@@ -60,7 +60,12 @@ class MaassDB(object):
 
         try:
             constr = "{0}:{1}".format(host, port)
-            Con = pymongo.Connection(constr)
+            if pymongo.version_tuple[0] < 3:
+                from pymongo import Connection
+                Con = pymongo.Connection(constr)
+            else:
+                from pymongo.mongo_client import MongoClient
+                Con = pymongo.MongoClient(constr)
             self._Con = Con
         except:  # AutoReconnect:
             logger.critical("No database found at {0}".format(constr))
@@ -812,7 +817,7 @@ class MaassDB(object):
         print s
 
     def set_table(self, refresh=False):
-        # if self.table<>{}:
+        # if self.table!={}:
         #    return self.table
         f = gridfs.GridFS(self._mongo_db, 'Table')
         if refresh == False:

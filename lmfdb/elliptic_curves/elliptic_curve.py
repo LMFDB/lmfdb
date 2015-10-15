@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import re
+import time
 
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, send_file
 import tempfile
 import os
+import StringIO
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
 from lmfdb.number_fields.number_field import parse_list
@@ -36,7 +38,6 @@ def db_ec():
 #########################
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
-TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 
@@ -55,6 +56,39 @@ def cmp_label(lab1, lab2):
     a, b, c = parse_cremona_label(lab2)
     id2 = int(a), class_to_int(b), int(c)
     return cmp(id1, id2)
+
+def parse_torsion_structure(L):
+    r"""
+    Parse a string entered into torsion structure search box
+    '[]' --> []
+    '[n]' --> [str(n)]
+    'n' --> [str(n)]
+    '[m,n]' or '[m n]' --> [str(m),str(n)]
+    'm,n' or 'm n' --> [str(m),str(n)]
+    """
+    # strip <whitespace> or <whitespace>[<whitespace> from the beginning:
+    L1 = re.sub(r'^\s*\[?\s*', '', str(L))
+    # strip <whitespace> or <whitespace>]<whitespace> from the beginning:
+    L1 = re.sub(r'\s*]?\s*$', '', L1)
+    # catch case where there is nothing left:
+    if not L1:
+        return []
+    # This matches a string of 1 or more digits at the start,
+    # optionally followed by nontrivial <ws> or <ws>,<ws> followed by
+    # 1 or more digits at the end:
+    TORS_RE = re.compile(r'^\d+((\s+|\s*,\s*)\d+)?$')
+    if TORS_RE.match(L1):
+        if ',' in L1:
+            # strip interior <ws> and use ',' as delimiter:
+            res = [int(a) for a in L1.replace(' ','').split(',')]
+        else:
+            # use whitespace as delimiter:
+            res = [int(a) for a in L1.split()]
+        n = len(res)
+        if (n==1 and res[0]>0) or (n==2 and res[0]>0 and res[1]>0 and res[1]%res[0]==0):
+            return res
+    return 'Error parsing input %s for the torsion structure.  It needs to be a list of 0, 1 or 2 integers, optionally in square brackets, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % L
+
 
 #########################
 #    Top level
@@ -96,6 +130,27 @@ def rational_elliptic_curves(err_args=None):
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, **err_args)
+
+@ec_page.route("/random")
+def random_curve():
+    from sage.misc.prandom import randint
+    n = get_stats().counts()['ncurves']
+    n = randint(0,n-1)
+    label = db_ec().find()[n]['label']
+    # This version leaves the word 'random' in the URL:
+    # return render_curve_webpage_by_label(label)
+    # This version uses the curve's own URL:
+    return redirect(url_for(".by_ec_label", label=label), 301)
+
+
+@ec_page.route("/curve_of_the_day")
+def todays_curve():
+    from datetime import date
+    mordells_birthday = date(1888,1,28)
+    n = (date.today()-mordells_birthday).days
+    label = db_ec().find({'number' : int(1)})[n]['label']
+    #return render_curve_webpage_by_label(label)
+    return redirect(url_for(".by_ec_label", label=label), 301)
 
 @ec_page.route("/stats")
 def statistics():
@@ -219,11 +274,13 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        info['torsion_structure'] = clean_input(info['torsion_structure'])
-        if not TORS_RE.match(info['torsion_structure']):
-            info['err'] = 'Error parsing input for the torsion structure.  It needs to be one or more integers in square brackets, such as [6], [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.'
+        res = parse_torsion_structure(info['torsion_structure'])
+        if 'Error' in res:
+            info['err'] = res
             return search_input_error(info, bread)
-        query['torsion_structure'] = [str(a) for a in parse_list(info['torsion_structure'])]
+        #update info for repeat searches
+        info['torsion_structure'] = str(res).replace(' ','')
+        query['torsion_structure'] = [str(r) for r in res]
 
     if info.get('surj_primes'):
         info['surj_primes'] = clean_input(info['surj_primes'])
@@ -256,8 +313,10 @@ def elliptic_curve_search(**args):
             info['err'] = 'Error parsing input for nonsurjective primes.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).'
             return search_input_error(info, bread)
 
-    info['query'] = query
-
+    if 'download' in info and info['download'] != '0':
+        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING) ])
+        return download_search(info, res)
+    
     count_default = 100
     if info.get('count'):
         try:
@@ -348,18 +407,21 @@ def by_ec_label(label):
                 return elliptic_curve_jump_error(label, {})
 
         # We permanently redirect to the lmfdb label
-        if number:
+        if number: # it's a curve
             data = db_ec().find_one({'label': label})
             if data is None:
                 return elliptic_curve_jump_error(label, {})
             ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
-        else:
+            #return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
+            return render_curve_webpage_by_label(data['label'])
+        else: # it's an isogeny class
             data = db_ec().find_one({'iso': label})
             if data is None:
                 return elliptic_curve_jump_error(label, {})
             ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            return redirect(url_for(".by_ec_label", label=data['lmfdb_iso']), 301)
+            #return redirect(url_for(".by_ec_label", label=data['iso']), 301)
+            return render_isogeny_class(data['iso'])
+
     if number:
         return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
     else:
@@ -484,9 +546,7 @@ def padic_data():
     label = request.args['label']
     p = int(request.args['p'])
     info['p'] = p
-    print "label = %s; p = %s" % (label,p)
     N, iso, number = split_lmfdb_label(label)
-    # print N, iso, number
     if request.args['rank'] == '0':
         info['reg'] = 1
     elif number == '1':
@@ -563,6 +623,57 @@ def download_EC_all(label):
     response = make_response('\n'.join(str(an) for an in dump_data))
     response.headers['Content-type'] = 'text/plain'
     return response
+
+
+def download_search(info, res):
+    dltype = info['Submit']
+    delim = 'bracket'
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    filename = 'elliptic_curves.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'elliptic_curves.sage'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'elliptic_curves.m'
+    s = com1 + "\n"
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Below is a list called data. Each entry has the form:\n'
+    s += com + '   [Weierstrass Coefficients]\n'
+    s += '\n' + com2
+    s += '\n'
+    if dltype == 'magma':
+        s += 'data := ['
+    else:
+        s += 'data = ['
+    s += '\\\n'
+    for f in res:
+        entry = str(f['ainvs'])
+        entry = entry.replace('u','')
+        entry = entry.replace('\'','')
+        s += entry + ',\\\n'
+    s = s[:-3]
+    s += ']\n'
+    if delim == 'brace':
+        s = s.replace('[', '{')
+        s = s.replace(']', '}')
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO,
+                     attachment_filename=filename,
+                     as_attachment=True)
+
 
 #@ec_page.route("/download_Rub_data")
 # def download_Rub_data():

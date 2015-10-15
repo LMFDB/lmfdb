@@ -1,0 +1,8 @@
+{
+    "description": "includes/Gamma0_3_psi_3_basic.html", 
+    "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Gamma0_3_psi_3",
+    "dim_args_default": "[range(0,21)]",
+    "latex_name": "M_k\\left(\\Gamma_0(3),\\psi_3\\right)",
+    "name": "Gamma0_3_psi_3",
+    "order": 90
+}

@@ -82,6 +82,15 @@ body {
     color: #181;
     margin: 10px 0 5px 0;
 }
+
+#content > h2.inline,
+#content > h3.inline {
+    font-weight: normal;
+    display: inline;
+    padding-right: 10px;
+    margin: 5px 0 10px 0;
+}
+
 #footer {
     clear: both;
     margin-top: 40px;
@@ -546,6 +555,11 @@ button, select {
   min-width: 75px;
 }
 
+button.inactive {
+  background: #EEE; 
+  border: 1px solid #EDD;
+}
+
 body.knowl form button, 
 body.knowl form select {
   border: 2px solid #AAD;
@@ -662,11 +676,11 @@ div.literature {
 }
 
 .redhighlight {
-  color: red;
+  color: #888888;
 }
 
 .bluehighlight {
-  color: blue;
+  color: black;
 }
 
 
@@ -788,6 +802,47 @@ body.knowl table.ntdata tr:nth-child(odd) {
 body.knowl table.ntdata tr:nth-child(even) {
  background: white;
 }
+
+/* next 4 copied from Dir Char templates */
+/* should be deleted from those 4 templates */
+table.ntdata th.left {
+    border-right: 2px solid #9b9;
+    background: #efe;
+    border-bottom: 0;
+    text-align: center;
+}
+
+table.ntdata th.weight {
+  text-align: center;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+
+table.ntdata tr.first {
+  border-top: 2px solid #9b9;
+}
+
+table.euler {
+    margin-left:auto; 
+    margin-right:auto;
+}
+
+table.euler tr .galois {
+    padding-left: 25px;
+}
+
 .knowl-content {
   padding: 0 10px;
 }
@@ -838,9 +893,19 @@ div > *[knowl], p > *[knowl] {
   position: relative;
 }
 
+table .knowl a {
+    padding: 0;
+}
+
 .knowl-error {
-   color: red;
+   color: purple;
    border-bottom: 0;
+   text-decoration: underline;
+}
+
+.knowl-error a {
+   font-size:60%;
+   color: purple;
 }
 
 .knowl-qm {
@@ -969,9 +1034,11 @@ div.limit-height {
   padding-right:0;
 }
 
+/*
 .dirichletseries td:first-child {
   padding-top:3px;
 }
+*/
 
 .dirichletseries span.term {
   white-space: nowrap;
@@ -1533,4 +1600,15 @@ div.box {
 	overflow: auto;
 	border: 1px solid #8080FF;
 	background-color: #E5E5FF;
+}
+
+div.codebox {
+    padding: 5px;
+    text-padding: 10px;
+    overflow: auto;
+    border: 1px solid #8080FF;
+    border-radius: 5px;
+    background-color: #E5E5FF;
+    box-shadow: 3px 3px 3px #8080FF;
+    white-space: pre;
 }

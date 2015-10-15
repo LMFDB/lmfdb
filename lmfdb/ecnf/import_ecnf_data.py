@@ -7,6 +7,7 @@ information. If the entry does not exist then it creates it and
 returns that.
 
 Initial version (Arizona March 2014) based on import_ec_data.py: John Cremona
+Revised continuously 2014-2015 by John Cremona: now uncludes download functions too.
 
 The documents in the collection 'nfcurves' in the database
 'elliptic_curves' have the following keys (* denotes a mandatory
@@ -37,7 +38,7 @@ field) and value types (with examples):
    - torsion_order            int
    - torsion_structure        list of 0, 1 or 2 ints
    - gens                     list of lists of 3 lists of d lists of 2 ints
-   - torsion_gens             list of lists of 3 lists of d lists of 2 ints
+   - torsion_gens             list of lists of 3 lists of d lists of strings
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
 
@@ -70,7 +71,7 @@ from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 
 print "calling base._init()"
-dbport=37010
+dbport = 37010
 init(dbport, '')
 print "getting connection"
 conn = getDBConnection()
@@ -98,26 +99,28 @@ print "finished indices"
 # dict of label:field pairs:
 nf_lookup_table = {}
 
+
 def nf_lookup(label):
     r"""
     Returns a NumberField from its label, caching the result.
     """
-    #print "Looking up number field with label %s" % label
+    # print "Looking up number field with label %s" % label
     if label in nf_lookup_table:
-        #print "We already have it: %s" % nf_lookup_table[label]
+        # print "We already have it: %s" % nf_lookup_table[label]
         return nf_lookup_table[label]
-    #print "We do not have it yet, finding in database..."
+    # print "We do not have it yet, finding in database..."
     field = conn.numberfields.fields.find_one({'label': label})
     if not field:
         raise ValueError("Invalid field label: %s" % label)
-    #print "Found it!"
+    # print "Found it!"
     coeffs = [ZZ(c) for c in field['coeffs'].split(",")]
-    K = NumberField(PolynomialRing(QQ,'x')(coeffs),'a')
-    #print "The field with label %s is %s" % (label, K)
+    K = NumberField(PolynomialRing(QQ, 'x')(coeffs), 'a')
+    # print "The field with label %s is %s" % (label, K)
     nf_lookup_table[label] = K
     return K
 
-## HNF of an ideal I in a quadratic field
+# HNF of an ideal I in a quadratic field
+
 
 def ideal_HNF(I):
     r"""
@@ -129,11 +132,12 @@ def ideal_HNF(I):
     """
     N = I.norm()
     a, c, b, d = I.pari_hnf().python().list()
-    assert a>0 and d>0 and N==a*d and d.divides(a) and d.divides(b) and 0<=c<a
-    return [a,c,d]
+    assert a > 0 and d > 0 and N == a * d and d.divides(a) and d.divides(b) and 0 <= c < a
+    return [a, c, d]
 
-## Label of an ideal I in a quadratic field: string formed from the
-## Norm and HNF of the ideal
+# Label of an ideal I in a quadratic field: string formed from the
+# Norm and HNF of the ideal
+
 
 def ideal_label(I):
     r"""
@@ -141,17 +145,19 @@ def ideal_label(I):
     with integral basis [1,w].  This is the string '[N,c,d]' where
     [a,c,d] is the HNF form of I and N=a*d=Norm(I).
     """
-    a,c,d = ideal_HNF(I)
-    return "[%s,%s,%s]" % (a*d,c,d)
+    a, c, d = ideal_HNF(I)
+    return "[%s,%s,%s]" % (a * d, c, d)
 
-## Reconstruct an ideal in a quadratic field from its label.
+# Reconstruct an ideal in a quadratic field from its label.
 
-def ideal_from_label(K,lab):
+
+def ideal_from_label(K, lab):
     r"""Returns the ideal with label lab in the quadratic field K.
     """
     N, c, d = [ZZ(c) for c in lab[1:-1].split(",")]
-    a = N//d
-    return K.ideal(a,K([c,d]))
+    a = N // d
+    return K.ideal(a, K([c, d]))
+
 
 def parse_NFelt(K, s):
     r"""
@@ -159,11 +165,13 @@ def parse_NFelt(K, s):
     """
     return K([QQ(c) for c in s.split(",")])
 
+
 def NFelt(a):
     r"""
     Returns an NFelt string encoding the element a (in a number field K).
     """
     return ",".join([str(c) for c in list(a)])
+
 
 def QorZ_list(a):
     r"""
@@ -171,18 +179,21 @@ def QorZ_list(a):
     """
     return [int(a.numerator()), int(a.denominator())]
 
+
 def K_list(a):
     r"""
     Return the list representation of the number field element.
     """
-    #return [QorZ_list(c) for c in list(a)]  # old: [num,den]
+    # return [QorZ_list(c) for c in list(a)]  # old: [num,den]
     return [str(c) for c in list(a)]         # new: "num/den"
+
 
 def NFelt_list(a):
     r"""
     Return the list representation of the NFelt string.
     """
     return [QorZ_list(QQ(c)) for c in a.split(",")]
+
 
 def parse_point(E, s):
     r"""
@@ -192,32 +203,38 @@ def parse_point(E, s):
     cc = s[1:-1].split(":")
     return E([parse_NFelt(c) for c in cc])
 
+
 def point_string(P):
     r"""Return a string representation of a point on an elliptic curve
     """
-    return "["+":".join([NFelt(c) for c in list(P)])+"]"
+    return "[" + ":".join([NFelt(c) for c in list(P)]) + "]"
+
 
 def point_string_to_list(s):
     r"""Return a list representation of a point string
     """
     return s[1:-1].split(":")
 
+
 def point_list(P):
     r"""Return a list representation of a point on an elliptic curve
     """
     return [K_list(c) for c in list(P)]
+
 
 def field_data(s):
     r"""
     Returns full field data from field label.
     """
     deg, r1, abs_disc, n = [int(c) for c in s.split(".")]
-    sig = [r1, (deg-r1)//2]
+    sig = [r1, (deg - r1) // 2]
     return [s, deg, sig, abs_disc]
+
 
 @cached_function
 def get_cm_list(K):
     return cm_j_invariants_and_orders(K)
+
 
 def get_cm(j):
     r"""
@@ -225,15 +242,17 @@ def get_cm(j):
     """
     if not j.is_integral():
         return 0
-    for d,f,j1 in get_cm_list(j.parent()):
-        if j==j1:
-            return int(d*f*f)
+    for d, f, j1 in get_cm_list(j.parent()):
+        if j == j1:
+            return int(d * f * f)
     return 0
 
 whitespace = re.compile(r'\s+')
 
+
 def split(line):
     return whitespace.split(line.strip())
+
 
 def curves(line):
     r""" Parses one line from a curves file.  Returns the label and a dict
@@ -253,7 +272,7 @@ def curves(line):
     """
     # Parse the line and form the full label:
     data = split(line)
-    if len(data)!=13:
+    if len(data) != 13:
         print "line %s does not have 13 fields, skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
@@ -265,38 +284,38 @@ def curves(line):
     label = "%s-%s" % (field_label, short_label)
 
     conductor_ideal = data[4]     # string
-    conductor_norm = int(data[5]) # int
+    conductor_norm = int(data[5])  # int
     ainvs = data[6:11]            # list of 5 NFelt strings
     cm = data[11]                 # int or '?'
-    if cm!='?':
+    if cm != '?':
         cm = int(cm)
-    q_curve = (data[12]=='1')   # bool
+    q_curve = (data[12] == '1')   # bool
 
     # Create the field and curve to compute the j-invariant:
     dummy, deg, sig, abs_disc = field_data(field_label)
     K = nf_lookup(field_label)
-    ainvsK = [parse_NFelt(K,ai) for ai in ainvs] # list of K-elements
+    ainvsK = [parse_NFelt(K, ai) for ai in ainvs]  # list of K-elements
     ainvs = [[str(c) for c in ai] for ai in ainvsK]
     E = EllipticCurve(ainvsK)
     j = E.j_invariant()
     jinv = K_list(j)
-    if cm=='?':
+    if cm == '?':
         cm = get_cm(j)
         if cm:
-            print "cm=%s for j=%s" %(cm,j)
+            print "cm=%s for j=%s" % (cm, j)
 
     # Here we should check that the conductor of the constructed curve
     # agrees with the input conductor.  We just check the norm.
-    if E.conductor().norm()==conductor_norm:
+    if E.conductor().norm() == conductor_norm:
         pass
-        #print "Conductor norms agree: %s" % conductor_norm
+        # print "Conductor norms agree: %s" % conductor_norm
     else:
         raise RuntimeError("Wrong conductor for input line %s" % line)
 
     # get torsion order, structure and generators:
-    #print("E = %s over %s" % (ainvsK,K))
+    # print("E = %s over %s" % (ainvsK,K))
     torgroup = E.torsion_subgroup()
-    #print("torsion = %s" % torgroup)
+    # print("torsion = %s" % torgroup)
     ntors = int(torgroup.order())
     torstruct = [int(n) for n in list(torgroup.invariants())]
     torgens = [point_list(P.element()) for P in torgroup.gens()]
@@ -305,11 +324,11 @@ def curves(line):
     # subset of Q-curves)
 
     if q_curve:
-        #print "%s is a Q-curve, testing for base-change..." % label
+        # print "%s is a Q-curve, testing for base-change..." % label
         E1list = E.descend_to(QQ)
         if len(E1list):
             base_change = [cremona_to_lmfdb(E1.label()) for E1 in E1list]
-            print "%s is base change of %s" % (label,base_change)
+            print "%s is base change of %s" % (label, base_change)
         else:
             base_change = []
             print "%s is a Q-curve, but not base-change..." % label
@@ -317,7 +336,7 @@ def curves(line):
         base_change = []
 
     return label, {
-        'field_label' : field_label,
+        'field_label': field_label,
         'degree': deg,
         'signature': sig,
         'abs_disc': abs_disc,
@@ -338,7 +357,8 @@ def curves(line):
         'torsion_order': ntors,
         'torsion_structure': torstruct,
         'torsion_gens': torgens,
-        }
+    }
+
 
 def curve_data(line):
     r""" Parses one line from a curve_data file.  Returns the label and a dict
@@ -357,10 +377,10 @@ def curve_data(line):
     """
     # Parse the line and form the full label:
     data = split(line)
-    if len(data)<9:
+    if len(data) < 9:
         print "line %s does not have 9 fields (excluding gens), skipping" % line
     ngens = int(data[7])
-    if len(data)!=9+ngens:
+    if len(data) != 9 + ngens:
         print "line %s does not have 9 fields (excluding gens), skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
@@ -371,20 +391,21 @@ def curve_data(line):
 
     edata = {'label': label}
     r = data[4]
-    if r!="?":
+    if r != "?":
         edata['rank'] = int(r)
     rb = data[5]
-    if rb!="?":
+    if rb != "?":
         edata['rank_bounds'] = [int(c) for c in rb[1:-1].split(",")]
     ra = data[6]
-    if ra!="?":
+    if ra != "?":
         edata['analytic_rank'] = int(ra)
     ngens = int(data[7])
-    edata['gens'] = [point_string_to_list(g) for g in data[8:8+ngens]]
-    sha = data[8+ngens]
-    if sha!="?":
+    edata['gens'] = [point_string_to_list(g) for g in data[8:8 + ngens]]
+    sha = data[8 + ngens]
+    if sha != "?":
         edata['sha_an'] = int(sha)
     return label, edata
+
 
 def isoclass(line):
     r""" Parses one line from an isovlass file.  Returns the label and a dict
@@ -401,7 +422,7 @@ def isoclass(line):
     """
     # Parse the line and form the full label:
     data = split(line)
-    if len(data)<5:
+    if len(data) < 5:
         print "isoclass line %s does not have 5 fields (excluding gens), skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
@@ -418,7 +439,7 @@ def isoclass(line):
 
 filename_base_list = ['curves', 'curve_data']
 
-############################################################
+#
 
 
 def upload_to_db(base_path, filename_suffix):
@@ -437,7 +458,8 @@ def upload_to_db(base_path, filename_suffix):
             h = open(os.path.join(base_path, f))
             print "opened %s" % os.path.join(base_path, f)
         except IOError:
-            continue # in case not all prefixes exist
+            print "No file %s exists" % os.path.join(base_path, f)
+            continue  # in case not all prefixes exist
 
         parse = globals()[f[:f.find('.')]]
 
@@ -445,9 +467,9 @@ def upload_to_db(base_path, filename_suffix):
         count = 0
         print "Starting to read lines from file %s" % f
         for line in h.readlines():
-            #if count==10: break # for testing
+            # if count==10: break # for testing
             label, data = parse(line)
-            if count%100==0:
+            if count % 100 == 0:
                 print "read %s from %s" % (label, f)
             count += 1
             if label not in data_to_insert:
@@ -456,7 +478,7 @@ def upload_to_db(base_path, filename_suffix):
             for key in data:
                 if key in curve:
                     if curve[key] != data[key]:
-                        raise RuntimeError("Inconsistent data for %s" % label)
+                        raise RuntimeError("Inconsistent data for %s:\ncurve=%s\ndata=%s\nkey %s differs!" % (label, curve, data, key))
                 else:
                     curve[key] = data[key]
         print "finished reading %s lines from file %s" % (count, f)
@@ -464,18 +486,18 @@ def upload_to_db(base_path, filename_suffix):
     vals = data_to_insert.values()
     count = 0
     for val in vals:
-        #print val
+        # print val
         nfcurves.update({'label': val['label']}, {"$set": val}, upsert=True)
         count += 1
         if count % 100 == 0:
             print "inserted %s" % (val['label'])
 
-######################################################################
+#
 #
 # Code to download data from the database, (re)creating file curves.*,
 # curve_data.*, isoclass.*
 #
-######################################################################
+#
 
 
 def make_curves_line(ec):
@@ -497,8 +519,9 @@ def make_curves_line(ec):
                      ec['conductor_ideal'],
                      str(ec['conductor_norm'])
                      ] + [",".join(t) for t in ec['ainvs']
-                     ] + [str(ec['cm']),str(int(len(ec['base_change'])>0)) ]
+                          ] + [str(ec['cm']), str(int(len(ec['base_change']) > 0))]
     return " ".join(output_fields)
+
 
 def make_curve_data_line(ec):
     r""" for ec a curve object from the database, create a line of text to
@@ -519,14 +542,14 @@ def make_curve_data_line(ec):
         rk = str(ec['rank'])
     rk_bds = '?'
     if 'rank_bounds' in ec:
-        rk_bds = str(ec['rank_bounds']).replace(" ","")
+        rk_bds = str(ec['rank_bounds']).replace(" ", "")
     an_rk = '?'
     if 'analytic_rank' in ec:
         an_rk = str(ec['analytic_rank'])
     ngens = '0'
     gens_str = []
     if 'gens' in ec:
-        gens_str = ["["+":".join([c for c in P])+"]" for P in ec['gens']]
+        gens_str = ["[" + ":".join([c for c in P]) + "]" for P in ec['gens']]
         ngens = str(len(gens_str))
     sha = '?'
     if 'sha_an' in ec:
@@ -555,21 +578,21 @@ def make_isoclass_line(ec):
     """
     mat = ''
     if 'isogeny_matrix' in ec:
-        mat = str(ec['isogeny_matrix']).replace(' ','')
+        mat = str(ec['isogeny_matrix']).replace(' ', '')
     else:
         print("Making isogeny matrix for class %s" % ec['label'])
         from lmfdb.ecnf.isog_class import permute_mat
         from lmfdb.ecnf.WebEllipticCurve import FIELD
         K = FIELD(ec['field_label'])
-        curves = nfcurves.find({'field_label' : ec['field_label'],
-                                'conductor_label' : ec['conductor_label'],
-                                'iso_label' : ec['iso_label']}).sort('number')
+        curves = nfcurves.find({'field_label': ec['field_label'],
+                                'conductor_label': ec['conductor_label'],
+                                'iso_label': ec['iso_label']}).sort('number')
         Elist = [EllipticCurve([K.parse_NFelt(x) for x in c['ainvs']]) for c in curves]
         cl = Elist[0].isogeny_class()
-        perm = dict([(i,cl.index(E)) for i,E in enumerate(Elist)])
+        perm = dict([(i, cl.index(E)) for i, E in enumerate(Elist)])
         mat = permute_mat(cl.matrix(), perm, True)
         n = len(Elist)
-        mat = str([list(ri) for ri in mat.rows()]).replace(" ","")
+        mat = str([list(ri) for ri in mat.rows()]).replace(" ", "")
 
     output_fields = [ec['field_label'],
                      ec['conductor_label'],
@@ -586,7 +609,7 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
     """
     query = {}
     query['field_label'] = field_label
-    query['conductor_norm'] = {'$gte' : int(min_norm)}
+    query['conductor_norm'] = {'$gte': int(min_norm)}
     if max_norm:
         query['conductor_norm']['$lte'] = int(max_norm)
     else:
@@ -597,225 +620,16 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
 
     file = {}
     prefixes = ['curves', 'curve_data', 'isoclass']
-    suffix = ''.join([".",field_label,".",str(min_norm),"-",str(max_norm)])
+    suffix = ''.join([".", field_label, ".", str(min_norm), "-", str(max_norm)])
     for prefix in prefixes:
-        filename = os.path.join(base_path, ''.join([prefix,suffix]))
-        file[prefix] = open(filename,'w')
+        filename = os.path.join(base_path, ''.join([prefix, suffix]))
+        file[prefix] = open(filename, 'w')
 
     for ec in res:
-        file['curves'].write(make_curves_line(ec)+"\n")
-        file['curve_data'].write(make_curve_data_line(ec)+"\n")
+        file['curves'].write(make_curves_line(ec) + "\n")
+        file['curve_data'].write(make_curve_data_line(ec) + "\n")
         if ec['number'] == 1:
-            file['isoclass'].write(make_isoclass_line(ec)+"\n")
+            file['isoclass'].write(make_isoclass_line(ec) + "\n")
 
     for prefix in prefixes:
         file[prefix].close()
-
-######################################################################
-#
-# Code to check conductor labels agree with Hilbert Modular Form level
-# labels for a real quadratic field.  So far run on all curves over
-# Q(sqrt(5)).
-#
-######################################################################
-
-from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
-
-def make_conductor(ecnfdata, hfield):
-    N,c,d = [ZZ(c) for c in ecnfdata['conductor_ideal'][1:-1].split(',')]
-    return hfield.K().ideal([N//d,c+d*hfield.K().gen()])
-
-def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
-    r""" Go through all curves with the given field label, assumed totally
-    real, check whether the ideal label agrees with the level_label of
-    the associated Hilbert Modular Form.
-    """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
-    query = {}
-    query['field_label'] = field_label
-    query['conductor_norm'] = {'$gte' : int(min_norm)}
-    if max_norm:
-        query['conductor_norm']['$lte'] = int(max_norm)
-    else:
-        max_norm = 'infinity'
-    cursor = nfcurves.find(query)
-    nfound = 0
-    nnotfound = 0
-    K = HilbertNumberField(field_label)
-    primes = [P['ideal'] for P in K.primes_iter(20)]
-    remap = {} # remap[old_label] = new_label
-
-    for ec in cursor:
-        fix_needed = False
-        cond_label = ec['conductor_label']
-        if cond_label in remap:
-            new_cond_label = remap[cond_label]
-            fix_needed=(cond_label!=new_cond_label)
-            if not fix_needed:
-                if verbose:
-                    print("conductor label %s ok" % cond_label)
-        else:
-            conductor = make_conductor(ec,K)
-            level = K.ideal(cond_label)
-            new_cond_label = K.ideal_label(conductor)
-            remap[cond_label] = new_cond_label
-            fix_needed=(cond_label!=new_cond_label)
-
-        if fix_needed:
-            print("conductor label for curve %s is wrong, should be %s not %s" % (ec['label'],new_cond_label, cond_label))
-            if fix:
-                iso = ec['iso_label']
-                num = str(ec['number'])
-                newlabeldata = {}
-                newlabeldata['conductor_label'] = new_cond_label
-                newlabeldata['short_class_label'] = '-'.join([new_cond_label,iso])
-                newlabeldata['short_label'] = ''.join([newlabeldata['short_class_label'],num])
-                newlabeldata['class_label'] = '-'.join([field_label,
-                                                        newlabeldata['short_class_label']])
-                newlabeldata['label'] = '-'.join([field_label,
-                                                  newlabeldata['short_label']])
-                nfcurves.update({'_id': ec['_id']}, {"$set": newlabeldata}, upsert=True)
-        else:
-            if verbose:
-                print("conductor label %s ok" % cond_label)
-
-    return dict([(k,remap[k]) for k in remap if not k==remap[k]])
-
-######################################################################
-#
-# Code to check isogeny class labels agree with Hilbert Modular Form
-# labels of each level, for a real quadratic field.  Tesing on all
-# curves over Q(sqrt(5)); not yet run.
-#
-######################################################################
-
-def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
-    r""" Go through all curves with the given field label, assumed totally
-    real, test whether a Hilbert Modular Form exists with the same
-    label.
-    """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
-    query = {}
-    query['field_label'] = field_label
-    query['number'] = 1 # only look at first curve in each isogeny class
-    query['conductor_norm'] = {'$gte' : int(min_norm)}
-    if max_norm:
-        query['conductor_norm']['$lte'] = int(max_norm)
-    else:
-        max_norm = 'infinity'
-    cursor = nfcurves.find(query)
-    nfound = 0
-    nnotfound = 0
-    nok = 0
-    bad_curves = []
-    K = HilbertNumberField(field_label)
-    primes = [P['ideal'] for P in K.primes_iter(20)]
-    curve_ap = {} # curve_ap[conductor_label] will be a dict iso -> ap
-    form_ap = {}  # form_ap[conductor_label]  will be a dict iso -> ap
-
-    # Step 1: look at all curves (one per isogeny class), check that
-    # there is a Hilbert newform of the same label, and if so compare
-    # ap-lists.  The dicts curve_ap and form_ap strose these when
-    # there is disagreement:
-    # e.g. curve_ap[conductor_label][iso_label] = aplist.
-
-    for ec in cursor:
-        hmf_label = "-".join([ec['field_label'],ec['conductor_label'],ec['iso_label']])
-        f = forms.find_one({'field_label' : field_label, 'label' : hmf_label})
-        if f:
-            if verbose:
-                print("hmf with label %s found" % hmf_label)
-            nfound +=1
-            ainvsK = [K.K()([QQ(str(c)) for c in ai]) for ai in ec['ainvs']]
-            E = EllipticCurve(ainvsK)
-            good_flags = [E.has_good_reduction(P) for P in primes]
-            good_primes = [P for (P,flag) in zip(primes,good_flags) if flag]
-            aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes[:10]]
-            f_aplist = [int(a) for a in f['hecke_eigenvalues'][:20]]
-            f_aplist = [ap for ap,flag in zip(f_aplist,good_flags) if flag][:10]
-            if aplist==f_aplist:
-                nok += 1
-                if verbose:
-                    print("Curve %s and newform agree!" % ec['short_label'])
-            else:
-                bad_curves.append(ec['short_label'])
-                print("Curve %s does NOT agree with newform" % ec['short_label'])
-                if verbose:
-                    print("ap from curve: %s" % aplist)
-                    print("ap from  form: %s" % f_aplist)
-                if not ec['conductor_label'] in curve_ap:
-                    curve_ap[ec['conductor_label']] = {}
-                    form_ap[ec['conductor_label']] = {}
-                curve_ap[ec['conductor_label']][ec['iso_label']] = aplist
-                form_ap[ec['conductor_label']][f['label_suffix']] = f_aplist
-        else:
-            if verbose:
-                print("No hmf with label %s found!" % hmf_label)
-            nnotfound +=1
-
-    # Report progress:
-
-    n = nfound+nnotfound
-    if nnotfound:
-        print("Out of %s forms, %s were found and %s were not found" % (n,nfound,nnotfound))
-    else:
-        print("Out of %s classes of curve, all %s had newforms with the same label" % (n,nfound))
-    if nfound==nok:
-        print("All curves agree with matching newforms")
-    else:
-        print("%s curves agree with matching newforms, %s do not" % (nok,nfound-nok))
-        #print("Bad curves: %s" % bad_curves)
-
-    # Step 2: for each conductor_label for which there was a
-    # discrepancy, create a dict giving the permutation curve -->
-    # newform, so remap[conductor_label][iso_label] = form_label
-
-    remap = {}
-    for level in curve_ap.keys():
-        remap[level] = {}
-        c_dat = curve_ap[level]
-        f_dat = form_ap[level]
-        for a in c_dat.keys():
-            aplist = c_dat[a]
-            for b in f_dat.keys():
-                if aplist==f_dat[b]:
-                    remap[level][a] = b
-                    break
-    if verbose:
-        print("remap: %s" % remap)
-
-    # Step 3, for through all curves with these bad conductors and
-    # create new labels for them, update the database with these (if
-    # fix==True)
-
-    for level in remap.keys():
-        perm = remap[level]
-        print("Fixing iso labels for conductor %s using map %s" % (level,perm))
-        query = {}
-        query['field_label'] = field_label
-        query['conductor_label'] = level
-        cursor = nfcurves.find(query)
-        for ec in cursor:
-            iso = ec['iso_label']
-            if iso in perm:
-                new_iso = perm[iso]
-                if verbose:
-                    print("--mapping class %s to class %s" % (iso,new_iso))
-                num = str(ec['number'])
-                newlabeldata = {}
-                newlabeldata['iso_label'] = new_iso
-                newlabeldata['short_class_label'] = '-'.join([level,new_iso])
-                newlabeldata['class_label'] = '-'.join([field_label,
-                                                        newlabeldata['short_class_label']])
-                newlabeldata['short_label'] = ''.join([newlabeldata['short_class_label'],num])
-                newlabeldata['label'] = '-'.join([field_label,
-                                                  newlabeldata['short_label']])
-                if verbose:
-                    print("new data fields: %s" % newlabeldata)
-                if fix:
-                    nfcurves.update({'_id': ec['_id']}, {"$set": newlabeldata}, upsert=True)
-

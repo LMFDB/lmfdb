@@ -53,6 +53,13 @@ By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
 <a href="?torsion={{t}}">{{t}}</a>
 {% endfor %}
 </p>
+<p>
+{#
+<a href={{url_for('.todays_curve')}}>Elliptic curve of the day</a>
+<br>
+#}
+A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the database
+</p>
 
 
 <h2> Find a specific curve or {{

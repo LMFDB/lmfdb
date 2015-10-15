@@ -15,7 +15,7 @@ fields</a> is available for download.
 
 </p>
 
-<h3> Browse {{KNOWL('nf', title='global number fields')}} </h3>
+<h2> Browse {{KNOWL('nf', title='global number fields')}} </h2>
 
 <ul>
 <li>
@@ -40,7 +40,32 @@ By {{KNOWL('nf.class_number', title='class number')}}:
 {% endfor %}
 </ul>
 
-<h3> Search for fields </h3>
+<p>
+A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from the database
+</p>
+
+
+<h2>Go to a specific field by {{KNOWL('nf.label',title='label')}}, 
+  {{KNOWL('nf.nickname',title='nickname')}}, or 
+  {{KNOWL('nf.defining_polynomial',title='polynomial')}}</h2>
+
+<form>
+<table border=0 cellpadding=5>
+<tr>
+<td>Field:&nbsp;&nbsp;</td>
+<td ><input type='text' name='natural' size=60 example='x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1'> </td>
+<td><button type='submit' name='search' value='Go'>Go</button></td>
+</tr>
+<tr>
+<td colspan="3" rowspan="2"><span class="formexample"> e.g.,
+ 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for
+    \(\Q(\sqrt{5})\)</span></td>
+</tr>
+</table>
+</form>
+
+
+<h2> Search for fields </h2>
 <form>
 <p>
 Enter values into one or more boxes to restrict the search.
@@ -98,25 +123,6 @@ Enter values into one or more boxes to restrict the search.
 </table>
 </form>
 
-
-<h3>Go to a specific field by {{KNOWL('nf.label',title='label')}}, 
-  {{KNOWL('nf.nickname',title='nickname')}}, or 
-  {{KNOWL('nf.defining_polynomial',title='polynomial')}}</h3>
-
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>Field:&nbsp;&nbsp;</td>
-<td ><input type='text' name='natural' size=60 example='x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1'> </td>
-<td><button type='submit' name='search' value='Go'>Go</button></td>
-</tr>
-<tr>
-<td colspan="3" rowspan="2"><span class="formexample"> e.g.,
- 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for
-    \(\Q(\sqrt{5})\)</span></td>
-</tr>
-</table>
-</form>
 
 
 {% endblock %}

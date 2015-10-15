@@ -1,0 +1,175 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<script type="text/javascript" src="{{ url_for('.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('.static', filename='elliptic_modular_form_scripts.js') }}"></script>
+
+
+<script>
+$(document).ready( function() {
+$("#wait").text("Plot of fundamental domain is loading!");
+$("#plot").load(function() {
+         $("#wait").text("");
+    });
+}
+);
+</script>
+
+<style>
+table.ntdata th.left {
+  border-right: 2px solid #9b9;
+  background: #efe;
+  border-bottom: 0;
+  text-align: right;
+}
+table.ntdata td { text-align: left; }
+table.ntdata th.weight {
+  text-align: left;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+
+</style>
+
+{% if error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>
+{{ error | safe }}
+</div>
+{% endif %}
+{#{ table | safe}#}
+
+
+{% include 'geometric.html' %}
+
+{% if level == 1 %}
+  {% set group=KNOWL('mf.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
+{% else %}
+  {% if grouptype == 0 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+  {% elif grouptype == 1 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma1N',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+  {% endif %}
+{% endif %}
+
+The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='Newforms') }}
+for \( \Gamma_1({{level}}) \) of specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, transforming
+with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).<br>
+
+
+In the table, we only list one representative per
+{{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit') }} of
+characters.
+The complete Galois orbits of characters are listed in the second table below.
+
+</p>
+{% set row_class = cycler('odd', 'even') %}
+{% set len = table.weights | length %}
+{% set wid = 10*len +20 %}
+<table class="ntdata" width="{{wid}}px">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Character</th>
+      <th class="weight" colspan="{{table.weights|length}}">
+	<span>Weight</span>
+      </th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft"></th>
+      {% for k in table.weights  %}
+        {% set col_url = url_for('emf.render_elliptic_modular_forms',level=level,weight=k) %}
+        <th class="weight"><a href="{{col_url}}">{{k}}</a></th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for xi in table.galois_orbits_reps_numbers  %}
+      {% set x = table.galois_orbits_reps[xi] %}
+      <tr class="{{row_class.next() }}">
+        <th width="10px" class="left"> 
+	  {% if x.url != '' %}
+            <a href="{{x.url}}">{{ x.head }}</a>
+          {% else %}
+	    {{x.head}}
+	  {% endif %}
+        </th>
+        {% for k in table.weights  %}
+          {% if k in table.cells[xi] %} 
+            {% set cell = table.cells[xi][k] %} 
+            <td align="center" width="0%">
+            {% if cell.url != '' %}
+               <a href="{{cell.url}}">{{cell.dim}}</a>
+            {% else %}
+               {% if cell.dim < 0 %}
+                  n/a
+               {% else %}
+	          {{cell.dim}}
+               {% endif %}
+	    {% endif %}
+            </td>
+	  {% endif %}
+        {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if showGaloisOrbits %}
+
+<table class="ntdata" width="{{wid}}px">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Representative</th>
+      <th class="weight" colspan="{{table.maxGalCount}}">Galois orbit</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for xi in table.galois_orbits_reps_numbers  %}
+    {% set x = table.galois_orbits_reps[xi] %}
+      <tr class="{{row_class.next() }}">
+        <th width="10px" class="left">
+	  {% if x.url != '' %}
+            <a href="{{x.url}}">{{ x.head }}</a>
+          {% else %}
+	    {{ x.head }}
+	  {% endif %}
+        </th>
+        {% for xc in table.galois_orbit[xi]  %}
+          <td align="center" width="0%">
+           {% if xc.url != '' %}
+             <a href="{{xc.url}}">{{ xc.head }}</a>
+           {% else %}
+	     {{xc.head}}
+	   {% endif %}
+          </td>
+        {% endfor %}
+      {% if table.maxGalCount is defined %}
+        {% set rc = table.galois_orbit[xi] | count %}
+        {% for j in range(rc,table.maxGalCount) %}
+          <td>&nbsp;</td>
+        {% endfor %}
+      {% endif  %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+
+
+{% endblock content %}

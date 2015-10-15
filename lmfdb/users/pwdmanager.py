@@ -127,9 +127,9 @@ class LmfdbUser(UserMixin):
     def id(self):
         return self._data['_id']
 
-    def is_authenticate(self):
-        """required by flask-login user class"""
-        return self._authenticated
+    # def is_authenticated(self):
+    #     """required by flask-login user class"""
+    #     return self._authenticated
 
     def is_anonymous(self):
         """required by flask-login user class"""
@@ -207,7 +207,7 @@ def get_user_list():
     returns a list of tuples: [('user_db_id', 'full_name'),…]
     full_name could be None
     """
-    users_cursor = get_users().find(fields=["full_name"])
+    users_cursor = get_users().find({}, ["full_name"])
     ret = []
     for e in users_cursor:
         name = e['full_name'] or e['_id']

@@ -14,8 +14,8 @@ from Lfunction import *
 import LfunctionPlot as LfunctionPlot
 from lmfdb.utils import to_dict
 import bson
-from Lfunctionutilities import (p2sage, lfuncDStex, lfuncEPtex, lfuncFEtex,
-                                truncatenumber, styleTheSign, specialValueString)
+from Lfunctionutilities import (p2sage, lfuncDShtml, lfuncEPtex, lfuncFEtex,
+                                truncatenumber, styleTheSign, specialValueString, specialValueTriple)
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curves.web_ec import cremona_label_regex, lmfdb_label_regex
@@ -42,7 +42,7 @@ def l_function_dirichlet_browse_page():
     info["maxModDefault"] = 20
     info["maxOrder"] = 19
     info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
-                                                          "maxModDefault"], 1, info["maxOrder"])]
+                "maxModDefault"], 1, info["maxOrder"])]
     return render_template("Degree1.html", title='Degree 1 L-functions', **info)
 
 # Degree 2 L-functions browsing page ##############################################
@@ -162,7 +162,7 @@ def set_info_for_start_page():
         'degree_list': range(1, 5),
         'type_table': tt,
         'type_row_list': [0, 1, 2, 3]
-    }
+        }
 
     info['title'] = 'L-functions'
     info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
@@ -390,6 +390,12 @@ def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
     info = {'title': L.title}
+#    if 'title_arithmetic' in L:
+    try:
+        info['title_arithmetic'] = L.title_arithmetic
+        info['title_analytic'] = L.title_analytic
+    except AttributeError:
+        pass
     try:
         info['citation'] = L.citation
     except AttributeError:
@@ -408,14 +414,34 @@ def initLfunction(L, args, request):
 
     # Now we usually display both
     if L.Ltype() == "genus2curveQ":
-        info['sv12'] = specialValueString(L, 0.5, '1/2')
+        if L.motivic_weight % 2 == 0:
+           arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
+        else:
+           arith_center = str(ZZ(1)/2 + L.motivic_weight/2)
+        svt_crit = specialValueTriple(L, 0.5, '\\frac12',arith_center)
+#        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+#        info['sv_critical_arithmetic'] = specialValueString(L, 0.5, str(ZZ(1)/2 + L.motivic_weight/2),'arithmetic')
+        info['sv_critical'] = svt_crit[0] + "\\ =\\ " + svt_crit[2]
+        info['sv_critical_analytic'] = [svt_crit[0], svt_crit[2]]
+        info['sv_critical_arithmetic'] = [svt_crit[1], svt_crit[2]]
+
+        if L.motivic_weight % 2 == 1:
+           arith_edge = "\\frac{" + str(2 + L.motivic_weight) + "}{2}"
+        else:
+           arith_edge = str(ZZ(1) + L.motivic_weight/2)
+
+        svt_edge = specialValueTriple(L, 1, '1',arith_edge)
+        info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
+        info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
+        info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
+
     elif L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
     #    if is_even(L.degree) :
-    #        info['sv12'] = specialValueString(L, 0.5, '1/2')
+    #        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
     #    if is_odd(L.degree):
-    #        info['sv1'] = specialValueString(L, 1, '1')
-        info['sv1'] = specialValueString(L, 1, '1')
-        info['sv12'] = specialValueString(L, 0.5, '1/2')
+    #        info['sv_edge'] = specialValueString(L, 1, '1')
+        info['sv_edge'] = specialValueString(L, 1, '1')
+        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
 
     info['args'] = args
 
@@ -468,13 +494,12 @@ def initLfunction(L, args, request):
         else:
             info['bread'] = get_bread(L.degree,
                                       [('Maass Form', url_for('.l_function_maass_gln_browse_page',
-                                        degree='degree' + str(L.degree))),
-                                     (L.dbid, request.url)])
+                                                              degree='degree' + str(L.degree))),
+                                       (L.dbid, request.url)])
 
     elif L.Ltype() == 'riemann':
         info['bread'] = get_bread(1, [('Riemann Zeta', request.url)])
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')), ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',
-                           url_for('characters.render_Dirichletwebpage', modulus=1, number=1))]
+        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')), ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',url_for('characters.render_Dirichletwebpage', modulus=1, number=1))]
 
     elif L.Ltype() == 'dirichlet':
         mod, num = L.charactermodulus, L.characternumber
@@ -513,14 +538,14 @@ def initLfunction(L, args, request):
         info['friends'].append(
             ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
         info['bread'] = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                                 (label, url_for('.l_function_ec_page', label=label))])
+                                      (label, url_for('.l_function_ec_page', label=label))])
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
-                                                   # number for the L-function
+        # number for the L-function
         if L.character:
             info['friends'] = [('Modular form ' + str(
-                L.level) + '.' + str(L.weight) + '.' + str(L.character) +
+                        L.level) + '.' + str(L.weight) + '.' + str(L.character) +
                                 str(L.label), friendlink)]
         else:
             info['friends'] = [('Modular form ' + str(L.level) + '.' +
@@ -533,7 +558,7 @@ def initLfunction(L, args, request):
                                     url_for('.l_function_ec_page', label=L.ellipticcurve)))
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i),
-                                       url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
+                                        url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
             info['friends'].append(
                 ('Symmetric square L-function',
                  url_for(".l_function_ec_sym_page", power='2',
@@ -566,20 +591,20 @@ def initLfunction(L, args, request):
 
         if L.m == 2:
             info['bread'] = get_bread(3, [("Symmetric square of Elliptic curve",
-                                    url_for('.l_function_ec_sym2_browse_page')),
-                                 (L.label, url_for('.l_function_ec_sym_page',
-                                                   label=L.label,power=L.m))])
+                                           url_for('.l_function_ec_sym2_browse_page')),
+                                          (L.label, url_for('.l_function_ec_sym_page',
+                                                            label=L.label,power=L.m))])
         elif L.m == 3:
             info['bread'] = get_bread(4, [("Symmetric cube of Elliptic curve",
-                                    url_for('.l_function_ec_sym3_browse_page')),
-                                 (L.label, url_for('.l_function_ec_sym_page',
-                                                   label=L.label,power=L.m))])
+                                           url_for('.l_function_ec_sym3_browse_page')),
+                                          (L.label, url_for('.l_function_ec_sym_page',
+                                                            label=L.label,power=L.m))])
         else:
             info['bread'] = [('L-functions', url_for('.l_function_top_page')),
-                                 ('Symmetric %s of Elliptic curve ' % ordinal(L.m)
-                                   + str(L.label),
-                                  url_for('.l_function_ec_sym_page',
-                                                   label=L.label,power=L.m))]
+                             ('Symmetric %s of Elliptic curve ' % ordinal(L.m)
+                              + str(L.label),
+                              url_for('.l_function_ec_sym_page',
+                                      label=L.label,power=L.m))]
 
         friendlink = request.url.replace('/L/SymmetricPower/%d/' % L.m, '/')
         splitlink = friendlink.rpartition('/')
@@ -616,11 +641,29 @@ def initLfunction(L, args, request):
         #info['friends'] = [('Hypergeometric motive ', friendlink.replace("t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
         info['friends'] = [('Hypergeometric motive ', friendlink)]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
 
+    # the code below should be in Lfunction.py
+    info['conductor'] = L.level
+    if not is_prime(L.level):
+        info['conductor_factored'] = latex(factor(int(L.level)))
 
-    info['dirichlet'] = lfuncDStex(L, "analytic")
+    info['degree'] = L.degree
+    info['sign'] = "$"+styleTheSign(L.sign)+"$"
+    if L.selfdual:
+        info['selfdual'] = 'yes'
+    else:
+        info['selfdual'] = 'no'
+    if L.primitive:
+        info['primitive'] = 'yes'
+    else:
+        info['primitive'] = 'no'
+    info['dirichlet'] = lfuncDShtml(L, "analytic")
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
+    if L.Ltype() == "genus2curveQ":
+        info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
+        info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
+        info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")
 
     if len(request.args) == 0:
         lcalcUrl = request.url + '?download=lcalcfile'
@@ -633,18 +676,20 @@ def initLfunction(L, args, request):
 
 def set_gaga_properties(L):
     ''' Sets the properties in the properties box in the
-        upper right corner
+    upper right corner
     '''
     ans = [('Degree', str(L.degree))]
 
-    ans.append(('Level', str(L.level)))
+    ans.append(('Conductor', str(L.level)))
     ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
 
     if L.selfdual:
-        sd = 'Self-dual'
+ #       sd = 'Self-dual'
+        ans.append(('Self-dual', "yes"))
     else:
-        sd = 'Not self-dual'
-    ans.append((None, sd))
+ #       sd = 'Not self-dual'
+        ans.append(('Self-dual', "no"))
+ #   ans.append((None, sd))
 
     if L.algebraic:
         ans.append(('Motivic weight', str(L.motivic_weight)))
@@ -670,7 +715,7 @@ def l_function_ec_plot(label):
         return render_plotLfunction_from_db("ecplots", "ecplots", query)
     except KeyError:
         return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
-                                                                          None, None, None)
+                                    None, None, None)
 
 @l_function_page.route("/Plot/<arg1>/")
 @l_function_page.route("/Plot/<arg1>/<arg2>/")
@@ -717,7 +762,7 @@ def render_plotLfunction_from_db(db, dbTable, condition):
         with db:
             cur = db.cursor()
             query = "SELECT start,end,points FROM {0} WHERE {1} LIMIT 1".format(dbTable,
-                                                                  condition)
+                                                                                condition)
             cur.execute(query)
             row = cur.fetchone()
 
@@ -829,7 +874,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):
     ''' Returns the L-function object corresponding to the supplied argumnents
-        from the url. temp_args contains possible arguments after a question mark.
+    from the url. temp_args contains possible arguments after a question mark.
     '''
     if arg1 == 'Riemann':
         return RiemannZeta()
@@ -844,6 +889,11 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
 
+    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'TotallyReal' and arg5 == 'holomorphic':  # Hilbert modular form
+        # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
+        return Lfunction_HMF(field=arg4, label=arg6, character=arg7, number=arg8)
+
+# next option is probably from an archaic HMF url
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 != 'Q' and arg4 == 'holomorphic':  # Hilbert modular form
         # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_HMF(field=arg3, label=arg5, character=arg6, number=arg7)

@@ -6,8 +6,8 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name
-from sage.all import QQ, PolynomialRing, factor,ZZ
+from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name, st0_group_name, get_end_data
+from sage.all import QQ, PolynomialRing, factor,ZZ, NumberField, expand, var
 from lmfdb.WebNumberField import field_pretty
 
 logger = make_logger("g2c")
@@ -26,28 +26,51 @@ def list_to_poly(s):
 def list_to_factored_poly(s):
     return str(factor(PolynomialRing(ZZ, 't')(s))).replace('*','')
 
-def list_to_factored_poly_otherorder(s):
+def list_to_factored_poly_otherorder(s, galois=False):
+    """ Either return the polynomial in a nice factored form,
+        or return a pair, with first entry the factored polynomial
+        and the second entry a list describing the Galois groups
+        of the factors.
+    """
+    gal_list=[]
     if len(s) == 1:
+        if galois:
+            return [str(s[0]), [[0,0]]]
         return str(s[0])
     sfacts = factor(PolynomialRing(ZZ, 'T')(s))
     sfacts_fc = [[v[0],v[1]] for v in sfacts]
     if sfacts.unit() == -1:
         sfacts_fc[0][0] *= -1
     outstr = ''
+    x = var('x')
     for v in sfacts_fc:
+        this_poly = v[0]
+        # if the factor is -1+T^2, replace it by 1-T^2
+        # this should happen an even number of times, mod powers 
+        if this_poly.substitute(T=0) == -1:
+            this_poly = -1*this_poly
+            v[0] = this_poly
+        if galois:
+            this_degree = this_poly.degree()
+                # hack because currently sage only handles monic polynomials:
+            this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
+            this_number_field = NumberField(this_poly, "a")
+            this_gal = this_number_field.galois_group(type='pari')
+            this_t_number = this_gal.group()._pari_()[2]._sage_()
+            gal_list.append([this_degree, this_t_number])
         vcf = v[0].list()
         started = False
         if len(sfacts) > 1 or v[1] > 1:
             outstr += '('
         for i in range(len(vcf)):
-            if vcf[i] <> 0:
+            if vcf[i] != 0:
                 if started and vcf[i] > 0:
                     outstr += '+'
                 started = True
                 if i == 0:
                     outstr += str(vcf[i])
                 else:
-                    if abs(vcf[i]) <> 1:
+                    if abs(vcf[i]) != 1:
                         outstr += str(vcf[i])
                     elif vcf[i] == -1:
                         outstr += '-'
@@ -59,6 +82,13 @@ def list_to_factored_poly_otherorder(s):
             outstr += ')'
         if v[1] > 1:
             outstr += '^{' + str(v[1]) + '}'        
+    if galois:
+        if galois and len(sfacts_fc)==2:
+            if sfacts[0][0].degree()==2 and sfacts[1][0].degree()==2:
+                troubletest = sfacts[0][0].disc()*sfacts[1][0].disc()
+                if troubletest.is_square():
+                    gal_list=[[2,1]]
+        return [outstr, gal_list]
     return outstr
 
 def url_for_label(label):
@@ -106,50 +136,52 @@ class G2Cisog_class(object):
         self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_label(c['label'])} for c in curves_data ]
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_factored_poly_otherorder(c[1])] for c in self.bad_lfactors]
-        for endalgtype in ['end_alg', 'rat_end_alg', 'real_end_alg', 'geom_end_alg', 'rat_geom_end_alg', 'real_geom_end_alg']:
+        ## duplication of get_end_alg.  need to clean up!
+        end_alg_title_dict = {'end_ring': r'\End(J)', 
+                              'rat_end_alg': r'\End(J) \otimes \Q',
+                              'real_end_alg': r'\End(J) \otimes \R',
+                              'geom_end_ring': r'\End(J_{\overline{\Q}})', 
+                              'rat_geom_end_alg': r'\End(J_{\overline{\Q}}) \otimes \Q',
+                              'real_geom_end_alg':'\End(J_{\overline{\Q}}) \otimes \R'}
+        for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
             if hasattr(self, endalgtype):
-                setattr(self,endalgtype + '_name',end_alg_name(getattr(self,endalgtype)))
+                setattr(self,endalgtype + '_name',[end_alg_title_dict[endalgtype],end_alg_name(getattr(self,endalgtype))])
             else:
-                setattr(self,endalgtype + '_name','')
-
-        self.st_group_name = st_group_name(self.st_group)
-
-        if hasattr(self, 'geom_end_field') and self.geom_end_field <> '':
+                setattr(self,endalgtype + '_name',[end_alg_title_dict[endalgtype],''])
+        
+        if hasattr(self, 'geom_end_field') and self.geom_end_field != '':
             self.geom_end_field_name = field_pretty(self.geom_end_field)
         else:
             self.geom_end_field_name = ''
-
+        self.st_group_name = st_group_name(self.st_group)
+        self.st0_group_name = st0_group_name(self.real_geom_end_alg)
         if self.is_gl2_type:
             self.is_gl2_type_name = 'yes'
+            gl2_statement = 'of \(\GL_2\)-type'
         else:
             self.is_gl2_type_name = 'no'
-        if hasattr(self, 'is_simple'):
-            if self.is_simple:
-                self.is_simple_name = 'yes'
-            else:
-                self.is_simple_name = 'no'
-        else:
-            self.is_simple_name = '?'
-        if hasattr(self, 'is_geom_simple'):
+            gl2_statement = 'not of \(\GL_2\)-type'
+        if hasattr(self, 'is_simple') and hasattr(self, 'is_geom_simple'):
             if self.is_geom_simple:
-                self.is_geom_simple_name = 'yes'
+                simple_statement = "simple over \(\overline{\Q}\), "
+            elif self.is_simple:
+                simple_statement = "simple over \(\Q\) but not simple over \(\overline{\Q}\), "
             else:
-                self.is_geom_simple_name = 'no'
+                simple_statement = "not simple over \(\Q\), "
         else:
-            self.is_geom_simple_name = '?'
+            simple_statement = ""  # leave empty since not computed.
+        self.endomorphism_statement = simple_statement + gl2_statement
 
         x = self.label.split('.')[1]
         
-        self.friends = [
-          ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
-          ('Siegel modular form someday', '.')]
+        self.friends = [('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x))]
 
         self.ecproduct_wurl = []
         if hasattr(self, 'ecproduct'):
             for i in range(2):
                 curve_label = self.ecproduct[i]
                 crv_url = url_for("ec.by_ec_label", label=curve_label)
-                if i == 1 or len(set(self.ecproduct)) <> 1:
+                if i == 1 or len(set(self.ecproduct)) != 1:
                     self.friends.append(('Elliptic curve ' + curve_label, crv_url))
                 self.ecproduct_wurl.append({'label' : curve_label, 'url' : crv_url})
 
@@ -182,7 +214,7 @@ class G2Cisog_class(object):
                            ('Number of curves', str(self.ncurves)),
                            ('Conductor','%s' % self.cond),
                            ('Sato-Tate group', '\(%s\)' % self.st_group_name),
-                           ('\(\mathrm{End}(J_{\overline{\Q}}) \otimes \R\)','\(%s\)' % self.real_geom_end_alg_name),
+                           ('\(%s\)' % self.real_geom_end_alg_name[0],'\(%s\)' % self.real_geom_end_alg_name[1]),
                            ('\(\mathrm{GL}_2\)-type','%s' % self.is_gl2_type_name)]
 
         self.title = "Genus 2 Isogeny Class %s" % (self.label)

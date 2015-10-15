@@ -23,6 +23,10 @@ contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 def acknowledgment():
     return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs)
 
+@app.route("/workshops")
+def workshops():
+    return render_template("workshops.html", title="LMFDB Workshops", contribs = contribs)
+
 
 class Box(object):
     def __init__(self, title):
@@ -151,6 +155,6 @@ def citation():
 
 @app.route("/contact")
 def contact():
-    t = "Contact"
+    t = "Contact and feedback"
     b = [(t, url_for("contact"))]
     return render_template('contact.html', title=t, body_class='', bread=b)

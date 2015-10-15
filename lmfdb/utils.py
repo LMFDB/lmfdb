@@ -263,15 +263,43 @@ def web_latex(x):
     else:
         return "\( %s \)" % sage.all.latex(x)
 
+# if you just use web_latex(x) where x is a factored ideal then the
+# parentheses are doubled which does not look good!
+def web_latex_ideal_fact(x):
+    y = web_latex(x)
+    y = y.replace("(\\left(","\\left(")
+    y = y.replace("\\right))","\\right)")
+    return y
 
-def web_latex_split_on_pm(x):
+def web_latex_split_on(x, on=['+', '-']):
     if isinstance(x, (str, unicode)):
         return x
     else:
         A = "\( %s \)" % sage.all.latex(x)
+        for s in on:
+            A = A.replace(s, '\) ' + s + ' \(')
+    return A
+    
+def web_latex_split_on_pm(x):
+    return web_latex_split_on(x)
+
+def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
+
+    def insert_latex(s):
+        return s.group(1) + '\) \('
+
+    if isinstance(x, (str, unicode)):
+        return x
+    else:
+        A = "\( %s \)" % sage.all.latex(x)
+        c = re.compile(r)
         A = A.replace('+', '\)\( {}+ ')
         A = A.replace('-', '\)\( {}- ')
-        return A
+        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
+        A = A.replace('\\right)','\left.\\right)')        
+        A = c.sub(insert_latex, A)
+    return A
+
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):

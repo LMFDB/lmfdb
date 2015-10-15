@@ -5,15 +5,14 @@ import sys
 import time
 import sage.misc.preparser
 import subprocess
-from pymongo.connection import Connection
+from lmfdb import base
+from lmfdb.website import dbport
 
-hmf_forms = Connection(port=dbport).hmfs.forms
-hmf_forms = Connection(port=dbport).hmfs.forms
-hmf_fields = Connection(port=dbport).hmfs.fields
-hmf_fields = Connection(port=dbport).hmfs.fields
-
-fields = Connection(port=dbport).numberfields.fields
-fields = Connection(port=dbport).numberfields.fields
+base._init(dbport, '')
+C = base.getDBConnection()
+hmf_forms = C.hmfs.forms
+hmf_fields = C.hmfs.fields
+fields = C.numberfields.fields
 
 # hmf_forms.create_index('field_label')
 # hmf_forms.create_index('level_norm')

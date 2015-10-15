@@ -1,0 +1,8 @@
+{
+    "description": "includes/Sp4Z_j_basic.html", 
+    "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Sp4Z_j",
+    "dim_args_default": "[range(4,25),4]",
+    "latex_name": "M_{k,j}\\left(\\textrm{Sp}(4,\\mathbb{Z})\\right)", 
+    "name": "Sp4Z_j",
+    "order": 40
+}

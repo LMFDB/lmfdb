@@ -1,0 +1,237 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<script type="text/javascript" src="{{url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
+
+
+
+{% if info.error is defined %}
+
+<h1>There was an error in meeting your previous request. Please change parameters.</h1>
+
+<div> 
+<h2> Error message: </h2>
+{{ info.error | safe }}
+</div>
+{% endif %}
+{# To make an interface that is easier to read we implement each case of input separately #}
+
+{# {{ info | safe }} $("div").data("option",{"start":1}); #}
+
+<script>
+$(document).ready(function() {
+$("#l_list").data("start",1); $("#l_list").data("len",20); $("#l_list").data("min",1);
+$("#l_list").data("name","level");
+$("#w_list").data("start",1); $("#w_list").data("len",20); $("#w_list").data("min",1);
+$("#w_list").data("name","weight");
+$("#char_selection").data("char",0);
+ print_list("#l_list");
+ print_list("#w_list");
+ });
+
+function shift(id,lr) {
+   var start = $(id).data("start");
+   var min = $(id).data("min");
+   var len = $(id).data("len");
+   if (lr == "left")
+      start = start - len;
+   if (lr == "right")
+      start = start + len;
+   if (start <= min) {
+      start = min;
+   }
+   $(id).contents().detach();
+   $(id).data("start",start);
+   $(id).data("min",min);
+   $(id).data("len",len);
+ /*alert("start:"+$(id).data("start")+" "+len+" "+min); */
+   print_list(id);
+
+}
+
+function print_list(id) {
+    var min = $(id).data("min");
+    var start = $(id).data("start");
+    var len = $(id).data("len");
+    var name = $(id).data("name");
+    var url = getAbsolutePath();
+    if (start > min) {
+       $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\" style=\"\"><small>&lt;&lt;</small></a>");
+    };
+    var char = $("#char_selection").data("char");
+    if (char == 1) {
+       s = "&character=1"
+    } else {
+       s = "&character=all"
+    }
+    for (var i = start; i < len+start; i++) {
+        /*s = "<a href="+url+"?"+name+"="+i+" style=\"display:inline\">" + i + "</a> ";*/
+  /*s = "<a href='' onclick='set_value(\""+id+"\","+i+");document.browse.submit()' >" + i + "</a> ";*/
+        s = "<a href=\"javascript:set_value('"+id+"',"+i+")\" style=\"display:inline\">" + i + "</a> ";
+	$(id).append(s);
+    }
+    $(id).append("<a id='go_right' href='#' onclick=\"shift('"+id+"','right')\" style=\"display:inline\"><small>&gt;&gt;</small></a>");
+
+};
+
+function set_value(id,val) {
+  var name = $(id).data("name"); 			   
+  document.forms.browse[name].value=val;
+  $(id).data("value",val);
+  document.browse.submit();			   
+}
+</script>
+{% if info.grouptype == 0 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(N)\)') %}
+    {% set chi = 1%}
+{% elif info.grouptype == 1 %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(N)\)') %}
+    {% set chi = -1%}
+{% endif %}
+
+{%if info.show_switch is defined %}
+  {% if info.groupother == 1 %}
+  {% set groupotherchar = -1 %}
+  {% else %}
+  {% set groupotherchar = 1 %}
+  {%endif%}
+  <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',character=groupotherchar)}}">Switch to \(\Gamma_{{info.groupother}}(N)\)</a></h2></div>
+{%endif%}
+
+<h1>Browse holomorphic {{KNOWL('mf.elliptic.newform',title='newforms')}} for {{group}}</h1>
+
+<div>
+
+The table below gives the dimensions of the space of holomorphic 
+{{KNOWL('mf.elliptic.new_form',title='newforms')}} of integral
+{{KNOWL('mf.elliptic.weight',title='weight')}} for {{group}}
+{% if info.grouptype == 1 %}
+.
+{% else %}
+, with trivial {{KNOWL('character.dirichlet', title='character')}}.
+{% endif %}
+</div>
+
+<style>
+table.ntdata th.left {
+  border-right: 2px solid #9b9;
+  background: #efe;
+  border-bottom: 0;
+  text-align: right;
+}
+table.ntdata td { text-align: left; }
+table.ntdata td.center { text-align: center; }
+table.ntdata th.weight {
+  text-align: left;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+</style>
+      {% set table = info.table %}
+      <table class="ntdata">
+        <thead>
+          <tr class="space">
+           <th class="spaceleft">Weight</th>
+           <th class="level" colspan="{{info.col_heads|length}}">
+	     <span style="display:block;float:left;margin-right:3px;">Level \(N\)</span>
+	   </th>
+          </tr>
+          <tr class="space">
+            <th class="spaceleft"></th>
+            {% for N in info.col_heads  %}
+	    {% set col_url = url_for('emf.render_elliptic_modular_forms',level=N,character=chi) %}
+            <th class="level"><a href="{{col_url}}">{{N}}</a></th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for k in info.row_heads  %}
+          
+
+          <tr>
+            <th class="left">
+              {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,character=chi) %}
+              <a href="{{ row_url }}">{{ k }}</a>
+            </th>
+            {% for N in info.col_heads  %}
+            {% set indb = 0 %}
+            {% set dim = 0 %}
+            <td class="center">
+              {% if table[N] is defined and table[N][k] is defined %}
+                  {% if info.grouptype == 0 and table[N][k][0] is defined %}
+	              {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=1) %}
+                      {% set dim = table[N][k][0] %}
+                      {% set indb = table[N][k][1] %}
+                  {% elif info.grouptype == 1 and table[N][k][0] is defined %}
+	              {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k) %}
+                      {% set dim = table[N][k][0] %}
+                      {% set indb = table[N][k][1] %}
+                  {% else %}
+                      {% set dim ="n/a" %}
+                  {% endif %}
+                  {% if indb == 1  and dim >0 %}
+                     <a href="{{url}}">{{dim}}</a>
+                  {% else %}
+                     {{dim}}
+              {% endif  %}
+           {% else %}
+               <small style="color:gray">n/a</small>
+           {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </td>
+    <small>"n/a" means that there is no information about this space in our database.</small>
+{#% include 'select_ranges.html' %#}
+
+  <h1>Find a specific cusp form from the database</h1>
+      <div>
+        Search by {{KNOWL('mf.elliptic.label',title="label")}} of a
+        form, or of a space of forms
+        <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">	  
+          <input type="text" name="jump_to" value="" placeholder="1.12.1a"> 
+	  <button type="submit" value="Find">Find</button>
+        </form>
+        <span class="formexample"> e.g. 1.12.1a or 11.6 </span>
+      </div>
+
+{#
+<h1>Search</h1>
+<form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
+  <table class="">
+    <tr>
+      <td>
+        {{KNOWL('mf.elliptic.level',title='Level')}}:
+      </td><td><input type="text" name="level" value="" example="4"></td>
+    </tr>
+    <tr>
+      <td>
+        {{KNOWL('mf.elliptic.weight',title='Weight')}}:
+      </td><td><input type="text" name="weight" value="" placeholder="12"></td>
+    </tr>
+    <tr>
+      <td>
+        {{KNOWL('mf.elliptic.character',title='Character')}}:
+      </td><td><input type="text" name="character" value="" placeholder="0"></td> 
+    </tr>
+  </table>
+  <button type="submit" name="Submit" value="Search">Search</button>
+</form>
+#}
+{% endblock content %}

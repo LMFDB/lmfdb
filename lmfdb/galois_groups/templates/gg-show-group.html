@@ -15,6 +15,10 @@ table.reptable td, table.reptable th {
     <table>
       <tr><td>Degree $n$ :<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
       <tr><td>Transitive number $t$ :<td>&nbsp;&nbsp;<td>${{info.t}}$</tr>
+      {% if info.pretty_name %}
+      <tr><td>{{KNOWL('gg.simple_name', title='Group')}} :<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
+      {% endif %}
+      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}} :<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
       <tr><td>Parity:<td>&nbsp;&nbsp;<td>{{info.parity}}</tr>
       <tr><td>Primitive:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
       <tr><td>Generators:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>
@@ -72,8 +76,8 @@ table.reptable td, table.reptable th {
 </pre></td></tr>
     </table> </div> </p>
 {% if info.int_reps %}
-<div><h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
-</div>
+<p><h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
+</p>
 <table>
 <tr><td> 
 {% if info['int_reps_complete'] > 0 %}
@@ -101,6 +105,21 @@ list of indecomposable integral representations:
     </table>
   </div>
 </table>
+  {% if info['decompunique'] == 0 %}
+    The decomposition of an arbitrary integral representation as a direct
+    sum of indecomposables is unique.
+  {% elif info['decompunique'] == 1 %}
+       The decomposition of an arbitrary integral representation as a direct
+       sum of indecomposables is not unique, in general. It
+       is unique up to the following isomorphisms:
+    <table cellpadding="0" cellspacing="0">
+    {% for isom in info['isoms'] %}
+      <tr>
+      <td align="right"> {{ isom[0] | safe }} <td>$\cong$<td align="center"> {{ isom[1] | safe }}
+      </tr>
+    {% endfor %}
+    </table>
+  {% endif %}
 {% endif %}
 
 {% endblock %}

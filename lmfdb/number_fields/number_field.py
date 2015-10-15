@@ -104,6 +104,10 @@ def parse_field_string(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         return '1.1.1.1'
     if F == 'Qi':
         return '2.0.4.1'
+    # Change unicode dash with minus sign
+    F = F.replace(u'\u2212', '-')
+    # remove non-ascii characters from F
+    F = F.decode('utf8').encode('ascii', 'ignore')
     fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
     if len(F) == 0:
         return "Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial."
@@ -266,6 +270,19 @@ def number_field_render_webpage():
     else:
         return number_field_search(**args)
 
+@nf_page.route("/random")
+def random_nfglobal():
+    from sage.misc.prandom import randint
+    C = getDBConnection()
+    init_nf_count()
+    n = randint(0,nfields-1)
+    label = C.numberfields.fields.find()[n]['label']
+    #This version leaves the word 'random' in the URL:
+    #return render_field_webpage({'label': label})
+    #This version uses the number field's own URL:
+    #url =
+    return redirect(url_for(".by_label", label= label))
+
 
 def coeff_to_nf(c):
     return NumberField(coeff_to_poly(c), 'a')
@@ -348,8 +365,7 @@ def render_field_webpage(args):
         ram_primes = r'\textrm{None}'
     data['frob_data'], data['seeram'] = frobs(nf.K())
     data['phrase'] = group_phrase(n, t, C)
-    zk = pari(nf.K())#          .nf_subst('a')
-    zk = list(zk.nf_get_zk())
+    zk = nf.zk()
     Ra = PolynomialRing(QQ, 'a')
     zk = [latex(Ra(x)) for x in zk]
     zk = ['$%s$' % x for x in zk]
@@ -835,7 +851,10 @@ def download_search(info, res):
             [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
         s += '[' + entry + ']' + ',\\\n'
     s = s[:-3]
-    s += ']\n'
+    if dltype == 'gp':
+        s += '];\n'
+    else:
+        s += ']\n'
     if delim == 'brace':
         s = s.replace('[', '{')
         s = s.replace(']', '}')

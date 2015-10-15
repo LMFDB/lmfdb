@@ -18,7 +18,7 @@ def Dirichlet_Lfunctions_iterator(qMax):
 
 
 def EC_iterator():
-    data = set(_["label"] for _ in Lfunctions.ellcurves.curves.find({}, fields=["label"]))
+    data = set(_["label"] for _ in Lfunctions.ellcurves.curves.find({}, ["label"]))
     for c in data:
         yield Lfunction_EC_Q(c["label"])
 

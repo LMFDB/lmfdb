@@ -45,6 +45,7 @@
           url_for: "l_functions.l_function_degree_page"
           url_args:
             degree: 'degree4'
+          status: beta
         - title: "5+"
           status: future
    secondpart:
@@ -52,10 +53,12 @@
        parts:
         - title: First zeros
           url_for: "first L-function zeros.firstzeros"
+          status: beta
         - title: $\zeta$&nbsp;zeros
           url_for: "zeta zeros.zetazeros"
         - title: Operations
           url_for: "tensor_products.index"
+          status: beta
 
 3ModForm:
    type: multilevel
@@ -115,16 +118,13 @@
                status: future
              - title: /NumberFields
                url_for: "ecnf.index"
-               status: beta
                colspan: onecolumn
              - title: $\Q$-curves
                status: future
            colspan: onecolumn
-         - title: "Hyperelliptic:"
-           status: beta
+         - title: "Genus 2:"
            part3:
              - title: $/\Q$
-               status: beta
                url_for: "g2c.index_Q"
              - title: $/\F_{q}(t)$
                status: future
@@ -186,6 +186,7 @@
            url_for:  "characters.render_Dirichletwebpage"
          - title: Hecke
            url_for:  "characters.render_Heckewebpage"
+           status: beta
       colspan: onecolumn
     - title: Artin
       url_for: "artin_representations.index"
@@ -203,6 +204,7 @@
       title: Motives
    parts:
     - title: "Hypergeometric:"
+      status: beta
       part2:
          - title: $/\Q$
            status:  beta
@@ -220,6 +222,8 @@
    heading:
       title: Groups
    parts:
+    - title: Galois groups
+      url_for: "galois_groups.index"
     - title: Subgroups of
       part2:
          - title: $\SL(2)$
@@ -228,8 +232,8 @@
            status:  future
       status: future
       colspan: onecolumn
-    - title: Galois groups
-      url_for: "galois_groups.index"
+    - title: Lattices
+      status: future
 
 9Know:
    type: single

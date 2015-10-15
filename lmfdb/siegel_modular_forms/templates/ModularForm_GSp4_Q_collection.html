@@ -1,0 +1,61 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+
+<h2>Available samples</h2>
+{% include [ [ 'includes/avail/', col.name(), '_avail_forms.html']|join, 'Not_available.html'] %}
+
+<h2>Dimensions</h2>
+{% if col.computes_dimensions() %}
+{% if dimensions %}
+{% include 'includes/dimension_table.html' %}
+<h3>New search</h3>
+{% endif %}
+{% block javascript %}
+<script src = "/static/validate.js"></script>
+{% endblock %}
+<form id="dimensionForm" action="/ModularForm/GSp/Q/{{ col.name() }}" method="get" onSubmit="return validate()">
+  <input type = "hidden" id = "dim_args" name = "dim_args" />
+  <input type = "hidden" id = "col_name" />
+  <input type = "hidden" id = "col_select" value = '{{ col.dimension_desc()|tojson|safe }}' />
+  <table> 
+    <tr>
+      <td> 
+	<label>arguments
+	  (
+	  {% for x in col.dimension_desc()['args'] %}
+	  {{ x }}
+	  {% endfor %}
+	  )
+	</label>
+	{% if col.dimension_desc()['args']|length == 1 %}
+	<input type="text" id="args_field" placeholder="6+20" />
+	<span class="formexample">e.g. 2 or 6+20</span>
+	{%else %}
+	<input type="text" id="args_field" placeholder="6+20 4" />
+	<span class="formexample">e.g. 2 4 or 6+10 6</span>
+	{% endif %}
+      </td>
+      <td> 
+	<button type="submit" value="submit">Find</button>
+      </td>
+    </tr>
+  </table> 
+</form>
+
+{% else %}
+<p>- not implemented -</p>
+{% endif %}
+
+<h2>Miscellaneous</h2>
+{% include [ ['',col.description()]|join, 'Not_available.html'] %}
+
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+{% endblock %}
+
+
+

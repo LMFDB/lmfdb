@@ -27,15 +27,17 @@ from sage.rings.rational import Rational
 
 from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.WebNumberField import WebNumberField
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms import *
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
+from lmfdb.base import url_for
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons
     '''
     logger.debug(str(object.__class__) + str(args))
 
+# Compute Dirichlet coefficients from Euler factors.
 def an_from_data(euler_factors,upperbound=30):
     PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', Integer(upperbound).nbits())
     result = upperbound * [1]
@@ -57,33 +59,52 @@ def an_from_data(euler_factors,upperbound=30):
 
     return result
 
+# Convert the information extracted from the database to the format
+# expected by the L-functions homepage template.
+# As of July 2015, some of the fields are hard coded specifically
+# for L-functions of genus 2 curves.  Need to update after the
+# general data format has been specified.
 def makeLfromdata(L):
     data = L.lfunc_data
     L.algebraic = data['algebraic']
     L.degree = data['degree']
     L.level = data['conductor']
     L.primitive = data['primitive']
-    L.motivic_weight = data['motivic_weight']
+    # Convert L.motivic_weight from python 'int' type to sage integer type.
+    # This is necessary because later we need to do L.motivic_weight/2
+    # when we write Gamma-factors in the arithmetic normalization.
+    L.motivic_weight = ZZ(data['motivic_weight'])
     L.sign = p2sage(data['root_number'])
+           # p2sage converts from the python string format in the database.
     L.mu_fe = [x+p2sage(data['analytic_normalization'])
         for x in p2sage(data['gamma_factors'])[0]]
     L.nu_fe = [x+p2sage(data['analytic_normalization'])
         for x in p2sage(data['gamma_factors'])[1]]
     L.compute_kappa_lambda_Q_from_mu_nu()
+    # start items specific to hyperelliptic curves
     L.langlands = True
     L.poles = []
     L.residues = []
     L.coefficient_period = 0
     L.coefficient_type = 2
+    # end items specific to hyperelliptic curves
     L.numcoeff = 30
-    L.dirichlet_coefficients_unnormalized = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
+    # an(analytic) = An(arithmetic)/n^(motivic_weight/2), where an/An are Dir. coeffs
+    L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
     L.normalize_by = p2sage(data['analytic_normalization'])
-    L.dirichlet_coefficients = L.dirichlet_coefficients_unnormalized
+    L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
     for n in range(0, len(L.dirichlet_coefficients)):
         an = L.dirichlet_coefficients[n]
         L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
-    L.checkselfdual()
-    generateSageLfunction(L)
+    # Note: a better name would be L.dirichlet_coefficients_analytic, but that
+    # would require more global changes.
+    L.localfactors = p2sage(data['euler_factors'])
+    # Currently the database stores the bad_lfactors as a list and the euler_factors
+    # as a string.  Those should be the same.  Once that change is made, either the
+    # line above or the line below will break.  (DF and SK, Aug 4, 2015)
+    L.bad_lfactors = data['bad_lfactors']
+    L.checkselfdual()  # needs to be changed to read from database
+    generateSageLfunction(L)  # DF: why is this needed if pulling from database?
 
 def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
@@ -250,7 +271,7 @@ class Lfunction_EC_Q(Lfunction):
         #remove a0
         self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]
 
-        self.dirichlet_coefficients_unnormalized = (
+        self.dirichlet_coefficients_arithmetic = (
             self.dirichlet_coefficients[:])
         self.normalize_by = Rational('1/2')
 
@@ -340,9 +361,9 @@ class Lfunction_EMF(Lfunction):
         
         # Create the modular form
         try:
-            self.MF = WebNewForm(k = self.weight, N = self.level,
-                                 chi = self.character, label = self.label, 
-                                 prec = self.numcoeff, verbose=0)
+            self.MF = WebNewForm(weight = self.weight, level = self.level,
+                                 character = self.character, label = self.label, 
+                                 prec = self.numcoeff)
         except:
             raise KeyError("No data available yet for this modular form, so" +
                            " not able to compute its L-function")
@@ -355,7 +376,7 @@ class Lfunction_EMF(Lfunction):
 
 
         # Get the data for the corresponding elliptic curve if possible
-        if self.weight == 2 and self.MF.is_rational():
+        if self.weight == 2 and self.MF.is_rational:
             self.ellipticcurve = EC_from_modform(self.level, self.label)
             self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(
                                                     self.ellipticcurve)
@@ -363,10 +384,9 @@ class Lfunction_EMF(Lfunction):
             self.ellipticcurve = False
 
         # Appending list of Dirichlet coefficients
-        embeddings = self.MF.q_expansion_embeddings(self.numcoeff + 1)
         self.algebraic_coefficients = []
         for n in range(1, self.numcoeff + 1):
-            self.algebraic_coefficients.append(embeddings[n][self.number])
+            self.algebraic_coefficients.append(self.MF.coefficient_embedding(n,self.number))
             
         self.dirichlet_coefficients = []
         for n in range(1, len(self.algebraic_coefficients) + 1):
@@ -399,7 +419,7 @@ class Lfunction_EMF(Lfunction):
 
         if self.character != 0:
             characterName = (" character \(%s\)" %
-                             (self.MF.conrey_character_name()))
+                             (self.MF.character.latex_name))
         else:
             characterName = " trivial character"
         self.title = ("$L(s,f)$, where $f$ is a holomorphic cusp form " +
@@ -495,7 +515,12 @@ class Lfunction_HMF(Lfunction):
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level>1, calculate sign from Fricke involution and weight
-            AL_signs = [iota(eval(al[1])) for al in f['AL_eigenvalues']]
+            ALeigs = [al[1].replace('^', '**') for al in f['AL_eigenvalues']]
+            # the above fixed a bug at
+            # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
+            # but now the sign is wrong (i.e., not of absolute value 1 *)
+       #     AL_signs = [iota(eval(al[1])) for al in f['AL_eigenvalues']]
+            AL_signs = [iota(eval(al)) for al in ALeigs]
             self.sign = prod(AL_signs) * (-1) ** (float(self.weight *
                                                         self.field_degree / 2))
         logger.debug("Sign: " + str(self.sign))
@@ -576,9 +601,11 @@ class Lfunction_HMF(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
         self.title = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp "
                       + "form with parallel weight " + str(self.weight)
-                      + ", level norm " + str(f['level_norm'])
-                      + ", and character "
-                      + str(self.character))
+                      + ", level norm " + str(f['level_norm']) )
+        if self.character:
+            self.title += ", and character " + str(self.character)
+        else:
+            self.title += ", and trivial character"
 
         self.citation = ''
         self.credit = ''
@@ -995,7 +1022,7 @@ class DedekindZeta(Lfunction):   # added by DK
 
         self.coefficient_period = 0
         self.selfdual = True
-        self.primitive = True
+        self.primitive = False
         self.coefficient_type = 3
         self.texname = "\\zeta_K(s)"
         self.texnamecompleteds = "\\Lambda_K(s)"
@@ -1249,7 +1276,7 @@ class SymmetricPowerLfunction(Lfunction):
         from lmfdb.symL.symL import SymmetricPowerLFunction
         self.S = SymmetricPowerLFunction(self.E, self.m)
         self.algebraic = True
-        self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^%d)$ of Elliptic Curve Isogeny Class %s"
+        self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
                       % (ordinal(self.m), self.m, self.label))
 
         self.dirichlet_coefficients = self.S._coeffs
@@ -1276,7 +1303,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.motivic_weight = self.m
         self.selfdual = True
         self.langlands = True
-        self.texname = "L(s, E, \mathrm{sym}^%d)" % self.m  
+        self.texname = "L(s, E, \mathrm{sym}^{%d})" % self.m  
         self.texnamecompleteds = "\\Lambda(s,E,\mathrm{sym}^{%d})" % self.S.m
         self.texnamecompleted1ms = ("\\Lambda(1-{s}, E,\mathrm{sym}^{%d})"
                                     % self.S.m)
@@ -1529,18 +1556,38 @@ class Lfunction_genus2_Q(Lfunction):
 
         self.number = int(0)
         self.quasidegree = 2
-        self.texname = "L(s,A)"
-        self.texnamecompleteds = "\\Lambda(s,A)"
-        self.texnamecompleted1ms = "\\Lambda(1-s,A)"
-        self.title = ("$L(s,A)$, " + "where $A$ is an abelian surface "
-                      + "of conductor " + str(isoclass['cond']))
+
         self.citation = ''
         self.credit = ''
 
+        self.title = "not really the title"
+        self.texname = "LLLLLLL"
+        self.texnamecompleteds = "AAAAAAA"
+        self.texnamecompleted1ms = "BBBBBBB"
         # Extract the L-function information
-        #self.lfunc_data = isoclass['lfunc_data']
+        # The data are stored in a database, so extract it and then convert
+        # to the format expected by the L-function homepage template.
+
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
         makeLfromdata(self)
+
+        # Need an option for the arithmetic normalization, leaving the
+        # analytic normalization as the default.
+        self.texname = "L(s,A)"
+        self.htmlname = "<em>L</em>(<em>s,A</em>)"
+        self.texname_arithmetic = "L(A,s)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>A,s</em>)"
+        self.texnamecompleteds = "\\Lambda(s,A)"
+        self.texnamecompleted1ms = "\\Lambda(1-s,A)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(A,s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(A, " + str(self.motivic_weight + 1) + "-s)"
+#        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
+#                      + "of conductor " + str(isoclass['cond']))
+        self.title_end = ("where $A$ is a genus 2 curve "
+                      + "of conductor " + str(isoclass['cond']))
+        self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
+        self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
+        self.title = "$" + self.texname + "$" + ", " + self.title_end
 
         constructor_logger(self, args)
 

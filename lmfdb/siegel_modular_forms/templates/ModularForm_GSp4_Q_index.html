@@ -1,0 +1,74 @@
+{% extends 'homepage.html' %}
+{% block content %}
+<p>
+  The database contains information about {{ number_of_samples }} <em>samples</em> of
+  scalar and vector valued Siegel modular forms or associated $L$-series of degree $\ge 2$. Moreover,
+  it provides information about {{ number_of_collections }}
+  <a title="Collection of Siegel modular forms [mf.siegel.collection]" knowl="mf.siegel.collection" kwargs="">
+    collections of Siegel modular forms
+  </a>.
+</p> 
+
+<h2>Browse
+  <a class="knowl-title" knowl="mf.siegel">
+    samples
+  </a>
+</h2>
+<p>
+  By collection:
+  {% for col in cols_with_forms|sort( attribute = 'order') %}
+  <a href="{{ col.name() }}">
+    ${{ col.latex_name() }}$ 
+  </a>
+  &nbsp;
+  {% endfor %}
+</p>
+<p>
+  By degree:
+  {% for n in [2,3,4] %}
+  <a href = "{{ url_for( 'ModularForm_GSp4_Q_top_level', page='search_results', query='{\"degree\":\"' ~ n ~ '\"}') }}">${{ n }}$</a>
+  {% endfor %}
+</p>
+<p>
+  By weight:
+  {% set d = { 1:9,10:19,20:29,30:39,40:49,50:99} %}
+  {% for n in d|sort %}
+  <a href = "{{ url_for( 'ModularForm_GSp4_Q_top_level', page='search_results', query='{\"weight\":{ \"$gte\":\"' ~ n ~ '\", \"$lte\":\"' ~ d[n] ~'\"}}') }}">${{ n }}$-${{ d[n] }}$</a>
+  {% endfor %}  
+</p>
+<p>
+  By degree of its field of definition:
+  {% for n in [1,2,3,4,5,6,7,8] %}
+  <a href = "{{ url_for( 'ModularForm_GSp4_Q_top_level', page='search_results', query='{\"degree_of_field\":\"' ~ n ~ '\"}') }}">${{ n }}$</a>
+  {% endfor %}
+</p>
+
+</br>
+
+<h2>Browse collections</h2>
+<p>
+  {% for col in cols|sort( attribute = 'order') %}
+  <a href="{{ col.name() }}">
+    ${{ col.latex_name() }}$
+  </a>
+  &nbsp;
+  {% endfor %}
+</p>
+
+<br/>
+
+<h2>Search for dimensions</h2>
+{% include 'includes/form_for_dimension_search.html' %}
+
+<h2>Search for samples</h2>
+<p>{% include 'includes/form_for_sample_search.html' %}</p>
+
+<h2>
+  Find a specific form by its
+  <a title="LMFDB label of a Siegel modular form [smf.lmfd_label]" knowl="ec.lmfdb_label" kwargs="">
+    LMFDB label
+  </a>
+</h2>
+<p>{% include 'includes/form_for_label_search.html' %}</p>
+
+{% endblock %}
