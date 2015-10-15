@@ -9,6 +9,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 from sage.misc.preparser import preparse
 from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats
 
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.ecnf.WebEllipticCurve import db_ecnf
@@ -24,8 +25,11 @@ from lmfdb.WebNumberField import *
 
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
+    from sage.misc.prandom import randint
+    n = get_stats().counts()['nforms']
+    n = randint(0,n-1)
     C = getDBConnection()
-    res = C.hmfs.forms.find_one()        
+    res = C.hmfs.forms.find()[n]
     return redirect(url_for(".render_hmf_webpage", field_label=res['field_label'], label=res['label']))
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
@@ -62,6 +66,7 @@ def hilbert_modular_form_render_webpage():
         t = 'Hilbert Modular Forms'
         bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
+        info['counts'] = get_stats().counts()
         return render_template("hilbert_modular_form_all.html", info=info, credit=credit, title=t, bread=bread)
     else:
         return hilbert_modular_form_search(**args)
@@ -298,7 +303,7 @@ def render_hmf_webpage(**args):
     if data['dimension'] == 1:   # Try to attach associated elliptic curve
         lab = split_class_label(info['label'])
         ec_from_hmf = db_ecnf().find_one({"label": label + '1'})
-        if ec_from_hmf <> None:
+        if ec_from_hmf != None:
             info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
 
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('%s' % data[

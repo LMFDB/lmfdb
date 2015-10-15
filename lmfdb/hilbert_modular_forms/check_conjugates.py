@@ -154,3 +154,35 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False):
     print("\nAdded "+str(count)+" new conjugate forms.")
     return None
 
+
+def fix_data_fields(min_level_norm=0, max_level_norm=None, fix=False):
+    r""" One-off utility to:
+    1. add degree and disc fields for each Hilbert newform
+    2. Change CM and base-change from "yes?" to "yes"
+    """
+    count = 0
+    query = {}
+    query['level_norm'] = {'$gte' : int(min_level_norm)}
+    if max_level_norm:
+        query['level_norm']['$lte'] = int(max_level_norm)
+    else:
+        max_level_norm = oo
+    forms_to_fix = forms.find(query)
+    print("%s forms to examine of level norm between %s and %s."
+          % (forms_to_fix.count(),min_level_norm,max_level_norm))
+    if forms_to_fix.count() == 0:
+        return None
+    for f in forms_to_fix:
+        count = count+1
+        if count%100==0: print f['label']
+        fix_data = {}
+        deg, r, disc, n = f['field_label'].split('.')
+        fix_data['deg'] = int(deg)
+        fix_data['disc'] = int(disc)
+        if f['is_CM'] == 'yes?':
+            fix_data['is_CM'] = 'yes'
+        if f['is_base_change'] == 'yes?':
+            fix_data['is_base_change'] = 'yes'
+        #print("using fixed data %s for form %s" % (fix_data,f['label']))
+        if fix:
+            forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)

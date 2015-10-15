@@ -817,7 +817,7 @@ class MaassDB(object):
         print s
 
     def set_table(self, refresh=False):
-        # if self.table<>{}:
+        # if self.table!={}:
         #    return self.table
         f = gridfs.GridFS(self._mongo_db, 'Table')
         if refresh == False:
