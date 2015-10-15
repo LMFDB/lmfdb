@@ -93,7 +93,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         return info
     else:
         ### Somehow the Hecke orbits are sometimes not in the space...
-        #if WMFS.dimension_new_cusp_forms()<>len(WMFS.hecke_orbits):
+        #if WMFS.dimension_new_cusp_forms()!=len(WMFS.hecke_orbits):
         #    ## Try to add them here... 
         #    for d in range(len(WMFS.dimension_new_cusp_forms())):
         #        F = 

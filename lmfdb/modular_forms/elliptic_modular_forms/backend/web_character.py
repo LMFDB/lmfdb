@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #*****************************************************************************
 #  Copyright (C) 2010 Fredrik Strömberg <fredrik314@gmail.com>,
-#  Stephan Ehlen <>
+#  Stephan Ehlen <stephan.ehlen@mcgill.ca>
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
 #    This code is distributed in the hope that it will be useful,

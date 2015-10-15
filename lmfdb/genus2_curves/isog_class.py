@@ -63,14 +63,14 @@ def list_to_factored_poly_otherorder(s, galois=False):
         if len(sfacts) > 1 or v[1] > 1:
             outstr += '('
         for i in range(len(vcf)):
-            if vcf[i] <> 0:
+            if vcf[i] != 0:
                 if started and vcf[i] > 0:
                     outstr += '+'
                 started = True
                 if i == 0:
                     outstr += str(vcf[i])
                 else:
-                    if abs(vcf[i]) <> 1:
+                    if abs(vcf[i]) != 1:
                         outstr += str(vcf[i])
                     elif vcf[i] == -1:
                         outstr += '-'
@@ -149,7 +149,7 @@ class G2Cisog_class(object):
             else:
                 setattr(self,endalgtype + '_name',[end_alg_title_dict[endalgtype],''])
         
-        if hasattr(self, 'geom_end_field') and self.geom_end_field <> '':
+        if hasattr(self, 'geom_end_field') and self.geom_end_field != '':
             self.geom_end_field_name = field_pretty(self.geom_end_field)
         else:
             self.geom_end_field_name = ''
@@ -181,7 +181,7 @@ class G2Cisog_class(object):
             for i in range(2):
                 curve_label = self.ecproduct[i]
                 crv_url = url_for("ec.by_ec_label", label=curve_label)
-                if i == 1 or len(set(self.ecproduct)) <> 1:
+                if i == 1 or len(set(self.ecproduct)) != 1:
                     self.friends.append(('Elliptic curve ' + curve_label, crv_url))
                 self.ecproduct_wurl.append({'label' : curve_label, 'url' : crv_url})
 

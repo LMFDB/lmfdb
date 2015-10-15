@@ -641,11 +641,10 @@ def initLfunction(L, args, request):
         #info['friends'] = [('Hypergeometric motive ', friendlink.replace("t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
         info['friends'] = [('Hypergeometric motive ', friendlink)]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
 
-
     # the code below should be in Lfunction.py
     info['conductor'] = L.level
     if not is_prime(L.level):
-        info['conductor_factored'] = latex(factor(L.level))
+        info['conductor_factored'] = latex(factor(int(L.level)))
 
     info['degree'] = L.degree
     info['sign'] = "$"+styleTheSign(L.sign)+"$"

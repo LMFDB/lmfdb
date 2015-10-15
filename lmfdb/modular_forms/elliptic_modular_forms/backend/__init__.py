@@ -15,7 +15,7 @@ def connect_to_modularforms_db(collection='',create=True):
         emf_logger.critical("Could not connect to Database! db={0}. Error: {1}".format(db_name,e.message))
     if db_name not in C.database_names() and not create:
         emf_logger.critical("Database {0} does not exist at connection {1}".format(db_name,C))
-    if collection <>'':
+    if collection !='':
         if collection not in C[db_name].collection_names() and not create:
             error_st = "Collection {0} is not in database {1} at connection {2}".format(collection,db_name,C)
             emf_logger.critical(error_st)

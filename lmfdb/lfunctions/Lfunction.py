@@ -33,6 +33,7 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
+from lmfdb.base import url_for
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons
@@ -517,7 +518,12 @@ class Lfunction_HMF(Lfunction):
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level>1, calculate sign from Fricke involution and weight
-            AL_signs = [iota(eval(al[1])) for al in f['AL_eigenvalues']]
+            ALeigs = [al[1].replace('^', '**') for al in f['AL_eigenvalues']]
+            # the above fixed a bug at
+            # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
+            # but now the sign is wrong (i.e., not of absolute value 1 *)
+       #     AL_signs = [iota(eval(al[1])) for al in f['AL_eigenvalues']]
+            AL_signs = [iota(eval(al)) for al in ALeigs]
             self.sign = prod(AL_signs) * (-1) ** (float(self.weight *
                                                         self.field_degree / 2))
         logger.debug("Sign: " + str(self.sign))
@@ -1019,7 +1025,7 @@ class DedekindZeta(Lfunction):   # added by DK
 
         self.coefficient_period = 0
         self.selfdual = True
-        self.primitive = True
+        self.primitive = False
         self.coefficient_type = 3
         self.texname = "\\zeta_K(s)"
         self.texnamecompleteds = "\\Lambda_K(s)"

@@ -54,11 +54,11 @@ class DimensionTable(object):
         except:
             rec = None
             emf_logger.critical('Critical error: No dimension information for group={0}'.format(group))
-        if rec<>None:
+        if rec!=None:
             self._table = loads(rec['data'])
         else:
             self._table = None
-        if self._table <> None:
+        if self._table != None:
             emf_logger.debug('Have information for levels {0}'.format(self._table.keys()))
     ## We are now asuming that the entries of the table are tuples (d,t)
     ## where d is the dimension and t is True if the space is in the database (with its decomposition)

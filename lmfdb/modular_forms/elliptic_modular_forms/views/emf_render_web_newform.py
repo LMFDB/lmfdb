@@ -215,7 +215,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         #         info['atkinlehner'].append([Q, c, ev])
     if(level == 1):
         poly = WNF.explicit_formulas.get('as_polynomial_in_E4_and_E6','')
-        if poly <> '':
+        if poly != '':
             d,monom,coeffs = poly
             emf_logger.critical("poly={0}".format(poly))
 
@@ -233,9 +233,9 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
                     cc = str(abs(c))
                 s += "{0} \cdot ".format(cc)
                 a = monom[i][0]; b = monom[i][1]
-                if a == 0 and b<>0:
+                if a == 0 and b != 0:
                     s+="E_6^{{ {0} }}".format(b)
-                elif b ==0 and a<>0:
+                elif b ==0 and a != 0:
                     s+="E_4^{{ {0} }}".format(a)
                 else:
                     s+="E_4^{{ {0} }}E_6^{{ {1} }}".format(a,b)
