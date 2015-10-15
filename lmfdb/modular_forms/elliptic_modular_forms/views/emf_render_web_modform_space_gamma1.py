@@ -60,7 +60,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
     from dirichlet_conrey import DirichletGroup_conrey
     G = dirichlet_character_conrey_galois_orbits_reps(level)
     dim_table = dimension_from_db(level,weight,chi='all',group='gamma1')
-    if weight<> None and weight2>weight:
+    if weight != None and weight2>weight:
         w1 = weight; w2 = weight2
     else:
         w1 = weight; w2 = weight

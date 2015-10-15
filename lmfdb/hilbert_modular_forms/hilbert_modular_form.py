@@ -9,6 +9,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 from sage.misc.preparser import preparse
 from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats
 
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.ecnf.WebEllipticCurve import db_ecnf
@@ -62,6 +63,7 @@ def hilbert_modular_form_render_webpage():
         t = 'Hilbert Modular Forms'
         bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
+        info['counts'] = get_stats().counts()
         return render_template("hilbert_modular_form_all.html", info=info, credit=credit, title=t, bread=bread)
     else:
         return hilbert_modular_form_search(**args)

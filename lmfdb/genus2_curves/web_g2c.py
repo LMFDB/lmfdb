@@ -207,7 +207,7 @@ def get_end_data(isogeny_class):
             data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],'']
         
     data['geom_end_field'] = isogeny_class['geom_end_field']
-    if data['geom_end_field'] <> '':
+    if data['geom_end_field'] != '':
         data['geom_end_field_name'] = field_pretty(data['geom_end_field'])
     else:
         data['geom_end_field_name'] = ''        
