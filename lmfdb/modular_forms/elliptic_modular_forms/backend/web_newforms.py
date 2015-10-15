@@ -319,6 +319,10 @@ class WebNewForm(WebObject, CachedRepresentation):
         Return the i-th complex embedding of coefficient C(n).
         Note that if it is not in the dictionary we compute the embedding (but not the coefficient).
         """
+        if not 'values' in self._embeddings:
+            self._embeddings['values'] = {}
+        if not 'bitprec' in self._embeddings:
+            self._embeddings['bitprec'] = {}
         embc = self._embeddings['values'].get(n,None)
         bitprec = self._embeddings['bitprec']
         if embc is None:
