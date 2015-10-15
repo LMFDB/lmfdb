@@ -25,8 +25,11 @@ from lmfdb.WebNumberField import *
 
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
+    from sage.misc.prandom import randint
+    n = get_stats().counts()['nforms']
+    n = randint(0,n-1)
     C = getDBConnection()
-    res = C.hmfs.forms.find_one()        
+    res = C.hmfs.forms.find()[n]
     return redirect(url_for(".render_hmf_webpage", field_label=res['field_label'], label=res['label']))
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
