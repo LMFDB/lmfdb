@@ -127,7 +127,7 @@ def hilbert_modular_form_search(**args):
 
     info['query'] = dict(query)
     res = C.hmfs.forms.find(
-        query).sort([('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
+        query).sort([('deg', pymongo.ASCENDING), ('disc', pymongo.ASCENDING), ('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
     if(start >= nres):
         start -= (1 + (start - nres) / count) * count
