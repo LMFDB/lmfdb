@@ -188,27 +188,22 @@ def fix_data_fields(min_level_norm=0, max_level_norm=None, fix=False):
         if fix:
             forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
 
-def fix_one_label(lab):
+def fix_one_label(lab, reverse=False):
     r""" If lab has length 1 do nothing.  If it has length 2 increment the
-    first letter (a to b to c to ... to z).  The lenths must be at most 2 and
-    if =2 it must start with 'a'..'y' (these are all which were required).
+    first letter (a to b to c to ... to z).  The lenths must be at
+    most 2 and if =2 it must start with 'a'..'y' (these are all which
+    were required).  If reverse==True the inverse operation is carried
+    out (z to y to ... to c to b to a).
     """
     if len(lab)!=2:
         return lab
     else:
-        return chr(ord(lab[0])+int(1))+lab[1]
+        if reverse:
+            return chr(ord(lab[0])-int(1))+lab[1]
+        else:
+            return chr(ord(lab[0])+int(1))+lab[1]
 
-def refix_one_label(lab):
-    r""" If lab has length 1 do nothing.  If it has length 2 increment the
-    first letter (a to b to c to ... to z).  The lenths must be at most 2 and
-    if =2 it must start with 'a'..'y' (these are all which were required).
-    """
-    if len(lab)!=2:
-        return lab
-    else:
-        return chr(ord(lab[0])-int(1))+lab[1]
-
-def fix_labels(min_level_norm=0, max_level_norm=None, fix=False):
+def fix_labels(min_level_norm=0, max_level_norm=None, fix=False, reverse=False):
     r""" One-off utility to correct labels 'aa'->'ba'->'ca', ..., 'az'->'bz'->'cz'
     """
     count = 0
@@ -234,7 +229,7 @@ def fix_labels(min_level_norm=0, max_level_norm=None, fix=False):
             print("Incorrect label_suffix %s in form %s" % (lab,f['label']))
             return
         oldlab = lab
-        lab = fix_one_label(lab)
+        lab = fix_one_label(lab, reverse=reverse)
         fix_data['label_suffix'] = lab
         fix_data['label'] = f['label'].replace(oldlab,lab)
         fix_data['short_label'] = f['short_label'].replace(oldlab,lab)
@@ -258,9 +253,12 @@ def fix_labels(min_level_norm=0, max_level_norm=None, fix=False):
         else:
             print("No elliptic curve to fix")
 
-def undo_fix_labels(min_level_norm=0, max_level_norm=None, fix=False):
-    r""" One-off utility to correct labels 'aa'->'ba'->'ca', ..., 'az'->'bz'->'cz'
+def add_numeric_label_suffixes(min_level_norm=0, max_level_norm=None, fix=False):
+    r""" One-off utility to add a numeric conversion of the letter-coded
+    label suffixes 'a'->0', 'z'->25, 'ba'->26, etc. for sorting
+    purposes.
     """
+    from sage.databases.cremona import class_to_int
     count = 0
     query = {}
     query['level_norm'] = {'$gte' : int(min_level_norm)}
@@ -271,31 +269,14 @@ def undo_fix_labels(min_level_norm=0, max_level_norm=None, fix=False):
     forms_to_fix = forms.find(query)
     print("%s forms to examine of level norm between %s and %s."
           % (forms_to_fix.count(),min_level_norm,max_level_norm))
-    if forms_to_fix.count() == 0:
-        return None
     for f in forms_to_fix:
         count = count+1
         if count%100==0: print("%s: %s" % (count, f['label']))
         fix_data = {}
         lab = f['label_suffix']
-        if len(lab)==1:
-            continue
+        fix_data['label_nsuffix'] = class_to_int(lab)
+        #print("using fixed data %s for form %s" % (fix_data,f['label']))
+        if fix:
+            forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
 
-        # find associated elliptic curve and fix that too (where appropriate)
-        if f['deg']==2 and f['dimension']==1:
-            label = f['label']
-            for e in nfcurves.find({'class_label':f['label']}):
-                fix_data = {}
-                isolab = e['iso_label']
-                num = e['number']
-                isolabx = isolab+str(num)
-                fix_data['label'] = e['label'][:-3]+isolabx
-                fix_data['short_label'] = e['short_label'][:-3]+isolabx
-                fix_data['class_label'] = e['class_label'][:-2]+isolab
-                fix_data['short_class_label'] = e['short_class_label'][:-2]+isolab
-                print("using fixed data %s for curve %s" % (fix_data,e['label']))
-                if fix:
-                    nfcurves.update({'label': e['label']}, {"$set": fix_data}, upsert=True)
-        else:
-            print("No elliptic curve to fix")
 

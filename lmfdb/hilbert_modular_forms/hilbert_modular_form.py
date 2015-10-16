@@ -92,9 +92,9 @@ def hilbert_modular_form_search(**args):
             elif field == 'field_label':
                 query[field] = parse_field_string(info[field])
             elif field == 'field_degree':
-                query[field] = parse_range(info[field])
+                query['deg'] = parse_range(info[field])
             elif field == 'field_disc':
-                query[field] = parse_range(info[field])
+                query['disc'] = parse_range(info[field])
             elif field == 'label':
                 query[field] = info[field]
             elif field == 'dimension':
@@ -104,32 +104,53 @@ def hilbert_modular_form_search(**args):
             else:
                 query[field] = info[field]
 
+    count_default = 100
     if info.get('count'):
         try:
             count = int(info['count'])
         except:
-            count = 100
+            count = count_default
     else:
-        info['count'] = 100
-        count = 100
+        info['count'] = count_default
+        count = count_default
+
+    start_default = 0
+    if info.get('start'):
+        try:
+            start = int(info['start'])
+            if(start < 0):
+                start += (1 - (start + 1) / count) * count
+        except:
+            start = start_default
+    else:
+        start = start_default
 
     info['query'] = dict(query)
     res = C.hmfs.forms.find(
-        query).sort([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)]).limit(count)
+        query).sort([('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
 
     if nres > 0:
         info['field_pretty_name'] = field_pretty(res[0]['field_label'])
     else:
         info['field_pretty_name'] = ''
     info['number'] = nres
+    info['start'] = start
+    info['more'] = int(start + count < nres)
     if nres == 1:
         info['report'] = 'unique match'
     else:
-        if nres > count:
-            info['report'] = 'displaying first %s of %s matches' % (count, nres)
+        if nres == 0:
+            info['report'] = 'no matches'
         else:
-            info['report'] = 'displaying all %s matches' % nres
+            if nres > count or start != 0:
+                info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
+            else:
+                info['report'] = 'displaying all %s matches' % nres
 
     res_clean = []
     for v in res:
