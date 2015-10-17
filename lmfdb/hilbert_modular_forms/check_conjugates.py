@@ -126,14 +126,18 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False):
     else:
         max_level_norm = oo
     ftoconj = forms.find(query)
-    print("%s forms to examine of level norm between %s and %s."
-          % (ftoconj.count(),min_level_norm,max_level_norm))
+    print("%s forms over %s to examine of level norm between %s and %s."
+          % (ftoconj.count(),label,min_level_norm,max_level_norm))
     if ftoconj.count() == 0:
         return None
     print("Ideals precomputations...")
     data = fldlabel2conjdata(label)
+    if data == None:
+        print("No nontrival automorphisms!")
+        return
     print("...done.\n")
     auts = data['auts']
+    print("Applying %s non-trivial automorphisms..." % len(auts))
     cideals = data['conjideals']
     cprimes = data['conjprimes']
     F = data['F']
