@@ -23,6 +23,9 @@ from lmfdb.number_fields.number_field import parse_list, parse_field_string
 
 from lmfdb.WebNumberField import *
 
+hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
+
+
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
     from sage.misc.prandom import randint
@@ -62,12 +65,11 @@ def hilbert_modular_form_render_webpage():
     args = request.args
     if len(args) == 0:
         info = {}
-        credit = 'John Cremona, Lassina Dembele, Steve Donnelly and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
         t = 'Hilbert Modular Forms'
         bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         info['counts'] = get_stats().counts()
-        return render_template("hilbert_modular_form_all.html", info=info, credit=credit, title=t, bread=bread)
+        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread)
     else:
         return hilbert_modular_form_search(**args)
 
@@ -169,7 +171,7 @@ def hilbert_modular_form_search(**args):
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), (
         'Search results', ' ')]
     properties = []
-    return render_template("hilbert_modular_form_search.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread)
 
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
@@ -331,7 +333,6 @@ def render_hmf_webpage(**args):
                                                                                          'label'], ' ')]
 
     t = "Hilbert Cusp Form %s" % info['label']
-    credit = 'John Cremona, Lassina Dembele, Steve Donnelly and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
     forms_space = C.hmfs.forms.find(
         {'field_label': data['field_label'], 'level_ideal': data['level_ideal']})
@@ -412,4 +413,4 @@ def render_hmf_webpage(**args):
                    ('Base Change', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=credit, title=t, bread=bread, friends=info['friends'])
+    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'])
