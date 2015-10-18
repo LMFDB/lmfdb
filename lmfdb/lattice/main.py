@@ -31,6 +31,15 @@ def vect_to_matrix(v):
 
 
 @lattice_page.route("/")
+def index():
+    bread = get_bread()
+    if len(request.args) != 0:
+        return lattice_search(**request.args)
+    info = {'count': 20}
+    return render_template("lattice-index.html", title="Integral Lattices", bread=bread, credit=lattice_credit, info=info)
+
+
+@lattice_page.route("/")
 def lattice_render_webpage():
     args = request.args
     if len(args) == 0:
