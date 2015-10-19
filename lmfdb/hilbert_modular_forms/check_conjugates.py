@@ -62,8 +62,7 @@ def fldlabel2conjdata(label):
     data['conjideals'] = cideals
     primes = niceideals(F, Fdata['primes'])
     data['primes'] = primes
-    primes = [prm[2] for prm in primes]
-    cprimes = [[primes.index(cideals[(prm,ig)]) for prm in primes] for ig in range(len(auts))]
+    cprimes = conjideals(primes, auts)
     data['conjprimes'] = cprimes
     return data
 
