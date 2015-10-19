@@ -10,7 +10,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, parse_torsion_structure
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
-from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, make_field
+from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import parse_list, parse_field_string, field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
@@ -69,11 +69,6 @@ def get_bread(*breads):
     bc = [("Elliptic Curves", url_for(".index"))]
     map(bc.append, breads)
     return bc
-
-
-def web_ainvs(field_label, ainvs):
-    return web_latex([make_field(field_label).parse_NFelt(x) for x in ainvs])
-
 
 @ecnf_page.route("/")
 def index():
