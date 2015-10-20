@@ -68,13 +68,6 @@ def fldlabel2conjdata(label):
     data['primes'] = primes
     cprimes = conjideals(primes, auts)
     data['conjprimes'] = cprimes
-    #old code for comparison
-    primes = [prm[2] for prm in primes]
-    old_cprimes = [[primes.index(cideals[(prm,ig)]) for prm in primes] for ig in range(len(auts))]
-    if cprimes!=old_cprimes:
-        print("Field %s: new cprimes labels do NOT agree with old" % label)
-    else:
-        print("Field %s: new cprimes labels DO agree with old" % label)
     return data
 
 def conjstringideal(F,stridl,g):
