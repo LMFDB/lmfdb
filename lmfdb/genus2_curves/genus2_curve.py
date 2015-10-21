@@ -54,6 +54,7 @@ geom_aut_grp_dict = {
 #########################
 #   Database connection
 #########################
+
 g2cdb = None
 
 def db_g2c():
@@ -62,6 +63,13 @@ def db_g2c():
         g2cdb = lmfdb.base.getDBConnection().genus2_curves
     return g2cdb
 
+g2endodb = None
+
+def db_g2endo():
+    global endodb
+    if g2endodb is None:
+        g2endodb = lmfdb.base.getDBConnection().genus2_endomorphisms
+    return g2endodb
 
 #########################
 #    Top level

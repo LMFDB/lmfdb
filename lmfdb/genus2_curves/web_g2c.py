@@ -6,15 +6,20 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
 #import sage.all
-from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot
+from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot, sage_eval
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.WebNumberField import *
 from itertools import izip
 
 logger = make_logger("g2c")
+
+###############################################################################
+#   Database connection
+###############################################################################
 
 g2cdb = None
 
@@ -24,12 +29,82 @@ def db_g2c():
         g2cdb = lmfdb.base.getDBConnection().genus2_curves
     return g2cdb
 
+g2endodb = None
+
+def db_g2endo():
+    global g2endodb
+    if g2endodb is None:
+        g2endodb = lmfdb.base.getDBConnection().genus2_endomorphisms
+    return g2endodb
+
+###############################################################################
+# Recovering the isogeny class
+###############################################################################
+
+def isog_label(label):
+    #get isog label from full label
+    L = label.split(".")
+    return L[0]+ "." + L[1]
+
+###############################################################################
+# Pretty print functions
+###############################################################################
+
+def intlist_to_poly(s):
+    return str(PolynomialRing(QQ, 'x')(s)).replace('*','')
+
+def strlist_to_nfelt(L, varname):
+    La = [ s.encode('ascii') for s in L ]
+    return str(PolynomialRing(QQ, varname)(La)).replace('*','')
+
 def list_to_min_eqn(L):
     xpoly_rng = PolynomialRing(QQ,'x')
     ypoly_rng = PolynomialRing(xpoly_rng,'y')
     poly_tup = [xpoly_rng(tup) for tup in L]
     lhs = ypoly_rng([0,poly_tup[1],1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
+
+def groupid_to_meaningful(groupid):
+    if groupid[0] < 120:
+        return group_dict[str(groupid).replace(" ","")]
+    else:
+        return groupid
+
+def make_link(label, is_simple_base):
+    if not is_simple_base:
+        return 'Q/' + '/'.join(split_cremona_label(label))
+    else:
+        splitlist = label.split('-')
+        end_regex = re.compile(r'([a-z]+)(\d+)')
+        splitlist[2] = '/'.join(end_regex.match(splitlist[2]).groups())
+        return '/'.join(splitlist)
+
+def factorsRR_pretty(factorsRR):
+    if factorsRR == ['RR']:
+        return r'\R'
+    elif factorsRR == ['CC']:
+        return r'\C'
+    elif factorsRR == ['RR', 'RR']:
+        return r'\R \times \R'
+    elif factorsRR == ['RR', 'CC']:
+        return r'\R \times \C'
+    elif factorsRR == ['CC', 'RR']:
+        return r'\R \times \C',
+    elif factorsRR == ['HH']:
+        return r'\mathbf{H}'
+    elif factorsRR == ['M_2(RR)']:
+        return r'\mathrm{M}_2 (\R)'
+    elif factorsRR == ['M_2(CC)']:
+        return r'\mathrm{M}_2 (\C)'
+    else:
+        return r'\text{Invalid factors of End x RR... please report this}'
+
+def zfactor(n):
+    return factor(n) if n != 0 else 0
+
+###############################################################################
+# Plot functions
+###############################################################################
 
 def inflate_interval(a,b,x=1.5):
     c = (a+b)/2
@@ -45,7 +120,8 @@ def eqn_list_to_curve_plot(L):
     g = f+h**2/4
     if len(g.real_roots())==0 and g(0)<0:
         return text("$X(\mathbb{R})=\emptyset$",(1,1),fontsize=50)
-    X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in g.derivative().base_extend(CC).roots()]
+    X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in
+            g.derivative().base_extend(CC).roots()]
     a,b = inflate_interval(min(X0),max(X0),1.5)
     groots = [a]+g.real_roots()+[b]
     if b-a<1e-7:
@@ -76,65 +152,13 @@ def eqn_list_to_curve_plot(L):
         plotzones.append((c,d,m,M))
     x = var('x')
     y = var('y')
-    return sum(implicit_plot(y**2+y*h(x)-f(x),(x,R[0],R[1]),(y,R[2],R[3]),aspect_ratio='automatic',plot_points=500) for R in plotzones)
+    return sum(implicit_plot(y**2 + y*h(x) - f(x), (x,R[0],R[1]),
+        (y,R[2],R[3]), aspect_ratio='automatic', plot_points=500) for R in
+        plotzones)
 
-# need to come up with a function that deal with the quadratic fields in the dictionary
-def end_alg_name(name):
-    name_dict = {
-        "Z":"\\Z",
-        "Q":"\\Q",      
-        "Q x Qsqrt-4":"\\Q \\times \\Q(\\sqrt{-1})",
-        "Q x Qsqrt-7":"\\Q \\times \\Q(\\sqrt{-7})",
-        "Q x Qsqrt-11":"\\Q \\times \\Q(\\sqrt{-11})",
-        "Q x Qsqrt-3":"\\Q \\times \\Q(\\sqrt{-3})",
-        "Q x Qsqrt-19":"\\Q \\times \\Q(\\sqrt{-19})",
-        "Q x Qsqrt-8":"\\Q \\times \\Q(\\sqrt{-2})",
-        "Q x Qsqrt-67":"\\Q \\times \\Q(\\sqrt{-67})",
-        "R":"\\R",
-        "C":"\\C",
-        "Q x Q":"\\Q \\times \\Q",
-        "R x R":"\\R \\times \\R",
-        "C x R":"\\C \\times \\R",
-        "C x C":"\\C \\times \\C",
-        "M_2(Q)":"\\mathrm{M}_2(\\Q)",
-        "M_2(R)":"\\mathrm{M}_2(\\R)",
-        "M_2(C)":"\\mathrm{M}_2(\\C)"
-    }
-    if name in name_dict.keys():
-        return name_dict[name]
-    else:
-        return name
-
-def st0_group_name(name):
-    st0_dict = {
-        'M_2(C)':'\\mathrm{U}(1)',
-        'M_2(R)':'\\mathrm{SU}(2)',
-        'C x C':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
-        'C x R':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
-        'R x R':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
-        'R':'\\mathrm{USp}(4)'
-        }
-    if name in st0_dict.keys():
-        return st0_dict[name]
-    else:
-        return name
-
-def st_group_name(name):
-    if name == 'USp(4)':
-        return '\\mathrm{USp}(4)'
-    else:
-        return name
-
-def groupid_to_meaningful(groupid):
-    if groupid[0] < 120:
-        return group_dict[str(groupid).replace(" ","")]
-    else:
-        return groupid
-
-def isog_label(label):
-    #get isog label from full label
-    L = label.split(".")
-    return L[0]+ "." + L[1]
+###############################################################################
+# Invariant conversions on the fly
+###############################################################################
 
 def igusa_clebsch_to_igusa(I):
     # Conversion from Igusa-Clebsch to Igusa
@@ -181,16 +205,68 @@ def normalize_invariants(I,W):
         return I
     ps = dI.prime_divisors()
     Z = zip(I_s, W_sn)
-    c = prod([p**floor(min([ floor(valuation(i,p)/w) for (i,w) in Z ])) for p in ps], 1)
+    c = prod([p**floor(min([ floor(valuation(i,p)/w) for (i,w) in Z ])) for p
+        in ps], 1)
     # Final weighted multiplication
     I_n = scalar_div(c, I,W_bn)
     I_n = [ZZ(i) for i in I_n]
+    # Endnote: We may want to preserve some factors in the gcd here to factor
+    # the invariants when these get bigger, though currently this is not needed
     return I_n
-# We may want to preserve some factors in the gcd here to factor the invariants when these get bigger, though currently this is not needed
 
-def zfactor(n):
-    return factor(n) if n != 0 else 0
+###############################################################################
+# Name conversions for the Sato-Tate and old endomorphism functionality
+###############################################################################
 
+def end_alg_name(name):
+    name_dict = {
+        "Z":"\\Z",
+        "Q":"\\Q",      
+        "Q x Qsqrt-4":"\\Q \\times \\Q(\\sqrt{-1})",
+        "Q x Qsqrt-7":"\\Q \\times \\Q(\\sqrt{-7})",
+        "Q x Qsqrt-11":"\\Q \\times \\Q(\\sqrt{-11})",
+        "Q x Qsqrt-3":"\\Q \\times \\Q(\\sqrt{-3})",
+        "Q x Qsqrt-19":"\\Q \\times \\Q(\\sqrt{-19})",
+        "Q x Qsqrt-8":"\\Q \\times \\Q(\\sqrt{-2})",
+        "Q x Qsqrt-67":"\\Q \\times \\Q(\\sqrt{-67})",
+        "R":"\\R",
+        "C":"\\C",
+        "Q x Q":"\\Q \\times \\Q",
+        "R x R":"\\R \\times \\R",
+        "C x R":"\\C \\times \\R",
+        "C x C":"\\C \\times \\C",
+        "M_2(Q)":"\\mathrm{M}_2(\\Q)",
+        "M_2(R)":"\\mathrm{M}_2(\\R)",
+        "M_2(C)":"\\mathrm{M}_2(\\C)"
+    }
+    if name in name_dict.keys():
+        return name_dict[name]
+    else:
+        return name
+
+def st0_group_name(name):
+    st0_dict = {
+        'M_2(C)':'\\mathrm{U}(1)',
+        'M_2(R)':'\\mathrm{SU}(2)',
+        'C x C':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
+        'C x R':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
+        'R x R':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
+        'R':'\\mathrm{USp}(4)'
+        }
+    if name in st0_dict.keys():
+        return st0_dict[name]
+    else:
+        return name
+
+def st_group_name(name):
+    if name == 'USp(4)':
+        return '\\mathrm{USp}(4)'
+    else:
+        return name
+
+###############################################################################
+# Dictionary construction for old endomorphism functionality
+###############################################################################
 
 def get_end_data(isogeny_class):
     data = {}
@@ -236,11 +312,24 @@ def get_end_data(isogeny_class):
     data['endomorphism_statement'] = simple_statement + gl2_statement
     return data
 
+###############################################################################
+# Statement functions for new endomorphism functionality
+###############################################################################
+
+def gl2_statement(factorsRR):
+    if factorsRR in [['RR', 'RR'], ['CC']]:
+        return "The Jacobian is of \(\GL_2\)-type"
+    return "The Jacobian is not of \(\GL_2\)-type"
+
+###############################################################################
+# The actual class definition
+###############################################################################
+
 class WebG2C(object):
     """
     Class for a genus 2 curve over Q
     """
-    def __init__(self, dbdata):
+    def __init__(self, dbdata, endodbdata):
         """
         Arguments:
 
@@ -248,6 +337,7 @@ class WebG2C(object):
         """
         #logger.debug("Constructing an instance of G2Cisog_class")
         self.__dict__.update(dbdata)
+        self.__dict__.update(endodbdata)
         self.make_curve()
 
     @staticmethod
@@ -261,26 +351,33 @@ class WebG2C(object):
         try:
             print label
             data = db_g2c().curves.find_one({"label" : label})
+            endodata = db_g2endo().bycurve.find_one({"label" : label})
             
         except AttributeError:
             return "Invalid label" # caller must catch this and raise an error
 
         if data:
-            return WebG2C(data)
-        return "Curve not found" # caller must catch this and raise an error
+            if endodata:
+                return WebG2C(data, endodata)
+            else:
+                return "Endomorphism data for curve not found"
+        return "Data for curve not found" # caller must catch this and raise an error
+
+###############################################################################
+# Main data manipulation for individual curve
+###############################################################################
 
     def make_curve(self):
-        # To start with the data fields of self are just those from
-        # the database.  We need to reformat these, construct the
-        # and compute some further (easy) data about it.
-        #
+        # To start with the data fields of self are just those from the
+        # databases.  We reformat these, while computing some further (easy)
+        # data about the curve on the fly.
 
-        # Weierstrass equation
-
+        # Get data from database:
         data = self.data = {}
 
+        # Polish data from database before putting it into the data dictionary:
         disc = ZZ(self.disc_sign) * ZZ(self.disc_key[3:]) 
-        # to deal with disc_key, uncomment line above and remove line below
+        # to deal with disc_key, uncomment line above and comment line below
         #disc = ZZ(self.disc_sign) * ZZ(self.abs_disc)
         data['disc'] = disc
         data['cond'] = ZZ(self.cond)
@@ -295,23 +392,133 @@ class WebG2C(object):
         data['g2'] = igusa_to_g2(data['igusa'])
         data['ic_norm'] = normalize_invariants(data['igusa_clebsch'],[1,2,3,5])
         data['igusa_norm'] = normalize_invariants(data['igusa'],[1,2,3,4,5])
-        data['ic_norm_factor_latex'] = [web_latex(zfactor(i)) for i in data['ic_norm']]
-        data['igusa_norm_factor_latex'] = [web_latex(zfactor(j)) for j in data['igusa_norm']]
+        data['ic_norm_factor_latex'] = [web_latex(zfactor(i)) for i in
+                data['ic_norm']]
+        data['igusa_norm_factor_latex'] = [web_latex(zfactor(j)) for j in
+                data['igusa_norm']]
         data['num_rat_wpts'] = ZZ(self.num_rat_wpts)
         data['two_selmer_rank'] = ZZ(self.two_selmer_rank)
         if len(self.torsion) == 0:
             data['tor_struct'] = '\mathrm{trivial}'
         else:
             tor_struct = [ZZ(a)  for a in self.torsion]
-            data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
-        isogeny_class = db_g2c().isogeny_classes.find_one({'label' : isog_label(self.label)})
+            data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in
+                tor_struct])
+
+        # Data from old endomorphism functionality, used in isogeny class as
+        # well. Calls the get_end_data function above.
+        isogeny_class = db_g2c().isogeny_classes.find_one({'label' :
+            isog_label(self.label)})
         end_data = get_end_data(isogeny_class)
         for key in end_data.keys():
             data[key] = end_data[key]
+
+        # TODO: Could have used endodata here as well. Decide upon this later.
+        # GL_2 statement
+        data['gl2_statement_base'] = gl2_statement(self.factorsRR_base)
+        
+        # Over QQ:
+        # Factors of the algebra:
+        data['factorsQQ_base'] = self.factorsQQ_base
+        data['factorsQQ_length_base'] = len(self.factorsQQ_base)
+        # NB: This function could in principle return a single factor and
+        # ignore the other. Due to field_pretty, that will never happen though.
+        data['factorsQQ_pretty_base'] = [ field_pretty(fac[0]) for fac in
+                self.factorsQQ_base if fac[0] ]
+        # NB: Same remark holds here:
+        data['factorsQQ_quatdisc_base'] = self.factorsQQ_base[0][2]
+        data['factorsQQ_cm_base'] = len(self.factorsQQ_base[0][1]) == 5
+        data['factorsQQ_poly_base'] = intlist_to_poly(self.factorsQQ_base[0][1])
+        # After tensoring with RR:
+        data['factorsRR_pretty_base'] = factorsRR_pretty(self.factorsRR_base)
+        # Ring description:
+        data['ring_base'] = self.ring_base
+
+        # TODO: What follows is stupid code copying that can certainly be
+        # improved, probably by taking first and final indices below.
+        # Over QQbar:
+        # Factors of the algebra:
+        data['factorsQQ_geom'] = self.factorsQQ_geom
+        data['factorsQQ_length_geom'] = len(self.factorsQQ_geom)
+        # NB: This function could in principle return a single factor and
+        # ignore the other. Due to field_pretty, that will never happen though.
+        data['factorsQQ_pretty_geom'] = [ field_pretty(fac[0]) for fac in
+                self.factorsQQ_geom if fac[0] ]
+        # NB: Same remark holds here:
+        data['factorsQQ_quatdisc_geom'] = self.factorsQQ_geom[0][2]
+        data['factorsQQ_cm_geom'] = len(self.factorsQQ_geom[0][1]) == 5
+        data['factorsQQ_poly_geom'] = intlist_to_poly(self.factorsQQ_geom[0][1])
+        # After tensoring with RR:
+        data['factorsRR_pretty_geom'] = factorsRR_pretty(self.factorsRR_geom)
+        # Ring description:
+        data['ring_geom'] = self.ring_geom
+
+        # Display of full endomorphism lattice:
+        EDs = self.lattice[1:len(self.lattice) - 1]
+        length_lattice = len(EDs)
+        data['lattice_iterator'] = range(length_lattice)
+        data['sub_gen_lattice'] = []
+        data['sub_poly_lattice'] = []
+        data['sub_label_lattice'] = []
+        data['sub_pretty_lattice'] = []
+        data['factorsQQ_lattice'] = []
+        data['factorsQQ_length_lattice'] = []
+        data['factorsQQ_pretty_lattice'] = []
+        data['factorsQQ_quatdisc_lattice'] = []
+        data['factorsQQ_cm_lattice'] = []
+        data['factorsQQ_poly_lattice'] = []
+        data['factorsRR_pretty_lattice'] = []
+        data['ring_lattice'] = []
+        data['st_group_lattice'] = []
+        for ED in EDs:
+            data['sub_gen_lattice'].append(strlist_to_nfelt(ED[0][2], 'a'))
+            data['sub_poly_lattice'].append(intlist_to_poly(ED[0][1]))
+            sub_label = ED[0][0]
+            data['sub_label_lattice'].append(sub_label)
+            if sub_label:
+                data['sub_pretty_lattice'].append(field_pretty(sub_label))
+            else:
+                data['sub_pretty_lattice'].append('')
+            data['factorsQQ_lattice'].append(ED[1])
+            data['factorsQQ_length_lattice'].append(len(ED[1]))
+            data['factorsQQ_pretty_lattice'].append([ field_pretty(fac[0]) for
+                fac in ED[1] if fac[0] ])
+            data['factorsQQ_quatdisc_lattice'].append(ED[1][0][2])
+            data['factorsQQ_cm_lattice'].append(len(ED[1][0][1]) == 5)
+            data['factorsQQ_poly_lattice'].append(intlist_to_poly(ED[1][0][1]))
+            data['factorsRR_pretty_lattice'].append(factorsRR_pretty(ED[2]))
+            data['ring_lattice'].append(ED[3])
+            data['st_group_lattice'].append(ED[4])
+
+        # Endomorphism field description:
+        data['fod_label'] = self.fod_label
+        data['fod_poly'] = intlist_to_poly(self.fod_coeffs)
+        if self.fod_label != '':
+            data['fod_pretty'] = field_pretty(self.fod_label)
+
+        # Statements on simplicity over QQ and QQbar:
+        data['is_simple_base'] = self.is_simple_base
+        data['is_simple_geom'] = self.is_simple_geom
+        # Splitting field description
+        data['spl_fod_label'] = self.spl_fod_label
+        data['spl_fod_poly'] = intlist_to_poly(self.spl_fod_coeffs)
+        if self.spl_fod_label != '':
+            data['spl_fod_pretty'] = field_pretty(self.spl_fod_label)
+        
+        # Display of isogeny factors:
+        data['spl_facs_length'] = len(self.spl_facs_coeffs)
+        data['spl_facs_iterator'] = range(len(self.spl_facs_coeffs))
+        if len(self.spl_facs_labels) == data['spl_facs_length']:
+            data['spl_facs_labels'] = self.spl_facs_labels
+            data['spl_facs_links'] = [ make_link(label, self.is_simple_base)
+                    for label in self.spl_facs_labels ]
+        else:
+            data['spl_facs_coeffs_display'] =  [ [ strlist_to_nfelt(L, 'b') for
+                L in splfac ] for splfac in self.spl_facs_coeffs ]
+            data['spl_facs_condnorms'] = self.spl_facs_condnorms
+
         x = self.label.split('.')[1]
-
         self.make_code_snippets()
-
         self.friends = [
             ('Isogeny class %s' % isog_label(self.label), url_for(".by_double_iso_label", conductor = self.cond, iso_label = x)),
             ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
@@ -433,6 +640,5 @@ class WebG2C(object):
                  pari_not_implemented, # pari code goes here
                  'TorsionSubgroup(Jacobian(SimplifiedModel(C))); AbelianInvariants($1);'
                  )
-
 
         self.code = {'sage': sagecode, 'pari': gpcode, 'magma': magmacode}
