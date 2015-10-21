@@ -6,7 +6,7 @@ BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 
-from lmfdb.transitive_group import complete_group_codes, make_galois_pair
+from sage.all import ZZ, QQ
 
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
@@ -115,7 +115,7 @@ def collapse_ors(parsed, query):
     query[parsed[0]] = parsed[1]
 
 def parse_rational(inp, query, field, name=None):
-    if inp is None: return
+    if not inp: return
     if name is None: name = field.replace('_',' ')
     ans = clean_input(inp)
     ans = ans.replace('+', '')
@@ -124,7 +124,7 @@ def parse_rational(inp, query, field, name=None):
     query[name] = str(QQ(ans))
 
 def parse_ints(inp, query, field, name=None):
-    if inp is None: return
+    if not inp: return
     if name is None: name = field.replace('_',' ')
     cleaned = clean_input(inp)
     cleaned = cleaned.replace('..', '-').replace(' ', '')
@@ -135,7 +135,7 @@ def parse_ints(inp, query, field, name=None):
 
 def parse_signed_ints(inp, query, sign_field, abs_field, name, parse_one=None):
     if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
-    if inp is None: return
+    if not inp: return
     cleaned = clean_input(info[field])
     cleaned = cleaned.replace('..', '-').replace(' ', '')
     if not LIST_RE.match(cleaned):
@@ -171,7 +171,7 @@ def parse_signed_ints(inp, query, sign_field, abs_field, name, parse_one=None):
         collapse_ors(['$or', iquery], query)
 
 def parse_primes(inp, query, field, name=None, mode=None):
-    if inp is None: return
+    if not inp: return
     if name is None: name = field.replace('_',' ')
     cleaned = clean_input(inp)
     format_ok = LIST_POSINT_RE.match(cleaned)
@@ -195,7 +195,7 @@ def parse_primes(inp, query, field, name=None, mode=None):
         raise ValueError("Error parsing input for %s.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11)."%name)
 
 def parse_bracketed_posints(inp, query, field, name=None, length=None,split=False,process=None):
-    if inp is None: return
+    if not inp: return
     if process is None: process = lambda x: x
     if name is None: name = field.replace('_',' ')
     cleaned = clean_input(inp)
@@ -211,7 +211,8 @@ def parse_bracketed_posints(inp, query, field, name=None, length=None,split=Fals
         raise ValueError("Error parsing input for %s. It needs to be a %s in square brackets, such as [2,3] or [3,3]" %(name, lstr))
 
 def parse_galgrp(inp, query, field='galois', name='Galois group'):
-    if inp is None: return
+    from lmfdb.transitive_group import complete_group_codes, make_galois_pair
+    if not inp: return
     cleaned = clean_input(inp)
     try:
         gcs = complete_group_codes(cleaned)
