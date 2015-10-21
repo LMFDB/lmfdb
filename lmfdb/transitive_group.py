@@ -9,7 +9,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import sage.all
 from sage.all import ZZ, latex, AbelianGroup, pari, gap
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, list_to_latex_matrix
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, list_to_latex_matrix
 
 MAX_GROUP_DEGREE = 23
 
