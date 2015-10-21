@@ -858,6 +858,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def symbol(self):
+
         """ chi is equal to a kronecker symbol if and only if it is real """
         if self.order != 2:
             return None
@@ -866,8 +867,10 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
             if cond % 4 == 1: m = cond
             else: m = -cond
         elif cond % 8 == 4:
-            if cond % 16 == 4: m = cond
-            elif cond % 16 == 12: m = -cond
+	    # Fixed : For Q(sqrt(d) the discr. = 4 d if d = 2,3 (mod) 4  and discr = d if d = 1 (mod) 4. 
+            #Please refer to eq 3.49 and section 3.8 of "Analytic number Theory - Henryk Iwaniek & Emmanuel Kowalski" for its connection with Kronecker symbol. 
+            if cond % 16 == 4: m = -cond
+            elif cond % 16 == 12: m = cond
         elif cond % 16 == 8:
             if self.chi.is_even(): m = cond
             else: m = -cond
