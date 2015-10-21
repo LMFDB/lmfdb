@@ -4,7 +4,7 @@ ASC = pymongo.ASCENDING
 import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
 
 import sage.all
@@ -12,6 +12,7 @@ import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing
 
 from lmfdb.lattice import lattice_page, lattice_logger
+from lmfdb.lattice.lattice_stats import get_stats
 
 lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
@@ -29,16 +30,6 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 def vect_to_matrix(v):
 	return str(latex(matrix(v)))	
 
-
-@lattice_page.route("/")
-def index():
-    bread = get_bread()
-    if len(request.args) != 0:
-        return lattice_search(**request.args)
-    info = {'count': 20}
-    return render_template("lattice-index.html", title="Integral Lattices", bread=bread, credit=lattice_credit, info=info)
-
-
 @lattice_page.route("/")
 def lattice_render_webpage():
     args = request.args
@@ -48,9 +39,21 @@ def lattice_render_webpage():
         t = 'Integral Lattices'
         bread = [('Integral Lattices', url_for(".lattice_render_webpage"))]
         info['learnmore'] = []
+        info['counts'] = get_stats().counts()
         return render_template("lattice-index.html", info=info, credit=credit, title=t, bread=bread)
     else:
         return lattice_search(**args)
+
+
+@lattice_page.route("/random")
+def random_lattice():    # Random Lattice
+    from sage.misc.prandom import randint
+    n = get_stats().counts()['nlattice']
+    n = randint(0,n-1)
+    C = getDBConnection()
+    res = C.Lattices.lat.find()[n]
+    return redirect(url_for(".render_lattice_webpage", label=res['label']))
+
 
 
 def lattice_search(**args):

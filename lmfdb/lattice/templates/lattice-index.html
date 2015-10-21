@@ -3,8 +3,9 @@
 {% block content %}
 
 <p>
-The database currently contains {{ KNOWL('lattice.definition', title='integral lattices') }} of {{ KNOWL('lattice.dimension', title='dimension') }} up to XXXXXXXXXXXXXX from the <a href="http://www.math.rwth-aachen.de/~Gabriele.Nebe/LATTICES/">Catalogue of Lattices</a>. 
-</p><p>
+The database currently contains ${{info.counts.nlattice_c}}$ {{ KNOWL('lattice.definition', title='integral lattices') }} of {{ KNOWL('lattice.dimension', title='dimension') }} up to ${{info.counts.max_dim_c}}$. It includes data from the <a href="http://www.math.rwth-aachen.de/~Gabriele.Nebe/LATTICES/">Catalogue of Lattices</a>. 
+</p>
+<p>
 In the case of {{ KNOWL('lattice.primitive', title='primitive') }} {{ KNOWL('lattice.definition', title='integral lattices') }} of {{ KNOWL('lattice.class_number', title='class number') }} one the database is complete.
 </p>
 
@@ -20,7 +21,7 @@ By {{ KNOWL('lattice.determinant', title='Determinant') }}: <a>1-99</a>&nbsp;&nb
 By {{ KNOWL('lattice.class_number', title='Class number') }}: <a>1</a>,&nbsp;<a>2</a>,&nbsp;<a>3</a>,&nbsp;<a>4</a>
 </p>
 <p>
-A <a>random integral lattice</a> from the database.
+<p>A <a href={{url_for('.random_lattice')}}>random integral lattice</a> from the database.
 <br>
 </p>
 

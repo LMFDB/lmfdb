@@ -233,7 +233,7 @@
       status: future
       colspan: onecolumn
     - title: Lattices
-      url_for: "lattice.index"
+      url_for: "lattice.lattice_render_webpage"
       status: future
 
 9Know:
