@@ -146,7 +146,7 @@ def show_ecnf1(nf):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)]).skip(start).limit(count)
+    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
     bread = [('Elliptic Curves', url_for(".index")),
              (nf_label, url_for('.show_ecnf1', nf=nf_label))]
@@ -346,7 +346,7 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)]).skip(start).limit(count)
+    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
     res = list(res)
     for e in res:
