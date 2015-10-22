@@ -168,33 +168,20 @@ sage: forms.count({'field_label':fld,'dimension':int(1)})
 sage: max([f['level_norm'] for f in forms.find({'field_label':fld,'dimension':int(1)})])
 535
 ######################################################################
-2015/10/21: check data for all quadratic fields -- some missing
-curves:
+
+2015/10/21: check data for all quadratic fields -- some problems, all solved:
 
 Checking 2.2.8.1...OK
-Checking 2.2.12.1...
-Curve 3072.1-bd1 does NOT agree with newform
-Out of 12252 newforms, 12248 curves were found and 4 were not found
-12247 curves agree with matching newforms, 1 do not
-Missing curves: [u'3072.1-ca', u'3072.1-cb', u'3072.1-cc',
-u'3072.1-cd']
+Checking 2.2.12.1...OK
 Checking 2.2.13.1...OK
 Checking 2.2.17.1...OK
-Checking 2.2.21.1...
-Out of 4758 newforms, 4754 curves were found and 4 were not found
-All curves agree with matching newforms
-Missing curves: [u'768.1-ca', u'768.1-cb', u'768.1-cc', u'768.1-cd']
+Checking 2.2.21.1...OK
 Checking 2.2.24.1...OK
 Checking 2.2.28.1...OK
 Checking 2.2.29.1...OK
 Checking 2.2.33.1...OK
 Checking 2.2.37.1...OK
-Checking 2.2.40.1...
-Out of 1836 newforms, 1826 curves were found and 10 were not found
-All curves agree with matching newforms
-Missing curves: [u'450.1-ca', u'450.1-cb', u'450.1-cc', u'450.1-cd',
-u'450.1-ce', u'450.1-cf', u'450.2-ca', u'45
-0.2-cb', u'450.3-ca', u'450.3-cb']
+Checking 2.2.40.1...OK
 Checking 2.2.41.1...OK
 Checking 2.2.44.1...OK
 Checking 2.2.53.1...OK

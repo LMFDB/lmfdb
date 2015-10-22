@@ -301,8 +301,58 @@ def fix_curve_labels(field_label, min_cond_norm=0, max_cond_norm=None, fix_curve
         if fix_curves:
             res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
             assert res.matched_count==1
-            print("Modified %s curves" % res.modified_count)
 
+def fix_one_curve_label(field_label, cond_label, old_iso_label, new_iso_label, fix_curves=False):
+    r""" One-off utility to correct class label
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_label'] = cond_label
+    query['iso_label'] = old_iso_label
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to fix"   % curves_to_fix.count())
+    if curves_to_fix.count() == 0:
+        return None
+    for c in curves_to_fix:
+        oldlab = old_iso_label
+        lab = new_iso_label
+        fix_data = {}
+        fix_data['iso_label'] = lab
+        fix_data['label'] = c['label'].replace(oldlab,lab)
+        fix_data['short_label'] = c['short_label'].replace(oldlab,lab)
+        fix_data['class_label'] = c['class_label'].replace(oldlab,lab)
+        fix_data['short_class_label'] = c['short_class_label'].replace(oldlab,lab)
+        print("using fixed data %s for curve %s" % (fix_data,c['label']))
+        if fix_curves:
+            res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+            assert res.matched_count==1
+
+def set_one_curve_label(id, new_iso_label, fix_curves=False):
+    r""" One-off utility to correct class label
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['_id'] = id
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to fix"   % curves_to_fix.count())
+    if curves_to_fix.count() == 0:
+        return None
+    for c in curves_to_fix:
+        oldlab = c['iso_label']
+        lab = new_iso_label
+        fix_data = {}
+        fix_data['iso_label'] = lab
+        fix_data['label'] = c['label'].replace(oldlab,lab)
+        fix_data['short_label'] = c['short_label'].replace(oldlab,lab)
+        fix_data['class_label'] = c['class_label'].replace(oldlab,lab)
+        fix_data['short_class_label'] = c['short_class_label'].replace(oldlab,lab)
+        print("using fixed data %s for curve %s" % (fix_data,c['label']))
+        if fix_curves:
+            res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+            assert res.matched_count==1
 
 def add_numeric_label_suffixes(min_level_norm=0, max_level_norm=None, fix=False):
     r""" One-off utility to add a numeric conversion of the letter-coded

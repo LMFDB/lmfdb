@@ -604,7 +604,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
         ec['conductor_label'] = form['level_label']
         ec['iso_label'] = form['label_suffix']
         ec['number'] = int(1)
-        ec['conductor_ideal'] = form['level_ideal']
+        ec['conductor_ideal'] = form['level_ideal'].replace(" ","")
         ec['conductor_norm'] = form['level_norm']
         ai = E.ainvs()
         ec['ainvs'] = [[str(c) for c in list(a)] for a in ai]
@@ -760,3 +760,36 @@ def rqf_iterator(d1, d2):
     for d in srange(d1, d2 + 1):
         if is_fundamental_discriminant(d):
             yield d, '2.2.%s.1' % d
+
+
+def add_numeric_iso_labels(min_conductor_norm=0, max_conductor_norm=None, fix=False):
+    r""" One-off utility to add a numeric conversion of the letter-coded
+    class labels 'a'->0', 'z'->25, 'ba'->26, etc. for sorting
+    purposes.
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['conductor_norm'] = {'$gte' : int(min_conductor_norm)}
+    if max_conductor_norm:
+        query['conductor_norm']['$lte'] = int(max_conductor_norm)
+    else:
+        max_conductor_norm = oo
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to examine of conductor norm between %s and %s."
+          % (curves_to_fix.count(),min_conductor_norm,max_conductor_norm))
+    for c in curves_to_fix:
+        count = count+1
+        if count%100==0: print("%s: %s" % (count, c['label']))
+        fix_data = {}
+        lab = c['iso_label']
+        if 'CM' in lab:
+            nlab = -1 - class_to_int(lab[2:])
+            print("converting label %s to %s" % (lab, nlab))
+        else:
+            nlab = class_to_int(lab.lower())
+        fix_data['iso_nlabel'] = nlab
+        #print("using fixed data %s for form %s" % (fix_data,c['label']))
+        if fix:
+            nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+
