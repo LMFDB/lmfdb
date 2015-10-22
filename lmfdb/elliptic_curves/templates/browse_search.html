@@ -26,11 +26,7 @@ An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title=
 
 {% else %}
 <div>
-The database currently contains the Cremona database of all
-{{info.counts.ncurves_c}} elliptic curves with {{ KNOWL('ec.q.conductor',title
-= "conductor")}} at most {{info.counts.max_N_c}}, all of which have {{
-KNOWL('ec.q.rank', title="rank")}} &le; {{info.counts.max_rank}}.  Here are some
-<a href="{{ info.stats_url }}">further statistics</a>.
+{{ KNOWL_INC('dq.ec.extent') }}
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over $\Q$</h2>
