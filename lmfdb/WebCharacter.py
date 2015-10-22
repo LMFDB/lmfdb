@@ -925,8 +925,8 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 
 
     def symbol_numerator(self): 
-#Please refer to eq 3.49 and section 3.8 of "Analytic number Theory - Henryk Iwaniec & Emmanuel Kowalski". 
-# Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if d = 1 # mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
+#Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
+# Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
 # symbol_numerator returns the appropriate Kronecker symbol depending on the conductor of \chi. 
         """ chi is equal to a kronecker symbol if and only if it is real """
         if self.order != 2:
@@ -937,7 +937,8 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
             else: m = -cond
         elif cond % 8 == 4:
 	    # Fixed cond % 16 == 4 and cond % 16 == 12 were switched in the previous version of the code. 
-            #If d  = 2,3 (mod) 4 then m = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12.  
+            # Let d be a non zero squarefree integer. If d  = 2,3 (mod) 4 and if cond = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12 then we set m = cond. 
+            # On the other hand if d = 1 (mod) 4 and cond = 4d = 4 (4n +1) = 16n + 4 then we set m = -cond. 
             if cond % 16 == 4: m = -cond
             elif cond % 16 == 12: m = cond
         elif cond % 16 == 8:
