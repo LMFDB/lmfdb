@@ -12,27 +12,35 @@ In the case of {{ KNOWL('lattice.primitive', title='primitive') }} {{ KNOWL('lat
 <h2> Browse {{ KNOWL('lattice.definition', title='Integral Lattices') }}</h2>
 
 <p>
-By {{ KNOWL('lattice.dimension', title='Dimension') }}: <a>2</a>,&nbsp;<a>3</a>,&nbsp;<a>4</a>,&nbsp;<a>5</a>,&nbsp;<a>6</a>,&nbsp;<a>7</a>,&nbsp;<a>8</a>,&nbsp;<a>9</a>,&nbsp;<a>10</a>
+By {{ KNOWL('lattice.dimension', title='Dimension') }}: 
+{% for rnge in info.dim_list %}
+<a href="?dim={{rnge}}">{{rnge}}</a>
+{% endfor %}
 </p>
 <p>
-By {{ KNOWL('lattice.determinant', title='Determinant') }}: <a>1-99</a>&nbsp;&nbsp;&nbsp;<a>100-199</a>&nbsp;&nbsp;&nbsp;<a>200-299</a>
+By {{ KNOWL('lattice.determinant', title='Determinant') }}:
+{% for rnge in info.det_list %}
+<a href="?det={{rnge}}">{{rnge}}</a>
+{% endfor %}
 </p>
 <p>
-By {{ KNOWL('lattice.class_number', title='Class number') }}: <a>1</a>,&nbsp;<a>2</a>,&nbsp;<a>3</a>,&nbsp;<a>4</a>
+By {{ KNOWL('lattice.class_number', title='Class number') }}: 
+{% for rnge in info.class_number_list %}
+<a href="?class_number={{rnge}}">{{rnge}}</a>
+{% endfor %}
 </p>
-<p>
 <p>A <a href={{url_for('.random_lattice')}}>random integral lattice</a> from the database.
 <br>
 </p>
 
 
 
-<h2> Find a specific integral lattice by {{ KNOWL('lattice.label', title='label') }} </h2>
+<h2> Find a specific integral lattice by {{KNOWL('lattice.label', title='label')}} or by {{KNOWL('lattice.name', title='name')}}</h2>
 
 <form>
 <input type='text' name='label' placeholder='3.4.16.1.1'>
 <button type='submit'>Label</button>
-<br><span class="formexample">e.g. 3.4.16.1.1 </span>
+<br><span class="formexample">e.g. 3.4.16.1.1, $D3$, $E8$, Leech lattice</span>
 </form>
 
 <h2> Search </h2>
@@ -43,18 +51,18 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}: <a>1</a>,&nbsp;<a>
 <tr>
 <td align= right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td>
 <td><input type='text' name='dim' placeholder='3' size=10>
-<td><span class="formexample"> e.g. 2, 3, 5</td>
+<td><span class="formexample"> e.g. 2, 3, 5 or a range of integers 1-5</td>
 </tr>
 
 <tr>
 <td align= right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td>
 <td><input type='text' name='det' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1, 2, 3</td>
+<td><span class="formexample"> e.g. 1, 2, 3, or a range of integers 1-5</td>
 </tr>
 <tr>
 <td align= right>{{ KNOWL('lattice.level', title='Level') }}:</td>
 <td><input type='text' name='level' placeholder='48' size=10>
-<td><span class="formexample"> e.g. 48, 336, 456 </td>
+<td><span class="formexample"> e.g. 48, 336, 456 a range of integers 48-150</td>
 </tr>
 
 <tr>
@@ -80,10 +88,10 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}: <a>1</a>,&nbsp;<a>
 <td><span class="formexample"> e.g. 2, 48, 696729600</td>
 </tr>
 
-<tr><td align= right>{{ KNOWL('lattice.name', title='Name') }}:</td>
-<td><input type='text' name='name' placeholder='D3' size=10>
-<td><span class="formexample"> e.g. $D3$, $E8$, Leech lattice</td>
-</tr>
+<!--<tr><td align= right>{{ KNOWL('lattice.name', title='Name') }}:</td>-->
+<!--<td><input type='text' name='name' placeholder='D3' size=10>-->
+<!--<td><span class="formexample"> e.g. $D3$, $E8$, Leech lattice</td>-->
+<!--</tr>-->
 <tr>
 <td colspan=3><button type='submit' value='Search'>Search</button>
 </td>

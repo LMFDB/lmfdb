@@ -48,9 +48,11 @@ class Latticestats(object):
         counts['nlattice_c']  = comma(nlattice)
 	max_dim = lattice.find().sort('dim', DESCENDING).limit(1)[0]['dim']
         counts['max_dim'] = max_dim
-        counts['max_dim_c']  = comma(max_dim)
+	counts['max_dim_c'] = comma(max_dim)
+	max_det = lattice.find().sort('det', DESCENDING).limit(1)[0]['det']
+        counts['max_det'] = max_det
+	max_class_number = lattice.find().sort('class_number', DESCENDING).limit(1)[0]['class_number']
+        counts['max_class_number'] = max_class_number
         self._counts  = counts
         logger.debug("... finished computing Lattice counts.")
         #logger.debug("%s" % self._counts)
-
-

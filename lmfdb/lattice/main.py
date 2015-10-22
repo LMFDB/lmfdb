@@ -32,17 +32,24 @@ def vect_to_matrix(v):
 
 @lattice_page.route("/")
 def lattice_render_webpage():
-    args = request.args
-    if len(args) == 0:
-        info = {}
-        credit = lattice_credit
-        t = 'Integral Lattices'
-        bread = [('Integral Lattices', url_for(".lattice_render_webpage"))]
-        info['learnmore'] = []
-        info['counts'] = get_stats().counts()
-        return render_template("lattice-index.html", info=info, credit=credit, title=t, bread=bread)
-    else:
-        return lattice_search(**args)
+	args = request.args
+	if len(args) == 0:
+		counts = get_stats().counts()
+		dim_list= range(2, counts['max_dim']+1, 1)
+		class_number_list=range(1, counts['max_class_number']+1, 1)
+		det_list_endpoints = [1, 100, 200, 300]
+		if counts['max_det']>300:
+			det_list_endpoints=det_list_endpoints+range(400, (floor(380/100)+2)*100, 100)
+		det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
+		info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list}
+	 	credit = lattice_credit
+		t = 'Integral Lattices'
+		bread = [('Integral Lattices', url_for(".lattice_render_webpage"))]
+		info['learnmore'] = []
+		info['counts'] = get_stats().counts()
+		return render_template("lattice-index.html", info=info, credit=credit, title=t, bread=bread)
+	else:
+		return lattice_search(**args)
 
 
 @lattice_page.route("/random")
