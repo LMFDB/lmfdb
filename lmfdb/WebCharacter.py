@@ -927,7 +927,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     def symbol_numerator(self): 
 #Please refer to eq 3.49 and section 3.8 of "Analytic number Theory - Henryk Iwaniec & Emmanuel Kowalski". 
 # Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if d = 1 # mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
-# symbol_numerator returns the appropriate Kronecker symbol based on the conductor of \chi. 
+# symbol_numerator returns the appropriate Kronecker symbol depending on the conductor of \chi. 
         """ chi is equal to a kronecker symbol if and only if it is real """
         if self.order != 2:
             return None
