@@ -247,7 +247,7 @@ def charactertable(query):
 
 
 def render_character_table(modulus=None, conductor=None, order=None):
-    from dirichlet_conrey import DirichletGroup_conrey
+    from dirichlet_conrey import DirichletGroup_conrey 
     start = 1
     end = 201
     stepsize = 1
@@ -263,39 +263,23 @@ def render_character_table(modulus=None, conductor=None, order=None):
         G = DirichletGroup_conrey(N)
         for chi in G:
             j = chi.number()
+            c = WebDirichletCharacter(modulus = chi.modulus(),number = chi.number())
             add = True
             add &= not conductor or chi.conductor() == conductor
             add &= not order or chi.multiplicative_order() == order
             if add:
-                if chi.multiplicative_order() == 2 and kronecker_symbol(chi) is not None:
-                    ret.append([(j, kronecker_symbol(chi), chi.modulus(
-                    ), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
-                else:
+                 #if chi.multiplicative_order() == 2 and kronecker_symbol(chi) is not None:
+		#	  ret.append([(j, kronecker_symbol(chi), chi.modulus(
+		 if chi.multiplicative_order() == 2 and c.symbol_numerator() is not None:
+                  	ret.append([(j, c.symbol_numerator(), chi.modulus(
+                 	), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
+                 else:
                     ret.append([(j, chi, chi.modulus(
                     ), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
         return ret
     return [row(_) for _ in range(start, end, stepsize)]
 
 
-def kronecker_symbol(chi):
-    m = chi.conductor() / 4
-    if chi.conductor() % 2 == 1:
-        if chi.conductor() % 4 == 1:
-            return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" % (chi.conductor())
-        else:
-            return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" % (chi.conductor())
-    elif chi.conductor() % 8 == 4:
-        if m % 4 == 1:
-            return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" % (chi.conductor())
-        elif m % 4 == 3:
-            return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" % (chi.conductor())
-    elif chi.conductor() % 16 == 8:
-        if chi.is_even():
-            return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" % (chi.conductor())
-        else:
-            return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" % (chi.conductor())
-    else:
-        return None
 
 
 @characters_page.route("/Dirichlet/table")
