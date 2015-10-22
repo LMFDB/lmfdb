@@ -858,25 +858,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def symbol(self):
-
-        """ chi is equal to a kronecker symbol if and only if it is real """
-        if self.order != 2:
-            return None
-        cond = self.conductor
-        if cond % 2 == 1:
-            if cond % 4 == 1: m = cond
-            else: m = -cond
-        elif cond % 8 == 4:
-	    # Fixed : For Q(sqrt(d) the discr. = 4 d if d = 2,3 (mod) 4  and discr = d if d = 1 (mod) 4. 
-            #Please refer to eq 3.49 and section 3.8 of "Analytic number Theory - Henryk Iwaniek & Emmanuel Kowalski" for its connection with Kronecker symbol. 
-            if cond % 16 == 4: m = -cond
-            elif cond % 16 == 12: m = cond
-        elif cond % 16 == 8:
-            if self.chi.is_even(): m = cond
-            else: m = -cond
-        else:
-            return None
-        return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
+        return self.symbol_numerator() 
 
     def value(self, val):
         val = int(val)
@@ -940,6 +922,27 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         = \sum_{r \in \Z/%s\Z}
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
         = %s. \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
+
+    def symbol_numerator(self): 
+        """ chi is equal to a kronecker symbol if and only if it is real """
+        if self.order != 2:
+            return None
+        cond = self.conductor
+        if cond % 2 == 1:
+            if cond % 4 == 1: m = cond
+            else: m = -cond
+        elif cond % 8 == 4:
+	    # Fixed 
+            #Please refer to eq 3.49 and section 3.8 of "Analytic number Theory - Henryk Iwaniek & Emmanuel Kowalski" for its connection with Kronecker symbol. 
+            if cond % 16 == 4: m = -cond
+            elif cond % 16 == 12: m = cond
+        elif cond % 16 == 8:
+            if self.chi.is_even(): m = cond
+            else: m = -cond
+        else:
+            return None
+        return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
+
 
 
 class WebHeckeExamples(WebHecke):
