@@ -280,25 +280,6 @@ def render_character_table(modulus=None, conductor=None, order=None):
     return [row(_) for _ in range(start, end, stepsize)]
 
 
-#def kronecker_symbol(chi):
- #   m = chi.conductor() / 4
-  #  if chi.conductor() % 2 == 1:
-   #     if chi.conductor() % 4 == 1:
-    #        return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" % (chi.conductor())
-     #   else:
-      #      return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" % (chi.conductor())
-#    elif chi.conductor() % 8 == 4:
- #       if m % 4 == 1:
-  #          return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" % (chi.conductor())
-   #     elif m % 4 == 3:
-    #        return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" % (chi.conductor())
-    #elif chi.conductor() % 16 == 8:
-     #   if chi.is_even():
-      #      return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" % (chi.conductor())
-       # else:
-        #    return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" % (chi.conductor())
-    #else:
-     #   return None
 
 
 @characters_page.route("/Dirichlet/table")
