@@ -282,7 +282,7 @@ def elliptic_curve_search(**args):
             return search_input_error(info, bread)
 
     if 'download' in info and info['download'] != '0':
-        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING) ])
+        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING) ])
         return download_search(info, res)
     
     count_default = 100
@@ -312,7 +312,7 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING)
+    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING)
                        ]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
@@ -320,6 +320,8 @@ def elliptic_curve_search(**args):
     info['iso_url'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['number'] = nres
     info['start'] = start
+    info['count'] = count
+    info['more'] = int(start + count < nres)
     if nres == 1:
         info['report'] = 'unique match'
     elif nres == 2:
@@ -329,6 +331,7 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
+
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
