@@ -119,14 +119,8 @@ def render_Dirichletwebpage(modulus=None, number=None):
     else:
         info = WebDirichletCharacter(**args).to_dict()
  #       info['navi'] = navi([info['previous'],info['next']])
-#        info['navi'] = [
-#           ["previous",info['previous'],url_character(info['previous'])], 
-#           ["next",info['next'],url_character(info['next'])]
-#                       ] 
-#        info['navi'] = navi([info['previous'],info['next']])
-        info['navi'] = (("previous",) + navi([info['previous']]),
-                        ("next",) + navi([info['next']]))
-        print info['navi']
+        info['navi'] = [("previous",) +navi([info['previous']])[0],
+                        ("next",) + navi([info['next']])[0]]
         m,n = info['modlabel'], info['numlabel']
         info['bread'] = [('Characters','/Character'),
                          ('Dirichlet','/Character/Dirichlet'),
