@@ -1,14 +1,14 @@
 import re
 import pymongo
 ASC = pymongo.ASCENDING
+LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
+
 import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
-
 import sage.all
-
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing
 
 from lmfdb.lattice import lattice_page, lattice_logger
@@ -23,12 +23,26 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
-
-
-
 def vect_to_matrix(v):
 	return str(latex(matrix(v)))	
+
+def print_q_expansion(list):
+     list=[str(c) for c in list]
+     Qa=PolynomialRing(QQ,'a')
+     a = QQ['a'].gen()
+     Qq=PowerSeriesRing(Qa,'q')
+     return str(Qq([c for c in list]).add_bigoh(len(list)+1))
+
+def my_latex(s):
+    ss = ""
+    ss += re.sub('x\d', 'x', s)
+    ss = re.sub("\^(\d+)", "^{\\1}", ss)
+    ss = re.sub('\*', '', ss)
+    ss = re.sub('zeta(\d+)', 'zeta_{\\1}', ss)
+    ss = re.sub('zeta', '\zeta', ss)
+    ss += ""
+    return ss
+
 
 @lattice_page.route("/")
 def lattice_render_webpage():
@@ -65,7 +79,7 @@ def random_lattice():    # Random Lattice
 
 def lattice_search(**args):
     C = getDBConnection()
-    C.Lattices.lat.ensure_index([('dim', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
+    C.Lattices.lat.ensure_index([('dim', ASC), ('label', ASC)])
 
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info:
@@ -91,7 +105,7 @@ def lattice_search(**args):
 		elif field == 'name':
 			query[field] = parse_field_string(info[field])
     info['query'] = dict(query)
-    res = C.Lattices.lat.find(query).sort([('level', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
+    res = C.Lattices.lat.find(query).sort([('level', ASC), ('label', ASC)])
     nres = res.count()
     count = 100
 	
@@ -147,9 +161,9 @@ def render_lattice_webpage(**args):
     info['hermite']=str(f['hermite'])
     info['minimum']=int(f['minimum'])
     info['kissing']=int(f['kissing'])
-    info['shortest']=str(f['shortest'])
+    info['shortest']=str([tuple(v) for v in f['shortest']]).strip('[').strip(']')
     info['aut']=int(f['aut'])
-    info['theta_series']=str(f['theta_series'])
+    info['theta_series']=my_latex(print_q_expansion(f['theta_series']))
     info['class_number']=int(f['class_number'])
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
     info['name']=str(f['name'])
