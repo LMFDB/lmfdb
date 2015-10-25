@@ -112,6 +112,18 @@
    {% endif %}
  {%- endmacro %}
 
+{% macro neighbors(title, entries) -%}
+   {% if entries %}
+    <h1 class="properties-header">{{ title }}</h1>
+    <div class="properties-body">
+    <table>
+       <tr><td>previous</td><td><a href="{{ entries[0][1] }}">{{ entries[0][0] }}</a></td></tr>
+       <tr><td>next</td><td><a href="{{ entries[1][1] }}">{{ entries[1][0] }}</a></td></tr>
+    </table>
+  </div>
+   {% endif %}
+ {%- endmacro %}
+
 {% if (properties2 or friends or downloads or learnmore) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
@@ -138,6 +150,9 @@
       </div>
     {% endif %}
    {{ rightnavig("Related objects", friends) }}
+   {% if navi %}
+       {{ neighbors("Neighbouring objects", navi) }}
+   {% endif %}
    {% if downloads %}
      {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
    {% else %}
