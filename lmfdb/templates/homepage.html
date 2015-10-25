@@ -117,8 +117,12 @@
     <h1 class="properties-header">{{ title }}</h1>
     <div class="properties-body">
     <table>
-       <tr><td>previous</td><td><a href="{{ entries[0][1] }}">{{ entries[0][0]|safe }}</a></td></tr>
+       {% for description, name, url in entries %}
+       <tr><td>{{ description }}</td><td><a href="{{ url }}">{{ name|safe }}</a></td></tr>
+       {% endfor %}
+ {#      <tr><td>previous</td><td><a href="{{ entries[0][1] }}">{{ entries[0][0]|safe }}</a></td></tr>
        <tr><td>next</td><td><a href="{{ entries[1][1] }}">{{ entries[1][0]|safe }}</a></td></tr>
+#}
     </table>
   </div>
    {% endif %}
