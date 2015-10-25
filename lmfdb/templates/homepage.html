@@ -117,8 +117,8 @@
     <h1 class="properties-header">{{ title }}</h1>
     <div class="properties-body">
     <table>
-       <tr><td>previous</td><td><a href="{{ entries[0][1] }}">{{ entries[0][0] }}</a></td></tr>
-       <tr><td>next</td><td><a href="{{ entries[1][1] }}">{{ entries[1][0] }}</a></td></tr>
+       <tr><td>previous</td><td><a href="{{ entries[0][1] }}">{{ entries[0][0]|safe }}</a></td></tr>
+       <tr><td>next</td><td><a href="{{ entries[1][1] }}">{{ entries[1][0]|safe }}</a></td></tr>
     </table>
   </div>
    {% endif %}
@@ -151,7 +151,7 @@
     {% endif %}
    {{ rightnavig("Related objects", friends) }}
    {% if navi %}
-       {{ neighbors("Neighbouring objects", navi) }}
+       {{ neighbors("Nearby objects", navi) }}
    {% endif %}
    {% if downloads %}
      {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
