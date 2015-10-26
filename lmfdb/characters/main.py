@@ -118,7 +118,6 @@ def render_Dirichletwebpage(modulus=None, number=None):
         return render_template('CharGroup.html', **info)
     else:
         info = WebDirichletCharacter(**args).to_dict()
- #       info['navi'] = navi([info['previous'],info['next']])
         info['navi'] = [("previous",) +navi([info['previous']])[0],
                         ("next",) + navi([info['next']])[0]]
         m,n = info['modlabel'], info['numlabel']
