@@ -148,6 +148,15 @@ def render_lattice_webpage(**args):
     info = {}
     info.update(data)
 
+    how_many_coeff = 20
+    try:
+        more = request.args['more']
+        how_many_coeff = how_many_coeff+10
+    except:
+        how_many_coeff = 20
+
+    info['how_many_coeff']= int(how_many_coeff)
+
     info['friends'] = []
 
     bread = [('Lattice', url_for(".lattice_render_webpage")), ('%s' % data['label'], ' ')]
@@ -163,7 +172,8 @@ def render_lattice_webpage(**args):
     info['kissing']=int(f['kissing'])
     info['shortest']=str([tuple(v) for v in f['shortest']]).strip('[').strip(']')
     info['aut']=int(f['aut'])
-    info['theta_series']=my_latex(print_q_expansion(f['theta_series']))
+    coeff=[f['theta_series'][i] for i in range(how_many_coeff+1)]
+    info['theta_series']=my_latex(print_q_expansion(coeff))
     info['class_number']=int(f['class_number'])
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
     info['name']=str(f['name'])
