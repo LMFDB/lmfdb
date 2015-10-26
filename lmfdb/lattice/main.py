@@ -31,7 +31,7 @@ def print_q_expansion(list):
      Qa=PolynomialRing(QQ,'a')
      a = QQ['a'].gen()
      Qq=PowerSeriesRing(Qa,'q')
-     return str(Qq([c for c in list]).add_bigoh(len(list)+1))
+     return str(Qq([c for c in list]).add_bigoh(len(list)))
 
 def my_latex(s):
     ss = ""
@@ -148,14 +148,21 @@ def render_lattice_webpage(**args):
     info = {}
     info.update(data)
 
-    how_many_coeff = 20
     try:
-        more = request.args['more']
-        how_many_coeff = how_many_coeff+10
+        ncoeff = request.args['ncoeff']
+	ncoeff = clean_input(ncoeff)
+        ncoeff=ncoeff.replace(' ', '')
+        if not LIST_RE.match(ncoeff):
+            info['err'] = 'Error parsing input for the number of coefficients. It needs to be an integer' 
+            return search_input_error(info, bread)
+        ncoeff = int(ncoeff)
+	if ncoeff>150:
+	    info['err'] = 'Only the first $150$ coefficients are stored in the database' 
+            return search_input_error(info, bread)
     except:
-        how_many_coeff = 20
+        ncoeff = 20
 
-    info['how_many_coeff']= int(how_many_coeff)
+    info['ncoeff']=int(ncoeff)
 
     info['friends'] = []
 
@@ -172,8 +179,10 @@ def render_lattice_webpage(**args):
     info['kissing']=int(f['kissing'])
     info['shortest']=str([tuple(v) for v in f['shortest']]).strip('[').strip(']')
     info['aut']=int(f['aut'])
-    coeff=[f['theta_series'][i] for i in range(how_many_coeff+1)]
+
+    coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
     info['theta_series']=my_latex(print_q_expansion(coeff))
+
     info['class_number']=int(f['class_number'])
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
     info['name']=str(f['name'])
