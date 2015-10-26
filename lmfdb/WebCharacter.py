@@ -300,8 +300,13 @@ class WebDirichlet(WebCharObject):
     def prevprimchar(m, n):
         if m <= 3:
             return 1, 1
-        if n > 2:
+    #    if n > 2:   why?
+        if n >= 2:
             Gm = DirichletGroup_conrey(m)
+        else:
+            m = m - 1
+            Gm = DirichletGroup_conrey(m)
+            n = m - 1
         while True:
             n -= 1
             if n == 1:  # (m,1) is never primitive for m>1
