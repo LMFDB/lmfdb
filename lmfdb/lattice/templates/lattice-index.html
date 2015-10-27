@@ -9,6 +9,24 @@ The database currently contains ${{info.counts.nlattice_c}}$ {{ KNOWL('lattice.d
 In the case of {{ KNOWL('lattice.primitive', title='primitive') }} {{ KNOWL('lattice.definition', title='integral lattices') }} of {{ KNOWL('lattice.class_number', title='class number') }} one the database is complete.
 </p>
 
+<style type="text/css">
+.error_message {
+   padding: 4px;
+   color: red;
+   font-size: 120%;
+   font-weight: bold;
+   margin: 20px;
+}
+</style>
+{% if err_msg %}
+<p class="error_message">
+{{err_msg}}
+</p>
+<p>
+  <input type=button value="Search again" onClick="history.go(-1)">
+</p>
+{% endif %}
+
 <h2> Browse {{ KNOWL('lattice.definition', title='Integral Lattices') }}</h2>
 
 <p>
@@ -98,10 +116,6 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 </tr>
 </table>
 </form>
-
-
-
-
 
 
 {% endblock %}

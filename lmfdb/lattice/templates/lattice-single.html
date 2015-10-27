@@ -11,6 +11,14 @@ window.history.replaceState({}, document.title, clean_uri);
 {% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
+{% if info.comments != "" or info.name != ""%}
+<p><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs= "name={{info.name}}&com={{info.comments}}" >More information on the integral lattice {{info.label}}</a></p> 
+{% endif %}
+
+
+<p><a title = "{{info.label}} [lattice.data]" knowl= "test.knowlparam" kwargs= "x=1&yy=2" >More information on the integral lattice {{info.label}}</a></p> 
+
+
 <h2> {{ KNOWL('lattice.gram_matrix', title='Gram Matrix') }} </h2>
 <p>${{info.gram}}$</p>
 
@@ -53,11 +61,6 @@ ${{n}}$
 </td></tr>
 </table>
 
-
-{% if info.comments != "" %}
-<h2> Comments </h2>
-{{info.comments }}
-{% endif %}
 
 {% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>

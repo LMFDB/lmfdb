@@ -197,3 +197,21 @@ def render_lattice_webpage(**args):
 
 
 
+
+
+
+
+def lattice_jump_error(label, args, wellformed_label=False, missing_lattice_name=False):
+    err_args = {}
+    for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut']:
+        err_args[field] = args.get(field, '')
+    if wellformed_label:
+        err_args['err_msg'] = "No integral lattice in the database has label %s" % label
+    elif missing_lattice_name:
+        err_args['err_msg'] = "The name %s for an integral lattice is not recorded in the database" % args.get('name','?')
+    else:
+        err_args['err_msg'] = "%s does not define an integral lattice in the database" % label
+    return rational_elliptic_curves(err_args)
+
+
+
