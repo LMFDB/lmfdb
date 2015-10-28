@@ -21,7 +21,7 @@
       {{ wt }}
     </td>
     {% for j in jrange %}
-    <td>{{dimtable[wt][j] }}
+    <td>${{dimtable[wt][j] }}$
     </td>
     {% endfor %}
   </tr>
@@ -33,6 +33,3 @@
 {% endif %}
 
 {% endblock %}
-
-
-
