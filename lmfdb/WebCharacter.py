@@ -723,7 +723,7 @@ class WebChar(WebCharObject):
         f.append( ("Character group", cglink) )
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
-        if self.type == 'Dirichlet':
+        if self.type == 'Dirichlet' and self.isprimitive=='Yes':
             f.append( ('L function', '/L'+ url_character(type=self.type,
                                     number_field=self.nflabel,
                                     modulus=self.modlabel,
