@@ -24,7 +24,7 @@ level structure.
       {{ wt }}
     </td>
     {% for j in jrange %}
-    <td>${{dimtable[wt][j] }}$
+    <td>{% if dimtable[wt][j]>0 %} <a href="/ModularForm/GSp/Q/Sp4Z_j/{{j}}/{{wt}}/">${{dimtable[wt][j] }}$</a> {% else %} 0 {% endif%}
     </td>
     {% endfor %}
   </tr>

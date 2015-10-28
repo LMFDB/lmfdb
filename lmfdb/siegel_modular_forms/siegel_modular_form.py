@@ -44,6 +44,10 @@ def rescan_collection():
     global COLNS
     COLNS = colns
 
+@app.route('/ModularForm/GSp/Q/Sp4Z_j/<j>/<k>')
+def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
+    return render_template('None.htm');
+
 @app.route('/ModularForm/GSp/Q/Sp4Z_j')
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/')
 def ModularForm_GSp4_Q_Sp4Z_j():
@@ -53,11 +57,21 @@ def ModularForm_GSp4_Q_Sp4Z_j():
     krange = xrange(10, 20)
     if request.args.get('j'):
         jr = parse_range(request.args.get('j'))
-        jrange = xrange(jr['$gte'], jr['$lte'])
+        if type(jr) is int:
+            jrange = xrange(jr, jr+10);
+        else:
+            jrange = xrange(jr['$gte'], jr['$lte'])
     if request.args.get('k'):
         kr = parse_range(request.args.get('k'))
-        krange = xrange(kr['$gte'], kr['$lte'])
-    dimtable = dimensions.dimension_table_Sp4Z_j(krange, jrange)
+        if type(kr) is int:
+            krange = xrange(kr, kr+10);
+        else:
+            krange = xrange(kr['$gte'], kr['$lte'])
+    try:
+        dimtable = dimensions.dimension_table_Sp4Z_j(krange, jrange)
+    except:
+        error={'error': 'Not all dimensions are implemented at the moment. Try again with a different range'}
+        return render_template("None.html", **error);
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
                            title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$',
                            bread = bread,
