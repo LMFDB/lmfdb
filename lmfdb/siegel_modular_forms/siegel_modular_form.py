@@ -49,7 +49,7 @@ def rescan_collection():
 def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
     bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', '/ModularForm/GSp/Q/Sp4Z_j'),
-             ('$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z})$'%(k,j), '/ModularForm/GSp/Q/Sp4Z_j/%s/%s'%(k,j))]
+             ('$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '/ModularForm/GSp/Q/Sp4Z_j/%s/%s'%(k,j))]
     
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
                            title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
@@ -61,7 +61,7 @@ def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/')
 def ModularForm_GSp4_Q_Sp4Z_j():
     bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
-             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', '/ModularForm/GSp/Q/Sp4Z_j')]
+             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '/ModularForm/GSp/Q/Sp4Z_j')]
     jrange = xrange(0, 11)
     krange = xrange(10, 20)
     if request.args.get('j'):
@@ -82,7 +82,7 @@ def ModularForm_GSp4_Q_Sp4Z_j():
         error={'error': 'Not all dimensions are implemented at the moment. Try again with a different range'}
         return render_template("None.html", **error);
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
-                           title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$',
+                           title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
                            bread = bread,
                            dimtable = dimtable,
                            jrange=jrange,
