@@ -518,12 +518,13 @@ def initLfunction(L, args, request):
         Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
         if mod > 1:
             pmod,pnum = WebDirichlet.prevprimchar(mod, num)
-            Lprev = (Lpattern%(pmod,pnum),url_for('.l_function_dirichlet_page',modulus=pmod,number=pnum))
+            Lprev = ("previous",Lpattern%(pmod,pnum),url_for('.l_function_dirichlet_page',modulus=pmod,number=pnum))
         else:
             Lprev = ('','')
         nmod,nnum = WebDirichlet.nextprimchar(mod, num)
-        Lnext = (Lpattern%(nmod,nnum),url_for('.l_function_dirichlet_page',modulus=nmod,number=nnum))
+        Lnext = ("next",Lpattern%(nmod,nnum),url_for('.l_function_dirichlet_page',modulus=nmod,number=nnum))
         info['navi'] = (Lprev,Lnext)
+        print info['navi']
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
         charname = WebDirichlet.char2tex(smod, snum)
