@@ -3,6 +3,7 @@
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
 from flask import render_template, url_for, request, send_file
+from lmfdb.utils import parse_range
 # import siegel_core
 import input_parser
 import dimensions
@@ -48,9 +49,14 @@ def rescan_collection():
 def ModularForm_GSp4_Q_Sp4Z_j():
     bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', '/ModularForm/GSp/Q/Sp4Z_j')]
-    
     jrange = xrange(0, 11)
     krange = xrange(10, 20)
+    if request.args.get('j'):
+        jr = parse_range(request.args.get('j'))
+        jrange = xrange(jr['$gte'], jr['$lte'])
+    if request.args.get('k'):
+        kr = parse_range(request.args.get('k'))
+        krange = xrange(kr['$gte'], kr['$lte'])
     dimtable = dimensions.dimension_table_Sp4Z_j(krange, jrange)
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
                            title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$',

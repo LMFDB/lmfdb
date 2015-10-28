@@ -3,16 +3,15 @@
 
 {% if not error %}
 
-Below are the spaces of Siegel Modular Forms with full level structure.
+Below are the dimensions of spaces of Siegel Modular Forms with full
+level structure.
 <h2>Dimensions</h2>
 <table>
   <thead>
-    <tr><th></th><th>j</th></tr>
+    <tr><th>k</th><th>j</th></tr>
   </thead>
   <tr>
-    <th>
-      k
-    </th>
+    <td></td>
     {% for j in jrange %}
     <td> {{j}}
     </td>
@@ -31,6 +30,12 @@ Below are the spaces of Siegel Modular Forms with full level structure.
   </tr>
   {% endfor %}
 </table>
+
+<form id="dimensionForm" action="/ModularForm/GSp/Q/Sp4Z_j" method="get">
+ <span>k:</span> <input id="k" name="k"/>
+  <span>j:</span><input id="j" name="j"/>
+  <button type="submit" value="submit">Find</button>
+</form>
 
 {% else %}
 {% include 'None.html' %}
