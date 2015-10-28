@@ -113,7 +113,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         m = info['modlabel']
         info['bread'] = [('Characters','/Character'),
                          ('Dirichlet','/Character/Dirichlet'),
-                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m)]
+                         ('Mod %s'%m, '/Character/Dirichlet/%s'%m)]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
@@ -122,8 +122,8 @@ def render_Dirichletwebpage(modulus=None, number=None):
         m,n = info['modlabel'], info['numlabel']
         info['bread'] = [('Characters','/Character'),
                          ('Dirichlet','/Character/Dirichlet'),
-                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m),
-                         ('Character number %s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
+                         ('Mod %s'%m, '/Character/Dirichlet/%s'%m),
+                         ('# %s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
         #logger.info(info)
         return render_template('Character.html', **info)
 
