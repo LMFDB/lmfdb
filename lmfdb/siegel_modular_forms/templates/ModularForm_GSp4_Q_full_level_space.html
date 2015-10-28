@@ -1,0 +1,14 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+
+This is a space of <a knowl="mf.siegel">Siegel Modular Forms</a>
+of full level with weight {{k}} and representation $\mathrm{Sym}^{{j}}$.
+
+
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+{% endblock %}

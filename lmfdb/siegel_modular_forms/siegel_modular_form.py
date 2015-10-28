@@ -45,8 +45,17 @@ def rescan_collection():
     COLNS = colns
 
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/<j>/<k>')
+@app.route('/ModularForm/GSp/Q/Sp4Z_j/<j>/<k>/')
 def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
-    return render_template('None.htm');
+    bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
+             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', '/ModularForm/GSp/Q/Sp4Z_j'),
+             ('$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z})$'%(k,j), '/ModularForm/GSp/Q/Sp4Z_j/%s/%s'%(k,j))]
+    
+    return render_template('ModularForm_GSp4_Q_full_level_space.html',
+                           title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
+                           k=k,
+                           j=j,
+                           bread=bread);
 
 @app.route('/ModularForm/GSp/Q/Sp4Z_j')
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/')
