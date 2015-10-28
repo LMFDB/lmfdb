@@ -123,7 +123,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         info['bread'] = [('Characters','/Character'),
                          ('Dirichlet','/Character/Dirichlet'),
                          ('Mod %s'%m, '/Character/Dirichlet/%s'%m),
-                         ('# %s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
+                         ('#%s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
         #logger.info(info)
         return render_template('Character.html', **info)
 
@@ -178,7 +178,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         info['bread'] = [('Characters','/Character'),
                          ('Hecke','/Character/Hecke'),
                          ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
-                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m))]
+                         ('Mod %s'%m, '/Character/Hecke/%s/%s'%(number_field,m))]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
@@ -188,8 +188,8 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         info['bread'] = [('Characters','/Character'),
                          ('Hecke','/Character/Hecke'),
                          ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
-                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m)),
-                         ('Character number %s'%n, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
+                         ('Mod %s'%m, '/Character/Hecke/%s/%s'%(number_field,m)),
+                         ('#%s'%n, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
         #logger.info(info)
         return render_template('Character.html', **info)
 
