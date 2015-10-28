@@ -11,21 +11,13 @@ window.history.replaceState({}, document.title, clean_uri);
 {% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
-{% if info.name or not info.comments %}
-<p>{{info.knowl_args}}</p>
-<p><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs={{info.knowl_args}} >More information on this integral lattice.</a></p> 
-{% endif %}
-
-
-<!--<p><a title = "{{info.label}} [lattice.data]" knowl= "test.knowlparam" kwargs= "x=1&yy=2" >More information on the integral lattice {{info.label}}</a></p> -->
-
-
 <h2> {{ KNOWL('lattice.gram_matrix', title='Gram Matrix') }} </h2>
 <p>${{info.gram}}$</p>
 
 <h2> Lattice Invariants </h2>
 
 <table>
+    <tr><td align=right>{{ KNOWL('lattice.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
@@ -61,6 +53,21 @@ ${{n}}$
 {% endfor %}
 </td></tr>
 </table>
+
+
+<br>
+{% if info.name or info.comments %}
+<h2><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs={{info.knowl_args}}>Comments</a></h2>
+
+{% if info.name != " " %}
+<p>This integral lattice is known with {{KNOWL('lattice.name', title='name')}} {{ info.name }}.</p>
+{% endif %}
+
+{% if info.comments != " " %}
+<p>{{info.comments}}.</p>
+{% endif %}
+
+{% endif %}
 
 
 {% set KNOWL_ID = "lattice.%s"|format(info['label']) %}

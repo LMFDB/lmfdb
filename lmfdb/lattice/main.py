@@ -135,7 +135,6 @@ def lattice_search(**args):
     return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread)
 
 
-
 @lattice_page.route('/<label>')
 def render_lattice_webpage(**args):
     C = getDBConnection()
@@ -192,9 +191,16 @@ def render_lattice_webpage(**args):
     else:
 	t = "Integral Lattice "+info['label']+" ("+info['name']+")"
     if info['name'] != "" or info['comments'] !="":
-	info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-'))
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread)
-
+	info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
+    info['properties'] = [
+			('Label', '$%s$' % info['label']),
+			('Dimension', '$%s$' % info['dim']),
+			('Gram matrix', '$%s$' % info['gram']),
+			]
+    if info['name'] != "" :
+	info['properties'].append(('Name','$%s$' % info['name'] ))
+    friends = [('L-series', ' ' ),('Half integral weight modular forms', ' ')]
+    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends)
 
 
 def lattice_jump_error(label, args, wellformed_label=False, missing_lattice_name=False):
