@@ -7,10 +7,10 @@ import pymongo
 ASC = pymongo.ASCENDING
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect
-from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, parse_torsion_structure
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
-from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, make_field
+from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import parse_list, parse_field_string, field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
@@ -69,11 +69,6 @@ def get_bread(*breads):
     bc = [("Elliptic Curves", url_for(".index"))]
     map(bc.append, breads)
     return bc
-
-
-def web_ainvs(field_label, ainvs):
-    return web_latex([make_field(field_label).parse_NFelt(x) for x in ainvs])
-
 
 @ecnf_page.route("/")
 def index():
@@ -300,11 +295,13 @@ def elliptic_curve_search(**args):
         query[tmp[0]] = tmp[1]
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        info['torsion_structure'] = clean_input(info['torsion_structure'])
-        if not TORS_RE.match(info['torsion_structure']):
-            info['err'] = 'Error parsing input for the torsion structure.  It needs to be one or more integers in square brackets, such as [6], [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.'
+        res = parse_torsion_structure(info['torsion_structure'],2)
+        if 'Error' in res:
+            info['err'] = res
             return search_input_error(info, bread)
-        query['torsion_structure'] = parse_list(info['torsion_structure'])
+        #update info for repeat searches
+        info['torsion_structure'] = str(res).replace(' ','')
+        query['torsion_structure'] = [int(r) for r in res]
 
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         query['number'] = 1

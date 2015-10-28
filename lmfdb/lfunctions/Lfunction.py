@@ -9,6 +9,8 @@
 import math
 import re
 
+from flask import url_for
+
 from Lfunctionutilities import (p2sage, seriescoeff,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
@@ -20,6 +22,7 @@ import LfunctionDatabase
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
+from lmfdb.utils import web_latex
 
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -30,6 +33,7 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
+from lmfdb.base import url_for
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons
@@ -496,7 +500,6 @@ class Lfunction_HMF(Lfunction):
         self.mu_fe = []
         self.nu_fe = [self.automorphyexp for i in range(self.field_degree)]
         
-        
         self.kappa_fe = [1 for i in range(self.field_degree)]
         self.lambda_fe = [self.automorphyexp for i in range(self.field_degree)]
         self.Q_fe = (float(sqrt(self.level)) / (2 * math.pi) **
@@ -514,7 +517,12 @@ class Lfunction_HMF(Lfunction):
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level>1, calculate sign from Fricke involution and weight
-            AL_signs = [iota(eval(al[1])) for al in f['AL_eigenvalues']]
+            ALeigs = [al[1].replace('^', '**') for al in f['AL_eigenvalues']]
+            # the above fixed a bug at
+            # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
+            # but now the sign is wrong (i.e., not of absolute value 1 *)
+       #     AL_signs = [iota(eval(al[1])) for al in f['AL_eigenvalues']]
+            AL_signs = [iota(eval(al)) for al in ALeigs]
             self.sign = prod(AL_signs) * (-1) ** (float(self.weight *
                                                         self.field_degree / 2))
         logger.debug("Sign: " + str(self.sign))
@@ -583,7 +591,7 @@ class Lfunction_HMF(Lfunction):
 
         self.coefficient_period = 0
         self.coefficient_type = 3
-        self.quasidegree = 1
+        self.quasidegree = self.degree
 
         self.checkselfdual()
 
@@ -1016,7 +1024,7 @@ class DedekindZeta(Lfunction):   # added by DK
 
         self.coefficient_period = 0
         self.selfdual = True
-        self.primitive = True
+        self.primitive = False
         self.coefficient_type = 3
         self.texname = "\\zeta_K(s)"
         self.texnamecompleteds = "\\Lambda_K(s)"
@@ -1024,9 +1032,7 @@ class DedekindZeta(Lfunction):   # added by DK
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
         else:
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
-        self.title = "Dedekind zeta-function: $\\zeta_K(s)$"
-        self.title = (self.title + ", where $K$ is the " +
-                      str(self.NF).replace("in a ", ""))
+        self.title = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
         self.credit = 'Sage'
         self.citation = ''
 

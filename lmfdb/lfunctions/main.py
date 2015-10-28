@@ -34,6 +34,18 @@ def l_function_top_page():
     info = set_info_for_start_page()
     return render_template("LfunctionNavigate.html", **info)
 
+@l_function_page.route("/history")
+def l_function_history():
+    from lmfdb.pages import _single_knowl
+    t = "A brief history of L-functions"
+
+    bc = [('L-functions', url_for('.l_function_top_page')),
+          (t, url_for('.l_function_history'))]
+    return render_template(_single_knowl, title=t, kid='lfunction.intro', body_class='', bread=bc)
+    
+
+
+
 # Degree 1 L-functions browsing page ##############################################
 @l_function_page.route("/degree1/")
 def l_function_dirichlet_browse_page():
@@ -641,11 +653,10 @@ def initLfunction(L, args, request):
         #info['friends'] = [('Hypergeometric motive ', friendlink.replace("t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
         info['friends'] = [('Hypergeometric motive ', friendlink)]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
 
-
     # the code below should be in Lfunction.py
     info['conductor'] = L.level
     if not is_prime(L.level):
-        info['conductor_factored'] = latex(factor(L.level))
+        info['conductor_factored'] = latex(factor(int(L.level)))
 
     info['degree'] = L.degree
     info['sign'] = "$"+styleTheSign(L.sign)+"$"
