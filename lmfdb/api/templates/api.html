@@ -1,0 +1,22 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h1>LMFDB API</h1>
+
+<ul>
+{% for db, collections in databases.iteritems() %}
+  <li>
+    <b>{{ db }}</b>
+    (<a href="https://github.com/LMFDB/lmfdb-inventory/blob/master/db-{{ db }}.md"
+       target="_blank">description</a>)
+    <br/>
+      {% for collection in collections %}
+        <a href="{{ url_for('.api_query', db=db, collection=collection) }}">{{ collection }}</a>
+        {% if not loop.last %}&middot;{% endif %}
+      {% endfor %}
+  </li>
+{% endfor %}
+</ul>
+
+{% endblock %}
