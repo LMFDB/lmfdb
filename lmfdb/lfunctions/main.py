@@ -34,6 +34,18 @@ def l_function_top_page():
     info = set_info_for_start_page()
     return render_template("LfunctionNavigate.html", **info)
 
+@l_function_page.route("/history")
+def l_function_history():
+    from lmfdb.pages import _single_knowl
+    t = "A brief history of L-functions"
+
+    bc = [('L-functions', url_for('.l_function_top_page')),
+          (t, url_for('.l_function_history'))]
+    return render_template(_single_knowl, title=t, kid='lfunction.intro', body_class='', bread=bc)
+    
+
+
+
 # Degree 1 L-functions browsing page ##############################################
 @l_function_page.route("/degree1/")
 def l_function_dirichlet_browse_page():
