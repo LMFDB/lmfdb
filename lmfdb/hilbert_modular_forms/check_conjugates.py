@@ -17,7 +17,8 @@ sys.path.append("../..");
 import pymongo
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from lmfdb.WebNumberField import WebNumberField
-from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals, conjideals, str2ideal)
+from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals,
+ conjideals, str2ideal, HilbertNumberField)
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=dbport)
@@ -51,6 +52,21 @@ def get_Fdata(label):
 
 def nautos(label):
     return len(get_WNF(label, 'a').K().automorphisms())
+
+def checkprimes(label):
+    Fdata = get_Fdata(label)
+    gen_name = findvar(Fdata['ideals'])
+    WebF = get_WNF(label, gen_name)
+    F = WebF.K()
+    ideals = niceideals(F, Fdata['ideals'])
+    primes = niceideals(F, Fdata['primes'])
+    F = HilbertNumberField(label)
+    L = []
+    for prhnf,prideal,prlabel in primes:
+        ideal = F.ideal(prlabel)
+        if ideal != prideal:
+            L.append(prlabel)
+    return L
 
 def fldlabel2conjdata(label):
     data = {}
