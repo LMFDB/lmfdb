@@ -187,17 +187,13 @@ def render_lattice_webpage(**args):
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
     info['name']=str(f['name'])
     info['comments']=str(f['comments'])
-
     if info['name'] == "":
 	t = "Integral Lattice %s" % info['label']
     else:
 	t = "Integral Lattice "+info['label']+" ("+info['name']+")"
-
+    if info['name'] != "" or info['comments'] !="":
+	info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-'))
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread)
-
-
-
-
 
 
 
