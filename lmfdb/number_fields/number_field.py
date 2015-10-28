@@ -76,7 +76,12 @@ def ctx_galois_groups():
 
 @app.context_processor
 def ctx_number_fields():
-    return {'number_field_data': number_field_data}
+    return {'number_field_data': number_field_data,
+            'global_numberfield_summary': global_numberfield_summary}
+
+def global_numberfield_summary():
+    init_nf_count()
+    return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('.render_class_group_data'))
 
 def group_display_shortC(C):
     def gds(nt):
@@ -265,8 +270,8 @@ def number_field_render_webpage():
         }
         t = 'Global Number Fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
-        info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-        return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread)  # , learnmore=info.pop('learnmore'))
+        info['learnmore'] = [(Completename, url_for(".render_discriminants_page")), ('How data was computed', url_for(".how_computed_page")), ('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
+        return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
     else:
         return number_field_search(**args)
 
@@ -868,3 +873,11 @@ def download_search(info, res):
     return send_file(strIO,
                      attachment_filename=filename,
                      as_attachment=True)
+
+@nf_page.route("/HowComputed")
+def how_computed_page():
+    info = {}
+    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
+    t = 'How This Data Was Computed'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('How computed', ' ')]
+    return render_template("how_computed.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
