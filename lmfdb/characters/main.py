@@ -14,6 +14,7 @@ from lmfdb.utils import to_dict, parse_range, make_logger
 from lmfdb.WebCharacter import *
 from lmfdb.characters import characters_page, logger
 import ListCharacters
+from lmfdb.WebNumberField import WebNumberField
 
 try:
     from dirichlet_conrey import *
@@ -189,14 +190,15 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
-        info = WebHeckeCharacter(**args).to_dict()
+        X = WebHeckeCharacter(**args)
+        info = X.to_dict()
         info['navi'] = navi([info['previous'],info['next']])
         m,n = info['modlabel'], info['number']
         info['bread'] = [('Characters','/Character'),
                          ('Hecke','/Character/Hecke'),
                          ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
-                         ('Mod %s'%m, '/Character/Hecke/%s/%s'%(number_field,m)),
-                         ('#%s'%n, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
+                         ('Mod %s'%X.modulus, '/Character/Hecke/%s/%s'%(number_field,m)),
+                         ('#%s'%X.number, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
         #logger.info(info)
         # TODO fix navi field
         del info["navi"]
