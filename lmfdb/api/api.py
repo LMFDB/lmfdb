@@ -68,8 +68,8 @@ def api_query(db, collection, id = None):
 
     # preparing the actual database query q
     C = base.getDBConnection()
-    q = dict(request.args)
-
+    q = {}
+    
     if id is not None:
         if id.startswith("ObjectId("):
             q["_id"] = ObjectId(id[9:-1])
@@ -78,9 +78,16 @@ def api_query(db, collection, id = None):
         single_object = True
     else:
         single_object = False
-
-    q.pop("_offset", None)
-    q.pop("_format", None)
+        
+    for qkey, qval in request.args.iteritems():
+        if qkey.startswith("_"):
+            continue
+        if qval.startswith("i"):
+            qval = int(qval[1:])
+        elif qval.startswith("f"):
+            qval = float(qval[1:])
+            
+        q[qkey] = qval
 
     # executing the query "q" and replacing the _id in the result list
     data = list(C[db][collection].find(q).skip(offset).limit(100))
