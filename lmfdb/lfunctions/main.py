@@ -41,7 +41,7 @@ def l_function_history():
 
     bc = [('L-functions', url_for('.l_function_top_page')),
           (t, url_for('.l_function_history'))]
-    return render_template(_single_knowl, title=t, kid='lfunction.intro', body_class='', bread=bc)
+    return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc)
     
 
 
