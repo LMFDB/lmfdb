@@ -50,7 +50,7 @@ def collapse_ors(parsed, query):
         parsed[1] = newors
     query[parsed[0]] = parsed[1]
 
-def parse_ints(inp, query, field, url, name=None):
+def parse_ints(inp, query, field, url=None, name=None):
     if not inp: return
     if name is None: 
         name = field.replace('_',' ')
@@ -58,7 +58,7 @@ def parse_ints(inp, query, field, url, name=None):
     cleaned = cleaned.replace('..', '-').replace(' ', '')
     if not LIST_RE.match(cleaned):
         flash("Error parsing input: %s is not a valid input. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % inp, "error")
-        return redirect(url)
-#       raise ValueError
+        if url is not None:
+            return redirect(url)
     else:
         collapse_ors(parse_range2(cleaned, field), query)

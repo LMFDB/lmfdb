@@ -91,7 +91,11 @@ def lattice_search(**args):
     for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut', 'name']:
         if info.get(field):
             if field in ['dim', 'det', 'level', 'class_number', 'aut']:
-                check= parse_ints(info.get(field), query, field, url_for(".lattice_render_webpage"))
+                try:
+                    info['start']
+                    check= parse_ints(info.get(field), query, field)
+                except:
+                    check= parse_ints(info.get(field), query, field, url_for(".lattice_render_webpage"))
                 if check is not None:
                     return check
 #			    except ValueError as err:
@@ -103,16 +107,16 @@ def lattice_search(**args):
 #			query[field] = int(info[field])
 #		elif field == 'level':
 #			query[field] = int(info[field])
-		elif field == 'gram':
-			query[field] = parse_field_string(info[field])
-		elif field == 'minimum':
-			query[field] = int(info[field])
+            elif field == 'gram':
+                query[field] = parse_field_string(info[field])
+            elif field == 'minimum':
+                query[field] = int(info[field])
 #		elif field == 'class_number':
 #			query[field] = int(info[field])
 #		elif field == 'aut':
 #			query[field] = int(info[field])
-		elif field == 'name':
-			query[field] = parse_field_string(info[field])
+            elif field == 'name':
+                query[field] = parse_field_string(info[field])
     info['query'] = dict(query)
     res = C.Lattices.lat.find(query).sort([('level', ASC), ('label', ASC)])
     nres = res.count()
