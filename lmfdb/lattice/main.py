@@ -6,13 +6,16 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing
 
 from lmfdb.lattice import lattice_page, lattice_logger
 from lmfdb.lattice.lattice_stats import get_stats
+from lmfdb.search_parsing import parse_ints
+
+
 
 lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
@@ -80,7 +83,6 @@ def random_lattice():    # Random Lattice
 def lattice_search(**args):
     C = getDBConnection()
     C.Lattices.lat.ensure_index([('dim', ASC), ('label', ASC)])
-
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info:
         args = {'label': info['label']}
@@ -88,20 +90,27 @@ def lattice_search(**args):
     query = {}
     for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut', 'name']:
         if info.get(field):
-		if field == 'dim':
-			query[field] = int(info[field])
-		elif field == 'det':
-			query[field] = int(info[field])
-		elif field == 'level':
-			query[field] = int(info[field])
+            if field in ['dim', 'det', 'level', 'class_number', 'aut']:
+                check= parse_ints(info.get(field), query, field, url_for(".lattice_render_webpage"))
+                if check is not None:
+                    return check
+#			    except ValueError as err:
+#				info['err'] = str(err)
+#				flash( err.message, "error")
+#				return redirect(url_for('lattice.lattice_render_webpage'))
+#				query[field] = int(info[field])
+#		elif field == 'det':
+#			query[field] = int(info[field])
+#		elif field == 'level':
+#			query[field] = int(info[field])
 		elif field == 'gram':
 			query[field] = parse_field_string(info[field])
 		elif field == 'minimum':
 			query[field] = int(info[field])
-		elif field == 'class_number':
-			query[field] = int(info[field])
-		elif field == 'aut':
-			query[field] = int(info[field])
+#		elif field == 'class_number':
+#			query[field] = int(info[field])
+#		elif field == 'aut':
+#			query[field] = int(info[field])
 		elif field == 'name':
 			query[field] = parse_field_string(info[field])
     info['query'] = dict(query)
@@ -203,17 +212,15 @@ def render_lattice_webpage(**args):
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends)
 
 
-def lattice_jump_error(label, args, wellformed_label=False, missing_lattice_name=False):
+def lattice_label_error(label, args, wellformed_label=False, missing_lattice_name=False):
     err_args = {}
-    for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut']:
-        err_args[field] = args.get(field, '')
     if wellformed_label:
-        err_args['err_msg'] = "No integral lattice in the database has label %s" % label
+        flash("No integral lattice in the database has label %s" % label, "error")
     elif missing_lattice_name:
-        err_args['err_msg'] = "The name %s for an integral lattice is not recorded in the database" % args.get('name','?')
+        flash("The name %s for an integral lattice is not recorded in the database" % args.get('name','?'), "error")
     else:
-        err_args['err_msg'] = "%s does not define an integral lattice in the database" % label
-    return rational_elliptic_curves(err_args)
+        flash("%s does not define an integral lattice in the database" % label, "error")
+
 
 
 
