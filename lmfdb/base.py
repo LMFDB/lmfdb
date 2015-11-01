@@ -90,7 +90,7 @@ def _db_reconnect(func):
 # _db_reconnect(Connection._send_message_with_response)
 
 
-def _init(dbport, readwrite_password, parallel_authentication=False):
+def _init(dbport):
     import pymongo
     makeDBConnection(dbport)
     C = getDBConnection()
