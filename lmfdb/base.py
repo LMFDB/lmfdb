@@ -107,10 +107,32 @@ def _db_reconnect(func):
 
 
 def _init(dbport, readwrite_password, parallel_authentication=False):
+    import pymongo
     makeDBConnection(dbport)
     C = getDBConnection()
 
-    # Disabling authentication completely as it does not work:
+    from os.path import dirname, join
+    pw_filename = join(dirname(dirname(__file__)), "password")
+    logging.info("fn: %s" % pw_filename)
+    try:
+        username = "webserver"
+        password = open(pw_filename, "r").readlines()[0].strip()
+    except:
+        # file not found or any other problem
+        # this is read-only everywhere
+        logging.warning("authentication: no password -- fallback to read-only access")
+        username = "lmfdb"
+        password = "lmfdb"
+
+    try:
+        C["admin"].authenticate(username, password)
+        if username == "webserver":
+            logging.info("authentication: partial read-write access enabled")
+    except pymongo.errors.PyMongoError as err:
+        logging.error("authentication: FAILED -- aborting")
+        raise err
+
+    # code below this line is only for reference purposes
     return
 
     def db_auth_task(db, readonly=False):
