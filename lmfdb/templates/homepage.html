@@ -87,7 +87,9 @@
 <div id="sidebar">
 {%- include "sidebar.html" -%}
 
-{{ entry("Data", getUploadedFor(request.path, true) ) }}
+{% if user_is_authenticated -%}
+    {{ entry("Data", getUploadedFor(request.path, true) ) }}
+{% endif %}
 
 </div>
 
