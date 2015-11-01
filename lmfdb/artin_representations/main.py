@@ -16,9 +16,12 @@ from lmfdb.math_classes import *
 from lmfdb.WebNumberField import *
 
 def initialize_indices():
-    ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC),("galorbit", ASC)])
-    ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor", ASC)])
-    ArtinRepresentation.collection().ensure_index([("Conductor", ASC), ("Dim", ASC)])
+    try:
+        ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC),("galorbit", ASC)])
+        ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor", ASC)])
+        ArtinRepresentation.collection().ensure_index([("Conductor", ASC), ("Dim", ASC)])
+    except pymongo.errors.OperationFailure:
+        pass
 
 
 def get_bread(breads=[]):
