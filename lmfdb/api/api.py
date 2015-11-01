@@ -13,6 +13,9 @@ from bson.objectid import ObjectId
 # caches the database information
 _databases = None
 
+def pluck(n, list):
+    return [_[n] for _ in list]
+
 
 def censor(entries):
     """
@@ -32,7 +35,8 @@ def init_database_info():
         C = base.getDBConnection()
         _databases = {}
         for db in censor(C.database_names()):
-            _databases[db] = list(censor(C[db].collection_names()))
+            colls = list(censor(C[db].collection_names()))
+            _databases[db] = [(c, C[db][c].count()) for c in colls]
 
 
 @api_page.route("/")
@@ -53,12 +57,13 @@ def api_query(db, collection, id = None):
     init_database_info()
 
     # check what is queried for
-    if db not in _databases or collection not in _databases[db]:
+    if db not in _databases or collection not in pluck(0, _databases[db]):
         return flask.abort(404)
 
     # parsing the meta parameters _format and _offset
     format = request.args.get("_format", "html")
     offset = int(request.args.get("_offset", 0))
+    DELIM = request.args.get("_delim", ",")
     if offset > 10000:
         if format != "html":
             flask.abort(404)
@@ -69,24 +74,46 @@ def api_query(db, collection, id = None):
     # preparing the actual database query q
     C = base.getDBConnection()
     q = {}
-    
+
     if id is not None:
-        if id.startswith("ObjectId("):
-            q["_id"] = ObjectId(id[9:-1])
+        if id.startswith("ObjectId-"):
+            q["_id"] = ObjectId(id[9:])
         else:
             q["_id"] = id
         single_object = True
     else:
         single_object = False
-        
+
     for qkey, qval in request.args.iteritems():
-        if qkey.startswith("_"):
-            continue
-        if qval.startswith("i"):
-            qval = int(qval[1:])
-        elif qval.startswith("f"):
-            qval = float(qval[1:])
-            
+        try:
+            if qkey.startswith("_"):
+                continue
+            if qval.startswith("s"):
+                qval = qval[1:]
+            if qval.startswith("i"):
+                qval = int(qval[1:])
+            elif qval.startswith("f"):
+                qval = float(qval[1:])
+            elif qval.startswith("ls"):      # indicator, that it might be a list of strings
+                qval = qval[2:].split(DELIM)
+            elif qval.startswith("li"):
+                qval = [int(_) for _ in qval[2:].split(DELIM)]
+            elif qval.startswith("lf"):
+                qval = [float(_) for _ in qval[2:].split(DELIM)]
+            elif qval.startswith("py"):     # literal evaluation
+                from ast import literal_eval
+                qval = literal_eval(qval[2:])
+            elif qval.startswith("cs"):     # containing string in list
+                qval = { "$in" : [qval[2:]] }
+            elif qval.startswith("ci"):
+                qval = { "$in" : [int(qval[2:])] }
+            elif qval.startswith("cf"):
+                qval = { "$in" : [float(qval[2:])] }
+        except:
+            # no suitable conversion for the value, keep it as string
+            pass
+
+        # update the query
         q[qkey] = qval
 
     # executing the query "q" and replacing the _id in the result list
@@ -94,7 +121,7 @@ def api_query(db, collection, id = None):
     for document in data:
         oid = document["_id"]
         if type(oid) == ObjectId:
-            document["_id"] = "ObjectId(%s)" % oid
+            document["_id"] = "ObjectId-%s" % oid
         elif isinstance(oid, basestring):
             document["_id"] = str(oid)
 
@@ -128,7 +155,7 @@ def api_query(db, collection, id = None):
                       default_flow_style=False,
                       canonical=False,
                       allow_unicode=True)
-        return flask.Response(y, mimetype='application/yaml')
+        return flask.Response(y, mimetype='text/plain')
     else:
         location = "%s/%s" % (db, collection)
         title = "API - " + location
