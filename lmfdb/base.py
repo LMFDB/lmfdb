@@ -49,6 +49,8 @@ def makeDBConnection(dbport):
         else:
             from pymongo.mongo_client import MongoClient
             _C = MongoClient(port=dbport)
+        mongo_info = _C.server_info()
+        logging.info("mongodb version: %s" % mongo_info["version"])
 
 AUTO_RECONNECT_MAX = 10
 AUTO_RECONNECT_DELAY = 1
