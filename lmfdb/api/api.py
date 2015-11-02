@@ -43,7 +43,7 @@ def init_database_info():
 def index():
     init_database_info()
     databases = _databases
-    title = "LMFDB API"
+    title = "API"
     return render_template("api.html", **locals())
 
 
