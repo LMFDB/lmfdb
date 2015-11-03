@@ -6,6 +6,7 @@ import gridfs
 import bson
 from sage.symbolic.expression import Expression
 import datetime
+from lmfdb import base
 from sage.all import Integer, DirichletGroup, is_even, loads, dumps, cached_method
 from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
 import math
@@ -60,12 +61,7 @@ class MaassDB(object):
 
         try:
             constr = "{0}:{1}".format(host, port)
-            if pymongo.version_tuple[0] < 3:
-                from pymongo import Connection
-                Con = pymongo.Connection(constr)
-            else:
-                from pymongo.mongo_client import MongoClient
-                Con = pymongo.MongoClient(constr)
+            Con = base.getDBConnection()
             self._Con = Con
         except:  # AutoReconnect:
             logger.critical("No database found at {0}".format(constr))
