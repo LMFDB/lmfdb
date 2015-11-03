@@ -13,7 +13,7 @@ from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicFie
 
 from lmfdb.lattice import lattice_page, lattice_logger
 from lmfdb.lattice.lattice_stats import get_stats
-from lmfdb.search_parsing import parse_ints
+from lmfdb.search_parsing import parse_ints, parse_list
 
 
 
@@ -85,12 +85,20 @@ def lattice_search(**args):
     C.Lattices.lat.ensure_index([('dim', ASC), ('label', ASC)])
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info:
-        args = {'label': info['label']}
-        return render_lattice_webpage(**args)
+        lab = info.get('label')
+        control= by_label_or_name(lab, C)
+        if control == "ok":
+            args = {'label': lab }
+            return render_lattice_webpage(**args)
+        else:
+            check=lattice_label_error(control, lab , url_for(".lattice_render_webpage"))
+            if check is not None:
+                return check
+
     query = {}
-    for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut', 'name']:
+    for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut']:
         if info.get(field):
-            if field in ['dim', 'det', 'level', 'class_number', 'aut']:
+            if field in ['dim', 'det', 'level', 'minimum', 'class_number', 'aut']:
                 try:
                     info['start']
                     check= parse_ints(info.get(field), query, field)
@@ -98,30 +106,19 @@ def lattice_search(**args):
                     check= parse_ints(info.get(field), query, field, url_for(".lattice_render_webpage"))
                 if check is not None:
                     return check
-#			    except ValueError as err:
-#				info['err'] = str(err)
-#				flash( err.message, "error")
-#				return redirect(url_for('lattice.lattice_render_webpage'))
-#				query[field] = int(info[field])
-#		elif field == 'det':
-#			query[field] = int(info[field])
-#		elif field == 'level':
-#			query[field] = int(info[field])
             elif field == 'gram':
-                query[field] = parse_field_string(info[field])
-            elif field == 'minimum':
-                query[field] = int(info[field])
-#		elif field == 'class_number':
-#			query[field] = int(info[field])
-#		elif field == 'aut':
-#			query[field] = int(info[field])
-            elif field == 'name':
-                query[field] = parse_field_string(info[field])
+                try:
+                    info['start']
+                    check= parse_list2(info.get(field), query, field, fun=gram)
+                except:
+                    check= parse_list2(info.get(field), query, field, fun=gram, url_for(".lattice_render_webpage"))
+                if check is not None:
+                    return check
     info['query'] = dict(query)
     res = C.Lattices.lat.find(query).sort([('level', ASC), ('label', ASC)])
     nres = res.count()
     count = 100
-	
+
     if nres == 1:
         info['report'] = 'unique match'
     else:
@@ -133,11 +130,11 @@ def lattice_search(**args):
     res_clean = []
     for v in res:
         v_clean = {}
-	v_clean['label']=v['label']
-	v_clean['dim']=v['dim']
-	v_clean['det']=v['det']
-	v_clean['level']=v['level']
-	v_clean['gram']=vect_to_matrix(v['gram'])
+        v_clean['label']=v['label']
+        v_clean['dim']=v['dim']
+        v_clean['det']=v['det']
+        v_clean['level']=v['level']
+        v_clean['gram']=vect_to_matrix(v['gram'])
         res_clean.append(v_clean)
 
     info['lattices'] = res_clean
@@ -153,10 +150,10 @@ def render_lattice_webpage(**args):
     C = getDBConnection()
     data = None
     if 'label' in args:
-        label = str(args['label'])
-        data = C.Lattices.lat.find_one({'label': label})
+        lab = args.get('label')
+        data = C.Lattices.lat.find_one({'$or':[{'label': lab }, {'name': lab }]})
     if data is None:
-        return "No such field"
+        return "No such field %s" %args
     info = {}
     info.update(data)
 
@@ -216,15 +213,42 @@ def render_lattice_webpage(**args):
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends)
 
 
-def lattice_label_error(label, args, wellformed_label=False, missing_lattice_name=False):
-    err_args = {}
-    if wellformed_label:
-        flash("No integral lattice in the database has label %s" % label, "error")
-    elif missing_lattice_name:
-        flash("The name %s for an integral lattice is not recorded in the database" % args.get('name','?'), "error")
-    else:
-        flash("%s does not define an integral lattice in the database" % label, "error")
+
+lmfdb_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
+
+def split_lmfdb_label(lab):
+    return lmfdb_label_regex.match(lab).groups()
+
+def by_label_or_name(lab, C):
+    try:
+        dim, det, level, class_number, number = split_lmfdb_label(lab)
+    except:
+        try:
+            data = C.Lattices.lat.find_one({'name' : lab })
+        except:
+            return "missing_lattice_name"
+    data = C.Lattices.lat.find_one({'$or':[{'label': lab }, {'name': lab }]})
+    if data:
+        return "ok"
+    return "missing_lattice" 
 
 
+def lattice_label_error(err_msg, lab, url):
+    if err_msg=="missing_lattice_name":
+        flash("No integral lattice in the database has label or name %s" % lab, "error")
+    elif err_msg=="missing_lattice":
+        flash("The integral lattice %s is not recorded in the database" % lab, "error")
+    if url is not None:
+        return redirect(url)
+
+
+def gram(v):
+    k=len(v)
+    for j in range(k):
+        if j*(j+1)==2*len(v):
+            n=j
+    out=[]
+    for t in range(n):
+    return out
 
 
