@@ -883,7 +883,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
         negativeZeros = negativeZeros.replace("]", ", ]")
 
-    return "<span class='redhighlight'>{0}</span><span class='bluehighlight'>{1}</span>".format(
+    return "<span class='redhighlight'>{0}</span><span class='nohighlight'>{1}</span>".format(
         negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
 
 
