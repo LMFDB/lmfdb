@@ -16,7 +16,11 @@ import sage.all
 from sage.all import os
 
 from pymongo.connection import Connection
-lat = Connection(port=37010).Lattices.lat
+C = Connection(port=37010)
+C.Lattices.authenticate('editor', '282a29103a17fbad')
+lat = C.Lattices.lat
+
+
 
 saving = True 
 
@@ -70,7 +74,7 @@ def do_import(ll):
         print "new lattice"
         lattice = data
     else:
-        print "form already in database"
+        print "lattice already in the database"
         lattice.update(data)
     if saving:
         lat.save(lattice)
