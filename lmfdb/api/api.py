@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pymongo
+import urllib2
 ASC = pymongo.ASCENDING
 import flask
 import yaml
@@ -85,6 +86,7 @@ def api_query(db, collection, id = None):
         single_object = False
 
     for qkey, qval in request.args.iteritems():
+        from ast import literal_eval
         try:
             if qkey.startswith("_"):
                 continue
@@ -101,7 +103,6 @@ def api_query(db, collection, id = None):
             elif qval.startswith("lf"):
                 qval = [float(_) for _ in qval[2:].split(DELIM)]
             elif qval.startswith("py"):     # literal evaluation
-                from ast import literal_eval
                 qval = literal_eval(qval[2:])
             elif qval.startswith("cs"):     # containing string in list
                 qval = { "$in" : [qval[2:]] }
@@ -109,6 +110,8 @@ def api_query(db, collection, id = None):
                 qval = { "$in" : [int(qval[2:])] }
             elif qval.startswith("cf"):
                 qval = { "$in" : [float(qval[2:])] }
+            elif qval.startswith("cpy"):
+                qval = { "$in" : [literal_eval(qval[3:])] }
         except:
             # no suitable conversion for the value, keep it as string
             pass
@@ -160,9 +163,11 @@ def api_query(db, collection, id = None):
         location = "%s/%s" % (db, collection)
         title = "API - " + location
         bc = [("API", url_for(".index")), (location, query)]
+        query_unquote = urllib2.unquote(data["query"])
         return render_template("collection.html",
                                title=title,
                                single_object=single_object,
+                               query_unquote = query_unquote,
                                url_args = url_args,
                                bread=bc,
                                **data)
