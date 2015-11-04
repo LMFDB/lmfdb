@@ -305,9 +305,6 @@ class Lfunction_EC_Q(Lfunction):
 
         constructor_logger(self, args)
     
-#    def Ltype(self):
-#        return "ellipticcurveQ"
-#
     def ground_field(self):
         return "Q"
 
@@ -436,9 +433,6 @@ class Lfunction_EMF(Lfunction):
 
         generateSageLfunction(self)
 
-#    def Ltype(self):
-#        return "ellipticmodularform"
-#    
     def Lkey(self):
         return {"weight": self.weight, "level": self.level}
         
@@ -622,9 +616,6 @@ class Lfunction_HMF(Lfunction):
         generateSageLfunction(self)
         constructor_logger(self, args)
 
-#    def Ltype(self):
-#        return "hilbertmodularform"
-#        
     def Lkey(self):
         return {"label", self.label}
 
@@ -681,9 +672,6 @@ class RiemannZeta(Lfunction):
         self.sageLfunction = lc.Lfunction_Zeta()
         self.motivic_weight = 0
 
-#    def Ltype(self):
-#        return "riemann"
-#
     def Lkey(self):
         return {}
 
@@ -794,9 +782,6 @@ class Lfunction_Dirichlet(Lfunction):
 
         constructor_logger(self, args)
 
-#    def Ltype(self):
-#        return "dirichlet"
-#
     def Lkey(self):
         return {"charactermodulus": self.charactermodulus,
                 "characternumber": self.characternumber}
@@ -923,9 +908,6 @@ class Lfunction_Maass(Lfunction):
 
         generateSageLfunction(self)
 
-#    def Ltype(self):
-#        return "maass"
-#    
     def Lkey(self):
         return {"dbid": self.dbid}
 
@@ -1054,9 +1036,6 @@ class DedekindZeta(Lfunction):   # added by DK
 
         generateSageLfunction(self)
 
-#    def Ltype(self):
-#        return "dedekindzeta"
-#
     def Lkey(self):
         return {"label": self.label}
 
@@ -1147,9 +1126,6 @@ class HypergeometricMotiveLfunction(Lfunction):
         
         self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficient, period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
         
-#    def Ltype(self):
-#        return "hgmQ"
-#        
     def Lkey(self):
         return {"label":self.label}
         
@@ -1230,9 +1206,6 @@ class ArtinLfunction(Lfunction):
         
         generateSageLfunction(self)
 
-#    def Ltype(self):
-#        return "artin"
-#        
     def Lkey(self):
         return {"dimension": self.dimension, "conductor": self.conductor,
                 "tim_index": self.tim_index}
@@ -1335,9 +1308,6 @@ class SymmetricPowerLfunction(Lfunction):
         self.credit = ' '
         self.level = self.S.conductor
 
-#    def Ltype(self):
-#        return "SymmetricPower"
-#    
     def Lkey(self):
         return {"power": power, "underlying_type": underlying_type,
                 "field": field}
@@ -1462,16 +1432,6 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         generateSageLfunction(self)
 
-#    def Ltype(self):
-#        if self.orbit[0] == 'U':
-#            return "siegelnonlift"
-#        elif self.orbit[0] == 'E':
-#            return "siegeleisenstein"
-#        elif self.orbit[0] == 'K':
-#            return "siegelklingeneisenstein"
-#        elif self.orbit[0] == 'M':
-#            return "siegelmaasslift"
-#    
     def Lkey():
         return {"weight": self.weight, "orbit": self.orbit}
 
@@ -1555,9 +1515,6 @@ class TensorProductLfunction(Lfunction):
 
         constructor_logger(self, args)
 
-#    def Ltype(self):
-#        return "tensorproduct"
-#
     def Lkey(self):
         return {"ellipticcurvelabel": self.Elabel,
                 "charactermodulus": self.charactermodulus,
@@ -1627,9 +1584,6 @@ class Lfunction_genus2_Q(Lfunction):
 
         constructor_logger(self, args)
 
-#    def Ltype(self):
-#        return "genus2curveQ"
-#        
     def Lkey(self):
         return {"label", self.label}
 
