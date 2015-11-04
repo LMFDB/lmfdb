@@ -55,6 +55,7 @@ def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
     #Then special case code here.
     j=int(j)
     k=int(k)
+    samples =[]
     #TODO: cleanup
     if j==0:
         t= dimensions._dimension_Sp4Z([k])
