@@ -260,267 +260,28 @@ function show_invs(invstyle) {
 
 <h3 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms') }} </h3>
 
-<!-- Old functionality:
-<p>{{data.data.endomorphism_statement}}</p>
+<p>{{data.endodata.gl2_statement_base}}</p>
 
-<table>
-    {% for endalgtype in ['end_ring_name', 'rat_end_alg_name', 'real_end_alg_name', 'geom_end_ring_name', 'rat_geom_end_alg_name', 'real_geom_end_alg_name'] %}
-        {% if data.data[endalgtype][1] != '' %}
-            <tr><td>\({{data.data[endalgtype][0]}}\)</td><td>\(\simeq\)</td><td>\({{data.data[endalgtype][1]}}\)</td></tr>
-        {% endif %}
-    {% endfor %}
-</table>
--->
+<!-- Description over QQ: -->
+<p>{{data.endodata.endo_statement_base|safe}}</p>
 
-<!-- GL_2 statement (only over QQ for the moment): -->
-<p>{{data.data.gl2_statement_base}} over \(\Q\)</p>
+<!-- Description of field of definition: -->
+<p>{{data.endodata.fod_statement|safe}}</p>
 
-<!-- Description over QQ and QQbar.
-     This is all a bit hard-coded, but improving it seems non-trivial -->
-<table>
-    <tr><td>\(\End (J) \otimes \Q\)</td><td>\(\simeq\)</td><td>
-        {% if data.data.factorsQQ_length_base == 1 %}
-            {% if data.data.factorsQQ_base[0][2] == -1 %}
-                {% if data.data.factorsQQ_pretty_base %}
-                    <!-- Use label if available: -->
-                    <a href="/NumberField/{{data.data.factorsQQ_base[0][0]}}">{{data.data.factorsQQ_pretty_base[0]}}</a>
-                {% else %}
-                    <!-- Otherwise return defining polynomial: -->
-                    number field with defining polynomial \({{data.data.factors_QQ_poly_base}}\)
-                {% endif %}
-                {% if data.data.factorsQQ_cm_base %}
-                    (CM)
-                {% endif %}
-            <!-- Otherwise we get a matrix algebra over an at most quadratic
-                 field or a quaternion algebra over the rationals: -->
-            {% elif data.data.factorsQQ_base[0][2] == 1 %}
-                \(\mathrm{M}_2\) (<a href="/NumberField/{{data.data.factorsQQ_base[0][0]}}">{{data.data.factorsQQ_pretty_base[0]}}</a>)
-            {% else %}
-                quaternion algebra over <a href="/NumberField/{{data.data.factorsQQ_base[0][0]}}">{{data.data.factorsQQ_pretty_base[0]}}</a>
-                of discriminant \({{data.data.factorsQQ_quatdisc_base}}\)
-            {% endif %}
-        {% else %}
-            <!-- Two factors: product of at most quadratic fields, which can
-                 always be prettified: -->
-            <a href="/NumberField/{{data.data.factorsQQ_base[0][0]}}">{{data.data.factorsQQ_pretty_base[0]}}</a>
-            \(\times\)
-            <a href="/NumberField/{{data.data.factorsQQ_base[1][0]}}">{{data.data.factorsQQ_pretty_base[1]}}</a>
-        {% endif %}
-    </td></tr>
-    <tr><td>\(\End (J) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.factorsRR_pretty_base}}\)</td></tr>
-    <tr><td>\(\End (J)\)</td><td>\(\simeq\)</td><td>
-        {% if data.data.ring_base[0] == 1 %}
-            {% if data.data.factorsQQ_base[0][0] == '1.1.1.1' %}
-                \(\Z\)
-            {% else %}
-                a maximal order in \(\End (J) \otimes \Q\)
-            {% endif %}
-        {% elif data.data.factorsQQ_length_base == 1 %}
-            {% if data.data.factorsQQ_base[0][2] == -1 %}
-                an order of conductor of norm \({{data.data.ring_base[0]}}\) in \(\End (J) \otimes \Q\)
-            {% else %}
-                {% if data.data.ring_base[1] == 1 %}
-                    an Eichler order of index \({{data.data.ring_base[0]}}\) in \(\End (J) \otimes \Q\)
-                {% else %}
-                    a non-Eichler order of index \({{data.data.ring_base[0]}}\) in \(\End (J) \otimes \Q\)
-                {% endif %}
-            {% endif %}
-        {% else %}
-            an order of index \({{data.data.ring_base[0]}}\) in \(\End (J) \otimes \Q\)
-        {% endif %}
-    </td></tr>
-    <!-- Add no information on the geometric endomorphism ring if it in fact
-         equals the rational one -->
-    {% if data.data.fod_label != '1.1.1.1' %}
-        <tr><td>\(\End (J_{\overline{\Q}}) \otimes \Q\)</td><td>\(\simeq\)</td><td>
-            {% if data.data.factorsQQ_length_geom == 1 %}
-                {% if data.data.factorsQQ_geom[0][2] == -1 %}
-                    {% if data.data.factorsQQ_pretty_geom %}
-                        <!-- Use label if available: -->
-                        <a href="/NumberField/{{data.data.factorsQQ_geom[0][0]}}">{{data.data.factorsQQ_pretty_geom[0]}}</a>
-                    {% else %}
-                        <!-- Otherwise return defining polynomial: -->
-                        number field with defining polynomial \({{data.data.factors_QQ_poly_geom}}\)
-                    {% endif %}
-                    {% if data.data.factorsQQ_cm_geom %}
-                        (CM)
-                    {% endif %}
-                <!-- Otherwise we get a matrix algebra over an at most quadratic
-                     field or a quaternion algebra over the rationals: -->
-                {% elif data.data.factorsQQ_geom[0][2] == 1 %}
-                    \(\mathrm{M}_2\) (<a href="/NumberField/{{data.data.factorsQQ_geom[0][0]}}">{{data.data.factorsQQ_pretty_geom[0]}}</a>)
-                {% else %}
-                    quaternion algebra over <a href="/NumberField/{{data.data.factorsQQ_geom[0][0]}}">{{data.data.factorsQQ_pretty_geom[0]}}</a>
-                    of discriminant \({{data.data.factorsQQ_quatdisc_geom}}\)
-                {% endif %}
-            {% else %}
-                <!-- Two factors: product of at most quadratic fields, which can
-                     always be prettified: -->
-                <a href="/NumberField/{{data.data.factorsQQ_geom[0][0]}}">{{data.data.factorsQQ_pretty_geom[0]}}</a>
-                \(\times\)
-                <a href="/NumberField/{{data.data.factorsQQ_geom[1][0]}}">{{data.data.factorsQQ_pretty_geom[1]}}</a>
-            {% endif %}
-        </td></tr>
-        <tr><td>\(\End (J_{\overline{\Q}}) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.factorsRR_pretty_geom}}\)</td></tr>
-        <tr><td>\(\End (J_{\overline{\Q}})\)</td><td>\(\simeq\)</td><td>
-            {% if data.data.ring_geom[0] == 1 %}
-                {% if data.data.factorsQQ_geom[0][0] == '1.1.1.1' %}
-                    \(\Z\)
-                {% else %}
-                    a maximal order in \(\End (J_{\overline{\Q}}) \otimes \Q\)
-                {% endif %}
-            {% elif data.data.factorsQQ_length_geom == 1 %}
-                {% if data.data.factorsQQ_geom[0][2] == -1 %}
-                    an order of conductor of norm \({{data.data.ring_geom[0]}}\) in \(\End (J_{\overline{\Q}}) \otimes \Q\)
-                {% else %}
-                    {% if data.data.ring_geom[1] == 1 %}
-                        an Eichler order of index \({{data.data.ring_geom[0]}}\) in \(\End (J_{\overline{\Q}}) \otimes \Q\)
-                    {% else %}
-                        a non-Eichler order of index \({{data.data.ring_geom[0]}}\) in \(\End (J_{\overline{\Q}}) \otimes \Q\)
-                    {% endif %}
-                {% endif %}
-            {% else %}
-                an order of index \({{data.data.ring_geom[0]}}\) in \(\End (J_{\overline{\Q}}) \otimes \Q\)
-            {% endif %}
-    {% endif %}
-</table>
+<!-- Description over QQbar: -->
+<p>{{data.endodata.endo_statement_geom|safe}}</p>
 
-<!-- Endomorphism field description:
-     TODO: Treat quadratic case well-->
-<p>
-{% if data.data.fod_label == '1.1.1.1' %}
-    All endomorphisms of the Jacobian are defined over \(\Q\)
-{% elif data.data.fod_label != '' %}
-    Smallest field over which all endomorphisms are defined:<br>
-    Galois number field \(L = \Q (a)\) with defining polynomial
-    \({{data.data.fod_poly}}\)
-    (<a href="/NumberField/{{data.data.fod_label}}">{{data.data.fod_pretty}})</a>
-{% else %}
-    Smallest field over which all endomorphisms are defined:<br>
-    Galois number field \(L = \Q (a)\) with defining polynomial
-    \({{data.data.fod_poly}}\)
-{% endif %}
-</p>
+<!-- Remainder of the lattice: -->
+<h3 style="display: inline">{{data.endodata.lattice_statement_preamble}}</h3>
 
-
-{% if data.data.lattice_iterator %}
-    <h3 class="inline"> Remainder of the endomorphism lattice by subfield</h3>
-    {% for n in data.data.lattice_iterator %}
-        <p>
-        Over subfield \(K\) with generator \({{data.data.sub_gen_lattice[n]}}\)
-        with minimal polynomial \({{data.data.sub_poly_lattice[n]}}\)
-        {% if data.data.sub_label_lattice[n] %}
-            (<a href="/NumberField/{{data.data.sub_label_lattice[n]}}">{{data.data.sub_pretty_lattice[n]}}</a>)
-        {% endif %}
-        :<br>
-        <table>
-            <tr><td>\(\End (J_K) \otimes \Q\)</td><td>\(\simeq\)</td><td>
-                {% if data.data.factorsQQ_length_lattice[n] == 1 %}
-                    {% if data.data.factorsQQ_lattice[n][0][2] == -1 %}
-                        {% if data.data.factorsQQ_pretty_lattice[n] %}
-                            <!-- Use label if available: -->
-                            <a href="/NumberField/{{data.data.factorsQQ_lattice[n][0][0]}}">{{data.data.factorsQQ_pretty_lattice[n][0]}}</a>
-                        {% else %}
-                            <!-- Otherwise return defining polynomial: -->
-                            number field with defining polynomial \({{data.data.factors_QQ_poly_lattice[n]}}\)
-                        {% endif %}
-                        {% if data.data.factorsQQ_cm_lattice[n] %}
-                            (CM)
-                        {% endif %}
-                    <!-- Otherwise we get a matrix algebra over an at most quadratic
-                         field or a quaternion algebra over the rationals: -->
-                    {% elif data.data.factorsQQ_lattice[n][0][2] == 1 %}
-                        \(\mathrm{M}_2\) (<a href="/NumberField/{{data.data.factorsQQ_lattice[n][0][0]}}">{{data.data.factorsQQ_pretty_lattice[n][0]}}</a>)
-                    {% else %}
-                        quaternion algebra over <a href="/NumberField/{{data.data.factorsQQ_lattice[n][0][0]}}">{{data.data.factorsQQ_pretty_lattice[n][0]}}</a>
-                        of discriminant \({{data.data.factorsQQ_quatdisc_lattice[n]}}\)
-                    {% endif %}
-                {% else %}
-                    <!-- Two factors: product of at most quadratic fields, which can
-                         always be prettified: -->
-                    <a href="/NumberField/{{data.data.factorsQQ_lattice[n][0][0]}}">{{data.data.factorsQQ_pretty_lattice[n][0]}}</a>
-                    \(\times\)
-                    <a href="/NumberField/{{data.data.factorsQQ_lattice[n][1][0]}}">{{data.data.factorsQQ_pretty_lattice[n][1]}}</a>
-                {% endif %}
-            </td></tr>
-            <tr><td>\(\End (J_K) \otimes \R\)</td><td>\(\simeq\)</td><td>\({{data.data.factorsRR_pretty_lattice[n]}}\)</td></tr>
-            <tr><td>\(\End (J_K)\)</td><td>\(\simeq\)</td><td>
-                {% if data.data.ring_lattice[n][0] == 1 %}
-                    {% if data.data.factorsQQ_lattice[n][0][0] == '1.1.1.1' %}
-                        \(\Z\)
-                    {% else %}
-                        a maximal order in \(\End (J_K) \otimes \Q\)
-                    {% endif %}
-                {% elif data.data.factorsQQ_length_lattice[n] == 1 %}
-                    {% if data.data.factorsQQ_lattice[n][0][2] == -1 %}
-                        an order of conductor of norm \({{data.data.ring_lattice[n][0]}}\) in \(\End (J_K) \otimes \Q\)
-                    {% else %}
-                        {% if data.data.ring_lattice[n][1] == 1 %}
-                            an Eichler order of index \({{data.data.ring_lattice[n][0]}}\) in \(\End (J_K) \otimes \Q\)
-                        {% else %}
-                            a non-Eichler order of index \({{data.data.ring_lattice[n][0]}}\) in \(\End (J_K) \otimes \Q\)
-                        {% endif %}
-                    {% endif %}
-                {% else %}
-                    an order of index \({{data.data.ring_lattice[n][0]}}\) in \(\End (J_K) \otimes \Q\)
-                {% endif %}
-            </td></tr>
-        </table>
-        Sato-Tate group over \(K\): \({{data.data.st_group_lattice[n]}}\)
-        </p>
-    {% endfor %}
-{% endif %}
+{{data.endodata.lattice_statement|safe}}
 
 <h3 style="display: inline"> Decomposition </h3>
 
-<!-- Description of the number field over which the splitting occurs, if any: -->
-<!-- TODO: Improve -->
-<p>
-{% if data.data.is_simple_geom %}
-    The Jacobian is simple over \(\overline{\Q}\)
-{% elif data.data.spl_fod_label == '1.1.1.1' %}
-    The Jacobian splits over \(\Q\)
-{% elif data.data.spl_fod_label != ''%}
-    Smallest field over which the Jacobian splits:<br>
-    Galois number field \(M = \Q (b)\) with defining polynomial
-        \({{data.data.spl_fod_poly}}\)
-    (<a href="/NumberField/{{data.data.spl_fod_label}}">{{data.data.spl_fod_pretty}}</a>)
-{% else %}
-    Smallest field over which the Jacobian splits:<br>
-    Galois number field \(M = \Q (b)\) with defining polynomial
-    \({{data.data.spl_fod_poly}}\).
-{% endif %}
-</p>
+<!-- Description of a splitting field of minimal degree: -->
+<p>{{data.endodata.spl_fod_statement|safe}}</p>
 
-<!-- The splittings themselves. Use the representation of the number field
-     above by its minimal polynomial. -->
-<p>
-{% if not data.data.is_simple_geom %}
-    {% if data.data.spl_facs_length == 1 %}
-        The Jacobian decomposes up to isogeny as the square of an elliptic
-        curve</p>
-        <p> Elliptic curve that admits a small isogeny:<br>
-    {% else %}
-        The Jacobian admits two distinct elliptic curve factors up to
-        isogeny</p>
-        <p>Elliptic curves that represent these factors and admit small
-        isogenies are:<br>
-    {% endif %}
-    {% if data.data.spl_facs_labels %}
-        <!-- Use labels if they exist for both factors, and link accordingly-->
-        {% for n in data.data.spl_facs_iterator %}
-            <a href="/EllipticCurve/{{data.data.spl_facs_links[n]}}">{{data.data.spl_facs_labels[n]}}</a><br>
-        {% endfor %}
-    {% else %}
-        <!-- Else use coefficients, with some information on the conductor-->
-        {% for n in data.data.spl_facs_iterator %}
-            \( 4 y^2 = x^3 - (g_4 / 48) x - (g_6 / 864) \), with<br>
-            \( g_4 = {{data.data.spl_facs_coeffs_display[n][0] }} \)<br>
-            \( g_6 = {{data.data.spl_facs_coeffs_display[n][1] }} \)<br>
-            Conductor norm: {{data.data.spl_facs_condnorms[n]}} <br>
-        {% endfor %}
-    {% endif %}
-{% endif %}
-</p>
+<!-- Description of the splittings themselves. -->
+<p>{{data.endodata.spl_statement|safe}}</p>
 
 {% endblock %}

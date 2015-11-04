@@ -3,17 +3,17 @@ import re
 import tempfile
 import os
 from pymongo import ASCENDING, DESCENDING
-from flask import url_for, make_response
-import lmfdb.base
+from lmfdb.base import getDBConnection
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
+from lmfdb.ecnf.main import split_full_label
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
-#import sage.all
-from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot, sage_eval
+from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.WebNumberField import *
 from itertools import izip
+from flask import url_for, make_response
 
 logger = make_logger("g2c")
 
@@ -26,7 +26,7 @@ g2cdb = None
 def db_g2c():
     global g2cdb
     if g2cdb is None:
-        g2cdb = lmfdb.base.getDBConnection().genus2_curves
+        g2cdb = getDBConnection().genus2_curves
     return g2cdb
 
 g2endodb = None
@@ -34,7 +34,7 @@ g2endodb = None
 def db_g2endo():
     global g2endodb
     if g2endodb is None:
-        g2endodb = lmfdb.base.getDBConnection().genus2_endomorphisms
+        g2endodb = getDBConnection().genus2_endomorphisms
     return g2endodb
 
 ###############################################################################
@@ -70,16 +70,18 @@ def groupid_to_meaningful(groupid):
     else:
         return groupid
 
-def make_link(label, is_simple_base):
-    if not is_simple_base:
-        return 'Q/' + '/'.join(split_cremona_label(label))
+def url_for_ec(label):
+    if not '-' in label:
+        # Convert to LMFDB label on next run:
+        (conductor_label, class_label, number) = split_cremona_label(label)
+        return url_for('ecnf.show_ecnf', nf = 'Q', conductor_label =
+                conductor_label, class_label = class_label, number = number)
     else:
-        splitlist = label.split('-')
-        end_regex = re.compile(r'([a-z]+)(\d+)')
-        splitlist[2] = '/'.join(end_regex.match(splitlist[2]).groups())
-        return '/'.join(splitlist)
+        (nf, conductor_label, class_label, number) = split_full_label(label)
+        return url_for('ecnf.show_ecnf', nf = nf, conductor_label =
+                conductor_label, class_label = class_label, number = number)
 
-def factorsRR_pretty(factorsRR):
+def factorsRR_pretty_raw(factorsRR):
     if factorsRR == ['RR']:
         return r'\R'
     elif factorsRR == ['CC']:
@@ -265,7 +267,7 @@ def st_group_name(name):
         return name
 
 ###############################################################################
-# Dictionary construction for old endomorphism functionality
+# Dictionary construction for Sato-Tate and other isogeny invariants
 ###############################################################################
 
 def get_end_data(isogeny_class):
@@ -316,10 +318,174 @@ def get_end_data(isogeny_class):
 # Statement functions for new endomorphism functionality
 ###############################################################################
 
-def gl2_statement(factorsRR):
+def gl2_statement(factorsRR, base):
     if factorsRR in [['RR', 'RR'], ['CC']]:
-        return "The Jacobian is of \(\GL_2\)-type"
-    return "The Jacobian is not of \(\GL_2\)-type"
+        return "The Jacobian is of \(\GL_2\)-type" + " over " + base
+    return "The Jacobian is not of \(\GL_2\)-type" + " over " + base
+
+def endo_statement(factorsQQ, factorsRR, ring, fieldstring):
+    statement = """<table>"""
+    # First row: description of endomorphism algebra factors
+    statement += """<tr><td>\(\End (J_{%s}) \otimes \Q\
+    \)</td><td>\(\simeq\)</td><td>""" % fieldstring
+    factorsQQ_number = len(factorsQQ) 
+    factorsQQ_pretty = [ field_pretty(fac[0]) for fac in factorsQQ if
+            fac[0] ]
+    # In the case of only one factor we either get a number field or a
+    # quaternion algebra:
+    if factorsQQ_number == 1:
+        # First we deal with the number field case:
+        if factorsQQ[0][2] == -1:
+            # Prettify if labels available, otherwise return defining polynomial:
+            if factorsQQ_pretty:
+                statement += """<a href=%s>%s</a>""" % \
+                (url_for("number_fields.by_label", label=factorsQQ[0][0]),
+                factorsQQ_pretty[0])
+            else:
+                statement += """number field with defining polynomial \
+                \(%s\)""" % intlist_to_poly(factorsQQ[0][1])
+            if len(factorsQQ[0][1]) == 5:
+                statement += """(CM)"""
+        # Up next is the case of a matrix ring, with labels and full
+        # prettification always available:
+        elif factorsQQ[0][2] == 1:
+            statement += """\(\mathrm{M}_2(\)<a href=%s>%s</a>\()\)""" % \
+            (url_for("number_fields.by_label", label=factorsQQ[0][0]),
+            factorsQQ_pretty[0])
+        # And finally we deal with quaternion algebras over the rationals:
+        else:
+            statement += """quaternion algebra over <a href=%s>%s</a> of \
+            discriminant %s""" % \
+            (url_for("number_fields.by_label", label=factorsQQ[0][0]),
+            factorsQQ_pretty[0], factorsQQ[0][2])
+    # If there are two factors, then we get two at most quadratic fields:
+    else:
+        statement += """<a href=%s>%s</a> \(\\times\) <a href=%s>%s</a>""" % \
+        (url_for("number_fields.by_label", label=factorsQQ[0][0]),
+        factorsQQ_pretty[0],
+        url_for("number_fields.by_label", label=factorsQQ[1][0]),
+        factorsQQ_pretty[1])
+    # End of first row:
+    statement += """</td></tr>"""
+    # Second row: description of algebra tensored with RR
+    statement += """<tr><td>\(\End (J_{%s}) \otimes\
+    \R\)</td><td>\(\simeq\)</td> <td>\(%s\)</td></tr>""" % \
+    (fieldstring, factorsRR_pretty_raw(factorsRR))
+    # Third row: description of the endomorphism ring as an order in the
+    # endomorphism algebra
+    statement += """<tr><td>\(\End (J_{%s})\)</td><td>\(\simeq\)</td><td>""" \
+            % fieldstring
+    # First the case of a maximal order:
+    if ring[0] == 1:
+        if factorsQQ[0][0] == '1.1.1.1':
+            statement += """\(\Z\)"""
+        else:
+            statement += """a maximal order in \(\End (J_{%s}) \otimes \Q\)"""\
+            % fieldstring
+    # Then the case where there is still a single factor:
+    elif factorsQQ_number == 1:
+        # Number field case:
+        if factorsQQ[0][2] == -1:
+            statement += """an order of conductor of norm \(%s\) in \(\End\
+            (J_{%s}) \otimes \Q\)""" % (ring[0], fieldstring)
+        # Otherwise mention whether the order is Eichler:
+        elif ring[1] == 1:
+            statement += """an Eichler order of index \(%s\) in \(\End\
+            (J_{%s}) \otimes \Q\)""" % (ring[0], fieldstring)
+        else:
+            statement += """a non-Eichler order of index \(%s\) in \(\End\
+            (J_{%s}) \otimes \Q\)""" % (ring[0], fieldstring)
+    # Finally the most generic case:
+    else:
+        statement += "an order of index \(%s\) in \(\End (J_{%s}) \otimes \
+        \Q\)""" % (ring[0], fieldstring)
+    # End of third row, and with it, of the statement:
+    statement += """</td></tr>"""
+    statement += """</table>"""
+    return statement
+
+def fod_statement(fod_label, fod_poly):
+    if fod_label == '1.1.1.1':
+        return """All endomorphisms of the Jacobian are defined over \(\Q\)"""
+    elif fod_label != '':
+        fod_pretty = field_pretty(fod_label)
+        fod_url = url_for("number_fields.by_label", label=fod_label)
+        return """Smallest field over which all endomorphisms are defined:<br>
+        Galois number field \(L = \Q (a)\) with defining polynomial \(%s\) (<a\
+        href=%s">%s)</a>""" % (fod_poly, fod_url, fod_pretty)
+    else:
+        return """Smallest field over which all endomorphisms are defined:<br>
+        Galois number field \(L = \Q (a)\) with defining polynomial \(%s\)"""\
+        % fod_poly
+
+def st_group_statement(group, fieldstring):
+    return """Sato-Tate group over \(%s\): \(%s\)""" % (fieldstring, group)
+
+def lattice_statement_preamble():
+    return """Remainder of the endomorphism lattice by subfield"""
+
+def lattice_statement(lattice):
+    statement = ''
+    for ED in lattice:
+        statement += """<p>"""
+        statement += """Over subfield \(K\) with generator \(%s\) with \
+        minimal polynomial \(%s\)""" % \
+        (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1]))
+        # Add link and prettify if available:
+        if ED[0][0]:
+            statement += """ (<a href=%s>%s</a>)""" % \
+            (url_for("number_fields.by_label", label=ED[0][0]),
+            field_pretty(ED[0][0]))
+        statement += """:<br>"""
+        statement += endo_statement(ED[1], ED[2], ED[3], r'K')
+        #statement += """<br>"""
+        statement += st_group_statement(ED[4], r'K')
+        statement += """</p>"""
+    return statement
+
+def spl_fod_statement(is_simple_geom, spl_fod_label, spl_fod_poly):
+    if is_simple_geom:
+        return """The Jacobian is simple over \(\overline{\Q}\)"""
+    elif spl_fod_label == '1.1.1.1':
+        return """The Jacobian splits over \(\Q\)"""
+    elif spl_fod_label != '':
+        spl_fod_pretty =  field_pretty(spl_fod_label)
+        spl_fod_url = url_for("number_fields.by_label", label=spl_fod_label)
+        return """Field of minimal degree over which the Jacobian splits:<br>\
+        number field \(M = \Q (b)\) with defining polynomial \(%s\) \
+        (<a href=%s>%s)</a>""" % (spl_fod_poly, spl_fod_url, spl_fod_pretty)
+    else:
+        return """Field of minimal degree over which the Jacobian splits:<br>\
+        number field \(M = \Q (b)\) with defining polynomial %s""" % \
+        spl_fod_poly
+
+def spl_statement(coeffss, labels, condnorms):
+    if len(coeffss) == 1:
+        statement = """The Jacobian decomposes up to isogeny as the square of
+        an elliptic curve</p>\
+        <p>Elliptic curve that admits a small isogeny:<br>"""
+    else:
+        statement = """The Jacobian admits two distinct elliptic curve factors
+        up to isogeny</p>\
+        <p>Elliptic curves that represent these factors and admit small
+        isogenies are:<br>"""
+    for n in range(len(coeffss)):
+        # Use labels when possible:
+        label = labels[n]
+        if label:
+            statement += """Elliptic curve with label <a href=%s>%s</a><br>""" % \
+            (url_for_ec(label), label)
+        # Otherwise give defining equation:
+        else:
+            statement += """\(4 y^2 = x^3 - (g_4 / 48) x - (g_6 / 864)\),
+            with<br>\
+            \(g_4 = %s\)<br>\
+            \(g_6 = %s\)<br>\
+            Conductor norm: %s<br>""" % \
+            (strlist_to_nfelt(coeffss[n][0], 'b'),
+            strlist_to_nfelt(coeffss[n][1], 'b'),
+            condnorms[n])
+    return statement
 
 ###############################################################################
 # The actual class definition
@@ -372,8 +538,9 @@ class WebG2C(object):
         # databases.  We reformat these, while computing some further (easy)
         # data about the curve on the fly.
 
-        # Get data from database:
+        # Get data from databases:
         data = self.data = {}
+        endodata = self.endodata = {}
 
         # Polish data from database before putting it into the data dictionary:
         disc = ZZ(self.disc_sign) * ZZ(self.disc_key[3:]) 
@@ -413,109 +580,69 @@ class WebG2C(object):
         for key in end_data.keys():
             data[key] = end_data[key]
 
-        # TODO: Could have used endodata here as well. Decide upon this later.
-        # GL_2 statement
-        data['gl2_statement_base'] = gl2_statement(self.factorsRR_base)
+        # GL_2 statement over the base field
+        endodata['gl2_statement_base'] = gl2_statement(self.factorsRR_base,
+                r'\(\Q\)')
         
-        # Over QQ:
-        # Factors of the algebra:
-        data['factorsQQ_base'] = self.factorsQQ_base
-        data['factorsQQ_length_base'] = len(self.factorsQQ_base)
-        # NB: This function could in principle return a single factor and
-        # ignore the other. Due to field_pretty, that will never happen though.
-        data['factorsQQ_pretty_base'] = [ field_pretty(fac[0]) for fac in
-                self.factorsQQ_base if fac[0] ]
-        # NB: Same remark holds here:
-        data['factorsQQ_quatdisc_base'] = self.factorsQQ_base[0][2]
-        data['factorsQQ_cm_base'] = len(self.factorsQQ_base[0][1]) == 5
-        data['factorsQQ_poly_base'] = intlist_to_poly(self.factorsQQ_base[0][1])
-        # After tensoring with RR:
-        data['factorsRR_pretty_base'] = factorsRR_pretty(self.factorsRR_base)
-        # Ring description:
-        data['ring_base'] = self.ring_base
+        # NOTE: In what follows there is some copying of code and data that is
+        # stupid from the point of view of efficiency but likely better from
+        # that of maintenance.
+        
+        # Endomorphism data over QQ:
+        endodata['factorsQQ_base'] = self.factorsQQ_base
+        endodata['factorsRR_base'] = self.factorsRR_base
+        endodata['ring_base'] = self.ring_base
+        endodata['endo_statement_base'] = \
+        """Endomorphism ring over \(\Q\):<br>""" + \
+        endo_statement(endodata['factorsQQ_base'], endodata['factorsRR_base'],
+                endodata['ring_base'], r'')
+        # Field of definition data:
+        endodata['fod_label'] = self.fod_label
+        endodata['fod_poly'] = intlist_to_poly(self.fod_coeffs)
+        endodata['fod_statement'] = fod_statement(endodata['fod_label'],
+                endodata['fod_poly'])
+        # Endomorphism data over QQbar:
+        endodata['factorsQQ_geom'] = self.factorsQQ_geom
+        endodata['factorsRR_geom'] = self.factorsRR_geom
+        endodata['ring_geom'] = self.ring_geom
+        if self.fod_label != '1.1.1.1':
+            endodata['endo_statement_geom'] = \
+            """Endomorphism ring over \(\overline{\Q}\):<br>""" + \
+            endo_statement(endodata['factorsQQ_geom'],
+                    endodata['factorsRR_geom'], endodata['ring_geom'],
+                    r'\overline{\Q}')
 
-        # TODO: What follows is stupid code copying that can certainly be
-        # improved, probably by taking first and final indices below.
-        # Over QQbar:
-        # Factors of the algebra:
-        data['factorsQQ_geom'] = self.factorsQQ_geom
-        data['factorsQQ_length_geom'] = len(self.factorsQQ_geom)
-        # NB: This function could in principle return a single factor and
-        # ignore the other. Due to field_pretty, that will never happen though.
-        data['factorsQQ_pretty_geom'] = [ field_pretty(fac[0]) for fac in
-                self.factorsQQ_geom if fac[0] ]
-        # NB: Same remark holds here:
-        data['factorsQQ_quatdisc_geom'] = self.factorsQQ_geom[0][2]
-        data['factorsQQ_cm_geom'] = len(self.factorsQQ_geom[0][1]) == 5
-        data['factorsQQ_poly_geom'] = intlist_to_poly(self.factorsQQ_geom[0][1])
-        # After tensoring with RR:
-        data['factorsRR_pretty_geom'] = factorsRR_pretty(self.factorsRR_geom)
-        # Ring description:
-        data['ring_geom'] = self.ring_geom
+        # Full endomorphism lattice:
+        endodata['lattice'] = self.lattice[1:len(self.lattice) - 1]
+        if endodata['lattice']:
+            endodata['lattice_statement_preamble'] = \
+            lattice_statement_preamble()
+            endodata['lattice_statement'] = \
+            lattice_statement(endodata['lattice'])
 
-        # Display of full endomorphism lattice:
-        EDs = self.lattice[1:len(self.lattice) - 1]
-        length_lattice = len(EDs)
-        data['lattice_iterator'] = range(length_lattice)
-        data['sub_gen_lattice'] = []
-        data['sub_poly_lattice'] = []
-        data['sub_label_lattice'] = []
-        data['sub_pretty_lattice'] = []
-        data['factorsQQ_lattice'] = []
-        data['factorsQQ_length_lattice'] = []
-        data['factorsQQ_pretty_lattice'] = []
-        data['factorsQQ_quatdisc_lattice'] = []
-        data['factorsQQ_cm_lattice'] = []
-        data['factorsQQ_poly_lattice'] = []
-        data['factorsRR_pretty_lattice'] = []
-        data['ring_lattice'] = []
-        data['st_group_lattice'] = []
-        for ED in EDs:
-            data['sub_gen_lattice'].append(strlist_to_nfelt(ED[0][2], 'a'))
-            data['sub_poly_lattice'].append(intlist_to_poly(ED[0][1]))
-            sub_label = ED[0][0]
-            data['sub_label_lattice'].append(sub_label)
-            if sub_label:
-                data['sub_pretty_lattice'].append(field_pretty(sub_label))
+        # Splitting field description:
+        #endodata['is_simple_base'] = self.is_simple_base
+        endodata['is_simple_geom'] = self.is_simple_geom
+        endodata['spl_fod_label'] = self.spl_fod_label
+        endodata['spl_fod_poly'] = intlist_to_poly(self.spl_fod_coeffs)
+        endodata['spl_fod_statement'] = \
+        spl_fod_statement(endodata['is_simple_geom'],
+                endodata['spl_fod_label'], endodata['spl_fod_poly'])
+        
+        # Isogeny factors:
+        if not endodata['is_simple_geom']:
+            endodata['spl_facs_coeffs'] = self.spl_facs_coeffs
+            # This could be done non-uniformly as well... later.
+            if len(self.spl_facs_labels) == len(self.spl_facs_coeffs):
+                endodata['spl_facs_labels'] = self.spl_facs_labels
             else:
-                data['sub_pretty_lattice'].append('')
-            data['factorsQQ_lattice'].append(ED[1])
-            data['factorsQQ_length_lattice'].append(len(ED[1]))
-            data['factorsQQ_pretty_lattice'].append([ field_pretty(fac[0]) for
-                fac in ED[1] if fac[0] ])
-            data['factorsQQ_quatdisc_lattice'].append(ED[1][0][2])
-            data['factorsQQ_cm_lattice'].append(len(ED[1][0][1]) == 5)
-            data['factorsQQ_poly_lattice'].append(intlist_to_poly(ED[1][0][1]))
-            data['factorsRR_pretty_lattice'].append(factorsRR_pretty(ED[2]))
-            data['ring_lattice'].append(ED[3])
-            data['st_group_lattice'].append(ED[4])
-
-        # Endomorphism field description:
-        data['fod_label'] = self.fod_label
-        data['fod_poly'] = intlist_to_poly(self.fod_coeffs)
-        if self.fod_label != '':
-            data['fod_pretty'] = field_pretty(self.fod_label)
-
-        # Statements on simplicity over QQ and QQbar:
-        data['is_simple_base'] = self.is_simple_base
-        data['is_simple_geom'] = self.is_simple_geom
-        # Splitting field description
-        data['spl_fod_label'] = self.spl_fod_label
-        data['spl_fod_poly'] = intlist_to_poly(self.spl_fod_coeffs)
-        if self.spl_fod_label != '':
-            data['spl_fod_pretty'] = field_pretty(self.spl_fod_label)
-        
-        # Display of isogeny factors:
-        data['spl_facs_length'] = len(self.spl_facs_coeffs)
-        data['spl_facs_iterator'] = range(len(self.spl_facs_coeffs))
-        if len(self.spl_facs_labels) == data['spl_facs_length']:
-            data['spl_facs_labels'] = self.spl_facs_labels
-            data['spl_facs_links'] = [ make_link(label, self.is_simple_base)
-                    for label in self.spl_facs_labels ]
-        else:
-            data['spl_facs_coeffs_display'] =  [ [ strlist_to_nfelt(L, 'b') for
-                L in splfac ] for splfac in self.spl_facs_coeffs ]
-            data['spl_facs_condnorms'] = self.spl_facs_condnorms
+                endodata['spl_facs_labels'] = ['' for coeffs in
+                        self.spl_facs_coeffs]
+            endodata['spl_facs_condnorms'] = self.spl_facs_condnorms
+            endodata['spl_statement'] = \
+            spl_statement(endodata['spl_facs_coeffs'],
+                    endodata['spl_facs_labels'],
+                    endodata['spl_facs_condnorms'])
 
         x = self.label.split('.')[1]
         self.make_code_snippets()
