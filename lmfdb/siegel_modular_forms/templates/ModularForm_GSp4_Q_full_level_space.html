@@ -7,8 +7,8 @@ This is a space of <a knowl="mf.siegel">Siegel Modular Forms</a>
 with real representation $\mathrm{Det}^{ {{k}}}\otimes\mathrm{Sym}^{ {{j}} }$. It has
 the following interesting subspaces:
 <table>
-  {% for key,value in subspace.iteritems()%}
-  <tr><td>{{key}}</td><td>{{value}}</td></tr>
+  {% for key in headers%}
+  <tr><td>{{key}}</td><td>{{subspace[key]}}</td></tr>
   {% endfor %}
 </table>
 

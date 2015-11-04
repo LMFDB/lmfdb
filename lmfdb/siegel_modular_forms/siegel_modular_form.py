@@ -56,18 +56,18 @@ def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
     k=int(k)
     #TODO: cleanup
     if j==0:
-        subdecomp = dimensions._dimension_Sp4Z([k])[1][k]
-    elif j==2:
-        subdecomp = dimensions._dimension_Gamma_2([k],2,group="Sp4(Z)")[1][k]
+        t= dimensions._dimension_Sp4Z([k])
     else:
-        subdecomp = dimensions._dimension_Gamma_2([k], j, group="Sp4(Z)")[1][k]
-        
+        t = dimensions._dimension_Gamma_2([k], j, group="Sp4(Z)")
+    subdecomp=t[1][k]
+    headers=t[0]
     #Same for samples. Really should have a big structure driving template: TODO
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
                            title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
                            k=k,
                            j=j,
                            subspace=subdecomp,
+                           headers=headers,
                            bread=bread);
 
 @app.route('/ModularForm/GSp/Q/Sp4Z_j')
