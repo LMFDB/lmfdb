@@ -9,6 +9,8 @@
 import math
 import re
 
+from flask import url_for
+
 from Lfunctionutilities import (p2sage, seriescoeff,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
@@ -20,6 +22,7 @@ import LfunctionDatabase
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
+from lmfdb.utils import web_latex
 
 from sage.all import *
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -1029,9 +1032,7 @@ class DedekindZeta(Lfunction):   # added by DK
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
         else:
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
-        self.title = "Dedekind zeta-function: $\\zeta_K(s)$"
-        self.title = (self.title + ", where $K$ is the " +
-                      str(self.NF).replace("in a ", ""))
+        self.title = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
         self.credit = 'Sage'
         self.citation = ''
 

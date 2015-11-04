@@ -23,6 +23,9 @@ from lmfdb.number_fields.number_field import parse_list, parse_field_string
 
 from lmfdb.WebNumberField import *
 
+hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
+
+
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
     from sage.misc.prandom import randint
@@ -62,12 +65,11 @@ def hilbert_modular_form_render_webpage():
     args = request.args
     if len(args) == 0:
         info = {}
-        credit = 'John Cremona, Lassina Dembele, Steve Donnelly and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
         t = 'Hilbert Modular Forms'
         bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         info['counts'] = get_stats().counts()
-        return render_template("hilbert_modular_form_all.html", info=info, credit=credit, title=t, bread=bread)
+        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread)
     else:
         return hilbert_modular_form_search(**args)
 
@@ -92,9 +94,9 @@ def hilbert_modular_form_search(**args):
             elif field == 'field_label':
                 query[field] = parse_field_string(info[field])
             elif field == 'field_degree':
-                query[field] = parse_range(info[field])
+                query['deg'] = parse_range(info[field])
             elif field == 'field_disc':
-                query[field] = parse_range(info[field])
+                query['disc'] = parse_range(info[field])
             elif field == 'label':
                 query[field] = info[field]
             elif field == 'dimension':
@@ -104,32 +106,53 @@ def hilbert_modular_form_search(**args):
             else:
                 query[field] = info[field]
 
+    count_default = 100
     if info.get('count'):
         try:
             count = int(info['count'])
         except:
-            count = 100
+            count = count_default
     else:
-        info['count'] = 100
-        count = 100
+        info['count'] = count_default
+        count = count_default
+
+    start_default = 0
+    if info.get('start'):
+        try:
+            start = int(info['start'])
+            if(start < 0):
+                start += (1 - (start + 1) / count) * count
+        except:
+            start = start_default
+    else:
+        start = start_default
 
     info['query'] = dict(query)
     res = C.hmfs.forms.find(
-        query).sort([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)]).limit(count)
+        query).sort([('deg', pymongo.ASCENDING), ('disc', pymongo.ASCENDING), ('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
 
     if nres > 0:
         info['field_pretty_name'] = field_pretty(res[0]['field_label'])
     else:
         info['field_pretty_name'] = ''
     info['number'] = nres
+    info['start'] = start
+    info['more'] = int(start + count < nres)
     if nres == 1:
         info['report'] = 'unique match'
     else:
-        if nres > count:
-            info['report'] = 'displaying first %s of %s matches' % (count, nres)
+        if nres == 0:
+            info['report'] = 'no matches'
         else:
-            info['report'] = 'displaying all %s matches' % nres
+            if nres > count or start != 0:
+                info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
+            else:
+                info['report'] = 'displaying all %s matches' % nres
 
     res_clean = []
     for v in res:
@@ -148,7 +171,7 @@ def hilbert_modular_form_search(**args):
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), (
         'Search results', ' ')]
     properties = []
-    return render_template("hilbert_modular_form_search.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread)
 
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
@@ -310,7 +333,6 @@ def render_hmf_webpage(**args):
                                                                                          'label'], ' ')]
 
     t = "Hilbert Cusp Form %s" % info['label']
-    credit = 'John Cremona, Lassina Dembele, Steve Donnelly and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
     forms_space = C.hmfs.forms.find(
         {'field_label': data['field_label'], 'level_ideal': data['level_ideal']})
@@ -391,4 +413,4 @@ def render_hmf_webpage(**args):
                    ('Base Change', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=credit, title=t, bread=bread, friends=info['friends'])
+    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'])

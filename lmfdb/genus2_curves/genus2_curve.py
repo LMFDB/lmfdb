@@ -8,7 +8,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_range
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_torsion_structure
 from lmfdb.number_fields.number_field import parse_list, parse_discs, make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
@@ -49,6 +49,7 @@ geom_aut_grp_dict = {
         '[12, 4]':'D_{12}',
         '[24, 8]':'2D_{12}',
         '[48, 29]':'tilde{S}_4'}
+
 
 #########################
 #   Database connection
@@ -182,9 +183,21 @@ def genus2_curve_search(**args):
     for fld in ['st_group', 'real_geom_end_alg']:
         if info.get(fld):
             query[fld] = info[fld]
-    for fld in ['aut_grp', 'geom_aut_grp','torsion','igusa_clebsch']:
+    for fld in ['aut_grp', 'geom_aut_grp','igusa_clebsch']:
         if info.get(fld):
             query[fld] = map(int,info[fld].strip()[1:-1].split(","))
+    if info.get('torsion'):
+        res = parse_torsion_structure(info['torsion'],4)
+        if 'Error' in res:
+            # no error handling of malformed input yet!
+            info['torsion'] = ''
+            #info['err'] = res
+            #return search_input_error(info, bread)
+        else:
+            #update info for repeat searches
+            info['torsion'] = str(res).replace(' ','')
+            query['torsion'] = [int(r) for r in res]
+
     if info.get('ic0'):
         query['igusa_clebsch']=[info['ic0'], info['ic1'], info['ic2'], info['ic3'] ]
         

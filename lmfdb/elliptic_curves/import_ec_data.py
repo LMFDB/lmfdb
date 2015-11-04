@@ -19,6 +19,7 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'conductor': (int) conductor, e.g. 1225
    - 'iso': (string) Cremona isogeny class code, e.g. '11a'
    - 'lmfdb_iso': (string) LMFDB isogeny class code, e.g. '11.a'
+   - 'iso_nlabel': (int) numerical version of the (lmfdb) isogeny class label
    - 'number': (int) Cremona curve number within its class, e.g. 2
    - 'lmfdb_number': (int) LMFDB curve number within its class, e.g. 2
    - 'ainvs': (list of strings) list of a-invariants, e.g. ['0', '1', '1', '10617', '75394']
@@ -79,19 +80,19 @@ print "setting curves"
 # curves = conn.elliptic_curves.test
 curves = conn.elliptic_curves.curves
 
-# The following ensure_index command checks if there is an index on
+# The following create_index command checks if there is an index on
 # label, conductor, rank and torsion. If there is no index it creates
 # one.  Need: once torsion structure is computed, we should have an
 # index on that too.
 
-curves.ensure_index('label')
-curves.ensure_index('conductor')
-curves.ensure_index('rank')
-curves.ensure_index('torsion')
-curves.ensure_index('degree')
-curves.ensure_index('jinv')
-curves.ensure_index('sha')
-curves.ensure_index('cm')
+curves.create_index('label')
+curves.create_index('conductor')
+curves.create_index('rank')
+curves.create_index('torsion')
+curves.create_index('degree')
+curves.create_index('jinv')
+curves.create_index('sha')
+curves.create_index('cm')
 
 print "finished indices"
 
@@ -116,6 +117,10 @@ def parse_ainvs(s):
 
 # def parse_gens(s):
  #   return [int(a) for a in s[1:-1].split(':')]
+
+def numerical_iso_label(lmfdb_iso):
+    from lmfdb.ecnf.import_ecnf_data import numerify_iso_label
+    return numerify_iso_label(lmfdb_iso.split('.')[1])
 
 whitespace = re.compile(r'\s+')
 
@@ -337,8 +342,8 @@ def alldegphi(line):
 
 def alllabels(line):
     r""" Parses one line from an alllabels file.  Returns the label
-    and a dict containing six fields, 'conductor', 'iso', 'number',
-    'lmfdb_label', 'lmfdb_iso', 'lmfdb_number', being strings or ints.
+    and a dict containing seven fields, 'conductor', 'iso', 'number',
+    'lmfdb_label', 'lmfdb_iso', 'iso_nlabel', 'lmfdb_number', being strings or ints.
 
     Input line fields:
 
@@ -360,6 +365,7 @@ def alllabels(line):
         'number': int(data[2]),
         'lmfdb_label': lmfdb_label,
         'lmfdb_iso': data[3] + '.' + data[4],
+        'iso_nlabel': numerical_iso_label(C['lmfdb_iso']),
         'lmfdb_number': data[5]
     }
 
@@ -531,3 +537,23 @@ def add_sha_tor_primes(N1,N2):
         data['sha_primes'] = [int(p) for p in sha_primes]
         data['torsion_primes'] = [int(p) for p in torsion_primes]
         curves.update({'lmfdb_label': label}, {"$set": data}, upsert=True)
+
+# one-off script to add numerical conversion of the isogeny class letter code, for sorting purposes
+def add_numerical_iso_codes(N1,N2):
+    """
+    Add the 'iso_nlabel' field to every
+    curve in the database whose conductor is between N1 and N2
+    inclusive.
+    """
+    query = {}
+    query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
+    res = curves.find(query)
+    res = res.sort([('conductor', pymongo.ASCENDING)])
+    n = 0
+    for C in res:
+        label = C['lmfdb_label']
+        n += 1
+        if n%1000==0: print label
+        data = {}
+        data['iso_nlabel'] = numerical_iso_label(C['lmfdb_iso'])
+        curves.update_one({'_id': C['_id']}, {"$set": data}, upsert=True)

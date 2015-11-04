@@ -272,7 +272,7 @@ class WebDirichlet(WebCharObject):
             They are extremal for a given m.
         """
         if onlyprimitive:
-            return nextprimchar(m, n)
+            return WebDirichlet.nextprimchar(m, n)
         if m == 1:
             return 2, 1
         if n == m - 1:
@@ -286,7 +286,7 @@ class WebDirichlet(WebCharObject):
     def prevchar(m, n, onlyprimitive=False):
         """ Assume m>1 """
         if onlyprimitive:
-            return prevprimchar(m, n)
+            return WebDirichlet.prevprimchar(m, n)
         if n == 1:
             m, n = m - 1, m
         if m <= 2:
@@ -304,7 +304,7 @@ class WebDirichlet(WebCharObject):
             Gm = DirichletGroup_conrey(m)
         while True:
             n -= 1
-            if n == 1:  # (m,1) is never primitive for m>1
+            if n <= 1:  # (m,1) is never primitive for m>1
                 m, n = m - 1, m - 1
                 Gm = DirichletGroup_conrey(m)
             if m <= 2:
@@ -324,7 +324,7 @@ class WebDirichlet(WebCharObject):
             Gm = DirichletGroup_conrey(m)
         while 1:
             n += 1
-            if n == m:
+            if n >= m:
                 m, n = m + 1, 2
                 Gm = DirichletGroup_conrey(m)
             if gcd(m, n) != 1:
@@ -723,7 +723,7 @@ class WebChar(WebCharObject):
         f.append( ("Character group", cglink) )
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
-        if self.type == 'Dirichlet':
+        if self.type == 'Dirichlet' and self.chi.is_primitive():
             f.append( ('L function', '/L'+ url_character(type=self.type,
                                     number_field=self.nflabel,
                                     modulus=self.modlabel,
@@ -822,12 +822,12 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     def previous(self):
         if self.modulus == 1:
             return ('',{})
-        mod, num = self.prevchar(self.modulus, self.number)
+        mod, num = self.prevchar(self.modulus, self.number, onlyprimitive=True)
         return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
     @property
     def next(self):
-        mod, num = self.nextchar(self.modulus, self.number)
+        mod, num = self.nextchar(self.modulus, self.number, onlyprimitive=True)
         return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
     @property
@@ -858,22 +858,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def symbol(self):
-        """ chi is equal to a kronecker symbol if and only if it is real """
-        if self.order != 2:
-            return None
-        cond = self.conductor
-        if cond % 2 == 1:
-            if cond % 4 == 1: m = cond
-            else: m = -cond
-        elif cond % 8 == 4:
-            if cond % 16 == 4: m = cond
-            elif cond % 16 == 12: m = -cond
-        elif cond % 16 == 8:
-            if self.chi.is_even(): m = cond
-            else: m = -cond
-        else:
-            return None
-        return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
+        return self.symbol_numerator() 
 
     def value(self, val):
         val = int(val)
@@ -937,6 +922,32 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         = \sum_{r \in \Z/%s\Z}
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
         = %s. \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
+
+
+    def symbol_numerator(self): 
+#Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
+# Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
+# symbol_numerator returns the appropriate Kronecker symbol depending on the conductor of \chi. 
+        """ chi is equal to a kronecker symbol if and only if it is real """
+        if self.order != 2:
+            return None
+        cond = self.conductor
+        if cond % 2 == 1:
+            if cond % 4 == 1: m = cond
+            else: m = -cond
+        elif cond % 8 == 4:
+	    # Fixed cond % 16 == 4 and cond % 16 == 12 were switched in the previous version of the code. 
+            # Let d be a non zero squarefree integer. If d  = 2,3 (mod) 4 and if cond = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12 then we set m = cond. 
+            # On the other hand if d = 1 (mod) 4 and cond = 4d = 4 (4n +1) = 16n + 4 then we set m = -cond. 
+            if cond % 16 == 4: m = -cond
+            elif cond % 16 == 12: m = cond
+        elif cond % 16 == 8:
+            if self.chi.is_even(): m = cond
+            else: m = -cond
+        else:
+            return None
+        return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
+
 
 
 class WebHeckeExamples(WebHecke):
