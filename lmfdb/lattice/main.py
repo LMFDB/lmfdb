@@ -9,7 +9,7 @@ from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
 import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing
+from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt
 
 from lmfdb.lattice import lattice_page, lattice_logger
 from lmfdb.lattice.lattice_stats import get_stats
@@ -27,7 +27,7 @@ def get_bread(breads=[]):
     return bc
 
 def vect_to_matrix(v):
-	return str(latex(matrix(v)))	
+    return str(latex(matrix(v)))
 
 def print_q_expansion(list):
      list=[str(c) for c in list]
@@ -49,24 +49,24 @@ def my_latex(s):
 
 @lattice_page.route("/")
 def lattice_render_webpage():
-	args = request.args
-	if len(args) == 0:
-		counts = get_stats().counts()
-		dim_list= range(2, counts['max_dim']+1, 1)
-		class_number_list=range(1, counts['max_class_number']+1, 1)
-		det_list_endpoints = [1, 100, 200, 300]
-		if counts['max_det']>300:
-			det_list_endpoints=det_list_endpoints+range(400, (floor(380/100)+2)*100, 100)
-		det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
-		info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list}
-	 	credit = lattice_credit
-		t = 'Integral Lattices'
-		bread = [('Integral Lattices', url_for(".lattice_render_webpage"))]
-		info['learnmore'] = []
-		info['counts'] = get_stats().counts()
-		return render_template("lattice-index.html", info=info, credit=credit, title=t, bread=bread)
-	else:
-		return lattice_search(**args)
+    args = request.args
+    if len(args) == 0:
+        counts = get_stats().counts()
+        dim_list= range(2, counts['max_dim']+1, 1)
+        class_number_list=range(1, counts['max_class_number']+1, 1)
+        det_list_endpoints = [1, 100, 200, 300]
+        if counts['max_det']>300:
+            det_list_endpoints=det_list_endpoints+range(400, (floor(380/100)+2)*100, 100)
+        det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
+        info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list}
+        credit = lattice_credit
+        t = 'Integral Lattices'
+        bread = [('Integral Lattices', url_for(".lattice_render_webpage"))]
+        info['learnmore'] = []
+        info['counts'] = get_stats().counts()
+        return render_template("lattice-index.html", info=info, credit=credit, title=t, bread=bread)
+    else:
+        return lattice_search(**args)
 
 
 @lattice_page.route("/random")
@@ -109,9 +109,9 @@ def lattice_search(**args):
             elif field == 'gram':
                 try:
                     info['start']
-                    check= parse_list2(info.get(field), query, field, fun=gram)
+                    check= parse_list(info.get(field), query, field, vect_to_sym)
                 except:
-                    check= parse_list2(info.get(field), query, field, fun=gram, url_for(".lattice_render_webpage"))
+                    check= parse_list(info.get(field), query, field, vect_to_sym, url_for(".lattice_render_webpage"))
                 if check is not None:
                     return check
     info['query'] = dict(query)
@@ -159,14 +159,14 @@ def render_lattice_webpage(**args):
 
     try:
         ncoeff = request.args['ncoeff']
-	ncoeff = clean_input(ncoeff)
+        ncoeff = clean_input(ncoeff)
         ncoeff=ncoeff.replace(' ', '')
         if not LIST_RE.match(ncoeff):
             info['err'] = 'Error parsing input for the number of coefficients. It needs to be an integer' 
             return search_input_error(info, bread)
         ncoeff = int(ncoeff)
-	if ncoeff>150:
-	    info['err'] = 'Only the first $150$ coefficients are stored in the database' 
+        if ncoeff>150:
+            info['err'] = 'Only the first $150$ coefficients are stored in the database' 
             return search_input_error(info, bread)
     except:
         ncoeff = 20
@@ -197,19 +197,19 @@ def render_lattice_webpage(**args):
     info['name']=str(f['name'])
     info['comments']=str(f['comments'])
     if info['name'] == "":
-	t = "Integral Lattice %s" % info['label']
+        t = "Integral Lattice %s" % info['label']
     else:
-	t = "Integral Lattice "+info['label']+" ("+info['name']+")"
+        t = "Integral Lattice "+info['label']+" ("+info['name']+")"
     if info['name'] != "" or info['comments'] !="":
-	info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
-    info['properties'] = [
-			('Label', '$%s$' % info['label']),
-			('Dimension', '$%s$' % info['dim']),
-			('Gram matrix', '$%s$' % info['gram']),
-			]
+        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
+        info['properties'] = [
+            ('Label', '$%s$' % info['label']),
+            ('Dimension', '$%s$' % info['dim']),
+            ('Gram matrix', '$%s$' % info['gram']),
+            ]
     if info['name'] != "" :
-	info['properties'].append(('Name','$%s$' % info['name'] ))
-    friends = [('L-series', ' ' ),('Half integral weight modular forms', ' ')]
+        info['properties'].append(('Name','$%s$' % info['name'] ))
+        friends = [('L-series', ' ' ),('Half integral weight modular forms', ' ')]
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends)
 
 
@@ -242,13 +242,21 @@ def lattice_label_error(err_msg, lab, url):
         return redirect(url)
 
 
-def gram(v):
-    k=len(v)
-    for j in range(k):
-        if j*(j+1)==2*len(v):
-            n=j
-    out=[]
-    for t in range(n):
-    return out
+def vect_to_sym(v): 
+    n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
+    M = matrix(n)
+    k = 0
+    for i in range(n):
+        for j in range(i, n):
+            M[i,j] = v[k]
+            M[j,i] = v[k]
+            k=k+1
+    return [[int(M[i,j]) for i in range(n)] for j in range(n)]
+
+
+
+
+
+
 
 

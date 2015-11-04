@@ -61,31 +61,21 @@ def parse_ints(inp, query, field, url=None):
     else:
         collapse_ors(parse_range2(cleaned, field), query)
 
-def parse_list(inp, query, field, url=None):
+def parse_list(inp, query, field, test=None, url=None):
     """
     parses a string representing a list of integers, e.g. '[1,2,3]'
     """
-    inp = inp.replace(' ','')[1:-1]
+    if len(inp)>2:
+        inp = inp.replace(' ','')[1:-1]
     if not inp: return
-    try:
-        out= [int(a) for a in inp.split(",")]
-        query[field]=out
-    except:
+    if re.search("\\d", inp):
+        out= [int(a) for a in inp.split(',')]
+        if test is not None:
+            query[field] = test(out)
+        else:
+            query[field]=out
+    else:
         flash("Error parsing input: %s is not a valid input. It needs to be an list of integers (such as [1,2,3])." % inp, "error")
         if url is not None:
             return redirect(url)
 
-def parse_list2(inp, query, field, test=None, fun=None, url=None):
-    """
-    parses a string representing a list of integers, e.g. '[1,2,3]'
-    """
-    inp = inp.replace(' ','')[1:-1]
-    if not inp: return
-    try:
-        out= [int(a) for a in inp.split(",")]
-        if fun is not None:
-            query[field]=fun(out)
-    except:
-        flash("Error parsing input: %s is not a valid input. It needs to be an list of integers (such as [1,2,3])." % inp, "error")
-        if url is not None:
-            return redirect(url)
