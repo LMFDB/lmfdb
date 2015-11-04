@@ -272,7 +272,7 @@ class WebDirichlet(WebCharObject):
             They are extremal for a given m.
         """
         if onlyprimitive:
-            return nextprimchar(m, n)
+            return WebDirichlet.nextprimchar(m, n)
         if m == 1:
             return 2, 1
         if n == m - 1:
@@ -286,7 +286,7 @@ class WebDirichlet(WebCharObject):
     def prevchar(m, n, onlyprimitive=False):
         """ Assume m>1 """
         if onlyprimitive:
-            return prevprimchar(m, n)
+            return WebDirichlet.prevprimchar(m, n)
         if n == 1:
             m, n = m - 1, m
         if m <= 2:
@@ -304,7 +304,7 @@ class WebDirichlet(WebCharObject):
             Gm = DirichletGroup_conrey(m)
         while True:
             n -= 1
-            if n == 1:  # (m,1) is never primitive for m>1
+            if n <= 1:  # (m,1) is never primitive for m>1
                 m, n = m - 1, m - 1
                 Gm = DirichletGroup_conrey(m)
             if m <= 2:
@@ -324,7 +324,7 @@ class WebDirichlet(WebCharObject):
             Gm = DirichletGroup_conrey(m)
         while 1:
             n += 1
-            if n == m:
+            if n >= m:
                 m, n = m + 1, 2
                 Gm = DirichletGroup_conrey(m)
             if gcd(m, n) != 1:
@@ -723,7 +723,7 @@ class WebChar(WebCharObject):
         f.append( ("Character group", cglink) )
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
-        if self.type == 'Dirichlet':
+        if self.type == 'Dirichlet' and self.chi.is_primitive():
             f.append( ('L function', '/L'+ url_character(type=self.type,
                                     number_field=self.nflabel,
                                     modulus=self.modlabel,
@@ -822,12 +822,12 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     def previous(self):
         if self.modulus == 1:
             return ('',{})
-        mod, num = self.prevchar(self.modulus, self.number)
+        mod, num = self.prevchar(self.modulus, self.number, onlyprimitive=True)
         return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
     @property
     def next(self):
-        mod, num = self.nextchar(self.modulus, self.number)
+        mod, num = self.nextchar(self.modulus, self.number, onlyprimitive=True)
         return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
     @property

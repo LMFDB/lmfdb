@@ -6,6 +6,7 @@ import gridfs
 import bson
 from sage.symbolic.expression import Expression
 import datetime
+from lmfdb import base
 from sage.all import Integer, DirichletGroup, is_even, loads, dumps, cached_method
 from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
 import math
@@ -60,12 +61,7 @@ class MaassDB(object):
 
         try:
             constr = "{0}:{1}".format(host, port)
-            if pymongo.version_tuple[0] < 3:
-                from pymongo import Connection
-                Con = pymongo.Connection(constr)
-            else:
-                from pymongo.mongo_client import MongoClient
-                Con = pymongo.MongoClient(constr)
+            Con = base.getDBConnection()
             self._Con = Con
         except:  # AutoReconnect:
             logger.critical("No database found at {0}".format(constr))
@@ -73,20 +69,16 @@ class MaassDB(object):
             return False
         D = Con['MaassWaveForms']
         self._mongo_db = D
-        if not self._collection_name in D.collection_names():
-            D.create_collection(self._collection_name)
         self._collection = D[self._collection_name]
-        if self._show_collection_name in D.collection_names():
+        if True: # .collection_names() is not supported -- self._show_collection_name in D.collection_names():
             self._show_collection = [self._show_collection_name]
         if self._show_collection_name == 'all':
             self._show_collection = []
             ## We currently merged both collections.
             for cn in ['FS']:  # ,'HT']: #D.collection_names():
-                if cn in D.collection_names():
+                if True: # no support for collection_names any more# cn in D.collection_names():
                     self._show_collection.append(D[cn])
 
-        if not 'Coefficients' in D.collection_names():
-            D.create_collection('Coefficients')
         # Stores a large amount of coefficients at two cusps (to be able to estimate error)
         self._collection_coeff = D['Coefficients']
         # Stores a small amount of coefficients in each cusp

@@ -118,19 +118,26 @@ def render_Dirichletwebpage(modulus=None, number=None):
         return render_template('CharGroup.html', **info)
     else:
         info = WebDirichletCharacter(**args).to_dict()
-        info['navi'] = navi([info['previous'],info['next']])
+        # the navi field in the homepage.html has changed. this can't work.
+        try:
+            info['navi'] = [("previous",) +navi([info['previous']])[0],
+                        ("next",) + navi([info['next']])[0]]
+        except IndexError:
+            info['navi'] = [("next",) + navi([info['next']])[0]]
         m,n = info['modlabel'], info['numlabel']
         info['bread'] = [('Characters','/Character'),
                          ('Dirichlet','/Character/Dirichlet'),
                          ('Modulus %s'%m, '/Character/Dirichlet/%s'%m),
                          ('Character number %s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
         #logger.info(info)
+        # TODO fix navi field
+        del info["navi"]
         return render_template('Character.html', **info)
 
 def navi(L):
     r = [ (l, url_character(**args)) for l, args in L if l ]
     return r
-    
+
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
     val = request.args.get("val", [])
@@ -191,6 +198,8 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
                          ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m)),
                          ('Character number %s'%n, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
         #logger.info(info)
+        # TODO fix navi field
+        del info["navi"]
         return render_template('Character.html', **info)
 
 @characters_page.route("/calc-<calc>/Hecke/<number_field>/<modulus>/<number>")

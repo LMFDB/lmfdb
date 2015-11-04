@@ -29,6 +29,7 @@ print "setting hmfs, fields and forms"
 hmfs = conn.hmfs
 fields = hmfs.fields
 forms = hmfs.forms
+nfcurves = conn.elliptic_curves.nfcurves
 
 # Cache of WebNumberField and FieldData objects to avoid re-creation
 WNFs = {}
@@ -43,6 +44,9 @@ def get_Fdata(label):
     if not label in Fdata:
         Fdata[label] = fields.find_one({'label':label})
     return Fdata[label]
+
+def nautos(label):
+    return len(get_WNF(label, 'a').K().automorphisms())
 
 def fldlabel2conjdata(label):
     data = {}
@@ -62,8 +66,7 @@ def fldlabel2conjdata(label):
     data['conjideals'] = cideals
     primes = niceideals(F, Fdata['primes'])
     data['primes'] = primes
-    primes = [prm[2] for prm in primes]
-    cprimes = [[primes.index(cideals[(prm,ig)]) for prm in primes] for ig in range(len(auts))]
+    cprimes = conjideals(primes, auts)
     data['conjprimes'] = cprimes
     return data
 
@@ -126,14 +129,18 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False):
     else:
         max_level_norm = oo
     ftoconj = forms.find(query)
-    print("%s forms to examine of level norm between %s and %s."
-          % (ftoconj.count(),min_level_norm,max_level_norm))
+    print("%s forms over %s to examine of level norm between %s and %s."
+          % (ftoconj.count(),label,min_level_norm,max_level_norm))
     if ftoconj.count() == 0:
         return None
     print("Ideals precomputations...")
     data = fldlabel2conjdata(label)
+    if data == None:
+        print("No nontrival automorphisms!")
+        return
     print("...done.\n")
     auts = data['auts']
+    print("Applying %s non-trivial automorphisms..." % len(auts))
     cideals = data['conjideals']
     cprimes = data['conjprimes']
     F = data['F']
@@ -174,7 +181,7 @@ def fix_data_fields(min_level_norm=0, max_level_norm=None, fix=False):
         return None
     for f in forms_to_fix:
         count = count+1
-        if count%100==0: print f['label']
+        if count%100==0: print("%s: %s" % (count, f['label']))
         fix_data = {}
         deg, r, disc, n = f['field_label'].split('.')
         fix_data['deg'] = int(deg)
@@ -186,3 +193,96 @@ def fix_data_fields(min_level_norm=0, max_level_norm=None, fix=False):
         #print("using fixed data %s for form %s" % (fix_data,f['label']))
         if fix:
             forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
+
+def fix_one_label(lab, reverse=False):
+    r""" If lab has length 1 do nothing.  If it has length 2 increment the
+    first letter (a to b to c to ... to z).  The lenths must be at
+    most 2 and if =2 it must start with 'a'..'y' (these are all which
+    were required).  If reverse==True the inverse operation is carried
+    out (z to y to ... to c to b to a).
+    """
+    if len(lab)!=2:
+        return lab
+    else:
+        if reverse:
+            return chr(ord(lab[0])-int(1))+lab[1]
+        else:
+            return chr(ord(lab[0])+int(1))+lab[1]
+
+def fix_labels(min_level_norm=0, max_level_norm=None, fix=False, reverse=False):
+    r""" One-off utility to correct labels 'aa'->'ba'->'ca', ..., 'az'->'bz'->'cz'
+    """
+    count = 0
+    query = {}
+    query['level_norm'] = {'$gte' : int(min_level_norm)}
+    if max_level_norm:
+        query['level_norm']['$lte'] = int(max_level_norm)
+    else:
+        max_level_norm = oo
+    forms_to_fix = forms.find(query)
+    print("%s forms to examine of level norm between %s and %s."
+          % (forms_to_fix.count(),min_level_norm,max_level_norm))
+    if forms_to_fix.count() == 0:
+        return None
+    for f in forms_to_fix:
+        count = count+1
+        if count%100==0: print("%s: %s" % (count, f['label']))
+        fix_data = {}
+        lab = f['label_suffix']
+        if len(lab)==1:
+            continue
+        if f['label'][-2:] != lab:
+            print("Incorrect label_suffix %s in form %s" % (lab,f['label']))
+            return
+        oldlab = lab
+        lab = fix_one_label(lab, reverse=reverse)
+        fix_data['label_suffix'] = lab
+        fix_data['label'] = f['label'].replace(oldlab,lab)
+        fix_data['short_label'] = f['short_label'].replace(oldlab,lab)
+        print("using fixed data %s for form %s" % (fix_data,f['label']))
+        if fix:
+            forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
+
+        # find associated elliptic curve and fix that too (where appropriate)
+        if f['deg']==2 and f['dimension']==1:
+            label = f['label']
+            for e in nfcurves.find({'class_label':f['label']}):
+                fix_data = {}
+                fix_data['iso_label'] = lab
+                fix_data['label'] = e['label'].replace(oldlab,lab)
+                fix_data['short_label'] = e['short_label'].replace(oldlab,lab)
+                fix_data['class_label'] = e['class_label'].replace(oldlab,lab)
+                fix_data['short_class_label'] = e['short_class_label'].replace(oldlab,lab)
+                print("using fixed data %s for curve %s" % (fix_data,e['label']))
+                if fix:
+                    nfcurves.update({'label': e['label']}, {"$set": fix_data}, upsert=True)
+        else:
+            print("No elliptic curve to fix")
+
+def add_numeric_label_suffixes(min_level_norm=0, max_level_norm=None, fix=False):
+    r""" One-off utility to add a numeric conversion of the letter-coded
+    label suffixes 'a'->0', 'z'->25, 'ba'->26, etc. for sorting
+    purposes.
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['level_norm'] = {'$gte' : int(min_level_norm)}
+    if max_level_norm:
+        query['level_norm']['$lte'] = int(max_level_norm)
+    else:
+        max_level_norm = oo
+    forms_to_fix = forms.find(query)
+    print("%s forms to examine of level norm between %s and %s."
+          % (forms_to_fix.count(),min_level_norm,max_level_norm))
+    for f in forms_to_fix:
+        count = count+1
+        if count%100==0: print("%s: %s" % (count, f['label']))
+        fix_data = {}
+        lab = f['label_suffix']
+        fix_data['label_nsuffix'] = class_to_int(lab)
+        #print("using fixed data %s for form %s" % (fix_data,f['label']))
+        if fix:
+            forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
+
+

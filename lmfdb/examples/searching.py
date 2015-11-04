@@ -9,7 +9,10 @@ from lmfdb import base
 conn = base.getDBConnection()
 test = conn.testdb.test
 test.remove()
-test.ensure_index('list')
+try:
+    test.ensure_index('list')
+except pymongo.errors.OperationFailure:
+    pass
 
 for i in range(10):
     test.insert({'list': range(1 + i, 4 + 2 * i)})

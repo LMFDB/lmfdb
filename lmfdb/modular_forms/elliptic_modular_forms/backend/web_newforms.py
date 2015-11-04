@@ -95,6 +95,8 @@ from sage.modules.vector_integer_dense import Vector_integer_dense
 
 from sage.structure.unique_representation import CachedRepresentation
 
+from sage.databases.cremona import cremona_letter_code
+
 class WebqExp(WebPoly):
 
     def __init__(self, name,
@@ -229,7 +231,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             character = None if parent is None else parent.character
             if not isinstance(label,basestring):
                 if isinstance(label,(int,Integer)):
-                    label = orbit_label(label)
+                    label = cremona_letter_code(label)
                 else:
                     raise ValueError,"Need label either string or integer! We got:{0}".format(label)
 
@@ -499,23 +501,6 @@ class WebNewForm(WebObject, CachedRepresentation):
             return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
         else:
             return ''
-
-
-from sage.all import cached_function,AlphabeticStrings
-       
-@cached_function
-def orbit_label(j):
-    x = AlphabeticStrings().gens()
-    j1 = j % 26
-    label = str(x[j1]).lower()
-    j  = (j - j1) / 26 -1
-    while j >= 0:
-        j1 = j % 26
-        label = str(x[j1]).lower() + label
-        j = (j - j1) / 26 - 1
-    return label
-
-
 
 from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
