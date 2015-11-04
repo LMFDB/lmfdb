@@ -25,6 +25,10 @@ Queries are url encoded <code>key=value</code> parameters, where the value has a
 <li><b>cs</b>, <b>ci</b>, <b>cf</b> and <b>cpy</b>: queries, if the given string, integer, float or Python literal is <i>contained</i> in a list.
 </ul>
 Several ones can be combined by specifying several ones delimited by <code>&amp;</code> to further drill down to the desired objects.
+To only retrieve a selected list of entries per document,
+use <code>_fields=name1,name2</code> to reduce the amount of data sent back to only those fields named <code>name1</code> and <code>name2</code>.
+Sorting by fields is done via <code>_sort=name1,-name2</code>,
+where the prefix "-" means that it is sorted in descending order.
 </div>
 <div>
 <h4>Examples</h4>
@@ -56,6 +60,12 @@ Several ones can be combined by specifying several ones delimited by <code>&amp;
     and the field <code>non-surjective_primes</code> contains the integer number 5:
     {% set kw = {"non-surjective_primes" : "ci3"} %}
     <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="cs-769", **kw) }}'>?ainvs=cs-769&amp;non-surjective_primes=ci3</a>.
+    </li>
+    <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
+    query <a href="{{ url_for('.api_query', db='knowledge', collection='knowls', _fields='authors,last_author') }}"</a>?_fields=authors,last_author</a>.
+    </li>
+    <li>For sorting the result, use a query like
+    <a href="{{ url_for('.api_query', db='knowledge', collection='knowls', _fields='authors,content', _sort='timestamp') }}">?_fields=content,authors&_sort=timestamp</a>.
     </li>
 </ul>
 </div>
