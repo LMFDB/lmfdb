@@ -2,26 +2,62 @@
 {% block content %}
 
 {% if not error %}
+<style>
+table.ntdata th.left {
+  border-right: 2px solid #9b9;
+  background: #efe;
+  border-bottom: 0;
+  text-align: right;
+}
+table.ntdata td { text-align: left; }
+table.ntdata td.center { text-align: center; }
+table.ntdata th.weight {
+  text-align: left;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
 
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+</style>
 <p>Below are the dimensions of spaces of Siegel Modular Forms with <a KNOWL="mf.siegel.vector.full">full
 level structure</a>.</p>
 <h2>Dimensions</h2>
-<table>
-  <tr>
-    <td><b>k\j</b></td>
-    {% for j in jrange %}
-    <td> {{j}}
-    </td>
-    {% endfor %}
-  </tr>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="left">
+        <b>k</b>
+      </th>
+      <th class="level" colspan="24">
+        <span style="display:block;float:left; margin-right:3px;"<b>j</b>
+      </th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft"></th>
+      {% for j in jrange %}
+      <th class="level"> {{j}}</th>
+      {% endfor %}
+    </tr>
   </thead>
   {% for wt in krange %}
-  <tr class="{{ loop.cycle( 'odd', 'even') }}">
-    <td>
+  <tr>
+    <th class="left">
       {{ wt }}
-    </td>
+    </th>
     {% for j in jrange %}
-    <td>{% if dimtable[wt][j]>0 %} <a href="/ModularForm/GSp/Q/Sp4Z_j/{{j}}/{{wt}}/">${{dimtable[wt][j] }}$</a> {% else %} 0 {% endif%}
+    <td class="center">{% if dimtable[wt][j]>0 %} <a href="/ModularForm/GSp/Q/Sp4Z_j/{{j}}/{{wt}}/">{{dimtable[wt][j] }}</a> {% else %}
+      0
+
+      {% endif%}
     </td>
     {% endfor %}
   </tr>
