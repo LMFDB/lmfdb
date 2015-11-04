@@ -1,3 +1,4 @@
+password
 password.py
 config.ini
 
@@ -25,3 +26,4 @@ lmfdb/cover
 lmfdb/.coverage
 .coverage
 .DS_Store
+.idea/

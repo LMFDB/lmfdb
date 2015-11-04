@@ -52,9 +52,10 @@ import re
 import json
 from sage.all import *
 
-#from pymongo.connection import Connection
 from pymongo.mongo_client import MongoClient
-fields = MongoClient(port=37010).numberfields.fields
+C= MongoClient(port=37010)
+C['numberfields'].authenticate('editor', '282a29103a17fbad')
+fields = C.numberfields.fields
 
 saving = True 
 
