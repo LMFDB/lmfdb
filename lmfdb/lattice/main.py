@@ -208,8 +208,8 @@ def render_lattice_webpage(**args):
             ('Gram matrix', '$%s$' % info['gram']),
             ]
     if info['name'] != "" :
-        info['properties'].append(('Name','$%s$' % info['name'] ))
-        friends = [('L-series', ' ' ),('Half integral weight modular forms', ' ')]
+        info['properties'].append(('Name','%s' % info['name'] ))
+        friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends)
 
 
