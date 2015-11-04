@@ -12,6 +12,7 @@ import urllib
 from sage.all_cmdline import *
 import os
 import sample
+import lmfdb.base
 from lmfdb.base import app
 from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms import smf_logger
@@ -57,8 +58,13 @@ def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
     #TODO: cleanup
     if j==0:
         t= dimensions._dimension_Sp4Z([k])
+        samples = find_samples('Sp4Z', k)
+    elif j==2:
+        t= dimensions._dimension_Sp4Z([k])
+        samples = find_samples('Sp4Z_2', k)
     else:
         t = dimensions._dimension_Gamma_2([k], j, group="Sp4(Z)")
+        #Right now no samples
     subdecomp=t[1][k]
     headers=t[0]
     #Same for samples. Really should have a big structure driving template: TODO
@@ -68,7 +74,21 @@ def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
                            j=j,
                            subspace=subdecomp,
                            headers=headers,
+                           samples = samples,
                            bread=bread);
+
+def find_samples(coll, weight):
+    conn = lmfdb.base.getDBConnection()
+    db = conn.siegel_modular_forms.samples
+    slist = db.find({'collection':coll,
+                         'weight':str(weight)})
+    ret = []
+    for res in slist:
+        name = res['name']
+        path = "%s.%s"%(coll,res['name'])
+        url = '/ModularForm/GSp/Q/%s'%(path)
+        ret.append({'url':url, 'name':name})
+    return ret
 
 @app.route('/ModularForm/GSp/Q/Sp4Z_j')
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/')
