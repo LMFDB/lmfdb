@@ -4,8 +4,13 @@
 {% if not error %}
 
 This is a space of <a knowl="mf.siegel">Siegel Modular Forms</a>
-of full level with weight {{k}} and representation $\mathrm{Sym}^{ {{j}} }$.
-
+with real representation $\mathrm{Det}^{ {{k}}}\otimes\mathrm{Sym}^{ {{j}} }$. It has
+the following interesting subspaces:
+<table>
+  {% for key,value in subspace.iteritems()%}
+  <tr><td>{{key}}</td><td>{{value}}</td></tr>
+  {% endfor %}
+</table>
 
 {% else %}
 {% include 'None.html' %}

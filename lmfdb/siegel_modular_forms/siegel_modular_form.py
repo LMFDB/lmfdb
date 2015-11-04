@@ -50,11 +50,24 @@ def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
     bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', '/ModularForm/GSp/Q/Sp4Z_j'),
              ('$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '/ModularForm/GSp/Q/Sp4Z_j/%s/%s'%(k,j))]
-    
+    # How to handle space decomposition: dict with keys and entries.
+    #Then special case code here.
+    j=int(j)
+    k=int(k)
+    #TODO: cleanup
+    if j==0:
+        subdecomp = dimensions._dimension_Sp4Z([k])[1][k]
+    elif j==2:
+        subdecomp = dimensions._dimension_Gamma_2([k],2,group="Sp4(Z)")[1][k]
+    else:
+        subdecomp = dimensions._dimension_Gamma_2([k], j, group="Sp4(Z)")[1][k]
+        
+    #Same for samples. Really should have a big structure driving template: TODO
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
                            title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
                            k=k,
                            j=j,
+                           subspace=subdecomp,
                            bread=bread);
 
 @app.route('/ModularForm/GSp/Q/Sp4Z_j')
