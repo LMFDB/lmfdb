@@ -190,14 +190,14 @@ def render_lattice_webpage(**args):
         t = "Integral Lattice "+info['label']+" ("+info['name']+")"
     if info['name'] != "" or info['comments'] !="":
         info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
-        info['properties'] = [
-            ('Label', '$%s$' % info['label']),
-            ('Dimension', '$%s$' % info['dim']),
-            ('Gram matrix', '$%s$' % info['gram']),
-            ]
+    info['properties'] = [
+        ('Label', '$%s$' % info['label']),
+        ('Dimension', '$%s$' % info['dim']),
+        ('Gram matrix', '$%s$' % info['gram'])
+        ]
     if info['name'] != "" :
         info['properties'].append(('Name','%s' % info['name'] ))
-        friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
+    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends)
 
 
