@@ -1,0 +1,98 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<!--<script type="text/javascript">-->
+<!--var clean_uri = location.protocol + "//" + location.host + location.pathname;-->
+<!--window.history.replaceState({}, document.title, clean_uri);-->
+<!--</script>-->
+
+
+{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+<h2> {{ KNOWL('lattice.gram_matrix', title='Gram Matrix') }} </h2>
+<p>${{info.gram}}$</p>
+
+<h2> Lattice Invariants </h2>
+
+<table>
+    <tr><td align=right>{{ KNOWL('lattice.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>${{info.minimum }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
+    <tr><td align=right>Normalized {{ KNOWL('lattice.minimal_vector', title='minimal vector')}} list:</td><td>${{info.shortest }}$</td></tr>
+    <tr><td align=right>Group order:</td><td>${{info.aut }}$</td></tr>
+</table>
+
+<h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
+
+<!--<p>-->
+<!--<form>-->
+<!--<p>-->
+<!--<div>Display the $q$ expansion up to power <input type='text' name='ncoeff' placeholder='20' value={{info.ncoeff}} size=5> <button type='submit' value='display'>Display</button></div></p>-->
+<!--<p>-->
+<!--<div style="overflow:auto;padding: 10px">${{info.theta_series }}$</div>-->
+<!--</p>-->
+<!--</form>-->
+<!--</p>-->
+
+<p><form>
+<div class="output"><span id="theta_output">{{info.theta_series}}</span></div>
+<div class="emptyspace"><br></div>
+<button id="morebutton">More coefficients</button>
+</form></p>
+
+
+
+<h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>
+
+<table>
+<tr><td align=right>Class number:</td><td>${{info.class_number }}$</td></tr>
+<tr><td align=right>Genus representatives:</td><td>
+{% for n in info.genus_reps %}
+${{n}}$
+{% endfor %}
+</td></tr>
+</table>
+
+
+<br>
+{% if info.name or info.comments %}
+<h2><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs={{info.knowl_args}}>Comments</a></h2>
+
+{% if info.name != " " %}
+<p>This integral lattice is known with {{KNOWL('lattice.name', title='name')}} {{ info.name }}.</p>
+{% endif %}
+
+{% if info.comments != " " %}
+<p>{{info.comments}}.</p>
+{% endif %}
+
+{% endif %}
+
+
+{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+
+<script type="text/javascript">
+var number_of_coefficients = 10;
+function more_handler(evt) {
+    number_of_coefficients += number_of_coefficients;
+    evt.preventDefault();
+    $("#theta_output").load("{{info.theta_display}}"+number_of_coefficients,
+        function() {
+            {# tell mathjx to render the output #}
+            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "theta_output"]);
+        });
+}
+$(function() {
+    $("#morebutton").click(function(e) {more_handler(e)});
+});
+</script>
+
+{% endblock %}
