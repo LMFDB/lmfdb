@@ -13,7 +13,18 @@ links to their respective descriptions,
 and has very limited query capabilities.
 </div>
 <div>
-Queries are url encoded <code>key=value</code> parameters, where the value has a prefix to specify the type:
+Queries are url encoded <b><code>key=value</code></b> parameters, where the value has a prefix to specify the type.
+Keys starting with "<code>_</code>" are meta-parameters further refining query.
+They can be combined by specifying several ones delimited by <code>&amp;</code> to further drill down to the desired objects.
+The result formats are JSON, YAML or HTML (default).
+Each list is limited by a maximum of 100 results and the <code>next</code> entry contains the query to request more objects.
+The overall limit is at about 10000 results and beyond that it is necessary to further refine the query to the results in question.
+</div>
+<div>
+<b>Please use this API responsibly!</b>
+</div>
+<h4>Type-prefixes for query values</h4>
+<div>
 <ul>
 <li><b>s</b>: string</li>
 <li><b>i</b>: integer</li>
@@ -24,7 +35,18 @@ Queries are url encoded <code>key=value</code> parameters, where the value has a
 <li><b>py</b>: this evaluates the query literally following the Python syntax. This can be used to express a matrix as a nested list of lists.
 <li><b>cs</b>, <b>ci</b>, <b>cf</b> and <b>cpy</b>: queries, if the given string, integer, float or Python literal is <i>contained</i> in a list.
 </ul>
-Several ones can be combined by specifying several ones delimited by <code>&amp;</code> to further drill down to the desired objects.
+</div>
+<h4>Meta-parameters</h4>
+<div>
+<ul>
+<li><code>_format</code> is used to specify the encoding. Possible values are html (defualt), json and yaml.</li>
+<li>To only retrieve a selected list of entries per document,
+use <code>_fields=name1,name2</code> to reduce the amount of data sent back to only those fields named <code>name1</code> and <code>name2</code>.
+</li>
+<li>Sorting by fields is done via <code>_sort=name1,-name2</code>,
+where the prefix "-" indicates to sort in descending order.
+</li>
+<li>Finally, <code>_delim</code> is used to specify the delimiter (default: "<code>,</code>")</li>
 </div>
 <div>
 <h4>Examples</h4>
@@ -57,15 +79,13 @@ Several ones can be combined by specifying several ones delimited by <code>&amp;
     {% set kw = {"non-surjective_primes" : "ci3"} %}
     <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="cs-769", **kw) }}'>?ainvs=cs-769&amp;non-surjective_primes=ci3</a>.
     </li>
+    <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
+    query <a href="{{ url_for('.api_query', db='knowledge', collection='knowls', _fields='authors,last_author') }}"</a>?_fields=authors,last_author</a>.
+    </li>
+    <li>For sorting the result, use a query like
+    <a href="{{ url_for('.api_query', db='knowledge', collection='knowls', _fields='authors,content', _sort='timestamp') }}">?_fields=content,authors&_sort=timestamp</a>.
+    </li>
 </ul>
-</div>
-<div>
-The result formats are JSON, YAML or HTML (default).
-Each list is limited by a maximum of 100 results and the <code>next</code> entry contains the query to request more objects.
-The overall limit is at about 10000 results and beyond that it is necessary to further refine the query to the results in question.
-</div>
-<div>
-<b>Please use this API responsibly!</b>
 </div>
 
 <h3>Available Collections</h3>

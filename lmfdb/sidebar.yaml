@@ -190,11 +190,15 @@
       colspan: onecolumn
     - title: Artin
       url_for: "artin_representations.index"
-    - title: Automorphic
+    - title: Galois
       status: future
     - title: dummy
       status: future
-    - title: Galois
+    - title: Weil-Deligne
+      status: future
+    - title: dummy
+      status: future
+    - title: Automorphic
       status: future
 
 7Mot:
@@ -209,6 +213,8 @@
          - title: $/\Q$
            status:  beta
            url_for:  "hypergm.index"
+         - title: dummy
+           status: future
          - title: $/\Q(\sqrt{d})$
            status: future
       colspan: onecolumn
@@ -224,16 +230,21 @@
    parts:
     - title: Galois groups
       url_for: "galois_groups.index"
+    - title: dummy
+      status: future
+    - title: Lattices
+      url_for: "lattice.lattice_render_webpage"
+      status: future
     - title: Subgroups of
       part2:
          - title: $\SL(2)$
            status:  future
+         - title: dummy
+           status: future
          - title: $\GL(2,\F_p)$
            status:  future
       status: future
       colspan: onecolumn
-    - title: Lattices
-      status: future
 
 9Know:
    type: single
