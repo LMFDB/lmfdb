@@ -4,10 +4,12 @@ ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 import flask
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
+
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, web_latex_split_on_pm
+
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt
 
@@ -15,7 +17,7 @@ from lmfdb.lattice import lattice_page, lattice_logger
 from lmfdb.lattice.lattice_stats import get_stats
 from lmfdb.search_parsing import parse_ints, parse_list
 
-
+from markupsafe import Markup
 
 lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
@@ -34,7 +36,7 @@ def print_q_expansion(list):
      Qa=PolynomialRing(QQ,'a')
      a = QQ['a'].gen()
      Qq=PowerSeriesRing(Qa,'q')
-     return str(Qq([c for c in list]).add_bigoh(len(list)))
+     return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
 
 def my_latex(s):
     ss = ""
@@ -157,22 +159,6 @@ def render_lattice_webpage(**args):
     info = {}
     info.update(data)
 
-    try:
-        ncoeff = request.args['ncoeff']
-        ncoeff = clean_input(ncoeff)
-        ncoeff=ncoeff.replace(' ', '')
-        if not LIST_RE.match(ncoeff):
-            info['err'] = 'Error parsing input for the number of coefficients. It needs to be an integer' 
-            return search_input_error(info, bread)
-        ncoeff = int(ncoeff)
-        if ncoeff>150:
-            info['err'] = 'Only the first $150$ coefficients are stored in the database' 
-            return search_input_error(info, bread)
-    except:
-        ncoeff = 20
-
-    info['ncoeff']=int(ncoeff)
-
     info['friends'] = []
 
     bread = [('Lattice', url_for(".lattice_render_webpage")), ('%s' % data['label'], ' ')]
@@ -186,11 +172,13 @@ def render_lattice_webpage(**args):
     info['hermite']=str(f['hermite'])
     info['minimum']=int(f['minimum'])
     info['kissing']=int(f['kissing'])
-    info['shortest']=str([tuple(v) for v in f['shortest']]).strip('[').strip(']')
+    info['shortest']=str([tuple(v) for v in f['shortest']]).strip('[').strip(']').replace('),', '), ')
     info['aut']=int(f['aut'])
 
+    ncoeff=20
     coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
     info['theta_series']=my_latex(print_q_expansion(coeff))
+    info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
 
     info['class_number']=int(f['class_number'])
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
@@ -235,9 +223,9 @@ def by_label_or_name(lab, C):
 
 def lattice_label_error(err_msg, lab, url):
     if err_msg=="missing_lattice_name":
-        flash("No integral lattice in the database has label or name %s" % lab, "error")
+        flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
     elif err_msg=="missing_lattice":
-        flash("The integral lattice %s is not recorded in the database" % lab, "error")
+        flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
     if url is not None:
         return redirect(url)
 
@@ -257,6 +245,17 @@ def vect_to_sym(v):
 
 
 
-
-
-
+@lattice_page.route('/theta_display/<label>/<number>')
+def theta_display(label, number):
+    try:
+        number = int(number)
+    except:
+        number = 30
+    if number < 30:
+        number = 30
+    if number > 150:
+        number = 150
+    C = getDBConnection()
+    data = C.Lattices.lat.find_one({'label': label})
+    coeff=[data['theta_series'][i] for i in range(number+1)]
+    return print_q_expansion(coeff)

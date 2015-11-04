@@ -10,6 +10,8 @@ FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
 from flask import flash, redirect, url_for, request
 from sage.all import ZZ, QQ
 
+from markupsafe import Markup
+
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
 def clean_input(inp):
@@ -55,7 +57,7 @@ def parse_ints(inp, query, field, url=None):
     cleaned = clean_input(inp)
     cleaned = cleaned.replace('..', '-').replace(' ', '')
     if not LIST_RE.match(cleaned):
-        flash("Error parsing input: %s is not a valid input. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % inp, "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % inp), "error")
         if url is not None:
             return redirect(url)
     else:
@@ -65,17 +67,18 @@ def parse_list(inp, query, field, test=None, url=None):
     """
     parses a string representing a list of integers, e.g. '[1,2,3]'
     """
+    i=str(inp)
     if len(inp)>2:
-        inp = inp.replace(' ','')[1:-1]
-    if not inp: return
-    if re.search("\\d", inp):
-        out= [int(a) for a in inp.split(',')]
+        i = str(inp).replace(' ','').replace('[','').replace(']','')
+    if not i: return
+    try:
+        out= [int(a) for a in i.split(',')]
         if test is not None:
             query[field] = test(out)
         else:
             query[field]=out
-    else:
-        flash("Error parsing input: %s is not a valid input. It needs to be an list of integers (such as [1,2,3])." % inp, "error")
+    except:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a list of integers (such as [1,2,3])." % inp), "error")
         if url is not None:
             return redirect(url)
 
