@@ -23,6 +23,10 @@ contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 def acknowledgment():
     return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs)
 
+@app.route("/workshops")
+def workshops():
+    return render_template("workshops.html", title="LMFDB Workshops", contribs = contribs)
+
 
 class Box(object):
     def __init__(self, title):
@@ -35,13 +39,12 @@ class Box(object):
     def add_link(self, title, href):
         self.links.append((title, href))
 
-boxes = None
+the_boxes = None
 
 def load_boxes():
     boxes = []
     listboxes = yaml.load_all(open(os.path.join(_curdir, "index_boxes.yaml")))
     for b in listboxes:
-        print b
         B = Box(b['title'])
         B.content = b['content']
         if 'image' in b:
@@ -53,17 +56,31 @@ def load_boxes():
 
 @app.route("/")
 def index():
-
-    global boxes
-    #if boxes is None: # FIXME: restore
-    boxes = load_boxes()
-    tmpl = "index-boxes.html" if g.BETA else "index.html"
+    global the_boxes
+    if the_boxes is None:
+        the_boxes = load_boxes()
+    boxes = the_boxes
+    tmpl = "index-boxes.html"
+    # We used to have an old version of the home page:
+    # tmpl = "index-boxes.html" if g.BETA else "index.html"
 
     return render_template(tmpl,
         titletag="The L-functions and modular forms database",
         title="",
         bread=None,
         boxes = boxes)
+
+# Harald suggested putting the following in base.pybut it does not work either there or here!
+#
+# create the sidebar from its yaml file and inject it into the jinja environment
+#from sidebar import get_sidebar
+#app.jinja_env.globals['sidebar'] = get_sidebar()
+#
+# so instead we do this to ensure that the sidebar content is available to every page:
+@app.context_processor
+def inject_sidebar():
+    from sidebar import get_sidebar
+    return dict(sidebar=get_sidebar())
 
 
 # geeky pages have humans.txt
@@ -138,6 +155,6 @@ def citation():
 
 @app.route("/contact")
 def contact():
-    t = "Contact"
+    t = "Contact and feedback"
     b = [(t, url_for("contact"))]
     return render_template('contact.html', title=t, body_class='', bread=b)

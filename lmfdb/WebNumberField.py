@@ -4,6 +4,7 @@ from sage.all import *
 import re
 import pymongo
 import bson
+import yaml
 from lmfdb.utils import *
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
@@ -76,6 +77,18 @@ def do_mult(ent):
         return ent[0]
     return "%s x%d" % (ent[0], ent[1])
 
+# input is a list of pairs, module and multiplicity
+def modules2string(n, t, modlist):
+    C = base.getDBConnection()
+    modlist = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in modlist]
+    ans = modlist[0][0]
+    modlist[0][1] -= 1
+    for j in range(len(modlist)):
+        while modlist[j][1]>0:
+            ans += r' $\oplus$ '+modlist[j][0]
+            modlist[j][1] -= 1
+    return ans
+
 def nf_display_knowl(label, C, name=None):
     if not name:
         name = "Global Number Field %s" % label
@@ -101,6 +114,9 @@ def nf_knowl_guts(label, C):
     out += '<br>Signature: '
     out += str(wnf.signature())
     out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t(),C)
+    out += '<br>Class number: %s ' % str(wnf.class_number())
+    if wnf.can_class_number():
+        out += wnf.short_grh_string()
     out += '</div>'
     out += '<div align="right">'
     out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", natural=label)),label)
@@ -118,6 +134,8 @@ class WebNumberField:
             self._data = self._get_dbdata()
         else:
             self._data = data
+        if self._data is not None:
+            self.make_code_snippets()
 
     # works with a string, or a list of coefficients
     @classmethod
@@ -135,7 +153,7 @@ class WebNumberField:
 
     @classmethod
     def from_polredabs(cls, pol):
-        return cls.from_coeffs([int(c) for c in pol.coeffs()])
+        return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])
 
     @classmethod
     def from_polynomial(cls, pol):
@@ -143,7 +161,7 @@ class WebNumberField:
         pol *= pol.denominator()
         R = pol.parent()
         pol = R(pari(pol).polredabs())
-        return cls.from_coeffs([int(c) for c in pol.coeffs()])
+        return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])
 
     # If we already have the database entry
     @classmethod
@@ -157,7 +175,7 @@ class WebNumberField:
             return cls('none')  # Forced to fail
         pol = pari.polcyclo(n)
         R = PolynomialRing(QQ, 'x')
-        coeffs = R(pol.polredabs()).coeffs()
+        coeffs = R(pol.polredabs()).coefficients(sparse=False)
         return cls.from_coeffs(coeffs)
 
     def _get_dbdata(self):
@@ -231,6 +249,15 @@ class WebNumberField:
     def haskey(self, key):
         return key in self._data
 
+    # Warning, this produces our prefered integral basis
+    # But, if you have the sage number field do computations,
+    # they will be in terms of a different basis
+    def zk(self):
+        if self.haskey('zk'):
+            zkstrings = self._data['zk']
+            return [str(u) for u in zkstrings]
+        return list(pari(self.poly()).nfbasis())
+
     def subfields(self):
         if not self.haskey('subs'):
             return []
@@ -241,8 +268,17 @@ class WebNumberField:
         if subs == []:
             return []
         C = base.getDBConnection()
-        subs = [[self.from_coeffs(string2list(a[0])), a[1]] for a in subs]
-        subs = [[nf_display_knowl(a[0].get_label(),C,a[0].field_pretty()), a[1]] for a in subs]
+        def myhelper(coefmult):
+            coef = string2list(coefmult[0])
+            subfield = self.from_coeffs(coef)
+            if subfield._data is None:
+                deg = len(coef) - 1
+                mypol = sage.all.latex(coeff_to_poly(coef))
+                mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
+                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+                return [mypol, coefmult[1]]
+            return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
+        subs = [myhelper(a) for a in subs]
         subs = [do_mult(a) for a in subs]
         return ', '.join(subs)
 
@@ -276,15 +312,7 @@ class WebNumberField:
         gmods = C.transitivegroups.Gmodules
         n = self.degree()
         t = self.galois_t()
-        ugm = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in ugm]
-        #ugm = [do_mult(a) for a in ugm]
-        ans = ugm[0][0]
-        ugm[0][1] -= 1
-        for j in range(len(ugm)):
-            while ugm[j][1]>0:
-                ans += r' $\oplus$ '+ugm[j][0]
-                ugm[j][1] -= 1
-        return ans
+        return modules2string(n, t, ugm)
 
     def K(self):
         if not self.haskey('K'):
@@ -464,8 +492,7 @@ class WebNumberField:
 
         return []
 
-    def dirichlet_group(self):
-        from dirichlet_conrey import DirichletGroup_conrey
+    def dirichlet_group(self, prime_bound=10000):
         f = self.conductor()
         if f == 1:  # To make the trivial case work correctly
             return [1]
@@ -488,32 +515,41 @@ class WebNumberField:
             if (f1 % 4) == 3:
                 return [1, 2*f1-1]
             return [1, 6*f1-1]
+
+        from dirichlet_conrey import DirichletGroup_conrey
         G = DirichletGroup_conrey(f)
-        pram = f.prime_factors()
-        P = Primes()
-        p = P.first()
         K = self.K()
+        S = Set(G[1].kernel()) # trivial character, kernel is whole group
 
-        while p in pram:
-            p = P.next(p)
-        fres = K.factor(p)[0][0].residue_class_degree()
-        a = p ** fres
-        S = set(G[a].kernel())
-        timeout = 10000
-        while len(S) != self.degree():
-            timeout -= 1
-            p = P.next(p)
-            if p not in pram:
-                fres = K.factor(p)[0][0].residue_class_degree()
-                a = p ** fres
-                S = S.intersection(G[a].kernel())
-            if timeout == 0:
-                raise Exception('timeout in dirichlet group')
+        for P in K.primes_of_bounded_norm_iter(ZZ(prime_bound)):
+            a = P.norm() % f
+            if gcd(a,f)>1:
+                continue
+            S = S.intersection(Set(G[a].kernel()))
+            if len(S) == self.degree():
+                return list(S)
 
-        return [b for b in S]
+        raise Exception('Failure in dirichlet group for K=%s using prime bound %s' % (K,prime_bound))
 
     def full_dirichlet_group(self):
         from dirichlet_conrey import DirichletGroup_conrey
         f = self.conductor()
         return DirichletGroup_conrey(f)
 
+    def make_code_snippets(self):
+         # read in code.yaml from numberfields directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code = yaml.load(open(os.path.join(_curdir, "number_fields/code.yaml")))
+
+        # Fill in placeholders for this specific field:
+        for lang in ['sage', 'pari']:
+            self.code['field'][lang] = self.code['field'][lang] % self.poly()
+        self.code['field']['magma'] = self.code['field']['magma'] % self.coeffs()
+
+        for k in self.code:
+            if k != 'prompt':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]

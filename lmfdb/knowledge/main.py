@@ -373,7 +373,7 @@ def cleanup():
     from knowl import refresh_knowl_categories, extract_cat, make_keywords, get_knowls
     cats = refresh_knowl_categories()
     knowls = get_knowls()
-    q_knowls = knowls.find(fields=['content', 'title'])
+    q_knowls = knowls.find({}, ['content', 'title'])
     for k in q_knowls:
         kid = k['_id']
         cat = extract_cat(kid)
@@ -387,7 +387,7 @@ def cleanup():
     hcount = 0
     # max allowed history length
     max_h = 50
-    q_knowls = knowls.find({'history': {'$exists': True}}, fields=['history'])
+    q_knowls = knowls.find({'history': {'$exists': True}}, ['history'])
     for k in q_knowls:
         if len(k['history']) <= max_h:
             continue
@@ -401,8 +401,11 @@ def cleanup():
 def index():
     # bypassing the Knowl objects to speed things up
     from knowl import get_knowls
-    get_knowls().ensure_index('_keywords')
-    get_knowls().ensure_index('cat')
+    try:
+        get_knowls().ensure_index('_keywords')
+        get_knowls().ensure_index('cat')
+    except pymongo.errors.OperationFailure:
+        pass
 
     cur_cat = request.args.get("category", "")
 
@@ -442,7 +445,7 @@ def index():
         s_query.update({'cat': cur_cat})  # { "$regex" : r"^%s\..+" % cur_cat }
 
     logger.debug("search query: %s" % s_query)
-    knowls = get_knowls().find(s_query, fields=['title'])
+    knowls = get_knowls().find(s_query, ['title'])
 
     def first_char(k):
         t = k['title']

@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 import re
+import time
 
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, send_file
 import tempfile
 import os
+import StringIO
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_torsion_structure
 from lmfdb.number_fields.number_field import parse_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, parse_list, parse_points
+from lmfdb.elliptic_curves.web_ec import WebEC, parse_list, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
@@ -35,12 +37,7 @@ def db_ec():
 #   Utility functions
 #########################
 
-cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
-lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
-sw_label_regex = re.compile(r'sw(\d+)(\.)(\d+)(\.*)(\d*)')
-
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
-TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
 
@@ -52,8 +49,6 @@ def format_ainvs(ainvs):
     """
     return [ZZ(a) for a in ainvs]
 
-
-
 def cmp_label(lab1, lab2):
     from sage.databases.cremona import parse_cremona_label, class_to_int
     a, b, c = parse_cremona_label(lab1)
@@ -62,18 +57,13 @@ def cmp_label(lab1, lab2):
     id2 = int(a), class_to_int(b), int(c)
     return cmp(id1, id2)
 
+
 #########################
 #    Top level
 #########################
 
-
 @app.route("/EC")
 def EC_redirect():
-    return redirect(url_for("ec.rational_elliptic_curves", **request.args))
-
-
-@app.route("/EllipticCurve")
-def EC_toplevel():
     return redirect(url_for("ec.rational_elliptic_curves", **request.args))
 
 #########################
@@ -87,7 +77,7 @@ def rational_elliptic_curves(err_args=None):
             return elliptic_curve_search(**request.args)
         else:
             err_args = {}
-            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure', 'msg']:
+            for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
                 err_args[field] = ''
             err_args['count'] = '100'
     counts = get_stats().counts()
@@ -109,6 +99,27 @@ def rational_elliptic_curves(err_args=None):
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, **err_args)
 
+@ec_page.route("/random")
+def random_curve():
+    from sage.misc.prandom import randint
+    n = get_stats().counts()['ncurves']
+    n = randint(0,n-1)
+    label = db_ec().find()[n]['label']
+    # This version leaves the word 'random' in the URL:
+    # return render_curve_webpage_by_label(label)
+    # This version uses the curve's own URL:
+    return redirect(url_for(".by_ec_label", label=label), 301)
+
+
+@ec_page.route("/curve_of_the_day")
+def todays_curve():
+    from datetime import date
+    mordells_birthday = date(1888,1,28)
+    n = (date.today()-mordells_birthday).days
+    label = db_ec().find({'number' : int(1)})[n]['label']
+    #return render_curve_webpage_by_label(label)
+    return redirect(url_for(".by_ec_label", label=label), 301)
+
 @ec_page.route("/stats")
 def statistics():
     info = {
@@ -123,33 +134,39 @@ def statistics():
     return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread)
 
 
-@ec_page.route("/<int:conductor>")
+@ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
     return elliptic_curve_search(conductor=conductor, **request.args)
 
 
-def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label=False):
+def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label=False, missing_curve=False):
     err_args = {}
-    for field in ['conductor', 'torsion', 'rank', 'sha_an', 'optimal', 'torsion_structure']:
+    for field in ['conductor', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure']:
         err_args[field] = args.get(field, '')
     err_args['count'] = args.get('count', '100')
     if wellformed_label:
-        err_args['err_msg'] = "No curve or isogeny class in database with label %s" % label
+        err_args['err_msg'] = "No curve or isogeny class in the database has label %s" % label
     elif cremona_label:
         err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'" % label
+    elif missing_curve:
+        err_args['err_msg'] = "The elliptic curve %s (conductor = %s) is not in the database" % (label, args.get('conductor','?'))
     else:
-        err_args['err_msg'] = "Could not understand label %s" % label
+        err_args['err_msg'] = "%s does not define a recognised elliptic curve over $\mathbb{Q}$" % label
     return rational_elliptic_curves(err_args)
 
 
 def elliptic_curve_search(**args):
     info = to_dict(args)
     query = {}
-    bread = [('Elliptic Curves', url_for(".rational_elliptic_curves")),
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('$\Q$', url_for(".rational_elliptic_curves")),
              ('Search Results', '.')]
+    if 'SearchAgain' in args:
+        return rational_elliptic_curves()
+
     if 'jump' in args:
         label = info.get('label', '').replace(" ", "")
-        m = lmfdb_label_regex.match(label)
+        m = match_lmfdb_label(label)
         if m:
             try:
                 return by_ec_label(label)
@@ -157,16 +174,17 @@ def elliptic_curve_search(**args):
                 return elliptic_curve_jump_error(label, info, wellformed_label=True)
         elif label.startswith("Cremona:"):
             label = label[8:]
-            m = cremona_label_regex.match(label)
+            m = match_cremona_label(label)
             if m:
                 try:
                     return by_ec_label(label)
                 except ValueError:
                     return elliptic_curve_jump_error(label, info, wellformed_label=True)
-        elif cremona_label_regex.match(label):
+        elif match_cremona_label(label):
             return elliptic_curve_jump_error(label, info, cremona_label=True)
         elif label:
-            # Try to parse a string like [1,0,3,2,4]
+            # Try to parse a string like [1,0,3,2,4] as valid
+            # Weistrass coefficients:
             lab = re.sub(r'\s','',label)
             lab = re.sub(r'^\[','',lab)
             lab = re.sub(r']$','',lab)
@@ -174,12 +192,15 @@ def elliptic_curve_search(**args):
                 labvec = lab.split(',')
                 labvec = [QQ(str(z)) for z in labvec] # Rationals allowed
                 E = EllipticCurve(labvec)
+                # Now we do have a valid curve over Q, but it might
+                # not be in the database.
                 ainvs = [str(c) for c in E.minimal_model().ainvs()]
                 data = db_ec().find_one({'ainvs': ainvs})
                 if data is None:
-                    return elliptic_curve_jump_error(label, info)
+                    info['conductor'] = E.conductor()
+                    return elliptic_curve_jump_error(label, info, missing_curve=True)
                 return by_ec_label(data['lmfdb_label'])
-            except (ValueError, ArithmeticError):
+            except (TypeError, ValueError, ArithmeticError):
                 return elliptic_curve_jump_error(label, info)
         else:
             query['label'] = ''
@@ -190,17 +211,17 @@ def elliptic_curve_search(**args):
         if not QQ_RE.match(j):
             info['err'] = 'Error parsing input for the j-invariant.  It needs to be a rational number.'
             return search_input_error(info, bread)
-        query['jinv'] = j
+        query['jinv'] = str(QQ(j)) # to simplify e.g. 1728/1
 
-    for field in ['conductor', 'torsion', 'rank', 'sha_an']:
+    for field in ['conductor', 'torsion', 'rank', 'sha']:
         if info.get(field):
             info[field] = clean_input(info[field])
             ran = info[field]
             ran = ran.replace('..', '-').replace(' ', '')
             if not LIST_RE.match(ran):
                 names = {'conductor': 'conductor', 'torsion': 'torsion order', 'rank':
-                         'rank', 'sha_an': 'analytic order of &#1064;'}
-                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[field]
+                         'rank', 'sha': 'analytic order of &#1064;'}
+                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).' % names[field]
                 return search_input_error(info, bread)
             # Past input check
             tmp = parse_range2(ran, field)
@@ -214,21 +235,20 @@ def elliptic_curve_search(**args):
                         x.update(y)
                     newors.extend(oldors)
                 tmp[1] = newors
-            if field=='sha_an': # database sha_an values are not all exact!
-                query[tmp[0]] = { '$gt': tmp[1]-0.1, '$lt': tmp[1]+0.1}
-            else:
-                query[tmp[0]] = tmp[1]
+            query[tmp[0]] = tmp[1]
 
     if 'optimal' in info and info['optimal'] == 'on':
         # fails on 990h3
         query['number'] = 1
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        info['torsion_structure'] = clean_input(info['torsion_structure'])
-        if not TORS_RE.match(info['torsion_structure']):
-            info['err'] = 'Error parsing input for the torsion structure.  It needs to be one or more integers in square brackets, such as [6], [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.'
+        res = parse_torsion_structure(info['torsion_structure'],2)
+        if 'Error' in res:
+            info['err'] = res
             return search_input_error(info, bread)
-        query['torsion_structure'] = [str(a) for a in parse_list(info['torsion_structure'])]
+        #update info for repeat searches
+        info['torsion_structure'] = str(res).replace(' ','')
+        query['torsion_structure'] = [str(r) for r in res]
 
     if info.get('surj_primes'):
         info['surj_primes'] = clean_input(info['surj_primes'])
@@ -261,8 +281,10 @@ def elliptic_curve_search(**args):
             info['err'] = 'Error parsing input for nonsurjective primes.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).'
             return search_input_error(info, bread)
 
-    info['query'] = query
-
+    if 'download' in info and info['download'] != '0':
+        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING) ])
+        return download_search(info, res)
+    
     count_default = 100
     if info.get('count'):
         try:
@@ -290,19 +312,26 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING)
+    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING)
                        ]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
+    info['curve_url'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
+    info['iso_url'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['number'] = nres
     info['start'] = start
+    info['count'] = count
+    info['more'] = int(start + count < nres)
     if nres == 1:
         info['report'] = 'unique match'
+    elif nres == 2:
+        info['report'] = 'displaying both matches'
     else:
         if nres > count or start != 0:
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
+
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
@@ -317,6 +346,16 @@ def search_input_error(info, bread):
 #  Specific curve pages
 ##########################
 
+@ec_page.route("/<int:conductor>/<iso_label>/")
+def by_double_iso_label(conductor,iso_label):
+    full_iso_label = str(conductor)+"."+iso_label
+    return render_isogeny_class(full_iso_label)
+
+@ec_page.route("/<int:conductor>/<iso_label>/<int:number>")
+def by_triple_label(conductor,iso_label,number):
+    full_label = str(conductor)+"."+iso_label+str(number)
+    return render_curve_webpage_by_label(full_label)
+
 # The following function determines whether the given label is in
 # LMFDB or Cremona format, and also whether it is a curve label or an
 # isogeny class label, and calls the appropriate function
@@ -325,32 +364,57 @@ def search_input_error(info, bread):
 def by_ec_label(label):
     ec_logger.debug(label)
     try:
-        N, iso, number = lmfdb_label_regex.match(label).groups()
+        N, iso, number = split_lmfdb_label(label)
     except AttributeError:
-        ec_logger.info("%s not a valid lmfdb label, trying cremona")
+        ec_logger.debug("%s not a valid lmfdb label, trying cremona")
         try:
-            N, iso, number = cremona_label_regex.match(label).groups()
+            N, iso, number = split_cremona_label(label)
         except AttributeError:
-            return elliptic_curve_jump_error(label, {})
+            ec_logger.debug("%s not a valid cremona label either, trying Weierstrass")
+            eqn = label.replace(" ","")
+            if weierstrass_eqn_regex.match(eqn) or short_weierstrass_eqn_regex.match(eqn):
+                return by_weierstrass(eqn)
+            else:
+                return elliptic_curve_jump_error(label, {})
 
         # We permanently redirect to the lmfdb label
-        if number:
+        if number: # it's a curve
             data = db_ec().find_one({'label': label})
             if data is None:
                 return elliptic_curve_jump_error(label, {})
             ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
-        else:
+            #return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
+            return render_curve_webpage_by_label(data['label'])
+        else: # it's an isogeny class
             data = db_ec().find_one({'iso': label})
             if data is None:
                 return elliptic_curve_jump_error(label, {})
             ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            return redirect(url_for(".by_ec_label", label=data['lmfdb_iso']), 301)
-    if number:
-        return render_curve_webpage_by_label(label=label)
-    else:
-        return render_isogeny_class(str(N) + '.' + iso)
+            #return redirect(url_for(".by_ec_label", label=data['iso']), 301)
+            return render_isogeny_class(data['iso'])
 
+    if number:
+        return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
+    else:
+        return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+
+def by_weierstrass(eqn):
+    w = weierstrass_eqn_regex.match(eqn)
+    if not w:
+        w = short_weierstrass_eqn_regex.match(eqn)
+    if not w:
+        return elliptic_curve_jump_error(eqn, {})
+    try:
+        ainvs = [ZZ(ai) for ai in w.groups()]
+    except TypeError:
+        return elliptic_curve_jump_error(eqn, {})
+    E = EllipticCurve(ainvs).global_minimal_model()
+    N = E.conductor()
+    ainvs = [str(ai) for ai in E.ainvs()]
+    data = db_ec().find_one({'ainvs': ainvs})
+    if data is None:
+        return elliptic_curve_jump_error(eqn, {'conductor':N}, missing_curve=True)
+    return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
 
 def render_isogeny_class(iso_class):
     credit = 'John Cremona'
@@ -359,6 +423,8 @@ def render_isogeny_class(iso_class):
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=False)
     if class_data == "Class not found":
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True)
+    class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
+
     return render_template("iso_class.html",
                            properties2=class_data.properties,
                            info=class_data,
@@ -424,10 +490,18 @@ def plot_ec(label):
 def render_curve_webpage_by_label(label):
     credit = 'John Cremona and Andrew Sutherland'
     data = WebEC.by_label(label)
-    if data is "Invalid label":
+    if data == "Invalid label":
         return elliptic_curve_jump_error(label, {}, wellformed_label=False)
-    if data is "Curve not found":
+    if data == "Curve not found":
         return elliptic_curve_jump_error(label, {}, wellformed_label=True)
+    try:
+        lmfdb_label = data.lmfdb_label
+    except AttributeError:
+        return elliptic_curve_jump_error(label, {}, wellformed_label=False)
+
+    if data.twoadic_label:
+        credit = credit.replace(' and',',') + ' and Jeremy Rouse'
+    data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     return render_template("curve.html",
                            properties2=data.properties,
@@ -443,9 +517,7 @@ def padic_data():
     label = request.args['label']
     p = int(request.args['p'])
     info['p'] = p
-    print "label = %s; p = %s" % (label,p)
-    N, iso, number = lmfdb_label_regex.match(label).groups()
-    # print N, iso, number
+    N, iso, number = split_lmfdb_label(label)
     if request.args['rank'] == '0':
         info['reg'] = 1
     elif number == '1':
@@ -469,7 +541,7 @@ def padic_data():
 def download_EC_qexp(label, limit):
     ec_logger.debug(label)
     CDB = lmfdb.base.getDBConnection().elliptic_curves.curves
-    N, iso, number = lmfdb_label_regex.match(label).groups()
+    N, iso, number = split_lmfdb_label(label)
     if number:
         data = CDB.find_one({'lmfdb_label': label})
     else:
@@ -485,7 +557,7 @@ def download_EC_qexp(label, limit):
 @ec_page.route("/download_all/<label>")
 def download_EC_all(label):
     CDB = lmfdb.base.getDBConnection().elliptic_curves.curves
-    N, iso, number = lmfdb_label_regex.match(label).groups()
+    N, iso, number = split_lmfdb_label(label)
     if number:
         data = CDB.find_one({'lmfdb_label': label})
         if data is None:
@@ -522,6 +594,57 @@ def download_EC_all(label):
     response = make_response('\n'.join(str(an) for an in dump_data))
     response.headers['Content-type'] = 'text/plain'
     return response
+
+
+def download_search(info, res):
+    dltype = info['Submit']
+    delim = 'bracket'
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    filename = 'elliptic_curves.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'elliptic_curves.sage'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'elliptic_curves.m'
+    s = com1 + "\n"
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Below is a list called data. Each entry has the form:\n'
+    s += com + '   [Weierstrass Coefficients]\n'
+    s += '\n' + com2
+    s += '\n'
+    if dltype == 'magma':
+        s += 'data := ['
+    else:
+        s += 'data = ['
+    s += '\\\n'
+    for f in res:
+        entry = str(f['ainvs'])
+        entry = entry.replace('u','')
+        entry = entry.replace('\'','')
+        s += entry + ',\\\n'
+    s = s[:-3]
+    s += ']\n'
+    if delim == 'brace':
+        s = s.replace('[', '{')
+        s = s.replace(']', '}')
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO,
+                     attachment_filename=filename,
+                     as_attachment=True)
+
 
 #@ec_page.route("/download_Rub_data")
 # def download_Rub_data():

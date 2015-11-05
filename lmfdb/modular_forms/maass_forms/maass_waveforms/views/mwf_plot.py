@@ -1,3 +1,4 @@
+import pymongo
 from lmfdb import base
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
      import MaassDB
@@ -36,8 +37,13 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
                         xfactor, yfactor, ticlength, xshift)
 
     # Fetch Maass forms from database
-    host = base.getDBConnection().host
-    port = base.getDBConnection().port
+    # NB although base.getDBConnection().PORT works it gives the
+    # default port number of 27017 and not the actual one!
+    if pymongo.version_tuple[0] < 3:
+        host = base.getDBConnection().host
+        port = base.getDBConnection().port
+    else:
+        host, port = base.getDBConnection().address
     db = MaassDB(host=host, port=port)
     search = {'level1': yMin, 'level2': yMax, 'char': char,
               'R1': xMin, 'R2': xMax, 'Newform' : None, 'weight' : weight}

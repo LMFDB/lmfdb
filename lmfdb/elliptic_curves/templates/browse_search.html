@@ -7,12 +7,26 @@
 An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} projective {{KNOWL("ag.curve",title="curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1 with a rational basepoint $O$. 
 </div>
 #}
+<style type="text/css">
+.error_message {
+   padding: 4px;
+   color: red;
+   font-size: 120%;
+   font-weight: bold;
+   margin: 20px;
+}
+</style>
+{% if err_msg %}
+<p class="error_message">
+{{err_msg}}
+</p>
+<p>
+  <input type=button value="Search again" onClick="history.go(-1)">
+</p>
+
+{% else %}
 <div>
-The database currently contains the Cremona database of all
-{{info.counts.ncurves_c}} elliptic curves with {{ KNOWL('ec.q.conductor',title
-= "conductor")}} at most {{info.counts.max_N_c}}, all of which have {{
-KNOWL('ec.q.rank', title="rank")}} &le; {{info.counts.max_rank}}.  Here are some
-<a href="{{ info.stats_url }}">further statistics</a>.
+{{ KNOWL_INC('dq.ec.extent') }}
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over $\Q$</h2>
@@ -35,20 +49,29 @@ By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
 <a href="?torsion={{t}}">{{t}}</a>
 {% endfor %}
 </p>
+<p>
+{#
+<a href={{url_for('.todays_curve')}}>Elliptic curve of the day</a>
+<br>
+#}
+A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the database
+</p>
 
 
 <h2> Find a specific curve or {{
   KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients or 
   {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }} </h2>
+{% if err_msg %}
+<form action={{url_for('ec.rational_elliptic_curves')}}>
+{% else %}
 <form>
+{% endif %}
 <input type='text' name='label' size=25 example="11.a2">
-<button type='submit' name='jump' value='label or isogeny class' >label or isogeny class</button>
+<button type='submit' name='jump' value='curve or isogeny class label'
+        >curve, label or isogeny class label</button>
 <br><span class="formexample">e.g. 11.a2 or 389.a or Cremona:11a1 or 
 [0,1,1,-2,0] or [-3024, 46224]
 </span>
-{% if err_msg %}
-<br><span class="errmsg">{{err_msg}}</span>
-{% endif %}
 </form>
 
 <h2> Search </h2>
@@ -109,7 +132,7 @@ Please enter a value or leave blank:
           {{ KNOWL('ec.q.analytic_sha_order',title="analytic order of &#1064;") }}
           </td>
           <td>
-          <input type='text' name='sha_an' example="4" size=10 />
+          <input type='text' name='sha' example="4" size=10 />
           </td>
           <td>
           <span class="formexample"> e.g. 4 </span>
@@ -160,4 +183,8 @@ Please enter a value or leave blank:
 <td><button type='submit' value='Search'>Search</button></td>
 
 </form>
+
+{% endif %}
+
+
 {% endblock %}

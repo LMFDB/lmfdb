@@ -1,0 +1,98 @@
+{#                                             #}
+{# Template for displaying a WebModFormSpace   #}
+{#                                             #}
+{% extends 'homepage.html' %}
+
+
+{% if space is defined %}
+{% if character is not defined or character.order() == 1%}
+  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.level) %}
+  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.level) %}
+{% else %}
+  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
+  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
+{% endif %}
+{% endif %}
+{% if not q_expansion_prec is defined %}
+  {# The number of coefficient of the q-expansion which we show on this page #}
+  {% set q_expansion_prec = 10 %}
+{% endif %}
+
+{% block content %}
+
+{% if error is defined %}
+{{ error |safe }}
+<br>
+{{ sage_version | safe}}
+{% else %}
+
+{% if space.dimension_new_cusp_forms == 0 %}
+  <h2>This space is empty!</h2>
+   {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
+     The weight is even and the character is odd.
+   {% endif %}
+   {% if space.weight % 2 != 0 and space.character.value(-1) == 1 %}
+     The weight is odd and the character is even.
+   {% endif %}
+
+{% else %}
+
+{% if extra_info is defined %}
+<span style="font-size:50%">({{ extra_info | safe }})</span>
+{% endif %}
+
+{% if space.dimension_new_cusp_forms > 0 %}
+<style>
+table.td.center {text-align : center;}
+</style>
+<h2>
+  Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
+</h2>
+{% if  space.hecke_orbits=={} %}
+   Problem with Hecke orbits in the datbase!
+{% else %}
+
+<table>
+  <thead>
+    <tr>
+      <th>{{ KNOWL('mf.elliptic.label',title='Label')}}</th>
+      <th>{{ KNOWL('mf.elliptic.hecke-orbit-dimension',title='Dimension')}}</th>
+      <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Field')}}</th>
+      <th align="left">{{ KNOWL('mf.elliptic.q-expansion-of-eigenform',title='$q$-expansion of eigenform')}}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% set orbits = space.hecke_orbits | sort %}
+    {% for label in orbits %}
+       {% set f = space.hecke_orbits[label] %}
+       <tr>
+      <td><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
+      <td align="center">
+        {{ f.dimension }}</td>
+      <td align="center">
+        <a href="{{ f.coefficient_field_url() }}">{{ f.coefficient_field_label() }}</a></td>
+      <td>{{ f.q_expansion_latex(q_expansion_prec) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% if space.character.order > 2%}
+  {% set n=space.character.modulus_euler_phi %}
+  {% set m=space.character.embedding() %}
+   Here, \( \zeta_{{n}} = \mathrm{exp}(2 \pi i {{m}}/n)\).
+{% endif %}
+
+{% else %}
+{{  name_new }} {{ nontrivial_new_info }}
+{% endif %}
+
+{% if space.oldspace_decomposition != {} and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
+<h2> Decomposition of {{old_name}} into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
+{{ space.oldspace_decomposition | safe }}
+{% endif %}
+	
+{% endif %}
+{{ test | safe }}
+{% endif %}
+{% endblock %}

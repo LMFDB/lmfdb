@@ -1,0 +1,31 @@
+{% block javascript %}
+<script src = "/static/validate.js"></script>
+{% endblock %}
+
+<form id="dimensionForm" action="/ModularForm/GSp/Q/dimensions" method="get" onSubmit="return validate()">
+  <input type = "hidden" id = "dim_args" name = "dim_args" />
+  <input type = "hidden" id = "col_name" name = "col_name" /> 
+  <table> 
+    <tr>
+      <td>
+	<label>Collection</label>
+	<select id="col_select">
+	  {% for c in cols_comp_dims|sort( attribute = 'order') %}
+	  <option value='{{ c.dimension_desc()|tojson|safe }}'>${{ c.latex_name() }}$</option>
+	  {% endfor %}
+	</select>
+      </td>
+      <td> 
+	<label>argument(s)</label>
+	<input type="text" id="args_field" placeholder="6+20" />
+	<span class="formexample">e.g. 2 or 20+10 or 20+26 4</span>
+      </td>
+      <td> 
+	<button type="submit" value="submit">Find</button>
+      </td>
+    </tr>
+  </table> 
+</form>
+
+
+

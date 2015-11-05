@@ -3,8 +3,6 @@ import sys
 from sage.all import DirichletGroup
 from sage.all import CC, EllipticCurve, sqrt
 
-import pymongo
-from pymongo import Connection
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb import base

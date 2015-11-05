@@ -5,15 +5,14 @@ import sys
 import time
 import sage.misc.preparser
 import subprocess
-from pymongo import Connection
+from lmfdb import base
+from lmfdb.website import dbport
+base._init(dbport, '')
+C = base.getDBConnection()
 
-hmf_forms = Connection(port=dbport).hmfs.forms
-hmf_forms = Connection(port=dbport).hmfs.forms
-hmf_fields = Connection(port=dbport).hmfs.fields
-hmf_fields = Connection(port=dbport).hmfs.fields
-
-fields = Connection(port=dbport).numberfields.fields
-fields = Connection(port=dbport).numberfields.fields
+hmf_forms = C.hmfs.forms
+hmf_fields = C.hmfs.fields
+fields = C.numberfields.fields
 
 P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()

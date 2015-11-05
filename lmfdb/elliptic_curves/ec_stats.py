@@ -2,7 +2,9 @@
 import re
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
+from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
+from flask import url_for
 
 def format_percentage(num, denom):
     return "%10.2f"%((100.0*num)/denom)
@@ -17,13 +19,23 @@ def get_stats():
         the_ECstats = ECstats()
     return the_ECstats
 
+def elliptic_curve_summary():
+    counts = get_stats().counts()
+    ecstaturl = url_for('ec.statistics')
+    return r'The database currently contains the Cremona database of all %s elliptic curves with <a title="Conductor of an elliptic curve over $\Q$ [ec.q.conductor]" knowl="ec.q.conductor" kwargs="">conductor</a> at most %s, all of which have <a title="Rank of an elliptic curve over $\mathbb{Q}$ [ec.q.rank]" knowl="ec.q.rank" kwargs="">rank</a> $\leq %s$.   Here are some <a href="%s">further statistics</a>.' % (str(counts['ncurves_c']), str(counts['max_N_c']), str(counts['max_rank']), ecstaturl)
+
+
+@app.context_processor
+def ctx_elliptic_curve_summary():
+    return {'elliptic_curve_summary': elliptic_curve_summary}
+
 class ECstats(object):
     """
     Class for creating and displaying statistics for elliptic curves over Q
     """
 
     def __init__(self):
-        logger.info("Constructing an instance of ECstats")
+        logger.debug("Constructing an instance of ECstats")
         self.ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
         self._counts = {}
         self._stats = {}
@@ -40,7 +52,7 @@ class ECstats(object):
     def init_ecdb_count(self):
         if self._counts:
             return
-        logger.info("Computing elliptic curve counts...")
+        logger.debug("Computing elliptic curve counts...")
         ecdb = self.ecdb
         counts = {}
         ncurves = ecdb.count()
@@ -54,13 +66,13 @@ class ECstats(object):
         counts['max_N_c'] = comma(max_N)
         counts['max_rank'] = ecdb.find().sort('rank', DESCENDING).limit(1)[0]['rank']
         self._counts  = counts
-        logger.info("... finished computing elliptic curve counts.")
-        #logger.info("%s" % self._counts)
+        logger.debug("... finished computing elliptic curve counts.")
+        #logger.debug("%s" % self._counts)
 
     def init_ecdb_stats(self):
         if self._stats:
             return
-        logger.info("Computing elliptic curve stats...")
+        logger.debug("Computing elliptic curve stats...")
         ecdb = self.ecdb
         counts = self._counts
         stats = {}
@@ -94,16 +106,16 @@ class ECstats(object):
                 prop = format_percentage(ncu,ncurves)
                 tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
         stats['tor_counts'] = tor_counts+tor_counts2
-        stats['max_sha'] = ecdb.find().sort('sha_an', DESCENDING).limit(1)[0]['sha_an']
+        stats['max_sha'] = ecdb.find().sort('sha', DESCENDING).limit(1)[0]['sha']
         sha_counts = []
-        from math import sqrt
-        for s in range(1,int(sqrt(stats['max_sha']))+1):
+        from sage.misc.functional import isqrt
+        for s in range(1,1+isqrt(stats['max_sha'])):
             s2 = s*s
-            nc = ecdb.find({'sha_an': { '$gt': s2-0.1, '$lt': s2+0.1}}).count()
+            nc = ecdb.find({'sha': s2}).count()
             if nc:
                 sha_counts.append({'s': s, 'ncurves': nc})
         stats['sha_counts'] = sha_counts
         self._stats = stats
-        logger.info("... finished computing elliptic curve stats.")
-        #logger.info("%s" % self._stats)
+        logger.debug("... finished computing elliptic curve stats.")
+        #logger.debug("%s" % self._stats)
 

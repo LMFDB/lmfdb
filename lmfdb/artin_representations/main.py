@@ -16,9 +16,12 @@ from lmfdb.math_classes import *
 from lmfdb.WebNumberField import *
 
 def initialize_indices():
-    ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC),("galorbit", ASC)])
-    ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor", ASC)])
-    ArtinRepresentation.collection().ensure_index([("Conductor", ASC), ("Dim", ASC)])
+    try:
+        ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC),("galorbit", ASC)])
+        ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor", ASC)])
+        ArtinRepresentation.collection().ensure_index([("Conductor", ASC), ("Dim", ASC)])
+    except pymongo.errors.OperationFailure:
+        pass
 
 
 def get_bread(breads=[]):
@@ -135,10 +138,7 @@ def artin_representation_search(**args):
     data = []
     galclass = []
     curclass = '0'
-    cnt = 0
     for x in results:
-        if cnt > count:
-            break
         ar = ArtinRepresentation(data=x)
         if ar.galois_orbit_label() == curclass:
             galclass.append(ar)
@@ -147,10 +147,10 @@ def artin_representation_search(**args):
                 data.append(galclass)
             curclass = ar.galois_orbit_label()
             galclass = [ar]
-            cnt += 1
-    if cnt > 0:
+        if len(data) >= count:
+            break
+    if len(data) < count and len(galclass)>0:
         data.append(galclass)
-    #data = [ArtinRepresentation(data=x) for x in results]
 
     return render_template("artin-representation-search.html", req=req, data=data, data_count=len(data), title=title, bread=bread, query=query)
 

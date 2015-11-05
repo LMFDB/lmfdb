@@ -61,8 +61,8 @@ function print_list(id) {
        $(id).append("<a id='go_left' href='#' onclick=\"shift('"+id+"','left')\" style=\"\"><small>&lt;&lt;</small></a>");
     };
     var char = $("#char_selection").data("char");
-    if (char == 0) {
-       s = "&character=0"
+    if (char == 1) {
+       s = "&character=1"
     } else {
        s = "&character=all"
     }
@@ -85,7 +85,7 @@ function set_value(id,val) {
 </script>
 {% if info.grouptype == 0 %}
     {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(N)\)') %}
-    {% set chi = 0%}
+    {% set chi = 1%}
 {% elif info.grouptype == 1 %}
     {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(N)\)') %}
     {% set chi = -1%}
@@ -95,7 +95,7 @@ function set_value(id,val) {
   {% if info.groupother == 1 %}
   {% set groupotherchar = -1 %}
   {% else %}
-  {% set groupotherchar = 0 %}
+  {% set groupotherchar = 1 %}
   {%endif%}
   <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',character=groupotherchar)}}">Switch to \(\Gamma_{{info.groupother}}(N)\)</a></h2></div>
 {%endif%}
@@ -106,7 +106,7 @@ function set_value(id,val) {
       {% if info.browse_table.rows is defined %}
       {#{KNOWLl('mf.elliptic.browse.all.info') } #}
 The table below gives the dimensions of the space of holomorphic 
-{{KNOWL('mf.elliptic.new_form',title='newforms')}} of integral
+{{KNOWL('mf.elliptic.newform',title='newforms')}} of integral
 {{KNOWL('mf.elliptic.weight',title='weight')}} for {{group}}
 {% if info.grouptype == 1 %}
 .

@@ -19,10 +19,12 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'conductor': (int) conductor, e.g. 1225
    - 'iso': (string) Cremona isogeny class code, e.g. '11a'
    - 'lmfdb_iso': (string) LMFDB isogeny class code, e.g. '11.a'
+   - 'iso_nlabel': (int) numerical version of the (lmfdb) isogeny class label
    - 'number': (int) Cremona curve number within its class, e.g. 2
    - 'lmfdb_number': (int) LMFDB curve number within its class, e.g. 2
    - 'ainvs': (list of strings) list of a-invariants, e.g. ['0', '1', '1', '10617', '75394']
    - 'jinv': (string) j-invariant, e.g. -4096/11
+   - 'cm': (int) 0 for no CM, or a negative discriminant
    - 'rank': (int) rank, e.g. 0
    - 'torsion': (int) torsion order, e.g. 1
    - 'torsion_structure': (list of strings) list of invariants of torsion subgroup, e.g. ['3']
@@ -31,14 +33,29 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'gens': (list of strings) list of generators of infinite order, e.g. ['(0:0:1)']
    - 'regulator': (float) regulator, e.g. 1.0
    - 'tamagawa_product': (int) product of Tamagawa numbers, e.g. 4
-   - 'special_value': (float) special value of derivative of L-function, e.g.1.490882041449698
+   - 'special_value': (float) special value of r'th derivative of L-function (divided by r!), e.g.1.490882041449698
    - 'real_period': (float) real period, e.g. 0.3727205103624245
    - 'degree': (int) degree of modular parametrization, e.g. 1984
    - 'non-surjective_primes': (list of ints) primes p for which the
-     mod p Galois representation is not surjective, e.g. [5]
+      mod p Galois representation is not surjective, e.g. [5]
    - 'galois_images': (list of strings) Sutherland codes for the
-     images of the mod p Galois representations for the primes in
-     'non-surjective_primes' e.g. ['5B']
+      images of the mod p Galois representations for the primes in
+      'non-surjective_primes' e.g. ['5B']
+   - '2adic_index': (int) the index of the 2-adic representation in
+      GL(2,Z2) (or 0 for CM curves, which have infinite index)
+   - '2adic_log_level': (int) the smallest n such that the image
+      contains the kernel of reduction modulo 2^n (or None for CM curves)
+   - '2adic_gens': (list of lists of 4 ints) list of entries [a,b,c,d]
+      of matrices in GL(2,Z/2^nZ) generating the image where n is the
+      log_level (None for CM curves)
+   - '2adic_label': (string) Rouse label of the associated modular
+      curve (None for CM curves)
+   - 'isogeny_matrix': (list of lists of ints) isogeny matrix for
+     curves in the class
+   - 'sha_an': (float) analytic order of sha (approximate unless r=0)
+   - 'sha': (int) analytic order of sha (rounded value of sha_an)
+   - 'sha_primes': (list of ints) primes dividing sha
+   - 'torsion_primes': (list of ints) primes dividing torsion
 """
 
 import os.path
@@ -63,17 +80,19 @@ print "setting curves"
 # curves = conn.elliptic_curves.test
 curves = conn.elliptic_curves.curves
 
-# The following ensure_index command checks if there is an index on
+# The following create_index command checks if there is an index on
 # label, conductor, rank and torsion. If there is no index it creates
 # one.  Need: once torsion structure is computed, we should have an
 # index on that too.
 
-curves.ensure_index('label')
-curves.ensure_index('conductor')
-curves.ensure_index('rank')
-curves.ensure_index('torsion')
-curves.ensure_index('degree')
-curves.ensure_index('jinv')
+curves.create_index('label')
+curves.create_index('conductor')
+curves.create_index('rank')
+curves.create_index('torsion')
+curves.create_index('degree')
+curves.create_index('jinv')
+curves.create_index('sha')
+curves.create_index('cm')
 
 print "finished indices"
 
@@ -99,6 +118,10 @@ def parse_ainvs(s):
 # def parse_gens(s):
  #   return [int(a) for a in s[1:-1].split(':')]
 
+def numerical_iso_label(lmfdb_iso):
+    from lmfdb.ecnf.import_ecnf_data import numerify_iso_label
+    return numerify_iso_label(lmfdb_iso.split('.')[1])
+
 whitespace = re.compile(r'\s+')
 
 
@@ -109,9 +132,10 @@ def split(line):
 def allbsd(line):
     r""" Parses one line from an allbsd file.  Returns the label and a
     dict containing fields with keys 'conductor', 'iso', 'number',
-    'ainvs', 'rank', 'torsion', 'tamagawa_product', 'real_period',
-    'special_value', 'regulator', 'sha_an', all values being strings
-    or ints.
+    'ainvs', 'rank', 'torsion', 'torsion_primes', 'tamagawa_product',
+    'real_period', 'special_value', 'regulator', 'sha_an', 'sha',
+    'sha_primes', all values being strings or floats or ints or lists
+    of ints.
 
     Input line fields:
 
@@ -125,19 +149,31 @@ def allbsd(line):
     data = split(line)
     label = data[0] + data[1] + data[2]
     ainvs = parse_ainvs(data[3])
-    return label, {
+
+    torsion = ZZ(data[5])
+    sha_an = RR(data[10])
+    sha = sha_an.round()
+    sha_primes = sha.prime_divisors()
+    torsion_primes = torsion.prime_divisors()
+
+    data = {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
         'number': int(data[2]),
         'ainvs': ainvs,
         'rank': int(data[4]),
-        'torsion': int(data[5]),
         'tamagawa_product': int(data[6]),
         'real_period': float(data[7]),
         'special_value': float(data[8]),
         'regulator': float(data[9]),
-        'sha_an': float(data[10]),
-    }
+        'sha_an': float(sha_an),
+        'sha':  int(sha),
+        'sha_primes':  [int(p) for p in sha_primes],
+        'torsion':  int(torsion),
+        'torsion_primes':  [int(p) for p in torsion_primes]
+        }
+
+    return label, data
 
 # Next function redundant as all data in allcurves is also in allgens
 
@@ -145,7 +181,7 @@ def allbsd(line):
 def allcurves(line):
     r""" Parses one line from an allcurves file.  Returns the label and a
     dict containing fields with keys 'conductor', 'iso', 'number',
-    'ainvs', 'jinv', 'rank', 'torsion', all values being strings or ints.
+    'ainvs', 'jinv', 'cm', 'rank', 'torsion', all values being strings or ints.
 
     Input line fields:
 
@@ -158,13 +194,20 @@ def allcurves(line):
     data = split(line)
     label = data[0] + data[1] + data[2]
     ainvs = parse_ainvs(data[3])
-    jinv = unicode(str(EllipticCurve([ZZ(eval(a)) for a in ainvs]).j_invariant()))
+    E = EllipticCurve([ZZ(eval(a)) for a in ainvs])
+    jinv = unicode(str(E.j_invariant()))
+    if E.has_cm():
+        cm = int(E.cm_discriminant())
+    else:
+        cm = int(0)
+
     return label, {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
         'number': int(data[2]),
         'ainvs': ainvs,
         'jinv': jinv,
+        'cm': cm,
         'rank': int(data[4]),
         'torsion': int(data[5]),
     }
@@ -173,7 +216,7 @@ def allcurves(line):
 def allgens(line):
     r""" Parses one line from an allgens file.  Returns the label and
     a dict containing fields with keys 'conductor', 'iso', 'number',
-    'ainvs', 'jinv', 'rank', 'gens', 'torsion_order', 'torsion_structure',
+    'ainvs', 'jinv', 'cm', 'rank', 'gens', 'torsion_order', 'torsion_structure',
     'torsion_generators', all values being strings or ints.
 
     Input line fields:
@@ -190,18 +233,68 @@ def allgens(line):
     t = eval(data[5])
     torsion = int(prod([ti for ti in t], 1))
     ainvs = parse_ainvs(data[3])
-    jinv = unicode(str(EllipticCurve([ZZ(eval(a)) for a in ainvs]).j_invariant()))
+    E = EllipticCurve([ZZ(eval(a)) for a in ainvs])
+    jinv = unicode(str(E.j_invariant()))
+    if E.has_cm():
+        cm = int(E.cm_discriminant())
+    else:
+        cm = int(0)
+
     return label, {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
         'number': int(data[2]),
         'ainvs': ainvs,
         'jinv': jinv,
+        'cm': cm,
         'rank': int(data[4]),
         'gens': ["(%s)" % gen[1:-1] for gen in data[6:6 + rank]],
         'torsion': torsion,
         'torsion_structure': ["%s" % tor for tor in t],
         'torsion_generators': ["%s" % parse_tgens(tgens[1:-1]) for tgens in data[6 + rank:]],
+    }
+
+def twoadic(line):
+    r""" Parses one line from a 2adic file.  Returns the label and a dict
+    containing fields with keys '2adic_index', '2adic_log_level',
+    '2adic_gens' and '2adic_label'.
+
+    Input line fields:
+
+    conductor iso number ainvs index level gens label
+
+    Sample input lines:
+
+    110005 a 2 [1,-1,1,-185793,29503856] 12 4 [[3,0,0,1],[3,2,2,3],[3,0,0,3]] X24
+    27 a 1 [0,0,1,0,-7] inf inf [] CM
+    """
+    data = split(line)
+    assert len(data)==8
+    label = data[0] + data[1] + data[2]
+    model = data[7]
+    if model == 'CM':
+        return label, {
+            '2adic_index': int(0),
+            '2adic_log_level': None,
+            '2adic_gens': None,
+            '2adic_label': None,
+        }
+
+    index = int(data[4])
+    level = ZZ(data[5])
+    log_level = int(level.valuation(2))
+    assert 2**log_level==level
+    if data[6]=='[]':
+        gens=[]
+    else:
+        gens = data[6][1:-1].replace('],[','];[').split(';')
+        gens = [[int(c) for c in g[1:-1].split(',')] for g in gens]
+
+    return label, {
+            '2adic_index': index,
+            '2adic_log_level': log_level,
+            '2adic_gens': gens,
+            '2adic_label': model,
     }
 
 
@@ -249,8 +342,8 @@ def alldegphi(line):
 
 def alllabels(line):
     r""" Parses one line from an alllabels file.  Returns the label
-    and a dict containing six fields, 'conductor', 'iso', 'number',
-    'lmfdb_label', 'lmfdb_iso', 'lmfdb_number', being strings or ints.
+    and a dict containing seven fields, 'conductor', 'iso', 'number',
+    'lmfdb_label', 'lmfdb_iso', 'iso_nlabel', 'lmfdb_number', being strings or ints.
 
     Input line fields:
 
@@ -272,6 +365,7 @@ def alllabels(line):
         'number': int(data[2]),
         'lmfdb_label': lmfdb_label,
         'lmfdb_iso': data[3] + '.' + data[4],
+        'iso_nlabel': numerical_iso_label(C['lmfdb_iso']),
         'lmfdb_number': data[5]
     }
 
@@ -321,18 +415,30 @@ def cmp_label(lab1, lab2):
 def comp_dict_by_label(d1, d2):
     return cmp_label(d1['label'], d2['label'])
 
+# To run this go into the top-level lmfdb directory, run sage and give
+# the command
+# %runfile lmfdb/elliptic_curves/import_ec_data.py
+#
 
 def upload_to_db(base_path, min_N, max_N):
-#    allcurves data all exists also in allgens
-#    allcurves_filename = 'allcurves/allcurves.%s-%s'%(min_N,max_N)
     allbsd_filename = 'allbsd/allbsd.%s-%s' % (min_N, max_N)
     allgens_filename = 'allgens/allgens.%s-%s' % (min_N, max_N)
     intpts_filename = 'intpts/intpts.%s-%s' % (min_N, max_N)
     alldegphi_filename = 'alldegphi/alldegphi.%s-%s' % (min_N, max_N)
     alllabels_filename = 'alllabels/alllabels.%s-%s' % (min_N, max_N)
     galreps_filename = 'galrep/galrep.%s-%s' % (min_N, max_N)
-    file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename]
-#    file_list = [galreps_filename]
+    twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
+    file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename,twoadic_filename]
+#    file_list = [twoadic_filename]
+
+    parsing_dict = {}
+    for f in file_list:
+        prefix = f[f.find('/')+1:f.find('.')]
+        if prefix == '2adic':
+            parsing_dict[f] = twoadic
+        else:
+            parsing_dict[f] = globals()[prefix]
+
 
     data_to_insert = {}  # will hold all the data to be inserted
 
@@ -340,8 +446,7 @@ def upload_to_db(base_path, min_N, max_N):
         h = open(os.path.join(base_path, f))
         print "opened %s" % os.path.join(base_path, f)
 
-        parse = globals()[f[f.find('/')+1:f.find('.')]]
-
+        parse=parsing_dict[f]
         t = time.time()
         count = 0
         for line in h.readlines():
@@ -405,3 +510,50 @@ def add_isogeny_matrices(N1,N2):
             data['lmfdb_label'] = label_i
             data['isogeny_matrix'] = mat
             curves.update({'lmfdb_label': label_i}, {"$set": data}, upsert=True)
+
+# A one-off script to add (1) exact Sha order; (2) prime factors of Sha; (3) prime factors of torsion
+
+def add_sha_tor_primes(N1,N2):
+    """
+    Add the 'sha', 'sha_primes', 'torsion_primes' fields to every
+    curve in the database whose conductor is between N1 and N2
+    inclusive.
+    """
+    query = {}
+    query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
+    res = curves.find(query)
+    res = res.sort([('conductor', pymongo.ASCENDING)])
+    n = 0
+    for C in res:
+        label = C['lmfdb_label']
+        if n%1000==0: print label
+        n += 1
+        torsion = ZZ(C['torsion'])
+        sha = RR(C['sha_an']).round()
+        sha_primes = sha.prime_divisors()
+        torsion_primes = torsion.prime_divisors()
+        data = {}
+        data['sha'] = int(sha)
+        data['sha_primes'] = [int(p) for p in sha_primes]
+        data['torsion_primes'] = [int(p) for p in torsion_primes]
+        curves.update({'lmfdb_label': label}, {"$set": data}, upsert=True)
+
+# one-off script to add numerical conversion of the isogeny class letter code, for sorting purposes
+def add_numerical_iso_codes(N1,N2):
+    """
+    Add the 'iso_nlabel' field to every
+    curve in the database whose conductor is between N1 and N2
+    inclusive.
+    """
+    query = {}
+    query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
+    res = curves.find(query)
+    res = res.sort([('conductor', pymongo.ASCENDING)])
+    n = 0
+    for C in res:
+        label = C['lmfdb_label']
+        n += 1
+        if n%1000==0: print label
+        data = {}
+        data['iso_nlabel'] = numerical_iso_label(C['lmfdb_iso'])
+        curves.update_one({'_id': C['_id']}, {"$set": data}, upsert=True)

@@ -56,7 +56,7 @@ class Lfunction:
 
     def compute_some_mu_nu(self):
         pairs_fe = zip(self.kappa_fe, self.lambda_fe)
-        self.mu_fe = [lambda_fe/2. for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 0.5) < 0.001]
+        self.mu_fe = [lambda_fe*2. for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 0.5) < 0.001]
         self.nu_fe = [lambda_fe for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 1) < 0.001]
         
         

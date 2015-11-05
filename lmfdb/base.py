@@ -11,10 +11,8 @@ import sys
 import logging
 from time import sleep
 from flask import Flask, session, g, render_template, url_for, request, redirect
-from pymongo import Connection
 from pymongo.cursor import Cursor
 from pymongo.errors import AutoReconnect
-from pymongo.connection import Connection
 from sage.all import *
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
@@ -32,19 +30,27 @@ def get_logfocus():
     global logfocus
     return logfocus
 
-# global db connection instance
+# global db connection instance (will be set by the first call to
+# getDBConnection() and should always be obtained from that)
 _C = None
 
-readonly_dbs = ['HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm',
-                'ellcurves', 'elliptic_curves', 'hmfs', 'modularforms', 'modularforms_2010',
-                'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'limbo']
+def getDBConnection():
+    return _C
 
-readwrite_dbs = ['userdb', 'upload', 'knowledge']
-
-readonly_username = 'lmfdb'
-readonly_password = 'readonly'
-
-readwrite_username = 'lmfdb_website'
+def makeDBConnection(dbport):
+    global _C
+    if not _C:
+        logging.info("establishing db connection at port %s ..." % dbport)
+        import pymongo
+        logging.info("using pymongo version %s" % pymongo.version)
+        if pymongo.version_tuple[0] < 3:
+            from pymongo import Connection
+            _C = Connection(port=dbport)
+        else:
+            from pymongo.mongo_client import MongoClient
+            _C = MongoClient(port=dbport)
+        mongo_info = _C.server_info()
+        logging.info("mongodb version: %s" % mongo_info["version"])
 
 AUTO_RECONNECT_MAX = 10
 AUTO_RECONNECT_DELAY = 1
@@ -86,46 +92,30 @@ def _db_reconnect(func):
 # _db_reconnect(Connection._send_message_with_response)
 
 
-def _init(dbport, readwrite_password, parallel_authentication=False):
-    global _C
-    logging.info("establishing db connection at port %s ..." % dbport)
-    _C = Connection(port=dbport)
+def _init(dbport):
+    import pymongo
+    makeDBConnection(dbport)
+    C = getDBConnection()
 
-    def db_auth_task(db, readonly=False):
-        if readonly or readwrite_password == '':
-            _C[db].authenticate(readonly_username, readonly_password)
-            logging.info("authenticated readonly on database %s" % db)
-        else:
-            _C[db].authenticate(readwrite_username, readwrite_password)
-            logging.info("authenticated readwrite on database %s" % db)
+    from os.path import dirname, join
+    pw_filename = join(dirname(dirname(__file__)), "password")
+    try:
+        username = "webserver"
+        password = open(pw_filename, "r").readlines()[0].strip()
+    except:
+        # file not found or any other problem
+        # this is read-only everywhere
+        logging.warning("authentication: no password -- fallback to read-only access")
+        username = "lmfdb"
+        password = "lmfdb"
 
-    if parallel_authentication:
-        logging.info("Authenticating to the databases in parallel")
-        import threading
-        tasks = []
-        for db in readwrite_dbs:
-            t = threading.Thread(target=db_auth_task, args=(db,))
-            t.start()
-            tasks.append(t)
-        for db in readonly_dbs:
-            t = threading.Thread(target=db_auth_task, args=(db, True))
-            t.start()
-            tasks.append(t)
-
-        for t in tasks:
-            t.join(timeout=15)
-        logging.info(">>> db auth done")
-    else:
-        logging.info("Authenticating sequentially")
-        for db in readwrite_dbs:
-            db_auth_task(db)
-        for db in readonly_dbs:
-            db_auth_task(db, True)
-        logging.info(">>> db auth done")
-
-
-def getDBConnection():
-    return _C
+    try:
+        C["admin"].authenticate(username, password)
+        if username == "webserver":
+            logging.info("authentication: partial read-write access enabled")
+    except pymongo.errors.PyMongoError as err:
+        logging.error("authentication: FAILED -- aborting")
+        raise err
 
 app = Flask(__name__)
 
@@ -178,6 +168,7 @@ def ctx_proc_userdata():
     import knowledge
     vars['meta_description'] = knowledge.knowl.Knowl("intro.description").content
     vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the US National Science Foundation and the UK Engineering and Physical Sciences Research Council.' % (url_for('acknowledgment') + "#sponsors")
+#    vars['feedbackpage'] = url_for('contact')
     vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
     vars['LINK_EXT'] = lambda a, b: '<a href="%s" target="_blank">%s</a>' % (b, a)
 
@@ -237,6 +228,8 @@ def git_infos():
     return cmd_output
 
 git_rev, git_date = git_infos()
+from sage.env import SAGE_VERSION
+
 """
 Creates link to the source code at the most recent commit.
 """
@@ -251,7 +244,9 @@ _latest_changeset = '<a href="%s%s">%s</a>' % (_url_changeset, git_rev, git_date
 
 @app.context_processor
 def link_to_current_source():
-    return {'current_source': _current_source, 'latest_changeset': _latest_changeset}
+    return {'current_source': _current_source,
+            'latest_changeset': _latest_changeset,
+            'sage_version': 'SageMath version %s' % SAGE_VERSION}
 
 # end: google code links
 

@@ -1,0 +1,262 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+<script>
+    $(document).ready( function() {
+	$("#toggle").click( function() {
+	    var toggle = document.getElementById( "toggle");
+	    if ( toggle.innerHTML == "Hide") {
+		$("#def_polynomial").hide("Slow");
+		toggle.innerHTML = "Show";
+		console.log( "Hide on");
+	    }
+	    else {
+		$("#def_polynomial").show("Slow");
+		toggle.innerHTML = "Hide";
+		console.log( "Show on");
+	    }
+	});
+        $("#toggle1").click( function() {
+	    var toggle1 = document.getElementById( "toggle1") 
+	    if ( toggle1.innerHTML == "Hide") {
+		$("#explicit_formula").hide("Slow");
+		toggle1.innerHTML = "Show";
+		console.log( "Hide on");
+	    }
+	    else {
+		$("#explicit_formula").show("Slow");
+		toggle1.innerHTML = "Hide";
+		console.log( "Show on");
+	    }
+	});
+    });
+</script>
+<p>
+  <button value="Download" onclick="window.location.href = '{{ url_for( 'ModularForm_GSp4_Q_top_level', download=sam.collection()[0]+'.'+sam.name()) }}'">Download</button>
+  this sample in JavaScript object notation (json).
+</p>
+
+<h2>Basic properties</h2>
+{% macro nice( x) %}
+{% if x == None %}
+  unkonwn
+{% else %}
+  {{ x }}
+{% endif %}
+{% endmacro %}
+<table>
+  <tr> <td>Type</td> <td>{{ nice( sam.type()) }}</td> </tr>
+  <tr> <td>Weight</td> <td>${{ nice(sam.weight()) }}$</td> </tr>
+  <tr> <td>Is Hecke eigenform</td> <td>{{ nice(sam.is_eigenform()) }}</td> </tr>
+  <tr> <td>Has integral Fourier coefficients</td> <td>{{ nice(sam.is_integral()) }}</td> </tr>
+  <tr> <td>Degree of field</td> <td>${{ nice(sam.field().degree()) }}$</td> </tr>
+</table>
+
+{% if sam.field() %}
+<h2>Field</h2>
+{% if sam.field().degree() == 1 %}
+{% set K='\mathbb{Q}' %}
+<table>
+  <tr> <td>Field</td> <td>$\mathbb{Q}$</td> </tr>
+</table>
+{% else %}
+{% set K='\mathbb{Q}(a)' %} 
+<table>
+  <tr> <td>Field</td> <td>$\mathbb{Q}(a)$</td> </tr>
+  {% if sam.field().degree() <= 5 %}
+  <tr> <td>Discriminant</td> <td>${{ latex(sam.field().discriminant().factor()) }}$</td> </tr>
+  <tr> <td>Signature</td> <td>${{ sam.field().signature() }}$</td> </tr>
+  <tr> <td>Is Galois</td> <td>${{ sam.field().is_galois() }}$</td> </tr>
+  {% else %}
+  <tr> <td>Discriminant</td> <td>{# ${{ latex(sam.field().discriminant().factor()) }}$ #}</td> </tr>
+  <tr> <td>Signature</td> <td>{# {{ sam.field().signature() }} #}</td> </tr>
+  <tr> <td>Is Galois</td> <td>{# {{ sam.field().is_galois() }} #}</td> </tr>
+  {% endif %}
+  <tr>
+    <td>Field equation</td>
+    {% set pol = sam.field().defining_polynomial() %}
+    {% set latex_pol = latex(pol) %}
+    {% if latex_pol|count > 100 %}
+    <td>
+      <button id ="toggle">Show</button>&nbsp;
+      <span id="def_polynomial" style="display: none;">	
+	<div class="small">{{ pol }}</span>
+      </span>
+    </td>
+    {% else %}
+    <td>${{ latex_pol }}$</td>
+    {% endif %}
+  </tr>
+</table>
+{% endif %}
+{% endif %}
+
+{% set ex_fo = sam.explicit_formula() %}
+{% if ex_fo %}
+<h2>Explicit formula</h2>
+{% if ex_fo|count > 200 %}
+<button id ="toggle1">Show</button>&nbsp;
+<span id="explicit_formula" style="display: none;">
+  <div class="small">
+    {{ ex_fo }}
+  </div>      
+</span>
+{% else %}
+{{ ex_fo }}
+{% endif %}
+{% endif %}
+
+
+{% set red = ideal_l.reduce %}
+{% set mod_l = '' if 0 == ideal_l else ' \\bmod \\mathfrak{L}' %}
+{% set evs = sam.available_eigenvalues() %}
+{% if evs|count > 0 %}
+<h2>Eigenvalues $\lambda(l)$ of $T(l)$</h2>
+{% if evs_to_show|count == 0 %}
+{% set evs_to_show = evs[:1] %}
+{% endif %}
+{% set ev_dict = sam.eigenvalues( evs_to_show) %}
+<div class="small">
+  <table>
+    <thead>
+      <tr><th>$l$</th><th>${{ '\lambda(l)' + mod_l }}$</th></tr>
+    </thead>
+    {% for l in ev_dict|sort %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}">
+      <td valign="top">{{ l }}</td><td>{{ red(ev_dict[l]) }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% set fcs = sam.available_Fourier_coefficients() %} 
+{% if fcs|count > 0 %}
+<h2>Fourier coefficients $c(F)$</h2>
+{% if fcs_to_show|count == 0 %}
+{% set fcs_to_show = fcs[1:2] %}
+{% endif %}
+{% set fc_dict = sam.Fourier_coefficients( fcs_to_show) %}
+<div class="small">
+  <table>
+    <thead>
+      <tr><th>\(\det(F)\)</th><th>F</th><th>${{ 'c(F)' + mod_l }}$</th></tr>
+    </thead>
+    {% for d in fc_dict|sort %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}">
+      {% set dk = fc_dict[d].keys()|sort %}
+      <td rowspan="{{ dk|count }}" valign="top">{{ d }}</td>
+      <td>{{ dk[0] }}</td><td>{{ red(fc_dict[d][dk[0]]) }}</td>
+    </tr>
+    {% for F in dk[1:]%}
+    <tr>
+      <td>{{ F }}</td><td>{{ red(fc_dict[d][F]) }}</td>
+    </tr>
+    {% endfor %}
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% if evs|count > 0 or fcs|count > 0 %}
+<h2>Find more</h2>
+<h3>Find more
+{% if evs|count > 0 %}$\lambda(l)${% endif %}
+{% if evs|count > 0 and fcs|count > 0%} and {% endif %}
+{% if fcs|count > 0 %}$c(F)${% endif %} reduced modulo an ideal $\mathfrak{L}$ of ${{ K }}$
+</h3>
+<table>
+  {% if evs|count > 0 %}
+  <tr valign="top">
+    <td>Eigenvalues $\lambda(l)$ available for $l$ from</td>
+    <td>
+      <div class="small">
+      {% for l in evs %} 
+      <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), indices=l) }}">{{ l }}</a>
+      {% endfor %}
+      </div>
+    </td>
+  </tr>
+  {% endif %}
+  {% if fcs|count > 0 %}
+  <tr valign="top">
+    <td>More $c(F)$ available for $\det(F)$ in</td>
+    <td>
+      <div class="small">
+      {% for d in fcs %} 
+      <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), dets=d) }}">{{ d }}</a>
+      {% endfor %}
+      </div>
+    </td>
+  </tr>
+  {% endif %}
+</table>
+
+<br />
+
+<script type="text/javascript">
+    function validate_modulus() {
+	var m = document.getElementById( "modulus_field").value
+	
+	try {
+	    gens = m.trim().split( /\s+/);
+	    a = 1;
+	    for ( n=0; n< gens.length; n++) {
+		b = eval( gens[n]);
+	    }
+	    return true;
+	}
+	catch(err) {
+	    txt ="Check the field for the reducing ideal $\mathfrak{L}$.\n\nThe generators must be expressions which define rational polynomials in $a$ and which must not contain spaces.";
+	    alert(txt);
+	    return false;
+	}
+
+    }
+</script> 
+<form id="EvFcForm" action="{{ '/ModularForm/GSp/Q/'+sam.collection()[0]+'.'+sam.name() }}" method="get" onsubmit="return validate_modulus()">
+  <table>
+    {% if evs|count > 0 %}
+    <tr>
+      <td>
+	<input name="indices" value="{{ evs_to_show|join(' ') }}" size="30" example="2 3 5" pattern="^(\s*\d+)+\s*$">list of $l$</input>
+        <br />
+	<span class="formexample">e.g. 2 or 2 3 5</span>
+      </td><td></td>
+    </tr>
+    {% endif %}
+    {% if fcs|count > 0 %}
+    <tr>
+      <td>
+	<input name="dets" value="{{ fcs_to_show|join(' ') }}" size="30" example="4 7 21" pattern="^(\s*\d+)+\s*$">list of $\det(F)$</input>
+        <br />
+	<span class="formexample">e.g. 3 or 3 7 41</span>
+      </td><td></td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td>
+	<input id="modulus_field" name="modulus" value="{{ ideal_l.gens()|join('#')|replace(' ','')|replace('#',' ') }}" size="30" example="3 a+5">generators of $\mathfrak{L}$</input>
+	<br />
+	<span class="formexample">e.g. 17 or 3 a^2+1</span>
+      </td>
+      <td>
+	<button type="submit" name="submit" value="submit">Find</button>
+      </td>
+    </tr>
+  </table>
+</form>
+{% endif %}
+
+<p>
+  Here $\mathfrak{L}$ equals {{ ideal_l }}.
+</p>
+
+
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+{% endblock %}
+

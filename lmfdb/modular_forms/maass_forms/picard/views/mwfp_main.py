@@ -35,7 +35,7 @@ def render_picard_maass_forms():
         return render_picard_test()
     if docid is not None:
         return render_picard_maass_forms_get_one(docid)
-    ds = [(_['_id'], _['ev']) for _ in htp.find(fields=['ev'], sort=[('ev', 1)])]
+    ds = [(_['_id'], _['ev']) for _ in htp.find({}, ['ev'], sort=[('ev', 1)])]
     data = None
     # TT= MaassformsPicardDisplay(mwfp_dbname,collection='all',skip=[0],limit=[10],keys=['Eigenvalue'])
     # TT.set_table_browsing()

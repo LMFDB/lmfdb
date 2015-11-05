@@ -21,7 +21,6 @@ AUTHORS:
 import lmfdb.base
 from lmfdb.base import app
 from flask import render_template, url_for, request, redirect, make_response, send_file
-from lmfdb.utils import url_character
 import bson
 import StringIO
 import pymongo
@@ -485,7 +484,7 @@ def evs_table(search, twodarray=False):
         ## Now get the COnrey number.
         ## First the character
         if k == 0:
-             # s+=url_character(type='Dirichlet',modulus=level,number=ch)
+             # s+=url_for('characters.render_Dirichletwebpage',modulus=level,number=ch)
             row['ch'] = f.the_character()  # conrey_character_name(N,chi)
         else:
             row['ch'] = "eta"
@@ -586,7 +585,7 @@ def evs_table2(search, twodarray=False):
         ## Now get the COnrey number.
         ## First the character
         if k == 0:
-            url = url_character(type='Dirichlet', modulus=N, number=chi)
+            url = url_for('characters.render_Dirichletwebpage', modulus=N, number=chi)
             s = "<a href={0}>{1}</a>".format(url, chi)
             row['ch'] = s
         else:

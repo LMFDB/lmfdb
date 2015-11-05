@@ -21,8 +21,8 @@ function show_code(system) {
   }
 </script>
 
+{#
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
-  
 
 </script><style type="text/css">
   .sagecell .CodeMirror-scroll {
@@ -45,6 +45,7 @@ function show_code(system) {
   }
 
   </style>
+#}
 
 {#
     <div align ="right">
@@ -55,9 +56,13 @@ function show_code(system) {
 #}
 
 <div>
-  <h2>  Base Field   {{ ec.field.knowl()|safe }} </h2>
+  <h2>  Base field   {{ ec.field.knowl()|safe }} </h2>
 <p>
-Generator \({{ ec.field.generator_name() }}\), with minimal polynomial \({{ec.field.poly()}}\)
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ ec.field.generator_name() }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ \({{ec.field.poly()}}\); {{ KNOWL('nf.class_number', 'class number')
+ }} \({{ec.field.class_number()}}\).
 </p>
 </div>
 
@@ -70,13 +75,30 @@ cellpadding="5";
 </style>
 
 <div>
-<h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Equation') }}</h2>
+<h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass equation') }}</h2>
+<p>
 {{ ec.equn }}
-<h2>Invariants</h2>
+</p>
+<p>
+  {% if ec.is_minimal %}
+  This is a {{ KNOWL('ec.global_minimal_model','global minimal model')}}.
+  {% else %}
+  This is not a {{ KNOWL('ec.global_minimal_model','global minimal
+  model')}}: it is {{ KNOWL('ec.local_minimal_model','minimal') }}
+  at all primes except {{ ec.non_min_prime }}.
+  {% if ec.has_minimal_model %}
+  However, a {{ KNOWL('ec.global_minimal_model','global minimal model')}} does exist.
+  {% else %}
+  No {{ KNOWL('ec.global_minimal_model','global minimal model')}} exists.
+  {% endif %}
+  {% endif %}
+</p>
+
+
+<h2>{{ KNOWL('ec.invariants', title='Invariants')}}</h2>
 
         <table id="invariants">
         <tr>
-          <td>{{ KNOWL('ec.conductor',  title='Conductor') }}</td>
         <td>
          \(\mathfrak{N} \)</td>
         <td>=</td>
@@ -86,7 +108,6 @@ cellpadding="5";
         </tr>
 
         <tr>
-          <td>Conductor norm</td>
         <td>
          \(N(\mathfrak{N}) \)</td>
         <td>=</td>
@@ -96,9 +117,13 @@ cellpadding="5";
         </tr>
 
         <tr>
-          <td>{{ KNOWL('ec.discriminant',  title='Discriminant') }}</td>
         <td>
-         \(\Delta\)</td>
+          {% if ec.is_minimal %}
+          \(\mathfrak{D}\)
+          {% else %}
+          \((\Delta)\)
+          {% endif %}
+        </td>
         <td>=</td>
         <td>{{ ec.disc }}</td>
         {% if ec.fact_disc %}
@@ -108,7 +133,42 @@ cellpadding="5";
         </tr>
 
         <tr>
-          <td>{{ KNOWL('ec.j_invariant',  title='\(j\)-invariant') }}</td>
+        <td>
+          {% if ec.is_minimal %}
+          \(N(\mathfrak{D})\)
+          {% else %}
+          \(N(\Delta)\)
+          {% endif %}
+         </td>
+        <td>=</td>
+        <td>{{ ec.disc_norm }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_disc_norm }}</td>
+        </tr>
+
+{% if not ec.is_minimal %}
+        <tr>
+        <td>
+         \(\mathfrak{D}\)</td>
+        <td>=</td>
+        <td>{{ ec.mindisc }}</td>
+        {% if ec.fact_mindisc %}
+        <td>=</td>
+        <td>{{ ec.fact_mindisc }}</td>
+        {% endif %}
+        </tr>
+
+        <tr>
+        <td>
+         \(N(\mathfrak{D})\)</td>
+        <td>=</td>
+        <td>{{ ec.mindisc_norm }}</td>
+        <td>=</td>
+        <td>{{ ec.fact_mindisc_norm }}</td>
+        </tr>
+{% endif %}
+
+        <tr>
         <td>
          \(j\)</td>
         <td>=</td>
@@ -120,18 +180,50 @@ cellpadding="5";
         </tr>
 
         <tr>
-          <td>Endomorphism ring</td>
         <td> \( \text{End} (E) \)</td>
         <td>=</td>
         <td>{{ ec.End }}</td>
         <td>&nbsp;</td>
-        <td>({%if not ec.cm %} no {%endif %}
+        <td>({%if not ec.cm %}no {%endif %}
    {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication')}}
             )
         </td>
         </tr>
 
 </table>
+</div>
+
+<div>
+<h2> {{ KNOWL('ec.mordell-weil', title="Mordell-Weil rank and generators") }} </h2>
+{% if ec.rk == "?" %}
+{% if ec.rk_bnds != "not recorded" %}
+<b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \le {{ ec.rank_bounds[1] }}\)
+{% else %}
+Rank not yet determined.
+{% endif %}
+{% else %}
+<b>Rank:</b> \( {{ ec.rank }} \)
+{% endif %}
+
+{% if ec.rank_bounds[0] %}
+{% if ec.gens == 'not recorded' %}
+<p>No generators recorded.</p>
+{% else %}
+<p><b>
+{% if ec.rank_bounds[0] == 1 %}
+Generator:
+{% else %}
+Generators:
+{% endif %}</b>
+{{ ec.gens }}
+</p>
+
+{% endif %}
+{% endif %}
+<p>
+<b>Regulator:</b>
+{{ ec.reg }}
+</p>
 </div>
 
 <div>
@@ -151,16 +243,19 @@ cellpadding="5";
 </div>
 
 <div>
-    <h2> Local data at primes of bad reduction </h2>
+    <h2>{{KNOWL('local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
 
 {% if ec.local_data %}
 <table cellpadding="5">
 <tr>
 <th>prime</th>
 <th>Norm</th>
-<th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
-<th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
-<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+<th>{{KNOWL('ec.tamagawa_number', title='Tamagawa number')}}</th>
+<th>{{KNOWL('ec.kodaira_symbol', title='Kodaira symbol')}}</th>
+<th>{{KNOWL('ec.reduction_type', title='Reduction type')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='ord(\(\mathfrak{N}\))')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\mathfrak{D}\))')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
 </tr>
 {% for pr in ec.local_data %}
 <tr>
@@ -185,6 +280,9 @@ cellpadding="5";
    Non-split multiplicative
 {% endif %}
 </td>
+<td align=center>{{pr.ord_cond}}</td>
+<td align=center>{{pr.ord_mindisc }}</td>
+<td align=center>{{pr.ord_den_j}}</td>
 </tr>
 {% endfor %}
 </table>

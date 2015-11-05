@@ -7,6 +7,7 @@ new information. If the entry does not exist then it creates it
 and returns that.
 
 Initial version (Warwick 2014), modified 7/14
+Adding zk, 7/15
 
 Data is imported to the collection 'fields' in the database 'numberfields'.
 The structure of the database entries is described in lmfdb/Database-info.
@@ -16,7 +17,7 @@ a field: [field1, field2, ..., ]
 
 Each field entry is a list:
 
-  [coeffs, galois t, disc, r1, h, clgp, extras, reg, fu, nogrh, subs, reduced]
+  [coeffs, galois t, disc, r1, h, clgp, extras, reg, fu, nogrh, subs, reduced, zk]
 
 where
 
@@ -41,6 +42,7 @@ where
         defined by x^2+3 and one subfield isomorphic to the field
         defined by x^4+x^2-2*x+6
    - reduced: is the polynomial known to be polredabs'ed
+   - zk: list of strings of integral basis elements in the variable a
 """
 
 import sys, time
@@ -50,8 +52,10 @@ import re
 import json
 from sage.all import *
 
-from pymongo.connection import Connection
-fields = Connection(port=37010).numberfields.fields
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=37010)
+C['numberfields'].authenticate('editor', '282a29103a17fbad')
+fields = C.numberfields.fields
 
 saving = True 
 

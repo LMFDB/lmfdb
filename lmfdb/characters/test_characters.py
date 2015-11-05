@@ -1,6 +1,5 @@
 from lmfdb.base import LmfdbTest
 from lmfdb.WebCharacter import *
-from lmfdb.utils import url_character
 import unittest2
 
 class WebCharacterTest(LmfdbTest):
@@ -27,10 +26,10 @@ class UrlCharacterTest(LmfdbTest):
     pass
     # FIXME: this test does not work, why ???
     #def test_url_character(self):
-    #    assert url_character() == '/Character/'
+    #    assert url_for('characters.render_characterNavigation') == '/Character/'
     #    assert url_character(type='Hecke') == '/Character/Hecke'
     #    assert url_character(type='Dirichlet') == '/Character/Dirichlet'
-    #    assert url_character(type='Dirichlet', modulus='132') == '/Character/Dirichlet/132'
+    #    assert url_for('characters.render_Dirichletwebpage', modulus='132') == '/Character/Dirichlet/132'
 
 class DirichletSearchTest(LmfdbTest):
 
@@ -70,8 +69,8 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_dirichletfamily(self):
         W = self.tc.get('/Character/Dirichlet/')
-        assert '/Character/Dirichlet/11/3' in W.data, "7th first conductor"
-        assert 'C_{2}\\times C_{2}' in W.data
+        assert 'Find a specific' in W.data
+        assert 'Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\)' in W.data
 
     def test_dirichletgroup(self):
         W = self.tc.get('/Character/Dirichlet/23')
@@ -91,8 +90,8 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert 'Character group' in W.data
-        assert '/Character/Dirichlet/0/1' not in W.data, "prev link"
-        assert '/Character/Dirichlet/2/1' in W.data, "next link"
+        #assert '/Character/Dirichlet/0/1' not in W.data, "prev link"
+        #assert '/Character/Dirichlet/2/1' in W.data, "next link"
         assert  '/NumberField/1.1.1.1' in W.data
      
     #@unittest2.skip("wait for new DirichletConrey")
@@ -106,12 +105,12 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Character group' in W.data
         assert '40486' in W.data
         assert '12409' in W.data, "log on generator"
-        assert '/Character/Dirichlet/40487/6' in W.data, "next link"
+        #assert '/Character/Dirichlet/40487/6' in W.data, "next link"
 
     def test_dirichletchar43(self):
         W = self.tc.get('/Character/Dirichlet/4/3')
         assert 'Kronecker symbol' in W.data
-        assert '\\left(\\frac{4}{\\bullet}\\right)' in W.data
+        assert '\\left(\\frac{-4}{\\bullet}\\right)' in W.data
 
     def test_dirichlet_calc(self):
         W = self.tc.get('/Character/calc-gauss/Dirichlet/4/3?val=3')
@@ -134,7 +133,10 @@ class DirichletCharactersTest(LmfdbTest):
         #assert '(119,415)' in W.data, "generators"
         assert '(356,235)' in W.data, "generators"
         assert 'Kloosterman sum' in W.data
-        assert '/Character/Dirichlet/531/38' in W.data, "prev navigation"
+        # next line commented out as homepage.html no longer diplays
+        #these (deliberately) as they were not useful, and possibly
+        #confusing!
+        #assert '/Character/Dirichlet/531/38' in W.data, "prev navigation"
         assert  '(\\zeta_{87})' in W.data, "field of values"
 
 class HeckeCharactersTest(LmfdbTest):
@@ -144,25 +146,21 @@ class HeckeCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Hecke/')
         assert '2.2.8.1' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_heckefamily(self):
         W = self.tc.get('/Character/Hecke/3.1.44.1')
         assert 'C_{5}' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_heckegroup(self):
         W = self.tc.get('/Character/Hecke/3.1.44.1/4.0')
         assert 'Related objects' in W.data
         assert 'primitive' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_heckechar(self):
         #W = self.tc.get('/Character/Hecke/7.3.674057.1')
         W = self.tc.get('/Character/Hecke/2.0.4.1/5./2')
         assert 'Related objects' in W.data
         assert 'primitive' in W.data
 
-    @unittest2.skip("hecke characters broken with sage 6.1")
     def test_hecke_calc(self):
         W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/5./1?val=1-a')
         assert '(1-a)=i' in W.data

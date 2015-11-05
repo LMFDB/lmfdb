@@ -3,18 +3,18 @@
 {% block content %}
 
 <style>
-td
+table.number_table td
 {
 text-align:right;
 }
+
+
 </style>
 
-<p>
-The database currently contains all extension fields of 
-{{KNOWL('lf.qp',title='$\Q_p$')}} of 
-{{KNOWL('lf.degree',title='degree')}} $n$ up to isomorphism for primes $p<150$
-and $1\leq n \leq 11$.
-<p>
+<div>
+{{ KNOWL_INC('dq.lf.extent') }}
+</div>
+
 
       <h2>Browse {{KNOWL('lf', title="local number fields")}}</h2>
 
@@ -23,7 +23,7 @@ The table gives for each $p$ and $n$ shown, the number of degree $n$ extension
 fields
 of $\Q_p$ up to isomorphism.
 <p>
-<table border=1 cellpadding=5 class='right_align_table'>
+<table border=1 cellpadding=5 class='number_table'>
 <tr>
 <th>$p$ \ $n$</th>
 <th>2</th> <th>3</th> <th>4</th> <th>5</th> <th>6</th>
@@ -68,63 +68,8 @@ of $\Q_p$ up to isomorphism.
 </table>
 <p>
 
-        <h2>Search</h2>
-      <form name="search" method = "get" action="{{search}}">
-        <table class="">
-          <tr>
-            <td>
-          {{KNOWL('lf.degree',title='Degree')}}:
-            </td><td><input type="text" name="n" value=""
-      placeholder="6"></td>
-      <td>
-	<span class="formexample">e.g. 6, or a range like 3..5</span>
-      </td>
-          </tr>
-          <tr>
-            <td>
-              Prime $p$ for base field  {{KNOWL('lf.qp',title='$\Q_p$')}}:
-            </td><td><input type="text" name="p" value="" placeholder="3"></td>
-      <td>
-	<span class="formexample">e.g. 3, or a range like 3..7</span>
-      </td>
-          </tr>
-          <tr>
-            <td>
-              {{KNOWL('lf.discriminant_exponent',title='Discriminant
-              exponent')}} $c$ :
-            </td><td><input type="text" name="c" value="" placeholder="8"></td>
-      <td>
-	<span class="formexample">e.g. 8, or a range like 2..6</span>
-      </td>
-          </tr>
-          <tr>
-            <td>
-              {{KNOWL('lf.ramification_index',title='Ramification
-              index')}} $e$ :
-            </td><td><input type="text" name="e" value="" placeholder="3"></td>
-      <td>
-	<span class="formexample">e.g. 3, or a range like 2..6</span>
-      </td>
-          </tr>
-          <tr>
-            <td>
-              {{KNOWL('nf.galois_group',title='Galois
-              group')}} $G$ :
-            </td><td><input type="text" name="gal" value="" placeholder="5T3"></td>
-      <td>
-	<span class="formexample">e.g. 5T3, C4, or a list of 
-{{KNOWL('nf.galois_group.name',title='labels')}}
-</span>
-      </td>
-          </tr>
-          <tr>
-          <td>
-              Maximum number of fields to display:
-            </td><td><input type="text" name="count" value="{{info.count}}" size="10"></td>
-          </tr>
-  </table>
-        <button type="submit" name="Submit" value="Search">Search</button>
-      </form>
+
+
 
     <h2>Find a specific local number field</h2>
 
@@ -145,6 +90,67 @@ of $\Q_p$ up to isomorphism.
 	    </tr>
 	  </table>
 	  </form>
+
+
+
+        <h2>Search</h2>
+      <form name="search" method = "get" action="{{search}}">
+        <table class="">
+          <tr align=left>
+            <td align=right>
+          {{KNOWL('lf.degree',title='Degree')}}:
+            </td><td><input type="text" name="n" value=""
+      placeholder="6"></td>
+      <td>
+	<span class="formexample">e.g. 6, or a range like 3..5</span>
+      </td>
+          </tr>
+          <tr>
+            <td align=right>
+              Prime $p$ for base field  {{KNOWL('lf.qp',title='$\Q_p$')}}:
+            </td><td><input type="text" name="p" value="" placeholder="3"></td>
+      <td>
+	<span class="formexample">e.g. 3, or a range like 3..7</span>
+      </td>
+          </tr>
+          <tr>
+            <td align=right>
+              {{KNOWL('lf.discriminant_exponent',title='Discriminant
+              exponent')}} $c$ :
+            </td><td><input type="text" name="c" value="" placeholder="8"></td>
+      <td>
+	<span class="formexample">e.g. 8, or a range like 2..6</span>
+      </td>
+          </tr>
+          <tr>
+            <td align=right>
+              {{KNOWL('lf.ramification_index',title='Ramification
+              index')}} $e$ :
+            </td><td><input type="text" name="e" value="" placeholder="3"></td>
+      <td>
+	<span class="formexample">e.g. 3, or a range like 2..6</span>
+      </td>
+          </tr>
+          <tr>
+            <td align=right>
+              {{KNOWL('nf.galois_group',title='Galois
+              group')}} $G$ :
+            </td><td><input type="text" name="gal" value="" placeholder="5T3"></td>
+      <td>
+	<span class="formexample">e.g. 5T3, C4, or a list of 
+{{KNOWL('nf.galois_group.name',title='labels')}}
+</span>
+      </td>
+          </tr>
+          <tr>
+          <td align=right>
+              Maximum number of fields to display:
+            </td><td><input type="text" name="count" value="{{info.count}}" size="10"></td>
+          </tr>
+  </table>
+        <button type="submit" name="Submit" value="Search">Search</button>
+      </form>
+
 
 
 
