@@ -680,9 +680,12 @@ div.literature {
 }
 
 .bluehighlight {
-  color: black;
+  color: blue;
 }
 
+.positivezero {
+  color: black;
+}
 
 
 .highlight {

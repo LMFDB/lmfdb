@@ -401,8 +401,11 @@ def cleanup():
 def index():
     # bypassing the Knowl objects to speed things up
     from knowl import get_knowls
-    get_knowls().ensure_index('_keywords')
-    get_knowls().ensure_index('cat')
+    try:
+        get_knowls().ensure_index('_keywords')
+        get_knowls().ensure_index('cat')
+    except pymongo.errors.OperationFailure:
+        pass
 
     cur_cat = request.args.get("category", "")
 

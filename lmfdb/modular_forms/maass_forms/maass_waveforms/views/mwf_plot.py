@@ -1,3 +1,4 @@
+import pymongo
 from lmfdb import base
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
      import MaassDB

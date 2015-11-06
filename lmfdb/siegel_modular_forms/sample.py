@@ -189,7 +189,7 @@ def export( collection, name):
     """
     global DB
     if not DB:
-        DB = DataBase( DB_URL = DB_URL) 
+        DB = DataBase()
     
     dct = { 'collection': collection, 'name': name}
     doc = DB.find_one( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})

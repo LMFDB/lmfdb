@@ -1,0 +1,107 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+<style>
+.api-entries > li { margin-bottom: 14px; }
+</style>
+
+
+<div>
+This is a very basic API for accessing the LMFDB Database.
+It lists available databases and collections,
+links to their respective descriptions,
+and has very limited query capabilities.
+</div>
+<div>
+Queries are url encoded <b><code>key=value</code></b> parameters, where the value has a prefix to specify the type.
+Keys starting with "<code>_</code>" are meta-parameters further refining query.
+They can be combined by specifying several ones delimited by <code>&amp;</code> to further drill down to the desired objects.
+The result formats are JSON, YAML or HTML (default).
+Each list is limited by a maximum of 100 results and the <code>next</code> entry contains the query to request more objects.
+The overall limit is at about 10000 results and beyond that it is necessary to further refine the query to the results in question.
+</div>
+<div>
+<b>Please use this API responsibly!</b>
+</div>
+<h4>Type-prefixes for query values</h4>
+<div>
+<ul>
+<li><b>s</b>: string</li>
+<li><b>i</b>: integer</li>
+<li><b>f</b>: float</li>
+<li><b>ls</b>: list of strings, delimiter is "," by default or the value of the query key <code>_delim</code></li>
+<li><b>li</b>: list of integers</li>
+<li><b>lf</b>: list of floats</li>
+<li><b>py</b>: this evaluates the query literally following the Python syntax. This can be used to express a matrix as a nested list of lists.
+<li><b>cs</b>, <b>ci</b>, <b>cf</b> and <b>cpy</b>: queries, if the given string, integer, float or Python literal is <i>contained</i> in a list.
+</ul>
+</div>
+<h4>Meta-parameters</h4>
+<div>
+<ul>
+<li><code>_format</code> is used to specify the encoding. Possible values are html (defualt), json and yaml.</li>
+<li>To only retrieve a selected list of entries per document,
+use <code>_fields=name1,name2</code> to reduce the amount of data sent back to only those fields named <code>name1</code> and <code>name2</code>.
+</li>
+<li>Sorting by fields is done via <code>_sort=name1,-name2</code>,
+where the prefix "-" indicates to sort in descending order.
+</li>
+<li>Finally, <code>_delim</code> is used to specify the delimiter (default: "<code>,</code>")</li>
+</div>
+<div>
+<h4>Examples</h4>
+<ul>
+    <li>
+    The query <a href='{{ url_for(".api_query", db="numberfields", collection="fields", signature="s2,5", _format="json") }}'>?signature=s2,5&amp;_format=json</a>
+    searches for numberfields with the signature <code>[2, 5]</code>
+    stored as a string (prefix "s") <code>"2,5"</code> and givs the result in the JSON format.
+    (Without any prefix, it is handled like a string. Example:
+    <a href='{{ url_for(".api_query", db="hgm", collection="families", gal3="O(5,3)") }}'>hgm/families?gal3=O(5,3)</a>.)
+    </li>
+    <li>
+    To search for integers or floats, prefix the value with "i" or "f".
+    For example elliptic curves with rank 2 and torsion 5:
+    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", rank="i2", torsion="i5")}}'><code>?rank=i2&amp;torsion=i5</code></a>.
+    </li>
+    <li>
+    A list of strings (string encoded integers) for the <code>ainvs</code> parameter of an elliptic curve is
+    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="ls0;1;1;-840;39800", _format="yaml", _delim=";")}}'>
+       <code>?ainvs=ls0;1;1;-840;39800&amp;_format=yaml&amp;_delim=;</code></a>,
+    where the delimiter is "<code>;</code>" and the result formatted in YAML.
+    </li>
+    <li>
+    This query <a href='{{ url_for('.api_query', db="elliptic_curves", collection="curves", isogeny_matrix="py[[1,13],[13,1]]", _format="json") }}'>?isogeny_matrix=py[[1,13],[13,1]]</a>
+    returns elliptic curves where the isogeny matrix is $\left(\begin{smallmatrix}1 & 13\\ 13 & 1\end{smallmatrix}\right)$.
+    </li>
+    <li>
+    To see those elliptic curves, where the <code>ainvs</code> list contains the string-encoded integer <code>-769</code>
+    and the field <code>non-surjective_primes</code> contains the integer number 5:
+    {% set kw = {"non-surjective_primes" : "ci3"} %}
+    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="cs-769", **kw) }}'>?ainvs=cs-769&amp;non-surjective_primes=ci3</a>.
+    </li>
+    <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
+    query <a href="{{ url_for('.api_query', db='knowledge', collection='knowls', _fields='authors,last_author') }}"</a>?_fields=authors,last_author</a>.
+    </li>
+    <li>For sorting the result, use a query like
+    <a href="{{ url_for('.api_query', db='knowledge', collection='knowls', _fields='authors,content', _sort='timestamp') }}">?_fields=content,authors&_sort=timestamp</a>.
+    </li>
+</ul>
+</div>
+
+<h3>Available Collections</h3>
+<ul class="api-entries">
+{% for db, collections in databases.iteritems() %}
+  <li>
+    <b>{{ db }}</b>
+    (<a href="https://github.com/LMFDB/lmfdb-inventory/blob/master/db-{{ db }}.md"
+       target="_blank">description</a>)
+    <br/>
+      {% for (collection, count) in collections %}
+        <a href="{{ url_for('.api_query', db=db, collection=collection) }}">{{ collection }} ({{ count }})</a>
+        {% if not loop.last %}&middot;{% endif %}
+      {% endfor %}
+  </li>
+{% endfor %}
+</ul>
+
+{% endblock %}

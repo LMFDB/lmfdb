@@ -21,52 +21,16 @@
 {% else %}
 
 {% from "knowl-defs.html" import knowlbar with context %}
-<div>
-The general editing inside a {{KNOWL("doc.knowl", title="Knowl")}} works as per usual in a {{KNOWL("doc.wiki",title="wiki")}}.
-The main difference is that a {{KNOWL("doc.knowl", title="Knowl")}} is {{KNOWL("doc.knowl.context_free", title="context-free")}}.
-</div>
-<br>
-
-<script type="text/javascript">
-//$(function() {
-// $( "#knowl-help" ).accordion({
-//  collapsible: true
-// });
-//});
-</script>
-
-<div id="knowl-help">
- <h3><a href="#">Knowl edit help</a></h3>
-    <div>
-        You are about to edit a Knowl. If you were to put the code
-    </div>
-    <blockquote>
-{% raw %}
-... the {{ KNOWL("lfunction.rh.proof",title="proof")}} of the {{KNOWL("lfunction.rh",title="Riemann hypothesis")}} was found in ...
-{% endraw %}
-    </blockquote>
-the result would look like
-    <blockquote>
-... the {{ KNOWL("lfunction.rh.proof",title="proof")}} of the {{KNOWL("lfunction.rh",title="Riemann hypothesis")}} was found in ...
-    </blockquote>
-    <br>
-<div>
-    As you can see the Knowl {{ KNOWL("lfunction.rh.proof", title="Riemann Hypothesis Knowl")}} is currently missing, but would be {{KNOWL("doc.knowl.implicit", title="implicitly created")}} once someone edits it.
-</div>
-<br>
-<div>
-    Please follow our {{ KNOWL("doc.knowl.naming_conventions",title="naming conventions")}} and {{ KNOWL("doc.knowl.naming_suggestions",title="naming suggestions")}}
-    for the {{KNOWL("doc.knowl.description",title="description")}} and {{KNOWL("doc.knowl.identifier",title="identifier")}} fields of Knowls.
-</div>
-</div>
-
 {{ knowlbar() }}
+
+<div style="margin: 10px;">
+Before editing, make sure you read the {{ KNOWL("doc.knowl.guidelines", title="Knowl Edit Guidelines") }}.
+</div>
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.js')}}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markitup.css')}}" />
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markdown.css')}}" />
-
 
 <script language="javascript">
 $(document).ready(function()	{
