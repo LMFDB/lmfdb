@@ -509,16 +509,18 @@ def initLfunction(L, args, request):
             # Navigation to previous and next form
             next_form_id = L.mf.next_maassform_id()
             if next_form_id:
-                next_data = (r"$L(s,f_{\text next})$", '/L' + url_for('mwf.render_one_maass_waveform',
-                                                                        maass_id = next_form_id) )
+                next_data = ("next",r"$L(s,f_{\text next})$", '/L' +
+                             url_for('mwf.render_one_maass_waveform',
+                             maass_id = next_form_id) )
             else:
-                next_data = ('','')
+                next_data = ('','','')
             prev_form_id = L.mf.prev_maassform_id()
             if prev_form_id:
-                prev_data = (r"$L(s,f_{\text prev}$)", '/L' + url_for('mwf.render_one_maass_waveform',
-                                                                        maass_id = prev_form_id) )
+                prev_data = ("previous", r"$L(s,f_{\text prev}$)", '/L' +
+                             url_for('mwf.render_one_maass_waveform',
+                             maass_id = prev_form_id) )
             else:
-                prev_data = ('','')
+                prev_data = ('','','')
                 
             info['navi'] = ( prev_data, next_data )
 
@@ -537,11 +539,15 @@ def initLfunction(L, args, request):
         Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
         if mod > 1:
             pmod,pnum = WebDirichlet.prevprimchar(mod, num)
-            Lprev = ("previous",Lpattern%(pmod,pnum),url_for('.l_function_dirichlet_page',modulus=pmod,number=pnum))
+            Lprev = ("previous",Lpattern%(pmod,pnum),
+                     url_for('.l_function_dirichlet_page',
+                             modulus=pmod,number=pnum))
         else:
-            Lprev = ('','')
+            Lprev = ('','','')
         nmod,nnum = WebDirichlet.nextprimchar(mod, num)
-        Lnext = ("next",Lpattern%(nmod,nnum),url_for('.l_function_dirichlet_page',modulus=nmod,number=nnum))
+        Lnext = ("next",Lpattern%(nmod,nnum),
+                 url_for('.l_function_dirichlet_page',
+                         modulus=nmod,number=nnum))
         info['navi'] = (Lprev,Lnext)
         print info['navi']
         snum = str(L.characternumber)
