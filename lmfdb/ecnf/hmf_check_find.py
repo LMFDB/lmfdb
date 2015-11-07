@@ -16,14 +16,25 @@ from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 
-print "calling base._init()"
-dbport = 37010
-init(dbport, '')
-print "getting connection"
-conn = getDBConnection()
+from lmfdb.website import DEFAULT_DB_PORT as dbport
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+
+print "authenticating on the elliptic_curves database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['elliptic_curves'].authenticate(username, password)
 print "setting nfcurves"
-nfcurves = conn.elliptic_curves.nfcurves
-qcurves = conn.elliptic_curves.curves
+nfcurves = C.elliptic_curves.nfcurves
+qcurves = C.elliptic_curves.curves
+
+print "authenticating on the hmfs database" # read-only
+C['hmfs'].authenticate('lmfdb', 'lmfdb')
+hmfs = C.hmfs
+forms = hmfs.forms
+fields = hmfs.fields
 
 #
 #
@@ -47,9 +58,6 @@ def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
     real, check whether the ideal label agrees with the level_label of
     the associated Hilbert Modular Form.
     """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
     query = {}
     query['field_label'] = field_label
     query['conductor_norm'] = {'$gte': int(min_norm)}
@@ -117,9 +125,6 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
     real, test whether a Hilbert Modular Form exists with the same
     label.
     """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
     query = {}
     query['field_label'] = field_label
     query['number'] = 1  # only look at first curve in each isogeny class
@@ -372,9 +377,6 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     assumed totally real, for level norms in the given range, test
     whether an elliptic curve exists with the same label.
     """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
     query = {}
     query['field_label'] = field_label
     if fields.count({'label': field_label}) == 0:
@@ -483,9 +485,6 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
     whether an elliptic curve exists with the same label; if not, find
     the curves using Magma; output these to a file.
     """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
     query = {}
     query['field_label'] = field_label
     if fields.count({'label': field_label}) == 0:

@@ -15,21 +15,25 @@ Initial version (University of Warwick 2015) Aurel Page
 import sys
 sys.path.append("../..");
 import pymongo
-from lmfdb import base
-from lmfdb.website import dbport
+from lmfdb.website import DEFAULT_DB_PORT as dbport
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals, conjideals, str2ideal)
 
-print "calling base._init()"
-dbport=37010
-base._init(dbport, '')
-print "getting connection"
-conn = base.getDBConnection()
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+
+print "authenticating on the hmfs database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['hmfs'].authenticate(username, password)
+
 print "setting hmfs, fields and forms"
-hmfs = conn.hmfs
+hmfs = C.hmfs
 fields = hmfs.fields
 forms = hmfs.forms
-nfcurves = conn.elliptic_curves.nfcurves
+nfcurves = C.elliptic_curves.nfcurves
 
 # Cache of WebNumberField and FieldData objects to avoid re-creation
 WNFs = {}
