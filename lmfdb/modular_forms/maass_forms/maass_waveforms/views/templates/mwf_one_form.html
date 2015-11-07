@@ -15,35 +15,33 @@ var oTable = $("table#coeffs").dataTable(
 {
     "sPaginationType": "full_numbers",
     "aoColumns":{{  coeff_aoColumns |safe }},
-    "bSort":true,
-    "iDisplayLength": 20,    
+    "bSort":false,
+    "iDisplayLength": 10,    
     "iDisplayStart": 0,
     "oLanguage": {
             "sZeroRecords": "There are no coefficients that match your search criterion",
             "sLengthMenu": "Display _MENU_ coefficients per page",
             "sInfo": "Displaying _START_ to _END_ of _TOTAL_ coefficients",
             "sInfoEmpty": "Showing 0 to 0 of 0 records",
+            "sSearch": "Filter by index and coefficients: ",
             "sInfoFiltered": "(filtered from _MAX_ total coefficients)"
      }, 
      "sDom": 't<"paging"ip><"bottom"lfr><"filterbox">',
-//     "sDom": 't<"paging"p><"bottom"l><"bottom"fr><"filterbox"i>',
      "sScorollX": "300px", 
-    "aLengthMenu": [[15, 25, 50, 100, 200, -1], [15, 25, 50, 100,  200, "All"]],
+    "aLengthMenu": [[10, 20, 50, 100, 200, -1], [10, 20, 50, 100,  200, "All"]],
      "bStateSave": false,
      "bAutoWidth": false,
      "oSearch": { "sSearch": "", "bRegex": false, "bSmart": true },
 
  });
 
-$('.bottom').css("width","100%")
-$('.bottom').css("text-align","left")
-$('.paging_full_numbers').css('width','250px')
-$('#coeffs').css('width','650px')
+$('.dataTables_filter input').attr("placeholder", "Strings to filter by");
+$('#coeffs').css('width','400px')
 });
 </script>
  
 <style type="text/css">
- .dataTables_wrapper { width: 600px; class:"ntdata"}
+ .dataTables_wrapper { width: 750px; class:"ntdata"}
  .dataTables_wrapper:after {
     content: ".";
     display: block;

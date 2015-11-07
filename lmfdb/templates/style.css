@@ -1196,24 +1196,36 @@ background-color: #8dbdd8;
 }
 
 .dataTables_length {
-	width: 40%;
+	width: 100%;
+        line-height: 40px;
 }
 
 .dataTables_filter {
-	width: 50%;
-	text-align: right;
+	width: 100%;
+        line-height: 40px;
 }
 
 .dataTables_info {
-	width: 60%;
+	width: 45%;
 	float: left;
+        margin: 5px;
 }
 
 .dataTables_paginate {
-	width: 44px;
+	width: 50%;
 	* width: 50px;
 	float: right;
 	text-align: right;
+        margin: 5px;
+}
+
+a.paginate_active {
+        font-weight: bold;
+        padding: 5px;
+}
+
+a.paginate_button {
+    padding: 5px;
 }
 
 /* Pagination nested */
@@ -1333,7 +1345,7 @@ table.display tr.even.gradeU {
 }
 
 .top, .bottom {
-	padding: 15px;
+	padding: 52px 5px 5px;
 	background-color: #F5F5F5;
 	border: 1px solid #CCCCCC;
 }
@@ -1377,7 +1389,6 @@ td.details {
 }
 
 .paging_full_numbers {
-	width: 400px;
 	height: 22px;
 	line-height: 22px;
 }

@@ -73,7 +73,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
     if info['search'] or (info['browse'] and int(info['weight']) != 0):
         search = get_search_parameters(info)
         mwf_logger.debug("search=%s" % search)
-        # for key in search:
+        #for key in search:
         #    info[key]=search[key]
         # return render_browse_all_eigenvalues(**info)
         return render_search_results_wp(info, search)
@@ -462,7 +462,6 @@ def get_table():
 def evs_table(search, twodarray=False):
     DB = connect_db()
 
-    # indices  = DB.get_Maass_forms(search)
     indices = DB.find_Maass_form_id(search)
     table = []
     nrows = 0
