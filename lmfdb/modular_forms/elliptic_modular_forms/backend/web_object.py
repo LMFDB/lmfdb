@@ -422,12 +422,25 @@ class WebObject(object):
         rec = coll.find_one(self.key_dict())
         return rec
 
+    def authorize(self):
+        r"""
+        Need to be authorized to insert data
+        """
+        from lmfdb.base import getDBConnection
+        from os.path import dirname, join
+        pw_filename = join(dirname(dirname(__file__)), "password_editor")
+        user = 'editor'
+        password = open(pw_filename, "r").readlines()[0].strip()
+        C = getDBConnection()
+        C["modularforms2"].authenticate(user,password)
+        
     def save_to_db(self, update = True):
         r"""
          Saves ```self``` to the database, i.e.
          save the meta record and the file in the gridfs file system.
         """
         fs = self._files
+        self.authorize()
         file_key = self.file_key_dict()
         coll = self._file_collection
         if fs.exists(file_key):
