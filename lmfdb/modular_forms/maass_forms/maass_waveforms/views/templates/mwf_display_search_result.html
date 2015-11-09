@@ -57,7 +57,8 @@ var evTable = $("table#eigenvalues").dataTable(
  });
 
 $('.dataTables_filter input').attr("placeholder", "Strings to filter by");
-
+$('.dataTables_filter input').attr("title", "E.g. 'even 2.' will give all even forms between 2 and 3.");
+ 
 /* Add filtering box if we don't have a fixed weight*/
 
 {% if wtis1 !='' %}
