@@ -13,6 +13,7 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 from base import *
 
 import pages
+import api
 import hilbert_modular_forms
 import siegel_modular_forms
 import modular_forms
@@ -42,20 +43,12 @@ import hypergm
 import motives
 import riemann
 import logging
+import lattice
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
 
 import sys
-
-try:
-    import password
-    logging.info("password imported")
-    readwrite_password = password.readwrite_password
-except:
-    logging.warning("no password!")
-    readwrite_password = ''
-
 
 @app.errorhandler(404)
 def not_found_404(error):
@@ -253,8 +246,6 @@ def get_configuration():
                 options["port"] = int(arg)
             elif opt in ("-h", "--host"):
                 options["host"] = arg
-            elif opt in ("-t", "--threading"):
-                threading_opt = True
             elif opt in ("-l", "--log"):
                 logfile = arg
             elif opt in ("--dbport"):
@@ -278,7 +269,7 @@ def get_configuration():
                 options["use_debugger"] = False
       except:
           pass # something happens on the server -> TODO: FIXME
-    return { 'flask_options' : options, 'dbport' : dbport , 'threading_opt' : threading_opt }
+    return { 'flask_options' : options, 'dbport' : dbport}
 
 configuration = get_configuration()
 
@@ -312,7 +303,7 @@ if True:
 
     logging.info("configuration: %s" % configuration)
     import base
-    base._init(configuration['dbport'], readwrite_password, parallel_authentication = configuration["threading_opt"])
+    base._init(configuration['dbport'])
     app.logger.addHandler(file_handler)
 
 def getDownloadsFor(path):

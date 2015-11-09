@@ -1,0 +1,121 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p>
+The database currently contains {{info.counts.nlattice_c}} {{ KNOWL('lattice.definition', title='integral lattices') }}. The largest {{ KNOWL('lattice.dimension', title='dimension') }} is {{info.counts.max_dim_c}}. It includes data from the <a href="http://www.math.rwth-aachen.de/~Gabriele.Nebe/LATTICES/">Catalogue of Lattices</a>. 
+</p>
+<p>
+In the case of {{ KNOWL('lattice.primitive', title='primitive') }} {{ KNOWL('lattice.definition', title='integral lattices') }} of {{ KNOWL('lattice.class_number', title='class number') }} one the database is complete.
+</p>
+
+<style type="text/css">
+.error_message {
+   padding: 4px;
+   color: red;
+   font-size: 120%;
+   font-weight: bold;
+   margin: 20px;
+}
+</style>
+{% if err_msg %}
+<p class="error_message">
+{{err_msg}}
+</p>
+<p>
+  <input type=button value="Search again" onClick="history.go(-1)">
+</p>
+{% endif %}
+
+<h2> Browse {{ KNOWL('lattice.definition', title='Integral Lattices') }}</h2>
+
+<p>
+By {{ KNOWL('lattice.dimension', title='Dimension') }}: 
+{% for rnge in info.dim_list %}
+<a href="?dim={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
+<p>
+By {{ KNOWL('lattice.determinant', title='Determinant') }}:
+{% for rnge in info.det_list %}
+<a href="?det={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
+<p>
+By {{ KNOWL('lattice.class_number', title='Class number') }}: 
+{% for rnge in info.class_number_list %}
+<a href="?class_number={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
+<p>A <a href={{url_for('.random_lattice')}}>random integral lattice</a> from the database.
+<br>
+</p>
+
+
+
+<h2> Find a specific integral lattice by {{KNOWL('lattice.label', title='label')}} or by {{KNOWL('lattice.name', title='name')}}</h2>
+
+<form>
+<input type='text' name='label' placeholder='3.4.16.1.1'>
+<button type='submit'>Label</button>
+<br><span class="formexample">e.g. 3.4.16.1.1, $D3$, $E8$, Leech lattice</span>
+</form>
+
+<h2> Search </h2>
+
+<p>Please enter a value or leave blank:</p>
+<form>
+<table>
+<tr>
+<td align= right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td>
+<td><input type='text' name='dim' placeholder='3' size=10>
+<td><span class="formexample"> e.g. 2, 3, 5 or a range of integers 1-5</td>
+</tr>
+
+<tr>
+<td align= right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td>
+<td><input type='text' name='det' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1, 2, 3, or a range of integers 1-5</td>
+</tr>
+<tr>
+<td align= right>{{ KNOWL('lattice.level', title='Level') }}:</td>
+<td><input type='text' name='level' placeholder='48' size=10>
+<td><span class="formexample"> e.g. 48, 336, 456 a range of integers 48-150</td>
+</tr>
+
+<tr>
+<td align= right>{{ KNOWL('lattice.gram', title='Gram matrix') }}:</td>
+<td><input type='text' name='gram' placeholder='[5,1,23]' size=10>
+<td><span class="formexample"> e.g. enter $[5,1,23]$ for the {{ KNOWL('lattice.gram', title='Gram matrix') }} $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$</td>
+</tr>
+<tr>
+<td align= right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td>
+<td><input type='text' name='minimum' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1, 2, 3</td>
+</tr>
+
+<tr>
+<td align= right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td>
+<td><input type='text' name='class_number' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1, 2, 3</td>
+</tr>
+
+<tr>
+<td align= right>Group order:</td>
+<td><input type='text' name='aut' placeholder='2' size=10>
+<td><span class="formexample"> e.g. 2, 48, 696729600</td>
+</tr>
+
+<!--<tr><td align= right>{{ KNOWL('lattice.name', title='Name') }}:</td>-->
+<!--<td><input type='text' name='name' placeholder='D3' size=10>-->
+<!--<td><span class="formexample"> e.g. $D3$, $E8$, Leech lattice</td>-->
+<!--</tr>-->
+<tr>
+<td colspan=3><button type='submit' value='Search'>Search</button>
+</td>
+</tr>
+</table>
+</form>
+
+
+{% endblock %}

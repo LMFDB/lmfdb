@@ -283,7 +283,7 @@ def get_search_parameters(info):
 #         if not cols:
 #             cols=list()
 #             for c in self.db.collection_names():
-#                 if c<>'system.indexes' and c<>'metadata':
+#                 if c!='system.indexes' and c!='metadata':
 #                     print "cc=",c
 #                 cols.append(self.db[c])
 #         self.cols=cols

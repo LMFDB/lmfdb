@@ -52,9 +52,14 @@ import re
 import json
 from sage.all import *
 
-#from pymongo.connection import Connection
+pw_filename = "../../../password"
+password = open(pw_filename, "r").readlines()[0].strip()
+
 from pymongo.mongo_client import MongoClient
-fields = MongoClient(port=37010).numberfields.fields
+C= MongoClient(port=37010)
+C['numberfields'].authenticate('editor', password)
+fields = C.numberfields.fields
+
 
 saving = True 
 

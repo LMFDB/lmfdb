@@ -162,7 +162,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
         q = db.find_one({'group':'gamma1'})
         if q:
             table = q.get('data',{})
-    if table <> {}:
+    if table != {}:
         table = json.loads(table)
     info['table'] = {}
     

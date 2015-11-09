@@ -179,7 +179,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebDict('_character_galois_orbit_embeddings', default_value={}),
             WebCharProperty('character_orbit_rep', modulus=level, save_to_fs=True),
             WebCharProperty('character_used_in_computation', modulus=level, save_to_fs=True),
-            WebStr('space_label', default_value=space_label(level, weight, character), save_to_fs=True),
+            WebStr('space_label', default_value=space_label(level=level, weight=weight, character=character), save_to_fs=True),
             WebStr('galois_orbit_name', value='', save_to_fs=True),
             WebInt('dimension'),
             WebInt('dimension_cusp_forms'),
@@ -246,7 +246,7 @@ from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 def WebModFormSpace_cached(level,weight,character,**kwds):
     if use_cache: 
-        label = space_label(level, weight, character, make_cache_label = True)
+        label = space_label(level=level, weight=weight, character=character, make_cache_label = True)
         M= cache.get(label)
         emf_logger.critical("Looking for cached space:{0}".format(label))
         if M is None:

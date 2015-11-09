@@ -30,7 +30,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Graph' in L.data
 
     def test_Lemf(self):
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/0/a/0/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/')
         assert 'Graph' in L.data
 
     def test_Lgl2maass(self):
@@ -184,7 +184,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_paintSVGholo(self):
         svg = paintSvgHolo(4,6,4,6)
-        assert "/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0" in svg
+        assert "/L/ModularForm/GL2/Q/holomorphic/4/6/1/a/0" in svg
 
     def test_paintSVGchar(self):
         svg = paintSvgChar(1,20,1,12)

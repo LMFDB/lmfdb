@@ -481,6 +481,45 @@ def parse_range2(arg, key, parse_singleton=int):
     else:
         return [key, parse_singleton(arg)]
 
+# Function to parse search box input for finite abelian group
+# invariants, e.g. torsion structure for elliptic curves or genus 2
+# curves
+
+def parse_torsion_structure(L, maxrank=2):
+    r"""
+    Parse a string entered into torsion structure search box
+    '[]' --> []
+    '[n]' --> [str(n)]
+    'n' --> [str(n)]
+    '[m,n]' or '[m n]' --> [str(m),str(n)]
+    'm,n' or 'm n' --> [str(m),str(n)]
+    ... and similarly for up to maxrank factors
+    """
+    # strip <whitespace> or <whitespace>[<whitespace> from the beginning:
+    L1 = re.sub(r'^\s*\[?\s*', '', str(L))
+    # strip <whitespace> or <whitespace>]<whitespace> from the beginning:
+    L1 = re.sub(r'\s*]?\s*$', '', L1)
+    # catch case where there is nothing left:
+    if not L1:
+        return []
+    # This matches a string of 1 or more digits at the start,
+    # optionally followed by up to 3 times (nontrivial <ws> or <ws>,<ws> followed by
+    # 1 or more digits):
+    TORS_RE = re.compile(r'^\d+((\s+|\s*,\s*)\d+){0,%s}$' % (maxrank-1))
+    if TORS_RE.match(L1):
+        if ',' in L1:
+            # strip interior <ws> and use ',' as delimiter:
+            res = [int(a) for a in L1.replace(' ','').split(',')]
+        else:
+            # use whitespace as delimiter:
+            res = [int(a) for a in L1.split()]
+        n = len(res)
+        if all(x>0 for x in res) and all(res[i+1]%res[i]==0 for i in range(n-1)):
+            return res
+    return 'Error parsing input %s.  It needs to be a list of up to %s integers, optionally in square brackets, separated by spaces or a comma, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % (L,maxrank)
+
+
+
 
 def len_val_fn(value):
     """ This creates a SON pair of the type {len:len(value), val:value}, with the len first so lexicographic ordering works.

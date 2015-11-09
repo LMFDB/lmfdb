@@ -422,15 +422,43 @@ class WebObject(object):
         rec = coll.find_one(self.key_dict())
         return rec
 
+    def authorize(self):
+        r"""
+        Need to be authorized to insert data
+        """
+        from lmfdb.base import getDBConnection
+        from os.path import dirname, join
+        pw_filename = join(dirname(dirname(__file__)), "password")
+        user = 'editor'
+        password = open(pw_filename, "r").readlines()[0].strip()
+        C = getDBConnection()
+        C["modularforms2"].authenticate(user,password)
+
+    def logout(self):
+        r"""
+        Logout authorized user.
+        """
+        import lmfdb.base
+        from lmfdb.base import getDBConnection        
+        C = getDBConnection()
+        C["modularforms2"].logout()
+        # log back in with usual read-only access
+        lmfdb.base._init(lmfdb.base.dbport)
+        
+
+        
+        
     def save_to_db(self, update = True):
         r"""
          Saves ```self``` to the database, i.e.
          save the meta record and the file in the gridfs file system.
         """
         fs = self._files
+        self.authorize()
         file_key = self.file_key_dict()
         coll = self._file_collection
         if fs.exists(file_key):
+            emf_logger.debug("File exists with key={0}".format(file_key))
             if not update:
                 return True
             else:
@@ -445,25 +473,29 @@ class WebObject(object):
             t = fs.put(s, **file_key)
             emf_logger.debug("Inserted file t={0}, filekey={1}".format(t,file_key))
         except Exception, e:
+            emf_logger.debug("Could not insert file s={0}, filekey={1}".format(s,file_key))     
             emf_logger.warn("Error inserting record: {0}".format(e))
         #fid = coll.find_one(key)['_id']
         # insert extended record
         if not self._use_separate_db:
+            self.logout()
             return True
         coll = self._collection
         key = self.key_dict()
         #key.update(file_key)
         #print meta_key
         dbd = self.db_dict()
-        emf_logger.debug("update with dbd={0}".format(dbd.keys()))
+        emf_logger.debug("update with dbd={0} and key:{1}".format(dbd,key))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
             if not update:
+                self.logout()
                 return True
             else:
-                coll.update(key, dbd)
+                coll.update_one(key,{"$set":dbd},upsert=True)
         else:
             coll.insert(dbd)
+        self.logout()
         return True
         
 
