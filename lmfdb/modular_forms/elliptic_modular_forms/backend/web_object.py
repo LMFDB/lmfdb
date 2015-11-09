@@ -428,11 +428,25 @@ class WebObject(object):
         """
         from lmfdb.base import getDBConnection
         from os.path import dirname, join
-        pw_filename = join(dirname(dirname(__file__)), "password_editor")
+        pw_filename = join(dirname(dirname(__file__)), "password")
         user = 'editor'
         password = open(pw_filename, "r").readlines()[0].strip()
         C = getDBConnection()
         C["modularforms2"].authenticate(user,password)
+
+    def logout(self):
+        r"""
+        Logout authorized user.
+        """
+        import lmfdb.base
+        from lmfdb.base import getDBConnection        
+        C = getDBConnection()
+        C["modularforms2"].logout()
+        # log back in with usual read-only access
+        lmfdb.base._init(lmfdb.base.dbport)
+        
+
+        
         
     def save_to_db(self, update = True):
         r"""
@@ -464,6 +478,7 @@ class WebObject(object):
         #fid = coll.find_one(key)['_id']
         # insert extended record
         if not self._use_separate_db:
+            self.logout()
             return True
         coll = self._collection
         key = self.key_dict()
@@ -474,11 +489,13 @@ class WebObject(object):
         #meta['fid'] = fid
         if coll.find(key).count()>0:
             if not update:
+                self.logout()
                 return True
             else:
                 coll.update_one(key,{"$set":dbd},upsert=True)
         else:
             coll.insert(dbd)
+        self.logout()
         return True
         
 
