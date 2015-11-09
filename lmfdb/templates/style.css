@@ -1615,3 +1615,20 @@ div.codebox {
     box-shadow: 3px 3px 3px #8080FF;
     white-space: pre;
 }
+
+/* Styling of Maass form plot */
+
+div.maassformplot {
+        width: 720px;
+        height: 800px;
+        overflow: hidden;
+        position: relative;
+}
+
+div.maassformplot img {
+        position: absolute;
+        top: -200px;
+        left: -870px;
+}
+
+/* End of styling of Maass form plot */

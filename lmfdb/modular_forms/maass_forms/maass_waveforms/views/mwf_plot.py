@@ -48,7 +48,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
     search = {'level1': yMin, 'level2': yMax, 'char': char,
               'R1': xMin, 'R2': xMax, 'Newform' : None, 'weight' : weight}
     fields = {'Eigenvalue', 'Level', 'Symmetry'}
-    forms = db.get_Maass_forms(search, fields, verbose = 1,
+    forms = db.get_Maass_forms(search, fields, 
                                do_sort = False, limit = 10000)
 
     # Loop through all forms and add a clickable dot for each

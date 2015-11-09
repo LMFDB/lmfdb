@@ -71,7 +71,8 @@ $('#coeffs').css('width','650px')
 </div>
 {% endif %}
 
-<h1> A {{KNOWL('mf.maass.mwf',title='Maass waveform')}} on  \(\Gamma_{0}({{ MF.level }} )\) with {{KNOWL('mf.maass.mwf.spectralparameter',title='spectral parameter')}} R= {{MF.R}}</h1>
+<h2>  {{KNOWL('mf.maass.mwf.spectralparameter',title='Spectral parameter')}} </h2>
+    $R= {{MF.R}}$
 
 {% if MF is defined %}
 {% set table = MF.table %}
@@ -79,7 +80,17 @@ $('#coeffs').css('width','650px')
 {% set ncols = table.ncols %}
 {% set data = table.data %}
 
-<h2>Fourier Coefficients</h2>
+ <h2> {{KNOWL('mf.maass.mwf.plot',title='Plot of the Maass form')}} in the hyperbolic plane </h2>
+
+ {% if plotlink %}
+    <div class = "maassformplot">
+    <img src="{{ plotlink|safe }}" >
+    </div>
+ {% else %}
+    <div>No plot generated yet.</div>
+ {% endif %}
+
+<h2>The first few {{KNOWL('mf.maass.mwf.fourierexpansion',title='Fourier Coefficients')}}</h2>
 {% if MF.coeffs is defined and MF.num_coeff > 0%}
 {# <table class="ntdata" id="coeffs" valign="top" border="1"> #}
 <table>
@@ -181,6 +192,7 @@ There are no Fourier coefficients supplied for this Maass form.
 There is no Maass waveform supplied.
 
 {% endif %}
+
 
 
 {% endblock content %}
