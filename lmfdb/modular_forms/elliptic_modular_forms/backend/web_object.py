@@ -444,6 +444,7 @@ class WebObject(object):
         file_key = self.file_key_dict()
         coll = self._file_collection
         if fs.exists(file_key):
+            emf_logger.debug("File exists with key={0}".format(file_key))
             if not update:
                 return True
             else:
@@ -458,6 +459,7 @@ class WebObject(object):
             t = fs.put(s, **file_key)
             emf_logger.debug("Inserted file t={0}, filekey={1}".format(t,file_key))
         except Exception, e:
+            emf_logger.debug("Could not insert file s={0}, filekey={1}".format(s,file_key))     
             emf_logger.warn("Error inserting record: {0}".format(e))
         #fid = coll.find_one(key)['_id']
         # insert extended record
@@ -468,13 +470,13 @@ class WebObject(object):
         #key.update(file_key)
         #print meta_key
         dbd = self.db_dict()
-        emf_logger.debug("update with dbd={0}".format(dbd.keys()))
+        emf_logger.debug("update with dbd={0} and key:{1}".format(dbd,key))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
             if not update:
                 return True
             else:
-                coll.update(key, dbd)
+                coll.update_one(key,{"$set":dbd},upsert=True)
         else:
             coll.insert(dbd)
         return True
