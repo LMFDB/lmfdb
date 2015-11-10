@@ -453,6 +453,7 @@ class WebObject(object):
          Saves ```self``` to the database, i.e.
          save the meta record and the file in the gridfs file system.
         """
+        import pymongo
         fs = self._files
         self.authorize()
         file_key = self.file_key_dict()
@@ -493,6 +494,7 @@ class WebObject(object):
                 return True
             else:
                 if hasattr(coll,"update_one"):
+                    emf_logger.critical("coll has update_one! pymongo={0}".format(pymongo.version_tuple()))
                     coll.update_one(key,{"$set":dbd},upsert=True)
                 else:
                     coll.update(key,{"$set":dbd},upsert=True)
