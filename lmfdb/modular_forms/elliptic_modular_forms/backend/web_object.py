@@ -492,7 +492,10 @@ class WebObject(object):
                 self.logout()
                 return True
             else:
-                coll.update_one(key,{"$set":dbd},upsert=True)
+                if hasattr(coll,"update_one"):
+                    coll.update_one(key,{"$set":dbd},upsert=True)
+                else:
+                    coll.update(key,{"$set":dbd},upsert=True)
         else:
             coll.insert(dbd)
         self.logout()
