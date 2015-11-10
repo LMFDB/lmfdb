@@ -493,8 +493,7 @@ class WebObject(object):
                 self.logout()
                 return True
             else:
-                if hasattr(coll,"update_one"):
-                    emf_logger.critical("coll has update_one! pymongo={0}".format(pymongo.version_tuple))
+                if pymongo.version_tuple[0]>2:
                     coll.update_one(key,{"$set":dbd},upsert=True)
                 else:
                     coll.update(key,{"$set":dbd},upsert=True)
