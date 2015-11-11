@@ -94,7 +94,7 @@ class WebHeckeOrbits(WebDict):
         super(WebHeckeOrbits, self).__init__(
             name, None, save_to_db=True, save_to_fs=False,**kwds
             )
-        emf_logger.critical("Initiated Hecke orbits!")
+        emf_logger.debug("Initiated Hecke orbits!")
         
     def to_db(self):
         return self.value().keys()
@@ -103,7 +103,7 @@ class WebHeckeOrbits(WebDict):
         return self.to_db()
 
     def from_db(self, l):
-        emf_logger.critical("Get Hecke orbits for labels : {0}!".format(l))
+        emf_logger.debug("Get Hecke orbits for labels : {0}!".format(l))
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached,WebNewForm
         res = {}
         for lbl in l:
@@ -113,7 +113,7 @@ class WebHeckeOrbits(WebDict):
             res[lbl]=F
 #            return {lbl : WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
 #                for lbl in l}
-        emf_logger.critical("Got Hecke orbits!")
+        emf_logger.debug("Got Hecke orbits!")
 
         return res
 
@@ -196,14 +196,14 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebFloat('version', value=float(emf_version), save_to_fs=True),
             WebList('zeta_orders',value=[],save_to_db=True)
                     )
-        emf_logger.critical("Have set properties of space 1 !!")
+        emf_logger.debug("Have set properties of space 1 !!")
         super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],
             dbkey='space_label',
             collection_name='webmodformspace',
             update_from_db=update_from_db)
-        emf_logger.critical("Have set properties of space 2 !!")
-        emf_logger.critical("orbits={0}".format(self.hecke_orbits))                
+        emf_logger.debug("Have set properties of space 2 !!")
+        emf_logger.debug("orbits={0}".format(self.hecke_orbits))                
 
     def init_dynamic_properties(self):
         if self.character.is_trivial():
@@ -249,13 +249,13 @@ def WebModFormSpace_cached(level,weight,character,**kwds):
     if use_cache: 
         label = space_label(level=level, weight=weight, character=character, make_cache_label = True)
         M= cache.get(label)
-        emf_logger.critical("Looking for cached space:{0}".format(label))
+        emf_logger.debug("Looking for cached space:{0}".format(label))
         if M is None:
             emf_logger.debug("M was not in cache!")
             M = WebModFormSpace(level,weight,character,**kwds)
             cache.set(label, M, timeout=5 * 60)
         else:
-            emf_logger.critical("M was in cache!")
+            emf_logger.debug("M was in cache!")
     else:
         M = WebModFormSpace(level,weight,character,**kwds)
     return M
