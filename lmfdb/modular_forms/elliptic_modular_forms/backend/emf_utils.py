@@ -105,13 +105,18 @@ def parse_range(arg, parse_singleton=int):
 
 
 def extract_limits_as_tuple(arg, field, defaults=(1, 10)):
-    if type(arg.get(field)) == dict:
+    fld = arg.get(field)
+    if isinstance(fld,basestring):
+        tmp = parse_range(fld)
+        limits = (tmp['min'],tmp['max'])
+    elif isinstance(fld,(tuple,list)):
+        limits = (int(fld[0]),int(fld[1]))
+    elif isinstance(fld,dict):
         limits = (arg[field]['min'], arg[field]['max'])
+    elif arg.get(field):
+        limits = (arg[field], arg[field])
     else:
-        if arg.get(field):
-            limits = (arg[field], arg[field])
-        else:
-            limits = defaults
+        limits = defaults
     return limits
 
 
