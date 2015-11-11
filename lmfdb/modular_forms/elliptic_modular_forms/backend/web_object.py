@@ -412,7 +412,7 @@ class WebObject(object):
         and values given by the corresponding values of self. We also apply the to_fs() function to the values
         to assure that we have the right data type (this is handy for complex conversions as well).
         """
-    return { p.name : p.to_fs() for p in self._fs_properties }
+        return { p.name : p.to_fs() for p in self._fs_properties }
 
     def get_db_record(self):
         r"""
