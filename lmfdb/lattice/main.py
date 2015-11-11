@@ -56,9 +56,9 @@ def lattice_render_webpage():
         counts = get_stats().counts()
         dim_list= range(2, counts['max_dim']+1, 1)
         class_number_list=range(1, counts['max_class_number']+1, 1)
-        det_list_endpoints = [1, 400, 800, 1200]
-        if counts['max_det']>1200:
-            det_list_endpoints=det_list_endpoints+range(1200, int(round(counts['max_det']/400)+2)*400, 400)
+        det_list_endpoints = [1, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+#        if counts['max_det']>3000:
+#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list}
         credit = lattice_credit
