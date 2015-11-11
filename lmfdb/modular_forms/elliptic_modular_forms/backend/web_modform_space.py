@@ -180,6 +180,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebCharProperty('character_orbit_rep', modulus=level, save_to_fs=True),
             WebCharProperty('character_used_in_computation', modulus=level, save_to_fs=True),
             WebStr('space_label', default_value=space_label(level=level, weight=weight, character=character), save_to_fs=True),
+            WebStr('space_orbit_label', value='', save_to_db=True),            
             WebStr('galois_orbit_name', value='', save_to_fs=True),
             WebInt('dimension'),
             WebInt('dimension_cusp_forms'),
