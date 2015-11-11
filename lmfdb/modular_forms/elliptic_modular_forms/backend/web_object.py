@@ -387,7 +387,7 @@ class WebObject(object):
         the values are the corresponding values of ```self```.
         """
         emf_logger.debug('key: {0}'.format(self._key))
-        emf_logger.debug('properties: {0}'.format(self._properties))
+        #emf_logger.debug('properties: {0}'.format(self._properties))
         return { key : self._properties[key].to_db() for key in self._file_key }
 
     def key_dict(self):
@@ -412,7 +412,7 @@ class WebObject(object):
         and values given by the corresponding values of self. We also apply the to_fs() function to the values
         to assure that we have the right data type (this is handy for complex conversions as well).
         """
-        return { p.name : p.to_fs() for p in self._fs_properties }
+    return { p.name : p.to_fs() for p in self._fs_properties }
 
     def get_db_record(self):
         r"""
@@ -486,7 +486,7 @@ class WebObject(object):
         #key.update(file_key)
         #print meta_key
         dbd = self.db_dict()
-        emf_logger.debug("update with dbd={0} and key:{1}".format(dbd,key))
+        #emf_logger.debug("update with dbd={0} and key:{1}".format(dbd,key))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
             if not update:
