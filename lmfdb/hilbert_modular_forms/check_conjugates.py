@@ -15,21 +15,25 @@ Initial version (University of Warwick 2015) Aurel Page
 import sys
 sys.path.append("../..");
 import pymongo
-from lmfdb import base
-from lmfdb.website import dbport
+from lmfdb.website import DEFAULT_DB_PORT as dbport
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals, conjideals, str2ideal)
 
-print "calling base._init()"
-dbport=37010
-base._init(dbport, '')
-print "getting connection"
-conn = base.getDBConnection()
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+
+print "authenticating on the hmfs database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['hmfs'].authenticate(username, password)
+
 print "setting hmfs, fields and forms"
-hmfs = conn.hmfs
+hmfs = C.hmfs
 fields = hmfs.fields
 forms = hmfs.forms
-nfcurves = conn.elliptic_curves.nfcurves
+nfcurves = C.elliptic_curves.nfcurves
 
 # Cache of WebNumberField and FieldData objects to avoid re-creation
 WNFs = {}
@@ -209,11 +213,13 @@ def fix_one_label(lab, reverse=False):
         else:
             return chr(ord(lab[0])+int(1))+lab[1]
 
-def fix_labels(min_level_norm=0, max_level_norm=None, fix=False, reverse=False):
+def fix_labels(field_label, min_level_norm=0, max_level_norm=None, fix_forms=False, fix_curves=False, reverse=False):
     r""" One-off utility to correct labels 'aa'->'ba'->'ca', ..., 'az'->'bz'->'cz'
     """
+    from sage.databases.cremona import class_to_int
     count = 0
     query = {}
+    query['field_label'] = field_label
     query['level_norm'] = {'$gte' : int(min_level_norm)}
     if max_level_norm:
         query['level_norm']['$lte'] = int(max_level_norm)
@@ -239,8 +245,9 @@ def fix_labels(min_level_norm=0, max_level_norm=None, fix=False, reverse=False):
         fix_data['label_suffix'] = lab
         fix_data['label'] = f['label'].replace(oldlab,lab)
         fix_data['short_label'] = f['short_label'].replace(oldlab,lab)
+        fix_data['label_nsuffix'] = class_to_int(lab)
         print("using fixed data %s for form %s" % (fix_data,f['label']))
-        if fix:
+        if fix_forms:
             forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
 
         # find associated elliptic curve and fix that too (where appropriate)
@@ -254,10 +261,102 @@ def fix_labels(min_level_norm=0, max_level_norm=None, fix=False, reverse=False):
                 fix_data['class_label'] = e['class_label'].replace(oldlab,lab)
                 fix_data['short_class_label'] = e['short_class_label'].replace(oldlab,lab)
                 print("using fixed data %s for curve %s" % (fix_data,e['label']))
-                if fix:
-                    nfcurves.update({'label': e['label']}, {"$set": fix_data}, upsert=True)
+                if fix_curves:
+                    res = nfcurves.update_one({'_id': e['_id']}, {"$set": fix_data}, upsert=True)
+                    assert res.matched_count==1
         else:
             print("No elliptic curve to fix")
+
+def fix_curve_labels(field_label, min_cond_norm=0, max_cond_norm=None, fix_curves=False, reverse=False):
+    r""" One-off utility to correct labels 'aa'->'ba'->'ca', ..., 'az'->'bz'->'cz'
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_norm'] = {'$gte' : int(min_cond_norm)}
+    if max_cond_norm:
+        query['conductor_norm']['$lte'] = int(max_cond_norm)
+    else:
+        max_cond_norm = oo
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to examine of conductor norm between %s and %s."
+          % (curves_to_fix.count(),min_cond_norm,max_cond_norm))
+    if curves_to_fix.count() == 0:
+        return None
+    for c in curves_to_fix:
+        count = count+1
+        if count%100==0: print("%s: %s" % (count, c['label']))
+        lab = c['iso_label']
+        if len(lab)==1:
+            continue
+        if c['iso_label'][-2:] != lab:
+            print("Incorrect iso_label %s in curve %s" % (lab,c['label']))
+            return
+        oldlab = lab
+        lab = fix_one_label(lab, reverse=reverse)
+        fix_data = {}
+        fix_data['iso_label'] = lab
+        fix_data['label'] = c['label'].replace(oldlab,lab)
+        fix_data['short_label'] = c['short_label'].replace(oldlab,lab)
+        fix_data['class_label'] = c['class_label'].replace(oldlab,lab)
+        fix_data['short_class_label'] = c['short_class_label'].replace(oldlab,lab)
+        print("using fixed data %s for curve %s" % (fix_data,c['label']))
+        if fix_curves:
+            res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+            assert res.matched_count==1
+
+def fix_one_curve_label(field_label, cond_label, old_iso_label, new_iso_label, fix_curves=False):
+    r""" One-off utility to correct class label
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_label'] = cond_label
+    query['iso_label'] = old_iso_label
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to fix"   % curves_to_fix.count())
+    if curves_to_fix.count() == 0:
+        return None
+    for c in curves_to_fix:
+        oldlab = old_iso_label
+        lab = new_iso_label
+        fix_data = {}
+        fix_data['iso_label'] = lab
+        fix_data['label'] = c['label'].replace(oldlab,lab)
+        fix_data['short_label'] = c['short_label'].replace(oldlab,lab)
+        fix_data['class_label'] = c['class_label'].replace(oldlab,lab)
+        fix_data['short_class_label'] = c['short_class_label'].replace(oldlab,lab)
+        print("using fixed data %s for curve %s" % (fix_data,c['label']))
+        if fix_curves:
+            res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+            assert res.matched_count==1
+
+def set_one_curve_label(id, new_iso_label, fix_curves=False):
+    r""" One-off utility to correct class label
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['_id'] = id
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to fix"   % curves_to_fix.count())
+    if curves_to_fix.count() == 0:
+        return None
+    for c in curves_to_fix:
+        oldlab = c['iso_label']
+        lab = new_iso_label
+        fix_data = {}
+        fix_data['iso_label'] = lab
+        fix_data['label'] = c['label'].replace(oldlab,lab)
+        fix_data['short_label'] = c['short_label'].replace(oldlab,lab)
+        fix_data['class_label'] = c['class_label'].replace(oldlab,lab)
+        fix_data['short_class_label'] = c['short_class_label'].replace(oldlab,lab)
+        print("using fixed data %s for curve %s" % (fix_data,c['label']))
+        if fix_curves:
+            res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+            assert res.matched_count==1
 
 def add_numeric_label_suffixes(min_level_norm=0, max_level_norm=None, fix=False):
     r""" One-off utility to add a numeric conversion of the letter-coded

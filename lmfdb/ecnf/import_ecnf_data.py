@@ -71,14 +71,21 @@ from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 
-print "calling base._init()"
-dbport = 37010
-init(dbport, '')
-print "getting connection"
-conn = getDBConnection()
+from lmfdb.website import DEFAULT_DB_PORT as dbport
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+
+print "authenticating on the elliptic_curves database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['elliptic_curves'].authenticate(username, password)
 print "setting nfcurves"
-nfcurves = conn.elliptic_curves.nfcurves
-qcurves = conn.elliptic_curves.curves
+nfcurves = C.elliptic_curves.nfcurves
+qcurves = C.elliptic_curves.curves
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
+
 
 # The following ensure_index command checks if there is an index on
 # label, conductor, rank and torsion. If there is no index it creates
@@ -110,7 +117,7 @@ def nf_lookup(label):
         # print "We already have it: %s" % nf_lookup_table[label]
         return nf_lookup_table[label]
     # print "We do not have it yet, finding in database..."
-    field = conn.numberfields.fields.find_one({'label': label})
+    field = C.numberfields.fields.find_one({'label': label})
     if not field:
         raise ValueError("Invalid field label: %s" % label)
     # print "Found it!"
