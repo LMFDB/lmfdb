@@ -1,5 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
+<h2>Available samples</h2>
+{% include [ [ 'includes/avail/', col.name(), '_avail_forms.html']|join, 'Not_available.html'] %}
 
 {% if not error %}
 
