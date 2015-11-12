@@ -104,7 +104,7 @@ def parse_range(arg, parse_singleton=int):
         return parse_singleton(arg)
 
 
-def extract_limits_as_tuple(arg, field, defaults=(1, 10)):
+def extract_limits_as_tuple(arg, field):
     fld = arg.get(field)
     if isinstance(fld,basestring):
         tmp = parse_range(fld)
@@ -116,7 +116,7 @@ def extract_limits_as_tuple(arg, field, defaults=(1, 10)):
     elif arg.get(field):
         limits = (arg[field], arg[field])
     else:
-        limits = defaults
+        limits = None
     return limits
 
 
@@ -379,7 +379,11 @@ def dirichlet_character_conrey_galois_orbits_reps(N):
                 continue
             Dl.remove(xx)
     return reps
-    
+
+@cached_function
+def conrey_character_from_number(N,c):
+    D = DirichletGroup_conrey(N)
+    return DirichletCharacter_conrey(D,c)
 
 @cached_function
 def dimension_from_db(level,weight,chi=None,group='gamma0'):

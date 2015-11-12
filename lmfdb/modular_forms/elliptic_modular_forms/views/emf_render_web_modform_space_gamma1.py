@@ -55,8 +55,9 @@ def render_web_modform_space_gamma1(level=None, weight=None, character=None, lab
 
 
 def set_info_for_gamma1(level,weight,weight2=None):
-    from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import dimension_from_db,dirichlet_character_conrey_galois_orbits_reps
-    from sage.all import DirichletGroup
+    from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import dimension_from_db,dirichlet_character_conrey_galois_orbits_reps,conrey_character_from_number
+    
+    from sage.all import DirichletGroup,dimension_new_cusp_forms
     from dirichlet_conrey import DirichletGroup_conrey
     G = dirichlet_character_conrey_galois_orbits_reps(level)
     dim_table = dimension_from_db(level,weight,chi='all',group='gamma1')
@@ -69,6 +70,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
     max_gal_count = 0
     from  lmfdb.base import getDBConnection
     db = getDBConnection()['modularforms2']['webmodformspace']
+    db_dim = getDBConnection()['modularforms2']['dimension_table']
     for x in G:
         xi = x.number()
         table['galois_orbits_reps'][xi]= {'head' : "\(\chi_{" + str(level) + "}(" + str(xi) + ",\cdot) \)",
@@ -91,12 +93,16 @@ def set_info_for_gamma1(level,weight,weight2=None):
             #     d = -1; t = 0
             r = db.find_one({'level':int(level),'weight':int(k),'character':{"$in":orbit}})
             if not r is None:
-                d = r.get('dimension',"n/a")
+                d = r.get('dimension_new_cusp_forms',"n/a")
                 url = url_for(
                     'emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
             else:
+                x = conrey_character_from_number(level,xi)
+                d = dimension_new_cusp_forms(x.sage_character(),k)
+                #q = db_dim.find({'N':level,'k':k,'i':xi})
+                #d = q.get('d','n/a')
                 url = ''
-                d = "n/a"
+                #d = "n/a"
             table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d}
     table['galois_orbits_reps_numbers']=table['galois_orbits_reps'].keys()
     table['galois_orbits_reps_numbers'].sort()

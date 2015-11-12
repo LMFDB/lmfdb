@@ -31,8 +31,7 @@ from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
 from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
 
-from emf_render_navigation import render_elliptic_modular_form_navigation_wp
-
+from emf_render_navigation import render_elliptic_modular_form_navigation_wp,_browse_web_modform_spaces_in_ranges
 
 emf_logger.setLevel(int(10))
 
@@ -49,6 +48,20 @@ def body_class():
 ###########################################
 
 met = ['GET', 'POST']
+
+
+
+# Used to be in the experimental part
+@emf.route("/ranges/", methods=["GET"])
+def browse_web_modform_spaces_in_ranges(**kwds):
+    r"""
+    Browse spaces with level and weight within given ranges. level and weight should be of the form N1-N2 and k1-k2
+
+    """
+    emf_logger.debug("request.args={0}".format(request.args))
+    level=request.args['level']; weight=request.args['weight']
+    return _browse_web_modform_spaces_in_ranges(level=level,weight=weight)
+
 
 @emf.route("/", methods=met)
 @emf.route("/<int:level>/", methods=met)
@@ -198,5 +211,31 @@ def get_args(request, level=0, weight=0, character=-1, label='', keys=[]):
         if key in dd:
             info[key] = my_get(dd, key, '', str)
     return info
+
+###
+###  Routines that used to be in /experimental/ folder.
+###
+@emf.route("/Dots/<min_level>/<max_level>/<min_weight>/<max_weight>/",methods=met)
+def show_dots(min_level, max_level, min_weight, max_weight):
+    info = {}
+    info['contents'] = [paintSvgHolomorphic(min_level, max_level, min_weight, max_weight,char=1)]
+    info['min_level'] = min_level
+    info['max_level'] = max_level
+    info['min_weight'] = min_weight
+    info['max_weight'] = max_weight
+    return render_template("experimental/emf_browse_graph.html", title='Browsing dimensions of modular forms in the database', **info)
+
+
+@emf.route("/DotsPlot/<min_level>/<max_level>/<min_weight>/<max_weight>/<complete>/",methods=met)
+def show_dots2(min_level, max_level, min_weight, max_weight,complete):
+    info = {}
+    char = 1
+    info['contents'] = [paintSvgHolomorphic2(min_level, max_level, min_weight, max_weight,char,complete=complete)]
+    info['min_level'] = min_level
+    info['max_level'] = max_level
+    info['min_weight'] = min_weight
+    info['max_weight'] = max_weight
+    return render_template("experimental/emf_browse_graph.html", title='Browsing dimensions of modular forms in the database', **info)
+
 
 
