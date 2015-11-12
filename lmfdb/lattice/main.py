@@ -8,7 +8,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, web_latex_split_on_pm
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, web_latex_split_on_pm, comma
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt
@@ -56,9 +56,9 @@ def lattice_render_webpage():
         counts = get_stats().counts()
         dim_list= range(2, counts['max_dim']+1, 1)
         class_number_list=range(1, counts['max_class_number']+1, 1)
-        det_list_endpoints = [1, 400, 800, 1200]
-        if counts['max_det']>1200:
-            det_list_endpoints=det_list_endpoints+range(1200, int(round(counts['max_det']/400)+2)*400, 400)
+        det_list_endpoints = [1, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+#        if counts['max_det']>3000:
+#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list}
         credit = lattice_credit
@@ -117,7 +117,7 @@ def lattice_search(**args):
                 if check is not None:
                     return check
     info['query'] = dict(query)
-    res = C.Lattices.lat.find(query).sort([('level', ASC), ('label', ASC)])
+    res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
     nres = res.count()
     count = 100
 
@@ -172,7 +172,7 @@ def render_lattice_webpage(**args):
     info['hermite']=str(f['hermite'])
     info['minimum']=int(f['minimum'])
     info['kissing']=int(f['kissing'])
-    info['shortest']=str([tuple(v) for v in f['shortest']]).strip('[').strip(']').replace('),', '), ')
+    info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
     info['aut']=int(f['aut'])
 
     ncoeff=20
@@ -243,15 +243,13 @@ def vect_to_sym(v):
 
 
 
-
-
 @lattice_page.route('/theta_display/<label>/<number>')
 def theta_display(label, number):
     try:
         number = int(number)
     except:
-        number = 30
-    if number < 30:
+        number = 20
+    if number < 20:
         number = 30
     if number > 150:
         number = 150

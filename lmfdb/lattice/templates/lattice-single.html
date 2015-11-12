@@ -11,10 +11,10 @@
 {% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
-<h2> {{ KNOWL('lattice.gram_matrix', title='Gram Matrix') }} </h2>
+<h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
 <p>${{info.gram}}$</p>
 
-<h2> Lattice Invariants </h2>
+<h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }} </h2>
 
 <table>
     <tr><td align=right>{{ KNOWL('lattice.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
@@ -25,8 +25,16 @@
     <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>${{info.minimum }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
-    <tr><td align=right>Normalized {{ KNOWL('lattice.minimal_vector', title='minimal vector')}} list:</td><td>${{info.shortest }}$</td></tr>
-    <tr><td align=right>Group order:</td><td>${{info.aut }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vector')}} list:</td>
+<td>
+<table><tr>
+{% for n in info.shortest %}
+${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
+{% endfor %}</tr>
+</table>
+</td></tr>
+    
 </table>
 
 <h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
@@ -52,8 +60,8 @@
 <h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>
 
 <table>
-<tr><td align=right>Class number:</td><td>${{info.class_number }}$</td></tr>
-<tr><td align=right>Genus representatives:</td><td>
+<tr><td align=right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
+<tr><td align=right>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
 {% for n in info.genus_reps %}
 ${{n}}$
 {% endfor %}
@@ -80,9 +88,9 @@ ${{n}}$
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 <script type="text/javascript">
-var number_of_coefficients = 10;
+var number_of_coefficients = 20;
 function more_handler(evt) {
-    number_of_coefficients += number_of_coefficients;
+    number_of_coefficients = number_of_coefficients + 10;
     evt.preventDefault();
     $("#theta_output").load("{{info.theta_display}}"+number_of_coefficients,
         function() {
