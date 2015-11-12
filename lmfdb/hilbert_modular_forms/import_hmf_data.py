@@ -9,6 +9,7 @@ import subprocess
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=dbport)
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
