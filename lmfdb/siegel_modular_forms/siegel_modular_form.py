@@ -97,20 +97,21 @@ def ModularForm_GSp4_Q_Sp4Z_j():
     bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '/ModularForm/GSp/Q/Sp4Z_j')]
     error = False
-    jrange = xrange(0, 11)
-    krange = xrange(10, 20)
+    jrange = xrange(0, 21)
+    krange = xrange(10, 21)
     if request.args.get('j'):
         jr = parse_range(request.args.get('j'))
         if type(jr) is int:
-            jrange = xrange(jr, jr+10);
+            jrange = xrange(jr, jr+20+1);
         else:
             jrange = xrange(jr['$gte'], jr['$lte'])
     if request.args.get('k'):
         kr = parse_range(request.args.get('k'))
         if type(kr) is int:
-            krange = xrange(kr, kr+10);
+            krange = xrange(kr, kr+10+1);
         else:
             krange = xrange(kr['$gte'], kr['$lte'])
+    jrange = [x for x in jrange if x%2==0]
     try:
         dimtable = dimensions.dimension_table_Sp4Z_j(krange, jrange)
     except:

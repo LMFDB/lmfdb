@@ -28,8 +28,10 @@ table.ntdata thead th.spaceleft {
   vertical-align: top;
 }
 </style>
-<p>Below are the dimensions of spaces of Siegel Modular Forms with <a KNOWL="mf.siegel.vector.full">full
-level structure</a>.</p>
+<p>Below are the dimensions of spaces of Siegel Modular Forms with <a KNOWL="mf.siegel.weight.vector">vector weights<a> and <a KNOWL="mf.siegel.level.full">$\mathrm{Sp}(4, \mathbb{Z})$</a>.</p>
+<h2>Featured Spaces</h2>
+<span style="padding:3em"><a href="/ModularForm/GSp/Q/Sp4Z/">$M_k(\mathrm{Sp}(4, \mathbb{Z}))$</a></span>
+<span style="padding:3em"><a href="/ModularForm/GSp/Q/Sp4Z_2/">$M_{k,2}(\mathrm{Sp}(4, \mathbb{Z}))$</a></span>
 <h2>Dimensions</h2>
 <table class="ntdata">
   <thead>
@@ -63,11 +65,11 @@ level structure</a>.</p>
   </tr>
   {% endfor %}
 </table>
-
+<p> Enter either a $k$ and $j$ to have in the upper left corner or a range of weights to display.</p>
 <form id="dimensionForm" action="/ModularForm/GSp/Q/Sp4Z_j" method="get">
  <span>k:</span> <input id="k" name="k"/>
   <span>j:</span><input id="j" name="j"/>
-  <button type="submit" value="submit">Find</button>
+  <button type="submit" value="submit">Recompute table</button>
 </form>
 
 {% else %}
