@@ -8,7 +8,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, web_latex_split_on_pm
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, web_latex_split_on_pm, comma
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt
@@ -176,10 +176,9 @@ def render_lattice_webpage(**args):
     info['aut']=int(f['aut'])
 
     ncoeff=20
-    max_stored=len(f['theta_series'])
     coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
     info['theta_series']=my_latex(print_q_expansion(coeff))
-    info['theta_display'] = url_for(".theta_display", label=f['label'], max_stored=max_stored, number="")
+    info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
 
     info['class_number']=int(f['class_number'])
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
@@ -244,18 +243,16 @@ def vect_to_sym(v):
 
 
 
-
-
 @lattice_page.route('/theta_display/<label>/<number>')
-def theta_display(label, max_stored, number):
+def theta_display(label, number):
     try:
         number = int(number)
     except:
+        number = 20
+    if number < 20:
         number = 30
-    if number < 30:
-        number = 30
-    if number > max_stored:
-        number = max_stored
+    if number > 150:
+        number = 150
     C = getDBConnection()
     data = C.Lattices.lat.find_one({'label': label})
     coeff=[data['theta_series'][i] for i in range(number+1)]
