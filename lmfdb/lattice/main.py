@@ -117,7 +117,7 @@ def lattice_search(**args):
                 if check is not None:
                     return check
     info['query'] = dict(query)
-    res = C.Lattices.lat.find(query).sort([('level', ASC), ('label', ASC)])
+    res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
     nres = res.count()
     count = 100
 
@@ -172,13 +172,14 @@ def render_lattice_webpage(**args):
     info['hermite']=str(f['hermite'])
     info['minimum']=int(f['minimum'])
     info['kissing']=int(f['kissing'])
-    info['shortest']=str([tuple(v) for v in f['shortest']]).strip('[').strip(']').replace('),', '), ')
+    info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
     info['aut']=int(f['aut'])
 
     ncoeff=20
+    max_stored=len(f['theta_series'])
     coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
     info['theta_series']=my_latex(print_q_expansion(coeff))
-    info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
+    info['theta_display'] = url_for(".theta_display", label=f['label'], max_stored=max_stored, number="")
 
     info['class_number']=int(f['class_number'])
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
@@ -246,15 +247,15 @@ def vect_to_sym(v):
 
 
 @lattice_page.route('/theta_display/<label>/<number>')
-def theta_display(label, number):
+def theta_display(label, max_stored, number):
     try:
         number = int(number)
     except:
         number = 30
     if number < 30:
         number = 30
-    if number > 150:
-        number = 150
+    if number > max_stored:
+        number = max_stored
     C = getDBConnection()
     data = C.Lattices.lat.find_one({'label': label})
     coeff=[data['theta_series'][i] for i in range(number+1)]
