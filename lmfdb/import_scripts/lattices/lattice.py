@@ -73,7 +73,7 @@ def do_import(ll):
         lattice = data
     else:
         print "lattice already in the database"
-        lattice.update(data)
+        lattice.update(data, upsert=True)
     if saving:
         lat.save(lattice)
 
