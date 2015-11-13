@@ -84,6 +84,7 @@ C['elliptic_curves'].authenticate(username, password)
 print "setting nfcurves"
 nfcurves = C.elliptic_curves.nfcurves
 qcurves = C.elliptic_curves.curves
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 
 # The following ensure_index command checks if there is an index on

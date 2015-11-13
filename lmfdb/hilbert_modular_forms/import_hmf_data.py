@@ -13,12 +13,12 @@ C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-print(pw_dict)
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['hmfs'].authenticate(username, password)
 hmf_forms = C.hmfs.forms
 hmf_fields = C.hmfs.fields
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 fields = C.numberfields.fields
 
 # hmf_forms.create_index('field_label')
