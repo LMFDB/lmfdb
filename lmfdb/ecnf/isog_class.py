@@ -116,8 +116,8 @@ class ECNF_isoclass(object):
         if self.field.is_imag_quadratic():
             self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
 
-        self.properties = [('Base field', field_pretty(self.ECNF.field)),
-                           ('Class label', self.ECNF.short_class_label),
+        self.properties = [('Base field', self.ECNF.field.field_pretty()),
+                           ('Label', self.ECNF.class_label),
                            (None, self.graph_link),
                            ('Conductor', '%s' % self.ECNF.cond)
                            ]
