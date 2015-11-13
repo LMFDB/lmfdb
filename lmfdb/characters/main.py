@@ -14,7 +14,7 @@ from lmfdb.utils import to_dict, parse_range, make_logger
 from lmfdb.WebCharacter import *
 from lmfdb.characters import characters_page, logger
 import ListCharacters
-from lmfdb.WebNumberField import WebNumberField
+##from lmfdb.WebNumberField import WebNumberField
 
 try:
     from dirichlet_conrey import *
