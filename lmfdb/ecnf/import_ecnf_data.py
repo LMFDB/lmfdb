@@ -29,7 +29,7 @@ field) and value types (with examples):
    - conductor_norm     *     int
    - number             *     int    (number of curve in isogeny class, from 1)
    - ainvs              *     list of 5 list of d lists of 2 ints
-   - jinv               *     list of d lists of 2 STRINGS
+   - jinv               *     list of d strings
    - cm                 *     either int (a negative discriminant, or 0) or '?'
    - q_curve            *     boolean (True, False)
    - base_change        *     list of labels of elliptic curve over Q
@@ -38,8 +38,8 @@ field) and value types (with examples):
    - analytic_rank            int
    - torsion_order            int
    - torsion_structure        list of 0, 1 or 2 ints
-   - gens                     list of lists of 3 lists of d lists of 2 ints
-   - torsion_gens             list of lists of 3 lists of d lists of strings
+   - gens                     list of lists of 3 lists of d strings
+   - torsion_gens             list of lists of 3 lists of d strings
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
 
