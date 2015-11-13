@@ -26,7 +26,7 @@ def split_full_label(lab):
     data = lab.split("-")
     field_label = data[0]
     conductor_label = data[1]
-    isoclass_label = re.search("[a-z]+", data[2]).group()
+    isoclass_label = re.search("(CM)?[a-z]+", data[2]).group()
     curve_number = re.search("\d+", data[2]).group()  # (a string)
     return (field_label, conductor_label, isoclass_label, curve_number)
 
@@ -240,7 +240,7 @@ def elliptic_curve_search(**args):
         # This label should be a full isogeny class label or a full
         # curve label (including the field_label component)
         try:
-            nf, cond_label, iso_label, number = split_full_label(label)
+            nf, cond_label, iso_label, number = split_full_label(label.strip())
         except IndexError:
             if not 'query' in info:
                 info['query'] = {}
