@@ -19,6 +19,7 @@ from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=dbport)
+C['admin'].authenticate('lmfdb', 'lmfdb')
 
 print "authenticating on the elliptic_curves database"
 import yaml
@@ -30,8 +31,7 @@ print "setting nfcurves"
 nfcurves = C.elliptic_curves.nfcurves
 qcurves = C.elliptic_curves.curves
 
-print "authenticating on the hmfs database" # read-only
-C['hmfs'].authenticate('lmfdb', 'lmfdb')
+print "setting hmfs, forms, fields"
 hmfs = C.hmfs
 forms = hmfs.forms
 fields = hmfs.fields
@@ -379,7 +379,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     """
     query = {}
     query['field_label'] = field_label
-    if fields.count({'label': field_label}) == 0:
+    if fields.find({'label': field_label}).count() == 0:
         if verbose:
             print("No HMF data for field %s" % field_label)
         return None
@@ -487,7 +487,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
     """
     query = {}
     query['field_label'] = field_label
-    if fields.count({'label': field_label}) == 0:
+    if fields.find({'label': field_label}).count() == 0:
         if verbose:
             print("No HMF data for field %s" % field_label)
         return None
