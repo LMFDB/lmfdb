@@ -265,6 +265,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebPoly('absolute_polynomial'),
             WebFloat('version', value=float(emf_version), save_to_fs=True),
             WebDict('explicit_formulas',required=False),
+            WebDate('creation_date',value=None),
             WebModFormSpaceProperty('parent', value=parent,
                                     level = level,
                                     weight = weight,

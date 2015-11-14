@@ -195,8 +195,10 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebDict('oldspace_decomposition', required=False),
             WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True),
-            WebList('zeta_orders',value=[],save_to_db=True)
+            WebList('zeta_orders',value=[],save_to_db=True),
+            WebDate('creation_date',value=None)
                     )
+            
         emf_logger.debug("Have set properties of space 1 !!")
         super(WebModFormSpace, self).__init__(
             params=['level', 'weight', 'character'],

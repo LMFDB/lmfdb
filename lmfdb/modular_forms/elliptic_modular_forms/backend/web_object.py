@@ -627,7 +627,18 @@ class WebObjectTest(WebObject):
     
 
 # Define some simple data types with reasonable default values
+
+  def __init__(self, name, value=None, fs_data_type=None, db_data_type=None,
+                 save_to_fs=True, save_to_db=False, default_value=None, include_in_update=True,
+                 required = True):
+
+import datetime
+class WebDate(WebProperty):
+    _default_value = datetime.datetime(1970, 1, 1, 0, 0)
+    def __init__(self, name, value=None, save_to_fs=False, save_to_db=True, **kwargs):
+        super(WebDate, self).__init__(name, value, datetime.datetime, datetime.datetime, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
         
+    
 class WebInt(WebProperty):
 
     _default_value = int(0)
