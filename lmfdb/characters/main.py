@@ -113,7 +113,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         m = info['modlabel']
         info['bread'] = [('Characters','/Character'),
                          ('Dirichlet','/Character/Dirichlet'),
-                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m)]
+                         ('Mod %s'%m, '/Character/Dirichlet/%s'%m)]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
@@ -127,8 +127,8 @@ def render_Dirichletwebpage(modulus=None, number=None):
         m,n = info['modlabel'], info['numlabel']
         info['bread'] = [('Characters','/Character'),
                          ('Dirichlet','/Character/Dirichlet'),
-                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m),
-                         ('Character number %s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
+                         ('Mod %s'%m, '/Character/Dirichlet/%s'%m),
+                         ('#%s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
         #logger.info(info)
         # TODO fix navi field
         del info["navi"]
@@ -185,18 +185,19 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         info['bread'] = [('Characters','/Character'),
                          ('Hecke','/Character/Hecke'),
                          ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
-                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m))]
+                         ('Mod %s'%m, '/Character/Hecke/%s/%s'%(number_field,m))]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
-        info = WebHeckeCharacter(**args).to_dict()
+        X = WebHeckeCharacter(**args)
+        info = X.to_dict()
         info['navi'] = navi([info['previous'],info['next']])
         m,n = info['modlabel'], info['number']
         info['bread'] = [('Characters','/Character'),
                          ('Hecke','/Character/Hecke'),
                          ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
-                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m)),
-                         ('Character number %s'%n, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
+                         ('Mod %s'%X.modulus, '/Character/Hecke/%s/%s'%(number_field,m)),
+                         ('#%s'%X.number, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
         #logger.info(info)
         # TODO fix navi field
         del info["navi"]
