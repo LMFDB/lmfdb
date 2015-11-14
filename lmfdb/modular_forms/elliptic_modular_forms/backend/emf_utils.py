@@ -108,13 +108,16 @@ def extract_limits_as_tuple(arg, field):
     fld = arg.get(field)
     if isinstance(fld,basestring):
         tmp = parse_range(fld)
-        limits = (tmp['min'],tmp['max'])
+        if isinstance(tmp,dict):
+            limits = (tmp['min'],tmp['max'])
+        else:
+            limits = (tmp,tmp)
     elif isinstance(fld,(tuple,list)):
         limits = (int(fld[0]),int(fld[1]))
     elif isinstance(fld,dict):
-        limits = (arg[field]['min'], arg[field]['max'])
-    elif arg.get(field):
-        limits = (arg[field], arg[field])
+        limits = (fld['min'], fld['max'])
+    elif not fld is None: 
+        limits = (fld,fld)
     else:
         limits = None
     return limits
