@@ -59,7 +59,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
     
     from sage.all import DirichletGroup,dimension_new_cusp_forms
     from dirichlet_conrey import DirichletGroup_conrey
-    G = dirichlet_character_conrey_galois_orbits_reps(level)
+   
     dim_table = dimension_from_db(level,weight,chi='all',group='gamma1')
     if weight != None and weight2>weight:
         w1 = weight; w2 = weight2
@@ -69,42 +69,36 @@ def set_info_for_gamma1(level,weight,weight2=None):
     table['weights']=range(w1,w2+1)
     max_gal_count = 0
     from  lmfdb.base import getDBConnection
-    db = getDBConnection()['modularforms2']['webmodformspace']
     db_dim = getDBConnection()['modularforms2']['dimension_table']
-    for x in G:
-        xi = x.number()
-        table['galois_orbits_reps'][xi]= {'head' : "\(\chi_{" + str(level) + "}(" + str(xi) + ",\cdot) \)",
-                                              'chi': str(x.number()),
-                                              'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
-        table['galois_orbit'][xi]= [
-            {'head' : "\({0}\)".format(xc.number()),
-             'chi': str(xc.number()),
-             'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xc.number()) }
-            for xc in x.galois_orbit()]
-        tmp_gal_count = len(table['galois_orbit'][xi])
-        if tmp_gal_count > max_gal_count:
-            max_gal_count = tmp_gal_count
-        table['cells'][xi]={}
-        orbit = map(lambda x:x.number(),x.galois_orbit()) 
-        for k in range(w1,w2+1):
-            # try:
-            #     d,t = dim_table[level][weight][xi]
-            # except KeyError:
-            #     d = -1; t = 0
-            r = db.find_one({'level':int(level),'weight':int(k),'character':{"$in":orbit}})
-            if not r is None:
-                d = r.get('dimension_new_cusp_forms',"n/a")
-                url = url_for(
-                    'emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
-            else:
-                x = conrey_character_from_number(level,xi)
-                d = dimension_new_cusp_forms(x.sage_character(),k)
-                #q = db_dim.find({'N':level,'k':k,'i':xi})
-                #d = q.get('d','n/a')
-                url = ''
-                #d = "n/a"
+    s = {'level':int(level),'weight':{"$lt":int(w2+1),"$gt":int(w1-1)},'cchi':{"$exists":True}}
+    q = db_dim.find(s).sort([('cchi',int(1)),('weight',int(1))])
+    if q.count() == 0:
+        # If the record for level N exists then we have data for all galois orbits
+        # otherwise we need to find the representatives anyway
+        #G = dirichlet_character_conrey_galois_orbits_reps(level)
+        return {}
+    else:
+        table['maxGalCount']=1
+        for r in q:
+            xi = r['cchi']
+            orbit = r['character_orbit']
+            k = r['weight']
+            if not table['galois_orbits_reps'].has_key(xi):
+                table['galois_orbits_reps'][xi]={
+                    'head' : "\(\chi_{{0}}({1},\cdot) \)".format(level,xi),
+                    'chi': "{0}".format(xi),
+                    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
+                table['galois_orbit'][xi]= [
+                    {'head' : "\({0}\)".format(xci),
+                     'chi': "{0}".format(xci),
+                     'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xci) }
+                    for xci in orbit]
+            if len(orbit)>table['maxGalCount']:
+                table['maxGalCount']=len(orbit)
+            table['cells'][xi]={}
+            d = r.get('d_newf',"n/a")
+            url = url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
             table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d}
     table['galois_orbits_reps_numbers']=table['galois_orbits_reps'].keys()
     table['galois_orbits_reps_numbers'].sort()
-    table['maxGalCount']=max_gal_count
     return table

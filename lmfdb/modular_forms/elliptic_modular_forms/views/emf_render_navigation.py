@@ -14,10 +14,8 @@ from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple,parse_range
 
 
-
+## This function is not in use
 def _browse_web_modform_spaces_in_ranges(**kwds):
-
-
     r"""
     Renders the webpage for browsing modular forms of given level and/or weight ranges.
     """
@@ -102,6 +100,121 @@ def _browse_web_modform_spaces_in_ranges(**kwds):
 
 
 
+def render_elliptic_modular_form_navigation_wp1(**args):
+    r"""
+    Renders the webpage for the navigational page.
+
+    """
+    from sage.all import is_even
+    info = to_dict(args)
+    args = to_dict(request.args)
+    info.update(args)
+    form = to_dict(request.form)
+    info.update(form)
+    emf_logger.debug("render_c_m_f_n_wp info={0}".format(info))
+    level = my_get(info, 'level', 0, int)
+    weight = my_get(info, 'weight', 0, int)
+    character = my_get(info, 'character', 1, int)
+    label = info.get('label', '')
+    #disp = ClassicalMFDisplay('modularforms2')
+    emf_logger.debug("info={0}".format(info))
+    emf_logger.debug("level=%s, %s" % (level, type(level)))
+    emf_logger.debug("label=%s, %s" % (label, type(label)))
+    emf_logger.debug("wt=%s, %s" % (weight, type(weight)))
+    emf_logger.debug("character=%s, %s" % (character, type(character)))
+    if('plot' in info and level is not None):
+        return render_fd_plot(level, info)
+    is_set = dict()
+    is_set['weight'] = False
+    is_set['level'] = False
+    limits_weight = extract_limits_as_tuple(info, 'weight')
+    limits_level = extract_limits_as_tuple(info, 'level')
+    if isinstance(weight,int) and weight > 0:
+        is_set['weight'] = True
+        weight = int(weight)
+    else:
+       weight = None
+       info.pop('weight',None)
+    if isinstance(level,int) and level > 0:
+        is_set['level'] = True
+        level = int(level)
+    else:
+        level = None
+        info.pop('level',None)
+    ## This is the list of weights we initially put on the form
+    title = "Holomorphic Cusp Forms"
+    bread = [(MF_TOP, url_for('mf.modular_form_main_page'))]
+    bread.append((EMF_TOP, url_for('.render_elliptic_modular_forms')))
+    if is_set['weight']:
+        limits_weight = (weight, weight)
+    elif limits_weight is None:
+        limits_weight = (2, 12) # default values
+    if is_set['level']:
+        limits_level = (level, level) 
+    elif limits_level is None:
+        limits_level = (1, 24) # default values
+    try:
+        group = info.get('group',0) # default group is gamma_0
+        group = int(group)
+    except ValueError: 
+        group = 0
+    if group not in [0,1]:
+        group = 0
+    if group == 0:
+        info['grouptype'] = 0; info['groupother'] = 1
+    else:
+        info['grouptype'] = 1; info['groupother'] = 0
+    emf_logger.debug("level:{0},level_range={1}".format(level,limits_level))
+    emf_logger.debug("weight:{0},weight_range={1}".format(weight,limits_weight))    
+    if limits_weight[0] == limits_weight[1] and limits_level[0] == limits_level[1]:
+        return redirect(url_for("emf.render_elliptic_modular_forms", level=limits_level[0],weight=limits_weight[0]), code=301)
+    info['show_switch'] = True
+    db = getDBConnection()['modularforms2']['webmodformspace_dimension']
+    table = {}
+    q = db.find_one({'group':'gamma{0}'.format(group)})
+    if q:
+        table = q.get('data',{})
+    if table != {}:
+        table = json.loads(table)
+    info['table'] = {}
+    level_range = range(limits_level[0],limits_level[1]+1)
+    # we don't have weight 1 in database
+    if limits_weight[0]==1:
+        limits_weight=(2,limits_weight[1])
+    weight_range = range(limits_weight[0],limits_weight[1]+1)
+    #print "levels=",level_range
+    #print "weights=",weight_range
+    if len(weight_range)>1:
+        info['weight_range']="{0}-{1}".format(limits_weight[0],limits_weight[1])
+    if len(level_range)>1:
+        info['level_range']="{0}-{1}".format(limits_level[0],limits_level[1])
+    if group == 0:
+        weight_range = filter(is_even,weight_range)
+        for n in level_range:
+            info['table'][n]={}
+            sn = unicode(n)
+            for k in weight_range:
+                info['table'][n][k]={}
+                sk = unicode(k)
+                if table.has_key(sn):
+                    if table[sn].has_key(sk):
+                        info['table'][n][k] = table[sn][sk] #.get(str(n),{}).get(str(k),"n/a")
+    else:
+        emf_logger.debug("Set table for Gamma1")
+        for n in level_range:
+            info['table'][n]={}
+            for k in weight_range:
+                info['table'][n][k] = table.get(str(n),{}).get(str(k),{}).get(str(-1),"n/a")
+    #print "table=\n",table
+    #print "info=\n",info
+    #info['table']=table
+    info['col_heads'] = level_range
+    info['row_heads'] = weight_range
+    return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)
+
+    
+
+
 def render_elliptic_modular_form_navigation_wp(**args):
     r"""
     Renders the webpage for the navigational page.
@@ -150,11 +263,11 @@ def render_elliptic_modular_form_navigation_wp(**args):
     if is_set['weight']:
         limits_weight = (weight, weight)
     elif limits_weight is None:
-        limits_weight = (2, 12)
+        limits_weight = (2, 12) # default values
     if is_set['level']:
-        limits_level = (level, level)
+        limits_level = (level, level) 
     elif limits_level is None:
-        limits_level = (1, 24)
+        limits_level = (1, 24) # default values
     try:
         group = info.get('group',0) # default group is gamma_0
         group = int(group)
@@ -171,41 +284,40 @@ def render_elliptic_modular_form_navigation_wp(**args):
     if limits_weight[0] == limits_weight[1] and limits_level[0] == limits_level[1]:
         return redirect(url_for("emf.render_elliptic_modular_forms", level=limits_level[0],weight=limits_weight[0]), code=301)
     info['show_switch'] = True
-    db = getDBConnection()['modularforms2']['webmodformspace_dimension']
+    db = getDBConnection()['modularforms2']['dimension_table']
+    s = {'level':{"$lt":int(limits_level[1]+1),"$gt":int(limits_level[0]-1)},
+         'weight' : {"$lt":int(limits_weight[1]+1),"$gt":int(limits_weight[0]-1)},
+         'd_newf':{"$gt":int(0)}}
+    if group == 0:
+        s['cchi']=int(1)        
+    else:
+        s['gamma1_label']={"$exists":True}
+    g = db.find(s).sort([('level',int(1)),('weight',int(1))])
     table = {}
-    q = db.find_one({'group':'gamma{0}'.format(group)})
-    if q:
-        table = q.get('data',{})
-    if table != {}:
-        table = json.loads(table)
     info['table'] = {}
     level_range = range(limits_level[0],limits_level[1]+1)
     # we don't have weight 1 in database
     if limits_weight[0]==1:
         limits_weight=(2,limits_weight[1])
     weight_range = range(limits_weight[0],limits_weight[1]+1)
-    #print "levels=",level_range
-    #print "weights=",weight_range
     if group == 0:
         weight_range = filter(is_even,weight_range)
-        for n in level_range:
-            info['table'][n]={}
-            sn = unicode(n)
-            for k in weight_range:
-                info['table'][n][k]={}
-                sk = unicode(k)
-                if table.has_key(sn):
-                    if table[sn].has_key(sk):
-                        info['table'][n][k] = table[sn][sk] #.get(str(n),{}).get(str(k),"n/a")
-    else:
-        emf_logger.debug("Set table for Gamma1")
-        for n in level_range:
-            info['table'][n]={}
-            for k in weight_range:
-                info['table'][n][k] = table.get(str(n),{}).get(str(k),{}).get(str(-1),"n/a")
-    #print "table=\n",table
-    #print "info=\n",info
-    #info['table']=table
+    if len(weight_range)>1:
+        info['weight_range']="{0}-{1}".format(limits_weight[0],limits_weight[1])
+    if len(level_range)>1:
+        info['level_range']="{0}-{1}".format(limits_level[0],limits_level[1])
+    for n in level_range:
+        info['table'][n]={}
+        for k in weight_range:
+            info['table'][n][k]={'dim_new':int(0)}
+    for r in db.find(s):
+        N = r['level']
+        k = r['weight']
+        info['table'][N][k]['dim_new']=r['d_newf'] # dimension of newforms
+        if group == 0:
+            info['table'][N][k]['in_db']=r['in_wdb']  # 1 if it is in the webmoforms db else 0
+        else:
+            info['table'][N][k]['in_db']=r.get('one_in_wdb',0)  # 1 if it is in the webmodforms db else 0
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
     return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)

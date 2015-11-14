@@ -95,10 +95,22 @@ function set_value(id,val) {
   {% else %}
   {% set groupother = 0 %}
   {%endif%}
-  {% if info.level is defined %}
-<div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',level=info.level)}}?group={{info.groupother}}">Switch to \(\Gamma_{{groupother}}(N)\)</a></h2></div>
+{# This variable is used to keep the browing window at the same place
+  when switching to Gamma1 or Gamma0 #}
+{% set level_weight_params = '' %}
+{% if info.level_range is defined %} 
+  {% set level_weight_params = level_weight_params +
+  '&level='+info.level_range %}
+{% endif %}
+{% if info.weight_range is defined %} 
+  {% set level_weight_params = level_weight_params +
+  '&weight='+info.weight_range %}
+{% endif %}
+
+{% if info.level is defined %}
+<div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',level=info.level)}}?group={{info.groupother}}&{{level_weight_params}}">Switch to \(\Gamma_{{groupother}}(N)\)</a></h2></div>
 {% else %}
-<div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',group=groupother)}}">Switch to \(\Gamma_{{groupother}}(N)\)</a></h2></div>
+<div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',group=groupother)}}&{{level_weight_params}}">Switch to \(\Gamma_{{groupother}}(N)\)</a></h2></div>
 {%endif%}
 {%endif%}
 
@@ -161,37 +173,33 @@ table.ntdata thead th.spaceleft {
         </thead>
         <tbody>
           {% for k in info.row_heads  %}
-          
-
           <tr>
             <th class="left">
               {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,group=info.grouptype) %}
               <a href="{{ row_url }}">{{ k }}</a>
             </th>
             {% for N in info.col_heads  %}
-            {% set indb = 0 %}
-            {% set dim = 0 %}
             <td class="center">
-              {% if table[N] is defined and table[N][k] is defined %}
-                  {% if info.grouptype == 0 and table[N][k][0] is defined %}
-	              {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,group=0) %}
-                      {% set dim = table[N][k][0] %}
-                      {% set indb = table[N][k][1] %}
-                  {% elif info.grouptype == 1 and table[N][k][0] is defined %}
-	              {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,group=1) %}
-                      {% set dim = table[N][k][0] %}
-                      {% set indb = table[N][k][1] %}
+                {% if table[N] is defined and table[N][k] is defined and
+                                             table[N][k]['dim_new'] is defined
+                %}
+                  {% set dim = table[N][k]['dim_new'] %}
+                  {% set in_db = table[N][k]['in_db'] %}
+                  {% if in_db == 1 and dim > 0 %}
+                     {% if info.grouptype == 0 %}
+                       {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=1)
+                       %}
+                    {% else %}
+                       {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k)
+                         %}
+                    {% endif %}
+                 <a href="{{url}}">{{dim}}</a>
                   {% else %}
-                      {% set dim ="n/a" %}
-                  {% endif %}
-                  {% if indb == 1  and dim >0 %}
-                     <a href="{{url}}">{{dim}}</a>
-                  {% else %}
-                     {{dim}}
-              {% endif  %}
-           {% else %}
-               <small style="color:gray">n/a</small>
-           {% endif %}
+                       {{dim}}
+                  {% endif %}           
+                {% else %}
+                 <small style="color:gray">n/a</small>
+                {% endif %}
             </td>
             {% endfor %}
           </tr>
