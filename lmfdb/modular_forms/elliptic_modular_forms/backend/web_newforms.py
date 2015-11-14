@@ -31,6 +31,7 @@ from flask import url_for
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebObject,
+     WebDate,
      WebInt,
      WebBool,
      WebStr,

@@ -31,6 +31,7 @@ from flask import url_for
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebObject,
+     WebDate,
      WebInt,
      WebStr,
      WebFloat,
@@ -181,7 +182,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebCharProperty('character_used_in_computation', modulus=level, save_to_fs=True),
             WebStr('space_label', default_value=space_label(level=level, weight=weight, character=character), save_to_fs=True),
             WebStr('space_orbit_label', value='', save_to_db=True),            
-            WebStr('galois_orbit_name', value='', save_to_fs=True),
+            #WebStr('galois_orbit_name', value='', save_to_fs=True),
             WebInt('dimension'),
             WebInt('dimension_cusp_forms'),
             WebInt('dimension_modular_forms'),
@@ -196,7 +197,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True),
             WebList('zeta_orders',value=[],save_to_db=True),
-            WebDate('creation_date',value=None)
+            WebDate('creation_date',value=None,save_to_db=True)
                     )
             
         emf_logger.debug("Have set properties of space 1 !!")

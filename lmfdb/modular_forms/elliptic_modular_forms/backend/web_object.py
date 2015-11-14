@@ -631,9 +631,11 @@ class WebObjectTest(WebObject):
 import datetime
 class WebDate(WebProperty):
     _default_value = datetime.datetime(1970, 1, 1, 0, 0)
+
     def __init__(self, name, value=None, save_to_fs=False, save_to_db=True, **kwargs):
-        super(WebDate, self).__init__(name, value, datetime.datetime, datetime.datetime, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
-        
+        date_fn = lambda t: datetime.datetime(t.year,t.month,t.day,t.hour,t.minute)
+        super(WebDate, self).__init__(name, value, date_fn, date_fn, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
+    
     
 class WebInt(WebProperty):
 
