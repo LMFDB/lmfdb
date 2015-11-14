@@ -628,10 +628,6 @@ class WebObjectTest(WebObject):
 
 # Define some simple data types with reasonable default values
 
-  def __init__(self, name, value=None, fs_data_type=None, db_data_type=None,
-                 save_to_fs=True, save_to_db=False, default_value=None, include_in_update=True,
-                 required = True):
-
 import datetime
 class WebDate(WebProperty):
     _default_value = datetime.datetime(1970, 1, 1, 0, 0)
