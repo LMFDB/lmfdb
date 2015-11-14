@@ -63,6 +63,12 @@ class WebChar(WebObject, CachedRepresentation):
 
         """
         emf_logger.critical("In WebChar {0}".format((modulus,number,update_from_db,compute)))
+        if isinstance(modulus,basestring):
+            try:
+                m,n=modulus.split('.')
+                modulus = int(m); number=int(n)
+            except:
+                raise ValueError,"{0} does not correspond to the label of a WebChar".format(modulus)
         if not gcd(number,modulus)==1:
             raise ValueError,"Character number {0} of modulus {1} does not exist!".format(number,modulus)
         if number > modulus:
