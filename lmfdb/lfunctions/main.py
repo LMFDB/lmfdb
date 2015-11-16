@@ -42,7 +42,7 @@ def l_function_history():
     bc = [('L-functions', url_for('.l_function_top_page')),
           (t, url_for('.l_function_history'))]
     return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc)
-    
+
 
 
 
@@ -69,6 +69,11 @@ def l_function_degree3_browse_page():
     info = {"bread": get_bread(3, [])}
     return render_template("Degree3.html", title='Degree 3 L-functions', **info)
 
+# Degree 4 L-functions browsing page ##############################################
+@l_function_page.route("/degree4/")
+def l_function_degree4_browse_page():
+    info = {"bread": get_bread(4, [])}
+    return render_template("Degree4.html", title='Degree 4 L-functions', **info)
 
 
 # Degree browsing page #########################################################
@@ -521,7 +526,7 @@ def initLfunction(L, args, request):
                              maass_id = prev_form_id) )
             else:
                 prev_data = ('','','')
-                
+
             info['navi'] = ( prev_data, next_data )
 
         else:
@@ -849,7 +854,7 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
 
     if hasattr(pythonL,"lfunc_data"):
         F = p2sage(pythonL.lfunc_data['plot'])
-    else:    
+    else:
         L = pythonL.sageLfunction
         # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
         # SL: Reason, it's not in the distribution of Sage
@@ -968,7 +973,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == "Genus2Curve" and arg2 == "Q":
         return Lfunction_genus2_Q(label=str(arg3)+'.'+str(arg4))
-    
+
     elif arg1 == 'Lcalcurl':
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
 
