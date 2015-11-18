@@ -87,7 +87,9 @@
 <div id="sidebar">
 {%- include "sidebar.html" -%}
 
-{{ entry("Data", getUploadedFor(request.path, true) ) }}
+{% if user_is_authenticated -%}
+    {{ entry("Data", getUploadedFor(request.path, true) ) }}
+{% endif %}
 
 </div>
 
@@ -108,6 +110,19 @@
            <li><a href="{{ url }}">{{ text }}</a></li>
         {% endfor %}
     </ul>
+  </div>
+   {% endif %}
+ {%- endmacro %}
+
+{% macro neighbors(title, entries) -%}
+   {% if entries %}
+    <h1 class="properties-header">{{ title }}</h1>
+    <div class="properties-body">
+    <table>
+       {% for description, name, url in entries %}
+       <tr><td>{{ description }}</td><td><a href="{{ url }}">{{ name|safe }}</a></td></tr>
+       {% endfor %}
+    </table>
   </div>
    {% endif %}
  {%- endmacro %}
@@ -138,6 +153,9 @@
       </div>
     {% endif %}
    {{ rightnavig("Related objects", friends) }}
+   {% if navi %}
+       {{ neighbors("Nearby objects", navi) }}
+   {% endif %}
    {% if downloads %}
      {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
    {% else %}

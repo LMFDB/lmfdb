@@ -66,16 +66,18 @@ table.ntdata thead th.spaceleft {
     {% set group=KNOWL('mf.sl2.subgroup.gamma1N',title='\(\Gamma_1(' ~ level ~  ')\)') %}
   {% endif %}
 {% endif %}
-
+<div>
 The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='Newforms') }}
 for \( \Gamma_1({{level}}) \) of specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, transforming
-with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).<br>
+with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).
+</div>
 
-
+<div>
 In the table, we only list one representative per
 {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit') }} of
 characters.
 The complete Galois orbits of characters are listed in the second table below.
+</div>
 
 </p>
 {% set row_class = cycler('odd', 'even') %}

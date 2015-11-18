@@ -34,6 +34,18 @@ def l_function_top_page():
     info = set_info_for_start_page()
     return render_template("LfunctionNavigate.html", **info)
 
+@l_function_page.route("/history")
+def l_function_history():
+    from lmfdb.pages import _single_knowl
+    t = "A brief history of L-functions"
+
+    bc = [('L-functions', url_for('.l_function_top_page')),
+          (t, url_for('.l_function_history'))]
+    return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc)
+    
+
+
+
 # Degree 1 L-functions browsing page ##############################################
 @l_function_page.route("/degree1/")
 def l_function_dirichlet_browse_page():
@@ -166,6 +178,8 @@ def set_info_for_start_page():
 
     info['title'] = 'L-functions'
     info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
+
+    info['learnmore'] = [('History of L-functions', '/L/history')]
 
     return info
 
@@ -491,6 +505,25 @@ def initLfunction(L, args, request):
                                            url_for('.l_function_maass_browse_page')),
                                           ('\(' + L.texname + '\)', request.url)])
             info['friends'] = [('Maass Form ', friendlink)]
+
+            # Navigation to previous and next form
+            next_form_id = L.mf.next_maassform_id()
+            if next_form_id:
+                next_data = ("next",r"$L(s,f_{\text next})$", '/L' +
+                             url_for('mwf.render_one_maass_waveform',
+                             maass_id = next_form_id) )
+            else:
+                next_data = ('','','')
+            prev_form_id = L.mf.prev_maassform_id()
+            if prev_form_id:
+                prev_data = ("previous", r"$L(s,f_{\text prev}$)", '/L' +
+                             url_for('mwf.render_one_maass_waveform',
+                             maass_id = prev_form_id) )
+            else:
+                prev_data = ('','','')
+                
+            info['navi'] = ( prev_data, next_data )
+
         else:
             info['bread'] = get_bread(L.degree,
                                       [('Maass Form', url_for('.l_function_maass_gln_browse_page',
@@ -506,12 +539,17 @@ def initLfunction(L, args, request):
         Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
         if mod > 1:
             pmod,pnum = WebDirichlet.prevprimchar(mod, num)
-            Lprev = (Lpattern%(pmod,pnum),url_for('.l_function_dirichlet_page',modulus=pmod,number=pnum))
+            Lprev = ("previous",Lpattern%(pmod,pnum),
+                     url_for('.l_function_dirichlet_page',
+                             modulus=pmod,number=pnum))
         else:
-            Lprev = ('','')
+            Lprev = ('','','')
         nmod,nnum = WebDirichlet.nextprimchar(mod, num)
-        Lnext = (Lpattern%(nmod,nnum),url_for('.l_function_dirichlet_page',modulus=nmod,number=nnum))
+        Lnext = ("next",Lpattern%(nmod,nnum),
+                 url_for('.l_function_dirichlet_page',
+                         modulus=nmod,number=nnum))
         info['navi'] = (Lprev,Lnext)
+        print info['navi']
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
         charname = WebDirichlet.char2tex(smod, snum)
@@ -641,11 +679,10 @@ def initLfunction(L, args, request):
         #info['friends'] = [('Hypergeometric motive ', friendlink.replace("t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
         info['friends'] = [('Hypergeometric motive ', friendlink)]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
 
-
     # the code below should be in Lfunction.py
     info['conductor'] = L.level
     if not is_prime(L.level):
-        info['conductor_factored'] = latex(factor(L.level))
+        info['conductor_factored'] = latex(factor(int(L.level)))
 
     info['degree'] = L.degree
     info['sign'] = "$"+styleTheSign(L.sign)+"$"
@@ -869,7 +906,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
         negativeZeros = negativeZeros.replace("]", ", ]")
 
-    return "<span class='redhighlight'>{0}</span><span class='bluehighlight'>{1}</span>".format(
+    return "<span class='redhighlight'>{0}</span><span class='positivezero'>{1}</span>".format(
         negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
 
 

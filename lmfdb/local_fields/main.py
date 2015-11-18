@@ -159,6 +159,7 @@ def local_field_search(**args):
     info['number'] = nres
     info['group_display'] = group_display_shortC(C)
     info['display_poly'] = format_coeffs
+    info['slopedisp'] = show_slope_content
     info['start'] = start
     if nres == 1:
         info['report'] = 'unique match'
@@ -253,6 +254,15 @@ def show_slopes(sl):
         return "None"
     return(sl)
 
+def show_slope_content(sl,t,u):
+    sc = str(sl)
+    if sc == '[]':
+        sc = r'[\ ]'
+    if t>1:
+        sc += '_%d'%t
+    if u>1:
+        sc += '^%d'%u
+    return(sc)
 
 def printquad(code, p):
     if code == [1, 0]:

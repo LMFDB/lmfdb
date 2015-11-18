@@ -24,11 +24,12 @@ field) and value types (with examples):
    - short_label        *     string
    - conductor_label    *     string
    - iso_label          *     string (letter code of isogeny class)
+   - iso_nlabel         *     int (numerical code of isogeny class)
    - conductor_ideal    *     string
    - conductor_norm     *     int
    - number             *     int    (number of curve in isogeny class, from 1)
    - ainvs              *     list of 5 list of d lists of 2 ints
-   - jinv               *     list of d lists of 2 STRINGS
+   - jinv               *     list of d strings
    - cm                 *     either int (a negative discriminant, or 0) or '?'
    - q_curve            *     boolean (True, False)
    - base_change        *     list of labels of elliptic curve over Q
@@ -37,8 +38,8 @@ field) and value types (with examples):
    - analytic_rank            int
    - torsion_order            int
    - torsion_structure        list of 0, 1 or 2 ints
-   - gens                     list of lists of 3 lists of d lists of 2 ints
-   - torsion_gens             list of lists of 3 lists of d lists of strings
+   - gens                     list of lists of 3 lists of d strings
+   - torsion_gens             list of lists of 3 lists of d strings
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
 
@@ -70,14 +71,21 @@ from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 
-print "calling base._init()"
-dbport = 37010
-init(dbport, '')
-print "getting connection"
-conn = getDBConnection()
+from lmfdb.website import DEFAULT_DB_PORT as dbport
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+
+print "authenticating on the elliptic_curves database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['elliptic_curves'].authenticate(username, password)
 print "setting nfcurves"
-nfcurves = conn.elliptic_curves.nfcurves
-qcurves = conn.elliptic_curves.curves
+nfcurves = C.elliptic_curves.nfcurves
+qcurves = C.elliptic_curves.curves
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
+
 
 # The following ensure_index command checks if there is an index on
 # label, conductor, rank and torsion. If there is no index it creates
@@ -109,7 +117,7 @@ def nf_lookup(label):
         # print "We already have it: %s" % nf_lookup_table[label]
         return nf_lookup_table[label]
     # print "We do not have it yet, finding in database..."
-    field = conn.numberfields.fields.find_one({'label': label})
+    field = C.numberfields.fields.find_one({'label': label})
     if not field:
         raise ValueError("Invalid field label: %s" % label)
     # print "Found it!"
@@ -231,7 +239,7 @@ def field_data(s):
     return [s, deg, sig, abs_disc]
 
 
-@cached_function
+#@cached_function
 def get_cm_list(K):
     return cm_j_invariants_and_orders(K)
 
@@ -253,12 +261,18 @@ whitespace = re.compile(r'\s+')
 def split(line):
     return whitespace.split(line.strip())
 
+def numerify_iso_label(lab):
+    from sage.databases.cremona import class_to_int
+    if 'CM' in lab:
+        return -1 - class_to_int(lab[2:])
+    else:
+        return class_to_int(lab.lower())
 
 def curves(line):
     r""" Parses one line from a curves file.  Returns the label and a dict
     containing fields with keys 'field_label', 'degree', 'signature',
     'abs_disc', 'label', 'short_label', conductor_label',
-    'conductor_ideal', 'conductor_norm', 'iso_label', 'number',
+    'conductor_ideal', 'conductor_norm', 'iso_label', 'iso_nlabel', 'number',
     'ainvs', 'jinv', 'cm', 'q_curve', 'base_change',
     'torsion_order', 'torsion_structure', 'torsion_gens'.
 
@@ -277,6 +291,7 @@ def curves(line):
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string
+    iso_nlabel = numerify_iso_label(iso_label)         # int
     number = int(data[3])       # int
     short_class_label = "%s-%s" % (conductor_label, iso_label)
     short_label = "%s%s" % (short_class_label, str(number))
@@ -348,6 +363,7 @@ def curves(line):
         'conductor_ideal': conductor_ideal,
         'conductor_norm': conductor_norm,
         'iso_label': iso_label,
+        'iso_nlabel': iso_nlabel,
         'number': number,
         'ainvs': ainvs,
         'jinv': jinv,
@@ -385,6 +401,7 @@ def curve_data(line):
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string
+    iso_nlabel = numerify_iso_label(iso_label)         # int
     number = int(data[3])       # int
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
     label = "%s-%s" % (field_label, short_label)
@@ -427,6 +444,7 @@ def isoclass(line):
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string
+    iso_nlabel = numerify_iso_label(iso_label)         # int
     number = int(data[3])       # int
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
     label = "%s-%s" % (field_label, short_label)
@@ -616,7 +634,7 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
         max_norm = 'infinity'
     cursor = nfcurves.find(query)
     ASC = pymongo.ASCENDING
-    res = cursor.sort([('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)])
+    res = cursor.sort([('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
 
     file = {}
     prefixes = ['curves', 'curve_data', 'isoclass']

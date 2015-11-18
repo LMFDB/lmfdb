@@ -15,20 +15,25 @@ Initial version (University of Warwick 2015) Aurel Page
 import sys
 sys.path.append("../..");
 import pymongo
-from lmfdb import base
-from lmfdb.website import dbport
+from lmfdb.website import DEFAULT_DB_PORT as dbport
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals, conjideals, str2ideal)
 
-print "calling base._init()"
-dbport=37010
-base._init(dbport, '')
-print "getting connection"
-conn = base.getDBConnection()
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+
+print "authenticating on the hmfs database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['hmfs'].authenticate(username, password)
+
 print "setting hmfs, fields and forms"
-hmfs = conn.hmfs
+hmfs = C.hmfs
 fields = hmfs.fields
 forms = hmfs.forms
+nfcurves = C.elliptic_curves.nfcurves
 
 # Cache of WebNumberField and FieldData objects to avoid re-creation
 WNFs = {}
@@ -43,6 +48,9 @@ def get_Fdata(label):
     if not label in Fdata:
         Fdata[label] = fields.find_one({'label':label})
     return Fdata[label]
+
+def nautos(label):
+    return len(get_WNF(label, 'a').K().automorphisms())
 
 def fldlabel2conjdata(label):
     data = {}
@@ -62,8 +70,7 @@ def fldlabel2conjdata(label):
     data['conjideals'] = cideals
     primes = niceideals(F, Fdata['primes'])
     data['primes'] = primes
-    primes = [prm[2] for prm in primes]
-    cprimes = [[primes.index(cideals[(prm,ig)]) for prm in primes] for ig in range(len(auts))]
+    cprimes = conjideals(primes, auts)
     data['conjprimes'] = cprimes
     return data
 
@@ -126,14 +133,18 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False):
     else:
         max_level_norm = oo
     ftoconj = forms.find(query)
-    print("%s forms to examine of level norm between %s and %s."
-          % (ftoconj.count(),min_level_norm,max_level_norm))
+    print("%s forms over %s to examine of level norm between %s and %s."
+          % (ftoconj.count(),label,min_level_norm,max_level_norm))
     if ftoconj.count() == 0:
         return None
     print("Ideals precomputations...")
     data = fldlabel2conjdata(label)
+    if data == None:
+        print("No nontrival automorphisms!")
+        return
     print("...done.\n")
     auts = data['auts']
+    print("Applying %s non-trivial automorphisms..." % len(auts))
     cideals = data['conjideals']
     cprimes = data['conjprimes']
     F = data['F']
@@ -153,4 +164,224 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False):
                         count += 1
     print("\nAdded "+str(count)+" new conjugate forms.")
     return None
+
+
+def fix_data_fields(min_level_norm=0, max_level_norm=None, fix=False):
+    r""" One-off utility to:
+    1. add degree and disc fields for each Hilbert newform
+    2. Change CM and base-change from "yes?" to "yes"
+    """
+    count = 0
+    query = {}
+    query['level_norm'] = {'$gte' : int(min_level_norm)}
+    if max_level_norm:
+        query['level_norm']['$lte'] = int(max_level_norm)
+    else:
+        max_level_norm = oo
+    forms_to_fix = forms.find(query)
+    print("%s forms to examine of level norm between %s and %s."
+          % (forms_to_fix.count(),min_level_norm,max_level_norm))
+    if forms_to_fix.count() == 0:
+        return None
+    for f in forms_to_fix:
+        count = count+1
+        if count%100==0: print("%s: %s" % (count, f['label']))
+        fix_data = {}
+        deg, r, disc, n = f['field_label'].split('.')
+        fix_data['deg'] = int(deg)
+        fix_data['disc'] = int(disc)
+        if f['is_CM'] == 'yes?':
+            fix_data['is_CM'] = 'yes'
+        if f['is_base_change'] == 'yes?':
+            fix_data['is_base_change'] = 'yes'
+        #print("using fixed data %s for form %s" % (fix_data,f['label']))
+        if fix:
+            forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
+
+def fix_one_label(lab, reverse=False):
+    r""" If lab has length 1 do nothing.  If it has length 2 increment the
+    first letter (a to b to c to ... to z).  The lenths must be at
+    most 2 and if =2 it must start with 'a'..'y' (these are all which
+    were required).  If reverse==True the inverse operation is carried
+    out (z to y to ... to c to b to a).
+    """
+    if len(lab)!=2:
+        return lab
+    else:
+        if reverse:
+            return chr(ord(lab[0])-int(1))+lab[1]
+        else:
+            return chr(ord(lab[0])+int(1))+lab[1]
+
+def fix_labels(field_label, min_level_norm=0, max_level_norm=None, fix_forms=False, fix_curves=False, reverse=False):
+    r""" One-off utility to correct labels 'aa'->'ba'->'ca', ..., 'az'->'bz'->'cz'
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['field_label'] = field_label
+    query['level_norm'] = {'$gte' : int(min_level_norm)}
+    if max_level_norm:
+        query['level_norm']['$lte'] = int(max_level_norm)
+    else:
+        max_level_norm = oo
+    forms_to_fix = forms.find(query)
+    print("%s forms to examine of level norm between %s and %s."
+          % (forms_to_fix.count(),min_level_norm,max_level_norm))
+    if forms_to_fix.count() == 0:
+        return None
+    for f in forms_to_fix:
+        count = count+1
+        if count%100==0: print("%s: %s" % (count, f['label']))
+        fix_data = {}
+        lab = f['label_suffix']
+        if len(lab)==1:
+            continue
+        if f['label'][-2:] != lab:
+            print("Incorrect label_suffix %s in form %s" % (lab,f['label']))
+            return
+        oldlab = lab
+        lab = fix_one_label(lab, reverse=reverse)
+        fix_data['label_suffix'] = lab
+        fix_data['label'] = f['label'].replace(oldlab,lab)
+        fix_data['short_label'] = f['short_label'].replace(oldlab,lab)
+        fix_data['label_nsuffix'] = class_to_int(lab)
+        print("using fixed data %s for form %s" % (fix_data,f['label']))
+        if fix_forms:
+            forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
+
+        # find associated elliptic curve and fix that too (where appropriate)
+        if f['deg']==2 and f['dimension']==1:
+            label = f['label']
+            for e in nfcurves.find({'class_label':f['label']}):
+                fix_data = {}
+                fix_data['iso_label'] = lab
+                fix_data['label'] = e['label'].replace(oldlab,lab)
+                fix_data['short_label'] = e['short_label'].replace(oldlab,lab)
+                fix_data['class_label'] = e['class_label'].replace(oldlab,lab)
+                fix_data['short_class_label'] = e['short_class_label'].replace(oldlab,lab)
+                print("using fixed data %s for curve %s" % (fix_data,e['label']))
+                if fix_curves:
+                    res = nfcurves.update_one({'_id': e['_id']}, {"$set": fix_data}, upsert=True)
+                    assert res.matched_count==1
+        else:
+            print("No elliptic curve to fix")
+
+def fix_curve_labels(field_label, min_cond_norm=0, max_cond_norm=None, fix_curves=False, reverse=False):
+    r""" One-off utility to correct labels 'aa'->'ba'->'ca', ..., 'az'->'bz'->'cz'
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_norm'] = {'$gte' : int(min_cond_norm)}
+    if max_cond_norm:
+        query['conductor_norm']['$lte'] = int(max_cond_norm)
+    else:
+        max_cond_norm = oo
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to examine of conductor norm between %s and %s."
+          % (curves_to_fix.count(),min_cond_norm,max_cond_norm))
+    if curves_to_fix.count() == 0:
+        return None
+    for c in curves_to_fix:
+        count = count+1
+        if count%100==0: print("%s: %s" % (count, c['label']))
+        lab = c['iso_label']
+        if len(lab)==1:
+            continue
+        if c['iso_label'][-2:] != lab:
+            print("Incorrect iso_label %s in curve %s" % (lab,c['label']))
+            return
+        oldlab = lab
+        lab = fix_one_label(lab, reverse=reverse)
+        fix_data = {}
+        fix_data['iso_label'] = lab
+        fix_data['label'] = c['label'].replace(oldlab,lab)
+        fix_data['short_label'] = c['short_label'].replace(oldlab,lab)
+        fix_data['class_label'] = c['class_label'].replace(oldlab,lab)
+        fix_data['short_class_label'] = c['short_class_label'].replace(oldlab,lab)
+        print("using fixed data %s for curve %s" % (fix_data,c['label']))
+        if fix_curves:
+            res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+            assert res.matched_count==1
+
+def fix_one_curve_label(field_label, cond_label, old_iso_label, new_iso_label, fix_curves=False):
+    r""" One-off utility to correct class label
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_label'] = cond_label
+    query['iso_label'] = old_iso_label
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to fix"   % curves_to_fix.count())
+    if curves_to_fix.count() == 0:
+        return None
+    for c in curves_to_fix:
+        oldlab = old_iso_label
+        lab = new_iso_label
+        fix_data = {}
+        fix_data['iso_label'] = lab
+        fix_data['label'] = c['label'].replace(oldlab,lab)
+        fix_data['short_label'] = c['short_label'].replace(oldlab,lab)
+        fix_data['class_label'] = c['class_label'].replace(oldlab,lab)
+        fix_data['short_class_label'] = c['short_class_label'].replace(oldlab,lab)
+        print("using fixed data %s for curve %s" % (fix_data,c['label']))
+        if fix_curves:
+            res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+            assert res.matched_count==1
+
+def set_one_curve_label(id, new_iso_label, fix_curves=False):
+    r""" One-off utility to correct class label
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['_id'] = id
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to fix"   % curves_to_fix.count())
+    if curves_to_fix.count() == 0:
+        return None
+    for c in curves_to_fix:
+        oldlab = c['iso_label']
+        lab = new_iso_label
+        fix_data = {}
+        fix_data['iso_label'] = lab
+        fix_data['label'] = c['label'].replace(oldlab,lab)
+        fix_data['short_label'] = c['short_label'].replace(oldlab,lab)
+        fix_data['class_label'] = c['class_label'].replace(oldlab,lab)
+        fix_data['short_class_label'] = c['short_class_label'].replace(oldlab,lab)
+        print("using fixed data %s for curve %s" % (fix_data,c['label']))
+        if fix_curves:
+            res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+            assert res.matched_count==1
+
+def add_numeric_label_suffixes(min_level_norm=0, max_level_norm=None, fix=False):
+    r""" One-off utility to add a numeric conversion of the letter-coded
+    label suffixes 'a'->0', 'z'->25, 'ba'->26, etc. for sorting
+    purposes.
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['level_norm'] = {'$gte' : int(min_level_norm)}
+    if max_level_norm:
+        query['level_norm']['$lte'] = int(max_level_norm)
+    else:
+        max_level_norm = oo
+    forms_to_fix = forms.find(query)
+    print("%s forms to examine of level norm between %s and %s."
+          % (forms_to_fix.count(),min_level_norm,max_level_norm))
+    for f in forms_to_fix:
+        count = count+1
+        if count%100==0: print("%s: %s" % (count, f['label']))
+        fix_data = {}
+        lab = f['label_suffix']
+        fix_data['label_nsuffix'] = class_to_int(lab)
+        #print("using fixed data %s for form %s" % (fix_data,f['label']))
+        if fix:
+            forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
+
 

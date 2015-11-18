@@ -10,7 +10,7 @@ import tempfile
 import os
 import StringIO
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_torsion_structure
 from lmfdb.number_fields.number_field import parse_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
@@ -56,38 +56,6 @@ def cmp_label(lab1, lab2):
     a, b, c = parse_cremona_label(lab2)
     id2 = int(a), class_to_int(b), int(c)
     return cmp(id1, id2)
-
-def parse_torsion_structure(L):
-    r"""
-    Parse a string entered into torsion structure search box
-    '[]' --> []
-    '[n]' --> [str(n)]
-    'n' --> [str(n)]
-    '[m,n]' or '[m n]' --> [str(m),str(n)]
-    'm,n' or 'm n' --> [str(m),str(n)]
-    """
-    # strip <whitespace> or <whitespace>[<whitespace> from the beginning:
-    L1 = re.sub(r'^\s*\[?\s*', '', str(L))
-    # strip <whitespace> or <whitespace>]<whitespace> from the beginning:
-    L1 = re.sub(r'\s*]?\s*$', '', L1)
-    # catch case where there is nothing left:
-    if not L1:
-        return []
-    # This matches a string of 1 or more digits at the start,
-    # optionally followed by nontrivial <ws> or <ws>,<ws> followed by
-    # 1 or more digits at the end:
-    TORS_RE = re.compile(r'^\d+((\s+|\s*,\s*)\d+)?$')
-    if TORS_RE.match(L1):
-        if ',' in L1:
-            # strip interior <ws> and use ',' as delimiter:
-            res = [int(a) for a in L1.replace(' ','').split(',')]
-        else:
-            # use whitespace as delimiter:
-            res = [int(a) for a in L1.split()]
-        n = len(res)
-        if (n==1 and res[0]>0) or (n==2 and res[0]>0 and res[1]>0 and res[1]%res[0]==0):
-            return res
-    return 'Error parsing input %s for the torsion structure.  It needs to be a list of 0, 1 or 2 integers, optionally in square brackets, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % L
 
 
 #########################
@@ -274,7 +242,7 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        res = parse_torsion_structure(info['torsion_structure'])
+        res = parse_torsion_structure(info['torsion_structure'],2)
         if 'Error' in res:
             info['err'] = res
             return search_input_error(info, bread)
@@ -314,7 +282,7 @@ def elliptic_curve_search(**args):
             return search_input_error(info, bread)
 
     if 'download' in info and info['download'] != '0':
-        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING) ])
+        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING) ])
         return download_search(info, res)
     
     count_default = 100
@@ -344,7 +312,7 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING)
+    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING)
                        ]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
@@ -352,6 +320,8 @@ def elliptic_curve_search(**args):
     info['iso_url'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['number'] = nres
     info['start'] = start
+    info['count'] = count
+    info['more'] = int(start + count < nres)
     if nres == 1:
         info['report'] = 'unique match'
     elif nres == 2:
@@ -361,6 +331,7 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
+
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'

@@ -110,7 +110,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar43(self):
         W = self.tc.get('/Character/Dirichlet/4/3')
         assert 'Kronecker symbol' in W.data
-        assert '\\left(\\frac{4}{\\bullet}\\right)' in W.data
+        assert '\\left(\\frac{-4}{\\bullet}\\right)' in W.data
 
     def test_dirichlet_calc(self):
         W = self.tc.get('/Character/calc-gauss/Dirichlet/4/3?val=3')

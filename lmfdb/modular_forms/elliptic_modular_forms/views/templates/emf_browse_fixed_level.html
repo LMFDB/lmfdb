@@ -71,9 +71,12 @@ table.ntdata thead th.spaceleft {
 {#{KNOWL('mf.ellipticemf_browse.all.info',title='Write about browsing') }#}
 <p>
 {% if grouptype == 1  %}
+<div>
 The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='Newforms') }}
 for \( \Gamma_1({{level}}) \) of specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, transforming
-with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).<br>
+with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).
+</div>
+<div>
   {% if table.maxGalCount is defined %}
     {% set maxGalCount = table.maxGalCount %}
     {% if maxGalCount > 1 %}
@@ -90,6 +93,7 @@ with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamm
 The table below gives the dimensions of the space of holomorphic cusp
 forms for  \( \Gamma_0({{level}}) \) with trivial {{ KNOWL('character.dirichlet',title='character') }}.
 {% endif %}
+</div>
 </p>
 {% set rows = browse_table.rows %}
 {% set row_class = cycler('odd', 'even') %}
