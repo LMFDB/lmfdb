@@ -14,4 +14,5 @@ mf_logger.debug("EN_V path: {0}".format(app.jinja_loader.searchpath))
 def modular_form_main_page():
     info = dict()
     title = "Modular Forms"
-    return render_template("mf_navigation.html", info=info, title=title, bread=[])
+    bread = [(title, url_for(".modular_form_main_page"))]
+    return render_template("mf_navigation.html", info=info, title=title, bread=bread)

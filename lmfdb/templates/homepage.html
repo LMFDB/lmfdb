@@ -10,6 +10,8 @@
           {% for b in bread -%}
             &rarr; <a href="{{ b[1] }}">{{ b[0]|striptags }}</a>
           {%- endfor %}
+         {% else %}
+          <a href="/">Top</a>
          {% endif %}
       </div>
       <div class="topright">

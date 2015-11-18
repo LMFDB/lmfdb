@@ -39,7 +39,7 @@ def render_characterNavigation():
     """
     args = to_dict(request.args)
     info = {}
-    info['bread'] = [ ('Characters','/Character') ]
+    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")) ]
 
     if 'modbrowse' in args:
         arg = args['modbrowse']
@@ -111,9 +111,9 @@ def render_Dirichletwebpage(modulus=None, number=None):
     elif number == None:
         info = WebDirichletGroup(**args).to_dict()
         m = info['modlabel']
-        info['bread'] = [('Characters','/Character'),
-                         ('Dirichlet','/Character/Dirichlet'),
-                         ('Mod %s'%m, '/Character/Dirichlet/%s'%m)]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m))]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
