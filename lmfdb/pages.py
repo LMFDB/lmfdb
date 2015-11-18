@@ -141,7 +141,7 @@ def roadmap():
 
 ## INTRO PAGES END
 
-@app.route('/varieties')
+@app.route('/Variety')
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
@@ -150,29 +150,34 @@ def varieties():
             learnmore=lm)
 
 
-@app.route('/fields')
+@app.route('/Field')
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
-    return render_template('fields.html', title=t, body_class=_bc, bread=b)
+    lm = [('History of fields', '/fields/history')]
+    return render_template('fields.html', title=t, body_class=_bc, bread=b, learnmore=lm)
 
 @app.route('/representations')
 def representations():
-    t = 'Representations'
+    t = 'Representation'
     b = [(t, url_for('representations'))]
-    return render_template('representations.html', title=t, body_class=_bc, bread=b)
+    lm = [('History of representations', '/representations/history')]
+    return render_template('representations.html', title=t, body_class=_bc, bread=b, learnmore=lm)
 
-@app.route('/groups')
+@app.route('/Group')
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
-    return render_template('groups.html', title=t, body_class=_bc, bread=b)
+    lm = [('History of groups', '/groups/history')]
+    return render_template('groups.html', title=t, body_class=_bc, bread=b, learnmore=lm)
 
-@app.route('/motives')
+@app.route('/Motive')
 def motives():
     t = 'Motives'
     b = [(t, url_for('motives'))]
-    return render_template('motives.html', title=t, body_class=_bc, bread=b)
+    lm = [('History of motives', '/motives/history')]
+    return render_template('motives.html', title=t, body_class=_bc, bread=b, learnmore=lm)
+
 @app.route("/editorial-board")
 def edit_board():
     t = "Editorial and Management Boards"
