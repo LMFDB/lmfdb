@@ -141,7 +141,38 @@ def roadmap():
 
 ## INTRO PAGES END
 
+@app.route('/varieties')
+def varieties():
+    t = 'Varieties'
+    b = [(t, url_for('varieties'))]
+    lm = [('History of varieties', '/varieties/history')]
+    return render_template('varieties.html', title=t, body_class=_bc, bread=b,
+            learnmore=lm)
 
+
+@app.route('/fields')
+def fields():
+    t = 'Fields'
+    b = [(t, url_for('fields'))]
+    return render_template('fields.html', title=t, body_class=_bc, bread=b)
+
+@app.route('/representations')
+def representations():
+    t = 'Representations'
+    b = [(t, url_for('representations'))]
+    return render_template('representations.html', title=t, body_class=_bc, bread=b)
+
+@app.route('/groups')
+def groups():
+    t = 'Groups'
+    b = [(t, url_for('groups'))]
+    return render_template('groups.html', title=t, body_class=_bc, bread=b)
+
+@app.route('/motives')
+def motives():
+    t = 'Motives'
+    b = [(t, url_for('motives'))]
+    return render_template('motives.html', title=t, body_class=_bc, bread=b)
 @app.route("/editorial-board")
 def edit_board():
     t = "Editorial and Management Boards"
