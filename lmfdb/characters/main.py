@@ -39,7 +39,8 @@ def render_characterNavigation():
     """
     args = to_dict(request.args)
     info = {}
-    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")) ]
+    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
+    ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
 
     if 'modbrowse' in args:
         arg = args['modbrowse']
@@ -128,7 +129,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
                          ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m)),
-                         ('#%s'%n, url_for(".render_Dirichletwebpage", modulus=m, number=n)) ]
+                         ('%s'%n, url_for(".render_Dirichletwebpage", modulus=m, number=n)) ]
         #logger.info(info)
         # TODO fix navi field
         del info["navi"]
@@ -238,7 +239,9 @@ def character_search(**args):
         for field in ['modulus', 'conductor', 'order']:
             if info.get(field):
                 query[field] = parse_range(info[field])
-        info['bread'] = [('Characters', url_for(".render_characterNavigation")), ('search results', ' ') ]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('search results', ' ') ]
         info['credit'] = 'Sage'
         if (len(query) != 0):
             from sage.modular.dirichlet import DirichletGroup
