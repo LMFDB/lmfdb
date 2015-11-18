@@ -184,7 +184,7 @@ def set_info_for_start_page():
     info['title'] = 'L-functions'
     info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
 
-    info['learnmore'] = [('History of L-functions', '/L/history')]
+    info['learnmore'] = [('History of L-functions', url_for('.l_function_history'))]
 
     return info
 
