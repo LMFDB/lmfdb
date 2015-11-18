@@ -321,7 +321,11 @@ def prepare_sample_page( sam, args, bread):
                 except:
                     return 'Reduction undefined'
         info['ideal_l'].reduce = apple
-        
+    info['properties2']=[('Type', "%s"%sam.type()),
+                         ('Weight', "%s"%sam.weight()),
+                         ('Hecke Eigenform', "%s"%sam.is_eigenform()),
+                         ('Degree of Field', "%s"%sam.field().degree())]
+    
     bread.append( (sam.collection()[0] + '.' + sam.name(), '/' + sam.collection()[0] + '.' + sam.name()))
     return render_template( "ModularForm_GSp4_Q_sample.html",
                             title='Siegel modular forms sample ' + sam.collection()[0] + '.'+ sam.name(),

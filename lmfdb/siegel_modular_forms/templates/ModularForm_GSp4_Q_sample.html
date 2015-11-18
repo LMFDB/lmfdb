@@ -40,7 +40,7 @@
 <h2>Basic properties</h2>
 {% macro nice( x) %}
 {% if x == None %}
-  unkonwn
+  unknown
 {% else %}
   {{ x }}
 {% endif %}
@@ -48,8 +48,8 @@
 <table>
   <tr> <td>Type</td> <td>{{ nice( sam.type()) }}</td> </tr>
   <tr> <td>Weight</td> <td>${{ nice(sam.weight()) }}$</td> </tr>
-  <tr> <td>Is Hecke eigenform</td> <td>{{ nice(sam.is_eigenform()) }}</td> </tr>
-  <tr> <td>Has integral Fourier coefficients</td> <td>{{ nice(sam.is_integral()) }}</td> </tr>
+  <tr> <td>Hecke eigenform?</td> <td>{{ nice(sam.is_eigenform()) }}</td> </tr>
+  <tr> <td>Integral Fourier coefficients?</td> <td>{{ nice(sam.is_integral()) }}</td> </tr>
   <tr> <td>Degree of field</td> <td>${{ nice(sam.field().degree()) }}$</td> </tr>
 </table>
 
@@ -147,11 +147,11 @@
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       {% set dk = fc_dict[d].keys()|sort %}
       <td rowspan="{{ dk|count }}" valign="top">{{ d }}</td>
-      <td>{{ dk[0] }}</td><td>{{ red(fc_dict[d][dk[0]]) }}</td>
+      <td>{{ dk[0] }}</td><td>${{ red(fc_dict[d][dk[0]]) }}$</td>
     </tr>
     {% for F in dk[1:]%}
     <tr>
-      <td>{{ F }}</td><td>{{ red(fc_dict[d][F]) }}</td>
+      <td>{{ F }}</td><td>${{ red(fc_dict[d][F]) }}$</td>
     </tr>
     {% endfor %}
     {% endfor %}
