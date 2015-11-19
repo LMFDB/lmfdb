@@ -61,13 +61,14 @@ def index():
         the_boxes = load_boxes()
     boxes = the_boxes
     tmpl = "index-boxes.html"
+    bread = None
     # We used to have an old version of the home page:
     # tmpl = "index-boxes.html" if g.BETA else "index.html"
 
     return render_template(tmpl,
         titletag="The L-functions and modular forms database",
         title="",
-        bread=None,
+        bread=bread,
         boxes = boxes)
 
 # Harald suggested putting the following in base.pybut it does not work either there or here!
