@@ -672,6 +672,8 @@ def lfuncFEtex(L, fmt):
                 curr_mu_exp += 1
             else:
                 old_mu = mu
+                if curr_mu_exp > 1:
+                    ans += "^{" + str(curr_mu_exp) + "}"
                 curr_mu_exp = 1
                 ans += "\Gamma_{\R}(s" + seriescoeff(mu, 0, "signed", "", -6, 5) + ")"
         if curr_mu_exp >= 2:
