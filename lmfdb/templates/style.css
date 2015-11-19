@@ -222,8 +222,15 @@ body.knowl #header {
     font-family: sans-serif;
     min-height: 18px;
     font-size: 90%;
+/*
     padding-top: 2px;
+*/
 }
+
+#header .bread a:first-child {
+    font-size: 150%;
+}
+
 #header .topright {
   /* border: 1px solid red;  */
   text-align: right;
