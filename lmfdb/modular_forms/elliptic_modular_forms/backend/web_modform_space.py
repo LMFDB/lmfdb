@@ -216,7 +216,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             self.group = Gamma1(self.level)
 
     def __repr__(self):
-        if self.character.is_trivial:
+        if self.character.is_trivial():
             return "Space of (Web) Modular Forms of level {N}, weight {k}, and trivial character".format(
                 k=self.weight, N=self.level)
         return "Space of (Web) Modular Forms of level {N}, weight {k}, and character number {chi}  modulo {N}".format(
