@@ -209,7 +209,6 @@
    status: beta
    heading:
       title: Motives
-      url_for: "motives"
    parts:
     - title: "Hypergeometric:"
       status: beta
