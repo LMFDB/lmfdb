@@ -25,7 +25,7 @@ from flask import jsonify
 from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec
 logger = emf_logger
-from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma
+from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma,QQ,Matrix
 from sage.misc.cachefunc import cached_function 
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
@@ -460,3 +460,19 @@ def dirichlet_character_conrey_galois_orbit_embeddings(N,xi):
         if gcd(n,N) == 1:
             embeddings[Mod(base_number,N)**n] = n
     return embeddings
+
+def multiply_mat_vec(E,v):
+    if not E.base_ring() is QQ:
+        EE = convert_matrix_to_extension_fld(E,v.base_ring())
+        return EE*v
+    else:
+        return E*v
+
+def convert_matrix_to_extension_fld(E,K):
+    EE=Matrix(K,E.nrows(), E.ncols())
+    z = K(E.base_ring().gen())
+    x = E[0,0].polynomial().parent().gen()
+    for a in range(E.nrows()):
+        for b in range(E.ncols()):
+            EE[a,b]=E[a,b].polynomial().substitute({x:z})
+    return EE
