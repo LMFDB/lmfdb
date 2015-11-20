@@ -499,6 +499,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
     else:
         max_norm = 'infinity'
     cursor = forms.find(query)
+    cursor.sort([('level_norm', pymongo.ASCENDING)])
     nfound = 0
     nnotfound = 0
     nok = 0
