@@ -166,7 +166,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     def init_dynamic_properties(self):
         emf_logger.debug("E = {0}".format(self.E))
         if not self.E is None and not self.v is None:
-            c = self.E*self.v
+            c = multiply_mat_vec(self.E,self.v)
             lc = len(c)
             primes_to_lc = primes_first_n(lc)
             self._ap = {}
@@ -223,7 +223,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     _collection_name = 'webnewforms'
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True):
-        emf_logger.critical("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
+        emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
             character_number = character.number
@@ -236,7 +236,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                 else:
                     raise ValueError,"Need label either string or integer! We got:{0}".format(label)
 
-        emf_logger.critical("Before init properties 0")
+        emf_logger.debug("Before init properties 0")
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
@@ -275,11 +275,11 @@ class WebNewForm(WebObject, CachedRepresentation):
 #                                    include_in_update = True if parent is None
 #                                    else False),
             )
-        emf_logger.critical("After init properties 1")
+        emf_logger.debug("After init properties 1")
         super(WebNewForm, self).__init__(
             update_from_db=update_from_db
             )
-        emf_logger.critical("After init properties 2 prec={0}".format(self.prec))
+        emf_logger.debug("After init properties 2 prec={0}".format(self.prec))
         # We're setting the WebEigenvalues property after calling __init__ of the base class
         # because it will set hecke_orbit_label from the db first
 
@@ -289,7 +289,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         ## in self._coefficients
         
         self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec,init_dynamic_properties=False)
-        emf_logger.critical("After init properties 3")
+        emf_logger.debug("After init properties 3")
 
     def __repr__(self):
         if self.dimension == 0:
@@ -505,6 +505,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             return ''
 
 from lmfdb.utils import cache
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import multiply_mat_vec
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 
 def WebNewForm_cached(level,weight,character,label,parent=None, **kwds):
@@ -513,7 +514,7 @@ def WebNewForm_cached(level,weight,character,label,parent=None, **kwds):
         return M.hecke_orbits[label]
     else:
         F = WebNewForm(level,weight,character,label,**kwds)
-        emf_logger.critical("Computed F not using cache!")
+        emf_logger.debug("Computed F not using cache!")
     return F
 
 
