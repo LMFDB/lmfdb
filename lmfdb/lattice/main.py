@@ -99,7 +99,7 @@ def lattice_by_label_or_name(lab, C):
 
 def lattice_search(**args):
     C = getDBConnection()
-    C.Lattices.lat.ensure_index([('dim', ASC), ('label', ASC)])
+#    C.Lattices.lat.ensure_index([('dim', ASC), ('label', ASC)])
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info and info.get('label'):
         return lattice_by_label_or_name(info.get('label'), C)

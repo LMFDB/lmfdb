@@ -73,9 +73,11 @@ def do_import(ll):
         lattice = data
     else:
         print "lattice already in the database"
-        lattice.update(data, upsert=True)
+        lattice.update(data)
     if saving:
         lat.save(lattice)
+
+
 
 # Loop over files
 
