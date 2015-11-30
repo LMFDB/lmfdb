@@ -63,14 +63,18 @@ def split_short_class_label(lab):
     return (conductor_label, isoclass_label)
 
 
-def pol_string_to_j_list(pol, deg, var=None):
+def pol_string_to_j_list(pol, deg=None, var=None):
     if var==None:
         from lmfdb.hilbert_modular_forms.hilbert_field import findvar
         var = findvar(pol)
         if not var:
             var = 'a'
     pol = PolynomialRing(QQ, var)(str(pol))
-    return [str(c) for c in pol.coefficients(sparse=False)] + ['0']*(deg-pol.degree()-1)
+    if deg == None:
+        fill = 0
+    else:
+        fill = deg - pol.degree() - 1
+    return [str(c) for c in pol.coefficients(sparse=False)] + ['0']*fill
 
 ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, John Voight, Dan Yasaki"
 
