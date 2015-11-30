@@ -262,12 +262,12 @@ class WebMaassForm(object):
         """
         ans = 'Level = ' + str(self.level) + '\n'
         ans += 'Eigenvalue = ' + str(self.R) + '\n'
-        ans += 'Symmetry = ' + self.even_odd() + '\n'
+        ans += 'Symmetry = "' + self.even_odd() + '"\n'
         ans += 'Weight = ' + str(self.weight) + '\n'
         ans += 'Character = ' + str(self.character) + '\n'
         ans += 'Precision = ' + self.precision() + '\n'
-        ans += 'Fricke Eigenvalue = ' + str(self.fricke()) + '\n'
-        ans += 'Atkin-Lehner Eigenvalues = ' + self.atkinlehner() + '\n'
+        ans += 'Fricke_Eigenvalue = ' + str(self.fricke()) + '\n'
+        ans += 'Atkin_Lehner_Eigenvalues = "' + self.atkinlehner() + '"\n'
         ans += 'Coefficients = ' + str(self.coeffs) + '\n'
         return ans
 
