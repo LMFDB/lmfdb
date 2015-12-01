@@ -287,17 +287,14 @@ def elliptic_curve_search(**args):
 
     deg = None
     if 'field' in info:
-        field_label = info['field']
+        field_label = parse_field_string(info['field'])
+        print("Field label was %s; after parsing, is %s" % (info['field'], field_label))
         if FIELD_LABEL_RE.match(field_label):
             query['field_label'] = field_label
+            deg = int(field_label.split(".")[0])
         else:
-            parsed_label = parse_field_string(field_label)
-            if FIELD_LABEL_RE.match(field_label):
-                query['field_label'] = field_label
-            else:
-                info['err'] = 'unrecognised field: %s' % info['field']
-                return search_input_error(info, bread)
-        deg = int(info['field'].split(".")[0])
+            info['err'] = 'unrecognised field: %s' % info['field']
+            return search_input_error(info, bread)
 
     if 'jinv' in info:
         if deg == None:
