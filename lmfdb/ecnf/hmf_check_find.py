@@ -561,7 +561,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
     else:
         print("%s curves agree with matching newforms, %s do not" % (nok, nfound - nok))
     if nnotfound:
-        print("Missing curves: %s" % missing_curves)
+        print("%s missing curves" % len(missing_curves))
     else:
         return
 
@@ -590,28 +590,30 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             goodP = [(i, P) for i, P in enumerate(Plist) if not P.divides(N)]
             label = form['short_label']
             aplist = [int(form['hecke_eigenvalues'][i]) for i, P in goodP]
-            curves = EllipticCurveSearch(K.K(), Plist, N, aplist[:5])
+            curves = EllipticCurveSearch(K.K(), Plist, N, aplist)
             #curves = EllipticCurveSearch(K.K(), [], N, [])
             if curves:
                 E = curves[0]
-                print("%s curves found by Magma, first is %s" % (len(curves),E))
+                print("%s curves found by Magma, first is %s" % (len(curves),E.ainvs()))
             else:
+                E = None
                 print("No curves found by Magma (using %s ap)" % len(aplist))
 
-
-        ec = {}
-        ec['field_label'] = field_label
-        ec['conductor_label'] = form['level_label']
-        ec['iso_label'] = form['label_suffix']
-        ec['number'] = int(1)
-        ec['conductor_ideal'] = form['level_ideal'].replace(" ","")
-        ec['conductor_norm'] = form['level_norm']
-        ai = E.ainvs()
-        ec['ainvs'] = [[str(c) for c in list(a)] for a in ai]
-        ec['cm'] = '?'
-        ec['base_change'] = []
-        output(make_curves_line(ec) + "\n")
-
+        if E!=None:
+            ec = {}
+            ec['field_label'] = field_label
+            ec['conductor_label'] = form['level_label']
+            ec['iso_label'] = form['label_suffix']
+            ec['number'] = int(1)
+            ec['conductor_ideal'] = form['level_ideal'].replace(" ","")
+            ec['conductor_norm'] = form['level_norm']
+            ai = E.ainvs()
+            ec['ainvs'] = [[str(c) for c in list(a)] for a in ai]
+            ec['cm'] = '?'
+            ec['base_change'] = []
+            output(make_curves_line(ec) + "\n")
+            if outfilename:
+                outfile.flush()
 
 def EllipticCurveSearch(K, Plist, N, aplist):
     r""" Call Magma's own EllipticCurveSearch() function to find and
@@ -630,43 +632,46 @@ def EllipticCurveSearch(K, Plist, N, aplist):
     A list (possibly empty) of elliptic curves defined over K with
     conductor N and traces of Frobenius given by the a(P).
     """
+    # Create a new magma instance for each search:
+    mag = Magma()
     # Define the number field in Magma and the list of primes
-    magma.eval("Qx<x> := PolynomialRing(RationalField());\n")
+    mag.eval("Qx<x> := PolynomialRing(RationalField());\n")
     disc = K.discriminant()
     name = K.gen()
     pol = K.defining_polynomial()
-    magma.eval("Qx<x> := PolynomialRing(RationalField());\n")
-    magma.eval("K<%s> := NumberField(%s);\n" % (name, pol))
-    magma.eval("OK := Integers(K);\n")
-    magma.eval("Plist := [];\n")
+    mag.eval("Qx<x> := PolynomialRing(RationalField());\n")
+    mag.eval("K<%s> := NumberField(%s);\n" % (name, pol))
+    mag.eval("OK := Integers(K);\n")
+    mag.eval("Plist := [];\n")
     for P in Plist:
         Pgens = P.gens_reduced()
         Pmagma = "(%s)*OK" % Pgens[0]
         if len(Pgens) > 1:
             Pmagma += "+(%s)*OK" % Pgens[1]
-        magma.eval("Append(~Plist,%s);\n" % Pmagma)
+        mag.eval("Append(~Plist,%s);\n" % Pmagma)
 
-    magma.eval('SetColumns(0);\n')
-    magma.eval('effort := 400;\n')
+    mag.eval('SetColumns(0);\n')
+    mag.eval('effort := 400;\n')
 
     Ngens = N.gens_reduced()
     Nmagma = "(%s)*OK" % Ngens[0]
     if len(Ngens) > 1:
         Nmagma += "+(%s)*OK" % Ngens[1]
-    magma.eval('N := %s;' % Nmagma)
-    magma.eval('aplist := %s;' % aplist)
-    magma.eval('goodP := [P: P in Plist | Valuation(N,P) eq 0];\n')
-    magma.eval('goodP := [goodP[i]: i in [1..#(aplist)]];\n')
-    magma.eval('curves := EllipticCurveSearch(N,effort : Primes:=goodP, Traces:=aplist);\n')
-    magma.eval('curves := [E: E in curves | &and[TraceOfFrobenius(E,goodP[i]) eq aplist[i] : i in [1..#(aplist)]]];\n')
-    magma.eval('ncurves := #curves;')
-    ncurves = magma('ncurves;').sage()
+    mag.eval('N := %s;' % Nmagma)
+    mag.eval('aplist := %s;' % aplist)
+    mag.eval('goodP := [P: P in Plist | Valuation(N,P) eq 0];\n')
+    mag.eval('goodP := [goodP[i]: i in [1..#(aplist)]];\n')
+    mag.eval('curves := EllipticCurveSearch(N,effort : Primes:=goodP, Traces:=aplist);\n')
+    mag.eval('curves := [E: E in curves | &and[TraceOfFrobenius(E,goodP[i]) eq aplist[i] : i in [1..#(aplist)]]];\n')
+    mag.eval('ncurves := #curves;')
+    ncurves = mag('ncurves;').sage()
     if ncurves==0:
         return []
     Elist = [0 for i in range(ncurves)]
     for i in range(ncurves):
-        magma.eval('E := curves[%s];\n' % (i+1))
-        Elist[i] = EllipticCurve(magma('aInvariants(E);\n').sage())
+        mag.eval('E := curves[%s];\n' % (i+1))
+        Elist[i] = EllipticCurve(mag('aInvariants(E);\n').sage())
+    mag.quit()
     return Elist
 
 
