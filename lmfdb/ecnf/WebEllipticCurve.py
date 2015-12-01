@@ -31,6 +31,7 @@ field_list = {}  # cached collection of enhanced WebNumberFields, keyed by label
 def FIELD(label):
     nf = WebNumberField(label, gen_name=special_names.get(label, 'a'))
     nf.parse_NFelt = lambda s: nf.K()([QQ(str(c)) for c in s])
+    nf.latex_poly = web_latex(nf.poly())
     return nf
 
 def make_field(label):
