@@ -1,0 +1,45 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+<div>
+
+The term representation is used for a variety of different types of
+group homomorphisms.  The first type in the LMFDB are Dirichlet
+characters.  These are homomorphisms
+$$ \chi:\modstar\Z n \to \C^\times$$
+for some $n\in\Z^+$.  Typically, they are thought of as functions on
+$\Z$ via the projection $\Z\to\Z/n\Z$ and extension by $0$.
+</div>
+<br>
+<div>
+The LMFDB also contains Artin representations.  These are continuous
+homomorphisms
+$$ \rho:\Gal(\overline\Q/\Q)\to\GL_n(\C)$$
+for some positive integer $n$.  Such homomorphisms always factor
+through the Galois group of some number field, and are complex
+representations of that Galois group.
+</div>
+<br>
+<div>
+A Dirichlet character can be viewed as special type of Artin
+representation.  If $n\in\Z^+$, then $\Gal(\Q(\zeta_n)/\Q)$
+can be identified in a natural way with $\modstar\Z n$, and
+$\C^\times\cong \GL_1(\C)$.
+</div>
+<br>
+<div>
+In both cases, the representations can be used to factor Dedekind
+$\zeta$-functions as products of L-functions.
+</div>
+<br>
+<div>
+Browse
+<br>
+<ul>
+<li><a href="{{ url_for('characters.render_characterNavigation') }}">Dirichlet characters</a>
+<li><a href="{{ url_for('artin_representations.index') }}">Artin representations</a>
+</ul>
+</div>
+
+{% endblock %}
+

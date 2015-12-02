@@ -106,6 +106,7 @@
    type: multilevel
    heading:
       title: Varieties
+      url_for: "varieties"
    parts:
      - title: Curves
        style: rotate
@@ -163,6 +164,7 @@
    type: simple
    heading:
       title: Fields
+      url_for: "fields"
    parts:
     - title: "Number fields:"
       part2:
@@ -178,6 +180,7 @@
    type: simple
    heading:
       title: Representations
+      url_for: "representations"
    parts:
     - title: "Characters:"
       url_for: "characters.render_characterNavigation"
@@ -227,6 +230,7 @@
    type: simple
    heading:
       title: Groups
+      url_for: "groups"
    parts:
     - title: Galois groups
       url_for: "galois_groups.index"

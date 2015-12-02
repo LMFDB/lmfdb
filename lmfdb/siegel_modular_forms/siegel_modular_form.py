@@ -48,7 +48,8 @@ def rescan_collection():
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/<j>/<k>')
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/<j>/<k>/')
 def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
-    bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
+    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+             ('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', '/ModularForm/GSp/Q/Sp4Z_j'),
              ('$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '/ModularForm/GSp/Q/Sp4Z_j/%s/%s'%(k,j))]
     # How to handle space decomposition: dict with keys and entries.
@@ -94,7 +95,8 @@ def find_samples(coll, weight):
 @app.route('/ModularForm/GSp/Q/Sp4Z_j')
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/')
 def ModularForm_GSp4_Q_Sp4Z_j():
-    bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
+    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+             ('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '/ModularForm/GSp/Q/Sp4Z_j')]
     error = False
     jrange = xrange(0, 21)
@@ -136,7 +138,8 @@ def ModularForm_GSp4_Q_top_level( page = None):
         # we trigger a (re)scan for available collections
         rescan_collection()
 
-    bread = [('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level'))]        
+    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+             ('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level'))]
 
     # info = dict(args); info['args'] =  request.args
     #info['learnmore'] = []
