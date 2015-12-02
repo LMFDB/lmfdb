@@ -101,6 +101,8 @@ def md_preprocess(txt):
               r"[{{ LINK_EXT('arXiv:\1', 'http://arxiv.org/abs/\1') }}]",
               knowl_content)
 
+    knowl_content = re.sub(r"\\cite{([^}]+)}",r"[\1]",knowl_content)
+
     return knowl_content
 
 @app.context_processor
