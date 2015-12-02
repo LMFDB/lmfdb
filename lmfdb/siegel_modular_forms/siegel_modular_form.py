@@ -306,7 +306,8 @@ def prepare_sample_page( sam, args, bread):
         except Exception as e:
             info['error'] = 'list of det(F): %s' % str(e)
             info['fcs_to_show'] = []
-
+    if info['fcs_to_show']==[]:
+        info['fcs_to_show']=sam.available_Fourier_coefficients()[:5]
     null_ideal = sam.field().ring_of_integers().ideal(0)
     info['ideal_l'] = args.get( 'modulus', null_ideal)
     if info['ideal_l'] != 0:

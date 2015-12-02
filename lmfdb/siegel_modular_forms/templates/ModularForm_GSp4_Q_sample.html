@@ -113,9 +113,6 @@
 {% set evs = sam.available_eigenvalues() %}
 {% if evs|count > 0 %}
 <h2>Eigenvalues $\lambda(l)$ of $T(l)$</h2>
-{% if evs_to_show|count == 0 %}
-{% set evs_to_show = evs[:1] %}
-{% endif %}
 {% set ev_dict = sam.eigenvalues( evs_to_show) %}
   <table>
     <thead>
@@ -132,9 +129,6 @@
 {% set fcs = sam.available_Fourier_coefficients() %} 
 {% if fcs|count > 0 %}
 <h2>Fourier coefficients $c(F)$</h2>
-{% if fcs_to_show|count == 0 %}
-{% set fcs_to_show = fcs[1:2] %}
-{% endif %}
 {% set fc_dict = sam.Fourier_coefficients( fcs_to_show) %}
   <table>
     <thead>
@@ -165,8 +159,8 @@
 <table>
   {% if evs|count > 0 %}
   <tr valign="top">
-    <td>Eigenvalues $\lambda(l)$ available for $l$ from</td>
-    <td>
+    <td>$\lambda(l)$ for $l$ in:</td>
+    <td width="80%">
       {% for l in evs %} 
       <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), indices=l) }}">{{ l }}</a>
       {% endfor %}
@@ -175,8 +169,8 @@
   {% endif %}
   {% if fcs|count > 0 %}
   <tr valign="top">
-    <td>More $c(F)$ available for $\det(F)$ in</td>
-    <td>
+    <td>$c(F)$ for $\det(F)$ in:</td>
+    <td width="80%">
       {% for d in fcs %} 
       <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), dets=d) }}">{{ d }}</a>
       {% endfor %}
