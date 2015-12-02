@@ -67,8 +67,8 @@ def EC_redirect():
     return redirect(url_for("ec.rational_elliptic_curves", **request.args))
 
 def learnmore_list():
-    return [('Completeness of this data', url_for(".completeness_page")),
-            ('Source of this data', url_for(".how_computed_page")),
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
             ('Elliptic Curve labels', url_for(".labels_page"))]
 
 
