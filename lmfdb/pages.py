@@ -146,7 +146,7 @@ def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
     lm = [('History of varieties', '/Variety/history')]
-    return render_template('varieties.html', title=t, body_class=_bc, bread=b,
+    return render_template('single.html', title=t, kid='varieties.about', bread=b,
             learnmore=lm)
 
 
