@@ -66,6 +66,12 @@ def cmp_label(lab1, lab2):
 def EC_redirect():
     return redirect(url_for("ec.rational_elliptic_curves", **request.args))
 
+def learnmore_list():
+    return [('Completeness of this data', url_for(".completeness_page")),
+            ('Source of this data', url_for(".how_computed_page")),
+            ('Elliptic Curve labels', url_for(".labels_page"))]
+
+
 #########################
 #  Search/navigate
 #########################
@@ -97,7 +103,7 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, **err_args)
+    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list(), **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -131,7 +137,7 @@ def statistics():
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
              ('statistics', ' ')]
-    return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread)
+    return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")
@@ -340,7 +346,7 @@ def elliptic_curve_search(**args):
 
 
 def search_input_error(info, bread):
-    return render_template("search_results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
+    return render_template("search_results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread, learnmore=learnmore_list())
 
 ##########################
 #  Specific curve pages
@@ -432,7 +438,8 @@ def render_isogeny_class(iso_class):
                            credit=credit,
                            title=class_data.title,
                            friends=class_data.friends,
-                           downloads=class_data.downloads)
+                           downloads=class_data.downloads,
+                           learnmore=learnmore_list())
 
 @ec_page.route("/modular_form_display/<label>/<number>")
 def modular_form_display(label, number):
@@ -509,7 +516,8 @@ def render_curve_webpage_by_label(label):
                            data=data,
                            bread=data.bread, title=data.title,
                            friends=data.friends,
-                           downloads=data.downloads)
+                           downloads=data.downloads,
+                           learnmore=learnmore_list())
 
 @ec_page.route("/padic_data")
 def padic_data():
@@ -659,3 +667,35 @@ def download_search(info, res):
 #    response = make_response(d.readline())
 #    response.headers['Content-type'] = 'text/plain'
 #    return response
+
+
+@ec_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of the elliptic curve data over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             ('Completeness', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.ec.extent',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
+@ec_page.route("/Source")
+def how_computed_page():
+    t = 'Source of the elliptic curve data over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             ('Source', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.ec.source',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
+@ec_page.route("/Labels")
+def labels_page():
+    t = 'Labels for elliptic curves over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             ('Labels', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='ec.q.lmfdb_label',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
