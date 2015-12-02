@@ -182,6 +182,7 @@
       colspan: onecolumn
     - title: Function fields
       status: future
+      colspan: onecolumn
 
 6Repn:
    type: simple
