@@ -162,24 +162,21 @@ def parse_field_string(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
 def NF_redirect():
     return redirect(url_for(".number_field_render_webpage", **request.args))
 
-# function copied from classical_modular_form.py
-# def set_sidebar(l):
-#        res=list()
-##       print "l=",l
-#        for ll in l:
-#                if(len(ll)>1):
-#                        content=list()
-#                        for n in range(1,len(ll)):
-#                                content.append(ll[n])
-#                        res.append([ll[0],content])
-#       print "res=",res
-#        return res
-
+@nf_page.route("/HowComputed")
+def how_computed_page():
+    info = {}
+    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), 
+        ('Galois group labels', url_for(".render_groups_page")), 
+        (Completename, url_for(".render_discriminants_page")) ]
+    t = 'How Number Field Data was Computed'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois group labels', ' ')]
+    return render_template("single.html", kid='dq.nf.howcomputed', 
+        credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 @nf_page.route("/GaloisGroups")
 def render_groups_page():
     info = {}
-    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
+    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")) ]
     t = 'Galois group labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois group labels', ' ')]
     C = base.getDBConnection()
@@ -210,7 +207,7 @@ def render_class_group_data():
     #for k in info.keys():
     # nf_logger.info(str(k) + ' ---> ' + str(info[k]))
     #nf_logger.info('******************* ')
-    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page"))]
+    #info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page"))]
     t = 'Class Groups of Quadratic Imaginary Fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), (t, ' ')]
     info['message'] =  ''
@@ -241,11 +238,11 @@ def render_class_group_data():
             info['message'] = 'Invalid congruence requested'
             return class_group_request_error(info, bread)
 
-    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread, learnmore=info.pop('learnmore'))
+    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
 
 def class_group_request_error(info, bread):
     t = 'Class Groups of Quadratic Imaginary Fields'
-    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread, learnmore=info.pop('learnmore'))
+    return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
 
 
 @nf_page.route("/")
@@ -413,7 +410,11 @@ def render_field_webpage(args):
                                                                [str(a) for a in dirichlet_chars]),
                                                            poly=info['polynomial'])))
     info['learnmore'] = [('Global number field labels', url_for(
-        ".render_labels_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
+        ".render_labels_page")), 
+        (Completename, url_for(".render_discriminants_page")),
+        ('How data was computed', url_for(".how_computed_page"))]
+    if info['signature'] == [0,1]:
+        info['learnmore'].append(('Quadratic imaginary class groups', url_for(".render_class_group_data")))
     # With Galois group labels, probably not needed here
     # info['learnmore'] = [('Global number field labels',
     # url_for(".render_labels_page")), ('Galois group
@@ -874,10 +875,3 @@ def download_search(info, res):
                      attachment_filename=filename,
                      as_attachment=True)
 
-@nf_page.route("/HowComputed")
-def how_computed_page():
-    info = {}
-    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'How This Data Was Computed'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('How computed', ' ')]
-    return render_template("how_computed.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
