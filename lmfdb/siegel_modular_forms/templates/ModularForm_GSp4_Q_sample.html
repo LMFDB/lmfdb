@@ -32,10 +32,6 @@
 	});
     });
 </script>
-<p>
-  <button value="Download" onclick="window.location.href = '{{ url_for( 'ModularForm_GSp4_Q_top_level', download=sam.collection()[0]+'.'+sam.name()) }}'">Download</button>
-  this sample in JavaScript object notation (json).
-</p>
 
 <h2>Basic properties</h2>
 {% macro nice( x) %}
@@ -120,7 +116,7 @@
     </thead>
     {% for l in ev_dict|sort %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
-      <td valign="top">{{ l }}</td><td>{{ red(ev_dict[l]) }}</td>
+      <td valign="top">${{ l }}$</td><td>${{ red(ev_dict[l]) }}$</td>
     </tr>
     {% endfor %}
   </table>
@@ -237,6 +233,10 @@
 
 <p>
   Here $\mathfrak{L}$ equals {{ ideal_l }}.
+</p>
+<p>
+  <button value="Download" onclick="window.location.href = '{{ url_for( 'ModularForm_GSp4_Q_top_level', download=sam.collection()[0]+'.'+sam.name()) }}'">Download</button>
+  this sample in JavaScript object notation (json).
 </p>
 
 
