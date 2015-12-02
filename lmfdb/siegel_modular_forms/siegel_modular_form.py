@@ -296,6 +296,8 @@ def prepare_sample_page( sam, args, bread):
         except Exception as e:
             info['error'] = 'list of l: %s' % str(e)
             info['evs_to_show'] = []
+    if info['evs_to_show']==[]:
+        info['evs_to_show']=[2,3,4,5,7,9,11,13,17,19]
 
     info['fcs_to_show'] = args.get( 'dets', [])
     if info['fcs_to_show'] != []:
