@@ -71,7 +71,7 @@ def dimension_Gamma1_2( wt_range, j):
       <li>Second entry: The codimension of the subspace of cusp forms.</li>
       <li>Third entry: The subspace of cusp forms.</li>
     </ul>
-    <p> More precisely, The trilple $[a,b,c]$ in
+    <p> More precisely, The triple $[a,b,c]$ in
     <ul>
       <li>
         row <span class="emph">All</span>
