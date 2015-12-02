@@ -437,9 +437,14 @@ def render_field_webpage(args):
                    ]
     from lmfdb.math_classes import NumberFieldGaloisGroup
     try:
-        info["tim_number_field"] = NumberFieldGaloisGroup.find_one({"label": label})
+        info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
         v = nf.factor_perm_repn(info["tim_number_field"])
-        info["mydecomp"] = ['*' if x>0 else '' for x in v]
+        def dopow(m):
+            if m==0: return ''
+            if m==1: return '*'
+            return '*<sup>%d</sup>'% m
+
+        info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
 #    del info['_id']
@@ -464,7 +469,7 @@ def format_coeffs(coeffs):
 
 def split_label(label):
     """
-      Parses number field labels. Allows for 3.1.4e1t11e1.1
+      Parses number field labels. Allows for 3.1.2e2_11.1
     """
     tmp = label.split(".")
     tmp[2] = parse_product(tmp[2])
@@ -472,7 +477,7 @@ def split_label(label):
 
 
 def parse_product(symbol):
-    tmp = symbol.split("t")
+    tmp = symbol.split("_")
     return str(prod(parse_power(pair) for pair in tmp))
 
 

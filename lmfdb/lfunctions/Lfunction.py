@@ -997,19 +997,15 @@ class DedekindZeta(Lfunction):   # added by DK
                     if nfgg[j]>0:
                         the_rep = ar[j]
                         if (the_rep.dimension()>1 or
-                                  str(the_rep.conductor())!=str(1) or
-                                  the_rep.index()>1):
+                                  str(the_rep.conductor())!=str(1)):
                             ar_url = url_for("l_functions.l_function_artin_page",
-                                             dimension=the_rep.dimension(),
-                                             conductor=the_rep.conductor(),
-                                             tim_index=the_rep.index())
+                                             label=the_rep.label())
                             right = (r'\({}^{%d}\)' % (nfgg[j])
                                      if nfgg[j]>1 else r'')
                             self.factorization += r'\(\;\cdot\)' 
-                            self.factorization += (r'<a href="%s">\(L(s, \rho_{%d,%s,%d})\)</a>' % (ar_url,
-                                            the_rep.dimension(),
-                                            str(the_rep.conductor()),
-                                            the_rep.index()))
+                            tex_label = the_rep.label()
+                            tex_label = tex_label.replace('_',r'\_')
+                            self.factorization += (r'<a href="%s">\(L(s, \rho_{%s})\)</a>' % (ar_url, tex_label))
                             self.factorization += right
 
         self.poles = [1, 0]  # poles of the Lambda(s) function
@@ -1139,22 +1135,16 @@ class ArtinLfunction(Lfunction):
     """
     def __init__(self, **args):
         constructor_logger(self, args)
-        if not ('dimension' in args.keys() and 'conductor' in args.keys() and 'tim_index' in args.keys()):
-            raise KeyError("You have to supply dimension, conductor and " +
-                           "tim_index for an Artin L-function")    
+        if not ('label' in args.keys()):
+            raise KeyError("You have to supply a label for an Artin L-function")    
 
         self._Ltype = "artin"
         
         from lmfdb.math_classes import ArtinRepresentation
-        self.dimension = args["dimension"]
-        self.conductor = args["conductor"]
-        self.tim_index = args["tim_index"]
-        self.artin = ArtinRepresentation(self.dimension,
-                                         self.conductor, self.tim_index)
+        self.label = args["label"]
+        self.artin = ArtinRepresentation(self.label)
 
-        self.title = ("L function for an Artin representation of dimension "
-                      + str(self.dimension)
-                      + ", conductor " + str(self.conductor))
+        self.title = ("L function for Artin representation " + str(self.label))
 
         self.motivic_weight = 0
         self.algebraic = True
@@ -1171,8 +1161,6 @@ class ArtinLfunction(Lfunction):
                 upperbound=1000)
         
         
-
-        
         self.sign = self.artin.root_number()
         self.poles_L = self.artin.poles()
         self.residues_L = self.artin.residues()
@@ -1186,7 +1174,7 @@ class ArtinLfunction(Lfunction):
         self.nu_fe = self.artin.nu_fe()
         
         
-        self.Q_fe = self.Q_fe = float(sqrt(Integer(self.conductor))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
+        self.Q_fe = self.Q_fe = float(sqrt(Integer(self.artin.conductor()))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
         self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
         self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         
@@ -1197,7 +1185,7 @@ class ArtinLfunction(Lfunction):
         self.citation = ''
         self.support = "Support by Paul-Olivier Dehaye"
 
-        self.texname = "L(s)"  
+        self.texname = "L(s,\\rho)"  
         self.texnamecompleteds = "\\Lambda(s)"  
         if self.selfdual:
             self.texnamecompleted1ms = "\\Lambda(1-s)" 
@@ -1207,8 +1195,7 @@ class ArtinLfunction(Lfunction):
         generateSageLfunction(self)
 
     def Lkey(self):
-        return {"dimension": self.dimension, "conductor": self.conductor,
-                "tim_index": self.tim_index}
+        return {"label": self.label}
 
 #############################################################################
 

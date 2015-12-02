@@ -335,11 +335,9 @@ def l_function_nf_page(label):
 
 
 # L-function of Artin representation    ########################################
-@l_function_page.route("/ArtinRepresentation/<dimension>/<conductor>/<tim_index>/")
-def l_function_artin_page(dimension, conductor, tim_index):
-    args = {'dimension': dimension, 'conductor': conductor,
-            'tim_index': tim_index}
-    return render_single_Lfunction(ArtinLfunction, args, request)
+@l_function_page.route("/ArtinRepresentation/<label>/")
+def l_function_artin_page(label):
+    return render_single_Lfunction(ArtinLfunction, {'label': label}, request)
 
 # L-function of hypergeometric motive   ########################################
 @l_function_page.route("/Motive/Hypergeometric/Q/<label>/<t>")
@@ -960,7 +958,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return DedekindZeta(label=str(arg2))
 
     elif arg1 == "ArtinRepresentation":
-        return ArtinLfunction(dimension=arg2, conductor=arg3, tim_index=arg4)
+        return ArtinLfunction(label=str(arg2))
 
     elif arg1 == "SymmetricPower":
         return SymmetricPowerLfunction(power=arg2, underlying_type=arg3, field=arg4, label=arg5)
