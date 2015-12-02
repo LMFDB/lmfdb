@@ -2,18 +2,9 @@
 {% block content %}
 {# Offers options to browse and search #}
 
-<p>
-This database contains {{ info.nfields }}
-{{KNOWL('nf', title='global number fields')}} of
-{{KNOWL('nf.degree', title='degree')}} $n\leq {{ info.maxdeg }}$.  The data is
-complete in a variety of ways, see 
-<a href="Discriminants">completeness of global number field data</a>
-for details.
-In addition, extensive data on
-<a href="QuadraticImaginaryClassGroups">class groups of quadratic imaginary
-fields</a> is available for download.
-
-</p>
+<div>
+{{ KNOWL_INC('dq.nf.extent') }}
+</div>
 
 <h2> Browse {{KNOWL('nf', title='global number fields')}} </h2>
 
