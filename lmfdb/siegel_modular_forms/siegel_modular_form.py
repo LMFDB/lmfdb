@@ -110,8 +110,12 @@ def ModularForm_GSp4_Q_Sp4Z_j():
     if request.args.get('k'):
         kr = parse_range(request.args.get('k'))
         if type(kr) is int:
+            if kr<4:
+                kr=4
             krange = xrange(kr, kr+10+1);
         else:
+            if kr['$gte']<4:
+                kr['$gte']=4
             krange = xrange(kr['$gte'], kr['$lte'])
     jrange = [x for x in jrange if x%2==0]
     try:
