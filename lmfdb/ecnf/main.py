@@ -17,7 +17,7 @@ from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
-
+from lmfdb.number_fields.number_field import FIELD_LABEL_RE
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
@@ -61,6 +61,20 @@ def split_short_class_label(lab):
     conductor_label = data[0]
     isoclass_label = data[1]
     return (conductor_label, isoclass_label)
+
+
+def pol_string_to_j_list(pol, deg=None, var=None):
+    if var==None:
+        from lmfdb.hilbert_modular_forms.hilbert_field import findvar
+        var = findvar(pol)
+        if not var:
+            var = 'a'
+    pol = PolynomialRing(QQ, var)(str(pol))
+    if deg == None:
+        fill = 0
+    else:
+        fill = deg - pol.degree() - 1
+    return [str(c) for c in pol.coefficients(sparse=False)] + ['0']*fill
 
 ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, John Voight, Dan Yasaki"
 
@@ -271,8 +285,23 @@ def elliptic_curve_search(**args):
     if 'conductor_label' in info:
         query['conductor_label'] = info['conductor_label']
 
+    deg = None
+    if 'field' in info:
+        field_label = parse_field_string(info['field'])
+        print("Field label was %s; after parsing, is %s" % (info['field'], field_label))
+        if FIELD_LABEL_RE.match(field_label):
+            query['field_label'] = field_label
+            deg = int(field_label.split(".")[0])
+        else:
+            info['err'] = 'unrecognised field: %s' % info['field']
+            return search_input_error(info, bread)
+
     if 'jinv' in info:
-        query['jinv'] = info['jinv']
+        if deg == None:
+            info['err'] = 'You must specify a field when searching by j-invariant'
+            return search_input_error(info, bread)
+        else:
+            query['jinv'] = pol_string_to_j_list(info['jinv'], deg=deg)
 
     if info.get('torsion'):
         ran = info['torsion'] = clean_input(info['torsion'])
@@ -304,15 +333,13 @@ def elliptic_curve_search(**args):
         query['torsion_structure'] = [int(r) for r in res]
 
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
+        info['number'] = 1
         query['number'] = 1
 
     if 'include_base_change' in info and info['include_base_change'] == 'off':
         query['base_change'] = []
     else:
         info['include_base_change'] = "on"
-
-    if 'field' in info:
-        query['field_label'] = parse_field_string(info['field'])
 
     info['query'] = query
 
