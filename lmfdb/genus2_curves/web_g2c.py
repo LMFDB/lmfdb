@@ -486,7 +486,7 @@ def spl_statement(coeffss, labels, condnorms):
         statement = """The Jacobian admits two distinct elliptic curve factors
         up to isogeny</p>\
         <p>Elliptic curves that represent these factors and admit small
-        isogenies are:<br>"""
+        isogenies are:"""
     for n in range(len(coeffss)):
         # Use labels when possible:
         label = labels[n]
@@ -494,15 +494,15 @@ def spl_statement(coeffss, labels, condnorms):
             # TODO: Next statement can be removed by a database update
             if not '-' in label:
                 label = cremona_to_lmfdb(label)
-            statement += """Elliptic curve with label <a href=%s>%s</a><br>"""\
+            statement += """<br>Elliptic curve with label <a href=%s>%s</a>"""\
             % (url_for_ec(label), label)
         # Otherwise give defining equation:
         else:
-            statement += """\(4 y^2 = x^3 - (g_4 / 48) x - (g_6 / 864)\),
+            statement += """<br>\(4 y^2 = x^3 - (g_4 / 48) x - (g_6 / 864)\),
             with<br>\
             \(g_4 = %s\)<br>\
             \(g_6 = %s\)<br>\
-            Conductor norm: %s<br>""" % \
+            Conductor norm: %s""" % \
             (strlist_to_nfelt(coeffss[n][0], 'b'),
             strlist_to_nfelt(coeffss[n][1], 'b'),
             condnorms[n])
