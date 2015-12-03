@@ -481,7 +481,7 @@ def spl_statement(coeffss, labels, condnorms):
     if len(coeffss) == 1:
         statement = """The Jacobian decomposes up to isogeny as the square of
         an elliptic curve</p>\
-        <p>Elliptic curve that admits a small isogeny:<br>"""
+        <p>Elliptic curve that admits a small isogeny:"""
     else:
         statement = """The Jacobian admits two distinct elliptic curve factors
         up to isogeny</p>\
