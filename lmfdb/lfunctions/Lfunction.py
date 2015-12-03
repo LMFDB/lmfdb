@@ -1130,7 +1130,7 @@ class HypergeometricMotiveLfunction(Lfunction):
 class ArtinLfunction(Lfunction):
     """Class representing the Artin L-function
 
-    Compulsory parameters: dimension, conductor, tim_index
+    Compulsory parameters: label
 
     """
     def __init__(self, **args):
@@ -1144,7 +1144,7 @@ class ArtinLfunction(Lfunction):
         self.label = args["label"]
         self.artin = ArtinRepresentation(self.label)
 
-        self.title = ("L function for Artin representation " + str(self.label))
+        self.title = ("L-function for Artin representation " + str(self.label))
 
         self.motivic_weight = 0
         self.algebraic = True
