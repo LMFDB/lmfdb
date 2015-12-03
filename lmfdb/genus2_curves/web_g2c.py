@@ -10,6 +10,7 @@ from lmfdb.ecnf.main import split_full_label
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
 from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot
+from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.WebNumberField import *
 from itertools import izip
@@ -51,11 +52,11 @@ def isog_label(label):
 ###############################################################################
 
 def intlist_to_poly(s):
-    return str(PolynomialRing(QQ, 'x')(s)).replace('*','')
+    return latex(PolynomialRing(QQ, 'x')(s))
 
 def strlist_to_nfelt(L, varname):
     La = [ s.encode('ascii') for s in L ]
-    return str(PolynomialRing(QQ, varname)(La)).replace('*','')
+    return latex(PolynomialRing(QQ, varname)(La))
 
 def list_to_min_eqn(L):
     xpoly_rng = PolynomialRing(QQ,'x')
@@ -72,8 +73,7 @@ def groupid_to_meaningful(groupid):
 
 def url_for_ec(label):
     if not '-' in label:
-        # Convert to LMFDB label on next run:
-        (conductor_label, class_label, number) = split_cremona_label(label)
+        (conductor_label, class_label, number) = split_lmfdb_label(label)
         return url_for('ecnf.show_ecnf', nf = 'Q', conductor_label =
                 conductor_label, class_label = class_label, number = number)
     else:
@@ -92,6 +92,8 @@ def factorsRR_pretty_raw(factorsRR):
         return r'\R \times \C'
     elif factorsRR == ['CC', 'RR']:
         return r'\R \times \C',
+    elif factorsRR == ['CC', 'CC']:
+        return r'\C \times \C'
     elif factorsRR == ['HH']:
         return r'\mathbf{H}'
     elif factorsRR == ['M_2(RR)']:
@@ -473,8 +475,11 @@ def spl_statement(coeffss, labels, condnorms):
         # Use labels when possible:
         label = labels[n]
         if label:
-            statement += """Elliptic curve with label <a href=%s>%s</a><br>""" % \
-            (url_for_ec(label), label)
+            # TODO: Next statement can be removed by a database update
+            if not '-' in label:
+                label = cremona_to_lmfdb(label)
+            statement += """Elliptic curve with label <a href=%s>%s</a><br>"""\
+            % (url_for_ec(label), label)
         # Otherwise give defining equation:
         else:
             statement += """\(4 y^2 = x^3 - (g_4 / 48) x - (g_6 / 864)\),
