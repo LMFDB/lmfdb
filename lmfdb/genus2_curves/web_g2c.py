@@ -51,11 +51,11 @@ def isog_label(label):
 ###############################################################################
 
 def intlist_to_poly(s):
-    return str(PolynomialRing(QQ, 'x')(s)).replace('*','')
+    return latex(PolynomialRing(QQ, 'x')(s))
 
 def strlist_to_nfelt(L, varname):
     La = [ s.encode('ascii') for s in L ]
-    return str(PolynomialRing(QQ, varname)(La)).replace('*','')
+    return latex(PolynomialRing(QQ, varname)(La))
 
 def list_to_min_eqn(L):
     xpoly_rng = PolynomialRing(QQ,'x')
