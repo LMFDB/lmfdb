@@ -5,12 +5,10 @@ import os
 from pymongo import ASCENDING, DESCENDING
 from lmfdb.base import getDBConnection
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
 from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot
-from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.WebNumberField import *
 from itertools import izip
@@ -38,6 +36,14 @@ def db_g2endo():
         g2endodb = getDBConnection().genus2_endomorphisms
     return g2endodb
 
+ecdbQQ = None
+
+def db_ecQQ():
+    global ecdbQQ
+    if ecdbQQ is None:
+        ecdbQQ = getDBConnection().elliptic_curves.curves
+    return ecdbQQ
+
 ###############################################################################
 # Recovering the isogeny class
 ###############################################################################
@@ -46,6 +52,18 @@ def isog_label(label):
     #get isog label from full label
     L = label.split(".")
     return L[0]+ "." + L[1]
+
+###############################################################################
+# Conversion of eliptic curve labels (database stores Cremona labels
+# but we want to display LMFDB labels -- see Issue #635)
+###############################################################################
+
+def cremona_to_lmfdb(label):
+    E = db_ecQQ().find_one({'label':label})
+    if E:
+        return E['lmfdb_label']
+    else:
+        return ''
 
 ###############################################################################
 # Pretty print functions
@@ -73,9 +91,7 @@ def groupid_to_meaningful(groupid):
 
 def url_for_ec(label):
     if not '-' in label:
-        (conductor_label, class_label, number) = split_lmfdb_label(label)
-        return url_for('ecnf.show_ecnf', nf = 'Q', conductor_label =
-                conductor_label, class_label = class_label, number = number)
+        return url_for('ec.by_ec_label', label = label)
     else:
         (nf, conductor_label, class_label, number) = split_full_label(label)
         return url_for('ecnf.show_ecnf', nf = nf, conductor_label =
