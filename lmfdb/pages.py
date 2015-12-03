@@ -164,7 +164,7 @@ def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
     lm = [('History of fields', '/Field/history')]
-    return render_template('fields.html', title=t, body_class=_bc, bread=b, learnmore=lm)
+    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b, learnmore=lm)
 
 @app.route("/Field/history")
 def fields_history():
@@ -179,7 +179,7 @@ def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
     lm = [('History of representations', '/Representation/history')]
-    return render_template('representations.html', title=t, body_class=_bc, bread=b, learnmore=lm)
+    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b, learnmore=lm)
 
 
 @app.route("/Representation/history")
@@ -196,7 +196,7 @@ def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
     lm = [('History of groups', '/Group/history')]
-    return render_template('groups.html', title=t, body_class=_bc, bread=b, learnmore=lm)
+    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b, learnmore=lm)
 
 
 @app.route("/Group/history")
