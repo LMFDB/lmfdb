@@ -61,7 +61,7 @@
           status: beta
         - title: dummy
           status: future
-        - title: Local $\zeta$-functions
+        - title: Local L-functions
           status: future
           colspan: onecolumn
 
