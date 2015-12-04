@@ -5,7 +5,6 @@ import os
 from pymongo import ASCENDING, DESCENDING
 from lmfdb.base import getDBConnection
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
@@ -36,6 +35,29 @@ def db_g2endo():
     if g2endodb is None:
         g2endodb = getDBConnection().genus2_endomorphisms
     return g2endodb
+
+ecdb = None
+
+def db_ec():
+    global ecdb
+    if ecdb is None:
+        ecdb = getDBConnection().elliptic_curves.curves
+    return ecdb
+
+###############################################################################
+# Conversion of eliptic curve labels (database stores Cremona labels
+# but we want to display LMFDB labels -- see Issue #635)
+###############################################################################
+
+def cremona_to_lmfdb(lab):
+    E = db_ec().find_one({'label':lab})
+    if E:
+        return E['lmfdb_label']
+    else:
+        return ''
+
+def cremona_to_lmfdb_list(lab_list):
+    return [cremona_to_lmfdb(lab) for lab in lab_list]
 
 ###############################################################################
 # Recovering the isogeny class
@@ -72,10 +94,7 @@ def groupid_to_meaningful(groupid):
 
 def url_for_ec(label):
     if not '-' in label:
-        # Convert to LMFDB label on next run:
-        (conductor_label, class_label, number) = split_cremona_label(label)
-        return url_for('ecnf.show_ecnf', nf = 'Q', conductor_label =
-                conductor_label, class_label = class_label, number = number)
+        return url_for('ec.by_ec_label', label = label)
     else:
         (nf, conductor_label, class_label, number) = split_full_label(label)
         return url_for('ecnf.show_ecnf', nf = nf, conductor_label =
@@ -634,7 +653,7 @@ class WebG2C(object):
             endodata['spl_facs_coeffs'] = self.spl_facs_coeffs
             # This could be done non-uniformly as well... later.
             if len(self.spl_facs_labels) == len(self.spl_facs_coeffs):
-                endodata['spl_facs_labels'] = self.spl_facs_labels
+                endodata['spl_facs_labels'] = cremona_to_lmfdb_list(self.spl_facs_labels)
             else:
                 endodata['spl_facs_labels'] = ['' for coeffs in
                         self.spl_facs_coeffs]
