@@ -208,7 +208,9 @@ function show_code(system) {
 	<center>
 	<table>
 
-	<thead><tr><th></th>
+	<thead><tr>
+    <th></th>
+    <th>Label</th>
 	<th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
 	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
@@ -219,8 +221,9 @@ function show_code(system) {
 	</tr></thead>
 	<tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
-          <tr> <td align="right">
-              {{info.mydecomp[loop.index-1]}}<a href = "{{artin.url_for()}}">{{loop.index}}</a></td><td align="center">${{artin.dimension()}}$</td>
+          <tr> <td align="left">
+              {{info.mydecomp[loop.index-1]|safe}}
+              <td align="left"><a href = "{{artin.url_for()}}">{{artin.label()}}</a></td><td align="center">${{artin.dimension()}}$</td>
 {#	  <td align="center">${{artin.conductor_equation()}}$</td> #}
 	  <td align="center">${{artin.factored_conductor_latex()}}$</td>
 	  {% if artin.number_field_galois_group().url_for() %}
@@ -242,8 +245,11 @@ function show_code(system) {
         <br />
         <div>
         Data is given for all irreducible 
-        representations of the Galois group.  Those marked with 
-        * are associated with this field.
+        representations of the Galois group for the Galois closure
+        of this field.  Those marked with * are summands in the
+        permutation representation coming from this field.  Representations
+        which appear with multiplicity greater than one are indicated
+        by exponents on the *.
 	</div>
 	{% endif %}
 
