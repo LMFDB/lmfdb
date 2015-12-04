@@ -5,7 +5,6 @@ import os
 from pymongo import ASCENDING, DESCENDING
 from lmfdb.base import getDBConnection
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
@@ -37,6 +36,14 @@ def db_g2endo():
         g2endodb = getDBConnection().genus2_endomorphisms
     return g2endodb
 
+ecdbQQ = None
+
+def db_ecQQ():
+    global ecdbQQ
+    if ecdbQQ is None:
+        ecdbQQ = getDBConnection().elliptic_curves.curves
+    return ecdbQQ
+
 ###############################################################################
 # Recovering the isogeny class
 ###############################################################################
@@ -47,15 +54,27 @@ def isog_label(label):
     return L[0]+ "." + L[1]
 
 ###############################################################################
+# Conversion of eliptic curve labels (database stores Cremona labels
+# but we want to display LMFDB labels -- see Issue #635)
+###############################################################################
+
+def cremona_to_lmfdb(label):
+    E = db_ecQQ().find_one({'label':label})
+    if E:
+        return E['lmfdb_label']
+    else:
+        return ''
+
+###############################################################################
 # Pretty print functions
 ###############################################################################
 
 def intlist_to_poly(s):
-    return str(PolynomialRing(QQ, 'x')(s)).replace('*','')
+    return latex(PolynomialRing(QQ, 'x')(s))
 
 def strlist_to_nfelt(L, varname):
     La = [ s.encode('ascii') for s in L ]
-    return str(PolynomialRing(QQ, varname)(La)).replace('*','')
+    return latex(PolynomialRing(QQ, varname)(La))
 
 def list_to_min_eqn(L):
     xpoly_rng = PolynomialRing(QQ,'x')
@@ -72,10 +91,7 @@ def groupid_to_meaningful(groupid):
 
 def url_for_ec(label):
     if not '-' in label:
-        # Convert to LMFDB label on next run:
-        (conductor_label, class_label, number) = split_cremona_label(label)
-        return url_for('ecnf.show_ecnf', nf = 'Q', conductor_label =
-                conductor_label, class_label = class_label, number = number)
+        return url_for('ec.by_ec_label', label = label)
     else:
         (nf, conductor_label, class_label, number) = split_full_label(label)
         return url_for('ecnf.show_ecnf', nf = nf, conductor_label =
@@ -92,6 +108,8 @@ def factorsRR_pretty_raw(factorsRR):
         return r'\R \times \C'
     elif factorsRR == ['CC', 'RR']:
         return r'\R \times \C',
+    elif factorsRR == ['CC', 'CC']:
+        return r'\C \times \C'
     elif factorsRR == ['HH']:
         return r'\mathbf{H}'
     elif factorsRR == ['M_2(RR)']:
@@ -463,25 +481,28 @@ def spl_statement(coeffss, labels, condnorms):
     if len(coeffss) == 1:
         statement = """The Jacobian decomposes up to isogeny as the square of
         an elliptic curve</p>\
-        <p>Elliptic curve that admits a small isogeny:<br>"""
+        <p>Elliptic curve that admits a small isogeny:"""
     else:
         statement = """The Jacobian admits two distinct elliptic curve factors
         up to isogeny</p>\
         <p>Elliptic curves that represent these factors and admit small
-        isogenies are:<br>"""
+        isogenies are:"""
     for n in range(len(coeffss)):
         # Use labels when possible:
         label = labels[n]
         if label:
-            statement += """Elliptic curve with label <a href=%s>%s</a><br>""" % \
-            (url_for_ec(label), label)
+            # TODO: Next statement can be removed by a database update
+            if not '-' in label:
+                label = cremona_to_lmfdb(label)
+            statement += """<br>Elliptic curve with label <a href=%s>%s</a>"""\
+            % (url_for_ec(label), label)
         # Otherwise give defining equation:
         else:
-            statement += """\(4 y^2 = x^3 - (g_4 / 48) x - (g_6 / 864)\),
+            statement += """<br>\(4 y^2 = x^3 - (g_4 / 48) x - (g_6 / 864)\),
             with<br>\
             \(g_4 = %s\)<br>\
             \(g_6 = %s\)<br>\
-            Conductor norm: %s<br>""" % \
+            Conductor norm: %s""" % \
             (strlist_to_nfelt(coeffss[n][0], 'b'),
             strlist_to_nfelt(coeffss[n][1], 'b'),
             condnorms[n])

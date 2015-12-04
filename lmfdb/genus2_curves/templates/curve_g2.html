@@ -258,6 +258,14 @@ function show_invs(invstyle) {
 
 <br>
 
+<h3 style="display: inline"> Decomposition </h3>
+
+<!-- Description of a splitting field of minimal degree: -->
+<p>{{data.endodata.spl_fod_statement|safe}}</p>
+
+<!-- Description of the splittings themselves. -->
+<p>{{data.endodata.spl_statement|safe}}</p>
+
 <h3 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms') }} </h3>
 
 <p>{{data.endodata.gl2_statement_base}}</p>
@@ -275,13 +283,5 @@ function show_invs(invstyle) {
 <h3 style="display: inline">{{data.endodata.lattice_statement_preamble}}</h3>
 
 {{data.endodata.lattice_statement|safe}}
-
-<h3 style="display: inline"> Decomposition </h3>
-
-<!-- Description of a splitting field of minimal degree: -->
-<p>{{data.endodata.spl_fod_statement|safe}}</p>
-
-<!-- Description of the splittings themselves. -->
-<p>{{data.endodata.spl_statement|safe}}</p>
 
 {% endblock %}
