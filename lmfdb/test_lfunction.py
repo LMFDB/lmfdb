@@ -66,11 +66,11 @@ class LfunctionTest(LmfdbTest):
         assert 'Graph' in L.data
 
     def test_Lartin(self):
-        L = self.tc.get('/L/ArtinRepresentation/2/68/2/')
+        L = self.tc.get('/L/ArtinRepresentation/2.2e2_17.4t3.2c1/')
         assert 'Graph' in L.data
 
-    def test_Llcalfile(self):
-        L = self.tc.get('/L/ArtinRepresentation/2/68/2/?download=lcalcfile')
+    def test_Llcalcfile(self):
+        L = self.tc.get('/L/ArtinRepresentation/2.2e2_17.4t3.2c1/?download=lcalcfile')
         assert 'lcalc' in L.data
 
     def test_LlcalcfileEc(self):
@@ -158,7 +158,7 @@ class LfunctionTest(LmfdbTest):
         assert '5.1156833288' in L.data
 
     def test_LartinPlot(self):
-        L = self.tc.get('/L/Zeros/ArtinRepresentation/2/68/2/')
+        L = self.tc.get('/L/Zeros/ArtinRepresentation/2.2e2_17.4t3.2c1/')
         assert 'OK' in str(L)
 
     def test_LecPlot(self):
@@ -184,7 +184,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_paintSVGholo(self):
         svg = paintSvgHolo(4,6,4,6)
-        assert "/L/ModularForm/GL2/Q/holomorphic/4/6/1/a/0" in svg
+        assert "/L/ModularForm/GL2/Q/holomorphic/4/6/0/a/0" in svg
 
     def test_paintSVGchar(self):
         svg = paintSvgChar(1,20,1,12)

@@ -222,7 +222,7 @@ def render_artin_representation_webpage(label):
     extra_data = {} # for testing?
     C = getDBConnection()
     extra_data['galois_knowl'] = group_display_knowl(5,3,C) # for testing?
-    artin_logger.info("Found %s" % (the_rep._data))
+    #artin_logger.info("Found %s" % (the_rep._data))
 
     bread = get_bread([(label, ' ')])
 

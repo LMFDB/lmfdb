@@ -38,7 +38,7 @@ class ECNF_isoclass(object):
 
             - dbdata: the data from the database
         """
-        logger.info("Constructing an instance of ECNF_isoclass")
+        #logger.info("Constructing an instance of ECNF_isoclass")
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -51,7 +51,7 @@ class ECNF_isoclass(object):
         class label.  In either case the data will be obtained from
         the curve in the database with number 1 in the class.
         """
-        print "label = %s" % label
+        #print "label = %s" % label
         try:
             if label[-1].isdigit():
                 data = db_ec().find_one({"label": label})

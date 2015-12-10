@@ -131,7 +131,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if bdeg > 1 and rdeg>1:
             p1 = WNF.coefficient_field.relative_polynomial()
             c_pol_ltx = latex(p1)
-            lgc = p1.variables()[0]
+            lgc = str(latex(p1.variables()[0]))
+            # need latex here, e.g. when the variable is zeta6 but c_pol_ltx cotains '\zeta_{6}'
             c_pol_ltx = c_pol_ltx.replace(lgc,'a')
             z = p1.base_ring().gens()[0]
             p2 = z.minpoly()
