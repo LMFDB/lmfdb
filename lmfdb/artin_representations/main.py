@@ -72,6 +72,7 @@ def artin_representation_search(**args):
 
     title = 'Artin representation search results'
     bread = [('Artin representation', url_for(".index")), ('Search results', ' ')]
+    sign_code = 0
     query = {'Hide': 0}
     if req.get("ramified", "") != "":
         tmp = req["ramified"].split(",")
@@ -87,7 +88,8 @@ def artin_representation_search(**args):
             assert req["root_number"] in ["1", "-1"]
         except:
             raise AssertionError("The root number can only be 1 or -1")
-        query["GaloisConjugates.Sign"] = int(req["root_number"])
+        sign_code= int(req["root_number"])
+        query["GaloisConjugates.Sign"] = sign_code
 
     if req.get("frobenius_schur_indicator", "") != "":
         try:
@@ -178,7 +180,7 @@ def artin_representation_search(**args):
 
     initfunc = ArtinRepresentation
 
-    return render_template("artin-representation-search.html", req=req, data=data, title=title, bread=bread, query=query, start=start, report=report, nres=nres, initfunc=initfunc)
+    return render_template("artin-representation-search.html", req=req, data=data, title=title, bread=bread, query=query, start=start, report=report, nres=nres, initfunc=initfunc, sign_code=sign_code)
 
 
 # Obsolete
