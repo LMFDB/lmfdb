@@ -38,7 +38,7 @@ class HomePageTest(LmfdbTest):
         self.check_external(homepage, "http://hobbes.la.asu.edu/lmfdb-14/",'Arizona State University' )
         self.check_external(homepage, "http://www.maths.bris.ac.uk/~maarb/public/lmfdb2013.html", 'Development of algorithms')
         self.check_external(homepage, "http://icms.org.uk/workshops/onlinedatabases",'development of new software tools' )
-        self.check_external(homepage, "https://www.msri.org/programs/262", 'algebraic number fields')
+        self.check_external(homepage, "http://www.msri.org/programs/262", 'algebraic number fields')
         self.check_external(homepage, "http://aimath.org/pastworkshops/lfunctionsandmf.html", 'L-functions and modular forms')
 
       
