@@ -1,12 +1,9 @@
 import sys, time
-import bson
+import bson, pymongo
 import sage.all
 import re
 import json
 from sage.all import *
-
-#pw_filename = "../../../xyzzy"
-#password = open(pw_filename, "r").readlines()[0].strip()
 
 # find lmfdb and the top of the tree
 mypath = os.path.realpath(__file__)
@@ -37,6 +34,15 @@ nfgal=art.field_data
 count = 0
 old = 0
 
+ASC = pymongo.ASCENDING
+rep.create_index([('Dim', ASC), ('Hide', ASC),('Conductor_key', ASC)])
+rep.create_index([('Hide', ASC), ('Conductor_key',ASC)])
+rep.create_index([('Hide', ASC), ('Galois_nt',ASC)])
+rep.create_index('NFGal')
+rep.create_index('Baselabel')
+nfgal.create_index('Polynomial')
+
+
 #utilities
 
 # turn poly coefs into a string
@@ -50,6 +56,16 @@ def make_cond_key(D):
   D1 = int(D.log(10))
   return '%04d%s'%(D1,str(D))
 
+maxint = (2**63)-1
+
+def int_or_string(a):
+  if abs(a)< maxint:
+    return a
+  return str(a)
+
+def fix_local_factors(gconj):
+  gconj['LocalFactors'] = [ [ [int_or_string(a) for a in b ] for b in c] for c in gconj['LocalFactors']]
+  return gconj
 
 # Main programs
 
@@ -66,6 +82,8 @@ def artrepload(l):
   cond_key = make_cond_key(ZZ(l['Conductor']))
   l['Conductor_key'] = cond_key
   l['NFGal'] = makels(l['NFGal'])
+  l['GaloisConjugates'] = [fix_local_factors(z) for z in l['GaloisConjugates']]
+  #print str(l)
   rep.save(l)
   count +=1
   if (count+old) % 100==0:
@@ -106,7 +124,7 @@ for path in sys.argv[1:]:
     if re.match(r'^art', filename):
       case = 'art rep'
     for line in fn.readlines():
-        line.strip()
+        line = line.strip()
         if re.match(r'\S',line):
             l = json.loads(line)
 	    if case == 'nfgal':
