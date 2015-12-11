@@ -87,7 +87,7 @@ def artin_representation_search(**args):
             assert req["root_number"] in ["1", "-1"]
         except:
             raise AssertionError("The root number can only be 1 or -1")
-        query["Sign"] = int(req["root_number"])
+        query["GaloisConjugates.Sign"] = int(req["root_number"])
 
     if req.get("frobenius_schur_indicator", "") != "":
         try:
