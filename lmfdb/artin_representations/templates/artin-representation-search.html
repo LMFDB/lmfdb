@@ -108,7 +108,9 @@
           <tr><td>
           {% for cnt in range(galccsize) %}
         {% set artx = initfunc(artin['Baselabel'],cnt+1) %}
+        {% if sign_code == 0 or sign_code == art.sign() %}
             <a href = "{{artx.url_for()}}">{{art.baselabel()}}c{{cnt+1}}</a>
+        {% endif %}
           {% endfor %}
             </td>
             <td>${{art.dimension()}}$</td>
