@@ -734,8 +734,7 @@ class WebNumberField(WebDict):
 
     def to_db(self):
         r"""
-        We store the LMFDB label of the absolute field
-        in the db.
+        We store the LMFDB label of the absolute field in the db.
         """
         K = self._value
         
