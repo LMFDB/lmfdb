@@ -108,9 +108,9 @@ class WebqExp(WebPoly):
         if prec is None:
             qe = self.value()
         else:
-            if qe is None:
-                qe = ''
-            qe = self.value().truncate_powerseries(prec)
+            qe = self.value()
+            if not qe is None:
+                qe = qe.truncate_powerseries(prec)
         wl = web_latex_split_on_re(qe)
         if name is not None and self.value().base_ring().degree()>1:
             return wl.replace(latex(self.value().base_ring().gen()), name)
