@@ -291,8 +291,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
     info['show_switch'] = True
     db = getDBConnection()['modularforms2']['dimension_table']
     s = {'level':{"$lt":int(limits_level[1]+1),"$gt":int(limits_level[0]-1)},
-         'weight' : {"$lt":int(limits_weight[1]+1),"$gt":int(limits_weight[0]-1)},
-         'd_newf':{"$gt":int(0)}}
+         'weight' : {"$lt":int(limits_weight[1]+1),"$gt":int(limits_weight[0]-1)}}
     if group == 0:
         s['cchi']=int(1)        
     else:
@@ -314,15 +313,18 @@ def render_elliptic_modular_form_navigation_wp(**args):
     for n in level_range:
         info['table'][n]={}
         for k in weight_range:
-            info['table'][n][k]={'dim_new':int(0)}
+            info['table'][n][k]={'dim_new':int(0), 'in_db':0}
     for r in db.find(s):
         N = r['level']
         k = r['weight']
-        info['table'][N][k]['dim_new']=r['d_newf'] # dimension of newforms
-        if group == 0:
-            info['table'][N][k]['in_db']=r['in_wdb']  # 1 if it is in the webmoforms db else 0
-        else:
-            info['table'][N][k]['in_db']=r.get('one_in_wdb',0)  # 1 if it is in the webmodforms db else 0
+        if group != 0 or k%2==0:
+          emf_logger.debug("Found:k={0},N={1},r[in_wdb]={2},r[one_in_wdb,0]={3}".format(k,N,r['in_wdb'],r.get('one_in_wdb')))
+          info['table'][N][k]['dim_new']=r['d_newf'] # dimension of newforms
+          indb = r['in_wdb']  # 1 if it is in the webmodforms db else 0
+          if indb == 0 and group != 0:
+              indb = r.get('one_in_wdb',0)  # 1 if it is in the webmodforms db else 0
+          #indb = 1
+          info['table'][N][k]['in_db'] = indb
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
     return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)
