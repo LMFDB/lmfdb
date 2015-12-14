@@ -381,7 +381,6 @@ def dirichlet_character_conrey_galois_orbits_reps(N):
             if xx not in Dl:
                 continue
             Dl.remove(xx)
-    print "reps",reps
     return reps
 
 @cached_function
