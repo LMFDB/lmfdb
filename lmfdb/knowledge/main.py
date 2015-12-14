@@ -83,6 +83,27 @@ md.inlinePatterns.add('knowltagtitle', KnowlTagPatternWithTitle(knowltagtitle_re
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
 
+def md_preprocess(txt):
+    """
+    Markdown preprocessor: html paragraph breaks before display math,
+    \cite{MR:...} and \cite{arXiv:...} converted to links.
+    """
+    knowl_content = txt
+
+    # put a blank line above display equations so that knowls open in the correct location
+    knowl_content = re.sub(r"([^\n])\n\\begin{eq",r"\1\n\n\\begin{eq",knowl_content)
+
+    knowl_content = re.sub(r"\\cite{MR[:]{0,2}([^}]+)}",   # 0, 1, or 2 colons after MR
+              r"[{{ LINK_EXT('MR\1', 'http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1=\1') }}]",
+              knowl_content)
+
+    knowl_content = re.sub(r"(?i)\\cite{arxiv[:]{0,2}([^}]+)}",    # case insensitive: arXiv or arxiv
+              r"[{{ LINK_EXT('arXiv:\1', 'http://arxiv.org/abs/\1') }}]",
+              knowl_content)
+
+    knowl_content = re.sub(r"\\cite{([^}]+)}",r"[\1]",knowl_content)
+
+    return knowl_content
 
 @app.context_processor
 def ctx_knowledge():
@@ -104,6 +125,8 @@ def render_knowl_in_template(knowl_content, **kwargs):
 
   %(content)s
   """
+    knowl_content = md_preprocess(knowl_content)
+
     # markdown enabled
     render_me = render_me % {'content': md.convert(knowl_content)}
     # Pass the text on to markdown.  Note, backslashes need to be escaped for
@@ -337,6 +360,8 @@ def render(ID, footer=None, kwargs=None, raw=False):
     # """ &middot; Authors: %(authors)s """
     render_me += "</div>"
     # render_me = render_me % {'content' : con, 'ID' : k.id }
+    con = md_preprocess(con)
+
     # markdown enabled
     render_me = render_me % {'content': md.convert(con), 'ID': k.id, 'kw_params': kw_params}
                                                     #, 'authors' : authors }

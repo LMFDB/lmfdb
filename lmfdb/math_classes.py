@@ -3,8 +3,10 @@
 from base import getDBConnection, app
 from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
+from databases.standard_types import PolynomialAsSequenceInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField
 from lmfdb.transitive_group import group_display_knowl, group_display_short
+from WebNumberField import WebNumberField
 
 
 def process_algebraic_integer(seq, root_of_unity):
@@ -25,9 +27,22 @@ class ArtinRepresentation(object):
         if len(x) == 0:
             # Just passing named arguments
             self._data = data_dict["data"]
+            label=self._data['label']
         else:
-            self._data = self.__class__.collection(
-            ).find_and_convert_one(Dim=int(x[0]), Conductor=str(x[1]), DBIndex=int(x[2]))
+            if len(x)==1: # Assume we got a label
+                label = x[0]
+                parts = x[0].split("c")
+                base = parts[0]
+                conjindex = int(parts[1])
+            else: # Assume length 2, base and gorb index
+                base = x[0]
+                conjindex = x[1]
+                label = "%sc%s"%(str(x[0]),str(x[1]))
+            self._data = self.__class__.collection().find_and_convert_one({'Baselabel':str(base)})
+            conjs = self._data["GaloisConjugates"]
+            conj = [x for x in conjs if x['GalOrbIndex'] == conjindex]
+            self._data['label']=label
+            self._data.update(conj[0])
 
     @classmethod
     def find(cls, *x, **y):
@@ -38,11 +53,21 @@ class ArtinRepresentation(object):
     def find_one(cls, *x, **y):
         return ArtinRepresentation(data=cls.collection().find_and_convert_one(*x, **y))
 
+    @classmethod
+    def find_one_in_galorbit(cls, baselabel):
+        return cls(baselabel,1)
+
+    def baselabel(self):
+        return self._data["Baselabel"]
+
+    def label(self):
+        return str(self._data['label'])
+
     def dimension(self):
         return self._data["Dim"]
 
     def conductor(self):
-        return self._data["Conductor"]
+        return self._data["Conductor_key"][4:]
 
     def conductor_equation(self):
         # Returns things of the type "1", "7", "49 = 7^{2}"
@@ -94,23 +119,50 @@ class ArtinRepresentation(object):
     def character_field(self):
         return self._data["CharacterField"]
 
-    def index(self):
-        return self._data["DBIndex"]
-
-    def galois_orbit_label(self):
-        return self._data["galorbit"]
+    def GaloisConjugates(self):
+        return self._data["GaloisConjugates"]
 
     def number_field_galois_group(self):
         try:
             return self._nf
         except AttributeError:
-            tmp = self._data["NFGal"]
-            query = {"TransitiveDegree": int(tmp[0]), "Size": str(tmp[1]), "DBIndex": int(tmp[2])}
-            self._nf = NumberFieldGaloisGroup.find_one(query)
+            tmp = str(self._data["NFGal"])
+            self._nf = NumberFieldGaloisGroup.find_one({"Polynomial": tmp})
         return self._nf
+
+    def galois_conjugacy_size(self):
+    	return len(self.GaloisConjugates())
+
+    def smallest_gal_t(self):
+        try:
+            return self._small_nt
+        except AttributeError:
+            tmp = str(self._data["Baselabel"])
+            bits = tmp.split('.')
+            tmp = bits[2]
+            bits = tmp.split('t')
+            self._small_nt = [int(z) for z in bits]
+    	return self._small_nt
+
+    def smallest_gal_t_format(self):
+        galnt = self.smallest_gal_t()
+        if len(galnt)==1:
+            return galnt[0]
+        C = getDBConnection()
+        return group_display_knowl(galnt[0],galnt[1],C)
 
     def is_ramified(self, p):
         return self.number_field_galois_group().discriminant() % p == 0
+
+    def central_char(self, p):
+        """
+          Returns the value of the central character at p.
+          Test with is_bad_prime(p) or YMMV
+        """
+        eulerp = self.euler_polynomial(p)
+        if eulerp.degree() < self.dimension():
+            return 0
+        return eulerp.leading_coefficient()
 
     def euler_polynomial(self, p):
         """
@@ -170,7 +222,7 @@ class ArtinRepresentation(object):
             return "An Artin representation"
 
     def url_for(self):
-        return url_for("artin_representations.by_data", dim=self.dimension(), conductor=self.conductor(), index=self.index())
+        return url_for("artin_representations.render_artin_representation_webpage", label=self.label())
 
     def langlands(self):
         """
@@ -181,7 +233,6 @@ class ArtinRepresentation(object):
         return True
 
     def sign(self):
-        print "ArtinRepresentation.sign now deprecated, use root_number instead"
         return self.root_number()
 
     def root_number(self):
@@ -405,7 +456,12 @@ class NumberFieldGaloisGroup(object):
             return tmp
 
     def __init__(self, *x, **data_dict):
-        self._data = data_dict["data"]
+        if len(x) == 0:
+            # Just passing named arguments
+            self._data = data_dict["data"]
+        else:
+	    # Assume we got coeffstring
+            self._data = self.__class__.collection().find_and_convert_one({'Polynomial':str(x[0])})
 
     @classmethod
     def find_one(cls, *x, **y):
@@ -420,7 +476,13 @@ class NumberFieldGaloisGroup(object):
         return self._data["TransitiveDegree"]
 
     def polynomial(self):
-        return self._data["Polynomial"]
+        polstring = self._data["Polynomial"]
+        return PolynomialAsSequenceInt([int(a) for a in polstring.split(",")])
+
+    def polynomial_latex(self):
+	from sage.rings.all import PolynomialRing, QQ
+	PP = PolynomialRing(QQ, 'x')
+    	return PP(self.polynomial())._latex_()
 
     def polredabs(self):
         if "polredabs" in self._data.keys():
@@ -445,9 +507,10 @@ class NumberFieldGaloisGroup(object):
         if "label" in self._data.keys():
             return self._data["label"]
         else:
-            from number_fields.number_field import poly_to_field_label
-            pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
-            label = poly_to_field_label(pol)
+            #from number_fields.number_field import poly_to_field_label
+            #pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
+            #label = poly_to_field_label(pol)
+	    label = WebNumberField.from_coeffs(self._data["Polynomial"]).get_label()
             if label:
                 self._data["label"] = label
             return label
@@ -460,12 +523,6 @@ class NumberFieldGaloisGroup(object):
 
     def size(self):
         return self._data["Size"]
-
-    def index(self):
-        """
-        The index in the database among entries with the same degree and group.
-        """
-        return self._data["DBIndex"]
 
     def G_gens(self):
         """
@@ -526,13 +583,14 @@ class NumberFieldGaloisGroup(object):
     def conjugacy_classes(self):
         return [ConjugacyClass(self.G_name(), item) for item in self._data["ConjClasses"]]
 
-    def artin_representations(self):
-        x = [ArtinRepresentation.find_one({"Dim": item["Dim"], "Conductor":str(item["Conductor"]), "DBIndex":item["DBIndex"]})
-             for item in self._data["ArtinReps"]]
-        return x
-
     def ArtinReps(self):
-        return self._data["ArtinReps"]
+        return self._data["ArtinReps"] # list of dictionaries
+
+    def artin_representations_full_characters(self):
+        return [[z['Character'],z['CharacterField']] for z in self.ArtinReps()]
+
+    def artin_representations(self):
+        return [ArtinRepresentation(z['Baselabel'],z['GalConj']) for z in self.ArtinReps()]
 
     def discriminant(self):
         return self.sage_object().discriminant()

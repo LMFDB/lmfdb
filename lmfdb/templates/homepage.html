@@ -6,10 +6,13 @@
     <div class="right">
       <div class="bread">
         {% if bread %}
-          <a href="/">Top</a>
+          <a href="/">&#8962;</a>
+{# there's a house symbol &#x1f3e0; but it does not work on all browsers#}
           {% for b in bread -%}
-            &rarr; <a href="{{ b[1] }}">{{ b[0]|striptags }}</a>
-          {%- endfor %}
+            &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
+          {% endfor %}
+         {% else %}
+          <a href="/">&#8962;</a>
          {% endif %}
       </div>
       <div class="topright">

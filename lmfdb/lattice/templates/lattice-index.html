@@ -3,7 +3,7 @@
 {% block content %}
 
 <p>
-The database currently contains {{info.counts.nlattice_c}} {{ KNOWL('lattice.definition', title='integral lattices') }}. The largest {{ KNOWL('lattice.dimension', title='dimension') }} is {{info.counts.max_dim_c}}. It includes data from the <a href="http://www.math.rwth-aachen.de/~Gabriele.Nebe/LATTICES/">Catalogue of Lattices</a>. 
+The database currently contains {{info.counts.nlattice_c}} {{ KNOWL('lattice.definition', title='integral lattices') }}. The largest {{ KNOWL('lattice.dimension', title='dimension') }} is {{info.counts.max_dim_c}} and the largest {{ KNOWL('lattice.determinant', title='determinant') }} is {{info.counts.max_det}}. It includes data from the {{ KNOWL('lattice.catalogue_of_lattices', title='Catalogue of Lattices') }}.
 </p>
 <p>
 In the case of {{ KNOWL('lattice.primitive', title='primitive') }} {{ KNOWL('lattice.definition', title='integral lattices') }} of {{ KNOWL('lattice.class_number', title='class number') }} one the database is complete.
@@ -101,7 +101,7 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 </tr>
 
 <tr>
-<td align= right>Group order:</td>
+<td align= right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td>
 <td><input type='text' name='aut' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2, 48, 696729600</td>
 </tr>

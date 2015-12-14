@@ -5,13 +5,20 @@ import sys
 import time
 import sage.misc.preparser
 import subprocess
-from lmfdb import base
-from lmfdb.website import dbport
 
-base._init(dbport, '')
-C = base.getDBConnection()
+from lmfdb.website import DEFAULT_DB_PORT as dbport
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
+
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['hmfs'].authenticate(username, password)
 hmf_forms = C.hmfs.forms
 hmf_fields = C.hmfs.fields
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 fields = C.numberfields.fields
 
 # hmf_forms.create_index('field_label')

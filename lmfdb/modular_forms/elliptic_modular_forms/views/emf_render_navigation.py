@@ -143,8 +143,13 @@ def render_elliptic_modular_form_navigation_wp1(**args):
         info.pop('level',None)
     ## This is the list of weights we initially put on the form
     title = "Holomorphic Cusp Forms"
-    bread = [(MF_TOP, url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP, url_for('.render_elliptic_modular_forms')))
+    bread = [(MF_TOP, url_for('mf.modular_form_main_page')),
+             (title, url_for('.render_elliptic_modular_forms'))]
+
+    limits_weight = extract_limits_as_tuple(info, 'weight')
+    limits_level = extract_limits_as_tuple(info, 'level')
+    if limits_weight[0] == limits_weight[1] and limits_level[0] == limits_level[1]:
+        return render_elliptic_modular_form_space_list_chars(limits_level[0], limits_weight[0])
     if is_set['weight']:
         limits_weight = (weight, weight)
     elif limits_weight is None:

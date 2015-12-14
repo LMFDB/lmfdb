@@ -61,13 +61,14 @@ def index():
         the_boxes = load_boxes()
     boxes = the_boxes
     tmpl = "index-boxes.html"
+    bread = None
     # We used to have an old version of the home page:
     # tmpl = "index-boxes.html" if g.BETA else "index.html"
 
     return render_template(tmpl,
         titletag="The L-functions and modular forms database",
         title="",
-        bread=None,
+        bread=bread,
         boxes = boxes)
 
 # Harald suggested putting the following in base.pybut it does not work either there or here!
@@ -139,6 +140,72 @@ def roadmap():
     return render_template('roadmap.html', title=t, body_class=_bc, bread=b)
 
 ## INTRO PAGES END
+
+@app.route('/Variety')
+def varieties():
+    t = 'Varieties'
+    b = [(t, url_for('varieties'))]
+    lm = [('History of varieties', '/Variety/history')]
+    return render_template('single.html', title=t, kid='varieties.about', bread=b,
+            learnmore=lm)
+
+
+@app.route("/Variety/history")
+def varieties_history():
+    t = 'Varieties'
+    b = [(t, url_for('varieties'))]
+    b.append(('History', url_for("varieties_history")))
+    return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
+
+
+
+@app.route('/Field')
+def fields():
+    t = 'Fields'
+    b = [(t, url_for('fields'))]
+    lm = [('History of fields', '/Field/history')]
+    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b, learnmore=lm)
+
+@app.route("/Field/history")
+def fields_history():
+    t = 'Fields'
+    b = [(t, url_for('fields'))]
+    b.append(('History', url_for("fields_history")))
+    return render_template(_single_knowl, title="A brief history of fields", kid='f.history', body_class=_bc, bread=b)
+
+
+@app.route('/Representation')
+def representations():
+    t = 'Representations'
+    b = [(t, url_for('representations'))]
+    lm = [('History of representations', '/Representation/history')]
+    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b, learnmore=lm)
+
+
+@app.route("/Representation/history")
+def representations_history():
+    t = 'Representations'
+    b = [(t, url_for('representations'))]
+    b.append(('History', url_for("representations_history")))
+    return render_template(_single_knowl, title="A brief history of representations", kid='rep.history', body_class=_bc, bread=b)
+
+
+
+@app.route('/Group')
+def groups():
+    t = 'Groups'
+    b = [(t, url_for('groups'))]
+    lm = [('History of groups', '/Group/history')]
+    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b, learnmore=lm)
+
+
+@app.route("/Group/history")
+def groups_history():
+    t = 'Groups'
+    b = [(t, url_for('groups'))]
+    b.append(('History', url_for("groups_history")))
+    return render_template(_single_knowl, title="A brief history of groups", kid='g.history', body_class=_bc, bread=b)
+
 
 
 @app.route("/editorial-board")

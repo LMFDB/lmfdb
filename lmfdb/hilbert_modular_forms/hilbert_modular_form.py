@@ -66,7 +66,8 @@ def hilbert_modular_form_render_webpage():
     if len(args) == 0:
         info = {}
         t = 'Hilbert Modular Forms'
-        bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
+        bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+                 ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         info['counts'] = get_stats().counts()
         return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread)

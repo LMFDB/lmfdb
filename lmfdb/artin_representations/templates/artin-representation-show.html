@@ -8,7 +8,9 @@
         <tr><td>{{ KNOWL('artin.gg_quotient', title='Group') }}:<td>{{ object.pretty_galois_knowl() | safe }}</td>
         <tr><td>{{ KNOWL('artin.conductor', title='Conductor') }}:<td>${{ object.conductor_equation() }} $</tr>
         <tr><td> {{ KNOWL('artin.number_field', title='Artin number field') }}: <td>Splitting field of
-                $f={{ object.number_field_galois_group().polynomial().latex()}}$ over $\Q$.</tr>
+                $f={{ object.number_field_galois_group().polynomial().latex()}}$ over $\Q$</tr>
+        <tr><td> Size of {{ KNOWL('artin.galois_orbit', title='Galois orbit') }}: <td> {{object.galois_conjugacy_size()}}
+        <tr><td> Smallest {{ KNOWL('artin.permutation_container', title='containing permutation representation') }}: <td> {{object.smallest_gal_t_format()|safe}}
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }} <td> {{ object.parity()}} </tr>
     </table>
 
@@ -44,7 +46,7 @@
         \end{aligned}\]
     </div>
     
-    <h3>Generators of the action on the roots $r_1 \cdots r_{{object.number_field_galois_group().degree()}}$</h3>
+    <h3>Generators of the action on the roots $r_1, \ldots, r_{{object.number_field_galois_group().degree()}}$</h3>
     <div>
     <center>
     <table class="ntdata">
@@ -77,7 +79,16 @@
       </center>
        The blue line marks the conjugacy class containing complex conjugation.
     </div>
-    
+ {# For testing in progress
+ <div>
+ <br>
+ {{ info.pol2 }} <br>
+ {{ info.pol3 }} <br>
+ {{ info.pol5 }} <br>
+ {{ info.pol7 }} <br>
+ {{ info.pol11 }} <br>
+ </div>
+ #}
    
 {% endblock %}
 

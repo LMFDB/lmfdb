@@ -9,6 +9,7 @@ from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import make_graph
 from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs
+from lmfdb.number_fields.number_field import field_pretty
 
 import sage.all
 from sage.all import EllipticCurve, latex, matrix
@@ -37,7 +38,7 @@ class ECNF_isoclass(object):
 
             - dbdata: the data from the database
         """
-        logger.info("Constructing an instance of ECNF_isoclass")
+        #logger.info("Constructing an instance of ECNF_isoclass")
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -50,7 +51,7 @@ class ECNF_isoclass(object):
         class label.  In either case the data will be obtained from
         the curve in the database with number 1 in the class.
         """
-        print "label = %s" % label
+        #print "label = %s" % label
         try:
             if label[-1].isdigit():
                 data = db_ec().find_one({"label": label})
@@ -115,7 +116,8 @@ class ECNF_isoclass(object):
         if self.field.is_imag_quadratic():
             self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
 
-        self.properties = [('Label', self.ECNF.label),
+        self.properties = [('Base field', self.ECNF.field.field_pretty()),
+                           ('Label', self.ECNF.class_label),
                            (None, self.graph_link),
                            ('Conductor', '%s' % self.ECNF.cond)
                            ]
