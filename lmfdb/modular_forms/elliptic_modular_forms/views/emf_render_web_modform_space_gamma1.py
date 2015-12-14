@@ -85,7 +85,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
             k = r['weight']
             if not table['galois_orbits_reps'].has_key(xi):
                 table['galois_orbits_reps'][xi]={
-                    'head' : "\(\chi_{{0}}({1},\cdot) \)".format(level,xi),
+                    'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xi),  # yes, {{{ is required
                     'chi': "{0}".format(xi),
                     'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
                 table['galois_orbit'][xi]= [
