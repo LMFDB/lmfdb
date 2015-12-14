@@ -284,10 +284,8 @@ class WebObject(object):
             try:
                 self.update_from_db()
                 self._has_updated_from_db = True
-            except:
-                # update failed, we may need to compute instead.
-                # I return here since init_dynamic_properties() may need something from the database
-                return 
+            except Exception as e:
+                raise RuntimeError(str(e))
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
         if init_dynamic_properties:
             emf_logger.debug('init_dynamic_properties will be called')
