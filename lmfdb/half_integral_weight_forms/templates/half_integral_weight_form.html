@@ -7,7 +7,7 @@
 <table>
 <tr><td> Weight:<td> ${{ info.weight }}/2$ </tr>
 <tr><td> Level:<td> ${{ info.level }}$ </tr>
-<tr><td> Character:<td> <A HREF="Character/Dirichlet/{{info.ch_lab}}">${{info.char}}$</A> </tr>
+<tr><td> Character:<td> <A href="/Character/Dirichlet/{{info.ch_lab}}">${{info.char}}$</A> </tr>
 </tr>
 <tr><td> Label:<td> {{ info.label}} </tr>
 <tr><td> Dimension:<td> ${{ info.dimension }}$ </tr>
@@ -40,7 +40,11 @@ $\rangle$</td></tr>
 <tr>
 {% for n in info.new %}
 	<td><A HREF="/ModularForm/GL2/Q/holomorphic/{{n.mf}}">{{n.mf}}</A></td>
-	<td>$\Q(a)$: <A HREF="/NumberField/{{n.nf}}"> {{n.field_knowl|safe }}</A>, minimal polynomial of $a$ is $xxxx$</td>
+    {% if {{n.nf}} is "1.1.1.1" %}
+        <td><A HREF="/NumberField/{{n.nf}}">$\Q$<A></td>
+    {% else %}
+        <td>$\Q(a)$: <A HREF="/NumberField/{{n.nf}}"> {{n.field_knowl|safe }}</A>, minimal polynomial of $a$ is $xxxx$</td>
+    {% endif %}
 	<td>{% for h in n.hiwf %}
 		<br><item>${{h}}$</item><br>
 	{% endfor %}<br></td></tr>
