@@ -185,7 +185,7 @@ table.ntdata thead th.spaceleft {
                 %}
                   {% set dim = table[N][k]['dim_new'] %}
                   {% set in_db = table[N][k]['in_db'] %}
-                  {% if in_db == 1 and dim > 0 %}
+                  {% if in_db == 1 %}
                      {% if info.grouptype == 0 %}
                        {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=1)
                        %}
