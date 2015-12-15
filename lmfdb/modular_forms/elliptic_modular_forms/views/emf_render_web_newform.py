@@ -225,9 +225,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if poly != '':
             d,monom,coeffs = poly
             emf_logger.critical("poly={0}".format(poly))
-
             info['explicit_formulas'] = '\('
-            for i in range(d):
+            for i in range(len(coeffs)):
                 c = QQ(coeffs[i])
                 s = ""
                 if d>1 and i >0 and c>0:
