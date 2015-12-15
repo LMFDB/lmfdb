@@ -125,6 +125,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         info['satake'] = WNF.satake
     info['qexp'] = WNF.q_expansion_latex(prec=10, name='a')
     info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
+    info['max_cn_qexp'] = WNF.q_expansion.prec()
     
     # info['qexp'] = WNF.q_expansion_latex(prec=prec)
     #c_pol_st = str(WNF.absolute_polynomial)

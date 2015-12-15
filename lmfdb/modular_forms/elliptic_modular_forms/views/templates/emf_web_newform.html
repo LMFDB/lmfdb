@@ -263,6 +263,9 @@ We have <b>{{ max_cn }}</b> coefficients available from the database.
 var number_of_coefficients = 10;
 function more_handler(evt) {
     number_of_coefficients += number_of_coefficients;
+    if (number_of_coefficients >= {{ max_cn_qexp }}) {
+        document.getElementById("morebutton").disabled = true;
+    }
     evt.preventDefault();
     $("#qexp_display").load("{{qexp_display}}"+number_of_coefficients,
         function() {
