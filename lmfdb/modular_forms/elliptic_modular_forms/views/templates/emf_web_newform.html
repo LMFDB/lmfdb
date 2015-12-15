@@ -192,11 +192,11 @@ that preserve the character are shown in the table below.
   {% endif %}
 <h2>Download {{KNOWL('mf.elliptic.fouriercoefficients',title='Fourier coefficients')}} </h2>
 
-We have {{ max_cn }} coefficients available from the database. 
+We have <b>{{ max_cn }}</b> coefficients available from the database. 
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
-  <input type="hidden" name="download" value="coefficients"/>
-  Get  <input type="text" size="10" name="number" value="10"/> 
-  coefficients in the following format:
+<input type="hidden" name="download" value="coefficients"/>
+<input type="hidden" name="max_num" value="{{max_cn}}"/>
+  Choose format to download:
   <ul>
     <li> 
       <label><input type=radio name="format" checked
@@ -221,10 +221,15 @@ We have {{ max_cn }} coefficients available from the database.
     sage objects (algebraic, sage pickle) </label>
     </li>
   </ul>
-{#  <input type="button" name="Submit" value="Get coefficients"> #}
- <input type="submit" name="Submit" value="Get coefficients">
-</form>
-
+  Number of coefficients to download <input type="text" size="10"
+  name="number" required value="10"/>
+  <br><span class=" " id="num_error"></span>
+  <div>
+    <input type="submit" name="Submit" value="Get coefficients">
+  </div>
+  </form>
+  
+  {% include 'emf_validate_coefficient_form_script.html' %}
 <h2>Download this newform as {{KNOWL('sage',title='Sage')}} Object</h2>
 <form name="download_object_form" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
   <input type="hidden" name="download" value="object">
