@@ -49,7 +49,7 @@ def render_web_modform_space_gamma1(level=None, weight=None, character=None, lab
     info['show_all_characters'] = 1
     table = set_info_for_gamma1(level,weight)
     if table is None:
-        #info['error'] = 'The database does not currently contain any spaces matching these parameters!'
+        pass #info['error'] = 'The database does not currently contain any spaces matching these parameters!'
     else:
         info['table'] = table 
     info['bread'] = bread
@@ -80,7 +80,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
     if q.count() == 0:
         emf_logger.debug("No spaces in the database!")
         flash('The database does not currently contain any spaces matching these parameters. Please try again!')
-    return None #'error':'The database does not currently contain any spaces matching these parameters!'}
+        return None #'error':'The database does not currently contain any spaces matching these parameters!'}
     else:
         table['maxGalCount']=1
         for r in q:
