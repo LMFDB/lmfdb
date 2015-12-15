@@ -65,6 +65,7 @@ table.dimtable tbody td.even {
 
 </style>
 
+
 {% if error is defined %}
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
@@ -74,7 +75,7 @@ table.dimtable tbody td.even {
 {{ error | safe }}
 </div>
 {% endif %}
-{#{ table | safe}#}
+
 
 
 {% include 'geometric.html' %}
@@ -88,6 +89,9 @@ table.dimtable tbody td.even {
     {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
   {% endif %}
 {% endif %}
+{{ table | safe }}
+
+{% if table is defined %}
 <p>
 The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='Newforms') }}
 for \( \Gamma_1({{level}}) \) of specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, transforming
@@ -188,6 +192,8 @@ The complete Galois orbits of characters are shown in the table below.
     {% endfor %}
   </tbody>
 </table>
+
+{% endif %}
 
 {% endif %}
 
