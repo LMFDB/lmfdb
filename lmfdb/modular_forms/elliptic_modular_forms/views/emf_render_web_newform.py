@@ -123,7 +123,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     br_is_QQ = (bdeg == 1)
     if cf_is_QQ:
         info['satake'] = WNF.satake
-    info['qexp'] = WNF.q_expansion_latex(prec=10, name='a')
+    info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
     info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
     info['max_cn_qexp'] = WNF.q_expansion.prec()
     
@@ -139,7 +139,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
             c_pol_ltx = latex(p1)
             lgc = str(latex(p1.variables()[0]))
             # need latex here, e.g. when the variable is zeta6 but c_pol_ltx cotains '\zeta_{6}'
-            c_pol_ltx = c_pol_ltx.replace(lgc,'a')
+            c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
             z = p1.base_ring().gens()[0]
             p2 = z.minpoly()
             b_pol_ltx = latex(p2)
@@ -148,7 +148,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         else:
             c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
             lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
-            c_pol_ltx = c_pol_ltx.replace(lgc,'a')
+            c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
             info['polynomial_st'] = 'where \({0}=0\)'.format(c_pol_ltx) 
     else:
         info['polynomial_st'] = ''
