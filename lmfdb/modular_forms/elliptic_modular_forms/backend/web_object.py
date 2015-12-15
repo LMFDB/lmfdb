@@ -23,10 +23,11 @@ AUTHORS:
  
 """
 
-
+from flask import url_for
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version, emf_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
-from lmfdb.number_fields.number_field import poly_to_field_label
+from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
+from lmfdb.utils import web_latex_split_on_pm
 
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.all import SageObject,dumps,loads, QQ, NumberField
@@ -43,7 +44,7 @@ class WebProperty(object):
 
     def __init__(self, name, value=None, fs_data_type=None, db_data_type=None,
                  save_to_fs=True, save_to_db=False, default_value=None, include_in_update=True,
-                 required = True):
+                 required = True, extend_fs_with_db = False):
         r"""
         INPUT:
             - save_to_fs -- bool: True if this property should be stored in gridfs
@@ -75,6 +76,8 @@ class WebProperty(object):
         self.include_in_update = include_in_update
 
         self.required = required
+
+        self._extend_fs_with_db = extend_fs_with_db
         
     def value(self):
         return self._value
@@ -122,11 +125,17 @@ class WebProperty(object):
     def from_db(self, val):
         return val
 
+    def extend_from_db(self):
+        setattr(self._value, self._extend_fs_with_db, self._db_value)
+
     def set_from_fs(self, val):
         self._value = self.from_fs(val)
+        if self._extend_fs_with_db:
+            self.extend_from_db()
 
     def set_from_db(self, val):
         self._value = self.from_db(val)
+        self._db_value = self.from_db(val)
 
     def __repr__(self):
         return "{0}: {1}".format(self.name, self._value)
@@ -554,7 +563,7 @@ class WebObject(object):
             if coll.find(key).count()>0:
                 props_to_fetch = { }  #p.name:True for p in self._key}
                 for p in self._db_properties:
-                    if p.include_in_update and not p.name in self._fs_properties:
+                    if p.include_in_update and (not p.name in self._fs_properties or p._extend_fs_with_db):
                         props_to_fetch[p.name] = True
 #                props_to_fetch = {p.name:True for p in self._db_properties
 #                                  if (p.include_in_update and not p.name in self._fs_properties)
@@ -724,7 +733,7 @@ class WebNumberField(WebDict):
     def __init__(self, name, value=None,
                  save_to_fs=True, save_to_db=True, **kwargs):
         self._default_value = QQ
-        super(WebDict, self).__init__(name, value, dict, dict, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
+        super(WebDict, self).__init__(name, value, dict, dict, save_to_fs=save_to_fs, save_to_db=save_to_db, extend_fs_with_db = 'lmfdb_label', **kwargs)
 
     def to_fs(self):
         return number_field_to_dict(self._value)
@@ -749,6 +758,16 @@ class WebNumberField(WebDict):
 
     def from_db(self, k):
         return k
+
+    def extend_from_db(self):
+        setattr(self._value, "lmfdb_label", self._db_value)
+        if not self._db_value is None:
+            setattr(self._value, "lmfdb_url", url_for("number_fields.by_label", label=self._db_value))
+            setattr(self._value, "lmfdb_pretty", field_pretty(self._db_value))
+        else:
+            setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
+
+    
             
 
 def number_field_to_dict(F):
