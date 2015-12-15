@@ -115,8 +115,6 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
             friends.append(('Number field ' + f.base_ring.lmfdb_pretty, f.base_ring.lmfdb_url))
         if hasattr(f.coefficient_field, "lmfdb_label") and f.coefficient_field.lmfdb_label is not None:
             friends.append(('Number field ' + f.coefficient_field.lmfdb_pretty, f.coefficient_field.lmfdb_url))
-        else:
-            f.coefficient_field_pretty = web_latex_split_on_pm(f.absolute_polynomial)
     friends.append(("Dirichlet character \(" + WMFS.character.latex_name + "\)", WMFS.character.url()))
     friends = uniq(friends)
     info['friends'] = friends
