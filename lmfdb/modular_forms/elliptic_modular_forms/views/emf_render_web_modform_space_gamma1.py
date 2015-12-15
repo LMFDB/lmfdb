@@ -48,9 +48,9 @@ def render_web_modform_space_gamma1(level=None, weight=None, character=None, lab
     info['grouptype'] = 1
     info['show_all_characters'] = 1
     table = set_info_for_gamma1(level,weight)
-    if table is None:
+    if not table is None:
         #info['error'] = 'The database does not currently contain any spaces matching these parameters!'
-    else:
+    #else:
         info['table'] = table 
     info['bread'] = bread
     info['title'] = title
