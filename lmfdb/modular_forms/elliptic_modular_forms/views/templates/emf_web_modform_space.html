@@ -95,10 +95,10 @@ table.td.center {text-align : center;}
        <tr>  
         {% if f.coefficient_field.lmfdb_label and f.coefficient_field.lmfdb_label != '1.1.1.1'%}
         <td>$\Q(\alpha_{ {{loop.index}} })\cong$ <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
-        <td>{{ f.coefficient_field.absolute_polynomial_latex('x') }}</td>
+        <td>${{ f.coefficient_field.absolute_polynomial_latex('x') }}$</td>
         {% elif not f.coefficient_field.lmfdb_label and f.coefficient_field.lmfdb_label != '1.1.1.1'%}
         <td>$\Q(\alpha_{ {{loop.index}} })$</td>
-        <td>{{ f.coefficient_field.absolute_polynomial_latex('x') }}</td>
+        <td>${{ f.coefficient_field.absolute_polynomial_latex('x') }}$</td>
         {% endif %}
     </tr>
     {% endfor %}
