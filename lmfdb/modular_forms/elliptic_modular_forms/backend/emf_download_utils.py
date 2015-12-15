@@ -133,8 +133,8 @@ def print_list_of_coefficients(info):
     if fmt == "sage":
         res = []
     for F in FS:
-        if number > F.prec:
-            raise IndexError,"The database does not contain this many ({0}) coefficients for this modular form!".format(number)
+        if number > F.max_cn():
+            raise IndexError,"The database does not contain this many ({0}) coefficients for this modular form! We only have {1}".format(number,F.max_cn())
         if len(FS) > 1:
             if info['format'] == 'html':
                 coefs += F.label()
