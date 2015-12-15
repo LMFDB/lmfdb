@@ -194,11 +194,11 @@ table.ntdata thead th.spaceleft {
                          %}
                     {% endif %}
                  <a href="{{url}}">{{dim}}</a>
-                 {% elif dim>0 or in_db == 1 %}
-                      {{dim}}
-                  {% else %}
-                      n/a
-                  {% endif %}           
+                 {% elif in_db == -1 %}
+                     n/a
+                 {% else %}
+                     {{dim}}
+                 {% endif %}
                 {% else %}
                  <small style="color:gray">n/a</small>
                 {% endif %}
