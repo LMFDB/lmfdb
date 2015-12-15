@@ -80,7 +80,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
     if q.count() == 0:
         emf_logger.debug("No spaces in the database!")
         flash('The database does not currently contain any spaces matching these parameters. Please try again!')
-    return None #'error':'The database does not currently contain any spaces matching these parameters!'}
+        return None #'error':'The database does not currently contain any spaces matching these parameters!'}
     else:
         table['maxGalCount']=1
         for r in q:
