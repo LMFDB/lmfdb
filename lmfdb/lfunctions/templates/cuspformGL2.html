@@ -2,31 +2,35 @@
 {% block content %}
 
 <div>
-This is the browse of the L-functions associated to
-{{ KNOWL("mf.elliptic",title="holomorphic cusp forms")}} \(f\) on Hecke congruence groups
-$\Gamma_0(N)$ with trivial character.
-These L-functions \(L(s,f) = \sum a_n n^{-s} \) have an
-{{ KNOWL('lfunction.euler_product', title='Euler product')}}
-of the form
-\[
-   L(s,f)= \prod_{p\mid N}  \left(1 - a_p p^{-s} \right)^{-1}\prod_{p\nmid N}  \left(1 - a_p p^{-s} + p^{-2s} \right)^{-1}
-\]
-and satisfy the
-{{ KNOWL("lfunction.functional_equation",title="functional equation")}} of the form
-\begin{equation}
-\Lambda(s,f) = N^{s/2} \Gamma_{\mathbb{C} }
-\left(s + \frac{k-1}{2} \right)\cdot L(s, f) =
-\varepsilon \Lambda(1-s,f),
-\end{equation}
-where  $N$ is the
-{{ KNOWL("mf.elliptic.level",title="level")}}, $k$ is the
-{{ KNOWL("mf.elliptic.weight",title="weight")}}
-and \(a_n n^{\frac{k-1}{2} } \)
-are algebraic integers. Since these L-functions are associated to a trivial character, the {{ KNOWL('lfunction.sign', title='sign')}} \(\varepsilon\) is equal to either \(+1\) or \(-1\).
+<h3>
+Browse L-functions associated to {{
+KNOWL("mf.elliptic.newform",title="newforms")}} \(f\) on Hecke
+congruence groups $\Gamma_0(N)$ with trivial character:
+</h3>
+</p>
+These L-functions \(L(s,f) = \sum a_n n^{-s} \) have an {{
+KNOWL('lfunction.euler_product', title='Euler product')}} of the form
+\[ L(s,f)= \prod_{p\mid N} \left(1 - a_p p^{-s}
+\right)^{-1}\prod_{p\nmid N} \left(1 - a_p p^{-s} + p^{-2s}
+\right)^{-1} \] and satisfy the {{
+KNOWL("lfunction.functional_equation",title="functional equation")}}
+of the form \begin{equation} \Lambda(s,f) = N^{s/2} \Gamma_{\mathbb{C}
+} \left(s + \frac{k-1}{2} \right)\cdot L(s, f) = \varepsilon
+\Lambda(1-s,f), \end{equation} where $N$ is the {{
+KNOWL("mf.elliptic.level",title="level")}}, $k$ is the {{
+KNOWL("mf.elliptic.weight",title="weight")}} and \(a_n
+n^{\frac{k-1}{2} } \) are algebraic integers. Here,
+\(\varepsilon = i^k \varepsilon_N\), where
+\(\varepsilon_N\) is the {{KNOWL("mf.elliptic.fricke",title="Fricke
+eigenvalue")}} of \(f\), and so is equal to either \(+1\) or \(-1\)
+since these L-functions are associated to the trivial character. It is
+therefore called the {{ KNOWL('lfunction.sign', title='sign')}} of the
+L-function.
+<p>
 </div>
 <br>
 <div>
-In the plot below, L-functions are organized by the ordered pair \((N,k)\).
+In the plot below, the L-functions are organized by the ordered pair \((N,k)\).
 For a given \((N,k)\), the color indicates the {{ KNOWL('lfunction.sign', title='sign')}}
 of the functional equation, and the horizontal
 grouping indicates the {{ KNOWL('nf.degree', title='degree')}} of the field containing the arithmetically normalized coefficients.

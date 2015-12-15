@@ -31,6 +31,7 @@ from flask import url_for
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebObject,
+     WebDate,
      WebInt,
      WebBool,
      WebStr,
@@ -57,7 +58,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label, field_label
 
-from lmfdb.utils import web_latex_split_on_re
+from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 
 from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
@@ -107,9 +108,11 @@ class WebqExp(WebPoly):
         if prec is None:
             qe = self.value()
         else:
-            qe = self.value().truncate_powerseries(prec)
+            qe = self.value()
+            if not qe is None:
+                qe = qe.truncate_powerseries(prec)
         wl = web_latex_split_on_re(qe)
-        if name is not None and self.value().base_ring().degree()>1:
+        if name is not None and self.value().base_ring().absolute_degree()>1:
             return wl.replace(latex(self.value().base_ring().gen()), name)
         else:
             return wl
@@ -165,7 +168,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     def init_dynamic_properties(self):
         emf_logger.debug("E = {0}".format(self.E))
         if not self.E is None and not self.v is None:
-            c = self.E*self.v
+            c = multiply_mat_vec(self.E,self.v)
             lc = len(c)
             primes_to_lc = primes_first_n(lc)
             self._ap = {}
@@ -222,7 +225,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     _collection_name = 'webnewforms'
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True):
-        emf_logger.critical("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
+        emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
             character_number = character.number
@@ -235,7 +238,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                 else:
                     raise ValueError,"Need label either string or integer! We got:{0}".format(label)
 
-        emf_logger.critical("Before init properties 0")
+        emf_logger.debug("Before init properties 0")
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
@@ -265,6 +268,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebPoly('absolute_polynomial'),
             WebFloat('version', value=float(emf_version), save_to_fs=True),
             WebDict('explicit_formulas',required=False),
+            WebDate('creation_date',value=None),
             WebModFormSpaceProperty('parent', value=parent,
                                     level = level,
                                     weight = weight,
@@ -273,11 +277,11 @@ class WebNewForm(WebObject, CachedRepresentation):
 #                                    include_in_update = True if parent is None
 #                                    else False),
             )
-        emf_logger.critical("After init properties 1")
+        emf_logger.debug("After init properties 1")
         super(WebNewForm, self).__init__(
             update_from_db=update_from_db
             )
-        emf_logger.critical("After init properties 2 prec={0}".format(self.prec))
+        emf_logger.debug("After init properties 2 prec={0}".format(self.prec))
         # We're setting the WebEigenvalues property after calling __init__ of the base class
         # because it will set hecke_orbit_label from the db first
 
@@ -287,7 +291,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         ## in self._coefficients
         
         self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec,init_dynamic_properties=False)
-        emf_logger.critical("After init properties 3")
+        emf_logger.debug("After init properties 3")
 
     def __repr__(self):
         if self.dimension == 0:
@@ -310,7 +314,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         #emf_logger.debug("In coefficient: n={0}".format(n))
         if n==0:
             if self.is_cuspidal:
-                return self.coefficient_field(0)
+                return 0
         c = self._coefficients.get(n, None)
         if c is None:
             c = self.coefficients([n])[0] 
@@ -339,7 +343,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                 embc = [embc[0] for x in range(self.coefficient_field_degree)]
                 self._embeddings['values'][n]=embc
         if i > len(embc):
-            raise ValueError,"Embedding nr. {0} does not exist of a number field of degree {1},embc={2}".format(i,self.coefficient_field.absolute_degree(),embc)
+            raise ValueError,"Embedding nr. {0} does not exist of a number field of degree {1},embc={2}".format(i,self.coefficient_field_degree,embc)
         return embc[i]
         
         
@@ -360,7 +364,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             #emf_logger.debug("c({0}) in self._coefficients={1}".format(n,c))            
             if c is None:
                 if n == 0 and self.is_cuspidal:
-                    c = self.coefficient_field(0)
+                    c = 0
                 else:
                     recompute = True
                     c = self.coefficient_n_recursive(n)
@@ -403,7 +407,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                     ev.init_dynamic_properties()
                     cp = ev[p]
             if cp is None:
-                raise ValueError,"p={0} is outside the range of computed primes (primes up to {1})! for label:{2}".format(p,max(ev.primes(),self.label))
+                raise IndexError,"p={0} is outside the range of computed primes (primes up to {1})! for label:{2}".format(p,max(ev.primes()),self.label)
             if self._coefficients.get(pr) is None:
                 if r == 1:
                     c = cp
@@ -476,33 +480,8 @@ class WebNewForm(WebObject, CachedRepresentation):
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
 
-    def coefficient_field_label(self, pretty = True, check=False):
-        r"""
-          Returns the LMFDB label of the (absolute) coefficient field (if it exists).
-        """
-        F = self.coefficient_field
-        return field_label(F, pretty, check)
-
-    def coefficient_field_url(self):
-        if self.coefficient_field_label(check=True):
-            return url_for("number_fields.by_label", label=self.coefficient_field_label(pretty = False))
-        else:
-            return ''
-
-    def base_field_label(self, pretty = True, check=False):
-        r"""
-          Returns the LMFDB label of the base field.
-        """
-        F = self.base_ring
-        return field_label(F, pretty, check)
-
-    def base_field_url(self):
-        if self.base_field_label(check=True):
-            return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
-        else:
-            return ''
-
 from lmfdb.utils import cache
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import multiply_mat_vec
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 
 def WebNewForm_cached(level,weight,character,label,parent=None, **kwds):
@@ -511,7 +490,7 @@ def WebNewForm_cached(level,weight,character,label,parent=None, **kwds):
         return M.hecke_orbits[label]
     else:
         F = WebNewForm(level,weight,character,label,**kwds)
-        emf_logger.critical("Computed F not using cache!")
+        emf_logger.debug("Computed F not using cache!")
     return F
 
 

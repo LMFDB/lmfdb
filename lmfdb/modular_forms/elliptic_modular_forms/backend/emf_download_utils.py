@@ -4,7 +4,8 @@ Routines for helping with the download of modular forms data.
 
 """
 import StringIO
-from flask import send_file
+import flask
+from flask import send_file,redirect,url_for
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
@@ -19,13 +20,19 @@ def get_coefficients(info):
     level = my_get(info, 'level', -1, int)
     weight = my_get(info, 'weight', -1, int)
     character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
+    number=my_get(info,'number',0,int)
+    label=my_get(info,'label','',str)    
     emf_logger.debug("info={0}".format(info))
     if character == '':
         character = 0
     label = info.get('label', '')
     # we only want one form or one embedding
-    s = print_list_of_coefficients(info)
-    print "s=",s
+    try:
+        s = print_list_of_coefficients(info)
+    except IndexError as e:
+        info['error']=str(e)
+        flask.flash(str(e))
+        return redirect(url_for("emf.render_elliptic_modular_forms", level=level,weight=weight,character=character,label=label), code=301)
     if info['format']=="sage":
         ending = "sobj"
     else:
@@ -126,6 +133,8 @@ def print_list_of_coefficients(info):
     if fmt == "sage":
         res = []
     for F in FS:
+        if number > F.max_cn():
+            raise IndexError,"The database does not contain this many ({0}) coefficients for this modular form! We only have {1}".format(number,F.max_cn())
         if len(FS) > 1:
             if info['format'] == 'html':
                 coefs += F.label()

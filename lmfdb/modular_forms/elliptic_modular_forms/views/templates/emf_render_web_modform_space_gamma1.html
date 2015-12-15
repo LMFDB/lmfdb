@@ -36,12 +36,35 @@ table.ntdata thead tr.space {
   border-bottom: 0;
 }
 
-table.ntdata thead th.spaceleft {
-  border-right: 2px solid #9b9;
+table.ntdata .label {
+  display: block;
+  padding: 5px 10px 5px 10px;
+}
+
+table.dimtable thead th.spaceleft {
+  border-right: 0;
   vertical-align: top;
 }
 
+table.dimtable tbody td.spaceleft {
+  border-right: 0;
+  vertical-align: top;
+}
+
+table.ntdata tbody tr:nth-child(odd) {
+    background: #FFF;
+}
+
+table.dimtable tbody td:nth-child(even) {
+    background: #FFF;
+}
+
+table.dimtable tbody td.even {
+    background: #EFE;
+}
+
 </style>
+
 
 {% if error is defined %}
 
@@ -52,7 +75,7 @@ table.ntdata thead th.spaceleft {
 {{ error | safe }}
 </div>
 {% endif %}
-{#{ table | safe}#}
+
 
 
 {% include 'geometric.html' %}
@@ -61,77 +84,75 @@ table.ntdata thead th.spaceleft {
   {% set group=KNOWL('mf.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
 {% else %}
   {% if grouptype == 0 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma0N',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(' ~ level ~ ') \)') %}
   {% elif grouptype == 1 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma1N',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+    {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
   {% endif %}
 {% endif %}
-<div>
+
+{% if table is defined %}
+<p>
 The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='Newforms') }}
 for \( \Gamma_1({{level}}) \) of specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, transforming
 with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).
-</div>
-
-<div>
-In the table, we only list one representative per
-{{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit') }} of
-characters.
-The complete Galois orbits of characters are listed in the second table below.
-</div>
-
 </p>
+
 {% set row_class = cycler('odd', 'even') %}
 {% set len = table.weights | length %}
 {% set wid = 10*len +20 %}
-<table class="ntdata" width="{{wid}}px">
+
+<table class="ntdata dimtable" width="{{wid}}px">
   <thead>
     <tr class="space">
-      <th class="spaceleft">Character</th>
-      <th class="weight" colspan="{{table.weights|length}}">
-	<span>Weight</span>
-      </th>
-    </tr>
-    <tr class="space">
-      <th class="spaceleft"></th>
-      {% for k in table.weights  %}
-        {% set col_url = url_for('emf.render_elliptic_modular_forms',level=level,weight=k) %}
-        <th class="weight"><a href="{{col_url}}">{{k}}</a></th>
-      {% endfor %}
+      <th class="spaceleft label">Character:</th>
+    {% for xi in table.galois_orbits_reps_numbers  %}
+      {% set x = table.galois_orbits_reps[xi] %}
+       <th width="10px">
+          {% if x.url != '' %}
+            <a href="{{x.url}}">{{ x.head }}</a>
+          {% else %}
+            {{ x.head }}
+          {% endif %}
+        </th>
+    {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for xi in table.galois_orbits_reps_numbers  %}
-      {% set x = table.galois_orbits_reps[xi] %}
-      <tr class="{{row_class.next() }}">
-        <th width="10px" class="left"> 
-	  {% if x.url != '' %}
-            <a href="{{x.url}}">{{ x.head }}</a>
-          {% else %}
-	    {{x.head}}
-	  {% endif %}
-        </th>
-        {% for k in table.weights  %}
-          {% if k in table.cells[xi] %} 
-            {% set cell = table.cells[xi][k] %} 
-            <td align="center" width="0%">
+     {% for k in table.weights  %}
+     <tr class="{{row_class.next() }}">
+        {% set col_url = url_for('emf.render_elliptic_modular_forms',level=level,weight=k) %}
+   <!--     <td class="weight">Weight&nbsp;<a href="{{col_url}}">{{k}}</a></td>
+-->
+        <td class="spaceleft"><a href="{{col_url}}">Weight = {{k}}</a></td>
+      {% for xi in table.galois_orbits_reps_numbers  %}
+       {% if k in table.cells[xi] %}
+            {% set cell = table.cells[xi][k] %}
+            <td class="weight left {{row_class.next() }}" align="center" width="0%">
             {% if cell.url != '' %}
                <a href="{{cell.url}}">{{cell.dim}}</a>
             {% else %}
                {% if cell.dim < 0 %}
                   n/a
                {% else %}
-	          {{cell.dim}}
+                  {{cell.dim}}
                {% endif %}
-	    {% endif %}
+            {% endif %}
             </td>
-	  {% endif %}
-        {% endfor %}
+          {% endif %}
+       {% endfor %}
+      {% endfor %}
     </tr>
-    {% endfor %}
   </tbody>
 </table>
 
 {% if showGaloisOrbits %}
+
+<p>
+The table above lists one representative per
+{{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit') }} of
+characters.
+The complete Galois orbits of characters are shown in the table below.
+</p>
 
 <table class="ntdata" width="{{wid}}px">
   <thead>
@@ -170,6 +191,9 @@ The complete Galois orbits of characters are listed in the second table below.
     {% endfor %}
   </tbody>
 </table>
+
+{% endif %}
+
 {% endif %}
 
 

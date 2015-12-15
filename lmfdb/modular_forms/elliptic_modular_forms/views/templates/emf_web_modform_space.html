@@ -27,7 +27,7 @@
 {% else %}
 
 {% if space.dimension_new_cusp_forms == 0 %}
-  <h2>This space is empty!</h2>
+  <h3>There are no newforms of this weight, level and character.</h3>
    {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
      The weight is even and the character is odd.
    {% endif %}
@@ -51,7 +51,6 @@ table.td.center {text-align : center;}
 {% if  space.hecke_orbits=={} %}
    Problem with Hecke orbits in the datbase!
 {% else %}
-
 <table>
   <thead>
     <tr>
@@ -60,7 +59,7 @@ table.td.center {text-align : center;}
       <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Field')}}</th>
       <th align="left">{{ KNOWL('mf.elliptic.q-expansion-of-eigenform',title='$q$-expansion of eigenform')}}</th>
     </tr>
-  </thead>
+    </thead>
   <tbody>
     {% set orbits = space.hecke_orbits | sort %}
     {% for label in orbits %}
@@ -69,18 +68,29 @@ table.td.center {text-align : center;}
       <td><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
       <td align="center">
         {{ f.dimension }}</td>
-      <td align="center">
-        <a href="{{ f.coefficient_field_url() }}">{{ f.coefficient_field_label() }}</a></td>
-      <td>{{ f.q_expansion_latex(q_expansion_prec) }}</td>
-    </tr>
+	<td align="center">
+	{% if f.coefficient_field.lmfdb_label %}
+	  <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
+	  {% else %}
+	  {{ f.coefficient_field.lmfdb_pretty }}</td>
+	{% endif %}
+        <td>{{ f.q_expansion_latex(q_expansion_prec) }}</td>
+      </tr>
     {% endfor %}
   </tbody>
 </table>
 {% endif %}
 {% if space.character.order > 2%}
-  {% set n=space.character.modulus_euler_phi %}
-  {% set m=space.character.embedding() %}
-   Here, \( \zeta_{ {{n}} } = \exp(2 \pi i {{m}}/{{n}})\).
+
+{% for n in space.zeta_orders %}
+   \( \zeta_{ {{n}} }\) is a primitive \( {{n}}\)-th root of unity{#
+#}{% if space.zeta_orders | length > 1 %}
+{% if loop.index < space.zeta_orders | length %},
+{% else %}.
+{% endif %}
+{% else %}.
+{% endif %}
+{% endfor %}
 {% endif %}
 
 {% else %}
