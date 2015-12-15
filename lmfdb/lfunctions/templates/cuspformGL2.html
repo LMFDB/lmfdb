@@ -3,7 +3,7 @@
 
 <div>
 This is the browse of the L-functions associated to
-{{ KNOWL("mf.elliptic",title="holomorphic cusp forms")}} \(f\) on Hecke congruence groups
+{{ KNOWL("mf.elliptic.newform",title="newforms")}} \(f\) on Hecke congruence groups
 $\Gamma_0(N)$ with trivial character.
 These L-functions \(L(s,f) = \sum a_n n^{-s} \) have an
 {{ KNOWL('lfunction.euler_product', title='Euler product')}}
@@ -22,11 +22,11 @@ where  $N$ is the
 {{ KNOWL("mf.elliptic.level",title="level")}}, $k$ is the
 {{ KNOWL("mf.elliptic.weight",title="weight")}}
 and \(a_n n^{\frac{k-1}{2} } \)
-are algebraic integers. Since these L-functions are associated to a trivial character, the {{ KNOWL('lfunction.sign', title='sign')}} \(\varepsilon\) is equal to either \(+1\) or \(-1\).
+are algebraic integers. The number \(\varepsilon\) is equal to \(i^k \varepsilon_N\) where \(\varepsilon_N\) is  the {{KNOWL("mf.elliptic.fricke",title="Fricke eigenvalue")}} of \(f\), and so is equal to either \(+1\) or \(-1\) since these L-functions are associated to the trivial character. It is therefore called the {{ KNOWL('lfunction.sign', title='sign')}} of the L-function.
 </div>
 <br>
 <div>
-In the plot below, L-functions are organized by the ordered pair \((N,k)\).
+In the plot below, the L-functions are organized by the ordered pair \((N,k)\).
 For a given \((N,k)\), the color indicates the {{ KNOWL('lfunction.sign', title='sign')}}
 of the functional equation, and the horizontal
 grouping indicates the {{ KNOWL('nf.degree', title='degree')}} of the field containing the arithmetically normalized coefficients.

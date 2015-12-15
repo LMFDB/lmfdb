@@ -313,17 +313,17 @@ def render_elliptic_modular_form_navigation_wp(**args):
     for n in level_range:
         info['table'][n]={}
         for k in weight_range:
-            info['table'][n][k]={'dim_new':int(0), 'in_db':0}
+            info['table'][n][k]={'dim_new':int(0), 'in_db':-1}
     for r in db.find(s):
         N = r['level']
         k = r['weight']
         if group != 0 or k%2==0:
-          emf_logger.debug("Found:k={0},N={1},r[in_wdb]={2},r[one_in_wdb,0]={3}".format(k,N,r['in_wdb'],r.get('one_in_wdb')))
+          emf_logger.debug("Found:k={0},N={1}".format(k,N))
           info['table'][N][k]['dim_new']=r['d_newf'] # dimension of newforms
-          indb = r['in_wdb']  # 1 if it is in the webmodforms db else 0
-          if indb == 0 and group != 0:
+          if group == 0:
+              indb = r['in_wdb']  # 1 if it is in the webmodforms db else 0
+          else:
               indb = r.get('one_in_wdb',0)  # 1 if it is in the webmodforms db else 0
-          #indb = 1
           info['table'][N][k]['in_db'] = indb
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
