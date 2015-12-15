@@ -319,11 +319,14 @@ def render_elliptic_modular_form_navigation_wp(**args):
         k = r['weight']
         if group != 0 or k%2==0:
           emf_logger.debug("Found:k={0},N={1}".format(k,N))
-          info['table'][N][k]['dim_new']=r['d_newf'] # dimension of newforms
+          dim = r['d_newf'] # dimension of newforms
+          info['table'][N][k]['dim_new'] = dim
           if group == 0:
-              indb = r['in_wdb']  # 1 if it is in the webmodforms db else 0
+              indb = r['in_wdb'] # 1 if it is in the webmodforms db else 0
           else:
-              indb = r.get('one_in_wdb',0)  # 1 if it is in the webmodforms db else 0
+              indb = r.get('one_in_wdb',0) # 1 if it is in the webmodforms db else 0
+              if dim == 0:
+                  indb = 1
           info['table'][N][k]['in_db'] = indb
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
