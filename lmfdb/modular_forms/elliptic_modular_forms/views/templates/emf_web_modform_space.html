@@ -27,7 +27,7 @@
 {% else %}
 
 {% if space.dimension_new_cusp_forms == 0 %}
-  <h2>This space is empty!</h2>
+  <h3>There are no newforms of this weight, level and character.</h3>
    {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
      The weight is even and the character is odd.
    {% endif %}
