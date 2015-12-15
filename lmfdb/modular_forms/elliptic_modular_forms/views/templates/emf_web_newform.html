@@ -32,13 +32,13 @@
 
 <h3>{{ KNOWL('mf.elliptic.embeddings',title='Embeddings')}}</h3>
 It is possible to embed the Fourier coefficients in the \(q\)-expansion above
-in the field of complex numbers. The values of the different embeddings 
+in the field of complex numbers. The different embeddings of the first few Fourier coefficients
 that preserve the character are shown in the table below.
 
 <table class="ntdata">
 <thead>
   <tr><th>\(n\)</th>
-    {% for n in range(1,embeddings_len) %}
+    {% for n in range(1,4) %}
     <th>{{n}}</th>
     {% endfor %}
   </tr>
@@ -49,7 +49,7 @@ that preserve the character are shown in the table below.
     <th style="border-right:solid black 1px">
       \( v_{ {{h}} }(a(n)) \)
     </th>
-    {% for n in range(1,embeddings_len) %}
+    {% for n in range(1,4) %}
     <td style="white-space:nowrap;" align=right>
       \({{ embeddings[n][h] |replace("*I", "i")}}\)
     </td>
