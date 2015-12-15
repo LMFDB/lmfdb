@@ -4,6 +4,8 @@ from lmfdb.base import LmfdbTest
 from flask import request
 
 from views.emf_main import *
+from . import emf_logger
+emf_logger.setLevel(100)
 
 class EmfTest(LmfdbTest):
 
