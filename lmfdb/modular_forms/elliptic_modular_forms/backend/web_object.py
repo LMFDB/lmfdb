@@ -762,7 +762,10 @@ class WebNumberField(WebDict):
     def extend_from_db(self):
         setattr(self._value, "lmfdb_label", self._db_value)
         if not self._db_value is None:
-            setattr(self._value, "lmfdb_url", url_for("number_fields.by_label", label=self._db_value))
+            try:
+                setattr(self._value, "lmfdb_url", url_for("number_fields.by_label", label=self._db_value))
+            except RuntimeError:
+                pass
             setattr(self._value, "lmfdb_pretty", field_pretty(self._db_value))
         else:
             setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
