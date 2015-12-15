@@ -28,6 +28,8 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
+from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
+from lmfdb.utils import web_latex_split_on_pm
 
 def render_web_newform(level, weight, character, label, **kwds):
     r"""
@@ -90,9 +92,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     friends = list()
     space_url = url_for('emf.render_elliptic_modular_forms',level=level, weight=weight, character=character)
     friends.append(('\( S_{%s}(%s, %s)\)'%(WNF.weight, WNF.level, WNF.character.latex_name), space_url))
-    if WNF.coefficient_field_label(check=True):
-        friends.append(('Number field ' + WNF.coefficient_field_label(), WNF.coefficient_field_url()))
-    friends.append(('Number field ' + WNF.base_field_label(), WNF.base_field_url()))
+    if hasattr(WNF.base_ring, "lmfdb_label") and not WNF.base_ring.lmfdb_label is None:
+        friends.append(('Number field ' + WNF.base_ring.lmfdb_pretty, WNF.base_ring.lmfdb_url))
+    if hasattr(WNF.coefficient_field, "lmfdb_label") and not WNF.coefficient_field.lmfdb_label is None:
+        friends.append(('Number field ' + WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_url))
     friends = uniq(friends)
     friends.append(("Dirichlet character \(" + WNF.character.latex_name + "\)", WNF.character.url()))
     
@@ -116,7 +119,9 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         rdeg = 1
     else:
         rdeg = WNF.coefficient_field.relative_degree()
-    if cdeg==1:
+    cf_is_QQ = (cdeg == 1)
+    br_is_QQ = (bdeg == 1)
+    if cf_is_QQ:
         info['satake'] = WNF.satake
     info['qexp'] = WNF.q_expansion_latex(prec=10, name='a')
     info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
@@ -127,8 +132,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     #b_pol_ltx = str(WNF.polynomial(type='base_ring',format='latex'))
     #print "c=",c_pol_ltx
     #print "b=",b_pol_ltx
-    if cdeg > 1: ## Field is QQ
-        if bdeg > 1 and rdeg>1:
+    if not cf_is_QQ:
+        if not br_is_QQ and not WNF.coefficient_field == WNF.base_ring:
             p1 = WNF.coefficient_field.relative_polynomial()
             c_pol_ltx = latex(p1)
             lgc = str(latex(p1.variables()[0]))

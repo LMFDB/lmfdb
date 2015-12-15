@@ -314,7 +314,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         #emf_logger.debug("In coefficient: n={0}".format(n))
         if n==0:
             if self.is_cuspidal:
-                return self.coefficient_field(0)
+                return 0
         c = self._coefficients.get(n, None)
         if c is None:
             c = self.coefficients([n])[0] 
@@ -343,7 +343,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                 embc = [embc[0] for x in range(self.coefficient_field_degree)]
                 self._embeddings['values'][n]=embc
         if i > len(embc):
-            raise ValueError,"Embedding nr. {0} does not exist of a number field of degree {1},embc={2}".format(i,self.coefficient_field.absolute_degree(),embc)
+            raise ValueError,"Embedding nr. {0} does not exist of a number field of degree {1},embc={2}".format(i,self.coefficient_field_degree,embc)
         return embc[i]
         
         
@@ -364,7 +364,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             #emf_logger.debug("c({0}) in self._coefficients={1}".format(n,c))            
             if c is None:
                 if n == 0 and self.is_cuspidal:
-                    c = self.coefficient_field(0)
+                    c = 0
                 else:
                     recompute = True
                     c = self.coefficient_n_recursive(n)
@@ -479,32 +479,6 @@ class WebNewForm(WebObject, CachedRepresentation):
         
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
-
-    def coefficient_field_label(self, pretty = True, check=False):
-        r"""
-          Returns the LMFDB label of the (absolute) coefficient field (if it exists).
-        """
-        F = self.coefficient_field
-        return field_label(F, pretty, check)
-
-    def coefficient_field_url(self):
-        if self.coefficient_field_label(check=True):
-            return url_for("number_fields.by_label", label=self.coefficient_field_label(pretty = False))
-        else:
-            return ''
-
-    def base_field_label(self, pretty = True, check=False):
-        r"""
-          Returns the LMFDB label of the base field.
-        """
-        F = self.base_ring
-        return field_label(F, pretty, check)
-
-    def base_field_url(self):
-        if self.base_field_label(check=True):
-            return url_for("number_fields.by_label", label=self.base_field_label(pretty = False))
-        else:
-            return ''
 
 from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import multiply_mat_vec
