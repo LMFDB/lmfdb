@@ -198,9 +198,9 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if WNF.is_cm is None:
         s = '- Unknown (insufficient data)<br>'
     elif WNF.is_cm is True:
-        s = '- Is a CM-form<br>'
+        s = 'Is a CM-form<br>'
     else:
-        s = '- Is not a CM-form<br>'
+        s = 'Is not a CM-form<br>'
     properties2.append(('CM info', s))
     alev = WNF.atkin_lehner_eigenvalues()
     info['atkinlehner'] = None
