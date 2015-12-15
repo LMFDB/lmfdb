@@ -24,6 +24,8 @@ from lmfdb.utils import to_dict
 from sage.all import uniq
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached, WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
+from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
+from lmfdb.utils import web_latex_split_on_pm
 ###
 ###
 
@@ -109,11 +111,15 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     friends = list()
     for label in WMFS.hecke_orbits:
         f = WMFS.hecke_orbits[label]
-        friends.append(('Number field ' + f.base_field_label(), f.base_field_url()))
-        if f.coefficient_field_label(check=True):
-            friends.append(('Number field ' + f.coefficient_field_label(), f.coefficient_field_url()))
+        if hasattr(f.base_ring, "lmfdb_label") and f.base_ring.lmfdb_label is not None:
+            friends.append(('Number field ' + f.base_ring.lmfdb_pretty, f.base_ring.lmfdb_url))
+        if hasattr(f.coefficient_field, "lmfdb_label") and f.coefficient_field.lmfdb_label is not None:
+            friends.append(('Number field ' + f.coefficient_field.lmfdb_pretty, f.coefficient_field.lmfdb_url))
+        else:
+            f.coefficient_field_pretty = web_latex_split_on_pm(f.absolute_polynomial)
     friends.append(("Dirichlet character \(" + WMFS.character.latex_name + "\)", WMFS.character.url()))
     friends = uniq(friends)
     info['friends'] = friends
     
     return info
+
