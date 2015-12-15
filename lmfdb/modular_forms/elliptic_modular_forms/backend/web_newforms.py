@@ -347,7 +347,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         return embc[i]
         
         
-    def coefficients(self, nrange=range(1, 10), save_to_db=True):
+    def coefficients(self, nrange=range(1, 10), save_to_db=False):
         r"""
          Gives the coefficients in a range.
          We assume that the self._ap containing Hecke eigenvalues
