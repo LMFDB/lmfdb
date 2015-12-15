@@ -277,7 +277,7 @@ def web_latex_split_on(x, on=['+', '-']):
     else:
         A = "\( %s \)" % sage.all.latex(x)
         for s in on:
-            A = A.replace(s, '\) ' + s + ' \(')
+            A = A.replace(s, '\) ' + s + ' \( ')
     return A
     
 def web_latex_split_on_pm(x):
@@ -293,8 +293,8 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     else:
         A = "\( %s \)" % sage.all.latex(x)
         c = re.compile(r)
-        A = A.replace('+', '\)\( {}+ ')
-        A = A.replace('-', '\)\( {}- ')
+        A = A.replace('+', '\) \( {}+ ')
+        A = A.replace('-', '\) \( {}- ')
         A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
         A = A.replace('\\right)','\left.\\right)')        
         A = c.sub(insert_latex, A)

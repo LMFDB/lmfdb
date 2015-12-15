@@ -58,7 +58,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label, field_label
 
-from lmfdb.utils import web_latex_split_on_re
+from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 
 from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
