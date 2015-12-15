@@ -103,7 +103,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_Ldegree2CuspForm(self):
         L = self.tc.get('/L/degree2/CuspForm/')
-        assert 'Holomorphic' in L.data
+        assert 'trivial character' in L.data
 
     def test_Ldegree2MaassForm(self):
         L = self.tc.get('/L/degree2/MaassForm/')
