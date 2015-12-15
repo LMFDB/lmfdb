@@ -19,7 +19,7 @@ Routines for rendering webpages for holomorphic modular forms on GL(2,Q)
 AUTHOR: Fredrik Strömberg <fredrik314@gmail.com>
 
 """
-from flask import render_template, url_for, send_file
+from flask import render_template, url_for, send_file,flash
 from lmfdb.utils import to_dict 
 from sage.all import uniq
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
@@ -47,10 +47,15 @@ def render_web_modform_space_gamma1(level=None, weight=None, character=None, lab
         ("Weight %s" % weight, url_for("emf.render_elliptic_modular_forms", level=level, weight=weight)))
     info['grouptype'] = 1
     info['show_all_characters'] = 1
-    info['table'] = set_info_for_gamma1(level,weight)
+    table = set_info_for_gamma1(level,weight)
+    if table is None:
+        pass #info['error'] = 'The database does not currently contain any spaces matching these parameters!'
+    else:
+        info['table'] = table 
     info['bread'] = bread
     info['title'] = title
     info['showGaloisOrbits']=1
+    emf_logger.debug("info={0}".format(info))
     return render_template("emf_render_web_modform_space_gamma1.html", **info)
 
 
@@ -73,10 +78,9 @@ def set_info_for_gamma1(level,weight,weight2=None):
     s = {'level':int(level),'weight':{"$lt":int(w2+1),"$gt":int(w1-1)},'cchi':{"$exists":True}}
     q = db_dim.find(s).sort([('cchi',int(1)),('weight',int(1))])
     if q.count() == 0:
-        # If the record for level N exists then we have data for all galois orbits
-        # otherwise we need to find the representatives anyway
-        #G = dirichlet_character_conrey_galois_orbits_reps(level)
-        return {}
+        emf_logger.debug("No spaces in the database!")
+        flash('The database does not currently contain any spaces matching these parameters. Please try again!')
+        return None #'error':'The database does not currently contain any spaces matching these parameters!'}
     else:
         table['maxGalCount']=1
         for r in q:
@@ -85,7 +89,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
             k = r['weight']
             if not table['galois_orbits_reps'].has_key(xi):
                 table['galois_orbits_reps'][xi]={
-                    'head' : "\(\chi_{{0}}({1},\cdot) \)".format(level,xi),
+                    'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xi),  # yes, {{{ is required
                     'chi': "{0}".format(xi),
                     'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
                 table['galois_orbit'][xi]= [
