@@ -198,7 +198,7 @@ that preserve the character are shown in the table below.
 The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1 }} \).
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
 <input type="hidden" name="download" value="coefficients"/>
-<input type="hidden" name="max_num" value="{{max_cn}}"/>
+<input type="hidden" name="max_num" value="{{max_cn - 1}}"/>
 
 <table>
 <tr><td rowspan=4>Choose format to download:</td>
