@@ -23,6 +23,12 @@ table.ntdata th.left {
   border-bottom: 0;
   text-align: right;
 }
+
+table.ntdata th.first {
+  text-align: center;
+  font-weight: normal;
+}
+
 table.ntdata td { text-align: left; }
 table.ntdata th.weight {
   text-align: left;
@@ -63,6 +69,10 @@ table.dimtable tbody td.even {
     background: #EFE;
 }
 
+table.ntdata thead tr.space th{
+  padding-top: 5px;
+}
+
 </style>
 
 
@@ -91,13 +101,30 @@ table.dimtable tbody td.even {
 {% endif %}
 
 {% if table is defined %}
+{% set k = table.weights[0]  %}
+
 <p>
-The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='Newforms') }}
-for \( \Gamma_1({{level}}) \) of specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, transforming
-with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).
+
+We have
+\[
+S_{ {{k}} }^{new}(\Gamma_1({{level}})) 
+= \bigoplus_{\chi \bmod {{level}} } S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)
+\]
+where the direct sum is over all {{ KNOWL('character.dirichlet',title='Dirichlet characters') }} mod \({{level}}\).
+If $\chi$ and $\chi'$ are in the same {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit')}},
+then $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$ and $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi')$
+are Galois conjugate, so in particular they have the same dimension.
+</p>
+
+<p>
+The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='newforms') }}
+for \( \Gamma_0({{level}}) \) of {{ KNOWL('mf.elliptic.weight',title='weight') }} {{k}} and 
+{{ KNOWL('character.dirichlet',title='characters') }} in each {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit')}}.
+Each character is a link to the corresponding newform space.
 </p>
 
 {% set row_class = cycler('odd', 'even') %}
+<!--
 {% set len = table.weights | length %}
 {% set wid = 10*len +20 %}
 
@@ -118,11 +145,8 @@ with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamm
     </tr>
   </thead>
   <tbody>
-     {% for k in table.weights  %}
      <tr class="{{row_class.next() }}">
         {% set col_url = url_for('emf.render_elliptic_modular_forms',level=level,weight=k) %}
-   <!--     <td class="weight">Weight&nbsp;<a href="{{col_url}}">{{k}}</a></td>
--->
         <td class="spaceleft"><a href="{{col_url}}">Weight = {{k}}</a></td>
       {% for xi in table.galois_orbits_reps_numbers  %}
        {% if k in table.cells[xi] %}
@@ -140,10 +164,11 @@ with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamm
             </td>
           {% endif %}
        {% endfor %}
-      {% endfor %}
     </tr>
   </tbody>
 </table>
+
+-->
 
 {% if showGaloisOrbits %}
 
@@ -165,11 +190,13 @@ The complete Galois orbits of characters are shown in the table below.
     {% for xi in table.galois_orbits_reps_numbers  %}
     {% set x = table.galois_orbits_reps[xi] %}
     {% set cell = table.cells[xi][k] %}
-
       <tr class="{{row_class.next() }}">
-        <th width="10px" class="left">
+        <th width="10px" class="left first">
 	  {% if x.url != '' %}
+            {{cell.dim}}
+<!--
             <a href="{{x.url}}">{{ x.head }}</a>
+-->
           {% else %}
 	    {{ x.head }}
 	  {% endif %}

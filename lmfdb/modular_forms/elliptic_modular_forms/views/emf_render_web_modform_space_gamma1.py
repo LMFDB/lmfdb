@@ -93,9 +93,13 @@ def set_info_for_gamma1(level,weight,weight2=None):
                     'chi': "{0}".format(xi),
                     'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
                 table['galois_orbit'][xi]= [
-                    {'head' : "\({0}\)".format(xci),
+                    {
+                    'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xci),  # yes, {{{ is required
+                    # 'head' : "\({0}\)".format(xci),
                      'chi': "{0}".format(xci),
-                     'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xci) }
+                 #    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xci)
+                     'url': url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xci)
+                    }
                     for xci in orbit]
             if len(orbit)>table['maxGalCount']:
                 table['maxGalCount']=len(orbit)
