@@ -157,13 +157,15 @@ The complete Galois orbits of characters are shown in the table below.
 <table class="ntdata" width="{{wid}}px">
   <thead>
     <tr class="space">
-      <th class="spaceleft">Representative</th>
-      <th class="weight" colspan="{{table.maxGalCount}}">Galois orbit</th>
+      <th class="spaceleft">Dimension</th>
+      <th class="weight" colspan="{{table.maxGalCount}}">Galois orbit of characters</th>
     </tr>
   </thead>
   <tbody>
     {% for xi in table.galois_orbits_reps_numbers  %}
     {% set x = table.galois_orbits_reps[xi] %}
+    {% set cell = table.cells[xi][k] %}
+
       <tr class="{{row_class.next() }}">
         <th width="10px" class="left">
 	  {% if x.url != '' %}
