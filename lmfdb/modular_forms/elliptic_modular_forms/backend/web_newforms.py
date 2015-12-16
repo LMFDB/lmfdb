@@ -116,9 +116,11 @@ class WebqExp(WebPoly):
         wl = web_latex_split_on_re(qe)
         if name is not None and self.value().base_ring().absolute_degree()>1:
             oldname = latex(self.value().base_ring().gen())
-            subfrom = oldname 
-            subfrom = subfrom.replace("{","\\{")  # because x_{0} means something in a regular expression
-            subfrom = "\\b" + subfrom.strip()
+            subfrom = oldname.strip()
+            subfrom = subfrom.replace("\\","\\\\")  
+            subfrom = subfrom.replace("{","\\{")   # because x_{0} means somethgn in a regular expression
+            if subfrom[0].isalpha():
+                subfrom = "\\b" + subfrom
             subto = name.replace("\\","\\\\") + " "
             wl = re.sub(subfrom, subto, wl)
 

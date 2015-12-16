@@ -784,11 +784,15 @@ def web_latex_poly(pol, name='x'):
     # the next few lines were adapted from the lines after line 117 of web_newforms.py 
     oldname = latex(pol.parent().gen())
     subfrom = oldname.strip() 
-    subfrom = "\\b" + subfrom
+    subfrom = subfrom.replace("\\","\\\\")  
     subfrom = subfrom.replace("{","\\{")   # because x_{0} means somethgn in a regular expression
+    if subfrom[0].isalpha():
+        subfrom = "\\b" + subfrom
     subto = name.replace("\\","\\\\")  
     subto += " "
+    print "converting from",subfrom,"to", subto, "of", latex(pol)
     newpol = re.sub(subfrom, subto, latex(pol))
+    print "result is",newpol
     return web_latex_split_on_pm(newpol)
 
 
