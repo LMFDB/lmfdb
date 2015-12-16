@@ -37,7 +37,14 @@ def get_coefficients(info):
         ending = "sobj"
     else:
         ending = "txt"
-    info['filename'] = "{0}-{1}-{2}-{3}-coefficients-0-to-{4}.{5}".format(level,weight,character,label,number,ending)
+    if info['format'] == 'q_expansion':
+        fmt = 'qexp'
+    elif info['format'] == "coefficients":
+        fmt = 'coef'
+    elif info['format'] == "embeddings":
+        fmt = 'emb'
+    
+    info['filename'] = "{0}-{1}-{2}-{3}-coefficients-0-to-{4}-{5}.{5}".format(level,weight,character,label,number,fmt,ending)
     # return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
 
     strIO = StringIO.StringIO()
