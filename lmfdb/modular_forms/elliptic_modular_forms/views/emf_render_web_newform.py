@@ -129,32 +129,17 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
     info['max_cn_qexp'] = WNF.q_expansion.prec()
     
-    # info['qexp'] = WNF.q_expansion_latex(prec=prec)
-    #c_pol_st = str(WNF.absolute_polynomial)
-    #b_pol_st = str(WNF.polynomial(type='base_ring',format='str'))
-    #b_pol_ltx = str(WNF.polynomial(type='base_ring',format='latex'))
-    #print "c=",c_pol_ltx
-    #print "b=",b_pol_ltx
     if not cf_is_QQ:
         if not br_is_QQ and not WNF.coefficient_field == WNF.base_ring:
             p1 = WNF.coefficient_field.relative_polynomial()
-            c_pol_ltx = web_latex_poly(p1, '\\alpha')
-  #          c_pol_ltx = latex(p1)
-  #          lgc = str(latex(p1.variables()[0]))
-  #          # need latex here, e.g. when the variable is zeta6 but c_pol_ltx cotains '\zeta_{6}'
-  #          c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
+            c_pol_ltx = web_latex_poly(p1, '\\alpha')  # make the variable \alpha
             z = p1.base_ring().gens()[0]
             p2 = z.minpoly()
             b_pol_ltx = web_latex_poly(pz, 'z')
-  #          b_pol_ltx = latex(p2)
-  #          b_pol_ltx = b_pol_ltx.replace(latex(p2.variables()[0]),latex(z)) 
             info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
         else:
             p1 = WNF.coefficient_field.relative_polynomial()
             c_pol_ltx = web_latex_poly(p1, '\\alpha')
-#            c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
-#            lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
-#            c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
             info['polynomial_st'] = 'where \({0}=0\)'.format(c_pol_ltx) 
     else:
         info['polynomial_st'] = ''
