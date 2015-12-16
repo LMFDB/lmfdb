@@ -24,6 +24,7 @@
 	<div class="emptyspace"><br>
         </div>
         <button id="morebutton">Show more coefficients</button>
+        (To download coefficients,  see below.)
     </form>
 </div>
 </div>
@@ -194,43 +195,56 @@ that preserve the character are shown in the table below.
   {% endif %}
 <h2>Download {{KNOWL('mf.elliptic.fouriercoefficients',title='Fourier coefficients')}} </h2>
 
-The database contains the coefficients of \(q^n\) for \(n\le {{ max_cn - 1 }} \).
+The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1 }} \).
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
 <input type="hidden" name="download" value="coefficients"/>
 <input type="hidden" name="max_num" value="{{max_cn}}"/>
-  Choose format to download:
-  <ul>
-    <li> 
+
+<table>
+<tr><td rowspan=4>Choose format to download:</td>
+<td>
       <label><input type=radio name="format" checked
     value="q_expansion" onclick="return selectCFormat(event)">
-    q-expansion (text format)</label>
-    </li>
-    <li> 
+    text file of the q-expansion</label>
+</td>
+</tr>
+<tr>
+<td>
       <label><input type=radio name="format" checked
     value="coefficients" onclick="return selectCFormat(event)">
-    algebraic coefficients (text format)</label>
-    </li>
-    <li>
+    text file of the algebraic coefficients in a table</label>
+</td>
+</tr>
+<tr>
+<td>
       <label><input type=radio name="format" value="embeddings"
     onclick="return selectCFormat(event)">
-    complex embeddings (double 
-    precision, text format) </label>
+    text file of the complex coefficients in double precision</label>
       <!-- with <input type="text" size="10" name="bitprec" value="15"> digits precision.     -->
-    </li>
-    <li>
+</td>
+</tr>
+<tr>
+<td>
     <label><input type=radio name="format" value="sage"
     onclick="return selectCFormat(event)">
-    sage objects (algebraic, sage pickle) </label>
-    </li>
-  </ul>
-  Number of coefficients to download <input type="text" size="10"
-  name="number" required value="10"/>
+    sage object (representing a list of algebraic numbers) </label>
+</td>
+</tr>
+<tr>
+<td>  Download coefficients of \(q^n\) for \(0\le n\le \) </td>
+<td>
+  <input type="text" size="10" name="number" example = 99> (maximum {{ max_cn - 1 }})
   <br><span class=" " id="num_error"></span>
+</td>
+</tr>
+</table>
+
   <div>
-    <input type="submit" name="Submit" value="Get coefficients">
+    <input type="submit" name="Submit" value="Download">
   </div>
   </form>
-  
+
+{#
 <h2>Download this newform as {{KNOWL('sage',title='Sage')}} Object</h2>
 <form name="download_object_form" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
   <input type="hidden" name="download" value="object">
@@ -242,9 +256,8 @@ The database contains the coefficients of \(q^n\) for \(n\le {{ max_cn - 1 }} \)
 </form>
 <div class="formexample"> 
 <!--  Note: In order to use this data file you currently need to download
-  and import the entire lmfdb from:  -->
-<a href="https://github.com/LMFDB/lmfdb">lmfdb at github</a>. 
-{#
+  and import the entire lmfdb from:  
+<a href="https://github.com/LMFDB/lmfdb">lmfdb at github</a>. -->
 <form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
   Note: In order to use this data file you currently need to download
   <input type="hidden" name="download" value="file">
