@@ -98,7 +98,7 @@ table.td.center {text-align : center;}
     {% endfor %}
 {% endif %}
 
-{% if not space.is_rational() %} {# this checks if there are forms which are not rational #}
+{% if not space.only_rational() %} {# this checks if there are forms which are not rational #}
 
 <p>The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient fields')}} are: </p>
 <table>
