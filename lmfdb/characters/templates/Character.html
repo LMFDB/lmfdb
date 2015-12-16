@@ -41,15 +41,16 @@
 
 
         {# Values on generators #}
-        <h2>
-            {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
-        </h2>
-        <div class = 'sage nodisplay code'>sage: chi_sage.values_on_gens()</div>
-        {{ addcode(codeval,'div') }}
-        <p>
-            {{ generators }} &rarr; {{ genvalues }}
-        </p>
-
+        {% if modulus>2 %}
+            <h2>
+                {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
+            </h2>
+            <div class = 'sage nodisplay code'>sage: chi_sage.values_on_gens()</div>
+            {{ addcode(codeval,'div') }}
+            <p>
+                {{ generators }} &rarr; {{ genvalues }}
+            </p>
+        {% endif %}
 
         {# Values #}
         
