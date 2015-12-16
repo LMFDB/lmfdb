@@ -94,7 +94,10 @@ def set_info_for_gamma1(level,weight,weight2=None):
                     'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
                 table['galois_orbit'][xi]= [
                     {
-                    'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xci),  # yes, {{{ is required
+                    #'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xci),  # yes, {{{ is required
+               ##     'head' : "\(S_{{{0}}}({1},\chi({2}, \cdot) ) \)".format(weight,level,xci),  # yes, {{{ is required
+                ##    'head' : "\(S_{{{0}}}(\chi({1}, \cdot) ) \)".format(weight,xci),  # yes, {{{ is required
+                    'head' : r"\(S_{{{0}}}(\chi_{{{1}}}({2}, \cdot)) \)".format(weight,level,xci),  # yes, {{{ is required
                     # 'head' : "\({0}\)".format(xci),
                      'chi': "{0}".format(xci),
                  #    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xci)
