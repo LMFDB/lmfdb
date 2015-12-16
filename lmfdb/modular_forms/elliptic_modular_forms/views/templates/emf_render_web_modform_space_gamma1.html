@@ -203,10 +203,10 @@ The complete Galois orbits of characters are shown in the table below.
         </th>
         {% for xc in table.galois_orbit[xi]  %}
           <td align="center" width="0%">
-           {% if xc.url != '' %}
+           {% if xc.url != '' and cell.dim > 0 %}
              <a href="{{xc.url}}">{{ xc.head }}</a>
            {% else %}
-	     {{xc.head}}
+	     <a class="inactive">{{xc.head}}</a>
 	   {% endif %}
           </td>
         {% endfor %}
