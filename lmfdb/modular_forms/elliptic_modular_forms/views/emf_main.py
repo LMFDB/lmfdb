@@ -93,8 +93,11 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, group=0, la
     group = info.get('group',None)
     emf_logger.debug("group=%s, %s" % (group, type(group)))
     if group == 0:
-        character = 1
-        info['character'] = 1
+        if character == -1 or character == None:
+            character = 1
+            info['character'] = 1
+        else:
+            group = 1 #or trigger an error?
     emf_logger.debug("character=%s, %s" % (character, type(character)))
     if 'download' in info:
         return get_downloads(**info)
