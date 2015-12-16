@@ -78,30 +78,35 @@ def Modf_changevar(f,NF,Bfacto=10^6):
   # Field not found, so we reduce the initial polynomial as we can
   [Q,iso]=gp.polredbest(P,1)
   Q=ZZx(str(Q))
-  pKQ=gp.nfinit([Q,Bfacto])
+  pkQ=gp.nfinit([Q,Bfacto])
   iso=QQx(str(gp.lift(iso)))
 
  # Now we have the model we want for the absolute field.
  # We now want the explicit embedding of the cyclotomic field, the relative polynomial for this new field, and the relative version of the isomorphism
  E=f.eigenvalues.E
+ v=f.eigenvalues.v
+ print Q
+ print iso
+ KQ.<a>=NumberField(Q)
  Kcyc=E.base_ring().base_ring()
  if Kcyc.degree()>1:
-  polcyc=Kcyc.defining_polynomial
+  polcyc=Kcyc.defining_polynomial()
   relP=E.base_ring().defining_polynomial()
-  emb=gp.nfisincl(polcyc,pKQ)[1]
-  Cycx.<x>=Cyc[]
-  Cycxy.<y>=Cycx[]
-  relQ=relP(y).resultant(y-iso(x))
-  pKcyc=gp.nfinit(QQy(polcyc))
-  relQ=TODO
-  R=Cyc.extension(TODO)
-  relIso=R(iso)
-  #TODO
-  return TODO
+  print relP
+  emb=QQx(str(gp.nfisincl(polcyc,pkQ)[1]))(a)
+  print emb
+  Krel.<a>=Kcyc.extension(relP)
+  osi=gp.lift(gp.modreverse(gp.Mod(iso,Q)))
+  osi=QQx(str(osi))
+  relQ=osi(a).charpoly()
+  print relQ
+  R.<a>=Kcyc.extension(relQ)
+  relIso=iso(a)
+  newv=[l.lift()(relIso) for l in v]
+  return [newv,E.apply_map(lambda x:x[0]).base_extend(R),Q,emb,Klabel]
 
  # Finally, apply isomorphism
  KQ.<a>=NumberField(Q)
  iso=KQ(iso)
- v=f.eigenvalues.v
  newv=[l.lift()(iso) for l in v]
  return [newv,Klabel]
