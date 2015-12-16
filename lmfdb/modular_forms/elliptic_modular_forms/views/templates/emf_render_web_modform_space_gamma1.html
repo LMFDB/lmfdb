@@ -23,6 +23,12 @@ table.ntdata th.left {
   border-bottom: 0;
   text-align: right;
 }
+
+table.ntdata th.first {
+  text-align: center;
+  font-weight: normal;
+}
+
 table.ntdata td { text-align: left; }
 table.ntdata th.weight {
   text-align: left;
@@ -63,6 +69,10 @@ table.dimtable tbody td.even {
     background: #EFE;
 }
 
+table.ntdata thead tr.space th{
+  padding-top: 5px;
+}
+
 </style>
 
 
@@ -91,98 +101,61 @@ table.dimtable tbody td.even {
 {% endif %}
 
 {% if table is defined %}
+{% set k = table.weights[0]  %}
+
 <p>
-The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='Newforms') }}
-for \( \Gamma_1({{level}}) \) of specified {{ KNOWL('mf.elliptic.weight',title='weight') }}, transforming
-with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamma_0({{level}}) \).
+
+The space of {{ KNOWL('mf.elliptic.newform',title='Newforms') }} of weight {{k}} on $\Gamma_1({{level}})$ decomposes as
+\[
+S_{ {{k}} }^{new}(\Gamma_1({{level}})) 
+= \bigoplus_{\chi \bmod {{level}} } S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)
+\]
+where the direct sum is over all {{ KNOWL('character.dirichlet',title='Dirichlet characters') }} mod \({{level}}\).
+If $\chi$ and $\chi'$ are in the same {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit')}},
+then $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$ and $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi')$
+are Galois conjugate, so in particular they have the same dimension.
+</p>
+
+<p>
+The table below gives the dimensions of the spaces of {{ KNOWL('mf.elliptic.newform',title='newforms') }}
+for \( \Gamma_0({{level}}) \) of {{ KNOWL('mf.elliptic.weight',title='weight') }} {{k}} and 
+{{ KNOWL('character.dirichlet',title='characters') }} in each {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit')}},
+with links to each space.
 </p>
 
 {% set row_class = cycler('odd', 'even') %}
-{% set len = table.weights | length %}
-{% set wid = 10*len +20 %}
-
-<table class="ntdata dimtable" width="{{wid}}px">
-  <thead>
-    <tr class="space">
-      <th class="spaceleft label">Character:</th>
-    {% for xi in table.galois_orbits_reps_numbers  %}
-      {% set x = table.galois_orbits_reps[xi] %}
-       <th width="10px">
-          {% if x.url != '' %}
-            <a href="{{x.url}}">{{ x.head }}</a>
-          {% else %}
-            {{ x.head }}
-          {% endif %}
-        </th>
-    {% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-     {% for k in table.weights  %}
-     <tr class="{{row_class.next() }}">
-        {% set col_url = url_for('emf.render_elliptic_modular_forms',level=level,weight=k) %}
-   <!--     <td class="weight">Weight&nbsp;<a href="{{col_url}}">{{k}}</a></td>
--->
-        <td class="spaceleft"><a href="{{col_url}}">Weight = {{k}}</a></td>
-      {% for xi in table.galois_orbits_reps_numbers  %}
-       {% if k in table.cells[xi] %}
-            {% set cell = table.cells[xi][k] %}
-            <td class="weight left {{row_class.next() }}" align="center" width="0%">
-            {% if cell.url != '' %}
-               <a href="{{cell.url}}">{{cell.dim}}</a>
-            {% else %}
-               {% if cell.dim < 0 %}
-                  n/a
-               {% else %}
-                  {{cell.dim}}
-               {% endif %}
-            {% endif %}
-            </td>
-          {% endif %}
-       {% endfor %}
-      {% endfor %}
-    </tr>
-  </tbody>
-</table>
-    <small>"n/a" means that there is no information about this space in our
-      database. The dimension is clickable whenever the Hecke orbits are 
-    stored for that space.</small>
-  <br/>
 
 {% if showGaloisOrbits %}
-
-<p>
-The table above lists one representative per
-{{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit') }} of
-characters.
-The complete Galois orbits of characters are shown in the table below.
-</p>
 
 <table class="ntdata" width="{{wid}}px">
   <thead>
     <tr class="space">
-      <th class="spaceleft">Representative</th>
-      <th class="weight" colspan="{{table.maxGalCount}}">Galois orbit of
-        characters</th>
+      <th class="spaceleft weight">Dimension&nbsp;of<br>
+$S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$</th>
+<!--
+      <th class="weight" colspan="{{table.maxGalCount}}">Characters $\chi$ grouped by Galois orbit</th>
+-->
+      <th class="weight" colspan="{{table.maxGalCount}}">$S_{ {{k}} }(\chi_{ {{level}} }(n,\cdot)):=S^{new}_{ {{k}} }(\Gamma_0({{level}}),\chi_{ {{level}} }(n,\cdot))$ &nbsp; for characters $\chi$ grouped by Galois orbit</th>
     </tr>
   </thead>
   <tbody>
     {% for xi in table.galois_orbits_reps_numbers  %}
     {% set x = table.galois_orbits_reps[xi] %}
+    {% set cell = table.cells[xi][k] %}
       <tr class="{{row_class.next() }}">
-        <th width="10px" class="left">
+        <th width="10px" class="left first">
 	  {% if x.url != '' %}
-            <a href="{{x.url}}">{{ x.head }}</a>
+            {{cell.dim}}
           {% else %}
 	    {{ x.head }}
 	  {% endif %}
         </th>
         {% for xc in table.galois_orbit[xi]  %}
           <td align="center" width="0%">
-           {% if xc.url != '' %}
+           {% if xc.url != '' and cell.dim > 0 %}
              <a href="{{xc.url}}">{{ xc.head }}</a>
            {% else %}
-	     {{xc.head}}
+	     <a class="inactive">{{xc.head}}</a>
 	   {% endif %}
           </td>
         {% endfor %}
