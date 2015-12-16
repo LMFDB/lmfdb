@@ -101,16 +101,22 @@ function set_value(id,val) {
 {% if info.level_range is defined %} 
   {% set level_weight_params = level_weight_params +
   '&level='+info.level_range %}
+{% elif info.level is defined %} 
+  {% set level_weight_params = level_weight_params +
+  '&level='+info.level %}
 {% endif %}
 {% if info.weight_range is defined %} 
   {% set level_weight_params = level_weight_params +
   '&weight='+info.weight_range %}
+{% elif info.weight is defined %} 
+  {% set level_weight_params = level_weight_params +
+  '&weight='+info.weight %}
 {% endif %}
 
 {% if info.level is defined %}
 <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',level=info.level)}}?group={{info.groupother}}&{{level_weight_params}}">Switch to \(\Gamma_{{groupother}}(N)\)</a></h2></div>
 {% else %}
-<div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',group=groupother)}}&{{level_weight_params}}">Switch to \(\Gamma_{{groupother}}(N)\)</a></h2></div>
+<div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.browse_web_modform_spaces_in_ranges',group=groupother)}}&{{level_weight_params}}">Switch to \(\Gamma_{{groupother}}(N)\)</a></h2></div>
 {%endif%}
 {%endif%}
 
@@ -187,10 +193,12 @@ table.ntdata thead th.spaceleft {
                   {% set in_db = table[N][k]['in_db'] %}
                   {% if in_db == 1 %}
                      {% if info.grouptype == 0 %}
-                       {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=1)
+                       {% set url =
+                       url_for('emf.render_elliptic_modular_forms',level=N,weight=k,character=1,group=0)
                        %}
                     {% else %}
-                       {% set url = url_for('emf.render_elliptic_modular_forms',level=N,weight=k)
+                       {% set url =
+                       url_for('emf.render_elliptic_modular_forms',level=N,weight=k,group=1)
                          %}
                     {% endif %}
                  <a href="{{url}}">{{dim}}</a>
@@ -225,6 +233,10 @@ table.ntdata thead th.spaceleft {
         <span class="formexample"> e.g. 1.12.1a or 11.6 </span>
       </div>
 
+
+  {% if DEBUG %}
+    info:{{info}}
+  {% endif %}
 {#
 <h1>Search</h1>
 <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
