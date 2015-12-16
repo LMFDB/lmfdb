@@ -195,6 +195,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if CM.has_key('tau') and len(CM['tau']) != 0:
             info['CM_values'] = CM
     info['is_cm'] = WNF.is_cm
+    if WNF.is_cm:
+        info['cm_field'] = "2.0.{0}.1".format(-WNF.cm_disc)
+        info['cm_disc'] = WNF.cm_disc
+        info['cm_field_url'] = url_for("number_fields.by_label", label=info["cm_field"])
     if WNF.is_cm is None:
         s = '- Unknown (insufficient data)<br>'
     elif WNF.is_cm is True:
@@ -286,7 +290,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         friends.append((s, url))
     info['properties2'] = properties2
     info['friends'] = friends
-    info['max_cn']=WNF.max_cn()
+    info['max_cn'] = WNF.max_cn()
     return info
 
 import flask

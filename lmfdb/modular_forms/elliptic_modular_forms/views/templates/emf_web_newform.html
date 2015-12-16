@@ -147,14 +147,16 @@ that preserve the character are shown in the table below.
   {% if is_cm is defined or is_minimal is defined %}
   <ul>
   {% if is_cm is defined %}
-  <li>
+    <li>
     This newform is 
-    {% if not is_cm[0] %}
-    not
-    {% endif %}
-    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
-    {% endif %}
+    {% if not is_cm %}
+    not a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
+    {% else %}
+    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}
+    with CM by <a href="{{ cm_field_url}}">$\Q(\sqrt{{{cm_disc}}})$</a>.
+    {% endif %}.
     </li>
+ {% endif %}
   {% if is_minimal is defined %}
   <li>
     It is 
