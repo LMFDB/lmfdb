@@ -88,7 +88,8 @@ from sage.all import (
      latex,
      primes_first_n,
      loads,
-     dumps
+     dumps,
+     is_fundamental_discriminant
      )
 
 from sage.matrix.matrix_integer_dense import Matrix_integer_dense
@@ -260,6 +261,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebInt('coefficient_field_degree'),
             WebList('twist_info', required = False),
             WebBool('is_cm', required = False),
+            WebInt('cm_disc', required = False, default_value=0),
             WebDict('_cm_values',required=False),
             WebBool('is_cuspidal',default_value=True),
             WebDict('satake', required=False),
