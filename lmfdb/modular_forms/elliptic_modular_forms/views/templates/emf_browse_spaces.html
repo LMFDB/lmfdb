@@ -101,10 +101,16 @@ function set_value(id,val) {
 {% if info.level_range is defined %} 
   {% set level_weight_params = level_weight_params +
   '&level='+info.level_range %}
+{% elif info.level is defined %} 
+  {% set level_weight_params = level_weight_params +
+  '&level='+info.level %}
 {% endif %}
 {% if info.weight_range is defined %} 
   {% set level_weight_params = level_weight_params +
   '&weight='+info.weight_range %}
+{% elif info.weight is defined %} 
+  {% set level_weight_params = level_weight_params +
+  '&weight='+info.weight %}
 {% endif %}
 
 {% if info.level is defined %}
@@ -227,6 +233,10 @@ table.ntdata thead th.spaceleft {
         <span class="formexample"> e.g. 1.12.1a or 11.6 </span>
       </div>
 
+
+  {% if DEBUG %}
+    info:{{info}}
+  {% endif %}
 {#
 <h1>Search</h1>
 <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">
