@@ -73,7 +73,7 @@ def browse_web_modform_spaces_in_ranges(**kwds):
 @emf.route("/<level>/<weight>/<character>/", methods=met)
 @emf.route("/<level>/<weight>/<character>/<label>", methods=met)
 @emf.route("/<level>/<weight>/<character>/<label>/", methods=met)
-def render_elliptic_modular_forms(level=None, weight=None, character=None, label=None,group=0, **kwds):
+def render_elliptic_modular_forms(level=None, weight=None, character=None, label=None,group=None, **kwds):
     r"""
     Default input of same type as required. Note that for holomorphic modular forms: level=0 or weight=0 are non-existent.
     """
@@ -96,13 +96,8 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
     emf_logger.debug("wt=%s, %s" % (weight, type(weight)))
     group = info.get('group',None)
     emf_logger.debug("group=%s, %s" % (group, type(group)))
-    if group == 0 or group is None:
-        if character == -1 or character == None:
-            character = 1
-            info['character'] = 1
-        else:
-            group = 1 #or trigger an error?
-        emf_logger.debug("character=%s, %s" % (character, type(character)))
+    if group == 0:
+        character = 1 # only trivial character for Gamma_0(N)
     try:
         if 'download' in info:
             return get_downloads(**info)
@@ -125,7 +120,7 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
                 return render_web_newform(**info)
             else: 
                 return render_web_modform_space(**info)
-        if level > 0 and weight > 0 and (group == 1 or character == None):
+        if level > 0 and weight > 0 and (group != 0 or character == None):
             return render_web_modform_space_gamma1(**info)
         return render_elliptic_modular_form_navigation_wp(**info)
         # Otherwise we go to the main navigation page

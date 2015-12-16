@@ -99,18 +99,14 @@ function set_value(id,val) {
   when switching to Gamma1 or Gamma0 #}
 {% set level_weight_params = '' %}
 {% if info.level_range is defined %} 
-  {% set level_weight_params = level_weight_params +
-  '&level='+info.level_range %}
+  {% set level_weight_params = level_weight_params + '&level=' + info.level_range | string %}
 {% elif info.level is defined %} 
-  {% set level_weight_params = level_weight_params +
-  '&level='+info.level %}
+  {% set level_weight_params = level_weight_params + '&level='+  info.level | string %}
 {% endif %}
 {% if info.weight_range is defined %} 
-  {% set level_weight_params = level_weight_params +
-  '&weight='+info.weight_range %}
+  {% set level_weight_params = level_weight_params +  '&weight='+info.weight_range | string %}
 {% elif info.weight is defined %} 
-  {% set level_weight_params = level_weight_params +
-  '&weight='+info.weight %}
+  {% set level_weight_params = level_weight_params + '&weight='+info.weight | string %}
 {% endif %}
 
 {% if info.level is defined %}
