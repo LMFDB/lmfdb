@@ -28,8 +28,9 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
+from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty, nf_display_knowl
 from lmfdb.utils import web_latex_split_on_pm
+from lmfdb.base import getDBConnection
 
 def render_web_newform(level, weight, character, label, **kwds):
     r"""
@@ -198,6 +199,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if WNF.is_cm:
         info['cm_field'] = "2.0.{0}.1".format(-WNF.cm_disc)
         info['cm_disc'] = WNF.cm_disc
+        info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], getDBConnection(), field_pretty(info['cm_field']))
         info['cm_field_url'] = url_for("number_fields.by_label", label=info["cm_field"])
     if WNF.is_cm is None:
         s = '- Unknown (insufficient data)<br>'
