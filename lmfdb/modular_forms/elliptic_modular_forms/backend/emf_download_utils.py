@@ -38,13 +38,14 @@ def get_coefficients(info):
     else:
         ending = "txt"
     if info['format'] == 'q_expansion':
-        fmt = 'qexp'
+        fmt = '-qexp'
     elif info['format'] == "coefficients":
-        fmt = 'coef'
+        fmt = '-coef'
     elif info['format'] == "embeddings":
-        fmt = 'emb'
-    
-    info['filename'] = "{0}-{1}-{2}-{3}-coefficients-0-to-{4}-{5}.{6}".format(level,weight,character,label,number,fmt,ending)
+        fmt = '-emb'
+    else:
+        fmt=''
+    info['filename'] = "{0}-{1}-{2}-{3}-coefficients-0-to-{4}{5}.{6}".format(level,weight,character,label,number,fmt,ending)
     # return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
 
     strIO = StringIO.StringIO()
@@ -198,7 +199,7 @@ def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
 
     if fmt == "embeddings":
         #embeddings = F.q_expansion_embeddings(number,bitprec=bitprec,format='numeric')
-        deg = F.coefficient_field.degree()
+        deg = F.coefficient_field.absolute_degree()
         for j in range(deg):
             if deg > 1:
                 s+="# Embedding nr. {j} \n".format(j=j)
