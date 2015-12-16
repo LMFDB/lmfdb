@@ -27,6 +27,8 @@ AUTHORS:
  
  """
 
+import re
+
 from flask import url_for
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
@@ -113,7 +115,14 @@ class WebqExp(WebPoly):
                 qe = qe.truncate_powerseries(prec)
         wl = web_latex_split_on_re(qe)
         if name is not None and self.value().base_ring().absolute_degree()>1:
-            return wl.replace(latex(self.value().base_ring().gen()), name)
+            oldname = latex(self.value().base_ring().gen())
+            subfrom = oldname 
+            subfrom = subfrom.replace("{","\\{")  # because x_{0} means something in a regular expression
+            subfrom = "\\b" + subfrom.strip()
+            subto = name.replace("\\","\\\\") + " "
+            wl = re.sub(subfrom, subto, wl)
+
+            return wl
         else:
             return wl
 

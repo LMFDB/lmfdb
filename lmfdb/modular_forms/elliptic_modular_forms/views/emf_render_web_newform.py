@@ -30,6 +30,7 @@ from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.utils import web_latex_split_on_pm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
 
 def render_web_newform(level, weight, character, label, **kwds):
     r"""
@@ -136,10 +137,11 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if not cf_is_QQ:
         if not br_is_QQ and not WNF.coefficient_field == WNF.base_ring:
             p1 = WNF.coefficient_field.relative_polynomial()
-            c_pol_ltx = latex(p1)
-            lgc = str(latex(p1.variables()[0]))
-            # need latex here, e.g. when the variable is zeta6 but c_pol_ltx cotains '\zeta_{6}'
-            c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
+            c_pol_ltx = web_latex_poly(p1, '\\alpha')
+  #          c_pol_ltx = latex(p1)
+  #          lgc = str(latex(p1.variables()[0]))
+  #          # need latex here, e.g. when the variable is zeta6 but c_pol_ltx cotains '\zeta_{6}'
+  #          c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
             z = p1.base_ring().gens()[0]
             p2 = z.minpoly()
             b_pol_ltx = latex(p2)

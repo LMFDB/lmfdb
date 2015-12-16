@@ -34,6 +34,7 @@ from sage.all import SageObject,dumps,loads, QQ, NumberField, latex
 
 import pymongo
 import gridfs
+import re
 
 class WebProperty(object):
     r"""
@@ -780,9 +781,16 @@ class WebNumberField(WebDict):
 
 
 def web_latex_poly(pol, name='x'):
-    return web_latex_split_on_pm(latex(pol).replace(latex(pol.parent().gen()),name))
-    
-            
+    # the next few lines were adapted from the lines after line 117 of web_newforms.py 
+    oldname = latex(pol.parent().gen())
+    subfrom = oldname.strip() 
+    subfrom = "\\b" + subfrom
+    subfrom = subfrom.replace("{","\\{")   # because x_{0} means somethgn in a regular expression
+    subto = name.replace("\\","\\\\")  
+    subto += " "
+    newpol = re.sub(subfrom, subto, latex(pol))
+    return web_latex_split_on_pm(newpol)
+
 
 def number_field_to_dict(F):
 
