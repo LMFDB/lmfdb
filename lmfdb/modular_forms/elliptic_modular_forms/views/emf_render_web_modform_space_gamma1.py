@@ -108,8 +108,15 @@ def set_info_for_gamma1(level,weight,weight2=None):
                 table['maxGalCount']=len(orbit)
             table['cells'][xi]={}
             d = r.get('d_newf',"n/a")
-            url = url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
+            indb = r.get('in_wdb',0)
+            if d == 0:
+                indb = 1
+            if indb:
+                url = url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
+            else:
+                url = ''
             table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d}
     table['galois_orbits_reps_numbers']=table['galois_orbits_reps'].keys()
     table['galois_orbits_reps_numbers'].sort()
+    #emf_logger.debug("Table:{0}".format(table))
     return table
