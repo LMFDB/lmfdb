@@ -69,16 +69,46 @@ table.td.center {text-align : center;}
       <td align="center">
         {{ f.dimension }}</td>
 	<td align="center">
-	{% if f.coefficient_field.lmfdb_label %}
-	  <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
-	  {% else %}
-	  {{ f.coefficient_field.lmfdb_pretty }}</td>
-	{% endif %}
-        <td>{{ f.q_expansion_latex(q_expansion_prec) }}</td>
+        {% if f.coefficient_field.lmfdb_label == '1.1.1.1'%}
+            <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
+        {% else %}
+            $\Q(\alpha_{ {{loop.index}} })$</td>
+	    {% endif %}
+        {% set varname = '\\alpha_{%s}' % loop.index %}
+        <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
       </tr>
     {% endfor %}
   </tbody>
 </table>
+
+{% if space.dimension > orbits|length %} {# this checks if there are
+forms which are not rational #}
+
+<p>The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient fields')}} are: </p>
+<table>
+  <thead>
+    <tr>
+      <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field')}}</th>
+      <th>Minimal polynomial of $\alpha_j$</th>
+    </tr>
+    </thead>
+  <tbody>
+    {% set orbits = space.hecke_orbits | sort %}
+    {% for label in orbits %}
+       {% set f = space.hecke_orbits[label] %}
+       <tr>  
+        {% if f.coefficient_field.lmfdb_label and f.coefficient_field.lmfdb_label != '1.1.1.1'%}
+        <td>$\Q(\alpha_{ {{loop.index}} })\cong$ <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
+        <td>${{ f.coefficient_field.absolute_polynomial_latex('x') }}$</td>
+        {% elif not f.coefficient_field.lmfdb_label and f.coefficient_field.lmfdb_label != '1.1.1.1'%}
+        <td>$\Q(\alpha_{ {{loop.index}} })$</td>
+        <td>${{ f.coefficient_field.absolute_polynomial_latex('x') }}$</td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 {% endif %}
 {% if space.character.order > 2%}
 

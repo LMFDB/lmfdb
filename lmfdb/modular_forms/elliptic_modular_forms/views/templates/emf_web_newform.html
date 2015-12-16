@@ -192,7 +192,7 @@ that preserve the character are shown in the table below.
   {% endif %}
 <h2>Download {{KNOWL('mf.elliptic.fouriercoefficients',title='Fourier coefficients')}} </h2>
 
-We have <b>{{ max_cn }}</b> coefficients available from the database. 
+The database contains the coefficients of \(q^n\) for \(n\le {{ max_cn - 1 }} \).
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
 <input type="hidden" name="download" value="coefficients"/>
 <input type="hidden" name="max_num" value="{{max_cn}}"/>
