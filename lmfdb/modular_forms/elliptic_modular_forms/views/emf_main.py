@@ -59,8 +59,10 @@ def browse_web_modform_spaces_in_ranges(**kwds):
 
     """
     emf_logger.debug("request.args={0}".format(request.args))
-    level=request.args['level']; weight=request.args['weight']
-    return _browse_web_modform_spaces_in_ranges(level=level,weight=weight)
+    level=request.args['level']
+    weight=request.args['weight']
+    group=request.args['group']
+    return _browse_web_modform_spaces_in_ranges(level=level,weight=weight,group=group)
 
 
 @emf.route("/", methods=met)
@@ -69,17 +71,17 @@ def browse_web_modform_spaces_in_ranges(**kwds):
 @emf.route("/<int:level>/<int:weight>/<int:character>/", methods=met)
 @emf.route("/<int:level>/<int:weight>/<int:character>/<label>", methods=met)
 @emf.route("/<int:level>/<int:weight>/<int:character>/<label>/", methods=met)
-def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', **kwds):
+def render_elliptic_modular_forms(level=0, weight=0, character=None, group=0, label='', **kwds):
     r"""
     Default input of same type as required. Note that for holomorphic modular forms: level=0 or weight=0 are non-existent.
     """
     emf_logger.debug(
-        "In render: level={0},weight={1},character={2},label={3}".format(level, weight, character, label))
+        "In render: level={0},weight={1},character={2},group={3},label={4}".format(level, weight, character, group, label))
     emf_logger.debug("args={0}".format(request.args))
     emf_logger.debug("args={0}".format(request.form))
     emf_logger.debug("met={0}".format(request.method))
     keys = ['download', 'jump_to']
-    info = get_args(request, level, weight, character, label, keys=keys)
+    info = get_args(request, level, weight, character, group, label, keys=keys)
     level = info['level']
     weight = info['weight']
     character = info['character']
@@ -88,10 +90,12 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', *
     emf_logger.debug("level=%s, %s" % (level, type(level)))
     emf_logger.debug("label=%s, %s" % (label, type(label)))
     emf_logger.debug("wt=%s, %s" % (weight, type(weight)))
-    emf_logger.debug("character=%s, %s" % (character, type(character)))
     group = info.get('group',None)
+    emf_logger.debug("group=%s, %s" % (group, type(group)))
     if group == 0:
         character = 1
+        info['character'] = 1
+    emf_logger.debug("character=%s, %s" % (character, type(character)))
     if 'download' in info:
         return get_downloads(**info)
     emf_logger.debug("info=%s" % info)
@@ -194,7 +198,7 @@ def redirect_false_route(test=None):
     return redirect(url_for("emf.render_elliptic_modular_forms",**args), code=301)
     # return render_elliptic_modular_form_navigation_wp(**info)
 
-def get_args(request, level=0, weight=0, character=-1, label='', keys=[]):
+def get_args(request, level=0, weight=0, character=-1, group=2, label='', keys=[]):
     r"""
     Use default input of the same type as desired output.
     """
@@ -207,6 +211,9 @@ def get_args(request, level=0, weight=0, character=-1, label='', keys=[]):
     info['level'] = my_get(dd, 'level', level, int)
     info['weight'] = my_get(dd, 'weight', weight, int)
     info['character'] = my_get(dd, 'character', character, int)
+    emf_logger.debug("group={0}".format(group))
+    info['group'] = my_get(dd, 'group', group, int)
+    emf_logger.debug("info[group]={0}".format(info['group']))
     info['label'] = my_get(dd, 'label', label, str)
     for key in keys:
         if key in dd:
