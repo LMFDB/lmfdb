@@ -37,8 +37,7 @@ def get_coefficients(info):
         ending = "sobj"
     else:
         ending = "txt"
-    info['filename'] = str(weight) + '-' + str(
-        level) + '-' + str(character) + '-' + label + 'coefficients-0to' + str(number) + "."+ending
+    info['filename'] = "{0}-{1}-{2}-{3}-coefficients-0-to-{4}.{5}".format(level,weight,character,label,number,ending)
     # return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
 
     strIO = StringIO.StringIO()
