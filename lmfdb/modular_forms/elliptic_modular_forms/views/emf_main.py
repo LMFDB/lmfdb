@@ -145,7 +145,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils impor
 @emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>", methods=['GET', 'POST'])
 def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
     keys = ['download', 'download_file', 'tempfile', 'format', 'number','bitprec']
-    info = get_args(request, level, weight, character, label, keys=keys)
+    info = get_args(request, level=level, weight=weight, character=character, label=label, keys=keys)
     if 'download' not in info:
         emf_logger.critical("Download called without specifying what to download! info={0}".format(info))
         return ""
