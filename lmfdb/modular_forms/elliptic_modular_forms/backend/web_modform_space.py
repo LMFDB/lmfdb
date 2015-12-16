@@ -105,10 +105,13 @@ class WebHeckeOrbits(WebDict):
 
     def from_db(self, l):
         emf_logger.debug("Get Hecke orbits for labels : {0}!".format(l))
+        self._only_rational = True
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached,WebNewForm
         res = {}
         for lbl in l:
             F = WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
+            if F.coefficient_field.absolute_degree() > 1:
+                self._only_rational = False
             #F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
             emf_logger.debug("Got F for label {0} : {1}".format(lbl,F))
             res[lbl]=F
@@ -121,6 +124,9 @@ class WebHeckeOrbits(WebDict):
 
     def from_fs(self, l):
         return self.from_db(l)
+
+    def only_rational(self):
+        return self._only_rational
     
 
 class WebModFormSpace(WebObject, CachedRepresentation):
@@ -214,6 +220,9 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             self.group = Gamma0(self.level)
         else:
             self.group = Gamma1(self.level)
+
+    def only_rational(self):
+        return self._properties['hecke_orbits'].only_rational()
 
     def __repr__(self):
         if self.character.is_trivial():
