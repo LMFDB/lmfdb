@@ -49,6 +49,7 @@ def body_class():
 
 met = ['GET', 'POST']
 
+app.debug = True
 
 
 # Used to be in the experimental part
@@ -60,9 +61,9 @@ def browse_web_modform_spaces_in_ranges(**kwds):
 
     """
     emf_logger.debug("request.args={0}".format(request.args))
-    level=request.args['level']
-    weight=request.args['weight']
-    group=request.args['group']
+    level=request.args.getlist('level')
+    weight=request.args.getlist('weight')
+    group=request.args.getlist('group')
     return _browse_web_modform_spaces_in_ranges(level=level,weight=weight,group=group)
 
 
@@ -83,7 +84,9 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
     emf_logger.debug("met={0}".format(request.method))
     keys = ['download', 'jump_to']
     info = get_args(request, level, weight, character, group, label, keys=keys)
-    validate_parameters(level,weight,character,label,info)
+    valid = validate_parameters(level,weight,character,label,info)
+    if isinstance(valid,basestring):
+        return redirect(valid,code=301)
     level = info['level']; weight = info['weight']; character = info['character']
     #if info.has_key('error'):
     #    return render_elliptic_modular_form_navigation_wp(error=info['error'])
@@ -257,13 +260,20 @@ def get_args(request, level=0, weight=0, character=-1, group=2, label='', keys=[
 
 
 from markupsafe import Markup
+from ..backend.emf_utils import is_range
 
 def validate_parameters(level=0,weight=0,character=None,label='',info={}):
+    #print app.url_map
     emf_logger.debug("validating info={0}".format(info))
     level= info['level']; weight=info['weight']
     character = info['character']; label = info['label']
     t = True
     m = []
+    if is_range(level) or is_range(weight):
+        new_url = url_for("emf.browse_web_modform_spaces_in_ranges",**info)
+        emf_logger.debug("level or weight is a range so we redirect! url={0}".format(new_url))
+        return new_url
+
     if not level is None and (not isinstance(level,int) or level <= 0):
         m.append("Please provide a positive integer level! You gave: {0}".format(level)); t = False
         if level is None:
