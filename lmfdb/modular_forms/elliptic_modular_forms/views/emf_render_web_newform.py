@@ -135,7 +135,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
             c_pol_ltx = web_latex_poly(p1, '\\alpha')  # make the variable \alpha
             z = p1.base_ring().gens()[0]
             p2 = z.minpoly()
-            b_pol_ltx = web_latex_poly(pz, 'z')
+            b_pol_ltx = latex(p2)
+     #       b_pol_ltx = web_latex_poly(p2, 'z')
             info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
         else:
             p1 = WNF.coefficient_field.relative_polynomial()
