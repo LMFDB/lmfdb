@@ -145,13 +145,16 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
   #          c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
             z = p1.base_ring().gens()[0]
             p2 = z.minpoly()
-            b_pol_ltx = latex(p2)
-            b_pol_ltx = b_pol_ltx.replace(latex(p2.variables()[0]),latex(z)) 
+            b_pol_ltx = web_latex_poly(pz, 'z')
+  #          b_pol_ltx = latex(p2)
+  #          b_pol_ltx = b_pol_ltx.replace(latex(p2.variables()[0]),latex(z)) 
             info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
         else:
-            c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
-            lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
-            c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
+            p1 = WNF.coefficient_field.relative_polynomial()
+            c_pol_ltx = web_latex_poly(p1, '\\alpha')
+#            c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
+#            lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
+#            c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
             info['polynomial_st'] = 'where \({0}=0\)'.format(c_pol_ltx) 
     else:
         info['polynomial_st'] = ''
