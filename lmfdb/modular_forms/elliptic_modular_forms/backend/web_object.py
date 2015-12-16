@@ -619,6 +619,17 @@ class WebObject(object):
                 succ = False
         if succ: self._has_updated_from_db = True
 
+    @classmethod
+    def find(cls, query):
+        r'''
+          Search the database using ```query``` and return
+          an iterator over the set of matching objects of this WebObject
+        '''
+        coll = cls.connect_to_db(cls._collection_name)
+        for s in coll.find(query, projection = cls._key):
+            s.pop('_id')
+            yield cls(**s)
+
     def __repr__(self):
         return "WebObject"
 
