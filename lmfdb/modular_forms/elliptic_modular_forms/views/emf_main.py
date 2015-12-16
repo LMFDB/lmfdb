@@ -49,9 +49,11 @@ def body_class():
 
 met = ['GET', 'POST']
 
+app.debug = True
 
 
 # Used to be in the experimental part
+@emf.route("/ranges", methods=["GET"])
 @emf.route("/ranges/", methods=["GET"])
 def browse_web_modform_spaces_in_ranges(**kwds):
     r"""
@@ -59,8 +61,10 @@ def browse_web_modform_spaces_in_ranges(**kwds):
 
     """
     emf_logger.debug("request.args={0}".format(request.args))
-    level=request.args['level']; weight=request.args['weight']
-    return _browse_web_modform_spaces_in_ranges(level=level,weight=weight)
+    level=request.args.getlist('level')
+    weight=request.args.getlist('weight')
+    group=request.args.getlist('group')
+    return _browse_web_modform_spaces_in_ranges(level=level,weight=weight,group=group)
 
 
 @emf.route("/", methods=met)
@@ -69,30 +73,36 @@ def browse_web_modform_spaces_in_ranges(**kwds):
 @emf.route("/<level>/<weight>/<character>/", methods=met)
 @emf.route("/<level>/<weight>/<character>/<label>", methods=met)
 @emf.route("/<level>/<weight>/<character>/<label>/", methods=met)
-def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', **kwds):
+def render_elliptic_modular_forms(level=None, weight=None, character=None, label=None,group=0, **kwds):
     r"""
     Default input of same type as required. Note that for holomorphic modular forms: level=0 or weight=0 are non-existent.
     """
     emf_logger.debug(
-        "In render: level={0},weight={1},character={2},label={3}".format(level, weight, character, label))
+        "In render: level={0},weight={1},character={2},group={3},label={4}".format(level, weight, character, group, label))
     emf_logger.debug("args={0}".format(request.args))
     emf_logger.debug("args={0}".format(request.form))
     emf_logger.debug("met={0}".format(request.method))
     keys = ['download', 'jump_to']
-    info = get_args(request, level, weight, character, label, keys=keys)
-    validate_parameters(level,weight,character,label,info)
+    info = get_args(request, level, weight, character, group, label, keys=keys)
+    valid = validate_parameters(level,weight,character,label,info)
+    if isinstance(valid,basestring):
+        return redirect(valid,code=301)
     level = info['level']; weight = info['weight']; character = info['character']
-    label = info['label']
     #if info.has_key('error'):
     #    return render_elliptic_modular_form_navigation_wp(error=info['error'])
     emf_logger.debug("info={0}".format(info))
     emf_logger.debug("level=%s, %s" % (level, type(level)))
     emf_logger.debug("label=%s, %s" % (label, type(label)))
     emf_logger.debug("wt=%s, %s" % (weight, type(weight)))
-    emf_logger.debug("character=%s, %s" % (character, type(character)))
     group = info.get('group',None)
-    if group == 0:
-        character = 1
+    emf_logger.debug("group=%s, %s" % (group, type(group)))
+    if group == 0 or group is None:
+        if character == -1 or character == None:
+            character = 1
+            info['character'] = 1
+        else:
+            group = 1 #or trigger an error?
+        emf_logger.debug("character=%s, %s" % (character, type(character)))
     try:
         if 'download' in info:
             return get_downloads(**info)
@@ -111,28 +121,31 @@ def render_elliptic_modular_forms(level=0, weight=0, character=None, label='', *
             # return render_elliptic_modular_forms(**args)
         emf_logger.debug("HERE! weight={0} level={1} char={2}".format(weight,level,character))
         if level > 0 and weight > 0 and character > 0:
-            if label != '':
+            if label != '' and not label is None:
                 return render_web_newform(**info)
             else: 
                 return render_web_modform_space(**info)
         if level > 0 and weight > 0 and (group == 1 or character == None):
             return render_web_modform_space_gamma1(**info)
+        return render_elliptic_modular_form_navigation_wp(**info)
         # Otherwise we go to the main navigation page
-    except Exception as e:
+    except IndexError as e:
         emf_logger.debug("catching exceptions. info={0}".format(info))
         errst = str(e)
         ## Try to customise some of the error messages:
         if 'Character' and 'not exist' in errst:
             errst += " Please choose a character from the table below!"
-        flash(errst,'error')
-    return render_elliptic_modular_form_navigation_wp(**info)
+            flash(errst,'error')
+            return render_elliptic_modular_form_navigation_wp(**info)
+        return render_elliptic_modular_form_navigation_wp()
+            
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils import download_web_modform,get_coefficients
 
 @emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>", methods=['GET', 'POST'])
 def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
     keys = ['download', 'download_file', 'tempfile', 'format', 'number','bitprec']
-    info = get_args(request, level, weight, character, label, keys=keys)
+    info = get_args(request, level=level, weight=weight, character=character, label=label, keys=keys)
     if 'download' not in info:
         emf_logger.critical("Download called without specifying what to download! info={0}".format(info))
         return ""
@@ -223,7 +236,7 @@ def show_dots2(min_level, max_level, min_weight, max_weight,complete):
 
 
 
-def get_args(request, level=0, weight=0, character=-1, label='', keys=[]):
+def get_args(request, level=0, weight=0, character=-1, group=2, label='', keys=[]):
     r"""
     Use default input of the same type as desired output.
     """
@@ -236,26 +249,38 @@ def get_args(request, level=0, weight=0, character=-1, label='', keys=[]):
     info['level'] = my_get(dd, 'level', level, int)
     info['weight'] = my_get(dd, 'weight', weight, int)
     info['character'] = my_get(dd, 'character', character, int)
+    emf_logger.debug("group={0}".format(group))
+    info['group'] = my_get(dd, 'group', group, int)
+    emf_logger.debug("info[group]={0}".format(info['group']))
     info['label'] = my_get(dd, 'label', label, str)
     for key in keys:
         if key in dd:
             info[key] = my_get(dd, key, '', str)
     return info
+
+
 from markupsafe import Markup
+from ..backend.emf_utils import is_range
 
 def validate_parameters(level=0,weight=0,character=None,label='',info={}):
+    #print app.url_map
     emf_logger.debug("validating info={0}".format(info))
     level= info['level']; weight=info['weight']
     character = info['character']; label = info['label']
     t = True
     m = []
-    if not isinstance(level,int) or level <= 0:
+    if is_range(level) or is_range(weight):
+        new_url = url_for("emf.browse_web_modform_spaces_in_ranges",**info)
+        emf_logger.debug("level or weight is a range so we redirect! url={0}".format(new_url))
+        return new_url
+
+    if not level is None and (not isinstance(level,int) or level <= 0):
         m.append("Please provide a positive integer level! You gave: {0}".format(level)); t = False
         if level is None:
             info['level'] = None
         else:
             info['level'] = 0
-    if not isinstance(weight,int) or weight <=0:
+    if not weight is None and (not isinstance(weight,int) or weight <=0):
         m.append("Please provide a positive integer weight! You gave: {0}".format(weight)); t = False
         if weight is None:
             info['weight']=None
@@ -264,7 +289,7 @@ def validate_parameters(level=0,weight=0,character=None,label='',info={}):
         if not isinstance(character,int) or character <= 0:
             m.append("Please provide positive integer character number! You gave: {0}".format(character)); t = False
             info['character'] = None
-    if not isinstance(label,basestring):
+    if not label is None and (not isinstance(label,basestring)):
         m.append('Please provide a label in string format! You gave: {0}'.format(label)); t=False
         info['label']=''
         if label is None:
@@ -272,6 +297,7 @@ def validate_parameters(level=0,weight=0,character=None,label='',info={}):
     if not t:
         msg = "<br>".join(m)
         flash(Markup(msg),'error')
+        emf_logger.debug("validate: {0}".format(msg))
         
 # If we don't match any arglist above we see if we have only a label
 # or else catch malformed urls

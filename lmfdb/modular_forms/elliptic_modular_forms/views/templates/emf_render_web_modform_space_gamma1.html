@@ -144,6 +144,10 @@ with specified {{ KNOWL('character.dirichlet',title='character') }} for \( \Gamm
     </tr>
   </tbody>
 </table>
+    <small>"n/a" means that there is no information about this space in our
+      database. The dimension is clickable whenever the Hecke orbits are 
+    stored for that space.</small>
+  <br/>
 
 {% if showGaloisOrbits %}
 
@@ -158,7 +162,8 @@ The complete Galois orbits of characters are shown in the table below.
   <thead>
     <tr class="space">
       <th class="spaceleft">Representative</th>
-      <th class="weight" colspan="{{table.maxGalCount}}">Galois orbit</th>
+      <th class="weight" colspan="{{table.maxGalCount}}">Galois orbit of
+        characters</th>
     </tr>
   </thead>
   <tbody>
