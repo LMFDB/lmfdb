@@ -201,7 +201,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         info['cm_field_url'] = url_for("number_fields.by_label", label=info["cm_field"])
     if WNF.is_cm is None:
         s = '- Unknown (insufficient data)<br>'
-    elif WNF.is_cm is True:
+    elif WNF.is_cm:
         s = 'Is a CM-form<br>'
     else:
         s = 'Is not a CM-form<br>'
