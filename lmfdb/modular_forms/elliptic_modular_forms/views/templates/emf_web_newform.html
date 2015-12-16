@@ -147,14 +147,16 @@ that preserve the character are shown in the table below.
   {% if is_cm is defined or is_minimal is defined %}
   <ul>
   {% if is_cm is defined %}
-  <li>
+    <li>
     This newform is 
-    {% if not is_cm[0] %}
-    not
-    {% endif %}
-    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
+    {% if not is_cm %}
+    not a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
+    {% else %}
+    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}
+    with CM by {{ cm_field_knowl | safe }}.
     {% endif %}
     </li>
+ {% endif %}
   {% if is_minimal is defined %}
   <li>
     It is 
@@ -192,7 +194,7 @@ that preserve the character are shown in the table below.
   {% endif %}
 <h2>Download {{KNOWL('mf.elliptic.fouriercoefficients',title='Fourier coefficients')}} </h2>
 
-We have <b>{{ max_cn }}</b> coefficients available from the database. 
+The database contains the coefficients of \(q^n\) for \(n\le {{ max_cn - 1 }} \).
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
 <input type="hidden" name="download" value="coefficients"/>
 <input type="hidden" name="max_num" value="{{max_cn}}"/>

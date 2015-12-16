@@ -27,6 +27,8 @@ AUTHORS:
  
  """
 
+import re
+
 from flask import url_for
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
@@ -113,7 +115,16 @@ class WebqExp(WebPoly):
                 qe = qe.truncate_powerseries(prec)
         wl = web_latex_split_on_re(qe)
         if name is not None and self.value().base_ring().absolute_degree()>1:
-            return wl.replace(latex(self.value().base_ring().gen()), name)
+            oldname = latex(self.value().base_ring().gen())
+            subfrom = oldname.strip()
+            subfrom = subfrom.replace("\\","\\\\")  
+            subfrom = subfrom.replace("{","\\{")   # because x_{0} means somethgn in a regular expression
+            if subfrom[0].isalpha():
+                subfrom = "\\b" + subfrom
+            subto = name.replace("\\","\\\\") + " "
+            wl = re.sub(subfrom, subto, wl)
+
+            return wl
         else:
             return wl
 
@@ -260,6 +271,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebInt('coefficient_field_degree'),
             WebList('twist_info', required = False),
             WebBool('is_cm', required = False),
+            WebInt('cm_disc', required = False, default_value=0),
             WebDict('_cm_values',required=False),
             WebBool('is_cuspidal',default_value=True),
             WebDict('satake', required=False),
@@ -347,13 +359,13 @@ class WebNewForm(WebObject, CachedRepresentation):
         return embc[i]
         
         
-    def coefficients(self, nrange=range(1, 10), save_to_db=True):
+    def coefficients(self, nrange=range(1, 10), save_to_db=False):
         r"""
          Gives the coefficients in a range.
          We assume that the self._ap containing Hecke eigenvalues
          are stored.
         """
-        emf_logger.debug("computing coeffs in range {0}".format(nrange))
+        emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[1]))
         if not isinstance(nrange, list):
             M = nrange
             nrange = range(0, M)

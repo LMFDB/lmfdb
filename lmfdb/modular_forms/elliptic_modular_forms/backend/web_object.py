@@ -30,10 +30,11 @@ from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.utils import web_latex_split_on_pm
 
 from sage.rings.power_series_poly import PowerSeries_poly
-from sage.all import SageObject,dumps,loads, QQ, NumberField
+from sage.all import SageObject,dumps,loads, QQ, NumberField, latex
 
 import pymongo
 import gridfs
+import re
 
 class WebProperty(object):
     r"""
@@ -132,10 +133,14 @@ class WebProperty(object):
         self._value = self.from_fs(val)
         if self._extend_fs_with_db:
             self.extend_from_db()
+        self.set_extended_properties()
 
     def set_from_db(self, val):
         self._value = self.from_db(val)
         self._db_value = self.from_db(val)
+
+    def set_extended_properties(self):
+        pass
 
     def __repr__(self):
         return "{0}: {1}".format(self.name, self._value)
@@ -770,8 +775,26 @@ class WebNumberField(WebDict):
         else:
             setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
 
-    
-            
+    def set_extended_properties(self):
+        setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
+        setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
+
+
+def web_latex_poly(pol, name='x'):
+    # the next few lines were adapted from the lines after line 117 of web_newforms.py 
+    oldname = latex(pol.parent().gen())
+    subfrom = oldname.strip() 
+    subfrom = subfrom.replace("\\","\\\\")  
+    subfrom = subfrom.replace("{","\\{")   # because x_{0} means somethgn in a regular expression
+    if subfrom[0].isalpha():
+        subfrom = "\\b" + subfrom
+    subto = name.replace("\\","\\\\")  
+    subto += " "
+    print "converting from",subfrom,"to", subto, "of", latex(pol)
+    newpol = re.sub(subfrom, subto, latex(pol))
+    print "result is",newpol
+    return web_latex_split_on_pm(newpol)
+
 
 def number_field_to_dict(F):
 
