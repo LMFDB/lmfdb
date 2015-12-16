@@ -25,7 +25,9 @@
 <br>
 {{ sage_version | safe}}
 {% else %}
-
+{% if not space.has_updated_from_db() %}
+<h3>Unfortunately, we do not have this space in the database, yet.</h3>
+{% else %}
 {% if space.dimension_new_cusp_forms == 0 %}
   <h3>There are no newforms of this weight, level and character.</h3>
    {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
@@ -134,5 +136,6 @@ forms which are not rational #}
 	
 {% endif %}
 {{ test | safe }}
+{% endif %}
 {% endif %}
 {% endblock %}

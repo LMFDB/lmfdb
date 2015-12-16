@@ -297,7 +297,6 @@ class WebObject(object):
             emf_logger.debug('Update requested')
             try:
                 self.update_from_db()
-                self._has_updated_from_db = True
             except Exception as e:
                 raise RuntimeError(str(e))
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
@@ -458,6 +457,8 @@ class WebObject(object):
         lmfdb.base._init(lmfdb.base.dbport)
         
 
+    def has_updated_from_db(self):
+        return self._has_updated_from_db
         
         
     def save_to_db(self, update = True):
@@ -581,11 +582,13 @@ class WebObject(object):
                         try:
                             p.set_from_db(rec[pn])
                         except NotImplementedError:
-                            continue                           
+                            continue
+                succ = True
             else:
                 emf_logger.critical("record with key:{0} was not found!".format(key))
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
+                succ = False
         if self._use_gridfs:
             fs = self._files
             file_key = self.file_key_dict()
@@ -609,9 +612,12 @@ class WebObject(object):
                     #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                     if p.include_in_update and d.has_key(p.name):
                         p.set_from_fs(d[p.name])
+                succ = True
             else:
                 if not ignore_non_existent:
                     raise IndexError("File does not exist")
+                succ = False
+        if succ: self._has_updated_from_db = True
 
     def __repr__(self):
         return "WebObject"
