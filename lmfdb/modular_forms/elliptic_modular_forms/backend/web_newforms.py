@@ -88,8 +88,7 @@ from sage.all import (
      latex,
      primes_first_n,
      loads,
-     dumps,
-     is_fundamental_discriminant
+     dumps
      )
 
 from sage.matrix.matrix_integer_dense import Matrix_integer_dense
