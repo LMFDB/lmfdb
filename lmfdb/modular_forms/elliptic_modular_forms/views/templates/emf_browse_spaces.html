@@ -109,6 +109,10 @@ function set_value(id,val) {
   {% set level_weight_params = level_weight_params + '&weight='+info.weight | string %}
 {% endif %}
 
+<div>
+{{ KNOWL_INC('mf.elliptic.extent') }}
+</div>
+
 {% if info.level is defined %}
 <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',level=info.level)}}?group={{info.groupother}}&{{level_weight_params}}">Switch to \(\Gamma_{{groupother}}(N)\)</a></h2></div>
 {% else %}
