@@ -79,6 +79,24 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         return info
     try:
         WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True,character = character)
+        if not WMFS.has_updated_from_db():
+            stop = False
+            orbit = WMFS.character.character.galois_orbit()
+            while not stop:
+                if len(orbit) == 0:
+                    stop = True
+                    continue
+                c = orbit.pop()
+                if c.number() == WMFS.character.number:
+                    continue
+                print c.number()
+                WMFS_rep = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = c.number())
+                if WMFS_rep.has_updated_from_db():
+                    print "Here"
+                    stop = True
+                    info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character = c.number())
+                    info['wmfs_rep_number'] =  c.number()
+                    
         emf_logger.debug("Created WebModFormSpace %s"%WMFS)
         if 'download' in info and 'tempfile' in info:
             save(WNF,info['tempfile'])
@@ -100,7 +118,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         #    for d in range(len(WMFS.dimension_new_cusp_forms())):
         #        F = 
         #        WMFS.hecke_orbits.append(F)
-        info = {'space':WMFS}
+        info['space'] = WMFS
 #    info['old_decomposition'] = WMFS.oldspace_decomposition()
 
     ## For side-bar
