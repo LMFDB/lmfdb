@@ -235,7 +235,7 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     _key = ['level', 'weight', 'character', 'label']
     _file_key = ['hecke_orbit_label']
-    _collection_name = 'webnewforms'
+    _collection_name = 'webnewforms2'
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
