@@ -95,7 +95,7 @@ function set_value(id,val) {
   {% else %}
    {% set groupother = 0 %}
   {%endif%}
-  <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',group=groupother)}}">Switch to \(\Gamma_{{info.groupother}}(N)\)</a></h2></div>
+  <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.browse_web_modform_spaces_in_ranges',group=groupother)}}">Switch to \(\Gamma_{{info.groupother}}(N)\)</a></h2></div>
 {%endif%}
 
 <h1>Browse holomorphic {{KNOWL('mf.elliptic.newform',title='newforms')}} for {{group}}</h1>

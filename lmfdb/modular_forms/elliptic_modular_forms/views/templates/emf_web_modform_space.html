@@ -23,9 +23,11 @@
 {% if error is defined %}
 {{ error |safe }}
 <br>
-{{ sage_version | safe}}
+{# { sage_version | safe} #}
 {% else %}
-
+{% if not space.has_updated_from_db() %}
+<h3>Unfortunately, we do not have this space in the database, yet.</h3>
+{% else %}
 {% if space.dimension_new_cusp_forms == 0 %}
   <h3>There are no newforms of this weight, level and character.</h3>
    {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
@@ -49,7 +51,7 @@ table.td.center {text-align : center;}
   Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
 </h2>
 {% if  space.hecke_orbits=={} %}
-   Problem with Hecke orbits in the datbase!
+   Problem with Hecke orbits in the database!
 {% else %}
 <table>
   <thead>
@@ -65,10 +67,10 @@ table.td.center {text-align : center;}
     {% for label in orbits %}
        {% set f = space.hecke_orbits[label] %}
        <tr>
-      <td><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
-      <td align="center">
+      <td valign="top"><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
+      <td align="center" valign="top">
         {{ f.dimension }}</td>
-	<td align="center">
+	<td align="center" valign="top">
         {% if f.coefficient_field.lmfdb_label == '1.1.1.1'%}
             <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
         {% else %}
@@ -81,15 +83,30 @@ table.td.center {text-align : center;}
   </tbody>
 </table>
 
-{% if space.dimension > orbits|length %} {# this checks if there are
-forms which are not rational #}
+{% if space.character.order > 2 %}
+{% set ord=space.zeta_orders[0] %}
+    {% for n in space.zeta_orders %}
+            {% if n==4 %}
+                <p> where \( \zeta_{ {{n}} } = i\)
+            {% else %}
+                <p> where \( \zeta_{ {{n}} } = e^{\frac{2\pi i}{ {{n}} }}\) is a primitive \( {{n}} \)-th root of unity
+            {% endif %}
+        {% if space.zeta_orders | length > 1 %}
+            {% if loop.index < space.zeta_orders | length %},{% else %}.</p>{% endif %}
+        {% else %}.</p>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+{% if not space.only_rational() %} {# this checks if there are forms which are not rational #}
 
 <p>The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient fields')}} are: </p>
 <table>
   <thead>
     <tr>
-      <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field')}}</th>
-      <th>Minimal polynomial of $\alpha_j$</th>
+      <th align="left">{{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field')}}</th>
+      <th align="left">{{ KNOWL('nf.minimal_polynomial',title='Minimal polynomial')}} of $\alpha_j$ over 
+      {% if ord %}$\Q(\zeta_{ {{ord}} })${% else %}$\Q${% endif %}</th>
     </tr>
     </thead>
   <tbody>
@@ -98,11 +115,11 @@ forms which are not rational #}
        {% set f = space.hecke_orbits[label] %}
        <tr>  
         {% if f.coefficient_field.lmfdb_label and f.coefficient_field.lmfdb_label != '1.1.1.1'%}
-        <td>$\Q(\alpha_{ {{loop.index}} })\cong$ <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
-        <td>${{ f.coefficient_field.absolute_polynomial_latex('x') }}$</td>
+        <td align="left">$\Q(\alpha_{ {{loop.index}} })\cong$ <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
+        <td align="left">${{ f.coefficient_field.relative_polynomial_latex('x') }}$</td>
         {% elif not f.coefficient_field.lmfdb_label and f.coefficient_field.lmfdb_label != '1.1.1.1'%}
-        <td>$\Q(\alpha_{ {{loop.index}} })$</td>
-        <td>${{ f.coefficient_field.absolute_polynomial_latex('x') }}$</td>
+        <td align="left">$\Q(\alpha_{ {{loop.index}} })$</td>
+        <td align="left">${{ f.coefficient_field.relative_polynomial_latex('x') }}$</td>
         {% endif %}
     </tr>
     {% endfor %}
@@ -110,18 +127,7 @@ forms which are not rational #}
 </table>
 {% endif %}
 {% endif %}
-{% if space.character.order > 2%}
 
-{% for n in space.zeta_orders %}
-   \( \zeta_{ {{n}} }\) is a primitive \( {{n}}\)-th root of unity{#
-#}{% if space.zeta_orders | length > 1 %}
-{% if loop.index < space.zeta_orders | length %},
-{% else %}.
-{% endif %}
-{% else %}.
-{% endif %}
-{% endfor %}
-{% endif %}
 
 {% else %}
 {{  name_new }} {{ nontrivial_new_info }}
@@ -134,5 +140,6 @@ forms which are not rational #}
 	
 {% endif %}
 {{ test | safe }}
+{% endif %}
 {% endif %}
 {% endblock %}
