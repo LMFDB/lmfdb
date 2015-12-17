@@ -133,18 +133,21 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if not br_is_QQ and not WNF.coefficient_field == WNF.base_ring:
             p1 = WNF.coefficient_field.relative_polynomial()
             c_pol_ltx = web_latex_poly(p1, '\\alpha')  # make the variable \alpha
-            z = p1.base_ring().gens()[0]
-            p2 = z.minpoly()
-            b_pol_ltx = latex(p2)
-            b_pol_ltx = b_pol_ltx.replace(latex(p2.variables()[0]),latex(z)) 
+            zeta = p1.base_ring().gens()[0]
+            p2 = zeta.minpoly()
+            b_pol_ltx = web_latex_poly(p2, latex(zeta))
+     #       b_pol_ltx = latex(p2)
+     #       b_pol_ltx = b_pol_ltx.replace(latex(p2.variables()[0]),latex(z)) 
             if hasattr(WNF.coefficient_field, "lmfdb_label") and not WNF.coefficient_field.lmfdb_label is None:
                 info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).</div><br/><div> The <a title="coefficient field[mf.elliptic.coefficient_field]" knowl="mf.elliptic.coefficient_field"" kwargs="">coefficient field</a> is <a href=" {2} ">{3}</a>.'.format(c_pol_ltx,b_pol_ltx, WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty)
             else:
                 info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
         else:
-            c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
-            lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
-            c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
+            p1 = WNF.coefficient_field.relative_polynomial()
+            c_pol_ltx = web_latex_poly(p1, '\\alpha')
+ #           c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
+ #           lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
+ #           c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
             if hasattr(WNF.coefficient_field, "lmfdb_label") and not WNF.coefficient_field.lmfdb_label is None:
                 info['polynomial_st'] = 'where \({0}=0\).</div><br/><div> The <a title="coefficient field[mf.elliptic.coefficient_field]" knowl="mf.elliptic.coefficient_field"" kwargs="">coefficient field</a> is <a href=" {1} ">{2}</a>.'.format(c_pol_ltx, WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty)
             else:
