@@ -36,6 +36,13 @@ hmfs = C.hmfs
 forms = hmfs.forms
 fields = hmfs.fields
 
+flabels = fields.distinct('label')
+flab2 = [fld for fld in flabels if '2.2.' in fld]
+flab3 = [fld for fld in flabels if '3.3.' in fld]
+flab4 = [fld for fld in flabels if '4.4.' in fld]
+flab5 = [fld for fld in flabels if '5.5.' in fld]
+flab6 = [fld for fld in flabels if '6.6.' in fld]
+
 #
 #
 # Code to check conductor labels agree with Hilbert Modular Form level
@@ -391,6 +398,8 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     else:
         max_norm = 'infinity'
     cursor = forms.find(query)
+    cursor.sort([('level_norm', pymongo.ASCENDING)])
+    labels = [f['label'] for f in cursor]
     nfound = 0
     nnotfound = 0
     nok = 0
@@ -406,8 +415,9 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     # disagreement: e.g. curve_ap[conductor_label][iso_label] =
     # aplist.
 
-    for f in cursor:
-        curve_label = f['label']
+    for curve_label in labels:
+        # We find the forms again since otherwise the cursor might timeout during the loop.
+        f = forms.find_one({'label': curve_label})
         ec = nfcurves.find_one({'field_label': field_label, 'class_label': curve_label, 'number': 1})
         if ec:
             if verbose:
@@ -500,6 +510,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
         max_norm = 'infinity'
     cursor = forms.find(query)
     cursor.sort([('level_norm', pymongo.ASCENDING)])
+    labels = [f['label'] for f in cursor]
     nfound = 0
     nnotfound = 0
     nok = 0
@@ -515,8 +526,9 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
     # disagreement: e.g. curve_ap[conductor_label][iso_label] =
     # aplist.
 
-    for f in cursor:
-        curve_label = f['label']
+    for curve_label in labels:
+        # We find the forms again since otherwise the cursor might timeout during the loop.
+        f = forms.find_one({'label': curve_label})
         ec = nfcurves.find_one({'field_label': field_label, 'class_label': curve_label, 'number': 1})
         if ec:
             if verbose:
@@ -586,18 +598,23 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
                 print("... found form, calling Magma search")
 
             N = K.ideal(form['level_label'])
-            Plist = [P['ideal'] for P in K.primes_iter(30)]
+            neigs = len(form['hecke_eigenvalues'])
+            if verbose:
+                print("Using %s ap from Hilbert newform" % neigs)
+            Plist = [P['ideal'] for P in K.primes_iter(neigs)]
             goodP = [(i, P) for i, P in enumerate(Plist) if not P.divides(N)]
             label = form['short_label']
             aplist = [int(form['hecke_eigenvalues'][i]) for i, P in goodP]
             curves = EllipticCurveSearch(K.K(), Plist, N, aplist)
             #curves = EllipticCurveSearch(K.K(), [], N, [])
+            E = None
             if curves:
                 E = curves[0]
-                print("%s curves found by Magma, first is %s" % (len(curves),E.ainvs()))
+                print("%s curves for %s found, first is %s" % (len(curves),nf_label,E.ainvs()))
             else:
-                E = None
-                print("No curves found by Magma (using %s ap)" % len(aplist))
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("!!! No curves for %s found (using %s ap) !!!" % (nf_label,len(aplist)))
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
         if E!=None:
             ec = {}
