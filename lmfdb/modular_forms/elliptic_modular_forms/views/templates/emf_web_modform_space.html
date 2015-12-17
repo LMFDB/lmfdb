@@ -50,7 +50,7 @@
           Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
         </h2>
         {% if  space.hecke_orbits=={} %}
-           Problem with Hecke orbits in the datbase!
+           Problem with Hecke orbits in the database!
         {% else %}
           {% set orbits = space.hecke_orbits | sort %}
           {% set orbits2 = space.hecke_orbits %}
