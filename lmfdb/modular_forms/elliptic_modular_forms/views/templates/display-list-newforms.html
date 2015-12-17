@@ -17,10 +17,10 @@
     {% for label in orbits %}
        {% set f = orbits2[label] %}
        <tr>
-      <td><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
-      <td align="center">
+      <td valign="top"><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
+      <td align="center" valign="top">
         {{ f.dimension }}</td>
-	<td align="center">
+	<td align="center" valign="top">
         {% if f.coefficient_field.lmfdb_label == '1.1.1.1'%}
             <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
         {% else %}
