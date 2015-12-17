@@ -21,12 +21,16 @@
 {% block content %}
 
 {% if error is defined %}
-{{ error |safe }}
+{{ error | safe }}
 <br>
 {# { sage_version | safe} #}
 {% else %}
 {% if not space.has_updated_from_db() %}
+{% if wmfs_rep_url is defined %}
+<p>This space is a Galois conjugate of <a href="{{ wmfs_rep_url }}"> \( S_&#123; {{space.weight}} &#125;(\chi_&#123;{{space.level}} &#125;({{ wmfs_rep_number }}, \cdot)) \)</a></p>
+{% else %}
 <h3>Unfortunately, we do not have this space in the database, yet.</h3>
+{% endif %}
 {% else %}
 {% if space.dimension_new_cusp_forms == 0 %}
   <h3>There are no newforms of this weight, level and character.</h3>
