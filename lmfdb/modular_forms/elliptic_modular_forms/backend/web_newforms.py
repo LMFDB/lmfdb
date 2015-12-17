@@ -157,8 +157,10 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             WebSageObject('v', None, vector),
             WebDict('meta',value={}),
             WebStr('hecke_orbit_label', value=hecke_orbit_label),
-            WebInt('prec', value=prec)
-            )
+            WebInt('prec', value=prec),
+            WebFloat('version', value=float(emf_version),
+                     save_to_fs=True),
+        )
 
         self.auto_update = True
         self._ap = {}        
