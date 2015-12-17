@@ -233,7 +233,11 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1
 <tr>
 <td>  Download coefficients of \(q^n\) for \(0\le n\le \) </td>
 <td>
-  <input type="text" size="10" name="number" example = 99> (maximum {{ max_cn - 1 }})
+  {% set examplemax = 100 %}
+  {% if max_cn - 1 < 100 %}
+    {% set examplemax = max_cn - 1 %}
+  {% endif %}
+  <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn - 1 }})
   <br><span class=" " id="num_error"></span>
 </td>
 </tr>
