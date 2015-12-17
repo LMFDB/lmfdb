@@ -15,6 +15,7 @@ from lmfdb.website import DEFAULT_DB_PORT as dbport
 from lmfdb.base import getDBConnection
 from pymongo.mongo_client import MongoClient
 from lmfdb.modular_forms.elliptic_modular_forms.views.emf_render_web_modform_space import set_info_for_modular_form_space
+from web_modform_space import WebModFormSpace_cached
 
 
 C = getDBConnection()
@@ -31,7 +32,7 @@ db_dim = db_mf.dimension_table
 def check_inwdb(dimdata):
     level = dimdata['level']
     weight = dimdata['weight']
-    character = dimdata['cchi']
+    character = dimdata.get('cchi',1)
     try:
         WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True,character = character)
     except (RuntimeError,ValueError):
@@ -48,6 +49,9 @@ def check_inwdb(dimdata):
 
 def correct_inwdb(dimdata, fix=False):
     is_in_wdb = check_inwdb(dimdata)
+    if not dimdata.has_key('in_wdb'):
+        print "this dimdata has no in_wdb field level:", dimdata['level'], "weight:", dimdata['weight']
+        return
     print "dimdata:", dimdata['in_wdb'], "correct:", is_in_wdb
     if is_in_wdb != dimdata['in_wdb']:
         dimdata['in_wdb'] = is_in_wdb
@@ -57,4 +61,15 @@ def correct_inwdb(dimdata, fix=False):
             db_dim.update(query,dimdata)
         else:
             print "Not fixing:{0},{1}".format(query,dimdata)
+
+def correct_all_inwdb(maxlevel=Infinity, maxweight=Infinity, fix=False):
+    query = {}
+    if maxlevel < Infinity:
+        query['level'] = {'$lt':int(maxlevel+1)}
+    if maxweight < Infinity:
+        query['weight'] = {'$lt':int(maxweight+1)}
+    dims = db_dim.find(query)
+    for dimdata in dims:
+        print dimdata
+        correct_inwdb(dimdata, fix=fix)
 
