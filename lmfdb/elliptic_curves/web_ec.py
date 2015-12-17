@@ -315,10 +315,9 @@ class WebEC(object):
             local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
             local_data.append(local_data_p)
 
-        if len(bad_primes)>1:
-            bsd['tamagawa_factors'] = r' \cdot '.join(str(c.factor()) for c in tamagawa_numbers)
-        else:
-            bsd['tamagawa_factors'] = ''
+        cp_fac = [cp.factor() for cp in tamagawa_numbers]
+        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+        bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         bsd['tamagawa_product'] = sage.misc.all.prod(tamagawa_numbers)
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
