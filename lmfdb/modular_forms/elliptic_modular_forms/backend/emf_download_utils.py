@@ -157,7 +157,7 @@ def print_list_of_coefficients(info):
     else:
         if len(res)==1:
             res = res[0]
-        print "res=",res
+        #print "res=",res
         return dumps(res)
 
 
