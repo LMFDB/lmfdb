@@ -106,7 +106,12 @@ class WebqExp(WebPoly):
                  default_value=None):
         super(WebqExp, self).__init__(name, default_value=default_value)
 
-    def latex(self, prec=None, name=None):
+    def latex(self, prec=None, name=None, keepzeta=False):
+        """
+        Change the name of the variable in a polynomial.  If keepzeta, then don't change
+        the name of zetaN in the defining polynomial of a cyclotomic field.
+        (keepzeta not implemented yet)
+        """
         if prec is None:
             qe = self.value()
         else:
@@ -122,9 +127,12 @@ class WebqExp(WebPoly):
             if subfrom[0].isalpha():
                 subfrom = "\\b" + subfrom
             subto = name.replace("\\","\\\\") + " "
-            wl = re.sub(subfrom, subto, wl)
-
+            if keepzeta and "zeta" in subfrom:
+                pass  # keep the variable as-is
+            else:
+                wl = re.sub(subfrom, subto, wl)
             return wl
+
         else:
             return wl
 
@@ -317,7 +325,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         self._properties['q_expansion'].maxprec = self.prec
         
     def q_expansion_latex(self, prec=None, name=None):
-        return self._properties['q_expansion'].latex(prec, name)
+        return self._properties['q_expansion'].latex(prec, name, keepzeta=True)
     
     def coefficient(self, n):
         r"""
