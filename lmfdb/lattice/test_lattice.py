@@ -60,3 +60,6 @@ class HomePageTest(LmfdbTest):
     def test_lattice_random(self):
         L = self.tc.get("/Lattice/random").data
         assert 'redirected automatically' in L # random lattice
+        L = self.tc.get("/Lattice/random", follow_redirects=True)
+        assert 'Normalized minimal vector list:' in L.data # check redirection
+
