@@ -34,7 +34,7 @@ def check_inwdb(dimdata):
     character = dimdata['cchi']
     try:
         WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True,character = character)
-    except ValueError as e:
+    except (RuntimeError,ValueError):
         return int(0)
     if WMFS == None:
         return int(0)
@@ -48,11 +48,13 @@ def check_inwdb(dimdata):
 
 def correct_inwdb(dimdata, fix=False):
     is_in_wdb = check_inwdb(dimdata)
+    print "dimdata:", dimdata['in_wdb'], "correct:", is_in_wdb
     if is_in_wdb != dimdata['in_wdb']:
         dimdata['in_wdb'] = is_in_wdb
         query = {'_id':dimdata['_id']}
         if fix:
-          db_dim.update(query,dimdata)
+            print "fixing"
+            db_dim.update(query,dimdata)
         else:
             print "Not fixing:{0},{1}".format(query,dimdata)
 
