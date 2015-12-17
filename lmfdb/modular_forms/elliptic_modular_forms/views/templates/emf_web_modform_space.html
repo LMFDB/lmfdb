@@ -51,7 +51,7 @@ table.td.center {text-align : center;}
   Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
 </h2>
 {% if  space.hecke_orbits=={} %}
-   Problem with Hecke orbits in the datbase!
+   Problem with Hecke orbits in the database!
 {% else %}
 <table>
   <thead>
@@ -68,7 +68,7 @@ table.td.center {text-align : center;}
        {% set f = space.hecke_orbits[label] %}
        <tr>
       <td><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
-      <td align="center">
+      <td align="center" valign="top">
         {{ f.dimension }}</td>
 	<td align="center">
         {% if f.coefficient_field.lmfdb_label == '1.1.1.1'%}
