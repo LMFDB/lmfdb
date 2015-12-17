@@ -807,9 +807,9 @@ def web_latex_poly(pol, name='x'):
         subfrom = "\\b" + subfrom
     subto = name.replace("\\","\\\\")  
     subto += " "
-    print "converting from",subfrom,"to", subto, "of", latex(pol)
+#    print "converting from",subfrom,"to", subto, "of", latex(pol)
     newpol = re.sub(subfrom, subto, latex(pol))
-    print "result is",newpol
+#    print "result is",newpol
     return web_latex_split_on_pm(newpol)
 
 
