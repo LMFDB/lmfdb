@@ -5,17 +5,13 @@
 
 
 {% if space is defined %}
-{% if character is not defined or character.order() == 1%}
-  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.level) %}
-  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.level) %}
-{% else %}
-  {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
-  {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
-{% endif %}
-{% endif %}
-{% if not q_expansion_prec is defined %}
-  {# The number of coefficient of the q-expansion which we show on this page #}
-  {% set q_expansion_prec = 10 %}
+  {% if character is not defined or character.order() == 1%}
+    {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.level) %}
+    {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.level) %}
+  {% else %}
+    {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
+    {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
+  {% endif %}
 {% endif %}
 
 {% block content %}
@@ -27,7 +23,7 @@
 {% else %}
 {% if not space.has_updated_from_db() %}
 {% if wmfs_rep_url is defined %}
-<p>This space is a Galois conjugate of <a href="{{ wmfs_rep_url }}"> \( S_&#123; {{space.weight}} &#125;({{space.level}}, \chi_&#123; {{space.level}} &#125;({{ wmfs_rep_number }}, \cdot)) \)</a></p>
+<p>This space is a Galois conjugate of <a href="{{ wmfs_rep_url }}"> \( S_&#123; {{space.weight}} &#125;(\chi_&#123;{{space.level}} &#125;({{ wmfs_rep_number }}, \cdot)) \)</a></p>
 {% else %}
 <h3>Unfortunately, we do not have this space in the database, yet.</h3>
 {% endif %}
@@ -40,110 +36,45 @@
    {% if space.weight % 2 != 0 and space.character.value(-1) == 1 %}
      The weight is odd and the character is even.
    {% endif %}
+    {% else %}
 
-{% else %}
+      {% if extra_info is defined %}
+        <span style="font-size:50%">({{ extra_info | safe }})</span>
+      {% endif %}
 
-{% if extra_info is defined %}
-<span style="font-size:50%">({{ extra_info | safe }})</span>
-{% endif %}
-
-{% if space.dimension_new_cusp_forms > 0 %}
-<style>
-table.td.center {text-align : center;}
-</style>
-<h2>
-  Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
-</h2>
-{% if  space.hecke_orbits=={} %}
-   Problem with Hecke orbits in the datbase!
-{% else %}
-<table>
-  <thead>
-    <tr>
-      <th>{{ KNOWL('mf.elliptic.label',title='Label')}}</th>
-      <th>{{ KNOWL('mf.elliptic.hecke-orbit-dimension',title='Dimension')}}</th>
-      <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Field')}}</th>
-      <th align="left">{{ KNOWL('mf.elliptic.q-expansion-of-eigenform',title='$q$-expansion of eigenform')}}</th>
-    </tr>
-    </thead>
-  <tbody>
-    {% set orbits = space.hecke_orbits | sort %}
-    {% for label in orbits %}
-       {% set f = space.hecke_orbits[label] %}
-       <tr>
-      <td><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
-      <td align="center">
-        {{ f.dimension }}</td>
-	<td align="center">
-        {% if f.coefficient_field.lmfdb_label == '1.1.1.1'%}
-            <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
+      {% if space.dimension_new_cusp_forms > 0 %}
+        <style>
+        table.td.center {text-align : center;}
+        </style>
+        <h2>
+          Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
+        </h2>
+        {% if  space.hecke_orbits=={} %}
+           Problem with Hecke orbits in the database!
         {% else %}
-            $\Q(\alpha_{ {{loop.index}} })$</td>
-	    {% endif %}
-        {% set varname = '\\alpha_{%s}' % loop.index %}
-        <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+          {% set orbits = space.hecke_orbits | sort %}
+          {% set orbits2 = space.hecke_orbits %}
+          {% if space.character.order > 2 %}
+            {% set ord=space.zeta_orders[0] %}
+            {% set zeta_ord = space.zeta_orders %}
+          {% endif %}
+          {% set onlyrat = space.only_rational() %} {# this checks if there are forms which are not rational #}
 
-{% if space.character.order > 2 %}
-{% set ord=space.zeta_orders[0] %}
-    {% for n in space.zeta_orders %}
-            {% if n==4 %}
-                <p> where \( \zeta_{ {{n}} } = i\)
-            {% else %}
-                <p> where \( \zeta_{ {{n}} } = e^{\frac{2\pi i}{ {{n}} }}\) is a primitive \( {{n}} \)-th root of unity
-            {% endif %}
-        {% if space.zeta_orders | length > 1 %}
-            {% if loop.index < space.zeta_orders | length %},{% else %}.</p>{% endif %}
-        {% else %}.</p>
+          {% include 'display-list-newforms.html' %}
+
         {% endif %}
-    {% endfor %}
-{% endif %}
 
-{% if not space.only_rational() %} {# this checks if there are forms which are not rational #}
+      {% else %}
+        {{ name_new }} {{ nontrivial_new_info }}
+      {% endif %}
 
-<p>The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient fields')}} are: </p>
-<table>
-  <thead>
-    <tr>
-      <th align="left">{{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field')}}</th>
-      <th align="left">{{ KNOWL('nf.minimal_polynomial',title='Minimal polynomial')}} of $\alpha_j$ over 
-      {% if ord %}$\Q(\zeta_{ {{ord}} })${% else %}$\Q${% endif %}</th>
-    </tr>
-    </thead>
-  <tbody>
-    {% set orbits = space.hecke_orbits | sort %}
-    {% for label in orbits %}
-       {% set f = space.hecke_orbits[label] %}
-       <tr>  
-        {% if f.coefficient_field.lmfdb_label and f.coefficient_field.lmfdb_label != '1.1.1.1'%}
-        <td align="left">$\Q(\alpha_{ {{loop.index}} })\cong$ <a href="{{ f.coefficient_field.lmfdb_url }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
-        <td align="left">${{ f.coefficient_field.relative_polynomial_latex('x') }}$</td>
-        {% elif not f.coefficient_field.lmfdb_label and f.coefficient_field.lmfdb_label != '1.1.1.1'%}
-        <td align="left">$\Q(\alpha_{ {{loop.index}} })$</td>
-        <td align="left">${{ f.coefficient_field.relative_polynomial_latex('x') }}$</td>
-        {% endif %}
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endif %}
-{% endif %}
-
-
-{% else %}
-{{  name_new }} {{ nontrivial_new_info }}
-{% endif %}
-
-{% if space.oldspace_decomposition != {} and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
-<h2> Decomposition of {{old_name}} into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
-{{ space.oldspace_decomposition | safe }}
-{% endif %}
-	
-{% endif %}
-{{ test | safe }}
-{% endif %}
+      {% if space.oldspace_decomposition != {} and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
+        <h2> Decomposition of {{old_name}} into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
+        {{ space.oldspace_decomposition | safe }}
+      {% endif %}
+        
+    {% endif %}
+    {{ test | safe }}
+  {% endif %}
 {% endif %}
 {% endblock %}
