@@ -15,7 +15,7 @@ def Modf_changevar(f,NF,Bfacto=10^6):
  P=f.absolute_polynomial
  # If f is rational, nothing to do :)
  if P.degree()==1:
-  return [f.eigenvalues.v,u'1.1.1.1']
+  return [f.eigenvalues.v,f.eigenvalues.E,x,-1,u'1.1.1.1']
  # Is the coefficient field already identified ?
  Klabel=f.coefficient_field.lmfdb_label
  if Klabel:
@@ -112,4 +112,4 @@ def Modf_changevar(f,NF,Bfacto=10^6):
  KQ.<a>=NumberField(Q)
  iso=KQ(iso)
  newv=[l.lift()(iso) for l in v]
- return [newv,E,Q,QQx.gen(),Klabel]
+ return [newv,E,Q,-1,Klabel]
