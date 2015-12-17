@@ -4,6 +4,8 @@ from lmfdb.base import LmfdbTest
 from flask import request
 
 from views.emf_main import *
+from . import emf_logger
+emf_logger.setLevel(100)
 
 class EmfTest(LmfdbTest):
 
@@ -11,7 +13,7 @@ class EmfTest(LmfdbTest):
         pass
     def test_browse_page(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/")
-        assert '"/ModularForm/GL2/Q/holomorphic/24/?character=1">24' in page.data
+        assert '"/ModularForm/GL2/Q/holomorphic/24/?group=0">24' in page.data
         assert '"/ModularForm/GL2/Q/holomorphic/23/12/1/">19' in page.data
 
     def test_delta(self):
@@ -49,9 +51,9 @@ class EmfTest(LmfdbTest):
         Check that non-trivial characters are also working.
         """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/2/4/a/")
-        assert r'\(  \left( {}\right.\)\( {}- a \)\( {}-  1\left.\right)q^{2} \)' in page.data
+        assert r'where \(\alpha ^{2} - \alpha  + 1=0\)' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/4/9/a/")
-        assert r'\( {}-\) \(  aq^{3} \)' in page.data
+        assert r'\( {}-\) \(  \alpha q^{3} \)' in page.data
 
     def test_get_args(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/1/")
@@ -59,14 +61,14 @@ class EmfTest(LmfdbTest):
 
     def test_empty(self):
         page = self.tc.get("ModularForm/GL2/Q/holomorphic/2/2/1/")
-        assert 'is empty' in page.data
+        assert 'no newforms' in page.data
 
 
     def test_not_in_db(self):
-        page = self.tc.get("ModularForm/GL2/Q/holomorphic/12000/12/0/")
-        assert 'n/a' in page.data
+        # The following redirects to "ModularForm/GL2/Q/holomorphic/12000/12/"
+        page = self.tc.get("ModularForm/GL2/Q/holomorphic/12000/12/0/", follow_redirects=True)
+        assert 'The database does not currently contain' in page.data
         page = self.tc.get("ModularForm/GL2/Q/holomorphic/12000/12/1/")
-        #assert 'not available yet' in page.data
-        assert 'This space is empty' in page.data
-        page = self.tc.get("ModularForm/GL2/Q/holomorphic/12000/12/0/a/")
-        assert 'n/a' in page.data
+        assert 'no newforms' in page.data
+        page = self.tc.get("ModularForm/GL2/Q/holomorphic/12000/12/0/a/", follow_redirects=True)
+        assert 'The database does not currently contain' in page.data

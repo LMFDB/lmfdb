@@ -4,7 +4,8 @@ Routines for helping with the download of modular forms data.
 
 """
 import StringIO
-from flask import send_file
+import flask
+from flask import send_file,redirect,url_for
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
@@ -19,21 +20,34 @@ def get_coefficients(info):
     level = my_get(info, 'level', -1, int)
     weight = my_get(info, 'weight', -1, int)
     character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
+    number=my_get(info,'number',0,int) + 1
+    label=my_get(info,'label','',str)
     emf_logger.debug("info={0}".format(info))
     if character == '':
         character = 0
     label = info.get('label', '')
     # we only want one form or one embedding
-    s = print_list_of_coefficients(info)
-    print "s=",s
+    try:
+        s = print_list_of_coefficients(info)
+    except IndexError as e:
+        info['error']=str(e)
+        flask.flash(str(e))
+        return redirect(url_for("emf.render_elliptic_modular_forms", level=level,weight=weight,character=character,label=label), code=301)
     if info['format']=="sage":
         ending = "sobj"
     else:
         ending = "txt"
-    info['filename'] = str(weight) + '-' + str(
-        level) + '-' + str(character) + '-' + label + 'coefficients-0to' + info['number'] + "."+ending
+    if info['format'] == 'q_expansion':
+        fmt = '-qexp'
+    elif info['format'] == "coefficients":
+        fmt = '-coef'
+    elif info['format'] == "embeddings":
+        fmt = '-emb'
+    else:
+        fmt=''
+    info['filename'] = "{0}-{1}-{2}-{3}-coefficients-0-to-{4}{5}.{6}".format(level,weight,character,label,number,fmt,ending)
     # return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
-    
+
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
@@ -107,9 +121,9 @@ def print_list_of_coefficients(info):
     if not WMFS:
         return ""
     if('number' in info):
-        number = int(info['number'])
+        number = int(info['number']) + 1
     else:
-        number = max(WMFS.sturm_bound() + 1, 20)
+        number = max(WMFS.sturm_bound + 1, 20)
     FS = list()
     f  = WMFS.hecke_orbits.get(label)
     if f is not None:
@@ -126,6 +140,8 @@ def print_list_of_coefficients(info):
     if fmt == "sage":
         res = []
     for F in FS:
+        if number > F.max_cn():
+            raise IndexError,"The database does not contain this many ({0}) coefficients for this modular form! We only have {1}".format(number,F.max_cn())
         if len(FS) > 1:
             if info['format'] == 'html':
                 coefs += F.label()
@@ -141,7 +157,7 @@ def print_list_of_coefficients(info):
     else:
         if len(res)==1:
             res = res[0]
-        print "res=",res
+        #print "res=",res
         return dumps(res)
 
 
@@ -156,34 +172,39 @@ def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
     #if number > max_cn:
     #    number = max_cn
     ## TODO: add check that we have sufficiently many coefficients!
+    deg = F.coefficient_field.absolute_degree() # OK for QQ too
+    if deg > 1:
+        pol = F.coefficient_field.relative_polynomial()
+    #emf_logger.debug("deg={0}".format(deg))
     if fmt == "q_expansion":
+        if deg > 1:
+            s += "\n## coefficient field : "+str(pol)+"=0"
+        else:
+            s += "## coefficient field : Rational Field"
+        s += "\n\n"
         s += str(F.q_expansion.truncate_powerseries(number))
     if fmt == "coefficients":
         qe = F.coefficients(range(number))
         #emf_logger.debug("F={0}".format(F))
         #deg=0 [emf_download_utils.py:147
-        deg = F.coefficient_field.degree()
-        #emf_logger.debug("deg={0}".format(deg))        
         if deg > 1:
-            pol = F.coefficient_field.polynomial()
-            s += "## coefficient field : "+str(pol)+"=0"
-            s += "\n"
+            s += "\n## coefficient field : "+str(pol)+"=0"
         else:
-            s += "## coefficient field : Rational Field"
-            s += "\n"            
+            s += "\n## coefficient field : Rational Field"
+        s += "\n\n"
         for n in range(len(qe)):
             c=qe[n]
             s += "{n} \t {c} \n".format(n=n,c=c)
         emf_logger.debug("qe={0}".format(qe))
-         
+
     if fmt == "embeddings":
         #embeddings = F.q_expansion_embeddings(number,bitprec=bitprec,format='numeric')
-        deg = F.coefficient_field.degree()
+        deg = F.coefficient_field.absolute_degree()
         for j in range(deg):
             if deg > 1:
-                s+="# Embedding nr. {j} \n".format(j=j)            
+                s+="# Embedding nr. {j} \n".format(j=j)
             for n in range(number):
                 s += str(n) + "\t" + str(F.coefficient_embedding(n,j)) + "\n"
-        
+
     emf_logger.debug("s={0}".format(s))
     return s

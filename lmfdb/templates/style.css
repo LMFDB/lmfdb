@@ -111,6 +111,15 @@ a {
   text-decoration: none;
   font-family: sans-serif;
 }
+
+a.inactive {
+    color: #000;
+}
+
+a.inactive:hover {
+    background: inherit;
+}
+
 #content a {
 }
 #content .announce {
@@ -562,11 +571,6 @@ button, select {
   min-width: 75px;
 }
 
-button.inactive {
-  background: #EEE; 
-  border: 1px solid #EDD;
-}
-
 body.knowl form button, 
 body.knowl form select {
   border: 2px solid #AAD;
@@ -581,6 +585,16 @@ form button:hover,
 form select:hover {
   background:    #CFC;
   border: 2px solid #9C9;
+}
+
+button.inactive {
+  background: #EEE;
+  border: 2px solid #EDD;
+}
+
+button.inactive:hover {
+  background: #EEE;
+  border: 2px solid #EDD;
 }
 
 body.knowl form button:hover,

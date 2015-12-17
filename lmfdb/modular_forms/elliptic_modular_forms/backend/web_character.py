@@ -62,7 +62,13 @@ class WebChar(WebObject, CachedRepresentation):
         Init self.
 
         """
-        emf_logger.critical("In WebChar {0}".format((modulus,number,update_from_db,compute)))
+        emf_logger.debug("In WebChar {0}".format((modulus,number,update_from_db,compute)))
+        if isinstance(modulus,basestring):
+            try:
+                m,n=modulus.split('.')
+                modulus = int(m); number=int(n)
+            except:
+                raise ValueError,"{0} does not correspond to the label of a WebChar".format(modulus)
         if not gcd(number,modulus)==1:
             raise ValueError,"Character number {0} of modulus {1} does not exist!".format(number,modulus)
         if number > modulus:
@@ -256,13 +262,13 @@ def WebChar_cached(modulus,number,**kwds):
     if use_cache:
         label = "{0}.{1}".format(modulus,number)
         X= cache.get(label)
-        emf_logger.critical("Looking for cached  char:{0}".format(label))
+        emf_logger.debug("Looking for cached  char:{0}".format(label))
         if X is None:
             emf_logger.debug("X was not in cache!")
             X = WebChar(modulus,number,**kwds)
             cache.set(label, X, timeout=5 * 60)
         else:
-            emf_logger.critical("X was in cache!")
+            emf_logger.debug("X was in cache!")
     else:
         X = WebChar(modulus,number,**kwds)
     return X

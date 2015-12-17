@@ -28,6 +28,10 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
+from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty, nf_display_knowl
+from lmfdb.utils import web_latex_split_on_pm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
+from lmfdb.base import getDBConnection
 
 def render_web_newform(level, weight, character, label, **kwds):
     r"""
@@ -90,9 +94,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     friends = list()
     space_url = url_for('emf.render_elliptic_modular_forms',level=level, weight=weight, character=character)
     friends.append(('\( S_{%s}(%s, %s)\)'%(WNF.weight, WNF.level, WNF.character.latex_name), space_url))
-    if WNF.coefficient_field_label(check=True):
-        friends.append(('Number field ' + WNF.coefficient_field_label(), WNF.coefficient_field_url()))
-    friends.append(('Number field ' + WNF.base_field_label(), WNF.base_field_url()))
+    if hasattr(WNF.base_ring, "lmfdb_label") and not WNF.base_ring.lmfdb_label is None:
+        friends.append(('Number field ' + WNF.base_ring.lmfdb_pretty, WNF.base_ring.lmfdb_url))
+    if hasattr(WNF.coefficient_field, "lmfdb_label") and not WNF.coefficient_field.lmfdb_label is None:
+        friends.append(('Number field ' + WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_url))
     friends = uniq(friends)
     friends.append(("Dirichlet character \(" + WNF.character.latex_name + "\)", WNF.character.url()))
     
@@ -116,34 +121,34 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         rdeg = 1
     else:
         rdeg = WNF.coefficient_field.relative_degree()
-    if cdeg==1:
+    cf_is_QQ = (cdeg == 1)
+    br_is_QQ = (bdeg == 1)
+    if cf_is_QQ:
         info['satake'] = WNF.satake
-    info['qexp'] = WNF.q_expansion_latex(prec=10, name='a')
+    info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
     info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
+    info['max_cn_qexp'] = WNF.q_expansion.prec()
     
-    # info['qexp'] = WNF.q_expansion_latex(prec=prec)
-    #c_pol_st = str(WNF.absolute_polynomial)
-    #b_pol_st = str(WNF.polynomial(type='base_ring',format='str'))
-    #b_pol_ltx = str(WNF.polynomial(type='base_ring',format='latex'))
-    #print "c=",c_pol_ltx
-    #print "b=",b_pol_ltx
-    if cdeg > 1: ## Field is QQ
-        if bdeg > 1 and rdeg>1:
+    if not cf_is_QQ:
+        if not br_is_QQ and not WNF.coefficient_field == WNF.base_ring:
             p1 = WNF.coefficient_field.relative_polynomial()
-            c_pol_ltx = latex(p1)
-            lgc = str(latex(p1.variables()[0]))
-            # need latex here, e.g. when the variable is zeta6 but c_pol_ltx cotains '\zeta_{6}'
-            c_pol_ltx = c_pol_ltx.replace(lgc,'a')
+            c_pol_ltx = web_latex_poly(p1, '\\alpha')  # make the variable \alpha
             z = p1.base_ring().gens()[0]
             p2 = z.minpoly()
             b_pol_ltx = latex(p2)
             b_pol_ltx = b_pol_ltx.replace(latex(p2.variables()[0]),latex(z)) 
-            info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
+            if hasattr(WNF.coefficient_field, "lmfdb_label") and not WNF.coefficient_field.lmfdb_label is None:
+                info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).</div><br/><div> The <a title="coefficient field[mf.elliptic.coefficient_field]" knowl="mf.elliptic.coefficient_field"" kwargs="">coefficient field</a> is <a href=" {2} ">{3}</a>.'.format(c_pol_ltx,b_pol_ltx, WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty)
+            else:
+                info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
         else:
             c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
             lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
-            c_pol_ltx = c_pol_ltx.replace(lgc,'a')
-            info['polynomial_st'] = 'where \({0}=0\)'.format(c_pol_ltx) 
+            c_pol_ltx = c_pol_ltx.replace(lgc,'\\alpha ')
+            if hasattr(WNF.coefficient_field, "lmfdb_label") and not WNF.coefficient_field.lmfdb_label is None:
+                info['polynomial_st'] = 'where \({0}=0\).</div><br/><div> The <a title="coefficient field[mf.elliptic.coefficient_field]" knowl="mf.elliptic.coefficient_field"" kwargs="">coefficient field</a> is <a href=" {1} ">{2}</a>.'.format(c_pol_ltx, WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty)
+            else:
+                info['polynomial_st'] = 'where \({0}=0\).'.format(c_pol_ltx)
     else:
         info['polynomial_st'] = ''
     info['degree'] = int(cdeg)
@@ -189,12 +194,17 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if CM.has_key('tau') and len(CM['tau']) != 0:
             info['CM_values'] = CM
     info['is_cm'] = WNF.is_cm
+    if WNF.is_cm:
+        info['cm_field'] = "2.0.{0}.1".format(-WNF.cm_disc)
+        info['cm_disc'] = WNF.cm_disc
+        info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], getDBConnection(), field_pretty(info['cm_field']))
+        info['cm_field_url'] = url_for("number_fields.by_label", label=info["cm_field"])
     if WNF.is_cm is None:
         s = '- Unknown (insufficient data)<br>'
-    elif WNF.is_cm is True:
-        s = '- Is a CM-form<br>'
+    elif WNF.is_cm:
+        s = 'Is a CM-form<br>'
     else:
-        s = '- Is not a CM-form<br>'
+        s = 'Is not a CM-form<br>'
     properties2.append(('CM info', s))
     alev = WNF.atkin_lehner_eigenvalues()
     info['atkinlehner'] = None
@@ -219,9 +229,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if poly != '':
             d,monom,coeffs = poly
             emf_logger.critical("poly={0}".format(poly))
-
             info['explicit_formulas'] = '\('
-            for i in range(d):
+            for i in range(len(coeffs)):
                 c = QQ(coeffs[i])
                 s = ""
                 if d>1 and i >0 and c>0:
@@ -281,7 +290,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         friends.append((s, url))
     info['properties2'] = properties2
     info['friends'] = friends
-    info['max_cn']=WNF.max_cn()
+    info['max_cn'] = WNF.max_cn()
     return info
 
 import flask
