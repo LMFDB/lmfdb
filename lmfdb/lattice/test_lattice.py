@@ -54,9 +54,14 @@ class HomePageTest(LmfdbTest):
         assert '0.785398163397448309615660845820' in L #Z2 lattice
 
     def test_lattice_thetadisplay(self):
-        L = self.tc.get("/Lattice/theta_display/3.4608.384.1.1/0").data
-        assert '16q^{10}' in L # theta display
+        L = self.tc.get("/Lattice/theta_display/7.576.18.1.1/0").data
+        assert '318' in L # theta display
+        assert '1908' in L # theta display
+        assert '13416' in L # theta display
 
     def test_lattice_random(self):
         L = self.tc.get("/Lattice/random").data
         assert 'redirected automatically' in L # random lattice
+        L = self.tc.get("/Lattice/random", follow_redirects=True)
+        assert 'Normalized minimal vector list:' in L.data # check redirection
+
