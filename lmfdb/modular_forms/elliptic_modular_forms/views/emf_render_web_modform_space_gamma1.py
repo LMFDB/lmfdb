@@ -87,6 +87,14 @@ def set_info_for_gamma1(level,weight,weight2=None):
             xi = r['cchi']
             orbit = r['character_orbit']
             k = r['weight']
+            d = r.get('d_newf',"n/a")
+            indb = r.get('in_wdb',0)
+            if d == 0:
+                indb = 1
+            if indb:
+                url = url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
+            else:
+                url = ''
             if not table['galois_orbits_reps'].has_key(xi):
                 table['galois_orbits_reps'][xi]={
                     'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xi),  # yes, {{{ is required
@@ -101,20 +109,12 @@ def set_info_for_gamma1(level,weight,weight2=None):
                     # 'head' : "\({0}\)".format(xci),
                      'chi': "{0}".format(xci),
                  #    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xci)
-                     'url': url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xci)
+                     'url': url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xci) if indb else ''
                     }
                     for xci in orbit]
             if len(orbit)>table['maxGalCount']:
                 table['maxGalCount']=len(orbit)
             table['cells'][xi]={}
-            d = r.get('d_newf',"n/a")
-            indb = r.get('in_wdb',0)
-            if d == 0:
-                indb = 1
-            if indb:
-                url = url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
-            else:
-                url = ''
             table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d}
     table['galois_orbits_reps_numbers']=table['galois_orbits_reps'].keys()
     table['galois_orbits_reps_numbers'].sort()
