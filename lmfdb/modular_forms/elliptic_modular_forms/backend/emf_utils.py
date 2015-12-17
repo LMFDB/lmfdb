@@ -122,7 +122,17 @@ def extract_limits_as_tuple(arg, field):
         limits = None
     return limits
 
-
+def is_range(arg):
+    r"""
+    Checks if arg seems to represent a range, i.e. of the form a-b or
+    a..b or a--b
+    """
+    if not isinstance(arg,basestring):
+        return False
+    for sep in ['..','-','--']:
+        if arg.split(sep)>1:
+            return True
+    return False
 def extract_data_from_jump_to(s):
     label = ''
     weight = 0

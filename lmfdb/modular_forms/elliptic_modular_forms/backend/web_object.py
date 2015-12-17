@@ -297,7 +297,6 @@ class WebObject(object):
             emf_logger.debug('Update requested')
             try:
                 self.update_from_db()
-                self._has_updated_from_db = True
             except Exception as e:
                 raise RuntimeError(str(e))
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
@@ -458,6 +457,8 @@ class WebObject(object):
         lmfdb.base._init(lmfdb.base.dbport)
         
 
+    def has_updated_from_db(self):
+        return self._has_updated_from_db
         
         
     def save_to_db(self, update = True):
@@ -581,11 +582,13 @@ class WebObject(object):
                         try:
                             p.set_from_db(rec[pn])
                         except NotImplementedError:
-                            continue                           
+                            continue
+                succ = True
             else:
                 emf_logger.critical("record with key:{0} was not found!".format(key))
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
+                succ = False
         if self._use_gridfs:
             fs = self._files
             file_key = self.file_key_dict()
@@ -609,9 +612,23 @@ class WebObject(object):
                     #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                     if p.include_in_update and d.has_key(p.name):
                         p.set_from_fs(d[p.name])
+                succ = True
             else:
                 if not ignore_non_existent:
                     raise IndexError("File does not exist")
+                succ = False
+        if succ: self._has_updated_from_db = True
+
+    @classmethod
+    def find(cls, query):
+        r'''
+          Search the database using ```query``` and return
+          an iterator over the set of matching objects of this WebObject
+        '''
+        coll = cls.connect_to_db(cls._collection_name)
+        for s in coll.find(query, projection = cls._key):
+            s.pop('_id')
+            yield cls(**s)
 
     def __repr__(self):
         return "WebObject"
@@ -777,7 +794,7 @@ class WebNumberField(WebDict):
 
     def set_extended_properties(self):
         setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
-        setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
+        setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
 
 
 def web_latex_poly(pol, name='x'):

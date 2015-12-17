@@ -75,10 +75,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/56.a/?download=lcalcfile')
         assert 'lcalc' in L.data
 
-    def test_Llcalcurl(self):
-        L = self.tc.get('/L/Lcalcurl/?url=http://www.math.chalmers.se/~sj/pub/gl3Maass/Data/sl3Maass1.txt')
-        assert 'Graph' in L.data
-
     def test_Lmain(self):
         L = self.tc.get('/L/')
         assert 'Riemann' in L.data
