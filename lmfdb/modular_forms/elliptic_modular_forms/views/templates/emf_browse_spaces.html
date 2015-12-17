@@ -118,6 +118,20 @@ function set_value(id,val) {
 
 <h1>Browse holomorphic {{KNOWL('mf.elliptic.newform',title='newforms')}} for {{group}}</h1>
 
+{% set table = info.table %}
+<!-- check of the table is empty -->
+{% set vars = {'emptytable': true} %}
+{% for column in table %}
+   {% if table[column] | length  > 0 %}
+    {% if vars.update({'emptytable': false}) %} {% endif %}
+   {% endif %}
+{% endfor %}
+
+{% if vars.emptytable %}
+ <em>  There are no results available in the requested range. </em>
+
+{% else %}
+
 <div>
 
 The table below gives the dimensions of the space of holomorphic 
@@ -156,7 +170,7 @@ table.ntdata thead th.spaceleft {
   vertical-align: top;
 }
 </style>
-      {% set table = info.table %}
+
       <table class="ntdata">
         <thead>
           <tr class="space">
@@ -216,6 +230,9 @@ table.ntdata thead th.spaceleft {
     <small>"n/a" means that there is no information about this space in our
       database. The dimension is clickable whenever the Hecke orbits are stored for that space.
 </small>
+
+{% endif %}
+
 {% include 'select_ranges.html' %}
 
   <h1>Find a specific cusp form from the database</h1>
