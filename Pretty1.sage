@@ -7,7 +7,7 @@ from lmfdb.number_fields.number_field import make_disc_key
 def Modf_changevar(f,NF,Bfacto=10^6):
  ######
  # Usage : f a hecke_orbit, NF=lmfdb.base.getDBConnection()['numberfields']['fields']
- # Returns : [v2,E2,Q,emb,label], where v2 and E2 are v and E expressed on a nice model of the coeff field, Q is the absolute defining polynomial of this model, emb is the embeddding of the generator of the cycltomic subfield (for Gamma1), and label is the lmfdb label of the field (or '' if not in the database)
+ # Returns : [v2,E2,Q,emb,label], where v2 and E2 are v and E expressed on a nice model of the coeff field (always hte LMFDB one if it exists in the DB), Q is the absolute defining polynomial of this model, emb is the embeddding of the generator of the cyclotomic subfield (Gamma1 case), and label is the LMFDB label of the absolute field (or '' if not in the database)
  ######
  
  ZZx.<x>=ZZ[]
@@ -76,7 +76,6 @@ def Modf_changevar(f,NF,Bfacto=10^6):
 
  if Klabel=='':
   # Field not found, so we reduce the initial polynomial as we can
-  print "Not found"
   [Q,iso]=gp.polredbest(P,1)
   Q=ZZx(str(Q))
   pkQ=gp.nfinit([Q,Bfacto])
@@ -86,21 +85,16 @@ def Modf_changevar(f,NF,Bfacto=10^6):
  # We now want the explicit embedding of the cyclotomic field, the relative polynomial for this new field, and the relative version of the isomorphism
  E=f.eigenvalues.E
  v=f.eigenvalues.v
- print Q
- print "iso",iso
  KQ.<a>=NumberField(Q)
  Kcyc=v[0].parent().base_ring()
  if Kcyc.degree()>1:
   polcyc=Kcyc.defining_polynomial()
   relP=v[0].parent().defining_polynomial()
-  print relP
   emb=QQx(str(gp.nfisincl(polcyc,pkQ)[1]))(a)
-  print "emb",emb
   Krel.<a>=Kcyc.extension(relP)
   osi=gp.lift(gp.modreverse(gp.Mod(iso,Q)))
   osi=QQx(str(osi))
   relQ=osi(a).charpoly()
-  print relQ
   R.<a>=Kcyc.extension(relQ)
   relIso=iso(a)
   newv=[l.lift()(relIso) for l in v]
