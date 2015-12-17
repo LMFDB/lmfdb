@@ -29,6 +29,27 @@
 </div>
 </div>
 <br>
+
+
+<h3>Coefficient field</h3>
+<div>
+The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient fields')}} is 
+{% if is_rational ==1 %}
+<a href="{{ coeff_field_pretty[0] }}">{{ coeff_field_pretty[1] }}.</a></td>
+{%  else %}
+    {% if coeff_field_pretty %}
+        $\Q(\alpha)\cong$<a href="{{ coeff_field_pretty[0] }}">{{ coeff_field_pretty[1] }}</a></td>
+    {% else %}
+        $\Q(\alpha)$
+    {% endif %}
+    where $\alpha$ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} ${{coeff_field[0]}}$ over $\Q$. 
+    {% if coeff_field|length >2 %}
+    </br>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is ${{coeff_field[1]}}$.
+    {% endif %}
+{% endif %}
+</div>
+
+<br>
 {% if is_rational==0 %}
 
 <h3>{{ KNOWL('mf.elliptic.embeddings',title='Embeddings')}}</h3>
