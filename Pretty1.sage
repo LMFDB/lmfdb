@@ -14,7 +14,7 @@ def Modf_changevar(f,NF,Bfacto=10^6):
  QQx.<x>=QQ[]
  P=f.absolute_polynomial
  # If f is rational, nothing to do :)
- if f.is_rational:
+ if P.degree()==1:
   return [f.eigenvalues.v,u'1.1.1.1']
  # Is the coefficient field already identified ?
  Klabel=f.coefficient_field.lmfdb_label
@@ -76,6 +76,7 @@ def Modf_changevar(f,NF,Bfacto=10^6):
 
  if Klabel=='':
   # Field not found, so we reduce the initial polynomial as we can
+  print "Not found"
   [Q,iso]=gp.polredbest(P,1)
   Q=ZZx(str(Q))
   pkQ=gp.nfinit([Q,Bfacto])
