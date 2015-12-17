@@ -99,19 +99,19 @@ function set_value(id,val) {
   when switching to Gamma1 or Gamma0 #}
 {% set level_weight_params = '' %}
 {% if info.level_range is defined %} 
-  {% set level_weight_params = level_weight_params +
-  '&level='+info.level_range %}
+  {% set level_weight_params = level_weight_params + '&level=' + info.level_range | string %}
 {% elif info.level is defined %} 
-  {% set level_weight_params = level_weight_params +
-  '&level='+info.level %}
+  {% set level_weight_params = level_weight_params + '&level='+  info.level | string %}
 {% endif %}
 {% if info.weight_range is defined %} 
-  {% set level_weight_params = level_weight_params +
-  '&weight='+info.weight_range %}
+  {% set level_weight_params = level_weight_params +  '&weight='+info.weight_range | string %}
 {% elif info.weight is defined %} 
-  {% set level_weight_params = level_weight_params +
-  '&weight='+info.weight %}
+  {% set level_weight_params = level_weight_params + '&weight='+info.weight | string %}
 {% endif %}
+
+<div>
+{{ KNOWL_INC('mf.elliptic.extent') }}
+</div>
 
 {% if info.level is defined %}
 <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',level=info.level)}}?group={{info.groupother}}&{{level_weight_params}}">Switch to \(\Gamma_{{groupother}}(N)\)</a></h2></div>
@@ -218,8 +218,8 @@ table.ntdata thead th.spaceleft {
       </table>
     </td>
     <small>"n/a" means that there is no information about this space in our
-      database. The dimension is not clickable when the Hecke orbits are not
-    stored for that space.</small>
+      database. The dimension is clickable whenever the Hecke orbits are stored for that space.
+</small>
 {% include 'select_ranges.html' %}
 
   <h1>Find a specific cusp form from the database</h1>

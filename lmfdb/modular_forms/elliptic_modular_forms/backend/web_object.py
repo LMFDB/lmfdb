@@ -794,7 +794,7 @@ class WebNumberField(WebDict):
 
     def set_extended_properties(self):
         setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
-        setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
+        setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
 
 
 def web_latex_poly(pol, name='x'):
