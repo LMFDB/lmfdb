@@ -118,13 +118,13 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
         if level > 0 and weight > 0 and character > 0:
             if label != '' and not label is None:
                 return render_web_newform(**info)
-            else: 
+            else:
                 return render_web_modform_space(**info)
         if level > 0 and weight > 0 and (group != 0 or character == None):
             return render_web_modform_space_gamma1(**info)
         return render_elliptic_modular_form_navigation_wp(**info)
         # Otherwise we go to the main navigation page
-    except IndexError as e:
+    except IndexError as e: # catch everything here..
         emf_logger.debug("catching exceptions. info={0}".format(info))
         errst = str(e)
         ## Try to customise some of the error messages:
@@ -132,6 +132,9 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
             errst += " Please choose a character from the table below!"
             flash(errst,'error')
             return render_elliptic_modular_form_navigation_wp(**info)
+        if 'WebNewForm_computing' in errst:
+            errst = "The space {0}.{1}.{2} is not in the database!".format(level,weight,character)
+            flash(errst)
         return render_elliptic_modular_form_navigation_wp()
             
 

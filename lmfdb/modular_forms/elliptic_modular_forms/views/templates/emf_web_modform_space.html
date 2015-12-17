@@ -23,7 +23,7 @@
 {% if error is defined %}
 {{ error |safe }}
 <br>
-{{ sage_version | safe}}
+{# { sage_version | safe} #}
 {% else %}
 {% if not space.has_updated_from_db() %}
 <h3>Unfortunately, we do not have this space in the database, yet.</h3>
