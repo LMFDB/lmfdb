@@ -105,7 +105,8 @@ table.td.center {text-align : center;}
   <thead>
     <tr>
       <th align="left">{{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field')}}</th>
-      <th align="left">{{ KNOWL('nf.minimal_polynomial',title='Minimal polynomial')}} of $\alpha_j$ over $\Q(\zeta_{ {{ord}} })$</th>
+      <th align="left">{{ KNOWL('nf.minimal_polynomial',title='Minimal polynomial')}} of $\alpha_j$ over 
+      {% if ord %}$\Q(\zeta_{ {{ord}} })${% else %}$\Q${% endif %}</th>
     </tr>
     </thead>
   <tbody>
