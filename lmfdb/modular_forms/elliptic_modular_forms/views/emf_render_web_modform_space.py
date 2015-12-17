@@ -19,7 +19,7 @@ Routines for rendering webpages for holomorphic modular forms on GL(2,Q)
 AUTHOR: Fredrik Strömberg  <fredrik314@gmail.com>
 
 """
-from flask import render_template, url_for, send_file
+from flask import render_template, url_for, send_file,flash
 from lmfdb.utils import to_dict 
 from sage.all import uniq
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached, WebModFormSpace
@@ -40,7 +40,12 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     info['level'] = level
     info['weight'] = weight
     info['character'] = character
-    info = set_info_for_modular_form_space(**info)
+    try:
+        info = set_info_for_modular_form_space(**info)
+    except RuntimeError:
+        errst = "The space {0}.{1}.{2} is not in the database!".format(level,weight,character)
+        flash(errst,'error')
+        info = {'error': ''}
     emf_logger.debug("keys={0}".format(info.keys()))
     if 'download' in kwds and 'error' not in kwds:
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
@@ -74,11 +79,31 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     info = dict()
     emf_logger.debug("info={0}".format(info))    
     WMFS = None
+    if info.has_key('error'):
+        return info
     if level <= 0:
         info['error'] = "Got wrong level: %s " % level
         return info
     try:
         WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True,character = character)
+        if not WMFS.has_updated_from_db():
+            stop = False
+            orbit = WMFS.character.character.galois_orbit()
+            while not stop:
+                if len(orbit) == 0:
+                    stop = True
+                    continue
+                c = orbit.pop()
+                if c.number() == WMFS.character.number:
+                    continue
+                print c.number()
+                WMFS_rep = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = c.number())
+                if WMFS_rep.has_updated_from_db():
+                    print "Here"
+                    stop = True
+                    info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character = c.number())
+                    info['wmfs_rep_number'] =  c.number()
+                    
         emf_logger.debug("Created WebModFormSpace %s"%WMFS)
         if 'download' in info and 'tempfile' in info:
             save(WNF,info['tempfile'])
@@ -100,7 +125,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         #    for d in range(len(WMFS.dimension_new_cusp_forms())):
         #        F = 
         #        WMFS.hecke_orbits.append(F)
-        info = {'space':WMFS}
+        info['space'] = WMFS
 #    info['old_decomposition'] = WMFS.oldspace_decomposition()
 
     ## For side-bar

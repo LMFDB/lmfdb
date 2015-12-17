@@ -118,7 +118,7 @@ class WebqExp(WebPoly):
             oldname = latex(self.value().base_ring().gen())
             subfrom = oldname.strip()
             subfrom = subfrom.replace("\\","\\\\")  
-            subfrom = subfrom.replace("{","\\{")   # because x_{0} means somethgn in a regular expression
+            subfrom = subfrom.replace("{","\\{")   # because x_{0} means something in a regular expression
             if subfrom[0].isalpha():
                 subfrom = "\\b" + subfrom
             subto = name.replace("\\","\\\\") + " "

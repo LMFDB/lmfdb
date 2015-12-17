@@ -93,16 +93,30 @@ def set_info_for_gamma1(level,weight,weight2=None):
                     'chi': "{0}".format(xi),
                     'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
                 table['galois_orbit'][xi]= [
-                    {'head' : "\({0}\)".format(xci),
+                    {
+                    #'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xci),  # yes, {{{ is required
+               ##     'head' : "\(S_{{{0}}}({1},\chi({2}, \cdot) ) \)".format(weight,level,xci),  # yes, {{{ is required
+                ##    'head' : "\(S_{{{0}}}(\chi({1}, \cdot) ) \)".format(weight,xci),  # yes, {{{ is required
+                    'head' : r"\(S_{{{0}}}(\chi_{{{1}}}({2}, \cdot)) \)".format(weight,level,xci),  # yes, {{{ is required
+                    # 'head' : "\({0}\)".format(xci),
                      'chi': "{0}".format(xci),
-                     'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xci) }
+                 #    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xci)
+                     'url': url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xci)
+                    }
                     for xci in orbit]
             if len(orbit)>table['maxGalCount']:
                 table['maxGalCount']=len(orbit)
             table['cells'][xi]={}
             d = r.get('d_newf',"n/a")
-            url = url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
+            indb = r.get('in_wdb',0)
+            if d == 0:
+                indb = 1
+            if indb:
+                url = url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xi)
+            else:
+                url = ''
             table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d}
     table['galois_orbits_reps_numbers']=table['galois_orbits_reps'].keys()
     table['galois_orbits_reps_numbers'].sort()
+    #emf_logger.debug("Table:{0}".format(table))
     return table

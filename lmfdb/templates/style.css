@@ -111,6 +111,15 @@ a {
   text-decoration: none;
   font-family: sans-serif;
 }
+
+a.inactive {
+    color: #000;
+}
+
+a.inactive:hover {
+    background: inherit;
+}
+
 #content a {
 }
 #content .announce {
