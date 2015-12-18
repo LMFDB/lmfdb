@@ -22,7 +22,7 @@ AUTHORS:
  - Stephan Ehlen
  
 """
-
+from lmfdb.base import app
 from flask import url_for
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version, emf_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
@@ -794,11 +794,13 @@ class WebNumberField(WebDict):
 
     def extend_from_db(self):
         setattr(self._value, "lmfdb_label", self._db_value)
-        if not self._db_value is None:
+        if not self._db_value is None and self._db_value != '':
             try:
-                setattr(self._value, "lmfdb_url", url_for("number_fields.by_label", label=self._db_value))
+                url =  url_for("number_fields.by_label", label=self._db_value)
             except RuntimeError:
-                pass
+                emf_logger.critical("could not set url for the label")
+                url = ''
+            setattr(self._value, "lmfdb_url",url)
             setattr(self._value, "lmfdb_pretty", field_pretty(self._db_value))
         else:
             setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
