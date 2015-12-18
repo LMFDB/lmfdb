@@ -42,11 +42,13 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     info['character'] = character
     try:
         info = set_info_for_modular_form_space(**info)
-    except RuntimeError:
+    except RuntimeError as e:
         errst = "The space {0}.{1}.{2} is not in the database!".format(level,weight,character)
         flash(errst,'error')
         info = {'error': ''}
     emf_logger.debug("keys={0}".format(info.keys()))
+    if info.has_key('error'):
+        emf_logger.critical("error={0}".format(info['error']))
     if 'download' in kwds and 'error' not in kwds:
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     if 'dimension_newspace' in kwds and kwds['dimension_newspace'] == 1:
