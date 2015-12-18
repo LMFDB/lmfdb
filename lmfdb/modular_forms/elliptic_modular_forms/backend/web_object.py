@@ -773,7 +773,12 @@ class WebNumberField(WebDict):
         r"""
         We store the LMFDB label of the absolute field in the db.
         """
+        if not self._db_value is None:
+            return self._db_value
+        
         K = self._value
+        if hasattr(K, "lmfdb_label"):
+            return K.lmfdb_label
         
         if K.absolute_degree() == 1:
             p = 'x'
