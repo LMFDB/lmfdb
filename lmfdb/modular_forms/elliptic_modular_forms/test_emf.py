@@ -74,3 +74,13 @@ class EmfTest(LmfdbTest):
         assert 'do not have' in page.data
         page = self.tc.get("ModularForm/GL2/Q/holomorphic/12000/12/0/a/", follow_redirects=True)
         assert 'The database does not currently contain' in page.data
+
+    def test_character_validation(self):
+        page = self.tc.get("ModularForm/GL2/Q/holomorphic/120/12/x/")
+        assert 'The character number should be an integer' in page.data
+        page = self.tc.get("ModularForm/GL2/Q/holomorphic/12/10/20/")
+        assert 'The character number should be a positive integer less than or equal to and coprime to the level' in page.data
+        page = self.tc.get("ModularForm/GL2/Q/holomorphic/12/10/4/")
+        assert 'The character number should be a positive integer less than or equal to and coprime to the level' in page.data
+        page = self.tc.get("ModularForm/GL2/Q/holomorphic/12/10/5/")
+        assert 'Newforms of weight 10' in page.data
