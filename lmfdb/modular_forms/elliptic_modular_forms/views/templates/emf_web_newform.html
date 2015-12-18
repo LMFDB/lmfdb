@@ -30,7 +30,6 @@
 </div>
 <br>
 
-
 <h3>Coefficient field</h3>
 <div>
 The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is 
@@ -43,7 +42,7 @@ The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is
         $\Q(\alpha)$
     {% endif %}
     where $\alpha$ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} ${{coeff_field[0]}}$ over $\Q$. 
-    {% if coeff_field|length >2 %}
+    {% if coeff_field|length >2 and coeff_field[2]>2 %}
     </br>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is ${{coeff_field[1]}}$.
     {% endif %}
 {% endif %}
