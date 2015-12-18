@@ -167,7 +167,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     else:
         _collection_name = 'webmodformspace'
 
-    def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True,update_hecke_orbits=True):
+    def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
 
         # I added this reduction since otherwise there is a problem with
         # caching the hecke orbits (since they have self as  parent)
@@ -210,7 +210,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
                     )
             
         emf_logger.debug("Have set properties of space 1 !!")
-        super(WebModFormSpace, self).__init__(update_from_db=update_from_db)
+        super(WebModFormSpace, self).__init__(update_from_db=update_from_db, **kwargs)
         emf_logger.debug("Have set properties of space 2 !!")
         emf_logger.debug("orbits={0}".format(self.hecke_orbits))                
 
