@@ -53,8 +53,8 @@ class WebChar(WebObject, CachedRepresentation):
     WebDirichletCharcter once this is ok.
     
     """
-    _key = ['modulus', 'number']
-    _file_key = ['modulus', 'number']
+    _key = ['modulus', 'number','version']
+    _file_key = ['modulus', 'number','version']
     _collection_name = 'webchar'
     
     def __init__(self, modulus=1, number=1, update_from_db=True, compute=False):
