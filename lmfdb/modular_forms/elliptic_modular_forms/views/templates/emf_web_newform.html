@@ -24,10 +24,31 @@
 	<div class="emptyspace"><br>
         </div>
         <button id="morebutton">Show more coefficients</button>
-        <small>(To download coefficients,  see below.)</small>
+        <small>(To download coefficients, see below.)</small>
     </form>
 </div>
 </div>
+<br>
+
+<h3>Coefficient field</h3>
+<div>
+The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is 
+{% if is_rational ==1 %}
+<a title = "{{ coeff_field_pretty[1] }}[nf.field.data]" knowl= "nf.field.data" kwargs="label=1.1.1.1">{{ coeff_field_pretty[1] }}</a>
+{%  else %}
+    {% if coeff_field_pretty %}
+        $\Q(\alpha)\cong\,$
+<a title = "{{ coeff_field_pretty[1] }}[nf.field.data]" knowl= "nf.field.data" kwargs="label={{coeff_field_pretty[2]}}">{{ coeff_field_pretty[1] }}</a></td>
+    {% else %}
+        $\Q(\alpha)$
+    {% endif %}
+    where $\alpha$ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} ${{coeff_field[0]}}$ over $\Q$. 
+    {% if coeff_field|length >2 and coeff_field[2]>2 %}
+    </br>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is ${{coeff_field[1]}}$.
+    {% endif %}
+{% endif %}
+</div>
+
 <br>
 {% if is_rational==0 %}
 

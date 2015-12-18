@@ -121,7 +121,7 @@ class WebChar(WebObject, CachedRepresentation):
         if self.modulus_euler_phi == 0:
             changed = True
             self.modulus_euler_phi = euler_phi(self.modulus)
-        if changed and save:
+        if changed and save and False:  # temporary hack to prevent fatal error when save_to_db fails
             self.save_to_db()
         else:            
             emf_logger.debug('Not saving.')
