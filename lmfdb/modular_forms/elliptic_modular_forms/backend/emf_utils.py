@@ -481,6 +481,7 @@ def multiply_mat_vec(E,v):
         return EE*v
     else:
         return E*v
+    
 
 def convert_matrix_to_extension_fld(E,K):
     EE=Matrix(K,E.nrows(), E.ncols())
