@@ -160,9 +160,12 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     """
 
-    _key = ['level', 'weight', 'character']
-    _file_key = ['space_label']
-    _collection_name = 'webmodformspace'
+    _key = ['level', 'weight', 'character','version']
+    _file_key = ['space_label','version']
+    if emf_version > 1.3:
+        _collection_name = 'webmodformspace2'
+    else:
+        _collection_name = 'webmodformspace'
 
     def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True,update_hecke_orbits=True):
 
@@ -207,11 +210,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
                     )
             
         emf_logger.debug("Have set properties of space 1 !!")
-        super(WebModFormSpace, self).__init__(
-            params=['level', 'weight', 'character'],
-            dbkey='space_label',
-            collection_name='webmodformspace',
-            update_from_db=update_from_db)
+        super(WebModFormSpace, self).__init__(update_from_db=update_from_db)
         emf_logger.debug("Have set properties of space 2 !!")
         emf_logger.debug("orbits={0}".format(self.hecke_orbits))                
 

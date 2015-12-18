@@ -147,8 +147,8 @@ class WebqExp(WebPoly):
 
 class WebEigenvalues(WebObject, CachedRepresentation):
 
-    _key = ['hecke_orbit_label']
-    _file_key = ['hecke_orbit_label', 'prec']
+    _key = ['hecke_orbit_label','version']
+    _file_key = ['hecke_orbit_label', 'prec','version']
     _collection_name = 'webeigenvalues'
 
     def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True,init_dynamic_properties=True):
@@ -233,9 +233,12 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     
 class WebNewForm(WebObject, CachedRepresentation):
 
-    _key = ['level', 'weight', 'character', 'label']
-    _file_key = ['hecke_orbit_label']
-    _collection_name = 'webnewforms'
+    _key = ['level', 'weight', 'character', 'label','version']
+    _file_key = ['hecke_orbit_label','version']
+    if emf_version > 1.3:
+        _collection_name = 'webnewforms2'
+    else:
+        _collection_name = 'webnewforms'
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
