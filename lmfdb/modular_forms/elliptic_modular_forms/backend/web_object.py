@@ -650,10 +650,14 @@ class WebObject(object):
           an iterator over the set of matching objects of this WebObject
         '''
         coll = cls.connect_to_db(cls._collection_name)
-        for s in coll.find(query, projection = cls._key):
-            s.pop('_id')
-            yield cls(**s)
-
+        if float(pymongo.version)>2.8:
+            for s in coll.find(query, projection = cls._key):
+                s.pop('_id')
+                yield cls(**s)
+        else:
+            for s in coll.find(query, fields = cls._key):
+                s.pop('_id')
+                yield cls(**s)                
     def __repr__(self):
         return "WebObject"
 
