@@ -98,8 +98,11 @@ class WebProperty(object):
         else:
             return None
 
-    def has_been_set(self):
-        return self._has_been_set
+    def has_been_set(self, s = None):
+        if not s is None:
+            self._has_been_set = s
+        else:
+            return self._has_been_set
 
     def to_db(self):
         r"""
@@ -213,6 +216,7 @@ class WebObject(object):
     _file_key = None
     _properties = None
     _has_updated_from_db = False
+    _has_updated_from_fs = False
     
     r"""
           _key: a list - The parameters that are needed to initialize a WebObject of this type.
@@ -465,7 +469,12 @@ class WebObject(object):
 
     def has_updated_from_db(self):
         return self._has_updated_from_db
-        
+
+    def has_updated_from_fs(self):
+        return self._has_updated_from_fs
+
+    def has_updated(self):
+        return self._has_updated_from_db and self._has_updated_from_fs
         
     def save_to_db(self, update = True):
         r"""
@@ -549,6 +558,8 @@ class WebObject(object):
         r"""
         Updates the properties of ```self``` from the database using params and dbkey.
         """
+        self._has_updated_from_db = False
+        self._has_updated_from_fs = False
         if add_to_db_query is None:
             add_to_db_query = self._add_to_db_query
         elif self._add_to_db_query is not None:
@@ -566,6 +577,8 @@ class WebObject(object):
         #emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
         #emf_logger.debug("self._add_to_fs_query: {0}".format(self._add_to_fs_query))
         emf_logger.debug("db_properties: {0}".format(self._db_properties))
+        succ_db = False
+        succ_fs = False
         if self._use_separate_db or not self._use_gridfs:
             coll = self._collection
             key = self.key_dict()
@@ -577,6 +590,7 @@ class WebObject(object):
                 for p in self._db_properties:
                     if p.include_in_update and (not p.name in self._fs_properties or p._extend_fs_with_db):
                         props_to_fetch[p.name] = True
+                        p.has_been_set(False)
 #                props_to_fetch = {p.name:True for p in self._db_properties
 #                                  if (p.include_in_update and not p.name in self._fs_properties)
 #                                  or p.name in self._key}
@@ -587,14 +601,16 @@ class WebObject(object):
                     if rec.has_key(pn):
                         try:
                             p.set_from_db(rec[pn])
+                            if not p.name in self._fs_properties:
+                                p.has_been_set(True)
                         except NotImplementedError:
                             continue
-                succ = True
+                succ_db = True
             else:
                 emf_logger.critical("record with key:{0} was not found!".format(key))
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
-                succ = False
+                succ_db = False
         if self._use_gridfs:
             fs = self._files
             file_key = self.file_key_dict()
@@ -617,13 +633,15 @@ class WebObject(object):
                     #emf_logger.debug("p={0}, update:{1}".format(p,p.include_in_update))
                     #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                     if p.include_in_update and d.has_key(p.name):
+                        p.has_been_set(False)
                         p.set_from_fs(d[p.name])
-                succ = True
+                succ_fs = True
             else:
                 if not ignore_non_existent:
                     raise IndexError("File does not exist")
-                succ = False
-        if succ: self._has_updated_from_db = True
+                succ_fs = False
+        if succ_db: self._has_updated_from_db = True
+        if succ_fs: self._has_updated_from_fs = True
 
     @classmethod
     def find(cls, query):
