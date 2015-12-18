@@ -174,8 +174,7 @@ that preserve the character are shown in the table below.
     {% if not is_cm %}
     not a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
     {% else %}
-    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}
-    with CM by {{ cm_field_knowl | safe }}.
+    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}{% if cm_disc < 0 %} with CM by {{ cm_field_knowl | safe }}{% endif %}.
     {% endif %}
     </li>
  {% endif %}
