@@ -58,6 +58,7 @@ class WebProperty(object):
         if value is None:
             value = self._default_value
             self._has_been_set = False
+            self._db_value_has_been_set = False
         else:
             self._has_been_set = True
         self._value = value
@@ -86,6 +87,10 @@ class WebProperty(object):
     def set_value(self, val):
         self._value = val
         self._has_been_set = True
+
+    def set_db_value(self, val):
+        self._db_value = val
+        self._db_value_has_been_set = True
     
     def default_value(self):
         if hasattr(self, '_default_value'):
@@ -127,17 +132,18 @@ class WebProperty(object):
         return val
 
     def extend_from_db(self):
-        setattr(self._value, self._extend_fs_with_db, self._db_value)
+        pass
 
     def set_from_fs(self, val):
-        self._value = self.from_fs(val)
+        self.set_value(self.from_fs(val))
         if self._extend_fs_with_db:
             self.extend_from_db()
         self.set_extended_properties()
 
     def set_from_db(self, val):
         self._value = self.from_db(val)
-        self._db_value = self.from_db(val)
+        self.set_db_value(self.from_db(val))
+        self.set_extended_properties()
 
     def set_extended_properties(self):
         pass
@@ -793,8 +799,9 @@ class WebNumberField(WebDict):
             setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
 
     def set_extended_properties(self):
-        setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
-        setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
+        if self._has_been_set:
+            setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
+            setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
 
 
 def web_latex_poly(pol, name='x'):
