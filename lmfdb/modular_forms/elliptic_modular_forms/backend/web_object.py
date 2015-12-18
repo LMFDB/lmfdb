@@ -474,7 +474,7 @@ class WebObject(object):
         return self._has_updated_from_fs
 
     def has_updated(self):
-        return self._has_updated_from_db and self._has_updated_from_fs
+        return self._has_updated_from_db and (self._has_updated_from_fs or not self._use_gridfs)
         
     def save_to_db(self, update = True):
         r"""
