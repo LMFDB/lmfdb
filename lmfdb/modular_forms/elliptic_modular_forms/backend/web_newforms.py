@@ -159,7 +159,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     _file_key = ['hecke_orbit_label', 'prec','version']
     _collection_name = 'webeigenvalues'
 
-    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True,init_dynamic_properties=True):
+    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True,init_dynamic_properties=True, **kwargs):
         self._properties = WebProperties(
             WebSageObject('E', None, Matrix),
             WebSageObject('v', None, vector),
@@ -176,7 +176,8 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             use_gridfs=True,
             use_separate_db=False,
             update_from_db=update_from_db,
-            init_dynamic_properties=init_dynamic_properties
+            init_dynamic_properties=init_dynamic_properties,
+            **kwargs
             )
 
     def update_from_db(self, ignore_non_existent = True, \
@@ -248,7 +249,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     else:
         _collection_name = 'webnewforms'
 
-    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True):
+    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True, **kwargs):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
@@ -304,7 +305,8 @@ class WebNewForm(WebObject, CachedRepresentation):
             )
         emf_logger.debug("After init properties 1")
         super(WebNewForm, self).__init__(
-            update_from_db=update_from_db
+            update_from_db=update_from_db,
+            **kwargs
             )
         emf_logger.debug("After init properties 2 prec={0}".format(self.prec))
         # We're setting the WebEigenvalues property after calling __init__ of the base class
