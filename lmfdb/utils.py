@@ -280,8 +280,25 @@ def web_latex_split_on(x, on=['+', '-']):
             A = A.replace(s, '\) ' + s + ' \( ')
     return A
     
+# web_latex_split_on was not splitting polynomials, so we make an expanded version
 def web_latex_split_on_pm(x):
-    return web_latex_split_on(x)
+    print '\nx\n', x
+    on = ['+', '-']
+ #   A = "\( %s \)" % sage.all.latex(x)
+    try:
+        A = "\(" + x + "\)"  # assume we are given LaTeX to split on
+    except:
+        A = "\( %s \)" % sage.all.latex(x)
+
+    print '\nA\n', A
+       # need a more clever split_on_pm that inserts left and right properly
+    A = A.replace("\\left","")
+    A = A.replace("\\right","")
+    for s in on:
+        A = A.replace(s, '\) ' + s + ' \( ')
+    print '\nnew A\n', A
+    return A
+    # return web_latex_split_on(x)
 
 def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
 

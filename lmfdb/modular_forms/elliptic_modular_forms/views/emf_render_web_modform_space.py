@@ -25,7 +25,6 @@ from sage.all import uniq
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached, WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
-from lmfdb.utils import web_latex_split_on_pm
 ###
 ###
 
