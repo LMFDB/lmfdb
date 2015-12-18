@@ -797,7 +797,12 @@ class WebNumberField(WebDict):
         setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
 
 
-def web_latex_poly(pol, name='x'):
+def web_latex_poly(pol, name='x', keepzeta=False):
+    """
+    Change the name of the variable in a polynomial.  If keepzeta, then don't change
+    the name of zetaN in the defining polynomial of a cyclotomic field.
+    (keepzeta not implemented yet)
+    """
     # the next few lines were adapted from the lines after line 117 of web_newforms.py 
     oldname = latex(pol.parent().gen())
     subfrom = oldname.strip() 
