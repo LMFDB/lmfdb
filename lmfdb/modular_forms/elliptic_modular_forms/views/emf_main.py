@@ -97,7 +97,7 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
     group = info.get('group',None)
     emf_logger.debug("group=%s, %s" % (group, type(group)))
     if group == 0:
-        character = 1 # only trivial character for Gamma_0(N)
+        info['character'] = character = 1 # only trivial character for Gamma_0(N)
     try:
         if 'download' in info:
             return get_downloads(**info)
@@ -260,6 +260,19 @@ def get_args(request, level=0, weight=0, character=-1, group=2, label='', keys=[
 from markupsafe import Markup
 from ..backend.emf_utils import is_range
 
+def validate_character(level, character):
+    """Assumes level is a positive integer N, checks that 0<character<=N
+    and gcd(character,N)=1.  Returns None if OK, else a suitable error
+    message.
+    """
+    #print "validate_character(%s,%s)" % (level, character)
+    if not isinstance(character,int):
+        return "The character number should be an integer. You gave: %s" % character
+    from sage.all import GCD
+    if character <= 0 or character > level or GCD(level,character)!=1:
+        return "The character number should be a positive integer less than or equal to and coprime to the level %s. You gave: %s" % (level, character)
+    return 0
+
 def validate_parameters(level=0,weight=0,character=None,label='',info={}):
     #print app.url_map
     emf_logger.debug("validating info={0}".format(info))
@@ -282,10 +295,11 @@ def validate_parameters(level=0,weight=0,character=None,label='',info={}):
         m.append("Please provide a positive integer weight! You gave: {0}".format(weight)); t = False
         if weight is None:
             info['weight']=None
-        info['weight'] = 0 
+        info['weight'] = 0
     if not character is None:
-        if not isinstance(character,int) or character <= 0:
-            m.append("Please provide positive integer character number! You gave: {0}".format(character)); t = False
+        res = validate_character(level, character)
+        if res:
+            m.append(res); t = False
             info['character'] = None
     if not label is None and (not isinstance(label,basestring)):
         m.append('Please provide a label in string format! You gave: {0}'.format(label)); t=False
