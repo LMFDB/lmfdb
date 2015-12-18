@@ -32,7 +32,6 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
          {% if vars.update({'cyclotomicorder': 0}) %} {% endif %}
          {% if f.coefficient_field.variable_name().startswith("zeta") %}
              {% if vars.update({'cyclotomicorder': f.coefficient_field.variable_name()[4:]}) %} {% endif %}
-              {{vars.cyclotomicorder}}
          {% endif %}
        <tr>
       <td valign="top"><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
