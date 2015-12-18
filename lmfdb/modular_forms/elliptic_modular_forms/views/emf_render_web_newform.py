@@ -132,7 +132,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if not cf_is_QQ:
         if not br_is_QQ and rdeg>1: # not WNF.coefficient_field == WNF.base_ring:
             p1 = WNF.coefficient_field.relative_polynomial()
-            c_pol_ltx = web_latex_poly(p1, '\\alpha')  # make the variable \alpha
+            c_pol_ltx = web_latex_split_on_pm(web_latex_poly(p1, '\\alpha'))  # make the variable \alpha
             c_pol_ltx_x = web_latex_poly(p1, 'x')
             zeta = p1.base_ring().gens()[0]
 #           p2 = zeta.minpoly() #this is not used anymore
@@ -149,9 +149,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
                 info['polynomial_st'] = 'where \(%s=0\) and \(\zeta_{%s}=e^{\\frac{2\\pi i}{%s}}\).'%(c_pol_ltx, z1,z1)
         else:
             p1 = WNF.coefficient_field.relative_polynomial()
-            c_pol_ltx = web_latex_poly(p1, '\\alpha')
+            c_pol_ltx = web_latex_split_on_pm(web_latex_poly(p1, '\\alpha'))
+            c_pol_ltx_x = web_latex_poly(p1, 'x')
             z1 = p1.base_ring().gens()[0].multiplicative_order()
-            info['coeff_field'] = [ web_latex_split_on_pm(WNF.coefficient_field.absolute_polynomial_latex('x')), web_latex_split_on_pm(WNF.coefficient_field.relative_polynomial_latex('x')), z1]
+            info['coeff_field'] = [ web_latex_split_on_pm(WNF.coefficient_field.absolute_polynomial_latex('x')), web_latex_split_on_pm(c_pol_ltx_x), z1]
             if hasattr(WNF.coefficient_field, "lmfdb_label") and not WNF.coefficient_field.lmfdb_label is None:
                 info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty ]
             if z1==4:
