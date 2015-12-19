@@ -651,7 +651,7 @@ class WebObject(object):
           an iterator over the set of matching objects of this WebObject
         '''
         coll = cls.connect_to_db(cls._collection_name)
-        if float(pymongo.version)>2.8:
+        if float(pymongo.version_tuple[0])>=3:
             for s in coll.find(query, projection = cls._key):
                 s.pop('_id')
                 yield cls(**s)
