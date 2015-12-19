@@ -22,7 +22,7 @@ AUTHORS:
  - Stephan Ehlen
  
 """
-
+from lmfdb.base import app
 from flask import url_for
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version, emf_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
@@ -52,12 +52,14 @@ class WebProperty(object):
             - save_to_db -- bool: True if this property should be stored in the db record (mongo)
         """
         #emf_logger.debug("In WebProperty of {0}".format(name))
+        self._db_value_has_been_set = False
         self.name = name
         if default_value is not None:
             self._default_value = default_value
         if value is None:
             value = self._default_value
             self._has_been_set = False
+            self._db_value_has_been_set = False
         else:
             self._has_been_set = True
         self._value = value
@@ -86,6 +88,10 @@ class WebProperty(object):
     def set_value(self, val):
         self._value = val
         self._has_been_set = True
+
+    def set_db_value(self, val):
+        self._db_value = val
+        self._db_value_has_been_set = True
     
     def default_value(self):
         if hasattr(self, '_default_value'):
@@ -93,8 +99,11 @@ class WebProperty(object):
         else:
             return None
 
-    def has_been_set(self):
-        return self._has_been_set
+    def has_been_set(self, s = None):
+        if not s is None:
+            self._has_been_set = s
+        else:
+            return self._has_been_set
 
     def to_db(self):
         r"""
@@ -127,17 +136,18 @@ class WebProperty(object):
         return val
 
     def extend_from_db(self):
-        setattr(self._value, self._extend_fs_with_db, self._db_value)
+        pass
 
     def set_from_fs(self, val):
-        self._value = self.from_fs(val)
+        self.set_value(self.from_fs(val))
         if self._extend_fs_with_db:
             self.extend_from_db()
         self.set_extended_properties()
 
     def set_from_db(self, val):
         self._value = self.from_db(val)
-        self._db_value = self.from_db(val)
+        self.set_db_value(self.from_db(val))
+        self.set_extended_properties()
 
     def set_extended_properties(self):
         pass
@@ -207,6 +217,7 @@ class WebObject(object):
     _file_key = None
     _properties = None
     _has_updated_from_db = False
+    _has_updated_from_fs = False
     
     r"""
           _key: a list - The parameters that are needed to initialize a WebObject of this type.
@@ -459,7 +470,12 @@ class WebObject(object):
 
     def has_updated_from_db(self):
         return self._has_updated_from_db
-        
+
+    def has_updated_from_fs(self):
+        return self._has_updated_from_fs
+
+    def has_updated(self):
+        return self._has_updated_from_db and (self._has_updated_from_fs or not self._use_gridfs)
         
     def save_to_db(self, update = True):
         r"""
@@ -543,6 +559,8 @@ class WebObject(object):
         r"""
         Updates the properties of ```self``` from the database using params and dbkey.
         """
+        self._has_updated_from_db = False
+        self._has_updated_from_fs = False
         if add_to_db_query is None:
             add_to_db_query = self._add_to_db_query
         elif self._add_to_db_query is not None:
@@ -560,6 +578,8 @@ class WebObject(object):
         #emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
         #emf_logger.debug("self._add_to_fs_query: {0}".format(self._add_to_fs_query))
         emf_logger.debug("db_properties: {0}".format(self._db_properties))
+        succ_db = False
+        succ_fs = False
         if self._use_separate_db or not self._use_gridfs:
             coll = self._collection
             key = self.key_dict()
@@ -571,6 +591,7 @@ class WebObject(object):
                 for p in self._db_properties:
                     if p.include_in_update and (not p.name in self._fs_properties or p._extend_fs_with_db):
                         props_to_fetch[p.name] = True
+                        p.has_been_set(False)
 #                props_to_fetch = {p.name:True for p in self._db_properties
 #                                  if (p.include_in_update and not p.name in self._fs_properties)
 #                                  or p.name in self._key}
@@ -581,14 +602,16 @@ class WebObject(object):
                     if rec.has_key(pn):
                         try:
                             p.set_from_db(rec[pn])
+                            if not p.name in self._fs_properties:
+                                p.has_been_set(True)
                         except NotImplementedError:
                             continue
-                succ = True
+                succ_db = True
             else:
                 emf_logger.critical("record with key:{0} was not found!".format(key))
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
-                succ = False
+                succ_db = False
         if self._use_gridfs:
             fs = self._files
             file_key = self.file_key_dict()
@@ -611,13 +634,15 @@ class WebObject(object):
                     #emf_logger.debug("p={0}, update:{1}".format(p,p.include_in_update))
                     #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                     if p.include_in_update and d.has_key(p.name):
+                        p.has_been_set(False)
                         p.set_from_fs(d[p.name])
-                succ = True
+                succ_fs = True
             else:
                 if not ignore_non_existent:
                     raise IndexError("File does not exist")
-                succ = False
-        if succ: self._has_updated_from_db = True
+                succ_fs = False
+        if succ_db: self._has_updated_from_db = True
+        if succ_fs: self._has_updated_from_fs = True
 
     @classmethod
     def find(cls, query):
@@ -626,10 +651,14 @@ class WebObject(object):
           an iterator over the set of matching objects of this WebObject
         '''
         coll = cls.connect_to_db(cls._collection_name)
-        for s in coll.find(query, projection = cls._key):
-            s.pop('_id')
-            yield cls(**s)
-
+        if float(pymongo.version_tuple[0])>=3:
+            for s in coll.find(query, projection = cls._key):
+                s.pop('_id')
+                yield cls(**s)
+        else:
+            for s in coll.find(query, fields = cls._key):
+                s.pop('_id')
+                yield cls(**s)                
     def __repr__(self):
         return "WebObject"
 
@@ -767,7 +796,12 @@ class WebNumberField(WebDict):
         r"""
         We store the LMFDB label of the absolute field in the db.
         """
+        if self._db_value_has_been_set and not self._db_value is None:
+            return self._db_value
+        
         K = self._value
+        if hasattr(K, "lmfdb_label"):
+            return K.lmfdb_label
         
         if K.absolute_degree() == 1:
             p = 'x'
@@ -775,7 +809,7 @@ class WebNumberField(WebDict):
             p = K.absolute_polynomial()
 
         l = poly_to_field_label(p)
-
+        
         return l
 
     def from_db(self, k):
@@ -783,18 +817,21 @@ class WebNumberField(WebDict):
 
     def extend_from_db(self):
         setattr(self._value, "lmfdb_label", self._db_value)
-        if not self._db_value is None:
+        if not self._db_value is None and self._db_value != '':
             try:
-                setattr(self._value, "lmfdb_url", url_for("number_fields.by_label", label=self._db_value))
+                url =  url_for("number_fields.by_label", label=self._db_value)
             except RuntimeError:
-                pass
+                emf_logger.critical("could not set url for the label")
+                url = ''
+            setattr(self._value, "lmfdb_url",url)
             setattr(self._value, "lmfdb_pretty", field_pretty(self._db_value))
         else:
             setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
 
     def set_extended_properties(self):
-        setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
-        setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
+        if self._has_been_set:
+            setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
+            setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
 
 
 def web_latex_poly(pol, name='x', keepzeta=False):
