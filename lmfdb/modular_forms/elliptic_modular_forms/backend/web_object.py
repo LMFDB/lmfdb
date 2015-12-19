@@ -52,6 +52,7 @@ class WebProperty(object):
             - save_to_db -- bool: True if this property should be stored in the db record (mongo)
         """
         #emf_logger.debug("In WebProperty of {0}".format(name))
+        self._db_value_has_been_set = False
         self.name = name
         if default_value is not None:
             self._default_value = default_value
@@ -795,7 +796,7 @@ class WebNumberField(WebDict):
         r"""
         We store the LMFDB label of the absolute field in the db.
         """
-        if not self._db_value is None:
+        if not self._db_value_has_been_set and not self._db_value is None:
             return self._db_value
         
         K = self._value
@@ -808,7 +809,7 @@ class WebNumberField(WebDict):
             p = K.absolute_polynomial()
 
         l = poly_to_field_label(p)
-
+        
         return l
 
     def from_db(self, k):
