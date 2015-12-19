@@ -154,11 +154,13 @@ class WebqExp(WebPoly):
 
     def to_db(self):
         if not self.value() is None:
-            f = self.value().truncate_powerseries(101)
+            if self.value().base_ring().absolute_degree() > 1:
+                return ''
+            f = self.value().truncate_powerseries(1001)
             s = str(f)
-            n = 101
-            while len(s)>5000 or n==3:
-                n = max(n-10,3)
+            n = 1001
+            while len(s)>10000 or n==3:
+                n = max(n-20,3)
                 f = self.value().truncate_powerseries(n)
                 s = str(f)
             return s
@@ -395,7 +397,10 @@ class WebNewForm(WebObject, CachedRepresentation):
          We assume that the self._ap containing Hecke eigenvalues
          are stored.
         """
-        emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[1]))
+        if len(nrange) > 1:
+            emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[1]))
+        else:
+            emf_logger.debug("computing coeffs in range {0}--{0}".format(nrange[0]))
         if not isinstance(nrange, list):
             M = nrange
             nrange = range(0, M)
