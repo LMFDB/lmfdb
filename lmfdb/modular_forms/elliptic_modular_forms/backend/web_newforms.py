@@ -152,6 +152,21 @@ class WebqExp(WebPoly):
         #print type(self.value()), self.value()
         return self.value()
 
+    def to_db(self):
+        if not self.value() is None:
+            f = self.value().truncate_powerseries(101)
+            s = str(f)
+            n = 101
+            while len(s)>5000 or n==3:
+                n = max(n-10,3)
+                f = self.value().truncate_powerseries(n)
+                s = str(f)
+            return s
+        else:
+            return ''
+            
+        
+
 
 class WebEigenvalues(WebObject, CachedRepresentation):
 
