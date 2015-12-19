@@ -64,7 +64,8 @@ def set_info_for_gamma1(level,weight,weight2=None):
     
     from sage.all import DirichletGroup,dimension_new_cusp_forms
     from dirichlet_conrey import DirichletGroup_conrey
-   
+    from lmfdb.modular_forms.elliptic_modular_forms import WebModFormSpace
+    dimension_table_name = WebModFormSpace._dimension_table_name
     dim_table = dimension_from_db(level,weight,chi='all',group='gamma1')
     if weight != None and weight2>weight:
         w1 = weight; w2 = weight2
@@ -74,7 +75,8 @@ def set_info_for_gamma1(level,weight,weight2=None):
     table['weights']=range(w1,w2+1)
     max_gal_count = 0
     from  lmfdb.base import getDBConnection
-    db_dim = getDBConnection()['modularforms2']['dimension_table']
+    emf_logger.debug("dimension table name={0}".format(dimension_table_name))
+    db_dim = getDBConnection()['modularforms2'][dimension_table_name]
     s = {'level':int(level),'weight':{"$lt":int(w2+1),"$gt":int(w1-1)},'cchi':{"$exists":True}}
     q = db_dim.find(s).sort([('cchi',int(1)),('weight',int(1))])
     if q.count() == 0:
