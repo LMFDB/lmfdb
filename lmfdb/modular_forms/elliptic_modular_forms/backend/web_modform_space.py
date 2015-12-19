@@ -164,8 +164,10 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     _file_key = ['space_label','version']
     if emf_version > 1.3:
         _collection_name = 'webmodformspace2'
+        _dimension_table_name = 'dimension_table2'
     else:
         _collection_name = 'webmodformspace'
+        _dimension_table_name = 'dimension_table'
 
     def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
 

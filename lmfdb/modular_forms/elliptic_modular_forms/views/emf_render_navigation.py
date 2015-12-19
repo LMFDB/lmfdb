@@ -10,7 +10,7 @@ from lmfdb.utils import to_dict
 from lmfdb.base import getDBConnection
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP,emf_version
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple,parse_range
 
 def _browse_web_modform_spaces_in_ranges(**kwds):
@@ -234,6 +234,9 @@ def render_elliptic_modular_form_navigation_wp(**args):
 
     """
     from sage.all import is_even
+    from lmfdb.modular_forms.elliptic_modular_forms import WebModFormSpace
+    dimension_table_name = WebModFormSpace._dimension_table_name
+  
     info = to_dict(args)
     args = to_dict(request.args)
     info.update(args)
@@ -301,7 +304,8 @@ def render_elliptic_modular_form_navigation_wp(**args):
         return redirect(url_for("emf.render_elliptic_modular_forms",
           level=limits_level[0],weight=limits_weight[0],group=group), code=301)
     info['show_switch'] = True
-    db = getDBConnection()['modularforms2']['dimension_table']
+    emf_logger.debug("dimension table name={0}".format(dimension_table_name))
+    db_dim = getDBConnection()['modularforms2'][dimension_table_name]
     s = {'level':{"$lt":int(limits_level[1]+1),"$gt":int(limits_level[0]-1)},
          'weight' : {"$lt":int(limits_weight[1]+1),"$gt":int(limits_weight[0]-1)}}
     if group == 0:
