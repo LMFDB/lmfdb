@@ -53,8 +53,8 @@ class WebChar(WebObject, CachedRepresentation):
     WebDirichletCharcter once this is ok.
     
     """
-    _key = ['modulus', 'number']
-    _file_key = ['modulus', 'number']
+    _key = ['modulus', 'number','version']
+    _file_key = ['modulus', 'number','version']
     _collection_name = 'webchar'
     
     def __init__(self, modulus=1, number=1, update_from_db=True, compute=False):
@@ -121,7 +121,7 @@ class WebChar(WebObject, CachedRepresentation):
         if self.modulus_euler_phi == 0:
             changed = True
             self.modulus_euler_phi = euler_phi(self.modulus)
-        if changed and save:
+        if changed and save and False:  # temporary hack to prevent fatal error when save_to_db fails
             self.save_to_db()
         else:            
             emf_logger.debug('Not saving.')

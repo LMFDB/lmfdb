@@ -106,7 +106,12 @@ class WebqExp(WebPoly):
                  default_value=None):
         super(WebqExp, self).__init__(name, default_value=default_value)
 
-    def latex(self, prec=None, name=None):
+    def latex(self, prec=None, name=None, keepzeta=False):
+        """
+        Change the name of the variable in a polynomial.  If keepzeta, then don't change
+        the name of zetaN in the defining polynomial of a cyclotomic field.
+        (keepzeta not implemented yet)
+        """
         if prec is None:
             qe = self.value()
         else:
@@ -122,9 +127,12 @@ class WebqExp(WebPoly):
             if subfrom[0].isalpha():
                 subfrom = "\\b" + subfrom
             subto = name.replace("\\","\\\\") + " "
-            wl = re.sub(subfrom, subto, wl)
-
+            if keepzeta and "zeta" in subfrom:
+                pass  # keep the variable as-is
+            else:
+                wl = re.sub(subfrom, subto, wl)
             return wl
+
         else:
             return wl
 
@@ -147,11 +155,11 @@ class WebqExp(WebPoly):
 
 class WebEigenvalues(WebObject, CachedRepresentation):
 
-    _key = ['hecke_orbit_label']
-    _file_key = ['hecke_orbit_label', 'prec']
+    _key = ['hecke_orbit_label','version']
+    _file_key = ['hecke_orbit_label', 'prec','version']
     _collection_name = 'webeigenvalues'
 
-    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True,init_dynamic_properties=True):
+    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True,init_dynamic_properties=True, **kwargs):
         self._properties = WebProperties(
             WebSageObject('E', None, Matrix),
             WebSageObject('v', None, vector),
@@ -168,7 +176,8 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             use_gridfs=True,
             use_separate_db=False,
             update_from_db=update_from_db,
-            init_dynamic_properties=init_dynamic_properties
+            init_dynamic_properties=init_dynamic_properties,
+            **kwargs
             )
 
     def update_from_db(self, ignore_non_existent = True, \
@@ -202,10 +211,10 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         Check how many coefficients we can generate from the eigenvalues in the database.
         """
         from sage.all import next_prime
-        rec = self.get_db_record()
-        if rec is None:
+        recs = self._file_collection.find(self.key_dict())
+        if recs is None:
             return 0
-        prec_in_db = rec.get('prec')
+        prec_in_db = max(rec['prec'] for rec in recs)
         return next_prime(prec_in_db)-1
         
     def __getitem__(self, p):
@@ -233,11 +242,14 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     
 class WebNewForm(WebObject, CachedRepresentation):
 
-    _key = ['level', 'weight', 'character', 'label']
-    _file_key = ['hecke_orbit_label']
-    _collection_name = 'webnewforms2'
+    _key = ['level', 'weight', 'character', 'label','version']
+    _file_key = ['hecke_orbit_label','version']
+    if emf_version > 1.3:
+        _collection_name = 'webnewforms2'
+    else:
+        _collection_name = 'webnewforms'
 
-    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True):
+    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True, **kwargs):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
@@ -293,7 +305,8 @@ class WebNewForm(WebObject, CachedRepresentation):
             )
         emf_logger.debug("After init properties 1")
         super(WebNewForm, self).__init__(
-            update_from_db=update_from_db
+            update_from_db=update_from_db,
+            **kwargs
             )
         emf_logger.debug("After init properties 2 prec={0}".format(self.prec))
         # We're setting the WebEigenvalues property after calling __init__ of the base class
@@ -319,7 +332,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         self._properties['q_expansion'].maxprec = self.prec
         
     def q_expansion_latex(self, prec=None, name=None):
-        return self._properties['q_expansion'].latex(prec, name)
+        return self._properties['q_expansion'].latex(prec, name, keepzeta=True)
     
     def coefficient(self, n):
         r"""

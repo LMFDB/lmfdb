@@ -270,7 +270,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         <tr>
         <td> &#1064;\(_{\text{an}} \) </td>
         <td>&nbsp;
-          {% if data.rank > 1 %}&approx;{% else %}={% endif %}
+          {%- if data.rank > 1 -%}&approx;{% else %}={% endif %}
         &nbsp;</td>
         <td>\({{data.bsd.sha }}\)
           {% if data.rank > 1 %}
