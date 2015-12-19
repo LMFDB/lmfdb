@@ -312,7 +312,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
         s['cchi']=int(1)        
     else:
         s['gamma1_label']={"$exists":True}
-    g = db.find(s).sort([('level',int(1)),('weight',int(1))])
+    g = db_dim.find(s).sort([('level',int(1)),('weight',int(1))])
     table = {}
     info['table'] = {}
     level_range = range(limits_level[0],limits_level[1]+1)
@@ -330,7 +330,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
         info['table'][n]={}
         for k in weight_range:
             info['table'][n][k]={'dim_new':int(0), 'in_db':-1}
-    for r in db.find(s):
+    for r in db_dim.find(s):
         N = r['level']
         k = r['weight']
         if group != 0 or k%2==0:
