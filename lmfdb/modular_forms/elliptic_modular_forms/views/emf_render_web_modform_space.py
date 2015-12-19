@@ -42,11 +42,13 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     info['character'] = character
     try:
         info = set_info_for_modular_form_space(**info)
-    except RuntimeError:
+    except RuntimeError as e:
         errst = "The space {0}.{1}.{2} is not in the database!".format(level,weight,character)
         flash(errst,'error')
         info = {'error': ''}
     emf_logger.debug("keys={0}".format(info.keys()))
+    if info.has_key('error'):
+        emf_logger.critical("error={0}".format(info['error']))
     if 'download' in kwds and 'error' not in kwds:
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
     if 'dimension_newspace' in kwds and kwds['dimension_newspace'] == 1:
@@ -67,6 +69,8 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     if info.has_key('space'):
         emf_logger.debug("space={0}".format(info['space']))        
         emf_logger.debug("dimension={0}".format(info['space'].dimension))
+    if info.has_key('error'):
+        emf_logger.debug("error={0}".format(info['error']))
     return render_template("emf_web_modform_space.html", **info)
 
 
@@ -85,8 +89,8 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         info['error'] = "Got wrong level: %s " % level
         return info
     try:
-        WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True,character = character)
-        if not WMFS.has_updated_from_db():
+        WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True,character = character,update_from_db=True)
+        if not WMFS.has_updated():
             stop = False
             orbit = WMFS.character.character.galois_orbit()
             while not stop:
@@ -97,7 +101,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
                 if c.number() == WMFS.character.number:
                     continue
                 print c.number()
-                WMFS_rep = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = c.number())
+                WMFS_rep = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = c.number(),update_from_db=true)
                 if WMFS_rep.has_updated_from_db():
                     print "Here"
                     stop = True

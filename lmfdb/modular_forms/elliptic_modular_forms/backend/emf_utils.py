@@ -472,15 +472,25 @@ def dirichlet_character_conrey_galois_orbit_embeddings(N,xi):
     return embeddings
 
 def multiply_mat_vec(E,v):
-    if not E.base_ring() is QQ:
-        EE = convert_matrix_to_extension_fld(E,v.base_ring())
+    KE = E.base_ring()
+    if isinstance(v,list):
+        v = vector(v)
+    Kv = v.base_ring()
+    if KE != QQ and KE != Kv:
+        EE = convert_matrix_to_extension_fld(E,Kv)
         return EE*v
     else:
         return E*v
+    
 
 def convert_matrix_to_extension_fld(E,K):
     EE=Matrix(K,E.nrows(), E.ncols())
-    z = K(E.base_ring().gen())
+    KE = E.base_ring()
+    if KE.is_relative():
+        gen = E.base_ring().base_ring().gen()
+    else:
+        gen = E.base_ring().gen()
+    z = K(gen)
     x = E[0,0].polynomial().parent().gen()
     for a in range(E.nrows()):
         for b in range(E.ncols()):

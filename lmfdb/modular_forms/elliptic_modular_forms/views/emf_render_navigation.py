@@ -10,11 +10,9 @@ from lmfdb.utils import to_dict
 from lmfdb.base import getDBConnection
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP,emf_version
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple,parse_range
 
-
-## This function is not in use
 def _browse_web_modform_spaces_in_ranges(**kwds):
     r"""
     Renders the webpage for browsing modular forms of given level and/or weight ranges.
@@ -46,6 +44,8 @@ def _browse_web_modform_spaces_in_ranges(**kwds):
     bread.append((EMF_TOP, url_for('emf.render_elliptic_modular_forms')))
     limits_weight = extract_limits_as_tuple(info, 'weight')
     limits_level = extract_limits_as_tuple(info, 'level')
+    # Special case: if the range reduces to a singleton for both level
+    # and weight then we return a single page rather than a table:
     if limits_weight[0] == limits_weight[1] and limits_level[0] == limits_level[1]:
         return render_elliptic_modular_form_space_list_chars(limits_level[0], limits_weight[0])
     if limits_level[0] > N_max_db:
@@ -152,6 +152,8 @@ def render_elliptic_modular_form_navigation_wp1(**args):
 
     limits_weight = extract_limits_as_tuple(info, 'weight')
     limits_level = extract_limits_as_tuple(info, 'level')
+    # Special case: if the range reduces to a singleton for both level
+    # and weight then we return a single page rather than a table:
     if limits_weight[0] == limits_weight[1] and limits_level[0] == limits_level[1]:
         return render_elliptic_modular_form_space_list_chars(limits_level[0], limits_weight[0])
     if is_set['weight']:
@@ -232,6 +234,9 @@ def render_elliptic_modular_form_navigation_wp(**args):
 
     """
     from sage.all import is_even
+    from lmfdb.modular_forms.elliptic_modular_forms import WebModFormSpace
+    dimension_table_name = WebModFormSpace._dimension_table_name
+  
     info = to_dict(args)
     args = to_dict(request.args)
     info.update(args)
@@ -293,18 +298,21 @@ def render_elliptic_modular_form_navigation_wp(**args):
     emf_logger.debug("group=%s, %s" % (group, type(group)))
     emf_logger.debug("level:{0},level_range={1}".format(level,limits_level))
     emf_logger.debug("weight:{0},weight_range={1}".format(weight,limits_weight))    
+    # Special case: if the range reduces to a singleton for both level
+    # and weight then we return a single page rather than a table:
     if limits_weight[0] == limits_weight[1] and limits_level[0] == limits_level[1]:
         return redirect(url_for("emf.render_elliptic_modular_forms",
           level=limits_level[0],weight=limits_weight[0],group=group), code=301)
     info['show_switch'] = True
-    db = getDBConnection()['modularforms2']['dimension_table']
+    emf_logger.debug("dimension table name={0}".format(dimension_table_name))
+    db_dim = getDBConnection()['modularforms2'][dimension_table_name]
     s = {'level':{"$lt":int(limits_level[1]+1),"$gt":int(limits_level[0]-1)},
          'weight' : {"$lt":int(limits_weight[1]+1),"$gt":int(limits_weight[0]-1)}}
     if group == 0:
         s['cchi']=int(1)        
     else:
         s['gamma1_label']={"$exists":True}
-    g = db.find(s).sort([('level',int(1)),('weight',int(1))])
+    g = db_dim.find(s).sort([('level',int(1)),('weight',int(1))])
     table = {}
     info['table'] = {}
     level_range = range(limits_level[0],limits_level[1]+1)
@@ -322,7 +330,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
         info['table'][n]={}
         for k in weight_range:
             info['table'][n][k]={'dim_new':int(0), 'in_db':-1}
-    for r in db.find(s):
+    for r in db_dim.find(s):
         N = r['level']
         k = r['weight']
         if group != 0 or k%2==0:
