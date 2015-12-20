@@ -440,9 +440,13 @@ class WebNewForm(WebObject, CachedRepresentation):
             self._coefficients[2]=ev[2]
             K = ev[2].parent()
         prod = K(1)
-        #emf_logger.debug("K= {0}".format(K))        
+        if K.is_relative():
+            KZ = K.base_field()
+        #emf_logger.debug("K= {0}".format(K))
         F = arith.factor(n)
         for p, r in F:
+            #emf_logger.debug("parent_char_val[{0}]={1}".format(p,self.parent.character_used_in_computation.value(p)))
+            #emf_logger.debug("char_val[{0}]={1}".format(p,self.character.value(p)))
             (p, r) = (int(p), int(r))
             pr = p**r
             cp = self._coefficients.get(p)
@@ -459,7 +463,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                 if r == 1:
                     c = cp
                 else:
-                    eps = K(self.parent.character_used_in_computation.value(p))
+                    eps = KZ(self.parent.character_used_in_computation.value(p))
                     # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                     apr1 = self.coefficient_n_recursive(pr//p)
                     #ap = self.coefficient_n_recursive(p)
