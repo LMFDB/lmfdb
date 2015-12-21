@@ -146,7 +146,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         # catch the url being None or set to '':
         if hasattr(f.base_ring, "lmfdb_label") and f.base_ring.lmfdb_label:
             friends.append(('Number field ' + f.base_ring.lmfdb_pretty, f.base_ring.lmfdb_url))
-        if hasattr(f.coefficient_field, "lmfdb_url") and f.coefficient_field.lmfdb_url is not None:
+        if hasattr(f.coefficient_field, "lmfdb_url") and f.coefficient_field.lmfdb_url:
             friends.append(('Number field ' + f.coefficient_field.lmfdb_pretty, f.coefficient_field.lmfdb_url))
     friends.append(("Dirichlet character \(" + WMFS.character.latex_name + "\)", WMFS.character.url()))
     friends = uniq(friends)
