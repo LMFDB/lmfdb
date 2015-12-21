@@ -139,7 +139,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
 #           b_pol_ltx = web_latex_poly(p2, latex(zeta)) #this is not used anymore
             z1 = zeta.multiplicative_order() 
             info['coeff_field'] = [ web_latex_split_on_pm(WNF.coefficient_field.absolute_polynomial_latex('x')),web_latex_split_on_pm(c_pol_ltx_x), z1]
-            if hasattr(WNF.coefficient_field, "lmfdb_url") and WNF.coefficient_field.url:
+            if hasattr(WNF.coefficient_field, "lmfdb_url") and WNF.coefficient_field.lmfdb_url:
                 info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_label]
             if z1==4:
                 info['polynomial_st'] = 'where \({0}=0\) and \(\zeta_4=i\).</div><br/>'.format(c_pol_ltx)
