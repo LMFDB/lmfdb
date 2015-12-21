@@ -784,6 +784,11 @@ class WebNumberField(WebDict):
     def __init__(self, name, value=None,
                  save_to_fs=True, save_to_db=True, **kwargs):
         self._default_value = QQ
+        ## set default values
+        self._db_value = None
+        self.lmfdb_label = ''
+        self.lmfdb_url = ''
+        self.lmfdb_pretty = ''
         super(WebDict, self).__init__(name, value, dict, dict, save_to_fs=save_to_fs, save_to_db=save_to_db, extend_fs_with_db = 'lmfdb_label', **kwargs)
 
     def to_fs(self):
