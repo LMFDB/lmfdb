@@ -56,7 +56,10 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
         emf_logger.debug("Dimension of newforms is one!")
         info['label'] = 'a'
         return redirect(url_for('emf.render_elliptic_modular_forms', **info))
-    info['title'] = "Newforms of weight %s for \(\Gamma_{0}(%s)\) with character \(\chi_{%s}(%s, \cdot)\)" % (weight, level, level, character)
+    if character>1:
+        info['title'] = "Newforms of weight %s for \(\Gamma_{0}(%s)\) with character \(\chi_{%s}(%s, \cdot)\)" % (weight, level, level, character)
+    else:
+        info['title'] = "Newforms of weight %s for \(\Gamma_{0}(%s)\)" % (weight, level)
     bread = [(EMF_TOP, url_for('emf.render_elliptic_modular_forms'))]
     bread.append(("Level %s" % level, url_for('emf.render_elliptic_modular_forms', level=level)))
     bread.append(
