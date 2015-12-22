@@ -152,21 +152,40 @@ class WebqExp(WebPoly):
         #print type(self.value()), self.value()
         return self.value()
 
+    def to_db(self):
+        if not self.value() is None:
+            if self.value().base_ring().absolute_degree() > 1:
+                return ''
+            f = self.value().truncate_powerseries(1001)
+            s = str(f)
+            n = 1001
+            while len(s)>10000 or n==3:
+                n = max(n-20,3)
+                f = self.value().truncate_powerseries(n)
+                s = str(f)
+            return s
+        else:
+            return ''
+            
+        
+
 
 class WebEigenvalues(WebObject, CachedRepresentation):
 
-    _key = ['hecke_orbit_label']
-    _file_key = ['hecke_orbit_label', 'prec']
+    _key = ['hecke_orbit_label','version']
+    _file_key = ['hecke_orbit_label', 'prec','version']
     _collection_name = 'webeigenvalues'
 
-    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True,init_dynamic_properties=True):
+    def __init__(self, hecke_orbit_label, prec=10, update_from_db=True, auto_update = True,init_dynamic_properties=True, **kwargs):
         self._properties = WebProperties(
             WebSageObject('E', None, Matrix),
             WebSageObject('v', None, vector),
             WebDict('meta',value={}),
             WebStr('hecke_orbit_label', value=hecke_orbit_label),
-            WebInt('prec', value=prec)
-            )
+            WebInt('prec', value=prec),
+            WebFloat('version', value=float(emf_version),
+                     save_to_fs=True),
+        )
 
         self.auto_update = True
         self._ap = {}        
@@ -174,7 +193,8 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             use_gridfs=True,
             use_separate_db=False,
             update_from_db=update_from_db,
-            init_dynamic_properties=init_dynamic_properties
+            init_dynamic_properties=init_dynamic_properties,
+            **kwargs
             )
 
     def update_from_db(self, ignore_non_existent = True, \
@@ -208,10 +228,10 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         Check how many coefficients we can generate from the eigenvalues in the database.
         """
         from sage.all import next_prime
-        rec = self.get_db_record()
-        if rec is None:
+        recs = self._file_collection.find(self.key_dict())
+        if recs is None:
             return 0
-        prec_in_db = rec.get('prec')
+        prec_in_db = max(rec['prec'] for rec in recs)
         return next_prime(prec_in_db)-1
         
     def __getitem__(self, p):
@@ -239,11 +259,14 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     
 class WebNewForm(WebObject, CachedRepresentation):
 
-    _key = ['level', 'weight', 'character', 'label']
-    _file_key = ['hecke_orbit_label']
-    _collection_name = 'webnewforms'
+    _key = ['level', 'weight', 'character', 'label','version']
+    _file_key = ['hecke_orbit_label','version']
+    if emf_version > 1.3:
+        _collection_name = 'webnewforms2'
+    else:
+        _collection_name = 'webnewforms'
 
-    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True):
+    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True, **kwargs):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
@@ -299,7 +322,8 @@ class WebNewForm(WebObject, CachedRepresentation):
             )
         emf_logger.debug("After init properties 1")
         super(WebNewForm, self).__init__(
-            update_from_db=update_from_db
+            update_from_db=update_from_db,
+            **kwargs
             )
         emf_logger.debug("After init properties 2 prec={0}".format(self.prec))
         # We're setting the WebEigenvalues property after calling __init__ of the base class
@@ -373,7 +397,10 @@ class WebNewForm(WebObject, CachedRepresentation):
          We assume that the self._ap containing Hecke eigenvalues
          are stored.
         """
-        emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[1]))
+        if len(nrange) > 1:
+            emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[1]))
+        else:
+            emf_logger.debug("computing coeffs in range {0}--{0}".format(nrange[0]))
         if not isinstance(nrange, list):
             M = nrange
             nrange = range(0, M)
@@ -413,9 +440,13 @@ class WebNewForm(WebObject, CachedRepresentation):
             self._coefficients[2]=ev[2]
             K = ev[2].parent()
         prod = K(1)
-        #emf_logger.debug("K= {0}".format(K))        
+        if K.absolute_degree()>1 and K.is_relative():
+            KZ = K.base_field()
+        #emf_logger.debug("K= {0}".format(K))
         F = arith.factor(n)
         for p, r in F:
+            #emf_logger.debug("parent_char_val[{0}]={1}".format(p,self.parent.character_used_in_computation.value(p)))
+            #emf_logger.debug("char_val[{0}]={1}".format(p,self.character.value(p)))
             (p, r) = (int(p), int(r))
             pr = p**r
             cp = self._coefficients.get(p)
@@ -432,7 +463,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                 if r == 1:
                     c = cp
                 else:
-                    eps = K(self.parent.character_used_in_computation.value(p))
+                    eps = KZ(self.parent.character_used_in_computation.value(p))
                     # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                     apr1 = self.coefficient_n_recursive(pr//p)
                     #ap = self.coefficient_n_recursive(p)

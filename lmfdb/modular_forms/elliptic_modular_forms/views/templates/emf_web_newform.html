@@ -34,10 +34,11 @@
 <div>
 The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is 
 {% if is_rational ==1 %}
-<a href="{{ coeff_field_pretty[0] }}">{{ coeff_field_pretty[1] }}.</a></td>
+<a title = "{{ coeff_field_pretty[1] }}[nf.field.data]" knowl= "nf.field.data" kwargs="label=1.1.1.1">{{ coeff_field_pretty[1] }}</a>
 {%  else %}
     {% if coeff_field_pretty %}
-        $\Q(\alpha)\cong$<a href="{{ coeff_field_pretty[0] }}">{{ coeff_field_pretty[1] }}</a></td>
+        $\Q(\alpha)\cong\,$
+<a title = "{{ coeff_field_pretty[1] }}[nf.field.data]" knowl= "nf.field.data" kwargs="label={{coeff_field_pretty[2]}}">{{ coeff_field_pretty[1] }}</a></td>
     {% else %}
         $\Q(\alpha)$
     {% endif %}
@@ -173,8 +174,7 @@ that preserve the character are shown in the table below.
     {% if not is_cm %}
     not a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}.
     {% else %}
-    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}
-    with CM by {{ cm_field_knowl | safe }}.
+    a {{KNOWL('mf.elliptic.cm_form',title='CM form')}}{% if cm_disc < 0 %} with CM by {{ cm_field_knowl | safe }}{% endif %}.
     {% endif %}
     </li>
  {% endif %}
