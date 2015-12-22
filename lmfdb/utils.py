@@ -295,7 +295,21 @@ def web_latex_split_on_pm(x):
     A = A.replace("\\left","")
     A = A.replace("\\right","")
     for s in on:
-        A = A.replace(s, '\) ' + s + ' \( ')
+  #      A = A.replace(s, '\) ' + s + ' \( ')
+   #     A = A.replace(s, '\) ' + ' \( \mathstrut ' + s )
+        A = A.replace(s, '\)' + ' \(\mathstrut ' + s + '\mathstrut ')
+    # the above will be re-done using a more sophisticated method involving
+    # regular expressions.  Below fixes bad spacing when the current approach
+    # encounters terms like (-3+x)
+    for s in on:
+        A = A.replace('(\) \(\mathstrut '+s,'(' + s)
+    A = A.replace('( {}','(')
+    A = A.replace('(\) \(','(')
+    A = A.replace('\(+','\(\mathstrut+')
+    A = A.replace('\(-','\(\mathstrut-')
+    A = A.replace('(  ','(')
+    A = A.replace('( ','(')
+
     print '\nnew A\n', A
     return A
     # return web_latex_split_on(x)
@@ -312,9 +326,22 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
         c = re.compile(r)
         A = A.replace('+', '\) \( {}+ ')
         A = A.replace('-', '\) \( {}- ')
-        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
-        A = A.replace('\\right)','\left.\\right)')        
+#        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
+#        A = A.replace('\\right)','\left.\\right)')        
+        A = A.replace('\left(','\\bigl(')
+        A = A.replace('\\right)','\\bigr)')        
         A = c.sub(insert_latex, A)
+
+    # the above will be re-done using a more sophisticated method involving
+    # regular expressions.  Below fixes bad spacing when the current approach
+    # encounters terms like (-3+x)
+    A = A.replace('( {}','(')
+    A = A.replace('(\) \(','(')
+    A = A.replace('\(+','\(\mathstrut+')
+    A = A.replace('\(-','\(\mathstrut-')
+    A = A.replace('(  ','(')
+    A = A.replace('( ','(')
+    A = A.replace('+\) \(O','+O')
     return A
 
 
