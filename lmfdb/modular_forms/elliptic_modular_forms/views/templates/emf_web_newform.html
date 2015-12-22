@@ -46,7 +46,7 @@ The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is
     {% endif %}
     where $\alpha$ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} {{coeff_field[0] | safe}} over $\Q$. 
     {% if coeff_field|length >2 and coeff_field[2]>2 %}
-    </br>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is {{coeff_field[1]}}.
+    <br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is {{coeff_field[1]}}.
     {% endif %}
 {% endif %}
 </div>
@@ -253,7 +253,7 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1
 </td>
 </tr>
 <tr>
-<td>  Download coefficients of \(q^n\) for \(0\le n\le \) </td>
+<td>  Download coefficients of&nbsp;\(q^n\)&nbsp;for&nbsp;\(0\le n\le \)</td>
 <td>
   {% set examplemax = 100 %}
   {% if max_cn - 1 < 100 %}

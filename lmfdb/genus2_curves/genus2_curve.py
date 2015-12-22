@@ -8,7 +8,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_torsion_structure
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, comma, clean_input, parse_torsion_structure
 from lmfdb.number_fields.number_field import parse_list, parse_discs, make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
