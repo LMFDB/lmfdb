@@ -397,6 +397,8 @@ class WebNewForm(WebObject, CachedRepresentation):
          We assume that the self._ap containing Hecke eigenvalues
          are stored.
         """
+        if len(nrange) == 0:
+            return []
         if len(nrange) > 1:
             emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[1]))
         else:
