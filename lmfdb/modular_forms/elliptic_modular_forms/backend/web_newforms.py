@@ -440,7 +440,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             self._coefficients[2]=ev[2]
             K = ev[2].parent()
         prod = K(1)
-        if K.is_relative():
+        if K.absolute_degree()>1 and K.is_relative():
             KZ = K.base_field()
         #emf_logger.debug("K= {0}".format(K))
         F = arith.factor(n)

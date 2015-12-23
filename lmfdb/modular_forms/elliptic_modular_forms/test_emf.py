@@ -2,6 +2,7 @@
 from lmfdb.base import LmfdbTest
 
 from flask import request
+import unittest2
 
 from views.emf_main import *
 from . import emf_logger
@@ -15,6 +16,16 @@ class EmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/")
         assert '"/ModularForm/GL2/Q/holomorphic/24/?group=0">24' in page.data
         assert '"/ModularForm/GL2/Q/holomorphic/23/12/1/?group=0">19' in page.data
+
+    @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
+    def test_many(self):
+        levels = range(1,41)
+        weights = range(2,22,2)
+        for N in levels:
+            for k in weights:
+                for g in range(2):
+                    print("testing (N,k,g) = (%s,%s,%s)" % (N,k,g))
+                    self.tc.get("/ModularForm/GL2/Q/holomorphic/%s/%s/?group=%s" % (N,k,g))
 
     def test_delta(self):
         r"""

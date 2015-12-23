@@ -153,7 +153,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
             c_pol_ltx_x = web_latex_poly(p1, 'x')
             z1 = p1.base_ring().gens()[0].multiplicative_order()
             info['coeff_field'] = [ web_latex_split_on_pm(WNF.coefficient_field.absolute_polynomial_latex('x')), web_latex_split_on_pm(c_pol_ltx_x), z1]
-            if hasattr(WNF.coefficient_field, "lmfdb_label") and not WNF.coefficient_field.lmfdb_label is None:
+            if hasattr(WNF.coefficient_field, "lmfdb_url") and WNF.coefficient_field.lmfdb_url:
                 info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_label]
             if z1==4:
                 info['polynomial_st'] = 'where \({0}=0\) and \(\zeta_4=i\).'.format(c_pol_ltx)
