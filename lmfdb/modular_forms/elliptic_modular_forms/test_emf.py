@@ -62,11 +62,11 @@ class EmfTest(LmfdbTest):
         Check that non-trivial characters are also working.
         """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/2/4/a/")
-        assert r'where \(\alpha ^{2} - \alpha  + 1=0\)' in page.data
-        assert r'\( {}+\) \(  \left( {}\right.2 \zeta_{6} \) \( {}-  2\left.\right)q^{3} \)' in page.data
+        assert r'where</div> \(\alpha ^{2} \) \(\mathstrut -\mathstrut  \alpha  \) \(\mathstrut +\mathstrut  1\)\(\mathstrut=0\)' in page.data
+        assert r'\(\mathstrut+\) \(\bigl(2 \zeta_{6} \) \(\mathstrut-  2\bigr)q^{3} \)' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/4/9/a/")
-        assert r'where \(\alpha ^{2} + 4=0\)' in page.data
-        assert r'\( {}-\) \(  \alpha  q^{3} \)' in page.data
+        assert r'where</div> \(\alpha ^{2} \) \(\mathstrut +\mathstrut  4\)\(\mathstrut=0\)' in page.data
+        assert r'\(\mathstrut-\) \(\alpha  q^{3} \)' in page.data
 
     def test_get_args(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/1/")

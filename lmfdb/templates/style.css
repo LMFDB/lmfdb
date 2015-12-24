@@ -617,6 +617,11 @@ table th, table td {
   padding-right: 10px;
 }
 
+table.newforms {
+/* to put a table after the properties box */
+    clear: right;
+}
+
 table.ntdata .knowl-header a,
 table.ntdata .knowl-footer a,
 table.ntdata a.knowl-link, 
@@ -685,11 +690,10 @@ div.literature {
     margin-top: 10px;
     font-size: 90%;
     color: #111111;
-
 }
 
-.name {
-    font-weight: bold;
+div.where {
+    margin: 10px 0 10px 0;
 }
 
 .emph {

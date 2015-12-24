@@ -29,7 +29,6 @@ from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty, nf_display_knowl
-from lmfdb.utils import web_latex_split_on_pm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
 from lmfdb.base import getDBConnection
 
@@ -132,35 +131,35 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if not cf_is_QQ:
         if not br_is_QQ and rdeg>1: # not WNF.coefficient_field == WNF.base_ring:
             p1 = WNF.coefficient_field.relative_polynomial()
-            c_pol_ltx = web_latex_split_on_pm(web_latex_poly(p1, '\\alpha'))  # make the variable \alpha
+            c_pol_ltx = web_latex_poly(p1, '\\alpha')  # make the variable \alpha
             c_pol_ltx_x = web_latex_poly(p1, 'x')
             zeta = p1.base_ring().gens()[0]
 #           p2 = zeta.minpoly() #this is not used anymore
 #           b_pol_ltx = web_latex_poly(p2, latex(zeta)) #this is not used anymore
             z1 = zeta.multiplicative_order() 
-            info['coeff_field'] = [ web_latex_split_on_pm(WNF.coefficient_field.absolute_polynomial_latex('x')),web_latex_split_on_pm(c_pol_ltx_x), z1]
+            info['coeff_field'] = [ WNF.coefficient_field.absolute_polynomial_latex('x'),c_pol_ltx_x, z1]
             if hasattr(WNF.coefficient_field, "lmfdb_url") and WNF.coefficient_field.lmfdb_url:
                 info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_label]
             if z1==4:
-                info['polynomial_st'] = 'where \({0}=0\) and \(\zeta_4=i\).</div><br/>'.format(c_pol_ltx)
+                info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\) and \(\zeta_4=i\).</div><br/>'.format(c_pol_ltx)
             elif z1<=2:
-                info['polynomial_st'] = 'where \({0}=0\).</div><br/>'.format(c_pol_ltx)
+                info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\).</div><br/>'.format(c_pol_ltx)
             else:
-                info['polynomial_st'] = 'where \(%s=0\) and \(\zeta_{%s}=e^{\\frac{2\\pi i}{%s}}\).'%(c_pol_ltx, z1,z1)
+                info['polynomial_st'] = '<div class="where">where</div> %s\(\mathstrut=0\) and \(\zeta_{%s}=e^{\\frac{2\\pi i}{%s}}\).'%(c_pol_ltx, z1,z1)
         else:
             p1 = WNF.coefficient_field.relative_polynomial()
-            c_pol_ltx = web_latex_split_on_pm(web_latex_poly(p1, '\\alpha'))
+            c_pol_ltx = web_latex_poly(p1, '\\alpha')
             c_pol_ltx_x = web_latex_poly(p1, 'x')
             z1 = p1.base_ring().gens()[0].multiplicative_order()
-            info['coeff_field'] = [ web_latex_split_on_pm(WNF.coefficient_field.absolute_polynomial_latex('x')), web_latex_split_on_pm(c_pol_ltx_x), z1]
+            info['coeff_field'] = [ WNF.coefficient_field.absolute_polynomial_latex('x'), c_pol_ltx_x, z1]
             if hasattr(WNF.coefficient_field, "lmfdb_url") and WNF.coefficient_field.lmfdb_url:
                 info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_label]
             if z1==4:
-                info['polynomial_st'] = 'where \({0}=0\) and \(\zeta_4=i\).'.format(c_pol_ltx)
+                info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\) and \(\zeta_4=i\).'.format(c_pol_ltx)
             elif z1<=2:
-                info['polynomial_st'] = 'where \({0}=0\).</div><br/>'.format(c_pol_ltx)
+                info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\).</div><br/>'.format(c_pol_ltx)
             else:
-                info['polynomial_st'] = 'where \(%s=0\) and \(\zeta_{%s}=e^{\\frac{2\\pi i}{%s}}\).'%(c_pol_ltx, z1,z1)
+                info['polynomial_st'] = '<div class="where">where</div> %s\(\mathstrut=0\) and \(\zeta_{%s}=e^{\\frac{2\\pi i}{%s}}\).'%(c_pol_ltx, z1,z1)
     else:
         info['polynomial_st'] = ''
     info['degree'] = int(cdeg)
