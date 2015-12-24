@@ -837,6 +837,8 @@ class WebNumberField(WebDict):
             p = 'x'
         else:
             p = K.absolute_polynomial()
+            if p.degree() > 4:
+                return ''
 
         l = poly_to_field_label(p)
         
