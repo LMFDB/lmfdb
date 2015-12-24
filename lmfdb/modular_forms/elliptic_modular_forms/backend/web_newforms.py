@@ -228,8 +228,8 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         Check how many coefficients we can generate from the eigenvalues in the database.
         """
         from sage.all import next_prime
-        recs = self._file_collection.find(self.key_dict())
-        if recs is None:
+        recs = list(self._file_collection.find(self.key_dict()))
+        if len(recs) == 0:
             return 0
         prec_in_db = max(rec['prec'] for rec in recs)
         return next_prime(prec_in_db)-1

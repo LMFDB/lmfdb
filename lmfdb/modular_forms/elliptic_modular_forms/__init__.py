@@ -31,7 +31,7 @@ N_max_db = 5000
 k_max_db = 12
 N_max_extra_comp = 500
 
-use_cache= True
+use_cache = True
 
 import views
 import backend
