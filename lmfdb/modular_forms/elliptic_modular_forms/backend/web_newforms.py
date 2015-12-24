@@ -184,7 +184,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             WebStr('hecke_orbit_label', value=hecke_orbit_label),
             WebInt('prec', value=prec),
             WebFloat('version', value=float(emf_version),
-                     save_to_fs=True),
+                     save_to_fs=True, save_to_db=True),
         )
 
         self.auto_update = True
