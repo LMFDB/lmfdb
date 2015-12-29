@@ -3,7 +3,7 @@
 
 <p>
 The database currently contains {{info.count}} genus 2 curves
-over the rational numbers. 
+over the rational numbers.
 </p>
 
 <h2> Browse {{ KNOWL('g2c.g2curve', title='genus 2 curves over $\Q$') }} </h2>
@@ -23,7 +23,7 @@ By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
 <p>
 Some of our favorite curves:
 {% for curve in info.browse_curves: %}
- <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a>  
+ <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a>
 {% endfor %}
 </p>
 <p>
@@ -44,7 +44,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 <table>
 <tr>Please enter a value or leave blank:</tr>
 <tr>
-<td>{{ KNOWL('ag.conductor', title='conductor') }}</td>  
+<td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
 <td><input type='text' name='cond' placeholder='169' size=10>
 <td><span class="formexample"> e.g. 169, 100-1000 </span></td>
 <td>{{ KNOWL('g2c.gl2type', title='$\GL_2$-type') }}</td>
@@ -67,7 +67,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.num_rat_wpts', title='rational Weierstrass points') }}</td>  
+<td>{{ KNOWL('g2c.num_rat_wpts', title='rational Weierstrass points') }}</td>
 <td><input type='text' name='num_rat_wpts' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1, 0-6 </span></td>
 <td>{{KNOWL('g2c.st_group_identity_component',title='Sato-Tate identity component')}}</td>
@@ -79,7 +79,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>  
+<td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
 <td><input type='text' name='torsion_order' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2 </span></td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\Q\)-automorphism group') }}</td>
@@ -91,7 +91,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>  
+<td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>
 <td><input type='text' name='torsion' placeholder='[2,2,2]' size=10>
 <td><span class="formexample"> e.g. [2,2,2] </span></td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\overline{\Q}\)-automorphism group') }}</td>
@@ -103,7 +103,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <!--<tr>
-<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>  
+<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
 <td><input type='text' name='two_selmer_rank' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1 </span></td>
 </tr>-->

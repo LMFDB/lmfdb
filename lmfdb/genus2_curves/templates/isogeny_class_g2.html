@@ -27,7 +27,7 @@ text-align: center;
 <!-- Someone please redo this table with css.-->
 <table>
     <tr><td> {{KNOWL('lfunction.sign', title='Root number')}}:<td> \({{ info.root_number }}\)</tr>
-    <tr><td>&nbsp;</td></tr> 
+    <tr><td>&nbsp;</td></tr>
     <tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
         <table id = "bad_lfactors_table">
         <tr>
@@ -60,7 +60,7 @@ text-align: center;
 {% endfor %}
 </table>
 {% if info.geom_end_field_name != '' %}
-<p>Field over which all endomorphisms are defined: 
+<p>Field over which all endomorphisms are defined:
 <a href="/NumberField/{{info.geom_end_field}}">{{info.geom_end_field_name}}</a></p>
 {% endif %}
 
@@ -77,7 +77,7 @@ text-align: center;
 
 {% if info.ecquadratic_wurl != [] %}
 {% for c in info.ecquadratic_wurl %}
-<p>\(J\) is isogenous over \(\Q\) to \(\mathrm{Res}_{F/\Q}(\)<a href="{{c.url}}">{{c.label}}</a>\()\), where \(F=\) 
+<p>\(J\) is isogenous over \(\Q\) to \(\mathrm{Res}_{F/\Q}(\)<a href="{{c.url}}">{{c.label}}</a>\()\), where \(F=\)
 <A HREF="/NumberField/{{c.nf}}">{{c.nf}}</A>.</p>
 {% endfor %}
 {% endif %}

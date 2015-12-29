@@ -17,7 +17,7 @@ from flask import url_for, make_response
 logger = make_logger("g2c")
 
 ###############################################################################
-#   Database connection
+# Database connection
 ###############################################################################
 
 g2cdb = None
@@ -49,13 +49,12 @@ def db_ecQQ():
 ###############################################################################
 
 def isog_label(label):
-    #get isog label from full label
     L = label.split(".")
     return L[0]+ "." + L[1]
 
 ###############################################################################
-# Conversion of eliptic curve labels (database stores Cremona labels
-# but we want to display LMFDB labels -- see Issue #635)
+# Conversion of eliptic curve labels (database stores Cremona labels but we
+# want to display LMFDB labels -- see Issue #635)
 ###############################################################################
 
 def cremona_to_lmfdb(label):
@@ -177,7 +176,7 @@ def eqn_list_to_curve_plot(L):
         plotzones)
 
 ###############################################################################
-# Invariant conversions on the fly
+# Invariant conversion
 ###############################################################################
 
 def igusa_clebsch_to_igusa(I):
@@ -241,7 +240,7 @@ def normalize_invariants(I,W):
 def end_alg_name(name):
     name_dict = {
         "Z":"\\Z",
-        "Q":"\\Q",      
+        "Q":"\\Q",
         "Q x Qsqrt-4":"\\Q \\times \\Q(\\sqrt{-1})",
         "Q x Qsqrt-7":"\\Q \\times \\Q(\\sqrt{-7})",
         "Q x Qsqrt-11":"\\Q \\times \\Q(\\sqrt{-11})",
@@ -290,10 +289,10 @@ def st_group_name(name):
 
 def get_end_data(isogeny_class):
     data = {}
-    end_alg_title_dict = {'end_ring': r'\End(J)', 
+    end_alg_title_dict = {'end_ring': r'\End(J)',
                           'rat_end_alg': r'\End(J) \otimes \Q',
                           'real_end_alg': r'\End(J) \otimes \R',
-                          'geom_end_ring': r'\End(J_{\overline{\Q}})', 
+                          'geom_end_ring': r'\End(J_{\overline{\Q}})',
                           'rat_geom_end_alg': r'\End(J_{\overline{\Q}}) \otimes \Q',
                           'real_geom_end_alg':'\End(J_{\overline{\Q}}) \otimes \R'}
     for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
@@ -301,12 +300,12 @@ def get_end_data(isogeny_class):
             data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],end_alg_name(isogeny_class[endalgtype])]
         else:
             data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],'']
-        
+
     data['geom_end_field'] = isogeny_class['geom_end_field']
     if data['geom_end_field'] != '':
         data['geom_end_field_name'] = field_pretty(data['geom_end_field'])
     else:
-        data['geom_end_field_name'] = ''        
+        data['geom_end_field_name'] = ''
 
     data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
     data['st_group_name'] = st_group_name(isogeny_class['st_group'])
@@ -338,15 +337,15 @@ def get_end_data(isogeny_class):
 
 def gl2_statement(factorsRR, base):
     if factorsRR in [['RR', 'RR'], ['CC']]:
-        return "The Jacobian is of \(\GL_2\)-type" + " over " + base
-    return "The Jacobian is not of \(\GL_2\)-type" + " over " + base
+        return "The Jacobian is of \(\GL_2\)-type over " + base
+    return "The Jacobian is not of \(\GL_2\)-type over " + base
 
 def endo_statement(factorsQQ, factorsRR, ring, fieldstring):
     statement = """<table>"""
     # First row: description of endomorphism algebra factors
     statement += """<tr><td>\(\End (J_{%s}) \otimes \Q\
     \)</td><td>\(\simeq\)</td><td>""" % fieldstring
-    factorsQQ_number = len(factorsQQ) 
+    factorsQQ_number = len(factorsQQ)
     factorsQQ_pretty = [ field_pretty(fac[0]) for fac in factorsQQ if
             fac[0] ]
     # In the case of only one factor we either get a number field or a
@@ -539,7 +538,7 @@ class WebG2C(object):
             print label
             data = db_g2c().curves.find_one({"label" : label})
             endodata = db_g2endo().bycurve.find_one({"label" : label})
-            
+
         except AttributeError:
             return "Invalid label" # caller must catch this and raise an error
 
@@ -550,21 +549,21 @@ class WebG2C(object):
                 return "Endomorphism data for curve not found"
         return "Data for curve not found" # caller must catch this and raise an error
 
-###############################################################################
-# Main data manipulation for individual curve
-###############################################################################
+    ###########################################################################
+    # Main data creation for individual curves
+    ###########################################################################
 
     def make_curve(self):
         # To start with the data fields of self are just those from the
         # databases.  We reformat these, while computing some further (easy)
         # data about the curve on the fly.
 
-        # Get data from databases:
+        # Initialize data:
         data = self.data = {}
         endodata = self.endodata = {}
 
         # Polish data from database before putting it into the data dictionary:
-        disc = ZZ(self.disc_sign) * ZZ(self.disc_key[3:]) 
+        disc = ZZ(self.disc_sign) * ZZ(self.disc_key[3:])
         # to deal with disc_key, uncomment line above and comment line below
         #disc = ZZ(self.disc_sign) * ZZ(self.abs_disc)
         data['disc'] = disc
@@ -604,11 +603,11 @@ class WebG2C(object):
         # GL_2 statement over the base field
         endodata['gl2_statement_base'] = gl2_statement(self.factorsRR_base,
                 r'\(\Q\)')
-        
+
         # NOTE: In what follows there is some copying of code and data that is
         # stupid from the point of view of efficiency but likely better from
         # that of maintenance.
-        
+
         # Endomorphism data over QQ:
         endodata['factorsQQ_base'] = self.factorsQQ_base
         endodata['factorsRR_base'] = self.factorsRR_base
@@ -649,7 +648,7 @@ class WebG2C(object):
         endodata['spl_fod_statement'] = \
         spl_fod_statement(endodata['is_simple_geom'],
                 endodata['spl_fod_label'], endodata['spl_fod_poly'])
-        
+
         # Isogeny factors:
         if not endodata['is_simple_geom']:
             endodata['spl_facs_coeffs'] = self.spl_facs_coeffs
@@ -665,37 +664,58 @@ class WebG2C(object):
                     endodata['spl_facs_labels'],
                     endodata['spl_facs_condnorms'])
 
-        x = self.label.split('.')[1]
-        self.make_code_snippets()
-        self.friends = [
-            ('Isogeny class %s' % isog_label(self.label), url_for(".by_double_iso_label", conductor = self.cond, iso_label = x)),
-            ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x)),
-            
-            ('Twists',url_for(".index_Q", ic0 = self.igusa_clebsch[0], ic1 = self.igusa_clebsch[1],ic2 = self.igusa_clebsch[2],ic3 = self.igusa_clebsch[3])),
-            #('Twists2',url_for(".index_Q", igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
-            #('Siegel modular form someday', '.')
-            ]
-        self.downloads = [
-             ('Download all stored data', '.')]
-        iso = self.label.split('.')[1]
-        num = '.'.join(self.label.split('.')[2:4])
+        # Title
+        self.title = "Genus 2 Curve %s" % (self.label)
+
+        # Lady Gaga box
         self.plot = encode_plot(eqn_list_to_curve_plot(self.min_eqn))
         self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
-        self.properties = [('Label', self.label),
-                           (None, self.plot_link),
-                           ('Conductor','%s' % self.cond),
-                           ('Discriminant', '%s' % data['disc']),
-                           ('Invariants', '%s </br> %s </br> %s </br> %s'% tuple(data['ic_norm'])), 
-                           ('Sato-Tate group', '\(%s\)' % data['st_group_name']), 
-                           ('\(%s\)' % data['real_geom_end_alg_name'][0],'\(%s\)' % data['real_geom_end_alg_name'][1]),
-                           ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]
-        self.title = "Genus 2 Curve %s" % (self.label)
+        self.properties = [
+                ('Label', self.label),
+               (None, self.plot_link),
+               ('Conductor','%s' % self.cond),
+               ('Discriminant', '%s' % data['disc']),
+               ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['ic_norm'])),
+               ('Sato-Tate group', '\(%s\)' % data['st_group_name']),
+               ('\(%s\)' % data['real_geom_end_alg_name'][0],'\(%s\)' % data['real_geom_end_alg_name'][1]),
+               ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]
+        x = self.label.split('.')[1]
+        self.friends = [
+            ('Isogeny class %s' % isog_label(self.label),
+                url_for(".by_double_iso_label",
+                    conductor = self.cond,
+                    iso_label = x)),
+            ('L-function',
+                url_for("l_functions.l_function_genus2_page",
+                    cond=self.cond,x=x)),
+            ('Twists',
+                url_for(".index_Q",
+                    ic0 = self.igusa_clebsch[0],
+                    ic1 = self.igusa_clebsch[1],
+                    ic2 = self.igusa_clebsch[2],
+                    ic3 = self.igusa_clebsch[3])),
+            #('Twists2',
+            #   url_for(".index_Q",
+            #       igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
+            #('Siegel modular form someday', '.')
+            ]
+        self.downloads = [('Download all stored data', '.')]
+
+        # Breadcrumbs
+        iso = self.label.split('.')[1]
+        num = '.'.join(self.label.split('.')[2:4])
         self.bread = [
              ('Genus 2 Curves', url_for(".index")),
              ('$\Q$', url_for(".index_Q")),
              ('%s' % self.cond, url_for(".by_conductor", conductor=self.cond)),
-             ('%s' % iso, url_for(".by_double_iso_label", conductor=self.cond, iso_label=iso)),
-             ('Genus 2 curve %s' % num, url_for(".by_g2c_label", label=self.label))]
+             ('%s' % iso, url_for(".by_double_iso_label", conductor=self.cond,
+                 iso_label=iso)),
+             ('Genus 2 curve %s' % num, url_for(".by_g2c_label",
+                 label=self.label))
+             ]
+
+        # Make code that is used on the page:
+        self.make_code_snippets()
 
     def make_code_snippets(self):
         sagecode = dict()
@@ -703,7 +723,6 @@ class WebG2C(object):
         magmacode = dict()
 
         #utility function to save typing!
-
         def set_code(key, s, g, m):
             sagecode[key] = s
             gpcode[key] = g
@@ -728,9 +747,11 @@ class WebG2C(object):
 
         # curve
         set_code('curve',
-                 'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'   % (self.data['min_eqn'][0],self.data['min_eqn'][1]),
+                 'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'
+                 % (self.data['min_eqn'][0],self.data['min_eqn'][1]),
                  pari_not_implemented, # pari code goes here
-                 'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'   % (self.data['min_eqn'][0],self.data['min_eqn'][1]) 
+                 'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'
+                 % (self.data['min_eqn'][0],self.data['min_eqn'][1])
                  )
         if self.data['disc'] % 4096 == 0:
             ind2 = [a[0] for a in self.data['isogeny_class']['bad_lfactors']].index(2)
@@ -741,7 +762,8 @@ class WebG2C(object):
         set_code('cond',
                  sage_not_implemented, # sage code goes here
                  pari_not_implemented, # pari code goes here
-                 'Conductor(LSeries(C%s)); Factorization($1);' % magma_cond_option
+                 'Conductor(LSeries(C%s)); Factorization($1);'
+                 % magma_cond_option
                  )
         set_code('disc',
                  sage_not_implemented, # sage code goes here
