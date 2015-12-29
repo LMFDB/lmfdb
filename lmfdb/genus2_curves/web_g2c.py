@@ -115,8 +115,6 @@ def factorsRR_pretty_raw(factorsRR):
         return r'\mathrm{M}_2 (\R)'
     elif factorsRR == ['M_2(CC)']:
         return r'\mathrm{M}_2 (\C)'
-    else:
-        return r'\text{Invalid factors of End x RR... please report this}'
 
 def zfactor(n):
     return factor(n) if n != 0 else 0
@@ -239,22 +237,11 @@ def normalize_invariants(I,W):
 
 def end_alg_name(name):
     name_dict = {
-        "Z":"\\Z",
-        "Q":"\\Q",
-        "Q x Qsqrt-4":"\\Q \\times \\Q(\\sqrt{-1})",
-        "Q x Qsqrt-7":"\\Q \\times \\Q(\\sqrt{-7})",
-        "Q x Qsqrt-11":"\\Q \\times \\Q(\\sqrt{-11})",
-        "Q x Qsqrt-3":"\\Q \\times \\Q(\\sqrt{-3})",
-        "Q x Qsqrt-19":"\\Q \\times \\Q(\\sqrt{-19})",
-        "Q x Qsqrt-8":"\\Q \\times \\Q(\\sqrt{-2})",
-        "Q x Qsqrt-67":"\\Q \\times \\Q(\\sqrt{-67})",
         "R":"\\R",
         "C":"\\C",
-        "Q x Q":"\\Q \\times \\Q",
         "R x R":"\\R \\times \\R",
         "C x R":"\\C \\times \\R",
         "C x C":"\\C \\times \\C",
-        "M_2(Q)":"\\mathrm{M}_2(\\Q)",
         "M_2(R)":"\\mathrm{M}_2(\\R)",
         "M_2(C)":"\\mathrm{M}_2(\\C)"
     }
@@ -284,51 +271,24 @@ def st_group_name(name):
         return name
 
 ###############################################################################
-# Dictionary construction for Sato-Tate and other isogeny invariants
+# Data obtained from Sato-Tate invariants
 ###############################################################################
 
-def get_end_data(isogeny_class):
+def get_st_data(isogeny_class):
+    # TODO: Some inheritance could help?
     data = {}
-    end_alg_title_dict = {'end_ring': r'\End(J)',
-                          'rat_end_alg': r'\End(J) \otimes \Q',
-                          'real_end_alg': r'\End(J) \otimes \R',
-                          'geom_end_ring': r'\End(J_{\overline{\Q}})',
-                          'rat_geom_end_alg': r'\End(J_{\overline{\Q}}) \otimes \Q',
-                          'real_geom_end_alg':'\End(J_{\overline{\Q}}) \otimes \R'}
-    for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
-        if endalgtype in isogeny_class:
-            data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],end_alg_name(isogeny_class[endalgtype])]
-        else:
-            data[endalgtype + '_name'] = [end_alg_title_dict[endalgtype],'']
-
-    data['geom_end_field'] = isogeny_class['geom_end_field']
-    if data['geom_end_field'] != '':
-        data['geom_end_field_name'] = field_pretty(data['geom_end_field'])
-    else:
-        data['geom_end_field_name'] = ''
-
-    data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
-    data['st_group_name'] = st_group_name(isogeny_class['st_group'])
     data['isogeny_class'] = isogeny_class
+    data['st_group_name'] = st_group_name(isogeny_class['st_group'])
+    data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
+    data['real_geom_end_alg_name'] = [r'\End(J_{\overline{\Q}}) \otimes \R',
+                end_alg_name(isogeny_class['real_geom_end_alg'])]
+    # Adding data that show in sidebar respectively search results:
     if isogeny_class['is_gl2_type']:
-        data['is_gl2_type_name'] = 'yes' # shows in side
-        data['is_gl2_type_display'] = '&#x2713;' # checkmark, shows in search results
-        gl2_statement = 'of \(\GL_2\)-type'
+        data['is_gl2_type_name'] = 'yes'
+        data['is_gl2_type_display'] = '&#x2713;'
     else:
-        data['is_gl2_type_name'] = 'no'  # shows in side
-        data['is_gl2_display'] = ''      # shows in search results
-        gl2_statement = 'not of \(\GL_2\)-type'
-
-    if 'is_simple' in isogeny_class and 'is_geom_simple' in isogeny_class:
-        if isogeny_class['is_geom_simple']:
-            simple_statement = "simple over \(\overline{\Q}\), "
-        elif isogeny_class['is_simple']:
-            simple_statement = "simple over \(\Q\) but not simple over \(\overline{\Q}\), "
-        else:
-            simple_statement = "not simple over \(\Q\), "
-    else:
-        simple_statement = ""  # leave empty since not computed.
-    data['endomorphism_statement'] = simple_statement + gl2_statement
+        data['is_gl2_type_name'] = 'no'
+        data['is_gl2_display'] = ''
     return data
 
 ###############################################################################
@@ -592,13 +552,12 @@ class WebG2C(object):
             data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in
                 tor_struct])
 
-        # Data from old endomorphism functionality, used in isogeny class as
-        # well. Calls the get_end_data function above.
+        # Data derived from Sato-Tate group:
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' :
             isog_label(self.label)})
-        end_data = get_end_data(isogeny_class)
-        for key in end_data.keys():
-            data[key] = end_data[key]
+        st_data = get_st_data(isogeny_class)
+        for key in st_data.keys():
+            data[key] = st_data[key]
 
         # GL_2 statement over the base field
         endodata['gl2_statement_base'] = gl2_statement(self.factorsRR_base,
@@ -677,7 +636,8 @@ class WebG2C(object):
                ('Discriminant', '%s' % data['disc']),
                ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['ic_norm'])),
                ('Sato-Tate group', '\(%s\)' % data['st_group_name']),
-               ('\(%s\)' % data['real_geom_end_alg_name'][0],'\(%s\)' % data['real_geom_end_alg_name'][1]),
+               ('\(%s\)' % data['real_geom_end_alg_name'][0],
+                '\(%s\)' % data['real_geom_end_alg_name'][1]),
                ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]
         x = self.label.split('.')[1]
         self.friends = [

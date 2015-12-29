@@ -6,7 +6,7 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name, st0_group_name, get_end_data
+from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name, st0_group_name
 from sage.all import QQ, PolynomialRing, factor,ZZ, NumberField, expand, var
 from lmfdb.WebNumberField import field_pretty
 
@@ -160,32 +160,17 @@ class G2Cisog_class(object):
         self.bad_lfactors = [ [c[0], list_to_factored_poly_otherorder(c[1])]
                 for c in self.bad_lfactors]
 
-        # Endomorphisms begin
-        # duplication of get_end_alg.  need to clean up!
-        end_alg_title_dict = {'end_ring': r'\End(J)',
-                              'rat_end_alg': r'\End(J) \otimes \Q',
-                              'real_end_alg': r'\End(J) \otimes \R',
-                              'geom_end_ring': r'\End(J_{\overline{\Q}})',
-                              'rat_geom_end_alg': r'\End(J_{\overline{\Q}}) \otimes \Q',
-                              'real_geom_end_alg':'\End(J_{\overline{\Q}}) \otimes \R'}
-        for endalgtype in ['end_ring', 'rat_end_alg', 'real_end_alg', 'geom_end_ring', 'rat_geom_end_alg', 'real_geom_end_alg']:
-            if hasattr(self, endalgtype):
-                setattr(self,endalgtype + '_name',[end_alg_title_dict[endalgtype],end_alg_name(getattr(self,endalgtype))])
-            else:
-                setattr(self,endalgtype + '_name',[end_alg_title_dict[endalgtype],''])
-
-        if hasattr(self, 'geom_end_field') and self.geom_end_field != '':
-            self.geom_end_field_name = field_pretty(self.geom_end_field)
-        else:
-            self.geom_end_field_name = ''
+        # Data derived from Sato-Tate group
         self.st_group_name = st_group_name(self.st_group)
         self.st0_group_name = st0_group_name(self.real_geom_end_alg)
+        self.real_geom_end_alg_name = [r'\End(J_{\overline{\Q}}) \otimes \R',
+                end_alg_name(self.real_geom_end_alg)]
         if self.is_gl2_type:
             self.is_gl2_type_name = 'yes'
-            gl2_statement = 'of \(\GL_2\)-type'
         else:
             self.is_gl2_type_name = 'no'
-            gl2_statement = 'not of \(\GL_2\)-type'
+
+        # TODO: Replace this with curve data until end of paragraph
         if hasattr(self, 'is_simple') and hasattr(self, 'is_geom_simple'):
             if self.is_geom_simple:
                 simple_statement = "simple over \(\overline{\Q}\), "
@@ -195,20 +180,22 @@ class G2Cisog_class(object):
                 simple_statement = "not simple over \(\Q\), "
         else:
             simple_statement = ""  # leave empty since not computed.
+        gl2_statement = "kabonka"
         self.endomorphism_statement = simple_statement + gl2_statement
-        # Endomorphisms end
 
         # Title
         self.title = "Genus 2 Isogeny Class %s" % (self.label)
 
         # Lady Gaga box
-        self.properties = [('Label', self.label),
-                           ('Number of curves', str(self.ncurves)),
-                           ('Conductor','%s' % self.cond),
-                           ('Sato-Tate group', '\(%s\)' % self.st_group_name),
-                           ('\(%s\)' % self.real_geom_end_alg_name[0],
-                            '\(%s\)' % self.real_geom_end_alg_name[1]),
-                           ('\(\mathrm{GL}_2\)-type','%s' % self.is_gl2_type_name)]
+        self.properties = [
+                ('Label', self.label),
+                ('Number of curves', str(self.ncurves)),
+                ('Conductor','%s' % self.cond),
+                ('Sato-Tate group', '\(%s\)' % self.st_group_name),
+                ('\(%s\)' % self.real_geom_end_alg_name[0],
+                 '\(%s\)' % self.real_geom_end_alg_name[1]),
+                ('\(\mathrm{GL}_2\)-type','%s' % self.is_gl2_type_name)
+                ]
         x = self.label.split('.')[1]
         self.friends = [('L-function',
             url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x))]
@@ -227,7 +214,6 @@ class G2Cisog_class(object):
                        ('%s' % self.cond, url_for(".by_conductor", conductor=self.cond)),
                        ('%s' % self.label, ' ')
                      ]
-
 
         # More friends (to be improved)
         self.ecproduct_wurl = []

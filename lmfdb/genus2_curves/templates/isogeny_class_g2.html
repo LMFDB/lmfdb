@@ -51,20 +51,11 @@ text-align: center;
 </p>
 
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
-<p>{{info.endomorphism_statement}}</p>
-<table>
-{% for endalgtype in ['end_ring_name', 'rat_end_alg_name', 'real_end_alg_name', 'geom_end_ring_name', 'rat_geom_end_alg_name', 'real_geom_end_alg_name'] %}
-{% if info[endalgtype][1] != '' %}
-<tr>  <td> \({{info[endalgtype][0]}}\)</td><td>\(\simeq\)</td><td>\({{info[endalgtype][1]}}\)</td></tr>
-{% endif %}
-{% endfor %}
-</table>
-{% if info.geom_end_field_name != '' %}
-<p>Field over which all endomorphisms are defined:
-<a href="/NumberField/{{info.geom_end_field}}">{{info.geom_end_field_name}}</a></p>
-{% endif %}
+<!-- TODO: Add results -->
 
 <h2>{{ KNOWL('ag.isogeny', title='Isogenies') }}</h2>
+
+<!-- TODO: Replace by new results from endomorphism algebra -->
 
 {% if info.ecproduct_wurl == [] and info.ecquadratic_wurl == [] %}
 <p>None currently known.</p>

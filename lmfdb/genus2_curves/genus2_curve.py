@@ -20,7 +20,7 @@ from sage.all import ZZ, QQ, latex, matrix, srange
 credit_string = "Andrew Booker, Andrew Sutherland, John Voight, and Dan Yasaki"
 
 ###############################################################################
-#   Database connection
+# Database connection
 ###############################################################################
 
 g2cdb = None
@@ -40,7 +40,7 @@ def db_g2endo():
     return g2endodb
 
 ###############################################################################
-# List and dictionaries needed for routing and searching
+# List and dictionaries needed routing and searching
 ###############################################################################
 
 # lists determine display order in drop down lists, dictionary key is the
@@ -52,8 +52,9 @@ st_group_list = ['J(C_2)', 'J(C_4)', 'J(C_6)', 'J(D_2)', 'J(D_3)', 'J(D_4)',
         'F_{a,b}', 'F_{ac}', 'N(G_{1,3})', 'G_{3,3}', 'N(G_{3,3})', 'USp(4)']
 st_group_dict = {a:a for a in st_group_list}
 
+# End_QQbar tensored with RR determines ST0 (which is the search parameter):
 real_geom_end_alg_list = ['M_2(C)', 'M_2(R)', 'C x C', 'C x R', 'R x R', 'R']
-real_geom_end_alg_dict = {
+real_geom_end_alg_to_ST0_dict = {
         'M_2(C)':'U(1)',
         'M_2(R)':'SU(2)',
         'C x C':'U(1) x U(1)',
@@ -113,7 +114,7 @@ def index_Q():
     info["st_group_list"] = st_group_list
     info["st_group_dict"] = st_group_dict
     info["real_geom_end_alg_list"] = real_geom_end_alg_list
-    info["real_geom_end_alg_dict"] = real_geom_end_alg_dict
+    info["real_geom_end_alg_to_ST0_dict"] = real_geom_end_alg_to_ST0_dict
     info["aut_grp_list"] = aut_grp_list
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list
@@ -195,7 +196,7 @@ def genus2_curve_search(**args):
     info["st_group_list"] = st_group_list
     info["st_group_dict"] = st_group_dict
     info["real_geom_end_alg_list"] = real_geom_end_alg_list
-    info["real_geom_end_alg_dict"] = real_geom_end_alg_dict
+    info["real_geom_end_alg_to_ST0_dict"] = real_geom_end_alg_to_ST0_dict
     info["aut_grp_list"] = aut_grp_list
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list

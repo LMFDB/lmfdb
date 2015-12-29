@@ -64,9 +64,9 @@
     <option ></option>
     {% for G in info.real_geom_end_alg_list %}
         {% if G == info.real_geom_end_alg %}
-            <option value='{{G}}' selected>{{info.real_geom_end_alg_dict[G]}}</option>
+            <option value='{{G}}' selected>{{info.real_geom_end_alg_to_ST0_dict[G]}}</option>
         {% else %}
-            <option value='{{G}}'>{{info.real_geom_end_alg_dict[G]}}</option>
+            <option value='{{G}}'>{{info.real_geom_end_alg_to_ST0_dict[G]}}</option>
         {% endif %}
     {% endfor %}
 </select></td>
