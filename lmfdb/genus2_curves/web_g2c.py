@@ -96,7 +96,7 @@ def url_for_ec(label):
         return url_for('ecnf.show_ecnf', nf = nf, conductor_label =
                 conductor_label, class_label = class_label, number = number)
 
-def factorsRR_pretty_raw(factorsRR):
+def factorsRR_raw_to_pretty(factorsRR):
     if factorsRR == ['RR']:
         return r'\R'
     elif factorsRR == ['CC']:
@@ -280,7 +280,8 @@ def get_st_data(isogeny_class):
     data['isogeny_class'] = isogeny_class
     data['st_group_name'] = st_group_name(isogeny_class['st_group'])
     data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
-    data['real_geom_end_alg_name'] = [r'\End(J_{\overline{\Q}}) \otimes \R',
+    # Later used in Lady Gaga box:
+    data['real_geom_end_alg_disp'] = [r'\End(J_{\overline{\Q}}) \otimes \R',
                 end_alg_name(isogeny_class['real_geom_end_alg'])]
     # Adding data that show in sidebar respectively search results:
     if isogeny_class['is_gl2_type']:
@@ -292,7 +293,7 @@ def get_st_data(isogeny_class):
     return data
 
 ###############################################################################
-# Statement functions for new endomorphism functionality
+# Statement functions for endomorphism functionality
 ###############################################################################
 
 def gl2_statement(factorsRR, base):
@@ -347,7 +348,7 @@ def endo_statement(factorsQQ, factorsRR, ring, fieldstring):
     # Second row: description of algebra tensored with RR
     statement += """<tr><td>\(\End (J_{%s}) \otimes\
     \R\)</td><td>\(\simeq\)</td> <td>\(%s\)</td></tr>""" % \
-    (fieldstring, factorsRR_pretty_raw(factorsRR))
+    (fieldstring, factorsRR_raw_to_pretty(factorsRR))
     # Third row: description of the endomorphism ring as an order in the
     # endomorphism algebra
     statement += """<tr><td>\(\End (J_{%s})\)</td><td>\(\simeq\)</td><td>""" \
@@ -452,9 +453,9 @@ def spl_statement(coeffss, labels, condnorms):
         if label:
             # TODO: Next statement can be removed by a database update
             if not '-' in label:
-                label = cremona_to_lmfdb(label)
+               lmfdb_label = cremona_to_lmfdb(label)
             statement += """<br>Elliptic curve with label <a href=%s>%s</a>"""\
-            % (url_for_ec(label), label)
+            % (url_for_ec(lmfdb_label), lmfdb_label)
         # Otherwise give defining equation:
         else:
             statement += """<br>\(4 y^2 = x^3 - (g_4 / 48) x - (g_6 / 864)\),
@@ -498,10 +499,8 @@ class WebG2C(object):
             print label
             data = db_g2c().curves.find_one({"label" : label})
             endodata = db_g2endo().bycurve.find_one({"label" : label})
-
         except AttributeError:
             return "Invalid label" # caller must catch this and raise an error
-
         if data:
             if endodata:
                 return WebG2C(data, endodata)
@@ -636,8 +635,8 @@ class WebG2C(object):
                ('Discriminant', '%s' % data['disc']),
                ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['ic_norm'])),
                ('Sato-Tate group', '\(%s\)' % data['st_group_name']),
-               ('\(%s\)' % data['real_geom_end_alg_name'][0],
-                '\(%s\)' % data['real_geom_end_alg_name'][1]),
+               ('\(%s\)' % data['real_geom_end_alg_disp'][0],
+                '\(%s\)' % data['real_geom_end_alg_disp'][1]),
                ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]
         x = self.label.split('.')[1]
         self.friends = [
@@ -682,7 +681,7 @@ class WebG2C(object):
         gpcode = dict()
         magmacode = dict()
 
-        #utility function to save typing!
+        # Utility function to save typing!
         def set_code(key, s, g, m):
             sagecode[key] = s
             gpcode[key] = g
@@ -691,21 +690,21 @@ class WebG2C(object):
         pari_not_implemented = '\\\\ (not yet implemented)'
         magma_not_implemented = '// (not yet implemented)'
 
-        # prompt
+        # Prompt
         set_code('prompt',
                  'sage:',
                  'gp:',
                  'magma:')
 
-        # logo
+        # Logo
         set_code('logo',
                  '<img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">',
                  '<img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">',
                  '<img src = "http://i.stack.imgur.com/0468s.png" width="50px">')
-        # overwrite the above until we get something which looks reasonable
+        # Overwrite the above until we get something which looks reasonable
         set_code('logo', '', '', '')
 
-        # curve
+        # Curve
         set_code('curve',
                  'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'
                  % (self.data['min_eqn'][0],self.data['min_eqn'][1]),

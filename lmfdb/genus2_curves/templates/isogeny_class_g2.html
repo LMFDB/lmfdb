@@ -51,11 +51,24 @@ text-align: center;
 </p>
 
 <h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
-<!-- TODO: Add results -->
+
+<p>{{info.gl2_statement_base}}</p>
+
+<!-- Description over QQ: -->
+<p>{{info.endo_statement_base|safe}}</p>
+
+<!-- Description of field of definition: -->
+<p>{{info.fod_statement|safe}}</p>
+
+<!-- Description over QQbar: -->
+<p>{{info.endo_statement_geom|safe}}</p>
+
+<p>More complete information on endomorphism algebras and rings can be found on
+the webpages of the individual curves in the isogeny class.</p>
 
 <h2>{{ KNOWL('ag.isogeny', title='Isogenies') }}</h2>
 
-<!-- TODO: Replace by new results from endomorphism algebra -->
+<!-- TODO: Replace and complete with new results from endomorphism algebra -->
 
 {% if info.ecproduct_wurl == [] and info.ecquadratic_wurl == [] %}
 <p>None currently known.</p>
