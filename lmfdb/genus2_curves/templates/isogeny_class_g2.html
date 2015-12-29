@@ -1,5 +1,4 @@
 {% extends 'homepage.html' %}
-
 {% block content %}
 
 <style type="text/css">
@@ -27,22 +26,20 @@ text-align: center;
 <p>
 <!-- Someone please redo this table with css.-->
 <table>
-<tr><td> {{KNOWL('lfunction.sign', title='Root number')}}:<td> \({{ info.root_number }}\) </tr>
-<tr> <td>&nbsp;</td> </tr> 
-<tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
-<table id = "bad_lfactors_table">
-<tr>
-<th>Prime</th>
-<th>L-Factor</th>
-</tr>
-{% for c in info.bad_lfactors %}
-<tr><td class="center">\({{ c[0] }}\)</a></td><td align="center">\( {{ c[1] }}\)</td></tr>
-{% endfor %}
+    <tr><td> {{KNOWL('lfunction.sign', title='Root number')}}:<td> \({{ info.root_number }}\)</tr>
+    <tr><td>&nbsp;</td></tr> 
+    <tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
+        <table id = "bad_lfactors_table">
+        <tr>
+            <th>Prime</th>
+            <th>L-Factor</th>
+        </tr>
+        {% for c in info.bad_lfactors %}
+        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="center">\( {{ c[1] }}\)</td></tr>
+        {% endfor %}
+        </table>
+    </tr>
 </table>
-
-</table>
-
-<p>
 
 <h2>{{ KNOWL('g2c.st_group', title='Sato-Tate group')}}</h2>
 <p>
@@ -86,5 +83,3 @@ text-align: center;
 {% endif %}
 
 {% endblock %}
-
-

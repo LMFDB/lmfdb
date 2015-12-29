@@ -16,7 +16,7 @@
 <td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>  
 <td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>  
 </tr>
-<tr>
+
 <tr>
 <td><input type='text' name='cond' placeholder='169' size=10 value="{{info.cond}}"></td>
 <td><input type='text' name='disc' placeholder='169' size=10 value="{{info.disc}}"></td>
@@ -25,6 +25,7 @@
 <td><input type='text' name='torsion_order' placeholder='2' size=10 value="{{info.torsion_order}}">
 <td><input type='text' name='two_selmer_rank' placeholder='1' size=10 value="{{info.two_selmer_rank}}">
 </tr>
+
 <tr>
 <td>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</td>
 <td>{{ KNOWL('g2c.st_group', title='\(\mathrm{ST}\)') }}</td>
@@ -70,7 +71,7 @@
     {% endfor %}
 </select></td>
 
-<td ><select name='aut_grp' width="122" style="width: 122px">
+<td><select name='aut_grp' width="122" style="width: 122px">
     <option ></option>
     {% for G in info.aut_grp_list %}
         {% if G == info.aut_grp %}
@@ -81,7 +82,7 @@
     {% endfor %}
 </select></td>
 
-<td ><select name='geom_aut_grp' width="122" style="width: 122px">
+<td><select name='geom_aut_grp' width="122" style="width: 122px">
     <option ></option>
     {% for G in info.geom_aut_grp_list %}
         {% if G == info.geom_aut_grp %}
@@ -100,48 +101,45 @@
 
 <h2> Results ({{info.report}})
 {% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</A>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
 {% endif %}
 {% if info.more > 0 %}
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
 {% endif %}
 </h2>
+
 <table class="ntdata">
 <tr>
-<th>{{ KNOWL('g2c.label', title='Label') }}</th>
-<th>{{ KNOWL('g2c.isogeny_class', title='Isogeny class') }}</th>
-<th>{{ KNOWL('g2c.equation', title='Equation') }}</th>
-<th>{{ KNOWL('g2c.st_group', title='Sato Tate group') }}</th>
-<th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</th>
+    <th>{{ KNOWL('g2c.label', title='Label') }}</th>
+    <th>{{ KNOWL('g2c.isogeny_class', title='Isogeny class') }}</th>
+    <th>{{ KNOWL('g2c.equation', title='Equation') }}</th>
+    <th>{{ KNOWL('g2c.st_group', title='Sato Tate group') }}</th>
+    <th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>
-  <td> <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a> </td>
-  <td> <a href = "{{info.isog_url(curve)}}"> {{curve.isog_label}} </a> </td>
-  <td> \({{curve.equation_formatted}}\) </td>
-  <td align=center> \({{curve.st_group_name}}\) </td>
-  <td align=center> {{curve.is_gl2_type_display | safe}} </td>
+    <td> <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a> </td>
+    <td> <a href = "{{info.isog_url(curve)}}"> {{curve.isog_label}} </a> </td>
+    <td> \({{curve.equation_formatted}}\) </td>
+    <td align=center> \({{curve.st_group_name}}\) </td>
+    <td align=center> {{curve.is_gl2_type_display | safe}} </td>
 </tr>
 {% endfor %}
 </table>
 
 <hr>
 {% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</A>
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
 {% endif %}
 {% if info.more > 0 %}
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
 {% endif %}
 
-<br>
 <!--
-   <p class="tex2jax_ignore">
-   Results for database query {{ info.query }}
-   </p>
+    <br>
+    <p class="tex2jax_ignore">
+    Results for database query {{ info.query }}
+    </p>
 -->
 
 {% endblock %}
