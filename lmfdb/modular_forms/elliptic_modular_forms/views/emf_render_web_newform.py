@@ -190,9 +190,9 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if isinstance(info['twist_info'], list) and len(info['twist_info'])>0:
             info['is_minimal'] = info['twist_info'][0]
             if(info['twist_info'][0]):
-                s = '- Is minimal<br>'
+                s = 'Is minimal<br>'
             else:
-                s = '- Is a twist of lower level<br>'
+                s = 'Is a twist of lower level<br>'
             properties2 = [('Twist info', s)]
     else:
         info['twist_info'] = 'Twist info currently not available.'
