@@ -397,6 +397,8 @@ class WebNewForm(WebObject, CachedRepresentation):
          We assume that the self._ap containing Hecke eigenvalues
          are stored.
         """
+        if len(nrange) == 0:
+            return []
         if len(nrange) > 1:
             emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[1]))
         else:
@@ -442,6 +444,8 @@ class WebNewForm(WebObject, CachedRepresentation):
         prod = K(1)
         if K.absolute_degree()>1 and K.is_relative():
             KZ = K.base_field()
+        else:
+            KZ = K
         #emf_logger.debug("K= {0}".format(K))
         F = arith.factor(n)
         for p, r in F:

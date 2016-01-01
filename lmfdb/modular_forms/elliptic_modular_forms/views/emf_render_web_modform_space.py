@@ -91,7 +91,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         info['error'] = "Got wrong level: %s " % level
         return info
     try:
-        WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True,character = character,update_from_db=True)
+        WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = character, update_from_db=True)
         if not WMFS.has_updated():
             stop = False
             orbit = WMFS.character.character.galois_orbit()
@@ -103,9 +103,8 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
                 if c.number() == WMFS.character.number:
                     continue
                 print c.number()
-                WMFS_rep = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = c.number(),update_from_db=true)
+                WMFS_rep = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = c.number(), update_from_db=True)
                 if WMFS_rep.has_updated_from_db():
-                    print "Here"
                     stop = True
                     info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character = c.number())
                     info['wmfs_rep_number'] =  c.number()
