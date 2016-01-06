@@ -261,6 +261,10 @@ def genus2_curve_search(**args):
             info['torsion'] = str(res).replace(' ','')
             query['torsion'] = [int(r) for r in res]
 
+    #if info.get('ic0'):
+    #    query['igusa_clebsch']=[info['ic0'], info['ic1'], info['ic2'],
+    #            info['ic3'] ]
+
     if info.get('ic0'):
         query['igusa_clebsch']=[info['ic0'], info['ic1'], info['ic2'],
                 info['ic3'] ]
