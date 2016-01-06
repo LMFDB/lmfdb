@@ -174,7 +174,7 @@ def eqn_list_to_curve_plot(L):
         plotzones)
 
 ###############################################################################
-# Invariant conversion
+# Invariant conversion (currently redundant)
 ###############################################################################
 
 def igusa_clebsch_to_igusa(I):
@@ -534,10 +534,12 @@ class WebG2C(object):
         data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
         data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
         data['igusa_clebsch'] = [ZZ(a) for a in self.igusa_clebsch]
-        data['igusa'] = igusa_clebsch_to_igusa(data['igusa_clebsch'])
-        data['g2'] = igusa_to_g2(data['igusa'])
-        data['ic_norm'] = normalize_invariants(data['igusa_clebsch'],[1,2,3,5])
-        data['igusa_norm'] = normalize_invariants(data['igusa'],[1,2,3,4,5])
+        data['igusa'] = [ZZ(a) for a in self.igusa]
+        data['g2'] = self.g2inv
+        data['ic_norm'] = normalize_invariants(data['igusa_clebsch'], [2, 4, 6,
+            10])
+        data['igusa_norm'] = normalize_invariants(data['igusa'], [2, 4, 6, 8,
+            10])
         data['ic_norm_factor_latex'] = [web_latex(zfactor(i)) for i in
                 data['ic_norm']]
         data['igusa_norm_factor_latex'] = [web_latex(zfactor(j)) for j in
@@ -649,10 +651,9 @@ class WebG2C(object):
                     cond=self.cond,x=x)),
             ('Twists',
                 url_for(".index_Q",
-                    ic0 = self.igusa_clebsch[0],
-                    ic1 = self.igusa_clebsch[1],
-                    ic2 = self.igusa_clebsch[2],
-                    ic3 = self.igusa_clebsch[3])),
+                    g20 = self.g2inv[0],
+                    g21 = self.g2inv[1],
+                    g22 = self.g2inv[2])),
             #('Twists2',
             #   url_for(".index_Q",
             #       igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
