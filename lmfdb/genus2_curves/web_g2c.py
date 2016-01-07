@@ -451,7 +451,7 @@ def spl_fod_statement(is_simple_geom, spl_fod_label, spl_fod_poly):
         number field \(M = \Q (b)\) with defining polynomial %s""" % \
         spl_fod_poly
 
-def spl_statement(coeffss, labels, condnorms):
+def spl_statement(coeffss, lmfdb_labels, condnorms):
     if len(coeffss) == 1:
         statement = """The Jacobian decomposes up to isogeny as the square of
         an elliptic curve</p>\
@@ -463,11 +463,11 @@ def spl_statement(coeffss, labels, condnorms):
         isogenies are:"""
     for n in range(len(coeffss)):
         # Use labels when possible:
-        label = labels[n]
-        if label:
-            # TODO: Next statement can be removed by a database update
-            if not '-' in label:
-               lmfdb_label = cremona_to_lmfdb(label)
+        lmfdb_label = lmfdb_labels[n]
+        if lmfdb_label:
+            # TODO: Next statement should be removed by a database update
+            if not '-' in lmfdb_label:
+               lmfdb_label = cremona_to_lmfdb(lmfdb_label)
             statement += """<br>Elliptic curve with label <a href=%s>%s</a>"""\
             % (url_for_ec(lmfdb_label), lmfdb_label)
         # Otherwise give defining equation:
