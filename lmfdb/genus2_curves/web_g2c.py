@@ -78,13 +78,13 @@ def strlist_to_nfelt(L, varname):
 def list_to_min_eqn(L):
     xpoly_rng = PolynomialRing(QQ,'x')
     ypoly_rng = PolynomialRing(xpoly_rng,'y')
-    poly_tup = [xpoly_rng(tup) for tup in L]
-    lhs = ypoly_rng([0,poly_tup[1],1])
+    poly_tup = [ xpoly_rng(tup) for tup in L ]
+    lhs = ypoly_rng([0, poly_tup[1], 1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
 
 def groupid_to_meaningful(groupid):
     if groupid[0] < 120:
-        return group_dict[str(groupid).replace(" ","")]
+        return group_dict[str(groupid).replace(" ", "")]
     else:
         return groupid
 
@@ -174,7 +174,7 @@ def eqn_list_to_curve_plot(L):
         plotzones)
 
 ###############################################################################
-# Invariant conversion
+# Invariant conversion (now redundant)
 ###############################################################################
 
 def igusa_clebsch_to_igusa(I):
@@ -184,20 +184,24 @@ def igusa_clebsch_to_igusa(I):
     J6 = (8*J2**3 - 160*J2*J4 - I[2])//576
     J8 = (J2*J6 - J4**2)//4
     J10 = I[3]//4096
-    return [J2,J4,J6,J8,J10]
+    return [ J2, J4, J6, J8, J10 ]
 
 def igusa_to_g2(J):
     # Conversion from Igusa to G2
     if J[0] != 0:
-        return [J[0]**5/J[4], J[0]**3*J[1]/J[4], J[0]**2*J[2]/J[4]]
+        return [ J[0]**5/J[4], J[0]**3*J[1]/J[4], J[0]**2*J[2]/J[4] ]
     elif J[1] != 0:
-        return [0, J[1]**5/J[4]**2, J[1]*J[2]/J[4]]
+        return [ 0, J[1]**5/J[4]**2, J[1]*J[2]/J[4] ]
     else:
-        return [0,0,J[2]**5/J[4]**3]
+        return [ 0, 0, J[2]**5/J[4]**3 ]
+
+###############################################################################
+# Invariant normalization
+###############################################################################
 
 def scalar_div(c,P,W):
     # Scalar division in a weighted projective space
-    return [p//(c**w) for (p,w) in izip(P,W)]
+    return [ p//(c**w) for (p,w) in izip(P,W) ]
 
 def normalize_invariants(I,W):
     # Normalizes integral invariants to remove factors
@@ -210,25 +214,35 @@ def normalize_invariants(I,W):
         if I_b[n] == 0:
             W_b[n] = 0
     # Smaller invariant tuples obtained by excluding zeroes
-    W_s = [W_b[n] for n in range(l_b) if I_b[n] != 0]
-    I_s = [I_b[n] for n in range(l_b) if I_b[n] != 0]
+    W_s = [ W_b[n] for n in range(l_b) if I_b[n] != 0 ]
+    I_s = [ I_b[n] for n in range(l_b) if I_b[n] != 0 ]
     # Finding the normalized weights, both big and small
     dW = gcd(W_s)
-    W_bn = [w//dW for w in W_b]
-    W_sn = [w//dW for w in W_s]
+    W_bn = [ w//dW for w in W_b ]
+    W_sn = [ w//dW for w in W_s ]
+    Z_bn = zip(I_b, W_bn)
+    Z_sn = zip(I_s, W_sn)
     # Normalization of the invariants by the appropriate weight
     dI = gcd(I_s)
     if dI == 1:
         return I
     ps = dI.prime_divisors()
-    Z = zip(I_s, W_sn)
-    c = prod([p**floor(min([ floor(valuation(i,p)/w) for (i,w) in Z ])) for p
-        in ps], 1)
+    c = prod([ p**floor(min([ floor(valuation(i,p)/w) for (i,w) in Z_sn ])) for
+            p in ps ], 1)
+    # Generalizable sign adjustment: Final odd weight (after normalization of
+    # weights) should have a positive sign.
+    # We start at the end because this is the most intuitive modification in
+    # genus 2: the discriminant then always has positive sign after
+    # normalization.
+    for (i,w) in Z_bn[::-1]:
+        if w % 2 == 1:
+            s = i.sign()
+            break
     # Final weighted multiplication
-    I_n = scalar_div(c, I,W_bn)
-    I_n = [ZZ(i) for i in I_n]
-    # Endnote: We may want to preserve some factors in the gcd here to factor
-    # the invariants when these get bigger, though currently this is not needed
+    I_n = scalar_div(s*c, I, W_bn)
+    I_n = [ ZZ(i) for i in I_n ]
+    # NOTE: We may want to preserve some factors in the gcd here to factor the
+    # invariants when these get bigger, though currently this is not needed
     return I_n
 
 ###############################################################################
@@ -281,8 +295,8 @@ def get_st_data(isogeny_class):
     data['st_group_name'] = st_group_name(isogeny_class['st_group'])
     data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
     # Later used in Lady Gaga box:
-    data['real_geom_end_alg_disp'] = [r'\End(J_{\overline{\Q}}) \otimes \R',
-                end_alg_name(isogeny_class['real_geom_end_alg'])]
+    data['real_geom_end_alg_disp'] = [ r'\End(J_{\overline{\Q}}) \otimes \R',
+                end_alg_name(isogeny_class['real_geom_end_alg']) ]
     # Adding data that show in sidebar respectively search results:
     if isogeny_class['is_gl2_type']:
         data['is_gl2_type_name'] = 'yes'
@@ -297,7 +311,7 @@ def get_st_data(isogeny_class):
 ###############################################################################
 
 def gl2_statement(factorsRR, base):
-    if factorsRR in [['RR', 'RR'], ['CC']]:
+    if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
         return "The Jacobian is of \(\GL_2\)-type over " + base
     return "The Jacobian is not of \(\GL_2\)-type over " + base
 
@@ -534,22 +548,24 @@ class WebG2C(object):
         data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
         data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
         data['igusa_clebsch'] = [ZZ(a) for a in self.igusa_clebsch]
-        data['igusa'] = igusa_clebsch_to_igusa(data['igusa_clebsch'])
-        data['g2'] = igusa_to_g2(data['igusa'])
-        data['ic_norm'] = normalize_invariants(data['igusa_clebsch'],[1,2,3,5])
-        data['igusa_norm'] = normalize_invariants(data['igusa'],[1,2,3,4,5])
+        data['igusa'] = [ZZ(a) for a in self.igusa]
+        data['g2'] = self.g2inv
+        data['ic_norm'] = normalize_invariants(data['igusa_clebsch'], [2, 4, 6,
+            10])
+        data['igusa_norm'] = normalize_invariants(data['igusa'], [2, 4, 6, 8,
+            10])
         data['ic_norm_factor_latex'] = [web_latex(zfactor(i)) for i in
                 data['ic_norm']]
-        data['igusa_norm_factor_latex'] = [web_latex(zfactor(j)) for j in
-                data['igusa_norm']]
+        data['igusa_norm_factor_latex'] = [ web_latex(zfactor(j)) for j in
+                data['igusa_norm'] ]
         data['num_rat_wpts'] = ZZ(self.num_rat_wpts)
         data['two_selmer_rank'] = ZZ(self.two_selmer_rank)
         if len(self.torsion) == 0:
             data['tor_struct'] = '\mathrm{trivial}'
         else:
-            tor_struct = [ZZ(a)  for a in self.torsion]
-            data['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in
-                tor_struct])
+            tor_struct = [ ZZ(a) for a in self.torsion ]
+            data['tor_struct'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in
+                tor_struct ])
 
         # Data derived from Sato-Tate group:
         isogeny_class = db_g2c().isogeny_classes.find_one({'label' :
@@ -649,10 +665,9 @@ class WebG2C(object):
                     cond=self.cond,x=x)),
             ('Twists',
                 url_for(".index_Q",
-                    ic0 = self.igusa_clebsch[0],
-                    ic1 = self.igusa_clebsch[1],
-                    ic2 = self.igusa_clebsch[2],
-                    ic3 = self.igusa_clebsch[3])),
+                    g20 = self.g2inv[0],
+                    g21 = self.g2inv[1],
+                    g22 = self.g2inv[2]))
             #('Twists2',
             #   url_for(".index_Q",
             #       igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
