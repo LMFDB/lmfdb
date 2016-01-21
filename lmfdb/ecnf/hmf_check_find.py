@@ -606,6 +606,15 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             label = form['short_label']
             aplist = [int(form['hecke_eigenvalues'][i]) for i, P in goodP]
             curves = EllipticCurveSearch(K.K(), Plist, N, aplist)
+            if not curves:
+                if verbose:
+                    print("No curves found by Magma, trying again...")
+                curves = EllipticCurveSearch(K.K(), Plist, N, aplist)
+                if verbose:
+                    if curves:
+                        print("Success!")
+                    else:
+                        print("Still no success, giving up")
             #curves = EllipticCurveSearch(K.K(), [], N, [])
             E = None
             if curves:
