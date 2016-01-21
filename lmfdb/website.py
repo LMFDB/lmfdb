@@ -10,8 +10,6 @@
 start this via $ sage -python website.py --port <portnumber>
 add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
-from base import *
-
 import pages
 import api
 import hilbert_modular_forms
@@ -49,6 +47,8 @@ import raw
 from modular_forms.maass_forms.picard import mwfp
 
 import sys
+import base
+from base import app, render_template, request, DEFAULT_DB_PORT, set_logfocus, _init
 
 @app.errorhandler(404)
 def not_found_404(error):
@@ -220,8 +220,7 @@ def get_configuration():
     # follow on the debug level and all others will be set to warning
     logfocus = None
     logfile = "flasklog"
-    import base
-    dbport = base.DEFAULT_DB_PORT
+    dbport = DEFAULT_DB_PORT
     if not sys.argv[0].endswith('nosetests'):
       try:
         import getopt
@@ -271,16 +270,19 @@ def get_configuration():
           pass # something happens on the server -> TODO: FIXME
     return { 'flask_options' : options, 'dbport' : dbport}
 
-configuration = get_configuration()
+configuration = None
 
 def main():
-    base.set_logfocus(logfocus)
+    set_logfocus(logfocus)
     logging.info("... done.")
 
     # just for debugging
     # if options["debug"]:
     #  logging.info(str(app.url_map))
 
+    global configuration
+    if not configuration:
+        configuration = get_configuration()
     app.run(**configuration['flask_options'])
 
 if True:
@@ -301,9 +303,10 @@ if True:
     ch.setFormatter(formatter)
     root_logger.addHandler(ch)
 
+    if not configuration:
+        configuration = get_configuration()
     logging.info("configuration: %s" % configuration)
-    import base
-    base._init(configuration['dbport'])
+    _init(configuration['dbport'])
     app.logger.addHandler(file_handler)
 
 def getDownloadsFor(path):
