@@ -142,8 +142,6 @@ app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 
 
 def is_debug_mode():
-    if (os.getenv('NO_DEBUG')=='1'):
-        return False
     from flask import current_app
     return current_app.debug
 
