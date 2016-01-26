@@ -121,7 +121,7 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
             return render_web_modform_space_gamma1(**info)
         return render_elliptic_modular_form_navigation_wp(**info)
         # Otherwise we go to the main navigation page
-    except IndexError as e: # catch everything here..
+    except IndexError as e: # catch everything here except KeyError below...
         emf_logger.debug("catching exceptions. info={0}".format(info))
         errst = str(e)
         ## Try to customise some of the error messages:
@@ -133,7 +133,12 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
             errst = "The space {0}.{1}.{2} is not in the database!".format(level,weight,character)
             flash(errst)
         return render_elliptic_modular_form_navigation_wp()
-            
+    except KeyError as e:
+        emf_logger.debug("catching exceptions. info={0}".format(info))
+        errst = "The space {0}.{1}.{2} is not in the database!".format(level,weight,character)
+        flash(errst)
+        return render_elliptic_modular_form_navigation_wp()
+
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils import download_web_modform,get_coefficients
 
