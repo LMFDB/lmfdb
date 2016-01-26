@@ -49,9 +49,6 @@ def body_class():
 
 met = ['GET', 'POST']
 
-app.debug = True
-
-
 # Used to be in the experimental part
 @emf.route("/ranges", methods=["GET"])
 @emf.route("/ranges/", methods=["GET"])
