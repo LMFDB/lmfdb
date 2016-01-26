@@ -478,7 +478,7 @@ $(function() {
 });
 </script>
 
-    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
     <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% if DEBUG %}
