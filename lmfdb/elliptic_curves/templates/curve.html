@@ -81,7 +81,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     </div>
 #}
 
-    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
     <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
     <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
 
