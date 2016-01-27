@@ -1,6 +1,12 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<!--New table class to avoid spacing in LaTeX-links -->
+<style type="text/css">
+table.g2 a {
+  padding: 0;
+}
+
 <style>
 /* seems to be unused?
 <div.ip>span { white-space: nowrap; font-family: serif; }
@@ -275,17 +281,23 @@ function show_invs(invstyle) {
 <p>{{data.endodata.gl2_statement_base}}</p>
 
 <!-- Description over QQ: -->
-<p>{{data.endodata.endo_statement_base|safe}}</p>
+{{data.endodata.endo_statement_base|safe}}
 
 <!-- Description of field of definition: -->
 <p>{{data.endodata.fod_statement|safe}}</p>
 
 <!-- Description over QQbar: -->
-<p>{{data.endodata.endo_statement_geom|safe}}</p>
+{{data.endodata.endo_statement_geom|safe}}
+<!-- Excuse the upcoming dirty spacing hack, but putting paragraph tags around
+the previous statement ruins its table spacing.
+Same for all other occasions of it.-->
+<p></p>
 
 <!-- Remainder of the lattice: -->
 <h3 style="display: inline">{{data.endodata.lattice_statement_preamble}}</h3>
 
+<p></p>
 {{data.endodata.lattice_statement|safe}}
+<p></p>
 
 {% endblock %}
