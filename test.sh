@@ -9,7 +9,7 @@
 #                                 $ easy_install -U coverage
 #                                 $ easy_install -U unittest2
 # Second, call it in two ways, either $ ./test.sh for coverage to test all
-# or to test only a part of LMFDB:    $ ./test lmfdb/knowledge
+# or to test only a part of LMFDB:    $ ./test.sh lmfdb/knowledge
 
 cd `dirname "$0"`
 

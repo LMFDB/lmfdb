@@ -8,7 +8,7 @@ import lmfdb.base
 from lmfdb.base import getDBConnection
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name, st0_group_name
-from lmfdb.genus2_curves.web_g2c import gl2_statement, factorsRR_raw_to_pretty, fod_statement, intlist_to_poly
+from lmfdb.genus2_curves.web_g2c import gl2_statement_base, factorsRR_raw_to_pretty, fod_statement, intlist_to_poly
 from sage.all import QQ, PolynomialRing, factor,ZZ, NumberField, expand, var
 from lmfdb.WebNumberField import field_pretty
 
@@ -25,6 +25,8 @@ def db_g2c():
     if g2cdb is None:
         g2cdb = getDBConnection().genus2_curves
     return g2cdb
+
+# TODO: Remove database below when switched to use of genus2_curves only
 
 g2endodb = None
 
@@ -125,56 +127,60 @@ def isog_url_for_label(label):
 # Statement functions for endomorphism functionality
 ###############################################################################
 
+# We could also import from web_g2c.py, but this seems more maintainable if we
+# ever want to give some individual style to the isogeny class pages.
 def endo_statement_isog(factorsQQ, factorsRR, fieldstring):
-    statement = """<table>"""
-    # First row: description of endomorphism algebra factors
-    statement += """<tr><td>\(\End (J_{%s}) \otimes \Q\
-    \)</td><td>\(\simeq\)</td><td>""" % fieldstring
+    statement = """<table class="g2">"""
     factorsQQ_number = len(factorsQQ)
     factorsQQ_pretty = [ field_pretty(fac[0]) for fac in factorsQQ if
-            fac[0] ]
+        fac[0] ]
+
+    # First row: description of endomorphism algebra factors
+    statement += """<tr><td>\(\End (J_{%s}) \otimes \Q \)</td><td>\(\simeq\)</td><td>"""\
+        % fieldstring
     # In the case of only one factor we either get a number field or a
     # quaternion algebra:
     if factorsQQ_number == 1:
-        # First we deal with the number field case:
+        # First we deal with the number field case,
+        # in which we have set the discriminant to be -1
         if factorsQQ[0][2] == -1:
             # Prettify if labels available, otherwise return defining polynomial:
             if factorsQQ_pretty:
-                statement += """<a href=%s>%s</a>""" % \
-                (url_for("number_fields.by_label", label=factorsQQ[0][0]),
-                factorsQQ_pretty[0])
+                statement += """<a href=%s>%s</a>"""\
+                    % (url_for("number_fields.by_label",
+                       label=factorsQQ[0][0]), factorsQQ_pretty[0])
             else:
-                statement += """number field with defining polynomial \
-                \(%s\)""" % intlist_to_poly(factorsQQ[0][1])
+                statement += """number field with defining polynomial \(%s\)"""\
+                    % intlist_to_poly(factorsQQ[0][1])
+            # Detect CM by presence of a quartic polynomial:
+            # TODO: Add knowl link
             if len(factorsQQ[0][1]) == 5:
                 statement += """(CM)"""
-        # Up next is the case of a matrix ring, with labels and full
-        # prettification always available:
+        # Up next is the case of a matrix ring (trivial disciminant), with
+        # labels and full prettification always available:
         elif factorsQQ[0][2] == 1:
-            statement += """\(\mathrm{M}_2(\)<a href=%s>%s</a>\()\)""" % \
-            (url_for("number_fields.by_label", label=factorsQQ[0][0]),
-            factorsQQ_pretty[0])
+            statement += """\(\mathrm{M}_2(\)<a href=%s>%s</a>\()\)"""\
+                % (url_for("number_fields.by_label", label=factorsQQ[0][0]),
+                    factorsQQ_pretty[0])
         # And finally we deal with quaternion algebras over the rationals:
         else:
-            statement += """quaternion algebra over <a href=%s>%s</a> of \
-            discriminant %s""" % \
-            (url_for("number_fields.by_label", label=factorsQQ[0][0]),
-            factorsQQ_pretty[0], factorsQQ[0][2])
+            statement += """quaternion algebra over <a href=%s>%s</a> of discriminant %s"""\
+                % (url_for("number_fields.by_label", label=factorsQQ[0][0]),
+                    factorsQQ_pretty[0], factorsQQ[0][2])
     # If there are two factors, then we get two at most quadratic fields:
     else:
-        statement += """<a href=%s>%s</a> \(\\times\) <a href=%s>%s</a>""" % \
-        (url_for("number_fields.by_label", label=factorsQQ[0][0]),
-        factorsQQ_pretty[0],
-        url_for("number_fields.by_label", label=factorsQQ[1][0]),
-        factorsQQ_pretty[1])
+        statement += """<a href=%s>%s</a> \(\\times\) <a href=%s>%s</a>"""\
+            % (url_for("number_fields.by_label", label=factorsQQ[0][0]),
+                factorsQQ_pretty[0], url_for("number_fields.by_label",
+                label=factorsQQ[1][0]), factorsQQ_pretty[1])
     # End of first row:
     statement += """</td></tr>"""
+
     # Second row: description of algebra tensored with RR
-    statement += """<tr><td>\(\End (J_{%s}) \otimes\
-    \R\)</td><td>\(\simeq\)</td> <td>\(%s\)</td></tr>""" % \
-    (fieldstring, factorsRR_raw_to_pretty(factorsRR))
-    # End of second row, and with it, of the statement:
-    statement += """</td></tr>"""
+    statement += """<tr><td>\(\End (J_{%s}) \otimes \R\)</td><td>\(\simeq\)</td> <td>\(%s\)</td></tr>"""\
+        % (fieldstring, factorsRR_raw_to_pretty(factorsRR))
+
+    # End of statement:
     statement += """</table>"""
     return statement
 
@@ -224,7 +230,7 @@ class G2Cisog_class(object):
             for c in curves_data ]
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_factored_poly_otherorder(c[1])]
-                for c in self.bad_lfactors]
+            for c in self.bad_lfactors]
 
         # Data derived from Sato-Tate group
         self.st_group_name = st_group_name(self.st_group)
@@ -238,21 +244,22 @@ class G2Cisog_class(object):
             self.is_gl2_type_name = 'no'
 
         # Endomorphism data
+        # TODO: Change lines here after database switch
         curve = db_g2c().curves.find_one({"class" : self.label})
         endodata = db_g2endo().bycurve.find_one({"label" : curve['label']})
-        self.gl2_statement_base = gl2_statement(endodata['factorsRR_base'],
-                r'\(\Q\)')
+        self.gl2_statement_base = \
+            gl2_statement_base(endodata['factorsRR_base'], r'\(\Q\)')
         self.endo_statement_base = \
-        """Endomorphism algebra over \(\Q\):<br>""" + \
-        endo_statement_isog(endodata['factorsQQ_base'],
+            """Endomorphism algebra over \(\Q\):<br>""" + \
+            endo_statement_isog(endodata['factorsQQ_base'],
                 endodata['factorsRR_base'], r'')
         endodata['fod_poly'] = intlist_to_poly(endodata['fod_coeffs'])
         self.fod_statement = fod_statement(endodata['fod_label'],
-                endodata['fod_poly'])
+            endodata['fod_poly'])
         if endodata['fod_label'] != '1.1.1.1':
             self.endo_statement_geom = \
-            """Endomorphism algebra over \(\overline{\Q}\):<br>""" + \
-            endo_statement_isog(endodata['factorsQQ_geom'],
+                """Endomorphism algebra over \(\overline{\Q}\):<br>""" + \
+                endo_statement_isog(endodata['factorsQQ_geom'],
                     endodata['factorsRR_geom'], r'\overline{\Q}')
         else:
             self.endo_statement_geom = ''
