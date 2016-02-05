@@ -17,7 +17,7 @@ from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label, st_
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
 #q = ZZ['x'].gen()
-credit_string = "Andrew Booker, Andrew Sutherland, John Voight, and Dan Yasaki"
+credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight, and Dan Yasaki"
 
 ###############################################################################
 # Database connection
@@ -30,6 +30,8 @@ def db_g2c():
     if g2cdb is None:
         g2cdb = lmfdb.base.getDBConnection().genus2_curves
     return g2cdb
+
+# TODO: Remove database below when switched to use of genus2_curves only
 
 g2endodb = None
 
