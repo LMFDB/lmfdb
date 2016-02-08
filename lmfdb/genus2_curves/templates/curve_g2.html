@@ -278,15 +278,15 @@ function show_invs(invstyle) {
 
 <h3 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms') }} </h3>
 
-<p>{{data.endodata.gl2_statement_base}}</p>
-
 <!-- Description over QQ: -->
+<p>{{data.endodata.gl2_statement_base}}</p>
 {{data.endodata.endo_statement_base|safe}}
 
 <!-- Description of field of definition: -->
 <p>{{data.endodata.fod_statement|safe}}</p>
 
 <!-- Description over QQbar: -->
+<p>{{data.endodata.gl2_statement_geom}}</p>
 {{data.endodata.endo_statement_geom|safe}}
 <!-- Excuse the upcoming dirty spacing hack, but putting paragraph tags around
 the previous statement ruins its table spacing.

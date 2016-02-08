@@ -26,16 +26,6 @@ def db_g2c():
         g2cdb = getDBConnection().genus2_curves
     return g2cdb
 
-# TODO: Remove database below when switched to use of genus2_curves only
-
-g2endodb = None
-
-def db_g2endo():
-    global g2endodb
-    if g2endodb is None:
-        g2endodb = getDBConnection().genus2_endomorphisms
-    return g2endodb
-
 ###############################################################################
 # Pretty print functions
 ###############################################################################
@@ -244,9 +234,9 @@ class G2Cisog_class(object):
             self.is_gl2_type_name = 'no'
 
         # Endomorphism data
-        # TODO: Change lines here after database switch
         curve = db_g2c().curves.find_one({"class" : self.label})
-        endodata = db_g2endo().bycurve.find_one({"label" : curve['label']})
+        endodata = db_g2c().endomorphisms.find_one({"label" :
+            curve['label']})
         self.gl2_statement_base = \
             gl2_statement_base(endodata['factorsRR_base'], r'\(\Q\)')
         self.endo_statement_base = \
