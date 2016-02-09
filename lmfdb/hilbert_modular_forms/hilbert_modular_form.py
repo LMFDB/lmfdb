@@ -137,10 +137,6 @@ def hilbert_modular_form_search(**args):
     if(start < 0):
         start = 0
 
-    if nres > 0:
-        info['field_pretty_name'] = field_pretty(res[0]['field_label'])
-    else:
-        info['field_pretty_name'] = ''
     info['number'] = nres
     info['start'] = start
     info['more'] = int(start + count < nres)
