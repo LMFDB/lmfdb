@@ -28,24 +28,6 @@ def db_g2c():
         g2cdb = getDBConnection().genus2_curves
     return g2cdb
 
-ecdbQQ = None
-
-def db_ecQQ():
-    global ecdbQQ
-    if ecdbQQ is None:
-        ecdbQQ = getDBConnection().elliptic_curves.curves
-    return ecdbQQ
-
-# TODO: Remove database below when switched to use of genus2_curves only
-
-g2endodb = None
-
-def db_g2endo():
-    global g2endodb
-    if g2endodb is None:
-        g2endodb = getDBConnection().genus2_endomorphisms
-    return g2endodb
-
 ###############################################################################
 # Recovering the isogeny class
 ###############################################################################
@@ -53,19 +35,6 @@ def db_g2endo():
 def isog_label(label):
     L = label.split(".")
     return L[0]+ "." + L[1]
-
-# TODO: Remove after database conversion
-###############################################################################
-# Conversion of eliptic curve labels (database stores Cremona labels but we
-# want to display LMFDB labels -- see Issue #635)
-###############################################################################
-
-def cremona_to_lmfdb(label):
-    E = db_ecQQ().find_one({'label':label})
-    if E:
-        return E['lmfdb_label']
-    else:
-        return ''
 
 ###############################################################################
 # Pretty print functions
@@ -427,7 +396,7 @@ def endo_statement(factorsQQ, factorsRR, ring, fieldstring):
                     % (url_for("number_fields.by_label",
                        label=factorsQQ[0][0]), factorsQQ_pretty[0])
             else:
-                statement += """number field with defining polynomial \(%s\)"""\
+                statement += """the number field with defining polynomial \(%s\)"""\
                     % intlist_to_poly(factorsQQ[0][1])
             # Detect CM by presence of a quartic polynomial:
             if len(factorsQQ[0][1]) == 5:
@@ -443,7 +412,7 @@ def endo_statement(factorsQQ, factorsRR, ring, fieldstring):
                     factorsQQ_pretty[0])
         # And finally we deal with quaternion algebras over the rationals:
         else:
-            statement += """quaternion algebra over <a href=%s>%s</a> of discriminant %s"""\
+            statement += """the quaternion algebra over <a href=%s>%s</a> of discriminant %s"""\
                 % (url_for("number_fields.by_label", label=factorsQQ[0][0]),
                     factorsQQ_pretty[0], factorsQQ[0][2])
     # If there are two factors, then we get two at most quadratic fields:
@@ -470,7 +439,7 @@ def fod_statement(fod_label, fod_poly):
         fod_pretty = field_pretty(fod_label)
         fod_url = url_for("number_fields.by_label", label=fod_label)
         return """Smallest field over which all endomorphisms are defined:<br>
-        Galois number field \(K = \Q (a) \cong \) <a href=%s">%s</a> with defining polynomial \(%s\)"""\
+        Galois number field \(K = \Q (a) \cong \) <a href=%s>%s</a> with defining polynomial \(%s\)"""\
             % (fod_url, fod_pretty, fod_poly)
     else:
         return """Smallest field over which all endomorphisms are defined:<br>
@@ -530,9 +499,6 @@ def spl_statement(coeffss, lmfdb_labels, condnorms):
         # Use labels when possible:
         lmfdb_label = lmfdb_labels[n]
         if lmfdb_label:
-            # TODO: Next statement can be removed after database update
-            if not '-' in lmfdb_label:
-               lmfdb_label = cremona_to_lmfdb(lmfdb_label)
             statement += """<br>Elliptic curve with label <a href=%s>%s</a>"""\
                 % (url_for_ec(lmfdb_label), lmfdb_label)
         # Otherwise give defining equation:
@@ -576,7 +542,7 @@ class WebG2C(object):
         try:
             print label
             data = db_g2c().curves.find_one({"label" : label})
-            endodata = db_g2endo().bycurve.find_one({"label" : label})
+            endodata = db_g2c().endomorphisms.find_one({"label" : label})
         except AttributeError:
             return "Invalid label" # caller must catch this and raise an error
         if data:
@@ -668,16 +634,17 @@ class WebG2C(object):
         endodata['factorsRR_geom'] = self.factorsRR_geom
         endodata['ring_geom'] = self.ring_geom
         if self.fod_label != '1.1.1.1':
+            endodata['gl2_statement_geom'] = \
+                gl2_statement_base(self.factorsRR_geom, r'\(\overline{\Q}\)')
             endodata['endo_statement_geom'] = \
             """Endomorphism ring over \(\overline{\Q}\):""" + \
             endo_statement(endodata['factorsQQ_geom'],
                 endodata['factorsRR_geom'], endodata['ring_geom'],
                 r'\overline{\Q}')
 
-        # Full endomorphism lattice:
-        # TODO: Remove this sort once endomorphism database is updated
-        endodata['lattice'] = \
-            sorted(self.lattice, key = lambda t : len(t[0][1]))[1:-1]
+        # Full endomorphism lattice minus entries already treated:
+        N = len(self.lattice)
+        endodata['lattice'] = (self.lattice)[1:N - 1]
         if endodata['lattice']:
             endodata['lattice_statement_preamble'] = \
                 lattice_statement_preamble()

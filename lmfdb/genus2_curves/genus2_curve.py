@@ -31,16 +31,6 @@ def db_g2c():
         g2cdb = lmfdb.base.getDBConnection().genus2_curves
     return g2cdb
 
-# TODO: Remove database below when switched to use of genus2_curves only
-
-g2endodb = None
-
-def db_g2endo():
-    global endodb
-    if g2endodb is None:
-        g2endodb = lmfdb.base.getDBConnection().genus2_endomorphisms
-    return g2endodb
-
 ###############################################################################
 # List and dictionaries needed routing and searching
 ###############################################################################
