@@ -68,7 +68,6 @@ import random
 import glob
 import pymongo
 from lmfdb import base
-from lmfdb.website import dbport
 from sage.rings.all import ZZ
 
 from lmfdb.website import DEFAULT_DB_PORT as dbport
@@ -363,13 +362,15 @@ def alllabels(line):
         raise ValueError("Inconsistent data in alllabels file: %s" % line)
     label = data[0] + data[1] + data[2]
     lmfdb_label = data[3] + '.' + data[4] + data[5]
+    lmfdb_iso = data[3] + '.' + data[4]
+    iso_nlabel = numerical_iso_label(lmfdb_iso)
     return label, {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
         'number': int(data[2]),
         'lmfdb_label': lmfdb_label,
-        'lmfdb_iso': data[3] + '.' + data[4],
-        'iso_nlabel': numerical_iso_label(C['lmfdb_iso']),
+        'lmfdb_iso': lmfdb_iso,
+        'iso_nlabel': iso_nlabel,
         'lmfdb_number': data[5]
     }
 
