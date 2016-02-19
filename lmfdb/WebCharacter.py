@@ -494,10 +494,11 @@ class WebHecke(WebCharObject):
 
 class WebCharFamily(WebCharObject):
     """ compute first groups """
-    def __init__(self, **args):
-        self._keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
+    _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'codeinit', 'headers', 'contents' ]   
-        self.headers = [ 'modulus', 'order', 'structure', 'first characters' ]
+    headers = [ 'modulus', 'order', 'structure', 'first characters' ]
+
+    def __init__(self, **args):
         self._contents = None
         self.maxrows, self.rowtruncate = 25, False
         WebCharObject.__init__(self, **args)
@@ -541,17 +542,18 @@ class WebCharGroup(WebCharObject):
     self.H is the character group
     self.G is the underlying group
     """
-    def __init__(self, **args):
-        self.headers = [ 'order', 'primitive']
-        self._contents = None
-        self.maxrows, self.maxcols = 25, 20
-        self.rowtruncate, self.coltruncate = False, False
-        self._keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
+    headers = [ 'order', 'primitive']
+    _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties2', 'friends', 'rowtruncate', 'coltruncate'] 
+     
+    def __init__(self, **args):
+        self._contents = None
+        self.maxrows, self.maxcols = 25, 20
+        self.rowtruncate, self.coltruncate = False, False
         WebCharObject.__init__(self, **args)
 
     @property
@@ -561,7 +563,8 @@ class WebCharGroup(WebCharObject):
 
     @property
     def codestruct(self):
-        return [('sage','G.invariants()'), ('pari','G.cyc')]
+        return {'sage':'G.invariants()',
+                'pari':'g.cyc'}
 
     @property
     def order(self):
@@ -569,7 +572,8 @@ class WebCharGroup(WebCharObject):
 
     @property
     def codeorder(self):
-        return [('sage','G.order()'), ('pari','G.no')]
+        return {'sage': 'G.order()',
+                'pari': 'g.no' }
 
     @property
     def modulus(self):
@@ -622,27 +626,33 @@ class WebChar(WebCharObject):
     """
     Class for presenting a Character on a web page
     """
+    _keys = [ 'title', 'credit', 'codelangs', 'type',
+              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'number', 'numlabel', 'texname', 'codeinit', 'symbol',
+              'previous', 'next', 'conductor',
+              'condlabel', 'codecond',
+              'isprimitive', 'codeisprimitive',
+              'inducing', 'codeinducing',
+              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
+              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
+              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'codegauss', 'codejacobi', 'codekloosterman']   
+
     def __init__(self, **args):
         self.maxcols = 20
         self.coltruncate = False
-        self._keys = [ 'title', 'credit', 'codelangs', 'type',
-                 'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
-                 'number', 'numlabel', 'texname', 'codeinit', 'symbol',
-                 'previous', 'next', 'conductor',
-                 'condlabel', 'codecond', 'isprimitive', 'inducing',
-                 'indlabel', 'codeind', 'order', 'codeorder', 'parity',
-                 'isreal', 'generators', 'codegen', 'genvalues', 'logvalues',
-                 'groupelts', 'values', 'codeval', 'galoisorbit', 'codegalois',
-                 'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
-                 'kfpol', 'contents', 'properties2', 'friends', 'coltruncate']   
         WebCharObject.__init__(self, **args)
 
     @property
     def order(self):
         return self.chi.multiplicative_order()
+
     @property
     def codeorder(self):
-        return [('sage', 'chi.multiplicative_order()'),]
+        return { 'sage': 'chi.multiplicative_order()',
+                 'pari': 'charorder(g,chi)' }
 
     @property
     def isprimitive(self):
@@ -675,7 +685,6 @@ class WebChar(WebCharObject):
     @property
     def inducing(self):
         return self.char2tex(self.conductor, self.indlabel)
-
 
     @property
     def valuefield(self):
@@ -771,7 +780,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     @property
     def codeinit(self):
         return [('sage', 'H = DirichletGroup_conrey(%i)\n'%(self.modulus)),
-                ('pari', 'G = znstar(%i)'%(self.modulus) ) ]
+                ('pari', 'g = idealstar(,%i,2)'%(self.modulus) ) ]
 
     @property
     def title(self):
@@ -779,13 +788,13 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @property
     def codegen(self):
-        return [('sage', 'H.gens()'),
-                ('pari', 'G.gen') ]
+        return {'sage': 'H.gens()',
+                'pari': 'g.gen' }
 
     @property
     def codestruct(self):
-        return [('sage', 'H.invariants()'),
-                ('pari', 'G.cyc') ]
+        return {'sage': 'H.invariants()',
+                'pari': 'g.cyc'}
       
     @property
     def order(self):
@@ -803,12 +812,15 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         self.number = n = int(self.numlabel)
         assert gcd(m, n) == 1
         self.chi = chi = self.H[n]
-
+  
     @property
     def codeinit(self):
-        return [('sage', 'H = DirichletGroup_conrey(%i)\n'%(self.modulus)
-                       + 'chi = H[%i]'%(self.number)),
-                ]
+        return {
+          'sage': [ 'H = DirichletGroup_conrey(%i)'%(self.modulus),
+                 'chi = H[%i]'%(self.number) ],
+          'pari': [ 'g = idealstar(,%i,2)'%(self.modulus),
+                    'chi = znconreychar(g,%i)'%(self.number) ],
+          }
         
     @property
     def title(self):
@@ -831,6 +843,10 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
     @property
+    def codeisprimitive(self):
+        return { 'sage': 'chi.is_primitive()',
+                 'pari': '#znconreyconductor(G,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
+    @property
     def indlabel(self):
         """ Conrey scheme makes this trivial ? except at two..."""
         #return self.number % self.conductor
@@ -838,15 +854,36 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         if indlabel == 0:
             return 1
         return indlabel
-    
+
+    @property
+    def codeinducing(self):
+        return { 'sage': 'sage: chi.primitive_character()',
+                 'pari': ['znconreyconductor(g,chi,&chi0)','chi0'] }
+
+    @property
+    def codecond(self):
+        return { 'sage': 'chi.conductor()',
+                 'pari': 'znconreyconductor(g,chi)' }
+
+ 
     @property
     def parity(self):
         return ('Odd', 'Even')[self.chi.is_even()]
+    
+    @property
+    def codeparity(self):
+        return { 'sage': 'chi.is_odd()',
+                 'pari': 'zncharisodd(g,chi)' }
 
     @property
     def genvalues(self):
         logvals = [self.chi.logvalue(k) for k in self.H.gens()]
         return self.textuple( map(self.texlogvalue, logvals) )
+
+    @property
+    def codegenvalues(self):
+        return { 'sage': 'chi_sage.values_on_gens()',
+                 'pari': '[ znchareval(g,chi,x) | x <- g.gen ]' }
 
     @property
     def galoisorbit(self):
@@ -857,8 +894,23 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         return ( self._char_desc(num, prim=prim) for num in orbit )
 
     @property
+    def codegaloisorbit(self):
+        return { 'sage': 'chi_sage.galois_orbit()',
+                 'pari': [
+                     '[mod,num,order] = [%i,%i,%i]'%(self.modulus,self.num,self.order),
+                     '[Mod(num,mod)^k | k<-[1..order-1], gcd(k,order)==1]',
+                     #'order = charorder(g,chi)',
+                     #'[ chi*k % order | k <-[1..order-1], gcd(k,order)==1 ]'
+                     ]
+                 }
+
+    @property
     def symbol(self):
         return self.symbol_numerator() 
+
+    @property
+    def codesymbol(self):
+      return { 'sage': 'kronecker_character(%i)'%self.symbol() }
 
     def value(self, val):
         val = int(val)
@@ -869,6 +921,11 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         else:
             val = 0
         return '\(%s=%s\)'%(chartex,val)
+
+    @property
+    def codevalue(self):
+        return { 'sage': 'chi_sage(x) # x integer',
+                 'pari': 'znchareval(g,chi,x) \\\\ x integer' }
 
     def gauss_sum(self, val):
         val = int(val)
@@ -887,6 +944,10 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
         return r"\(\displaystyle \tau_{%s}(%s) = %s = %s. \)" % (val, chitex, deftex, g)
 
+    @property
+    def codegauss(self):
+        return { 'sage': 'chi.gauss_sum(a)' }
+
     def jacobi_sum(self, val):
         mod, num = self.modulus, self.number
         val = int(val[0])
@@ -902,6 +963,10 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
         from sage.all import latex
         return r"\( \displaystyle J(%s,%s) = %s = %s.\)" % (chitex, psitex, deftex, latex(jacobi_sum))
+
+    @property
+    def codejacobi(self):
+        return { 'sage': 'chi.jacobi_sum(n)' }
 
     def kloosterman_sum(self, arg):
         a, b = map(int, arg.split(','))
@@ -923,6 +988,9 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
         = %s. \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
 
+    @property
+    def codekloosterman(self):
+        return { 'sage': 'chi_sage.kloosterman_sum(a,b)' }
 
     def symbol_numerator(self): 
 #Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
@@ -953,9 +1021,10 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 class WebHeckeExamples(WebHecke):
     """ this class only collects some interesting number fields """
 
+    _keys = [ 'title', 'credit', 'headers', 'contents' ]   
+    headers = ['label','signature', 'polynomial' ]
+
     def __init__(self, **args):
-        self._keys = [ 'title', 'credit', 'headers', 'contents' ]   
-        self.headers = ['label','signature', 'polynomial' ]
         self._contents = None
         self.maxrows, self.rowtruncate = 25, False
         WebCharObject.__init__(self, **args)
@@ -1064,14 +1133,16 @@ class WebHeckeCharacter(WebChar, WebHecke):
     @property
     def codeinit(self):
         kpol = self.k.polynomial()
-        return [('sage', '\n'.join(['k.<a> = NumberField(%s)'%kpol,
+        return {
+                'sage':  ['k.<a> = NumberField(%s)'%kpol,
                           'm = k.ideal(%s)'%self.modulus,
                           'G = RayClassGroup(k,m)',
                           'H = G.dual_group()',
-                          'chi = H(%s)'%self.number])),
-                ('pari',  '\n'.join(['k=bnfinit(%s)'%kpol,
-                           'G=bnrinit(k,m,1)',
-                           'chi = %s'%self.number] )) ]
+                          'chi = H(%s)'%self.number],
+                'pari':  ['k=bnfinit(%s)'%kpol,
+                           'g=bnrinit(k,m,1)',
+                           'chi = %s'%self.number]
+                }
 
     @property
     def title(self):
@@ -1079,8 +1150,10 @@ class WebHeckeCharacter(WebChar, WebHecke):
     
     @property
     def codecond(self):
-        return [('sage', 'chi.conductor()'),
-                ('pari', 'bnrconductorofchar(G,chi)')]
+        return {
+                'sage': 'chi.conductor()',
+                'pari': 'bnrconductorofchar(G,chi)'
+                }
 
     @property
     def inducing(self):
@@ -1134,13 +1207,14 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     @property
     def codeinit(self):
         kpol = self.k.polynomial()
-        return [('sage', '\n'.join(['k.<a> = NumberField(%s)'%kpol,
+        return {
+                'sage':  ['k.<a> = NumberField(%s)'%kpol,
                           'm = k.ideal(%s)'%self.modulus,
                           'G = RayClassGroup(k,m)',
-                          'H = G.dual_group()' ])),
-                ('pari',  '\n'.join(['k=bnfinit(%s)'%kpol,
-                           'G=bnrinit(k,m,1)']) )
-                ]
+                          'H = G.dual_group()' ],
+                'pari':  ['k=bnfinit(%s)'%kpol,
+                           'g=bnrinit(k,m,1)']
+                }
 
     @property
     def title(self):
@@ -1153,5 +1227,8 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
 
     @property
     def codegen(self):
-        return [('sage','G.gen_ideals()'), ('pari','G.gen')]
+        return {
+                'sage': 'G.gen_ideals()',
+                'pari': 'G.gen'
+                }
 
