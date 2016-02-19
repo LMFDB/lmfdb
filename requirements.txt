@@ -8,4 +8,5 @@ unittest2
 coverage
 nose
 cython
+markupsafe
 git+git://github.com/jwbober/conrey-dirichlet-characters.git@master#egg=dirichlet_conrey
