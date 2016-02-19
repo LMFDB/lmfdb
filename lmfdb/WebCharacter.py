@@ -149,8 +149,8 @@ class WebCharObject:
             return 0
         if not isinstance(x, Rational):
             return '1'
-        n = int(x.numer())
         d = int(x.denom())
+        n = int(x.numer())  % d # should be fixed in Dirichlet_conrey
         if d == 1:
             return '1'
         elif n == 1 and d == 2:
