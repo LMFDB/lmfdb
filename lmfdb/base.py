@@ -49,22 +49,8 @@ def makeDBConnection(dbport):
         else:
             from pymongo.mongo_client import MongoClient
             _C = MongoClient(port=dbport)
-
-# Note: the original intention was to have all databases and
-# collections read-only except to users who could authenticate
-# themselves with a password.  But this never worked, and this list
-# (which is in any case incomplete) is now redundant.
-
-readonly_dbs = ['HTPicard', 'Lfunction', 'Lfunctions', 'MaassWaveForm',
-                'ellcurves', 'elliptic_curves', 'hmfs', 'modularforms', 'modularforms_2010',
-                'mwf_dbname', 'numberfields', 'quadratic_twists', 'test', 'limbo']
-
-readwrite_dbs = ['userdb', 'upload', 'knowledge']
-
-readonly_username = 'lmfdb'
-readonly_password = 'readonly'
-
-readwrite_username = 'lmfdb_website'
+        mongo_info = _C.server_info()
+        logging.info("mongodb version: %s" % mongo_info["version"])
 
 AUTO_RECONNECT_MAX = 10
 AUTO_RECONNECT_DELAY = 1
@@ -106,44 +92,30 @@ def _db_reconnect(func):
 # _db_reconnect(Connection._send_message_with_response)
 
 
-def _init(dbport, readwrite_password, parallel_authentication=False):
+def _init(dbport):
+    import pymongo
     makeDBConnection(dbport)
     C = getDBConnection()
 
-    # Disabling authentication completely as it does not work:
-    return
+    from os.path import dirname, join
+    pw_filename = join(dirname(dirname(__file__)), "password")
+    try:
+        username = "webserver"
+        password = open(pw_filename, "r").readlines()[0].strip()
+    except:
+        # file not found or any other problem
+        # this is read-only everywhere
+        logging.warning("authentication: no password -- fallback to read-only access")
+        username = "lmfdb"
+        password = "lmfdb"
 
-    def db_auth_task(db, readonly=False):
-        if readonly or readwrite_password == '':
-            C[db].authenticate(readonly_username, readonly_password)
-            logging.info("authenticated readonly on database %s" % db)
-        else:
-            C[db].authenticate(readwrite_username, readwrite_password)
-            logging.info("authenticated readwrite on database %s" % db)
-
-    if parallel_authentication:
-        logging.info("Authenticating to the databases in parallel")
-        import threading
-        tasks = []
-        for db in readwrite_dbs:
-            t = threading.Thread(target=db_auth_task, args=(db,))
-            t.start()
-            tasks.append(t)
-        for db in readonly_dbs:
-            t = threading.Thread(target=db_auth_task, args=(db, True))
-            t.start()
-            tasks.append(t)
-
-        for t in tasks:
-            t.join(timeout=15)
-        logging.info(">>> db auth done")
-    else:
-        logging.info("Authenticating sequentially")
-        for db in readwrite_dbs:
-            db_auth_task(db)
-        for db in readonly_dbs:
-            db_auth_task(db, True)
-        logging.info(">>> db auth done")
+    try:
+        C["admin"].authenticate(username, password)
+        if username == "webserver":
+            logging.info("authentication: partial read-write access enabled")
+    except pymongo.errors.PyMongoError as err:
+        logging.error("authentication: FAILED -- aborting")
+        raise err
 
 app = Flask(__name__)
 
@@ -173,9 +145,13 @@ def is_debug_mode():
     from flask import current_app
     return current_app.debug
 
+branch = "prod"
+if (os.getenv('BETA')=='1'):
+    branch = "beta"
+
 @app.before_request
 def set_beta_state():
-    g.BETA = os.getenv('BETA') is not None or is_debug_mode()
+    g.BETA = (os.getenv('BETA')=='1') or is_debug_mode()
 
 @app.context_processor
 def ctx_proc_userdata():
@@ -266,8 +242,8 @@ _current_source = '<a href="%s%s">%s</a>' % (_url_source, git_rev, "Source")
 """
 Creates link to the list of revisions on the master, where the most recent commit is on top.
 """
-_url_changeset = 'https://github.com/LMFDB/lmfdb/commit/'
-_latest_changeset = '<a href="%s%s">%s</a>' % (_url_changeset, git_rev, git_date)
+_url_changeset = 'https://github.com/LMFDB/lmfdb/commits/%s' % branch
+_latest_changeset = '<a href="%s">%s</a>' % (_url_changeset, git_date)
 
 
 @app.context_processor

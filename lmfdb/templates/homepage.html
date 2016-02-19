@@ -6,10 +6,13 @@
     <div class="right">
       <div class="bread">
         {% if bread %}
-          <a href="/">Top</a>
+          <a href="/">&#8962;</a>
+{# there's a house symbol &#x1f3e0; but it does not work on all browsers#}
           {% for b in bread -%}
-            &rarr; <a href="{{ b[1] }}">{{ b[0]|striptags }}</a>
-          {%- endfor %}
+            &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
+          {% endfor %}
+         {% else %}
+          <a href="/">&#8962;</a>
          {% endif %}
       </div>
       <div class="topright">
@@ -87,7 +90,9 @@
 <div id="sidebar">
 {%- include "sidebar.html" -%}
 
-{{ entry("Data", getUploadedFor(request.path, true) ) }}
+{% if user_is_authenticated -%}
+    {{ entry("Data", getUploadedFor(request.path, true) ) }}
+{% endif %}
 
 </div>
 
@@ -108,6 +113,19 @@
            <li><a href="{{ url }}">{{ text }}</a></li>
         {% endfor %}
     </ul>
+  </div>
+   {% endif %}
+ {%- endmacro %}
+
+{% macro neighbors(title, entries) -%}
+   {% if entries %}
+    <h1 class="properties-header">{{ title }}</h1>
+    <div class="properties-body">
+    <table>
+       {% for description, name, url in entries %}
+       <tr><td>{{ description }}</td><td><a href="{{ url }}">{{ name|safe }}</a></td></tr>
+       {% endfor %}
+    </table>
   </div>
    {% endif %}
  {%- endmacro %}
@@ -138,6 +156,9 @@
       </div>
     {% endif %}
    {{ rightnavig("Related objects", friends) }}
+   {% if navi %}
+       {{ neighbors("Nearby objects", navi) }}
+   {% endif %}
    {% if downloads %}
      {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
    {% else %}

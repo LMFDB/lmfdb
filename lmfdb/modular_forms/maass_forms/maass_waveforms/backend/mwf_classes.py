@@ -253,8 +253,34 @@ class WebMaassForm(object):
             return "odd"
         elif self.symmetry == 0:
             return "even"
-        else:
-            return "undefined"
+        else:          return "undefined"
+
+    def download_text(self):
+        r"""
+        Returns a string with all relevant data suitable for
+        download
+        """
+        ans = 'Level = ' + str(self.level) + '\n'
+        ans += 'Eigenvalue = ' + str(self.R) + '\n'
+        ans += 'Symmetry = "' + self.even_odd() + '"\n'
+        ans += 'Weight = ' + str(self.weight) + '\n'
+        ans += 'Character = ' + str(self.character) + '\n'
+        ans += 'Precision = ' + self.precision() + '\n'
+        ans += 'Fricke_Eigenvalue = ' + str(self.fricke()) + '\n'
+        ans += 'Atkin_Lehner_Eigenvalues = "' + self.atkinlehner() + '"\n'
+        ans += 'Coefficients = ' + str(self.coeffs) + '\n'
+        return ans
+
+    def has_plot(self):
+        return self._db.maassform_has_plot(self._maassid)
+
+    def next_maassform_id(self):
+        return self._db.get_next_maassform_id(self.level, self.character,
+                                              self.weight, self.R, self._maassid)
+
+    def prev_maassform_id(self):
+        return self._db.get_prev_maassform_id(self.level, self.character,
+                                              self.weight, self.R, self._maassid)
 
     def set_table(self, fnr=-1, cusp=0):
         r"""

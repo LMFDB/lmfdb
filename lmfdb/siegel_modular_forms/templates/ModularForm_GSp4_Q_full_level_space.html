@@ -1,0 +1,26 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+
+<p>This is a space of <a knowl="mf.siegel">Siegel Modular Forms</a>
+with real representation $\mathrm{Det}^{ {{k}}}\otimes\mathrm{Sym}^{ {{j}} }$. It has
+the following interesting subspaces:</p>
+<table>
+  {% for key in headers%}
+  <tr><td>{{key}}</td><td>{{subspace[key]}}</td></tr>
+  {% endfor %}
+</table>
+
+{% if samples !=[] %}
+<p> The following samples live in this space.</p>
+{% for form in samples %}
+<a href="{{form['url']}}">{{form['name']}}</a>
+{% endfor %}
+{% endif %}
+
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+{% endblock %}

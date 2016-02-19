@@ -111,6 +111,15 @@ a {
   text-decoration: none;
   font-family: sans-serif;
 }
+
+a.inactive {
+    color: #000;
+}
+
+a.inactive:hover {
+    background: inherit;
+}
+
 #content a {
 }
 #content .announce {
@@ -222,8 +231,15 @@ body.knowl #header {
     font-family: sans-serif;
     min-height: 18px;
     font-size: 90%;
+/*
     padding-top: 2px;
+*/
 }
+
+#header .bread a:first-child {
+    font-size: 150%;
+}
+
 #header .topright {
   /* border: 1px solid red;  */
   text-align: right;
@@ -555,11 +571,6 @@ button, select {
   min-width: 75px;
 }
 
-button.inactive {
-  background: #EEE; 
-  border: 1px solid #EDD;
-}
-
 body.knowl form button, 
 body.knowl form select {
   border: 2px solid #AAD;
@@ -574,6 +585,16 @@ form button:hover,
 form select:hover {
   background:    #CFC;
   border: 2px solid #9C9;
+}
+
+button.inactive {
+  background: #EEE;
+  border: 2px solid #EDD;
+}
+
+button.inactive:hover {
+  background: #EEE;
+  border: 2px solid #EDD;
 }
 
 body.knowl form button:hover,
@@ -594,6 +615,11 @@ table th {
 table th, table td {
   padding-left:  10px;
   padding-right: 10px;
+}
+
+table.newforms {
+/* to put a table after the properties box */
+    clear: right;
 }
 
 table.ntdata .knowl-header a,
@@ -664,11 +690,10 @@ div.literature {
     margin-top: 10px;
     font-size: 90%;
     color: #111111;
-
 }
 
-.name {
-    font-weight: bold;
+div.where {
+    margin: 10px 0 10px 0;
 }
 
 .emph {
@@ -680,9 +705,12 @@ div.literature {
 }
 
 .bluehighlight {
-  color: black;
+  color: blue;
 }
 
+.positivezero {
+  color: black;
+}
 
 
 .highlight {
@@ -1193,24 +1221,36 @@ background-color: #8dbdd8;
 }
 
 .dataTables_length {
-	width: 40%;
+	width: 100%;
+        line-height: 40px;
 }
 
 .dataTables_filter {
-	width: 50%;
-	text-align: right;
+	width: 100%;
+        line-height: 40px;
 }
 
 .dataTables_info {
-	width: 60%;
+	width: 45%;
 	float: left;
+        margin: 5px;
 }
 
 .dataTables_paginate {
-	width: 44px;
+	width: 50%;
 	* width: 50px;
 	float: right;
 	text-align: right;
+        margin: 5px;
+}
+
+a.paginate_active {
+        font-weight: bold;
+        padding: 5px;
+}
+
+a.paginate_button {
+    padding: 5px;
 }
 
 /* Pagination nested */
@@ -1330,7 +1370,7 @@ table.display tr.even.gradeU {
 }
 
 .top, .bottom {
-	padding: 15px;
+	padding: 52px 5px 5px;
 	background-color: #F5F5F5;
 	border: 1px solid #CCCCCC;
 }
@@ -1374,7 +1414,6 @@ td.details {
 }
 
 .paging_full_numbers {
-	width: 400px;
 	height: 22px;
 	line-height: 22px;
 }
@@ -1612,3 +1651,20 @@ div.codebox {
     box-shadow: 3px 3px 3px #8080FF;
     white-space: pre;
 }
+
+/* Styling of Maass form plot */
+
+div.maassformplot {
+        width: 720px;
+        height: 800px;
+        overflow: hidden;
+        position: relative;
+}
+
+div.maassformplot img {
+        position: absolute;
+        top: -200px;
+        left: -870px;
+}
+
+/* End of styling of Maass form plot */

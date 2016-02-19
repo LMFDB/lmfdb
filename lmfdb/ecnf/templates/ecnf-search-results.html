@@ -17,6 +17,7 @@
 <td align=left>{{ KNOWL('ec.base_change',title="base change") }} curves</td>
 <td align=left>{{ KNOWL('ec.torsion_order',title="torsion order") }}</td>
 <td align=left>{{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}</td>
+<td align=left>{{ KNOWL('ec.j_invariant', title="j-invariant") }}</td>
 </tr>
 
 <tr>
@@ -24,7 +25,7 @@
 <td align=left><input type='text' name='conductor_norm' size=10
                       value="{{info.conductor_norm}}"></td>
 <td>         <select name='include_isogenous'>
-{% if info.query.number %}
+{% if info.number %}
            <option value="off" selected="yes">exclude</option>
            <option value="on">include</option>
 {% else %}
@@ -48,6 +49,9 @@
           </td>
           <td>
           <input type='text' name='torsion_structure' size=10 value="{{info.torsion_structure}}" />
+          </td>
+          <td>
+          <input type='text' name='jinv' size=20 value="{{info.jinv}}" />
           </td>
 
 </tr>

@@ -25,7 +25,7 @@ class HomePageTest(LmfdbTest):
         homepage = self.tc.get("/").data
         self.check(homepage, "/L/degree2/", '9.53369')
         self.check(homepage, "/EllipticCurve/Q/?conductor=1-99", '[1, 0, 1, -14, -64]')
-        self.check(homepage, "/ModularForm/GL2/Q/Maass/",  'The entire database consists of 16599 Maass forms.')
+        self.check(homepage, "/ModularForm/GL2/Q/Maass/",  'The database contains 16599 Maass forms')
         self.check(homepage, "/zeros/first/", 'Riemann zeta function') # the interesting numbers are filled in dynamically
         self.check(homepage, "/NumberField/?degree=2", '"/NumberField/2.0.8.1">2.0.8.1')
 

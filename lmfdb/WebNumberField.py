@@ -454,7 +454,7 @@ class WebNumberField:
             else:
                 if "nfgg" not in self._data:
                     from math_classes import NumberFieldGaloisGroup
-                    nfgg = NumberFieldGaloisGroup.find_one({"label": self.label})
+                    nfgg = NumberFieldGaloisGroup(self._data['coeffs'])
                     self._data["nfgg"] = nfgg
                 else:
                     nfgg = self._data["nfgg"]
@@ -465,18 +465,19 @@ class WebNumberField:
             ccns = [int(x.size()) for x in cc]
             ccreps = [x.cycle_string() for x in ccreps]
             ccgen = '['+','.join(ccreps)+']'
-            ar = nfgg.ArtinReps() # list of artin reps from db
+            ar = nfgg.artin_representations() # list of artin reps from db
+            arfull = nfgg.artin_representations_full_characters() # list of artin reps from db
             gap.set('fixed', 'function(a,b) if a*b=a then return 1; else return 0; fi; end;');
             g = gap.Group(ccgen)
             h = g.Stabilizer('1')
             rc = g.RightCosets(h)
             # Permutation character for our field
             permchar = [gap.Sum(rc, 'j->fixed(j,'+x+')') for x in ccreps]
-            charcoefs = [0 for x in ar]
+            charcoefs = [0 for x in arfull]
             # list of lists (inner are giving char values
-            ar2 = [x['Character'] for x in ar]
+            ar2 = [x[0] for x in arfull]
             for j in range(len(ar)):
-                fieldchar = int(ar[j]['CharacterField'])
+                fieldchar = int(arfull[j][1])
                 zet = CyclotomicField(fieldchar).gen()
                 ar2[j] = [psum(zet, x) for x in ar2[j]]
             for j in range(len(ar)):

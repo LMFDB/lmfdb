@@ -7,7 +7,7 @@
       what the macro does.
    The macro itself is only there for the presentation of the data via suitable
    HTML tags and associated javascript code. 
-   
+
    Arguments: 
     * title: to overwrite the knowl's title, usually just leave it 
              to its default None.
@@ -102,10 +102,9 @@
 {%- endmacro %}
 
 {# for the bar when editing or showing knowls #}
-{% macro knowlbar() -%}
+{% macro knowlbar(show_kid=False) -%}
  <div class="knowl-bar">
-   actions: 
-   <a title="like as a wiki would" href="{{ url_for('.show', ID=k.id) }}">show</a>
+   <a title="like a wiki would" href="{{ url_for('.show', ID=k.id) }}">show</a>
    {% if user_is_authenticated %}
      &middot;
      <a href="{{ url_for('.edit', ID=k.id) }}">edit</a>
@@ -115,9 +114,12 @@
      <a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
             href="{{ url_for('.delete', ID=k.id) }}">delete</a>
    {% endif %}
+   {% if show_kid %}
+   &middot; <code>{{ k.id }}</code>
+   {% endif %}
    <a style="margin-left: 30px;" href="{{ url_for('.index') }}">all knowls</a>
    &middot; <a href="{{ url_for('.index', category=k.category) }}">up</a>
-   &middot; search: 
+   &middot; search:
    <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
      <input size="20" name="search" placeholder="modular" />
      <button type="submit">go</button>

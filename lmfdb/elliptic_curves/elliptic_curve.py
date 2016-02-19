@@ -10,7 +10,7 @@ import tempfile
 import os
 import StringIO
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_torsion_structure
 from lmfdb.number_fields.number_field import parse_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
@@ -57,38 +57,6 @@ def cmp_label(lab1, lab2):
     id2 = int(a), class_to_int(b), int(c)
     return cmp(id1, id2)
 
-def parse_torsion_structure(L):
-    r"""
-    Parse a string entered into torsion structure search box
-    '[]' --> []
-    '[n]' --> [str(n)]
-    'n' --> [str(n)]
-    '[m,n]' or '[m n]' --> [str(m),str(n)]
-    'm,n' or 'm n' --> [str(m),str(n)]
-    """
-    # strip <whitespace> or <whitespace>[<whitespace> from the beginning:
-    L1 = re.sub(r'^\s*\[?\s*', '', str(L))
-    # strip <whitespace> or <whitespace>]<whitespace> from the beginning:
-    L1 = re.sub(r'\s*]?\s*$', '', L1)
-    # catch case where there is nothing left:
-    if not L1:
-        return []
-    # This matches a string of 1 or more digits at the start,
-    # optionally followed by nontrivial <ws> or <ws>,<ws> followed by
-    # 1 or more digits at the end:
-    TORS_RE = re.compile(r'^\d+((\s+|\s*,\s*)\d+)?$')
-    if TORS_RE.match(L1):
-        if ',' in L1:
-            # strip interior <ws> and use ',' as delimiter:
-            res = [int(a) for a in L1.replace(' ','').split(',')]
-        else:
-            # use whitespace as delimiter:
-            res = [int(a) for a in L1.split()]
-        n = len(res)
-        if (n==1 and res[0]>0) or (n==2 and res[0]>0 and res[1]>0 and res[1]%res[0]==0):
-            return res
-    return 'Error parsing input %s for the torsion structure.  It needs to be a list of 0, 1 or 2 integers, optionally in square brackets, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % L
-
 
 #########################
 #    Top level
@@ -97,6 +65,12 @@ def parse_torsion_structure(L):
 @app.route("/EC")
 def EC_redirect():
     return redirect(url_for("ec.rational_elliptic_curves", **request.args))
+
+def learnmore_list():
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Elliptic Curve labels', url_for(".labels_page"))]
+
 
 #########################
 #  Search/navigate
@@ -129,7 +103,7 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, **err_args)
+    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list(), **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -163,7 +137,7 @@ def statistics():
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
              ('statistics', ' ')]
-    return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread)
+    return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")
@@ -274,7 +248,7 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        res = parse_torsion_structure(info['torsion_structure'])
+        res = parse_torsion_structure(info['torsion_structure'],2)
         if 'Error' in res:
             info['err'] = res
             return search_input_error(info, bread)
@@ -314,7 +288,7 @@ def elliptic_curve_search(**args):
             return search_input_error(info, bread)
 
     if 'download' in info and info['download'] != '0':
-        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING) ])
+        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING) ])
         return download_search(info, res)
     
     count_default = 100
@@ -344,7 +318,7 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('conductor', ASCENDING), ('lmfdb_iso', ASCENDING), ('lmfdb_number', ASCENDING)
+    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING)
                        ]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
@@ -352,6 +326,8 @@ def elliptic_curve_search(**args):
     info['iso_url'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
     info['number'] = nres
     info['start'] = start
+    info['count'] = count
+    info['more'] = int(start + count < nres)
     if nres == 1:
         info['report'] = 'unique match'
     elif nres == 2:
@@ -361,6 +337,7 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
+
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
@@ -369,7 +346,7 @@ def elliptic_curve_search(**args):
 
 
 def search_input_error(info, bread):
-    return render_template("search_results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
+    return render_template("search_results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread, learnmore=learnmore_list())
 
 ##########################
 #  Specific curve pages
@@ -461,7 +438,8 @@ def render_isogeny_class(iso_class):
                            credit=credit,
                            title=class_data.title,
                            friends=class_data.friends,
-                           downloads=class_data.downloads)
+                           downloads=class_data.downloads,
+                           learnmore=learnmore_list())
 
 @ec_page.route("/modular_form_display/<label>/<number>")
 def modular_form_display(label, number):
@@ -538,7 +516,8 @@ def render_curve_webpage_by_label(label):
                            data=data,
                            bread=data.bread, title=data.title,
                            friends=data.friends,
-                           downloads=data.downloads)
+                           downloads=data.downloads,
+                           learnmore=learnmore_list())
 
 @ec_page.route("/padic_data")
 def padic_data():
@@ -688,3 +667,35 @@ def download_search(info, res):
 #    response = make_response(d.readline())
 #    response.headers['Content-type'] = 'text/plain'
 #    return response
+
+
+@ec_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of the elliptic curve data over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             ('Completeness', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.ec.extent',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
+@ec_page.route("/Source")
+def how_computed_page():
+    t = 'Source of the elliptic curve data over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             ('Source', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.ec.source',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
+@ec_page.route("/Labels")
+def labels_page():
+    t = 'Labels for elliptic curves over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             ('Labels', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='ec.q.lmfdb_label',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+

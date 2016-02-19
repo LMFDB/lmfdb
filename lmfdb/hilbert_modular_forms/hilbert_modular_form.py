@@ -9,6 +9,10 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 from sage.misc.preparser import preparse
 from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats
+
+from lmfdb.ecnf.main import split_class_label
+from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
@@ -19,6 +23,17 @@ from lmfdb.number_fields.number_field import parse_list, parse_field_string
 
 from lmfdb.WebNumberField import *
 
+hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
+
+
+@hmf_page.route("/random")
+def random_hmf():    # Random Hilbert modular form
+    from sage.misc.prandom import randint
+    n = get_stats().counts()['nforms']
+    n = randint(0,n-1)
+    C = getDBConnection()
+    res = C.hmfs.forms.find()[n]
+    return redirect(url_for(".render_hmf_webpage", field_label=res['field_label'], label=res['label']))
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*', '')
@@ -50,25 +65,26 @@ def hilbert_modular_form_render_webpage():
     args = request.args
     if len(args) == 0:
         info = {}
-        credit = 'Lassina Dembele, Steve Donnelly and <A HREF="http://www.cems.uvm.edu/~voight/">John Voight</A>'
-        t = 'Hilbert Cusp Forms'
-        bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
+        t = 'Hilbert Modular Forms'
+        bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+                 ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
-        return render_template("hilbert_modular_form_all.html", info=info, credit=credit, title=t, bread=bread)
+        info['counts'] = get_stats().counts()
+        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread)
     else:
         return hilbert_modular_form_search(**args)
 
 
 def hilbert_modular_form_search(**args):
     C = getDBConnection()
-    C.hmfs.forms.ensure_index([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
+#    C.hmfs.forms.ensure_index([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
 
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info:
         args = {'label': info['label']}
         return render_hmf_webpage(**args)
     query = {}
-    for field in ['field_label', 'weight', 'level_norm', 'dimension']:
+    for field in ['field_degree', 'field_disc', 'field_label', 'weight', 'level_norm', 'dimension']:
         if info.get(field):
             if field == 'weight':
                 try:
@@ -78,6 +94,10 @@ def hilbert_modular_form_search(**args):
                     query[field] = str(parse_list(info[field]))
             elif field == 'field_label':
                 query[field] = parse_field_string(info[field])
+            elif field == 'field_degree':
+                query['deg'] = parse_range(info[field])
+            elif field == 'field_disc':
+                query['disc'] = parse_range(info[field])
             elif field == 'label':
                 query[field] = info[field]
             elif field == 'dimension':
@@ -87,32 +107,49 @@ def hilbert_modular_form_search(**args):
             else:
                 query[field] = info[field]
 
+    count_default = 100
     if info.get('count'):
         try:
             count = int(info['count'])
         except:
-            count = 100
+            count = count_default
     else:
-        info['count'] = 100
-        count = 100
+        info['count'] = count_default
+        count = count_default
+
+    start_default = 0
+    if info.get('start'):
+        try:
+            start = int(info['start'])
+            if(start < 0):
+                start += (1 - (start + 1) / count) * count
+        except:
+            start = start_default
+    else:
+        start = start_default
 
     info['query'] = dict(query)
     res = C.hmfs.forms.find(
-        query).sort([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)]).limit(count)
+        query).sort([('deg', pymongo.ASCENDING), ('disc', pymongo.ASCENDING), ('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
 
-    if nres > 0:
-        info['field_pretty_name'] = field_pretty(res[0]['field_label'])
-    else:
-        info['field_pretty_name'] = ''
     info['number'] = nres
+    info['start'] = start
+    info['more'] = int(start + count < nres)
     if nres == 1:
         info['report'] = 'unique match'
     else:
-        if nres > count:
-            info['report'] = 'displaying first %s of %s matches' % (count, nres)
+        if nres == 0:
+            info['report'] = 'no matches'
         else:
-            info['report'] = 'displaying all %s matches' % nres
+            if nres > count or start != 0:
+                info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
+            else:
+                info['report'] = 'displaying all %s matches' % nres
 
     res_clean = []
     for v in res:
@@ -131,7 +168,7 @@ def hilbert_modular_form_search(**args):
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), (
         'Search results', ' ')]
     properties = []
-    return render_template("hilbert_modular_form_search.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread)
 
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
@@ -280,20 +317,19 @@ def render_hmf_webpage(**args):
         ('Download to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
         ('Download to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
         ]
-    info['friends'] = []
     info['friends'] = [('L-function',
                         url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
 
-# info['learnmore'] = [('Number Field labels',
-# url_for("render_labels_page")), ('Galois group
-# labels',url_for("render_groups_page")), ('Discriminant
-# ranges',url_for("render_discriminants_page"))]
+    if data['dimension'] == 1:   # Try to attach associated elliptic curve
+        lab = split_class_label(info['label'])
+        ec_from_hmf = db_ecnf().find_one({"label": label + '1'})
+        if ec_from_hmf != None:
+            info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
 
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('%s' % data[
                                                                                          'label'], ' ')]
 
     t = "Hilbert Cusp Form %s" % info['label']
-    credit = 'Lassina Dembele, Steve Donnelly and <A HREF="http://www.cems.uvm.edu/~voight/">John Voight</A>'
 
     forms_space = C.hmfs.forms.find(
         {'field_label': data['field_label'], 'level_ideal': data['level_ideal']})
@@ -374,4 +410,4 @@ def render_hmf_webpage(**args):
                    ('Base Change', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=credit, title=t, bread=bread, friends=info['friends'])
+    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'])

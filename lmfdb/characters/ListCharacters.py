@@ -57,7 +57,8 @@ def get_character_modulus(a, b, limit=7):
 
 def get_character_conductor(a, b):
     from dirichlet_conrey import DirichletGroup_conrey
-    from main import kronecker_symbol as k
+    # from main import kronecker_symbol as k
+    
 
     def line(N):
         l = []
@@ -66,13 +67,15 @@ def get_character_conductor(a, b):
         while count < 7:
             if modulus % N == 0:
                 G = DirichletGroup_conrey(modulus)
+               
                 for chi in G:
                     j = chi.number()
+                    c = WebDirichletCharacter(modulus = chi.modulus(),number = chi.number())
                     if count == 7:
                         break
                     elif chi.conductor() == N:
                         count += 1
-                        l.append((modulus, j, chi.is_primitive(), chi.multiplicative_order(), k(chi)))
+                        l.append((modulus, j, chi.is_primitive(), chi.multiplicative_order(), c.symbol_numerator()))
             modulus += N
             if count == 0:
                 break
@@ -82,7 +85,8 @@ def get_character_conductor(a, b):
 
 def get_character_order(a, b):
     from dirichlet_conrey import DirichletGroup_conrey
-    from main import kronecker_symbol as k
+    #from main import kronecker_symbol as k
+
 
     def line(N):
         l = []
@@ -90,11 +94,12 @@ def get_character_order(a, b):
         for modulus in range(N, 250):
             G = DirichletGroup_conrey(modulus)
             for j, chi in enumerate(G):
+                c = WebDirichletCharacter(modulus = chi.modulus(),number = chi.number())
                 if count == 8:
                     break
                 elif chi.multiplicative_order() == N:
                     count += 1
-                    l.append((modulus, chi.number(), chi.is_primitive(), chi.multiplicative_order(), k(chi)))
+                    l.append((modulus, chi.number(), chi.is_primitive(), chi.multiplicative_order(), c.symbol_numerator()))
             if count == 8:
                 break
         return l

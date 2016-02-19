@@ -315,10 +315,9 @@ class WebEC(object):
             local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
             local_data.append(local_data_p)
 
-        if len(bad_primes)>1:
-            bsd['tamagawa_factors'] = r' \cdot '.join(str(c.factor()) for c in tamagawa_numbers)
-        else:
-            bsd['tamagawa_factors'] = ''
+        cp_fac = [cp.factor() for cp in tamagawa_numbers]
+        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+        bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         bsd['tamagawa_product'] = sage.misc.all.prod(tamagawa_numbers)
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
@@ -333,7 +332,7 @@ class WebEC(object):
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label)),
             ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
             ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=0, label=iso))]
+            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=1, label=iso))]
 
         self.downloads = [('Download coeffients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
                           ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label))]

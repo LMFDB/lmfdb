@@ -39,7 +39,8 @@ def render_characterNavigation():
     """
     args = to_dict(request.args)
     info = {}
-    info['bread'] = [ ('Characters','/Character') ]
+    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
+    ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
 
     if 'modbrowse' in args:
         arg = args['modbrowse']
@@ -111,26 +112,33 @@ def render_Dirichletwebpage(modulus=None, number=None):
     elif number == None:
         info = WebDirichletGroup(**args).to_dict()
         m = info['modlabel']
-        info['bread'] = [('Characters','/Character'),
-                         ('Dirichlet','/Character/Dirichlet'),
-                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m)]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m))]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
         info = WebDirichletCharacter(**args).to_dict()
-        info['navi'] = navi([info['previous'],info['next']])
+        # the navi field in the homepage.html has changed. this can't work.
+        try:
+            info['navi'] = [("previous",) +navi([info['previous']])[0],
+                        ("next",) + navi([info['next']])[0]]
+        except IndexError:
+            info['navi'] = [("next",) + navi([info['next']])[0]]
         m,n = info['modlabel'], info['numlabel']
-        info['bread'] = [('Characters','/Character'),
-                         ('Dirichlet','/Character/Dirichlet'),
-                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m),
-                         ('Character number %s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m)),
+                         ('%s'%n, url_for(".render_Dirichletwebpage", modulus=m, number=n)) ]
         #logger.info(info)
+        # TODO fix navi field
+        del info["navi"]
         return render_template('Character.html', **info)
 
 def navi(L):
     r = [ (l, url_character(**args)) for l, args in L if l ]
     return r
-    
+
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
     val = request.args.get("val", [])
@@ -175,22 +183,25 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
     elif number == None:
         info = WebHeckeGroup(**args).to_dict()
         m = info['modlabel']
-        info['bread'] = [('Characters','/Character'),
-                         ('Hecke','/Character/Hecke'),
-                         ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
-                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m))]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Hecke', url_for(".render_Heckewebpage")),
+                         ('Number Field %s'%number_field, url_for(".render_Heckewebpage", number_field=number_field)),
+                         ('Mod %s'%m,  url_for(".render_Heckewebpage", number_field=number_field, modulus=m))]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
-        info = WebHeckeCharacter(**args).to_dict()
+        X = WebHeckeCharacter(**args)
+        info = X.to_dict()
         info['navi'] = navi([info['previous'],info['next']])
         m,n = info['modlabel'], info['number']
-        info['bread'] = [('Characters','/Character'),
-                         ('Hecke','/Character/Hecke'),
-                         ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
-                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m)),
-                         ('Character number %s'%n, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
+        info['bread'] = [('Characters',url_for(".render_characterNavigation")),
+                         ('Hecke',  url_for(".render_Heckewebpage")),
+                         ('Number Field %s'%number_field,url_for(".render_Heckewebpage", number_field=number_field)),
+                         ('Mod %s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=m)),
+                         ('#%s'%X.number, url_for(".render_Heckewebpage", number_field=number_field, modulus=m, number=n))]
         #logger.info(info)
+        # TODO fix navi field
+        del info["navi"]
         return render_template('Character.html', **info)
 
 @characters_page.route("/calc-<calc>/Hecke/<number_field>/<modulus>/<number>")
@@ -228,7 +239,9 @@ def character_search(**args):
         for field in ['modulus', 'conductor', 'order']:
             if info.get(field):
                 query[field] = parse_range(info[field])
-        info['bread'] = [('Characters','/Character'), ('search results', ' ') ]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('search results', ' ') ]
         info['credit'] = 'Sage'
         if (len(query) != 0):
             from sage.modular.dirichlet import DirichletGroup
@@ -247,7 +260,7 @@ def charactertable(query):
 
 
 def render_character_table(modulus=None, conductor=None, order=None):
-    from dirichlet_conrey import DirichletGroup_conrey
+    from dirichlet_conrey import DirichletGroup_conrey 
     start = 1
     end = 201
     stepsize = 1
@@ -263,39 +276,23 @@ def render_character_table(modulus=None, conductor=None, order=None):
         G = DirichletGroup_conrey(N)
         for chi in G:
             j = chi.number()
+            c = WebDirichletCharacter(modulus = chi.modulus(),number = chi.number())
             add = True
             add &= not conductor or chi.conductor() == conductor
             add &= not order or chi.multiplicative_order() == order
             if add:
-                if chi.multiplicative_order() == 2 and kronecker_symbol(chi) is not None:
-                    ret.append([(j, kronecker_symbol(chi), chi.modulus(
-                    ), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
-                else:
+                 #if chi.multiplicative_order() == 2 and kronecker_symbol(chi) is not None:
+		#	  ret.append([(j, kronecker_symbol(chi), chi.modulus(
+		 if chi.multiplicative_order() == 2 and c.symbol_numerator() is not None:
+                  	ret.append([(j, c.symbol_numerator(), chi.modulus(
+                 	), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
+                 else:
                     ret.append([(j, chi, chi.modulus(
                     ), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
         return ret
     return [row(_) for _ in range(start, end, stepsize)]
 
 
-def kronecker_symbol(chi):
-    m = chi.conductor() / 4
-    if chi.conductor() % 2 == 1:
-        if chi.conductor() % 4 == 1:
-            return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" % (chi.conductor())
-        else:
-            return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" % (chi.conductor())
-    elif chi.conductor() % 8 == 4:
-        if m % 4 == 1:
-            return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" % (chi.conductor())
-        elif m % 4 == 3:
-            return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" % (chi.conductor())
-    elif chi.conductor() % 16 == 8:
-        if chi.is_even():
-            return r"\(\displaystyle\left(\frac{%s}{\bullet}\right)\)" % (chi.conductor())
-        else:
-            return r"\(\displaystyle\left(\frac{-%s}{\bullet}\right)\)" % (chi.conductor())
-    else:
-        return None
 
 
 @characters_page.route("/Dirichlet/table")
@@ -337,7 +334,7 @@ def dirichlet_group_table(**args):
     info = to_dict(args)
     if "modulus" not in info:
         info["modulus"] = modulus
-    info['bread'] = [('Characters','/Character'), ('Dirichlet table', ' ') ]
+    info['bread'] = [('Characters', url_for(".render_characterNavigation")), ('Dirichlet table', ' ') ]
     info['credit'] = 'Sage'
     char_number_list = request.args.get("char_number_list",None)
     if char_number_list is not None:

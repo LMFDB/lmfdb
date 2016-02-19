@@ -2,18 +2,20 @@
 
 {% block content %}
 
-<p>
-The database contains 4,953 groups, including all transitive subgroups 
-of $S_n$, up to conjugation, for $n\leq 23$.
-<p>
+<div>
+{{ KNOWL_INC('dq.gg.extent') }}
+</div>
+<div>
 
       <h2>Browse {{KNOWL('gg.galois_group', title="Galois groups")}}</h2>
-<p>
+<div/>
 
+<div>
 Browse by degree $n$ :
 {% for n in info.degree_list: %}
 <a href="?n={{n}}">{{n}}</a>
 {% endfor %}
+</div>
 
 <p>
 Browse by type:

@@ -1,0 +1,82 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+<style>
+table.ntdata th.left {
+  border-right: 2px solid #9b9;
+  background: #efe;
+  border-bottom: 0;
+  text-align: right;
+}
+table.ntdata td { text-align: left; }
+table.ntdata td.center { text-align: center; }
+table.ntdata th.weight {
+  text-align: left;
+  background: #efe;
+  border-bottom: 2px solid #9b9;
+  border-left: 0;
+  vertical-align: center;
+}
+table.ntdata thead tr.space {
+  background: #efe;
+  border-bottom: 0;
+}
+
+table.ntdata thead th.spaceleft {
+  border-right: 2px solid #9b9;
+  vertical-align: top;
+}
+</style>
+<p>Below are the dimensions of spaces of Siegel Modular Forms with <a KNOWL="mf.siegel.weight.vector">vector weights</a> and <a KNOWL="mf.siegel.level.full">$\mathrm{Sp}(4, \mathbb{Z})$</a>.</p>
+<h2>Featured Examples</h2>
+<p><a href="/ModularForm/GSp/Q/Sp4Z.20_Ups/">$\Upsilon_{20}$</a>: The nonlift of lowest weight </p>
+<p><a href="/ModularForm/GSp/Q/Sp4Z.24_Ups_I/">$\Upsilon_{24a}$</a>, <a href="/ModularForm/GSp/Q/Sp4Z.24_Ups_II/">$\Upsilon_{24b}$</a> Two rational eigenforms of full level  in a two-dimensional space.</p>
+<h2>Featured Spaces</h2>
+<span style="padding:3em"><a href="/ModularForm/GSp/Q/Sp4Z/">$M_k(\mathrm{Sp}(4, \mathbb{Z}))$</a></span>
+<span style="padding:3em"><a href="/ModularForm/GSp/Q/Sp4Z_2/">$M_{k,2}(\mathrm{Sp}(4, \mathbb{Z}))$</a></span>
+<h2>Dimensions</h2>
+<table class="ntdata">
+  <thead>
+    <tr class="space">
+      <th class="left">
+        <b>k</b>
+      </th>
+      <th class="level" colspan="24">
+        <span style="display:block;float:left; margin-right:3px;"<b>j</b>
+      </th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft"></th>
+      {% for j in jrange %}
+      <th class="level"> {{j}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  {% for wt in krange %}
+  <tr>
+    <th class="left">
+      {{ wt }}
+    </th>
+    {% for j in jrange %}
+    <td class="center">{% if dimtable[wt][j]>0 %} <a href="/ModularForm/GSp/Q/Sp4Z_j/{{j}}/{{wt}}/">{{dimtable[wt][j] }}</a> {% else %}
+      0
+
+      {% endif%}
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+<p> Enter either a $k$ and $j$ to have in the upper left corner or a range of weights to display.</p>
+<form id="dimensionForm" action="/ModularForm/GSp/Q/Sp4Z_j" method="get">
+ <span>k:</span> <input id="k" name="k"/>
+  <span>j:</span><input id="j" name="j"/>
+  <button type="submit" value="submit">Recompute table</button>
+</form>
+
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+{% endblock %}

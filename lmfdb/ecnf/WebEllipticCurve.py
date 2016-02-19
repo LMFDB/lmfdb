@@ -8,7 +8,6 @@ from kraus import (non_minimal_primes, is_global_minimal_model, has_global_minim
 ecnf = None
 nfdb = None
 
-
 def db_ecnf():
     global ecnf
     if ecnf is None:
@@ -29,18 +28,21 @@ special_names = {'2.0.4.1': 'i',
 
 field_list = {}  # cached collection of enhanced WebNumberFields, keyed by label
 
-
 def FIELD(label):
     nf = WebNumberField(label, gen_name=special_names.get(label, 'a'))
     nf.parse_NFelt = lambda s: nf.K()([QQ(str(c)) for c in s])
+    nf.latex_poly = web_latex(nf.poly())
     return nf
 
-
 def make_field(label):
-    if label in field_list:
-        return field_list[label]
-    return FIELD(label)
+    global field_list
+    if not label in field_list:
+        #print("Constructing field %s" % label)
+        field_list[label] = FIELD(label)
+    return field_list[label]
 
+def web_ainvs(field_label, ainvs):
+    return web_latex([make_field(field_label).parse_NFelt(x) for x in ainvs])
 
 def EC_R_plot(ainvs, xmin, xmax, ymin, ymax, colour, legend):
     x = var('x')

@@ -6,14 +6,17 @@
         {{ addcode(codeinit,'div') }}
 
         {% if symbol %}
+        {% if isprimitive == "Yes" and indlabel %}
         {# Kronecker symbol #}
         <h2>
             {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
         </h2>
         <div class = 'sage nodisplay code'>sage: chi_sage.kronecker({{conductor}})</div>
         <p>
-        {{ symbol }} (mod {{modulus}})
+         
+        {{ symbol }} 
         </p>
+        {% endif %}
         {% endif %}
 
         {# Inducing character #}
@@ -21,28 +24,33 @@
             <h2>
                 Inducing {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
             </h2>
-            <div class = 'sage nodisplay code'>sage: chi.primitive_character()</div>
-            <p>
+            <div class = 'sage nodisplay code'>sage: chi_sage.kronecker({{conductor}})</div>
+            <div class = 'sage nodisplay code'>sage: chi.primitive_character()  </div>  
+           <p>
             <a href="{{ url_character(
                 type = type,
                 number_field = nflabel,
                 modulus = condlabel, 
-                number  = indlabel)}}">
+                number  = indlabel)}}"> 
                 {{inducing}}
-            </a>
+            </a>  {% if symbol %}  = {{ symbol }} {% endif %}	
             </p>
+
+            
         {% endif %}
 
-        {# Values on generators #}
-        <h2>
-            {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
-        </h2>
-        <div class = 'sage nodisplay code'>sage: chi_sage.values_on_gens()</div>
-        {{ addcode(codeval,'div') }}
-        <p>
-            {{ generators }} &rarr; {{ genvalues }}
-        </p>
 
+        {# Values on generators #}
+        {% if modulus>2 %}
+            <h2>
+                {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
+            </h2>
+            <div class = 'sage nodisplay code'>sage: chi_sage.values_on_gens()</div>
+            {{ addcode(codeval,'div') }}
+            <p>
+                {{ generators }} &rarr; {{ genvalues }}
+            </p>
+        {% endif %}
 
         {# Values #}
         

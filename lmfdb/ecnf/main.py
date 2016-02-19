@@ -7,17 +7,17 @@ import pymongo
 ASC = pymongo.ASCENDING
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect
-from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, parse_torsion_structure
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
-from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, make_field
+from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import parse_list, parse_field_string, field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
-
+from lmfdb.number_fields.number_field import FIELD_LABEL_RE
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
@@ -26,7 +26,7 @@ def split_full_label(lab):
     data = lab.split("-")
     field_label = data[0]
     conductor_label = data[1]
-    isoclass_label = re.search("[a-z]+", data[2]).group()
+    isoclass_label = re.search("(CM)?[a-z]+", data[2]).group()
     curve_number = re.search("\d+", data[2]).group()  # (a string)
     return (field_label, conductor_label, isoclass_label, curve_number)
 
@@ -62,6 +62,20 @@ def split_short_class_label(lab):
     isoclass_label = data[1]
     return (conductor_label, isoclass_label)
 
+
+def pol_string_to_j_list(pol, deg=None, var=None):
+    if var==None:
+        from lmfdb.hilbert_modular_forms.hilbert_field import findvar
+        var = findvar(pol)
+        if not var:
+            var = 'a'
+    pol = PolynomialRing(QQ, var)(str(pol))
+    if deg == None:
+        fill = 0
+    else:
+        fill = deg - pol.degree() - 1
+    return [str(c) for c in pol.coefficients(sparse=False)] + ['0']*fill
+
 ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, John Voight, Dan Yasaki"
 
 
@@ -69,11 +83,6 @@ def get_bread(*breads):
     bc = [("Elliptic Curves", url_for(".index"))]
     map(bc.append, breads)
     return bc
-
-
-def web_ainvs(field_label, ainvs):
-    return web_latex([make_field(field_label).parse_NFelt(x) for x in ainvs])
-
 
 @ecnf_page.route("/")
 def index():
@@ -151,7 +160,7 @@ def show_ecnf1(nf):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)]).skip(start).limit(count)
+    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
     bread = [('Elliptic Curves', url_for(".index")),
              (nf_label, url_for('.show_ecnf1', nf=nf_label))]
@@ -245,7 +254,7 @@ def elliptic_curve_search(**args):
         # This label should be a full isogeny class label or a full
         # curve label (including the field_label component)
         try:
-            nf, cond_label, iso_label, number = split_full_label(label)
+            nf, cond_label, iso_label, number = split_full_label(label.strip())
         except IndexError:
             if not 'query' in info:
                 info['query'] = {}
@@ -276,8 +285,23 @@ def elliptic_curve_search(**args):
     if 'conductor_label' in info:
         query['conductor_label'] = info['conductor_label']
 
+    deg = None
+    if 'field' in info:
+        field_label = parse_field_string(info['field'])
+        #print("Field label was %s; after parsing, is %s" % (info['field'], field_label))
+        if FIELD_LABEL_RE.match(field_label):
+            query['field_label'] = field_label
+            deg = int(field_label.split(".")[0])
+        else:
+            info['err'] = 'unrecognised field: %s' % info['field']
+            return search_input_error(info, bread)
+
     if 'jinv' in info:
-        query['jinv'] = info['jinv']
+        if deg == None:
+            info['err'] = 'You must specify a field when searching by j-invariant'
+            return search_input_error(info, bread)
+        else:
+            query['jinv'] = pol_string_to_j_list(info['jinv'], deg=deg)
 
     if info.get('torsion'):
         ran = info['torsion'] = clean_input(info['torsion'])
@@ -300,22 +324,22 @@ def elliptic_curve_search(**args):
         query[tmp[0]] = tmp[1]
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        info['torsion_structure'] = clean_input(info['torsion_structure'])
-        if not TORS_RE.match(info['torsion_structure']):
-            info['err'] = 'Error parsing input for the torsion structure.  It needs to be one or more integers in square brackets, such as [6], [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.'
+        res = parse_torsion_structure(info['torsion_structure'],2)
+        if 'Error' in res:
+            info['err'] = res
             return search_input_error(info, bread)
-        query['torsion_structure'] = parse_list(info['torsion_structure'])
+        #update info for repeat searches
+        info['torsion_structure'] = str(res).replace(' ','')
+        query['torsion_structure'] = [int(r) for r in res]
 
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
+        info['number'] = 1
         query['number'] = 1
 
     if 'include_base_change' in info and info['include_base_change'] == 'off':
         query['base_change'] = []
     else:
         info['include_base_change'] = "on"
-
-    if 'field' in info:
-        query['field_label'] = parse_field_string(info['field'])
 
     info['query'] = query
 
@@ -349,7 +373,7 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_label', ASC), ('number', ASC)]).skip(start).limit(count)
+    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
     res = list(res)
     for e in res:

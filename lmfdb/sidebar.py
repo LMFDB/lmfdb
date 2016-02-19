@@ -16,7 +16,7 @@ def linked_name(item, level=""):
             return ''.join(['<h2>',item['title'],'</h2>\n'])
 
     else:
-        if 'url_for' in item:
+        if 'url_for' in item and not ('status' in item and item['status'] == 'future'):
             url = url_for(item['url_for'],**item.get('url_args',dict()))
             this_entry = ''.join(['<a href="',url,'">',item['title'],'</a>'])
         else:

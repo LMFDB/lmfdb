@@ -8,7 +8,8 @@ import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.isog_class import make_graph
-from lmfdb.ecnf.WebEllipticCurve import ECNF
+from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs
+from lmfdb.number_fields.number_field import field_pretty
 
 import sage.all
 from sage.all import EllipticCurve, latex, matrix
@@ -37,7 +38,7 @@ class ECNF_isoclass(object):
 
             - dbdata: the data from the database
         """
-        logger.info("Constructing an instance of ECNF_isoclass")
+        #logger.info("Constructing an instance of ECNF_isoclass")
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -50,7 +51,7 @@ class ECNF_isoclass(object):
         class label.  In either case the data will be obtained from
         the curve in the database with number 1 in the class.
         """
-        print "label = %s" % label
+        #print "label = %s" % label
         try:
             if label[-1].isdigit():
                 data = db_ec().find_one({"label": label})
@@ -67,7 +68,7 @@ class ECNF_isoclass(object):
         self.ECNF = ECNF.by_label(self.label)
 
         # Create a list of the curves in the class from the database
-        self.db_curves = [ECNF(c) for c in db_ec().find(
+        self.db_curves = [c for c in db_ec().find(
             {'field_label': self.field_label, 'conductor_label':
              self.conductor_label, 'iso_label': self.iso_label}).sort('number')]
         size = len(self.db_curves)
@@ -86,7 +87,16 @@ class ECNF_isoclass(object):
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
         self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
 
-        self.curves = [[c.short_label, c.urls['curve'], c.latex_ainvs] for c in self.db_curves]
+        def latex_ainvs(c):
+            return web_latex([self.field.parse_NFelt(x) for x in c['ainvs']])
+        def curve_url(c):
+            return url_for(".show_ecnf",
+                           nf=c['field_label'],
+                           conductor_label=c['conductor_label'],
+                           class_label=c['iso_label'],
+                           number=c['number'])
+
+        self.curves = [[c['short_label'], curve_url(c), web_ainvs(self.field_label,c['ainvs'])] for c in self.db_curves]
 
         self.urls = {}
         self.urls['class'] = url_for(".show_ecnf_isoclass", nf=self.field_label, conductor_label=self.conductor_label, class_label=self.iso_label)
@@ -106,7 +116,8 @@ class ECNF_isoclass(object):
         if self.field.is_imag_quadratic():
             self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
 
-        self.properties = [('Label', self.ECNF.label),
+        self.properties = [('Base field', self.ECNF.field.field_pretty()),
+                           ('Label', self.ECNF.class_label),
                            (None, self.graph_link),
                            ('Conductor', '%s' % self.ECNF.cond)
                            ]

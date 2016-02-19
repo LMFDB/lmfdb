@@ -81,7 +81,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     </div>
 #}
 
-    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
     <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
     <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
 
@@ -270,7 +270,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         <tr>
         <td> &#1064;\(_{\text{an}} \) </td>
         <td>&nbsp;
-          {% if data.rank > 1 %}&approx;{% else %}={% endif %}
+          {%- if data.rank > 1 -%}&approx;{% else %}={% endif %}
         &nbsp;</td>
         <td>\({{data.bsd.sha }}\)
           {% if data.rank > 1 %}
@@ -316,7 +316,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
       <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} attached to the curve </h3>
     {{ code(data.code,'L1') }}
     <p>
-        \( {{ data.bsd.lder_name }} = {{ data.bsd.lder }} \)
+        \( {{ data.bsd.lder_name }} \) &approx; \( {{ data.bsd.lder }} \)
     </p>
 
     <h2> Local data </h2>
@@ -374,7 +374,7 @@ to this elliptic curve is surjective.
 <p>
 The image of the {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached to this elliptic curve
 is the subgroup of $\GL(2,\Z_2)$ with {{KNOWL('ec.rouse_label', title='Rouse label')}}
- <a href="{{data.data.twoadic_rouse_url}}">{{data.twoadic_label}}</a>.
+ <a href="{{data.data.twoadic_rouse_url}}" target="_blank">{{data.twoadic_label}}</a>.
 </p>
 <p>
 This subgroup is the pull-back of the subgroup of
@@ -478,7 +478,7 @@ $(function() {
 });
 </script>
 
-    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
     <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% if DEBUG %}

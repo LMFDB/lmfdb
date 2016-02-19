@@ -1,0 +1,63 @@
+Format of data in files which are imported
+==========================================
+
+These files are at https://math.dartmouth.edu/~jvoight/hmf.html, for
+example
+https://neccsdc.dbi.udel.edu/jvoight/ModFrmHilDatav1gz/2/data_2_0005.gz
+
+line 1: starts with "COEFFS := "
+        e.g. COEFFS := [ -1, -1, 1 ];
+        defines list of coefficients of minimal polynomial
+
+line 2: starts with "n := "
+        e.g. n := 2
+        degree
+
+line 3: starts with "d := "
+        e.g. n := 5
+        discriminant
+
+line 4: is "F<w> := NumberField(Polynomial(COEFFS));"
+        creates the field in Magma
+
+line 5: starts with "PRIMES := "
+        followed by a list of triples representing prime ideals P,
+        each of the form [N, n, alpha] where N=N(P), n the smallest
+        positive integer in P and alpha a second generator as a
+        polynomial in w.
+
+line 6: is "PRIMES1 := [];"
+
+line 7: starts with "LEVEL := "
+        followed by a list of triples representing ideals I,
+        each of the form [N, n, alpha] where N=N(I), n the smallest
+        positive integer in I and alpha a second generator as a
+        polynomial in w.
+
+line 8: is "LEVELS1 := [];"
+
+line 9: is "NEWFORMS := [*"
+
+lines 10ff: each contains one newform, the format is either
+
+      <level, label, aplist>
+
+      where: level is a triple representing the ideal, e.g. [31, 31, w + 12]
+             label is a string, e.g. "a"
+             aplist is a list of integers
+
+      or (for non-rational newforms)
+
+
+      <level, label, poly, aplist>
+
+      where: level is a triple representing the ideal, e.g. [31, 31, w + 12]
+             label is a string, e.g. "a"
+             poly is a polynomial in x, e.g. x^2 + 2*x - 4
+             aplist is a list of polynomials in e
+
+             where the Hecke eigenvalue field is Q(e)=Q[x]/poly.
+
+
+
+
