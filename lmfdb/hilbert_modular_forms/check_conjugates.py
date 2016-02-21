@@ -17,17 +17,20 @@ sys.path.append("../..");
 import pymongo
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from lmfdb.WebNumberField import WebNumberField
-from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals, conjideals, str2ideal)
+from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals,
+ conjideals, str2ideal, HilbertNumberField)
+from pymongo import MongoClient
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=dbport)
+C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by default
 
 print "authenticating on the hmfs database"
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
-C['hmfs'].authenticate(username, password)
+C['hmfs'].authenticate(username, password) ## read/write on hmfs
 
 print "setting hmfs, fields and forms"
 hmfs = C.hmfs
@@ -52,6 +55,21 @@ def get_Fdata(label):
 def nautos(label):
     return len(get_WNF(label, 'a').K().automorphisms())
 
+def checkprimes(label):
+    Fdata = get_Fdata(label)
+    gen_name = findvar(Fdata['ideals'])
+    WebF = get_WNF(label, gen_name)
+    F = WebF.K()
+    ideals = niceideals(F, Fdata['ideals'])
+    primes = niceideals(F, Fdata['primes'])
+    F = HilbertNumberField(label)
+    L = []
+    for prhnf,prideal,prlabel in primes:
+        ideal = F.ideal(prlabel)
+        if ideal != prideal:
+            L.append(prlabel)
+    return L
+
 def fldlabel2conjdata(label):
     data = {}
     Fdata = get_Fdata(label)
@@ -70,7 +88,9 @@ def fldlabel2conjdata(label):
     data['conjideals'] = cideals
     primes = niceideals(F, Fdata['primes'])
     data['primes'] = primes
+    primeslabels = [prm[2] for prm in primes]
     cprimes = conjideals(primes, auts)
+    cprimes = [[primeslabels.index(cprimes[(prm[2],ig)]) for prm in primes] for ig in range(len(auts))]
     data['conjprimes'] = cprimes
     return data
 
@@ -88,7 +108,10 @@ def conjform_label(f, ig, cideals):
 
 def conjform(f, g, ig, cideals, cprimes, F): #ig index of g in auts
     if f['is_base_change'][0:3] == 'yes':
-        return None
+        print("This form is a base-change.")
+        #return None
+        #if the form is a base-change, but not from Q,
+        #we should still add its conjugate
     fg = copy(f)
 
     fg['level_label'] = cideals[(f['level_label'],ig)]
@@ -123,8 +146,11 @@ def conjform(f, g, ig, cideals, cprimes, F): #ig index of g in auts
     del fg['_id']
     return fg
 
-def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False):
+def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, buildform=False):
+    if fix:
+        buildform = True
     count = 0
+    countmiss = 0
     query = {}
     query['field_label'] = label
     query['level_norm'] = {'$gte' : int(min_level_norm)}
@@ -156,15 +182,39 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False):
             fgdb = forms.find_one({'label':fg_label})
             if fgdb == None:
                 print("conjugate not present")
-                if fix:
+                countmiss += 1
+                if buildform:
                     fg = conjform(f, g, ig, cideals, cprimes, F)
+                if fix:
                     if fg != None: #else: is a lift (self-conjugate), should have been detected
                         print("adding it : "+fg['label'])
                         forms.insert(fg)
                         count += 1
-    print("\nAdded "+str(count)+" new conjugate forms.")
+    print("\nMissing "+str(countmiss)+" conjugate forms (possibly counted multiple times if several nontrivial automorphisms).")
+    print("Added "+str(count)+" new conjugate forms.")
     return None
 
+def forms_equal(f,g):
+    fH = f['hecke_eigenvalues']
+    gH = g['hecke_eigenvalues']
+    for i in range(min(len(fH),len(gH))):
+        if fH[i] != gH[i]:
+            return False
+    return True
+
+def check_multiplicity_one(label):
+    F = HilbertNumberField(label)
+    count = 0
+    for N in F.ideals_iter():
+        Lf = forms.find({'field_label':label, 'level_label':N['label']})
+        Lf = [f for f in Lf]
+        n = len(Lf)
+        for i in range(n):
+            for j in range(i+1,n):
+                if forms_equal(Lf[i],Lf[j]):
+                    count += 1
+                    print "duplicates: "+Lf[i]['label']+" and "+Lf[j]['label']
+    print("Found "+str(count)+" duplicate forms.")
 
 def fix_data_fields(min_level_norm=0, max_level_norm=None, fix=False):
     r""" One-off utility to:

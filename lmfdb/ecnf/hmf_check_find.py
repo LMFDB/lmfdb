@@ -456,16 +456,17 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     else:
         return
 
+    if outfilename==None:
+        return
+
     # Step 2: for each newform for which there was no curve, create a
     # Magma file containing code to search for such a curve.
 
     # First output Magma code to define the field and primes:
-    if outfilename:
-        output_magma_field(field_label, K.K(), primes, outfilename)
-        if verbose:
-            print("...output definition of field and primes finished")
-    if outfilename:
-        outfile = file(outfilename, mode="a")
+    output_magma_field(field_label, K.K(), primes, outfilename)
+    if verbose:
+        print("...output definition of field and primes finished")
+    outfile = file(outfilename, mode="a")
 
     for nf_label in missing_curves:
         if verbose:
