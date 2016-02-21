@@ -175,13 +175,13 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
     cprimes = data['conjprimes']
     F = data['F']
     for f in ftoconj:
-        print("Testing form %s" % f['label'])
+        #print("Testing form %s" % f['label'])
         for g in auts:
             ig = auts.index(g)
             fg_label = conjform_label(f, ig, cideals)
             fgdb = forms.find_one({'label':fg_label})
             if fgdb == None:
-                print("conjugate not present")
+                print("Testing form %s: conjugate %s not present" % (f['label'], fg_label))
                 countmiss += 1
                 if buildform:
                     fg = conjform(f, g, ig, cideals, cprimes, F)
