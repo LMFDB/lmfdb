@@ -5,17 +5,15 @@
  
         {{ addcode(codeinit,'div') }}
 
+        {# Kronecker symbol #}
         {% if symbol %}
         {% if isprimitive == "Yes" and indlabel %}
-        {# Kronecker symbol #}
         <h2>
             {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
         </h2>
-        <div class = 'sage nodisplay code'>sage: chi_sage.kronecker({{conductor}})</div>
-        <p>
-         
-        {{ symbol }} 
-        </p>
+
+        {{ addcode(codesymbol,'div') }}
+        <p> {{ symbol }} </p>
         {% endif %}
         {% endif %}
 
@@ -96,7 +94,6 @@
         <h2>
             {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }}
         </h2>
-        {{ codegaloisorbit }}
           {{ addcode(codegaloisorbit,'div') }}
         <p>
         {% for mod,num,label,prim in galoisorbit %}

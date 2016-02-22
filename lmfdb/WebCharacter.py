@@ -628,7 +628,8 @@ class WebChar(WebCharObject):
     """
     _keys = [ 'title', 'credit', 'codelangs', 'type',
               'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 'codeinit', 'symbol',
+              'number', 'numlabel', 'texname', 'codeinit',
+              'symbol', 'codesymbol',
               'previous', 'next', 'conductor',
               'condlabel', 'codecond',
               'isprimitive', 'codeisprimitive',
@@ -779,8 +780,10 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @property
     def codeinit(self):
-        return [('sage', 'H = DirichletGroup_conrey(%i)\n'%(self.modulus)),
-                ('pari', 'g = idealstar(,%i,2)'%(self.modulus) ) ]
+        return {
+                'sage': 'H = DirichletGroup_conrey(%i)\n'%(self.modulus),
+                'pari': 'g = idealstar(,%i,2)'%(self.modulus)
+                }
 
     @property
     def title(self):
@@ -846,6 +849,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     def codeisprimitive(self):
         return { 'sage': 'chi.is_primitive()',
                  'pari': '#znconreyconductor(G,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
+
     @property
     def indlabel(self):
         """ Conrey scheme makes this trivial ? except at two..."""
@@ -906,11 +910,17 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def symbol(self):
-        return self.symbol_numerator() 
+        m = self.symbol_numerator
+        if m:
+            return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % m
+        return None
 
     @property
     def codesymbol(self):
-      return { 'sage': 'kronecker_character(%i)'%self.symbol() }
+        m = self.symbol_numerator
+        if m:
+            return { 'sage': 'kronecker_character(%i)'%self.symbol_numerator }
+        return None
 
     def value(self, val):
         val = int(val)
@@ -992,6 +1002,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     def codekloosterman(self):
         return { 'sage': 'chi_sage.kloosterman_sum(a,b)' }
 
+    @property
     def symbol_numerator(self): 
 #Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
 # Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
@@ -1014,7 +1025,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
             else: m = -cond
         else:
             return None
-        return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
+        return m
 
 
 
