@@ -283,8 +283,8 @@ def render_character_table(modulus=None, conductor=None, order=None):
             if add:
                  #if chi.multiplicative_order() == 2 and kronecker_symbol(chi) is not None:
 		#	  ret.append([(j, kronecker_symbol(chi), chi.modulus(
-		 if chi.multiplicative_order() == 2 and c.symbol_numerator() is not None:
-                  	ret.append([(j, c.symbol_numerator(), chi.modulus(
+		 if chi.multiplicative_order() == 2 and c.symbol is not None:
+                  	ret.append([(j, c.symbol, chi.modulus(
                  	), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
                  else:
                     ret.append([(j, chi, chi.modulus(
