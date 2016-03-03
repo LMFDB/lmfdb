@@ -66,7 +66,7 @@ def not_found_500(error):
 
 
 def root_static_file(name):
-    import flask
+    from flask import redirect
 
     def static_fn():
         import os
@@ -75,7 +75,7 @@ def root_static_file(name):
             return open(fn).read()
         import logging
         logging.critical("root_static_file: file %s not found!" % fn)
-        return flask.redirect(404)
+        return redirect(404)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
 map(root_static_file, ['favicon.ico'])
 
@@ -134,7 +134,7 @@ def set_menu_cookie(response):
 
 @app.route('/_menutoggle/<show>')
 def menutoggle(show):
-    from flask import g
+    from flask import g, redirect
     g.show_menu = show != "False"
     url = request.referrer or url_for('index')
     return redirect(url)
@@ -155,6 +155,7 @@ def example(blah=None):
 @app.route("/ModularForm/")
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
+    from flask import redirect
     return redirect(url_for("mf.render_modular_form_main_page"))
     # return render_template("modular_form_space.html", info = { })
 
