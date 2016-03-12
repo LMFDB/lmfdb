@@ -1,3 +1,5 @@
+import os
+import yaml
 from flask import url_for
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text, Infinity
 from lmfdb.base import app, getDBConnection
@@ -326,3 +328,27 @@ class ECNF(object):
 
         for E0 in self.base_change:
             self.friends += [('Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
+
+        self.make_code_snippets()
+
+    def make_code_snippets(self):
+        # read in code.yaml from current directory:
+
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+
+        # Fill in placeholders for this specific curve:
+
+        for lang in ['sage', 'magma']:
+            self.code['field'][lang] = self.code['field'][lang] % self.field.poly()
+
+        for lang in ['sage', 'magma']:
+            self.code['curve'][lang] = self.code['curve'][lang] % self.ainvs
+
+        for k in self.code:
+            if k != 'prompt':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]
