@@ -1,4 +1,5 @@
 from flask import url_for
+from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text, Infinity
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
@@ -272,11 +273,11 @@ class ECNF(object):
         self.urls = {}
         # It's useful to be able to use this class out of context, when calling url_for will fail:
         try:
-            self.urls['curve'] = url_for(".show_ecnf", nf=self.field_label, conductor_label=self.conductor_label, class_label=self.iso_label, number=self.number)
+            self.urls['curve'] = url_for(".show_ecnf", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number)
         except RuntimeError:
             return
-        self.urls['class'] = url_for(".show_ecnf_isoclass", nf=self.field_label, conductor_label=self.conductor_label, class_label=self.iso_label)
-        self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=self.conductor_label)
+        self.urls['class'] = url_for(".show_ecnf_isoclass", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label)
+        self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=quote(self.conductor_label))
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
 
         if self.field.is_real_quadratic():

@@ -5,6 +5,7 @@
 import re
 import pymongo
 ASC = pymongo.ASCENDING
+from urllib import quote, unquote
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect
 from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, parse_torsion_structure
@@ -192,12 +193,13 @@ def show_ecnf1(nf):
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
     nf_label = parse_field_string(nf)
-    return elliptic_curve_search(data={'nf_label': nf_label, 'conductor_label': conductor_label}, **request.args)
+    return elliptic_curve_search(data={'nf_label': nf_label, 'conductor_label': quote(conductor_label)}, **request.args)
 
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
     nf_label = parse_field_string(nf)
+    conductor_label = unquote(conductor_label)
     label = "-".join([nf_label, conductor_label, class_label])
     full_class_label = "-".join([conductor_label, class_label])
     cl = ECNF_isoclass.by_label(label)
@@ -205,7 +207,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     bread = [("Elliptic Curves", url_for(".index"))]
     bread.append((cl.ECNF.field.field_pretty(), url_for(".show_ecnf1", nf=nf_label)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
-    bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=conductor_label, class_label=class_label)))
+    bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=quote(conductor_label), class_label=class_label)))
     info = {}
     return render_template("show-ecnf-isoclass.html",
                            credit=ecnf_credit,

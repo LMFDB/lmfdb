@@ -4,6 +4,7 @@ import tempfile
 import os
 from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
+from urllib import quote
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -161,7 +162,7 @@ def make_graph(M):
             centervert = [i for i in range(4) if max(MM.row(i)) < maxdegree][0]
             other = [i for i in range(4) if i != centervert]
             G.set_pos(pos={centervert: [0, 0], other[0]: [0, 1], other[1]: [-0.8660254, -0.5], other[2]: [0.8660254, -0.5]})
-        elif maxdegree == 27:
+        elif maxdegree == 27 and n==4:
             # o--o--o--o
             centers = [i for i in range(4) if list(MM.row(i)).count(3) == 2]
             left = [j for j in range(4) if MM[centers[0], j] == 3 and j not in centers][0]
@@ -178,14 +179,14 @@ def make_graph(M):
             left = [j for j in range(6) if MM[centers[0], j] == 2 and j not in centers]
             right = [j for j in range(6) if MM[centers[1], j] == 2 and j not in centers]
             G.set_pos(pos={centers[0]: [-0.5, 0], left[0]: [-1, 0.8660254], left[1]: [-1, -0.8660254], centers[1]: [0.5, 0], right[0]: [1, 0.8660254], right[1]: [1, -0.8660254]})
-        elif maxdegree == 18:
+        elif maxdegree == 18 and n==6:
             # two squares joined on an edge
             centers = [i for i in range(6) if list(MM.row(i)).count(3) == 2]
             top = [j for j in range(6) if MM[centers[0], j] == 3]
             bl = [j for j in range(6) if MM[top[0], j] == 2][0]
             br = [j for j in range(6) if MM[top[1], j] == 2][0]
             G.set_pos(pos={centers[0]: [0, 0.5], centers[1]: [0, -0.5], top[0]: [-1, 0.5], top[1]: [1, 0.5], bl: [-1, -0.5], br: [1, -0.5]})
-        elif maxdegree == 16:
+        elif maxdegree == 16 and n==8:
             # tree from bottom, 3 regular except for the leaves.
             centers = [i for i in range(8) if list(MM.row(i)).count(2) == 3]
             center = [i for i in centers if len([j for j in centers if MM[i, j] == 2]) == 2][0]
