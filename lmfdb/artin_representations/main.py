@@ -205,9 +205,7 @@ def search_input_error(info, bread):
 
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
-    artin_logger.debug("Asked for the set of Artin representations with parameters dim: %s conductor: %s " %
-                       (dim, conductor))
-    return render_artin_representation_set_webpage(dim, conductor)
+    return artin_representation_search(**{'dimension': dim, 'conductor': conductor})
 
 
 # credit information should be moved to the databases themselves, not at the display level. that's too late.
