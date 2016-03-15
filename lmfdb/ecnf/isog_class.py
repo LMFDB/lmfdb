@@ -179,7 +179,7 @@ def make_graph(M):
             left = [j for j in range(6) if MM[centers[0], j] == 2 and j not in centers]
             right = [j for j in range(6) if MM[centers[1], j] == 2 and j not in centers]
             G.set_pos(pos={centers[0]: [-0.5, 0], left[0]: [-1, 0.8660254], left[1]: [-1, -0.8660254], centers[1]: [0.5, 0], right[0]: [1, 0.8660254], right[1]: [1, -0.8660254]})
-        elif maxdegree == 18:
+        elif maxdegree == 18 and n==6:
             # two squares joined on an edge
             centers = [i for i in range(6) if list(MM.row(i)).count(3) == 2]
             top = [j for j in range(6) if MM[centers[0], j] == 3]
