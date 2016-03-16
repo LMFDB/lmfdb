@@ -146,12 +146,12 @@ def is_debug_mode():
     return current_app.debug
 
 branch = "prod"
-if os.getenv('BETA') is not None: # or is_debug_mode():
+if (os.getenv('BETA')=='1'):
     branch = "beta"
 
 @app.before_request
 def set_beta_state():
-    g.BETA = os.getenv('BETA') is not None or is_debug_mode()
+    g.BETA = (os.getenv('BETA')=='1') or is_debug_mode()
 
 @app.context_processor
 def ctx_proc_userdata():

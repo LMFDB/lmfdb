@@ -309,7 +309,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
     s = {'level':{"$lt":int(limits_level[1]+1),"$gt":int(limits_level[0]-1)},
          'weight' : {"$lt":int(limits_weight[1]+1),"$gt":int(limits_weight[0]-1)}}
     if group == 0:
-        s['cchi']=int(1)        
+        s['character_orbit']=[int(1)]
     else:
         s['gamma1_label']={"$exists":True}
     g = db_dim.find(s).sort([('level',int(1)),('weight',int(1))])
