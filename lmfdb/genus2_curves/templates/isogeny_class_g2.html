@@ -1,6 +1,12 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<!--New table class to avoid spacing in LaTeX-links -->
+<style type="text/css">
+table.g2 a {
+  padding: 0;
+}
+
 <style type="text/css">
 #isogeny_class_table th, #isogeny_class_table td {
 padding : 4px;
@@ -55,16 +61,20 @@ text-align: center;
 <p>{{info.gl2_statement_base}}</p>
 
 <!-- Description over QQ: -->
-<p>{{info.endo_statement_base|safe}}</p>
+{{info.endo_statement_base|safe}}
 
 <!-- Description of field of definition: -->
 <p>{{info.fod_statement|safe}}</p>
 
 <!-- Description over QQbar: -->
-<p>{{info.endo_statement_geom|safe}}</p>
+{{info.endo_statement_geom|safe}}
+<!-- Excuse the upcoming dirty spacing hack, but putting paragraph tags around
+the previous statement ruins its table spacing.
+Same for all other occasions of it.-->
+<!-- <p></p> -->
 
 <p>More complete information on endomorphism algebras and rings can be found on
-the webpages of the individual curves in the isogeny class.</p>
+the pages of the individual curves in the isogeny class.</p>
 
 <h2>{{ KNOWL('ag.isogeny', title='Isogenies') }}</h2>
 
@@ -85,5 +95,8 @@ the webpages of the individual curves in the isogeny class.</p>
 <A HREF="/NumberField/{{c.nf}}">{{c.nf}}</A>.</p>
 {% endfor %}
 {% endif %}
+
+<p>More complete information on the decomposition of the Jacobian found on the
+pages of the individual curves in the isogeny class.</p>
 
 {% endblock %}

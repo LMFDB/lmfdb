@@ -141,7 +141,6 @@ class DirichletCharactersTest(LmfdbTest):
 
 class HeckeCharactersTest(LmfdbTest):
 
-
     def test_heckeexamples(self):
         W = self.tc.get('/Character/Hecke/')
         assert '2.2.8.1' in W.data
@@ -159,7 +158,7 @@ class HeckeCharactersTest(LmfdbTest):
         #W = self.tc.get('/Character/Hecke/7.3.674057.1')
         W = self.tc.get('/Character/Hecke/2.0.4.1/5./2')
         assert 'Related objects' in W.data
-        assert 'primitive' in W.data
+        assert 'Primitive' in W.data
 
     def test_hecke_calc(self):
         W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/5./1?val=1-a')

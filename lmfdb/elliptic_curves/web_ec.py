@@ -332,9 +332,9 @@ class WebEC(object):
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label)),
             ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
             ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=0, label=iso))]
+            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=1, label=iso))]
 
-        self.downloads = [('Download coeffients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
+        self.downloads = [('Download coefficients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
                           ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label))]
 
         self.plot = encode_plot(self.E.plot())
