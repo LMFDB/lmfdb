@@ -259,16 +259,3 @@ def render_artin_representation_webpage(label):
 
     return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info)
 
-
-def render_artin_representation_set_webpage(dim, conductor):
-    try:
-        the_reps = ArtinRepresentation.find({'Dim': int(dim), "Conductor": str(conductor)})
-    except:
-        pass
-
-    bread = get_bread([(str("Dimension %s, conductor %s" % (dim, conductor)), ' ')])
-
-    title = "Artin representations of dimension $%s$ and conductor $%s$" % (dim, conductor)
-
-    return render_template("artin-representation-set-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, object=the_reps)
-
