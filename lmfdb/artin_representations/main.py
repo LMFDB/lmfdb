@@ -10,6 +10,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 from lmfdb.artin_representations import artin_representations_page, artin_logger
 from lmfdb.utils import to_dict
 from lmfdb.transitive_group import *
+import re
 
 
 from lmfdb.math_classes import *
@@ -212,9 +213,12 @@ def by_partial_data(dim, conductor):
 tim_credit = "Tim Dokchitser, John Jones, and David Roberts"
 support_credit = "Support by Paul-Olivier Dehaye."
 
-
 @artin_representations_page.route("/<label>")
+@artin_representations_page.route("/<label>/")
 def render_artin_representation_webpage(label):
+    if re.compile(r'^\d+$').match(label):
+        return artin_representation_search(**{'dimension': label})
+
     # label=dim.cond.nTt.indexcj, c is literal, j is index in conj class
     # Should we have a big try around this to catch bad labels?
     the_rep = ArtinRepresentation(label)
