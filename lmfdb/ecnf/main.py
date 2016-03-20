@@ -203,9 +203,9 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     label = "-".join([nf_label, conductor_label, class_label])
     full_class_label = "-".join([conductor_label, class_label])
     cl = ECNF_isoclass.by_label(label)
-    title = "Elliptic Curve isogeny class %s over Number Field %s" % (full_class_label, cl.ECNF.field.field_pretty())
+    title = "Elliptic Curve isogeny class %s over Number Field %s" % (full_class_label, cl.field)
     bread = [("Elliptic Curves", url_for(".index"))]
-    bread.append((cl.ECNF.field.field_pretty(), url_for(".show_ecnf1", nf=nf_label)))
+    bread.append((cl.field, url_for(".show_ecnf1", nf=nf_label)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
     bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=quote(conductor_label), class_label=class_label)))
     info = {}
