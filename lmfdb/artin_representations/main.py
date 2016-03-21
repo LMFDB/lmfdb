@@ -10,6 +10,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 from lmfdb.artin_representations import artin_representations_page, artin_logger
 from lmfdb.utils import to_dict
 from lmfdb.transitive_group import *
+import re
 
 
 from lmfdb.math_classes import *
@@ -205,18 +206,19 @@ def search_input_error(info, bread):
 
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
-    artin_logger.debug("Asked for the set of Artin representations with parameters dim: %s conductor: %s " %
-                       (dim, conductor))
-    return render_artin_representation_set_webpage(dim, conductor)
+    return artin_representation_search(**{'dimension': dim, 'conductor': conductor})
 
 
 # credit information should be moved to the databases themselves, not at the display level. that's too late.
 tim_credit = "Tim Dokchitser, John Jones, and David Roberts"
 support_credit = "Support by Paul-Olivier Dehaye."
 
-
 @artin_representations_page.route("/<label>")
+@artin_representations_page.route("/<label>/")
 def render_artin_representation_webpage(label):
+    if re.compile(r'^\d+$').match(label):
+        return artin_representation_search(**{'dimension': label})
+
     # label=dim.cond.nTt.indexcj, c is literal, j is index in conj class
     # Should we have a big try around this to catch bad labels?
     the_rep = ArtinRepresentation(label)
@@ -260,17 +262,4 @@ def render_artin_representation_webpage(label):
     #info['pol11']=str(the_rep.central_char(11))
 
     return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info)
-
-
-def render_artin_representation_set_webpage(dim, conductor):
-    try:
-        the_reps = ArtinRepresentation.find({'Dim': int(dim), "Conductor": str(conductor)})
-    except:
-        pass
-
-    bread = get_bread([(str("Dimension %s, conductor %s" % (dim, conductor)), ' ')])
-
-    title = "Artin representations of dimension $%s$ and conductor $%s$" % (dim, conductor)
-
-    return render_template("artin-representation-set-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, object=the_reps)
 
