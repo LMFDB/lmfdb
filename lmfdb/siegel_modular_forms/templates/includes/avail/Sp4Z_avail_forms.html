@@ -31,7 +31,7 @@
 	<td>
 
      {# the coefficients in the database are stored in a way that requires
-        a log of Sage computation.  so we avoid those when the degree is more than 4 #}
+        a lot of Sage computation.  so we avoid those when the degree is more than 4 #}
         {% if dim<5 %}
 	  <a style="display: inline;" href="{{ ['/ModularForm/GSp/Q/Sp4Z.',form]|join }}">
         {% endif %}
