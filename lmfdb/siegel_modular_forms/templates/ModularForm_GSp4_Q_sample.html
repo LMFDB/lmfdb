@@ -32,15 +32,11 @@
 	});
     });
 </script>
-<p>
-  <button value="Download" onclick="window.location.href = '{{ url_for( 'ModularForm_GSp4_Q_top_level', download=sam.collection()[0]+'.'+sam.name()) }}'">Download</button>
-  this sample in JavaScript object notation (json).
-</p>
 
 <h2>Basic properties</h2>
 {% macro nice( x) %}
 {% if x == None %}
-  unkonwn
+  unknown
 {% else %}
   {{ x }}
 {% endif %}
@@ -48,8 +44,8 @@
 <table>
   <tr> <td>Type</td> <td>{{ nice( sam.type()) }}</td> </tr>
   <tr> <td>Weight</td> <td>${{ nice(sam.weight()) }}$</td> </tr>
-  <tr> <td>Is Hecke eigenform</td> <td>{{ nice(sam.is_eigenform()) }}</td> </tr>
-  <tr> <td>Has integral Fourier coefficients</td> <td>{{ nice(sam.is_integral()) }}</td> </tr>
+  <tr> <td>Hecke eigenform?</td> <td>{{ nice(sam.is_eigenform()) }}</td> </tr>
+  <tr> <td>Integral Fourier coefficients?</td> <td>{{ nice(sam.is_integral()) }}</td> </tr>
   <tr> <td>Degree of field</td> <td>${{ nice(sam.field().degree()) }}$</td> </tr>
 </table>
 
@@ -113,35 +109,26 @@
 {% set evs = sam.available_eigenvalues() %}
 {% if evs|count > 0 %}
 <h2>Eigenvalues $\lambda(l)$ of $T(l)$</h2>
-{% if evs_to_show|count == 0 %}
-{% set evs_to_show = evs[:1] %}
-{% endif %}
 {% set ev_dict = sam.eigenvalues( evs_to_show) %}
-<div class="small">
   <table>
     <thead>
       <tr><th>$l$</th><th>${{ '\lambda(l)' + mod_l }}$</th></tr>
     </thead>
     {% for l in ev_dict|sort %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
-      <td valign="top">{{ l }}</td><td>{{ red(ev_dict[l]) }}</td>
+      <td valign="top">${{ l }}$</td><td>${{ red(ev_dict[l]) }}$</td>
     </tr>
     {% endfor %}
   </table>
-</div>
 {% endif %}
 
 {% set fcs = sam.available_Fourier_coefficients() %} 
 {% if fcs|count > 0 %}
 <h2>Fourier coefficients $c(F)$</h2>
-{% if fcs_to_show|count == 0 %}
-{% set fcs_to_show = fcs[1:2] %}
-{% endif %}
 {% set fc_dict = sam.Fourier_coefficients( fcs_to_show) %}
-<div class="small">
   <table>
     <thead>
-      <tr><th>\(\det(F)\)</th><th>F</th><th>${{ 'c(F)' + mod_l }}$</th></tr>
+      <tr><th>\(\det(F)\)</th><th width="60">\(F\)</th><th>${{ 'c(F)' + mod_l }}$</th></tr>
     </thead>
     {% for d in fc_dict|sort %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
@@ -151,12 +138,11 @@
     </tr>
     {% for F in dk[1:]%}
     <tr>
-      <td>{{ F }}</td><td>{{ red(fc_dict[d][F]) }}</td>
+      <td width="10%">{{ F }}</td><td overflow="visible">{{ red(fc_dict[d][F]) }}</td>
     </tr>
     {% endfor %}
     {% endfor %}
   </table>
-</div>
 {% endif %}
 
 {% if evs|count > 0 or fcs|count > 0 %}
@@ -169,25 +155,21 @@
 <table>
   {% if evs|count > 0 %}
   <tr valign="top">
-    <td>Eigenvalues $\lambda(l)$ available for $l$ from</td>
-    <td>
-      <div class="small">
+    <td>$\lambda(l)$ for $l$ in:</td>
+    <td width="80%">
       {% for l in evs %} 
       <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), indices=l) }}">{{ l }}</a>
       {% endfor %}
-      </div>
     </td>
   </tr>
   {% endif %}
   {% if fcs|count > 0 %}
   <tr valign="top">
-    <td>More $c(F)$ available for $\det(F)$ in</td>
-    <td>
-      <div class="small">
+    <td>$c(F)$ for $\det(F)$ in:</td>
+    <td width="80%">
       {% for d in fcs %} 
       <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), dets=d) }}">{{ d }}</a>
       {% endfor %}
-      </div>
     </td>
   </tr>
   {% endif %}
@@ -251,6 +233,10 @@
 
 <p>
   Here $\mathfrak{L}$ equals {{ ideal_l }}.
+</p>
+<p>
+  <button value="Download" onclick="window.location.href = '{{ url_for( 'ModularForm_GSp4_Q_top_level', download=sam.collection()[0]+'.'+sam.name()) }}'">Download</button>
+  this sample in JavaScript object notation (json).
 </p>
 
 
