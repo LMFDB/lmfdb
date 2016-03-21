@@ -49,9 +49,9 @@
 	  </a>
         {% endif %}
 	  {% if wt <= 8 %}</td><td></td><td></td><td></td><td>{% endif %}
-          {% if (wt == 10 or wt == 14) and form == "E" %}</td><td>{% endif %}
-          {% if wt >= 10 and wt <= 18 and form == "Maass" %}</td><td></td><td>{% endif %}
-	  {% if form == "Ups" %}</td><td>{% endif %}
+          {% if (wt == 10 or wt == 14) and "_E" in form %}</td><td>{% endif %}
+          {% if (wt == 58 or wt <= 18) and "_Maass" in form  %}</td><td></td><td>{% endif %}
+	  {% if (wt != 24 and wt != 26) and "_Ups" in form  %}</td><td>{% endif %}
 	</td>  
 	{% endfor %}
       </tr>
