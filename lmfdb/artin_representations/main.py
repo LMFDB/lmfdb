@@ -216,8 +216,8 @@ def by_partial_data(dim, conductor):
 tim_credit = "Tim Dokchitser, John Jones, and David Roberts"
 support_credit = "Support by Paul-Olivier Dehaye."
 
-@artin_representations_page.route("/<label>")
 @artin_representations_page.route("/<label>/")
+@artin_representations_page.route("/<label>")
 def render_artin_representation_webpage(label):
     if re.compile(r'^\d+$').match(label):
         return artin_representation_search(**{'dimension': label})
