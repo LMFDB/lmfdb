@@ -128,7 +128,7 @@
 {% set fc_dict = sam.Fourier_coefficients( fcs_to_show) %}
   <table>
     <thead>
-      <tr><th>\(\det(F)\)</th><th>F</th><th>${{ 'c(F)' + mod_l }}$</th></tr>
+      <tr><th>\(\det(F)\)</th><th width="60">\(F\)</th><th>${{ 'c(F)' + mod_l }}$</th></tr>
     </thead>
     {% for d in fc_dict|sort %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
