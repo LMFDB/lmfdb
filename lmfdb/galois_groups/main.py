@@ -97,7 +97,10 @@ def index():
         return galois_group_search(**request.args)
     info = {'count': 50}
     info['degree_list'] = range(16)[2:]
-    return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit)
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page")),
+                ('Galois group labels', url_for(".labels_page"))]
+    return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore)
 
 
 @galois_groups_page.route("/search", methods=["GET", "POST"])
@@ -333,3 +336,34 @@ def render_group_webpage(args):
 
 def search_input_error(info, bread):
     return render_template("gg-search.html", info=info, title='Galois Group Search Input Error', bread=bread)
+
+
+@galois_groups_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of Galois group data'
+    bread = get_bread([("Completeness", )])
+    learnmore = [('Source of the data', url_for(".how_computed_page")),
+                ('Galois group labels', url_for(".labels_page"))]
+    return render_template("single.html", kid='dq.gg.extent',
+                           credit=GG_credit, title=t, bread=bread, 
+                           learnmore=learnmore)
+
+@galois_groups_page.route("/Labels")
+def labels_page():
+    t = 'Labels for Galois groups'
+    bread = get_bread([("Labels", '')])
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page"))]
+    return render_template("single.html", kid='gg.label',learnmore=learnmore, credit=GG_credit, title=t, bread=bread)
+
+@galois_groups_page.route("/Source")
+def how_computed_page():
+    t = 'Source of the Galois group data'
+    bread = get_bread([("Source", '')])
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                #('Source of the data', url_for(".how_computed_page")),
+                ('Galois group labels', url_for(".labels_page"))]
+    return render_template("single.html", kid='dq.gg.source',
+                           credit=GG_credit, title=t, bread=bread, 
+                           learnmore=learnmore)
+
