@@ -71,6 +71,9 @@ def learnmore_list():
             ('Source of the data', url_for(".how_computed_page")),
             ('Elliptic Curve labels', url_for(".labels_page"))]
 
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 #########################
 #  Search/navigate
@@ -103,7 +106,7 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list(), **err_args)
+    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -677,7 +680,7 @@ def completeness_page():
              ('Completeness', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.ec.extent',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @ec_page.route("/Source")
 def how_computed_page():
@@ -687,7 +690,7 @@ def how_computed_page():
              ('Source', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.ec.source',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Labels")
 def labels_page():
@@ -697,5 +700,5 @@ def labels_page():
              ('Labels', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='ec.q.lmfdb_label',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
