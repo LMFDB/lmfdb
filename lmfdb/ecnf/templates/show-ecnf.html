@@ -75,9 +75,9 @@ cellpadding="5";
 </style>
 
 <h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass equation') }}</h2>
-<p>
+<div style='overflow-x:auto; overflow-y:hidden'>
 {{ ec.equn }}
-</p>
+</div>
 <p>
   {% if ec.is_minimal %}
   This is a {{ KNOWL('ec.global_minimal_model','global minimal model')}}.

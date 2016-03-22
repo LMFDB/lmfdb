@@ -113,7 +113,7 @@ class ECNF(object):
         self.latex_ainvs = web_latex(self.ainvs)
         from sage.schemes.elliptic_curves.all import EllipticCurve
         self.E = E = EllipticCurve(self.ainvs)
-        self.equn = web_latex(E).replace('=', '\) = \(\qquad')
+        self.equn = web_latex(E)
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
@@ -280,19 +280,26 @@ class ECNF(object):
         self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=quote(self.conductor_label))
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
 
-        if self.field.is_real_quadratic():
+        sig = self.signature
+        real_quadratic = sig == [2,0]
+        totally_real = sig[1] == 0
+        imag_quadratic = sig == [0,1]
+
+        if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
+            self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
 
-        if self.field.is_imag_quadratic():
+        if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field_label=self.field_label, jinv=self.jinv))]
-        if self.field.is_real_quadratic():
+        if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
-        if self.field.is_imag_quadratic():
+            self.friends += [('L-function', self.urls['Lfunction'])]
+        if imag_quadratic:
             self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
 
         self.properties = [
