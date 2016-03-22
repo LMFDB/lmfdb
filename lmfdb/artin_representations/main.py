@@ -255,7 +255,9 @@ def render_artin_representation_webpage(label):
     if nf_url:
     	friends.append(("Artin Field", nf_url))
 
-    friends.append(("L-function", url_for("l_functions.l_function_artin_page",
+    # once the L-functions are in the database, the link can always be shown
+    if the_rep.dimension() <= 6:
+        friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                           label=the_rep.label())))
     info={}
     #info['pol2']=str(the_rep.central_char(2))
