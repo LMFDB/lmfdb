@@ -231,7 +231,8 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         recs = self._collection.find({'hecke_orbit_label':self.hecke_orbit_label})
         if recs.count()==0:
             return 0
-        prec_in_db = max(rec['prec'] for rec in recs)
+        emf_logger.info("recs['prec']={0}".format(recs))
+        prec_in_db = max([rec['prec'] for rec in recs])
         return next_prime(prec_in_db)-1
         
     def __getitem__(self, p):
