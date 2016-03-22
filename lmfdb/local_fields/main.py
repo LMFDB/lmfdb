@@ -52,7 +52,7 @@ def index():
     if len(request.args) != 0:
         return local_field_search(**request.args)
     info = {'count': 20}
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+    learnmore = [#('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Local field labels', url_for(".labels_page"))]
     return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore)

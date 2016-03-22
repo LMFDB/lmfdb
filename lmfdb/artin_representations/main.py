@@ -43,7 +43,7 @@ def index():
     args = request.args
     bread = get_bread()
     if len(args) == 0:
-        learnmore = [('Completeness of the data', url_for(".completeness_page")),
+        learnmore = [#('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Galois group labels', url_for(".labels_page"))]
         return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore)
