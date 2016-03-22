@@ -305,7 +305,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebNumberField('coefficient_field'),
             WebInt('coefficient_field_degree'),
             WebList('twist_info', required = False),
-            WebBool('is_cm', required = False),
+            WebInt('is_cm', required = False),
             WebInt('cm_disc', required = False, default_value=0),
             WebDict('_cm_values',required=False),
             WebBool('is_cuspidal',default_value=True),
