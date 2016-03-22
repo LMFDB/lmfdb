@@ -5,7 +5,7 @@ from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
 from databases.standard_types import PolynomialAsSequenceInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField
-from lmfdb.transitive_group import group_display_knowl, group_display_short
+from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
 from WebNumberField import WebNumberField
 
 
@@ -148,8 +148,7 @@ class ArtinRepresentation(object):
         galnt = self.smallest_gal_t()
         if len(galnt)==1:
             return galnt[0]
-        C = getDBConnection()
-        return group_display_knowl(galnt[0],galnt[1],C)
+        return tryknowl(galnt[0],galnt[1])
 
     def is_ramified(self, p):
         return self.number_field_galois_group().discriminant() % p == 0
