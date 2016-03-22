@@ -73,6 +73,18 @@ class ECNF_isoclass(object):
              self.conductor_label, 'iso_label': self.iso_label}).sort('number')]
         size = len(self.db_curves)
 
+        # Rank or bounds
+        try:
+            self.rk = web_latex(self.db_curves[0]['rank'])
+        except KeyError:
+            self.rk = "?"
+        try:
+            self.rk_bnds = "%s...%s" % tuple(self.db_curves[0]['rank_bounds'])
+        except KeyError:
+            self.rank_bounds = [0, sage.rings.infinity.Infinity]
+            self.rk_bnds = "not recorded"
+
+
         # Extract the isogeny degree matrix from the database if possible, else create it
         if hasattr(self, 'isogeny_matrix'):
             from sage.matrix.all import Matrix
@@ -102,18 +114,22 @@ class ECNF_isoclass(object):
         self.urls['class'] = url_for(".show_ecnf_isoclass", nf=self.field_label, conductor_label=self.conductor_label, class_label=self.iso_label)
         self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=self.conductor_label)
         self.urls['field'] = url_for('.show_ecnf1', nf=self.field_label)
-        real_quadratic = self.signature == [2,0]
-        imag_quadratic = self.signature == [0,1]
-        if real_quadratic:
+        sig = self.signature
+        real_quadratic = sig == [2,0]
+        totally_real = sig[1] == 0
+        imag_quadratic = sig == [0,1]
+        if totally_real:
             self.hmf_label = "-".join([self.field_label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field_label, label=self.hmf_label)
+            self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
 
         if imag_quadratic:
             self.bmf_label = "-".join([self.field_label, self.conductor_label, self.iso_label])
 
         self.friends = []
-        if real_quadratic:
+        if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
+            self.friends += [('L-function', self.urls['Lfunction'])]
         if imag_quadratic:
             self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
 
@@ -121,7 +137,14 @@ class ECNF_isoclass(object):
                            ('Label', self.class_label),
                            (None, self.graph_link),
                            ('Conductor', '%s' % self.conductor_label)
-                           ]
+                       ]
+        if self.rk != '?':
+            self.properties += [('Rank', '%s' % self.rk)]
+        else:
+            if self.rk_bnds == 'not recorded':
+                self.properties += [('Rank', '%s' % self.rk_bnds)]
+            else:
+                self.properties += [('Rank bounds', '%s' % self.rk_bnds)]
 
         self.bread = [('Elliptic Curves ', url_for(".index")),
                       (self.field_label, self.urls['field']),
