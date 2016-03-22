@@ -1576,16 +1576,16 @@ class Lfunction_genus2_Q(Lfunction):
         self.citation = ''
         self.credit = ''
 
-        self.title = "not really the title"
-        self.texname = "LLLLLLL"
-        self.texnamecompleteds = "AAAAAAA"
-        self.texnamecompleted1ms = "BBBBBBB"
         # Extract the L-function information
         # The data are stored in a database, so extract it and then convert
         # to the format expected by the L-function homepage template.
 
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
-        makeLfromdata(self)
+        try:
+            makeLfromdata(self)
+            self.fromDB = True
+        except:
+            self.fromDB = False
 
         # Need an option for the arithmetic normalization, leaving the
         # analytic normalization as the default.
