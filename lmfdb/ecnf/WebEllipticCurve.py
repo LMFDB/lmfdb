@@ -113,7 +113,7 @@ class ECNF(object):
         self.latex_ainvs = web_latex(self.ainvs)
         from sage.schemes.elliptic_curves.all import EllipticCurve
         self.E = E = EllipticCurve(self.ainvs)
-        self.equn = web_latex(E).replace('=', '\) = \(\qquad')
+        self.equn = web_latex(E)
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
