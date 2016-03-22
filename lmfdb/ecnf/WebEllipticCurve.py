@@ -2,7 +2,7 @@ from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text, Infinity
 from lmfdb.base import app, getDBConnection
-from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
+from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot, web_latex_split_on_pm
 from lmfdb.WebNumberField import WebNumberField
 from kraus import (non_minimal_primes, is_global_minimal_model, has_global_minimal_model, minimal_discriminant_ideal)
 
@@ -113,7 +113,10 @@ class ECNF(object):
         self.latex_ainvs = web_latex(self.ainvs)
         from sage.schemes.elliptic_curves.all import EllipticCurve
         self.E = E = EllipticCurve(self.ainvs)
-        self.equn = web_latex(E).replace('=', '\) = \(\qquad')
+        equn_l, equn_r = web_latex(E).split("=")
+        self.equn = equn_l + '\) = \( \qquad ' + web_latex_split_on_pm(equn_r)
+     #   self.equn = equn_l + '\) = \( \qquad ' + equn_r
+     #   self.equn = web_latex(E).replace('=', '\) = \(\qquad')
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
