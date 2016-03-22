@@ -114,11 +114,13 @@ def generateSageLfunction(L):
     """
     from lmfdb.lfunctions import logger
     logger.debug("Generating Sage Lfunction with parameters %s and there are %s coefficients "
-                % ([L.title, L.coefficient_type, L.coefficient_period,
+          #      % ([L.title, L.coefficient_type, L.coefficient_period,
+                % ([L.coefficient_type, L.coefficient_period,
                 L.Q_fe, L.sign, L.kappa_fe, L.lambda_fe,
                 L.poles, L.residues], len(L.dirichlet_coefficients)))
     import sage.libs.lcalc.lcalc_Lfunction as lc
-    L.sageLfunction = lc.Lfunction_C(L.title, L.coefficient_type,
+ #   L.sageLfunction = lc.Lfunction_C(L.title, L.coefficient_type,
+    L.sageLfunction = lc.Lfunction_C("", L.coefficient_type,
                                         L.dirichlet_coefficients,
                                         L.coefficient_period,
                                         L.Q_fe, L.sign,
@@ -291,6 +293,19 @@ class Lfunction_EC_Q(Lfunction):
         self.selfdual = True
         self.primitive = True
         self.coefficient_type = 2
+
+ #       print "trying to make EC L-function from database, with label", self.label
+        label_nodot = self.label.replace(".","")
+        db_label = "EllipticCurve/Q/" + label_nodot
+        self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
+        if 'zeroes' in self.lfunc_data:
+            self.lfunc_data['zeros'] = self.lfunc_data['zeroes']
+   #     print self.lfunc_data
+        try:
+            makeLfromdata(self)
+        except:
+            print "failed makeLfromdata"
+
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
@@ -298,10 +313,29 @@ class Lfunction_EC_Q(Lfunction):
                       "Class " + self.label)
         self.properties = [('Degree ', '%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
-        self.credit = 'Sage'
+#        self.credit = 'Sage'
+        self.credit = ''
         self.citation = ''
-        self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E,
-                                                        int(self.numcoeff))
+  #      self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E,
+  #                                                      int(self.numcoeff))
+
+        self.texname = "L(s,A)"
+        self.htmlname = "<em>L</em>(<em>s,E</em>)"
+        self.texname_arithmetic = "L(E,s)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>E,s</em>)"
+        self.texnamecompleteds = "\\Lambda(s,E)"
+        self.texnamecompleted1ms = "\\Lambda(1-s,E)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(E,s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
+#        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
+#                      + "of conductor " + str(isoclass['cond']))
+        self.title_end = ("where $E$ is an elliptic curve "
+                      + "of conductor " + str(self.level))
+        self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
+        self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
+        self.title = "$" + self.texname + "$" + ", " + self.title_end
+
+        constructor_logger(self, args)
 
         constructor_logger(self, args)
     

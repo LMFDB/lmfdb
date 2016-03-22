@@ -430,7 +430,8 @@ def initLfunction(L, args, request):
     # (however, I'm not sure this is true if L is not primitive -- GT)
 
     # Now we usually display both
-    if L.Ltype() == "genus2curveQ":
+#    if L.Ltype() == "genus2curveQ":
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"]:
         if L.motivic_weight % 2 == 0:
            arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
         else:
@@ -701,7 +702,8 @@ def initLfunction(L, args, request):
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
-    if L.Ltype() == "genus2curveQ":
+ #   if L.Ltype() == "genus2curveQ":
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"]:
         info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
         info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
         info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")

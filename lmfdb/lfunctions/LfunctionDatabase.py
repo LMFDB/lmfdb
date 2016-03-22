@@ -36,6 +36,15 @@ def getEllipticCurveData(label):
     connection = base.getDBConnection()
     curves = connection.elliptic_curves.curves
     return curves.find_one({'lmfdb_label': label})
+
+def getEllipticCurveLData(label):
+    connection = base.getDBConnection()
+    coll = connection.Lfunctions.LfunctionsECtest
+    try:
+        Ldata = coll.find_one({'origin': label})
+    except:
+        Ldata = None
+    return Ldata
     
 def getGenus2Ldata(hash):
     connection = base.getDBConnection()
