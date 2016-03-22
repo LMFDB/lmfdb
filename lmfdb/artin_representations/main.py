@@ -134,7 +134,7 @@ def artin_representation_search(**args):
     elif len(tmp_both) >= 2:
         query["$or"] = tmp_both
 
-    count_default = 50
+    count_default = 10
     if req.get('count'):
         try:
             count = int(req['count'])
