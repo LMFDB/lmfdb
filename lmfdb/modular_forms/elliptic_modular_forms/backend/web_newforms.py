@@ -232,7 +232,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         if recs.count()==0:
             return 0
         emf_logger.info("recs['prec']={0}".format(recs))
-        prec_in_db = max([rec['prec'] for rec in recs])
+        prec_in_db = max(rec['prec'] for rec in recs)
         return next_prime(prec_in_db)-1
         
     def __getitem__(self, p):
