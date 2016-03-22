@@ -171,7 +171,7 @@ class WebNumberField:
     # For cyclotomic fields
     @classmethod
     def from_cyclo(cls, n):
-        if euler_phi(n) > 15:
+        if euler_phi(n) > 23:
             return cls('none')  # Forced to fail
         pol = pari.polcyclo(n)
         R = PolynomialRing(QQ, 'x')
