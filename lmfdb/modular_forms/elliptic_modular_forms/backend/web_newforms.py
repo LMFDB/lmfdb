@@ -231,9 +231,12 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         recs = self._collection.find({'hecke_orbit_label':self.hecke_orbit_label})
         if recs.count()==0:
             return 0
-        emf_logger.info("recs['prec']={0}".format(recs))
-        prec_in_db = max(rec['prec'] for rec in recs)
-        return next_prime(prec_in_db)-1
+        prec_in_db = [rec['prec'] for rec in recs]
+        if prec_in_db != []:
+            max_prec_in_db = max(prec_in_db)
+            return next_prime(max_prec_in_db)-1
+        else:
+            return 0
         
     def __getitem__(self, p):
         if self.auto_update and not self.has_eigenvalue(p):
