@@ -432,7 +432,7 @@ class WebNewForm(WebObject, CachedRepresentation):
           Reimplement the recursive algorithm in sage modular/hecke/module.py
           We do this because of a bug in sage with .eigenvalue()
         """
-        from sage.rings import arith
+        from sage.arith.all import factor
         ev = self.eigenvalues
 
         c2 = self._coefficients.get(2)
@@ -451,7 +451,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         else:
             KZ = K
         #emf_logger.debug("K= {0}".format(K))
-        F = arith.factor(n)
+        F = factor(n)
         for p, r in F:
             #emf_logger.debug("parent_char_val[{0}]={1}".format(p,self.parent.character_used_in_computation.value(p)))
             #emf_logger.debug("char_val[{0}]={1}".format(p,self.character.value(p)))
