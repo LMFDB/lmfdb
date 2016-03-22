@@ -371,6 +371,7 @@ def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
     logger.debug(args)
     logger.debug(temp_args)
+    print "temp_args", temp_args
     try:
         L = Lclass(**args)
     except Exception as ex:
@@ -431,7 +432,7 @@ def initLfunction(L, args, request):
 
     # Now we usually display both
 #    if L.Ltype() == "genus2curveQ":
-    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"]:
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and L.fromDB:
         if L.motivic_weight % 2 == 0:
            arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
         else:
@@ -458,8 +459,12 @@ def initLfunction(L, args, request):
     #        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
     #    if is_odd(L.degree):
     #        info['sv_edge'] = specialValueString(L, 1, '1')
-        info['sv_edge'] = specialValueString(L, 1, '1')
-        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+        try:
+            info['sv_edge'] = specialValueString(L, 1, '1')
+            info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+        except:
+            info['sv_edge'] = "L(1): not computed"
+            info['sv_critical'] = "L(1/2): not computed"
 
     info['args'] = args
 
@@ -703,7 +708,7 @@ def initLfunction(L, args, request):
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
  #   if L.Ltype() == "genus2curveQ":
-    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"]:
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and L.fromDB:
         info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
         info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
         info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")

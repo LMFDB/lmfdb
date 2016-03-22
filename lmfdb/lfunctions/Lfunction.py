@@ -294,17 +294,19 @@ class Lfunction_EC_Q(Lfunction):
         self.primitive = True
         self.coefficient_type = 2
 
- #       print "trying to make EC L-function from database, with label", self.label
         label_nodot = self.label.replace(".","")
         db_label = "EllipticCurve/Q/" + label_nodot
+        print "fetching L data for", db_label
         self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
-        if 'zeroes' in self.lfunc_data:
+        print "self.lfunc_data",self.lfunc_data
+        if self.lfunc_data and 'zeroes' in self.lfunc_data:
             self.lfunc_data['zeros'] = self.lfunc_data['zeroes']
-   #     print self.lfunc_data
+        print "self.lfunc_data",self.lfunc_data
         try:
             makeLfromdata(self)
+            self.fromDB = True
         except:
-            print "failed makeLfromdata"
+            self.fromDB = False
 
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
