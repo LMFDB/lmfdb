@@ -2,7 +2,7 @@ from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text, Infinity
 from lmfdb.base import app, getDBConnection
-from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot, web_latex_split_on_pm, web_latex_split_on_re
+from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from kraus import (non_minimal_primes, is_global_minimal_model, has_global_minimal_model, minimal_discriminant_ideal)
 
