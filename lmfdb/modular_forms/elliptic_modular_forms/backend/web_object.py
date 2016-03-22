@@ -517,7 +517,7 @@ class WebObject(object):
         #print meta_key
         dbd = self.db_dict()
         ## Add modification data
-        dbs['modification_date'] = datetime.datetime.utcnow()
+        dbd['modification_date'] = datetime.datetime.utcnow()
         #emf_logger.debug("update with dbd={0} and key:{1}".format(dbd,key))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
