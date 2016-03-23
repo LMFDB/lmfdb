@@ -467,13 +467,16 @@ class WebNewForm(WebObject, CachedRepresentation):
                 if r == 1:
                     c = cp
                 else:
-                    eps = KZ(self.parent.character_used_in_computation.value(p))
                     # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                     apr1 = self.coefficient_n_recursive(pr//p)
                     #ap = self.coefficient_n_recursive(p)
-                    k = self.weight
                     apr2 = self.coefficient_n_recursive(pr//(p*p))
-                    c = cp*apr1 - eps*(p**(k-1)) * apr2
+                    val = self.parent.character_used_in_computation.value(p)
+                    if val == 0:
+                        c = cp*apr1
+                    else:
+                        eps = KZ(val)
+                        c = cp*apr1 - eps*(p**(self.weight-1)) * apr2
                     #emf_logger.debug("c({0})={1}".format(pr,c))
                             #ev[pr]=c
                 self._coefficients[pr]=c
