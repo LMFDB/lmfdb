@@ -21,8 +21,8 @@ The documents in the collection 'Lfunctions' in the database 'elliptic_curves' h
    - '_id': internal mogodb identifier
    - 'conductor' (int) conductor, e.g. 1225
    - 'hash' (python Long int)
-   - 'origin' (strings): the URL of the object from which this L-function originated, e.g. 'EllipticCurve/11/a'
-   - 'instances' (list of strings): list of URLs of objects with this L-function, e.g. ['EllipticCurve/11/a']
+   - 'origin' (strings): the URL of the object from which this L-function originated, e.g. 'EllipticCurve/Q/11/a'
+   - 'instances' (list of strings): list of URLs of objects with this L-function, e.g. ['EllipticCurve/Q/11/a']
    - 'order_of_vanishing': (int) order of vanishing at critical point, e.g. 0
    - 'plot' (string): string representing list of [x,y] coordinates of points on the plot
    - 'bad_lfactors' (list of lists) list of pairs [p,coeffs] where p
@@ -40,7 +40,6 @@ The documents in the collection 'Lfunctions' in the database 'elliptic_curves' h
    - 'zeros' (string): string representing list of imaginary parts of zeros between -20 and +20.
 
 """
-
 import os.path
 import gzip
 import re
@@ -146,6 +145,10 @@ def read_line(line):
     data['central_character'] = '%s.1' % cond
     data['st_group'] = 'N(U(1))' if E['cm'] else 'SU(2)'
 
+    # To compute the Euler factors we need the ap which are currently
+    # not in the database so we call Sage.  It might be a good idea to
+    # store in the ec database (1) all ap for p<100; (2) all ap for
+    # bad p.
     Esage = EllipticCurve([ZZ(eval(a)) for a in E['ainvs']])
     data['bad_lfactors'] = make_bad_lfactors(Esage)
     data['euler_factors'] = str(make_euler_factors(Esage))
@@ -158,8 +161,10 @@ def comp_dict_by_label(d1, d2):
 
 # To run this go into the top-level lmfdb directory, run sage and give
 # the command
-# %runfile lmfdb/elliptic_curves/import_ec_data.py
+# %runfile lmfdb/elliptic_curves/import_ec_lfunction_data.py
 #
+# and then run the following function.
+# Unless you set test=False it will not actually upload any data.
 
 def upload_to_db(base_path, f, test=True):
     f = os.path.join(base_path, f)
@@ -179,10 +184,10 @@ def upload_to_db(base_path, f, test=True):
             data_to_insert[hash] = data
 
     print "finished reading %s lines from file" % count
-
     vals = data_to_insert.values()
     print("Number of records to insert = %s" % len(vals))
     count = 0
+
     for val in vals:
         #print val
         if not test:
