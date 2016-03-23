@@ -430,7 +430,8 @@ def initLfunction(L, args, request):
     # (however, I'm not sure this is true if L is not primitive -- GT)
 
     # Now we usually display both
-    if L.Ltype() == "genus2curveQ":
+#    if L.Ltype() == "genus2curveQ":
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and L.fromDB:
         if L.motivic_weight % 2 == 0:
            arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
         else:
@@ -457,8 +458,12 @@ def initLfunction(L, args, request):
     #        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
     #    if is_odd(L.degree):
     #        info['sv_edge'] = specialValueString(L, 1, '1')
-        info['sv_edge'] = specialValueString(L, 1, '1')
-        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+        try:
+            info['sv_edge'] = specialValueString(L, 1, '1')
+            info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+        except:
+            info['sv_critical'] = "L(1/2): not computed"
+            info['sv_edge'] = "L(1): not computed"
 
     info['args'] = args
 
@@ -487,6 +492,13 @@ def initLfunction(L, args, request):
     info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
                         replace('/Lfunction/', '/L/Plot/').
                         replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
+    # an inelegant way to remove the plot in certain cases
+    try: 
+        if not L.fromDB and not L.plot:
+            info['plotlink'] = ""
+    except:
+        pass
+
 
     info['bread'] = []
     info['properties2'] = set_gaga_properties(L)
@@ -668,8 +680,6 @@ def initLfunction(L, args, request):
         info['friends'] = [('Siegel Modular Form ' + weight + '_' + L.orbit, friendlink)]
 
     elif L.Ltype() == "artin":
-        # info['zeroeslink'] = ''
-        # info['plotlink'] = ''
         info['friends'] = [('Artin representation', L.artin.url_for())]
         if L.sign == 0:           # The root number is now unknown
             info['zeroeslink'] = ''
@@ -701,7 +711,8 @@ def initLfunction(L, args, request):
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
-    if L.Ltype() == "genus2curveQ":
+ #   if L.Ltype() == "genus2curveQ":
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and L.fromDB:
         info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
         info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
         info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")
@@ -851,7 +862,10 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
     if hasattr(pythonL,"lfunc_data"):
-        F = p2sage(pythonL.lfunc_data['plot'])
+        if pythonL.lfunc_data is None:
+            return ""
+        else:
+            F = p2sage(pythonL.lfunc_data['plot'])
     else:
         L = pythonL.sageLfunction
         # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
@@ -885,7 +899,10 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
     if hasattr(L,"lfunc_data"):
-        website_zeros = p2sage(L.lfunc_data['zeros'])
+        if L.lfunc_data is None:
+            return "<span>" + L.zeros + "</span>"
+        else:
+            website_zeros = p2sage(L.lfunc_data['zeros'])
     else:
         # This depends on mathematical information, all below is formatting
         # More semantic this way

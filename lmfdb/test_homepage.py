@@ -41,7 +41,7 @@ class HomePageTest(LmfdbTest):
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/1/a/", '0.2993668')
         self.check(homepage,"/L/ModularForm/GL2/Q/holomorphic/1/12/1/a/0/", 'approx 0.839345512')
         self.check(homepage,"/EllipticCurve/Q/234446/a/1", r'y^2 + x y = x^{3} -  x^{2} - 79 x + 289')
-        self.check(homepage,"/L/EllipticCurve/Q/234446.a/", 'L-function $L(s,E)$ for the Elliptic Curve Isogeny Class 234446.a')
+        self.check(homepage,"/L/EllipticCurve/Q/234446.a/", 'is an elliptic curve of conductor 234446')
 
     # Box 3
     def test_box3(self):
