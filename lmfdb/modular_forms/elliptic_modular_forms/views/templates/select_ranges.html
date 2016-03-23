@@ -1,13 +1,24 @@
-  <h1>Change the range covered by the table</h1>
+{% if info['level_range'] is defined %}
+  {% set level_range = info['level_range'] %} 
+{% else %}
+{  %   set level_range = "1-12" %}
+{% endif %}
+{% if info['weight_range'] is defined %}
+   {% set weight_range = info['weight_range'] %}
+{% else %}
+   {% set weight_range = "2-36" %}
+{% endif %}
+
+<h1>Change the range covered by the table</h1>
   <form name="browse" method = "get" action="{{url_for('emf.browse_web_modform_spaces_in_ranges')}}">
     <table>
       <tr>
 	<td>{{KNOWL('mf.elliptic.level',title='Level')}} range:</td>
-	<td><input type="text" name="level" example="1-12"></td>
+	<td><input type="text" name="level" example="1-12" value={{level_range}}></td>
       </tr>
       <tr>
 	<td>{{KNOWL('mf.elliptic.weight',title='Weight')}} range:</td>
-	<td><input type="text" name="weight" example="2-36"></td>
+	<td><input type="text" name="weight" example="2-36" value={{weight_range}}></td>
       </tr>
       <tr>
 	<td>Group:</td>
