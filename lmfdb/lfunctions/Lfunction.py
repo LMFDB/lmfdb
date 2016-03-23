@@ -1568,7 +1568,6 @@ class Lfunction_genus2_Q(Lfunction):
             makeLfromdata(self)
             self.fromDB = True
         except:
-            print "Failed to make L-function from data"
             self.fromDB = False
             self.zeros = "zeros not available"
             self.plot = ""
