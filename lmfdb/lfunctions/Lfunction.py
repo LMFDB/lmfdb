@@ -114,12 +114,10 @@ def generateSageLfunction(L):
     """
     from lmfdb.lfunctions import logger
     logger.debug("Generating Sage Lfunction with parameters %s and there are %s coefficients "
-          #      % ([L.title, L.coefficient_type, L.coefficient_period,
                 % ([L.coefficient_type, L.coefficient_period,
                 L.Q_fe, L.sign, L.kappa_fe, L.lambda_fe,
                 L.poles, L.residues], len(L.dirichlet_coefficients)))
     import sage.libs.lcalc.lcalc_Lfunction as lc
- #   L.sageLfunction = lc.Lfunction_C(L.title, L.coefficient_type,
     L.sageLfunction = lc.Lfunction_C("", L.coefficient_type,
                                         L.dirichlet_coefficients,
                                         L.coefficient_period,
@@ -127,18 +125,6 @@ def generateSageLfunction(L):
                                         L.kappa_fe, L.lambda_fe,
                                         L.poles, L.residues)
     
-            # self.poles:           Needs poles of _completed_ L-function
-            # self.residues:        Needs residues of _completed_ L-function
-            # self.kappa_fe:        What ultimately appears if you do
-            #     lcalc.lcalc_Lfunction._print_data_to_standard_output() as the
-            #                                                       gamma[1]
-            # self.lambda_fe:       What ultimately appears if you do
-            #     lcalc.lcalc_Lfunction._print_data_to_standard_output() as the
-            #                                                       lambda[1]
-            # According to Rishi, as of March 2012 (sage <=5.0),
-            # the documentation to his wrapper is wrong
-
-
 class Lfunction_lcalc(Lfunction):
     """Class representing an L-function coming from an lcalc source,
     either a URL or a file

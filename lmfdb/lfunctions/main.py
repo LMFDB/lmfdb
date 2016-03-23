@@ -371,7 +371,6 @@ def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
     logger.debug(args)
     logger.debug(temp_args)
-    print "temp_args", temp_args
     try:
         L = Lclass(**args)
     except Exception as ex:
@@ -463,8 +462,8 @@ def initLfunction(L, args, request):
             info['sv_edge'] = specialValueString(L, 1, '1')
             info['sv_critical'] = specialValueString(L, 0.5, '1/2')
         except:
-            info['sv_edge'] = "L(1): not computed"
             info['sv_critical'] = "L(1/2): not computed"
+            info['sv_edge'] = "L(1): not computed"
 
     info['args'] = args
 
@@ -864,9 +863,7 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
 
     if hasattr(pythonL,"lfunc_data"):
         if pythonL.lfunc_data is None:
-            print "returning",pythonL.plot
             return ""
-            return pythonL.plot
         else:
             F = p2sage(pythonL.lfunc_data['plot'])
     else:
