@@ -321,7 +321,7 @@ class Lfunction_EC_Q(Lfunction):
   #      self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E,
   #                                                      int(self.numcoeff))
 
-        self.texname = "L(s,A)"
+        self.texname = "L(s,E)"
         self.htmlname = "<em>L</em>(<em>s,E</em>)"
         self.texname_arithmetic = "L(E,s)"
         self.htmlname_arithmetic = "<em>L</em>(<em>E,s</em>)"
