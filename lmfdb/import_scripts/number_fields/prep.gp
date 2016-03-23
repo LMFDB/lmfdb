@@ -3,8 +3,8 @@ default(realprecision,1000);
 default(new_galois_format, 1);
 
 /* timeouts */
-shortt = 2*60; /* in seconds */
-longt = 5*60;
+shortt = 30; /* in seconds */
+longt = 3*60;
 /*
 shortt = 2;
 longt = 5;
