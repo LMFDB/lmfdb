@@ -231,8 +231,12 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         recs = self._collection.find({'hecke_orbit_label':self.hecke_orbit_label})
         if recs.count()==0:
             return 0
-        prec_in_db = max(rec['prec'] for rec in recs)
-        return next_prime(prec_in_db)-1
+        prec_in_db = [rec['prec'] for rec in recs]
+        if prec_in_db != []:
+            max_prec_in_db = max(prec_in_db)
+            return next_prime(max_prec_in_db)-1
+        else:
+            return 0
         
     def __getitem__(self, p):
         if self.auto_update and not self.has_eigenvalue(p):
@@ -301,7 +305,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebNumberField('coefficient_field'),
             WebInt('coefficient_field_degree'),
             WebList('twist_info', required = False),
-            WebBool('is_cm', required = False),
+            WebInt('is_cm', required = False),
             WebInt('cm_disc', required = False, default_value=0),
             WebDict('_cm_values',required=False),
             WebBool('is_cuspidal',default_value=True),
