@@ -58,11 +58,6 @@ function show_invs(invstyle) {
 {#
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 #}
-{% set KNOWL_ID = "g2c.%s"|format(data['label']) %}
-
-<!--
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
--->
 
 <div align ="center">
     Show commands using:
@@ -72,6 +67,10 @@ function show_invs(invstyle) {
     -->
     <a onclick="show_code('magma'); return false" href='#'>magma</a>
 </div>
+
+{% set KNOWL_ID = "g2c.%s"|format(data['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
 
 <h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 {{code(data.code,['sage','magma'],'curve')}}
@@ -299,5 +298,7 @@ Same for all other occasions of it.-->
 <p></p>
 {{data.endodata.lattice_statement|safe}}
 <p></p>
+
+<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}
