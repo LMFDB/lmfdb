@@ -138,8 +138,8 @@ def read_line(line):
     data['plot'] = fields[5]
 
     cond = data['conductor'] = int(E['conductor'])
-    data['origin'] = ec_url = 'EllipticCurve/Q/%s' % label
     iso = E['lmfdb_iso'].split('.')[1]
+    data['origin'] = ec_url = 'EllipticCurve/Q/%s/%s' % (cond,iso)
     mf_url = 'ModularForms/GL2/Q/holomorphic/%s/2/1/%s' % (cond,iso)
     data['instances'] = [ec_url, mf_url]
     data['order_of_vanishing'] = r = E['rank']
@@ -150,7 +150,7 @@ def read_line(line):
     data['bad_lfactors'] = make_bad_lfactors(Esage)
     data['euler_factors'] = str(make_euler_factors(Esage))
 
-    return hash, data
+    return data['hash'], data
 
 
 def comp_dict_by_label(d1, d2):
@@ -177,13 +177,11 @@ def upload_to_db(base_path, f, test=True):
         hash, data = read_line(line)
         if hash not in data_to_insert:
             data_to_insert[hash] = data
-        # if count==1:
-        #     for k in data_to_insert[hash].keys():
-        #         print k, type(data_to_insert[hash][k])
 
     print "finished reading %s lines from file" % count
 
     vals = data_to_insert.values()
+    print("Number of records to insert = %s" % len(vals))
     count = 0
     for val in vals:
         #print val
