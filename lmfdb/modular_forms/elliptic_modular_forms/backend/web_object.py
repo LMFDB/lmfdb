@@ -20,7 +20,7 @@ r""" Class to represent an object that we store in a database and want to presen
 AUTHORS:
 
  - Stephan Ehlen
- 
+ - Fredrik Stromberg 
 """
 from lmfdb.base import app
 from flask import url_for
@@ -35,6 +35,7 @@ from sage.all import SageObject,dumps,loads, QQ, NumberField, latex
 import pymongo
 import gridfs
 import re
+import datetime
 
 class WebProperty(object):
     r"""
@@ -515,6 +516,8 @@ class WebObject(object):
         #key.update(file_key)
         #print meta_key
         dbd = self.db_dict()
+        ## Add modification data
+        dbd['modification_date'] = datetime.datetime.utcnow()
         #emf_logger.debug("update with dbd={0} and key:{1}".format(dbd,key))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
@@ -686,7 +689,7 @@ class WebObjectTest(WebObject):
 
 # Define some simple data types with reasonable default values
 
-import datetime
+
 class WebDate(WebProperty):
     _default_value = datetime.datetime(1970, 1, 1, 0, 0)
 

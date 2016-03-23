@@ -231,8 +231,12 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         recs = self._collection.find({'hecke_orbit_label':self.hecke_orbit_label})
         if recs.count()==0:
             return 0
-        prec_in_db = max(rec['prec'] for rec in recs)
-        return next_prime(prec_in_db)-1
+        prec_in_db = [rec['prec'] for rec in recs]
+        if prec_in_db != []:
+            max_prec_in_db = max(prec_in_db)
+            return next_prime(max_prec_in_db)-1
+        else:
+            return 0
         
     def __getitem__(self, p):
         if self.auto_update and not self.has_eigenvalue(p):
@@ -301,7 +305,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebNumberField('coefficient_field'),
             WebInt('coefficient_field_degree'),
             WebList('twist_info', required = False),
-            WebBool('is_cm', required = False),
+            WebInt('is_cm', required = False),
             WebInt('cm_disc', required = False, default_value=0),
             WebDict('_cm_values',required=False),
             WebBool('is_cuspidal',default_value=True),
@@ -428,7 +432,7 @@ class WebNewForm(WebObject, CachedRepresentation):
           Reimplement the recursive algorithm in sage modular/hecke/module.py
           We do this because of a bug in sage with .eigenvalue()
         """
-        from sage.rings import arith
+        from sage.arith.all import factor
         ev = self.eigenvalues
 
         c2 = self._coefficients.get(2)
@@ -447,7 +451,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         else:
             KZ = K
         #emf_logger.debug("K= {0}".format(K))
-        F = arith.factor(n)
+        F = factor(n)
         for p, r in F:
             #emf_logger.debug("parent_char_val[{0}]={1}".format(p,self.parent.character_used_in_computation.value(p)))
             #emf_logger.debug("char_val[{0}]={1}".format(p,self.character.value(p)))
