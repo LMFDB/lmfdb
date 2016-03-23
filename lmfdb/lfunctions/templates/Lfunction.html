@@ -303,15 +303,15 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
      {{zeroswarning}}.
      <div><span id="tpzeros">{{tpzeroslink|safe}}</span></div>
  {% else %}
-     <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute zeros.</div>
+     <div>Zeros not available.</div>
  {% endif %}
 
-    <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along center part of the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
+    <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
 
  {% if plotlink %}
     <img src="{{ plotlink|safe }}" >
  {% else %}
-    <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to make a plot.</div>
+    <div>Plot not available.</div>
  {% endif %}
 
 <script type="text/javascript">

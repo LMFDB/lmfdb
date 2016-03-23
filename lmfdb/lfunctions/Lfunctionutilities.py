@@ -403,7 +403,8 @@ def lfuncEPtex(L, fmt):
     """ Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
-    if L.Ltype() == "genus2curveQ" and fmt == "arithmetic":
+#    if L.Ltype() == "genus2curveQ" and fmt == "arithmetic":
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and fmt == "arithmetic":
         return lfuncEPhtml(L, fmt)
 
     ans = ""
@@ -473,11 +474,18 @@ def lfuncEPhtml(L,fmt):
     ans = ""
  #   ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
     ans += texform_gen + "where, for " + pgoodset + ",\n"
-    ans += "\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
-    ans += "with $b_p = a_p^2 - a_{p^2}$. "
+    if L.degree == 4 and L.motivic_weight == 1:
+        ans += "\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
+        ans += "with $b_p = a_p^2 - a_{p^2}$. "
+    elif L.degree == 2 and L.motivic_weight == 1:
+        ans += "\[F_p(T) = 1 - a_p T + p T^2 .\]"
+    else:
+        ans += "\(F_p\) is a polynomial of degree " + str(L.degree) + ". "
   #  ans += "If $p \mid "  + str(L.level) + "$, then $F_p$ is a polynomial of degree at most 3, "
-    ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most 3, "
-    ans += "with $F_p(0) = 1$."
+  #  ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most 3, "
+    ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most "
+    ans += str(L.degree - 1) + ". "
+#    ans += "with $F_p(0) = 1$."
     factN = list(factor(L.level))
     bad_primes = []
     for lf in L.bad_lfactors:
