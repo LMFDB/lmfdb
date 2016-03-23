@@ -37,14 +37,14 @@
 The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is 
 {% if is_rational ==1 %}
 <a title = "{{ coeff_field_pretty[1] }}[nf.field.data]" knowl= "nf.field.data" kwargs="label=1.1.1.1">{{ coeff_field_pretty[1] }}</a>
-{%  else %}
+  {%  else %}
     {% if coeff_field_pretty %}
-        $\Q(\alpha)\cong\,$
+        $\Q({{ polvars['coefficient_field']}})\cong\,$
 <a title = "{{ coeff_field_pretty[1] }}[nf.field.data]" knowl= "nf.field.data" kwargs="label={{coeff_field_pretty[2]}}">{{ coeff_field_pretty[1] }}</a></td>
     {% else %}
-        $\Q(\alpha)$
+        $\Q({{ polvars['coefficient_field']}})$
     {% endif %}
-    where $\alpha$ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} {{coeff_field[0] | safe}} over $\Q$. 
+    where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} {{coeff_field[0] | safe}} over $\Q$. 
     {% if coeff_field|length >2 and coeff_field[2]>2 %}
     <br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is {{coeff_field[1]}}.
     {% endif %}

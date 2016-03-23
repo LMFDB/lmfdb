@@ -62,7 +62,7 @@ class EmfTest(LmfdbTest):
         Check that non-trivial characters are also working.
         """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/2/4/a/")
-        assert r'where</div> \(\alpha ^{2} \) \(\mathstrut -\mathstrut  \alpha  \) \(\mathstrut +\mathstrut  1\)\(\mathstrut=0\)' in page.data
+        assert r'where \(\zeta_{6}=e^{\frac{2\pi i}{ 6 } }\) is a primitive 6-th root of unity.' in page.data
         assert r'\(\mathstrut+\) \(\bigl(2 \zeta_{6} \) \(\mathstrut-  2\bigr)q^{3} \)' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/4/9/a/")
         assert r'where</div> \(\alpha ^{2} \) \(\mathstrut +\mathstrut  4\)\(\mathstrut=0\)' in page.data

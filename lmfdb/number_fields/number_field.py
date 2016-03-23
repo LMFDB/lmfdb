@@ -15,7 +15,7 @@ import re
 
 import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod
-from sage.rings.arith import primes
+from sage.arith.all import primes
 
 from lmfdb.transitive_group import *
 
