@@ -37,7 +37,7 @@ The documents in the collection 'Lfunctions' in the database 'elliptic_curves' h
    - 'special_values': (string) string representing list of (1) list
      [1,v] where v is the value of L(1): e.g. '[[1,1.490882041449698]]'
    - 'st_group' (string): Sato-Tate group, either 'SU(2)' if not CM or 'N(U(1))'
-   - 'zeroes' (string): string representing list of imaginary parts of zeroes between -20 and +20.
+   - 'zeros' (string): string representing list of imaginary parts of zeros between -20 and +20.
 
 """
 
@@ -99,30 +99,25 @@ def make_one_euler_factor(E, p):
     r"""
     Returns the Euler factor at p from a Sage elliptic curve E.
     """
-    if E.has_additive_reduction(p):
-        return [1]
-    if E.has_split_multiplicative_reduction(p):
-        return [1,-1]
-    if E.has_nonsplit_multiplicative_reduction(p):
-        return [1,1]
-    # now E.has_good_reduction(p)
-    ap = int(E.reduction(p).trace_of_frobenius())
-    return [1,-ap,int(p)]
-
+    ap = int(E.ap(p))
+    e = E.conductor().valuation(p)
+    if e==0:
+        return [1,-ap,int(p)]
+    if e==1:
+        return [1,-ap]
+    return [1]
 
 def make_euler_factors(E, maxp=100):
     r"""
     Returns a list of the Euler factors for all primes up to max_p,
-        given a database elliptic curve E,
+        given a Sage elliptic curve E,
     """
-    E = EllipticCurve([ZZ(eval(a)) for a in E['ainvs']])
     return [make_one_euler_factor(E, p) for p in primes(100)]
 
 def make_bad_lfactors(E):
     r"""
     Returns a list of the bad Euler factors, given a database elliptic curve E,
     """
-    E = EllipticCurve([ZZ(eval(a)) for a in E['ainvs']])
     return [[int(p),make_one_euler_factor(E, p)] for p in E.conductor().support()]
 
 def read_line(line):
@@ -139,7 +134,7 @@ def read_line(line):
     data['hash'] = fields[0]
     data['root_number'] = fields[2]
     data['special_values'] = fields[3]
-    data['zeroes'] = fields[4]
+    data['zeros'] = fields[4]
     data['plot'] = fields[5]
 
     cond = data['conductor'] = int(E['conductor'])
@@ -148,10 +143,12 @@ def read_line(line):
     mf_url = 'ModularForms/GL2/Q/holomorphic/%s/2/1/%s' % (cond,iso)
     data['instances'] = [ec_url, mf_url]
     data['order_of_vanishing'] = r = E['rank']
-    data['bad_lfactors'] = make_bad_lfactors(E)
-    data['euler_factors'] = str(make_euler_factors(E))
     data['central_character'] = '%s.1' % cond
     data['st_group'] = 'N(U(1))' if E['cm'] else 'SU(2)'
+
+    Esage = EllipticCurve([ZZ(eval(a)) for a in E['ainvs']])
+    data['bad_lfactors'] = make_bad_lfactors(Esage)
+    data['euler_factors'] = str(make_euler_factors(Esage))
 
     return hash, data
 
@@ -175,24 +172,24 @@ def upload_to_db(base_path, f, test=True):
 
     for line in h.readlines():
         count += 1
-        if count%5==0:
+        if count%1000==0:
             print "read %s lines" % count
         hash, data = read_line(line)
         if hash not in data_to_insert:
             data_to_insert[hash] = data
-        if count==1:
-            for k in data_to_insert[hash].keys():
-                print k, type(data_to_insert[hash][k])
+        # if count==1:
+        #     for k in data_to_insert[hash].keys():
+        #         print k, type(data_to_insert[hash][k])
 
     print "finished reading %s lines from file" % count
 
     vals = data_to_insert.values()
     count = 0
     for val in vals:
-        print val
+        #print val
         if not test:
             Lfunctions.update({'hash': val['hash']}, {"$set": val}, upsert=True)
         count += 1
-        if count % 5000 == 0:
+        if count % 1000 == 0:
             print "inserted %s" % (val['label'])
 
