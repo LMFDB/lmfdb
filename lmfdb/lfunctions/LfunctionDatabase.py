@@ -41,16 +41,17 @@ def getEllipticCurveLData(label):
     connection = base.getDBConnection()
     coll = connection.Lfunctions.LfunctionsECtest
     try:
-        Ldata = coll.find_one({'origin': label})
+        Ldata = coll.find_one({'instances': label})
     except:
         Ldata = None
     return Ldata
     
-def getGenus2Ldata(hash):
+def getGenus2Ldata(label):
     connection = base.getDBConnection()
     g2 = connection.genus2_curves
     try:
-        Ldata = g2.Lfunctions.find_one({'hash': hash})
+    #    Ldata = g2.Lfunctions.find_one({'hash': hash})
+        Ldata = g2.Lfunctions.find_one({'instances': label})
     except:
         Ldata = None
     return Ldata

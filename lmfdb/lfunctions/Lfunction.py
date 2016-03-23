@@ -294,19 +294,16 @@ class Lfunction_EC_Q(Lfunction):
         self.primitive = True
         self.coefficient_type = 2
 
-        label_nodot = self.label.replace(".","")
-        db_label = "EllipticCurve/Q/" + label_nodot
-        print "fetching L data for", db_label
+        label_slash = self.label.replace(".","/")
+        db_label = "EllipticCurve/Q/" + label_slash
         self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
-        print "self.lfunc_data",self.lfunc_data
-        if self.lfunc_data and 'zeroes' in self.lfunc_data:
-            self.lfunc_data['zeros'] = self.lfunc_data['zeroes']
-        print "self.lfunc_data",self.lfunc_data
         try:
             makeLfromdata(self)
             self.fromDB = True
         except:
             self.fromDB = False
+            self.zeros = "zeros not available"
+            self.plot = ""
 
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
@@ -329,8 +326,6 @@ class Lfunction_EC_Q(Lfunction):
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
         self.texnamecompleteds_arithmetic = "\\Lambda(E,s)"
         self.texnamecompleted1ms_arithmetic = "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-#        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
-#                      + "of conductor " + str(isoclass['cond']))
         self.title_end = ("where $E$ is an elliptic curve "
                       + "of conductor " + str(self.level))
         self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
@@ -339,8 +334,6 @@ class Lfunction_EC_Q(Lfunction):
 
         constructor_logger(self, args)
 
-        constructor_logger(self, args)
-    
     def ground_field(self):
         return "Q"
 
@@ -1565,10 +1558,11 @@ class Lfunction_genus2_Q(Lfunction):
         self.__dict__.update(args)
         self.label = args['label']
 
-        # Load form from database
-        isoclass = LfunctionDatabase.getGenus2IsogenyClass(self.label)
-        if isoclass is None:
-            raise KeyError("There is no genus 2 isogeny class with that label")
+#        print "self.label",self.label
+#        # Load form from database
+#        isoclass = LfunctionDatabase.getGenus2IsogenyClass(self.label)
+#        if isoclass is None:
+#            raise KeyError("There is no genus 2 isogeny class with that label")
 
         self.number = int(0)
         self.quasidegree = 2
@@ -1580,12 +1574,18 @@ class Lfunction_genus2_Q(Lfunction):
         # The data are stored in a database, so extract it and then convert
         # to the format expected by the L-function homepage template.
 
-        self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
+        label_slash = self.label.replace(".","/")
+        db_label = "/L/Genus2Curve/Q/" + label_slash
+    #    self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
+        self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
         try:
             makeLfromdata(self)
             self.fromDB = True
         except:
+            print "Failed to make L-function from data"
             self.fromDB = False
+            self.zeros = "zeros not available"
+            self.plot = ""
 
         # Need an option for the arithmetic normalization, leaving the
         # analytic normalization as the default.
@@ -1600,7 +1600,8 @@ class Lfunction_genus2_Q(Lfunction):
 #        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
 #                      + "of conductor " + str(isoclass['cond']))
         self.title_end = ("where $A$ is a genus 2 curve "
-                      + "of conductor " + str(isoclass['cond']))
+#                      + "of conductor " + str(isoclass['cond']))
+                      + "with label " + self.label)
         self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
         self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
         self.title = "$" + self.texname + "$" + ", " + self.title_end
