@@ -142,6 +142,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     ## 13/4/3/a ->  base_ring = coefficient_field = QQ(zeta_3) 
     ## 13/4/1/a -> all rational
     ## 13/6/1/a/ -> base_ring = QQ, coefficient_field = Q(sqrt(17))
+    ## These are variables which needs to be set properly below
+    info['polvars'] = {'base_ring':'x','coefficient_field':'\\alpha'}
     if not cf_is_QQ:
         if rdeg>1: # not WNF.coefficient_field == WNF.base_ring:
             ## Here WNF.base_ring should be some cyclotomic field and we have an extension over this.
@@ -157,10 +159,12 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
                 info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_label]
             if z1==4:
                 info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\) and \(\zeta_4=i\).</div><br/>'.format(c_pol_ltx)
+                info['polvars']['base_ring']='i'
             elif z1<=2:
                 info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\).</div><br/>'.format(c_pol_ltx)
             else:
                 info['polynomial_st'] = '<div class="where">where</div> %s\(\mathstrut=0\) and \(\zeta_{%s}=e^{\\frac{2\\pi i}{%s}}\) '%(c_pol_ltx, z1,z1)
+                info['polvars']['base_ring']='\zeta_{{ {0} }}'.format(z1)
                 if z1==3:
                     info['polynomial_st'] += 'is a primitive cube root of unity.'
                 else:
@@ -176,12 +180,13 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
             if hasattr(WNF.coefficient_field, "lmfdb_url") and WNF.coefficient_field.lmfdb_url:
                 info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_label]
             if z1==4:
-                info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\) and \(\zeta_4=i\).'.format(c_pol_ltx)
+                info['polynomial_st'] = '<div class="where">where \(\zeta_4=e^{{\\frac{{\\pi i}}{{ 2 }} }}=i \).</div>'.format(c_pol_ltx)
+                info['polvars']['coefficient_field']='i'
             elif z1<=2:
-                info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\).</div><br/>'.format(c_pol_ltx)
+                info['polynomial_st'] = '' 
             else:
-                #info['polynomial_st'] = '<div class="where">where</div> %s\(\mathstrut=0\) and \(\zeta_{%s}=e^{\\frac{2\\pi i}{%s}}\).'%(c_pol_ltx, z1,z1)
                 info['polynomial_st'] = '<div class="where">where \(\zeta_{{{0}}}=e^{{\\frac{{2\\pi i}}{{ {0} }} }}\) '.format(z1)
+                info['polvars']['coefficient_field']='\zeta_{{{0}}}'.format(z1)
                 if z1==3:
                     info['polynomial_st'] += 'is a primitive cube root of unity.</div>'
                 else:
@@ -232,14 +237,14 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if CM.has_key('tau') and len(CM['tau']) != 0:
             info['CM_values'] = CM
     info['is_cm'] = WNF.is_cm
-    if WNF.is_cm == 1:
+    if WNF.is_cm:
         info['cm_field'] = "2.0.{0}.1".format(-WNF.cm_disc)
         info['cm_disc'] = WNF.cm_disc
         info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], getDBConnection(), field_pretty(info['cm_field']))
         info['cm_field_url'] = url_for("number_fields.by_label", label=info["cm_field"])
-    if WNF.is_cm is None or WNF.is_cm==-1:
+    if WNF.is_cm is None:
         s = '- Unknown (insufficient data)<br>'
-    elif WNF.is_cm == 1:
+    elif WNF.is_cm:
         s = 'Is a CM-form<br>'
     else:
         s = 'Is not a CM-form<br>'
