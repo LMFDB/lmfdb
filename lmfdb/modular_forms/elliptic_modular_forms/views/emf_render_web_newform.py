@@ -139,7 +139,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     ## All combinations should be tested...
     ## 13/4/4/a -> base ring = coefficient_field = QQ(zeta_6)
     ## 13/3/8/a ->  base_ring = QQ(zeta_4), coefficient_field has poly x^2+(2\zeta_4+2x-3\zeta_$ over base_ring
-    ## 13/4/2/a ->  base_ring = coefficient_field = QQ(zeta_3) 
+    ## 13/4/3/a ->  base_ring = coefficient_field = QQ(zeta_3) 
     ## 13/4/1/a -> all rational
     ## 13/6/1/a/ -> base_ring = QQ, coefficient_field = Q(sqrt(17))
     if not cf_is_QQ:
