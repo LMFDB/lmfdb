@@ -135,9 +135,8 @@ def is_range(arg):
     return False
 def extract_data_from_jump_to(s):
     label = ''
-    weight = 0
-    character = 0
-    level = 1
+
+    args = dict()
     if s == 'delta':
         weight = 12
         level = 1
@@ -146,23 +145,18 @@ def extract_data_from_jump_to(s):
         # first see if we have a label or not, i.e. if we have precisely one string of letters at the end
         test = re.findall("[a-z]+", s)
         if len(test) == 1:
-            label = test[0]
+            args['label'] = test[0]
             # emf_logger.debug("label1={0}".format(label))
             # the first string of integers should be the level
         test = re.findall("\d+", s)
         if not test is None and len(test)>0:
-            level = int(test[0])
+            args['level'] = int(test[0])
             if len(test) > 1:  # we also have weight
-                weight = int(test[1])
+                args['weight'] = int(test[1])
             if len(test) > 2:  # we also have character
-                character = int(test[2])
-    emf_logger.debug("label=%s" % label)
-    emf_logger.debug("level=%s" % level)
-    args = dict()
-    args['level'] = int(level)
-    args['weight'] = int(weight) 
-    args['character'] = int(character)
-    if label: args['label'] = label
+                args['character']=int(test[2])
+    emf_logger.debug("args=%s" % label)
+
     return args
 
 
