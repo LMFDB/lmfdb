@@ -456,7 +456,8 @@ class WebObject(object):
         password = open(pw_filename, "r").readlines()[0].strip()
         C = getDBConnection()
         C["modularforms2"].authenticate(user,password)
-
+        emf_logger.critical("Authenticated with user:{0} and pwd:{1}".format(user,password))
+                            
     def logout(self):
         r"""
         Logout authorized user.
@@ -484,8 +485,13 @@ class WebObject(object):
          save the meta record and the file in the gridfs file system.
         """
         import pymongo
+        from pymongo.errors import OperationFailure
         fs = self._files
-        self.authorize()
+        try: 
+            self.authorize()
+        except OperationFailure:
+            emf_logger.critical("Authentication failed. You are not authorized to save data to the database!")
+            return False
         file_key = self.file_key_dict()
         coll = self._file_collection
         if fs.exists(file_key):
