@@ -323,7 +323,9 @@ def render_hmf_webpage(**args):
     if data['dimension'] == 1:   # Try to attach associated elliptic curve
         lab = split_class_label(info['label'])
         ec_from_hmf = db_ecnf().find_one({"label": label + '1'})
-        if ec_from_hmf != None:
+        if ec_from_hmf == None:
+            info['friends'] += [('Elliptic curve not available', "")]
+        else:
             info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
 
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('%s' % data[
