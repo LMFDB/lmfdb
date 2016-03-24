@@ -12,6 +12,7 @@ from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_htm
 from lmfdb.search_parsing import clean_input, parse_range, parse_range2, parse_bracketed_posints
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
+from lmfdb.ecnf.ecnf_stats import get_stats
 from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import parse_list, parse_field_string, field_pretty
