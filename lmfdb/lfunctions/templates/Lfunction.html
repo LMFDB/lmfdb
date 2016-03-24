@@ -43,6 +43,7 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 {% if dirichlet_arithmetic -%}
  <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
 <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
+
 {% elif BETA %}
 <div align='center'><div style="display: inline-block; vertical-align:top;">{{ KNOWL('lfunction.normalization', title='Normalization') }}:  &nbsp; 
 </div>
@@ -57,6 +58,11 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 </span>
 </div>
 </div>
+{% endif %}
+
+{% if knowltype and label %}
+{% set KNOWL_ID = "lfunction.%s.%s"|format(knowltype,label) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2> 
 {% endif %}
 
  <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
@@ -313,6 +319,11 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
  {% else %}
     <div>Plot not available.</div>
  {% endif %}
+
+{% if knowltype and label %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom',title='') }}</h2>
+{% endif %}
+
 
 <script type="text/javascript">
   $(function() {
