@@ -1,13 +1,9 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-
-<p>
-The database currently contains {{info.counts.nlattice_c}} {{ KNOWL('lattice.definition', title='integral lattices') }}. The largest {{ KNOWL('lattice.dimension', title='dimension') }} is {{info.counts.max_dim_c}} and the largest {{ KNOWL('lattice.determinant', title='determinant') }} is {{info.counts.max_det}}. It includes data from the {{ KNOWL('lattice.catalogue_of_lattices', title='Catalogue of Lattices') }}.
-</p>
-<p>
-In the case of {{ KNOWL('lattice.primitive', title='primitive') }} {{ KNOWL('lattice.definition', title='integral lattices') }} of {{ KNOWL('lattice.class_number', title='class number') }} one the database is complete.
-</p>
+<div>
+{{ KNOWL_INC('dq.lattice.extent') }}
+</div>
 
 <style type="text/css">
 .error_message {

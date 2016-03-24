@@ -48,6 +48,15 @@ def my_latex(s):
     ss += ""
     return ss
 
+def learnmore_list():
+    return [('Completeness of the data', url_for("lattice.completeness_page")),
+            ('Source of the data', url_for("lattice.how_computed_page")),
+            ('Integral lattices label', url_for("lattice.labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+
 
 @lattice_page.route("/")
 def lattice_render_webpage():
@@ -63,10 +72,9 @@ def lattice_render_webpage():
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list}
         credit = lattice_credit
         t = 'Integral Lattices'
-        bread = [('Integral Lattices', url_for(".lattice_render_webpage"))]
-        info['learnmore'] = []
+        bread = [('Lattice', url_for(".lattice_render_webpage"))]
         info['counts'] = get_stats().counts()
-        return render_template("lattice-index.html", info=info, credit=credit, title=t, bread=bread)
+        return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
         return lattice_search(**args)
 
@@ -234,3 +242,43 @@ def theta_display(label, number):
     data = C.Lattices.lat.find_one({'label': label})
     coeff=[data['theta_series'][i] for i in range(number+1)]
     return print_q_expansion(coeff)
+
+@lattice_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of the integral lattice data'
+    bread = [('Lattice', url_for(".lattice_render_webpage")),
+             ('Completeness', '')]
+    credit = lattice_credit
+    return render_template("single.html", kid='dq.lattice.extent',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@lattice_page.route("/Source")
+def how_computed_page():
+    t = 'Source of integral lattice data'
+    bread = [('Lattice', url_for(".lattice_render_webpage")),
+             ('Source', '')]
+    credit = lattice_credit
+    return render_template("single.html", kid='dq.lattice.source',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@lattice_page.route("/Labels")
+def labels_page():
+    t = 'LMFDB label of an integral lattice'
+    bread = [('Lattice', url_for(".lattice_render_webpage")),
+             ('Labels', '')]
+    credit = lattice_credit
+    return render_template("single.html", kid='lattice.label',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+
+
+
+
+
+
+
+
+
+
+
+
+
