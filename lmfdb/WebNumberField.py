@@ -61,6 +61,19 @@ def field_pretty(label):
         return '\(\Q(\sqrt{' + str(D) + '}) \)'
     if label in cycloinfo:
         return '\(\Q(\zeta_{%d})\)' % cycloinfo[label]
+    if d == '4':
+        wnf = WebNumberField(label)
+        subs = wnf.subfields()
+        subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
+        # Abort if we don't know one of these fields
+        if [z for z in subs if z._data is None] == []:
+            labels = [str(z.get_label()) for z in subs]
+            labels = [z.split('.') for z in labels]
+            labels = [[ZZ(z[2]).squarefree_part(), - int(z[1])] for z in labels]
+            labels.sort()
+            labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]
+            labels = ['i' if z == -1 else '\sqrt{%d}'% z for z in labels]
+            return '\(\Q(%s, %s)\)'%(labels[0],labels[1])
     return label
 
 def psum(val, li):
