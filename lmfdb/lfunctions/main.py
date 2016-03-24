@@ -424,13 +424,25 @@ def initLfunction(L, args, request):
 
     info['Ltype'] = L.Ltype()
 
-    # Here we should decide which values are indeed special values
-    # According to Brian, odd degree has special value at 1, and even
-    # degree has special value at 1/2.
-    # (however, I'm not sure this is true if L is not primitive -- GT)
+    try:
+        info['label'] = L.label
+    except:
+        info['label'] = ""
 
-    # Now we usually display both
-#    if L.Ltype() == "genus2curveQ":
+    info['knowltype'] = ""   # will be things like g2c.q, ec.q, ...
+    if L.Ltype() == "genus2curveQ":
+        info['knowltype'] = "g2c.q"
+    elif L.Ltype() == "ellipticcurveQ":
+        info['knowltype'] = "ec.q"
+    elif L.Ltype() == "dirichlet":
+        info['knowltype'] = "character.dirichlet"
+        info['label'] = str(L.charactermodulus) + "." + str(L.characternumber)
+    elif L.Ltype() == "ellipticmodularform":
+        info['knowltype'] = "mf"
+        info['label'] =  str(L.level) + '.' + str(L.weight) 
+        info['label'] += '.' + str(L.character) + '.' + str(L.label) 
+        info['label'] += '.' + request.url.split("/")[-2]  # the embedding
+
     if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and L.fromDB:
         if L.motivic_weight % 2 == 0:
            arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
@@ -454,10 +466,6 @@ def initLfunction(L, args, request):
         info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
 
     elif L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
-    #    if is_even(L.degree) :
-    #        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
-    #    if is_odd(L.degree):
-    #        info['sv_edge'] = specialValueString(L, 1, '1')
         try:
             info['sv_edge'] = specialValueString(L, 1, '1')
             info['sv_critical'] = specialValueString(L, 0.5, '1/2')
