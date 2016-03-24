@@ -348,8 +348,11 @@ class ECNF(object):
 
         # Fill in placeholders for this specific curve:
 
+        gen = self.field.generator_name().replace("\\","") # phi not \phi
         for lang in ['sage', 'magma']:
             self.code['field'][lang] = self.code['field'][lang] % self.field.poly()
+            if gen != 'a':
+                self.code['field'][lang] = self.code['field'][lang].replace("<a>","<%s>" % gen)
 
         for lang in ['sage', 'magma']:
             self.code['curve'][lang] = self.code['curve'][lang] % self.ainvs
