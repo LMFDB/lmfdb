@@ -499,6 +499,9 @@ def lfuncEPhtml(L,fmt):
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th><th class='weight galois'>$\Gal(F_p)$</th></tr>\n"
+    if L.degree > 2:
+        eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
+    eptable += "</tr>\n"
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
@@ -509,19 +512,19 @@ def lfuncEPhtml(L,fmt):
             eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
                         "$" + thispolygal[0] + "$" +
                         "</td>")
-            eptable += "<td class='galois'>" 
-       #     eptable += group_display_knowl(4,thispolygal[1][0],C) 
-            this_gal_group = thispolygal[1]
-            if this_gal_group[0]==[0,0]:
-                pass   # do nothing, because the local faco is 1
-            elif this_gal_group[0]==[1,1]:
-                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
-            else:
-                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
-            for j in range(1,len(thispolygal[1])):
-                eptable += "$\\times$"
-                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-            eptable += "</td>"
+            if L.degree > 2:
+                eptable += "<td class='galois'>" 
+                this_gal_group = thispolygal[1]
+                if this_gal_group[0]==[0,0]:
+                    pass   # do nothing, because the local faco is 1
+                elif this_gal_group[0]==[1,1]:
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
+                else:
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+                for j in range(1,len(thispolygal[1])):
+                    eptable += "$\\times$"
+                    eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                eptable += "</td>"
             eptable += "</tr>\n"
 
         except IndexError:
