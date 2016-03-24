@@ -49,6 +49,10 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/?dim=&det=&level=&gram=[17%2C6%2C138]&minimum=&class_number=&aut=").data
         assert '4620' in L #gram matrix search
 
+    def test_lattice_searchGM_2(self):
+        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=5%2C3%2C2&minimum=&class_number=&aut=").data
+        assert '2.1.2.1.1' in L #gram matrix search
+
     def test_latticeZ2(self):
         L = self.tc.get("/Lattice/?label=Z2").data
         assert '0.785398163397448309615660845820' in L #Z2 lattice
