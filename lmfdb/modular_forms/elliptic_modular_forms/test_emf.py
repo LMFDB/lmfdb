@@ -57,6 +57,16 @@ class EmfTest(LmfdbTest):
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/')
         assert '0.2538' in page.data
 
+    def test_triv_character(self):
+        r"""
+        Check that some forms from issue 815 work.
+        """
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/8/1/a/")
+        assert '1016q^{7}' in page.data
+        assert '1.955904533356' in page.data
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/3/6/1/a/")
+        assert '168q^{8}' in page.data
+
     def test_non_triv_character(self):
         r"""
         Check that non-trivial characters are also working.
