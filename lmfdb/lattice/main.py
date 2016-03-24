@@ -11,7 +11,7 @@ from lmfdb.base import app, getDBConnection
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, web_latex_split_on_pm, comma
 
 import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt
+from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
 
 from lmfdb.lattice import lattice_page, lattice_logger
 from lmfdb.lattice.lattice_stats import get_stats
@@ -129,8 +129,14 @@ def lattice_search(**args):
     info['query'] = dict(query)
     res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
     nres = res.count()
-    count = 100
+    if nres==0 and info.get('gram'):
+        A=query['gram'];
+        n=len(A[0])
+        result=[B for B in C.Lattices.lat.find({'dim': int(n)}) if isom(B['gram'], A)==True][0]['label']
+        res=C.Lattices.lat.find({ 'label' : result }).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
+        nres = res.count()
 
+    count = 100
     if nres == 1:
         info['report'] = 'unique match'
     else:
@@ -230,7 +236,7 @@ def vect_to_sym(v):
 
 def isom(A,B):
     # First check that A is a symmetric matrix.
-    if not Matrix(A).is_symmetric():
+    if not matrix(A).is_symmetric():
         return False
     # Then check A against the viable database candidates.
     else:
@@ -253,7 +259,7 @@ def isom(A,B):
         Aquad=QuadraticForm(ZZ,len(A[0]),Avec)
         Bquad=QuadraticForm(ZZ,len(B[0]),Bvec)
         if Aquad.is_globally_equivalent_to(Bquad)==True:
-            return B
+            return True
         else:
             return False
 
@@ -299,16 +305,4 @@ def labels_page():
     credit = lattice_credit
     return render_template("single.html", kid='lattice.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
-
-
-
-
-
-
-
-
-
-
-
-
 
