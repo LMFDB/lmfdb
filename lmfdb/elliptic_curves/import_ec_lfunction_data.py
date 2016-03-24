@@ -15,6 +15,7 @@ The documents in the collection 'Lfunctions' in the database 'elliptic_curves' h
    - 'motivic_weight' (int), motivic weight: 1
    - 'primitive' (bool), wheher this L-function is primitive: True
    - 'self_dual' (bool), wheher this L-function is self-dual: True
+   - 'type' (list of strings): ['EC', 'MF']
 
 (2) fields which depend on the curve (isogeny class)
 
@@ -67,7 +68,8 @@ curves = C.elliptic_curves.curves
 
 print "authenticating on the Lfunctions database"
 C['Lfunctions'].authenticate(username, password)
-Lfunctions = C.Lfunctions.LfunctionsECtest
+#Lfunctions = C.Lfunctions.LfunctionsECtest
+Lfunctions = C.Lfunctions.Lfunctions
 
 def constant_data():
     r"""
@@ -91,7 +93,8 @@ def constant_data():
         'gamma_factors': '[[],[0]]',
         'motivic_weight': 1,
         'primitive': True,
-        'self_dual': True
+        'self_dual': True,
+        'type': ['EC', 'MF']
         }
 
 def make_one_euler_factor(E, p):
@@ -188,11 +191,15 @@ def upload_to_db(base_path, f, test=True):
     print("Number of records to insert = %s" % len(vals))
     count = 0
 
+    if test:
+        print("Not inserting any records as in test mode")
+        print("First record is %s" % vals[0])
+        return
+
     for val in vals:
         #print val
-        if not test:
-            Lfunctions.update({'hash': val['hash']}, {"$set": val}, upsert=True)
+        Lfunctions.update({'hash': val['hash']}, {"$set": val}, upsert=True)
         count += 1
         if count % 1000 == 0:
-            print "inserted %s" % (val['label'])
+            print("inserted %s items" % count)
 
