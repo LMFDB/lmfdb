@@ -1,0 +1,95 @@
+prompt:
+  sage:   'sage:'
+  pari:   'gp:'
+  magma:  'magma:'
+
+logo:
+  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\\\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+field:
+  sage:  K.<a> = NumberField(%s)
+  magma: K<a> := NumberField(%s);
+
+curve:
+  sage: |
+    E = EllipticCurve(%s)
+  magma: |
+    E := EllipticCurve(%s);
+
+is_min:
+  sage: |
+    E.is_global_minimal_model()
+
+cond:
+  sage:  E.conductor()
+  magma: Conductor(E);
+
+cond_norm:
+  sage:  E.conductor().norm()
+  magma: Norm(Conductor(E));
+
+disc:
+  sage:  E.discriminant()
+  magma: Discriminant(E);
+
+disc_norm:
+  sage:  E.discriminant().norm()
+  magma: Norm(Discriminant(E));
+
+jinv:
+  sage:  E.j_invariant()
+  magma: jInvariant(E);
+
+cm:
+  sage:  E.has_cm(), E.cm_discriminant()
+  magma: HasComplexMultiplication(E);
+
+rank:
+  sage:  E.rank()
+  magma: Rank(E);
+
+reg:
+  sage:  E.regulator_of_points(E.gens())
+  magma: Regulator(Generators(E));
+
+gens:
+  sage:  E.gens()
+  magma: Generators(E); // includes torsion
+
+tors:
+  sage:  E.torsion_subgroup().gens()
+  magma: TorsionSubgroup(E);
+
+torgens:
+  sage:  E.torsion_subgroup().gens()
+  magma: |
+    [f(P): P in Generators(T)] where T,f:=TorsionSubgroup(E);
+
+ntors:
+  sage:  E.torsion_order()
+  magma: Order(TorsionSubgroup(E));
+
+cp:
+  sage:  E.tamagawa_numbers()
+  pari:  E.omega[1]
+  magma: RealPeriod(E);
+
+sha:
+  sage:  E.sha().an_numerical()
+  magma: MordellWeilShaInformation(E);
+
+localdata:
+  sage:
+    E.local_data()
+  magma:
+    LocalInformation(E)
