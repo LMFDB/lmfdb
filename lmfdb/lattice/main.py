@@ -23,7 +23,7 @@ lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
 
 def get_bread(breads=[]):
-    bc = [("Lattices", url_for(".index"))]
+    bc = [("Lattice", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -49,9 +49,9 @@ def my_latex(s):
     return ss
 
 def learnmore_list():
-    return [('Completeness of the data', url_for("lattice.completeness_page")),
-            ('Source of the data', url_for("lattice.how_computed_page")),
-            ('Integral lattices label', url_for("lattice.labels_page"))]
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels for integral lattices', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -129,12 +129,17 @@ def lattice_search(**args):
     info['query'] = dict(query)
     res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
     nres = res.count()
+
+    # here we are checking for isometric lattices if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future
+
     if nres==0 and info.get('gram'):
         A=query['gram'];
         n=len(A[0])
-        result=[B for B in C.Lattices.lat.find({'dim': int(n)}) if isom(B['gram'], A)==True][0]['label']
-        res=C.Lattices.lat.find({ 'label' : result }).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
-        nres = res.count()
+        result=[B for B in C.Lattices.lat.find({'dim': int(n)}) if isom(A, B['gram'])==True]
+        if len(result)>0:
+            result=result[0]['label']
+            res=C.Lattices.lat.find({ 'label' : result }).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
+            nres = res.count()
 
     count = 100
     if nres == 1:
@@ -258,10 +263,8 @@ def isom(A,B):
                     Bvec+=[2*B[i][j]]
         Aquad=QuadraticForm(ZZ,len(A[0]),Avec)
         Bquad=QuadraticForm(ZZ,len(B[0]),Bvec)
-        if Aquad.is_globally_equivalent_to(Bquad)==True:
-            return True
-        else:
-            return False
+        return Aquad.is_globally_equivalent_to(Bquad)
+
 
 
 @lattice_page.route('/theta_display/<label>/<number>')
@@ -299,10 +302,10 @@ def how_computed_page():
 
 @lattice_page.route("/Labels")
 def labels_page():
-    t = 'LMFDB label of an integral lattice'
+    t = 'Label of an integral lattice'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Labels', '')]
     credit = lattice_credit
     return render_template("single.html", kid='lattice.label',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
