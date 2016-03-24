@@ -112,8 +112,14 @@ def index():
     iqfs = ['2.0.%s.1' % str(d) for d in [4, 8, 3, 7, 11]]
     data['fields'].append(['imaginary quadratic fields', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in iqfs)])
     # Cubics
-    cubics = ['3.1.23.1']
+    cubics = ['3.1.23.1'] + ['3.3.%s.1' % str(d) for d in [49,148,1957]]
     data['fields'].append(['cubic fields', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in cubics)])
+    # Quartics
+    quartics = ['4.4.%s.1' % str(d) for d in [725,2777,9909,19821]]
+    data['fields'].append(['totally real quartic fields', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quartics)])
+    # Quintics
+    quintics = ['5.5.%s.1' % str(d) for d in [14641]]
+    data['fields'].append(['a totally real quintic field', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
 
 # data['highlights'] holds data (URL and descriptive text) for a
 # sample of elliptic curves with interesting features:

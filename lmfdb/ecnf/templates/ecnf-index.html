@@ -3,8 +3,8 @@
 {% block content %}
 
 <div>
-The database currently contains elliptic curves over a few number
-fields other than $\Q$, mostly quadratic fields.
+The database currently contains elliptic curves over several number
+fields of degree up to 6, mostly totally real fields.
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over {{
@@ -16,7 +16,7 @@ KNOWL('nf',title = "number fields")}}</h2>
 <li>
 curves defined over {{types[0]}}:
 {% for label,f in types[1] %}
-{% if types[0]=='real quadratic fields' %}
+{% if types[0]!='imaginary quadratic fields' %}
 {% if loop.index0 %},...,{% endif %}
 {% else %}
 {% if loop.index0 %},{% endif %}
