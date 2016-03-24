@@ -39,8 +39,8 @@ $\rangle$</td></tr>
 <tr> <td>Classical newforms</td> <td>Hecke eigenvalue field</td><td>Half integral weight cuspforms</td></tr>
 <tr>
 {% for n in info.new %}
-	<td><A HREF="/ModularForm/GL2/Q/holomorphic/{{n.mf}}">{{n.mf}}</A></td>
-    {% if {{n.nf}} is "1.1.1.1" %}
+	<td><A HREF="/ModularForm/GL2/Q/holomorphic/?jump_to={{n.mf}}">{{n.mf}}</A></td>
+    {% if n.nf == "1.1.1.1" %}
         <td><A HREF="/NumberField/{{n.nf}}">$\Q$<A></td>
     {% else %}
         <td>$\Q(a)$: <A HREF="/NumberField/{{n.nf}}"> {{n.field_knowl|safe }}</A>, minimal polynomial of $a$ is $xxxx$</td>
