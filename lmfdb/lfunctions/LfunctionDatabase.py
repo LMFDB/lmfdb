@@ -39,7 +39,7 @@ def getEllipticCurveData(label):
 
 def getEllipticCurveLData(label):
     connection = base.getDBConnection()
-    coll = connection.Lfunctions.LfunctionsECtest
+    coll = connection.Lfunctions.Lfunctions
     try:
         Ldata = coll.find_one({'instances': label})
     except:
