@@ -498,7 +498,7 @@ def lfuncEPhtml(L,fmt):
             good_primes.append(this_prime)
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th><th class='weight galois'>$\Gal(F_p)$</th></tr>\n"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th>"
     if L.degree > 2:
         eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
     eptable += "</tr>\n"
@@ -540,13 +540,14 @@ def lfuncEPhtml(L,fmt):
         eptable += ("<tr" + firsttime + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + thispolygal[0] + "$" +
                     "</td>")
-        this_gal_group = thispolygal[1]
-        eptable += "<td class='galois'>"
-        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
-        for j in range(1,len(thispolygal[1])):
-            eptable += "$\\times$"
-            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-        eptable += "</td>"
+        if L.degree > 2:
+            eptable += "<td class='galois'>"
+            this_gal_group = thispolygal[1]
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
         eptable += "</tr>\n"
 
 
@@ -557,17 +558,18 @@ def lfuncEPhtml(L,fmt):
     firsttime = " id='moreep'"
     for j in good_primes2:
         this_prime_index = prime_pi(j) - 1
+        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
         eptable += ("<tr" + firsttime +  " class='more nodisplay'" + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index], galois=True)[0] + "$" +
                     "</td>")
-        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
-        this_gal_group = thispolygal[1]
-        eptable += "<td class='galois'>"
-        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
-        for j in range(1,len(thispolygal[1])):
-            eptable += "$\\times$"
-            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-        eptable += "</td>"
+        if L.degree > 2:
+            this_gal_group = thispolygal[1]
+            eptable += "<td class='galois'>"
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
 
         eptable += "</tr>\n"
         firsttime = ""
