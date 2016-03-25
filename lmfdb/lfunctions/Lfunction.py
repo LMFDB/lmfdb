@@ -753,6 +753,18 @@ class Lfunction_Dirichlet(Lfunction):
             self.coefficient_period = self.charactermodulus
             self.level = self.charactermodulus
 
+            self.label = str(self.charactermodulus) + "." + str(self.characternumber)
+            label_slash = self.label.replace(".","/")
+            db_label = "Character/Dirichlet/" + label_slash
+            self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
+            try:
+                makeLfromdata(self)
+                self.fromDB = True
+            except:
+                self.fromDB = False
+                self.zeros = "zeros not available"
+                self.plot = ""
+
             chival = [ CC(z.real,z.imag) for z in chi.values()]
             self.dirichlet_coefficients = [ chival[k % self.level] for k in range(1,self.numcoeff) ]
 
@@ -1406,14 +1418,6 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
             self.langlands = True
             self.primitive = False
 
-        # FIX the coefficients by applying the analytic normalization and
-        # K = self.ev_data[0].parent().fraction_field()
-        # if K == QQ:
-        # d = self.dirichlet_coefficients
-        # self.dirichlet_coefficients = [ d[i]/float(i)**self.automorphyexp for i in range(1,len(d)) ]
-        # else:
-        # d = self.dirichlet_coefficients
-        # self.dirichlet_coefficients = [ emb(d[i])/float(i)**self.automorphyexp for i in range(1,len(d)) ]
         self.coefficient_period = 0
         self.coefficient_type = 3
         self.quasidegree = 1
@@ -1543,12 +1547,6 @@ class Lfunction_genus2_Q(Lfunction):
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
         self.label = args['label']
-
-#        print "self.label",self.label
-#        # Load form from database
-#        isoclass = LfunctionDatabase.getGenus2IsogenyClass(self.label)
-#        if isoclass is None:
-#            raise KeyError("There is no genus 2 isogeny class with that label")
 
         self.number = int(0)
         self.quasidegree = 2

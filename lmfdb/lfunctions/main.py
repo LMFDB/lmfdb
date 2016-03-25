@@ -443,7 +443,7 @@ def initLfunction(L, args, request):
         info['label'] += '.' + str(L.character) + '.' + str(L.label) 
         info['label'] += '.' + request.url.split("/")[-2]  # the embedding
 
-    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and L.fromDB:
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
         if L.motivic_weight % 2 == 0:
            arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
         else:
@@ -720,7 +720,7 @@ def initLfunction(L, args, request):
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
  #   if L.Ltype() == "genus2curveQ":
-    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and L.fromDB:
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
         info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
         info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
         info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")
@@ -906,6 +906,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     '''
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
+    print "generateLfunctionFromUrl",L.lfunc_data
     if hasattr(L,"lfunc_data"):
         if L.lfunc_data is None:
             return "<span>" + L.zeros + "</span>"
@@ -921,21 +922,29 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     negativeZeros = []
 
     for zero in website_zeros:
-        if zero.abs() < 1e-10:
+        if abs(float(zero)) < 1e-10:
             zero = 0
-        if zero < 0:
-            negativeZeros.append(zero)
+        if float(zero) < 0:
+            negativeZeros.append(str(zero))
         else:
-            positiveZeros.append(zero)
+            positiveZeros.append(str(zero))
 
+    zero_truncation = 25   # show at most 25 positive and negative zeros
+                           # later: implement "show more"
+    negativeZeros = negativeZeros[-1*zero_truncation:]
+    positiveZeros = positiveZeros[:zero_truncation]
     # Format the html string to render
-    positiveZeros = str(positiveZeros)
-    negativeZeros = str(negativeZeros)
+#    positiveZeros = str(positiveZeros)
+#    negativeZeros = str(negativeZeros)
+    positiveZeros = ", ".join(positiveZeros)
+    negativeZeros = ", ".join(negativeZeros)
     if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
-        negativeZeros = negativeZeros.replace("]", ", ]")
+       # negativeZeros = negativeZeros.replace("]", ", ]")
+        negativeZeros = negativeZeros + ", "
 
     return "<span class='redhighlight'>{0}</span><span class='positivezero'>{1}</span>".format(
-        negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
+     #   negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
+        negativeZeros.replace("-","&minus;"), positiveZeros)
 
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):
