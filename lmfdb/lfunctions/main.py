@@ -371,8 +371,11 @@ def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
     logger.debug(args)
     logger.debug(temp_args)
+
+    L = Lclass(**args)
+    # removing this from the try, because it makes debugging difficult
     try:
-        L = Lclass(**args)
+        pass #L = Lclass(**args)
     except Exception as ex:
         from flask import current_app
         if not current_app.debug:
@@ -906,7 +909,6 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     '''
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
-    print "generateLfunctionFromUrl",L.lfunc_data
     if hasattr(L,"lfunc_data"):
         if L.lfunc_data is None:
             return "<span>" + L.zeros + "</span>"

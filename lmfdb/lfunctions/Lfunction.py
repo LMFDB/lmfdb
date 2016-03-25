@@ -73,12 +73,17 @@ def makeLfromdata(L):
     L.degree = data['degree']
     L.level = data['conductor']
     L.primitive = data['primitive']
+    L.selfdual = data['self_dual']
     # Convert L.motivic_weight from python 'int' type to sage integer type.
     # This is necessary because later we need to do L.motivic_weight/2
     # when we write Gamma-factors in the arithmetic normalization.
     L.motivic_weight = ZZ(data['motivic_weight'])
-    L.sign = p2sage(data['root_number'])
+    if 'root_number' in data:
+        L.sign = p2sage(data['root_number'])
            # p2sage converts from the python string format in the database.
+    else:
+        L.sign = 123 + 456*I
+        #L.sign = exp(2*pi*I*float(data['sign_arg']))
     L.mu_fe = [x+p2sage(data['analytic_normalization'])
         for x in p2sage(data['gamma_factors'])[0]]
     L.nu_fe = [x+p2sage(data['analytic_normalization'])
@@ -93,12 +98,34 @@ def makeLfromdata(L):
     # end items specific to hyperelliptic curves
     L.numcoeff = 30
     # an(analytic) = An(arithmetic)/n^(motivic_weight/2), where an/An are Dir. coeffs
-    L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
-    L.normalize_by = p2sage(data['analytic_normalization'])
+
+    if 'dirichlet_coefficients' in data:
+        L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
+    else:
+        L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
+
     L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
-    for n in range(0, len(L.dirichlet_coefficients)):
-        an = L.dirichlet_coefficients[n]
-        L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
+    L.normalize_by = p2sage(data['analytic_normalization'])
+    for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
+        an = L.dirichlet_coefficients_arithmetic[n]
+        if L.normalize_by > 0:
+            L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
+        else:
+            L.dirichlet_coefficients[n] = an
+
+    if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
+        base_power = int(data['coeff_info'][0][2:-3])
+        print 'base_power',base_power
+        for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
+            an = L.dirichlet_coefficients_arithmetic[n]
+            if not str(an).startswith('a'):
+                L.dirichlet_coefficients_arithmetic[n] = an
+            else:
+                an_power = an[2:]
+                if an_power == '0':
+                    L.dirichlet_coefficients_arithmetic[n] = 1
+                else:
+                    L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + an_power + "}{" + str(base_power)  + "}\\right)$"
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
     L.localfactors = p2sage(data['euler_factors'])
@@ -283,6 +310,11 @@ class Lfunction_EC_Q(Lfunction):
         label_slash = self.label.replace(".","/")
         db_label = "EllipticCurve/Q/" + label_slash
         self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
+        try:
+            self.lfunc_data['values'] = self.lfunc_data['special_values']
+        except:
+            pass  # this is just here for backward compatibility
+
         try:
             makeLfromdata(self)
             self.fromDB = True
@@ -757,16 +789,20 @@ class Lfunction_Dirichlet(Lfunction):
             label_slash = self.label.replace(".","/")
             db_label = "Character/Dirichlet/" + label_slash
             self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
+
+            makeLfromdata(self)
+
             try:
                 makeLfromdata(self)
                 self.fromDB = True
             except:
+                print "oooooooooooops"
                 self.fromDB = False
                 self.zeros = "zeros not available"
                 self.plot = ""
 
-            chival = [ CC(z.real,z.imag) for z in chi.values()]
-            self.dirichlet_coefficients = [ chival[k % self.level] for k in range(1,self.numcoeff) ]
+                chival = [ CC(z.real,z.imag) for z in chi.values()]
+                self.dirichlet_coefficients = [ chival[k % self.level] for k in range(1,self.numcoeff) ]
 
             self.poles = []
             self.residues = []
@@ -792,13 +828,27 @@ class Lfunction_Dirichlet(Lfunction):
             else:
                 self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
 
+            self.htmlname = "<em>L</em>(<em>s,A</em>)"
+            self.texname_arithmetic = "L(\\chi,s)"
+            self.htmlname_arithmetic = "<em>L</em>(<em>A,s</em>)"
+            self.texnamecompleteds = "\\Lambda(s,\\chi)"
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
+            self.texnamecompleteds_arithmetic = "\\Lambda(\\chi,s)"
+            self.texnamecompleted1ms_arithmetic = "\\Lambda(\\chi, " + str(self.motivic_weight + 1) + "-s)"
+            self.title_end = ("where $\\chi$ is the Dirichlet character "
+                      + "with label " + self.label)
+            self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
+            self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
+            self.title = "$" + self.texname + "$" + ", " + self.title_end
+
+
             self.credit = 'Sage'
             self.citation = ''
-            self.title = "Dirichlet L-function: $L(s,\\chi)$"
-            self.title = (self.title + ", where $\\chi$ is the " +
-                          "character modulo " +
-                          str(self.charactermodulus) + ", number " +
-                          str(self.characternumber))
+    #        self.title = "Dirichlet L-function: $L(s,\\chi)$"
+    #        self.title = (self.title + ", where $\\chi$ is the " +
+    #                      "character modulo " +
+    #                      str(self.charactermodulus) + ", number " +
+    #                      str(self.characternumber))
 
             self.sageLfunction = lc.Lfunction_from_character(chi.sage_character())
 
@@ -1562,6 +1612,10 @@ class Lfunction_genus2_Q(Lfunction):
         db_label = "/L/Genus2Curve/Q/" + label_slash
     #    self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
+        try:
+            self.lfunc_data['values'] = self.lfunc_data['special_values']
+        except:
+            pass  # this is just here for backward compatibility
         try:
             makeLfromdata(self)
             self.fromDB = True

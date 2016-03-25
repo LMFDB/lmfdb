@@ -94,12 +94,19 @@ def styleTheSign(sign):
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
     truncation = float(10 ** truncationexp)
-    if type(coeff) == complex:
-        rp = coeff.real
-        ip = coeff.imag
-    else:
-        rp = real_part(coeff)
-        ip = imag_part(coeff)
+    print "seriescoefftype",seriescoefftype
+    try:
+        if type(coeff) == complex:
+            rp = coeff.real
+            ip = coeff.imag
+        else:
+            rp = real_part(coeff)
+            ip = imag_part(coeff)
+    except TypeError:
+        if seriescoefftype == "serieshtml":
+            return " +" + coeff + "&middot;" + seriesvar(index, seriestype)
+        else:
+            return coeff
 # below we use float(abs()) instead of abs() to avoid a sage bug
     if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):  # has a real and an imaginary part
         ans = ""
@@ -749,7 +756,7 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['special_values']):
+        for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
@@ -785,7 +792,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['special_values']):
+        for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
@@ -799,13 +806,16 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
     lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
 
-    if CC(val).real().is_NaN():
-        Lval = "\\infty"
-    elif val.abs() < 1e-10:
-        Lval = "0"
-    else:
-        Lval = latex(round(val.real(), number_of_decimals)
+    try:
+        if CC(val).real().is_NaN():
+            Lval = "\\infty"
+        elif val.abs() < 1e-10:
+            Lval = "0"
+        else:
+            Lval = latex(round(val.real(), number_of_decimals)
                          + round(val.imag(), number_of_decimals) * I)
+    except TypeError:
+        Lval = val    # if val is text
 
     return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
 
