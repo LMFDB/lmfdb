@@ -3,11 +3,7 @@
 {% block content %}
 <h1>Graph of eigenvalues of Maass forms of levels {{min_level}} to {{max_level}} with ${{min_R}} \leq R\leq {{max_R}}$</h1>
 <p>
-The horisontal axis is the spectral parameter $R$ with the Laplace eigenvalue
-satisying $\lambda=1/4+R²$. The vertical axis is the level $N$. Each point
-corresponds to a Maass form of weight 0 and trivial character on $\Gamma_0(N)$
-with even ones being red and odd ones being blue. Clicking on a dot takes you
-to the homepage of the Maass form. For $N>100$ there are only results for prime level.
+    {{KNOWL_INC('mf.maass.mwf.browsegraph')}}
 </p>
 <p>
 Examples of some ranges with complete data:

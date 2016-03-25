@@ -1,0 +1,7 @@
+{
+    "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Gamma1_2",
+    "dim_args_default": "[range(4,11),2]",
+    "latex_name": "M_{k,j}\\left(\\Gamma_1(2)\\right)", 
+    "name": "Gamma1_2",
+    "order": 60
+}

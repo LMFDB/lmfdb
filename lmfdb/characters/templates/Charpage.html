@@ -1,9 +1,11 @@
 {% macro addcode(entries,tag) -%}
    {% if entries %}
-   {% for lang,code in entries %}
-   <{{tag}} class='{{lang}} nodisplay code'>
-   {{ code|nl2br|safe }}
-   </{{tag}}>
+   {% for lang in codelangs %}
+     {% if lang in entries %}
+       {% set prompt = 'gp> ' if lang == 'pari' else '%s: '%lang %}
+       {% set code = entries[lang] %}
+       <{{tag}} class='{{lang}} nodisplay code codebox'>{{prompt}}{{- code if code is string else code|join('\n%s'%prompt) -}}</{{tag}}>
+     {% endif %}
    {% endfor %}
    {% endif %}
 {%- endmacro %}
@@ -18,12 +20,11 @@ function show_code(system) {
    {% for lang in codelangs %}
    $('.{{lang}}').hide();
    {% endfor %}
-    if (cur_system == null) {
+    if (cur_system == system) {
+      cur_system = null;
+    } else {
       $('.'+system).show();
       cur_system = system;
-    } else {
-      $('.'+system).hide();
-      cur_system = null;
     }
 }
 </script>
@@ -74,7 +75,7 @@ table.values td:nth-child(even) {
 </style>
 
    {% if codelangs %}
-        <div align="right">
+        <div align="center">
             <font size="3">Show commands for:</font>
             {% for lang in codelangs %}
             <a onclick="show_code('{{lang}}'); return false" href='#'>{{lang}}</a>

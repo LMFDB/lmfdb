@@ -7,6 +7,7 @@ from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms.backend.plot_dom import *
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
+from lmfdb.modular_forms.backend.mf_utils import my_get
 # from knowledge.knowl import Knowl
 # from psage.modform.maass.lpkbessel import *
 # build extensions
@@ -127,7 +128,6 @@ def get_maassform_by_id(maass_id, fields=None):
         # return render_template("mwf_browse.html", info=info)
     return data
 
-
 def set_info_for_maass_form(data):
     ret = []
     ret.append(["Eigenvalue", "\(\\lambda=r^2 + \\frac{1}{4} \\ , \\quad r= \\ \)" + str(data['Eigenvalue'])])
@@ -212,6 +212,11 @@ def get_search_parameters(info):
         else:
             ret['l1'] = level_range[0]
             ret['l2'] = level_range[1]
+    character = my_get(info, 'character', 1)
+    mwf_logger.info("character: %s" % character)
+    if character > 1:
+        ret['ch1'] = int(character)
+        ret['ch2'] = int(character)
     weight = my_get(info, 'weight', -1)
     if weight > -1:
         ret['wt1'] = float(weight)
@@ -282,7 +287,7 @@ def get_search_parameters(info):
 #         if not cols:
 #             cols=list()
 #             for c in self.db.collection_names():
-#                 if c<>'system.indexes' and c<>'metadata':
+#                 if c!='system.indexes' and c!='metadata':
 #                     print "cc=",c
 #                 cols.append(self.db[c])
 #         self.cols=cols
@@ -610,22 +615,6 @@ def search_for_eigenvalues(search):
     if search['rec_stop'] < 0:
         search['rec_stop'] = limit + rec_start
     return res
-
-
-def my_get(dict, key, default, f=None):
-    r"""
-    Improved version of dict.get where an empty string also gives default.
-    and before returning we apply f on the result.
-    """
-    x = dict.get(key, default)
-    if x == '':
-        x = default
-    if f is not None:
-        try:
-            x = f(x)
-        except:
-            pass
-    return x
 
 
 def ajax_once(callback, *arglist, **kwds):

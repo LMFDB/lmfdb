@@ -99,7 +99,7 @@ class MFDisplay(object):
     def connect(self):
         self.db = base.getDBConnection()[dbname]
 
-    def set_table():
+    def set_table(self):
         raise NotImplementedError("Needs to be overwritten in subclasses!")
 
     def table(self):

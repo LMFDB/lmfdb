@@ -6,15 +6,6 @@
 The page you are looking for has produced a server error.
 </div>
 
-{% if 0 %}
-John Cremona, Kiran Kedlaya and David Roe jointly agreed to remove
-this silly text on 2012-03-29.
-<div>
-Oh nooeess! We are so ashamed. This page is the living proof that
-calculations on the best mathematical website in the world 
-sometimes still go awfully wrong.
-</div>
-{% endif %}
 
 {% if request.referrer %}
 <div>
@@ -23,7 +14,7 @@ please <a href="{{ feedbackpage }}">report that page's URL</a>!
 </div>
 {% endif %}
 
-<div>Please keep your faith in mathematics!</div>
+{# <div>Please keep your faith in mathematics!</div> #}
 
 {% if request.referrer %}
 <div><a href="{{ request.referrer }}">jump back</a></div>

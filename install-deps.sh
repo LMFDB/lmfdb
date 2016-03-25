@@ -18,6 +18,7 @@ do
         echo " -v -- verbose; output more info"
         echo " -f : force installation of packages even if version is not tested"
         echo " -sage=path-to-sage -- use a specific sage, if not set we use the system default"
+	echo " -u --user -- do install packages in the user directory, not in the system-wide installation"
         echo " Observe that some matching stuff does not work with all shell versions. Use -f in this case." 
         exit
     fi
@@ -33,6 +34,11 @@ do
     if [ `expr match $par '-v'` -ge 1 ]
     then 
         verbose=1
+    fi
+    if [ `expr match $par '-u'` -ge 1 ] || [ `expr match $par '--user'` -ge 1 ]
+    then
+        user_install=1
+        easy_opts="$easy_opts --user"
     fi
     if [ `expr match $par '-sage'` -ge 1 ]
     then 
@@ -130,9 +136,9 @@ then
         fi
         if [ $dry_run = 1 ]
         then
-            easy_install -n $dep
+            easy_install -n $easy_opts $dep
         else
-            easy_install -U $dep
+            easy_install -U $easy_opts $dep
         fi
     done
 fi
@@ -172,9 +178,9 @@ then
     . ""$sage_env"" >&2
     if [ $dry_run = 1 ]
     then
-        easy_install -n http://sage.math.washington.edu/home/stromberg/pub/DirichletConrey-0.1-py2.7-linux-x86_64.egg
+        easy_install $easy_opts -n http://sage.math.washington.edu/home/stromberg/pub/DirichletConrey-0.1-py2.7-linux-x86_64.egg
     else
-        easy_install http://sage.math.washington.edu/home/stromberg/pub/DirichletConrey-0.1-py2.7-linux-x86_64.egg
+        easy_install $easy_opts http://sage.math.washington.edu/home/stromberg/pub/DirichletConrey-0.1-py2.7-linux-x86_64.egg
     fi
 else
     if [ $verbose -gt 0 ]

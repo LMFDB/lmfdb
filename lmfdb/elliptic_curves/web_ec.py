@@ -2,6 +2,7 @@
 import re
 import tempfile
 import os
+import yaml
 from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
@@ -163,7 +164,7 @@ class WebEC(object):
             data['j_inv_factor'] = latex(data['j_invariant'].factor())
         data['j_inv_str'] = unicode(str(data['j_invariant']))
         data['j_inv_latex'] = web_latex(data['j_invariant'])
-        data['disc'] = self.E.discriminant()
+        data['disc'] = D = self.E.discriminant()
         data['disc_latex'] = web_latex(data['disc'])
         data['disc_factor'] = latex(data['disc'].factor())
         data['cond_factor'] =latex(N.factor())
@@ -197,15 +198,20 @@ class WebEC(object):
         E_pari = self.E.pari_curve()
         from sage.libs.pari.all import PariError
         try:
-            minq = self.E.minimal_quadratic_twist()[0]
+            minq, minqD = self.E.minimal_quadratic_twist()
         except PariError:  # this does occur with 164411a1
             ec.debug("PariError computing minimal quadratic twist of elliptic curve %s" % lmfdb_label)
             minq = self.E
+            minqD = 1
+        data['minq_D'] = minqD
         if self.E == minq:
             data['minq_label'] = self.lmfdb_label
+            data['minq_info'] = '(itself)'
         else:
             minq_ainvs = [str(c) for c in minq.ainvs()]
             data['minq_label'] = db_ec().find_one({'ainvs': minq_ainvs})['lmfdb_label']
+            data['minq_info'] = '(by %s)' % minqD
+
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
 
         # rational and integral points
@@ -220,9 +226,12 @@ class WebEC(object):
 
         mw['rank'] = self.rank
         try:
-            mw['generators'] = ', '.join(web_latex(self.E(g).xy()) for g in parse_points(self.gens))
+            self.generators = [self.E(g) for g in parse_points(self.gens)]
+            mw['generators'] = [web_latex(P.xy()) for P in self.generators]
+            mw['heights'] = [P.height() for P in self.generators]
         except AttributeError:
             mw['generators'] = ''
+            mw['heights'] = []
 
         # Torsion subgroup: order, structure, generators
 
@@ -258,9 +267,10 @@ class WebEC(object):
 
         bsd = self.bsd = {}
 
-        if mw['rank'] >= 2:
-            bsd['lder_name'] = "L^{(%s)}(E,1)" % mw['rank']
-        elif mw['rank']:
+        r = self.rank
+        if r >= 2:
+            bsd['lder_name'] = "L^{(%s)}(E,1)/%s!" % (r,r)
+        elif r:
             bsd['lder_name'] = "L'(E,1)"
         else:
             bsd['lder_name'] = "L(E,1)"
@@ -290,7 +300,7 @@ class WebEC(object):
 
         local_data = self.local_data = []
         # if we use E.tamagawa_numbers() it calls E.local_data(p) which
-        # crashes on some curves e.g. 164411a1
+        # used to crash on some curves e.g. 164411a1
         tamagawa_numbers = []
         for p in bad_primes:
             local_info = self.E.local_data(p, algorithm="generic")
@@ -300,24 +310,31 @@ class WebEC(object):
             tamagawa_numbers.append(ZZ(local_info.tamagawa_number()))
             local_data_p['kodaira_symbol'] = web_latex(local_info.kodaira_symbol()).replace('$', '')
             local_data_p['reduction_type'] = local_info.bad_reduction_type()
+            local_data_p['ord_cond'] = local_info.conductor_valuation()
+            local_data_p['ord_disc'] = local_info.discriminant_valuation()
+            local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
             local_data.append(local_data_p)
 
-        bsd['tamagawa_factors'] = r' \cdot '.join(str(c.factor()) for c in tamagawa_numbers)
+        cp_fac = [cp.factor() for cp in tamagawa_numbers]
+        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+        bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         bsd['tamagawa_product'] = sage.misc.all.prod(tamagawa_numbers)
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(self.E.q_eigenform(10))
 
+        self.make_code_snippets()
+
         self.friends = [
             ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
-            ('Minimal quadratic twist ' + data['minq_label'], url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
+            ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label)),
             ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
             ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=0, label=iso))]
+            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=1, label=iso))]
 
-        self.downloads = [('Download coeffients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
+        self.downloads = [('Download coefficients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
                           ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label))]
 
         self.plot = encode_plot(self.E.plot())
@@ -339,3 +356,22 @@ class WebEC(object):
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
+
+    def make_code_snippets(self):
+        # read in code.yaml from current directory:
+
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+
+        # Fill in placeholders for this specific curve:
+
+        for lang in ['sage', 'pari', 'magma']:
+            self.code['curve'][lang] = self.code['curve'][lang] % (self.data['ainvs'],self.label)
+
+        for k in self.code:
+            if k != 'prompt':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]

@@ -1,27 +1,80 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Results ({{info.report}})</h2>
+<h2> Further refine search </h2>
+
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<table border="0">
+<tr>
+<td>{{ KNOWL('nf', title='field') }}</td>
+<td><input type='text' name='field_label' value={{info.field_label}}>
+<td>field {{ KNOWL('nf.degree', title='degree') }}</td>
+<td><input type='text' name='field_degree' value={{info.field_degree}}>
+<td>field {{ KNOWL('nf.discriminant', title='discriminant') }}</td>
+<td><input type='text' name='field_disc' value={{info.field_disc}}>
+</tr>
+<tr>
+<td>{{ KNOWL('mf.hilbert.weight_vector', title='weight') }}</td>
+<td><input type='text' name='weight' value={{info.weight}}>
+<td>{{ KNOWL('mf.hilbert.level_norm', title='level norm') }}</td>
+<td><input type='text' name='level_norm' value={{info.level_norm}}>
+<td>{{ KNOWL('mf.hilbert.dimension', title='dimension') }}</td>
+<td><input type='text' name='dimension' value={{info.dimension}}>
+</tr>
+<tr>
+<td>Maximum number</td>
+<td><input type='text' name='count' value={{info.count}}></td>
+</tr>
+<tr>
+<td colspan=3><button type='submit' value='Search'>Refine or change search</button>
+</td>
+</tr>
+</table>
+</form>
+
+<h2> Results: {{info.report}}</h2>
+
+{% if info.number > 0 %}
+
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</a>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</a></td>
+{% endif %}
 
 <table class="ntdata">
 <tr>
-<th>Field</th>
 <th>Label</th>
-<th>Level</th>
-<th>Dimension</th>
+<th>{{ KNOWL('nf', title='Field') }}</th>
+<th>{{ KNOWL('mf.hilbert.level_norm', title='Level') }}</th>
+<th>{{ KNOWL('mf.hilbert.dimension', title='Dimension') }} </th>
 </tr>
 {% for form in info.forms: %}
 <tr>
-<td>{{form.field_label}}</td>
 <td align='left'><a href="{{url_for('hmf.render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
-    {{form.short_label}} </a></td>
+  {{form.short_label}} </a></td>
+<td>{{form.field_label}}</td>
 <td>${{form.level_ideal}}$</td>
 <td>{{form.dimension}}</td>
 </tr>
 {% endfor %}
 </table>
 
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+{% endif %}
 <br>
+{% endif %}
+
 <!--
    <p class="tex2jax_ignore">
    Results for database query {{ info.query }}

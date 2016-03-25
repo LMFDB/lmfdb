@@ -1,0 +1,343 @@
+---
+first_zero: 17.0249420759926
+Lfunction_texname: $L(s,f)$
+mu: 9.53369526135
+delta: [1,1]
+level: 1
+character: 1.1
+analytic_conductor: 3.010101010101
+epsilon: -1
+url: L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032
+object_url: ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032
+object_name: odd Maass
+self_dual: true
+arithmetic: false
+---
+first_zero: 11.7845499380124
+Lfunction_texname: $L(s,f)$
+mu: 5.41733480684
+delta: [1,1]
+level: 2
+character: 2.1
+analytic_conductor: 3.010101010101
+epsilon: 1
+url: L/ModularForm/GL2/Q/Maass/4f55570e88aece241f00000c
+object_url: ModularForm/GL2/Q/Maass/4f55570e88aece241f00000c
+object_name: odd Maass
+self_dual: true
+arithmetic: false
+---
+first_zero: 11.614970337813
+Lfunction_texname: $L(s,f)$
+mu: 5.0987419087
+delta: [0,0]
+level: 3
+character: 3.1
+analytic_conductor: 3.010101010101
+epsilon: 1
+url: L/ModularForm/GL2/Q/Maass/4f55571b88aece241f000013
+object_url: ModularForm/GL2/Q/Maass/4f55571b88aece241f000013
+object_name: even Maass
+self_dual: true
+arithmetic: false
+---
+first_zero: 9.2223793999
+Lfunction_texname: $L(s,\Delta)$
+nu: $\frac{11}{2}$
+level: 1
+character: 1.1
+analytic_conductor: 0.010101010101
+epsilon: 1
+url: L/ModularForm/GL2/Q/holomorphic/1/12/0/
+object_url: ModularForm/GL2/Q/holomorphic/1/12/0/a/
+object_name: holomorphic
+self_dual: true
+arithmetic: true
+---
+first_zero: 7.2145891812871
+Lfunction_texname: $L(s,f)$
+nu: $1$
+level: 7
+character: $\left(\frac{-7}{\cdot}\right)$
+analytic_conductor: 0.010101010101
+epsilon: 1
+url: L/ModularForm/GL2/Q/holomorphic/7/3/3/a/0/
+object_url: [,,ModularForm/GL2/Q/holomorphic/7/3/3/a/]
+object_name: [K3 surface,Hecke character,holomorphic]
+self_dual: true
+arithmetic: true
+---
+first_zero: 6.7163109486976
+Lfunction_texname: $L(s,f)$
+nu: $\frac{5}{2}$
+level: 5
+character: $\left(\frac{5}{\cdot}\right)$
+analytic_conductor: 0.010101010101
+epsilon: e(0.101086789678)
+url: L/ModularForm/GL2/Q/holomorphic/5/6/2/a/1/
+object_url: ModularForm/GL2/Q/holomorphic/5/6/2/a/
+object_name: holomorphic
+self_dual: false
+arithmetic: true
+---
+first_zero: 6.5610830573611
+Lfunction_texname: $L(s,f)$
+nu: 4
+level: 3
+character: $\left(\frac{-3}{\cdot}\right)$
+analytic_conductor: 0.010101010101
+epsilon: e(0.15625280945586)
+url: L/ModularForm/GL2/Q/holomorphic/3/9/1/a/1/
+object_url: ModularForm/GL2/Q/holomorphic/3/9/1/a/
+object_name: holomorphic
+self_dual: false
+arithmetic: true
+---
+first_zero: 6.5021008628898
+Lfunction_texname: $L(s,f)$
+mu: 4.582361503
+delta: [0,0]
+level: 10
+character: 1.1
+analytic_conductor: 3.010101010101
+epsilon: -1
+url: L/ModularForm/GL2/Q/Maass/4f4bf1c388aece438d000002/
+object_url: ModularForm/GL2/Q/Maass/4f4bf1c388aece438d000002
+object_name: even Maass
+self_dual: true
+arithmetic: false
+---
+first_zero: 6.480447638467
+Lfunction_texname: $L(s,f)$
+nu: $\frac{3}{2}$
+level: 6
+character: 6.1
+analytic_conductor: 0.010101010101
+epsilon: 1
+url: L/ModularForm/GL2/Q/holomorphic/6/4/0/a/0/
+object_url: [,ModularForm/GL2/Q/holomorphic/6/4/0/a/]
+object_name: [Calabi-Yau&nbsp;3-fold,holomorphic]
+self_dual: true
+arithmetic: true
+---
+first_zero: 6.3626138947
+Lfunction_texname: $L(s,E_{11a})$
+nu: $\frac{1}{2}$
+level: 11
+character: 11.1
+analytic_conductor: 0.010101010101
+epsilon: 1
+url: L/EllipticCurve/Q/11.a
+object_url: [EllipticCurve/Q/11.a,ModularForm/GL2/Q/holomorphic/11/2/0/a/]
+object_name: [elliptic curve,holomorphic]
+self_dual: true
+arithmetic: true
+---
+first_zero: 5.10553130864724
+Lfunction_texname: $L(s,f)$
+mu: 12.1730083247
+delta: [1,1]
+level: 1
+character: 1.1
+analytic_conductor: 3.310101010101
+epsilon: -1
+url: L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000033
+object_url: ModularForm/GL2/Q/Maass/4cb8503a58bca91458000033
+object_name: odd Maass
+self_dual: true
+arithmetic: false
+---
+first_zero: 4.063507457033
+Lfunction_texname: $L(s,f)$
+nu: $\frac{5}{2}$
+level: 5
+character: $\left(\frac{5}{\cdot}\right)$
+analytic_conductor: 0.010101010101
+epsilon: e(0.89891321032)
+url: L/ModularForm/GL2/Q/holomorphic/5/6/2/a/0/
+object_url: ModularForm/GL2/Q/holomorphic/5/6/2/a/
+object_name: holomorphic
+self_dual: false
+arithmetic: true
+---
+first_zero: 3.443343367909
+Lfunction_texname: $L(s,E_{36a})$
+nu: $\frac{1}{2}$
+level: 36
+character: 36.1
+analytic_conductor: 0.010101010101
+epsilon: 1
+url: L/EllipticCurve/Q/36.a/
+object_url: [EllipticCurve/Q/36.a,,ModularForm/GL2/Q/holomorphic/36/2/0/a/]
+object_name: [CM elliptic curve,Hecke character,holomorphic]
+self_dual: true
+arithmetic: true
+---
+first_zero: 3.129434090755
+Lfunction_texname: $L(s,f)$
+mu: 4.8645128053028
+delta: [0,1]
+level: 5
+character: $\chi_5(2,\cdot)$
+analytic_conductor: 4.310101010101
+epsilon: e(0.602956179)
+url:
+object_url:
+object_name: Maass
+self_dual: false
+arithmetic: false
+---
+first_zero: 3.024024578458
+Lfunction_texname: $L(s,A)$
+mu: 0
+delta: [0,0]
+level: 148
+character: $\left(\frac{37}{\cdot}\right)$
+analytic_conductor: 2.010101010101
+epsilon: 1
+url: L/ArtinRepresentation/2/148/2/
+object_url: [ArtinRepresentation/2/148/2/,,]
+object_name: [Artin&nbsp;representation,Hecke character,even Maass]
+self_dual: true
+arithmetic: true
+---
+first_zero: 2.89772467827113
+Lfunction_texname: $L(s,f)$
+mu: 13.7797513519
+delta: [0,0]
+level: 1
+character: 1.1
+analytic_conductor: 2.010101010101
+epsilon: 1
+url: L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000000
+object_url: ModularForm/GL2/Q/Maass/4cb8503a58bca91458000000
+object_name: even Maass
+self_dual: true
+arithmetic: false
+---
+first_zero: 2.832545782357
+Lfunction_texname: $L(s,A)$
+mu: 0
+delta: [1,1]
+level: 163
+character: ?
+analytic_conductor: 2.010101010101
+epsilon: 1
+url: L/ArtinRepresentation/2/163/1/
+object_url: [ArtinRepresentation/2/163/1/,]
+object_name: [Artin&nbsp;representation,odd Maass form]
+self_dual: false
+arithmetic: true
+---
+first_zero: 2.75562279580888
+Lfunction_texname: $L(s,A)$
+mu: 0
+delta: [0,1]
+level: 68
+character: $\left(\frac{-68}{\cdot}\right)$
+analytic_conductor: 2.010101010101
+epsilon: 1
+url: L/ArtinRepresentation/2/68/2/
+object_url: [ArtinRepresentation/2/68/2/,,]
+object_name: [Artin&nbsp;representation,Hecke character,weight&nbsp;1&nbsp;cusp&nbsp;form]
+self_dual: true
+arithmetic: true
+---
+first_zero: 2.474467506970
+Lfunction_texname: $L(s,A)$
+mu: 0
+delta: [1,1]
+level: 136
+character: ?
+analytic_conductor: 2.010101010101
+epsilon: 1
+url: L/ArtinRepresentation/2/136/4/
+object_url: [ArtinRepresentation/2/136/4/,,]
+object_name: [Artin&nbsp;representation,Hecke character,odd Maass form]
+self_dual: true
+arithmetic: true
+---
+first_zero: 1.7335322471578
+Lfunction_texname: $L(s,E_{234446a})$
+nu: $\frac{1}{2}$
+level: 234446
+character: 234446.1
+analytic_conductor: 0.010101010101
+epsilon: 1
+url: L/EllipticCurve/Q/234446.a
+object_url: [EllipticCurve/Q/234446.a,]
+object_name: [rank&nbsp;4&nbsp;elliptic&nbsp;curve,holomorphic]
+self_dual: true
+arithmetic: true
+---
+
+
+XXXXXXXXXXXXX
+
+
+
+first_zero: 2.832545782357
+Lfunction_texname: $L(s,A)$
+mu: 0
+delta: [1,1]
+level: 163
+character: ????????
+analytic_conductor: 2.010101010101
+epsilon: ????????
+url: L/ArtinRepresentation/2/163/1/
+object_url: [ArtinRepresentation/2/163/1/,]
+object_name: [Artin&nbsp;representation,odd Maass form]
+self_dual: false
+arithmetic: true
+---
+
+
+
+
+
+first_zero: 00.010101010101
+Lfunction_texname: $L(s,f)$
+nu: $\frac{19}{2}$
+level: 5
+character: 5.1
+analytic_conductor: 32.010101010101
+epsilon: 1
+url: L/unused
+object_url: unused
+object_name: holomorphic
+self_dual: true
+arithmetic: true
+---
+
+
+
+---
+first_zero: 2.63895104553180
+Lfunction_texname: $L(s,E_{64a})$
+nu: $\frac{1}{2}$
+level: 64
+character: 64.1
+analytic_conductor: 0.010101010101
+epsilon: 1
+url: L/EllipticCurve/Q/64.a/
+object_url: [L/EllipticCurve/Q/64.a/,,ModularForm/GL2/Q/holomorphic/64/2/0/a/]
+object_name: [CM elliptic curve,Hecke character,holomorphic]
+self_dual: true
+arithmetic: true
+
+
+---
+first_zero: 9.36456151080203
+Lfunction_texname: $L(s,f)$
+mu: 4.38805356322
+delta: [1,1]
+level: 3
+character: 3.1
+analytic_conductor: 4.310101010101
+epsilon: 1
+url: L/ModularForm/GL2/Q/Maass/4f77894788aece4a3f000007
+object_url: ModularForm/GL2/Q/Maass/4f77894788aece4a3f000007
+object_name: odd Maass
+self_dual: true
+arithmetic: false
+

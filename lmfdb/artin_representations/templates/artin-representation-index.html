@@ -4,10 +4,7 @@
 
 
 <div>
-{{KNOWL_INC("artin", title = "")}}
-</div>
-<div>
-{{KNOWL_INC("artin.database_comment", title = "")}}
+{{KNOWL_INC("dq.artin.extent", title = "")}}
 </div>
 
 <h2>Browse {{KNOWL('artin', title="Artin representations")}}</h2>
@@ -42,8 +39,26 @@ By {{ KNOWL('artin.gg_quotient',title="group") }}:
 <a href="?group=A7">$A_7$</a>,
 <a href="?group=S7">$S_7$</a>
 
+<h2>Go to a specific Artin representation by {{KNOWL('artin.label',title='label')}}
+
+<form>
+<table border=0 cellpadding=5>
+<tr>
+<td>Artin representation:&nbsp;&nbsp;</td>
+<td ><input type='text' name='natural' size='30' example='3.2e3_7e5.7t3.1c1'> </td>
+<td><button type='submit' name='search' value='Go'>label</button></td>
+</tr>
+<tr>
+<td colspan="3" rowspan="2"><span class="formexample"> e.g.,
+3.2e3_7e5.7t3.1c1
+</span></td>
+</tr>
+</table>
+</form>
+
+
 <h2> Search for an Artin representation </h2>
-Please enter a value or leave blank:
+Enter values into one or more boxes to restrict the search.
 <p></p>
 <form>
   <table>
@@ -89,31 +104,8 @@ Please enter a value or leave blank:
         <td><span class="formexample"> +1 for orthogonal, -1 for symplectic, 0 for non-real character </span></td>
     </tr>
 
-    {#
     <tr>
-        <td>Transitive degree</td>
-        <td><input type='text' name='transitive_degree' placeholder="2" size=15></td>
-        <td><span class="formexample"> e.g. 2, 2-5 </span></td>
-    </tr>
-    #}
-    
-    {#
-    <tr>
-        <td>{{ KNOWL('gg.galois_group',title="Galois group") }}</td>
-        <td><input type='text' name='galois_group' placeholder="S3" size=15></td>
-        <td><span class="formexample"> e.g. S3, C5 </span></td>
-    </tr>
-    #}
-    {#
-    <tr>
-        <td>Galois group size</td>
-        <td><input type='text' name='group_size' placeholder="10" size=15></td>
-        <td><span class="formexample"> e.g. 10 </span></td>
-    </tr>
-    #}
-
-    <tr>
-        <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value=15 size=10></td>
+        <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value='10' size='10'></td>
     </tr>
   </table>
   

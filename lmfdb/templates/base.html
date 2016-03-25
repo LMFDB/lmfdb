@@ -47,8 +47,8 @@ MathJax.Hub.Config({
     Gal: '{\\mathop{\\rm Gal}}',
     Aut: '{\\mathop{\\rm Aut}}',
     Sym: '{\\mathop{\\rm Sym}}',
-    End: '{\\mathop{\\rm Reg}}',
-    Reg: '{\\mathop{\\rm Res}}',
+    End: '{\\mathop{\\rm End}}',
+    Reg: '{\\mathop{\\rm Reg}}',
     Ord: '{\\mathop{\\rm Ord}}',
     sgn: '{\\mathop{\\rm sgn}}',
     trace: '{\\mathop{\\rm trace}}',
@@ -65,7 +65,25 @@ MathJax.Hub.Config({
   asciimath2jax: { delimiters: [['#(',')#'], ['#[',']#']] },
   "HTML-CSS": { scale: 85 },
   menuSettings: { zscale: "150%", zoom: "Double-Click" }
+
 });
+MathJax.Hub.Register.StartupHook("MathEvents Ready",function () { 
+  var EVENT = MathJax.Extension.MathEvents.Event, 
+      MENU = EVENT.Menu, 
+      HUB = MathJax.Hub; 
+  EVENT.Menu = function (event) { 
+    if (!HUB.getJaxFor(this).noContextualMenu) {return MENU.apply(this,arguments)} 
+        return true; 
+  } 
+}); 
+MathJax.Hub.Queue( 
+  function () { 
+    var jax = MathJax.Hub.getAllJax("sidebar"); 
+    for (var i = 0, m = jax.length; i < m; i++) { 
+      jax[i].noContextualMenu = true; 
+    } 
+  } 
+); 
 </script>
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 {#- <script type="text/javascript" src="http://www.lmfdb.org/MathJax/MathJax.js"></script> -#}

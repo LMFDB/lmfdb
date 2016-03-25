@@ -8,48 +8,39 @@
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
 
-<h2> Error message: </h2>% extends "homepage.html" %}
+<h2> Error message: </h2>
 
 <div>
 {{ info.error | safe }}
 </div>
 {% endif %}
 
+<div>
+{{KNOWL_INC('mf.maass.mwf.weight0')}}
+</div>
 
-{#{ info | safe } #}
+<div>
+The database contains {{dbcount}} Maass forms of weight 0 on $\Gamma_0(N)$ for $N$ in the range from 1 to 997.
+</div>
 
-<h1>Browse {{KNOWL('mf.maass.mwf',title='Maass forms')}} over \( \GL(2,\Q)\) </h1>
-<form name="browse" method="get" action="{{url_for('.render_maass_waveforms')}}">
-        
-  <input type="hidden" name="weight" value=""/>
-  <input type="hidden" name="level" value=""/>
-  <input type="hidden" name="browse" value="1"/>
-{% if DB is defined %}
-{#% include 'mwf_table.html' %#}
-{% else %}
-No table!
-{% endif %}
+<h1>Browse {{KNOWL('mf.maass.mwf',title='Maass forms')}} </h1>
   <ul>
     <li>
       <a href="{{ url_for('mwf.render_maass_browse_graph',min_level = 1,max_level= 10,
-                            min_R = 0,max_R = 10) }}">Browse Maass forms of weight 0</a>
+                            min_R = 0,max_R = 10) }}">Browse Maass forms of weight 0 on $\Gamma_0(N)$ with $1\leq N\leq 10$</a>
+    </li>
+    <li>
+      <a href="{{ url_for('mwf.render_maass_browse_graph',min_level = 100,max_level= 1000,
+                            min_R = 0,max_R = 1) }}">Browse Maass forms of weight 0 on $\Gamma_0(p)$ for prime $p$ with $100\leq p< 1000$</a>
     </li>
    {# 
     <li>
       <a href="javascript:set_browse_value('weight',1);">Browse Maass forms of weight 1</a>
     </li>
     #}
-   {#<li>
-      <a href="javascript:set_browse_value('browse','all');">Browse Table of all
-      Eigenvalues in the Database</a>
-   </li>
-   #}
   </ul>
 <br>
-The entire database consists of {{dbcount}} Maass forms.
-  {# <button type="submit" name="Browse" value="Search">Browse</button> #}
-  {# <button type="submit" name="Browse" value="Search">Browse</button> #}
-</form>
+
 
 {#<h1>Find a specific Maass form</h1>
 <table>
@@ -67,6 +58,7 @@ The entire database consists of {{dbcount}} Maass forms.
   </tr>
  </table>
 #}
+
 <h1>Search</h1>
  <table>
   <tr>
@@ -98,8 +90,8 @@ The entire database consists of {{dbcount}} Maass forms.
 	  <tr>
 	    <td>Character:</td>
       <td>
-        <input type="text" name="character" value="" placeholder="0"/>
-          <span class="formexample">(0 means trivial character, leave blank for all characters)</span>
+        <input type="text" name="character" value="" placeholder="1"/>
+          <span class="formexample">(1 means trivial character, leave blank for all characters)</span>
       </td>
 	  </tr>
 	  <tr>

@@ -6,10 +6,13 @@
     <div class="right">
       <div class="bread">
         {% if bread %}
-          <a href="/">Top</a>
+          <a href="/">&#8962;</a>
+{# there's a house symbol &#x1f3e0; but it does not work on all browsers#}
           {% for b in bread -%}
-            &rarr; <a href="{{ b[1] }}">{{ b[0]|striptags }}</a>
-          {%- endfor %}
+            &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
+          {% endfor %}
+         {% else %}
+          <a href="/">&#8962;</a>
          {% endif %}
       </div>
       <div class="topright">
@@ -17,7 +20,7 @@
             <input type="text" placeholder="search ..." name="q" size="13" />
           </form>
             &middot;
-          <a href="{{ feedbackpage }}" target="_blank">
+          <a href="{{ feedbackpage }}" target=_blank">
              Feedback</a>
             &middot;
           {% if g.show_menu %}
@@ -45,6 +48,8 @@
             <span id="communication"></span>
           </span>
       </div>
+{# deleting the confusing prev/next character links, 
+   but leaving the code in case it is useful later
       {% if navi is defined -%}
         <div id="navi">
          {% for txt, u in navi -%}
@@ -55,9 +60,15 @@
       {%- elif navi_raw is defined -%}
         <div id="navi">{{ navi_raw|safe }}</div>
       {%- endif %} 
+#}
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
 
+      {% if title_arithmetic -%}
+      <div id="title" class="arithmetic"><span id="title-content">{{ title_arithmetic|safe }}</span></div>
+      <div id="title" class="analytic nodisplay"><span id="title-content">{{ title_analytic|safe }}</span></div>
+      {% else %}
       <div id="title"><span id="title-content">{{ title|safe }}</span></div>
+      {% endif %}
 
     </div>
 </div>
@@ -76,17 +87,15 @@
    {% endif %}
  {%- endmacro %}
 
+<div id="sidebar">
 {%- include "sidebar.html" -%}
 
-{% if BETA %}
-
-      {#  Please keep the commented part, I might reinstate some of it POD
-      #<li><a class = "number_field_galois_groups" href="{{ url_for('number_field_galois_groups.index') }}">Galois Groups (only logged in)</a></li>
-      #}
+{% if user_is_authenticated -%}
+    {{ entry("Data", getUploadedFor(request.path, true) ) }}
 {% endif %}
 
-   {{ entry("Data", getUploadedFor(request.path, true) ) }}
-  {# {% if user_is_authenticated %} {% endif %} #}
+</div>
+
 
 {% else %}
 <style type="text/css">
@@ -104,6 +113,19 @@
            <li><a href="{{ url }}">{{ text }}</a></li>
         {% endfor %}
     </ul>
+  </div>
+   {% endif %}
+ {%- endmacro %}
+
+{% macro neighbors(title, entries) -%}
+   {% if entries %}
+    <h1 class="properties-header">{{ title }}</h1>
+    <div class="properties-body">
+    <table>
+       {% for description, name, url in entries %}
+       <tr><td>{{ description }}</td><td><a href="{{ url }}">{{ name|safe }}</a></td></tr>
+       {% endfor %}
+    </table>
   </div>
    {% endif %}
  {%- endmacro %}
@@ -134,6 +156,9 @@
       </div>
     {% endif %}
    {{ rightnavig("Related objects", friends) }}
+   {% if navi %}
+       {{ neighbors("Nearby objects", navi) }}
+   {% endif %}
    {% if downloads %}
      {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
    {% else %}
@@ -168,7 +193,7 @@
 
 <div id="footer">
     {% if credit -%}
-      &copy; Data computed by {{ credit|safe }}.<br />
+      Data computed by {{ credit|safe }}.<br />
     {%- endif %}
     
     {% if support -%}

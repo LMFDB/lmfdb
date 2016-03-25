@@ -45,6 +45,7 @@
           url_for: "l_functions.l_function_degree_page"
           url_args:
             degree: 'degree4'
+          status: beta
         - title: "5+"
           status: future
    secondpart:
@@ -52,10 +53,17 @@
        parts:
         - title: First zeros
           url_for: "first L-function zeros.firstzeros"
+          status: beta
         - title: $\zeta$&nbsp;zeros
           url_for: "zeta zeros.zetazeros"
         - title: Operations
           url_for: "tensor_products.index"
+          status: beta
+        - title: dummy
+          status: future
+        - title: Local L-functions
+          status: future
+          colspan: onecolumn
 
 3ModForm:
    type: multilevel
@@ -76,6 +84,7 @@
            status: future
          - title: Half-integral
            status: future
+           colspan: onecolumn
          - title: Noncongruence
            status: future
            colspan: onecolumn
@@ -103,6 +112,7 @@
    type: multilevel
    heading:
       title: Varieties
+      url_for: "varieties"
    parts:
      - title: Curves
        style: rotate
@@ -115,16 +125,14 @@
                status: future
              - title: /NumberFields
                url_for: "ecnf.index"
-               status: beta
                colspan: onecolumn
              - title: $\Q$-curves
                status: future
+               colspan: onecolumn
            colspan: onecolumn
-         - title: "Hyperelliptic:"
-           status: beta
+         - title: "Genus 2:"
            part3:
              - title: $/\Q$
-               status: beta
                url_for: "g2c.index_Q"
              - title: $/\F_{q}(t)$
                status: future
@@ -163,6 +171,7 @@
    type: simple
    heading:
       title: Fields
+      url_for: "fields"
    parts:
     - title: "Number fields:"
       part2:
@@ -173,11 +182,13 @@
       colspan: onecolumn
     - title: Function fields
       status: future
+      colspan: onecolumn
 
 6Repn:
    type: simple
    heading:
       title: Representations
+      url_for: "representations"
    parts:
     - title: "Characters:"
       url_for: "characters.render_characterNavigation"
@@ -186,15 +197,19 @@
            url_for:  "characters.render_Dirichletwebpage"
          - title: Hecke
            url_for:  "characters.render_Heckewebpage"
+           status: beta
       colspan: onecolumn
     - title: Artin
       url_for: "artin_representations.index"
-    - title: Automorphic
-      status: future
-    - title: dummy
-      status: future
     - title: Galois
       status: future
+      colspan: onecolumn
+    - title: Weil-Deligne
+      status: future
+      colspan: onecolumn
+    - title: Automorphic
+      status: future
+      colspan: onecolumn
 
 7Mot:
    type: simple
@@ -203,10 +218,13 @@
       title: Motives
    parts:
     - title: "Hypergeometric:"
+      status: beta
       part2:
          - title: $/\Q$
            status:  beta
            url_for:  "hypergm.index"
+         - title: dummy
+           status: future
          - title: $/\Q(\sqrt{d})$
            status: future
       colspan: onecolumn
@@ -219,17 +237,27 @@
    type: simple
    heading:
       title: Groups
+      url_for: "groups"
    parts:
+    - title: Galois groups
+      url_for: "galois_groups.index"
+      colspan: onecolumn
+    - title: Sato-Tate groups
+      status: future
+      colspan: onecolumn
+    - title: Lattices
+      url_for: "lattice.lattice_render_webpage"
+      status: beta
     - title: Subgroups of
       part2:
          - title: $\SL(2)$
            status:  future
+         - title: dummy
+           status: future
          - title: $\GL(2,\F_p)$
            status:  future
       status: future
       colspan: onecolumn
-    - title: Galois groups
-      url_for: "galois_groups.index"
 
 9Know:
    type: single

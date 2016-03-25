@@ -1,11 +1,12 @@
 flask
 flask-cache
-flask-login
+flask-login == 0.2.11
 flask-markdown
-pymongo
+pymongo==2.8
 pyyaml
 unittest2
 coverage
 nose
 cython
+markupsafe
 git+git://github.com/jwbober/conrey-dirichlet-characters.git@master#egg=dirichlet_conrey

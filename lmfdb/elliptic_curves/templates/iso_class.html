@@ -95,12 +95,9 @@ rank \({{ info.rank}}\).
 
 {% if info.ncurves>1 %}
 
-<h2>Matrix of isogeny degrees</h2>
+<h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
+
 <div class='sage nodisplay code'>sage: E.isogeny_class().matrix()</div>
-<p>
-  Rows and columns are indexed by the number of the curve in
-  the class.
-</p>
 <p>
   \({{info.isogeny_matrix_str}}\)
 </p>
@@ -109,9 +106,6 @@ rank \({{ info.rank}}\).
 <div class='sage nodisplay code'>
   sage: E.isogeny_graph().plot(edge_labels=True)
 </div>
-<p>
-  Only edges corresponding to isogenies of prime degree are shown.
-</p>
 <center>
   <img src="{{info.graph_img}}" />
 </center>
