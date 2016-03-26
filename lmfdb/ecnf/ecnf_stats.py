@@ -9,6 +9,20 @@ from flask import url_for
 def format_percentage(num, denom):
     return "%10.2f"%((100.0*num)/denom)
 
+def field_data(s):
+    r"""
+    Returns full field data from field label.
+    """
+    deg, r1, abs_disc, n = [int(c) for c in s.split(".")]
+    sig = [r1, (deg - r1) // 2]
+    return [s, deg, sig, abs_disc]
+
+def sort_field(F):
+    r"""
+    Returns data to sort by, from field label.
+    """
+    return [int(c) for c in F.split(".")]
+
 logger = make_logger("ecnf")
 
 the_ECNFstats = None
@@ -45,8 +59,8 @@ class ECNFstats(object):
         return self._counts
 
     def stats(self):
-        self.init_ecdb_count()
-        self.init_ecdb_stats()
+        self.init_ecnfdb_count()
+        self.init_ecnfdb_stats()
         return self._stats
 
     def init_ecnfdb_count(self):
@@ -56,10 +70,14 @@ class ECNFstats(object):
         ecdb = self.ecdb
         counts = {}
         fields = ecdb.distinct('field_label')
+        counts['fields'] = fields
         counts['nfields'] = len(fields)
         degrees = ecdb.distinct('degree')
+        counts['degrees'] = degrees
         counts['maxdeg'] = max(degrees)
         counts['ncurves_by_degree'] = dict([(d,ecdb.find({'degree':d}).count()) for d in degrees])
+        counts['fields_by_degree'] = dict([(d,sorted(ecdb.find({'degree':d}).distinct('field_label'),key=sort_field)) for d in degrees])
+        counts['nfields_by_degree'] = dict([(d,len(counts['fields_by_degree'][d])) for d in degrees])
         ncurves = ecdb.count()
         counts['ncurves']  = ncurves
         counts['ncurves_c'] = comma(ncurves)
@@ -69,53 +87,25 @@ class ECNFstats(object):
         self._counts  = counts
         logger.debug("... finished computing elliptic curve (nf) counts.")
 
-    def init_ecdb_stats(self):
+    def init_ecnfdb_stats(self):
         if self._stats:
             return
-        logger.debug("Computing elliptic curve stats...")
+        logger.debug("Computing elliptic curve (nf) stats...")
         ecdb = self.ecdb
         counts = self._counts
         stats = {}
-        rank_counts = []
-        for r in range(counts['max_rank']+1):
-            ncu = ecdb.find({'rank': r}).count()
-            ncl = ecdb.find({'rank': r, 'number': 1}).count()
-            prop = format_percentage(ncl,counts['nclasses'])
-            rank_counts.append({'r': r, 'ncurves': ncu, 'nclasses': ncl, 'prop': prop})
-        stats['rank_counts'] = rank_counts
-        tor_counts = []
-        tor_counts2 = []
-        ncurves = counts['ncurves']
-        for t in  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16]:
-            ncu = ecdb.find({'torsion': t}).count()
-            if t in [4,8,12]: # two possible structures
-                ncyc = ecdb.find({'torsion_structure': [str(t)]}).count()
-                gp = "\(C_{%s}\)"%t
-                prop = format_percentage(ncyc,ncurves)
-                tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncyc, 'prop': prop})
-                nncyc = ncu-ncyc
-                gp = "\(C_{2}\\times C_{%s}\)"%(t//2)
-                prop = format_percentage(nncyc,ncurves)
-                tor_counts2.append({'t': t, 'gp': gp, 'ncurves': nncyc, 'prop': prop})
-            elif t==16: # all C_2 x C_8
-                gp = "\(C_{2}\\times C_{8}\)"
-                prop = format_percentage(ncu,ncurves)
-                tor_counts2.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
-            else: # all cyclic
-                gp = "\(C_{%s}\)"%t
-                prop = format_percentage(ncu,ncurves)
-                tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
-        stats['tor_counts'] = tor_counts+tor_counts2
-        stats['max_sha'] = ecdb.find().sort('sha', DESCENDING).limit(1)[0]['sha']
-        sha_counts = []
-        from sage.misc.functional import isqrt
-        for s in range(1,1+isqrt(stats['max_sha'])):
-            s2 = s*s
-            nc = ecdb.find({'sha': s2}).count()
-            if nc:
-                sha_counts.append({'s': s, 'ncurves': nc})
-        stats['sha_counts'] = sha_counts
+        # For each field find the max conductor norm
+        stats['ncurves'] = {}
+        stats['nclasses'] = {}
+        stats['maxnorm'] = {}
+        for d in counts['degrees']:
+            stats['ncurves'][d] = {}
+            stats['nclasses'][d] = {}
+            stats['maxnorm'][d] = {}
+            for F in counts['fields_by_degree'][d]:
+                stats['ncurves'][d][F] = ecdb.find({'field_label':F}).count()
+                stats['nclasses'][d][F] = ecdb.find({'field_label':F, 'number':1}).count()
+                stats['maxnorm'][d][F] = max(ecdb.find({'field_label':F}).distinct('conductor_norm'))
         self._stats = stats
-        logger.debug("... finished computing elliptic curve stats.")
-        #logger.debug("%s" % self._stats)
+        logger.debug("... finished computing elliptic curve (nf) stats.")
 
