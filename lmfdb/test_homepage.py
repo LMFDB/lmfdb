@@ -40,8 +40,8 @@ class HomePageTest(LmfdbTest):
         self.check(homepage,"/NumberField/3.1.23.1", r'Regulator:<td>&nbsp;&nbsp;<td>\( 0.281199574322962 \)')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/1/a/", '0.2993668')
         self.check(homepage,"/L/ModularForm/GL2/Q/holomorphic/1/12/1/a/0/", 'approx 0.839345512')
-        self.check(homepage,"/EllipticCurve/Q/234446/a/1", r'y^2 + x y = x^{3} -  x^{2} - 79 x + 289')
-        self.check(homepage,"/L/EllipticCurve/Q/234446.a/", 'is an elliptic curve of conductor 234446')
+        self.check(homepage,"/EllipticCurve/Q/5077/a/1", r'y^2 + y = x^{3} - 7 x + 6')
+        self.check(homepage,"/L/EllipticCurve/Q/5077.a/", 'is an elliptic curve of conductor 5077')
 
     # Box 3
     def test_box3(self):

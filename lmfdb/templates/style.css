@@ -866,7 +866,12 @@ table.ntdata thead th.spaceleft {
 table.ntdata tr.first {
   border-top: 2px solid #9b9;
 }
-
+table.ntdata .border-right {
+    border-right: 2px solid {{ col_ntdata_border }};
+}
+table.ntdata td.center {
+    text-align: center;
+}
 table.euler {
     margin-left:auto; 
     margin-right:auto;

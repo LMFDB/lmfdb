@@ -89,6 +89,12 @@ def set_info_for_gamma1(level,weight,weight2=None):
             xi = r['cchi']
             orbit = r['character_orbit']
             k = r['weight']
+            parity = r.get('character_parity','n/a')
+            if parity == 1:
+                parity = 'even'
+            elif parity == -1:
+                parity = 'odd'
+            
             d = r.get('d_newf',"n/a")
             indb = r.get('in_wdb',0)
             if d == 0:
@@ -101,7 +107,8 @@ def set_info_for_gamma1(level,weight,weight2=None):
                 table['galois_orbits_reps'][xi]={
                     'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xi),  # yes, {{{ is required
                     'chi': "{0}".format(xi),
-                    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
+                    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi),
+                    'parity':parity}
                 table['galois_orbit'][xi]= [
                     {
                     #'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xci),  # yes, {{{ is required
