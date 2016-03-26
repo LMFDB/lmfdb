@@ -9,6 +9,7 @@ from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, make_logger, clean_input, list_to_latex_matrix
+from lmfdb.search_parsing import LIST_RE, parse_bool, parse_ints, prep_ranges
 import os
 import re
 import bson
@@ -123,91 +124,34 @@ def galois_group_search(**args):
     if 'jump_to' in info:
         return render_group_webpage({'label': info['jump_to']})
 
-    for param in ['n', 't']:
-        if info.get(param):
-            info[param] = clean_input(info[param])
-            ran = info[param]
-            ran = ran.replace('..', '-')
-            if LIST_RE.match(ran):
-                tmp = parse_range2(ran, param)
+    def includes_composite(s):
+        s = s.replace(' ','').replace('..','-')
+        for interval in s.split(','):
+            if '-' in interval[1:]:
+                ix = interval.index('-',1)
+                a,b = int(arg[:ix]), int(arg[ix+1:])
+                if b == a:
+                    if a != 1 and not a.is_prime():
+                        return True
+                if b > a and b > 3:
+                    return True
             else:
-                names = {'n': 'degree', 't': 't'}
-                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
-                return search_input_error(info, bread)
-            # work around syntax for $or
-            # we have to foil out multiple or conditions
-            if tmp[0] == '$or' and '$or' in query:
-                newors = []
-                for y in tmp[1]:
-                    oldors = [dict.copy(x) for x in query['$or']]
-                    for x in oldors:
-                        x.update(y)
-                    newors.extend(oldors)
-                tmp[1] = newors
-            query[tmp[0]] = tmp[1]
-    for param in ['cyc', 'solv', 'prim', 'parity']:
-        if info.get(param):
-            info[param] = str(info[param])
-            if info[param] == str(1):
-                query[param] = 1
-            elif info[param] == str(-1):
-                query[param] = -1 if param == 'parity' else 0
+                a = ZZ(interval)
+                if a != 1 and not a.is_prime():
+                    return True
+    try:
+        parse_ints(info,query,'n','degree')
+        parse_ints(info,query,'t')
+        for param in ('cyc', 'solv', 'prim', 'parity'):
+            parse_bool(info,query,param,minus_one_to_zero=(param != 'parity'))
+        degree_str = prep_ranges(info.get('n'))
+        info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
+    except ValueError as err:
+        info['err'] = str(err)
+        return search_input_error(info, bread)
 
-    # Determine if we have any composite degrees
-    info['show_subs'] = True
-    if info.get('n'):
-        info['show_subs'] = False  # now only show subs if a composite n is allowed
-        nparam = info.get('n')
-        nparam.replace('..', '-')
-        nlist = nparam.split(',')
-        found = False
-        for nl in nlist:
-            if '-' in nl:
-                inx = nl.index('-')
-                ll, hh = nl[:inx], nl[inx + 1:]
-                hh = int(hh)
-                jj = int(ll)
-                while jj <= hh and not found:
-                    if not(ZZ(jj).is_prime() or ZZ(jj) == 1):
-                        found = True
-                    jj += 1
-                if found:
-                    break
-            else:
-                jj = ZZ(nl)
-                if not (ZZ(jj).is_prime() or ZZ(jj) == 1):
-                    found = True
-                    break
-        if found:
-            info['show_subs'] = True
-
-    count_default = 50
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        count = count_default
-    info['count'] = count
-
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
-    if info.get('paging'):
-        try:
-            paging = int(info['paging'])
-            if paging == 0:
-                start = 0
-        except:
-            pass
+    count = parse_count(info, 50)
+    start = parse_start(info)
 
     res = C.transitivegroups.groups.find(query).sort([('n', pymongo.ASCENDING), ('t', pymongo.ASCENDING)])
     nres = res.count()
