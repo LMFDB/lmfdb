@@ -15,7 +15,7 @@ from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, parse_list, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex
-from lmfdb.search_parsing import clean_input, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_torsion_structure, parse_count, parse_start
+from lmfdb.search_parsing import clean_input, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
@@ -215,18 +215,20 @@ def elliptic_curve_search(**args):
             query['label'] = ''
 
     try:
-        parse_rational(info.get('jinv'),query,'jinv','j-invariant')
-        parse_ints(info.get('conductor'),query,'conductor')
-        parse_ints(info.get('torsion'),query,'torsion','torsion order')
-        parse_ints(info.get('rank'),query,'rank')
-        parse_ints(info.get('sha'),query,'sha','analytic order of &#1064;')
-        parse_bracketed_posints(info.get('torsion_structure'),query,'torsion_structure',split=True,process=str)
-        parse_primes(info.get('surj_primes'),query,'non-surjective_primes','surjective primes','complement')
-        if info['surj_quantifier'] == 'exactly':
+        parse_rational(info,query,'jinv','j-invariant')
+        parse_ints(info,query,'conductor')
+        parse_ints(info,query,'torsion','torsion order')
+        parse_ints(info,query,'rank')
+        parse_ints(info,query,'sha','analytic order of &#1064;')
+        parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,process=str)
+        parse_primes(info, query, 'surj_primes', name='surjective primes',
+                     qfield='non-surjective_primes', mode='complement')
+        if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
-        parse_primes(info.get('nonsurj_primes'),query,'non-surjective_primes',mode=mode)
+        parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
+                     qfield='non-surjective_primes',mode=mode)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)

@@ -481,7 +481,7 @@ def image_callback(G):
 
 # The following functions are moving to search_parsing.py, but are imported here
 # temporarily
-from search_parsing import parse_range, parse_range2, parse_torsion_structure, clean_input
+from search_parsing import parse_range, parse_range2, clean_input
 
 def len_val_fn(value):
     """ This creates a SON pair of the type {len:len(value), val:value}, with the len first so lexicographic ordering works.

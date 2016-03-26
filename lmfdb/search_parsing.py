@@ -15,33 +15,27 @@ from markupsafe import Markup
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
 def clean_input(inp):
+    if inp is None: return None
     return re.sub(r'[\s<>]', '', str(inp))
 
-def _parse_list(L):
-    L = str(L)
-    if re.search("\\d", L):
-        return [int(a) for a in L[1:-1].split(',')]
-    return []
-    # return eval(str(L)) works but using eval() is insecure
+def parse_list(info, query, field, name=None, qfield=None, process=None):
+    """
+    Parses a string representing a list of integers, e.g. '[1,2,3]'
 
-def parse_list(inp, query, field, test=None, url=None):
+    Flashes an error and returns true if there are problems parsing.
     """
-    parses a string representing a list of integers, e.g. '[1,2,3]'
-    """
-    i=str(inp)
-    if len(inp)>2:
-        i = str(inp).replace(' ','').replace('[','').replace(']','')
-    if not i: return
+    inp = clean_input(info.get(field))
+    if not inp: return
+    if qfield is None: qfield = field
     try:
-        out= [int(a) for a in i.split(',')]
-        if test is not None:
-            query[field] = test(out)
+        out= [int(a) for a in inp.split(',')]
+        if process is not None:
+            query[qfield] = process(out)
         else:
-            query[field]=out
-    except:
+            query[qfield]=out
+    except Exception:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a list of integers (such as [1,2,3])." % inp), "error")
-        if url is not None:
-            return redirect(url)
+        raise ValueError
 
 def parse_range(arg, parse_singleton=int):
     # TODO: graceful errors
@@ -86,6 +80,36 @@ def parse_range2(arg, key, parse_singleton=int):
     else:
         return [key, parse_singleton(arg)]
 
+# We parse into a list of singletons and pairs, like [[-5,-2], 10, 11, [16,100]]
+# If split0, we split ranges [-a,b] that cross 0 into [-a, -1], [1, b]
+def parse_range3(arg, name, split0 = False):
+    if type(arg) == str:
+        arg = arg.replace(' ', '')
+    if ',' in arg:
+        return sum([parse_discs(a) for a in arg.split(',')],[])
+    elif '-' in arg[1:]:
+        ix = arg.index('-', 1)
+        start, end = arg[:ix], arg[ix + 1:]
+        if start:
+            low = ZZ(str(start))
+        else:
+            raise ValueError("Error parsing input for the %s.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % name)
+        if end:
+            high = ZZ(str(end))
+        else:
+            raise ValueError("Error parsing input for the %s.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % name)
+        if low == high: return [low]
+        if split0 and low < 0 and high > 0:
+            if low == -1: m = [low]
+            else: m = [low,ZZ(-1)]
+            if high == 1: p = [high]
+            else: p = [ZZ(1),high]
+            return [m,p]
+        else:
+            return [[low, high]]
+    else:
+        return [ZZ(str(arg))]
+
 def collapse_ors(parsed, query):
     # work around syntax for $or
     # we have to foil out multiple or conditions
@@ -99,152 +123,153 @@ def collapse_ors(parsed, query):
         parsed[1] = newors
     query[parsed[0]] = parsed[1]
 
-def parse_rational(inp, query, field, name=None):
+def parse_rational(info, query, field, name=None, qfield=None):
+    inp = clean_input(info.get(field))
     if not inp: return
+    if qfield is None: qfield = field
     if name is None: name = field.replace('_',' ')
-    ans = clean_input(inp)
-    ans = ans.replace('+', '')
-    if not QQ_RE.match(ans):
-        raise ValueError("Error parsing input for the %s.  It needs to be a rational number.")
-    query[name] = str(QQ(ans))
-
-def parse_ints(inp, query, field, url=None):
-    if not inp: return
-    cleaned = clean_input(inp)
-    cleaned = cleaned.replace('..', '-').replace(' ', '')
-    if not LIST_RE.match(cleaned):
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % inp), "error")
-        if url is not None:
-            return redirect(url)
+    cleaned = inp.replace('+', '')
+    if QQ_RE.match(cleaned):
+        query[qfield] = str(QQ(cleaned))
+        info[field] = cleaned
     else:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be a rational number." % (inp, name)), "error")
+        raise ValueError
+
+def parse_ints(info, query, field, name=None, qfield=None):
+    inp = clean_input(info.get(field))
+    if not inp: return
+    if qfield is None: qfield = field
+    if name is None: name = field.replace('_',' ')
+    cleaned = inp.replace('..', '-').replace(' ', '')
+    if LIST_RE.match(cleaned):
         collapse_ors(parse_range2(cleaned, field), query)
-
-def parse_signed_ints(inp, query, sign_field, abs_field, name, parse_one=None):
-    if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
-    if not inp: return
-    cleaned = clean_input(info[field])
-    cleaned = cleaned.replace('..', '-').replace(' ', '')
-    if not LIST_RE.match(cleaned):
-        raise ValueError("Error parsing input for %s.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % name)
-    parsed = parse_range3(inp, name, split0 = True)
-    # if there is only one part, we don't need an $or
-    if len(parsed) == 1:
-        parsed = parsed[0]
-        if type(parsed) == list:
-            s0, d0 = parse_one(parsed[0])
-            s1, d1 = parse_one(parsed[1])
-            if s0 < 0:
-                query[abs_field] = {'$gte': d1, '$lte': d0}
-            else:
-                query[abs_field] = {'$lte': d1, '$gte': d0}
-        else:
-            s0, d0 = parse_one(parsed)
-            query[abs_field] = d0
-        query[sign_field] = s0
+        info[field] = cleaned
     else:
-        iquery = []
-        for x in parsed:
-            if type(x) == list:
-                s0, d0 = parse_one(x[0])
-                s1, d1 = parse_one(x[1])
-                if s0 < 0:
-                    iquery.append({sign_field: s0, abs_field: {'$gte': d1, '$lte': d0}})
-                else:
-                    iquery.append({sign_field: s0, abs_field: {'$lte': d1, '$gte': d0}})
-            else:
-                s0, d0 = parse_one(x)
-                iquery.append({sign_field: s0, abs_field: d0})
-        collapse_ors(['$or', iquery], query)
+        err_msg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % (inp,name)
+        flash(Markup(err_msg), "error")
+        raise ValueError
 
-def parse_primes(inp, query, field, name=None, mode=None):
+def parse_signed_ints(info, query, sign_field, abs_field, name, qfield=None, parse_one=None):
+    inp = clean_input(info.get(field))
     if not inp: return
+    if qfield is None: qfield = field
+    if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
+    cleaned = inp.replace('..', '-').replace(' ', '')
+    if LIST_RE.match(cleaned):
+        parsed = parse_range3(inp, name, split0 = True)
+        # if there is only one part, we don't need an $or
+        if len(parsed) == 1:
+            parsed = parsed[0]
+            if type(parsed) == list:
+                s0, d0 = parse_one(parsed[0])
+                s1, d1 = parse_one(parsed[1])
+                if s0 < 0:
+                    query[abs_field] = {'$gte': d1, '$lte': d0}
+                else:
+                    query[abs_field] = {'$lte': d1, '$gte': d0}
+            else:
+                s0, d0 = parse_one(parsed)
+                query[abs_field] = d0
+            query[sign_field] = s0
+        else:
+            iquery = []
+            for x in parsed:
+                if type(x) == list:
+                    s0, d0 = parse_one(x[0])
+                    s1, d1 = parse_one(x[1])
+                    if s0 < 0:
+                        iquery.append({sign_field: s0, abs_field: {'$gte': d1, '$lte': d0}})
+                    else:
+                        iquery.append({sign_field: s0, abs_field: {'$lte': d1, '$gte': d0}})
+                else:
+                    s0, d0 = parse_one(x)
+                    iquery.append({sign_field: s0, abs_field: d0})
+            collapse_ors(['$or', iquery], query)
+        info[field] = cleaned
+    else:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % (inp, name)), "error")
+        raise ValueError
+
+def parse_primes(info, query, field, name=None, qfield=None, mode=None):
+    inp = clean_input(info.get(field))
+    if not inp: return
+    if qfield is None: qfield = field
     if name is None: name = field.replace('_',' ')
-    cleaned = clean_input(inp)
-    format_ok = LIST_POSINT_RE.match(cleaned)
+    format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
-        primes = [int(p) for p in cleaned.split(',')]
+        primes = [int(p) for p in inp.split(',')]
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if format_ok:
         if mode == 'complement':
-            query[field] = {"$nin": primes}
+            query[qfield] = {"$nin": primes}
         elif mode == 'exact':
-            query[field] = sorted(primes)
+            query[qfield] = sorted(primes)
         elif mode == "append":
-            if field in query:
-                if "$all" in query[field]:
-                    query[field]["$all"].extend(primes)
-                else:
-                    query[field]["$all"] = primes
+            if qfield not in query:
+                query[qfield] = {}
+            if "$all" in query[qfield]:
+                query[qfield]["$all"].extend(primes)
+            else:
+                query[qfield]["$all"] = primes
         else:
             raise ValueError("Unrecognized mode: programming error in LMFDB code")
+        info[field] = inp
     else:
-        raise ValueError("Error parsing input for %s.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11)."%name)
+        err_msg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11)." % (inp, name)
+        flash(Markup(err_msg), "error")
+        raise ValueError
 
-def parse_bracketed_posints(inp, query, field, name=None, length=None,split=False,process=None):
+def parse_bracketed_posints(info, query, field, name=None, qfield=None, maxlength=None, exactlength=None, split=True, process=None):
+    inp = clean_input(info.get(field))
     if not inp: return
+    if qfield is None: qfield = field
     if process is None: process = lambda x: x
     if name is None: name = field.replace('_',' ')
-    cleaned = clean_input(inp)
-    if BRACKETED_POSINT_RE.match(cleaned) and (length is None or cleaned.count(',') == length - 1):
-        if split:
-            query[field] = [process(a) for a in _parse_list(cleaned)]
+    if (not BRACKETED_POSINT_RE.match(inp) or
+        (maxlength is not None and inp.count(',') > maxlength - 1) or
+        (exactlength is not None and inp.count(',') != exactlength - 1)):
+        if exactlength == 2:
+            lstr = "pair of integers"
+            example = "[2,3] or [3,3]"
+        elif exactlength == 1:
+            lstr = "list of 1 integer"
+            example = "[2]"
+        elif exactlength is not None:
+            lstr = "list of %s integers" % exactlength
+            example = str(range(2,exactlength+2)).replace(" ","") + " or " + str([3]*exactlength).replace(" ","")
+        elif maxlength is not None:
+            lstr = "list of at most %s integers" % maxlength
+            example = str(range(2,maxlength+2)).replace(" ","") + " or " + str([2]*max(1, maxlength-2)).replace(" ","")
         else:
-            query[field] = cleaned[1:-1]
+            lstr = "list of integers"
+            example = "[1,2,3] or [5,6]"
+        err_msg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be a %s in square brackets, such as %s." % (inp, name, lstr, example)
+        flash(Markup(err_msg), "error")
+        raise ValueError
     else:
-        if length is None: lstr = "list of integers"
-        elif length == 2: lstr = "pair of integers"
-        else: lstr = "list of integers of length %s"%(length)
-        raise ValueError("Error parsing input for %s. It needs to be a %s in square brackets, such as [2,3] or [3,3]" %(name, lstr))
-
-def parse_galgrp(inp, query, field='galois', name='Galois group'):
-    from lmfdb.transitive_group import complete_group_codes, make_galois_pair
-    if not inp: return
-    cleaned = clean_input(inp)
-    try:
-        gcs = complete_group_codes(cleaned)
-        if len(gcs) == 1:
-            query[field] = make_galois_pair(gcs[0][0], gcs[0][1])
-        elif len(gcs) > 1:
-            query[field] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
-    except NameError as code:
-        raise ValueError('Error parsing input for %s: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or a comma separated list of such labels.'%(name, code))
-
-# Function to parse search box input for finite abelian group
-# invariants, e.g. torsion structure for elliptic curves or genus 2
-# curves
-
-def parse_torsion_structure(L, maxrank=2):
-    r"""
-    Parse a string entered into torsion structure search box
-    '[]' --> []
-    '[n]' --> [str(n)]
-    'n' --> [str(n)]
-    '[m,n]' or '[m n]' --> [str(m),str(n)]
-    'm,n' or 'm n' --> [str(m),str(n)]
-    ... and similarly for up to maxrank factors
-    """
-    # strip <whitespace> or <whitespace>[<whitespace> from the beginning:
-    L1 = re.sub(r'^\s*\[?\s*', '', str(L))
-    # strip <whitespace> or <whitespace>]<whitespace> from the beginning:
-    L1 = re.sub(r'\s*]?\s*$', '', L1)
-    # catch case where there is nothing left:
-    if not L1:
-        return []
-    # This matches a string of 1 or more digits at the start,
-    # optionally followed by up to 3 times (nontrivial <ws> or <ws>,<ws> followed by
-    # 1 or more digits):
-    TORS_RE = re.compile(r'^\d+((\s+|\s*,\s*)\d+){0,%s}$' % (maxrank-1))
-    if TORS_RE.match(L1):
-        if ',' in L1:
-            # strip interior <ws> and use ',' as delimiter:
-            res = [int(a) for a in L1.replace(' ','').split(',')]
+        if split:
+            query[qfield] = [process(int(a)) for a in inp[1:-1].split(',')]
         else:
-            # use whitespace as delimiter:
-            res = [int(a) for a in L1.split()]
-        n = len(res)
-        if all(x>0 for x in res) and all(res[i+1]%res[i]==0 for i in range(n-1)):
-            return res
-    return 'Error parsing input %s.  It needs to be a list of up to %s integers, optionally in square brackets, separated by spaces or a comma, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % (L,maxrank)
+            query[qfield] = inp[1:-1]
+        info[field] = inp
+
+def parse_galgrp(info, query, field='galois', name='Galois group', qfield=None):
+    inp = clean_input(info.get(field))
+    if not inp: return
+    if qfield is None: qfield = field
+    from lmfdb.transitive_group import complete_group_codes, make_galois_pair
+    try:
+        gcs = complete_group_codes(inp)
+        if len(gcs) == 1:
+            query[qfield] = make_galois_pair(gcs[0][0], gcs[0][1])
+        elif len(gcs) > 1:
+            query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
+        info[field] = inp
+    except NameError as code:
+        err_msg = "Error: <span style='color:black'>%s</span> is no a valid input for <span style='color:black'>%s</span>. It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels."%(inp, name)
+        flash(Markup(err_msg), "error")
+        raise ValueError
 
 def parse_count(info, default=20):
     try:

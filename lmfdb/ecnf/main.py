@@ -8,7 +8,8 @@ ASC = pymongo.ASCENDING
 from urllib import quote, unquote
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect
-from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, parse_torsion_structure
+from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
+from lmfdb.search_parsing import clean_input, parse_range, parse_range2, parse_bracketed_posints
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
 from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
@@ -326,13 +327,10 @@ def elliptic_curve_search(**args):
         query[tmp[0]] = tmp[1]
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        res = parse_torsion_structure(info['torsion_structure'],2)
-        if 'Error' in res:
-            info['err'] = res
+        try:
+            parse_bracketed_posints(info['torsion_structure'], query, 'torsion_structure', maxlength=2)
+        except ValueError:
             return search_input_error(info, bread)
-        #update info for repeat searches
-        info['torsion_structure'] = str(res).replace(' ','')
-        query['torsion_structure'] = [int(r) for r in res]
 
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         info['number'] = 1
