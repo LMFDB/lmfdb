@@ -22,6 +22,9 @@ from markupsafe import Markup
 def clean_input(inp):
     if inp is None: return None
     return re.sub(r'[\s<>]', '', str(inp))
+def prep_ranges(inp):
+    if inp is None: return None
+    return inp.replace('..','-').replace(' ','')
 
 def parse_list(info, query, field, name=None, qfield=None, process=None):
     """
@@ -146,7 +149,7 @@ def parse_ints(info, query, field, name=None, qfield=None):
     if not inp: return
     if qfield is None: qfield = field
     if name is None: name = field.replace('_',' ')
-    cleaned = inp.replace('..', '-').replace(' ', '')
+    cleaned = prep_ranges(inp)
     if LIST_RE.match(cleaned):
         collapse_ors(parse_range2(cleaned, field), query)
         info[field] = cleaned
@@ -160,7 +163,7 @@ def parse_signed_ints(info, query, field, sign_field, abs_field, name=None, pars
     if not inp: return
     if name is None: name = field
     if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
-    cleaned = inp.replace('..', '-').replace(' ', '')
+    cleaned = prep_ranges(inp)
     if LIST_RE.match(cleaned):
         parsed = parse_range3(inp, name, split0 = True)
         # if there is only one part, we don't need an $or
@@ -176,7 +179,8 @@ def parse_signed_ints(info, query, field, sign_field, abs_field, name=None, pars
             else:
                 s0, d0 = parse_one(parsed)
                 query[abs_field] = d0
-            query[sign_field] = s0
+            if sign_field is not None:
+                query[sign_field] = s0
         else:
             iquery = []
             for x in parsed:
@@ -184,12 +188,15 @@ def parse_signed_ints(info, query, field, sign_field, abs_field, name=None, pars
                     s0, d0 = parse_one(x[0])
                     s1, d1 = parse_one(x[1])
                     if s0 < 0:
-                        iquery.append({sign_field: s0, abs_field: {'$gte': d1, '$lte': d0}})
+                        abs_D = {'$gte': d1, '$lte': d0}
                     else:
-                        iquery.append({sign_field: s0, abs_field: {'$lte': d1, '$gte': d0}})
+                        abs_D = {'$lte': d1, '$gte': d0}
                 else:
-                    s0, d0 = parse_one(x)
-                    iquery.append({sign_field: s0, abs_field: d0})
+                    s0, abs_D = parse_one(x)
+                if sign_field is None:
+                    iquery.append({abs_field: abs_D})
+                else:
+                    iquery.append({sign_field: s0, abs_field: abs_D})
             collapse_ors(['$or', iquery], query)
         info[field] = cleaned
     else:
@@ -271,8 +278,25 @@ def parse_galgrp(info, query, field='galois_group', name='Galois group', qfield=
             query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
         info[field] = inp
     except NameError as code:
-        err_msg = "Error: <span style='color:black'>%s</span> is no a valid input for <span style='color:black'>%s</span>. It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels."%(inp, name)
+        err_msg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels."%(inp, name)
         flash(Markup(err_msg), "error")
+        raise ValueError
+
+def parse_bool(info, query, field, name=None, qfield=None, minus_one_to_zero=False):
+    inp = clean_input(info.get(field))
+    if not inp: return
+    if qfield is None: qfield = field
+    if name is None: name = field.replace("_", " ")
+    if inp == "True":
+        query[qfield] = True
+    elif inp == "False":
+        query[qfield] = False
+    elif inp == "1":
+        query[qfield] = 1
+    elif inp == "-1":
+        query[qfield] = 0 if minus_one_to_zero else -1
+    else:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It must be True or False." % (inp, name)))
         raise ValueError
 
 def parse_count(info, default=20):
