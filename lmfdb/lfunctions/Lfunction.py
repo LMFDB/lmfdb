@@ -82,8 +82,7 @@ def makeLfromdata(L):
         L.sign = p2sage(data['root_number'])
            # p2sage converts from the python string format in the database.
     else:
-        L.sign = 123 + 456*I
-        #L.sign = exp(2*pi*I*float(data['sign_arg']))
+        L.sign = exp(2*pi*I*float(data['sign_arg'])).n()
     L.mu_fe = [x+p2sage(data['analytic_normalization'])
         for x in p2sage(data['gamma_factors'])[0]]
     L.nu_fe = [x+p2sage(data['analytic_normalization'])
@@ -809,9 +808,22 @@ class Lfunction_Dirichlet(Lfunction):
             label_slash = self.label.replace(".","/")
             db_label = "Character/Dirichlet/" + label_slash
             self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
+            if self.lfunc_data['self_dual']:
+                neg_zeros = ["-" + pos_zero for pos_zero in self.lfunc_data['positive_zeros']]
+            else:
+                dual_L_label = self.lfunc_data['conjugate']
+                dual_L_data = LfunctionDatabase.getEllipticCurveLData(dual_L_label)
+                neg_zeros = ["-" + pos_zero for pos_zero in dual_L_data['positive_zeros']]
 
+            neg_zeros.reverse()
+            self.lfunc_data['zeros'] = neg_zeros[:]
+            self.lfunc_data['zeros'] += [0 for _ in range(self.lfunc_data['order_of_vanishing'])]
+            self.lfunc_data['zeros'] += self.lfunc_data['positive_zeros']
+                
+            self.lfunc_data["plot"] = []
             makeLfromdata(self)
             self.fromDB = True
+            self.plot = ""
 #            try:
 #                makeLfromdata(self)
 #                self.fromDB = True

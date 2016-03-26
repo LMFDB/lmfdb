@@ -94,7 +94,6 @@ def styleTheSign(sign):
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
     truncation = float(10 ** truncationexp)
-    print "seriescoefftype",seriescoefftype
     try:
         if type(coeff) == complex:
             rp = coeff.real
@@ -102,7 +101,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
         else:
             rp = real_part(coeff)
             ip = imag_part(coeff)
-    except TypeError:
+    except TypeError:     # mostly a hack for Dirichlet L-functions
         if seriescoefftype == "serieshtml":
             if coeff == "I":
                 return " + " + "$i$" + "&middot;" + seriesvar(index, seriestype) 
