@@ -307,10 +307,10 @@ class WebObject(object):
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
             emf_logger.debug('Update requested')
-            #try:
-            self.update_from_db()
-            #except Exception as e:
-            #    raise RuntimeError(str(e))
+            try:
+                self.update_from_db()
+            except Exception as e:
+                raise RuntimeError(str(e))
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
         if init_dynamic_properties:
             emf_logger.debug('init_dynamic_properties will be called')
