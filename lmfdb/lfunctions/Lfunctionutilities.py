@@ -104,7 +104,12 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             ip = imag_part(coeff)
     except TypeError:
         if seriescoefftype == "serieshtml":
-            return " +" + coeff + "&middot;" + seriesvar(index, seriestype)
+            if coeff == "I":
+                return " + " + "$i$" + "&middot;" + seriesvar(index, seriestype) 
+            elif coeff == "-I":
+                return "&minus;" + " $i$" + "&middot;" + seriesvar(index, seriestype)
+            else:
+                return " +" + coeff + "&middot;" + seriesvar(index, seriestype)
         else:
             return coeff
 # below we use float(abs()) instead of abs() to avoid a sage bug

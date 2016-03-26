@@ -114,18 +114,38 @@ def makeLfromdata(L):
             L.dirichlet_coefficients[n] = an
 
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
-        base_power = int(data['coeff_info'][0][2:-3])
-        print 'base_power',base_power
+        base_power_int = int(data['coeff_info'][0][2:-3])
+        print 'base_power_int',base_power_int
+        L.dirichlet_coefficients_analytic = L.dirichlet_coefficients_arithmetic[:]
         for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
             an = L.dirichlet_coefficients_arithmetic[n]
             if not str(an).startswith('a'):
                 L.dirichlet_coefficients_arithmetic[n] = an
+                L.dirichlet_coefficients_analytic[n] = an
             else:
                 an_power = an[2:]
-                if an_power == '0':
+                an_power_int = int(an_power)
+                this_gcd = gcd(an_power_int,base_power_int)
+                an_power_int /= this_gcd
+                this_base_power_int = base_power_int/this_gcd
+                if an_power_int == 0:
                     L.dirichlet_coefficients_arithmetic[n] = 1
+                    L.dirichlet_coefficients_analytic[n] = 1
+                elif this_base_power_int == 2:
+                    L.dirichlet_coefficients_arithmetic[n] = -1
+                    L.dirichlet_coefficients_analytic[n] = -1
+                elif this_base_power_int == 4:
+                    if an_power_int == 1:
+                        L.dirichlet_coefficients_arithmetic[n] = I
+                        L.dirichlet_coefficients_analytic[n] = I
+                    else:
+                        L.dirichlet_coefficients_arithmetic[n] = -1*I
+                        L.dirichlet_coefficients_analytic[n] = -1*I
                 else:
-                    L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + an_power + "}{" + str(base_power)  + "}\\right)$"
+                    L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
+                    L.dirichlet_coefficients_analytic[n] = exp(2*pi*I*float(an_power_int)/float(this_base_power_int)).n()
+        print "rename L.dirichlet_coefficients_analytic"
+        L.dirichlet_coefficients = L.dirichlet_coefficients_analytic[:]
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
     L.localfactors = p2sage(data['euler_factors'])
@@ -791,18 +811,18 @@ class Lfunction_Dirichlet(Lfunction):
             self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
 
             makeLfromdata(self)
-
-            try:
-                makeLfromdata(self)
-                self.fromDB = True
-            except:
-                print "oooooooooooops"
-                self.fromDB = False
-                self.zeros = "zeros not available"
-                self.plot = ""
-
-                chival = [ CC(z.real,z.imag) for z in chi.values()]
-                self.dirichlet_coefficients = [ chival[k % self.level] for k in range(1,self.numcoeff) ]
+            self.fromDB = True
+#            try:
+#                makeLfromdata(self)
+#                self.fromDB = True
+#            except:
+#                print "oooooooooooops"
+#                self.fromDB = False
+#                self.zeros = "zeros not available"
+#                self.plot = ""
+#
+#                chival = [ CC(z.real,z.imag) for z in chi.values()]
+#                self.dirichlet_coefficients = [ chival[k % self.level] for k in range(1,self.numcoeff) ]
 
             self.poles = []
             self.residues = []
@@ -828,9 +848,9 @@ class Lfunction_Dirichlet(Lfunction):
             else:
                 self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
 
-            self.htmlname = "<em>L</em>(<em>s,A</em>)"
+            self.htmlname = "<em>L</em>(<em>s,&chi;</em>)"
             self.texname_arithmetic = "L(\\chi,s)"
-            self.htmlname_arithmetic = "<em>L</em>(<em>A,s</em>)"
+            self.htmlname_arithmetic = "<em>L</em>(<em>&chi;,s</em>)"
             self.texnamecompleteds = "\\Lambda(s,\\chi)"
             self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
             self.texnamecompleteds_arithmetic = "\\Lambda(\\chi,s)"
