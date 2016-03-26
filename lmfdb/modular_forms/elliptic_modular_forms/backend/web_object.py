@@ -307,10 +307,10 @@ class WebObject(object):
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
             emf_logger.debug('Update requested')
-            try:
-                self.update_from_db()
-            except Exception as e:
-                raise RuntimeError(str(e))
+            #try:
+            self.update_from_db()
+            #except Exception as e:
+            #    raise RuntimeError(str(e))
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
         if init_dynamic_properties:
             emf_logger.debug('init_dynamic_properties will be called')
@@ -455,8 +455,9 @@ class WebObject(object):
         user = 'editor'
         password = open(pw_filename, "r").readlines()[0].strip()
         C = getDBConnection()
+        emf_logger.debug("Authenticating user={0} password={1}".format(user,password))
         C["modularforms2"].authenticate(user,password)
-        emf_logger.critical("Authenticated with user:{0} and pwd:{1}".format(user,password))
+        emf_logger.debug("Authenticated with user:{0} and pwd:{1}".format(user,password))
                             
     def logout(self):
         r"""
@@ -627,29 +628,33 @@ class WebObject(object):
             if add_to_fs_query is not None:
                 file_key.update(add_to_fs_query)
             emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
-            emf_logger.debug("file_key: {0}".format(file_key))
+            emf_logger.debug("file_key: {0} fs={1}".format(file_key,self._file_collection))
             if fs.exists(file_key):
                 coll = self._file_collection
-                fid = coll.find_one(file_key)['_id']
+                r = coll.find_one(file_key)
+                fid = r['_id']
                 #emf_logger.debug("col={0}".format(coll))
                 #emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
                 try: 
                     d = loads(fs.get(fid).read())
                 except ValueError as e:
-                    raise ValueError("Wrong format in database! : {0}".format(e))
+                    raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,r))
                 #emf_logger.debug("type(d)={0}".format(type(d)))                                
                 #emf_logger.debug("d.keys()={0}".format(d.keys()))                
                 for p in self._fs_properties:
                     #emf_logger.debug("p={0}, update:{1}".format(p,p.include_in_update))
                     #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                     if p.include_in_update and d.has_key(p.name):
+                        emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                         p.has_been_set(False)
+                        
                         p.set_from_fs(d[p.name])
                 succ_fs = True
             else:
                 if not ignore_non_existent:
                     raise IndexError("File does not exist")
                 succ_fs = False
+            emf_logger.debug("loaded from fs")
         if succ_db: self._has_updated_from_db = True
         if succ_fs: self._has_updated_from_fs = True
 
