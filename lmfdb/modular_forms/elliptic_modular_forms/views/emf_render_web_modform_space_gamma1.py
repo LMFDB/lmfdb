@@ -91,9 +91,9 @@ def set_info_for_gamma1(level,weight,weight2=None):
             k = r['weight']
             parity = r.get('character_parity','n/a')
             if parity == 1:
-                parity = 'e'
+                parity = 'even'
             elif parity == -1:
-                parity = 'o'
+                parity = 'odd'
             
             d = r.get('d_newf',"n/a")
             indb = r.get('in_wdb',0)
