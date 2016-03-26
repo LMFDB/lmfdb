@@ -19,13 +19,18 @@ _curdir = os.path.dirname(os.path.abspath(__file__))
 contribs = yaml.load_all(open(os.path.join(_curdir, "..", "CONTRIBUTORS.yaml")))
 contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 
+
+
+
 @app.route("/acknowledgment")
 def acknowledgment():
-    return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs)
+    bread = [("Acknowledgments" , '')]
+    return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs, bread = bread)
 
-@app.route("/activities")
+@app.route("/acknowledgment/activities")
 def workshops():
-    return render_template("workshops.html", title="LMFDB Activities", contribs = contribs)
+    bread = [("Acknowledgments" , url_for('.acknowledgment')) , ("Activities", '')]
+    return render_template("workshops.html", title="LMFDB Activities", contribs = contribs, bread = bread)
 
 
 class Box(object):
