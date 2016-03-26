@@ -23,9 +23,9 @@ contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 def acknowledgment():
     return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs)
 
-@app.route("/workshops")
+@app.route("/activities")
 def workshops():
-    return render_template("workshops.html", title="LMFDB Workshops", contribs = contribs)
+    return render_template("workshops.html", title="LMFDB Activities", contribs = contribs)
 
 
 class Box(object):
