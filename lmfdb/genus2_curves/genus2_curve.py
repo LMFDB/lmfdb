@@ -8,9 +8,9 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import tempfile
 import os
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, comma
-from lmfdb.search_parsing import clean_input, parse_range2, parse_bracketed_posints
-from lmfdb.number_fields.number_field import parse_list, parse_discs, make_disc_key
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict
+from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints
+from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label, st_group_name
@@ -204,96 +204,27 @@ def genus2_curve_search(**args):
     if 'jump' in args:
         return render_curve_webpage_by_label(info["jump"])
 
-    if info.get("disc"):
-        field = "abs_disc"
-        ran = info["disc"]
-        ran = ran.replace('..', '-').replace(' ','')
-        # Past input check
-        dlist = parse_discs(ran)
-        tmp = g2_list_to_query(dlist)
-
-        if len(tmp) == 1:
-            tmp = tmp[0]
-        else:
-            query[tmp[0][0]] = tmp[0][1]
-            tmp = tmp[1]
-
-        # work around syntax for $or
-        # we have to foil out multiple or conditions
-        if tmp[0] == '$or' and '$or' in query:
-            newors = []
-            for y in tmp[1]:
-                oldors = [dict.copy(x) for x in query['$or']]
-                for x in oldors:
-                    x.update(y)
-                newors.extend(oldors)
-            tmp[1] = newors
-        query[tmp[0]] = tmp[1]
-
-    if info.get("is_gl2_type"):
-        if info['is_gl2_type'] == "True":
-            query['is_gl2_type']= True
-        elif info['is_gl2_type'] == "False":
-            query['is_gl2_type']= False
-
-    for fld in ['st_group', 'real_geom_end_alg']:
-        if info.get(fld):
-            query[fld] = info[fld]
-    for fld in ['aut_grp', 'geom_aut_grp','igusa_clebsch']:
-        if info.get(fld):
-            query[fld] = map(int,info[fld].strip()[1:-1].split(","))
-    if info.get('torsion'):
-        try:
-            parse_bracketed_posints(info['torsion'], query, 'torsion', 'torsion structure', maxlength=4)
-        except ValueError:
-            # no error handling of malformed input yet!
-            #return search_input_error(info, bread)
-            pass
-
-    if info.get('g20'):
-        query['g2inv'] = [ info['g20'], info['g21'], info['g22'] ]
-
-    for fld in ["cond", "num_rat_wpts", "torsion_order", "two_selmer_rank"]:
-        if info.get(fld):
-            field = fld
-            ran = str(info[field])
-            ran = ran.replace('..', '-').replace(' ','')
-            # Past input check
-            tmp = parse_range2(ran, field)
-            # work around syntax for $or
-            # we have to foil out multiple or conditions
-            if tmp[0] == '$or' and '$or' in query:
-                newors = []
-                for y in tmp[1]:
-                    oldors = [dict.copy(x) for x in query['$or']]
-                    for x in oldors:
-                        x.update(y)
-                    newors.extend(oldors)
-                tmp[1] = newors
-            query[tmp[0]] = tmp[1]
+    try:
+        parse_ints(info,query,'disc',None,'abs_disc','absolute discriminant')
+        parse_bool(info,query,'is_gl2_type')
+        for fld in ('st_group', 'real_geom_end_alg'):
+            if info.get(fld): query[fld] = info[fld]
+        for fld in ('aut_grp', 'geom_aut_grp'):
+            #Encoded into a GAP ID.
+            parse_bracketed_posints(info,query,fld,exactlength=2)
+        # igusa and igusa_clebsch invariants not currently searchable
+        parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4)
+        parse_ints(info,query,'cond','conductor')
+        parse_ints(info,query,'num_rat_wpts','Weierstrass points')
+        parse_ints(info,query,'torsion_order')
+        parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
+    except ValueError as err:
+        info['err'] = str(err)
+        return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit)
 
     info["query"] = dict(query)
-
-    count_default = 50
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        count = count_default
-    info['count'] = count
-
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
+    count = parse_count(info, 50)
+    start = parse_start(info)
 
     cursor = db_g2c().curves.find(query)
     nres = cursor.count()
@@ -343,32 +274,3 @@ def genus2_curve_search(**args):
     title = 'Genus 2 Curves search results'
     return render_template("search_results_g2.html", info=info, credit=credit,
             bread=bread, title=title)
-
-def g2_list_to_query(dlist):
-    # if there is only one part, we don't need an $or
-    if len(dlist) == 1:
-        dlist = dlist[0]
-        if type(dlist) == list:
-            s0, d0 = make_disc_key(dlist[0])
-            s1, d1 = make_disc_key(dlist[1])
-            if s0 < 0:
-                return [['disc_key', {'$gte': d1, '$lte': d0}]]
-            else:
-                return [['disc_key', {'$lte': d1, '$gte': d0}]]
-        else:
-            s0, d0 = make_disc_key(dlist)
-            return [['disc_key', d0]]
-    # Now dlist has length >1
-    ans = []
-    for x in dlist:
-        if type(x) == list:
-            s0, d0 = make_disc_key(x[0])
-            s1, d1 = make_disc_key(x[1])
-            if s0 < 0:
-                ans.append({ 'disc_key': {'$gte': d1, '$lte': d0}})
-            else:
-                ans.append({ 'disc_key': {'$lte': d1, '$gte': d0}})
-        else:
-            s0, d0 = make_disc_key(x)
-            ans.append({'disc_key': d0})
-    return [['$or', ans]]
