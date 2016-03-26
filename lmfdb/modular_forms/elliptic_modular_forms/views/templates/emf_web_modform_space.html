@@ -36,7 +36,7 @@
    {% if space.weight % 2 != 0 and space.character.value(-1) == 1 %}
      The weight is odd and the character is even.
    {% endif %}
-    {% else %}
+ {% else %}
 
       {% if extra_info is defined %}
         <span style="font-size:50%">({{ extra_info | safe }})</span>
@@ -67,13 +67,12 @@
       {% else %}
         {{ name_new }} {{ nontrivial_new_info }}
       {% endif %}
-      HERE
-      {% if space.oldspace_decomposition != {} and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
+    {% endif %}
+      {% if oldspace_decomposition != '' and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
         <h2> Decomposition of {{old_name}} into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
-        {{ space.oldspace_decomposition | safe }}
+        {{ old_name}}  = {{ oldspace_decomposition | safe }} 
       {% endif %}
         
-    {% endif %}
     {{ test | safe }}
   {% endif %}
 {% endif %}
