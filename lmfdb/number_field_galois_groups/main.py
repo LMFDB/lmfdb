@@ -12,10 +12,14 @@ from lmfdb.math_classes import *
 
 
 def initialize_indices():
-    NumberFieldGaloisGroup.collection().ensure_index([("label", ASC)])
-    NumberFieldGaloisGroup.collection().ensure_index([("Size", ASC)])
-    NumberFieldGaloisGroup.collection(
-    ).ensure_index([("Transitive_degree", ASC), ("Size", ASC), ("DBIndex", ASC)])
+    try:
+##        NumberFieldGaloisGroup.collection().ensure_index([("label", ASC)])
+#        NumberFieldGaloisGroup.collection().ensure_index([("Size", ASC)])
+#        NumberFieldGaloisGroup.collection(
+#        ).ensure_index([("Transitive_degree", ASC), ("Size", ASC), ("DBIndex", ASC)])
+	pass
+    except pymongo.errors.OperationFailure:
+        pass
 
 
 def get_bread(breads=[]):

@@ -1,0 +1,23 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if not error %}
+<h2>Search results</h2>
+{% if not results or results|count == 0 %}
+<p> - no samples found - </p>
+{% else %}
+{% for sam in results|sort %}
+<a href="{{ '/ModularForm/GSp/Q/' + sam.collection()[0] + '.' + sam.name() }}">{{ sam.collection()[0] + '.' + sam.name() }}</a>
+{% endfor %}
+{% endif %}
+
+{% else %}
+{% include 'None.html' %}
+{% endif %}
+
+<h2>New search</h2>
+{% include 'includes/form_for_sample_search.html' %}
+
+{% include 'includes/form_for_label_search.html' %}
+
+{% endblock %}

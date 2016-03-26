@@ -5,6 +5,14 @@
 <div.ip>span { white-space: nowrap; font-family: serif; }
 </style>
 
+{% macro code(codes, item) %}
+{% for L in codes[item] %}
+{# N.B. whitespace is preserved in the following div since the CSS has
+white-space: pre in order to keep line breaks! #}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
+{% endfor %}
+{% endmacro %}
+
 <script>
 var cur_system = null;
 function show_code(system) {
@@ -21,8 +29,8 @@ function show_code(system) {
   }
 </script>
 
+{#
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
-  
 
 </script><style type="text/css">
   .sagecell .CodeMirror-scroll {
@@ -45,21 +53,24 @@ function show_code(system) {
   }
 
   </style>
-
-{#
-    <div align ="right">
-      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
-        <a onclick="show_code('pari'); return false" href='#'>pari</a>,
-        <a onclick="show_code('magma'); return false" href='#'>magma</a>
-    </div>
 #}
 
+    <div align ="right">
+      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
+       {# <a onclick="show_code('pari'); return false" href='#'>pari</a>, #}
+        <a onclick="show_code('magma'); return false" href='#'>magma</a>
+    </div>
+
 <div>
-  <h2>  Base Field   {{ ec.field.knowl()|safe }} </h2>
+  <h2>  Base field   {{ ec.field.knowl()|safe }} </h2>
 <p>
-Generator \({{ ec.field.generator_name() }}\), with minimal polynomial
-\({{ec.field.poly()}}\), class number \({{ec.field.class_number()}}\).
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ ec.field.generator_name() }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ {{ec.field.latex_poly}}; {{ KNOWL('nf.class_number', 'class number')
+ }} \({{ec.field.class_number()}}\).
 </p>
+    {{ code(ec.code,'field') }}
 </div>
 
 <style type="text/css">
@@ -70,31 +81,33 @@ cellpadding="5";
 }
 </style>
 
-<div>
-<h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Equation') }}</h2>
-<p>
+<h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass equation') }}</h2>
+<div style='overflow-x:auto; overflow-y:hidden'>
 {{ ec.equn }}
-</p>
+</div>
+    {{ code(ec.code,'curve') }}
 <p>
   {% if ec.is_minimal %}
-  This is a global minimal model.
+  This is a {{ KNOWL('ec.global_minimal_model','global minimal model')}}.
   {% else %}
-  This is not a global minimal model: it is minimal at all primes except
-  {{ ec.non_min_prime }}.
+  This is not a {{ KNOWL('ec.global_minimal_model','global minimal
+  model')}}: it is {{ KNOWL('ec.local_minimal_model','minimal') }}
+  at all primes except {{ ec.non_min_prime }}.
   {% if ec.has_minimal_model %}
-  However, a minimal model does exist.
+  However, a {{ KNOWL('ec.global_minimal_model','global minimal model')}} does exist.
   {% else %}
-  No global minimal model exists.
+  No {{ KNOWL('ec.global_minimal_model','global minimal model')}} exists.
   {% endif %}
   {% endif %}
+    {{ code(ec.code,'is_min') }}
 </p>
 
 
-<h2>Invariants</h2>
+<h2>{{ KNOWL('ec.invariants', title='Invariants')}}</h2>
 
-        <table id="invariants">
+    <div style='overflow:auto'>
+      <table id="invariants">
         <tr>
-          <td>{{ KNOWL('ec.conductor',  title='Conductor') }}</td>
         <td>
          \(\mathfrak{N} \)</td>
         <td>=</td>
@@ -102,9 +115,9 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.fact_cond }}</td>
         </tr>
+        <tr><td colspan=5>    {{ code(ec.code,'cond') }}</td></tr>
 
         <tr>
-          <td>Conductor {{ KNOWL('ec.conductor_norm',  title='norm') }}</td>
         <td>
          \(N(\mathfrak{N}) \)</td>
         <td>=</td>
@@ -112,11 +125,16 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.fact_cond_norm }}</td>
         </tr>
+        <tr><td colspan=5>    {{ code(ec.code,'cond_norm') }}</td></tr>
 
         <tr>
-          <td>{{ KNOWL('ec.discriminant',  title='Discriminant ideal') }}</td>
         <td>
-         \((\Delta)\)</td>
+          {% if ec.is_minimal %}
+          \(\mathfrak{D}\)
+          {% else %}
+          \((\Delta)\)
+          {% endif %}
+        </td>
         <td>=</td>
         <td>{{ ec.disc }}</td>
         {% if ec.fact_disc %}
@@ -125,21 +143,26 @@ cellpadding="5";
         {% endif %}
         </tr>
 
+          <tr><td colspan=5> {{ code(ec.code,'disc_norm') }}</td></tr>
         <tr>
-          <td>Discriminant {{ KNOWL('ec.discriminant_norm',  title='norm') }}</td>
         <td>
-         \(N(\Delta)\)</td>
+          {% if ec.is_minimal %}
+          \(N(\mathfrak{D})\)
+          {% else %}
+          \(N(\Delta)\)
+          {% endif %}
+         </td>
         <td>=</td>
         <td>{{ ec.disc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_disc_norm }}</td>
         </tr>
+        <tr><td colspan=5> {{ code(ec.code,'disc') }}</td></tr>
 
 {% if not ec.is_minimal %}
         <tr>
-          <td>{{ KNOWL('ec.discriminant',  title='Minimal Discriminant ideal') }}</td>
         <td>
-         \(\Delta_{min}\)</td>
+         \(\mathfrak{D}\)</td>
         <td>=</td>
         <td>{{ ec.mindisc }}</td>
         {% if ec.fact_mindisc %}
@@ -149,9 +172,8 @@ cellpadding="5";
         </tr>
 
         <tr>
-          <td>Minimal discriminant norm</td>
         <td>
-         \(N(\Delta_{min})\)</td>
+         \(N(\mathfrak{D})\)</td>
         <td>=</td>
         <td>{{ ec.mindisc_norm }}</td>
         <td>=</td>
@@ -160,7 +182,6 @@ cellpadding="5";
 {% endif %}
 
         <tr>
-          <td>{{ KNOWL('ec.j_invariant',  title='\(j\)-invariant') }}</td>
         <td>
          \(j\)</td>
         <td>=</td>
@@ -170,25 +191,58 @@ cellpadding="5";
         <td>{{ ec.fact_j }}</td>
         {% endif %}
         </tr>
+        <tr><td colspan=5>     {{ code(ec.code,'jinv') }}</td></tr>
 
         <tr>
-          <td>Endomorphism ring</td>
         <td> \( \text{End} (E) \)</td>
         <td>=</td>
         <td>{{ ec.End }}</td>
         <td>&nbsp;</td>
-        <td>({%if not ec.cm %} no {%endif %}
+        <td>({%if not ec.cm %}no {%endif %}
    {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication')}}
             )
         </td>
         </tr>
+        <tr><td colspan=5>     {{ code(ec.code,'cm') }}</td></tr>
 
 </table>
 </div>
 
 <div>
 <h2> {{ KNOWL('ec.mordell-weil', title="Mordell-Weil rank and generators") }} </h2>
-Not yet determined.
+{% if ec.rk == "?" %}
+{% if ec.rk_bnds != "not recorded" %}
+<b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \le {{ ec.rank_bounds[1] }}\)
+{% else %}
+Rank not yet determined.
+{% endif %}
+{% else %}
+<b>Rank:</b> \( {{ ec.rank }} \)
+{% endif %}
+ {{ code(ec.code,'rank') }}
+
+{% if ec.rank_bounds[0] %}
+{% if ec.gens == 'not recorded' %}
+<p>No generators recorded.</p>
+{% else %}
+<p><b>
+{% if ec.rank_bounds[0] == 1 %}
+Generator:
+{% else %}
+Generators:
+{% endif %}</b>
+{{ ec.gens }}
+</p>
+
+{% endif %}
+{% endif %}
+ {{ code(ec.code,'gens') }}
+
+<p>
+<b>Regulator:</b>
+{{ ec.reg }}
+ {{ code(ec.code,'reg') }}
+</p>
 </div>
 
 <div>
@@ -198,28 +252,33 @@ Not yet determined.
 <th>Structure:</th>
 <td>{{ ec.tor_struct_pretty }}</td>
 </tr>
+<tr><td colspan=2> {{ code(ec.code,'tors') }}</td></tr>
+<tr><td colspan=2> {{ code(ec.code,'ntors') }}</td></tr>
     {% if ec.tr %}
 <tr>
 <th>{% if ec.tr==1 %}Generator{% else %}Generators{% endif %}:</th>
 <td>{{ ec.torsion_gens }}</td>
 </tr>
+<tr><td colspan=2> {{ code(ec.code,'torgens') }}</td></tr>
     {% endif %}
 </table>
 </div>
 
 <div>
-    <h2> Local data at primes of bad reduction </h2>
+    <h2>{{KNOWL('local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
+ {{ code(ec.code,'localdata') }}
 
 {% if ec.local_data %}
 <table cellpadding="5">
 <tr>
 <th>prime</th>
 <th>Norm</th>
-<th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
-<th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
-<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
-<th>ord(\(\Delta_{min}\))</th>
-<th>ord\({}_-(j\))</th>
+<th>{{KNOWL('ec.tamagawa_number', title='Tamagawa number')}}</th>
+<th>{{KNOWL('ec.kodaira_symbol', title='Kodaira symbol')}}</th>
+<th>{{KNOWL('ec.reduction_type', title='Reduction type')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='ord(\(\mathfrak{N}\))')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\mathfrak{D}\))')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
 </tr>
 {% for pr in ec.local_data %}
 <tr>
@@ -244,12 +303,9 @@ Not yet determined.
    Non-split multiplicative
 {% endif %}
 </td>
-<td align=center>
-{{ pr.ord_mindisc }}
-</td>
-<td align=center>
-{{ pr.ord_den_j }}
-</td>
+<td align=center>{{pr.ord_cond}}</td>
+<td align=center>{{pr.ord_mindisc }}</td>
+<td align=center>{{pr.ord_den_j}}</td>
 </tr>
 {% endfor %}
 </table>

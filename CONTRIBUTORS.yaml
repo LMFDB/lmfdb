@@ -1,5 +1,5 @@
 # This is the list of contributors to LMFDB
-# They are listed on /acknowledgement and mabye elsewhere
+# They are listed on /acknowledgement and maybe elsewhere
 # the 'name' field is mandatory, all others currently optional
 #  - affil: university or company affiliation
 #  - url: homepage
@@ -9,12 +9,17 @@ name: Matthew Alderson
 name: Samuele Anni
 email: samuele.anni@gmail.com
 affil: University of Warwick
+url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/anni/
 ---
 name: Salman Baig
 ---
 name: Jennifer Balakrishnan
 url: http://www.math.harvard.edu/~jen/
 affil: University of Oxford
+---
+name: Alex Bartel
+url: http://homepages.warwick.ac.uk/~maslan/
+affil: University of Warwick
 ---
 name: Jennifer Beineke
 url: http://mars.wne.edu/~jbeineke/
@@ -46,6 +51,10 @@ url: http://www.aimath.org/conrey/
 name: John Cremona
 affil: University of Warwick
 url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/john_cremona/
+---
+name: Rachel Davis
+affil: Purdue University
+url: http://www.math.purdue.edu/~davis705
 ---
 name: Paul-Olivier Dehaye
 url: http://user.math.uzh.ch/dehaye/
@@ -83,9 +92,21 @@ name: Markus Fraczek
 email: markus.fraczek@gmail.com
 affil: University of Warwick
 ---
+name: Sharon Frechette
+affil: College of Holy Cross
+url: http://mathcs.holycross.edu/~sfrechet/
+---
 name: Ralph Furmaniak
 affil: Stanford University
 url: http://stanford.edu/~rfurman/
+---
+name: Paul E. Gunnells
+affil: University of Massachusetts Amherst
+url: http://people.math.umass.edu/~gunnells/
+---
+name: Anna Haensch
+affil: Duquesne University
+url: http://www.mathcs.duq.edu/~haensch/
 ---
 name: Jonthan Hanke
 ---
@@ -107,7 +128,7 @@ affil: University of Bristol
 url: http://www.maths.bris.ac.uk/people/profile/majpk
 ---
 name: Kiran S. Kedlaya
-url: http://math.ucsd.edu/~kedlaya/
+url: http://kskedlaya.org/
 affil: University of California, San Diego
 ---
 name: Kamal Khuri-Makdisi
@@ -116,6 +137,9 @@ affil: American University Beirut
 name: Sally Koutsoliotas
 url: http://www.bucknell.edu/x18772.xml
 affil: Bucknell University
+---
+name: Watson Ladd
+affil: University of California
 ---
 name: Stefan Lemurell
 url: http://www.math.chalmers.se/~sj/
@@ -128,6 +152,9 @@ affil: University of Warwick
 name: Mark McConnell
 email: mmcconnell17704@yahoo.com
 affil: Princeton
+---
+name: Anna Medvedovsky
+affil: ICERM
 ---
 name: Robert Miller
 url: http://www.rlmiller.org/
@@ -178,9 +205,17 @@ name: Gagan Sekhon
 name: Haluk Sengun
 affil: University of Sheffield
 ---
+name: Jeroen Sijsling
+affil: Dartmouth College
+url: https://sites.google.com/site/sijsling/
+---
 name: Samir Siksek
 affil: University of Warwick
 url: http://homepages.warwick.ac.uk/staff/S.Siksek/
+---
+name: Joseph Silverman
+affil: Brown University
+url: http://www.math.brown.edu/~jhs/
 ---
 name: Nils-Peter Skoruppa
 url: http://www.nskoruppa.de/
@@ -202,7 +237,7 @@ affil: University of Nottingham
 url: https://sites.google.com/site/fredrikstroemberg/
 ---
 name: Holly Swisher
-url: http://www.math.oregonstate.edu/people/view/swisherh
+url: http://people.oregonstate.edu/~swisherh/home/
 affil: Oregon State University
 ---
 name: Gonzalo Tornaria
@@ -212,6 +247,15 @@ affil: Universidad de la República, Uruguay
 name: Holger Then
 url: http://www.maths.bris.ac.uk/~mahlt/
 affil: University of Bristol
+---
+name: Alex Torzewski
+url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/torzewski/
+affil: University of Warwick
+---
+name: Christelle Vincent
+affil: University of Vermont
+email: christelle.vincent@uvm.edu
+url: http://www.uvm.edu/~cvincen1/
 ---
 name: John Voight
 url: http://www.math.dartmouth.edu/~jvoight
@@ -224,6 +268,10 @@ url: http://www.maths.bris.ac.uk/people/profile/malhw
 name: Mark Watkins
 affil: University of Sydney
 url: http://magma.maths.usyd.edu.au/~watkins/
+---
+name: David Watson
+url: http://emps.exeter.ac.uk/mathematics/staff/dw387
+affil: University of Exeter
 ---
 name: Jamie Weigandt
 affil: Purdue University
@@ -243,3 +291,4 @@ url: http://www.lakeforest.edu/academics/faculty/yuen/
 ---
 name: Patrick Kühn
 affil: Universität Zürich
+

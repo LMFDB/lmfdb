@@ -3,168 +3,120 @@
 
 <p>
 The database currently contains {{info.count}} genus 2 curves
-over the rational numbers. 
+over the rational numbers.
 </p>
 
 <h2> Browse {{ KNOWL('g2c.g2curve', title='genus 2 curves over $\Q$') }} </h2>
 <p>
-By {{ KNOWL('g2c.conductor', title='conductor')}}:
+By {{ KNOWL('ag.conductor', title='conductor')}}:
 {% for rnge in info.conductor_list %}
 <a href="?cond={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p>
 
 <p>
-By {{ KNOWL('g2c.discriminant', title='discriminant')}}:
+By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
 {% for rnge in info.discriminant_list %}
 <a href="?disc={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p>
-
+<p>
 Some of our favorite curves:
 {% for curve in info.browse_curves: %}
- <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a>  
+ <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a>
 {% endfor %}
+</p>
+<p>
+A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the database.
+</p>
+<h2> Find a specific curve by {{ KNOWL('g2c.label', title='label')}} </h2>
+
+<form>
+<input type='text' name='jump' placeholder='169.a.169.1'>
+<button type='submit'>Search by label</button>
+<br><span class="formexample">e.g. 169.a.169.1 </span>
+</form>
 
 
 <h2> Search </h2>
 
 <form>
 <table>
+<tr>Please enter a value or leave blank:</tr>
 <tr>
-<td>Conductor</td>  
+<td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
 <td><input type='text' name='cond' placeholder='169' size=10>
 <td><span class="formexample"> e.g. 169, 100-1000 </span></td>
+<td>{{ KNOWL('g2c.gl2type', title='$\GL_2$-type') }}</td>
+<td><select name='is_gl2_type' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+      </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.discriminant', title='Absolute Discriminant') }}</td>
+<td>{{ KNOWL('g2c.abs_discriminant', title='absolute discriminant') }}</td>
 <td><input type='text' name='disc' placeholder='169' size=10>
 <td><span class="formexample"> e.g. 169, 0-1000</td>
-</tr>
-
-<tr>
-<td>{{ KNOWL('g2c.gl2type', title='GL_2-type') }}</td>
-<td><input type='text' name='is_gl2_type' placeholder='true' size=10>
-<td><span class="formexample"> e.g. true, false</td>
-</tr>
-
-<tr>
 <td>{{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
-<td colspan="2">
-  <table>
-    <tr>
-      <td align = "center">\( \mathrm{ST} \)</td>
-      <td align = "center">\( \mathrm{ST}_0 \)</td>
-    </tr>
-    <tr>
-      <td><select name='st_group' width="80" style="width: 80px">
-                   <option ></option>
-                   <option value='J(C_2)'>\(J(C_2)\)</option>
-                   <option value='J(C_4)'>\(J(C_4)\)</option>
-                   <option value='J(C_6)'>\(J(C_6)\)</option>
-                   <option value='J(D_2)'>\(J(D_2)\)</option>
-                   <option value='J(D_3)'>\(J(D_3)\)</option>
-                   <option value='J(D_4)'>\(J(D_4)\)</option>
-                   <option value='J(D_6)'>\(J(D_6)\)</option>
-                   <option value='J(T)'>\(J(T)\)</option>
-                   <option value='J(O)'>\(J(O)\)</option>
-                   <option value='C{2,1}'>\(C_{2,1}\)</option>
-                   <option value='C_{6,1}'>\(C_{6,1}\)</option>
-                   <option value='D_{2,1}'>\(D_{2,1}\)</option>
-                   <option value='D_{3,2}'>\(D_{3,2}\)</option>
-                   <option value='D_{4,1}'>\(D_{4,1}\)</option>
-                   <option value='D_{4,2}'>\(D_{4,2}\)</option>
-                   <option value='D_{6,1}'>\(D_{6,1}\)</option>
-                   <option value='D_{6,2}'>\(D_{6,2}\)</option>
-                   <option value='O_1'>\(O_1\)</option>
-                   <option value='E_1'>\(E_1\)</option>
-                   <option value='E_2'>\(E_2\)</option>
-                   <option value='E_3'>\(E_3\)</option>
-                   <option value='E_4'>\(E_4\)</option>
-                   <option value='E_6'>\(E_6\)</option>
-                   <option value='J(E_1)'>\(J(E_1)\)</option>
-                   <option value='J(E_2)'>\(J(E_2)\)</option>
-                   <option value='J(E_3)'>\(J(E_3)\)</option>
-                   <option value='J(E_4)'>\(J(E_4)\)</option>
-                   <option value='J(E_6)'>\(J(E_6)\)</option>
-                   <option value='F_{a,b}'>\(F_{a,b}\)</option>
-                   <option value='F_{ac}'>\(F_{ac}\)</option>
-                   <option value='N(G_{1,3})'>\( N(G_{1,3})\)</option>
-                   <option value='G_{3,3}'>\(G_{3,3}\)</option>
-                   <option value='N(G_{3,3})'>\( N(G_{3,3}) \)</option>
-                   <option value='USp(4)'>\( USp(4) \)</option>
-</td>
-
-<td><select name='real_geom_end_alg' width="80" style="width: 80px">
-                   <option ></option>
-                   <option value='M_2(C)'>\(U(1)\)</option>
-                   <option value='M_2(R)'>\(SU(2)\)</option>
-                   <option value='C x C'>\(G_{1,1}\)</option>
-                   <option value='C x R'>\(G_{1,3}\)</option>
-                   <option value='R x R'>\(G_{3,3}\)</option>
-                   <option value='R'>\(USp(4)\)</option>
+<td><select name='st_group' width="122" style="width: 122px">
+        <option ></option>
+    {% for G in info.st_group_list %}
+        <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
+    {% endfor %}
 </select></td>
 </tr>
-
-    </tr>
-  </table>
+<tr>
+<td>{{ KNOWL('g2c.num_rat_wpts', title='rational Weierstrass points') }}</td>
+<td><input type='text' name='num_rat_wpts' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1, 0-6 </span></td>
+<td>{{KNOWL('g2c.st_group_identity_component',title='Sato-Tate identity component')}}</td>
+<td><select name='real_geom_end_alg' width="122" style="width: 122px">
+        <option ></option>
+    {% for G in info.real_geom_end_alg_list %}
+        <option value='{{G}}'>{{info.real_geom_end_alg_to_ST0_dict[G]}}</option>
+    {% endfor %}
+</select></td>
 </tr>
 <tr>
-
-<tr>
-<td>{{ KNOWL('g2c.aut_grp', title='Automorphism group') }}</td>
-<td colspan="2">
-  <table>
-    <tr>
-      <td align = "center"> \(\mathrm{Aut}(X)\) </td>
-      <td align = "center"> \(\mathrm{Aut}(X_{\overline{\Q}})\) </td>
-    </tr>
-    <tr>
-      <td align = "center"><select name='aut_grp' width="80" style="width: 80px">
-                   <option ></option>
-                   <option value='[2, 1]'>\(C_2\)</option>
-                   <option value='[4, 1]'>\(C_4\)</option>                   
-                   <option value='[4, 2]'>\(V_4\)</option>
-                   <option value='[6, 2]'>\(C_6\)</option>                   
-                   <option value='[8, 3]'>\(D_8\)</option>                   
-                   <option value='[12, 4]'>\(D_{12}\)</option>
-
-      </select></td>
-      <td align = "center"><select name='geom_aut_grp' width="80" style="width: 80px">
-	           <option ></option>
-                   <option value='[2, 1]'>\(C_2\)</option>
-                   <option value='[4, 2]'>\(V_4\)</option>
-                   <option value='[8, 3]'>\(D_8\)</option>
-                   <option value='[10, 2]'>\(C_{10}\)</option>
-                   <option value='[12, 4]'>\(D_{12}\)</option>
-                   <option value='[24, 8]'>\(2D_{12}\)</option>
-                   <option value='[48, 29]'>\(\tilde{S}_4\)</option>
-      </select></td>
-    </tr>
-  </table>
+<td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
+<td><input type='text' name='torsion_order' placeholder='2' size=10>
+<td><span class="formexample"> e.g. 2 </span></td>
+<td>{{ KNOWL('g2c.aut_grp', title='\(\Q\)-automorphism group') }}</td>
+<td align = "center"><select name='aut_grp' width="122" style="width: 122px">
+        <option ></option>
+    {% for G in info.aut_grp_list %}
+        <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
+    {% endfor %}
+</select></td>
 </tr>
 <tr>
-
-
+<td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>
+<td><input type='text' name='torsion' placeholder='[2,2,2]' size=10>
+<td><span class="formexample"> e.g. [2,2,2] </span></td>
+<td>{{ KNOWL('g2c.aut_grp', title='\(\overline{\Q}\)-automorphism group') }}</td>
+<td align = "center"><select name='geom_aut_grp' width="122" style="width: 122px">
+        <option ></option>
+    {% for G in info.geom_aut_grp_list %}
+        <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+</tr>
+<!--<tr>
+<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
+<td><input type='text' name='two_selmer_rank' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1 </span></td>
+</tr>-->
 <tr>
-<td>Maximum number</td>
-<td><input type='text' name='count' value=100 size=10></td>
+<td>Maximum number of curves to display</td>
+<td><input type='text' name='count' value=50 size=10></td>
 <td><span class="formexample"> &nbsp;</td>
 </tr>
 <tr>
-<td colspan=3><button type='submit' value='Search'>Search</button>
-</td>
+<td><button type='submit' value='Search'>Search</button></td>
 </tr>
 </table>
+
 </form>
-
-<h2> Find a specific curve by label </h2>
-
-<form>
-<input type='text' name='jump' placeholder='169.a.169.1'>
-<button type='submit'>Label</button>
-<br><span class="formexample">e.g. 169.a.169.1 </span>
-</form>
-
 
 {% endblock %}

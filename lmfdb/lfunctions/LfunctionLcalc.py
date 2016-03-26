@@ -194,13 +194,13 @@ def createLcalcfile_ver2(L, url):
         else:
             period = L.coefficient_period
 
-        if hasattr(L, 'dirichlet_coefficients_unnormalized'):
-            total = min(len(L.dirichlet_coefficients_unnormalized), period - 1)
+        if hasattr(L, 'dirichlet_coefficients_arithmetic'):
+            total = min(len(L.dirichlet_coefficients_arithmetic), period - 1)
             for n in range(0, total):
                 if L.selfdual:
-                    thefile += str(L.dirichlet_coefficients_unnormalized[n])
+                    thefile += str(L.dirichlet_coefficients_arithmetic[n])
                 else:
-                    thefile += parse_complex_number(L.dirichlet_coefficients_unnormalized[n])
+                    thefile += parse_complex_number(L.dirichlet_coefficients_arithmetic[n])
                 if n < total - 1:           # We will be back
                     thefile += ","
                 if n < 2:

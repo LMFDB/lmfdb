@@ -37,7 +37,10 @@ def database_query(db_name, coll_name):
     args = to_dict(request.args)
     info = dict(args)
     collection = getattr(db, coll_name)
-    collection.ensure_index('metadata', background=True)
+    try:
+        collection.ensure_index('metadata', background=True)
+    except pymongo.errors.OperationFailure:
+        pass
     metadata = collection.find_one({'metadata': 'metadata'})
     if metadata:
         del metadata['_id']

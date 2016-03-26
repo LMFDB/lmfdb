@@ -28,7 +28,8 @@ from lmfdb.lfunctions import *
 # The method "show" shows the page for the Lfunction of a tensor product object.  This is registered on to the tensor_products_page blueprint rather than going via the l_function blueprint, hence the idiosyncrasies.  Sorry about that.  The reason is due to a difference in implementation; the tensor products are not (currently) in the database and the current L functions framewo  
 
 def get_bread(breads=[]):
-    bc = [("Tensor products", url_for(".index"))]
+    bc = [("L-functions", url_for("l_functions.l_function_top_page")),
+          ("Tensor products", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -67,7 +68,7 @@ def show():
         gr.lfunction()
 
         info = {}
-        info['dirichlet'] = lfuncDStex(tp, "analytic")
+        info['dirichlet'] = lfuncDShtml(tp, "analytic")
         info['eulerproduct'] = lfuncEPtex(tp, "abstract")
         info['functionalequation'] = lfuncFEtex(tp, "analytic")
         info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
@@ -82,7 +83,7 @@ def show():
             tp.lfunction()
 
             info = {}
-            info['dirichlet'] = lfuncDStex(tp, "analytic")
+            info['dirichlet'] = lfuncDShtml(tp, "analytic")
             info['eulerproduct'] = lfuncEPtex(tp, "abstract")
             info['functionalequation'] = lfuncFEtex(tp, "analytic")
             info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
@@ -100,8 +101,8 @@ def show():
                 info['svwarning'] = '' 
     
             info['tpzeroslink'] = zeros(tp) 
-            info['sv1'] = specialValueString(tp, 1, '1')
-            info['sv12'] = specialValueString(tp, 0.5, '1/2')
+            info['sv_edge'] = specialValueString(tp, 1, '1')
+            info['sv_critical'] = specialValueString(tp, 0.5, '1/2')
 
 #            friends = []
 #            friends.append(('L-function of first object', url_for('.show', obj1=objLinks[0])))

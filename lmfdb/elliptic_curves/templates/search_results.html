@@ -99,7 +99,16 @@ table td.params {
 
 {% if info.number %}
 
-<h2> Results ({{info.report}})</h2>
+<h2> Results ({{info.report}})
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+</h2>
 <table>
 <tr>
   <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
@@ -128,8 +137,29 @@ table td.params {
 </table>
 
 <hr>
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+
+
+<form>
+Download all search results for
+<input type="submit" name="Submit" value="gp">
+<input type="submit" name="Submit" value="sage">
+<input type="submit" name="Submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="conductor" value="{{info.conductor}}"/>
+<input type="hidden" name="jinv" value="{{info.jinv}}"/>
+<input type="hidden" name="rank" value="{{info.rank}}"/>
+<input type="hidden" name="torsion" value="{{info.torsion}}"/>
+<input type="hidden" name="torsion_structure" value="{{info.torsion_structure}}"/>
+<input type="hidden" name="sha" value="{{info.sha}}"/>
+</form>
 
 
 {% else %}
@@ -139,14 +169,7 @@ table td.params {
 {% endif %}
 
 
-{#
-<form>
-Download all search results for
-<input type="submit" name="Submit" value="gp">
-<input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="mathematica">
-</form>
-#}
+
 
 {#
 Query was: {{info.query}}

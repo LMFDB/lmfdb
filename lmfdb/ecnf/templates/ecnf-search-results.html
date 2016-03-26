@@ -11,11 +11,13 @@
 <table border="0">
 
 <tr>
-<td align=left>Field</td>
-<td align=left>{{ KNOWL('ec.conductor',title = "Conductor") }} norm</td>
-<td align=left>Include {{ KNOWL('ec.isogeny',title="isogenous") }} curves</td>
+<td align=left>{{ KNOWL('nf',title = "base field") }}</td>
+<td align=left>{{ KNOWL('ec.conductor',title = "conductor") }} norm</td>
+<td align=left>{{ KNOWL('ec.isogeny',title="isogenous") }} curves</td>
+<td align=left>{{ KNOWL('ec.base_change',title="base change") }} curves</td>
 <td align=left>{{ KNOWL('ec.torsion_order',title="torsion order") }}</td>
 <td align=left>{{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}</td>
+<td align=left>{{ KNOWL('ec.j_invariant', title="j-invariant") }}</td>
 </tr>
 
 <tr>
@@ -23,12 +25,22 @@
 <td align=left><input type='text' name='conductor_norm' size=10
                       value="{{info.conductor_norm}}"></td>
 <td>         <select name='include_isogenous'>
-{% if info.query.number %}
-           <option value="off" selected="yes">No</option>
-           <option value="on">Yes</option>
+{% if info.number %}
+           <option value="off" selected="yes">exclude</option>
+           <option value="on">include</option>
 {% else %}
-           <option value="off">No</option>
-           <option value="on" selected="yes">Yes</option>
+           <option value="off">exclude</option>
+           <option value="on" selected="yes">include</option>
+{% endif %}
+         </select>
+</td>
+<td>         <select name='include_base_change'>
+{% if info.include_base_change == "off" %}
+           <option value="off" selected="yes">exclude</option>
+           <option value="on">include</option>
+{% else %}
+           <option value="off">exclude</option>
+           <option value="on" selected="yes">include</option>
 {% endif %}
          </select>
 </td>
@@ -37,6 +49,9 @@
           </td>
           <td>
           <input type='text' name='torsion_structure' size=10 value="{{info.torsion_structure}}" />
+          </td>
+          <td>
+          <input type='text' name='jinv' size=20 value="{{info.jinv}}" />
           </td>
 
 </tr>
@@ -85,22 +100,22 @@ table td.params {
 </h2>
 <table>
 <tr>
-  <th class="center">Field</th>
-  <th class="center">{{ KNOWL('ec.conductor',title = "Conductor") }} norm</th>
-  <th class="center">{{ KNOWL('ec.conductor_label',title = "Conductor label") }}</th>
-  <th class="center">{{ KNOWL('ec.isogeny_class',title = "Isogeny class")}} label</th>
-  <th class="center">{{ KNOWL('ec.curve_label',title = "Curve label") }}</th>
-  <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
+  <th class="center">{{ KNOWL('ec.curve_label',title = "curve label") }}</th>
+  <th class="center">{{ KNOWL('nf',title = "base field") }}</th>
+  <th class="center">{{ KNOWL('ec.conductor',title = "conductor") }} norm</th>
+  <th class="center">{{ KNOWL('ec.conductor_label',title = "conductor label") }}</th>
+  <th class="center">{{ KNOWL('ec.isogeny_class',title = "isogeny class")}} label</th>
+  <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass coefficients') }}</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>
+<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{curve.short_label}}</a></td>
 <td class="center">
  {{ curve.field_knowl|safe }}
 </td>
 <td class="center">{{curve.conductor_norm}}</td>
 <td class="center">{{curve.conductor_label}}</td>
 <td class="center"><a href="{{ url_for('.show_ecnf_isoclass',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label) }} ">{{curve.short_class_label}}</a></td>
-<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{curve.short_label}}</a></td>
 <td class="left"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{info.web_ainvs(curve.field_label,curve.ainvs)}}</a></td>
 </tr>
 {% endfor %}
@@ -131,6 +146,9 @@ Download all search results for
 <hr>
 <div>
 Query was: {{info.query}}
+</div>
+<div>
+info.include_base_change =  {{info.include_base_change}}
 </div>
 Start = {{info.start}}, Count = {{info.count}}
 Field label = {{info.field}}

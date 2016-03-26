@@ -2,18 +2,20 @@
 
 {% block content %}
 
-<p>
-The database contains 4,953 groups, including all transitive subgroups 
-of $S_n$, up to conjugation, for $n\leq 23$.
-<p>
+<div>
+{{ KNOWL_INC('dq.gg.extent') }}
+</div>
+<div>
 
       <h2>Browse {{KNOWL('gg.galois_group', title="Galois groups")}}</h2>
-<p>
+<div/>
 
+<div>
 Browse by degree $n$ :
 {% for n in info.degree_list: %}
 <a href="?n={{n}}">{{n}}</a>
 {% endfor %}
+</div>
 
 <p>
 Browse by type:
@@ -26,6 +28,27 @@ Browse by type:
 <a href="?prim=1">Primitive</a>
 <a href="?prim=-1">Imprimitive</a>
 <p>
+
+
+<h2>Find a specific Galois group</h2>
+
+
+    <form name="search" method = "get" action="{{search}}">
+        <table class="">
+	  <tr>
+	    <td>
+	      Search by {{KNOWL('gg.label',title="label")}}
+	      <input type="text" name="jump_to" value="" placeholder="8T14"> 
+	      <button type="submit" value="Find">Find</button>
+	    </td>
+	    <td>
+	      <span class="formexample">a Galois group label, e.g. 6T3</span>
+	    </td>
+	  </tr>
+	</table>
+        </form>
+
+
 
         <h2>Search</h2>
       <form name="search" method = "get" action="{{search}}">
@@ -96,24 +119,7 @@ Browse by type:
         <button type="submit" name="Submit" value="Search">Search</button>
       </form>
 
-    <h2>Find a specific Galois group</h2>
-
-
-    <form name="search" method = "get" action="{{search}}">
-        <table class="">
-	  <tr>
-	    <td>
-	      Search by {{KNOWL('gg.label',title="label")}}
-	      <input type="text" name="jump_to" value="" placeholder="8T14"> 
-	      <button type="submit" value="Find">Find</button>
-	    </td>
-	    <td>
-	      <span class="formexample">a Galois group label, e.g. 6T3</span>
-	    </td>
-	  </tr>
-	</table>
-        </form>
-
+    
 
 
 {% endblock %}

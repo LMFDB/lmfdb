@@ -280,7 +280,7 @@ def getUploadedFor(path, addExtras):
     ret = [[x['metadata']['name'], "/upload/view/%s" % x['_id']] for x in files]
     if addExtras:
         from flask.ext.login import current_user
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path])
             ret.append(["View all data", url_for("upload.viewAll")])
     return ret

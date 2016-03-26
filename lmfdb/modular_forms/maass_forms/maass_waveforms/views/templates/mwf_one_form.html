@@ -15,7 +15,7 @@ var oTable = $("table#coeffs").dataTable(
 {
     "sPaginationType": "full_numbers",
     "aoColumns":{{  coeff_aoColumns |safe }},
-    "bSort":true,
+    "bSort":false,
     "iDisplayLength": 20,    
     "iDisplayStart": 0,
     "oLanguage": {
@@ -23,27 +23,27 @@ var oTable = $("table#coeffs").dataTable(
             "sLengthMenu": "Display _MENU_ coefficients per page",
             "sInfo": "Displaying _START_ to _END_ of _TOTAL_ coefficients",
             "sInfoEmpty": "Showing 0 to 0 of 0 records",
+            "sSearch": "Filter by index and coefficients: ",
             "sInfoFiltered": "(filtered from _MAX_ total coefficients)"
      }, 
      "sDom": 't<"paging"ip><"bottom"lfr><"filterbox">',
-//     "sDom": 't<"paging"p><"bottom"l><"bottom"fr><"filterbox"i>',
      "sScorollX": "300px", 
-    "aLengthMenu": [[15, 25, 50, 100, 200, -1], [15, 25, 50, 100,  200, "All"]],
+    "aLengthMenu": [[20, 50, 100, 200, 500, -1], [20, 50, 100,  200, 500, "All"]],
      "bStateSave": false,
      "bAutoWidth": false,
      "oSearch": { "sSearch": "", "bRegex": false, "bSmart": true },
 
  });
 
-$('.bottom').css("width","100%")
-$('.bottom').css("text-align","left")
-$('.paging_full_numbers').css('width','250px')
-$('#coeffs').css('width','650px')
+$('.dataTables_filter input').attr("placeholder", "Strings to filter by");
+$('.dataTables_filter input').attr("title", "E.g. '2.' will give all ooefficients larger than 2 or less than -2.");
+ 
+$('#coeffs').css('width','400px')
 });
 </script>
  
 <style type="text/css">
- .dataTables_wrapper { width: 600px; class:"ntdata"}
+ .dataTables_wrapper { width: 750px; class:"ntdata"}
  .dataTables_wrapper:after {
     content: ".";
     display: block;
@@ -71,7 +71,8 @@ $('#coeffs').css('width','650px')
 </div>
 {% endif %}
 
-<h1> A {{KNOWL('mf.maass.mwf',title='Maass waveform')}} on  \(\Gamma_{0}({{ MF.level }} )\) with {{KNOWL('mf.maass.mwf.spectralparameter',title='spectral parameter')}} R= {{MF.R}}</h1>
+<h2>  {{KNOWL('mf.maass.mwf.spectralparameter',title='Spectral parameter')}} </h2>
+    $R= {{MF.R}}$
 
 {% if MF is defined %}
 {% set table = MF.table %}
@@ -79,7 +80,8 @@ $('#coeffs').css('width','650px')
 {% set ncols = table.ncols %}
 {% set data = table.data %}
 
-<h2>Fourier Coefficients</h2>
+
+<h2>The first few {{KNOWL('mf.maass.mwf.fourierexpansion',title='Fourier Coefficients')}}</h2>
 {% if MF.coeffs is defined and MF.num_coeff > 0%}
 {# <table class="ntdata" id="coeffs" valign="top" border="1"> #}
 <table>
@@ -113,7 +115,7 @@ $('#coeffs').css('width','650px')
     </tr>
   </thead>
   <tbody>
-    {% set nnrows = 200 %}
+    {% set nnrows = 500 %}
     {%if nrows < nnrows %}
      {% set nnrows = nrows %}
     {%endif%}
@@ -169,18 +171,29 @@ $('#coeffs').css('width','650px')
   <input type="hidden" name="download" value="coefficients">
   <button type="submit" name="Submit" value="Get more">Download coefficients</button>	
 </form> #}
-</td></tr></table>
-<div style="clear:both">
+    </td>
+    </tr>
+</table>
 {# { KNOWL('metadata.knowl-tag') } #}
+    
+{% if plotlink %}
+    <h2> {{KNOWL('mf.maass.mwf.plot',title='Plot of the Maass form')}}
+        in a fundamental domain </h2>
+    <div class = "maassformplot">
+    <img src="{{ plotlink|safe }}" >
+    </div>
+{% endif %}
+
+<div style="clear:both">
+
 </div>
+
 {% else %}
 There are no Fourier coefficients supplied for this Maass form.
 {% endif %}
 
 {% else %}
 There is no Maass waveform supplied.
-
 {% endif %}
-
 
 {% endblock content %}

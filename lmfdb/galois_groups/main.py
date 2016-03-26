@@ -24,11 +24,19 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_long, group_display_inertia, group_knowl_guts, galois_module_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, galois_module_knowl
+from lmfdb.transitive_group import group_display_short, group_display_pretty, group_display_long, group_display_inertia, group_knowl_guts, galois_module_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, galois_module_knowl
 
-#import lmfdb.WebNumberField
+from lmfdb.WebNumberField import modules2string
 
-GG_credit = 'GAP, Magma, and J. Jones'
+GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
+
+# convert [0,5,21,0,1] to [[1,5],[2,21],[4,1]]
+def mult2mult(li):
+    ans = []
+    for j in range(len(li)):
+        if li[j]>0:
+            ans.append([j, li[j]])
+    return ans
 
 
 def get_bread(breads=[]):
@@ -69,6 +77,11 @@ def group_display_shortC(C):
         return group_display_short(nt[0], nt[1], C)
     return gds
 
+def group_display_prettyC(C):
+    def gds(nt):
+        return group_display_pretty(nt[0], nt[1], C)
+    return gds
+
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 
@@ -84,7 +97,10 @@ def index():
         return galois_group_search(**request.args)
     info = {'count': 50}
     info['degree_list'] = range(16)[2:]
-    return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit)
+    learnmore = [#('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page")),
+                ('Galois group labels', url_for(".labels_page"))]
+    return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore)
 
 
 @galois_groups_page.route("/search", methods=["GET", "POST"])
@@ -203,7 +219,7 @@ def galois_group_search(**args):
         start = 0
 
     info['groups'] = res
-    info['group_display'] = group_display_shortC(C)
+    info['group_display'] = group_display_prettyC(C)
     info['report'] = "found %s groups" % nres
     info['yesno'] = yesno
     info['wgg'] = WebGaloisGroup.from_data
@@ -239,7 +255,7 @@ def render_group_webpage(args):
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Galois Group:' + label
+        title = 'Galois Group: ' + label
         wgg = WebGaloisGroup.from_data(data)
         n = data['n']
         t = data['t']
@@ -270,6 +286,8 @@ def render_group_webpage(args):
         data['subinfo'] = subfield_display(C, n, data['subs'])
         data['resolve'] = resolve_display(C, data['resolve'])
         data['otherreps'] = wgg.otherrep_list()
+        if len(data['otherreps']) == 0:
+            data['otherreps']="There is no other low degree representation."
         query={'galois': bson.SON([('n', n), ('t', t)])}
         C = base.getDBConnection()
         intreps = C.transitivegroups.Gmodules.find({'n': n, 't': t}).sort('index', pymongo.ASCENDING)
@@ -279,11 +297,17 @@ def render_group_webpage(args):
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
                 onerep['gens']=[list_to_latex_matrix(z[1]) for z in onerep['gens']]
-                #onerep.update({'gens': onerep['gens'][1]})
-                #onerep.update({'gens': [str(onerep['gens'][0]), list_to_latex_matrix(onerep['gens'][1]])})
             data['int_reps'] = intreps
-            #data['int_reps'] = [galois_module_knowl(n, t, z['index'], C) for z in intreps]
             data['int_reps_complete'] = int_reps_are_complete(intreps)
+            dcq = data['moddecompuniq']
+            if dcq[0] == 0:
+                data['decompunique'] = 0
+            else:
+                data['decompunique'] = dcq[0]
+                data['isoms'] = [[mult2mult(z[0]), mult2mult(z[1])] for z in dcq[1]]
+                data['isoms'] = [[modules2string(n,t,z[0]), modules2string(n,t,z[1])] for z in data['isoms']]
+                print dcq[1]
+                print data['isoms']
 
         friends = []
         one = C.numberfields.fields.find_one(query)
@@ -297,8 +321,13 @@ def render_group_webpage(args):
             ('Solvable:', yesno(data['solv'])),
             ('Primitive:', yesno(data['prim'])),
             ('$p$-group:', yesno(pgroup)),
-            ('Name:', group_display_short(n, t, C)),
         ]
+        pretty = group_display_pretty(n,t,C)
+        if len(pretty)>0:
+            prop2.extend([('Group:', pretty)])
+            info['pretty_name'] = pretty
+        data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
+        data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
         info.update(data)
 
         bread = get_bread([(label, ' ')])
@@ -307,3 +336,34 @@ def render_group_webpage(args):
 
 def search_input_error(info, bread):
     return render_template("gg-search.html", info=info, title='Galois Group Search Input Error', bread=bread)
+
+
+@galois_groups_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of Galois group data'
+    bread = get_bread([("Completeness", )])
+    learnmore = [('Source of the data', url_for(".how_computed_page")),
+                ('Galois group labels', url_for(".labels_page"))]
+    return render_template("single.html", kid='dq.gg.extent',
+                           credit=GG_credit, title=t, bread=bread, 
+                           learnmore=learnmore)
+
+@galois_groups_page.route("/Labels")
+def labels_page():
+    t = 'Labels for Galois groups'
+    bread = get_bread([("Labels", '')])
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page"))]
+    return render_template("single.html", kid='gg.label',learnmore=learnmore, credit=GG_credit, title=t, bread=bread)
+
+@galois_groups_page.route("/Source")
+def how_computed_page():
+    t = 'Source of the Galois group data'
+    bread = get_bread([("Source", '')])
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                #('Source of the data', url_for(".how_computed_page")),
+                ('Galois group labels', url_for(".labels_page"))]
+    return render_template("single.html", kid='dq.gg.source',
+                           credit=GG_credit, title=t, bread=bread, 
+                           learnmore=learnmore)
+

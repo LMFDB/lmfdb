@@ -4,6 +4,14 @@
 <div.ip>span { white-space: nowrap; font-family: serif; }
 </style>
 
+{% macro code(codes, item) %}
+{% for L in codes[item] %}
+{# N.B. whitespace is preserved in the following div since the CSS has
+white-space: pre in order to keep line breaks! #}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
+{% endfor %}
+{% endmacro %}
+
 <script>
 var cur_system = null;
 function show_code(system) {
@@ -15,6 +23,7 @@ function show_code(system) {
       cur_system = null;
       } else {
       $('.'+system).show();
+      $('.'+system).css('display','inline-block');
       cur_system = system;
     }
   }
@@ -24,6 +33,7 @@ function show_code(system) {
         src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <script type="text/javascript"
 src="http://code.jquery.com/jquery-latest.min.js"></script>
+{#
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 
 <style type="text/css">
@@ -40,10 +50,8 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
   .sagecell_sessionContainer {
       margin-bottom:1em;
-  
   }
-
-  </style>
+</style>
 
 
 <script>
@@ -58,25 +66,26 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 //      }
 //   ))
   </script>
+#}
 
     <div align ="center">
-      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
-        <a onclick="show_code('pari'); return false" href='#'>pari</a>,
-        <a onclick="show_code('magma'); return false" href='#'>magma</a>
+      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sagemath</a>,
+        <a onclick="show_code('pari'); return false" href='#'>pari/gp</a>,
+        <a onclick="show_code('magma'); return false" href='#'>Magma</a>
     </div>
 
+{#
     <div align = "center">
       {{ KNOWL('sage.test', title='Start a Sage cell', kwargs='n=2')
       }}
     </div>
+#}
 
-    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
     <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
     <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
 
-    <div class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E = EllipticCurve({{data.data.ainvs}})  {{ KNOWL('sage.test', title='(evaluate)', code = 'E = EllipticCurve(%s); E'|format(data.data.ainvs))  }}</div>
-    <div class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;E = ellinit({{data.data.ainvs}})  </div>
-    <div class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> E := EllipticCurve({{data.data.ainvs}});</div>
+    {{ code(data.code,'curve') }}
 
     <p> {{ data.data.equation }} </p>
 
@@ -93,30 +102,39 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     Trivial {%endif%}  {%endif%} </div>
 
     {% if data.mw.rank!=0 %}
-    <p><h3> Infinite order Mordell-Weil generators </h3>
-    <div class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.gens()</div>
-    <div class='pari nodisplay code'> </div>
-    <div class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> Generators(E);</div>
-    <div style='overflow:auto'><p> {{ data.mw.generators }} </p></div>
+    {% if data.mw.rank==1 %}
+    <p><h3> Infinite order Mordell-Weil generator and height</h3>
+    {% else %}
+    <p><h3> Infinite order Mordell-Weil generators and heights</h3>
+    {% endif %}
+      {{ code(data.code,'gens') }}
+      <div style='overflow:auto'><p>
+      <table>
+        <tr><td>\(P\)</td>
+          {% for pt in data.mw.generators %}<td>{{pt}}</td>{% endfor %}
+          </tr>
+        <tr><td>\(\hat{h}(P)\)</td>
+          {% for ht in data.mw.heights %}<td>{{ht}}</td>{% endfor %}
+          </tr>
+        </table>
+      </p></div>
     </p>
     {%endif %}
 
     {% if data.mw.tor_order!=1 %}
-    <p><h2> {{ KNOWL('ec.q.torsion_generators', title='Torsion generators') }}</h2>
-    <div class='sage nodisplay code'> <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.torsion_subgroup().gens() </div>
-    <div class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;elltors(E) </div>
-    <div class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> TorsionSubgroup(E);</div>
-    <p> {{ data.mw.tor_gens }} </p></p>
+    <h2> {{ KNOWL('ec.q.torsion_generators', title='Torsion generators') }}</h2>
+      {{ code(data.code,'tors') }}
+    <p> {{ data.mw.tor_gens }} </p>
     {%endif %}
 
 
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
-    <div class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.integral_points()</div>
-    <div class='pari nodisplay code'> </div>
-    <div class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> IntegralPoints(E);</div>
+      {{ code(data.code,'intpts') }}
     {% if data.xintcoords %}
     <div class="ip">
+      <p>
       {{data.mw.int_points}}
+      </p>
     </div>
     <div> Note: only one of each pair $\pm P$ is listed. </div>
     {%else %}
@@ -127,15 +145,12 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         <table>
 
         <tr>
-        <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.conductor().factor()</span>
-            <span class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;ellglobalred(E)[1]</span>
-            <span class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> Conductor(E);</span>
+        <td colspan="6">
+          {{ code(data.code,'cond') }}
         </td>
         </tr>
         <tr>
-        <td>
-         \( N \) </td>
+        <td>\( N \) </td>
         <td>&nbsp;=&nbsp;</td>
         <td>{{ data.data.cond_latex }}</td>
         <td>&nbsp;=&nbsp;</td>
@@ -143,10 +158,8 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </tr>
 
         <tr>
-        <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.discriminant().factor()</span>
-            <span class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;E.disc</span>
-            <span class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> Discriminant(E);</span>
+        <td colspan="6">
+          {{ code(data.code,'disc') }}
         </td>
         </tr>
         <tr>
@@ -158,10 +171,8 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </tr>
 
         <tr>
-        <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.j_invariant().factor()</span>
-            <span class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;E.j</span>
-            <span class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> jInvariant(E);</span>
+        <td colspan="6">
+          {{ code(data.code,'jinv') }}
         </td>
         </tr>
         <tr>
@@ -177,7 +188,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         <td>&nbsp;=&nbsp;</td>
         <td>{{ data.data.EndE }}</td>
         <td>&nbsp;</td>
-        <td>({%if not data.data.CMD %} no {%endif %}
+        <td>({%if not data.data.CMD %}no {%endif %}
 {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
         </td>
         </tr>
@@ -191,80 +202,83 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.rank()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> Rank(E);</span>
+          {{ code(data.code,'rank') }}
         </td>
         </tr>
         <tr>
-        <td colspan="4">
-            \( r \) </td><td>&nbsp;=&nbsp;</td><td> \({{ data.rank }}\)
-        </td>
-        </tr>
-
-
-        <tr>
-        <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.regulator()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> Regulator(E);</span>
-        </td>
-        </tr>
-        <tr>
-        <td colspan="4"> 
-           \( \text{Reg} \) </td><td>&nbsp;=&nbsp;</td><td> \({{ data.bsd.reg }}\)</td>
-        </tr>
-
-        <tr>
-        <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.period_lattice().omega()</span>
-            <span class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;E.omega[1]</span>
-            <span class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> RealPeriod(E);</span>
-        </td>
-        </tr>
-        <tr>
-        <td colspan="4">
-           \( \Omega \) </td><td>&nbsp;=&nbsp;</td><td> \({{ data.bsd.omega }}\)</td>
-        </tr>
-
-        <tr>
-        <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.tamagawa_numbers()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> TamagawaNumbers(E);</span>
-        </td>
-        </tr>
-        <tr>
-        <td colspan="4">
-         \( \prod_p c_p \)</td>
+        <td> \( r \)</td>
         <td>&nbsp;=&nbsp;</td>
-        <td>\( {{ data.bsd.tamagawa_product }} \) &nbsp;=&nbsp;
-        \( {{ data.bsd.tamagawa_factors }} \)</td>
+        <td> \({{ data.rank }}\)
+        </td>
+        </tr>
+
+
+        <tr>
+        <td colspan="4">
+          {{ code(data.code,'reg') }}
+        </td>
+        </tr>
+        <tr>
+        <td>\( \text{Reg} \) </td>
+        {% if data.rank==0 %}
+        <td>&nbsp;=&nbsp;</td><td> \(1\)</td>
+        {% else %}
+        <td>&nbsp;&approx;&nbsp;</td><td> \({{ data.bsd.reg }}\)</td>
+        {% endif %}
         </tr>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.torsion_order()</span>
-            <span class='pari nodisplay code'><img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">&nbsp;elltors(E)[1]</span>
-            <span class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> OrderTorsionSubgroup(E);</span>
+          {{ code(data.code,'real_period') }}
         </td>
         </tr>
         <tr>
-        <td colspan="4"> \( \#E_{\text{tor}} \)</td>
+        <td>\( \Omega \) </td><td>&nbsp;&approx;&nbsp;</td>
+        <td> \({{ data.bsd.omega }}\)</td>
+        </tr>
+
+        <tr>
+        <td colspan="4">
+          {{ code(data.code,'cp') }}
+        </td>
+        </tr>
+        <tr>
+        <td>\( \prod_p c_p \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\( {{ data.bsd.tamagawa_product }} \)
+          {% if data.bsd.tamagawa_factors %}
+          &nbsp;=&nbsp;\( {{ data.bsd.tamagawa_factors }} \)
+          {% endif %}
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="4">
+          {{ code(data.code,'ntors') }}
+        </td>
+        </tr>
+        <tr>
+        <td> \( \#E_{\text{tor}} \)</td>
         <td>&nbsp;=&nbsp;</td><td>\({{ data.mw.tor_order }}\)</td>
         </tr>
 
         <tr>
         <td colspan="4">
-            <span class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.sha().an_numerical()</span>
-            <span class='pari nodisplay code'></span>
-            <span class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> MordellWeilShaInformation(E);</span>
+          {{ code(data.code,'sha') }}
         </td>
         </tr>
         <tr>
-        <td colspan="4"> &#1064;\(_{\text{an}} \) </td>
-        <td>&nbsp;=&nbsp;</td>
-        <td>\({{ data.bsd.sha }}\)</td>
+        <td> &#1064;\(_{\text{an}} \) </td>
+        <td>&nbsp;
+          {%- if data.rank > 1 -%}&approx;{% else %}={% endif %}
+        &nbsp;</td>
+        <td>\({{data.bsd.sha }}\)
+          {% if data.rank > 1 %}
+          ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
+          {% else %}
+          ({{ KNOWL('ec.q.analytic_sha_value',title="exact") }})
+          {% endif %}
+        </td>
         </tr>
 
         </table>
@@ -273,10 +287,8 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 {# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 
     <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
-    <p><h3> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h3>
-    <div class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.q_eigenform(10)</div>
-    <div class='pari nodisplay code'></div>
-    <div class='magma nodisplay code'><img src = "http://upload.wikimedia.org/wikipedia/en/e/ee/Magma-logo.png" width="50px"> ModularForm(E);</div>
+    <h3> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h3>
+          {{ code(data.code,'qexp') }}
     <p>
     <form>
         <div class="output"><span id="modform_output">{{ data.data.newform | safe }}</span></div>
@@ -285,8 +297,9 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     </form>
     </p>
 
-    <p><h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
-      and {{ KNOWL('ec.q.optimal', title='Optimality') }}</h3>
+    <h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
+      and {{ KNOWL('ec.q.optimal', title='optimality') }}</h3>
+    {{ code(data.code,'moddeg') }}
       {% if data.data.degree==0 %}
       Not available
       {% else %}
@@ -299,8 +312,11 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
       \( \Gamma_0(N) \)-optimal
     </p>
 
-    <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} attached to the curve </h3>
-        \( {{ data.bsd.lder_name }} = {{ data.bsd.lder }} \)
+    <p>
+      <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} attached to the curve </h3>
+    {{ code(data.code,'L1') }}
+    <p>
+        \( {{ data.bsd.lder_name }} \) &approx; \( {{ data.bsd.lder }} \)
     </p>
 
     <h2> Local data </h2>
@@ -311,12 +327,18 @@ padding : 4px;
 text-align: center;
 }
 </style>
+
+    {{ code(data.code,'localdata') }}
+
 <table id = "local_data">
 <tr>
 <th>prime</th>
 <th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
 <th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='ord(\(N\))')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\Delta\))')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
 </tr>
 {% for pr in data.local_data %}
 <tr>
@@ -332,23 +354,27 @@ text-align: center;
    Non-split multiplicative
 {% endif %}
 </td>
+<td>{{pr.ord_cond}}</td>
+<td>{{pr.ord_disc}}</td>
+<td>{{pr.ord_den_j}}</td>
 </tr>
 {% endfor %}
 </table>
 
 
-    <h2> {{KNOWL('ec.galois_rep', title='Galois Representations')}} </h2>
+    <h2> {{KNOWL('ec.galois_rep', title='Galois representations')}} </h2>
 
 {% if data.data.CMD %} {% else %}
 {% if data.twoadic_index == 1 %}
-The {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached to this elliptic curve is
-    surjective.
+<p>
+The {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached
+to this elliptic curve is surjective.
+</p>
 {% else %}
-
 <p>
 The image of the {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached to this elliptic curve
 is the subgroup of $\GL(2,\Z_2)$ with {{KNOWL('ec.rouse_label', title='Rouse label')}}
- <a href="{{data.data.twoadic_rouse_url}}">{{data.twoadic_label}}</a>.
+ <a href="{{data.data.twoadic_rouse_url}}" target="_blank">{{data.twoadic_label}}</a>.
 </p>
 <p>
 This subgroup is the pull-back of the subgroup of
@@ -360,24 +386,26 @@ data.twoadic_index }}.
 {% endif %}
 
 
+    {{ code(data.code,'galrep') }}
+
 {% if data.data.galois_data %}
 <p>
 {% if data.data.CMD %}
 The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
-Representations')}} of an elliptic curve with {{
+representations')}} of an elliptic curve with {{
 KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
 are non-surjective for all primes \( p \).  We only show the image for
 primes \( p\le 37 \).
 {% else %}
 The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
-Representation')}} is surjective for all primes \( p \) except those
+representation')}} is surjective for all primes \( p \) except those
     listed.
 {% endif %}
 </p>
 <table>
 <tr>
 <th>prime</th>
-<th>{{KNOWL('ec.q.galois_rep_image', title='Image of Galois Representation')}}</th>
+<th>{{KNOWL('ec.q.galois_rep_image', title='Image of Galois representation')}}</th>
 </tr>
 {% for pr in data.data.galois_data %}
 <tr>
@@ -389,13 +417,16 @@ Representation')}} is surjective for all primes \( p \) except those
 {% else %}
 <p>
 The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
-Representation')}} is surjective for all primes \( p \).
+representation')}} is surjective for all primes \( p \).
 </p>
 {% endif %}
 
 
 
     <h2> p-adic data </h2>
+
+    {{ code(data.code,'padicreg') }}
+
     <p>
 {% if data.bsd.rank==0 %}
 All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
@@ -447,7 +478,7 @@ $(function() {
 });
 </script>
 
-    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
     <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% if DEBUG %}

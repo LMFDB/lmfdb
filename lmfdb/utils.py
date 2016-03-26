@@ -271,14 +271,76 @@ def web_latex_ideal_fact(x):
     y = y.replace("\\right))","\\right)")
     return y
 
-def web_latex_split_on_pm(x):
+def web_latex_split_on(x, on=['+', '-']):
     if isinstance(x, (str, unicode)):
         return x
     else:
         A = "\( %s \)" % sage.all.latex(x)
-        A = A.replace('+', '\)\( {}+ ')
-        A = A.replace('-', '\)\( {}- ')
-        return A
+        for s in on:
+            A = A.replace(s, '\) ' + s + ' \( ')
+    return A
+    
+# web_latex_split_on was not splitting polynomials, so we make an expanded version
+def web_latex_split_on_pm(x):
+    on = ['+', '-']
+ #   A = "\( %s \)" % sage.all.latex(x)
+    try:
+        A = "\(" + x + "\)"  # assume we are given LaTeX to split on
+    except:
+        A = "\( %s \)" % sage.all.latex(x)
+
+       # need a more clever split_on_pm that inserts left and right properly
+    A = A.replace("\\left","")
+    A = A.replace("\\right","")
+    for s in on:
+  #      A = A.replace(s, '\) ' + s + ' \( ')
+   #     A = A.replace(s, '\) ' + ' \( \mathstrut ' + s )
+        A = A.replace(s, '\)' + ' \(\mathstrut ' + s + '\mathstrut ')
+    # the above will be re-done using a more sophisticated method involving
+    # regular expressions.  Below fixes bad spacing when the current approach
+    # encounters terms like (-3+x)
+    for s in on:
+        A = A.replace('(\) \(\mathstrut '+s,'(' + s)
+    A = A.replace('( {}','(')
+    A = A.replace('(\) \(','(')
+    A = A.replace('\(+','\(\mathstrut+')
+    A = A.replace('\(-','\(\mathstrut-')
+    A = A.replace('(  ','(')
+    A = A.replace('( ','(')
+
+    return A
+    # return web_latex_split_on(x)
+
+def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
+
+    def insert_latex(s):
+        return s.group(1) + '\) \('
+
+    if isinstance(x, (str, unicode)):
+        return x
+    else:
+        A = "\( %s \)" % sage.all.latex(x)
+        c = re.compile(r)
+        A = A.replace('+', '\) \( {}+ ')
+        A = A.replace('-', '\) \( {}- ')
+#        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
+#        A = A.replace('\\right)','\left.\\right)')        
+        A = A.replace('\left(','\\bigl(')
+        A = A.replace('\\right)','\\bigr)')        
+        A = c.sub(insert_latex, A)
+
+    # the above will be re-done using a more sophisticated method involving
+    # regular expressions.  Below fixes bad spacing when the current approach
+    # encounters terms like (-3+x)
+    A = A.replace('( {}','(')
+    A = A.replace('(\) \(','(')
+    A = A.replace('\(+','\(\mathstrut+')
+    A = A.replace('\(-','\(\mathstrut-')
+    A = A.replace('(  ','(')
+    A = A.replace('( ','(')
+    A = A.replace('+\) \(O','+O')
+    return A
+
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):

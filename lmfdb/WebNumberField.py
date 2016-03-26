@@ -4,6 +4,7 @@ from sage.all import *
 import re
 import pymongo
 import bson
+import yaml
 from lmfdb.utils import *
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
@@ -76,6 +77,18 @@ def do_mult(ent):
         return ent[0]
     return "%s x%d" % (ent[0], ent[1])
 
+# input is a list of pairs, module and multiplicity
+def modules2string(n, t, modlist):
+    C = base.getDBConnection()
+    modlist = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in modlist]
+    ans = modlist[0][0]
+    modlist[0][1] -= 1
+    for j in range(len(modlist)):
+        while modlist[j][1]>0:
+            ans += r' $\oplus$ '+modlist[j][0]
+            modlist[j][1] -= 1
+    return ans
+
 def nf_display_knowl(label, C, name=None):
     if not name:
         name = "Global Number Field %s" % label
@@ -101,6 +114,9 @@ def nf_knowl_guts(label, C):
     out += '<br>Signature: '
     out += str(wnf.signature())
     out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t(),C)
+    out += '<br>Class number: %s ' % str(wnf.class_number())
+    if wnf.can_class_number():
+        out += wnf.short_grh_string()
     out += '</div>'
     out += '<div align="right">'
     out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.number_field_render_webpage", natural=label)),label)
@@ -118,6 +134,8 @@ class WebNumberField:
             self._data = self._get_dbdata()
         else:
             self._data = data
+        if self._data is not None:
+            self.make_code_snippets()
 
     # works with a string, or a list of coefficients
     @classmethod
@@ -153,7 +171,7 @@ class WebNumberField:
     # For cyclotomic fields
     @classmethod
     def from_cyclo(cls, n):
-        if euler_phi(n) > 15:
+        if euler_phi(n) > 23:
             return cls('none')  # Forced to fail
         pol = pari.polcyclo(n)
         R = PolynomialRing(QQ, 'x')
@@ -231,6 +249,15 @@ class WebNumberField:
     def haskey(self, key):
         return key in self._data
 
+    # Warning, this produces our prefered integral basis
+    # But, if you have the sage number field do computations,
+    # they will be in terms of a different basis
+    def zk(self):
+        if self.haskey('zk'):
+            zkstrings = self._data['zk']
+            return [str(u) for u in zkstrings]
+        return list(pari(self.poly()).nfbasis())
+
     def subfields(self):
         if not self.haskey('subs'):
             return []
@@ -241,8 +268,17 @@ class WebNumberField:
         if subs == []:
             return []
         C = base.getDBConnection()
-        subs = [[self.from_coeffs(string2list(a[0])), a[1]] for a in subs]
-        subs = [[nf_display_knowl(a[0].get_label(),C,a[0].field_pretty()), a[1]] for a in subs]
+        def myhelper(coefmult):
+            coef = string2list(coefmult[0])
+            subfield = self.from_coeffs(coef)
+            if subfield._data is None:
+                deg = len(coef) - 1
+                mypol = sage.all.latex(coeff_to_poly(coef))
+                mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
+                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+                return [mypol, coefmult[1]]
+            return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
+        subs = [myhelper(a) for a in subs]
         subs = [do_mult(a) for a in subs]
         return ', '.join(subs)
 
@@ -276,15 +312,7 @@ class WebNumberField:
         gmods = C.transitivegroups.Gmodules
         n = self.degree()
         t = self.galois_t()
-        ugm = [[galois_module_knowl(n, t, z[0], C), int(z[1])] for z in ugm]
-        #ugm = [do_mult(a) for a in ugm]
-        ans = ugm[0][0]
-        ugm[0][1] -= 1
-        for j in range(len(ugm)):
-            while ugm[j][1]>0:
-                ans += r' $\oplus$ '+ugm[j][0]
-                ugm[j][1] -= 1
-        return ans
+        return modules2string(n, t, ugm)
 
     def K(self):
         if not self.haskey('K'):
@@ -426,7 +454,7 @@ class WebNumberField:
             else:
                 if "nfgg" not in self._data:
                     from math_classes import NumberFieldGaloisGroup
-                    nfgg = NumberFieldGaloisGroup.find_one({"label": self.label})
+                    nfgg = NumberFieldGaloisGroup(self._data['coeffs'])
                     self._data["nfgg"] = nfgg
                 else:
                     nfgg = self._data["nfgg"]
@@ -437,18 +465,19 @@ class WebNumberField:
             ccns = [int(x.size()) for x in cc]
             ccreps = [x.cycle_string() for x in ccreps]
             ccgen = '['+','.join(ccreps)+']'
-            ar = nfgg.ArtinReps() # list of artin reps from db
+            ar = nfgg.artin_representations() # list of artin reps from db
+            arfull = nfgg.artin_representations_full_characters() # list of artin reps from db
             gap.set('fixed', 'function(a,b) if a*b=a then return 1; else return 0; fi; end;');
             g = gap.Group(ccgen)
             h = g.Stabilizer('1')
             rc = g.RightCosets(h)
             # Permutation character for our field
             permchar = [gap.Sum(rc, 'j->fixed(j,'+x+')') for x in ccreps]
-            charcoefs = [0 for x in ar]
+            charcoefs = [0 for x in arfull]
             # list of lists (inner are giving char values
-            ar2 = [x['Character'] for x in ar]
+            ar2 = [x[0] for x in arfull]
             for j in range(len(ar)):
-                fieldchar = int(ar[j]['CharacterField'])
+                fieldchar = int(arfull[j][1])
                 zet = CyclotomicField(fieldchar).gen()
                 ar2[j] = [psum(zet, x) for x in ar2[j]]
             for j in range(len(ar)):
@@ -508,3 +537,20 @@ class WebNumberField:
         f = self.conductor()
         return DirichletGroup_conrey(f)
 
+    def make_code_snippets(self):
+         # read in code.yaml from numberfields directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code = yaml.load(open(os.path.join(_curdir, "number_fields/code.yaml")))
+
+        # Fill in placeholders for this specific field:
+        for lang in ['sage', 'pari']:
+            self.code['field'][lang] = self.code['field'][lang] % self.poly()
+        self.code['field']['magma'] = self.code['field']['magma'] % self.coeffs()
+
+        for k in self.code:
+            if k != 'prompt':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]

@@ -11,11 +11,14 @@ DSC = pymongo.DESCENDING
 def get_knowls():
     _C = getDBConnection()
     knowls = _C.knowledge.knowls
-    knowls.ensure_index('authors')
-    # _keywords is used for the full text search
-    knowls.ensure_index('title')
-    knowls.ensure_index('cat')
-    knowls.ensure_index('_keywords')
+    try:
+        knowls.ensure_index('authors')
+        # _keywords is used for the full text search
+        knowls.ensure_index('title')
+        knowls.ensure_index('cat')
+        knowls.ensure_index('_keywords')
+    except pymongo.errors.OperationFailure:
+        pass
     return knowls
 
 

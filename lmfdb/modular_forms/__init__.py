@@ -1,12 +1,13 @@
 # / modular_forms/__init__.py
 import lmfdb.base
 import lmfdb.utils
+from lmfdb.utils import make_logger
 import flask
 
 MF_TOP = "Modular Forms"
 MF = "mf"
 mf = flask.Blueprint(MF, __name__, template_folder="views/templates", static_folder="views/static")
-mf_logger = lmfdb.utils.make_logger(mf)
+mf_logger = make_logger(mf)
 
 import views
 import backend
