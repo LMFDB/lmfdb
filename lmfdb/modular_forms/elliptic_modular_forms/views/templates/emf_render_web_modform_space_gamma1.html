@@ -1,5 +1,5 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <script type="text/javascript" src="{{ url_for('.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
@@ -18,8 +18,8 @@ $("#plot").load(function() {
 
 <style>
 table.ntdata th.left {
-  border-right: 2px solid #9b9;
-  background: #efe;
+  border-right: 2px solid {{color.col_main_lg2}};
+  background: {{color.col_main_ll}};
   border-bottom: 0;
   text-align: right;
 }
@@ -32,13 +32,13 @@ table.ntdata th.first {
 table.ntdata td { text-align: left; }
 table.ntdata th.weight {
   text-align: left;
-  background: #efe;
-  border-bottom: 2px solid #9b9;
+  background: {{color.col_main_ll}};
+  border-bottom: 2px solid {{color.col_main_lg2}};
   border-left: 0;
   vertical-align: center;
 }
 table.ntdata thead tr.space {
-  background: #efe;
+  background: {{color.col_main_ll}};
   border-bottom: 0;
 }
 
@@ -58,15 +58,15 @@ table.dimtable tbody td.spaceleft {
 }
 
 table.ntdata tbody tr:nth-child(odd) {
-    background: #FFF;
+    background: {{color.white}};
 }
 
 table.dimtable tbody td:nth-child(even) {
-    background: #FFF;
+    background: {{color.white}};
 }
 
 table.dimtable tbody td.even {
-    background: #EFE;
+    background: {{color.col_main_ll}};
 }
 
 table.ntdata thead tr.space th{

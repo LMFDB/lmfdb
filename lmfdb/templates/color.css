@@ -1,0 +1,179 @@
+/*This is the file where we set all of our colors to avoid color explosion.  
+  We will have defined colors that you should use for appropriate objects.  
+  Hopefully they are descriptively enough named.*/
+
+/*These are the different greens used in LMFDB*/
+{% set col_main_d  = '#040' %} /*Used once*/
+{% set col_main_dld = '#060' %}
+{% set col_main_dl = '#006400'%}
+{% set col_main_dll = '#008000' %}/*Used once*/
+{% set col_main    = '#292' %}
+{% set col_main_2  = '#afa' %}
+{% set col_main_3  = '#181' %} /*Used once*/
+{% set col_main_4  = '#390' %} /*Used twice*/
+{% set col_main_5  = '#4a4' %} /*Used twice*/
+{% set col_main_l  = '#bfb' %}
+{% set col_main_l_1 = '#9e9' %}
+{% set col_main_ldl= '#cfc' %}
+{% set col_main_ldl_1 = '#c4ff4c'%}
+{% set col_main_lg = '#8b8' %}
+{% set col_main_lg2 = '#9b9' %}
+{% set col_main_ld = '#dfd' %}
+{% set col_main_ld_1 = '#d1ffd1' %}
+{% set col_main_ld_2 = '#d5ffd5' %}
+{% set col_main_ll = '#efe' %}
+{% set col_main_ll_1 = '#e2ffe2'%}
+{% set col_main_llg = '#9C9' %}/*Used once*/
+{% set col_main_g = '#474' %} /*Used once*/
+{% set col_main_g2 = '#ada' %}
+{% set col_main_g3 = '#aca' %}/*Used once*/
+
+{% set col_red_1 = '#D00' %} /*Used once*/
+{% set col_light_red_1 = '#FDD' %}
+{% set col_light_red_2 = '#FEE' %}
+{% set col_light_red_3 = '#EDD' %}
+{% set col_light_red_4 = '#ffc4c4' %}
+{% set col_light_red_5 = '#ffd1d1' %}
+{% set col_light_red_6 = '#ffd5d5' %}
+{% set col_light_red_7 = '#ffd2d2' %}
+{% set col_light_red_8 = '#ffe2e2' %}
+
+{% set col_ntdata_border  = '#9b9' %}
+{% set col_ntdata_bkg     = '#afa' %}
+{% set col_ntdata_bkg2 = '#efe' %}
+
+{% set header_fill = '#dfd'%} /*Color of the banner at the top*/
+{% set tabs = col_main_l%} /*Color of tabs on left and right bars.*/
+{% set links = 'black'%}
+{% set hover_back = col_main_l%} /*'#cfc'*/
+{% set hover_text = 'black'%}
+{% set sidebar_background = col_main_ll%}
+{% set sidebar_background2 = white%} 
+{% set blank_links = 'black'%}/*TODO: get used?*/
+{% set background = white%}
+{% set footer = col_main_l %}
+{% set main_text = black%}/*text in boxes in the middle that are  not hyperlinks.*/
+{% set minor_text ='#060'%}
+{% set hyperlink_text = col_main%} 
+{% set inactive_text = 'black'%}
+{% set visited_text = '#080'%}
+{% set border = col_main%}
+{% set shadow = '#8b8'%}
+
+/*index-boxes todo*/
+{% set box_background = todo %}
+{% set pic_border = col_main_ll %}
+{% set box_fill = col_main_ll %}
+{% set box_tab = col_main_l %}
+{% set box_shadow = '#060'%}
+
+{% set button_fill = '#dfd'%}
+{% set button_border = '#ada'%}
+
+{% set table_hover = '#cfc'%}
+{% set table_off_color = col_main_ll%}
+{% set table_border = '#9b9'%}
+{% set table_background = '#efe'%}
+{% set table_border2 = '#8a8'%} /*TODO: used?*/
+
+{% set error   = '#922' %} /*red for error*/
+{% set light_error = '#FDD' %} /*light red*/
+{% set check = '#0080FF' %} 
+{% set todo = '#f22' %}
+
+{% set knowl_error = purple %}
+{% set knowl_shadow = '#88b'%}
+{% set knowl     = '#AAF' %}
+{% set knowl_1   = '#99B3FF'%}/*Used once*/
+{% set knowl_g   = '#AAD' %} /*Only used twice.*/
+{% set knowl_ld  = '#CCF' %} /*Only used once.*/
+{% set knowl_ld_1 = '#c4c4ff'%}
+{% set knowl_l   = '#DDF' %}
+{% set knowl_l_1 = '#D3D6FF' %}
+{% set knowl_l_2 = '#DADCFF' %}
+{% set knowl_l_3 = '#E0E2FF' %}
+{% set knowl_l_4 = '#EAEBFF' %}
+{% set knowl_l_5 = '#F2F3FF' %}
+{% set knowl_l_6 = '#F9F9FF' %}
+{% set knowl_l_7 = '#d1d1ff' %}
+{% set knowl_l_8 = '#d5d5ff' %}
+{% set knowl_ll  = '#EEF' %} /*Used once*/
+{% set knowl_ll_2 = '#E5E5FF'%}
+{% set knowl_ll_1 = '#e2e2ff'%}
+{% set knowl_lll = '#F0F0F6' %}/*Only used once.*/
+{% set knowl_d   = '#88F' %}
+{% set knowl_d_1 = '#8080FF'%}
+{% set knowl_dg  = '#99C' %} /*Only used once.*/
+{% set knowl_dd  = '#006' %} /*Only used twice.*/
+{% set knowl_ddd = '#004' %}
+{% set knowl_db  = '#66d' %} /*Only used once.*/
+
+{% set chitable_imprimitive = 'blue' %}
+{% set chitable_primitive = 'green' %}
+
+{% set future_plane_text = '#B4B4B4' %} /*Upcoming features*/
+{% set beta_plane_text = 'purple'%}
+{% set beta_hyperlink_text = 'purple' %}
+{% set sidebar_border = col_main_ll%}
+
+{% set text_affil = '#333'%}
+{% set text_notes = '#555'%}
+{% set text_trad_hyperlink = 'black'%}
+{% set light_blue = 'lightblue' %}
+{% set black = 'black'%}
+{% set black_1 = '#111111'%}/*Only used once*/
+{% set important_grey = '#999'%}
+{% set light_green = 'lightgreen' %}
+{% set white = 'white' %}
+{% set white_1 = '#F5F5F5'%}
+{% set yellow_white = '#FFFFF4'%}
+{% set yell0w_white_1 = '#FFFFCC'%}
+
+{% set upload_border = 'lightgrey' %}
+{% set upload_background = '#fffff4' %}
+{% set upload_background_hover = 'ffffcc' %}
+
+{% set search_border_inactive = '#E9E9E9'%}
+{% set search_background_inactive = '#E9E9E9'%}
+{% set search_border_active = '#FF9900'%}
+{% set web_border = '#336699' %}
+
+{% set button_background2 = '#EEE' %}
+{% set button_border2 = '#EED'%}
+
+{% set nav = '#4a4'%}
+ 
+{% set light_grey_1 = '#EEE' %}
+{% set light_blue_grey = '#E6EEEE' %}/*Used once*/
+{% set light_red_grey = '#d1cfd0' %}/*Used twice*/
+{% set light_grey_2 = '#CDCDCD' %}/*Used once*/
+{% set light_grey_3 = '#ddd' %}
+{% set light_grey_4 = '#ccc' %}
+{% set light_grey_5 = '#c4c4c4'%}
+{% set light_grey_6 = '#d1d1d1'%}
+{% set light_grey_7 = '#d5d5d5'%}
+ {% set light_grey_8 = '#e2e2e2'%}
+
+{% set grey = 'grey'%}
+{% set blue_grey = '#B0BED9' %}/*Used once*/
+{% set blue_grey_1 = '#9FAFD1'%}/*Used once*/
+{% set red_gre = '#A19B9E'%}
+{% set grey_1 = '#888888' %}
+{% set grey_2 = '#999' %}
+{% set grey_3 = '#aaa' %} /*Used twice*/
+{% set dark_grey = '#3D3D3D' %}/*Used once*/
+{% set dark_grey_2 = '#444' %}/*Used once*/
+{% set steel_blue = '#8DBDD8'%}/*Used once*/
+{% set blue_1 = '#3366FF'%}
+
+{% set div_box_border = '#8080FF' %}
+{% set div_box_bkg = '#E5E5FF' %}
+
+{% set light_citron = '#ECFFB3'%}
+{% set light_citron_1 = '#E6FF99'%}
+{% set light_citron_2 = '#DDFF75'%}
+{% set light_citron_3 = '#E7FF9E'%}
+{% set light_citron_4 = '#E2FF89'%}
+{% set light_citron_5 = '#D6FF5C'%}
+{% set light_citron_6 = '#E0FF84'%}
+{% set light_citron_7 = '#DBFF70'%}

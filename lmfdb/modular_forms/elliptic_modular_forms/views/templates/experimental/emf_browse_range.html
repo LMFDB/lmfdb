@@ -1,5 +1,5 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <script type="text/javascript" src="{{ url_for('.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
@@ -19,9 +19,9 @@ $("#plot").load(function() {
 <style>
 table.ntdata th.colhead {
   text-align: left;
-  background: #efe;
+  background: {{color.col_main_ll}};
   border-bottom: 0;
-  border-left: 2px solid #9b9;
+  border-left: 2px solid {{color.col_main_lg2}};
 }
 </style>
 {% if error is defined %}
