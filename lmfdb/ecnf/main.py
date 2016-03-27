@@ -328,7 +328,7 @@ def elliptic_curve_search(**args):
 
     if 'torsion_structure' in info and info['torsion_structure']:
         try:
-            parse_bracketed_posints(info['torsion_structure'], query, 'torsion_structure', maxlength=2)
+            parse_bracketed_posints(info, query, 'torsion_structure', maxlength=2)
         except ValueError:
             return search_input_error(info, bread)
 

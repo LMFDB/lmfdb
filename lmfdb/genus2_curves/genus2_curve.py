@@ -9,7 +9,7 @@ import tempfile
 import os
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict
-from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints
+from lmfdb.search_parsing import parse_bool, parse_ints, parse_signed_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
@@ -205,7 +205,7 @@ def genus2_curve_search(**args):
         return render_curve_webpage_by_label(info["jump"])
 
     try:
-        parse_ints(info,query,'disc',None,'abs_disc','absolute discriminant')
+        parse_signed_ints(info,query,'disc',None,'abs_disc','absolute discriminant')
         parse_bool(info,query,'is_gl2_type')
         for fld in ('st_group', 'real_geom_end_alg'):
             if info.get(fld): query[fld] = info[fld]

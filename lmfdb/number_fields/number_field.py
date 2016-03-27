@@ -20,6 +20,7 @@ from sage.rings.arith import primes
 from lmfdb.transitive_group import *
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, comma, clean_input
+from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of this data'
@@ -537,16 +538,16 @@ def number_field_search(**args):
     try:
         parse_galgrp(info,query)
         parse_ints(info,query,'degree')
-        parse_bracketed_posints(info,query,'signature')
+        parse_bracketed_posints(info,query,'signature',split=False)
         parse_signed_ints(info,query,'discriminant','disc_sign','disc_abs_key',parse_one=make_disc_key)
         parse_ints(info,query,'class_number')
-        parse_bracketed_posints(info,query,'class_group')
-        parse_primes(info,query,'ur_primes','unramified primes','ramps','complement')
+        parse_bracketed_posints(info,query,'class_group',split=False)
+        parse_primes(info,query,'ur_primes','unramified primes','ramps','complement',to_string=True)
         if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'some':
             mode = 'append'
         else:
             mode = 'exact'
-        parse_primes(info,query,'ram_primes','ramified primes','ramps',mode)
+        parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)

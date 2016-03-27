@@ -8,8 +8,8 @@ import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, make_logger, clean_input, list_to_latex_matrix
-from lmfdb.search_parsing import LIST_RE, parse_bool, parse_ints, prep_ranges
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, make_logger, list_to_latex_matrix
+from lmfdb.search_parsing import LIST_RE, clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start
 import os
 import re
 import bson
@@ -129,7 +129,7 @@ def galois_group_search(**args):
         for interval in s.split(','):
             if '-' in interval[1:]:
                 ix = interval.index('-',1)
-                a,b = int(arg[:ix]), int(arg[ix+1:])
+                a,b = int(interval[:ix]), int(interval[ix+1:])
                 if b == a:
                     if a != 1 and not a.is_prime():
                         return True

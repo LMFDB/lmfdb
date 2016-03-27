@@ -35,14 +35,15 @@ def parse_list(info, query, field, name=None, qfield=None, process=None):
     inp = clean_input(info.get(field))
     if not inp: return
     if qfield is None: qfield = field
+    cleaned = re.sub(r'[\[\]]','',inp)
     try:
-        out= [int(a) for a in inp.split(',')]
+        out= [int(a) for a in cleaned.split(',')]
         if process is not None:
             query[qfield] = process(out)
         else:
             query[qfield]=out
     except Exception:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a list of integers (such as [1,2,3])." % inp), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be a list of integers (such as [1,2,3])." % (inp, name)), "error")
         raise ValueError
 
 def parse_range(arg, parse_singleton=int):
@@ -203,7 +204,7 @@ def parse_signed_ints(info, query, field, sign_field, abs_field, name=None, pars
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % (inp, name)), "error")
         raise ValueError
 
-def parse_primes(info, query, field, name=None, qfield=None, mode=None):
+def parse_primes(info, query, field, name=None, qfield=None, mode=None, to_string=False):
     inp = clean_input(info.get(field))
     if not inp: return
     if qfield is None: qfield = field
@@ -213,6 +214,8 @@ def parse_primes(info, query, field, name=None, qfield=None, mode=None):
         primes = [int(p) for p in inp.split(',')]
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if format_ok:
+        if to_string:
+            primes = [str(p) for p in primes]
         if mode == 'complement':
             query[qfield] = {"$nin": primes}
         elif mode == 'exact':
@@ -295,6 +298,9 @@ def parse_bool(info, query, field, name=None, qfield=None, minus_one_to_zero=Fal
         query[qfield] = 1
     elif inp == "-1":
         query[qfield] = 0 if minus_one_to_zero else -1
+    elif inp == "0":
+        # On the Galois groups page, these indicate "All"
+        pass
     else:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It must be True or False." % (inp, name)))
         raise ValueError
@@ -314,3 +320,4 @@ def parse_start(info, default=0):
             start += (1 - (start + 1) / count) * count
     except (KeyError, ValueError):
         start = default
+    return start

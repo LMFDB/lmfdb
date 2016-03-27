@@ -101,15 +101,21 @@ def lattice_search(**args):
     C = getDBConnection()
     C.Lattices.lat.ensure_index([('dim', ASC), ('label', ASC)])
     info = to_dict(args)  # what has been entered in the search boxes
-    if 'label' in info:
-        return by_label_or_name(info.get('label'))
+    if 'label' in info and info.get('label'):
+        return lattice_by_label_or_name(info.get('label'), C)
     query = {}
-    for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut']:
-        process = vect_to_sym if field == 'gram' else None
-        try:
-            parse_list(info, query, field, process=process)
-        except ValueError:
-            return redirect(url_for(".lattice_render_webpage"))
+    try:
+        for field in ('dim','det','level', 'minimum', 'class_number', 'aut'):
+            parse_ints(info, query, field)
+        # Check if length of gram is triangular
+        gram = info.get('gram')
+        if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
+            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+            raise ValueError
+        parse_list(info, query, 'gram', process=vect_to_sym)
+    except ValueError:
+        return redirect(url_for(".lattice_render_webpage"))
+
     info['query'] = dict(query)
     res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
     nres = res.count()
