@@ -130,12 +130,13 @@ def lattice_search(**args):
     res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
     nres = res.count()
 
-    # here we are checking for isometric lattices if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future
+    # here we are checking for isometric lattices if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
 
     if nres==0 and info.get('gram'):
         A=query['gram'];
         n=len(A[0])
-        result=[B for B in C.Lattices.lat.find({'dim': int(n)}) if isom(A, B['gram'])==True]
+        d=matrix(A).determinant()
+        result=[B for B in C.Lattices.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])==True]
         if len(result)>0:
             result=result[0]['label']
             res=C.Lattices.lat.find({ 'label' : result }).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
@@ -262,9 +263,13 @@ def isom(A,B):
                 else:
                     Bvec+=[2*B[i][j]]
         Aquad=QuadraticForm(ZZ,len(A[0]),Avec)
-        Bquad=QuadraticForm(ZZ,len(B[0]),Bvec)
-        return Aquad.is_globally_equivalent_to(Bquad)
-
+    # check positive definite
+        if Aquad.is_positive_definite():
+            Bquad=QuadraticForm(ZZ,len(B[0]),Bvec)
+            print Aquad, Bquad;
+            return Aquad.is_globally_equivalent_to(Bquad)
+        else:
+            return False
 
 
 @lattice_page.route('/theta_display/<label>/<number>')
