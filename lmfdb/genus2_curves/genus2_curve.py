@@ -155,8 +155,8 @@ def render_curve_webpage_by_label(label):
                            data=data,
                            bread=data.bread,
                            title=data.title,
-                           friends=data.friends,
-                           downloads=data.downloads)
+                           friends=data.friends)
+                           #downloads=data.downloads)
 
 ###############################################################################
 # Isogeny class pages
@@ -176,8 +176,8 @@ def render_isogeny_class(iso_class):
                            credit=credit,
                            info=class_data,
                            title=class_data.title,
-                           friends=class_data.friends,
-                           downloads=class_data.downloads)
+                           friends=class_data.friends)
+                           #downloads=class_data.downloads)
 
 ################################################################################
 # Searching
