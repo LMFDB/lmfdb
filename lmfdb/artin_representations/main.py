@@ -256,10 +256,11 @@ def render_artin_representation_webpage(label):
     if nf_url:
     	friends.append(("Artin Field", nf_url))
     cc = the_rep.central_character()
-    if the_rep.dimension()==1: 
-        friends.append(("Corresponding Dirichlet character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
-    else:
-        friends.append(("Determinant character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+    if cc.modulus <= 100000: 
+        if the_rep.dimension()==1:
+            friends.append(("Corresponding Dirichlet character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+        else:
+            friends.append(("Determinant character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
 
     # once the L-functions are in the database, the link can always be shown
     if the_rep.dimension() <= 6:

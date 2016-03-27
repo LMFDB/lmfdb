@@ -88,6 +88,17 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
+class FakeCharacter:
+    """
+      This is a workaround for the fact that one cannot create
+      a single Dirichlet character with large modulus.  All we
+      really need is for it to format itself.
+    """
+    def __init__(self, **kwargs):
+        self.modulus = kwargs['modulus']
+        self.number = kwargs['number']
+        self.order = 100 # to fool checks on this
+        self.texname = r'\(\chi_{%s}(%s,\cdot)\)'%(self.modulus,self.number)
 
 class ArtinRepresentation(object):
     @staticmethod
@@ -266,7 +277,10 @@ class ArtinRepresentation(object):
         myfunc = self.central_char_function()
         wc = id_dirichlet(myfunc, self.conductor(), 2*self.character_field())
         # print "Got wc id = "+str(wc)
-        wc = WebDirichletCharacter(modulus=wc[0], number=wc[1])
+        if wc[0]>100000:
+            wc = FakeCharacter(modulus=wc[0], number=wc[1])
+        else:
+            wc = WebDirichletCharacter(modulus=wc[0], number=wc[1])
         self._data['central_character'] = wc
         return wc
 
