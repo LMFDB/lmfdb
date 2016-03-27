@@ -266,7 +266,6 @@ def isom(A,B):
     # check positive definite
         if Aquad.is_positive_definite():
             Bquad=QuadraticForm(ZZ,len(B[0]),Bvec)
-            print Aquad, Bquad;
             return Aquad.is_globally_equivalent_to(Bquad)
         else:
             return False
