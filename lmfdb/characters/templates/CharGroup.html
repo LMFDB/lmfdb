@@ -6,11 +6,11 @@
 {# Underlying group #}
 <h2>
   Underlying
-  {%- if type=='Dirichlet' -%}
-  {{ KNOWL('character.unit_group', title="Unit group") }}
-  {%- elif type=='Hecke' -%}
-  {{ KNOWL('character.ray_class_group', title="Ray class group") }}
-  {%- endif %}
+  {% if type=='Dirichlet' %}
+  {{ KNOWL('character.unit_group', title="unit group") }}
+  {% elif type=='Hecke' %}
+  {{ KNOWL('character.ray_class_group', title="ray class group") }}
+  {% endif %}
   modulo {{modulus}}
 </h2>
 
