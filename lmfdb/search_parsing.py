@@ -35,6 +35,7 @@ def parse_list(info, query, field, name=None, qfield=None, process=None):
     inp = clean_input(info.get(field))
     if not inp: return
     if qfield is None: qfield = field
+    if name is None: name = field.replace('_',' ').capitalize()
     cleaned = re.sub(r'[\[\]]','',inp)
     try:
         out= [int(a) for a in cleaned.split(',')]
@@ -136,7 +137,7 @@ def parse_rational(info, query, field, name=None, qfield=None):
     inp = clean_input(info.get(field))
     if not inp: return
     if qfield is None: qfield = field
-    if name is None: name = field.replace('_',' ')
+    if name is None: name = field.replace('_',' ').capitalize()
     cleaned = inp.replace('+', '')
     if QQ_RE.match(cleaned):
         query[qfield] = str(QQ(cleaned))
@@ -149,7 +150,7 @@ def parse_ints(info, query, field, name=None, qfield=None):
     inp = clean_input(info.get(field))
     if not inp: return
     if qfield is None: qfield = field
-    if name is None: name = field.replace('_',' ')
+    if name is None: name = field.replace('_',' ').capitalize()
     cleaned = prep_ranges(inp)
     if LIST_RE.match(cleaned):
         collapse_ors(parse_range2(cleaned, field), query)
@@ -162,7 +163,7 @@ def parse_ints(info, query, field, name=None, qfield=None):
 def parse_signed_ints(info, query, field, sign_field, abs_field, name=None, parse_one=None):
     inp = clean_input(info.get(field))
     if not inp: return
-    if name is None: name = field
+    if name is None: name = field.replace('_',' ').capitalize()
     if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
     cleaned = prep_ranges(inp)
     if LIST_RE.match(cleaned):
@@ -208,7 +209,7 @@ def parse_primes(info, query, field, name=None, qfield=None, mode=None, to_strin
     inp = clean_input(info.get(field))
     if not inp: return
     if qfield is None: qfield = field
-    if name is None: name = field.replace('_',' ')
+    if name is None: name = field.replace('_',' ').capitalize()
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(',')]
@@ -240,7 +241,7 @@ def parse_bracketed_posints(info, query, field, name=None, qfield=None, maxlengt
     if not inp: return
     if qfield is None: qfield = field
     if process is None: process = lambda x: x
-    if name is None: name = field.replace('_',' ')
+    if name is None: name = field.replace('_',' ').capitalize()
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
         (exactlength is not None and inp.count(',') != exactlength - 1)):
@@ -289,7 +290,7 @@ def parse_bool(info, query, field, name=None, qfield=None, minus_one_to_zero=Fal
     inp = clean_input(info.get(field))
     if not inp: return
     if qfield is None: qfield = field
-    if name is None: name = field.replace("_", " ")
+    if name is None: name = field.replace("_", " ").capitalize()
     if inp == "True":
         query[qfield] = True
     elif inp == "False":

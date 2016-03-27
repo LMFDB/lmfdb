@@ -105,16 +105,18 @@ def lattice_search(**args):
         return lattice_by_label_or_name(info.get('label'), C)
     query = {}
     try:
-        for field in ('dim','det','level', 'minimum', 'class_number', 'aut'):
-            parse_ints(info, query, field)
+        for field, name in (('dim','Dimension'),('det','Determinant'),('level',None),
+                            ('minimum','Minimal vector length'), ('class_number',None), ('aut','Group order')):
+            parse_ints(info, query, field, name)
         # Check if length of gram is triangular
         gram = info.get('gram')
         if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
             flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
             raise ValueError
         parse_list(info, query, 'gram', process=vect_to_sym)
-    except ValueError:
-        return redirect(url_for(".lattice_render_webpage"))
+    except ValueError as err:
+        info['err'] = str(err)
+        return search_input_error(info)
 
     info['query'] = dict(query)
     res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
@@ -141,11 +143,16 @@ def lattice_search(**args):
 
     info['lattices'] = res_clean
 
-    t = 'Integral Lattices search results'
-    bread = [('Lattices', url_for(".lattice_render_webpage")),('Search results', ' ')]
+    t = 'Integral Lattices Search Results'
+    bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
     properties = []
     return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread)
 
+def search_input_error(info, bread=None):
+    t = 'Integral Lattices Search Error'
+    if bread is None:
+        bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
+    return render_template("lattice-search.html", info=info, title=t, properties=[], bread=bread)
 
 @lattice_page.route('/<label>')
 def render_lattice_webpage(**args):
