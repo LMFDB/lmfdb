@@ -767,7 +767,10 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
                 val = x[1]
                 break
     if val is None:
-        val = L.sageLfunction.value(s)
+        if L.fromDB:
+            val = "not computed"
+        else:
+            val = L.sageLfunction.value(s)
     if normalization == "arithmetic":
         lfunction_value_tex = L.texname_arithmetic.replace('s)',  sLatex + ')')
     else:
@@ -803,7 +806,10 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
                 val = x[1]
                 break
     if val is None:
-        val = L.sageLfunction.value(s)
+        if L.fromDB:
+            val = "not computed"
+        else:
+            val = L.sageLfunction.value(s)
     # We must test for NaN first, since it would show as zero otherwise
     # Try "RR(NaN) < float(1e-10)" in sage -- GT
 
@@ -818,7 +824,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
         else:
             Lval = latex(round(val.real(), number_of_decimals)
                          + round(val.imag(), number_of_decimals) * I)
-    except TypeError:
+    except (TypeError, NameError):
         Lval = val    # if val is text
 
     return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]

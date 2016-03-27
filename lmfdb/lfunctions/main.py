@@ -878,6 +878,8 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         else:
             F = p2sage(pythonL.lfunc_data['plot'])
     else:
+        if pythonL.fromDB:
+            return ""
         L = pythonL.sageLfunction
         # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
         # SL: Reason, it's not in the distribution of Sage

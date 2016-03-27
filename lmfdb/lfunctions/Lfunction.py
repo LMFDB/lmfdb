@@ -67,7 +67,7 @@ def an_from_data(euler_factors,upperbound=30):
 # As of July 2015, some of the fields are hard coded specifically
 # for L-functions of genus 2 curves.  Need to update after the
 # general data format has been specified.
-def makeLfromdata(L):
+def makeLfromdata(L, fromdb=False):
     data = L.lfunc_data
     L.algebraic = data['algebraic']
     L.degree = data['degree']
@@ -153,7 +153,8 @@ def makeLfromdata(L):
     # line above or the line below will break.  (DF and SK, Aug 4, 2015)
     L.bad_lfactors = data['bad_lfactors']
     L.checkselfdual()  # needs to be changed to read from database
-    generateSageLfunction(L)  # DF: why is this needed if pulling from database?
+    if not fromdb:
+        generateSageLfunction(L)  # DF: why is this needed if pulling from database?
 
 def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
@@ -821,7 +822,7 @@ class Lfunction_Dirichlet(Lfunction):
             self.lfunc_data['zeros'] += self.lfunc_data['positive_zeros']
                 
             self.lfunc_data["plot"] = []
-            makeLfromdata(self)
+            makeLfromdata(self, fromdb=True)
             self.fromDB = True
             self.plot = ""
 #            try:
@@ -882,7 +883,7 @@ class Lfunction_Dirichlet(Lfunction):
     #                      str(self.charactermodulus) + ", number " +
     #                      str(self.characternumber))
 
-            self.sageLfunction = lc.Lfunction_from_character(chi.sage_character())
+     ###       self.sageLfunction = lc.Lfunction_from_character(chi.sage_character())
 
         else:  # Character not primitive
             raise Exception("The dirichlet character you choose is " +

@@ -121,11 +121,15 @@ class Lfunction:
         if via_N == True:
             count = kwargs["count"]
             do_negative = kwargs["do_negative"]
+            if self.fromDB:
+                return "not available"
             return self.sageLfunction.find_zeros_via_N(count, do_negative)
         else:
             T1 = kwargs["lower_bound"]
             T2 = kwargs["upper_bound"]
             stepsize = kwargs["step_size"]
+            if self.fromDB:
+                return "not available"
             return self.sageLfunction.find_zeros(T1, T2, stepsize)
     
     def compute_zeros(algorithm , **kwargs):
