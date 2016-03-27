@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 import re
+SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
@@ -14,8 +15,53 @@ FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
 
 from flask import flash, redirect, url_for, request
 from sage.all import ZZ, QQ
+from sage.misc.decorators import decorator_keywords
 
 from markupsafe import Markup
+
+class SearchParser(object):
+    def __init__(self, f, clean_info, prep_ranges, prep_plus, default_field, default_name, default_qfield):
+        self.f = f
+        self.clean_info = clean_info
+        self.prep_ranges = prep_ranges
+        self.prep_plus = prep_plus
+        self.default_field = default_field
+        self.default_name = default_name
+        self.default_qfield = default_qfield
+    def __call__(self, info, query, field=None, name=None, qfield=None, *args, **kwds):
+        try:
+            if field is None: field=self.default_field
+            inp = info.get(field)
+            if not inp: return
+            if name is None:
+                if self.default_name is None:
+                    name = field.replace('_',' ').capitalize()
+                else:
+                    name = self.default_name
+            inp = str(inp)
+            if SPACES_RE.search(inp):
+                raise ValueError("You have entered spaces in between digits. Please add a comma or delete the spaces.")
+            inp = clean_input(inp)
+            if qfield is None:
+                if self.default_qfield is None:
+                    qfield = field
+                else:
+                    qfield = self.default_qfield
+            if self.prep_ranges:
+                inp = prep_ranges(inp)
+            if self.prep_plus:
+                inp = inp.replace('+','')
+            self.f(inp, query, qfield, *args, **kwds)
+            if self.clean_info:
+                info[field] = inp
+        except (ValueError, AttributeError, TypeError) as err:
+            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s" % (inp, name, str(err))), "error")
+            info['err'] = ''
+            raise
+
+@decorator_keywords
+def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, default_field=None, default_name=None, default_qfield=None):
+    return SearchParser(f, clean_info, prep_ranges, prep_plus, default_field, default_name, default_qfield)
 
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
@@ -26,26 +72,19 @@ def prep_ranges(inp):
     if inp is None: return None
     return inp.replace('..','-').replace(' ','')
 
-def parse_list(info, query, field, name=None, qfield=None, process=None):
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_list(inp, query, qfield, process=None):
     """
     Parses a string representing a list of integers, e.g. '[1,2,3]'
 
     Flashes an error and returns true if there are problems parsing.
     """
-    inp = clean_input(info.get(field))
-    if not inp: return
-    if qfield is None: qfield = field
-    if name is None: name = field.replace('_',' ').capitalize()
     cleaned = re.sub(r'[\[\]]','',inp)
-    try:
-        out= [int(a) for a in cleaned.split(',')]
-        if process is not None:
-            query[qfield] = process(out)
-        else:
-            query[qfield]=out
-    except Exception:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be a list of integers (such as [1,2,3])." % (inp, name)), "error")
-        raise ValueError
+    out= [int(a) for a in cleaned.split(',')]
+    if process is not None:
+        query[qfield] = process(out)
+    else:
+        query[qfield]=out
 
 def parse_range(arg, parse_singleton=int):
     # TODO: graceful errors
@@ -133,39 +172,24 @@ def collapse_ors(parsed, query):
         parsed[1] = newors
     query[parsed[0]] = parsed[1]
 
-def parse_rational(info, query, field, name=None, qfield=None):
-    inp = clean_input(info.get(field))
-    if not inp: return
-    if qfield is None: qfield = field
-    if name is None: name = field.replace('_',' ').capitalize()
-    cleaned = inp.replace('+', '')
-    if QQ_RE.match(cleaned):
-        query[qfield] = str(QQ(cleaned))
-        info[field] = cleaned
+@search_parser(clean_info=True, prep_plus=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_rational(inp, query, qfield):
+    if QQ_RE.match(inp):
+        query[qfield] = str(QQ(inp))
     else:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be a rational number." % (inp, name)), "error")
-        raise ValueError
+        raise ValueError("It needs to be a rational number.")
 
-def parse_ints(info, query, field, name=None, qfield=None):
-    inp = clean_input(info.get(field))
-    if not inp: return
-    if qfield is None: qfield = field
-    if name is None: name = field.replace('_',' ').capitalize()
-    cleaned = prep_ranges(inp)
-    if LIST_RE.match(cleaned):
-        collapse_ors(parse_range2(cleaned, field), query)
-        info[field] = cleaned
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_ints(inp, query, qfield):
+    if LIST_RE.match(inp):
+        collapse_ors(parse_range2(inp, qfield), query)
     else:
-        err_msg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % (inp,name)
-        flash(Markup(err_msg), "error")
-        raise ValueError
+        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
-def parse_signed_ints(info, query, field, sign_field, abs_field, name=None, parse_one=None):
-    inp = clean_input(info.get(field))
-    if not inp: return
-    if name is None: name = field.replace('_',' ').capitalize()
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_signed_ints(inp, query, qfield, parse_one=None):
     if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
-    cleaned = prep_ranges(inp)
+    sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(cleaned):
         parsed = parse_range3(inp, name, split0 = True)
         # if there is only one part, we don't need an $or
@@ -200,16 +224,11 @@ def parse_signed_ints(info, query, field, sign_field, abs_field, name=None, pars
                 else:
                     iquery.append({sign_field: s0, abs_field: abs_D})
             collapse_ors(['$or', iquery], query)
-        info[field] = cleaned
     else:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % (inp, name)), "error")
-        raise ValueError
+        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
-def parse_primes(info, query, field, name=None, qfield=None, mode=None, to_string=False):
-    inp = clean_input(info.get(field))
-    if not inp: return
-    if qfield is None: qfield = field
-    if name is None: name = field.replace('_',' ').capitalize()
+@search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_primes(inp, query, qfield, mode=None, to_string=False):
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(',')]
@@ -230,18 +249,12 @@ def parse_primes(info, query, field, name=None, qfield=None, mode=None, to_strin
                 query[qfield]["$all"] = primes
         else:
             raise ValueError("Unrecognized mode: programming error in LMFDB code")
-        info[field] = inp
     else:
-        err_msg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11)." % (inp, name)
-        flash(Markup(err_msg), "error")
-        raise ValueError
+        raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
 
-def parse_bracketed_posints(info, query, field, name=None, qfield=None, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None):
-    inp = clean_input(info.get(field))
-    if not inp: return
-    if qfield is None: qfield = field
+@search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None):
     if process is None: process = lambda x: x
-    if name is None: name = field.replace('_',' ').capitalize()
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
         (exactlength is not None and inp.count(',') != exactlength - 1)):
@@ -260,33 +273,27 @@ def parse_bracketed_posints(info, query, field, name=None, qfield=None, maxlengt
         else:
             lstr = "list of integers"
             example = "[1,2,3] or [5,6]"
-        err_msg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be a %s in square brackets, such as %s." % (inp, name, lstr, example)
-        flash(Markup(err_msg), "error")
-        raise ValueError
+        raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
     else:
         if check_divisibility == 'decreasing':
             # Check that each entry divides the previous
             L = [int(a) for a in inp[1:-1].split(',')]
             for i in range(len(L)-1):
                 if L[i] % L[i+1] != 0:
-                    flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. Each entry must divide the previous, such as [4,2]." % (inp, name)))
-                    raise ValueError
+                    raise ValueError("Each entry must divide the previous, such as [4,2].")
         elif check_divisibility == 'increasing':
             # Check that each entry divides the previous
             L = [int(a) for a in inp[1:-1].split(',')]
             for i in range(len(L)-1):
                 if L[i+1] % L[i] != 0:
-                    flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. Each entry must divide the next, such as [2,4]." % (inp, name)))
-                    raise ValueError
+                    raise ValueError("Each entry must divide the next, such as [2,4].")
         if split:
             query[qfield] = [process(int(a)) for a in inp[1:-1].split(',')]
         else:
             query[qfield] = inp[1:-1]
-        info[field] = inp
 
-def parse_galgrp(info, query, field='galois_group', name='Galois group', qfield='galois'):
-    inp = clean_input(info.get(field))
-    if not inp: return
+@search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
+def parse_galgrp(inp, query, qfield):
     from lmfdb.transitive_group import complete_group_codes, make_galois_pair
     try:
         gcs = complete_group_codes(inp)
@@ -294,17 +301,11 @@ def parse_galgrp(info, query, field='galois_group', name='Galois group', qfield=
             query[qfield] = make_galois_pair(gcs[0][0], gcs[0][1])
         elif len(gcs) > 1:
             query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
-        info[field] = inp
     except NameError as code:
-        err_msg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels."%(inp, name)
-        flash(Markup(err_msg), "error")
-        raise ValueError
+        raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
 
-def parse_bool(info, query, field, name=None, qfield=None, minus_one_to_zero=False):
-    inp = clean_input(info.get(field))
-    if not inp: return
-    if qfield is None: qfield = field
-    if name is None: name = field.replace("_", " ").capitalize()
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_bool(inp, query, qfield, minus_one_to_zero=False):
     if inp == "True":
         query[qfield] = True
     elif inp == "False":
@@ -317,8 +318,7 @@ def parse_bool(info, query, field, name=None, qfield=None, minus_one_to_zero=Fal
         # On the Galois groups page, these indicate "All"
         pass
     else:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It must be True or False." % (inp, name)))
-        raise ValueError
+        raise ValueError("It must be True or False.")
 
 def parse_count(info, default=20):
     try:

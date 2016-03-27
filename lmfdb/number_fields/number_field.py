@@ -539,7 +539,7 @@ def number_field_search(**args):
         parse_galgrp(info,query)
         parse_ints(info,query,'degree')
         parse_bracketed_posints(info,query,'signature',split=False,exactlength=2)
-        parse_signed_ints(info,query,'discriminant','disc_sign','disc_abs_key',parse_one=make_disc_key)
+        parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs_key'),parse_one=make_disc_key)
         parse_ints(info,query,'class_number')
         parse_bracketed_posints(info,query,'class_group',split=False,check_divisibility='decreasing')
         parse_primes(info,query,'ur_primes','unramified primes','ramps','complement',to_string=True)
