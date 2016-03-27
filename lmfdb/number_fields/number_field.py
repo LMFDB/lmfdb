@@ -548,8 +548,7 @@ def number_field_search(**args):
         else:
             mode = 'exact'
         parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
-    except ValueError as err:
-        info['err'] = str(err)
+    except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)
     start = parse_start(info)

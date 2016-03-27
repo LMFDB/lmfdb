@@ -10,6 +10,7 @@ from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start
 from sage.all import ZZ, var, PolynomialRing, QQ
 from lmfdb.local_fields import local_fields_page, logger
 
@@ -83,69 +84,16 @@ def local_field_search(**args):
     if 'jump_to' in info:
         return render_field_webpage({'label': info['jump_to']})
 
-    for param in ['p', 'n', 'c', 'e', 'gal']:
-        if info.get(param):
-            info[param] = clean_input(info[param])
-            if param == 'gal':
-                try:
-                    gcs = complete_group_codes(info[param])
-                    if len(gcs) == 1:
-                        tmp = ['gal', list(gcs[0])]
-                    if len(gcs) > 1:
-                        tmp = [{'gal': list(x)} for x in gcs]
-                        tmp = ['$or', tmp]
-                except NameError as code:
-                    info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
-                    return search_input_error(info, bread)
-            else:
-                ran = info[param]
-                ran = ran.replace('..', '-')
-                if LIST_RE.match(ran):
-                    tmp = parse_range2(ran, param)
-                else:
-                    names = {'p': 'prime p', 'n': 'degree', 'c':
-                             'discriminant exponent c', 'e': 'ramification index e'}
-                    info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
-                    return search_input_error(info, bread)
-            # work around syntax for $or
-            # we have to foil out multiple or conditions
-            if tmp[0] == '$or' and '$or' in query:
-                newors = []
-                for y in tmp[1]:
-                    oldors = [dict.copy(x) for x in query['$or']]
-                    for x in oldors:
-                        x.update(y)
-                    newors.extend(oldors)
-                tmp[1] = newors
-            query[tmp[0]] = tmp[1]
-
-    count_default = 20
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        count = count_default
-    info['count'] = count
-
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
-    if info.get('paging'):
-        try:
-            paging = int(info['paging'])
-            if paging == 0:
-                start = 0
-        except:
-            pass
+    try:
+        parse_galgrp(info,query,'gal')
+        parse_ints(info,query,'p',name='Prime p')
+        parse_ints(info,query,'n',name='Degree')
+        parse_ints(info,query,'c',name='Discriminant exponent c')
+        parse_ints(info,query,'e',name='Ramification index e')
+    except ValueError:
+        return search_input_error(info, bread)
+    count = parse_count(info)
+    start = parse_start(info)
 
     # logger.debug(query)
     res = C.localfields.fields.find(query).sort([('p', pymongo.ASCENDING), (

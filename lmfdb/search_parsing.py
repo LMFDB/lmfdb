@@ -43,10 +43,10 @@ class SearchParser(object):
                 raise ValueError("You have entered spaces in between digits. Please add a comma or delete the spaces.")
             inp = clean_input(inp)
             if qfield is None:
-                if self.default_qfield is None:
-                    qfield = field
-                else:
+                if field is None:
                     qfield = self.default_qfield
+                else:
+                    qfield = field
             if self.prep_ranges:
                 inp = prep_ranges(inp)
             if self.prep_plus:
@@ -190,7 +190,7 @@ def parse_ints(inp, query, qfield):
 def parse_signed_ints(inp, query, qfield, parse_one=None):
     if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
     sign_field, abs_field = qfield
-    if SIGNED_LIST_RE.match(cleaned):
+    if SIGNED_LIST_RE.match(inp):
         parsed = parse_range3(inp, name, split0 = True)
         # if there is only one part, we don't need an $or
         if len(parsed) == 1:
@@ -320,6 +320,10 @@ def parse_bool(inp, query, qfield, minus_one_to_zero=False):
     else:
         raise ValueError("It must be True or False.")
 
+@search_parser
+def parse_noop(inp, query, qfield):
+    query[qfield] = inp
+
 def parse_count(info, default=20):
     try:
         info['count'] = int(info['count'])
@@ -335,4 +339,10 @@ def parse_start(info, default=0):
             start += (1 - (start + 1) / count) * count
     except (KeyError, ValueError):
         start = default
+    try:
+        paging = int(info['paging'])
+        if paging == 0:
+            start = 0
+    except (KeyError, ValueError, TypeError):
+        pass
     return start
