@@ -166,11 +166,9 @@ def parse_signed_ints(info, query, field, sign_field, abs_field, name=None, pars
     if name is None: name = field.replace('_',' ').capitalize()
     if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
     cleaned = prep_ranges(inp)
-    print SIGNED_LIST_RE.match(cleaned)
     if SIGNED_LIST_RE.match(cleaned):
         parsed = parse_range3(inp, name, split0 = True)
         # if there is only one part, we don't need an $or
-        print parsed
         if len(parsed) == 1:
             parsed = parsed[0]
             if type(parsed) == list:
