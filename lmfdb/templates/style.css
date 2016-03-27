@@ -1,19 +1,5 @@
 {# template defs #}
-{% set col_error   = '#922' %}
-{% set col_main_d  = '#040' %}
-{% set col_main    = '#292' %}
-{% set col_main_2  = '#afa' %}
-{% set col_main_l  = '#bfb' %}
-{% set col_main_ll = '#efe' %}
-
-{% set col_ntdata_border  = '#9b9' %}
-{% set col_ntdata_bkg     = '#afa' %}
-
-{% set col_knowl     = '#AAF' %}
-{% set col_knowl_l   = '#DDF' %}
-{% set col_knowl_ll  = '#EEF' %}
-{% set col_knowl_d   = '#88F' %}
-{% set col_knowl_dd  = '#006' %}
+{% import 'color.css' as color %}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
@@ -31,8 +17,8 @@ body {
     margin: 0px;
     padding: 0px;
     font-family: sans-serif;
-    color: black;
-    background-color: white;
+    color: {{color.black}};
+    background-color: {{color.white}};
     /* max-width: 1200px; */
 }
 #mathjax-info {
@@ -51,7 +37,7 @@ body {
 {
     font-size: 130%;
     font-weight: bold;
-    color: {{ col_main }};
+    color: {{ color.col_main }};
     font-family: sans-serif;
     text-decoration: none;
     margin: 15px 0;
@@ -68,7 +54,7 @@ body {
     font-size: 120%;
     text-align: left;
     font-weight: bold;
-    color: #292;
+    color: {{color.col_main}};
     padding: 5px 0 5px 0;
     margin: 15px 0 10px 0;
 }
@@ -79,7 +65,7 @@ body {
     text-align: left;
     font-weight: bold;
     padding: 5px 0 5px 0;
-    color: #181;
+    color: {{color.col_main_3}};
     margin: 10px 0 5px 0;
 }
 
@@ -94,12 +80,12 @@ body {
 #footer {
     clear: both;
     margin-top: 40px;
-    background-color: #dfd;
-    border-top: 2px solid {{ col_main_l }};
+    background-color: {{color.col_main_ld}};
+    border-top: 2px solid {{ color.col_main_l }};
     padding: 25px 10px;
     text-align: center;
     font-size: 75%;
-    color: #060;
+    color: {{color.col_main_dld}};
 }
 
 #content > ul {
@@ -107,13 +93,13 @@ body {
   margin-bottom: 10px;
 }
 a {
-  color: #292;
+    color: {{color.col_main}};
   text-decoration: none;
   font-family: sans-serif;
 }
 
 a.inactive {
-    color: #000;
+    color: {{color.black}};
 }
 
 a.inactive:hover {
@@ -131,8 +117,8 @@ a.inactive:hover {
   line-height: 1.5em;
 }
 #content .announce.red {
-  border-left: 3px solid #D00;
-  background: #FDD;
+    border-left: 3px solid {{color.col_red_1}};
+    background: {{color.col_light_red_1}};
 }
 #search-topright {
   display: inline;
@@ -141,28 +127,10 @@ a.inactive:hover {
   font-size: 75%;
   border: 1px solid {{ col_main }};
   padding: 1px;
-  background: #DFD ;
+  background: {{color.col_main_ld}} ;
   position: relative;
   top: -1px;
 }
-/*
-#content .announce {
-  font-size: 1.2em;
-  margin: 40px;
-  padding: 20px;
-  border: 1px solid {{ col_main }};
-  {{ BORDER_RADIUS(10) }}
-  -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_main_l }};
-  -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_main_l }};
-  box-shadow:         inset 0px 0px 15px 5px {{ col_main_l }};
-}
-#content .announce.error {
-  border: 1px solid {{ col_error }};
-  -webkit-box-shadow: inset 0px 0px 15px 5px {{ col_error }};
-  -moz-box-shadow:    inset 0px 0px 15px 5px {{ col_error }};
-  box-shadow:         inset 0px 0px 15px 5px {{ col_error }};
-}
-*/
 
 /* icon in front of external links */
 #content a[target="_blank"]:before {
@@ -174,10 +142,10 @@ body.checklist {
  font-size: 70%;
 }
 
-a:visited { color: #080; }
+a:visited { color: {{color.col_main_dll}}; }
 a:hover { 
-  color: #000; 
-  background: #cfc;  
+    color: {{color.black}}; 
+    background: {{color.col_main_ldl}};  
 }
 
 #logo a, #logo a:hover, body.knowl #logo a:hover {
@@ -185,19 +153,18 @@ a:hover {
 }
 
 #header {
-  /*border-bottom: 2px solid #4a4;*/
   min-height: 120px;
-  background: #dfd;
-  -moz-box-shadow:     0px 5px 5px #8b8;
-  -webkit-box-shadow:  0px 5px 5px #8b8;
-  box-shadow:          0px 5px 5px #8b8;
+  background: {{color.col_main_ld}};
+  -moz-box-shadow:     0px 5px 5px {{color.col_main_lg}};
+  -webkit-box-shadow:  0px 5px 5px {{color.col_main_lg}};
+  box-shadow:          0px 5px 5px {{color.col_main_lg}};
 }
 
 body.knowl #header {
-  background: {{ col_knowl_l }};
-  -moz-box-shadow:     0px 5px 5px #88b;
-  -webkit-box-shadow:  0px 5px 5px #88b;
-  box-shadow:          0px 5px 5px #88b;
+  background: {{ color.knowl_l }};
+  -moz-box-shadow:     0px 5px 5px {{color.col_main_lg}};
+  -webkit-box-shadow:  0px 5px 5px {{color.col_main_lg}};
+  box-shadow:          0px 5px 5px {{color.col_main_lg}};
 }
 
 #header #logo {
@@ -218,7 +185,7 @@ body.knowl #header {
     font-family: sans-serif;
     min-height: 100px;
     position: relative;
-    color: #040;
+    color: {{color.col_main_d}};
 }
 
 #header #title-content {
@@ -244,7 +211,7 @@ body.knowl #header {
   /* border: 1px solid red;  */
   text-align: right;
   white-space:nowrap; 
-  color: #060;
+  color: {{color.col_main_dld}};
   font-family: sans-serif;
   min-height: 18px;
   font-size: 90%;
@@ -254,7 +221,7 @@ body.knowl #header {
   right: 0px;
 }
 #header .topright a {
-  color: #060;
+    color: {{color.col_main_dld}};
 }
 #header .topright #communication-wrapper {  
   display: none;
@@ -263,7 +230,7 @@ body.knowl #header {
 #header #navi {
   white-space: nowrap;
   text-align: right;
-  color: #060;
+  color: {{color.col_main_dld}};
   font-family: sans-serif;
   font-size: 90%;
   padding: 2px 5px;
@@ -274,9 +241,9 @@ body.knowl #header {
 }
 
 #flashes p {
-  border-left: 15px solid #DDF;
+    border-left: 15px solid {{color.knowl_l}};
   padding: 5px;
-  background: #EEF;
+  background: {{color.knowl_lls}};
   
 }
 
@@ -284,8 +251,8 @@ body.knowl #header {
   margin: 15px 0;
   font-size: 95%;
   border: 0;
-  border-left: 15px solid #FDD;
-  background: #FEE;
+  border-left: 15px solid {{color.col_light_red_1}};
+  background: {{color.col_light_red_2}};
 }
 
 
@@ -306,7 +273,7 @@ body.knowl #header {
     /* width: 20%; */
     /* background: {{ col_main_l }}; */
     position: relative;
-    border: 1px solid #474;
+    border: 1px solid {{color.col_main_g}};
     border: 0;
     padding: 0px;
 }
@@ -358,7 +325,7 @@ body.knowl #header {
 .properties-body {
   margin: 0px;
   padding: 0px;
-  background: #efe;
+  background: {{color.col_main_ll}};
   min-width: 200px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
@@ -399,29 +366,8 @@ body.knowl #header {
 
 #content blockquote
 {
-/*
-    margin: 10px;
-    color: #996633;
-    text-decoration: none;
-    font-size: 12px;
-    padding-left: 15px;
-    font-family: sans-serif;
-    line-height: 18px;
-    background-color: #F1EFE2;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    text-align: justify;
-    padding-right: 10px;
-    border: 2px solid #ECE9D8;
-*/
 }
-/*
-blockquote p {
-    color: #CC6600;
-    line-height: 18px;
-    font-family: serif;
-}
-*/
+
 
 #sidebar {
   float: left;
@@ -429,8 +375,8 @@ blockquote p {
   margin: 20px 0px 0px 0px;
   font-family: sans-serif;
   font-size: 85%;
-  color: #390;
-  background: #EFE;
+  color: {{color.col_main_4}};
+  background: {{color.col_main_ll}};
   margin-bottom: 100px;
   border-top-right-radius: 10px;
   -moz-border-radius-topright: 10px;
@@ -445,20 +391,20 @@ blockquote p {
   padding: 5px;
 }
 #sidebar h2.knowl {
-  background: {{ col_knowl_l }};
+  background: {{ color.knowl_l }};
 }
 #sidebar h2.knowl a {
-  color: {{ col_knowl_dd }};
+  color: {{ color.knowl_dd }};
 }
 #sidebar h2.knowl a:hover {
-  background: {{ col_knowl }};
+  background: {{ color.knowl }};
 }
 
 #sidebar h2 {
     font-family: sans-serif;
     font-size: 100%;
-    background-color: {{ col_main_l }};
-    color: {{ col_main_d }};
+    background-color: {{ color.col_main_l }};
+    color: {{ color.col_main_d }};
     padding: 5px;
     margin: 15px 0 0 0;
 }
@@ -489,29 +435,29 @@ blockquote p {
     padding: 0px;
 }
 #sidebar a:hover {
-    background: {{ col_main_l }};
+    background: {{ color.col_main_l }};
 }
 #sidebar a {
     display: block;
 }
 #sidebar li a {
-  background: {{ col_main_ll }};
+  background: {{ color.col_main_ll }};
   padding: 5px;
 }
 #sidebar h2 a { padding: 5px; }
 #sidebar h2 a:hover {
-  background: {{ col_main_2 }};
+  background: {{ color.col_main_2 }};
 }
 #sidebar h2.link {
   padding: 0px;
 }
 
 /* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
-body.mwf #sidebar a.mwf { background: {{ col_main_l }}; }
-body.cmf #sidebar a.cmf { background: {{ col_main_l }}; }
-body.knowl #sidebar a.knowl { background: {{ col_knowl_d }}; }
-body.local_fields #sidebar a.local_fields { background:  {{ col_main_l }}; }
-body.intro #sidebar a.intro { background: {{ col_main_l }}; }
+body.mwf #sidebar a.mwf { background: {{ color.col_main_l }}; }
+body.cmf #sidebar a.cmf { background: {{ color.col_main_l }}; }
+body.knowl #sidebar a.knowl { background: {{ color.col_knowl_d }}; }
+body.local_fields #sidebar a.local_fields { background:  {{ color.col_main_l }}; }
+body.intro #sidebar a.intro { background: {{ color.col_main_l }}; }
 
 .visible {
 	visibility: visible;
@@ -552,7 +498,7 @@ td.forminfo {
 }
 
 input, textarea {
-  border: 2px solid #ACA;
+    border: 2px solid {{color.col_main_g3}};
   font-size: 110%;
   padding: 3px;
   border-radius: 5px;
@@ -562,45 +508,45 @@ input, textarea {
 
 button, select {
   padding: 3px 6px;
-  background: #DFD;
+  background: {{color.col_main_ld}};
   border-radius: 4px;
   -moz-border-radius:4px;
   -webkit-border-radius:4px;
   cursor: pointer;
-  border: 2px solid #ADA;
+  border: 2px solid {{color.col_main_g2}};
   min-width: 75px;
 }
 
 body.knowl form button, 
 body.knowl form select {
-  border: 2px solid #AAD;
-  background: #DDF;
+    border: 2px solid {{color.knowl_g}};
+  background: {{color.knowl_l}};
 }
 body.knowl form textarea,
 body.knowl form input {
-  border: 2px solid #AAD;
+    border: 2px solid {{color.knowl_g}};
 }
 
 form button:hover, 
 form select:hover {
-  background:    #CFC;
-  border: 2px solid #9C9;
+    background:    {{color.col_main_ldl}};
+    border: 2px solid {{color.col_main_llg}};
 }
 
 button.inactive {
-  background: #EEE;
-  border: 2px solid #EDD;
+    background: {{color.light_grey_1}};
+    border: 2px solid {{color.col_light_red_3}};
 }
 
 button.inactive:hover {
-  background: #EEE;
-  border: 2px solid #EDD;
+    background: {{color.light_grey_1}};
+    border: 2px solid {{color.col_light_red_3}};
 }
 
 body.knowl form button:hover,
 body.knowl form select:hover {
-  background:    #CCF;
-  border: 2px solid #99C;
+    background:    {{color.knowl_ld}};
+    border: 2px solid {{color.knowl_dg}};
 }
 
 table {
@@ -632,16 +578,6 @@ table a[knowl] {
   padding: 0;
 }
 
-/* this was too general
-   deleted by DF on 3/21/16
-   do not put back
-table a {
-  padding: 2px 5px;
-  border-radius: 3px;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-}
-*/
 
 table.ntdata a {
   display: block;
@@ -651,7 +587,7 @@ table td.top {
 }
 
 table a:hover {
-    background: #cfc;
+    background: {{color.col_main_ldl}};
 }
 
 
@@ -666,8 +602,8 @@ table.ntdata {
   margin-bottom: 15px;
 }
 table.ntdata thead tr {
-  background: {{ col_ntdata_bkg }};
-  border-bottom: 2px solid {{ col_ntdata_border }};
+  background: {{ color.col_ntdata_bkg }};
+  border-bottom: 2px solid {{ color.col_ntdata_border }};
 }
 table.ntdata tr {
 }
@@ -679,12 +615,12 @@ table.ntdata th {
 table.ntdata tr.odd,
 table.ntdata tr:nth-child(odd),
 table.ntdata tr:first-child {
- background: white;
+    background: {{color.white}};
 }
 
 table.ntdata tr.even,
 table.ntdata tr:nth-child(even) {
- background: #EFE;
+    background: {{color.col_main_ll}};
 }
 
 table.ntdata tr.line {
@@ -694,7 +630,7 @@ table.ntdata tr.line {
 div.literature {
     margin-top: 10px;
     font-size: 90%;
-    color: #111111;
+    color: {{color.black_1}};
 }
 
 div.where {
@@ -706,7 +642,7 @@ div.where {
 }
 
 .redhighlight {
-  color: #888888;
+    color: {{color.grey_1}};
 }
 
 .bluehighlight {
@@ -728,17 +664,17 @@ div.where {
  *  all elements, that have a knowl attribute set to any value */
 table .knowl-link {
   display: inline;
-  border-bottom: 1px dotted {{ col_knowl_dd }};
+  border-bottom: 1px dotted {{ color.knowl_dd }};
   border-radius: 0px;
   -moz-border-radius: 0px;
   padding: 1px;
 }
 .knowl-bar {
   white-space: nowrap;
-  background: {{ col_knowl_ll}};
+  background: {{ color.knowl_ll}};
   padding: 5px 10px;
   margin-bottom: 5px;
-  border-bottom: 1px solid {{ col_knowl_d }};
+  border-bottom: 1px solid {{ color.knowl_d }};
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
 }
@@ -751,7 +687,7 @@ table .knowl-link {
 }
 #knowl-search input {
   font-size: small;
-  background: {{ col_knowl_ll }};
+  background: {{ color.knowl_ll }};
 }
 .knowl-bar a {
   padding: 2px 5px;
@@ -759,22 +695,22 @@ table .knowl-link {
 .knowl-preview-sep {
   padding: 5px;
   margin: 30px 0;
-  border-bottom: 1px solid {{ col_knowl_d }};
-  background: {{ col_knowl_ll}};
-  color: {{ col_knowl_dd }};
+  border-bottom: 1px solid {{ color.knowl_d }};
+  background: {{ color.knowl_ll}};
+  color: {{ color.knowl_dd }};
   font-weight: bold;
 }
 .knowl-inc-edit {
   margin-bottom: 10px;
-  border-bottom: 2px solid {{ col_knowl_l}};
+  border-bottom: 2px solid {{ color.knowl_l}};
   font-size: x-small;
   text-align: right;
   line-height: 100%;
 }
 .knowl-inc-edit a {
   padding: 3px 5px 0px 5px;
-  background: {{ col_knowl_dd }};
-  background: {{ col_knowl_l }};
+  background: {{ color.knowl_dd }};
+  background: {{ color.knowl_l }};
   border-top-left-radius: 5px;
   -moz-border-radius-topleft: 5px;
 } 
@@ -805,13 +741,12 @@ table .knowl-link {
   overflow: hidden;
   padding: 2px;
   margin: 1px;
-  /* border: 1px solid {{ col_knowl_l }}; */
   border-radius: 2px;
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
 }
 #knowl-index td div:hover {
-  background: {{ col_knowl_l }};
+  background: {{ color.knowl_l }};
   cursor: pointer;
 }
 #knowl-index td { 
@@ -822,52 +757,52 @@ table .knowl-link {
   vertical-align: top;
   text-align: center;
   font-size: x-large;
-  color: #006;
+  color: {{color.knowl_dd}};
   padding-top: 12px;
 }
 body.knowl table.ntdata thead tr {
-  background: {{ col_knowl_ll }};
-  border-bottom: 2px solid {{ col_knowl }};
+  background: {{ color.knowl_ll }};
+  border-bottom: 2px solid {{ color.knowl }};
 }
 body.knowl table.ntdata tr:nth-child(odd) {
- background: {{ col_knowl_ll }};
+ background: {{ color.knowl_ll }};
 }
 body.knowl table.ntdata tr:nth-child(even) {
- background: white;
+    background: {{color.white}};
 }
 
 /* next 4 copied from Dir Char templates */
 /* should be deleted from those 4 templates */
 table.ntdata th.left {
-    border-right: 2px solid #9b9;
-    background: #efe;
+    border-right: 2px solid {{color.col_main_lg2}};
+    background: {{color.col_main_ll}};
     border-bottom: 0;
     text-align: center;
 }
 
 table.ntdata th.weight {
   text-align: center;
-  background: #efe;
-  border-bottom: 2px solid #9b9;
+  background: {{color.col_main_ll}};
+  border-bottom: 2px solid {{color.col_main_lg2}};
   border-left: 0;
   vertical-align: center;
 }
 
 table.ntdata thead tr.space {
-  background: #efe;
+    background: {{color.col_main_ll}};
   border-bottom: 0;
 }
 
 table.ntdata thead th.spaceleft {
-  border-right: 2px solid #9b9;
+  border-right: 2px solid {{color.col_main_lg2}};
   vertical-align: top;
 }
 
 table.ntdata tr.first {
-  border-top: 2px solid #9b9;
+  border-top: 2px solid {{color.col_main_lg2}};
 }
 table.ntdata .border-right {
-    border-right: 2px solid {{ col_ntdata_border }};
+    border-right: 2px solid {{ color.col_ntdata_border }};
 }
 table.ntdata td.center {
     text-align: center;
@@ -892,7 +827,7 @@ table.euler tr .galois {
 }
 
 *[knowl] {
-  border-bottom: 1px dotted {{ col_knowl }};
+  border-bottom: 1px dotted {{ color.knowl }};
   cursor: pointer;
   border-radius: 0;
   -webkit-border-radius: 0;
@@ -901,9 +836,9 @@ table.euler tr .galois {
 }
 *[knowl]:hover,
 *[knowl].active {
-  border-bottom: 2px solid {{ col_knowl }};
-  background: {{ col_knowl_l }};
-  color: {{ col_knowl_dd }};
+  border-bottom: 2px solid {{ color.knowl }};
+  background: {{ color.knowl_l }};
+  color: {{ color.knowl_dd }};
   margin: 0;
   padding: 3px 0 0 0;
   border-top-left-radius: 3px;
@@ -913,18 +848,18 @@ table.euler tr .galois {
 }
 
 body.knowl #header {
-  background: {{ col_knowl_l }}; 
+  background: {{ color.knowl_l }}; 
 }
 body.knowl #header #title {
-  color: #004;
+    color: {{color.knowl_ddd}};
 }
 body.knowl #content h1,
 body.knowl #content h2,
 body.knowl #content a {
-  color: {{ col_knowl_dd }};
+  color: {{ color.knowl_dd }};
 }
 body.knowl a:hover {
-  background: {{ col_knowl_l }};
+  background: {{ color.knowl_l }};
 }
 
 div > *[knowl], p > *[knowl] {
@@ -949,9 +884,9 @@ table .knowl a {
 .knowl-qm {
   font-family: sans-serif;
   font-weight: bold;
-  border: 1px solid {{ col_knowl }};
+  border: 1px solid {{ color.knowl }};
   background: transparent;
-  color: {{ col_knowl }}; 
+  color: {{ color.knowl }}; 
   cursor: pointer;
   padding: 0 0.4em;
   border-radius: 0.8em;
@@ -961,12 +896,12 @@ table .knowl a {
 }
 .knowl-qm:hover,
 .knowl-qm.active {
-  background: #66d;
-  color: white
+    background: {{color.knowl_db}};
+  color: {{color.white}};
 }
 .knowl-qm.active:hover {
   background: transparent;
-  color: {{ col_knowl }}; 
+  color: {{ color.knowl }}; 
 }
 h1 > .knowl-qm {
   /** custom superscript */
@@ -985,14 +920,8 @@ h2 > .knowl-qm {
   left: -0.4em;
 }
 .knowl-output {
-  background: {{ col_knowl_ll }}; 
-  border: 10px solid {{ col_knowl_l }};
-  /* border-right: 10px solid {{ col_knowl_l }};
-  border-bottom: 10px solid {{ col_knowl_l }}; */
-  /* border-bottom-left-radius: 10px;
-  -moz-border-radius-bottomleft: 10px;
-  border-bottom-right-radius: 10px;
-  -moz-border-radius-bottomright: 10px; */
+  background: {{ color.knowl_ll }}; 
+  border: 10px solid {{ color.knowl_l }};
   {{ BORDER_RADIUS(10) }}
   padding: 0px;
   display: none;
@@ -1018,10 +947,10 @@ div.limit-height {
   margin: 5px 0;
 }
 .knowl-output h1 {
-  color: {{ col_knowl_dd }};
+  color: {{ color.knowl_dd }};
 }
 .knowl-output h2 {
-  color: {{ col_knowl_dd }};
+  color: {{ color.knowl_dd }};
 }
 .knowl-output a { display: inline; }
 
@@ -1030,7 +959,7 @@ div.limit-height {
   bottom: -10px;
   font-size: x-small;
   line-height: 100%;
-  background: {{ col_knowl_l }};
+  background: {{ color.knowl_l }};
   color: grey;
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
@@ -1040,19 +969,19 @@ div.limit-height {
   top: -10px;
   font-size: x-small;
   line-height: 100%;
-  background: {{ col_knowl_l }};
+  background: {{ color.knowl_l }};
   color: grey;
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
 .knowl-header a,
 .knowl-footer a {
-  color: {{ col_knowl_dd }};
+  color: {{ color.knowl_dd }};
 }
 .knowl-header a:hover,
 .knowl-footer a:hover {
   background: none;
-  color: {{ col_knowl_d }};
+  color: {{ color.knowl_d }};
 }
 
 /* end knowl */
@@ -1119,14 +1048,14 @@ div.limit-height {
 }
 
 .watermark {
-  color: #999 !important;
+    color: {{color.grey_2}} !important;
 }
 
 
 .propertylist {
   margin: 2em 0;
   padding: 0;
-  border: 1px solid #999999;
+  border: 1px solid {{color.grey_2}};
 }
 
 .propertylist dt {
@@ -1138,26 +1067,26 @@ div.limit-height {
 }
 
 a.navlink {
-  color: white;
-  background-color: #4a4;
+    color: {{color.white}};
+    background-color: {{color.col_main_5}};
   font-weight: bold;
   font-size: 11px;
   text-align: center;
   padding: 5px;
   padding-top: 3px;
   padding-bottom: 4px;
-  border: 1px solid white;
-  outline: 1px solid #4a4;
+  border: 1px solid {{color.white}};
+  outline: 1px solid {{color.col_main_5}};
   text-decoration: none;
   margin-left: 1px;
   margin-top: 10px
 }
 hr {
-  border: 2px solid {{ col_main_l }};
+  border: 2px solid {{ color.col_main_l }};
   margin: 15px 0;
 }
 body.knowl hr {
-  border: 2px solid {{ col_knowl_l }};
+  border: 2px solid {{ color.knowl_l }};
 }
 
 /* jquery ui slider */
@@ -1168,15 +1097,15 @@ body.knowl hr {
 /* tables */
 table.tablesorter {
 	font-family:arial;
-	background-color: #CDCDCD;
+	background-color: {{color.light_grey_2}};
 	margin:10px 0pt 15px;
 	font-size: 8pt;
 	width: 100%;
 	text-align: left;
 }
 table.tablesorter thead tr th, table.tablesorter tfoot tr th {
-	background-color: #e6EEEE;
-	border: 1px solid #FFF;
+    background-color: {{color.light_blue_grey}};
+    border: 1px solid {{color.white}};
 	font-size: 8pt;
 	padding: 4px;
 }
@@ -1187,13 +1116,13 @@ table.tablesorter thead tr .header {
 	cursor: pointer;
 }
 table.tablesorter tbody td {
-	color: #3D3D3D;
+    color: {{color.dark_grey}};
 	padding: 4px;
-	background-color: #FFF;
+	background-color: {{color.white}};
 	vertical-align: top;
 }
 table.tablesorter tbody tr.odd td {
-	background-color:#F0F0F6;
+    background-color:{{color.knowl_lll}};
 }
 table.tablesorter thead tr .headerSortUp {
 	background-image: url(asc.gif);
@@ -1202,7 +1131,7 @@ table.tablesorter thead tr .headerSortDown {
 	background-image: url(desc.gif);
 }
 table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
-background-color: #8dbdd8;
+    background-color: {{color.steel_blue}};
 }
 
 .dataTables_wrapper {
@@ -1223,11 +1152,11 @@ background-color: #8dbdd8;
 	margin-left: -125px;
 	margin-top: -15px;
 	padding: 14px 0 2px 0;
-	border: 1px solid #ddd;
+	border: 1px solid {{color.light_grey_3}};
 	text-align: center;
-	color: #999;
+	color: {{color.grey_2}};
 	font-size: 14px;
-	background-color: white;
+	background-color: {{color.white}};
 }
 
 .dataTables_length {
@@ -1308,7 +1237,7 @@ table.display tfoot th {
 }
 
 table.display tr.heading2 td {
-	border-bottom: 1px solid #aaa;
+    border-bottom: 1px solid {{color.grey_3}};
 }
 
 table.display td {
@@ -1340,35 +1269,35 @@ table.display td.center {
 }
 
 table.display tr.odd.gradeA {
-	background-color: #ddffdd;
+    background-color: {{color.col_main_ld}};
 }
 
 table.display tr.even.gradeA {
-	background-color: #eeffee;
+    background-color: {{color.col_main_ll}};
 }
 
 table.display tr.odd.gradeC {
-	background-color: #ddddff;
+    background-color: {{color.knowl_l}};
 }
 
 table.display tr.even.gradeC {
-	background-color: #eeeeff;
+    background-color: {{color.knowl_ll}};
 }
 
 table.display tr.odd.gradeX {
-	background-color: #ffdddd;
+    background-color: {{color.col_light_red_1}};
 }
 
 table.display tr.even.gradeX {
-	background-color: #ffeeee;
+    background-color: {{color.col_light_red_2}};
 }
 
 table.display tr.odd.gradeU {
-	background-color: #ddd;
+    background-color: {{color.light_grey_3}};
 }
 
 table.display tr.even.gradeU {
-	background-color: #eee;
+    background-color: {{color.light_grey_1}};
 }
 
 .dataTables_scroll {
@@ -1381,8 +1310,8 @@ table.display tr.even.gradeU {
 
 .top, .bottom {
 	padding: 52px 5px 5px;
-	background-color: #F5F5F5;
-	border: 1px solid #CCCCCC;
+	background-color: {{color.white_1}};
+	border: 1px solid {{color.light_grey_4}};
 }
 
 .top .dataTables_info {
@@ -1400,22 +1329,22 @@ table.display tr.even.gradeU {
 tfoot input {
 	margin: 0.5em 0;
 	width: 100%;
-	color: #444;
+	color: {{color.dark_grey_2}};
 }
 
 tfoot input.search_init {
-	color: #999;
+    color: {{color.grey_2}};
 }
 
 td.group {
-	background-color: #d1cfd0;
-	border-bottom: 2px solid #A19B9E;
-	border-top: 2px solid #A19B9E;
+    background-color: {{color.light_red_grey}};
+    border-bottom: 2px solid {{color.red_grey}};
+    border-top: 2px solid {{color.red_grey}};
 }
 
 td.details {
-	background-color: #d1cfd0;
-	border: 2px solid #A19B9E;
+    background-color: {{color.light_red_grey}};
+    border: 2px solid {{color.red_grey}};
 }
 
 
@@ -1430,7 +1359,7 @@ td.details {
 
 .paging_full_numbers span.paginate_button,
  	.paging_full_numbers span.paginate_active {
-	border: 1px solid #aaa;
+	    border: 1px solid {{color.grey_3}};
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	padding: 2px 5px;
@@ -1440,183 +1369,183 @@ td.details {
 }
 
 .paging_full_numbers span.paginate_button {
-	background-color: #ddd;
+    background-color: {{color.light_grey_3}};
 }
 
 .paging_full_numbers span.paginate_button:hover {
-	background-color: #ccc;
+    background-color: {{color.light_grey_4}};
 }
 
 .paging_full_numbers span.paginate_active {
-	background-color: #99B3FF;
+    background-color: {{color.knowl_1}};
 }
 
 table.display tr.even.row_selected td {
-	background-color: #B0BED9;
+    background-color: {{color.blue_grey}};
 }
 
 table.display tr.odd.row_selected td {
-	background-color: #9FAFD1;
+    background-color: {{color.blue_grey_1}};
 }
 
 tr.odd td.sorting_1 {
-	background-color: #D3D6FF;
+    background-color: {{color.knowl_l_1}};
 }
 
 tr.odd td.sorting_2 {
-	background-color: #DADCFF;
+    background-color: {{color.knowl_l_2}};
 }
 
 tr.odd td.sorting_3 {
-	background-color: #E0E2FF;
+    background-color: {{color.knowl_l_3}};
 }
 
 tr.even td.sorting_1 {
-	background-color: #EAEBFF;
+    background-color: {{color.knowl_l_4}};
 }
 
 tr.even td.sorting_2 {
-	background-color: #F2F3FF;
+    background-color: {{color.knowl_l_5}};
 }
 
 tr.even td.sorting_3 {
-	background-color: #F9F9FF;
+    background-color: {{color.knowl_l_6}};
 }
 
 tr.odd.gradeA td.sorting_1 {
-	background-color: #c4ffc4;
+    background-color: {{color.col_main_ldl_1}};
 }
 
 tr.odd.gradeA td.sorting_2 {
-	background-color: #d1ffd1;
+    background-color: {{color.col_main_ld_1}};
 }
 
 tr.odd.gradeA td.sorting_3 {
-	background-color: #d1ffd1;
+    background-color: {{color.col_main_ld_1}};
 }
 
 tr.even.gradeA td.sorting_1 {
-	background-color: #d5ffd5;
+    background-color: {{color.col_main_ld_2}};
 }
 
 tr.even.gradeA td.sorting_2 {
-	background-color: #e2ffe2;
+    background-color: {{color.col_main_ll_1}};
 }
 
 tr.even.gradeA td.sorting_3 {
-	background-color: #e2ffe2;
+    background-color: {{color.col_main_ll_1}};
 }
 
 tr.odd.gradeC td.sorting_1 {
-	background-color: #c4c4ff;
+    background-color: {{color.knowl_ld_1}}
 }
 
 tr.odd.gradeC td.sorting_2 {
-	background-color: #d1d1ff;
+    background-color: {{color.knowl_l_7}};
 }
 
 tr.odd.gradeC td.sorting_3 {
-	background-color: #d1d1ff;
+    background-color: {{color.knowl_l_7}};
 }
 
 tr.even.gradeC td.sorting_1 {
-	background-color: #d5d5ff;
+    background-color: {{color.knowl_l_8}};
 }
 
 tr.even.gradeC td.sorting_2 {
-	background-color: #e2e2ff;
+    background-color: {{color.knowl_ll_1}};
 }
 
 tr.even.gradeC td.sorting_3 {
-	background-color: #e2e2ff;
+    background-color: {{color.knowl_ll_1}};
 }
 
 tr.odd.gradeX td.sorting_1 {
-	background-color: #ffc4c4;
+    background-color: {{color.light_red_4}};
 }
 
 tr.odd.gradeX td.sorting_2 {
-	background-color: #ffd1d1;
+    background-color: {{color.light_red_5}};
 }
 
 tr.odd.gradeX td.sorting_3 {
-	background-color: #ffd1d1;
+    background-color: {{color.light_red_5}};
 }
 
 tr.even.gradeX td.sorting_1 {
-	background-color: #ffd5d5;
+    background-color: {{color.light_red_6}};
 }
 
 tr.even.gradeX td.sorting_2 {
-	background-color: #ffe2e2;
+    background-color: {{color.light_red_7}};
 }
 
 tr.even.gradeX td.sorting_3 {
-	background-color: #ffe2e2;
+    background-color: {{color.light_red_8}};
 }
 
 tr.odd.gradeU td.sorting_1 {
-	background-color: #c4c4c4;
+    background-color: {{color.light_grey_5}};
 }
 
 tr.odd.gradeU td.sorting_2 {
-	background-color: #d1d1d1;
+    background-color: {{color.light_grey_6}};
 }
 
 tr.odd.gradeU td.sorting_3 {
-	background-color: #d1d1d1;
+    background-color: {{color.light_grey_6}};
 }
 
 tr.even.gradeU td.sorting_1 {
-	background-color: #d5d5d5;
+    background-color: {{color.light_grey_7}};
 }
 
 tr.even.gradeU td.sorting_2 {
-	background-color: #e2e2e2;
+    background-color: {{color.light_grey_8}};
 }
 
 tr.even.gradeU td.sorting_3 {
-	background-color: #e2e2e2;
+    background-color: {{color.light_grey_8}};
 }
 
 .ex_highlight #example tbody tr.even:hover, #example tbody tr.even td.highlighted {
-	background-color: #ECFFB3;
+    background-color: {{color.light_citron}};
 }
 
 .ex_highlight #example tbody tr.odd:hover, #example tbody tr.odd td.highlighted {
-	background-color: #E6FF99;
+    background-color: {{color.light_citron_1}};
 }
 
 .ex_highlight_row #example tr.even:hover {
-	background-color: #ECFFB3;
+    background-color: {{color.light_citron}};
 }
 
 .ex_highlight_row #example tr.even:hover td.sorting_1 {
-	background-color: #DDFF75;
+    background-color: {{color.light_citron_2}};
 }
 
 .ex_highlight_row #example tr.even:hover td.sorting_2 {
-	background-color: #E7FF9E;
+    background-color: {{color.light_citron_3}};
 }
 
 .ex_highlight_row #example tr.even:hover td.sorting_3 {
-	background-color: #E2FF89;
+    background-color: {{color.light_citron_4}};
 }
 
 .ex_highlight_row #example tr.odd:hover {
-	background-color: #E6FF99;
+    background-color: {{color.light_citron_1}};
 }
 
 .ex_highlight_row #example tr.odd:hover td.sorting_1 {
-	background-color: #D6FF5C;
+    background-color: {{color.light_citron_5}};
 }
 
 .ex_highlight_row #example tr.odd:hover td.sorting_2 {
-	background-color: #E0FF84;
+    background-color: {{color.light_citron_6}};
 }
 
 .ex_highlight_row #example tr.odd:hover td.sorting_3 {
-	background-color: #DBFF70;
+    background-color: {{color.light_citron_7}};
 }
 
 table.KeyTable td {
@@ -1624,41 +1553,41 @@ table.KeyTable td {
 }
 
 table.KeyTable td.focus {
-	border: 3px solid #3366FF;
+    border: 3px solid {{color.blue_1}};
 }
 
 table.display tr.gradeA {
-	background-color: #eeffee;
+    background-color: {{color.col_main_ll}};
 }
 
 table.display tr.gradeC {
-	background-color: #ddddff;
+    background-color: {{color.knowl_}};
 }
 
 table.display tr.gradeX {
-	background-color: #ffdddd;
+    background-color: {{color.col_light_red_1}};
 }
 
 table.display tr.gradeU {
-	background-color: #ddd;
+    background-color: {{color.light_grey_3}};
 }
 
 div.box {
 	height: 100px;
 	padding: 10px;
 	overflow: auto;
-	border: 1px solid #8080FF;
-	background-color: #E5E5FF;
+	border: 1px solid {{color.knowl_d_1}};
+	background-color: {{color.knowl_ll_2}};
 }
 
 div.codebox {
     padding: 5px;
     text-padding: 10px;
     overflow: auto;
-    border: 1px solid #8080FF;
+    border: 1px solid {{color.knowl_d_1}};
     border-radius: 5px;
-    background-color: #E5E5FF;
-    box-shadow: 3px 3px 3px #8080FF;
+    background-color: {{color.knowl_ll_2}};
+    box-shadow: 3px 3px 3px {{color.knowl_d_1}};
     white-space: pre;
 }
 

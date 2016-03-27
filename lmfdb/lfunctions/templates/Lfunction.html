@@ -1,5 +1,5 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <script>
@@ -10,16 +10,16 @@ function show_normalization(normstyle) {
     $('button.analytic').show();
     $('button.arithmetic').show();
     if (normstyle == 'analytic') {
-       $('button.analytic').css('background', '#DFD');
-       $('button.analytic').css('border', '2px solid #ADA');
-       $('button.arithmetic').css('background', '#EEE');
-       $('button.arithmetic').css('border', '1px solid #EDD');
+       $('button.analytic').css('background', '{{color.col_main_ld}}');
+       $('button.analytic').css('border', '2px solid {{color.col_main_g2}}');
+       $('button.arithmetic').css('background', '{{color.light_grey_1}}');
+       $('button.arithmetic').css('border', '1px solid {{color.col_light_red_3}}');
     }
     if (normstyle == 'arithmetic') {
-       $('button.arithmetic').css('background', '#DFD');
-       $('button.arithmetic').css('border', '2px solid #ADA');
-       $('button.analytic').css('background', '#EEE');
-       $('button.analytic').css('border', '1px solid #EDD');
+       $('button.arithmetic').css('background', '{{color.col_main_ld}}');
+       $('button.arithmetic').css('border', '2px solid {{color.col_main_g2}}');
+       $('button.analytic').css('background', '{{color.light_grey_1}}');
+       $('button.analytic').css('border', '1px solid {{color.col_light_red_3}}');
     }
   }
 
@@ -32,11 +32,11 @@ function show_moreless(ml) {
 
 <style type="text/css">
 table.ntdata tr.toggle { font-size: 80%; text-align: right; }
-table.ntdata tr.toggle:nth-child(2n) { background: #FFF; }
-table.ntdata tr.toggle a:hover { background: #FFF; }
+table.ntdata tr.toggle:nth-child(2n) { background: {{color.white}}; }
+table.ntdata tr.toggle a:hover { background: {{color.white}}; }
 /*
 table.ntdata tr.more:last-child { font-size: 80%; text-align: right; }
-table.ntdata tr.more:nth-child(2n) { background: #FFF; }
+table.ntdata tr.more:nth-child(2n) { background: {{color.white}}; }
 */
 </style>
 

@@ -1,31 +1,31 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 
 {% block content %}
 
 <style type="text/css">
 table.ntdata th.left { 
-    border-right: 2px solid #9b9; 
-    background: #efe;
+    border-right: 2px solid {{color.col_main_lg2}}; 
+    background: {{color.col_main_ll}};
     border-bottom: 0;
     text-align: center;
 }
 
 table.ntdata th.weight {
   text-align: center;
-  background: #efe;
-  border-bottom: 2px solid #9b9;
+  background: {{color.col_main_ll}};
+  border-bottom: 2px solid {{color.col_main_lg2}};
   border-left: 0;
   vertical-align: center;
 }
 
 table.ntdata thead tr.space {
-  background: #efe;
+  background: {{color.col_main_ll}};
   border-bottom: 0;
 }
 
 table.ntdata thead th.spaceleft {
-  border-right: 2px solid #9b9;
+  border-right: 2px solid {{color.col_main_lg2}};
   vertical-align: top;
 }
 .conductor {
@@ -46,7 +46,7 @@ table.ntdata thead th.spaceleft {
 #chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
 #chitable td div>a { text-align: right; }
 #chitable td { vertical-align: middle;  white-space: nowrap; }
-#chitable td.a { background: #DFD; }
+#chitable td.a { background: {{color.col_main_ld}}; }
 #chitable td.b { background: none; }
 #chitable th { text-align: center; }
 #chitable .imprimitive a:visited { color:blue;}
@@ -84,7 +84,7 @@ var prim = true;
 var impr = false;
 $(function() {
   $("#legend-imp").hover(
-     function() { $(".imprimitive").css("background", "#DDF"); },
+     function() { $(".imprimitive").css("background", "{{color.knowl_l}}"); },
      function() { $(".imprimitive").css("background", "inherit"); }
      );
   $("#legend-imp").click(function() {
