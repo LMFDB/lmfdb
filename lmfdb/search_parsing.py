@@ -5,8 +5,8 @@ LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
+SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 ## RE from number_field.py
-#LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$'
 #PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
@@ -166,9 +166,11 @@ def parse_signed_ints(info, query, field, sign_field, abs_field, name=None, pars
     if name is None: name = field.replace('_',' ').capitalize()
     if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
     cleaned = prep_ranges(inp)
-    if LIST_RE.match(cleaned):
+    print SIGNED_LIST_RE.match(cleaned)
+    if SIGNED_LIST_RE.match(cleaned):
         parsed = parse_range3(inp, name, split0 = True)
         # if there is only one part, we don't need an $or
+        print parsed
         if len(parsed) == 1:
             parsed = parsed[0]
             if type(parsed) == list:
@@ -236,7 +238,7 @@ def parse_primes(info, query, field, name=None, qfield=None, mode=None, to_strin
         flash(Markup(err_msg), "error")
         raise ValueError
 
-def parse_bracketed_posints(info, query, field, name=None, qfield=None, maxlength=None, exactlength=None, split=True, process=None):
+def parse_bracketed_posints(info, query, field, name=None, qfield=None, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None):
     inp = clean_input(info.get(field))
     if not inp: return
     if qfield is None: qfield = field
@@ -264,6 +266,20 @@ def parse_bracketed_posints(info, query, field, name=None, qfield=None, maxlengt
         flash(Markup(err_msg), "error")
         raise ValueError
     else:
+        if check_divisibility == 'decreasing':
+            # Check that each entry divides the previous
+            L = [int(a) for a in inp[1:-1].split(',')]
+            for i in range(len(L)-1):
+                if L[i] % L[i+1] != 0:
+                    flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. Each entry must divide the previous, such as [4,2]." % (inp, name)))
+                    raise ValueError
+        elif check_divisibility == 'increasing':
+            # Check that each entry divides the previous
+            L = [int(a) for a in inp[1:-1].split(',')]
+            for i in range(len(L)-1):
+                if L[i+1] % L[i] != 0:
+                    flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. Each entry must divide the next, such as [2,4]." % (inp, name)))
+                    raise ValueError
         if split:
             query[qfield] = [process(int(a)) for a in inp[1:-1].split(',')]
         else:

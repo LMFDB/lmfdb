@@ -220,7 +220,7 @@ def genus2_curve_search(**args):
         parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
     except ValueError as err:
         info['err'] = str(err)
-        return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit)
+        return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
 
     info["query"] = dict(query)
     count = parse_count(info, 50)
