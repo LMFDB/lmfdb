@@ -2,7 +2,6 @@
   We will have defined colors that you should use for appropriate objects.  
   Hopefully they are descriptively enough named.*/
 
-
 {% set white = 'white' %}
 {% set black = 'black'%}
 
@@ -55,7 +54,6 @@
   {% set body_background = white %}
   {% set body_text = black %}
   {% set box_tab_text = black %}
-
     
 {% elif color_template == 3 %}
     /*Green 2*/
@@ -155,6 +153,7 @@
   {% set body_text = '#512809' %}
   {% set box_tab_text = '#e2ddd9' %}
 
+<<<<<<< 00eef8bd7945647e2db92ba8a5c211f7f5ef6728
     
 {% elif color_template == 9 %}
     /*??*/
@@ -233,7 +232,6 @@
 
 {% endif %}
 
-
 /*Greens found in code probably not used*/
 /*These can probably be removed along with come code in style.css*/
 /*{% set col_main_ldl_1 = '#c4ffc4'%}*/
@@ -269,7 +267,6 @@
 {% set blue_grey_1 = '#9FAFD1'%}
 {% set red_grey = '#A19B9E'%}
 {% set light_red_grey = '#d1cfd0' %}
-
 {% set grey = '#999' %}
 {% set dark_grey = '#333' %}
 {% set dark_grey_1 = '#666' %}
@@ -330,7 +327,6 @@
 {% set a_text = col_main %}
 {% set a_inactive = black %}
 {% set a_text_visited = col_main %}
-
 {% if color_template == 6 %}
   {% set a_text_hover = col_main %}
   {% set a_background_hover = box_tab_text %}
@@ -373,7 +369,6 @@
 
 
 /* Sidebar: left hand side sidebar. */
-
 {% set sidebar_background = col_main_ll%}
 {% set sidebar_background_h2 = col_main_l %} /*sidebar tab background*/
 {% if color_template == 6 %}
