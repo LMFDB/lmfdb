@@ -19,9 +19,9 @@ $("#plot").load(function() {
 <style>
 table.ntdata th.colhead {
   text-align: left;
-  background: {{color.col_main_ll}};
+  background: {{color.emf_background}};
   border-bottom: 0;
-  border-left: 2px solid {{color.col_main_lg2}};
+  border-left: 2px solid {{color.emf_border}};
 }
 </style>
 {% if error is defined %}
@@ -108,7 +108,7 @@ entry you access information about the forms in the specified space.
   <tbody>
     {% for row in rows  %}
     <tr class="{{row_class.next() }}">
-      <th width="10px" style="background:{{color.col_main_2}}; border-right: 1px solid black">
+      <th width="10px" style="background:{{color.exp_background}}; border-right: 1px solid black">
 
         {{ table.row_heads[loop.index-1] }}
 

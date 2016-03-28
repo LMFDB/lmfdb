@@ -387,7 +387,6 @@
 {% set sidebar_background_off = white %}
 
 
-
 /* Buttons */
 {% set button_background = col_main_ld %}
 {% set button_border = col_main_lg %}

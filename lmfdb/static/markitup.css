@@ -18,7 +18,7 @@
 	border:5px solid {{color.white_1}};	
 }
 .markItUpContainer  {
-        border:1px solid {{color.steel_blue_1}};	
+        border:1px solid {{color.steel_blue}};	
 	background:{{color.white}} url(images/bg-container.png) repeat-x top left;
 	padding:5px 5px 2px 5px;
 	font:11px Verdana, Arial, Helvetica, sans-serif;
@@ -26,7 +26,7 @@
 .markItUpEditor {
 	font:12px 'Courier New', Courier, monospace;
 	padding:5px 5px 5px 35px;
-	border:3px solid {{color.steel_blue_1}};
+	border:3px solid {{color.steel_blue}};
 	width:643px;
 	height:320px;
 	background:{{color.white}} url(images/bg-editor.png) no-repeat;
@@ -37,7 +37,7 @@
 .markItUpPreviewFrame	{
 	overflow:auto;
 	background-color:{{color.white}};
-	border:1px solid {{color.steel_blue_1}};
+	border:1px solid {{color.steel_blue}};
 	width:99.9%;
 	height:300px;
 	margin:5px 0;
@@ -91,12 +91,12 @@
 	position:absolute;
 	top:18px; left:0px;	
 	background:{{color.white_1}};
-	border:1px solid {{color.steel_blue_1}};
+	border:1px solid {{color.steel_blue}};
 	height:inherit;
 }
 .markItUpHeader ul ul li {
 	float:none;
-	border-bottom:1px solid {{color.steel_blue_1}};
+	border-bottom:1px solid {{color.steel_blue}};
 }
 .markItUpHeader ul ul .markItUpDropMenu {
     background:{{color.white_1}} url(images/submenu.png) no-repeat 100% 50%;
@@ -127,7 +127,7 @@
 }
 .markItUpHeader ul ul a:hover  {
     color:{{color.white}};
-	background-color:{{color.steel_blue_1}};
+	background-color:{{color.steel_blue}};
 }
 /***************************************************************************************/
 .html .markItUpEditor {
