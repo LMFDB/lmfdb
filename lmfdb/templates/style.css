@@ -112,8 +112,8 @@ a.inactive:hover {
   font-size: 1.2em;
   padding: 10px 20px;
   margin: 20px 0px;
-  border-left: 3px solid {{ col_main }};
-  background: {{ col_main_ll }};
+  border-left: 3px solid {{ color.col_main }};
+  background: {{ color.col_main_ll }};
   line-height: 1.5em;
 }
 #content .announce.red {
@@ -125,7 +125,7 @@ a.inactive:hover {
 }
 #search-topright input {
   font-size: 75%;
-  border: 1px solid {{ col_main }};
+  border: 1px solid {{ color.col_main }};
   padding: 1px;
   background: {{color.col_main_ld}} ;
   position: relative;
@@ -263,6 +263,7 @@ body.knowl #header {
   /* border: 1px solid purple; */
 }
 
+/*These are the right hand side properties and sidebar stuffs.*/
 #properties {
     z-index: 99;
     font-size: 85%;
@@ -270,8 +271,6 @@ body.knowl #header {
     float: right;
     clear: right;
     margin: 10px 0px 15px 15px;
-    /* width: 20%; */
-    /* background: {{ col_main_l }}; */
     position: relative;
     border: 1px solid {{color.col_main_g}};
     border: 0;
@@ -281,11 +280,11 @@ body.knowl #header {
   padding: 5px;
 }
 .properties-body h1, .properties-body h2 {
-    color: {{ col_main_d }};
+    color: {{ color.col_main_d }};
     padding: 5px;
     margin: 0;
     margin-bottom: 0;
-    background: {{ col_main_l }};
+    background: {{ color.col_main_l }};
 }
 .properties-body h1 {
     font-size: 120%;
@@ -336,15 +335,15 @@ body.knowl #header {
   margin: 0;
   margin-top: 10px;
   padding: 5px 10px;
-  color: {{ col_main_d }};
-  background: {{ col_main_l }};
+  color: {{ color.col_main_d }};
+  background: {{ color.col_main_l }};
   font-size: 14px;
   cursor: pointer;
   padding-right: 30px;
 }
 #properties-collapser {
   cursor: pointer;
-  color: {{ col_main_d }};
+  color: {{ color.col_main_d }};
   font-size: 19px;
   font-weight: bold;
   text-align: center;
@@ -403,7 +402,7 @@ body.knowl #header {
 #sidebar h2 {
     font-family: sans-serif;
     font-size: 100%;
-    background-color: {{ color.col_main_l }};
+    background-color: {{ color.col_main_l }};/*sidebar tabs*/
     color: {{ color.col_main_d }};
     padding: 5px;
     margin: 15px 0 0 0;
@@ -441,7 +440,7 @@ body.knowl #header {
     display: block;
 }
 #sidebar li a {
-  background: {{ color.col_main_ll }};
+    background: {{ color.col_main_ll }};
   padding: 5px;
 }
 #sidebar h2 a { padding: 5px; }

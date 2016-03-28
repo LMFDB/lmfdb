@@ -17,8 +17,6 @@
 
 #sidebar div.L {
     margin: 8px;
- /*   padding-top: 5px;
-*/
 }
 
 #sidebar table td a {
@@ -78,10 +76,6 @@
 #sidebar li a {
     background: inherit;
 }
-
-display: inline;
-  background: none;
-  padding: 0px;}
 
 #sidebar .list a {
   display: block;
