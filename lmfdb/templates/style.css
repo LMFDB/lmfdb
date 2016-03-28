@@ -1,4 +1,4 @@
-{# template defs #}
+s{# template defs #}
 {% import 'color.css' as color %}
 
 {%- macro BORDER_RADIUS(R) -%}
@@ -491,7 +491,7 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 .errmsg {
    font-size: 80%;
    font-style: bold;
-   color: red;
+   color: {{color.red}};
 }
 
 td.forminfo {
@@ -648,7 +648,7 @@ div.where {
 }
 
 .redhighlight {
-    color: {{color.grey_1}};
+    color: {{color.grey}};
 }
 
 .bluehighlight {
@@ -1042,8 +1042,8 @@ div.limit-height {
 .error {
     margin: 20px 0 20px 0;
     padding: 10px;
-    border: 1px solid red;
-    color: red;
+    border: 1px solid {{color.red}};
+    color: {{color.red}};
     font-size: 120%;
 }
 
@@ -1054,14 +1054,14 @@ div.limit-height {
 }
 
 .watermark {
-    color: {{color.grey_2}} !important;
+    color: {{color.grey}} !important;
 }
 
 
 .propertylist {
   margin: 2em 0;
   padding: 0;
-  border: 1px solid {{color.grey_2}};
+  border: 1px solid {{color.grey}};
 }
 
 .propertylist dt {
@@ -1113,7 +1113,7 @@ table.tablesorter {
 	text-align: left;
 }
 table.tablesorter thead tr th, table.tablesorter tfoot tr th {
-    background-color: {{color.light_blue_grey}};
+    background-color: {{color.col_main_ll}};/*TODO: or really light grey?*/
     border: 1px solid {{color.white}};
 	font-size: 8pt;
 	padding: 4px;
@@ -1159,7 +1159,7 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 	padding: 14px 0 2px 0;
 	border: 1px solid {{color.light_grey_3}};
 	text-align: center;
-	color: {{color.grey_2}};
+	color: {{color.grey}};
 	font-size: 14px;
 	background-color: {{color.white}};
 }
@@ -1242,7 +1242,7 @@ table.display tfoot th {
 }
 
 table.display tr.heading2 td {
-    border-bottom: 1px solid {{color.grey_3}};
+    border-bottom: 1px solid {{color.grey}};
 }
 
 table.display td {
@@ -1338,11 +1338,11 @@ table.display tr.even.gradeU {
 tfoot input {
 	margin: 0.5em 0;
 	width: 100%;
-	color: {{color.dark_grey_2}};
+	color: {{color.dark_grey_1}};
 }
 
 tfoot input.search_init {
-    color: {{color.grey_2}};
+    color: {{color.grey}};
 }
 
 td.group {
@@ -1368,7 +1368,7 @@ td.details {
 
 .paging_full_numbers span.paginate_button,
  	.paging_full_numbers span.paginate_active {
-	    border: 1px solid {{color.grey_3}};
+	    border: 1px solid {{color.grey}};
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	padding: 2px 5px;

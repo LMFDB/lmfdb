@@ -1,5 +1,5 @@
 {% extends "homepage.html" %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <p>
@@ -12,7 +12,7 @@ In the case of {{ KNOWL('lattice.primitive', title='primitive') }} {{ KNOWL('lat
 <style type="text/css">
 .error_message {
    padding: 4px;
-   color: red;
+   color: {{color.red}};
    font-size: 120%;
    font-weight: bold;
    margin: 20px;
