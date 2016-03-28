@@ -26,7 +26,7 @@
 }
 
 #sidebar table td .subtitle {
-    color: {{color.col_main_4}};
+    color: {{color.sidebar_text}};
 }
 
 #sidebar table td.borc .subtitle .future {
@@ -47,19 +47,19 @@
 }
 
 #sidebar .future { 
-    color: {{color.grey_4}};
+    color: {{color.sidebar_text_future}};
     display: inherit;
 }
 
 
 #sidebar .beta { 
-    color:{{color.purple}};
+    color:{{color.sidebar_text_beta}};
     display: inherit;
 }
 
 
 #sidebar .beta a { 
-    color:{{color.purple}};
+    color:{{color.sidebar_text_beta}};
 }
 
 
@@ -107,7 +107,7 @@ p.rotation  {
 	border-style: solid;
 	padding: 2px;
 	border-spacing: 0px;
-	border-color: {{color.col_main_ll}};
+	border-color: {{color.sidebar_background}};
 	border-collapse: separate;
 }
 
@@ -129,7 +129,7 @@ p.rotation  {
 
 #sidebar table.short td.off { 
 	text-align: center;	
-	background: {{color.white}};
+	background: {{color.sidebar_background_off}};
 }
 
 
@@ -160,7 +160,7 @@ p.rotation  {
     table-layout:fixed;
 	padding: 10px;
 	border-spacing: 0px;
-	border-color: {{color.col_main_ll}};
+	border-color: {{color.sidebar_background}};
 	border-collapse: collapse;
 }
 

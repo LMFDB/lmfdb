@@ -3,12 +3,26 @@
 {% block content %}
 <style>
   #contribs { overflow: hidden; }
-  #contribs > div { padding: 0 ; margin: 5px; font-size: 70%; height: 4em; border: 1px solid {{color.col_main_ld}}; float:left; width: 200px;  overflow: hidden; }
+  #contribs > div {
+  padding: 0 ;
+  margin: 5px;
+  font-size: 70%;
+  height: 4em;
+  border: 1px solid {{color.contrib_border}};
+  float:left;
+  width: 200px;
+  overflow: hidden;
+  }
   #contribs > div > div { padding-left: 5px; }
-  #contribs > div > div.name { font-weight: bold; background: {{color.col_main_ld}}; font-size: 100%; position: relative; }
+  #contribs > div > div.name {
+  font-weight: bold;
+  background: {{color.contrib_background}};
+  font-size: 100%;
+  position: relative;
+  }
   #contribs > div > div.name > a { position: absolute; right: 5px; }
-  #contribs > div > div.affil { color: {{color.dark_grey_3}};}
-  #contribs > div > div.notes { color: {{color.dark_grey_4}}; }
+  #contribs > div > div.affil { color: {{color.contrib_text_affil}};}
+  #contribs > div > div.notes { color: {{color.contrib_text_notes}}; }
 </style>
 
 <div>
