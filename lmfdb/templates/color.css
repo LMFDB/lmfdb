@@ -43,36 +43,6 @@
 {% set col_light_red_7 = '#ffd2d2' %}
 {% set col_light_red_8 = '#ffe2e2' %}
 
-/*Knowl colors, purplish-blues */
-{% set purple = 'purple' %}
-{% set knowl_error = purple %}
-{% set knowl_shadow = '#88b'%}
-{% set knowl     = '#AAF' %}
-{% set knowl_1   = '#99B3FF'%}/*Used once*/
-{% set knowl_g   = '#AAD' %} /*Only used twice.*/
-{% set knowl_ld  = '#CCF' %} /*Only used once.*/
-{% set knowl_ld_1 = '#c4c4ff'%}
-{% set knowl_l   = '#DDF' %}
-{% set knowl_l_1 = '#D3D6FF' %}
-{% set knowl_l_2 = '#DADCFF' %}
-{% set knowl_l_3 = '#E0E2FF' %}
-{% set knowl_l_4 = '#EAEBFF' %}
-{% set knowl_l_5 = '#F2F3FF' %}
-{% set knowl_l_6 = '#F9F9FF' %}
-{% set knowl_l_7 = '#d1d1ff' %}
-{% set knowl_l_8 = '#d5d5ff' %}
-{% set knowl_ll  = '#EEF' %} /*Used once*/
-{% set knowl_ll_2 = '#E5E5FF'%}
-{% set knowl_ll_1 = '#e2e2ff'%}
-{% set knowl_lll = '#F0F0F6' %}/*Only used once.*/
-{% set knowl_d   = '#88F' %}
-{% set knowl_d_1 = '#8080FF'%}
-{% set knowl_dg  = '#99C' %} /*Only used once.*/
-{% set knowl_dd  = '#006' %} /*Only used twice.*/
-{% set knowl_ddd = '#004' %}
-{% set knowl_db  = '#66d' %} /*Only used once.*/
-
-
 /* Blues */
 {% set light_blue = 'lightblue' %}
 {% set steel_blue = '#8DBDD8'%}/*Used once*/
@@ -255,24 +225,29 @@
 {% set text_notes = '#555'%}
 {% set text_trad_hyperlink = 'black'%}
 
+/* Knowl colors */
+{% set knowl_error = 'purple' %}
+{% set knowl_border = '#DDF' %}
+{% set knowl_hover = '#DDF' %}
+{% set knowl_background = '#EEF' %}
+{% set knowl_hyper_text = '#006' %}
+{% set knowl_title_text = '#004' %}
+{% set knowl_underline = '#aaf' %}
+{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+{% set knowl_shadow = '#88b'%}
 
-{% set upload_border = 'lightgrey' %}
-{% set upload_background = '#fffff4' %}
-{% set upload_background_hover = 'ffffcc' %}
+{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+/* td.sorting */
+{% set knowl_ld_1 = '#c4c4ff'%}
+{% set knowl_l_1 = '#D3D6FF' %}
+{% set knowl_l_2 = '#DADCFF' %}
+{% set knowl_l_3 = '#E0E2FF' %}
+{% set knowl_l_4 = '#EAEBFF' %}
+{% set knowl_l_5 = '#F2F3FF' %}
+{% set knowl_l_6 = '#F9F9FF' %}
+{% set knowl_l_7 = '#d1d1ff' %}
+{% set knowl_l_8 = '#d5d5ff' %}
+{% set knowl_l_9 = '#eef'    %}
 
-
-
-{% set button_background2 = '#EEE' %}
-{% set button_border2 = '#EED'%}
-
-{% set nav = '#4a4'%}
-
-
-{% set div_box_border = '#8080FF' %}
-{% set div_box_bkg = '#E5E5FF' %}
-
-
-{% set error   = '#922' %} /*red for error*/
-{% set light_error = '#FDD' %} /*light red*/
-{% set check = '#0080FF' %} 
-{% set todo = '#f22' %}
