@@ -20,11 +20,12 @@ from sage.misc.decorators import decorator_keywords
 from markupsafe import Markup
 
 class SearchParser(object):
-    def __init__(self, f, clean_info, prep_ranges, prep_plus, default_field, default_name, default_qfield):
+    def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield):
         self.f = f
         self.clean_info = clean_info
         self.prep_ranges = prep_ranges
         self.prep_plus = prep_plus
+        self.pass_name = pass_name
         self.default_field = default_field
         self.default_name = default_name
         self.default_qfield = default_qfield
@@ -51,7 +52,10 @@ class SearchParser(object):
                 inp = prep_ranges(inp)
             if self.prep_plus:
                 inp = inp.replace('+','')
-            self.f(inp, query, qfield, *args, **kwds)
+            if self.pass_name:
+                self.f(inp, query, name, qfield, *args, **kwds)
+            else:
+                self.f(inp, query, qfield, *args, **kwds)
             if self.clean_info:
                 info[field] = inp
         except (ValueError, AttributeError, TypeError) as err:
@@ -60,8 +64,9 @@ class SearchParser(object):
             raise
 
 @decorator_keywords
-def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, default_field=None, default_name=None, default_qfield=None):
-    return SearchParser(f, clean_info, prep_ranges, prep_plus, default_field, default_name, default_qfield)
+def search_parser(f, clean_info=False, prep_ranges=False, prep_plus=False, pass_name=False,
+                  default_field=None, default_name=None, default_qfield=None):
+    return SearchParser(f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield)
 
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
@@ -71,6 +76,13 @@ def clean_input(inp):
 def prep_ranges(inp):
     if inp is None: return None
     return inp.replace('..','-').replace(' ','')
+
+# Various modules need to split a list of integers more simply
+def split_list(s):
+    s = s.replace(' ','')[1:-1]
+    if s:
+        return [int(a) for a in s.split(",")]
+    return []
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_list(inp, query, qfield, process=None):
@@ -303,6 +315,110 @@ def parse_galgrp(inp, query, qfield):
             query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
     except NameError as code:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
+
+def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
+    if F == 'Q':
+        return '1.1.1.1'
+    if F == 'Qi':
+        return '2.0.4.1'
+    # Change unicode dash with minus sign
+    F = F.replace(u'\u2212', '-')
+    # remove non-ascii characters from F
+    F = F.decode('utf8').encode('ascii', 'ignore')
+    fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
+    if len(F) == 0:
+        raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
+    if F[0] == 'Q':
+        if F[1:5] in ['sqrt', 'root']:
+            try:
+                d = ZZ(str(F[5:])).squarefree_part()
+            except ValueError:
+                d = 0
+            if d == 0:
+                raise ValueError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(F[:5]))
+            if d % 4 in [2, 3]:
+                D = 4 * d
+            else:
+                D = d
+            absD = D.abs()
+            s = 0 if D < 0 else 2
+            return '2.%s.%s.1' % (s, str(absD))
+        if F[1:5] == 'zeta':
+            try:
+                d = ZZ(str(F[5:]))
+            except ValueError:
+                d = 0
+            if d < 1:
+                raise ValueError("After {0}, the remainder must be a positive integer.  Use {0}5 for example.".format(F[:5]))
+            if d % 4 == 2:
+                d /= 2  # Q(zeta_6)=Q(zeta_3), etc)
+            if d == 1:
+                return '1.1.1.1'
+            deg = euler_phi(d)
+            if deg > 23:
+                raise ValueError('%s is not in the database.' % F)
+            adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
+            return '%s.0.%s.1' % (deg, adisc)
+        return fail_string
+    # check if a polynomial was entered
+    F = F.replace('X', 'x')
+    if 'x' in F:
+        F1 = F.replace('^', '**')
+        # print F
+        from lmfdb.number_fields.number_field import poly_to_field_label
+        F1 = poly_to_field_label(F1)
+        if F1:
+            return F1
+        raise ValueError('%s is not in the database.'%F)
+    # Expand out factored labels, like 11.11.11e20.1
+    parts = F.split(".")
+    if len(parts) != 4:
+        raise ValueError("It must be of the form <deg>.<real_emb>.<absdisc>.<number>, such as 2.2.5.1.")
+    def raise_power(ab):
+        if ab.count("e") == 0:
+            return ZZ(ab)
+        elif ab.count("e") == 1:
+            a,b = ab.split("e")
+            return ZZ(a)**ZZ(b)
+        else:
+            raise ValueError("Malformed absolute discriminant.  It must be a sequence of strings AeB for A and B integers, joined by _s.  For example, 2e7_3e5_11.")
+    parts[2] = str(prod(raise_power(c) for c in parts[2].split("_")))
+    return ".".join(parts)
+
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_nf_string(inp, query, qfield):
+    query[qfield] = nf_string_to_label(inp)
+
+def pol_string_to_list(pol, deg=None, var=None):
+    if var is None:
+        from lmfdb.hilbert_modular_forms.hilbert_field import findvar
+        var = findvar(pol)
+        if not var:
+            var = 'a'
+    pol = PolynomialRing(QQ, var)(str(pol))
+    if deg is None:
+        fill = 0
+    else:
+        fill = deg - pol.degree() - 1
+    return [str(c) for c in pol.coefficients(sparse=False)] + ['0']*fill
+
+@search_parser(pass_name=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_nf_elt(inp, query, name, qfield, field_label='field_label'):
+    if field_label not in query:
+        raise ValueError("You must specify a field when searching by %s"%name)
+    deg = int(query[field_label].split('.')[0])
+    query[qfield] = pol_string_to_list(inp, deg=deg)
+
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_hmf_weight(inp, query, qfield):
+    parallel_field, normal_field = qfield
+    try:
+        query[parallel_field] = int(inp)
+    except ValueError:
+        try:
+            query[normal_field] = str(split_list(inp))
+        except ValueError:
+            raise ValueError("It must be either an integer (parallel weight) or a comma separated list of integers, such as 2 or 2,4,6.")
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_bool(inp, query, qfield, minus_one_to_zero=False):

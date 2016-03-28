@@ -10,7 +10,7 @@ from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, image_callback
-from lmfdb.number_fields.number_field import parse_list
+from lmfdb.search_parsing import split_list
 from sage.all import ZZ, var, PolynomialRing, QQ, latex, gp
 from lmfdb.hypergm import hypergm_page, hgm_logger
 
@@ -195,7 +195,7 @@ def hgm_search(**args):
         if info.get(param):
             info[param] = clean_input(info[param])
             if IF_RE.match(info[param]):
-                query[param] = parse_list(info[param])
+                query[param] = split_list(info[param])
                 query[param].sort()
             else:
                 name = param
