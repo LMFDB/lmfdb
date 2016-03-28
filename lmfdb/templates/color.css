@@ -132,7 +132,12 @@
 {% set a_text_visited = col_main_dll %}
 {% set a_text_hover = black %}
 {% set a_background_hover = col_main_ldl %}
+{% set a_nav_text = white %}
+{% set a_nav_background = col_main_5 %}
+{% set a_nav_border = white %}
 
+/* hr = horizontal rule */
+{% set hr_border = col_main_l %}
 
 /* Upper right hand corner searchbox */
 {% set search_border = col_main %}
@@ -159,6 +164,7 @@
 {% set properties_header_background = col_main_l%}
 {% set properties_collapser = col_main_d %} /*The little circle-arrow thingy*/
 
+
 /* Sidebar: left hand side sidebar. */
 {% set sidebar_text = col_main_4 %}
 {% set sidebar_background = col_main_ll%}
@@ -184,7 +190,7 @@
 {% set button_border_hover = col_main_llg %}
 {% set button_background_inactive = light_grey_1 %}
 {% set button_border_inactive = col_light_red_3 %}
-/* TODO: knowl buttons*/
+{% set input_border = col_main_g3%}
 
 
 /* Tables */

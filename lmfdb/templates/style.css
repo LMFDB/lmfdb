@@ -502,7 +502,7 @@ td.forminfo {
 }
 
 input, textarea {
-    border: 2px solid {{color.col_main_g3}};
+  border: 2px solid {{color.input_border}};
   font-size: 110%;
   padding: 3px;
   border-radius: 5px;
@@ -1073,22 +1073,23 @@ div.limit-height {
 }
 
 a.navlink {
-  color: {{color.white}};
-  background-color: {{color.col_main_5}};
+  color: {{color.a_nav_text}};
+  background-color: {{color.a_nav_background}};
   font-weight: bold;
   font-size: 11px;
   text-align: center;
   padding: 5px;
   padding-top: 3px;
   padding-bottom: 4px;
-  border: 1px solid {{color.white}};
-  outline: 1px solid {{color.col_main_5}};
+  border: 1px solid {{color.a_nav_border}};
+  outline: 1px solid {{color.a_nav_background}};
   text-decoration: none;
   margin-left: 1px;
   margin-top: 10px
 }
+
 hr {
-  border: 2px solid {{ color.col_main_l }};
+  border: 2px solid {{ color.hr_border }};
   margin: 15px 0;
 }
 /*TODO: above*/
