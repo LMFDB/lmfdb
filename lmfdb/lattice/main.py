@@ -82,40 +82,42 @@ def random_lattice():    # Random Lattice
 
 
 
+
+lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
+
+def split_lattice_label(lab):
+    return lattice_label_regex.match(lab).groups()
+
+def lattice_by_label_or_name(lab, C):
+    if C.Lattices.lat.find({'$or':[{'label': lab}, {'name': lab}]}).limit(1).count() > 0:
+        return render_lattice_webpage(label=lab)
+    if lattice_label_regex.match(lab):
+        flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+    else:
+        flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+    return redirect(url_for(".lattice_render_webpage"))
+
 def lattice_search(**args):
     C = getDBConnection()
     C.Lattices.lat.ensure_index([('dim', ASC), ('label', ASC)])
     info = to_dict(args)  # what has been entered in the search boxes
-    if 'label' in info:
-        lab = info.get('label')
-        control= by_label_or_name(lab, C)
-        if control == "ok":
-            args = {'label': lab }
-            return render_lattice_webpage(**args)
-        else:
-            check=lattice_label_error(control, lab , url_for(".lattice_render_webpage"))
-            if check is not None:
-                return check
-
+    if 'label' in info and info.get('label'):
+        return lattice_by_label_or_name(info.get('label'), C)
     query = {}
-    for field in ['dim','det','level', 'gram', 'minimum', 'class_number', 'aut']:
-        if info.get(field):
-            if field in ['dim', 'det', 'level', 'minimum', 'class_number', 'aut']:
-                try:
-                    info['start']
-                    check= parse_ints(info.get(field), query, field)
-                except:
-                    check= parse_ints(info.get(field), query, field, url_for(".lattice_render_webpage"))
-                if check is not None:
-                    return check
-            elif field == 'gram':
-                try:
-                    info['start']
-                    check= parse_list(info.get(field), query, field, vect_to_sym)
-                except:
-                    check= parse_list(info.get(field), query, field, vect_to_sym, url_for(".lattice_render_webpage"))
-                if check is not None:
-                    return check
+    try:
+        for field, name in (('dim','Dimension'),('det','Determinant'),('level',None),
+                            ('minimum','Minimal vector length'), ('class_number',None), ('aut','Group order')):
+            parse_ints(info, query, field, name)
+        # Check if length of gram is triangular
+        gram = info.get('gram')
+        if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
+            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+            raise ValueError
+        parse_list(info, query, 'gram', process=vect_to_sym)
+    except ValueError as err:
+        info['err'] = str(err)
+        return search_input_error(info)
+
     info['query'] = dict(query)
     res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
     nres = res.count()
@@ -141,11 +143,16 @@ def lattice_search(**args):
 
     info['lattices'] = res_clean
 
-    t = 'Integral Lattices search results'
-    bread = [('Lattices', url_for(".lattice_render_webpage")),('Search results', ' ')]
+    t = 'Integral Lattices Search Results'
+    bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
     properties = []
     return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread)
 
+def search_input_error(info, bread=None):
+    t = 'Integral Lattices Search Error'
+    if bread is None:
+        bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
+    return render_template("lattice-search.html", info=info, title=t, properties=[], bread=bread)
 
 @lattice_page.route('/<label>')
 def render_lattice_webpage(**args):
@@ -200,37 +207,7 @@ def render_lattice_webpage(**args):
     friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends)
 
-
-
-lmfdb_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
-
-def split_lmfdb_label(lab):
-    return lmfdb_label_regex.match(lab).groups()
-
-def by_label_or_name(lab, C):
-    try:
-        dim, det, level, class_number, number = split_lmfdb_label(lab)
-    except:
-        try:
-            data = C.Lattices.lat.find_one({'name' : lab })
-        except:
-            return "missing_lattice_name"
-    data = C.Lattices.lat.find_one({'$or':[{'label': lab }, {'name': lab }]})
-    if data:
-        return "ok"
-    return "missing_lattice" 
-
-
-def lattice_label_error(err_msg, lab, url):
-    if err_msg=="missing_lattice_name":
-        flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
-    elif err_msg=="missing_lattice":
-        flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
-    if url is not None:
-        return redirect(url)
-
-
-def vect_to_sym(v): 
+def vect_to_sym(v):
     n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
     M = matrix(n)
     k = 0

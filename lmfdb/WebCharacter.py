@@ -738,7 +738,8 @@ class WebChar(WebCharObject):
                                     number_field=self.nflabel,
                                     modulus=self.modlabel,
                                     number=self.numlabel) ) )
-        f.append( ("Value Field", '/NumberField/' + self.vflabel) )
+        if len(self.vflabel)>0:
+            f.append( ("Value Field", '/NumberField/' + self.vflabel) )
         return f
 
 #############################################################################

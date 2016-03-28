@@ -710,7 +710,7 @@ class WebG2C(object):
             #       igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
             #('Siegel modular form someday', '.')
             ]
-        self.downloads = [('Download all stored data', '.')]
+        #self.downloads = [('Download all stored data', '.')]
 
         # Breadcrumbs
         iso = self.label.split('.')[1]

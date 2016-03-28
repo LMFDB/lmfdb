@@ -5,7 +5,7 @@ from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
 from databases.standard_types import PolynomialAsSequenceInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField
-from lmfdb.transitive_group import group_display_knowl, group_display_short
+from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
 from WebNumberField import WebNumberField
 
 
@@ -148,8 +148,7 @@ class ArtinRepresentation(object):
         galnt = self.smallest_gal_t()
         if len(galnt)==1:
             return galnt[0]
-        C = getDBConnection()
-        return group_display_knowl(galnt[0],galnt[1],C)
+        return tryknowl(galnt[0],galnt[1])
 
     def is_ramified(self, p):
         return self.number_field_galois_group().discriminant() % p == 0
@@ -368,13 +367,22 @@ class ArtinRepresentation(object):
         return self.hard_factors()[i]
 
     def nf(self):
-        return self.number_field_galois_group()
+        if not 'nf' in self._data:
+            self._data['nf']= self.number_field_galois_group()
+        return self._data['nf']
 
     def hard_factor(self, p):
         return self.from_conjugacy_class_index_to_polynomial(self.hard_prime_to_conjugacy_class_index(p))
 
     def good_factor(self, p):
         return self.from_conjugacy_class_index_to_polynomial(self.nf().from_prime_to_conjugacy_class_index(p))
+
+    def any_prime_to_cc_index(self, p):
+        if self.is_hard_prime(p):
+            return self.hard_prime_to_conjugacy_class_index(p)
+        else:
+            return self.nf().from_prime_to_conjugacy_class_index(p)
+
 
     ### if p is good: NumberFieldGaloisGroup.frobenius_cycle_type :     p -> Frob --NF---> cycle type
     ###               NumberFieldGaloisGroup.from_cycle_type_to_conjugacy_class_index : Uses data stored in the number field originally, but allows

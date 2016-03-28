@@ -403,7 +403,8 @@ def lfuncEPtex(L, fmt):
     """ Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
-    if L.Ltype() == "genus2curveQ" and fmt == "arithmetic":
+#    if L.Ltype() == "genus2curveQ" and fmt == "arithmetic":
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and fmt == "arithmetic":
         return lfuncEPhtml(L, fmt)
 
     ans = ""
@@ -473,11 +474,18 @@ def lfuncEPhtml(L,fmt):
     ans = ""
  #   ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
     ans += texform_gen + "where, for " + pgoodset + ",\n"
-    ans += "\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
-    ans += "with $b_p = a_p^2 - a_{p^2}$. "
+    if L.degree == 4 and L.motivic_weight == 1:
+        ans += "\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
+        ans += "with $b_p = a_p^2 - a_{p^2}$. "
+    elif L.degree == 2 and L.motivic_weight == 1:
+        ans += "\[F_p(T) = 1 - a_p T + p T^2 .\]"
+    else:
+        ans += "\(F_p\) is a polynomial of degree " + str(L.degree) + ". "
   #  ans += "If $p \mid "  + str(L.level) + "$, then $F_p$ is a polynomial of degree at most 3, "
-    ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most 3, "
-    ans += "with $F_p(0) = 1$."
+  #  ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most 3, "
+    ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most "
+    ans += str(L.degree - 1) + ". "
+#    ans += "with $F_p(0) = 1$."
     factN = list(factor(L.level))
     bad_primes = []
     for lf in L.bad_lfactors:
@@ -490,7 +498,10 @@ def lfuncEPhtml(L,fmt):
             good_primes.append(this_prime)
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th><th class='weight galois'>$\Gal(F_p)$</th></tr>\n"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th>"
+    if L.degree > 2:
+        eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
+    eptable += "</tr>\n"
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
@@ -501,19 +512,19 @@ def lfuncEPhtml(L,fmt):
             eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
                         "$" + thispolygal[0] + "$" +
                         "</td>")
-            eptable += "<td class='galois'>" 
-       #     eptable += group_display_knowl(4,thispolygal[1][0],C) 
-            this_gal_group = thispolygal[1]
-            if this_gal_group[0]==[0,0]:
-                pass   # do nothing, because the local faco is 1
-            elif this_gal_group[0]==[1,1]:
-                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
-            else:
-                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
-            for j in range(1,len(thispolygal[1])):
-                eptable += "$\\times$"
-                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-            eptable += "</td>"
+            if L.degree > 2:
+                eptable += "<td class='galois'>" 
+                this_gal_group = thispolygal[1]
+                if this_gal_group[0]==[0,0]:
+                    pass   # do nothing, because the local faco is 1
+                elif this_gal_group[0]==[1,1]:
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
+                else:
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+                for j in range(1,len(thispolygal[1])):
+                    eptable += "$\\times$"
+                    eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                eptable += "</td>"
             eptable += "</tr>\n"
 
         except IndexError:
@@ -529,13 +540,14 @@ def lfuncEPhtml(L,fmt):
         eptable += ("<tr" + firsttime + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + thispolygal[0] + "$" +
                     "</td>")
-        this_gal_group = thispolygal[1]
-        eptable += "<td class='galois'>"
-        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
-        for j in range(1,len(thispolygal[1])):
-            eptable += "$\\times$"
-            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-        eptable += "</td>"
+        if L.degree > 2:
+            eptable += "<td class='galois'>"
+            this_gal_group = thispolygal[1]
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
         eptable += "</tr>\n"
 
 
@@ -546,17 +558,18 @@ def lfuncEPhtml(L,fmt):
     firsttime = " id='moreep'"
     for j in good_primes2:
         this_prime_index = prime_pi(j) - 1
+        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
         eptable += ("<tr" + firsttime +  " class='more nodisplay'" + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index], galois=True)[0] + "$" +
                     "</td>")
-        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
-        this_gal_group = thispolygal[1]
-        eptable += "<td class='galois'>"
-        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
-        for j in range(1,len(thispolygal[1])):
-            eptable += "$\\times$"
-            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-        eptable += "</td>"
+        if L.degree > 2:
+            this_gal_group = thispolygal[1]
+            eptable += "<td class='galois'>"
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
 
         eptable += "</tr>\n"
         firsttime = ""

@@ -77,7 +77,7 @@ cp:
 ntors:
   sage:  E.torsion_order()
   pari:  elltors(E)[1]
-  magma: OrderTorsionSubgroup(E);
+  magma: Order(TorsionSubgroup(E));
 
 sha:
   sage:  E.sha().an_numerical()

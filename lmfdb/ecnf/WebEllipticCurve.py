@@ -1,3 +1,5 @@
+import os
+import yaml
 from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text, Infinity
@@ -280,19 +282,26 @@ class ECNF(object):
         self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=quote(self.conductor_label))
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
 
-        if self.field.is_real_quadratic():
+        sig = self.signature
+        real_quadratic = sig == [2,0]
+        totally_real = sig[1] == 0
+        imag_quadratic = sig == [0,1]
+
+        if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
+            self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
 
-        if self.field.is_imag_quadratic():
+        if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field_label=self.field_label, jinv=self.jinv))]
-        if self.field.is_real_quadratic():
+        if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
-        if self.field.is_imag_quadratic():
+            self.friends += [('L-function', self.urls['Lfunction'])]
+        if imag_quadratic:
             self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
 
         self.properties = [
@@ -308,7 +317,8 @@ class ECNF(object):
         self.properties += [
             ('Conductor', self.cond),
             ('Conductor norm', self.cond_norm),
-            ('j-invariant', self.j),
+            # See issue #796 for why this is hidden
+            # ('j-invariant', self.j),
             ('CM', self.cm_bool)]
 
         if self.base_change:
@@ -327,3 +337,30 @@ class ECNF(object):
 
         for E0 in self.base_change:
             self.friends += [('Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
+
+        self.make_code_snippets()
+
+    def make_code_snippets(self):
+        # read in code.yaml from current directory:
+
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+
+        # Fill in placeholders for this specific curve:
+
+        gen = self.field.generator_name().replace("\\","") # phi not \phi
+        for lang in ['sage', 'magma']:
+            self.code['field'][lang] = self.code['field'][lang] % self.field.poly()
+            if gen != 'a':
+                self.code['field'][lang] = self.code['field'][lang].replace("<a>","<%s>" % gen)
+
+        for lang in ['sage', 'magma']:
+            self.code['curve'][lang] = self.code['curve'][lang] % self.ainvs
+
+        for k in self.code:
+            if k != 'prompt':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]

@@ -43,7 +43,10 @@ def index():
     args = request.args
     bread = get_bread()
     if len(args) == 0:
-        return render_template("artin-representation-index.html", title="Artin Representations", bread=bread)
+        learnmore = [#('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page")),
+                ('Galois group labels', url_for(".labels_page"))]
+        return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore)
     else:
         return artin_representation_search(**args)
 
@@ -131,7 +134,7 @@ def artin_representation_search(**args):
     elif len(tmp_both) >= 2:
         query["$or"] = tmp_both
 
-    count_default = 50
+    count_default = 10
     if req.get('count'):
         try:
             count = int(req['count'])
@@ -213,8 +216,8 @@ def by_partial_data(dim, conductor):
 tim_credit = "Tim Dokchitser, John Jones, and David Roberts"
 support_credit = "Support by Paul-Olivier Dehaye."
 
-@artin_representations_page.route("/<label>")
 @artin_representations_page.route("/<label>/")
+@artin_representations_page.route("/<label>")
 def render_artin_representation_webpage(label):
     if re.compile(r'^\d+$').match(label):
         return artin_representation_search(**{'dimension': label})
@@ -252,7 +255,9 @@ def render_artin_representation_webpage(label):
     if nf_url:
     	friends.append(("Artin Field", nf_url))
 
-    friends.append(("L-function", url_for("l_functions.l_function_artin_page",
+    # once the L-functions are in the database, the link can always be shown
+    if the_rep.dimension() <= 6:
+        friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                           label=the_rep.label())))
     info={}
     #info['pol2']=str(the_rep.central_char(2))
@@ -262,4 +267,33 @@ def render_artin_representation_webpage(label):
     #info['pol11']=str(the_rep.central_char(11))
 
     return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info)
+
+@artin_representations_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of Artin representation data'
+    bread = get_bread([("Completeness", )])
+    learnmore = [('Source of the data', url_for(".how_computed_page")),
+                ('Artin representation labels', url_for(".labels_page"))]
+    return render_template("single.html", kid='dq.artin.extent',
+                           credit=tim_credit, title=t, bread=bread, 
+                           learnmore=learnmore)
+
+@artin_representations_page.route("/Labels")
+def labels_page():
+    t = 'Labels for Artin representations'
+    bread = get_bread([("Labels", '')])
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page"))]
+    return render_template("single.html", kid='artin.label',learnmore=learnmore, credit=tim_credit, title=t, bread=bread)
+
+@artin_representations_page.route("/Source")
+def how_computed_page():
+    t = 'Source of Artin representation data'
+    bread = get_bread([("Source", '')])
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                #('Source of the data', url_for(".how_computed_page")),
+                ('Artin representation labels', url_for(".labels_page"))]
+    return render_template("single.html", kid='dq.artin.source',
+                           credit=tim_credit, title=t, bread=bread, 
+                           learnmore=learnmore)
 

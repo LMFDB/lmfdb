@@ -12,7 +12,7 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
   <thead>
     <tr>
       <th>{{ KNOWL('mf.elliptic.label',title='Label')}}</th>
-      <th>{{ KNOWL('mf.elliptic.hecke-orbit-dimension',title='Dimension')}}</th>
+      <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
       <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Field')}}</th>
       <th align="left">{{ KNOWL('mf.elliptic.q-expansion-of-eigenform',title='$q$-expansion of eigenform')}}</th>
     </tr>
@@ -58,6 +58,8 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
     {% for n in zeta_ord %}
             {% if n==4 %}
                 <p> where \( \zeta_{ {{n}} } = i\)
+            {% elif n==3 %}
+                <p> where \( \zeta_{ {{n}} } = e^{\frac{2\pi i}{ {{n}} }}\) is a primitive cube root of unity
             {% else %}
                 <p> where \( \zeta_{ {{n}} } = e^{\frac{2\pi i}{ {{n}} }}\) is a primitive \( {{n}} \)-th root of unity
             {% endif %}
