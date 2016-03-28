@@ -201,7 +201,7 @@
 {% set sidebar_text_future = grey_4 %}
 {% set sidebar_text_beta = purple %}
 {% set sidebar_background_off = white %}
-/*TODO: START HERE in sidebar.css */
+
 
 /* TODO: clean up knowl colors.*/
 
@@ -231,17 +231,11 @@
 {% set box_background = white %}
 {% set box_background_img = col_main_ll %}
 {% set box_background_title = col_main_l %}
-{% set pic_border = col_main_ll %}
-{% set box_fill = col_main_ll %}
-{% set box_tab = col_main_l %}
-{% set box_shadow = '#060'%}
-
  
 /*Maass nav and show*/
 {% set maas_table_bkg = white %}
 {% set maas_table_bkg_hl = col_main_l %}
 {% set maas_coff_bkg = white%}
-
 
 /* Search */
 {% set search_background = white %}
@@ -256,11 +250,7 @@
 {% set chitable_imprimitive = 'blue' %}
 {% set chitable_primitive = 'green' %}
 
-{% set future_plane_text = '#B4B4B4' %} /*Upcoming features*/
-{% set beta_plane_text = 'purple'%}
-{% set beta_hyperlink_text = 'purple' %}
-{% set sidebar_border = col_main_ll%}
-
+/* acknowledgements*/
 {% set text_affil = '#333'%}
 {% set text_notes = '#555'%}
 {% set text_trad_hyperlink = 'black'%}
