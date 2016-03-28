@@ -240,9 +240,9 @@ body.knowl #header {
 
 /* TODO: what? */
 #flashes p {
-  border-left: 15px solid {{color.knowl_l}};
+  border-left: 15px solid {{color.knowl_border}};
   padding: 5px;
-  background: {{color.knowl_lls}};
+  background: {{color.knowl_background}};
 }
 
 #flashes p.error {
@@ -387,13 +387,13 @@ body.knowl #header {
   padding: 5px;
 }
 #sidebar h2.knowl {
-  background: {{ color.knowl_l }};
+  background: {{ color.knowl_border }};
 }
 #sidebar h2.knowl a {
-  color: {{ color.knowl_dd }};
+  color: {{ color.knowl_hyper_text }};
 }
 #sidebar h2.knowl a:hover {
-  background: {{ color.knowl }};
+  background: {{ color.knowl_hover_text }};
 }
 
 #sidebar h2 {
@@ -449,12 +449,12 @@ body.knowl #header {
 }
 
 /* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
-/* TODO: are these used? */
 body.mwf #sidebar a.mwf { background: {{ color.sidebar_bkg_highlight }}; }
 body.cmf #sidebar a.cmf { background: {{ color.sidebar_bkg_highlight }}; }
 body.knowl #sidebar a.knowl { background: {{ color.sidebar_bkg_highlight_knowl }}; }
 body.local_fields #sidebar a.local_fields { background:  {{ color.sidebar_bkg_highlight }}; }
 body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
+
 
 .visible {
 	visibility: visible;
@@ -517,12 +517,12 @@ button, select {
 
 body.knowl form button, 
 body.knowl form select {
-    border: 2px solid {{color.knowl_g}};
-  background: {{color.knowl_l}};
+  border: 2px solid {{color.knowl_thin_border}};
+  background: {{color.knowl_border}};
 }
 body.knowl form textarea,
 body.knowl form input {
-    border: 2px solid {{color.knowl_g}};
+    border: 2px solid {{color.knowl_thin_border}};
 }
 
 form button:hover, 
@@ -543,8 +543,8 @@ button.inactive:hover {
 
 body.knowl form button:hover,
 body.knowl form select:hover {
-    background:    {{color.knowl_ld}};
-    border: 2px solid {{color.knowl_dg}};
+    background:    {{color.knowl_hover}};
+    border: 2px solid {{color.knowl_thin_border}};
 }
 
 table {
@@ -663,17 +663,17 @@ div.where {
  *  all elements, that have a knowl attribute set to any value */
 table .knowl-link {
   display: inline;
-  border-bottom: 1px dotted {{ color.knowl_dd }};
+  border-bottom: 1px dotted {{ color.knowl_hyper_text }};
   border-radius: 0px;
   -moz-border-radius: 0px;
   padding: 1px;
 }
 .knowl-bar {
   white-space: nowrap;
-  background: {{ color.knowl_ll}};
+  background: {{ color.knowl_background}};
   padding: 5px 10px;
   margin-bottom: 5px;
-  border-bottom: 1px solid {{ color.knowl_d }};
+  border-bottom: 1px solid {{ color.knowl_thin_border }};
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
 }
@@ -686,7 +686,7 @@ table .knowl-link {
 }
 #knowl-search input {
   font-size: small;
-  background: {{ color.knowl_ll }};
+  background: {{ color.knowl_background }};
 }
 .knowl-bar a {
   padding: 2px 5px;
@@ -694,22 +694,21 @@ table .knowl-link {
 .knowl-preview-sep {
   padding: 5px;
   margin: 30px 0;
-  border-bottom: 1px solid {{ color.knowl_d }};
-  background: {{ color.knowl_ll}};
-  color: {{ color.knowl_dd }};
+  border-bottom: 1px solid {{ color.knowl_thin_border }};
+  background: {{ color.knowl_background}};
+  color: {{ color.knowl_hyper_text }};
   font-weight: bold;
 }
 .knowl-inc-edit {
   margin-bottom: 10px;
-  border-bottom: 2px solid {{ color.knowl_l}};
+  border-bottom: 2px solid {{ color.knowl_border}};
   font-size: x-small;
   text-align: right;
   line-height: 100%;
 }
 .knowl-inc-edit a {
   padding: 3px 5px 0px 5px;
-  background: {{ color.knowl_dd }};
-  background: {{ color.knowl_l }};
+  background: {{ color.knowl_hyper_text }};
   border-top-left-radius: 5px;
   -moz-border-radius-topleft: 5px;
 } 
@@ -745,7 +744,7 @@ table .knowl-link {
   -moz-border-radius: 2px;
 }
 #knowl-index td div:hover {
-  background: {{ color.knowl_l }};
+  background: {{ color.knowl_hover }};
   cursor: pointer;
 }
 #knowl-index td { 
@@ -756,15 +755,15 @@ table .knowl-link {
   vertical-align: top;
   text-align: center;
   font-size: x-large;
-  color: {{color.knowl_dd}};
+  color: {{color.knowl_hyper_text}};
   padding-top: 12px;
 }
 body.knowl table.ntdata thead tr {
-  background: {{ color.knowl_ll }};
-  border-bottom: 2px solid {{ color.knowl }};
+  background: {{ color.knowl_background }};
+  border-bottom: 2px solid {{ color.knowl_underline }};
 }
 body.knowl table.ntdata tr:nth-child(odd) {
- background: {{ color.knowl_ll }};
+ background: {{ color.knowl_background }};
 }
 body.knowl table.ntdata tr:nth-child(even) {
     background: {{color.white}};
@@ -824,7 +823,7 @@ table.euler tr .galois {
 }
 
 *[knowl] {
-  border-bottom: 1px dotted {{ color.knowl }};
+  border-bottom: 1px dotted {{ color.knowl_underline }};
   cursor: pointer;
   border-radius: 0;
   -webkit-border-radius: 0;
@@ -833,9 +832,9 @@ table.euler tr .galois {
 }
 *[knowl]:hover,
 *[knowl].active {
-  border-bottom: 2px solid {{ color.knowl }};
-  background: {{ color.knowl_l }};
-  color: {{ color.knowl_dd }};
+  border-bottom: 2px solid {{ color.knowl_underline }};
+  background: {{ color.knowl_hover }};
+  color: {{ color.knowl_hyper_text }};
   margin: 0;
   padding: 3px 0 0 0;
   border-top-left-radius: 3px;
@@ -845,18 +844,18 @@ table.euler tr .galois {
 }
 
 body.knowl #header {
-  background: {{ color.knowl_l }}; 
+  background: {{ color.knowl_border }}; 
 }
 body.knowl #header #title {
-    color: {{color.knowl_ddd}};
+    color: {{color.knowl_title_text}};
 }
 body.knowl #content h1,
 body.knowl #content h2,
 body.knowl #content a {
-  color: {{ color.knowl_dd }};
+  color: {{ color.knowl_hyper_text }};
 }
 body.knowl a:hover {
-  background: {{ color.knowl_l }};
+  background: {{ color.knowl_hover }};
 }
 
 div > *[knowl], p > *[knowl] {
@@ -868,22 +867,25 @@ table .knowl a {
 }
 
 .knowl-error {
-   color: {{color.purple}};
+   color: {{color.knowl_error}};
    border-bottom: 0;
    text-decoration: underline;
 }
 
 .knowl-error a {
    font-size:60%;
-   color: {{color.purple}};
+   color: {{color.knowl_error}};
 }
+
+/*
+knowl-qm does not seem to be currently used.
 
 .knowl-qm {
   font-family: sans-serif;
   font-weight: bold;
-  border: 1px solid {{ color.knowl }};
+  border: 1px solid {{ color.knowl_thin_border }};
   background: transparent;
-  color: {{ color.knowl }}; 
+  color: {{ color.knowl_hover_text }}; 
   cursor: pointer;
   padding: 0 0.4em;
   border-radius: 0.8em;
@@ -898,10 +900,9 @@ table .knowl a {
 }
 .knowl-qm.active:hover {
   background: transparent;
-  color: {{ color.knowl }}; 
+  color: {{ color.knowl_hover_text }}; 
 }
 h1 > .knowl-qm {
-  /** custom superscript */
   font-size: 0.6em;
   border-radius: 0.6em;
   position: relative;
@@ -909,16 +910,16 @@ h1 > .knowl-qm {
   left: -0.3em;
 }
 h2 > .knowl-qm {
-  /** custom superscript */
   font-size: 0.7em;
   border-radius: 0.7em;
   position: relative;
   top: -0.6em;
   left: -0.4em;
 }
+*/
 .knowl-output {
-  background: {{ color.knowl_ll }}; 
-  border: 10px solid {{ color.knowl_l }};
+  background: {{ color.knowl_background }}; 
+  border: 10px solid {{ color.knowl_border }};
   {{ BORDER_RADIUS(10) }}
   padding: 0px;
   display: none;
@@ -944,10 +945,10 @@ div.limit-height {
   margin: 5px 0;
 }
 .knowl-output h1 {
-  color: {{ color.knowl_dd }};
+  color: {{ color.knowl_hyper_text }};
 }
 .knowl-output h2 {
-  color: {{ color.knowl_dd }};
+  color: {{ color.knowl_hyper_text }};
 }
 .knowl-output a { display: inline; }
 
@@ -956,7 +957,7 @@ div.limit-height {
   bottom: -10px;
   font-size: x-small;
   line-height: 100%;
-  background: {{ color.knowl_l }};
+  background: {{ color.knowl_border }};
   color: {{color.grey}};
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
@@ -966,19 +967,19 @@ div.limit-height {
   top: -10px;
   font-size: x-small;
   line-height: 100%;
-  background: {{ color.knowl_l }};
+  background: {{ color.knowl_border }};
   color: {{color.grey}};
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
 .knowl-header a,
 .knowl-footer a {
-  color: {{ color.knowl_dd }};
+  color: {{ color.knowl_hyper_text }};
 }
 .knowl-header a:hover,
 .knowl-footer a:hover {
   background: none;
-  color: {{ color.knowl_d }};
+  color: {{ color.knowl_hover_text }};
 }
 
 /* end knowl */
@@ -1085,7 +1086,7 @@ hr {
 }
 /*TODO: above*/
 body.knowl hr {
-  border: 2px solid {{ color.knowl_l }};
+  border: 2px solid {{ color.knowl_border }};
 }
 
 /* jquery ui slider */
@@ -1122,7 +1123,7 @@ table.tablesorter tbody td {
 	vertical-align: top;
 }
 table.tablesorter tbody tr.odd td {
-    background-color:{{color.knowl_lll}};
+    background-color:{{color.knowl_background}};
 }
 table.tablesorter thead tr .headerSortUp {
 	background-image: url(asc.gif);
@@ -1276,11 +1277,11 @@ table.display tr.even.gradeA {
 }
 
 table.display tr.odd.gradeC {
-    background-color: {{color.knowl_l}};
+    background-color: {{color.knowl_border}};
 }
 
 table.display tr.even.gradeC {
-    background-color: {{color.knowl_ll}};
+    background-color: {{color.knowl_background}};
 }
 
 table.display tr.odd.gradeX {
@@ -1455,11 +1456,11 @@ tr.even.gradeC td.sorting_1 {
 }
 
 tr.even.gradeC td.sorting_2 {
-    background-color: {{color.knowl_ll_1}};
+    background-color: {{color.knowl_l_9}};
 }
 
 tr.even.gradeC td.sorting_3 {
-    background-color: {{color.knowl_ll_1}};
+    background-color: {{color.knowl_l_9}};
 }
 
 tr.odd.gradeX td.sorting_1 {
@@ -1563,7 +1564,7 @@ table.display tr.gradeA {
 }
 
 table.display tr.gradeC {
-    background-color: {{color.knowl_}};
+    background-color: {{color.knowl_background}};
 }
 
 table.display tr.gradeX {
@@ -1580,18 +1581,18 @@ div.box {
 	height: 100px;
 	padding: 10px;
 	overflow: auto;
-	border: 1px solid {{color.knowl_d_1}};
-	background-color: {{color.knowl_ll_2}};
+	border: 1px solid {{color.knowl_thin_border}};
+	background-color: {{color.knowl_background}};
 }
 
 div.codebox {
     padding: 5px;
     text-padding: 10px;
     overflow: auto;
-    border: 1px solid {{color.knowl_d_1}};
+    border: 1px solid {{color.knowl_thin_border}};
     border-radius: 5px;
-    background-color: {{color.knowl_ll_2}};
-    box-shadow: 3px 3px 3px {{color.knowl_d_1}};
+    background-color: {{color.knowl_background}};
+    box-shadow: 3px 3px 3px {{color.knowl_shadow}};
     white-space: pre;
 }
 
