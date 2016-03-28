@@ -9,8 +9,8 @@ import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
-from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
+from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input
 from sage.all import ZZ, var, PolynomialRing, QQ
 from lmfdb.local_fields import local_fields_page, logger
 

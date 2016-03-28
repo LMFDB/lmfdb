@@ -98,20 +98,23 @@ def parse_list(inp, query, qfield, process=None):
     else:
         query[qfield]=out
 
-def parse_range(arg, parse_singleton=int):
+def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     # TODO: graceful errors
     if type(arg) == parse_singleton:
         return arg
     if ',' in arg:
-        return {'$or': [parse_range(a) for a in arg.split(',')]}
+        if use_dollar_vars:
+            return {'$or': [parse_range(a) for a in arg.split(',')]}
+        else:
+            return [parse_range(a) for a in arg.split(',')]
     elif '-' in arg[1:]:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
         q = {}
         if start:
-            q['$gte'] = parse_singleton(start)
+            q['$gte' if use_dollar_vars else 'min'] = parse_singleton(start)
         if end:
-            q['$lte'] = parse_singleton(end)
+            q['$lte' if use_dollar_vars else 'max'] = parse_singleton(end)
         return q
     else:
         return parse_singleton(arg)
@@ -192,9 +195,9 @@ def parse_rational(inp, query, qfield):
         raise ValueError("It needs to be a rational number.")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_ints(inp, query, qfield):
+def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
-        collapse_ors(parse_range2(inp, qfield), query)
+        collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     else:
         raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
@@ -305,8 +308,10 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             query[qfield] = inp[1:-1]
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
-def parse_galgrp(inp, query, qfield):
+def parse_galgrp(inp, query, qfield, use_bson=True):
     from lmfdb.transitive_group import complete_group_codes, make_galois_pair
+    if not use_bson:
+        make_galois_pair = lambda x,y: [x,y]
     try:
         gcs = complete_group_codes(inp)
         if len(gcs) == 1:
@@ -437,8 +442,61 @@ def parse_bool(inp, query, qfield, minus_one_to_zero=False):
         raise ValueError("It must be True or False.")
 
 @search_parser
+def parse_restricted(inp, query, qfield, allowed, process=None):
+    if process is None: process = lambda x: x
+    allowed = [str(a) for a in allowed]
+    if inp not in allowed:
+        if len(allowed) == 0:
+            allowed_str = "unspecified"
+        if len(allowed) == 1:
+            allowed_str = allowed[0]
+        elif len(allowed) == 2:
+            allowed_str = " or ".join(allowed)
+        else:
+            allowed_str = ", ".join(allowed[:-1]) + " or " + allowed[-1]
+        raise ValueError("It must be %s"%allowed_str)
+    query[qfield] = process(inp)
+
+@search_parser
 def parse_noop(inp, query, qfield):
     query[qfield] = inp
+
+def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, parse1=None, kwds1={},
+                                     field2=None, name2=None, qfield2=None, parse2=None, kwds2={}):
+    tmp_query1 = {}
+    tmp_query2 = {}
+    parse1(info,tmp_query1,field1,name1,qfield1,**kwds1)
+    parse2(info,tmp_query2,field2,name2,qfield2,**kwds2)
+    print tmp_query1
+    print tmp_query2
+    def remove_or(D):
+        assert len(D) <= 1
+        if '$or' in D: return D['$or']
+        elif D: return [D]
+        else: return []
+    def combine(D1, D2):
+        # For key='qfield',
+        # Values can be singletons or a dict with keys '$lte' and '$gte' and values singletons.
+        # For key='$or',
+        # Values are lists of such dicts (with key qfield)
+        # Analogous to collapse_ors, we update D2
+        L1 = remove_or(D1)
+        L2 = remove_or(D2)
+        print L1
+        print L2
+        if not L1:
+            return L2
+        elif not L2:
+            return L1
+        else:
+            return [{A.keys()[0]:A.values()[0], B.keys()[0]:B.values()[0]} for A in L1 for B in L2]
+    L = combine(tmp_query1,tmp_query2)
+    print L
+    if len(L) == 1:
+        query.update(L[0])
+    else:
+        collapse_ors(['$or',L], query)
+    print query
 
 def parse_count(info, default=20):
     try:

@@ -33,6 +33,7 @@ import lmfdb.base
 from bson.binary import *
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
+from lmfdb.search_parsing import parse_range
 
 try:
     from dirichlet_conrey import *
@@ -85,29 +86,10 @@ def parse_space_label(label):
     level = int(l[0]); weight = int(l[1]); character = int(l[2])
     return level,weight,character
 
-def parse_range(arg, parse_singleton=int):
-    # TODO: graceful errors
-    if type(arg) == parse_singleton:
-        return arg
-    if ',' in arg:
-        return [parse_range(a) for a in arg.split(',')]
-    elif '-' in arg[1:]:
-        ix = arg.index('-', 1)
-        start, end = arg[:ix], arg[ix + 1:]
-        q = {}
-        if start:
-            q['min'] = parse_singleton(start)
-        if end:
-            q['max'] = parse_singleton(end)
-        return q
-    else:
-        return parse_singleton(arg)
-
-
 def extract_limits_as_tuple(arg, field):
     fld = arg.get(field)
     if isinstance(fld,basestring):
-        tmp = parse_range(fld)
+        tmp = parse_range(fld, use_dollar_vars=True)
         if isinstance(tmp,dict):
             limits = (tmp['min'],tmp['max'])
         else:

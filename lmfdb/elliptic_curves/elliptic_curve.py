@@ -15,7 +15,7 @@ from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex
-from lmfdb.search_parsing import clean_input, split_list, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
+from lmfdb.search_parsing import split_list, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange

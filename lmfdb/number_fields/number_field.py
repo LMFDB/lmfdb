@@ -19,8 +19,8 @@ from sage.rings.arith import primes
 
 from lmfdb.transitive_group import *
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, comma, clean_input
-from lmfdb.search_parsing import nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, comma
+from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of this data'
@@ -453,7 +453,7 @@ def number_field_search(**args):
         parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs_key'),parse_one=make_disc_key)
         parse_ints(info,query,'class_number')
         parse_bracketed_posints(info,query,'class_group',split=False,check_divisibility='decreasing')
-        parse_primes(info,query,'ur_primes','unramified primes','ramps','complement',to_string=True)
+        parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',mode='complement',to_string=True)
         if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'some':
             mode = 'append'
         else:

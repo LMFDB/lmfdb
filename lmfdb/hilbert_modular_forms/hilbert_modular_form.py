@@ -17,7 +17,7 @@ from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, parse_range
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 from lmfdb.WebNumberField import *

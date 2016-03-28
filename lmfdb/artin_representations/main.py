@@ -9,6 +9,8 @@ from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.artin_representations import artin_representations_page, artin_logger
 from lmfdb.utils import to_dict
+from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_paired_fields, parse_count, parse_start
+
 from lmfdb.transitive_group import *
 import re
 
@@ -50,27 +52,10 @@ def index():
     else:
         return artin_representation_search(**args)
 
-
-def parse_range_simple(query, fn=lambda x: x):
-    tmp = query.split("-")
-    if len(tmp) == 1:
-        return fn(tmp[0])
-    try:
-        assert len(tmp) == 2
-    except AssertionError:
-        raise AssertionError("Error while parsing request")
-    return {"$lte": fn(tmp[1]), "$gte": fn(tmp[0])}
-
-
-def parse_compound(query, fn=lambda x: x):
-    tmp = query.split(",")
-    return [parse_range_simple(y, fn=fn) for y in tmp]
-
-
 def artin_representation_search(**args):
-    req = to_dict(args)
-    if 'natural' in req:
-        label = req['natural']
+    info = to_dict(args)
+    if 'natural' in info:
+        label = info['natural']
         # test if it is ok
         return render_artin_representation_webpage(label)
 
@@ -78,90 +63,23 @@ def artin_representation_search(**args):
     bread = [('Artin representation', url_for(".index")), ('Search results', ' ')]
     sign_code = 0
     query = {'Hide': 0}
-    if req.get("ramified", "") != "":
-        tmp = req["ramified"].split(",")
-        query["BadPrimes"] = {"$all": [str(x) for x in tmp]}
-    if req.get("unramified", "") != "":
-        tmp = req["unramified"].split(",")
-        a = query.get("BadPrimes", {})
-        a.update({"$not": {"$in": [str(x) for x in tmp]}})
-        query["BadPrimes"] = a
+    try:
+        parse_primes(info,query,"unramified",name="Unramified primes",
+                     qfield="BadPrimes",mode="complement",to_string=True)
+        parse_primes(info,query,"ramified",name="Ramified primes",
+                     qfield="BadPrimes",mode="append",to_string=True)
+        parse_restricted(info,query,"root_number",qfield="GaloisConjugates.Sign",
+                         allowed=[1,-1],process=int)
+        parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
+                         allowed=[1,0,-1],process=int)
+        parse_galgrp(info,query,"group",name="Group",qfield="Galois_nt",use_bson=False)
+        parse_paired_fields(info,query,field1='conductor',qfield1='Conductor_key',parse1=parse_ints,kwds1={'parse_singleton':make_cond_key},
+                                       field2='dimension',qfield2='Dim',          parse2=parse_ints)
+    except ValueError:
+        return search_input_error(info, bread)
 
-    if req.get("root_number", "") != "":
-        try:
-            assert req["root_number"] in ["1", "-1"]
-        except:
-            raise AssertionError("The root number can only be 1 or -1")
-        sign_code= int(req["root_number"])
-        query["GaloisConjugates.Sign"] = sign_code
-
-    if req.get("frobenius_schur_indicator", "") != "":
-        try:
-            assert req["frobenius_schur_indicator"] in ["1", "-1", "0"]
-        except:
-            raise AssertionError("The Frobenius-Schur indicator can only be 0, 1 or -1")
-        query["Indicator"] = int(req["frobenius_schur_indicator"])
-    if req.get("group", "") != "":
-        try:
-            gcs = complete_group_codes(req['group'])
-            if len(gcs) == 1:
-                query['Galois_nt'] = gcs[0]
-            if len(gcs) > 1:
-                query['Galois_nt'] = {'$in': [x for x in gcs]}
-        except NameError as code:
-            info = {}
-            info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
-            return search_input_error(info, bread)
-
-
-    tmp_conductor = []
-    if req.get("conductor", "") != "":
-        tmp_conductor = parse_compound(req["conductor"], fn=make_cond_key)
-    # examples of tmp_conductor: [],
-    # [{"len":2,"val":"44"},{"len":3,"val":"444"},{"$gte":{"len":2,"val":"44"},
-    # "$lte":{"len":5,"val";"44444"}}]
-    tmp_dimension = []
-    if req.get("dimension", "") != "":
-        tmp_dimension = parse_compound(req["dimension"], fn=int)
-    # examples of tmp_dimension: [], [17], [5,7,{"$gte":4, "$lte":10}]
-    tmp_both = [{"Conductor_key": c, "Dim": d} for c in tmp_conductor for d in tmp_dimension]
-    if len(tmp_conductor) == 0:
-        tmp_both += [{"Dim": d} for d in tmp_dimension]
-    if len(tmp_dimension) == 0:
-        tmp_both += [{"Conductor_key": c} for c in tmp_conductor]
-    if len(tmp_both) == 1:
-        query.update(tmp_both[0])
-    elif len(tmp_both) >= 2:
-        query["$or"] = tmp_both
-
-    count_default = 10
-    if req.get('count'):
-        try:
-            count = int(req['count'])
-        except:
-            count = count_default
-    else:
-        count = count_default
-    req['count'] = count
-
-    start_default = 0
-    if req.get('start'):
-        try:
-            start = int(req['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
-    if req.get('paging'):
-        try:
-            paging = int(req['paging'])
-            if paging == 0:
-                start = 0
-        except:
-            pass
-
+    count = parse_count(info,10)
+    start = parse_start(info)
 
     data = ArtinRepresentation.collection().find(query).sort([("Dim", ASC), ("Conductor_key", ASC)])
     nres = data.count()
@@ -184,7 +102,7 @@ def artin_representation_search(**args):
 
     initfunc = ArtinRepresentation
 
-    return render_template("artin-representation-search.html", req=req, data=data, title=title, bread=bread, query=query, start=start, report=report, nres=nres, initfunc=initfunc, sign_code=sign_code)
+    return render_template("artin-representation-search.html", req=info, data=data, title=title, bread=bread, query=query, start=start, report=report, nres=nres, initfunc=initfunc, sign_code=sign_code)
 
 
 # Obsolete

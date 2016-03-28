@@ -5,7 +5,7 @@ import math
 from sage.all import *
 import re
 from flask import url_for
-from lmfdb.utils import parse_range, make_logger
+from lmfdb.utils import make_logger
 logger = make_logger("DC")
 from WebNumberField import WebNumberField
 try:
