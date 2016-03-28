@@ -20,6 +20,12 @@ body {
     color: {{color.body_text}};
     background-color: {{color.body_background}};
 }
+td.title {
+    color: {{color.box_tab_text}};
+}
+h2.link > a {
+    color: {{color.box_tab_text}};
+}
 #mathjax-info {
   display: none;
   position: absolute;

@@ -2,16 +2,98 @@
   We will have defined colors that you should use for appropriate objects.  
   Hopefully they are descriptively enough named.*/
 
+{% set white = 'white' %}
+{% set black = 'black'%}
+
 /*These are the different greens used in LMFDB*/
-{% set col_main_d  = '#040' %} 
-{% set col_main_dl = '#060' %}
-{% set col_main    = '#292' %} 
-{% set col_main_2  = '#afa' %} 
-{% set col_main_l  = '#bfb' %}
-{% set col_main_lg = '#8b8' %}
-{% set col_main_ld = '#dfd' %}
-{% set col_main_ll = '#efe' %}
-{% set col_main_g  = '#474' %}
+{% set color_template = 8 %}
+
+{% if color_template == 0 %}
+/*Original LMFDB colors*/
+  {% set col_main_d  = '#040' %} 
+  {% set col_main_dl = '#060' %}
+  {% set col_main    = '#292' %} 
+  {% set col_main_2  = '#afa' %} 
+  {% set col_main_l  = '#bfb' %}
+  {% set col_main_lg = '#8b8' %}
+  {% set col_main_ld = '#dfd' %}
+  {% set col_main_ll = '#efe' %}
+  {% set col_main_g  = '#474' %}
+  {% set grey        = '#999' %}
+  /* Body colors */
+  {% set body_background = white %}
+  {% set body_text = black %}
+
+
+{% elif color_template == 2 %}
+  /*Ruddy Browns*/
+  {% set col_main_ld = '#83614c' %} /*Header and Footer*/
+  {% set col_main_dl = '#33261d' %} /*Header and Footer Text*/
+  {% set col_main    = '#372820' %} /*Links*/
+  {% set col_main_2  = '#443227' %} /*Main Link Hovers*/
+  {% set col_main_l  = '#83614c' %} /*Tabs*/
+  {% set col_main_lg = '#83614c' %} /*Shadow and Bottom Border*/
+  {% set col_main_ll = '#c39070' %} /*Box Background*/
+  {% set col_main_d  = '#33261d' %} /*Beta text*/
+  {% set col_main_g  = '#474' %} /*Not very visible*/
+  {% set grey        = '#771307' %}
+  /* Body colors */
+  {% set body_background = white %}
+  {% set body_text = black %}
+  {% set box_tab_text = black %}
+
+{% elif color_template == 4 %}
+  /*Tans*/
+  {% set col_main_ld = '#827f64' %} /*Header and Footer*/
+  {% set col_main_dl = '#ffd893' %} /*Header and Footer Text*/
+  {% set col_main    = '#1c4a7f' %} /*Links*/
+  {% set col_main_2  = '#7f6330' %} /*Main Link Hovers*/
+  {% set col_main_l  = '#cca661' %} /*Tabs*/
+  {% set col_main_lg = '#8ca9cc' %} /*Shadow and Bottom Border*/
+  {% set col_main_ll = '#ffd893' %} /*Box Background*/
+  {% set col_main_d  = '#5c4a7f' %} /*Beta text*/
+  {% set col_main_g  = '#474' %} /*Not very visible*/
+  {% set grey        = '#5c4a7f' %}
+  /* Body colors */
+  {% set body_background = white %}
+  {% set body_text = black %}
+  {% set box_tab_text = black %}
+
+{% elif color_template == 6 %}
+  /*Blues*/
+  {% set col_main_ld = '#b9c8c8' %} /*Header and Footer*/
+  {% set col_main_dl = '#cf5a00' %} /*Header and Footer Text*/
+  {% set col_main    = '#cf5a00' %} /*Links*/
+  {% set col_main_2  = '#cf5a00' %} /*Main Link Hovers*/
+  {% set col_main_l  = '#091851' %} /*Tabs*/
+  {% set col_main_lg = '#555555' %} /*Shadow and Bottom Border*/
+  {% set col_main_ll = '#b9c8ff' %} /*Box Background*/
+  {% set col_main_d  = '#5c4a7f' %} /*Beta text*/
+  {% set col_main_g  = '#474' %} /*Not very visible*/
+  {% set grey        = '#5c4a7f' %}
+  /* Body colors */
+  {% set body_background = white %}
+  {% set body_text = black %}
+  {% set box_tab_text = '#eaf0ff' %}
+
+{% elif color_template == 8 %}
+  /*Teal+Orange*/
+  {% set col_main_ld = '#62544a' %} /*Header and Footer*/
+  {% set col_main_dl = '#cf5a00' %} /*Header and Footer Text*/
+  {% set col_main    = '#028b9d' %} /*Links*/
+  {% set col_main_2  = '#cf5a00' %} /*Main Link Hovers*/
+  {% set col_main_l  = '#cf5a00' %} /*Tabs*/
+  {% set col_main_lg = '#555555' %} /*Shadow and Bottom Border*/
+  {% set col_main_ll = '#cec7bc' %} /*Box Background*/
+  {% set col_main_d  = '#5c4a7f' %} /*Beta text*/
+  {% set col_main_g  = '#474' %} /*Not very visible*/
+  {% set grey        = '#5c4a7f' %}
+  /* Body colors */
+  {% set body_background = '#f5f2eb' %}
+  {% set body_text = '#512809' %}
+  {% set box_tab_text = '#e2ddd9' %}
+
+{% endif %}
 
 /*Greens found in code probably not used*/
 /*These can probably be removed along with come code in style.css*/
@@ -41,7 +123,6 @@
 /*{% set blue_1 = '#3366FF'%}*/
 
 /* Blacks */
-{% set black = 'black'%}
 
 /* Greys */
 /*TODO: are the blue_grey's close to knowl colors?*/
@@ -49,7 +130,6 @@
 {% set blue_grey_1 = '#9FAFD1'%}
 {% set red_grey = '#A19B9E'%}
 {% set light_red_grey = '#d1cfd0' %}
-{% set grey = '#999' %}
 {% set dark_grey = '#333' %}
 {% set dark_grey_1 = '#666' %}
 /*I think we need all the un-commented light_grey's*/
@@ -65,7 +145,6 @@
 
 
 /*whites*/
-{% set white = 'white' %}
 {% set white_1 = '#F5F5F5'%}
 {% set yellow_white = '#FFFFF4'%} /*TODO: used?*/
 {% set yell0w_white_1 = '#FFFFCC'%}/*TODO: used?*/
@@ -95,10 +174,6 @@
 {% set content_background_red = col_light_red_1 %}
 
 
-/* Body colors */
-{% set body_background = white %}
-{% set body_text = black %}
-
 /* contributors, i.e., contribs */
 {% set contrib_border = col_main_ld %}
 {% set contrib_background = col_main_ld %}
@@ -114,8 +189,13 @@
 {% set a_text = col_main %}
 {% set a_inactive = black %}
 {% set a_text_visited = col_main %}
-{% set a_text_hover = black %}
-{% set a_background_hover = col_main_l %}
+{% if color_template == 6 %}
+  {% set a_text_hover = col_main %}
+  {% set a_background_hover = box_tab_text %}
+{% else %}
+  {% set a_text_hover = black %}
+  {% set a_background_hover = col_main_l %}
+{% endif %}
 {% set a_nav_text = white %}
 {% set a_nav_background = col_main %}
 {% set a_nav_border = white %}
@@ -150,10 +230,15 @@
 
 
 /* Sidebar: left hand side sidebar. */
-{% set sidebar_text = col_main %}
 {% set sidebar_background = col_main_ll%}
 {% set sidebar_background_h2 = col_main_l %} /*sidebar tab background*/
-{% set sidebar_text_h2 = col_main_d %}
+{% if color_template == 6 %}
+  {% set sidebar_text = col_main_l %}
+  {% set sidebar_text_h2 = white %}
+{% else %}
+  {% set sidebar_text = col_main %}
+  {% set sidebar_text_h2 = col_main_d %}
+{% endif %}
 {% set sidebar_background_hover = col_main_l %}
 {% set sidebar_background_li = col_main_ll %}
 {% set sidebar_background_h2_hover = col_main_2 %}
