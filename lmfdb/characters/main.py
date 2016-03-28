@@ -42,6 +42,11 @@ def render_characterNavigation():
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
 
+    info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels', url_for(".labels_page"))
+            ]
+
     if 'modbrowse' in args:
         arg = args['modbrowse']
         arg = arg.split('-')
@@ -92,6 +97,30 @@ def render_characterNavigation():
        info['title'] = 'Dirichlet Characters'
        return render_template('CharacterNavigate.html', **info)
 
+@characters_page.route("/Source")
+def labels_page():
+    info = {}
+    info['title'] = 'Dirichlet character labels'
+    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
+    ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Labels', '') ]
+    info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ]
+    return render_template("single.html", kid='character.dirichlet.conrey',
+                           **info)
+
+@characters_page.route("/Labels")
+def how_computed_page():
+    info = {}
+    info['title'] = 'Source of Dirichlet characters'
+    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
+    ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Source', '') ]
+    info['learnmore'] = [
+            ('Labels', url_for(".labels_page"))
+            ]
+    return render_template("single.html", kid='dq.character.dirichlet.source',
+                           **info)
+
 @characters_page.route("/Dirichlet/")
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
@@ -108,6 +137,11 @@ def render_Dirichletwebpage(modulus=None, number=None):
         return render_characterNavigation() # waiting for new landing page
         info = WebDirichletFamily(**args).to_dict()
         #logger.info(info)
+        info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels', url_for(".labels_page"))
+            ]
+
         return render_template('CharFamily.html', **info)
     elif number == None:
         info = WebDirichletGroup(**args).to_dict()
@@ -115,6 +149,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
                          ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m))]
+        info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels', url_for(".labels_page"))
+            ]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
@@ -130,6 +168,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
                          ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m)),
                          ('%s'%n, url_for(".render_Dirichletwebpage", modulus=m, number=n)) ]
+        info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels', url_for(".labels_page"))
+            ]
         #logger.info(info)
         # TODO fix navi field
         del info["navi"]
@@ -257,7 +299,6 @@ def charactertable(query):
         modulus=query.get('modulus', None),
         conductor=query.get('conductor', None),
         order=query.get('order', None))
-
 
 def render_character_table(modulus=None, conductor=None, order=None):
     from dirichlet_conrey import DirichletGroup_conrey 

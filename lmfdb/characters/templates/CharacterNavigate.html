@@ -3,6 +3,22 @@
 
 {% block content %}
 
+<p>
+The database provides detailed information on all
+{{ KNOWL('character.dirichlet', title="Dirichlet characters") }}
+ of {{ KNOWL('character.dirichlet.modulus', title="modulus") }} less than $10^6$.
+It contains precomputed data for all
+{{ KNOWL('lfunction.dirichlet', title="Dirichlet L functions") }}
+of {{ KNOWL('character.dirichlet.conductor', title="character conductor") }} less than $10^4$.
+</p>
+
+<p>
+For this database, we use the
+{{ KNOWL('character.dirichlet.conrey', title="Conrey notation") }}
+$\chi_{q}(n,·)$ for Dirichlet characters, where $q$ is the modulus,
+ and the index $n$ is such that $(q, n) = 1$.
+</p>
+
 <h2> Browse {{ KNOWL('character.dirichlet', title="Dirichlet characters") }}</h2>
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
