@@ -146,7 +146,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
                     sname = "S^{{ new }}_{{ {k} }}(\\Gamma_0({N}),\\chi_{{ {N} }}({chi},\\cdot))".format(k=k,N=N,chi=chi)
                 else:
                     sname = "S^{{ new }}_{{ {k} }}(\\Gamma_0({N}))".format(k=k,N=N)
-                l.append("[{mult}]\\cdot \href{{ {url} }}{{ {sname} }}".format(sname=sname,mult=mult,url=url))
+                l.append("\href{{ {url} }}{{ {sname} }}^{{\oplus {mult} }}".format(sname=sname,mult=mult,url=url))
             if l != []:            
                 s = "\\oplus ".join(l)
                 info['oldspace_decomposition']=' $ {0} $'.format(s)
