@@ -148,49 +148,111 @@
 /*Need to define colors based on object: Currently not used!!*/
 /* TODO: define these with more descriptive names and in terms
    of the colors defined above. */
-{% set col_ntdata_border  = '#9b9' %}
-{% set col_ntdata_bkg     = '#afa' %}
-{% set col_ntdata_bkg2 = '#efe' %}
+/* Body colors */
+{% set body_background = white %}
+{% set body_text = black %}
+/* contributors, i.e., contribs */
+{% set contrib_border = col_main_ld %}
+{% set contrib_background = col_main_ld %}
+{% set contrib_text_affil = dark_grey_3 %}
+{% set contrib_text_notes = dark_grey_4 %}
 
-{% set header_fill = '#dfd'%} /*Color of the banner at the top*/
-{% set tabs = col_main_l%} /*Color of tabs on left and right bars.*/
-{% set links = 'black'%}
-{% set hover_back = col_main_l%} /*'#cfc'*/
-{% set hover_text = 'black'%}
+/* TODO: set content colors */
+
+/* footer colors */
+{% set footer_background = col_main_ld %}
+{% set footer_border = col_main_l %}
+{% set footer_text = col_main_dld %}
+
+/* TODO: set a colors */
+
+/* Upper right hand corner searchbox */
+{% set search_border = col_main %}
+{% set search_background = col_main_ld %}
+
+/* Header colors*/
+{% set header_background = col_main_ld %} /*Color of the banner at the top*/
+{% set header_shadow = col_main_lg %}
+{% set header_text_title = col_main_d %}
+{% set header_text_topright = col_main_dld %}
+/* Header navi colors */
+{% set header_navi_text = col_main_dld %}
+
+/* TODO: flashes */
+
+/* Properties: the right hand side boxes. */
+{% set properties_border = col_main_g %}
+{% set properties_text_h1h2 = col_main_l %}
+{% set properties_body_background = col_main_ll %}
+{% set properties_header_text = col_main_d %}
+{% set properties_header_background = col_main_l%}
+{% set properties_collapser = col_main_d %} /*The little circle-arrow thingy*/
+
+/* Sidebar: left hand side sidebar. */
+{% set sidebar_text = col_main_4 %}
 {% set sidebar_background = col_main_ll%}
-{% set sidebar_background2 = white%} 
-{% set blank_links = 'black'%}/*TODO: get used?*/
-{% set background = white%}
-{% set footer = col_main_l %}
-{% set main_text = black%}/*text in boxes in the middle that are  not hyperlinks.*/
-{% set minor_text ='#060'%}
-{% set hyperlink_text = col_main%} 
-{% set inactive_text = 'black'%}
-{% set visited_text = '#080'%}
-{% set border = col_main%}
-{% set shadow = '#8b8'%}
+{% set sidebar_background_h2 = col_main_l %} /*sidebar tab background*/
+{% set sidebar_text_h2 = col_main_d %}
+{% set sidebar_background_hover = col_main_l %}
+{% set sidebar_background_li = col_main_ll %}
+{% set sidebar_background_h2_hover = col_main_2 %}
+{% set sidebar_bkg_highlight = col_main_l %}
+{% set sidebar_bkg_highlight_knowl = col_knowl_d %}
+{% set sidebar_text_future = grey_4 %}
+{% set sidebar_text_beta = purple %}
+{% set sidebar_background_off = white %}
+/*TODO: START HERE in sidebar.css */
+
+/* TODO: clean up knowl colors.*/
+
+
+/* Buttons */
+{% set button_background = col_main_ld %}
+{% set button_border = col_main_g2 %}
+{% set button_background_hover = col_main_ldl %}
+{% set button_border_hover = col_main_llg %}
+{% set button_background_inactive = light_grey_1 %}
+{% set button_border_inactive = col_light_red_3 %}
+/* TODO: knowl buttons*/
+
+
+/* Tables */
+{% set table_background_hover = col_main_ldl %}
+{% set table_ntdata_background = col_main_2 %}
+{% set table_ntdata_background_2 = col_main_ll %}
+{% set table_ntdata_background_c1 = white %} /* tr:first-child, odd*/
+{% set table_ntdata_background_cn = col_main_ll %} /*tr:nth-child, even */
+{% set table_ntdata_border = col_main_lg2 %}
+{% set table_ntdata_border_bottom = grey %}
+
+/* TODO: table knowls*/
 
 /*index-boxes todo*/
-{% set box_background = todo %}
+{% set box_background = white %}
+{% set box_background_img = col_main_ll %}
+{% set box_background_title = col_main_l %}
 {% set pic_border = col_main_ll %}
 {% set box_fill = col_main_ll %}
 {% set box_tab = col_main_l %}
 {% set box_shadow = '#060'%}
 
-{% set button_fill = '#dfd'%}
-{% set button_border = '#ada'%}
+ 
+/*Maass nav and show*/
+{% set maas_table_bkg = white %}
+{% set maas_table_bkg_hl = col_main_l %}
+{% set maas_coff_bkg = white%}
 
-{% set table_hover = '#cfc'%}
-{% set table_off_color = col_main_ll%}
-{% set table_border = '#9b9'%}
-{% set table_background = '#efe'%}
-{% set table_border2 = '#8a8'%} /*TODO: used?*/
 
-{% set error   = '#922' %} /*red for error*/
-{% set light_error = '#FDD' %} /*light red*/
-{% set check = '#0080FF' %} 
-{% set todo = '#f22' %}
+/* Search */
+{% set search_background = white %}
+{% set serach_border = white %}
+{% set gsa_inactive = light_grey_9 %}
+{% set gsa_active = orange_1 %}
+{% set gs_text_webResult = black %}
+{% set gs_text = col_main_dll %}
+{% set gs_border = blue_2 %}
 
+/* Chi tables */
 {% set chitable_imprimitive = 'blue' %}
 {% set chitable_primitive = 'green' %}
 
@@ -208,10 +270,7 @@
 {% set upload_background = '#fffff4' %}
 {% set upload_background_hover = 'ffffcc' %}
 
-{% set search_border_inactive = '#E9E9E9'%}
-{% set search_background_inactive = '#E9E9E9'%}
-{% set search_border_active = '#FF9900'%}
-{% set web_border = '#336699' %}
+
 
 {% set button_background2 = '#EEE' %}
 {% set button_border2 = '#EED'%}
@@ -221,3 +280,9 @@
 
 {% set div_box_border = '#8080FF' %}
 {% set div_box_bkg = '#E5E5FF' %}
+
+
+{% set error   = '#922' %} /*red for error*/
+{% set light_error = '#FDD' %} /*light red*/
+{% set check = '#0080FF' %} 
+{% set todo = '#f22' %}

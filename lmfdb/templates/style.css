@@ -17,9 +17,8 @@ body {
     margin: 0px;
     padding: 0px;
     font-family: sans-serif;
-    color: {{color.black}};
-    background-color: {{color.white}};
-    /* max-width: 1200px; */
+    color: {{color.body_text}};
+    background-color: {{color.body_background}};
 }
 #mathjax-info {
   display: none;
@@ -33,6 +32,7 @@ body {
   font-size: small;
   color: {{color.grey}};
 }
+/* TODO: where is content?*/
 #content > h1
 {
     font-size: 130%;
@@ -80,18 +80,20 @@ body {
 #footer {
     clear: both;
     margin-top: 40px;
-    background-color: {{color.col_main_ld}};
-    border-top: 2px solid {{ color.col_main_l }};
+    background-color: {{color.footer_background}};
+    border-top: 2px solid {{ color.footer_border }};
     padding: 25px 10px;
     text-align: center;
     font-size: 75%;
-    color: {{color.col_main_dld}};
+    color: {{color.footer_text}};
 }
 
 #content > ul {
   margin-top: 10px;
   margin-bottom: 10px;
 }
+
+/* TODO: where is this?  Hyperlinks? */
 a {
     color: {{color.col_main}};
   text-decoration: none;
@@ -120,14 +122,15 @@ a.inactive:hover {
     border-left: 3px solid {{color.col_red_1}};
     background: {{color.col_light_red_1}};
 }
+
 #search-topright {
   display: inline;
 }
 #search-topright input {
   font-size: 75%;
-  border: 1px solid {{ color.col_main }};
+  border: 1px solid {{ color.search_border }};
   padding: 1px;
-  background: {{color.col_main_ld}} ;
+  background: {{color.search_background}} ;
   position: relative;
   top: -1px;
 }
@@ -154,17 +157,17 @@ a:hover {
 
 #header {
   min-height: 120px;
-  background: {{color.col_main_ld}};
-  -moz-box-shadow:     0px 5px 5px {{color.col_main_lg}};
-  -webkit-box-shadow:  0px 5px 5px {{color.col_main_lg}};
-  box-shadow:          0px 5px 5px {{color.col_main_lg}};
+  background: {{color.header_background}};
+  -moz-box-shadow:     0px 5px 5px {{color.header_shadow}};
+  -webkit-box-shadow:  0px 5px 5px {{color.header_shadow}};
+  box-shadow:          0px 5px 5px {{color.header_shadow}};
 }
 
 body.knowl #header {
   background: {{ color.knowl_l }};
-  -moz-box-shadow:     0px 5px 5px {{color.col_main_lg}};
-  -webkit-box-shadow:  0px 5px 5px {{color.col_main_lg}};
-  box-shadow:          0px 5px 5px {{color.col_main_lg}};
+  -moz-box-shadow:     0px 5px 5px {{color.knowl_shadow}};
+  -webkit-box-shadow:  0px 5px 5px {{color.knowl_shadow}};
+  box-shadow:          0px 5px 5px {{color.knowl_shadow}};
 }
 
 #header #logo {
@@ -185,7 +188,7 @@ body.knowl #header {
     font-family: sans-serif;
     min-height: 100px;
     position: relative;
-    color: {{color.col_main_d}};
+    color: {{color.header_text_title}};
 }
 
 #header #title-content {
@@ -194,13 +197,9 @@ body.knowl #header {
 }
 
 #header .bread {
-    /* border: 1px solid red; */
     font-family: sans-serif;
     min-height: 18px;
     font-size: 90%;
-/*
-    padding-top: 2px;
-*/
 }
 
 #header .bread a:first-child {
@@ -208,10 +207,9 @@ body.knowl #header {
 }
 
 #header .topright {
-  /* border: 1px solid red;  */
   text-align: right;
   white-space:nowrap; 
-  color: {{color.col_main_dld}};
+  color: {{color.header_text_topright}};
   font-family: sans-serif;
   min-height: 18px;
   font-size: 90%;
@@ -221,7 +219,7 @@ body.knowl #header {
   right: 0px;
 }
 #header .topright a {
-    color: {{color.col_main_dld}};
+    color: {{color.header_text_topright}};
 }
 #header .topright #communication-wrapper {  
   display: none;
@@ -230,7 +228,7 @@ body.knowl #header {
 #header #navi {
   white-space: nowrap;
   text-align: right;
-  color: {{color.col_main_dld}};
+  color: {{color.header_navi_text}};
   font-family: sans-serif;
   font-size: 90%;
   padding: 2px 5px;
@@ -240,11 +238,11 @@ body.knowl #header {
   z-index: 5;
 }
 
+/* TODO: what? */
 #flashes p {
-    border-left: 15px solid {{color.knowl_l}};
+  border-left: 15px solid {{color.knowl_l}};
   padding: 5px;
   background: {{color.knowl_lls}};
-  
 }
 
 #flashes p.error {
@@ -254,7 +252,6 @@ body.knowl #header {
   border-left: 15px solid {{color.col_light_red_1}};
   background: {{color.col_light_red_2}};
 }
-
 
 #main {
   margin:  0px 0px 0px 200px;
@@ -271,7 +268,7 @@ body.knowl #header {
     clear: right;
     margin: 10px 0px 15px 15px;
     position: relative;
-    border: 1px solid {{color.col_main_g}};
+    border: 1px solid {{color.properties_border}};
     border: 0;
     padding: 0px;
 }
@@ -283,7 +280,7 @@ body.knowl #header {
     padding: 5px;
     margin: 0;
     margin-bottom: 0;
-    background: {{ color.col_main_l }};
+    background: {{ color.properties_text_h1h2 }};
 }
 .properties-body h1 {
     font-size: 120%;
@@ -307,6 +304,7 @@ body.knowl #header {
   margin: 0px;
   padding: 0px;
 }
+
 .properties-body ul:last-child li:last-child a {
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
@@ -323,7 +321,7 @@ body.knowl #header {
 .properties-body {
   margin: 0px;
   padding: 0px;
-  background: {{color.col_main_ll}};
+  background: {{color.properties_body_background}};
   min-width: 200px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
@@ -334,15 +332,15 @@ body.knowl #header {
   margin: 0;
   margin-top: 10px;
   padding: 5px 10px;
-  color: {{ color.col_main_d }};
-  background: {{ color.col_main_l }};
+  color: {{ color.properties_header_text }};
+  background: {{ color.properties_header_background }};
   font-size: 14px;
   cursor: pointer;
   padding-right: 30px;
 }
 #properties-collapser {
   cursor: pointer;
-  color: {{ color.col_main_d }};
+  color: {{ color.properties_collapser }};
   font-size: 19px;
   font-weight: bold;
   text-align: center;
@@ -373,8 +371,8 @@ body.knowl #header {
   margin: 20px 0px 0px 0px;
   font-family: sans-serif;
   font-size: 85%;
-  color: {{color.col_main_4}};
-  background: {{color.col_main_ll}};
+  color: {{color.sidebar_text}};
+  background: {{color.sidebar_background}};
   margin-bottom: 100px;
   border-top-right-radius: 10px;
   -moz-border-radius-topright: 10px;
@@ -401,8 +399,8 @@ body.knowl #header {
 #sidebar h2 {
     font-family: sans-serif;
     font-size: 100%;
-    background-color: {{ color.col_main_l }};/*sidebar tabs*/
-    color: {{ color.col_main_d }};
+    background-color: {{ color.sidebar_background_h2 }};/*sidebar tabs*/
+    color: {{ color.sidebar_text_h2 }};
     padding: 5px;
     margin: 15px 0 0 0;
 }
@@ -433,29 +431,30 @@ body.knowl #header {
     padding: 0px;
 }
 #sidebar a:hover {
-    background: {{ color.col_main_l }};
+    background: {{ color.sidebar_background_hover }};
 }
 #sidebar a {
     display: block;
 }
 #sidebar li a {
-    background: {{ color.col_main_ll }};
+    background: {{ color.sidebar_background_li }};
   padding: 5px;
 }
 #sidebar h2 a { padding: 5px; }
 #sidebar h2 a:hover {
-  background: {{ color.col_main_2 }};
+  background: {{ color.sidebar_background_h2_hover }};
 }
 #sidebar h2.link {
   padding: 0px;
 }
 
 /* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
-body.mwf #sidebar a.mwf { background: {{ color.col_main_l }}; }
-body.cmf #sidebar a.cmf { background: {{ color.col_main_l }}; }
-body.knowl #sidebar a.knowl { background: {{ color.col_knowl_d }}; }
-body.local_fields #sidebar a.local_fields { background:  {{ color.col_main_l }}; }
-body.intro #sidebar a.intro { background: {{ color.col_main_l }}; }
+/* TODO: are these used? */
+body.mwf #sidebar a.mwf { background: {{ color.sidebar_bkg_highlight }}; }
+body.cmf #sidebar a.cmf { background: {{ color.sidebar_bkg_highlight }}; }
+body.knowl #sidebar a.knowl { background: {{ color.sidebar_bkg_highlight_knowl }}; }
+body.local_fields #sidebar a.local_fields { background:  {{ color.sidebar_bkg_highlight }}; }
+body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 
 .visible {
 	visibility: visible;
@@ -475,7 +474,7 @@ body.intro #sidebar a.intro { background: {{ color.col_main_l }}; }
 .nodisplay {
     display: None;
 }
-
+/*TODO: where do the following show up?*/
 .formexample {
    font-size: 80%;
    font-style: italic;
@@ -503,15 +502,16 @@ input, textarea {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
 }
+/* TODO: above? */
 
 button, select {
   padding: 3px 6px;
-  background: {{color.col_main_ld}};
+  background: {{color.button_background}};
   border-radius: 4px;
   -moz-border-radius:4px;
   -webkit-border-radius:4px;
   cursor: pointer;
-  border: 2px solid {{color.col_main_g2}};
+  border: 2px solid {{color.button_border}};
   min-width: 75px;
 }
 
@@ -527,18 +527,18 @@ body.knowl form input {
 
 form button:hover, 
 form select:hover {
-    background:    {{color.col_main_ldl}};
-    border: 2px solid {{color.col_main_llg}};
+    background:    {{color.button_background_hover}};
+    border: 2px solid {{color.button_border_hover}};
 }
 
 button.inactive {
-    background: {{color.light_grey_1}};
-    border: 2px solid {{color.col_light_red_3}};
+    background: {{color.button_background_inactive}};
+    border: 2px solid {{color.button_border_inactive}};
 }
 
 button.inactive:hover {
-    background: {{color.light_grey_1}};
-    border: 2px solid {{color.col_light_red_3}};
+    background: {{color.button_background_inactive}};
+    border: 2px solid {{color.button_border_inactive}};
 }
 
 body.knowl form button:hover,
@@ -585,7 +585,7 @@ table td.top {
 }
 
 table a:hover {
-    background: {{color.col_main_ldl}};
+    background: {{color.table_background_hover}};
 }
 
 
@@ -600,8 +600,8 @@ table.ntdata {
   margin-bottom: 15px;
 }
 table.ntdata thead tr {
-  background: {{ color.col_ntdata_bkg }};
-  border-bottom: 2px solid {{ color.col_ntdata_border }};
+  background: {{ color.table_ntdata_background }};
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
 table.ntdata tr {
 }
@@ -613,18 +613,19 @@ table.ntdata th {
 table.ntdata tr.odd,
 table.ntdata tr:nth-child(odd),
 table.ntdata tr:first-child {
-    background: {{color.white}};
+    background: {{color.table_ntdata_background_c1}};
 }
 
 table.ntdata tr.even,
 table.ntdata tr:nth-child(even) {
-    background: {{color.col_main_ll}};
+    background: {{color.table_ntdata_background_cn}};
 }
 
 table.ntdata tr.line {
-    border-bottom: 1px dotted gray;
+    border-bottom: 1px dotted {{color.table_ntdata_border_bottom}};
 }
 
+/* TODO: where? */
 div.literature {
     margin-top: 10px;
     font-size: 90%;
@@ -769,38 +770,36 @@ body.knowl table.ntdata tr:nth-child(even) {
     background: {{color.white}};
 }
 
-/* next 4 copied from Dir Char templates */
-/* should be deleted from those 4 templates */
 table.ntdata th.left {
-    border-right: 2px solid {{color.col_main_lg2}};
-    background: {{color.col_main_ll}};
+    border-right: 2px solid {{color.table_ntdata_border}};
+    background: {{color.table_ntdata_background_2}};
     border-bottom: 0;
     text-align: center;
 }
 
 table.ntdata th.weight {
   text-align: center;
-  background: {{color.col_main_ll}};
-  border-bottom: 2px solid {{color.col_main_lg2}};
+  background: {{color.table_ntdata_background_2}};
+  border-bottom: 2px solid {{color.table_ntdata_border}};
   border-left: 0;
   vertical-align: center;
 }
 
 table.ntdata thead tr.space {
-    background: {{color.col_main_ll}};
+  background: {{color.table_ntdata_background_2}};
   border-bottom: 0;
 }
 
 table.ntdata thead th.spaceleft {
-  border-right: 2px solid {{color.col_main_lg2}};
+  border-right: 2px solid {{color.table_ntdata_border}};
   vertical-align: top;
 }
 
 table.ntdata tr.first {
-  border-top: 2px solid {{color.col_main_lg2}};
+  border-top: 2px solid {{color.table_ntdata_border}};
 }
 table.ntdata .border-right {
-    border-right: 2px solid {{ color.col_ntdata_border }};
+  border-right: 2px solid {{ color.table_ntdata_border }};
 }
 table.ntdata td.center {
     text-align: center;
@@ -933,7 +932,7 @@ h2 > .knowl-qm {
  margin-right: 0;
 }
 .knowl-output.loading {
-    color: {{color.grey}};
+ color: {{color.grey}};
  font-style: italic;
  font-size: small;
 }
@@ -1040,6 +1039,7 @@ div.limit-height {
     font-size: 120%;
 }
 
+/* TODO: where?*/
 .enternumber
 {
     border: 1px solid {{color.black}};
@@ -1065,8 +1065,8 @@ div.limit-height {
 }
 
 a.navlink {
-    color: {{color.white}};
-    background-color: {{color.col_main_5}};
+  color: {{color.white}};
+  background-color: {{color.col_main_5}};
   font-weight: bold;
   font-size: 11px;
   text-align: center;
@@ -1083,6 +1083,7 @@ hr {
   border: 2px solid {{ color.col_main_l }};
   margin: 15px 0;
 }
+/*TODO: above*/
 body.knowl hr {
   border: 2px solid {{ color.knowl_l }};
 }
@@ -1093,6 +1094,7 @@ body.knowl hr {
 }
 
 /* tables */
+/* TODO: where? do colors get used?*/
 table.tablesorter {
 	font-family:arial;
 	background-color: {{color.light_grey_2}};
@@ -1134,11 +1136,7 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 
 .dataTables_wrapper {
     width: 557px;
-	/*position: relative;
-	min-height: 302px;
-	clear: both;
-	_height: 302px;*/
-	zoom: 1; /* Feeling sorry for IE */
+    zoom: 1; /* Feeling sorry for IE */
 }
 
 .dataTables_processing {
@@ -1266,6 +1264,9 @@ table.display td.center {
 	background: url('/static/images/sort_desc_disabled.png') no-repeat center right;
 }
 
+
+/* TODO: I think the following are not used. */
+/*
 table.display tr.odd.gradeA {
     background-color: {{color.col_main_ld}};
 }
@@ -1297,6 +1298,7 @@ table.display tr.odd.gradeU {
 table.display tr.even.gradeU {
     background-color: {{color.light_grey_1}};
 }
+*/
 
 .dataTables_scroll {
 	clear: both;
@@ -1410,6 +1412,8 @@ tr.even td.sorting_3 {
     background-color: {{color.knowl_l_6}};
 }
 
+/*TODO: I think these are not used.*/
+/*
 tr.odd.gradeA td.sorting_1 {
     background-color: {{color.col_main_ldl_1}};
 }
@@ -1569,7 +1573,9 @@ table.display tr.gradeX {
 table.display tr.gradeU {
     background-color: {{color.light_grey_3}};
 }
+*/
 
+/* TODO: div? */
 div.box {
 	height: 100px;
 	padding: 10px;
