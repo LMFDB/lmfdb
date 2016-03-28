@@ -8,7 +8,7 @@
     vertical-align: top;
     padding-top:    .5em;
     padding-bottom: .5em;
-    border-right: 2px solid {{color.col_main_lg_1}};
+    border-right: 2px solid {{color.chi_border}};
 }
 .chi {
     padding: 5px 5px;
@@ -22,24 +22,24 @@
 #chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
 #chitable td div>a { text-align: right; }
 #chitable td { vertical-align: middle;  white-space: nowrap; }
-#chitable td.a { background: {{color.col_main_ld}}; }
+#chitable td.a { background: {{color.chi_table_background}}; }
 #chitable td.b { background: none; }
 #chitable th { text-align: center; }
-#chitable .imprimitive a:visited { color:{{color.blue}};}
-#chitable .primitive   a:visited { color:{{color.green}};}
+#chitable .imprimitive a:visited { color:{{color.chitable_imprimitive}};}
+#chitable .primitive   a:visited { color:{{color.chitable_primitive}};}
 #chitable .imprimitive { display:none; }
 #chitable a { display: inline; }
 #legend {
   margin: 0 20px 10px 0;
-  border-left: 2px solid {{color.col_main_dl}};
+  border-left: 2px solid {{color.chi_table_border}};
 }
 #legend td { cursor: pointer; }
 
 .primitive, .primitive a {
-  color:{{color.green}};
+  color:{{color.chitable_primitive}};
 }
 .imprimitive, .imprimitive a {
-  color:{{color.blue}};
+  color:{{color.chitable_imprimitive}};
 }
 </style>
 
@@ -74,7 +74,7 @@ $(function() {
     $("#legend-prim input").prop("checked", prim);
   });
   $("#legend-prim").hover(
-     function() { $(".primitive").css("background", "{{color.col_main_6}}"); },
+     function() { $(".primitive").css("background", "{{color.chi_background}}"); },
      function() { $(".primitive").css("background", "inherit"); }
    );
  }
@@ -84,8 +84,8 @@ $(function() {
 
 <table style="float:right">
     <thead align="left">
-        <tr><th><font color = "{{color.blue}}"> &bullet; Imprimitive </font></th></tr>
-        <tr><th><font color = "{{color.green}}"> &bullet; Primitive </font></th><tr/>
+        <tr><th><font color = "{{color.chitable_imprimitive}}"> &bullet; Imprimitive </font></th></tr>
+        <tr><th><font color = "{{color.chitable_primitive}}"> &bullet; Primitive </font></th><tr/>
     </thead>
 </table>
 <div>
@@ -113,9 +113,9 @@ given {{ KNOWL('character.dirichlet.order', title="order") }}.
           <div>
             <a href="{{url_for('characters.render_Dirichletwebpage',modulus=chi[0],number=chi[1])}}">
               {% if chi[2] %}
-              <font color="{{color.green}}">
+              <font color="{{color.chitable_primitive}}">
                 {% else %}
-                <font color="{{color.blue}}">
+                <font color="{{color.chitable_imprimitive}}">
                   {% endif %}
                   {% if chi[3] == 2 %}
                   {{ chi[4] }} (mod {{chi[0]}})

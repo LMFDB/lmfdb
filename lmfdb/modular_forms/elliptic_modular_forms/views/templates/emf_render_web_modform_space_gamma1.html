@@ -17,35 +17,6 @@ $("#plot").load(function() {
 </script>
 
 <style>
-table.ntdata th.left {
-  border-right: 2px solid {{color.col_main_lg2}};
-  background: {{color.col_main_ll}};
-  border-bottom: 0;
-  text-align: right;
-}
-
-table.ntdata th.first {
-  text-align: center;
-  font-weight: normal;
-}
-
-table.ntdata td { text-align: left; }
-table.ntdata th.weight {
-  text-align: left;
-  background: {{color.col_main_ll}};
-  border-bottom: 2px solid {{color.col_main_lg2}};
-  border-left: 0;
-  vertical-align: center;
-}
-table.ntdata thead tr.space {
-  background: {{color.col_main_ll}};
-  border-bottom: 0;
-}
-
-table.ntdata .label {
-  display: block;
-  padding: 5px 10px 5px 10px;
-}
 
 table.dimtable thead th.spaceleft {
   border-right: 0;
@@ -58,15 +29,15 @@ table.dimtable tbody td.spaceleft {
 }
 
 table.ntdata tbody tr:nth-child(odd) {
-    background: {{color.white}};
+    background: {{color.emf_table_background_off}};
 }
 
 table.dimtable tbody td:nth-child(even) {
-    background: {{color.white}};
+    background: {{color.emf_table_background_off}};
 }
 
 table.dimtable tbody td.even {
-    background: {{color.col_main_ll}};
+    background: {{color.emf_table_background}};
 }
 
 table.ntdata thead tr.space th{

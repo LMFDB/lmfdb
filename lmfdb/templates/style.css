@@ -37,7 +37,7 @@ body {
 {
     font-size: 130%;
     font-weight: bold;
-    color: {{ color.col_main }};
+    color: {{ color.content_text }};
     font-family: sans-serif;
     text-decoration: none;
     margin: 15px 0;
@@ -54,7 +54,7 @@ body {
     font-size: 120%;
     text-align: left;
     font-weight: bold;
-    color: {{color.col_main}};
+    color: {{color.content_text}};
     padding: 5px 0 5px 0;
     margin: 15px 0 10px 0;
 }
@@ -65,7 +65,7 @@ body {
     text-align: left;
     font-weight: bold;
     padding: 5px 0 5px 0;
-    color: {{color.col_main_3}};
+    color: {{color.conent_main_3}};
     margin: 10px 0 5px 0;
 }
 
@@ -95,13 +95,13 @@ body {
 
 /* TODO: where is this?  Hyperlinks? */
 a {
-    color: {{color.col_main}};
+    color: {{color.a_text}};
   text-decoration: none;
   font-family: sans-serif;
 }
 
 a.inactive {
-    color: {{color.black}};
+    color: {{color.a_inactive}};
 }
 
 a.inactive:hover {
@@ -114,13 +114,13 @@ a.inactive:hover {
   font-size: 1.2em;
   padding: 10px 20px;
   margin: 20px 0px;
-  border-left: 3px solid {{ color.col_main }};
-  background: {{ color.col_main_ll }};
+  border-left: 3px solid {{ color.content_border }};
+  background: {{ color.content_background }};
   line-height: 1.5em;
 }
 #content .announce.red {
-    border-left: 3px solid {{color.col_red_1}};
-    background: {{color.col_light_red_1}};
+    border-left: 3px solid {{color.content_border_red}};
+    background: {{color.content_background_red}};
 }
 
 #search-topright {
@@ -145,10 +145,10 @@ body.checklist {
  font-size: 70%;
 }
 
-a:visited { color: {{color.col_main_dll}}; }
+a:visited { color: {{color.a_text_visited}}; }
 a:hover { 
-    color: {{color.black}}; 
-    background: {{color.col_main_ldl}};  
+    color: {{color.a_text_hover}}; 
+    background: {{color.a_background_hover}};  
 }
 
 #logo a, #logo a:hover, body.knowl #logo a:hover {
@@ -256,8 +256,8 @@ body.knowl #header {
   margin: 15px 0;
   font-size: 95%;
   border: 0;
-  border-left: 15px solid {{color.col_light_red_1}};
-  background: {{color.col_light_red_2}};
+  border-left: 15px solid {{color.flashes_border}};
+  background: {{color.flashes_background}};
 }
 
 #main {
@@ -283,7 +283,7 @@ body.knowl #header {
   padding: 5px;
 }
 .properties-body h1, .properties-body h2 {
-    color: {{ color.col_main_d }};
+    color: {{ color.properties_header_text }};
     padding: 5px;
     margin: 0;
     margin-bottom: 0;
@@ -456,20 +456,12 @@ body.knowl #header {
 }
 
 /* highlighting menu entries (if their respective blueprint overwirtes the body_class variable!) */
-<<<<<<< HEAD
 /* TODO: are these used? */
 body.mwf #sidebar a.mwf { background: {{ color.sidebar_bkg_highlight }}; }
 body.cmf #sidebar a.cmf { background: {{ color.sidebar_bkg_highlight }}; }
 body.knowl #sidebar a.knowl { background: {{ color.sidebar_bkg_highlight_knowl }}; }
 body.local_fields #sidebar a.local_fields { background:  {{ color.sidebar_bkg_highlight }}; }
 body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
-=======
-body.mwf #sidebar a.mwf { background: {{ color.col_main_l }}; }
-body.cmf #sidebar a.cmf { background: {{ color.col_main_l }}; }
-body.knowl #sidebar a.knowl { background: {{ color.knowl_hover_text }}; }
-body.local_fields #sidebar a.local_fields { background:  {{ color.col_main_l }}; }
-body.intro #sidebar a.intro { background: {{ color.col_main_l }}; }
->>>>>>> 693961f60299c1cb76a9685adb51e8f77ac1b1b9
 
 .visible {
 	visibility: visible;
@@ -644,7 +636,7 @@ table.ntdata tr.line {
 div.literature {
     margin-top: 10px;
     font-size: 90%;
-    color: {{color.black_1}};
+    color: {{color.black}};
 }
 
 div.where {

@@ -3,30 +3,28 @@
   Hopefully they are descriptively enough named.*/
 
 /*These are the different greens used in LMFDB*/
-{% set green = 'green'%}
-{% set light_green = 'lightgreen' %}
 {% set col_main_d  = '#040' %} /*Used once*/
 {% set col_main_dld = '#060' %}
 {% set col_main_dl = '#006400'%}
-{% set col_main_dll = '#008000' %}/*Used once*/
-{% set col_main    = '#292' %}
-{% set col_main_2  = '#afa' %}
-{% set col_main_3  = '#181' %} /*Used once*/
+{% set col_main_dll = '#008000' %}/*green*/
+{% set col_main    = '#292' %} /*TODO*/
+{% set col_main_2  = '#afa' %} /*only used in exp/emf*/
+{% set col_main_3  = '#181' %} /*Used once*//*TODO*/
 {% set col_main_4  = '#390' %} /*Used twice*/
-{% set col_main_5  = '#4a4' %} /*Used twice*/
-{% set col_main_6 = '#90EE90' %}
-{% set col_main_l  = '#bfb' %}
+{% set col_main_5  = '#4a4' %} /*Used twice*//*TODO*/
+{% set col_main_6 = '#90EE90' %} /*lightgreen, done*/
+{% set col_main_l  = '#bfb' %}/*TODO*/
 {% set col_main_l_1 = '#9e9' %}
-{% set col_main_ldl= '#cfc' %}
-{% set col_main_ldl_1 = '#c4ff4c'%}
-{% set col_main_lg = '#8b8' %}
+{% set col_main_ldl= '#cfc' %}/*TODO*/
+{% set col_main_ldl_1 = '#c4ff4c'%}/*TODO*/
+{% set col_main_lg = '#8b8' %}/*TODO*/
 {% set col_main_lg_1 = '#8a8' %}
 {% set col_main_lg2 = '#9b9' %}
 {% set col_main_ld = '#dfd' %}
 {% set col_main_ld_1 = '#d1ffd1' %}
 {% set col_main_ld_2 = '#d5ffd5' %}
-{% set col_main_ll = '#efe' %}
-{% set col_main_ll_1 = '#e2ffe2'%}
+{% set col_main_ll = '#efe' %}/*TODO style.css*/
+{% set col_main_ll_1 = '#e2ffe2'%}/*TODO*/
 {% set col_main_llg = '#9C9' %}/*Used once*/
 {% set col_main_g = '#474' %} /*Used once*/
 {% set col_main_g2 = '#ada' %}
@@ -45,19 +43,16 @@
 
 /* Blues */
 {% set light_blue = 'lightblue' %}
-{% set steel_blue = '#8DBDD8'%}/*Used once*/
-{% set steel_blue_1 = '#3C769D' %}
+{% set steel_blue = '#3C769D' %}
 {% set blue_1 = '#3366FF'%}
 {% set blue_2 = '#336699'%}
-{% set blue = 'blue'%}
+{% set blue = 'blue'%} /*done*/
 {% set hyperlink_blue = '#0000cc'%}
 
 /* Blacks */
 {% set black = 'black'%}
-{% set black_1 = '#111111'%}/*Only used once*/
 
 /* Greys */
-{% set important_grey = '#999'%}
 {% set grey = 'grey'%}
 {% set blue_grey = '#B0BED9' %}/*Used once*/
 {% set blue_grey_1 = '#9FAFD1'%}/*Used once*/
@@ -88,8 +83,8 @@
 /*whites*/
 {% set white = 'white' %}
 {% set white_1 = '#F5F5F5'%}
-{% set yellow_white = '#FFFFF4'%}
-{% set yell0w_white_1 = '#FFFFCC'%}
+{% set yellow_white = '#FFFFF4'%} /*TODO: used?*/
+{% set yell0w_white_1 = '#FFFFCC'%}/*TODO: used?*/
 
 
 /*citrons*/
@@ -107,34 +102,37 @@
 
 
 
+/* Content colors*/
+{% set content_text = col_main %}
+{% set content_text_h3 = col_main_3 %}
+{% set content_border = col_main %}
+{% set connent_background = col_main_ll %}
+{% set content_border_red = col_red_1 %}
+{% set content_background_red = col_light_red_1 %}
 
 
-
-
-
-
-
-
-/*Need to define colors based on object: Currently not used!!*/
-/* TODO: define these with more descriptive names and in terms
-   of the colors defined above. */
 /* Body colors */
 {% set body_background = white %}
 {% set body_text = black %}
+
 /* contributors, i.e., contribs */
 {% set contrib_border = col_main_ld %}
 {% set contrib_background = col_main_ld %}
 {% set contrib_text_affil = dark_grey_3 %}
 {% set contrib_text_notes = dark_grey_4 %}
 
-/* TODO: set content colors */
-
 /* footer colors */
 {% set footer_background = col_main_ld %}
 {% set footer_border = col_main_l %}
 {% set footer_text = col_main_dld %}
 
-/* TODO: set a colors */
+/* a colors */
+{% set a_text = col_main %}
+{% set a_inactive = black %}
+{% set a_text_visited = col_main_dll %}
+{% set a_text_hover = black %}
+{% set a_background_hover = col_main_ldl %}
+
 
 /* Upper right hand corner searchbox */
 {% set search_border = col_main %}
@@ -148,7 +146,10 @@
 /* Header navi colors */
 {% set header_navi_text = col_main_dld %}
 
-/* TODO: flashes */
+/* flashes */
+{% set flashes_border = col_light_red_1 %}
+{% set flashes_background = col_light_red_2 %}
+
 
 /* Properties: the right hand side boxes. */
 {% set properties_border = col_main_g %}
@@ -217,13 +218,41 @@
 {% set gs_border = blue_2 %}
 
 /* Chi tables */
-{% set chitable_imprimitive = 'blue' %}
-{% set chitable_primitive = 'green' %}
+{% set chitable_imprimitive = blue %}
+{% set chitable_primitive = col_main_dll %}
+{% set chi_background = col_main_6 %}
+{% set chi_table_background = col_main_ll %}
+{% set chi_table_background_off = white %}
+{% set chi_border = col_main_lg_1 %}
+{% set chi_table_background = col_main_ld %}
+{% set chi_table_border = col_main_dl %}
 
 /* acknowledgements*/
 {% set text_affil = '#333'%}
 {% set text_notes = '#555'%}
 {% set text_trad_hyperlink = 'black'%}
+
+/* Elliptic Curve colors */
+{% set ec_background = col_main_6%}
+
+/* Elliptic Modular Form */
+{% set exp_background = col_main_2 %}
+{% set emf_background = col_main_ll %}
+{% set emf_table_background = col_main_ll %}
+{% set emf_table_background_off = white %}
+{% set emf_border = col_main_lg2 %}
+{% set emf_fundom_background = light_blue %}
+{% set emf_fundom_text = white %}
+
+/*Siegel modular forms*/
+{% set smf_background = col_main_ll%}
+{% set smf_border = col_main_lg2 %}
+
+/*L-functions*/
+{% set lf_an_button_bkg = col_main_ld %}
+{% set lf_an_button_brd = col_main_g2 %}
+{% set lf_ar_button_bkg = light_grey_1 %}
+{% set lf_ar_button_brd = col_light_red_3 %}
 
 /* Knowl colors */
 {% set knowl_error = 'purple' %}
