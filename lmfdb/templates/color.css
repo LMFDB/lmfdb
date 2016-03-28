@@ -12,11 +12,13 @@
 {% set col_main_3  = '#181' %} /*Used once*/
 {% set col_main_4  = '#390' %} /*Used twice*/
 {% set col_main_5  = '#4a4' %} /*Used twice*/
+{% set col_main_6 = '#90EE90' %}
 {% set col_main_l  = '#bfb' %}
 {% set col_main_l_1 = '#9e9' %}
 {% set col_main_ldl= '#cfc' %}
 {% set col_main_ldl_1 = '#c4ff4c'%}
 {% set col_main_lg = '#8b8' %}
+{% set col_main_lg_1 = '#8a8' %}
 {% set col_main_lg2 = '#9b9' %}
 {% set col_main_ld = '#dfd' %}
 {% set col_main_ld_1 = '#d1ffd1' %}
@@ -152,19 +154,25 @@
 {% set light_grey_5 = '#c4c4c4'%}
 {% set light_grey_6 = '#d1d1d1'%}
 {% set light_grey_7 = '#d5d5d5'%}
- {% set light_grey_8 = '#e2e2e2'%}
+{% set light_grey_8 = '#e2e2e2'%}
+{% set light_grey_9 = '#E9E9E9' %}
 
 {% set grey = 'grey'%}
 {% set blue_grey = '#B0BED9' %}/*Used once*/
 {% set blue_grey_1 = '#9FAFD1'%}/*Used once*/
-{% set red_gre = '#A19B9E'%}
+{% set red_grey = '#A19B9E'%}
 {% set grey_1 = '#888888' %}
 {% set grey_2 = '#999' %}
 {% set grey_3 = '#aaa' %} /*Used twice*/
+{% set grey_4 = '#B4B4B4' %}
 {% set dark_grey = '#3D3D3D' %}/*Used once*/
 {% set dark_grey_2 = '#444' %}/*Used once*/
+{% set dark_grey_3 = '#333' %}
+{% set dark_grey_4 = '#666' %}
 {% set steel_blue = '#8DBDD8'%}/*Used once*/
+{% set steel_blue_1 = '#3C769D' %}
 {% set blue_1 = '#3366FF'%}
+{% set blue_2 = '#336699'%}
 
 {% set div_box_border = '#8080FF' %}
 {% set div_box_bkg = '#E5E5FF' %}
@@ -177,3 +185,9 @@
 {% set light_citron_5 = '#D6FF5C'%}
 {% set light_citron_6 = '#E0FF84'%}
 {% set light_citron_7 = '#DBFF70'%}
+
+{% set purple = 'purple' %}
+{% set blue = 'blue'%}
+{% set green = 'green'%}
+{% set hyperlink_blue = '#0000cc'%}
+{% set orange_1 = '%FF9900'%}

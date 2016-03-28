@@ -1,4 +1,5 @@
 {% extends 'homepage.html' %}
+{% import 'color.css' as color %}
 {% block content %}
 
 <!--New table class to avoid spacing in LaTeX-links -->
@@ -13,7 +14,7 @@ table.g2 a {
 */
 .toggle {margin-top:5px; margin-left:20px;}
 div.properties-body table tr td.label { vertical-align: top; }
-#content > h2.subhead { color:black;}
+#content > h2.subhead { color:{{color.black}};}
 </style>
 
 {% macro code(codes, languages, item) %}

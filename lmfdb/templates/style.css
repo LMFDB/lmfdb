@@ -31,7 +31,7 @@ body {
   line-height: 20px;
   text-align: center;
   font-size: small;
-  color: grey;
+  color: {{color.grey}};
 }
 #content > h1
 {
@@ -260,7 +260,6 @@ body.knowl #header {
   margin:  0px 0px 0px 200px;
   padding: 0px 0px 0px 10px;
   min-height: 700px;
-  /* border: 1px solid purple; */
 }
 
 /*These are the right hand side properties and sidebar stuffs.*/
@@ -480,7 +479,7 @@ body.intro #sidebar a.intro { background: {{ color.col_main_l }}; }
 .formexample {
    font-size: 80%;
    font-style: italic;
-   color: grey;
+   color: {{color.grey}};
 }
 
 .errmsg {
@@ -492,7 +491,7 @@ body.intro #sidebar a.intro { background: {{ color.col_main_l }}; }
 td.forminfo {
    font-size: 80%;
    font-style: italic;
-   color: grey;
+   color: {{color.grey}};
    vertical-align: top;
 }
 
@@ -649,7 +648,7 @@ div.where {
 }
 
 .positivezero {
-  color: black;
+    color: {{color.black}};
 }
 
 
@@ -725,7 +724,7 @@ table .knowl-link {
 }
 #knowl-index td div > span {
   font-size: xx-small;
-  color: grey;
+  color: {{color.grey}};
   position: absolute;
   top: 2px;
   line-height: 1em;
@@ -870,14 +869,14 @@ table .knowl a {
 }
 
 .knowl-error {
-   color: purple;
+   color: {{color.purple}};
    border-bottom: 0;
    text-decoration: underline;
 }
 
 .knowl-error a {
    font-size:60%;
-   color: purple;
+   color: {{color.purple}};
 }
 
 .knowl-qm {
@@ -934,7 +933,7 @@ h2 > .knowl-qm {
  margin-right: 0;
 }
 .knowl-output.loading {
- color: grey;
+    color: {{color.grey}};
  font-style: italic;
  font-size: small;
 }
@@ -959,7 +958,7 @@ div.limit-height {
   font-size: x-small;
   line-height: 100%;
   background: {{ color.knowl_l }};
-  color: grey;
+  color: {{color.grey}};
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
@@ -969,7 +968,7 @@ div.limit-height {
   font-size: x-small;
   line-height: 100%;
   background: {{ color.knowl_l }};
-  color: grey;
+  color: {{color.grey}};
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
@@ -1043,7 +1042,7 @@ div.limit-height {
 
 .enternumber
 {
-  border: 1px solid black;
+    border: 1px solid {{color.black}};
 }
 
 .watermark {
@@ -1223,7 +1222,7 @@ table.display {
 
 table.display thead th {
 	padding: 3px 18px 3px 10px;
-	border-bottom: 1px solid black;
+	border-bottom: 1px solid {{color.black}};
 	font-weight: bold;
 	cursor: pointer;
 	* cursor: hand;
@@ -1231,7 +1230,7 @@ table.display thead th {
 
 table.display tfoot th {
 	padding: 3px 18px 3px 10px;
-	border-top: 1px solid black;
+	border-top: 1px solid {{color.black}};
 	font-weight: bold;
 }
 
