@@ -32,7 +32,7 @@ table.ntdata thead th.spaceleft {
     vertical-align: top;
     padding-top:    .5em;
     padding-bottom: .5em;
-    border-right: 2px solid #8a8;
+    border-right: 2px solid {{color.col_main_lg_1}};
 }
 .chi {
     padding: 5px 5px;
@@ -51,21 +51,21 @@ table.ntdata thead th.spaceleft {
 #chitable th { text-align: center; }
 table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 table.ntdata tr.odd, table.ntdata tr:nth-child(odd), table.ntdata tr:first-child { background: none; }
-#chitable .imprimitive a:visited { color:blue;}
-#chitable .primitive   a:visited { color:green;}
+#chitable .imprimitive a:visited { color:{{color.blue}};}
+#chitable .primitive   a:visited { color:{{color.green}};}
 #chitable .imprimitive { display:none; }
 #chitable a { display: inline; }
 #legend {
   margin: 0 20px 10px 0;
-  border-left: 2px solid #006400;
+  border-left: 2px solid {{color.col_main_dl}};
 }
 #legend td { cursor: pointer; }
 
 .primitive, .primitive a {
-  color:green;
+  color:{{color.green}};
 }
 .imprimitive, .imprimitive a {
-  color:blue;
+  color:{{color.blue}};
 }
 </style>
 
@@ -100,7 +100,7 @@ $(function() {
     $("#legend-prim input").prop("checked", prim);
   });
   $("#legend-prim").hover(
-     function() { $(".primitive").css("background", "#90EE90"); },
+     function() { $(".primitive").css("background", "{{color.col_main_6}}"); },
      function() { $(".primitive").css("background", "inherit"); }
    );
  }

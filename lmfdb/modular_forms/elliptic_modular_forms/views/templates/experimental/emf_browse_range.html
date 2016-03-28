@@ -108,7 +108,7 @@ entry you access information about the forms in the specified space.
   <tbody>
     {% for row in rows  %}
     <tr class="{{row_class.next() }}">
-      <th width="10px" style="background:#afa; border-right: 1px solid black">
+      <th width="10px" style="background:{{color.col_main_2}}; border-right: 1px solid black">
 
         {{ table.row_heads[loop.index-1] }}
 

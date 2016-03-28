@@ -47,19 +47,19 @@
 }
 
 #sidebar .future { 
-    color:rgb(180,180,180);
+    color: {{color.grey_4}};
     display: inherit;
 }
 
 
 #sidebar .beta { 
-    color:purple;
+    color:{{color.purple}};
     display: inherit;
 }
 
 
 #sidebar .beta a { 
-    color:purple;
+    color:{{color.purple}};
 }
 
 

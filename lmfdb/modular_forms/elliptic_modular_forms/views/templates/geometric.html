@@ -1,3 +1,4 @@
+{% import 'color.css' as color %}
 {% if geometric is defined %}
 {% if grouptype==0 or level == 1 or level == 2%}
   {% set w="217" %} {%set h="320"%}
@@ -11,8 +12,8 @@
   vertical-align:top;
   height:{{h}}px;
   width:{{w}}px;
-  background-color:lightblue;
-  text-color:white;
+  background-color:{{color.light_blue}};
+  text-color:{{color.white}};
 }
 </style>
 {% if level == 1 %}

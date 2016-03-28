@@ -32,7 +32,7 @@ table.ntdata thead th.spaceleft {
     vertical-align: top;
     padding-top:    .5em;
     padding-bottom: .5em;
-    border-right: 2px solid #8a8;
+    border-right: 2px solid {{color.col_main_lg_1}};
 }
 .chi {
     padding: 5px 5px;
@@ -49,21 +49,21 @@ table.ntdata thead th.spaceleft {
 #chitable td.a { background: {{color.col_main_ld}}; }
 #chitable td.b { background: none; }
 #chitable th { text-align: center; }
-#chitable .imprimitive a:visited { color:blue;}
-#chitable .primitive   a:visited { color:green;}
+#chitable .imprimitive a:visited { color:{{color.blue}};}
+#chitable .primitive   a:visited { color:{{color.green}};}
 #chitable .imprimitive { display:none; }
 #chitable a { display: inline; }
 #legend {
   margin: 0 20px 10px 0;
-  border-left: 2px solid #006400;
+  border-left: 2px solid {{color.col_main_dl}};
 }
 #legend td { cursor: pointer; }
 
 .primitive, .primitive a {
-  color:green;
+  color:{{color.green}};
 }
 .imprimitive, .imprimitive a {
-  color:blue;
+  color:{{color.blue}};
 }
 </style>
 
@@ -98,7 +98,7 @@ $(function() {
     $("#legend-prim input").prop("checked", prim);
   });
   $("#legend-prim").hover(
-     function() { $(".primitive").css("background", "#90EE90"); },
+     function() { $(".primitive").css("background", "{{color.col_main_6}}"); },
      function() { $(".primitive").css("background", "inherit"); }
    );
  }
@@ -108,8 +108,8 @@ $(function() {
 
 <table style="float:right">
     <thead align="left">
-        <tr><th><font color = "blue"> &bullet; Imprimitive </font></th></tr>
-        <tr><th><font color = "green"> &bullet; Primitive </font></th><tr/>
+        <tr><th><font color = "{{color.blue}}"> &bullet; Imprimitive </font></th></tr>
+        <tr><th><font color = "{{color.green}}"> &bullet; Primitive </font></th><tr/>
     </thead>
 </table>
 <div>
@@ -137,9 +137,9 @@ given {{ KNOWL('character.dirichlet.order', title="order") }}.
           <div>
             <a href="{{url_for('characters.render_Dirichletwebpage',modulus=chi[0],number=chi[1])}}">
               {% if chi[2] %}
-              <font color="green">
+              <font color="{{color.green}}">
                 {% else %}
-                <font color="blue">
+                <font color="{{color.blue}}">
                   {% endif %}
                   {% if chi[3] == 2 %}
                   {{ chi[4] }} (mod {{chi[0]}})
