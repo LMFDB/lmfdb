@@ -20,6 +20,9 @@ def id_dirichlet(fun, N, n):
     N2 = 2**p2
     Nodd = N/N2
     Nfact = list(factor(Nodd))
+    #print "n = "+str(n)
+    #for j in range(20):
+    #    print "chi(%d) = e(%d/%d)"%(j+2, fun(j+2,n), n)
     plist = [z[0] for z in Nfact]
     ppows = [z[0]**z[1] for z in Nfact]
     ppows2 = list(ppows)
@@ -64,14 +67,15 @@ def id_dirichlet(fun, N, n):
     #print "*********************************************"
     #print "N2 = "+str(N2)+" and Nodd = "+str(Nodd)
 
-    my3=crt([3, 1], [N2, Nodd])
-    #print "my3 = "+str(my3)
-    test1 = fun(my3,n) * N2/4/n
+    my5=crt([5, 1], [N2, Nodd])
+    #print "my5 = "+str(my5)
+    test1 = fun(my5,n) * N2/4/n
     #print "computed "+str(test1)
-    test1 = Integer(mod(3,N2)**test1)
-    minus3 = crt([-3,1], [N2, Nodd])
-    #print "minus3 = "+str(minus3)
-    test2 = (fun(minus3, n) * N2/4/n) % (N2/4)
+    test1 = Integer(mod(5,N2)**test1)
+    #print "would be "+str(crt([test1, ans], [N2, Nodd]))
+    minusone = crt([-1,1], [N2, Nodd])
+    #print "minusone = "+str(minusone)
+    test2 = (fun(minusone, n) * N2/4/n) % (N2/4)
     #print "computed "+str(test2)
     if test2 > 0:
         test1 = Integer(mod(-test1, N2))
