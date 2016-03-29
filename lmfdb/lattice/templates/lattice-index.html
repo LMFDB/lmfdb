@@ -1,5 +1,5 @@
 {% extends "homepage.html" %}
-
+{% import 'color.css' as color %}
 {% block content %}
 <div>
 {{ KNOWL_INC('dq.lattice.extent') }}
@@ -8,7 +8,7 @@
 <style type="text/css">
 .error_message {
    padding: 4px;
-   color: red;
+   color: {{color.red}};
    font-size: 120%;
    font-weight: bold;
    margin: 20px;

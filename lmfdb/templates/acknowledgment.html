@@ -1,14 +1,28 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 <style>
   #contribs { overflow: hidden; }
-  #contribs > div { padding: 0 ; margin: 5px; font-size: 70%; height: 4em; border: 1px solid #dfd; float:left; width: 200px;  overflow: hidden; }
+  #contribs > div {
+  padding: 0 ;
+  margin: 5px;
+  font-size: 70%;
+  height: 4em;
+  border: 1px solid {{color.contrib_border}};
+  float:left;
+  width: 200px;
+  overflow: hidden;
+  }
   #contribs > div > div { padding-left: 5px; }
-  #contribs > div > div.name { font-weight: bold; background: #dfd; font-size: 100%; position: relative; }
+  #contribs > div > div.name {
+  font-weight: bold;
+  background: {{color.contrib_background}};
+  font-size: 100%;
+  position: relative;
+  }
   #contribs > div > div.name > a { position: absolute; right: 5px; }
-  #contribs > div > div.affil { color: #333;}
-  #contribs > div > div.notes { color: #666; }
+  #contribs > div > div.affil { color: {{color.contrib_text_affil}};}
+  #contribs > div > div.notes { color: {{color.contrib_text_notes}}; }
 </style>
 
 <div>

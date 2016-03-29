@@ -1,5 +1,5 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 {#
@@ -10,7 +10,7 @@ An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title=
 <style type="text/css">
 .error_message {
    padding: 4px;
-   color: red;
+   color: {{color.red}};
    font-size: 120%;
    font-weight: bold;
    margin: 20px;
