@@ -89,7 +89,7 @@ def parse_space_label(label):
 def extract_limits_as_tuple(arg, field):
     fld = arg.get(field)
     if isinstance(fld,basestring):
-        tmp = parse_range(fld, use_dollar_vars=True)
+        tmp = parse_range(fld, use_dollar_vars=False)
         if isinstance(tmp,dict):
             limits = (tmp['min'],tmp['max'])
         else:
