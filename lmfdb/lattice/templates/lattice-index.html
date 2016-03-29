@@ -49,7 +49,7 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 
 
 
-<h2> Find a specific integral lattice by {{KNOWL('lattice.label', title='label')}} or by {{KNOWL('lattice.name', title='name')}}</h2>
+<h2> Find a specific {{ KNOWL('lattice.definition', title='integral lattice') }} by {{KNOWL('lattice.label', title='label')}} or by {{KNOWL('lattice.name', title='name')}}</h2>
 
 <form>
 <input type='text' name='label' placeholder='3.4.16.1.1'>
@@ -100,6 +100,10 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 <td align= right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td>
 <td><input type='text' name='aut' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2, 48, 696729600</td>
+</tr>
+
+<tr><td align=left colspan='3'>Maximum number of integral lattices to display <input type='text' name='count' value=50 size='5' />
+</td>
 </tr>
 
 <!--<tr><td align= right>{{ KNOWL('lattice.name', title='Name') }}:</td>-->

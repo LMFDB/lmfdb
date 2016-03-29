@@ -22,11 +22,8 @@ from markupsafe import Markup
 lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
 
-def get_bread(breads=[]):
-    bc = [("Lattice", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
-    return bc
+
+# usiliary functions for displays 
 
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
@@ -48,6 +45,14 @@ def my_latex(s):
     ss += ""
     return ss
 
+#breadcrumbs and links for data quality entries
+
+def get_bread(breads=[]):
+    bc = [("Lattice", url_for(".index"))]
+    for b in breads:
+        bc.append(b)
+    return bc
+
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
@@ -57,6 +62,8 @@ def learnmore_list():
 def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
+
+# webpages: main, random and search results
 
 @lattice_page.route("/")
 def lattice_render_webpage():
@@ -87,8 +94,6 @@ def random_lattice():    # Random Lattice
     C = getDBConnection()
     res = C.Lattices.lat.find()[n]
     return redirect(url_for(".render_lattice_webpage", label=res['label']))
-
-
 
 
 lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
@@ -126,8 +131,32 @@ def lattice_search(**args):
         info['err'] = str(err)
         return search_input_error(info)
 
+    count_default = 50
+    if info.get('count'):
+        try:
+            count = int(info['count'])
+        except:
+            err = "Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']
+            flash(Markup(err), "error")
+            info['err'] = str(err)
+            return search_input_error(info)
+    else:
+        info['count'] = count_default
+        count = count_default
+
+    start_default = 0
+    if info.get('start'):
+        try:
+            start = int(info['start'])
+            if(start < 0):
+                start += (1 - (start + 1) / count) * count
+        except:
+            start = start_default
+    else:
+        start = start_default
+
     info['query'] = dict(query)
-    res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
+    res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)]).skip(start).limit(count)
     nres = res.count()
 
     # here we are checking for isometric lattices if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
@@ -142,14 +171,24 @@ def lattice_search(**args):
             res=C.Lattices.lat.find({ 'label' : result }).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
             nres = res.count()
 
-    count = 100
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
+
+    info['number'] = nres
+    info['start'] = int(start)
+    info['more'] = int(start + count < nres)
     if nres == 1:
         info['report'] = 'unique match'
     else:
-        if nres > count:
-            info['report'] = 'displaying first %s of %s matches' % (count, nres)
+        if nres == 0:
+            info['report'] = 'no matches'
         else:
-            info['report'] = 'displaying all %s matches' % nres
+            if nres > count or start != 0:
+                info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
+            else:
+                info['report'] = 'displaying all %s matches' % nres
 
     res_clean = []
     for v in res:
@@ -239,7 +278,7 @@ def vect_to_sym(v):
     return [[int(M[i,j]) for i in range(n)] for j in range(n)]
 
 
-
+# function for checking isometries
 def isom(A,B):
     # First check that A is a symmetric matrix.
     if not matrix(A).is_symmetric():
@@ -271,6 +310,7 @@ def isom(A,B):
             return False
 
 
+#auxiliary function for displaying more coefficients of the theta series
 @lattice_page.route('/theta_display/<label>/<number>')
 def theta_display(label, number):
     try:
@@ -286,6 +326,8 @@ def theta_display(label, number):
     coeff=[data['theta_series'][i] for i in range(number+1)]
     return print_q_expansion(coeff)
 
+
+#data quality pages
 @lattice_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the integral lattice data'

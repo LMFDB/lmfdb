@@ -1,10 +1,10 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Modify search </h2>
+<h2> Further refine search </h2>
 
 <form id='re-search'>
-<input type="hidden" name="start">
+<input type="hidden" name="start" value="{{info.start}}"/>
 <table border="0">
 
 <tr>
@@ -31,7 +31,12 @@
 <td align=left><input type='text' name='minimum' size=10 value="{{info.minimum}}"> </td>
 <td align=left><input type='text' name='class_number' size=10 value="{{info.class_number}}"> </td>
 <td align=left><input type='text' name='aut' size=10 value="{{info.aut}}"> </td>
-<td><button type='submit' size=10  value='refine'>Modify search</button></td>
+</tr>
+
+<tr>
+<td align=left colspan=2>Maximum number of integral lattices to display</td>
+<td align=left><input type='text' name='count' value={{info.count}} size=10></td>
+<td><button type='submit' size=10  value='refine'>Search again</button></td>
 </tr>
 </table>
 </form>
@@ -47,14 +52,24 @@
 
 {% else %}
 
-{% if info.report == "displaying all 0 matches" %}
+{% if info.report == "no matches" %}
 
 <h2> No matches</h2>
 
 {% else %}
-<h2> Results ({{info.report}})</h2>
+<h2> Results ({{info.report}})
 
-<table class="ntdata">
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+</h2>
+
+<table>
 <tr>
 <th>{{ KNOWL('lattice.label', title='Label') }}</th>
 <th>{{ KNOWL('lattice.dimension', title='Dimension') }}</th>
@@ -65,21 +80,29 @@
 {% for l in info.lattices %}
 <tr>
 <td align='left'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
-<td>${{l.dim}}$</td>
-<td>${{l.det}}$</td>
-<td>${{l.level}}$</td>
+<td>{{l.dim}}</td>
+<td>{{l.det}}</td>
+<td>{{l.level}}</td>
 <td>${{l.gram}}$</td>
 </tr>
 {% endfor %}
 </table>
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
 {% endif %}
-
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
 {% endif %}
-
 <br>
-{% if DEBUG %}
-<p class="tex2jax_ignore">  Results for database query {{ info.query }}</p>
+{% endif %}
 
 {% endif %}
+
+<!--<br>-->
+<!--{% if DEBUG %}-->
+<!--<p class="tex2jax_ignore">  Results for database query {{ info.query }}</p>-->
+
+<!--{% endif %}-->
 
 {% endblock %}
