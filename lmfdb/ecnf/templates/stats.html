@@ -1,0 +1,21 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+{{ KNOWL_INC('dq.ecnf.extent') }}
+</div>
+
+<h2>Fields, number of curves and maximum conductor norm</h2>
+{% for d in info.stats.ncurves %}
+<h3> Degree {{d}} </h3>
+<table>
+<tr><th> Field <th> Number of curves <th> Number of isogeny classes <th> Maximum conductor norm </tr>
+{% for F in info.counts.fields_by_degree[d] %}
+<tr><td> {{F}} <td> {{info.stats.ncurves[d][F]}} <td> {{info.stats.nclasses[d][F]}} <td> {{info.stats.maxnorm[d][F]}} </tr>
+{% endfor %}
+</table>
+
+{% endfor %}
+
+{% endblock %}
+</html>
