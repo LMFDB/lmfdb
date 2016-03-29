@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
-import math
-# from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
-from sage.all import *
+from sage.misc.cachefunc import cached_method
+from sage.all import gcd, Rational, power_mod
 import re
 from flask import url_for
 from lmfdb.utils import make_logger
 logger = make_logger("DC")
 from WebNumberField import WebNumberField
 try:
-    from dirichlet_conrey import *
+    from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
-from HeckeCharacters import *
+from HeckeCharacters import HeckeChar, RayClassGroup
 
 """
 Any character object is obtained as a double inheritance of
@@ -98,6 +97,7 @@ def complex2str(g, digits=10):
         return str(imag) + 'i'
     else:
         return str(real) + '+' + str(imag) + 'i'
+
 
 ###############################################################################
 ## url_for modified for characters
@@ -333,6 +333,68 @@ class WebDirichlet(WebCharObject):
             chi = Gm[n]
             if chi.is_primitive():
                 return m, n
+
+    @staticmethod
+    def conductor_conrey(modulus, number):
+        assert gcd(modulus, number) == 1
+        cond = 1;
+        for p,e in modulus.factor():
+            mp = Mod(number, p ** e);
+            if mp == 1:
+                continue
+            if p == 2:
+                cond = 4
+                if number % 4 == 3:
+                    mp = -mp
+            else:
+                cond *= p
+                mp = mp.pow(p-1)
+            while mp != 1:
+                cond *= p
+                mp = mp.pow(p)
+        return cond
+
+    @staticmethod
+    def kronecker_symbol(cond, parity):
+        #Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
+        # Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
+        # symbol_numerator returns the appropriate Kronecker symbol depending on the conductor of \chi. 
+        if cond % 2 == 1:
+            if cond % 4 == 1: m = cond
+            else: m = -cond
+        elif cond % 8 == 4:
+	    # Fixed cond % 16 == 4 and cond % 16 == 12 were switched in the previous version of the code. 
+            # Let d be a non zero squarefree integer. If d  = 2,3 (mod) 4 and if cond = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12 then we set m = cond. 
+            # On the other hand if d = 1 (mod) 4 and cond = 4d = 4 (4n +1) = 16n + 4 then we set m = -cond. 
+            if cond % 16 == 4: m = -cond
+            elif cond % 16 == 12: m = cond
+        elif cond % 16 == 8:
+            if parity == 1: m = -cond
+        else:
+            return None
+        return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
+
+    @staticmethod
+    def parity_conrey(modulus, number):
+        par = 0;
+        for p,e in modulus.factor():
+            if p == 2:
+                if number % 4 == 3:
+                    par = 1 - par
+            else:
+                phi2 = (p-1)/2 * p **(e-1)
+            if Mod(number, p ** e).pow(phi2) != 1:
+                par = 1 - par
+        return par
+
+    @staticmethod
+    def kronecker_symbol_conrey(modulus, number):
+        c = self.conductor_conrey(modulus, number)
+        p = self.parity_conrey(modulus, number)
+        return self.kronecker_symbol(c, p)
+
+
+
 
 #############################################################################
 ###  Hecke type
@@ -898,6 +960,12 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         orbit = ( power_mod(num, k, mod) for k in xrange(1, order) if gcd(k, order) == 1)
         return ( self._char_desc(num, prim=prim) for num in orbit )
 
+    def kronecker_symbol(self): 
+        """ chi is equal to a kronecker symbol if and only if it is real """
+        if self.order != 2:
+            return None
+        return WebDirichlet.kronecker_symbol(self.conductor, self.chi.is_odd())
+
     @property
     def codegaloisorbit(self):
         return { 'sage': 'chi_sage.galois_orbit()',
@@ -910,11 +978,8 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
                  }
 
     @property
-    def symbol(self):
-        m = self.symbol_numerator
-        if m:
-            return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % m
-        return None
+    def symbol(self): 
+        return self.kronecker_symbol()
 
     @property
     def codesymbol(self):
@@ -1002,33 +1067,6 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     @property
     def codekloosterman(self):
         return { 'sage': 'chi_sage.kloosterman_sum(a,b)' }
-
-    @property
-    def symbol_numerator(self): 
-#Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
-# Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
-# symbol_numerator returns the appropriate Kronecker symbol depending on the conductor of \chi. 
-        """ chi is equal to a kronecker symbol if and only if it is real """
-        if self.order != 2:
-            return None
-        cond = self.conductor
-        if cond % 2 == 1:
-            if cond % 4 == 1: m = cond
-            else: m = -cond
-        elif cond % 8 == 4:
-	    # Fixed cond % 16 == 4 and cond % 16 == 12 were switched in the previous version of the code. 
-            # Let d be a non zero squarefree integer. If d  = 2,3 (mod) 4 and if cond = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12 then we set m = cond. 
-            # On the other hand if d = 1 (mod) 4 and cond = 4d = 4 (4n +1) = 16n + 4 then we set m = -cond. 
-            if cond % 16 == 4: m = -cond
-            elif cond % 16 == 12: m = cond
-        elif cond % 16 == 8:
-            if self.chi.is_even(): m = cond
-            else: m = -cond
-        else:
-            return None
-        return m
-
-
 
 class WebHeckeExamples(WebHecke):
     """ this class only collects some interesting number fields """
