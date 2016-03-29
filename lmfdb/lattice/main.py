@@ -167,8 +167,10 @@ def lattice_search(**args):
         d=matrix(A).determinant()
         result=[B for B in C.Lattices.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])==True]
         if len(result)>0:
-            result=result[0]['label']
-            res=C.Lattices.lat.find({ 'label' : result }).sort([('dim', ASC), ('det', ASC), ('label', ASC)])
+            result=result[0]['gram']
+            query_gram={ 'gram' : result }
+            query.update(query_gram)
+            res = C.Lattices.lat.find(query)
             nres = res.count()
 
     if(start >= nres):
