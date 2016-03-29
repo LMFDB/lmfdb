@@ -58,6 +58,7 @@ function show_code(system) {
     <div align ="right">
       Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
        {# <a onclick="show_code('pari'); return false" href='#'>pari</a>, #}
+        <a onclick="show_code('pari'); return false" href='#'>gp</a>,
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
 
@@ -143,7 +144,7 @@ cellpadding="5";
         {% endif %}
         </tr>
 
-          <tr><td colspan=5> {{ code(ec.code,'disc_norm') }}</td></tr>
+          <tr><td colspan=5> {{ code(ec.code,'disc') }}</td></tr>
         <tr>
         <td>
           {% if ec.is_minimal %}
@@ -157,7 +158,7 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.fact_disc_norm }}</td>
         </tr>
-        <tr><td colspan=5> {{ code(ec.code,'disc') }}</td></tr>
+        <tr><td colspan=5> {{ code(ec.code,'disc_norm') }}</td></tr>
 
 {% if not ec.is_minimal %}
         <tr>
