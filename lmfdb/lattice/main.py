@@ -137,7 +137,7 @@ def lattice_search(**args):
             count = int(info['count'])
         except:
             err = "Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']
-            flash(Markup(err), "error")
+            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']), "error")
             info['err'] = str(err)
             return search_input_error(info)
     else:
@@ -264,7 +264,7 @@ def render_lattice_webpage(**args):
     if info['name'] != "" :
         info['properties'].append(('Name','%s' % info['name'] ))
     friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends)
+    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends, learnmore=learnmore_list())
 
 def vect_to_sym(v):
     n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
