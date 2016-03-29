@@ -38,7 +38,6 @@
     {% set body_background = white %}
     {% set body_text = black%}
 
-<<<<<<< 561b797440d4b5f5a2357142af13e6006a18745c
 {% elif color_template == 2 %}
   /*Ruddy Browns*/
   {% set col_main_ld = '#83614c' %} /*Header and Footer*/
@@ -56,8 +55,6 @@
   {% set body_text = black %}
   {% set box_tab_text = black %}
     
-=======
->>>>>>> Added new color schemes.
 {% elif color_template == 3 %}
     /*Green 2*/
     {% set col_main_d  = '#284928' %}
@@ -73,7 +70,6 @@
     {% set body_background = white %}
     {% set body_text = black%}
 
-<<<<<<< 561b797440d4b5f5a2357142af13e6006a18745c
 {% elif color_template == 4 %}
   /*Tans*/
   {% set col_main_ld = '#827f64' %} /*Header and Footer*/
@@ -90,8 +86,7 @@
   {% set body_background = white %}
   {% set body_text = black %}
   {% set box_tab_text = black %}
-=======
->>>>>>> Added new color schemes.
+
     
 {% elif color_template == 5 %}
     /*Pink.  Because*/
@@ -107,8 +102,6 @@
     /* Body colors */
     {% set body_background = white %}
     {% set body_text = black %}
-
-<<<<<<< 561b797440d4b5f5a2357142af13e6006a18745c
 
 {% elif color_template == 6 %}
   /*Blues*/
@@ -126,8 +119,6 @@
   {% set body_background = white %}
   {% set body_text = black %}
   {% set box_tab_text = '#eaf0ff' %}
-=======
->>>>>>> Added new color schemes.
     
 {% elif color_template == 7 %}
     /*Mint.*/
@@ -143,8 +134,6 @@
     /* Body colors */
     {% set body_background = white %}
     {% set body_text = black%}
-
-<<<<<<< 561b797440d4b5f5a2357142af13e6006a18745c
 
 {% elif color_template == 8 %}
   /*Teal+Orange*/
@@ -163,15 +152,8 @@
   {% set body_text = '#512809' %}
   {% set box_tab_text = '#e2ddd9' %}
 
-<<<<<<< 00eef8bd7945647e2db92ba8a5c211f7f5ef6728
-    
-{% elif color_template == 9 %}
-    /*??*/
-=======
-    
 {% elif color_template == 9 %}
     /*Mint.*/
->>>>>>> Added new color schemes.
     {% set col_main_d  = '#cccccc' %} /*Motives*/
     {% set col_main_dl = '#00de61' %} /*RHC text, footer text*/
     {% set col_main    = '#' %} /*hyperlink text*/ 
@@ -185,7 +167,6 @@
     {% set body_background = '#ffffff' %}
     {% set body_text = '#444444'%}
 
-<<<<<<< 561b797440d4b5f5a2357142af13e6006a18745c
 {% elif color_template == 10 %}
     /*Grey and Green*/
     {% set col_main_d  = '#cccccc' %} /*Motives*/
@@ -211,24 +192,11 @@
     {% set col_main_lg = '#F38630' %} /*shadow*/
     {% set col_main_ld = '#A7DBD8' %} /*header*/
     {% set col_main_ll = '#E0E4CC' %} /*boxes*/
-=======
-{% elif color_template == 11 %}
-    /*Mint.*/
-    {% set col_main_d  = '#cccccc' %} /*Motives*/
-    {% set col_main_dl = '#4caf50' %} /*RHC text, footer text*/
-    {% set col_main    = '#4caf50' %} /*hyperlink text*/ 
-    {% set col_main_2  = '#78909c' %} /*Rollover*/ 
-    {% set col_main_l  = '#c0c0c0' %} /*tabs*/
-    {% set col_main_lg = '#4caf50' %} /*shadow*/
-    {% set col_main_ld = '#dddddd' %} /*header*/
-    {% set col_main_ll = '#f1f1f1' %} /*boxes*/
->>>>>>> Added new color schemes.
     {% set col_main_g  = 'red' %}/*where is this*/
     /* Body colors */
     {% set body_background = '#ffffff' %}
     {% set body_text = '#555555'%}
 
-<<<<<<< 561b797440d4b5f5a2357142af13e6006a18745c
 {% elif color_template == 12 %}
     /*Blue.*/
     {% set col_main_d  = '#FA6900' %} /*Motives*/
@@ -244,8 +212,7 @@
     {% set body_background = '#ffffff' %}
     {% set body_text = '#555555'%}
     
-=======
->>>>>>> Added new color schemes.
+
 {% elif color_template == 13 %}
     /*Mint.*/
     {% set col_main_d  = '#cccccc' %} /*Motives*/
@@ -261,10 +228,6 @@
     {% set body_background = '#2b2d30' %}
     {% set body_text = '#d10a92'%}
 
-<<<<<<< 561b797440d4b5f5a2357142af13e6006a18745c
-=======
-    
->>>>>>> Added new color schemes.
 {% endif %}
 
 /*Greens found in code probably not used*/
