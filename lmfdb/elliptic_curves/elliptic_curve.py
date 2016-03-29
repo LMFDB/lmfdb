@@ -81,6 +81,8 @@ def learnmore_list_remove(matchstring):
 
 @ec_page.route("/")
 def rational_elliptic_curves(err_args=None):
+    print "in rational_elliptic_curves"
+    print request.args
     if err_args is None:
         if len(request.args) != 0:
             return elliptic_curve_search(**request.args)
@@ -165,7 +167,11 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
 
 
 def elliptic_curve_search(**args):
+    print 'args'
+    print args
     info = to_dict(args)
+    print 'info'
+    print info
     query = {}
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
@@ -215,20 +221,31 @@ def elliptic_curve_search(**args):
             query['label'] = ''
 
     try:
+        print query
         parse_rational(info,query,'jinv','j-invariant')
+        print query
         parse_ints(info,query,'conductor')
+        print query
         parse_ints(info,query,'torsion','torsion order')
+        print query
         parse_ints(info,query,'rank')
+        print query
         parse_ints(info,query,'sha','analytic order of &#1064;')
+        print query
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,process=str,check_divisibility='increasing')
+        print query
         parse_primes(info, query, 'surj_primes', name='surjective primes',
                      qfield='non-surjective_primes', mode='complement')
+        print query
+        print info.get('surj_quantifier')
         if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
+        print query
         parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
                      qfield='non-surjective_primes',mode=mode)
+        print query
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)
@@ -241,11 +258,7 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     info['query'] = query
-
-    if 'download' in info and info['download'] != '0':
-        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING) ])
-        return download_search(info, res)
-
+    print query
     cursor = db_ec().find(query)
     nres = cursor.count()
     if(start >= nres):
@@ -262,6 +275,9 @@ def elliptic_curve_search(**args):
     info['start'] = start
     info['count'] = count
     info['more'] = int(start + count < nres)
+
+    if 'download' in info and info['download'] != '0':
+        return download_search(info)
     if nres == 1:
         info['report'] = 'unique match'
     elif nres == 2:
@@ -271,7 +287,6 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
@@ -538,7 +553,7 @@ def download_EC_all(label):
     return response
 
 
-def download_search(info, res):
+def download_search(info):
     dltype = info['Submit']
     delim = 'bracket'
     com = r'\\'  # single line comment start
@@ -556,7 +571,7 @@ def download_search(info, res):
         delim = 'magma'
         filename = 'elliptic_curves.m'
     s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, info['curves'].count())
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [Weierstrass Coefficients]\n'
     s += '\n' + com2
@@ -566,7 +581,8 @@ def download_search(info, res):
     else:
         s += 'data = ['
     s += '\\\n'
-    for f in res:
+    #for f in info['curves']:
+    for f in info['curves']:
         entry = str(f['ainvs'])
         entry = entry.replace('u','')
         entry = entry.replace('\'','')
