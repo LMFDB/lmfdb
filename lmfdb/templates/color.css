@@ -8,7 +8,6 @@
 {% set color_template = 0 %}
 /*0, 1, 2, 3, 10, 11, 12, 13*/
 
-
 {% if color_template == 0 %}
     /*Original LMFDB colors*/
     {% set col_main_d  = '#040' %} 
@@ -154,7 +153,7 @@
   {% set box_tab_text = '#e2ddd9' %}
 
 {% elif color_template == 9 %}
-    /*Mint.*/
+    /*??*/
     {% set col_main_d  = '#cccccc' %} /*Motives*/
     {% set col_main_dl = '#00de61' %} /*RHC text, footer text*/
     {% set col_main    = '#' %} /*hyperlink text*/ 
@@ -213,7 +212,6 @@
     {% set body_background = '#ffffff' %}
     {% set body_text = '#555555'%}
     
-
 {% elif color_template == 13 %}
     /*Mint.*/
     {% set col_main_d  = '#cccccc' %} /*Motives*/
