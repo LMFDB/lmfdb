@@ -241,11 +241,6 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     info['query'] = query
-
-    if 'download' in info and info['download'] != '0':
-        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING) ])
-        return download_search(info, res)
-
     cursor = db_ec().find(query)
     nres = cursor.count()
     if(start >= nres):
@@ -262,6 +257,9 @@ def elliptic_curve_search(**args):
     info['start'] = start
     info['count'] = count
     info['more'] = int(start + count < nres)
+
+    if 'download' in info and info['download'] != '0':
+        return download_search(info)
     if nres == 1:
         info['report'] = 'unique match'
     elif nres == 2:
@@ -271,7 +269,6 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
@@ -538,7 +535,7 @@ def download_EC_all(label):
     return response
 
 
-def download_search(info, res):
+def download_search(info):
     dltype = info['Submit']
     delim = 'bracket'
     com = r'\\'  # single line comment start
@@ -556,7 +553,7 @@ def download_search(info, res):
         delim = 'magma'
         filename = 'elliptic_curves.m'
     s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, info['curves'].count())
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [Weierstrass Coefficients]\n'
     s += '\n' + com2
@@ -566,7 +563,8 @@ def download_search(info, res):
     else:
         s += 'data = ['
     s += '\\\n'
-    for f in res:
+    #for f in info['curves']:
+    for f in info['curves']:
         entry = str(f['ainvs'])
         entry = entry.replace('u','')
         entry = entry.replace('\'','')
