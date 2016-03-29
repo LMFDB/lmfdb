@@ -6,8 +6,8 @@
 {% set white = 'white' %}
 {% set black = 'black'%}
 
-{% set color_template = 11 %}
-
+{% set color_template = 0 %}
+/*0, 1, 2, 3, 10, 11, 12, 13*/
 
 {% if color_template == 0 %}
     /*Original LMFDB colors*/
@@ -157,7 +157,7 @@
 
     
 {% elif color_template == 9 %}
-    /*Mint.*/
+    /*??*/
     {% set col_main_d  = '#cccccc' %} /*Motives*/
     {% set col_main_dl = '#00de61' %} /*RHC text, footer text*/
     {% set col_main    = '#' %} /*hyperlink text*/ 
@@ -171,21 +171,51 @@
     {% set body_background = '#ffffff' %}
     {% set body_text = '#444444'%}
 
-{% elif color_template == 11 %}
-    /*Mint.*/
+{% elif color_template == 10 %}
+    /*Grey and Green*/
     {% set col_main_d  = '#cccccc' %} /*Motives*/
-    {% set col_main_dl = '#4caf50' %} /*RHC text, footer text*/
-    {% set col_main    = '#4caf50' %} /*hyperlink text*/ 
+    {% set col_main_dl = '#00de61' %} /*RHC text, footer text*/
+    {% set col_main    = '#5bbcc0' %} /*hyperlink text*/ 
     {% set col_main_2  = '#78909c' %} /*Rollover*/ 
-    {% set col_main_l  = '#c0c0c0' %} /*tabs*/
-    {% set col_main_lg = '#4caf50' %} /*shadow*/
+    {% set col_main_l  = '#5bbcc0' %} /*tabs*/
+    {% set col_main_lg = '#5bbcc0' %} /*shadow*/
     {% set col_main_ld = '#dddddd' %} /*header*/
-    {% set col_main_ll = '#f1f1f1' %} /*boxes*/
+    {% set col_main_ll = '#e0e0e0' %} /*boxes*/
+    {% set col_main_g  = 'red' %}/*where is this*/
+    /* Body colors */
+    {% set body_background = '#ffffff' %}
+    {% set body_text = '#444444'%}
+
+{% elif color_template == 11 %}
+    /*Blue and Orange.*/
+    {% set col_main_d  = '#FA6900' %} /*Motives*/
+    {% set col_main_dl = '#FA6900' %} /*RHC text, footer text*/
+    {% set col_main    = '#102D49' %} /*hyperlink text*/ 
+    {% set col_main_2  = '#78909c' %} /*Rollover*/ 
+    {% set col_main_l  = '#69D2E7' %} /*tabs*/
+    {% set col_main_lg = '#F38630' %} /*shadow*/
+    {% set col_main_ld = '#A7DBD8' %} /*header*/
+    {% set col_main_ll = '#E0E4CC' %} /*boxes*/
     {% set col_main_g  = 'red' %}/*where is this*/
     /* Body colors */
     {% set body_background = '#ffffff' %}
     {% set body_text = '#555555'%}
 
+{% elif color_template == 12 %}
+    /*Blue.*/
+    {% set col_main_d  = '#FA6900' %} /*Motives*/
+    {% set col_main_dl = '#23A7C0' %} /*RHC text, footer text*/
+    {% set col_main    = '#102D49' %} /*hyperlink text*/ 
+    {% set col_main_2  = '#78909c' %} /*Rollover*/ 
+    {% set col_main_l  = '#69D2E7' %} /*tabs*/
+    {% set col_main_lg = '#69D3E7' %} /*shadow*/
+    {% set col_main_ld = '#95E4F3' %} /*header*/
+    {% set col_main_ll = '#CDF5FC' %} /*boxes*/
+    {% set col_main_g  = 'red' %}/*where is this*/
+    /* Body colors */
+    {% set body_background = '#ffffff' %}
+    {% set body_text = '#555555'%}
+    
 {% elif color_template == 13 %}
     /*Mint.*/
     {% set col_main_d  = '#cccccc' %} /*Motives*/
