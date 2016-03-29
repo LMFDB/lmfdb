@@ -207,13 +207,13 @@ def lattice_search(**args):
     t = 'Integral Lattices Search Results'
     bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
     properties = []
-    return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info, bread=None):
     t = 'Integral Lattices Search Error'
     if bread is None:
         bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
-    return render_template("lattice-search.html", info=info, title=t, properties=[], bread=bread)
+    return render_template("lattice-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
 
 @lattice_page.route('/<label>')
 def render_lattice_webpage(**args):
@@ -223,7 +223,10 @@ def render_lattice_webpage(**args):
         lab = args.get('label')
         data = C.Lattices.lat.find_one({'$or':[{'label': lab }, {'name': lab }]})
     if data is None:
-        return "No such field %s" %args
+        t = "Integral Lattices Search Error"
+        bread = [('Lattice', url_for(".lattice_render_webpage"))]
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral lattice in the database." % (lab)),"error")
+        return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
 
