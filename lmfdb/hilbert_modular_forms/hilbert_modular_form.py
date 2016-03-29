@@ -17,9 +17,8 @@ from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, parse_range
-
-from lmfdb.number_fields.number_field import parse_list, parse_field_string
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
+from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 from lmfdb.WebNumberField import *
 
@@ -84,49 +83,18 @@ def hilbert_modular_form_search(**args):
         args = {'label': info['label']}
         return render_hmf_webpage(**args)
     query = {}
-    for field in ['field_degree', 'field_disc', 'field_label', 'weight', 'level_norm', 'dimension']:
-        if info.get(field):
-            if field == 'weight':
-                try:
-                    parallelweight = int(info[field])
-                    query['parallel_weight'] = parallelweight
-                except:
-                    query[field] = str(parse_list(info[field]))
-            elif field == 'field_label':
-                query[field] = parse_field_string(info[field])
-            elif field == 'field_degree':
-                query['deg'] = parse_range(info[field])
-            elif field == 'field_disc':
-                query['disc'] = parse_range(info[field])
-            elif field == 'label':
-                query[field] = info[field]
-            elif field == 'dimension':
-                query[field] = parse_range(str(info[field]))
-            elif field == 'level_norm':
-                query[field] = parse_range(info[field])
-            else:
-                query[field] = info[field]
+    try:
+        parse_nf_string(info,query,'field_label',name="Field")
+        parse_ints(info,query,'field_degree')
+        parse_ints(info,query,'field_disc',name="Field discriminant")
+        parse_ints(info,query,'dimension')
+        parse_ints(info,query,'level_norm')
+        parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
+    except ValueError:
+        return search_input_error()
 
-    count_default = 100
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        info['count'] = count_default
-        count = count_default
-
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
+    count = parse_count(info,100)
+    start = parse_start(info)
 
     info['query'] = dict(query)
     res = C.hmfs.forms.find(
@@ -170,6 +138,10 @@ def hilbert_modular_form_search(**args):
     properties = []
     return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread)
 
+def search_input_error(info = None, bread = None):
+    if info is None: info = {'err':''}
+    if bread is None: bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('Search results', ' ')]
+    return render_template("hilbert_modular_form_search.html", info=info, title="Hilbert Modular Form Search Error", bread=bread)
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
 def render_hmf_webpage_download(**args):

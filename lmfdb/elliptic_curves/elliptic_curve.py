@@ -14,8 +14,8 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_spli
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, parse_list, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex
-from lmfdb.search_parsing import clean_input, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
+from lmfdb.elliptic_curves.web_ec import WebEC, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex
+from lmfdb.search_parsing import split_list, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
@@ -522,7 +522,7 @@ def download_EC_all(label):
             elif t in ['torsion_generators', 'torsion_structure']:
                 data1.append([eval(g) for g in d])
             elif t == 'x-coordinates_of_integral_points':
-                data1.append(parse_list(d))
+                data1.append(split_list(d))
             elif t == 'gens':
                 data1.append(parse_points(d))
             elif t in ['iso', 'label', 'lmfdb_iso', 'lmfdb_label']:
