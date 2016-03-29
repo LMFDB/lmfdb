@@ -10,7 +10,8 @@ from sage.all import *
 import tempfile
 import os
 from pymongo import ASCENDING
-from lmfdb.utils import to_dict, parse_range, make_logger
+from lmfdb.utils import to_dict, make_logger
+from lmfdb.search_parsing import parse_range
 from lmfdb.WebCharacter import *
 from lmfdb.characters import characters_page, logger
 import ListCharacters

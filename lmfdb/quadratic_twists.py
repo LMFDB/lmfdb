@@ -8,7 +8,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import flask
 
 
-from utils import ajax_more, image_src, web_latex, to_dict, parse_range
+from utils import ajax_more, image_src, web_latex, to_dict
 import sage.all
 from sage.all import ZZ, EllipticCurve, latex, matrix, srange
 q = ZZ['x'].gen()
