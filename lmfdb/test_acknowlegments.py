@@ -25,7 +25,7 @@ class HomePageTest(LmfdbTest):
     #
     # Link to workshops page
     def test_workshops(self):
-        homepage = self.tc.get("/workshops").data
+        homepage = self.tc.get("/acknowledgment/activities").data
         assert 'Computational Aspects of the Langlands Program' in homepage
        
         
