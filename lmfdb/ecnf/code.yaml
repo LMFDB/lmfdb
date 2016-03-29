@@ -1,6 +1,6 @@
 prompt:
   sage:   'sage:'
-  pari:   'gp:'
+  pari:   'gp (2.8):'
   magma:  'magma:'
 
 logo:
@@ -18,11 +18,14 @@ not-implemented:
 
 field:
   sage:  K.<a> = NumberField(%s)
+  pari: K = nfinit(%s); a=x
   magma: K<a> := NumberField(%s);
 
 curve:
   sage: |
     E = EllipticCurve(%s)
+  pari: |
+    E = ellinit(%s)
   magma: |
     E := EllipticCurve(%s);
 
@@ -40,14 +43,17 @@ cond_norm:
 
 disc:
   sage:  E.discriminant()
+  pari:  E.disc
   magma: Discriminant(E);
 
 disc_norm:
   sage:  E.discriminant().norm()
+  pari:  norm(E.disc)
   magma: Norm(Discriminant(E));
 
 jinv:
   sage:  E.j_invariant()
+  pari:  E.j
   magma: jInvariant(E);
 
 cm:
@@ -68,25 +74,20 @@ gens:
 
 tors:
   sage:  E.torsion_subgroup().gens()
+  pari:  elltors(E)[2]
   magma: TorsionSubgroup(E);
 
 torgens:
   sage:  E.torsion_subgroup().gens()
+  pari:  elltors(E)[3]
   magma: |
     [f(P): P in Generators(T)] where T,f:=TorsionSubgroup(E);
 
 ntors:
   sage:  E.torsion_order()
+  pari:  elltors(E)[1]
   magma: Order(TorsionSubgroup(E));
 
-cp:
-  sage:  E.tamagawa_numbers()
-  pari:  E.omega[1]
-  magma: RealPeriod(E);
-
-sha:
-  sage:  E.sha().an_numerical()
-  magma: MordellWeilShaInformation(E);
 
 localdata:
   sage:
