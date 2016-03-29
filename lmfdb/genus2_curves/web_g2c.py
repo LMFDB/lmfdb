@@ -709,7 +709,7 @@ class WebG2C(object):
             #   url_for(".index_Q",
             #       igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
             #('Siegel modular form someday', '.')
-            ]
+            ] + [('Elliptic curve %s' % lab,url_for_ec(lab)) for lab in endodata['spl_facs_labels'] if lab != '']
         #self.downloads = [('Download all stored data', '.')]
 
         # Breadcrumbs
@@ -758,7 +758,7 @@ class WebG2C(object):
 
         # Curve
         set_code('curve',
-                 'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'
+                 '|R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'
                  % (self.data['min_eqn'][0],self.data['min_eqn'][1]),
                  pari_not_implemented, # pari code goes here
                  'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'
