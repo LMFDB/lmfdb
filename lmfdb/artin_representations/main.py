@@ -74,8 +74,10 @@ def artin_representation_search(**args):
         parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                          allowed=[1,0,-1],process=int)
         parse_galgrp(info,query,"group",name="Group",qfield="Galois_nt",use_bson=False)
-        parse_paired_fields(info,query,field1='conductor',qfield1='Conductor_key',parse1=parse_ints,kwds1={'parse_singleton':make_cond_key},
-                                       field2='dimension',qfield2='Dim',          parse2=parse_ints)
+        parse_ints(info,query,'dimension',qfield='Dim')
+        parse_ints(info,query,'conductor',qfield='Conductor_key', parse_singleton=make_cond_key)
+        #parse_paired_fields(info,query,field1='conductor',qfield1='Conductor_key',parse1=parse_ints,kwds1={'parse_singleton':make_cond_key},
+                                       #field2='dimension',qfield2='Dim', parse2=parse_ints)
     except ValueError:
         return search_input_error(info, bread)
 

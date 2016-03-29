@@ -14,7 +14,7 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
 
 from flask import flash, redirect, url_for, request
-from sage.all import ZZ, QQ
+from sage.all import ZZ, QQ, prod
 from sage.misc.decorators import decorator_keywords
 
 from markupsafe import Markup

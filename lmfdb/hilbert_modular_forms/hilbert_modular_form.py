@@ -85,10 +85,10 @@ def hilbert_modular_form_search(**args):
     query = {}
     try:
         parse_nf_string(info,query,'field_label',name="Field")
-        parse_ints(info,query,'field_degree')
-        parse_ints(info,query,'field_disc',name="Field discriminant")
+        parse_ints(info,query,'deg', name='Field degree')
+        parse_ints(info,query,'disc',name="Field discriminant")
         parse_ints(info,query,'dimension')
-        parse_ints(info,query,'level_norm')
+        parse_ints(info,query,'level_norm', name="Level norm")
         parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
     except ValueError:
         return search_input_error()
