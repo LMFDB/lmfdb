@@ -55,7 +55,6 @@ def id_dirichlet(fun, N, n):
         return (N, ans)
     if p2==1:
         return (N, crt([1, ans], [2, Nodd]))
-    quick = p2==2
     if p2==2:
         my3=crt([3, 1], [N2, Nodd])
         #print "My3 = "+str(my3)

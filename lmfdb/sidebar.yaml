@@ -45,7 +45,6 @@
           url_for: "l_functions.l_function_degree_page"
           url_args:
             degree: 'degree4'
-          status: beta
         - title: "5+"
           status: future
    secondpart:
