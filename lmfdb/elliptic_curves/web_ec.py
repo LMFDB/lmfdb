@@ -7,6 +7,7 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
+from lmfdb.search_parsing import split_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
 
 import sage.all
@@ -59,15 +60,6 @@ def padic_db():
 def trim_galois_image_code(s):
     return s[2:] if s[1].isdigit() else s[1:]
 
-def parse_list(s):
-    """
-    parses a string representing a list of integers, e.g. '[1,2,3]'
-    """
-    s = s.replace(' ','')[1:-1]
-    if s:
-        return [int(a) for a in s.split(",")]
-    return []
-
 def parse_point(s):
     r""" Converts a string representing a point in affine or
     projective coordinates to a tuple of rationals.
@@ -106,7 +98,7 @@ class WebEC(object):
         logger.debug("Constructing an instance of ECisog_class")
         self.__dict__.update(dbdata)
         # Next lines because the hyphens make trouble
-        self.xintcoords = parse_list(dbdata['x-coordinates_of_integral_points'])
+        self.xintcoords = split_list(dbdata['x-coordinates_of_integral_points'])
         self.non_surjective_primes = dbdata['non-surjective_primes']
         # Next lines because the python identifiers cannot start with 2
         self.twoadic_index = dbdata['2adic_index']

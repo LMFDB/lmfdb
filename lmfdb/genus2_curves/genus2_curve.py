@@ -205,7 +205,7 @@ def genus2_curve_search(**args):
         return render_curve_webpage_by_label(info["jump"])
 
     try:
-        parse_signed_ints(info,query,'disc',None,'abs_disc','absolute discriminant')
+        parse_signed_ints(info,query,'disc',name='Absolute discriminant',qfield=(None,'abs_disc'))
         parse_bool(info,query,'is_gl2_type')
         for fld in ('st_group', 'real_geom_end_alg'):
             if info.get(fld): query[fld] = info[fld]
