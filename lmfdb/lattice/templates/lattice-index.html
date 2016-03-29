@@ -1,13 +1,9 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-
-<p>
-The database currently contains {{info.counts.nlattice_c}} {{ KNOWL('lattice.definition', title='integral lattices') }}. The largest {{ KNOWL('lattice.dimension', title='dimension') }} is {{info.counts.max_dim_c}} and the largest {{ KNOWL('lattice.determinant', title='determinant') }} is {{info.counts.max_det}}. It includes data from the {{ KNOWL('lattice.catalogue_of_lattices', title='Catalogue of Lattices') }}.
-</p>
-<p>
-In the case of {{ KNOWL('lattice.primitive', title='primitive') }} {{ KNOWL('lattice.definition', title='integral lattices') }} of {{ KNOWL('lattice.class_number', title='class number') }} one the database is complete.
-</p>
+<div>
+{{ KNOWL_INC('dq.lattice.extent') }}
+</div>
 
 <style type="text/css">
 .error_message {
@@ -53,7 +49,7 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 
 
 
-<h2> Find a specific integral lattice by {{KNOWL('lattice.label', title='label')}} or by {{KNOWL('lattice.name', title='name')}}</h2>
+<h2> Find a specific {{ KNOWL('lattice.definition', title='integral lattice') }} by {{KNOWL('lattice.label', title='label')}} or by {{KNOWL('lattice.name', title='name')}}</h2>
 
 <form>
 <input type='text' name='label' placeholder='3.4.16.1.1'>
@@ -104,6 +100,10 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 <td align= right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td>
 <td><input type='text' name='aut' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2, 48, 696729600</td>
+</tr>
+
+<tr><td align=left colspan='3'>Maximum number of integral lattices to display <input type='text' name='count' value=50 size='5' />
+</td>
 </tr>
 
 <!--<tr><td align= right>{{ KNOWL('lattice.name', title='Name') }}:</td>-->
