@@ -23,7 +23,7 @@ and an Euler product of the form
 \[
 L(s)=
 \prod_{p|N} \left(1-a_p\, p^{-s} + (a_p^2 - a_{p^2})\, p^{-2s}\right)^{-1}.
-\prod_{p\nmid N} \left(1-a_p\, p^{-s} + \chi(p) \, \overline{a_p} \, p^{-2s} -\chi(p) \, p^{-3s}\right)^{-1}.
+\prod_{p\nmid N} \left(1-a_p\, p^{-s}-\chi(p) \, \overline{a_p} \, p^{-2s} +\chi(p) \, p^{-3s}\right)^{-1}.
 \]
 Here $N$ is the {{ KNOWL('lfunction.conductor', title='conductor') }} of the L-function, and $\chi$, known as the central character,
 is a primitive Dirichlet character of conductor dividing&nbsp;$N$.
@@ -64,7 +64,7 @@ text-align: center;
 </style>
 
 
-<table border=1 cellpadding=5>
+<table border=1 cellpadding=5> 
 <tbody>
 <tr align="center">
 <th align="center">First&nbsp;complex<br>critical&nbsp;zero</th>
@@ -74,24 +74,20 @@ text-align: center;
 <th align="center">{{ KNOWL('lfunction.arithmetic', title='arithmetic') }}</th>
 <th align="center">{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
 <th align="center">$\delta,\nu$</th>
-<th align="center">$\mu$</th>
+<th align="center">$mu$</th>
 <th align="center">$\delta_1,\delta_2,\delta_3$</th>
 <th align="center">$\mu_1,\mu_2$</th>
 <th align="center">{{ KNOWL('lfunction.sign', title='$\epsilon$') }}</th>
 </tr>
-<tr align="center"><td><a href="/L/ModularForm/GL3/Q/Maass/GL3Maass_1_16.4031_0.17112/">6.42223</a></td><td>Maass cusp form</td><td>1</td><td>-</td><td>&#x25CB;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,0</td><td>16.40312, 0.17112</td><td>1</td><tr>
-<tr align="center"><td><a href="/L/NumberField/3.1.23.1/">5.11568</a></td><td><a href="/NumberField/3.1.23.1">number field 3.1.23.1</a></td><td>23</td><td>-</td><td>&#x25CF;</td><td>&#x25CF;</td><td>0,0</td><td>0</td><td></td><td></td><td>1</td><tr>
-<tr align="center"><td><a href="/L/SymmetricPower/2/EllipticCurve/Q/11.a/">3.89928</a></td><td>symmetric square of the<a href="/EllipticCurve/Q/11.a1">rank 0 elliptic curve 11.a1</a></td><td>121</td><td>-</td><td>&#x25CF;</td><td>&#x25CF;</td><td>0,1</td><td>0</td><td></td><td></td><td>1</td><tr>
-<tr align="center"><td><a href="/L/ArtinRepresentation/3/229/2/">3.19363</a></td><td><a href="/ArtinRepresentation/3/229/1/">Artin representation</a></td><td>229</td><td>$\left( \frac{229}{\cdot}\right)$</td><td>&#x25CF;</td><td>&#x25CF;</td><td></td><td></td><td>0,1,1</td><td>0,0</td><td>1</td><tr>
-<tr align="center"><td><a href="/L/ModularForm/GL3/Q/Maass/GL3Maass_4_8.23979_2.64122/">2.65766</a></td><td>Maass cusp form</td><td>4</td><td>-</td><td>&#x25CB;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,0</td><td>8.23979, 2.64122</td><td>1</td><tr>
-<tr align="center"><td><a href="//L/ModularForm/GL3/Q/Maass/GL3Maass_4_9.63244_1.37406/">2.53210</a></td><td>Maass cusp form</td><td>4</td><td>-</td><td>&#x25CB;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,0</td><td>9.63244, 1.37406</td><td>$e(0.33333)$</td><tr>
-<tr align="center"><td><a href="/L/SymmetricPower/2/EllipticCurve/Q/37.a/">2.15869</a></td><td>symmetric square of the<a href="/EllipticCurve/Q/37.a">rank 1 elliptic curve 37.a1</a></td><td>1369</td><td>-</td><td>&#x25CF;</td><td>&#x25CF;</td><td>0,1</td><td>0</td><td></td><td></td><td>1</td><tr>
-<tr align="center"><td>1.36848</td><td><a href="/TensorProducts/">tensor product</a>of an<a href="/ArtinRepresentation/3/229/1/">Artin representation</a>and a<a href="/Character/Dirichlet/5/2">Dirichlet character</a></td><td>28625</td><td>$\chi_{1145}(228,\cdot)$</td><td>&#x25CF;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,1</td><td>0,0</td><td>$e(0.76431)$</td><tr>
-<!-- the link <a href="/TensorProducts/show/?obj1=ArtinRepresentation%2F3%2F229%2F1%2F&obj2=Character%2FDirichlet%2F5%2F2">1.36848</a> crashes, need to fix that!
--->
-<tr align="center"><td><a href="/L/SymmetricPower/2/EllipticCurve/Q/389.a/">1.07683</a></td><td>symmetric square of the<a href="/EllipticCurve/Q/389.a1">rank 2 elliptic curve 389.a1</a></td><td>151321</td><td>-</td><td>&#x25CF;</td><td>&#x25CF;</td><td>0,1</td><td>0</td><td></td><td></td><td>1</td><tr>
-<tr align="center"><td><a href="/L/ModularForm/GL3/Q/Maass/GL3Maass_4_8.95466_2.93659/">0.93372</a></td><td>Maass cusp form</td><td>4</td><td>-</td><td>&#x25CB;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,0</td><td>8.95466, 2.93659</td><td>$e(0.66667)$</td><tr>
+<tr align="center"><td><a href="/L/ModularForm/GL3/Q/Maass/GL3Maass_1_16.4031_0.17112/">6.42223</a></td><td>$\SL(3,\Z)$ Maass form</td><td>1</td><td>-</td><td>&#x25CB;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,0</td><td>16.40312, 0.17112</td><td>1</td><tr>
+<tr align="center"><td><a href="/L/NumberField/3.1.23.1/">5.11568</a></td><td><a href="/NumberField/3.1.23.1">global number field</a></td><td>23</td><td>$\left(\frac{-23}{\cdot}\right)$</td><td>&#x25CF;</td><td>&#x25CF;</td><td>$0$,0</td><td>0</td><td></td><td></td><td>1</td><tr>
+<tr align="center"><td><a href="/L/SymmetricPower/2/EllipticCurve/Q/11.a/">3.89928</a></td><td>$\Sym^2$ of rank 0 elliptic curve <a href="EllipticCurve/Q/11.a1">11.a1</a></td><td>121</td><td>-</td><td>&#x25CF;</td><td>&#x25CF;</td><td>$0$,1</td><td>0</td><td></td><td></td><td>1</td><tr>
+<tr align="center"><td><a href="/L/ArtinRepresentation/3.229.4t5.1c1">3.19363</a></td><td><a href="/ArtinRepresentation/3.229.4t5.1c1">Artin representation</a></td><td>229</td><td>$\left(\frac{229}{\cdot}\right)$</td><td>&#x25CF;</td><td>&#x25CF;</td><td></td><td></td><td>0,1,1</td><td>0, 0</td><td>1</td><tr>
+<tr align="center"><td><a href="/L/ModularForm/GL3/Q/Maass/GL3Maass_4_8.23979_2.64122/">2.65766</a></td><td>$\GL(3)$ Maass form</td><td>4</td><td>-</td><td>&#x25CB;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,0</td><td>8.23979, 2.64122</td><td>1</td><tr>
+<tr align="center"><td><a href="/L/ModularForm/GL3/Q/Maass/GL3Maass_4_9.63244_1.37406/">2.53210</a></td><td>$\GL(3)$ Maass form</td><td>4</td><td>-</td><td>&#x25CB;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,0</td><td>9.63244, 1.37406</td><td>$e(1/3)$</td><tr>
+<tr align="center"><td><a href="/L/SymmetricPower/2/EllipticCurve/Q/37.a/">2.15869</a></td><td>$\Sym^2$ of rank 1 elliptic curve <a href="/EllipticCurve/Q/37.a1">37.a1</a></td><td>1369</td><td>-</td><td>&#x25CF;</td><td>&#x25CF;</td><td>$0$,1</td><td>0</td><td></td><td></td><td>1</td><tr>
+<tr align="center"><td><a href="/TensorProducts/">1.36848</a></td><td>tensor product of an <a href="/ArtinRepresentation/3.229.4t5.1c1">Artin representation</a> and a <a href="/Character/Dirichlet/5/2">Dirichlet character</a></td><td>28625</td><td>$\chi_{1145}(228,\cdot)$</td><td>&#x25CF;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,1</td><td>0, 0</td><td>$e(0.76431)$</td><tr>
+<tr align="center"><td><a href="/L/SymmetricPower/2/EllipticCurve/Q/389.a/">1.07683</a></td><td>$\Sym^2$ of rank 2 elliptic curve <a href="/EllipticCurve/Q/389.a1">389.a1</a></td><td>151321</td><td>-</td><td>&#x25CF;</td><td>&#x25CF;</td><td>$0$,1</td><td>0</td><td></td><td></td><td>1</td><tr>
+<tr align="center"><td><a href="/L/ModularForm/GL3/Q/Maass/GL3Maass_4_8.95466_2.93659/">0.93372</a></td><td>$\GL(3)$ Maass form</td><td>4</td><td>-</td><td>&#x25CB;</td><td>&#x25CB;</td><td></td><td></td><td>0,0,0</td><td>8.95466, 2.93659</td><td>$e(2/3)$</td><tr>
 </tbody></table>
-
-
 {% endblock %}

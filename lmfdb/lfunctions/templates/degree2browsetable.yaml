@@ -195,8 +195,8 @@ level: 148
 character: $\left(\frac{37}{\cdot}\right)$
 analytic_conductor: 2.010101010101
 epsilon: 1
-url: L/ArtinRepresentation/2/148/2/
-object_url: [ArtinRepresentation/2/148/2/,,]
+url: L/ArtinRepresentation/2.2e2_37.3t2.1c1
+object_url: [ArtinRepresentation/2.2e2_37.3t2.1c1,,]
 object_name: [Artin&nbsp;representation,Hecke character,even Maass]
 self_dual: true
 arithmetic: true
@@ -220,11 +220,11 @@ Lfunction_texname: $L(s,A)$
 mu: 0
 delta: [1,1]
 level: 163
-character: ?
+character: $\chi_{163}(104,\cdot)$
 analytic_conductor: 2.010101010101
 epsilon: 1
-url: L/ArtinRepresentation/2/163/1/
-object_url: [ArtinRepresentation/2/163/1/,]
+url: L/ArtinRepresentation/2.163.8t12.1c2
+object_url: [ArtinRepresentation/2.163.8t12.1c2,]
 object_name: [Artin&nbsp;representation,odd Maass form]
 self_dual: false
 arithmetic: true
@@ -237,8 +237,8 @@ level: 68
 character: $\left(\frac{-68}{\cdot}\right)$
 analytic_conductor: 2.010101010101
 epsilon: 1
-url: L/ArtinRepresentation/2/68/2/
-object_url: [ArtinRepresentation/2/68/2/,,]
+url: L/ArtinRepresentation/2.2e2_17.4t3.2c1
+object_url: [ArtinRepresentation/2.2e2_17.4t3.2c1,,]
 object_name: [Artin&nbsp;representation,Hecke character,weight&nbsp;1&nbsp;cusp&nbsp;form]
 self_dual: true
 arithmetic: true
@@ -248,11 +248,11 @@ Lfunction_texname: $L(s,A)$
 mu: 0
 delta: [1,1]
 level: 136
-character: ?
+character: $\left(\frac{136}{\cdot}\right)$
 analytic_conductor: 2.010101010101
 epsilon: 1
-url: L/ArtinRepresentation/2/136/4/
-object_url: [ArtinRepresentation/2/136/4/,,]
+url: L/ArtinRepresentation/2.2e3_17.4t3.4c1
+object_url: [ArtinRepresentation/2.2e3_17.4t3.4c1,,]
 object_name: [Artin&nbsp;representation,Hecke character,odd Maass form]
 self_dual: true
 arithmetic: true

@@ -45,16 +45,16 @@ print OUTFILE qq|
 <table border=1 cellpadding=5> 
 <tbody>
 <tr align="center">
-<td align="center">First&nbsp;complex<br>critical&nbsp;zero</td>
-<td align="center">Underlying<br>object</td>
-<td align="center">\$N\$</td>
-<td align="center">\$\\chi\$</td>
-<td align="center">arithmetic</td>
-<td align="center">self-dual</td>
-<td align="center">\$\\nu\$</td>
-<td align="center">\$\\delta_1,\\delta_2\$</td>
-<td align="center">\$\\mu\$</td>
-<td align="center">\$\\varepsilon\$</td>
+<th align="center">First&nbsp;complex<br>critical&nbsp;zero</th>
+<th align="center">{{ KNOWL('lfunction.underlying_object', title='underlying object') }}</th>
+<th align="center">{{ KNOWL('lfunction.level', title='$N$') }}</th>
+<th align="center">{{ KNOWL('lfunction.central_character', title='$\chi$') }}</th>
+<th align="center">{{ KNOWL('lfunction.arithmetic', title='arithmetic') }}</th>
+<th align="center">{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
+<th align="center">$\nu$</th>
+<th align="center">$\delta_1,\delta_2$</th>
+<th align="center">$\mu$</th>
+<th align="center">{{ KNOWL('lfunction.sign', title='$\epsilon$') }}</th>
 </tr>
 |;
 
