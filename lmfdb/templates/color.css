@@ -6,7 +6,7 @@
 {% set white = 'white' %}
 {% set black = 'black'%}
 
-{% set color_template = 3 %}
+{% set color_template = 11 %}
 
 
 {% if color_template == 0 %}
