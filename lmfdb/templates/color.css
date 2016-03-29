@@ -2,16 +2,135 @@
   We will have defined colors that you should use for appropriate objects.  
   Hopefully they are descriptively enough named.*/
 
-/*These are the different greens used in LMFDB*/
-{% set col_main_d  = '#040' %} 
-{% set col_main_dl = '#060' %}
-{% set col_main    = '#292' %} 
-{% set col_main_2  = '#afa' %} 
-{% set col_main_l  = '#bfb' %}
-{% set col_main_lg = '#8b8' %}
-{% set col_main_ld = '#dfd' %}
-{% set col_main_ll = '#efe' %}
-{% set col_main_g  = '#474' %}
+/*These are the different greens used in LMFDB*/ 
+{% set color_template = 11 %}
+
+
+{% if color_template == 0 %}
+    /*Original LMFDB colors*/
+    {% set col_main_d  = '#040' %} 
+    {% set col_main_dl = '#060' %}
+    {% set col_main    = '#292' %} 
+    {% set col_main_2  = '#afa' %} 
+    {% set col_main_l  = '#bfb' %}
+    {% set col_main_lg = '#8b8' %}
+    {% set col_main_ld = '#dfd' %}
+    {% set col_main_ll = '#efe' %}
+    {% set col_main_g  = '#474' %}
+    /* Body colors */
+    {% set body_background = white %}
+    {% set body_text = black%}
+
+{% elif color_template == 1 %}
+    /*Green 1*/
+    {% set col_main_d  = '#005B00' %} 
+    {% set col_main_dl = '#0F7C0F' %}
+    {% set col_main    = '#292' %} 
+    {% set col_main_2  = '#40AD40' %} 
+    {% set col_main_l  = '#6BCB6B' %}
+    {% set col_main_lg = '#259325' %}
+    {% set col_main_ld = '#97DF97' %}
+    {% set col_main_ll = '#C6F0C6' %}
+    {% set col_main_g  = '#43AD43' %}
+    /* Body colors */
+    {% set body_background = white %}
+    {% set body_text = black%}
+
+{% elif color_template == 3 %}
+    /*Green 2*/
+    {% set col_main_d  = '#284928' %}
+    {% set col_main_dl = '#3c6d3c' %}
+    {% set col_main    = '#509250' %} 
+    {% set col_main_2  = '#5aa45' %} 
+    {% set col_main_l  = '#64b764' %}
+    {% set col_main_lg = '#73be73' %}
+    {% set col_main_ld = '#83c583' %}
+    {% set col_main_ll = '#c1e2c1' %}
+    {% set col_main_g  = '#b1dbb1' %}
+    /* Body colors */
+    {% set body_background = white %}
+    {% set body_text = black%}
+
+    
+{% elif color_template == 5 %}
+    /*Pink.  Because*/
+    {% set col_main_d  = '#7f365e' %}
+    {% set col_main_dl = '#cb5796' %}
+    {% set col_main    = '#fe6dbc' %} 
+    {% set col_main_2  = '#fe7bc2' %} 
+    {% set col_main_l  = '#feb6dd' %}
+    {% set col_main_lg = '#fe8ac9' %}
+    {% set col_main_ld = '#fe98d0' %}
+    {% set col_main_ll = '#fed3ea' %}
+    {% set col_main_g  = '#fec4e4' %}
+    /* Body colors */
+    {% set body_background = white %}
+    {% set body_text = black %}
+
+    
+{% elif color_template == 7 %}
+    /*Mint.*/
+    {% set col_main_d  = '#00c69d' %} /*Motives*/
+    {% set col_main_dl = '#999999' %} /*RHC text, footer text*/
+    {% set col_main    = '#98ed4d' %} /*hyperlink text*/ 
+    {% set col_main_2  = '#666666' %} /*Rollover*/ 
+    {% set col_main_l  = '#555555' %} /*tabs*/
+    {% set col_main_lg = '#00c96d' %}
+    {% set col_main_ld = '#777777' %} /*header*/
+    {% set col_main_ll = '#808080' %}
+    {% set col_main_g  = '#f5f5f5' %}/*where is this*/
+    /* Body colors */
+    {% set body_background = white %}
+    {% set body_text = black%}
+
+    
+{% elif color_template == 9 %}
+    /*Mint.*/
+    {% set col_main_d  = '#cccccc' %} /*Motives*/
+    {% set col_main_dl = '#00de61' %} /*RHC text, footer text*/
+    {% set col_main    = '#' %} /*hyperlink text*/ 
+    {% set col_main_2  = '#78909c' %} /*Rollover*/ 
+    {% set col_main_l  = '#00de61' %} /*tabs*/
+    {% set col_main_lg = '#5bbcc0' %} /*shadow*/
+    {% set col_main_ld = '#dddddd' %} /*header*/
+    {% set col_main_ll = '#e0e0e0' %} /*boxes*/
+    {% set col_main_g  = 'red' %}/*where is this*/
+    /* Body colors */
+    {% set body_background = '#ffffff' %}
+    {% set body_text = '#444444'%}
+
+{% elif color_template == 11 %}
+    /*Mint.*/
+    {% set col_main_d  = '#cccccc' %} /*Motives*/
+    {% set col_main_dl = '#4caf50' %} /*RHC text, footer text*/
+    {% set col_main    = '#4caf50' %} /*hyperlink text*/ 
+    {% set col_main_2  = '#78909c' %} /*Rollover*/ 
+    {% set col_main_l  = '#c0c0c0' %} /*tabs*/
+    {% set col_main_lg = '#4caf50' %} /*shadow*/
+    {% set col_main_ld = '#dddddd' %} /*header*/
+    {% set col_main_ll = '#f1f1f1' %} /*boxes*/
+    {% set col_main_g  = 'red' %}/*where is this*/
+    /* Body colors */
+    {% set body_background = '#ffffff' %}
+    {% set body_text = '#555555'%}
+
+{% elif color_template == 13 %}
+    /*Mint.*/
+    {% set col_main_d  = '#cccccc' %} /*Motives*/
+    {% set col_main_dl = '#400aff' %} /*RHC text, footer text*/
+    {% set col_main    = '#400aff' %} /*hyperlink text*/ 
+    {% set col_main_2  = '#78909c' %} /*Rollover*/ 
+    {% set col_main_l  = '#ffffff' %} /*tabs*/
+    {% set col_main_lg = '#d10a92' %} /*shadow*/
+    {% set col_main_ld = '#111111' %} /*header*/
+    {% set col_main_ll = '#b6b6b6' %} /*boxes*/
+    {% set col_main_g  = 'red' %}/*where is this*/
+    /* Body colors */
+    {% set body_background = '#2b2d30' %}
+    {% set body_text = '#d10a92'%}
+
+    
+{% endif %}
 
 /*Greens found in code probably not used*/
 /*These can probably be removed along with come code in style.css*/
@@ -94,10 +213,6 @@
 {% set content_border_red = col_red_1 %}
 {% set content_background_red = col_light_red_1 %}
 
-
-/* Body colors */
-{% set body_background = white %}
-{% set body_text = black %}
 
 /* contributors, i.e., contribs */
 {% set contrib_border = col_main_ld %}
