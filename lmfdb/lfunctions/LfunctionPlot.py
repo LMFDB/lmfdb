@@ -9,6 +9,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebN
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
+from sage.all import prod
 
 ###############################################################################
 # Maass form for GL(n) n>2
@@ -416,7 +417,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             lid = "(" + str(x) + "," + str(y) + ")"
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/"
             WS = WebModFormSpace(level = x, weight = y)
-            numlabels = len(WS.galois_decomposition())  # one label per Galois orbit
+            numlabels = len(WS.hecke_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             countplus = 0   # count how many Galois orbits have sign Plus (+ 1)
             countminus = 0   # count how many Galois orbits have sign Minus (- 1)
@@ -427,11 +428,11 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             for label in thelabels:  # looping over Galois orbit
                 linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/" + label
                 MF = WebNewForm(level = x, weight = y, label = label)   # one of the Galois orbits for weight y, level x
-                numberwithlabel = MF.degree()  # number of forms in the Galois orbit
+                numberwithlabel = MF.dimension  # number of forms in the Galois orbit
                 if x == 1:  # For level 1, the sign is always plus
                     signfe = 1
                 else:
-                    frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x]  # gives Fricke eigenvalue
+                    frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
                     signfe = frickeeigenvalue * (-1) ** float(y / 2)  # sign of functional equation
                 xbase = x - signfe * (xdotspacing / 2.0)
 
@@ -590,7 +591,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             lid = "(" + str(x) + "," + str(y) + ")"
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/0/"
             WS = WebModFormSpace(level = x, weight = y)  # space of modular forms of weight y, level x
-            galois_orbits = WS.galois_decomposition()   # make a list of Galois orbits
+            galois_orbits = WS.hecke_orbits   # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             countplus = 0   # count how many Galois orbits have sign Plus (+ 1)
@@ -642,7 +643,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                         signfe = 1
                     else:
                         # signfe = -1
-                        frickeeigenvalue = MF.atkin_lehner_eigenvalues()[x]  # gives Fricke eigenvalue
+                        frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
                         signfe = frickeeigenvalue * (-1) ** float(y / 2)  # sign of functional equation
                     if signfe == signtmp:  # we find an orbit with sign of "signtmp"
                         if signfe == 1:

@@ -66,7 +66,8 @@ def hilbert_modular_form_render_webpage():
     if len(args) == 0:
         info = {}
         t = 'Hilbert Modular Forms'
-        bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
+        bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+                 ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         info['counts'] = get_stats().counts()
         return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread)
@@ -136,10 +137,6 @@ def hilbert_modular_form_search(**args):
     if(start < 0):
         start = 0
 
-    if nres > 0:
-        info['field_pretty_name'] = field_pretty(res[0]['field_label'])
-    else:
-        info['field_pretty_name'] = ''
     info['number'] = nres
     info['start'] = start
     info['more'] = int(start + count < nres)
@@ -326,7 +323,9 @@ def render_hmf_webpage(**args):
     if data['dimension'] == 1:   # Try to attach associated elliptic curve
         lab = split_class_label(info['label'])
         ec_from_hmf = db_ecnf().find_one({"label": label + '1'})
-        if ec_from_hmf != None:
+        if ec_from_hmf == None:
+            info['friends'] += [('Elliptic curve not available', "")]
+        else:
             info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
 
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('%s' % data[

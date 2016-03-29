@@ -28,6 +28,9 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
+from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty, nf_display_knowl
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
+from lmfdb.base import getDBConnection
 
 def render_web_newform(level, weight, character, label, **kwds):
     r"""
@@ -90,9 +93,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     friends = list()
     space_url = url_for('emf.render_elliptic_modular_forms',level=level, weight=weight, character=character)
     friends.append(('\( S_{%s}(%s, %s)\)'%(WNF.weight, WNF.level, WNF.character.latex_name), space_url))
-    if WNF.coefficient_field_label(check=True):
-        friends.append(('Number field ' + WNF.coefficient_field_label(), WNF.coefficient_field_url()))
-    friends.append(('Number field ' + WNF.base_field_label(), WNF.base_field_url()))
+    if hasattr(WNF.base_ring, "lmfdb_url") and WNF.base_ring.lmfdb_url:
+        friends.append(('Number field ' + WNF.base_ring.lmfdb_pretty, WNF.base_ring.lmfdb_url))
+    if hasattr(WNF.coefficient_field, "lmfdb_url") and WNF.coefficient_field.lmfdb_label:
+        friends.append(('Number field ' + WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_url))
     friends = uniq(friends)
     friends.append(("Dirichlet character \(" + WNF.character.latex_name + "\)", WNF.character.url()))
     
@@ -110,44 +114,89 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     ## Until we have figured out how to do the embeddings correctly we don't display the Satake
     ## parameters for non-trivial characters....
 
+    ## Example to illustrate the different cases
+    ## base              = CyclotomicField(n) -- of degree phi(n) 
+    ## coefficient_field = NumberField( p(x)) for some p in base['x'] of degree m
+    ##   we would then have cdeg = m*phi(n) and bdeg = phi(n)
+    ##   and rdeg = m
+    ## Unfortunately, for e.g. base = coefficient_field = CyclotomicField(6)
+    ## we get coefficient_field.relative_degree() == 2 although it should be 1
     cdeg = WNF.coefficient_field.absolute_degree()
     bdeg = WNF.base_ring.absolute_degree()
-    if WNF.coefficient_field.absolute_degree() == 1:
+    if cdeg == 1:
         rdeg = 1
     else:
-        rdeg = WNF.coefficient_field.relative_degree()
-    if cdeg==1:
+        ## just setting rdeg = WNF.coefficient_field.relative_degree() does not give correct result...
+        ## 
+        rdeg = QQ(cdeg)/QQ(bdeg)
+    cf_is_QQ = (cdeg == 1)
+    br_is_QQ = (bdeg == 1)
+    if cf_is_QQ:
         info['satake'] = WNF.satake
-    info['qexp'] = WNF.q_expansion_latex(prec=10, name='a')
+    info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
     info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
-    
-    # info['qexp'] = WNF.q_expansion_latex(prec=prec)
-    #c_pol_st = str(WNF.absolute_polynomial)
-    #b_pol_st = str(WNF.polynomial(type='base_ring',format='str'))
-    #b_pol_ltx = str(WNF.polynomial(type='base_ring',format='latex'))
-    #print "c=",c_pol_ltx
-    #print "b=",b_pol_ltx
-    if cdeg > 1: ## Field is QQ
-        if bdeg > 1 and rdeg>1:
+    info['max_cn_qexp'] = WNF.q_expansion.prec()
+    ## All combinations should be tested...
+    ## 13/4/4/a -> base ring = coefficient_field = QQ(zeta_6)
+    ## 13/3/8/a ->  base_ring = QQ(zeta_4), coefficient_field has poly x^2+(2\zeta_4+2x-3\zeta_$ over base_ring
+    ## 13/4/3/a ->  base_ring = coefficient_field = QQ(zeta_3) 
+    ## 13/4/1/a -> all rational
+    ## 13/6/1/a/ -> base_ring = QQ, coefficient_field = Q(sqrt(17))
+    ## These are variables which needs to be set properly below
+    info['polvars'] = {'base_ring':'x','coefficient_field':'\\alpha'}
+    if not cf_is_QQ:
+        if rdeg>1: # not WNF.coefficient_field == WNF.base_ring:
+            ## Here WNF.base_ring should be some cyclotomic field and we have an extension over this.
             p1 = WNF.coefficient_field.relative_polynomial()
-            c_pol_ltx = latex(p1)
-            lgc = p1.variables()[0]
-            c_pol_ltx = c_pol_ltx.replace(lgc,'a')
-            z = p1.base_ring().gens()[0]
-            p2 = z.minpoly()
-            b_pol_ltx = latex(p2)
-            b_pol_ltx = b_pol_ltx.replace(latex(p2.variables()[0]),latex(z)) 
-            info['polynomial_st'] = 'where \({0}=0\) and \({1}=0\).'.format(c_pol_ltx,b_pol_ltx)
-        else:
-            c_pol_ltx = latex(WNF.coefficient_field.relative_polynomial())
-            lgc = str(latex(WNF.coefficient_field.relative_polynomial().variables()[0]))
-            c_pol_ltx = c_pol_ltx.replace(lgc,'a')
-            info['polynomial_st'] = 'where \({0}=0\)'.format(c_pol_ltx) 
+            c_pol_ltx = web_latex_poly(p1, '\\alpha')  # make the variable \alpha
+            c_pol_ltx_x = web_latex_poly(p1, 'x')
+            zeta = p1.base_ring().gens()[0]
+#           p2 = zeta.minpoly() #this is not used anymore
+#           b_pol_ltx = web_latex_poly(p2, latex(zeta)) #this is not used anymore
+            z1 = zeta.multiplicative_order() 
+            info['coeff_field'] = [ WNF.coefficient_field.absolute_polynomial_latex('x'),c_pol_ltx_x, z1]
+            if hasattr(WNF.coefficient_field, "lmfdb_url") and WNF.coefficient_field.lmfdb_url:
+                info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_label]
+            if z1==4:
+                info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\) and \(\zeta_4=i\).</div><br/>'.format(c_pol_ltx)
+                info['polvars']['base_ring']='i'
+            elif z1<=2:
+                info['polynomial_st'] = '<div class="where">where</div> {0}\(\mathstrut=0\).</div><br/>'.format(c_pol_ltx)
+            else:
+                info['polynomial_st'] = '<div class="where">where</div> %s\(\mathstrut=0\) and \(\zeta_{%s}=e^{\\frac{2\\pi i}{%s}}\) '%(c_pol_ltx, z1,z1)
+                info['polvars']['base_ring']='\zeta_{{ {0} }}'.format(z1)
+                if z1==3:
+                    info['polynomial_st'] += 'is a primitive cube root of unity.'
+                else:
+                    info['polynomial_st'] += 'is a primitive {0}-th root of unity.'.format(z1)
+        elif not br_is_QQ:
+            ## Now we have base and coefficient field being equal, meaning that since the coefficient field is not QQ it is some cyclotomic field
+            ## generated by some \zeta_n 
+            p1 = WNF.coefficient_field.absolute_polynomial()
+            z1 = WNF.coefficient_field.gens()[0].multiplicative_order()
+            c_pol_ltx = web_latex_poly(p1, '\\zeta_{{{0}}}'.format(z1))
+            c_pol_ltx_x = web_latex_poly(p1, 'x')
+            info['coeff_field'] = [ WNF.coefficient_field.absolute_polynomial_latex('x'), c_pol_ltx_x]
+            if hasattr(WNF.coefficient_field, "lmfdb_url") and WNF.coefficient_field.lmfdb_url:
+                info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty, WNF.coefficient_field.lmfdb_label]
+            if z1==4:
+                info['polynomial_st'] = '<div class="where">where \(\zeta_4=e^{{\\frac{{\\pi i}}{{ 2 }} }}=i \).</div>'.format(c_pol_ltx)
+                info['polvars']['coefficient_field']='i'
+            elif z1<=2:
+                info['polynomial_st'] = '' 
+            else:
+                info['polynomial_st'] = '<div class="where">where \(\zeta_{{{0}}}=e^{{\\frac{{2\\pi i}}{{ {0} }} }}\) '.format(z1)
+                info['polvars']['coefficient_field']='\zeta_{{{0}}}'.format(z1)
+                if z1==3:
+                    info['polynomial_st'] += 'is a primitive cube root of unity.</div>'
+                else:
+                    info['polynomial_st'] += 'is a primitive {0}-th root of unity.</div>'.format(z1)
     else:
         info['polynomial_st'] = ''
     info['degree'] = int(cdeg)
     if cdeg==1:
         info['is_rational'] = 1
+        info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty ]
     else:
         info['is_rational'] = 0
     # info['q_exp_embeddings'] = WNF.print_q_expansion_embeddings()
@@ -172,9 +221,9 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if isinstance(info['twist_info'], list) and len(info['twist_info'])>0:
             info['is_minimal'] = info['twist_info'][0]
             if(info['twist_info'][0]):
-                s = '- Is minimal<br>'
+                s = 'Is minimal<br>'
             else:
-                s = '- Is a twist of lower level<br>'
+                s = 'Is a twist of lower level<br>'
             properties2 = [('Twist info', s)]
     else:
         info['twist_info'] = 'Twist info currently not available.'
@@ -188,12 +237,17 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if CM.has_key('tau') and len(CM['tau']) != 0:
             info['CM_values'] = CM
     info['is_cm'] = WNF.is_cm
-    if WNF.is_cm is None:
+    if WNF.is_cm == 1:
+        info['cm_field'] = "2.0.{0}.1".format(-WNF.cm_disc)
+        info['cm_disc'] = WNF.cm_disc
+        info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], getDBConnection(), field_pretty(info['cm_field']))
+        info['cm_field_url'] = url_for("number_fields.by_label", label=info["cm_field"])
+    if WNF.is_cm is None or WNF.is_cm==-1:
         s = '- Unknown (insufficient data)<br>'
-    elif WNF.is_cm is True:
-        s = '- Is a CM-form<br>'
+    elif WNF.is_cm == 1:
+        s = 'Is a CM-form<br>'
     else:
-        s = '- Is not a CM-form<br>'
+        s = 'Is not a CM-form<br>'
     properties2.append(('CM info', s))
     alev = WNF.atkin_lehner_eigenvalues()
     info['atkinlehner'] = None
@@ -218,9 +272,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         if poly != '':
             d,monom,coeffs = poly
             emf_logger.critical("poly={0}".format(poly))
-
             info['explicit_formulas'] = '\('
-            for i in range(d):
+            for i in range(len(coeffs)):
                 c = QQ(coeffs[i])
                 s = ""
                 if d>1 and i >0 and c>0:
@@ -280,7 +333,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         friends.append((s, url))
     info['properties2'] = properties2
     info['friends'] = friends
-    info['max_cn']=WNF.max_cn()
+    info['max_cn'] = WNF.max_cn()
     return info
 
 import flask

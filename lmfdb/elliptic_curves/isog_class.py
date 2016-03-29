@@ -130,7 +130,7 @@ class ECisog_class(object):
 
         self.newform = web_latex(self.E.q_eigenform(10))
         self.newform_label = self.lmfdb_iso.replace('.', '.2')
-        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=0, label=iso)
+        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
 
@@ -158,7 +158,7 @@ class ECisog_class(object):
                            ]
 
 
-        self.downloads = [('Download coeffients of newform', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=100)),
+        self.downloads = [('Download coefficients of newform', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=100)),
                          ('Download stored data for all curves', url_for(".download_EC_all", label=self.lmfdb_iso))]
 
         if self.lmfdb_iso == self.iso:

@@ -70,14 +70,14 @@ real_period:
 
 cp:
   sage:  E.tamagawa_numbers()
-  pari:  E.omega[1]
-  magma: RealPeriod(E);
+  pari:  gr=ellglobalred(E); [[gr[4][i,1],gr[5][i][4]] | i<-[1..#gr[4][,1]]]
+  magma: TamagawaNumbers(E);
 
 
 ntors:
   sage:  E.torsion_order()
   pari:  elltors(E)[1]
-  magma: OrderTorsionSubgroup(E);
+  magma: Order(TorsionSubgroup(E));
 
 sha:
   sage:  E.sha().an_numerical()

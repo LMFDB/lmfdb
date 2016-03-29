@@ -3,8 +3,7 @@
 {% block content %}
 
 <div>
-The database currently contains elliptic curves over a few number
-fields other than $\Q$, mostly quadratic fields.
+{{ KNOWL_INC('dq.ecnf.extent') }}
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over {{
@@ -14,9 +13,9 @@ KNOWL('nf',title = "number fields")}}</h2>
 <ul>
 {% for types in data.fields %}
 <li>
-curves defined over {{types[0]}}:
+over {{types[0]}}:
 {% for label,f in types[1] %}
-{% if types[0]=='real quadratic fields' %}
+{% if types[0]!='imaginary quadratic fields' %}
 {% if loop.index0 %},...,{% endif %}
 {% else %}
 {% if loop.index0 %},{% endif %}
@@ -87,6 +86,23 @@ Please enter a value or leave blank:
          </select>
   </td>
  </tr>
+
+    <tr>
+          <td align=right>
+          {{ KNOWL('ec.j_invariant', title="j-invariant") }}
+          </td>
+          <td>
+          <input type='text' name='jinv' example=" (818172355/1024)*a-(2133314821/512)" size=20 value="{{jinv}}" />
+          </td>
+          <td colspan=2>
+          <span class="formexample">
+          e.g. (818172355/1024)*a-(2133314821/512) over 2.2.89.1</span>
+          </td>
+
+          <td align=right>&nbsp; </td>
+          <td align=right>&nbsp; </td>
+          <td align=right>&nbsp; </td>
+      </tr>
 
     <tr>
           <td align=right>

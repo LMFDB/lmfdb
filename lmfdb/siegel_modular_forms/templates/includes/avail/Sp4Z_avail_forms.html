@@ -1,6 +1,6 @@
 <p>
   The following table shows, for each even weight between 4 and 58, the  <a class="knowl-title" knowl="mf.siegel.galois_orbit">Galois orbits</a> of Hecke eigenforms
-  <a class ="knowl-title" knowl="mf.siegel.group.symplectic">in the space \(M_*({\rm Sp}(4,\mathbb{Z}))\)</a>.
+  <a class ="knowl-title" knowl="group.sp2gr">in the space \(M_*({\rm Sp}(4,\mathbb{Z}))\)</a>.
   The number (#) next to each orbit denotes the number of eigenforms in the orbit.
   <ul>
     <li>
@@ -30,7 +30,11 @@
         {% for form,dim in forms|sort %}
 	<td>
 
+     {# the coefficients in the database are stored in a way that requires
+        a lot of Sage computation.  so we avoid those when the degree is more than 4 #}
+        {% if dim<5 %}
 	  <a style="display: inline;" href="{{ ['/ModularForm/GSp/Q/Sp4Z.',form]|join }}">
+        {% endif %}
 	    {% if form=="Ups" %}
 	    \(\Upsilon\)
 	    {% elif form=="Ups_I" %}
@@ -41,11 +45,13 @@
 	    {{ form }}
 	      {% endif %}
 	    ({{ dim }})
+        {% if dim<5 %}
 	  </a>
+        {% endif %}
 	  {% if wt <= 8 %}</td><td></td><td></td><td></td><td>{% endif %}
-          {% if (wt == 10 or wt == 14) and form == "E" %}</td><td>{% endif %}
-          {% if wt >= 10 and wt <= 18 and form == "Maass" %}</td><td></td><td>{% endif %}
-	  {% if form == "Ups" %}</td><td>{% endif %}
+          {% if (wt == 10 or wt == 14) and "_E" in form %}</td><td>{% endif %}
+          {% if (wt == 58 or wt <= 18) and "_Maass" in form  %}</td><td></td><td>{% endif %}
+	  {% if (wt != 24 and wt != 26) and "_Ups" in form  %}</td><td>{% endif %}
 	</td>  
 	{% endfor %}
       </tr>

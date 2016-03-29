@@ -29,7 +29,7 @@ field) and value types (with examples):
    - conductor_norm     *     int
    - number             *     int    (number of curve in isogeny class, from 1)
    - ainvs              *     list of 5 list of d lists of 2 ints
-   - jinv               *     list of d lists of 2 STRINGS
+   - jinv               *     list of d strings
    - cm                 *     either int (a negative discriminant, or 0) or '?'
    - q_curve            *     boolean (True, False)
    - base_change        *     list of labels of elliptic curve over Q
@@ -38,8 +38,8 @@ field) and value types (with examples):
    - analytic_rank            int
    - torsion_order            int
    - torsion_structure        list of 0, 1 or 2 ints
-   - gens                     list of lists of 3 lists of d lists of 2 ints
-   - torsion_gens             list of lists of 3 lists of d lists of strings
+   - gens                     list of lists of 3 lists of d strings
+   - torsion_gens             list of lists of 3 lists of d strings
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
 
@@ -70,15 +70,23 @@ from lmfdb.base import _init as init
 from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
+from lmfdb.ecnf.ecnf_stats import field_data
 
-print "calling base._init()"
-dbport = 37010
-init(dbport, '')
-print "getting connection"
-conn = getDBConnection()
+from lmfdb.website import DEFAULT_DB_PORT as dbport
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+
+print "authenticating on the elliptic_curves database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['elliptic_curves'].authenticate(username, password)
 print "setting nfcurves"
-nfcurves = conn.elliptic_curves.nfcurves
-qcurves = conn.elliptic_curves.curves
+nfcurves = C.elliptic_curves.nfcurves
+qcurves = C.elliptic_curves.curves
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
+
 
 # The following ensure_index command checks if there is an index on
 # label, conductor, rank and torsion. If there is no index it creates
@@ -92,6 +100,9 @@ nfcurves.ensure_index('conductor_norm')
 nfcurves.ensure_index('rank')
 nfcurves.ensure_index('torsion')
 nfcurves.ensure_index('jinv')
+nfcurves.ensure_index('number')
+nfcurves.ensure_index('degree')
+nfcurves.ensure_index('field_label')
 
 print "finished indices"
 
@@ -99,7 +110,6 @@ print "finished indices"
 # but only want to do this once for each label, so we will maintain a
 # dict of label:field pairs:
 nf_lookup_table = {}
-
 
 def nf_lookup(label):
     r"""
@@ -110,7 +120,7 @@ def nf_lookup(label):
         # print "We already have it: %s" % nf_lookup_table[label]
         return nf_lookup_table[label]
     # print "We do not have it yet, finding in database..."
-    field = conn.numberfields.fields.find_one({'label': label})
+    field = C.numberfields.fields.find_one({'label': label})
     if not field:
         raise ValueError("Invalid field label: %s" % label)
     # print "Found it!"
@@ -222,14 +232,6 @@ def point_list(P):
     """
     return [K_list(c) for c in list(P)]
 
-
-def field_data(s):
-    r"""
-    Returns full field data from field label.
-    """
-    deg, r1, abs_disc, n = [int(c) for c in s.split(".")]
-    sig = [r1, (deg - r1) // 2]
-    return [s, deg, sig, abs_disc]
 
 
 #@cached_function

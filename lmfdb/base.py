@@ -145,9 +145,13 @@ def is_debug_mode():
     from flask import current_app
     return current_app.debug
 
+branch = "prod"
+if (os.getenv('BETA')=='1'):
+    branch = "beta"
+
 @app.before_request
 def set_beta_state():
-    g.BETA = os.getenv('BETA') is not None or is_debug_mode()
+    g.BETA = (os.getenv('BETA')=='1') or is_debug_mode()
 
 @app.context_processor
 def ctx_proc_userdata():
@@ -238,8 +242,8 @@ _current_source = '<a href="%s%s">%s</a>' % (_url_source, git_rev, "Source")
 """
 Creates link to the list of revisions on the master, where the most recent commit is on top.
 """
-_url_changeset = 'https://github.com/LMFDB/lmfdb/commit/'
-_latest_changeset = '<a href="%s%s">%s</a>' % (_url_changeset, git_rev, git_date)
+_url_changeset = 'https://github.com/LMFDB/lmfdb/commits/%s' % branch
+_latest_changeset = '<a href="%s">%s</a>' % (_url_changeset, git_date)
 
 
 @app.context_processor

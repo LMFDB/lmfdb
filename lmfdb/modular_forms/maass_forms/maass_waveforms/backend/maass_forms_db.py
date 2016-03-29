@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ### Class for computing and storing Maass waveforms.
 ### Use either mongodd or SQL
 
@@ -87,6 +88,7 @@ class MaassDB(object):
         self._collection_progress = D['Progress']
         self._collection_coeff_progress = D['CoeffProgress']
         self._job_history = D['job_history']
+        self._maassform_plots = D['maassform_plots']
         return True
 
     # def setup_file(self,dir='',filename='maassforms_db'):
@@ -410,6 +412,79 @@ class MaassDB(object):
             for x in finds:
                 res.append(x)
         return res
+
+    def get_next_maassform_id(self, level, character, weight,
+                              eigenvalue, maass_id):
+        if isinstance(maass_id, bson.objectid.ObjectId):
+            _id = maass_id
+        else:
+            _id = bson.objectid.ObjectId(maass_id)
+
+        limit = 10
+        search = {'level': level, 'char': character,
+              'R1': eigenvalue, 'Newform' : None, 'weight' : weight}
+        fields = {'_id': True}
+        forms = self.get_Maass_forms(search, fields, 
+                               do_sort = True, limit = limit)
+        if len(forms) == 0 or (
+            len(forms) == 1 and _id == forms[0]['_id'] ):
+            return None
+        
+        i = 0
+        while _id != forms[i]['_id']:
+            i += 1
+            if i == len(forms) - 1:
+                return forms[0]['_id']
+        return forms[i+1]['_id']
+    
+    def get_prev_maassform_id(self, level, character, weight,
+                              eigenvalue, maass_id):
+        if isinstance(maass_id, bson.objectid.ObjectId):
+            _id = maass_id
+        else:
+            _id = bson.objectid.ObjectId(maass_id)
+
+        limit = 10000
+        search = {'level': level, 'char': character,
+              'R2': eigenvalue, 'Newform' : None, 'weight' : weight}
+        fields = {'_id': True}
+        forms = self.get_Maass_forms(search, fields, 
+                               do_sort = True, limit = limit)
+        if len(forms) == 0 or (
+            len(forms) == 1 and _id == forms[0]['_id'] ):
+            return None
+        
+        i = len(forms) - 1
+        while _id != forms[i]['_id']:
+            i -= 1
+            if i == 0:
+                return forms[len(forms) - 1]['_id']
+        return forms[i-1]['_id']
+    
+
+    def get_maassform_plot_by_id(self, maass_id):
+        r"""
+        """
+        coll = self._maassform_plots
+        if isinstance(maass_id, bson.objectid.ObjectId):
+            find_data = {'maass_id': maass_id}
+        else:
+            find_data = {'maass_id': bson.objectid.ObjectId(maass_id)}
+        data = coll.find_one(find_data)
+        return data
+
+    def maassform_has_plot(self, maass_id):
+        coll = self._maassform_plots
+        if isinstance(maass_id, bson.objectid.ObjectId):
+            find_data = {'maass_id': maass_id}
+        else:
+            find_data = {'maass_id': bson.objectid.ObjectId(maass_id)}
+        data = coll.find(find_data, {'eigenvalue': True})
+        if data.count()>0:
+            return True
+        else:
+            return False
+
 
     def get_coefficients(self, data={}, verbose=0, **kwds):
         if verbose > 0:

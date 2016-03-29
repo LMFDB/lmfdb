@@ -25,7 +25,7 @@ from flask import jsonify
 from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec
 logger = emf_logger
-from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma
+from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma,QQ,Matrix
 from sage.misc.cachefunc import cached_function 
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
@@ -104,22 +104,39 @@ def parse_range(arg, parse_singleton=int):
         return parse_singleton(arg)
 
 
-def extract_limits_as_tuple(arg, field, defaults=(1, 10)):
-    if type(arg.get(field)) == dict:
-        limits = (arg[field]['min'], arg[field]['max'])
-    else:
-        if arg.get(field):
-            limits = (arg[field], arg[field])
+def extract_limits_as_tuple(arg, field):
+    fld = arg.get(field)
+    if isinstance(fld,basestring):
+        tmp = parse_range(fld)
+        if isinstance(tmp,dict):
+            limits = (tmp['min'],tmp['max'])
         else:
-            limits = defaults
+            limits = (tmp,tmp)
+    elif isinstance(fld,(tuple,list)):
+        limits = (int(fld[0]),int(fld[1]))
+    elif isinstance(fld,dict):
+        limits = (fld['min'], fld['max'])
+    elif not fld is None: 
+        limits = (fld,fld)
+    else:
+        limits = None
     return limits
 
-
+def is_range(arg):
+    r"""
+    Checks if arg seems to represent a range, i.e. of the form a-b or
+    a..b or a--b
+    """
+    if not isinstance(arg,basestring):
+        return False
+    for sep in ['..','-','--']:
+        if arg.split(sep)>1:
+            return True
+    return False
 def extract_data_from_jump_to(s):
     label = ''
-    weight = 0
-    character = 0
-    level = 1
+
+    args = dict()
     if s == 'delta':
         weight = 12
         level = 1
@@ -128,23 +145,18 @@ def extract_data_from_jump_to(s):
         # first see if we have a label or not, i.e. if we have precisely one string of letters at the end
         test = re.findall("[a-z]+", s)
         if len(test) == 1:
-            label = test[0]
+            args['label'] = test[0]
             # emf_logger.debug("label1={0}".format(label))
             # the first string of integers should be the level
         test = re.findall("\d+", s)
         if not test is None and len(test)>0:
-            level = int(test[0])
+            args['level'] = int(test[0])
             if len(test) > 1:  # we also have weight
-                weight = int(test[1])
+                args['weight'] = int(test[1])
             if len(test) > 2:  # we also have character
-                character = int(test[2])
-    emf_logger.debug("label=%s" % label)
-    emf_logger.debug("level=%s" % level)
-    args = dict()
-    args['level'] = int(level)
-    args['weight'] = int(weight) 
-    args['character'] = int(character)
-    if label: args['label'] = label
+                args['character']=int(test[2])
+    emf_logger.debug("args=%s" % label)
+
     return args
 
 
@@ -374,7 +386,11 @@ def dirichlet_character_conrey_galois_orbits_reps(N):
                 continue
             Dl.remove(xx)
     return reps
-    
+
+@cached_function
+def conrey_character_from_number(N,c):
+    D = DirichletGroup_conrey(N)
+    return DirichletCharacter_conrey(D,c)
 
 @cached_function
 def dimension_from_db(level,weight,chi=None,group='gamma0'):
@@ -448,3 +464,29 @@ def dirichlet_character_conrey_galois_orbit_embeddings(N,xi):
         if gcd(n,N) == 1:
             embeddings[Mod(base_number,N)**n] = n
     return embeddings
+
+def multiply_mat_vec(E,v):
+    KE = E.base_ring()
+    if isinstance(v,list):
+        v = vector(v)
+    Kv = v.base_ring()
+    if KE != QQ and KE != Kv:
+        EE = convert_matrix_to_extension_fld(E,Kv)
+        return EE*v
+    else:
+        return E*v
+    
+
+def convert_matrix_to_extension_fld(E,K):
+    EE=Matrix(K,E.nrows(), E.ncols())
+    KE = E.base_ring()
+    if KE.is_relative():
+        gen = E.base_ring().base_ring().gen()
+    else:
+        gen = E.base_ring().gen()
+    z = K(gen)
+    x = E[0,0].polynomial().parent().gen()
+    for a in range(E.nrows()):
+        for b in range(E.ncols()):
+            EE[a,b]=E[a,b].polynomial().substitute({x:z})
+    return EE

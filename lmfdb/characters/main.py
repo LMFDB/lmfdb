@@ -39,7 +39,13 @@ def render_characterNavigation():
     """
     args = to_dict(request.args)
     info = {}
-    info['bread'] = [ ('Characters','/Character') ]
+    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
+    ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
+
+    info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels', url_for(".labels_page"))
+            ]
 
     if 'modbrowse' in args:
         arg = args['modbrowse']
@@ -91,6 +97,30 @@ def render_characterNavigation():
        info['title'] = 'Dirichlet Characters'
        return render_template('CharacterNavigate.html', **info)
 
+@characters_page.route("/Source")
+def labels_page():
+    info = {}
+    info['title'] = 'Dirichlet character labels'
+    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
+    ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Labels', '') ]
+    info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ]
+    return render_template("single.html", kid='character.dirichlet.conrey',
+                           **info)
+
+@characters_page.route("/Labels")
+def how_computed_page():
+    info = {}
+    info['title'] = 'Source of Dirichlet characters'
+    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
+    ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Source', '') ]
+    info['learnmore'] = [
+            ('Labels', url_for(".labels_page"))
+            ]
+    return render_template("single.html", kid='dq.character.dirichlet.source',
+                           **info)
+
 @characters_page.route("/Dirichlet/")
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
@@ -107,13 +137,22 @@ def render_Dirichletwebpage(modulus=None, number=None):
         return render_characterNavigation() # waiting for new landing page
         info = WebDirichletFamily(**args).to_dict()
         #logger.info(info)
+        info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels', url_for(".labels_page"))
+            ]
+
         return render_template('CharFamily.html', **info)
     elif number == None:
         info = WebDirichletGroup(**args).to_dict()
         m = info['modlabel']
-        info['bread'] = [('Characters','/Character'),
-                         ('Dirichlet','/Character/Dirichlet'),
-                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m)]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m))]
+        info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels', url_for(".labels_page"))
+            ]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
@@ -125,10 +164,14 @@ def render_Dirichletwebpage(modulus=None, number=None):
         except IndexError:
             info['navi'] = [("next",) + navi([info['next']])[0]]
         m,n = info['modlabel'], info['numlabel']
-        info['bread'] = [('Characters','/Character'),
-                         ('Dirichlet','/Character/Dirichlet'),
-                         ('Modulus %s'%m, '/Character/Dirichlet/%s'%m),
-                         ('Character number %s'%n, '/Character/Dirichlet/%s/%s'%(m,n)) ]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m)),
+                         ('%s'%n, url_for(".render_Dirichletwebpage", modulus=m, number=n)) ]
+        info['learnmore'] = [
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels', url_for(".labels_page"))
+            ]
         #logger.info(info)
         # TODO fix navi field
         del info["navi"]
@@ -182,21 +225,22 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
     elif number == None:
         info = WebHeckeGroup(**args).to_dict()
         m = info['modlabel']
-        info['bread'] = [('Characters','/Character'),
-                         ('Hecke','/Character/Hecke'),
-                         ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
-                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m))]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Hecke', url_for(".render_Heckewebpage")),
+                         ('Number Field %s'%number_field, url_for(".render_Heckewebpage", number_field=number_field)),
+                         ('Mod %s'%m,  url_for(".render_Heckewebpage", number_field=number_field, modulus=m))]
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
-        info = WebHeckeCharacter(**args).to_dict()
+        X = WebHeckeCharacter(**args)
+        info = X.to_dict()
         info['navi'] = navi([info['previous'],info['next']])
         m,n = info['modlabel'], info['number']
-        info['bread'] = [('Characters','/Character'),
-                         ('Hecke','/Character/Hecke'),
-                         ('Number Field %s'%number_field,'/Character/Hecke/%s'%number_field),
-                         ('Modulus %s'%m, '/Character/Hecke/%s/%s'%(number_field,m)),
-                         ('Character number %s'%n, '/Character/Hecke/%s/%s/%s'%(number_field,m,n))]
+        info['bread'] = [('Characters',url_for(".render_characterNavigation")),
+                         ('Hecke',  url_for(".render_Heckewebpage")),
+                         ('Number Field %s'%number_field,url_for(".render_Heckewebpage", number_field=number_field)),
+                         ('Mod %s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=m)),
+                         ('#%s'%X.number, url_for(".render_Heckewebpage", number_field=number_field, modulus=m, number=n))]
         #logger.info(info)
         # TODO fix navi field
         del info["navi"]
@@ -237,7 +281,9 @@ def character_search(**args):
         for field in ['modulus', 'conductor', 'order']:
             if info.get(field):
                 query[field] = parse_range(info[field])
-        info['bread'] = [('Characters','/Character'), ('search results', ' ') ]
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('search results', ' ') ]
         info['credit'] = 'Sage'
         if (len(query) != 0):
             from sage.modular.dirichlet import DirichletGroup
@@ -253,7 +299,6 @@ def charactertable(query):
         modulus=query.get('modulus', None),
         conductor=query.get('conductor', None),
         order=query.get('order', None))
-
 
 def render_character_table(modulus=None, conductor=None, order=None):
     from dirichlet_conrey import DirichletGroup_conrey 
@@ -279,8 +324,8 @@ def render_character_table(modulus=None, conductor=None, order=None):
             if add:
                  #if chi.multiplicative_order() == 2 and kronecker_symbol(chi) is not None:
 		#	  ret.append([(j, kronecker_symbol(chi), chi.modulus(
-		 if chi.multiplicative_order() == 2 and c.symbol_numerator() is not None:
-                  	ret.append([(j, c.symbol_numerator(), chi.modulus(
+		 if chi.multiplicative_order() == 2 and c.symbol is not None:
+                  	ret.append([(j, c.symbol, chi.modulus(
                  	), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
                  else:
                     ret.append([(j, chi, chi.modulus(
@@ -330,7 +375,7 @@ def dirichlet_group_table(**args):
     info = to_dict(args)
     if "modulus" not in info:
         info["modulus"] = modulus
-    info['bread'] = [('Characters','/Character'), ('Dirichlet table', ' ') ]
+    info['bread'] = [('Characters', url_for(".render_characterNavigation")), ('Dirichlet table', ' ') ]
     info['credit'] = 'Sage'
     char_number_list = request.args.get("char_number_list",None)
     if char_number_list is not None:

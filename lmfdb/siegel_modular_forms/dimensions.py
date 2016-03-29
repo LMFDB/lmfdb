@@ -71,7 +71,7 @@ def dimension_Gamma1_2( wt_range, j):
       <li>Second entry: The codimension of the subspace of cusp forms.</li>
       <li>Third entry: The subspace of cusp forms.</li>
     </ul>
-    <p> More precisely, The trilple $[a,b,c]$ in
+    <p> More precisely, The triple $[a,b,c]$ in
     <ul>
       <li>
         row <span class="emph">All</span>
@@ -121,6 +121,20 @@ def dimension_Sp4Z_2( wt_range):
     </ul>
     """
     return _dimension_Gamma_2( wt_range, 2, group = 'Sp4(Z)')
+
+def dimension_table_Sp4Z_j(wt_range, j_range):
+    result = {}
+    for wt in wt_range:
+        result[wt] = {}
+    for j in j_range:
+        if is_odd(j):
+            for wt in wt_range:
+                result[wt][j]=0
+        else:
+            _,olddim= dimension_Sp4Z_j(wt_range, j)
+            for wt in wt_range:
+                result[wt][j]=olddim[wt]['Total']
+    return result
 
 def dimension_Sp4Z_j( wt_range, j):
     """
