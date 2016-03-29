@@ -9,7 +9,7 @@ analytic_conductor: 3.010101010101
 epsilon: 1
 url: L/ModularForm/GL3/Q/Maass/GL3Maass_1_16.4031_0.17112/
 object_url:
-object_name: Maass
+object_name: $\SL(3,\Z)$ Maass form
 self_dual: false
 arithmetic: false
 ---
@@ -19,7 +19,7 @@ nuRC: 0
 muRC: 0
 deltaRC: $0$
 level: 23
-character: 23.1
+character: $\left(\frac{-23}{\cdot}\right)$
 analytic_conductor: 
 epsilon: 1
 url: L/NumberField/3.1.23.1/
@@ -34,12 +34,12 @@ deltaRC: $0$
 nuRC: 1
 muRC: 0
 level: 121
-character: ?
+character: 1.1
 analytic_conductor: 0.010101010101
 epsilon: 1
 url: L/SymmetricPower/2/EllipticCurve/Q/11.a/
-object_url: EllipticCurve/Q/11.a1
-object_name: rank 0 elliptic curve
+object_url:
+object_name: $\Sym^2$ of rank 0 elliptic curve <a href="EllipticCurve/Q/11.a1">11.a1</a>
 self_dual: true
 arithmetic: true
 ---
@@ -48,11 +48,11 @@ Lfunction_texname: $L(s,\rho)$
 muRRR: [0,0]
 deltaRRR: [0,1,1]
 level: 229
-character: ?
+character: $\left(\frac{229}{\cdot}\right)$
 analytic_conductor:
 epsilon: 1
-url: L/ArtinRepresentation/3/229/2/
-object_url: ArtinRepresentation/3/229/2/
+url: L/ArtinRepresentation/3.229.4t5.1c1
+object_url: ArtinRepresentation/3.229.4t5.1c1
 object_name: Artin representation
 self_dual: true
 arithmetic: true
@@ -67,7 +67,7 @@ analytic_conductor:
 epsilon: 1
 url: L/ModularForm/GL3/Q/Maass/GL3Maass_4_8.23979_2.64122/
 object_url:
-object_name: Maass
+object_name: $\GL(3)$ Maass form
 self_dual: false
 arithmetic: false
 ---
@@ -78,10 +78,10 @@ deltaRRR: [0,0,0]
 level: 4
 character: 1.1
 analytic_conductor:
-epsilon: e(0.33333)
-url: /L/ModularForm/GL3/Q/Maass/GL3Maass_4_9.63244_1.37406/
+epsilon: e(1/3)
+url: L/ModularForm/GL3/Q/Maass/GL3Maass_4_9.63244_1.37406/
 object_url:
-object_name: Maass
+object_name: $\GL(3)$ Maass form
 self_dual: false
 arithmetic: false
 ---
@@ -91,12 +91,12 @@ nuRC: 1
 muRC: 0
 deltaRC: $0$
 level: 1369
-character: ?
+character: 1.1
 analytic_conductor: 
 epsilon: 1
 url: L/SymmetricPower/2/EllipticCurve/Q/37.a/
-object_url: EllipticCurve/Q/37.a
-object_name: rank 1 elliptic curve
+object_url:
+object_name: $\Sym^2$ of rank 1 elliptic curve <a href="/EllipticCurve/Q/37.a1">37.a1</a>
 self_dual: true
 arithmetic: true
 ---
@@ -105,12 +105,11 @@ Lfunction_texname: $L(s,\rho)$
 muRRR: [0,0]
 deltaRRR: [0,0,1]
 level: 28625
-character: 5.2
+character: $\chi_{1145}(228,\cdot)$
 analytic_conductor:
 epsilon: e(0.76431)
 url: TensorProducts/
-object_url: TensorProducts/
-object_name: tensor product of Artin representation and Dirichlet character
+object_name: tensor product of an <a href="/ArtinRepresentation/3.229.4t5.1c1">Artin representation</a> and a <a href="/Character/Dirichlet/5/2">Dirichlet character</a>
 self_dual: false
 arithmetic: true
 ---
@@ -120,12 +119,12 @@ nuRC: 1
 muRC: 0
 deltaRC: $0$
 level: 151321
-character: ?
+character: 1.1
 analytic_conductor: 
 epsilon: 1
 url: L/SymmetricPower/2/EllipticCurve/Q/389.a/
-object_url: EllipticCurve/Q/389.a1
-object_name: rank 2 elliptic curve
+object_url:
+object_name: $\Sym^2$ of rank 2 elliptic curve <a href="/EllipticCurve/Q/389.a1">389.a1</a>
 self_dual: true
 arithmetic: true
 ---
@@ -136,24 +135,10 @@ deltaRRR: [0,0,0]
 level: 4
 character: 1.1
 analytic_conductor: 
-epsilon: e(0.66667)
+epsilon: e(2/3)
 url: L/ModularForm/GL3/Q/Maass/GL3Maass_4_8.95466_2.93659/
 object_url:
-object_name: Maass
-self_dual: false
-arithmetic: false
----
-first_zero: 0.933723469852848
-Lfunction_texname: $L(s,f)$
-muRRR: [8.95466,2.93659]
-deltaRRR: [0,0,0]
-level: 4
-character: 1.1
-analytic_conductor: 
-epsilon: e(0.66667)
-url: L/ModularForm/GL3/Q/Maass/GL3Maass_4_8.95466_2.93659/
-object_url:
-object_name: Maass
+object_name: $\GL(3)$ Maass form
 self_dual: false
 arithmetic: false
 ---

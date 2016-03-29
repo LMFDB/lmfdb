@@ -204,7 +204,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
                            character, self,include_in_update=update_hecke_orbits),
-            WebDict('oldspace_decomposition', required=False),
+            WebList('oldspace_decomposition', required=False),
             WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True),
             WebList('zeta_orders',value=[],save_to_db=True),

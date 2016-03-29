@@ -479,88 +479,9 @@ def image_callback(G):
     response.headers['Content-type'] = 'image/png'
     return response
 
-
-def parse_range(arg, parse_singleton=int):
-    # TODO: graceful errors
-    if type(arg) == parse_singleton:
-        return arg
-    if ',' in arg:
-        return {'$or': [parse_range(a) for a in arg.split(',')]}
-    elif '-' in arg[1:]:
-        ix = arg.index('-', 1)
-        start, end = arg[:ix], arg[ix + 1:]
-        q = {}
-        if start:
-            q['$gte'] = parse_singleton(start)
-        if end:
-            q['$lte'] = parse_singleton(end)
-        return q
-    else:
-        return parse_singleton(arg)
-
-
-# version above does not produce legal results when there is a comma
-# to deal with $or, we return [key, value]
-def parse_range2(arg, key, parse_singleton=int):
-    if type(arg) == str:
-        arg = arg.replace(' ', '')
-    if type(arg) == parse_singleton:
-        return [key, arg]
-    if ',' in arg:
-        tmp = [parse_range2(a, key, parse_singleton) for a in arg.split(',')]
-        tmp = [{a[0]: a[1]} for a in tmp]
-        return ['$or', tmp]
-    elif '-' in arg[1:]:
-        ix = arg.index('-', 1)
-        start, end = arg[:ix], arg[ix + 1:]
-        q = {}
-        if start:
-            q['$gte'] = parse_singleton(start)
-        if end:
-            q['$lte'] = parse_singleton(end)
-        return [key, q]
-    else:
-        return [key, parse_singleton(arg)]
-
-# Function to parse search box input for finite abelian group
-# invariants, e.g. torsion structure for elliptic curves or genus 2
-# curves
-
-def parse_torsion_structure(L, maxrank=2):
-    r"""
-    Parse a string entered into torsion structure search box
-    '[]' --> []
-    '[n]' --> [str(n)]
-    'n' --> [str(n)]
-    '[m,n]' or '[m n]' --> [str(m),str(n)]
-    'm,n' or 'm n' --> [str(m),str(n)]
-    ... and similarly for up to maxrank factors
-    """
-    # strip <whitespace> or <whitespace>[<whitespace> from the beginning:
-    L1 = re.sub(r'^\s*\[?\s*', '', str(L))
-    # strip <whitespace> or <whitespace>]<whitespace> from the beginning:
-    L1 = re.sub(r'\s*]?\s*$', '', L1)
-    # catch case where there is nothing left:
-    if not L1:
-        return []
-    # This matches a string of 1 or more digits at the start,
-    # optionally followed by up to 3 times (nontrivial <ws> or <ws>,<ws> followed by
-    # 1 or more digits):
-    TORS_RE = re.compile(r'^\d+((\s+|\s*,\s*)\d+){0,%s}$' % (maxrank-1))
-    if TORS_RE.match(L1):
-        if ',' in L1:
-            # strip interior <ws> and use ',' as delimiter:
-            res = [int(a) for a in L1.replace(' ','').split(',')]
-        else:
-            # use whitespace as delimiter:
-            res = [int(a) for a in L1.split()]
-        n = len(res)
-        if all(x>0 for x in res) and all(res[i+1]%res[i]==0 for i in range(n-1)):
-            return res
-    return 'Error parsing input %s.  It needs to be a list of up to %s integers, optionally in square brackets, separated by spaces or a comma, such as [6], 6, [2,2], or [2,4].  Moreover, each integer should be bigger than 1, and each divides the next.' % (L,maxrank)
-
-
-
+# The following functions are moving to search_parsing.py, but are imported here
+# temporarily
+from search_parsing import parse_range, parse_range2, clean_input
 
 def len_val_fn(value):
     """ This creates a SON pair of the type {len:len(value), val:value}, with the len first so lexicographic ordering works.
@@ -605,14 +526,6 @@ def order_values(doc, field, sub_fields=["len", "val"]):
 
 def comma(x):
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
-
-# Remove whitespace for simpler parsing
-# Remove brackets to avoid tricks (so we can echo it back safely)
-
-
-def clean_input(inp):
-    return re.sub(r'[\s<>]', '', str(inp))
-
 
 def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ

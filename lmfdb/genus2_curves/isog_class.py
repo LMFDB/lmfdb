@@ -270,7 +270,7 @@ class G2Cisog_class(object):
         x = self.label.split('.')[1]
         self.friends = [('L-function',
             url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x))]
-        self.downloads = [('Download Euler factors', ".")]
+        #self.downloads = [('Download Euler factors', ".")]
         #self.downloads = [
         #        ('Download Euler factors', "."),
         #            url_for(".download_g2c_eulerfactors", label=self.label)),

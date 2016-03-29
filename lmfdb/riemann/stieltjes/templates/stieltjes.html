@@ -94,16 +94,13 @@ List <input type="text" name="limit" value="{{limit}}" style="width:5em"/> Stiel
 starting from <input type="text" value="{{start}}" name="start" id="nbox"/> <button type="submit" value="Go">Go</button>
 </form>
 <br/>
-<div align="center">
-{{KNOWL('riemann.stieltjes.contents', title="Contents of these tables.")}}
-</div>
 <br/>
 <div align="center">
 <a href="#" class="navlink" onclick="prev(); return false">Previous {{limit}}</a>
 <a href="#" class="navlink" onclick="next(); return false">Next {{limit}}</a>
 </div>
 <table class='ntdata' id='constant_table' align="center">
-<thead><td>n</td> <td>{{KNOWL('riemann.stieltjes_constants', title='$\gamma_n$')}}</td> <td>{{KNOWL('riemann.stieltjes.cn', title='$c_n$')}}</td> </thead>
+<thead><td>n</td> <td>$\gamma_n$</td> <td>$c_n$</td> </thead>
 </table>
 
 {% endblock %}

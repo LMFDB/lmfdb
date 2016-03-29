@@ -132,7 +132,26 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         #        WMFS.hecke_orbits.append(F)
         info['space'] = WMFS
 #    info['old_decomposition'] = WMFS.oldspace_decomposition()
-
+    info['oldspace_decomposition']=''
+    try: 
+        emf_logger.debug("Oldspace = {0}".format(WMFS.oldspace_decomposition))
+        if WMFS.oldspace_decomposition != []:
+            emf_logger.debug("oldspace={0}".format(WMFS.oldspace_decomposition))
+            l = []
+            for t in WMFS.oldspace_decomposition:
+                emf_logger.debug("t={0}".format(t))
+                N,k,chi,mult,d = t
+                url = url_for('emf.render_elliptic_modular_forms', level=N, weight=k, character=chi)
+                if chi != 1:
+                    sname = "S^{{ new }}_{{ {k} }}(\\Gamma_0({N}),\\chi_{{ {N} }}({chi},\\cdot))".format(k=k,N=N,chi=chi)
+                else:
+                    sname = "S^{{ new }}_{{ {k} }}(\\Gamma_0({N}))".format(k=k,N=N)
+                l.append("\href{{ {url} }}{{ {sname} }}^{{\oplus {mult} }}".format(sname=sname,mult=mult,url=url))
+            if l != []:            
+                s = "\\oplus ".join(l)
+                info['oldspace_decomposition']=' $ {0} $'.format(s)
+    except Exception as e:
+        emf_logger.critical("Oldspace decomposition failed. Error:{0}".format(e))
     ## For side-bar
     lifts = list()
     lifts.append(('Half-Integral Weight Forms', '/ModularForm/Mp2/Q'))

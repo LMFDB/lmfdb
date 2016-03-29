@@ -8,9 +8,11 @@ ASC = pymongo.ASCENDING
 from urllib import quote, unquote
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect
-from lmfdb.utils import image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input, parse_torsion_structure
+from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
+from lmfdb.search_parsing import clean_input, parse_range, parse_range2, parse_bracketed_posints
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
+from lmfdb.ecnf.ecnf_stats import get_stats
 from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import parse_list, parse_field_string, field_pretty
@@ -85,6 +87,44 @@ def get_bread(*breads):
     map(bc.append, breads)
     return bc
 
+def learnmore_list():
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Elliptic Curve labels', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+
+@ecnf_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of the elliptic curve data over number fields'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('Completeness', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.ecnf.extent',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+
+@ecnf_page.route("/Source")
+def how_computed_page():
+    t = 'Source of the elliptic curve data over number fields'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('Source', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.ecnf.source',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@ecnf_page.route("/Labels")
+def labels_page():
+    t = 'Labels for elliptic curves over number fields'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('Labels', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='ec.curve_label',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+
+
 @ecnf_page.route("/")
 def index():
 #    if 'jump' in request.args:
@@ -101,18 +141,32 @@ def index():
 # data['fields'] holds data for a sample of number fields of different
 # signatures for a general browse:
 
+    counts = get_stats().counts()
     data['fields'] = []
     # Rationals
     data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)])
     # Real quadratics (only a sample)
     rqfs = ['2.2.%s.1' % str(d) for d in [5, 89, 229, 497]]
-    data['fields'].append(['real quadratic fields', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in rqfs)])
+    nquadratics = counts['nfields_by_degree'][2]
+    niqfs = 5
+    nrqfs = nquadratics - niqfs
+    data['fields'].append(['%s real quadratic fields, including' % nrqfs, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in rqfs)])
     # Imaginary quadratics
     iqfs = ['2.0.%s.1' % str(d) for d in [4, 8, 3, 7, 11]]
-    data['fields'].append(['imaginary quadratic fields', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in iqfs)])
+    data['fields'].append(['%s imaginary quadratic fields' % niqfs, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in iqfs)])
     # Cubics
-    cubics = ['3.1.23.1']
-    data['fields'].append(['cubic fields', ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in cubics)])
+    cubics = ['3.1.23.1'] + ['3.3.%s.1' % str(d) for d in [49,148,1957]]
+    ncubics = counts['nfields_by_degree'][3]
+    data['fields'].append(['%s cubic fields, including' % ncubics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in cubics)])
+    # Quartics
+    quartics = ['4.4.%s.1' % str(d) for d in [725,2777,9909,19821]]
+    nquartics = counts['nfields_by_degree'][4]
+    data['fields'].append(['%s totally real quartic fields, including' % nquartics,
+                           ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quartics)])
+    # Quintics
+    quintics = ['5.5.%s.1' % str(d) for d in [14641]]
+    nquintics = counts['nfields_by_degree'][5]
+    data['fields'].append(['%s totally real quintic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
 
 # data['highlights'] holds data (URL and descriptive text) for a
 # sample of elliptic curves with interesting features:
@@ -142,7 +196,7 @@ def index():
     return render_template("ecnf-index.html",
                            title="Elliptic Curves over Number Fields",
                            data=data,
-                           bread=bread)
+                           bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 
 @ecnf_page.route("/<nf>/")
@@ -326,13 +380,10 @@ def elliptic_curve_search(**args):
         query[tmp[0]] = tmp[1]
 
     if 'torsion_structure' in info and info['torsion_structure']:
-        res = parse_torsion_structure(info['torsion_structure'],2)
-        if 'Error' in res:
-            info['err'] = res
+        try:
+            parse_bracketed_posints(info, query, 'torsion_structure', maxlength=2)
+        except ValueError:
             return search_input_error(info, bread)
-        #update info for repeat searches
-        info['torsion_structure'] = str(res).replace(' ','')
-        query['torsion_structure'] = [int(r) for r in res]
 
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         info['number'] = 1
@@ -415,3 +466,15 @@ def search():
         return "ERROR: we always do http get to explicitly display the search parameters"
     else:
         return redirect(404)
+
+@ecnf_page.route("/stats")
+def statistics():
+    info = {
+        'counts': get_stats().counts(),
+        'stats': get_stats().stats(),
+    }
+    credit = 'John Cremona'
+    t = 'Elliptic curves over number fields: statistics'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('statistics', ' ')]
+    return render_template("stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())

@@ -4,9 +4,83 @@ from base import getDBConnection, app
 from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
 from databases.standard_types import PolynomialAsSequenceInt
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod
 from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
 from WebNumberField import WebNumberField
+from lmfdb.WebCharacter import WebDirichletCharacter
+
+
+# fun is the function, N the modulus, and n the denominator
+# for values (value a means e(a/n))
+def id_dirichlet(fun, N, n):
+    N = Integer(N)
+    if N==1:
+        return (1,1)
+    p2 = valuation(N, 2)
+    N2 = 2**p2
+    Nodd = N/N2
+    Nfact = list(factor(Nodd))
+    #print "n = "+str(n)
+    #for j in range(20):
+    #    print "chi(%d) = e(%d/%d)"%(j+2, fun(j+2,n), n)
+    plist = [z[0] for z in Nfact]
+    ppows = [z[0]**z[1] for z in Nfact]
+    ppows2 = list(ppows)
+    idems = [1 for z in Nfact]
+    proots = [primitive_root(z) for z in ppows]
+    # Get CRT idempotents
+    if p2>0:
+        ppows2.append(N2)
+    for j in range(len(plist)):
+        exps = [1 for z in idems]
+        if p2>0:
+            exps.append(1)
+        exps[j] = proots[j]
+        idems[j] = crt(exps, ppows2)
+    idemvals = [fun(z,n) for z in idems]
+    # now normalize to right root of unity base
+    idemvals = [idemvals[j] * euler_phi(ppows[j])/n for j in range(len(idemvals))]
+    ans = [Integer(mod(proots[j], ppows[j])**idemvals[j]) for j in range(len(proots))]
+    ans = crt(ans, ppows)
+    #print "*********************************************"
+    #print "n = "+str(n)
+    #print "ppows = "+str(ppows)
+    #print "idems = "+str(idems)
+    #print "idemvals = "+str(idemvals)
+    #print "p2 = "+str(p2)
+    #print "Odd part: chi_%d(%d, - )"%(Nodd,ans)
+    #print "*********************************************"
+    # There are cases depending on 2-part of N
+    if p2==0:
+        return (N, ans)
+    if p2==1:
+        return (N, crt([1, ans], [2, Nodd]))
+    if p2==2:
+        my3=crt([3, 1], [N2, Nodd])
+        #print "My3 = "+str(my3)
+        if fun(my3,n) == 0:
+            return (N, crt([1, ans], [4, Nodd]))
+        else:
+            return (N, crt([3, ans], [4, Nodd]))
+    # Final case 2^3 | N
+    #print "*********************************************"
+    #print "N2 = "+str(N2)+" and Nodd = "+str(Nodd)
+
+    my5=crt([5, 1], [N2, Nodd])
+    #print "my5 = "+str(my5)
+    test1 = fun(my5,n) * N2/4/n
+    #print "computed "+str(test1)
+    test1 = Integer(mod(5,N2)**test1)
+    #print "would be "+str(crt([test1, ans], [N2, Nodd]))
+    minusone = crt([-1,1], [N2, Nodd])
+    #print "minusone = "+str(minusone)
+    test2 = (fun(minusone, n) * N2/4/n) % (N2/4)
+    #print "computed "+str(test2)
+    if test2 > 0:
+        test1 = Integer(mod(-test1, N2))
+    #print "calling CRT with "+str([test1, ans, N2, Nodd])
+    #print "Got "+str(crt([test1, ans], [N2, Nodd]))
+    return (N, crt([test1, ans], [N2, Nodd]))
 
 
 def process_algebraic_integer(seq, root_of_unity):
@@ -16,6 +90,18 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     from sage.rings.all import PolynomialRing
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
+
+class FakeCharacter:
+    """
+      This is a workaround for the fact that one cannot create
+      a single Dirichlet character with large modulus.  All we
+      really need is for it to format itself.
+    """
+    def __init__(self, **kwargs):
+        self.modulus = kwargs['modulus']
+        self.number = kwargs['number']
+        self.order = 100 # to fool checks on this
+        self.texname = r'\(\chi_{%s}(%s,\cdot)\)'%(self.modulus,self.number)
 
 class ArtinRepresentation(object):
     @staticmethod
@@ -153,11 +239,66 @@ class ArtinRepresentation(object):
     def is_ramified(self, p):
         return self.number_field_galois_group().discriminant() % p == 0
 
-    def central_char(self, p):
+    # sets up, and returns a function to compute the central character
+    # as a function
+    def central_char_function(self):
+        dim = self.dimension()
+        dfactor = (-1)**dim
+        # doubling insures integers below
+        # we could test for when we need it, but then we carry the "if"
+        # throughout
+        charf = 2*self.character_field()
+        localfactors = self.local_factors_table()
+        bad = [0 if dim+1>len(z) else 1 for z in localfactors]
+        localfactors = [self.from_conjugacy_class_index_to_polynomial(j+1) for j in range(len(localfactors))]
+        localfactors = [z.leading_coefficient()*dfactor for z in localfactors]
+        # Now take logs to figure out what power these are
+        mypi = RealField(100)(pi)
+        localfactors = [charf*log(z)/(2*I*mypi) for z in localfactors]
+        localfactorsa = [z.real().round() % charf for z in localfactors]
+        # Test to see if we are ok?
+        localfactorsa = [localfactorsa[j] if bad[j]>0 else -1 for j in range(len(localfactorsa))]
+        def myfunc(inp, n):
+            fn = list(factor(inp))
+            pvals = [[localfactorsa[self.any_prime_to_cc_index(z[0])-1], z[1]] for z in fn]
+            # -1 is the marker that the prime divides the conductor
+            for j in range(len(pvals)):
+                if pvals[j][0] < 0:
+                    return -1
+            pvals = sum([z[0]*z[1] for z in pvals])
+            return (pvals % n)
+        return myfunc
+
+    def central_character(self):
+        """
+          Returns the central character, i.e., determinant character
+          as a web character.
+        """
+        if 'central_character' in self._data:
+            return self._data['central_character']
+        # Build it as a python function, id it, make a lmfdb character
+        myfunc = self.central_char_function()
+        wc = id_dirichlet(myfunc, self.conductor(), 2*self.character_field())
+        # print "Got wc id = "+str(wc)
+        if wc[0]>100000:
+            wc = FakeCharacter(modulus=wc[0], number=wc[1])
+        else:
+            wc = WebDirichletCharacter(modulus=wc[0], number=wc[1])
+        self._data['central_character'] = wc
+        return wc
+
+    def det_display(self):
+        cc= self.central_character()
+        if cc.order == 2:
+            return cc.symbol
+        return cc.texname
+
+    def central_char_old(self, p):
         """
           Returns the value of the central character at p.
           Test with is_bad_prime(p) or YMMV
         """
+        eulerp = self.local_factors_table()[self.any_prime_to_cc_index(p)-1]
         eulerp = self.euler_polynomial(p)
         if eulerp.degree() < self.dimension():
             return 0
