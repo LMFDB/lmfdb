@@ -81,8 +81,6 @@ def learnmore_list_remove(matchstring):
 
 @ec_page.route("/")
 def rational_elliptic_curves(err_args=None):
-    print "in rational_elliptic_curves"
-    print request.args
     if err_args is None:
         if len(request.args) != 0:
             return elliptic_curve_search(**request.args)
@@ -167,11 +165,7 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
 
 
 def elliptic_curve_search(**args):
-    print 'args'
-    print args
     info = to_dict(args)
-    print 'info'
-    print info
     query = {}
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
@@ -221,31 +215,20 @@ def elliptic_curve_search(**args):
             query['label'] = ''
 
     try:
-        print query
         parse_rational(info,query,'jinv','j-invariant')
-        print query
         parse_ints(info,query,'conductor')
-        print query
         parse_ints(info,query,'torsion','torsion order')
-        print query
         parse_ints(info,query,'rank')
-        print query
         parse_ints(info,query,'sha','analytic order of &#1064;')
-        print query
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,process=str,check_divisibility='increasing')
-        print query
         parse_primes(info, query, 'surj_primes', name='surjective primes',
                      qfield='non-surjective_primes', mode='complement')
-        print query
-        print info.get('surj_quantifier')
         if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
-        print query
         parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
                      qfield='non-surjective_primes',mode=mode)
-        print query
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)
@@ -258,7 +241,6 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     info['query'] = query
-    print query
     cursor = db_ec().find(query)
     nres = cursor.count()
     if(start >= nres):
