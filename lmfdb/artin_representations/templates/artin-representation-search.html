@@ -91,7 +91,7 @@
 <div>
 	<table border=1 cellpadding=5 class="ntdata">
 
-	<thead><tr><th>Result</th>
+	<thead><tr><th>Label</th>
         <th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
 	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
@@ -113,15 +113,14 @@
         {% endif %}
           {% endfor %}
             </td>
-            <td>${{art.dimension()}}$</td>
+            <td align="center">${{art.dimension()}}$</td>
           <td>${{art.factored_conductor_latex()}}$</td>
           <td>{{ art.field_knowl()|safe }}</td>
 
 	  {# <td align="center">{{artin.number_field_galois_group().G_name()}}</td> #}
 	  <td align="center">{{art.pretty_galois_knowl() | safe }} </td>
-{#	  <td>${{artin.processed_root_number()}}$</td> #}
-	  <td> ${{artin.Indicator}}$</td>
-	  <td>${{art.trace_complex_conjugation()}}$</td>
+	  <td align="center"> ${{artin.Indicator}}$</td>
+	  <td align="center">${{art.trace_complex_conjugation()}}$</td>
 	  </tr>
         {% endfor %}
 	</tbody>

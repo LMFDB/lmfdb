@@ -10,6 +10,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 from lmfdb.artin_representations import artin_representations_page, artin_logger
 from lmfdb.utils import to_dict
 from lmfdb.transitive_group import *
+from lmfdb.WebCharacter import WebDirichletCharacter
 import re
 
 
@@ -254,13 +255,21 @@ def render_artin_representation_webpage(label):
     nf_url = the_nf.url_for()
     if nf_url:
     	friends.append(("Artin Field", nf_url))
+    cc = the_rep.central_character()
+    if cc.modulus <= 100000: 
+        if the_rep.dimension()==1:
+            friends.append(("Corresponding Dirichlet character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+        else:
+            friends.append(("Determinant character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
 
     # once the L-functions are in the database, the link can always be shown
     if the_rep.dimension() <= 6:
         friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                           label=the_rep.label())))
     info={}
-    #info['pol2']=str(the_rep.central_char(2))
+    #mychar = the_rep.central_char()
+    #info['pol2']= str([((j+1),mychar(j+1, 2*the_rep.character_field())) for j in range(50)])
+    #info['pol3']=str(the_rep.central_character())
     #info['pol3']=str(the_rep.central_char(3))
     #info['pol5']=str(the_rep.central_char(5))
     #info['pol7']=str(the_rep.central_char(7))
