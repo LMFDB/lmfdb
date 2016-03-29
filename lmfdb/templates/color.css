@@ -8,6 +8,7 @@
 {% set color_template = 0 %}
 /*0, 1, 2, 3, 10, 11, 12, 13*/
 
+
 {% if color_template == 0 %}
     /*Original LMFDB colors*/
     {% set col_main_d  = '#040' %} 
