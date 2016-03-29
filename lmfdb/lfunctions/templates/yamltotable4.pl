@@ -53,7 +53,7 @@ print OUTFILE qq|
 <th align="center">{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
 <td align="center">\$\\Gamma_{\\R}\$ parameters</td>
 <td align="center">\$\\Gamma_{\\C}\$ parameters</td>
-<th align="center">{{ KNOWL('lfunction.sign', title='$\epsilon$') }}</th>
+<th align="center">{{ KNOWL('lfunction.sign', title='\$\\\\varepsilon\$') }}</th>
 </tr>
 |;
 
@@ -133,7 +133,7 @@ if(my $tmp=$rowvals{epsilon}) {
 
 }
 
-if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "-" }
+if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "triv" }
 
 if($rowvals{arithmetic} eq "true") { $rowvals{arithmetic}=$truesymbol }
 else {$rowvals{arithmetic}=$falsesymbol }

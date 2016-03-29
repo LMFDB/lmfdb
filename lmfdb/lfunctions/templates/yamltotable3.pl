@@ -47,10 +47,10 @@ print OUTFILE qq|
 <th align="center">{{ KNOWL('lfunction.arithmetic', title='arithmetic') }}</th>
 <th align="center">{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
 <th align="center">\$\\delta,\\nu\$</th>
-<th align="center">\$\mu\$</th>
+<th align="center">\$\\mu\$</th>
 <th align="center">\$\\delta_1,\\delta_2,\\delta_3\$</th>
 <th align="center">\$\\mu_1,\\mu_2\$</th>
-<th align="center">{{ KNOWL('lfunction.sign', title='\$\\epsilon\$') }}</th>
+<th align="center">{{ KNOWL('lfunction.sign', title='\$\\\\varepsilon\$') }}</th>
 </tr>
 |;
 
@@ -129,7 +129,7 @@ if(my $tmp=$rowvals{epsilon}) {
 
 }
 
-if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "-" }
+if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "triv" }
 
 if($rowvals{arithmetic} eq "true") { $rowvals{arithmetic}=$truesymbol }
 else {$rowvals{arithmetic}=$falsesymbol }
