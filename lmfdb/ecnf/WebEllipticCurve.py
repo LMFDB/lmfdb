@@ -62,7 +62,7 @@ def EC_nf_plot(E, base_field_gen_name):
         return plot([])
     prec = 53
     maxprec = 10 ** 6
-    while prec < maxprec:  # Try to base change to R. May fail if resulting curve is almost singular, so increase precision.
+    while prec < maxprec:  # Try to base change to RR. May fail if resulting curve is almost singular, so increase precision.
         try:
             SR = K.embeddings(RealField(prec))
             X = [E.base_extend(s) for s in SR]
@@ -76,9 +76,22 @@ def EC_nf_plot(E, base_field_gen_name):
     xmax = max([x.xmax() for x in X])
     ymin = min([x.ymin() for x in X])
     ymax = max([x.ymax() for x in X])
-    cols = ["blue", "red", "green", "orange", "brown"]  # Preset colours, because rainbow tends to return too pale ones
-    if n1 > len(cols):
-        cols = rainbow(n1)
+    cols = rainbow(n1) # Default choice of n colours
+    # Howver, these tend to be too pale, so we preset them for small values of n
+    if n1==1:
+        cols=["blue"]
+    elif n1==2:
+        cols=["red","blue"]
+    elif n1==3:
+        cols=["red","limegreen","blue"]
+    elif n1==4:
+        cols = ["red", "orange", "forestgreen", "blue"]
+    elif n1==5:
+        cols = ["red", "orange", "forestgreen", "blue", "darkviolet"] 
+    elif n1==6:
+        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"] 
+    elif n1==7:
+        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"] 
     return sum([EC_R_plot([SR[i](a) for a in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(SR[i].im_gens()[0].n(20))) for i in range(n1)])
 
 
