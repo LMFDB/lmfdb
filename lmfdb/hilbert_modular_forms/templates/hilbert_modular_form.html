@@ -37,13 +37,13 @@
 <div>The Hecke eigenvalue field is $\Q(e)$ where $e$ is a root of the defining polynomial:</div> 
 <div style='overflow-x:auto; overflow-y:hidden'>${{ info.hecke_polynomial }}$ </div>
 
+<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Show full eigenvalues</a>
+&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>
+
 {% else %}
 <div>The Hecke eigenvalue field is <a knowl= "nf.field.data" kwargs="label=1.1.1.1">$\Q$</a>.</div>
 
 {% endif %}
- 
-<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Print full eigenvalues</a>
-&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>
 
 <style type="text/css">
 div.scrollable {
@@ -55,7 +55,8 @@ div.scrollable {
 }
 </style>
 
-<table class="ntdata" cellpadding=10 style="width:70%; table-layout:fixed">
+<table class="ntdata" cellpadding=3 style="width:70%;
+    table-layout:fixed vertical-align:inherit">
 <tr>
 <th>Norm</th>
 <th colspan=3>{{ KNOWL('nf.ideal.label.hmf', title='Prime') }} </th>

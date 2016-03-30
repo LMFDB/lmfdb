@@ -37,7 +37,7 @@ def random_hmf():    # Random Hilbert modular form
     n = randint(0,n-1)
     C = getDBConnection()
     res = C.hmfs.forms.find()[n]
-    return redirect(url_for(".render_hmf_webpage", field_label=res['field_label'], label=res['label']))
+    return hilbert_modular_form_by_label(res)
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*', '')
@@ -93,25 +93,28 @@ def split_full_label(lab):
     label_suffix = data[2]
     return (field_label, level_label, label_suffix)
 
-def hilbert_modular_form_by_label(lab, C):
-    if C.hmfs.forms.find({'label': lab}).limit(1).count() > 0:
-        return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab))
+def hilbert_modular_form_by_label(lab):
+    if isinstance(lab, basestring):
+        C = getDBConnection()
+        res = C.hmfs.forms.find_one({'label': lab})
     else:
+        res = lab
+        lab = res['label']
+    if res == None:
         flash(Markup("No Hilbert modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
         return redirect(url_for(".hilbert_modular_form_render_webpage"))
+    else:
+        return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab, data=res))
 
 
 def hilbert_modular_form_search(**args):
-    C = getDBConnection()
-#    C.hmfs.forms.ensure_index([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
-
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info and info['label']:
         lab=info['label'].strip()
         info['label']=lab
         try:
             split_full_label(lab)
-            return hilbert_modular_form_by_label(lab, C)
+            return hilbert_modular_form_by_label(lab)
         except ValueError:
             return redirect(url_for(".hilbert_modular_form_render_webpage"))
 
@@ -130,6 +133,7 @@ def hilbert_modular_form_search(**args):
     start = parse_start(info)
 
     info['query'] = dict(query)
+    C = getDBConnection()
     res = C.hmfs.forms.find(
         query).sort([('deg', pymongo.ASCENDING), ('disc', pymongo.ASCENDING), ('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
@@ -289,12 +293,14 @@ def download_hmf_sage(**args):
 @hmf_page.route('/<field_label>/holomorphic/<label>')
 def render_hmf_webpage(**args):
     C = getDBConnection()
-    data = None
-    if 'label' in args:
+    if 'data' in args:
+        data = args['data']
+        label = data['label']
+    else:
         label = str(args['label'])
         data = C.hmfs.forms.find_one({'label': label})
     if data is None:
-        return "No such field"
+        return "No such form"
     info = {}
     try:
         info['count'] = args['count']
@@ -382,6 +388,8 @@ def render_hmf_webpage(**args):
         info['AL_eigs'] = [{'eigenvalue': '?', 'prime_ideal': '?'}]
     info['AL_eigs_count'] = len(info['AL_eigs']) != 0
 
+    max_eig_len = max([len(eig['eigenvalue']) for eig in info['eigs']])
+    display_eigs = display_eigs or (max_eig_len<=300)
     if not display_eigs:
         for eig in info['eigs']:
             if len(eig['eigenvalue']) > 300:
