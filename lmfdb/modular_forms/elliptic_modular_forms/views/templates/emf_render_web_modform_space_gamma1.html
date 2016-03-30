@@ -128,15 +128,14 @@ $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$</th>
 	  {% endif %}
         </th>
         <td class="border-right center">
-              {{ x.parity }}
+            {{ x.parity }}
         </td>
         {% for xc in table.galois_orbit[xi]  %}
           <td align="center" width="0%">
-       {#    {% if xc.url != '' and cell.dim > 0 %}  want link even if 0 dimensional #}
            {% if xc.url != '' %}
              <a href="{{xc.url}}">{{ xc.head }}</a>
            {% else %}
-	       <span class="inactive">{{xc.head}}</span>
+	     <span class="inactive">{{xc.head}}</span>
 	   {% endif %}
           </td>
         {% endfor %}
