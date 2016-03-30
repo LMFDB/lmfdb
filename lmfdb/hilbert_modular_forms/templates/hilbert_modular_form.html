@@ -36,6 +36,10 @@
 {% if info.dimension > 1 %}
 <div>The Hecke eigenvalue field is $\Q(e)$ where $e$ is a root of the defining polynomial:</div> 
 <div style='overflow-x:auto; overflow-y:hidden'>${{ info.hecke_polynomial }}$ </div>
+
+{% else %}
+<div>The Hecke eigenvalue field is <a knowl= "nf.field.data" kwargs="label=1.1.1.1">$\Q$</a>.</div>
+
 {% endif %}
  
 <p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Print full eigenvalues</a>
@@ -43,7 +47,6 @@
 
 <style type="text/css">
 div.scrollable {
-    width: 100%;
     height: 100%;
     margin: 10;
     padding: 10;
@@ -52,17 +55,19 @@ div.scrollable {
 }
 </style>
 
-<table class="ntdata" cellpadding=10 style="width:80%; table-layout:fixed">
+<table class="ntdata" cellpadding=10 style="width:70%; table-layout:fixed">
 <tr>
-<th style="width:5%;">Norm</th>
-<th style="width:15%;">{{ KNOWL('nf.ideal.label.hmf', title='Prime') }} </th>
+<th>Norm</th>
+<th>{{ KNOWL('nf.ideal.label.hmf', title='Prime') }} </th>
+<th></th>
 <th>Eigenvalue</th>
 </tr>
 {% for entry in info.eigs: %}
 <tr>
 <td>{{entry.prime_norm}}</td>
 <td>${{entry.prime_ideal}}$</td>
-<td><div class=scrollable>${{entry.eigenvalue}}$</div></td>
+<td></td>
+<td colspan=6><div class=scrollable>${{entry.eigenvalue}}$</div></td>
 </tr>
 {% endfor %}
 </table>
@@ -80,7 +85,7 @@ div.scrollable {
 </table>
 </form>
 
-  <h2>  Atkin-Lehner eigenvalues  </h2>
+<h2>  Atkin-Lehner eigenvalues  </h2>
 
 {% if info.AL_eigs_count %} 
 <p>

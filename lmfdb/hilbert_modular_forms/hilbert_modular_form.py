@@ -95,11 +95,10 @@ def split_full_label(lab):
 
 def hilbert_modular_form_by_label(lab, C):
     if C.hmfs.forms.find({'label': lab}).limit(1).count() > 0:
-        return render_hmf_webpage(label=lab)
+        return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab))
     else:
         flash(Markup("No Hilbert modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
-    return redirect(url_for(".hilbert_modular_form_render_webpage"))
-
+        return redirect(url_for(".hilbert_modular_form_render_webpage"))
 
 
 def hilbert_modular_form_search(**args):
@@ -109,11 +108,12 @@ def hilbert_modular_form_search(**args):
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info and info['label']:
         lab=info['label'].strip()
+        info['label']=lab
         try:
             split_full_label(lab)
             return hilbert_modular_form_by_label(lab, C)
         except ValueError:
-            return search_input_error()
+            return redirect(url_for(".hilbert_modular_form_render_webpage"))
 
     query = {}
     try:
