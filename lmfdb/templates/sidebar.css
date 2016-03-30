@@ -1,3 +1,4 @@
+{% import 'color.css' as color %}
 <style type="text/css">
 #sidebar .L a {
     display: inline;
@@ -16,8 +17,6 @@
 
 #sidebar div.L {
     margin: 8px;
- /*   padding-top: 5px;
-*/
 }
 
 #sidebar table td a {
@@ -27,7 +26,7 @@
 }
 
 #sidebar table td .subtitle {
-    color: #390;
+    color: {{color.sidebar_text}};
 }
 
 #sidebar table td.borc .subtitle .future {
@@ -48,19 +47,19 @@
 }
 
 #sidebar .future { 
-    color:rgb(180,180,180);
+    color: {{color.sidebar_text_future}};
     display: inherit;
 }
 
 
 #sidebar .beta { 
-    color:purple;
+    color:{{color.sidebar_text_beta}};
     display: inherit;
 }
 
 
 #sidebar .beta a { 
-    color:purple;
+    color:{{color.sidebar_text_beta}};
 }
 
 
@@ -78,16 +77,6 @@
     background: inherit;
 }
 
-/*
-#sidebar .test { color:rgb(150,0,0);}
-#sidebar .test a { color:rgb(150,0,0);
-*/
-display: inline;
-  background: none;
-  padding: 0px;}
-/*#sidebar .list li {
-    padding: px;
-}*/
 #sidebar .list a {
   display: block;
   background: none;
@@ -118,13 +107,11 @@ p.rotation  {
 	border-style: solid;
 	padding: 2px;
 	border-spacing: 0px;
-	border-color: #efe;
+	border-color: {{color.sidebar_background}};
 	border-collapse: separate;
 }
 
 #sidebar table.short td.bor{
-/*	border-bottom: 5px solid #fff;
-	padding: 0px;*/
 	text-align: left;
 }
 
@@ -134,21 +121,16 @@ p.rotation  {
 
 #sidebar table.short td.borc{
 	text-align: center;
-/*	border-bottom: 5px solid #fff;
-	padding: 0px;*/
 }
  
 #sidebar table.short td.full{
         text-align: left;
-/*      border-bottom: 5px solid #fff;
-      padding: 0px;*/
 }
 
 #sidebar table.short td.off { 
 	text-align: center;	
-/*	border-bottom: 5px solid #fff;
-	padding: 0px*/
-	background: #fff }
+	background: {{color.sidebar_background_off}};
+}
 
 
 
@@ -178,7 +160,7 @@ p.rotation  {
     table-layout:fixed;
 	padding: 10px;
 	border-spacing: 0px;
-	border-color: #efe;
+	border-color: {{color.sidebar_background}};
 	border-collapse: collapse;
 }
 

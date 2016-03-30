@@ -2,41 +2,42 @@
 // markItUp! Universal MarkUp Engine, JQuery plugin
 // By Jay Salvat - http://markitup.jaysalvat.com/
 // ------------------------------------------------------------------*/
+{% import 'color.css' as color %}
 .markItUp * {
 	margin:0px; padding:0px;
 	outline:none;
 }
 .markItUp a:link,
 .markItUp a:visited {
-	color:#000;
+    color:{{color.black}};
 	text-decoration:none;
 }
 .markItUp  {
 	width:700px;
 	margin:5px 0 5px 0;
-	border:5px solid #F5F5F5;	
+	border:5px solid {{color.white_1}};	
 }
 .markItUpContainer  {
-	border:1px solid #3C769D;	
-	background:#FFF url(images/bg-container.png) repeat-x top left;
+        border:1px solid {{color.steel_blue}};	
+	background:{{color.white}} url(images/bg-container.png) repeat-x top left;
 	padding:5px 5px 2px 5px;
 	font:11px Verdana, Arial, Helvetica, sans-serif;
 }
 .markItUpEditor {
 	font:12px 'Courier New', Courier, monospace;
 	padding:5px 5px 5px 35px;
-	border:3px solid #3C769D;
+	border:3px solid {{color.steel_blue}};
 	width:643px;
 	height:320px;
-	background:#FFF url(images/bg-editor.png) no-repeat;
+	background:{{color.white}} url(images/bg-editor.png) no-repeat;
 	clear:both;
 	line-height:18px;
 	overflow:auto;
 }
 .markItUpPreviewFrame	{
 	overflow:auto;
-	background-color:#FFFFFF;
-	border:1px solid #3C769D;
+	background-color:{{color.white}};
+	border:1px solid {{color.steel_blue}};
 	width:99.9%;
 	height:300px;
 	margin:5px 0;
@@ -78,7 +79,7 @@
 	width:1px;
 	height:16px;
 	overflow:hidden;
-	background-color:#CCC;
+	background-color:{{color.light_grey_4}};
 }
 .markItUpHeader ul ul .markItUpSeparator {
 	width:auto; height:1px;
@@ -89,16 +90,16 @@
 	display:none;
 	position:absolute;
 	top:18px; left:0px;	
-	background:#F5F5F5;
-	border:1px solid #3C769D;
+	background:{{color.white_1}};
+	border:1px solid {{color.steel_blue}};
 	height:inherit;
 }
 .markItUpHeader ul ul li {
 	float:none;
-	border-bottom:1px solid #3C769D;
+	border-bottom:1px solid {{color.steel_blue}};
 }
 .markItUpHeader ul ul .markItUpDropMenu {
-	background:#F5F5F5 url(images/submenu.png) no-repeat 100% 50%;
+    background:{{color.white_1}} url(images/submenu.png) no-repeat 100% 50%;
 }
 /* next rows of buttons */
 .markItUpHeader ul ul ul {
@@ -125,8 +126,8 @@
 	background-position:2px 50%;
 }
 .markItUpHeader ul ul a:hover  {
-	color:#FFF;
-	background-color:#3C769D;
+    color:{{color.white}};
+	background-color:{{color.steel_blue}};
 }
 /***************************************************************************************/
 .html .markItUpEditor {

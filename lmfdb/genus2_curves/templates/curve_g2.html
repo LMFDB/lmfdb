@@ -1,4 +1,5 @@
 {% extends 'homepage.html' %}
+{% import 'color.css' as color %}
 {% block content %}
 
 <!--New table class to avoid spacing in LaTeX-links -->
@@ -13,7 +14,7 @@ table.g2 a {
 */
 .toggle {margin-top:5px; margin-left:20px;}
 div.properties-body table tr td.label { vertical-align: top; }
-#content > h2.subhead { color:black;}
+#content > h2.subhead { color:{{color.black}};}
 </style>
 
 {% macro code(codes, languages, item) %}
@@ -238,11 +239,24 @@ function show_invs(invstyle) {
 <h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h2>\({{data.data.num_rat_wpts}}\)
 
 <br>
+{{code(data.code,['magma'],'locally_solvable')}}
+<br>
+<h3 class="inline"> {{ KNOWL('g2c.locally_solvable', title='Locally solvable') }}: </h3>{{data.data.locally_solvable}}
+
+<br>
 <h2 class='subhead'> Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
 
-{{code(data.code,['magma'],'two_selmer')}}
+<h3 class="inline"> {{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}: </h3>\({{data.data.analytic_rank}}\)
 
+<br>
+{{code(data.code,['magma'],'two_selmer')}}
+<br>
 <h3 class="inline"> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: </h3>\({{data.data.two_selmer_rank}}\)
+
+<br>
+{{code(data.code,['magma'],'has_square_sha')}}
+<br>
+<h3 class="inline"> {{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}: </h3>{{data.data.has_square_sha}}
 
 <br>
 {{code(data.code,['magma'],'tor_struct')}}
