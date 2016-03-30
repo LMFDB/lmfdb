@@ -55,8 +55,9 @@
             {{ KNOWL('character.dirichlet.values', title="Values") }}
            {% endif %}
         </h2>
+        {# I don't know why you need the 'overflow:auto' twice --David F #}
         <div style='overflow:auto'>
-            <table class="values">
+            <table class="values" style='overflow:auto'>
                 <thead>
                     <tr>{% for a in groupelts %}<td>{{a}}</td>{%endfor%}</tr>
                 </thead>
