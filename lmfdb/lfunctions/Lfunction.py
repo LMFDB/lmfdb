@@ -80,7 +80,6 @@ def makeLfromdata(L, fromdb=False):
     else:
         L.motivic_weight = ''
 
-    print "LLLLLLLLL",L
     L.selfdual = data['self_dual']
     # Convert L.motivic_weight from python 'int' type to sage integer type.
     # This is necessary because later we need to do L.motivic_weight/2

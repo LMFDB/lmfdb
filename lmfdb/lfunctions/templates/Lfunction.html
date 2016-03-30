@@ -158,7 +158,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 {% if rank is defined -%}
 
         <tr>
-        <td> analytic rank </td>
+        <td> {{ KNOWL('lfunction.analytic_rank', title="analytic rank") }} </td>
         <td>&nbsp;=&nbsp;</td>
         <td> {{ rank }}
         </td>
