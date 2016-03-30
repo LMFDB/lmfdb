@@ -65,9 +65,9 @@ table.ntdata thead tr.space th{
   {% set group=KNOWL('group.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
 {% else %}
   {% if grouptype == 0 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma0n',title='\(\Gamma_0(' ~ level ~ ') \)') %}
   {% elif grouptype == 1 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
   {% endif %}
 {% endif %}
 
@@ -146,7 +146,7 @@ $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$</th>
   </tbody>
 </table>
 <small>The space is clickable whenever the Hecke orbits are stored for that space.
-The parity is listed as "e" for even, "o" for odd and "n/a" in case we do not have it
+The parity is listed as "n/a" in case we do not have it
 stored in the database.</small>
 
 {% endif %}

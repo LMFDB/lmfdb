@@ -30,7 +30,7 @@ def split_full_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash(Markup("Error: <span syle='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form <NFlabel>-<Condlabel>-<Isoglabel><CurveId> (separated by dashes), such as 2.2.5.1-31.1-a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1" % lab), "error")
         raise ValueError
     field_label = data[0]
     conductor_label = data[1]
@@ -38,7 +38,7 @@ def split_full_label(lab):
         isoclass_label = re.search("(CM)?[a-z]+", data[2]).group()
         curve_number = re.search("\d+", data[2]).group()  # (a string)
     except AttributeError:
-        flash(Markup("Error: <span syle='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of lower case letters), followed by a curve id (an integer), such as a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of lower case letters), followed by a curve id (an integer), such as a1" % lab), "error")
         raise ValueError
     return (field_label, conductor_label, isoclass_label, curve_number)
 
@@ -49,14 +49,14 @@ def split_short_label(lab):
     """
     data = lab.split("-")
     if len(data) != 2:
-        flash(Markup("Error: <span syle='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form <Condlabel>-<Isoglabel><CurveId> (separated by dashes), such as 31.1-a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % lab), "error")
         raise ValueError
     conductor_label = data[0]
     try:
         isoclass_label = re.search("[a-z]+", data[1]).group()
         curve_number = re.search("\d+", data[1]).group()  # (a string)
     except AttributeError:
-        flash(Markup("Error: <span syle='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of lower case letters), followed by a curve id (an integer), such as a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of lower case letters), followed by a curve id (an integer), such as a1" % lab), "error")
         raise ValueError
     return (conductor_label, isoclass_label, curve_number)
 
@@ -67,7 +67,7 @@ def split_class_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash(Markup("Error: <span syle='color:black'>%s</span> is not a valid isogeny class label. It must be of the form <NFlabel>-<Condlabel>-<Isoglabel> (separated by dashes), such as 2.2.5.1-31.1-a" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (number field label) - (conductor label) - (isogeny class label) (separated by dashes), such as 2.2.5.1-31.1-a" % lab), "error")
         raise ValueError
     field_label = data[0]
     conductor_label = data[1]
@@ -81,7 +81,7 @@ def split_short_class_label(lab):
     """
     data = lab.split("-")
     if len(data) != 2:
-        flash(Markup("Error: <span syle='color:black'>%s</span> is not a valid isogeny class label. It must be of the form <Condlabel>-<Isoglabel> (separated by dashes), such as 31.1-a" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (conductor label) - (isogeny class label) (separated by dashes), such as 31.1-a" % lab), "error")
         raise ValueError
     conductor_label = data[0]
     isoclass_label = data[1]

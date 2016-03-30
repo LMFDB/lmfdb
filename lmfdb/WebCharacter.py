@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
-import math
-# from Lfunctionutilities import pair2complex, splitcoeff, seriescoeff
-from sage.all import *
+from sage.misc.cachefunc import cached_method
+from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp
 import re
 from flask import url_for
 from lmfdb.utils import make_logger
 logger = make_logger("DC")
 from WebNumberField import WebNumberField
 try:
-    from dirichlet_conrey import *
+    from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
-from HeckeCharacters import *
+from HeckeCharacters import HeckeChar, RayClassGroup
 
 """
 Any character object is obtained as a double inheritance of
@@ -99,6 +98,112 @@ def complex2str(g, digits=10):
     else:
         return str(real) + '+' + str(imag) + 'i'
 
+def symbol_numerator(cond, parity):
+    #Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
+    # Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
+    # symbol_numerator returns the appropriate Kronecker symbol depending on the conductor of \chi. 
+    m = cond
+    if cond % 2 == 1:
+        if cond % 4 == 3:
+            m = -cond
+    elif cond % 8 == 4:
+        # Fixed cond % 16 == 4 and cond % 16 == 12 were switched in the previous version of the code. 
+        # Let d be a non zero squarefree integer. If d  = 2,3 (mod) 4 and if cond = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12 then we set m = cond. 
+        # On the other hand if d = 1 (mod) 4 and cond = 4d = 4 (4n +1) = 16n + 4 then we set m = -cond. 
+        if cond % 16 == 4:
+            m = -cond
+    elif cond % 16 == 8:
+        if parity == 1:
+            m = -cond
+    else:
+        return None
+    return m
+
+def kronecker_symbol(m):
+    if m:
+        return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
+    else:
+        return None
+
+###############################################################################
+## Conrey character with no call to Jonathan's code
+## in order to handle big moduli
+##
+class ConreyCharacter:
+    """
+    tiny implementation on Conrey index only
+    """
+
+    def __init__(self, modulus, number):
+        assert gcd(modulus, number)==1
+        self.modulus = Integer(modulus)
+        self.number = Integer(number)
+
+    @property
+    def texname(self):
+        return WebDirichlet.char2tex(self.modulus, self.number)
+
+    @cached_method
+    def modfactor(self):
+        return self.modulus.factor()
+
+    @cached_method
+    def conductor(self):
+        cond = Integer(1);
+        number = self.number
+        for p,e in self.modfactor():
+            mp = Mod(number, p**e);
+            if mp == 1:
+                continue
+            if p == 2:
+                cond = 4
+                if number % 4 == 3:
+                    mp = -mp
+            else:
+                cond *= p
+                mp = mp**(p-1)
+            while mp != 1:
+                cond *= p
+                mp = mp**p
+        return cond
+
+    def is_primitive(self):
+        return self.conductor() == self.modulus
+
+    @cached_method
+    def parity(self):
+        number = self.number
+        par = 0;
+        for p,e in self.modfactor():
+            if p == 2:
+                if number % 4 == 3:
+                    par = 1 - par
+            else:
+                phi2 = (p-1)/Integer(2) * p **(e-1)
+                if Mod(number, p ** e)**phi2 != 1:
+                    par = 1 - par
+        return par
+
+    def is_odd(self):
+        return self.parity() == 1
+
+    def is_even(self):
+        return self.parity() == 0
+
+    @cached_method
+    def multiplicative_order(self):
+        return Mod(self.number, self.modulus).multiplicative_order()
+
+    @property
+    def order(self):
+        return self.multiplicative_order()
+
+    @cached_method
+    def kronecker_symbol(self):
+        c = self.conductor()
+        p = self.parity()
+        return kronecker_symbol(symbol_numerator(c, p))
+
 ###############################################################################
 ## url_for modified for characters
 def url_character(**kwargs):
@@ -132,7 +237,6 @@ class WebCharObject:
         self.numlabel = args.get('number',None)
         self.args = args
 
-        logger.debug('### class WebCharObject calls _compute')
         self._compute()
 
     def to_dict(self):
@@ -196,7 +300,6 @@ class WebDirichlet(WebCharObject):
             self.H = H = DirichletGroup_conrey(m)
         self.credit = 'Sage'
         self.codelangs = ('pari', 'sage')
-        logger.debug('###### WebDirichletComputed')
 
     def _char_desc(self, c, mod=None, prim=None):
         """ usually num is the number, but can be a character """
@@ -245,7 +348,7 @@ class WebDirichlet(WebCharObject):
     """ numbering characters """
     number2label = int
     label2number = int
-    
+
     @property
     def groupelts(self):
         return map(self.group2tex, self.Gelts())
@@ -281,7 +384,7 @@ class WebDirichlet(WebCharObject):
             if gcd(m, k) == 1:
                 return m, k
         raise Exception("nextchar")
-    
+
     @staticmethod
     def prevchar(m, n, onlyprimitive=False):
         """ Assume m>1 """
@@ -295,7 +398,7 @@ class WebDirichlet(WebCharObject):
             if gcd(m, k) == 1:
                 return m, k
         raise Exception("prevchar")
-    
+
     @staticmethod
     def prevprimchar(m, n):
         if m <= 3:
@@ -333,6 +436,7 @@ class WebDirichlet(WebCharObject):
             chi = Gm[n]
             if chi.is_primitive():
                 return m, n
+
 
 #############################################################################
 ###  Hecke type
@@ -415,7 +519,7 @@ class WebHecke(WebCharObject):
         n, b = k(n), k(b)
         return k.ideal( (n,b) )
 
-           
+
     """
     underlying group contains ideal classes, but are represented
     as exponent tuples on cyclic components (not canonical, but
@@ -472,7 +576,7 @@ class WebHecke(WebCharObject):
         #x = var('x')
         #pol = evalpolelt(label,x,'x')
         #return NumberField(pol,'a')
- 
+
     @property
     def groupelts(self):
         return map(self.group2tex, self.Gelts())
@@ -549,7 +653,7 @@ class WebCharGroup(WebCharObject):
             'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties2', 'friends', 'rowtruncate', 'coltruncate'] 
-     
+
     def __init__(self, **args):
         self._contents = None
         self.maxrows, self.maxcols = 25, 20
@@ -586,7 +690,7 @@ class WebCharGroup(WebCharObject):
                    ( chi.multiplicative_order(),
                      self.texbool(prim) ),
                      self.charvalues(chi) ) )
-    
+
     @cached_method
     def first_chars(self):
         r = []
@@ -799,24 +903,59 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     def codestruct(self):
         return {'sage': 'H.invariants()',
                 'pari': 'g.cyc'}
-      
+
     @property
     def order(self):
         return self.H.order()
 
-class WebDirichletCharacter(WebChar, WebDirichlet):
+class WebSmallDirichletGroup(WebDirichletGroup):
+
+    def _compute(self):
+        if self.modlabel:
+            self.modulus = m = int(self.modlabel)
+            self.H = Integers(m).unit_group()
+        self.credit = 'Sage'
+        self.codelangs = ('pari', 'sage')
+
+    @property
+    def contents(self):
+        return None
+
+    @property
+    def generators(self):
+        return self.textuple(map(str, self.H.gens_values()))
+
+class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     """
     Heritage: WebCharacter -> __init__()
               WebDirichlet -> _compute()
     """           
 
     def _compute(self):
-        WebDirichlet._compute(self)
-        m = self.modulus
-        self.number = n = int(self.numlabel)
-        assert gcd(m, n) == 1
-        self.chi = chi = self.H[n]
-  
+        self.modulus = int(self.modlabel)
+        self.number = int(self.numlabel)
+        self.chi = ConreyCharacter(self.modulus, self.number)
+        self.credit = ''
+        self.codelangs = ('pari', 'sage')
+
+    @property
+    def conductor(self):
+        return self.chi.conductor()
+
+    @property
+    def previous(self):   return None
+    @property
+    def next(self):       return None
+    @property
+    def genvalues(self):  return None
+    @property
+    def indlabel(self):  return None
+    def value(self, *args): return None
+    def gauss_sum(self, *args): return None
+    def jacobi_sum(self, *args): return None
+    def kloosterman_sum(self, *args): return None
+
+
     @property
     def codeinit(self):
         return {
@@ -825,7 +964,7 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
           'pari': [ 'g = idealstar(,%i,2)'%(self.modulus),
                     'chi = znconreychar(g,%i)'%(self.number) ],
           }
-        
+
     @property
     def title(self):
         return r"Dirichlet Character %s" % (self.texname)
@@ -833,6 +972,92 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     @property
     def texname(self):
         return self.char2tex(self.modulus, self.number)
+
+    @property
+    def codeisprimitive(self):
+        return { 'sage': 'chi.is_primitive()',
+                 'pari': '#znconreyconductor(G,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
+
+    @property
+    def codecond(self):
+        return { 'sage': 'chi.conductor()',
+                 'pari': 'znconreyconductor(g,chi)' }
+
+
+    @property
+    def parity(self):
+        return ('Odd', 'Even')[self.chi.is_even()]
+
+    @property
+    def codeparity(self):
+        return { 'sage': 'chi.is_odd()',
+                 'pari': 'zncharisodd(g,chi)' }
+
+    @property
+    def galoisorbit(self):
+        order = self.order
+        mod, num = self.modulus, self.number
+        prim = self.isprimitive
+        #beware this **must** be a generator
+        orbit = ( power_mod(num, k, mod) for k in xrange(1, order) if gcd(k, order) == 1)
+        return ( self._char_desc(num, prim=prim) for num in orbit )
+
+    def symbol_numerator(self): 
+        """ chi is equal to a kronecker symbol if and only if it is real """
+        if self.order != 2:
+            return None
+        return symbol_numerator(self.conductor, self.chi.is_odd())
+
+    @property
+    def symbol(self): 
+        return kronecker_symbol(self.symbol_numerator())
+
+    @property
+    def codesymbol(self):
+        m = self.symbol_numerator()
+        if m:
+            return { 'sage': 'kronecker_character(%i)'%m }
+        return None
+
+
+    @property
+    def codegaloisorbit(self):
+        return { 'sage': 'chi_sage.galois_orbit()',
+                 'pari': [
+                     '[mod,num,order] = [%i,%i,%i]'%(self.modulus,self.num,self.order),
+                     '[Mod(num,mod)^k | k<-[1..order-1], gcd(k,order)==1]',
+                     #'order = charorder(g,chi)',
+                     #'[ chi*k % order | k <-[1..order-1], gcd(k,order)==1 ]'
+                     ]
+                 }
+
+
+
+class WebDirichletCharacter(WebSmallDirichletCharacter):
+    """
+    remove all computations for large moduli
+    """
+    _keys = [ 'title', 'credit', 'codelangs', 'type',
+              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'number', 'numlabel', 'texname', 'codeinit',
+              'symbol', 'codesymbol',
+              'previous', 'next', 'conductor',
+              'condlabel', 'codecond',
+              'isprimitive', 'codeisprimitive',
+              'inducing', 'codeinducing',
+              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
+              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
+              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'codegauss', 'codejacobi', 'codekloosterman']   
+
+    def _compute(self):
+        WebDirichlet._compute(self)
+        m = self.modulus
+        self.number = n = int(self.numlabel)
+        assert gcd(m, n) == 1
+        self.chi = chi = self.H[n]
 
     @property
     def previous(self):
@@ -847,14 +1072,8 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
         return (self.char2tex(mod, num), {'type':'Dirichlet', 'modulus':mod,'number':num})
 
     @property
-    def codeisprimitive(self):
-        return { 'sage': 'chi.is_primitive()',
-                 'pari': '#znconreyconductor(G,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
-
-    @property
     def indlabel(self):
         """ Conrey scheme makes this trivial ? except at two..."""
-        #return self.number % self.conductor
         indlabel =  self.chi.primitive_character().number()
         if indlabel == 0:
             return 1
@@ -866,21 +1085,6 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
                  'pari': ['znconreyconductor(g,chi,&chi0)','chi0'] }
 
     @property
-    def codecond(self):
-        return { 'sage': 'chi.conductor()',
-                 'pari': 'znconreyconductor(g,chi)' }
-
- 
-    @property
-    def parity(self):
-        return ('Odd', 'Even')[self.chi.is_even()]
-    
-    @property
-    def codeparity(self):
-        return { 'sage': 'chi.is_odd()',
-                 'pari': 'zncharisodd(g,chi)' }
-
-    @property
     def genvalues(self):
         logvals = [self.chi.logvalue(k) for k in self.H.gens()]
         return self.textuple( map(self.texlogvalue, logvals) )
@@ -889,39 +1093,6 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     def codegenvalues(self):
         return { 'sage': 'chi_sage.values_on_gens()',
                  'pari': '[ znchareval(g,chi,x) | x <- g.gen ]' }
-
-    @property
-    def galoisorbit(self):
-        order = self.order
-        mod, num = self.modulus, self.number
-        prim = self.isprimitive
-        orbit = ( power_mod(num, k, mod) for k in xrange(1, order) if gcd(k, order) == 1)
-        return ( self._char_desc(num, prim=prim) for num in orbit )
-
-    @property
-    def codegaloisorbit(self):
-        return { 'sage': 'chi_sage.galois_orbit()',
-                 'pari': [
-                     '[mod,num,order] = [%i,%i,%i]'%(self.modulus,self.num,self.order),
-                     '[Mod(num,mod)^k | k<-[1..order-1], gcd(k,order)==1]',
-                     #'order = charorder(g,chi)',
-                     #'[ chi*k % order | k <-[1..order-1], gcd(k,order)==1 ]'
-                     ]
-                 }
-
-    @property
-    def symbol(self):
-        m = self.symbol_numerator
-        if m:
-            return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % m
-        return None
-
-    @property
-    def codesymbol(self):
-        m = self.symbol_numerator
-        if m:
-            return { 'sage': 'kronecker_character(%i)'%self.symbol_numerator }
-        return None
 
     def value(self, val):
         val = int(val)
@@ -1003,32 +1174,6 @@ class WebDirichletCharacter(WebChar, WebDirichlet):
     def codekloosterman(self):
         return { 'sage': 'chi_sage.kloosterman_sum(a,b)' }
 
-    @property
-    def symbol_numerator(self): 
-#Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
-# Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
-# symbol_numerator returns the appropriate Kronecker symbol depending on the conductor of \chi. 
-        """ chi is equal to a kronecker symbol if and only if it is real """
-        if self.order != 2:
-            return None
-        cond = self.conductor
-        if cond % 2 == 1:
-            if cond % 4 == 1: m = cond
-            else: m = -cond
-        elif cond % 8 == 4:
-	    # Fixed cond % 16 == 4 and cond % 16 == 12 were switched in the previous version of the code. 
-            # Let d be a non zero squarefree integer. If d  = 2,3 (mod) 4 and if cond = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12 then we set m = cond. 
-            # On the other hand if d = 1 (mod) 4 and cond = 4d = 4 (4n +1) = 16n + 4 then we set m = -cond. 
-            if cond % 16 == 4: m = -cond
-            elif cond % 16 == 12: m = cond
-        elif cond % 16 == 8:
-            if self.chi.is_even(): m = cond
-            else: m = -cond
-        else:
-            return None
-        return m
-
-
 
 class WebHeckeExamples(WebHecke):
     """ this class only collects some interesting number fields """
@@ -1081,7 +1226,7 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
         self.k = self.label2nf(self.nflabel)
         self.credit = 'Pari, Sage'
         self.codelangs = ('pari', 'sage')
-        
+
     def first_moduli(self, bound=200):
         """ first ideals which are conductors """
         bnf = self.k.pari_bnf()                                                           
@@ -1159,7 +1304,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
     @property
     def title(self):
       return r"Hecke Character: %s modulo %s" % (self.texname, self.modulus)
-    
+
     @property
     def codecond(self):
         return {
