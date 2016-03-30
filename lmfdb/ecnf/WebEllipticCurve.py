@@ -92,7 +92,7 @@ def EC_nf_plot(E, base_field_gen_name):
         cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"] 
     elif n1==7:
         cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"] 
-    return sum([EC_R_plot([SR[i](a) for a in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(SR[i].im_gens()[0].n(20))) for i in range(n1)])
+    return sum([EC_R_plot([SR[i](a) for a in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(SR[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)])
 
 
 class ECNF(object):
