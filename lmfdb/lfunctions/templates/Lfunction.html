@@ -133,7 +133,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 {% if st_group -%}
 
         <tr>
-        <td> {{ KNOWL('g2c.st_group', title="Sato-Tate") }} </td>
+        <td> {{ KNOWL('g2c.st_group', title="sato-Tate") }} </td>
         <td>&nbsp;:&nbsp;</td>
         <td> {{ st_group }}
         </td>
@@ -142,23 +142,23 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 {% endif %}
 
         <tr>
-        <td> {{ KNOWL('lfunction.primitive', title="Primitive") }}  </td>
+        <td> {{ KNOWL('lfunction.primitive', title="primitive") }}  </td>
         <td>&nbsp;:&nbsp;</td>
         <td> {{ primitive }}
         </td>
         </tr>
 
         <tr>
-        <td> {{ KNOWL('lfunction.self-dual', title="Self-dual") }} </td>
+        <td> {{ KNOWL('lfunction.self-dual', title="self-dual") }} </td>
         <td>&nbsp;:&nbsp;</td>
         <td> {{ selfdual }}
         </td>
         </tr>
 
-{% if rank -%}
+{% if rank is defined -%}
 
         <tr>
-        <td> Analytic rank </td>
+        <td> analytic rank </td>
         <td>&nbsp;=&nbsp;</td>
         <td> {{ rank }}
         </td>
