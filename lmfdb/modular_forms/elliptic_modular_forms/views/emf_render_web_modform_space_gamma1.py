@@ -90,10 +90,14 @@ def set_info_for_gamma1(level,weight,weight2=None):
             orbit = r['character_orbit']
             k = r['weight']
             parity = r.get('character_parity','n/a')
-            if k % 2 == (1 + parity)/2:   # is space empty because of parity?
-                trivial_trivially = "yes"
-            else:
+            print "parity",parity
+            if parity == 'n/a':
                 trivial_trivially = ""
+            else:
+                if k % 2 == (1 + parity)/2:   # is space empty because of parity?
+                    trivial_trivially = "yes"
+                else:
+                    trivial_trivially = ""
             if parity == 1:
                 parity = 'even'
             elif parity == -1:
