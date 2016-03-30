@@ -440,7 +440,7 @@ def number_field_search(**args):
         query = {'label_orig': info['natural']}
         try:
             parse_nf_string(info,query,'natural',name="Label",qfield='label')
-            return render_field_webpage(query)
+            return redirect(url_for(".by_label", label= clean_input(query['label'])))
         except ValueError:
             query['err'] = info['err']
             return search_input_error(query, bread)
@@ -479,7 +479,7 @@ def number_field_search(**args):
         one = C.numberfields.fields.find_one(query)
         if one:
             label = one['label']
-            return render_field_webpage({'label': label})
+            return redirect(url_for(".by_label", clean_input(label)))
 
     fields = C.numberfields.fields
 
