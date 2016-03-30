@@ -491,7 +491,7 @@ def download_search(info):
         entry = str(f['ainvs'])
         entry = entry.replace('u','')
         entry = entry.replace('\'','')
-        s += '[' + poly + '], ' + entry + ',\\\n'
+        s += '[[' + poly + '], ' + entry + '],\\\n'
     s = s[:-3]
     s += ']\n'
     if delim == 'brace':
