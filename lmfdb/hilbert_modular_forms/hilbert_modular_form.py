@@ -17,7 +17,12 @@ from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
+import flask
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
+
+from markupsafe import Markup
+
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 from lmfdb.WebNumberField import *
@@ -69,9 +74,31 @@ def hilbert_modular_form_render_webpage():
                  ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         info['counts'] = get_stats().counts()
-        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread)
+        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return hilbert_modular_form_search(**args)
+
+
+
+def split_full_label(lab):
+    r""" Split a full hilbert modular form label into 3 components
+    (field_label, level_label, label_suffix)
+    """
+    data = lab.split("-")
+    if len(data) != 3:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid Hilbert modular form label. It must be of the form (number field label) - (level label) - (orbit label) separated by dashes, such as 2.2.5.1-31.1-a" % lab), "error")
+        raise ValueError
+    field_label = data[0]
+    level_label = data[1]
+    label_suffix = data[2]
+    return (field_label, level_label, label_suffix)
+
+def hilbert_modular_form_by_label(lab, C):
+    if C.hmfs.forms.find({'label': lab}).limit(1).count() > 0:
+        return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab))
+    else:
+        flash(Markup("No Hilbert modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        return redirect(url_for(".hilbert_modular_form_render_webpage"))
 
 
 def hilbert_modular_form_search(**args):
@@ -79,9 +106,15 @@ def hilbert_modular_form_search(**args):
 #    C.hmfs.forms.ensure_index([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
 
     info = to_dict(args)  # what has been entered in the search boxes
-    if 'label' in info:
-        args = {'label': info['label']}
-        return render_hmf_webpage(**args)
+    if 'label' in info and info['label']:
+        lab=info['label'].strip()
+        info['label']=lab
+        try:
+            split_full_label(lab)
+            return hilbert_modular_form_by_label(lab, C)
+        except ValueError:
+            return redirect(url_for(".hilbert_modular_form_render_webpage"))
+
     query = {}
     try:
         parse_nf_string(info,query,'field_label',name="Field")
@@ -136,7 +169,7 @@ def hilbert_modular_form_search(**args):
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), (
         'Search results', ' ')]
     properties = []
-    return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread)
+    return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info = None, bread = None):
     if info is None: info = {'err':''}
@@ -384,4 +417,44 @@ def render_hmf_webpage(**args):
                    ('Base Change', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'])
+    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
+
+
+
+# Learn more box
+
+def learnmore_list():
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels for Hilbert Modular Forms', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+
+
+
+#data quality pages
+@hmf_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of the Hilbert Modular Forms data'
+    bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+             ('Completeness', '')]
+    return render_template("single.html", kid='dq.mf.hilbert.extent',
+                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@hmf_page.route("/Source")
+def how_computed_page():
+    t = 'Source of the Hilbert Modular Forms data'
+    bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+             ('Source', '')]
+    return render_template("single.html", kid='dq.mf.hilbert.source',
+                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@hmf_page.route("/Labels")
+def labels_page():
+    t = 'Label of an Hilbert Modular Form'
+    bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+             ('Labels', '')]
+    return render_template("single.html", kid='mf.hilbert.label',
+                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
