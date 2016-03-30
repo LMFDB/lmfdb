@@ -3,11 +3,13 @@
 # Authors: Harald Schilly and John Cremona
 
 import re
+import time
+import StringIO
 import pymongo
 ASC = pymongo.ASCENDING
 from urllib import quote, unquote
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, flash
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, flash, send_file
 from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
@@ -227,6 +229,17 @@ def show_ecnf1(nf):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
+
+    if 'download' in info and info['download'] != 0:
+        res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
+        res.rewind()
+        info['curves'] = res  # [ECNF(e) for e in res]
+        info['number'] = nres
+        info['count'] = count
+        info['field_pretty'] = field_pretty
+        info['web_ainvs'] = web_ainvs
+        return download_search(info)
+    
     res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
     bread = [('Elliptic Curves', url_for(".index")),
@@ -429,3 +442,62 @@ def statistics():
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('statistics', ' ')]
     return render_template("stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
+
+def download_search(info):
+    dltype = info['Submit']
+    delim = 'bracket'
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    filename = 'elliptic_curves.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'elliptic_curves.sage'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'elliptic_curves.m'
+    s = com1 + "\n"
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, info['curves'].count())
+    s += com + ' Below is a list called data. Each entry has the form:\n'
+    s += com + '   [[field_poly],[Weierstrass Coefficients]]\n'
+    s += '\n' + com2
+    s += '\n'
+    
+    if dltype == 'magma':
+        s += 'data := ['
+    else:
+        s += 'data = [ '
+    s += '\\\n'
+    nf_dict = {}
+    for f in info['curves']:
+        nf = str(f['field_label'])
+        # look up number field and see if we already have the min poly
+        if nf in nf_dict:
+            poly = nf_dict[nf]
+        else:
+            poly = str(WebNumberField(f['field_label']).poly())
+            nf_dict[nf] = poly
+        entry = str(f['ainvs'])
+        entry = entry.replace('u','')
+        entry = entry.replace('\'','')
+        s += '[' + poly + '], ' + entry + ',\\\n'
+    s = s[:-3]
+    s += ']\n'
+    if delim == 'brace':
+        s = s.replace('[', '{')
+        s = s.replace(']', '}')
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO,
+                     attachment_filename=filename,
+                     as_attachment=True)
