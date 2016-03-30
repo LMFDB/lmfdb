@@ -17,6 +17,11 @@ from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
 
+import flask
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
+
+from markupsafe import Markup
+
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
@@ -74,14 +79,41 @@ def hilbert_modular_form_render_webpage():
         return hilbert_modular_form_search(**args)
 
 
+
+def split_full_label(lab):
+    r""" Split a full hilbert modular form label into 3 components
+    (field_label, level_label, label_suffix)
+    """
+    data = lab.split("-")
+    if len(data) != 3:
+        flash(Markup("Error: <span syle='color:black'>%s</span> is not a valid Hilbert modular form label. It must be of the form <NFlabel>-<Condlabel>-<OrbitId> (separated by dashes), such as 2.2.5.1-31.1-a" % lab), "error")
+        raise ValueError
+    field_label = data[0]
+    level_label = data[1]
+    label_suffix = data[2]
+    return (field_label, level_label, label_suffix)
+
+def hilbert_modular_form_by_label(lab, C):
+    if C.hmfs.forms.find({'label': lab}).limit(1).count() > 0:
+        return render_hmf_webpage(label=lab)
+    else:
+        flash(Markup("No Hilbert modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+    return redirect(url_for(".hilbert_modular_form_render_webpage"))
+
+
+
 def hilbert_modular_form_search(**args):
     C = getDBConnection()
 #    C.hmfs.forms.ensure_index([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
 
     info = to_dict(args)  # what has been entered in the search boxes
-    if 'label' in info:
-        args = {'label': info['label']}
-        return render_hmf_webpage(**args)
+    if 'label' in info and info.get('label'):
+        lab=info.get('label').replace(" ", "")
+        try:
+            split_full_label(lab)
+        except ValueError:
+            return search_input_error()
+        return hilbert_modular_form_by_label(info.get('label'), C)
     query = {}
     try:
         parse_nf_string(info,query,'field_label',name="Field")
