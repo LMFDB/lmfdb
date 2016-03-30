@@ -222,7 +222,7 @@ def show_ecnf1(nf):
 
     res = list(res)
     for e in res:
-        e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), e['field_label'])
+        e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), field_pretty(e['field_label']))
     info = {}
     info['field'] = nf_label
     info['query'] = query
@@ -269,7 +269,8 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            bread=bread,
                            cl=cl,
                            properties2=cl.properties,
-                           friends=cl.friends)
+                           friends=cl.friends,
+                           learnmore=learnmore_list())
 
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<number>")
@@ -300,7 +301,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            #        properties = ec.properties,
                            properties2=ec.properties,
                            friends=ec.friends,
-                           info=info)
+                           info=info,
+                           learnmore=learnmore_list())
 
 
 def elliptic_curve_search(**args):
@@ -431,7 +433,7 @@ def elliptic_curve_search(**args):
     res = list(res)
     for e in res:
         e['numb'] = str(e['number'])
-        e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), e['field_label'])
+        e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), field_pretty(e['field_label']))
 
     info['curves'] = res  # [ECNF(e) for e in res]
     info['number'] = nres
