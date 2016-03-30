@@ -4,7 +4,8 @@ import pymongo
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+from flask import Flask, flash, session, g, render_template, url_for, request, redirect, make_response
+from markupsafe import Markup
 import tempfile
 import os
 
@@ -150,6 +151,10 @@ def by_g2c_label(label):
 def render_curve_webpage_by_label(label):
     credit = credit_string
     data = WebG2C.by_label(label)
+    if data == "Invalid label":
+        return data
+    if data == "Data for curve not found":
+        return data
     return render_template("curve_g2.html",
                            properties2=data.properties,
                            credit=credit,
@@ -202,13 +207,23 @@ def genus2_curve_search(**args):
     #    return rational_genus2_curves()
 
     if 'jump' in args:
-        return render_curve_webpage_by_label(info["jump"])
+        label_regex = re.compile(r'\d+\.[a-z]+.\d+.\d+')
+        if label_regex.match(info["jump"].strip()):
+            data = render_curve_webpage_by_label(info["jump"].strip())
+        else:
+            data = "Invalid label"
+        print data
+        if data == "Invalid label":
+            flash(Markup("The label <span style='color:black'>%s</span> is invalid."%(info["jump"])),"error")
+            return redirect(url_for(".index"))
+        if data == "Data for curve not found":
+            flash(Markup("No genus 2 curve with label <span style='color:black'>%s</span> was found in the database."%(info["jump"])),"error")
+            return redirect(url_for(".index"))
+        return data
 
     try:
         parse_signed_ints(info,query,'disc',name='Absolute discriminant',qfield=(None,'abs_disc'))
         parse_bool(info,query,'is_gl2_type')
-        parse_bool(info,query,'locally_solvable')
-        parse_bool(info,query,'has_square_sha')
         for fld in ('st_group', 'real_geom_end_alg'):
             if info.get(fld): query[fld] = info[fld]
         for fld in ('aut_grp', 'geom_aut_grp'):
@@ -218,9 +233,8 @@ def genus2_curve_search(**args):
         parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4)
         parse_ints(info,query,'cond','conductor')
         parse_ints(info,query,'num_rat_wpts','Weierstrass points')
-        parse_ints(info,query,'torsion_order','torsion order')
+        parse_ints(info,query,'torsion_order')
         parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
-        parse_ints(info,query,'analytic_rank','analytic rank')
     except ValueError as err:
         info['err'] = str(err)
         return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
@@ -264,7 +278,6 @@ def genus2_curve_search(**args):
             v_clean["is_gl2_type_display"] = ''
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
         v_clean["st_group_name"] = st_group_name(isogeny_class['st_group'])
-        v_clean["analytic_rank"] = v["analytic_rank"]
         res_clean.append(v_clean)
 
     info["curves"] = res_clean

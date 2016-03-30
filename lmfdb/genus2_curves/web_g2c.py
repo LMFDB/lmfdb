@@ -535,15 +535,14 @@ class WebG2C(object):
     def by_label(label):
         """
         Searches for a specific elliptic curve in the curves
-        collection by its label, which can be either in LMFDB or
-        Cremona format.
+        collection by its label
         label is string separated by "."
         """
         try:
-            print label
             data = db_g2c().curves.find_one({"label" : label})
             endodata = db_g2c().endomorphisms.find_one({"label" : label})
         except AttributeError:
+            logger.debug("invalid label")
             return "Invalid label" # caller must catch this and raise an error
         if data:
             if endodata:
