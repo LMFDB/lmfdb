@@ -10,11 +10,12 @@
 <table>
 <tr>
 <td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
-<td>{{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}</td>
-<td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}</td>
+<td>{{ KNOWL('g2c.abs_discriminant', title='discriminant')}}</td>
+<td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrasss pts') }}</td>
 <td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>
 <td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
 <td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
+<td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
 </tr>
 
 <tr>
@@ -24,6 +25,7 @@
 <td><input type='text' name='torsion' placeholder='[2,2,2]' size=10 value="{{info.torsion}}">
 <td><input type='text' name='torsion_order' placeholder='2' size=10 value="{{info.torsion_order}}">
 <td><input type='text' name='two_selmer_rank' placeholder='1' size=10 value="{{info.two_selmer_rank}}">
+<td><input type='text' name='analytic_rank' placeholder='1' size=10 value="{{info.analytic_rank}}">
 </tr>
 
 <tr>
@@ -32,6 +34,8 @@
 <td>{{ KNOWL('g2c.st_group_identity_component', title='\(\mathrm{ST}^0\)') }}</td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\mathrm{Aut}(X)\)') }}</td>
 <td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
+<td>{{ KNOWL('g2c.locally_solvable',   title='locally solvable') }}</td>
+<td>{{ KNOWL('g2c.has_square_sha',   title='square &#1064;*') }}</td>
 </tr>
 
 <tr>
@@ -92,6 +96,35 @@
         {% endif %}
     {% endfor %}
 </select></td>
+
+<td><select name='locally_solvable' width="122" style="width: 122px">
+  <option ></option>
+{% if info.locally_solvable=='True' %}
+  <option value="True" selected>True</option>
+{% else %}
+  <option value="True">True</option>
+{% endif %}
+{% if info.locally_solvable == 'False' %}
+  <option value="False" selected>False</option>
+{% else %}
+  <option value="False">False</option>
+{% endif %}
+</select></td>
+
+<td><select name='has_square_sha' width="122" style="width: 122px">
+  <option ></option>
+{% if info.has_square_sha=='True' %}
+  <option value="True" selected>True</option>
+{% else %}
+  <option value="True">True</option>
+{% endif %}
+{% if info.has_square_sha == 'False' %}
+  <option value="False" selected>False</option>
+{% else %}
+  <option value="False">False</option>
+{% endif %}
+</select></td>
+
 <td>
 <button type='submit' value='refine'  width="122" style="width: 122px">Search again</button>
 </td>
@@ -117,6 +150,7 @@
     <th>{{ KNOWL('g2c.equation', title='Equation') }}</th>
     <th>{{ KNOWL('g2c.st_group', title='Sato Tate group') }}</th>
     <th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</th>
+    <th>{{ KNOWL('g2c.analytic_rank', title='rank*') }}</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>
@@ -125,6 +159,7 @@
     <td> \({{curve.equation_formatted}}\) </td>
     <td align=center> \({{curve.st_group_name}}\) </td>
     <td align=center> {{curve.is_gl2_type_display | safe}} </td>
+    <td align=center> {{curve.analytic_rank}} </td>
 </tr>
 {% endfor %}
 </table>

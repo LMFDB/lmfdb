@@ -207,6 +207,8 @@ def genus2_curve_search(**args):
     try:
         parse_signed_ints(info,query,'disc',name='Absolute discriminant',qfield=(None,'abs_disc'))
         parse_bool(info,query,'is_gl2_type')
+        parse_bool(info,query,'locally_solvable')
+        parse_bool(info,query,'has_square_sha')
         for fld in ('st_group', 'real_geom_end_alg'):
             if info.get(fld): query[fld] = info[fld]
         for fld in ('aut_grp', 'geom_aut_grp'):
@@ -216,8 +218,9 @@ def genus2_curve_search(**args):
         parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4)
         parse_ints(info,query,'cond','conductor')
         parse_ints(info,query,'num_rat_wpts','Weierstrass points')
-        parse_ints(info,query,'torsion_order')
+        parse_ints(info,query,'torsion_order','torsion order')
         parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
+        parse_ints(info,query,'analytic_rank','analytic rank')
     except ValueError as err:
         info['err'] = str(err)
         return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
@@ -261,6 +264,7 @@ def genus2_curve_search(**args):
             v_clean["is_gl2_type_display"] = ''
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
         v_clean["st_group_name"] = st_group_name(isogeny_class['st_group'])
+        v_clean["analytic_rank"] = v["analytic_rank"]
         res_clean.append(v_clean)
 
     info["curves"] = res_clean
