@@ -194,6 +194,10 @@ class ConreyCharacter:
     def multiplicative_order(self):
         return Mod(self.number, self.modulus).multiplicative_order()
 
+    @property
+    def order(self):
+        return self.multiplicative_order()
+
     @cached_method
     def kronecker_symbol(self):
         c = self.conductor()
