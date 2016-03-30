@@ -113,7 +113,7 @@ def hilbert_modular_form_search(**args):
             split_full_label(lab)
         except ValueError:
             return search_input_error()
-        return hilbert_modular_form_by_label(info.get('label'), C)
+        return hilbert_modular_form_by_label(lab, C)
     query = {}
     try:
         parse_nf_string(info,query,'field_label',name="Field")
