@@ -38,7 +38,7 @@ class NumberFieldTest(LmfdbTest):
 
     def test_url_naturallabel(self):
 		L = self.tc.get('/NumberField/junk')
-		assert 'No such field: junk in the database' in L.data # error mesage
+		assert 'Error' in L.data # error mesage
 
 
 
