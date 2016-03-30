@@ -90,11 +90,15 @@ def set_info_for_gamma1(level,weight,weight2=None):
             orbit = r['character_orbit']
             k = r['weight']
             parity = r.get('character_parity','n/a')
+            if k % 2 == (1 + parity)/2:   # is space empty because of parity?
+                trivial_trivially = "yes"
+            else:
+                trivial_trivially = ""
             if parity == 1:
                 parity = 'even'
             elif parity == -1:
                 parity = 'odd'
-            
+
             d = r.get('d_newf',"n/a")
             indb = r.get('in_wdb',0)
             if d == 0:
@@ -118,13 +122,14 @@ def set_info_for_gamma1(level,weight,weight2=None):
                     # 'head' : "\({0}\)".format(xci),
                      'chi': "{0}".format(xci),
                  #    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xci)
-                     'url': url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xci) if indb else ''
+                     'url': url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xci) if indb else '',
+                     'trivial_trivially': trivial_trivially
                     }
                     for xci in orbit]
             if len(orbit)>table['maxGalCount']:
                 table['maxGalCount']=len(orbit)
             table['cells'][xi]={}
-            table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d}
+            table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d, 'trivial_trivially': trivial_trivially,}
     table['galois_orbits_reps_numbers']=table['galois_orbits_reps'].keys()
     table['galois_orbits_reps_numbers'].sort()
     #emf_logger.debug("Table:{0}".format(table))
