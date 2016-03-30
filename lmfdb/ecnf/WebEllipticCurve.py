@@ -246,7 +246,7 @@ class ECNF(object):
             self.rk_bnds = "%s...%s" % tuple(self.rank_bounds)
         except AttributeError:
             self.rank_bounds = [0, Infinity]
-            self.rk_bnds = "not recorded"
+            self.rk_bnds = "not available"
 
         # Generators
         try:
@@ -254,7 +254,7 @@ class ECNF(object):
                     for P in self.gens]
             self.gens = ", ".join([web_latex(P) for P in gens])
             if self.rk == "?":
-                self.reg = "unknown"
+                self.reg = "not available"
             else:
                 if gens:
                     self.reg = E.regulator_of_points(gens)
@@ -262,8 +262,8 @@ class ECNF(object):
                     self.reg = 1  # otherwise we only get 1.00000...
 
         except AttributeError:
-            self.gens = "not recorded"
-            self.reg = "unknown"
+            self.gens = "not available"
+            self.reg = "not available"
             try:
                 if self.rank == 0:
                     self.reg = 1
@@ -315,7 +315,7 @@ class ECNF(object):
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
             self.friends += [('L-function', self.urls['Lfunction'])]
         if imag_quadratic:
-            self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
+            self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
 
         self.properties = [
             ('Base field', self.field.field_pretty()),
