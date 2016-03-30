@@ -180,8 +180,8 @@ class ConreyCharacter:
                     par = 1 - par
             else:
                 phi2 = (p-1)/Integer(2) * p **(e-1)
-            if Mod(number, p ** e)**phi2 != 1:
-                par = 1 - par
+                if Mod(number, p ** e)**phi2 != 1:
+                    par = 1 - par
         return par
 
     def is_odd(self):
