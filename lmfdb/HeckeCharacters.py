@@ -90,7 +90,9 @@ class HeckeCharGroup(DualAbelianGroup_class):
         names = tuple([ "chi%i"%i for i in range(ray_class_group.ngens()) ])
         if base_ring is None:
             from sage.rings.number_field.number_field import CyclotomicField
-            from sage.arith.all import LCM
+            # FIXME: following is deprecated starting from sage 7.1
+            # replace by from sage.arith.all import LCM
+            from sage.rings.arith import LCM
             base_ring = CyclotomicField(LCM(ray_class_group.gens_orders()))
         DualAbelianGroup_class.__init__(self, ray_class_group, names, base_ring)
         """ ray_class_group accessible as self.group() """
