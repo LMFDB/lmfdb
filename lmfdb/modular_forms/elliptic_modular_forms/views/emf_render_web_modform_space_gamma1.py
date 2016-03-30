@@ -122,8 +122,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
                     # 'head' : "\({0}\)".format(xci),
                      'chi': "{0}".format(xci),
                  #    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xci)
-                     'url': url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xci) if indb else '',
-                     'trivial_trivially': trivial_trivially
+                     'url': url_for('emf.render_elliptic_modular_forms', level=level, weight=k, character=xci) if indb else ''
                     }
                     for xci in orbit]
             if len(orbit)>table['maxGalCount']:
