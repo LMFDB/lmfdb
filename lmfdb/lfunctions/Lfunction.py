@@ -817,23 +817,24 @@ class Lfunction_Dirichlet(Lfunction):
             self.label = str(self.charactermodulus) + "." + str(self.characternumber)
             label_slash = self.label.replace(".","/")
             db_label = "Character/Dirichlet/" + label_slash
-            self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
-            if self.lfunc_data['self_dual']:
-                neg_zeros = ["-" + pos_zero for pos_zero in self.lfunc_data['positive_zeros']]
-            else:
-                dual_L_label = self.lfunc_data['conjugate']
-                dual_L_data = LfunctionDatabase.getEllipticCurveLData(dual_L_label)
-                neg_zeros = ["-" + pos_zero for pos_zero in dual_L_data['positive_zeros']]
-
-            neg_zeros.reverse()
-            self.lfunc_data['zeros'] = neg_zeros[:]
-            self.lfunc_data['zeros'] += [0 for _ in range(self.lfunc_data['order_of_vanishing'])]
-            self.lfunc_data['zeros'] += self.lfunc_data['positive_zeros']
-                
-            self.lfunc_data["plot"] = []
+        #    self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
+            self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
+  #          if self.lfunc_data['self_dual']:
+  #              neg_zeros = ["-" + pos_zero for pos_zero in self.lfunc_data['positive_zeros']]
+  #          else:
+  #              dual_L_label = self.lfunc_data['conjugate']
+  #              dual_L_data = LfunctionDatabase.getEllipticCurveLData(dual_L_label)
+  #              neg_zeros = ["-" + pos_zero for pos_zero in dual_L_data['positive_zeros']]
+#
+#            neg_zeros.reverse()
+#            self.lfunc_data['zeros'] = neg_zeros[:]
+#            self.lfunc_data['zeros'] += [0 for _ in range(self.lfunc_data['order_of_vanishing'])]
+#            self.lfunc_data['zeros'] += self.lfunc_data['positive_zeros']
+#                
+#            self.lfunc_data["plot"] = []
             makeLfromdata(self, fromdb=True)
             self.fromDB = True
-            self.plot = ""
+#            self.plot = ""
 #            try:
 #                makeLfromdata(self)
 #                self.fromDB = True

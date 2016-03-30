@@ -46,17 +46,25 @@ def getEllipticCurveLData(label):
         Ldata = None
     return Ldata
     
-def getGenus2Ldata(label):
+def getGenus2Ldata(label,label_type="url"):
     connection = base.getDBConnection()
 #    g2 = connection.genus2_curves
-    g2 = connection.Lfunctions
+    db = connection.Lfunctions
     try:
     #    Ldata = g2.Lfunctions.find_one({'hash': hash})
-        Lpointer = g2.instances.find_one({'url': label})
-        Lhash = Lpointer['Lhash']
-        print "Lhash",Lhash
-        Ldata = g2.Lfunctions.find_one({'Lhash': Lhash})
-
+        print "looking for label",label
+   #     Lpointer = db.instances.find_one({'url': label})
+        if label_type == "url":
+            Lpointer = db.instances.find_one({'url': label})
+            Lhash = Lpointer['Lhash']
+            print "Lhash",Lhash
+            Ldata = db.Lfunctions.find_one({'Lhash': Lhash})
+        elif label_type == "Lhash":
+            Ldata = db.Lfunctions.find_one({'Lhash': label})
+            # just return what we have, because
+            # we are just filling in the dual data  
+            return Ldata
+            
         if Ldata['order_of_vanishing']:
             central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
         else:
@@ -70,19 +78,22 @@ def getGenus2Ldata(label):
             neg_zeros = ["-" + str(pos_zero) for pos_zero in Ldata['positive_zeros']]
         else:   # can't happen for genus 2 curves
             dual_L_label = Ldata['conjugate']
-            dual_L_data = LfunctionDatabase.getGenus2Ldata(dual_L_label)
+            dual_L_data = getGenus2Ldata(dual_L_label, label_type="Lhash")
             neg_zeros = ["-" + str(pos_zero) for pos_zero in dual_L_data['positive_zeros']]
 
-        pos_plot = [
+        if label.startswith('Character'):  # because those temporarily are missing the plot
+            Ldata['plot'] = ""
+        else:
+            print "label",label
+            pos_plot = [
                       [j * Ldata['plot_delta'], Ldata['plot_values'][j]]
                               for j in range(len(Ldata['plot_values']))]
-        if Ldata['self_dual']:
-            neg_plot = [ [-1*pt[0], Ldata['root_number'] * pt[1]] for pt in pos_plot ][1:]
-            neg_plot.reverse()
-        else:
-            pass  # need to add this case
-        Ldata['plot'] = neg_plot[:] + pos_plot[:]
-
+            if Ldata['self_dual']:
+                neg_plot = [ [-1*pt[0], Ldata['root_number'] * pt[1]] for pt in pos_plot ][1:]
+                neg_plot.reverse()
+            else:
+                pass  # need to add this case
+            Ldata['plot'] = neg_plot[:] + pos_plot[:]
 
         neg_zeros.reverse()
         Ldata['zeros'] = neg_zeros[:]
