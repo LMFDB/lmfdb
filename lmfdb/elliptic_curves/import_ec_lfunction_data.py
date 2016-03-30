@@ -3,42 +3,57 @@ r""" Import L-function data (as computed from Cremona tables by Andy Booker).
 
 Initial version (Bristol March 2016)
 
-The documents in the collection 'Lfunctions' in the database 'elliptic_curves' have the following fields:
+For the format of the collections Lfunctions and Instances in the
+database Lfunctions, see
+https://github.com/LMFDB/lmfdb-inventory/blob/master/db-Lfunctions.md.
+These are duplicated here for convenience but the inventory takes
+precedence in case of any discrepancy.
+
+In general "number" means an int or double or string representing a number (e.g. '1/2').
 
 (1) fields which are the same for every elliptic curve over Q:
 
-   - 'algebraic' (boolean), whether the L-function is algebraic: True
-   - 'analytic_normalization' (string), translation needed to obtain the analytic normalization: '1/2'
+   - 'algebraic' (bool), whether the L-function is algebraic: True
+
+   - 'analytic_normalization' (number), translation needed to obtain
+     the analytic normalization: 0.5
+
    - 'coefficient_field' (string), label of the the coefficient field Q: '1.1.1.1'
    - 'degree' (int), degree of the L-function: 2
-   - 'gamma_factors' (string), encoding of Gamma factors: '[[],[0]]'
+   - 'gamma_factors' (list of length 2 of lists of numbers), encoding of Gamma factors: [[],[0]]
    - 'motivic_weight' (int), motivic weight: 1
    - 'primitive' (bool), wheher this L-function is primitive: True
    - 'self_dual' (bool), wheher this L-function is self-dual: True
-   - 'type' (list of strings): ['EC', 'MF']
+   - 'load_key' (string), person who uploaded the data
+   - 'type' (string), "ECQ"
 
 (2) fields which depend on the curve (isogeny class)
 
    - '_id': internal mogodb identifier
+   - 'Lhash' (string)
    - 'conductor' (int) conductor, e.g. 1225
-   - 'hash' (python Long int)
-   - 'origin' (strings): the URL of the object from which this L-function originated, e.g. 'EllipticCurve/Q/11/a'
+   - 'url' (string): the URL of the object from which this
+     L-function originated, e.g. 'EllipticCurve/Q/11/a'
    - 'instances' (list of strings): list of URLs of objects with this L-function, e.g. ['EllipticCurve/Q/11/a']
    - 'order_of_vanishing': (int) order of vanishing at critical point, e.g. 0
-   - 'plot' (string): string representing list of [x,y] coordinates of points on the plot
    - 'bad_lfactors' (list of lists) list of pairs [p,coeffs] where p
-     is a bad prime and coeffs is a list of 1 or 2 coefficients of the
-     bad Euler factor at p, e.g. [[2,[1]],[3,[1,1]],[5,[1,-1]]]
-   - 'euler_factors' (string reprenting list of lists of 3 ints):
-     list of lists [1] or [1,1] or [1,-1] or[1,-ap,p] of coefficients
-     of the p'th Euler factor for the first 100 primes (including any
-     bad primes).
-   - 'central_character' (string): label of associated central character, always "%s.1" % cond
-   - 'root_number' (string): sign of the functional equation: '1' or '-1'
-   - 'special_values': (string) string representing list of (1) list
-     [1,v] where v is the value of L(1): e.g. '[[1,1.490882041449698]]'
-   - 'st_group' (string): Sato-Tate group, either 'SU(2)' if not CM or 'N(U(1))'
-   - 'zeros' (string): string representing list of imaginary parts of zeros between -20 and +20.
+     is a bad prime and coeffs is a list of 1 or 2 numbers,
+     coefficients of the bad Euler factor at p,
+     e.g. [[2,[1]],[3,[1,1]],[5,[1,-1]]]
+   - 'euler_factors' (list of lists of 3 ints): list of lists [1] or
+     [1,1] or [1,-1] or[1,-ap,p] of coefficients of the p'th Euler
+     factor for the first 100 primes (including any bad primes).
+   - 'A2',...,'A10' (int): first few (integral) Dirichlet coefficients, arithmetic normalization
+   - 'a2',...,'a10' (list of 2 floats): first few (complex) Dirichlet coefficients, analytic normalization
+   - 'central_character' (string): label of associated central character, '%s.1' % conductor
+   - 'root_number' (int): sign of the functional equation: 1 or -1
+   - 'leading_term' (number): value of L^{r}(1)/r! where r=order_of_vanishing, e.g. 0.253841860856
+   - 'st_group' (string): Sato-Tate group, either 'SU(2)' if not CM or 'N(U(1))' if CM
+   - 'positive_zeros' (list of numbers): list of strictly positive
+     imaginary parts of zeros between 0 and 20.
+   - 'z1', 'z2', 'z3' (numbers): the first three positive zeros
+   - 'plot_delta' (number): x-increment for plot values
+   - 'plot_values' (list of numbers): list of y-coordinates of points on the plot
 
 """
 import os.path
@@ -68,33 +83,36 @@ curves = C.elliptic_curves.curves
 
 print "authenticating on the Lfunctions database"
 C['Lfunctions'].authenticate(username, password)
-#Lfunctions = C.Lfunctions.LfunctionsECtest
 Lfunctions = C.Lfunctions.Lfunctions
+#Lfunctions = C.Lfunctions.LfunctionsECtest
+Instances = C.Lfunctions.instances
+#Instances = C.Lfunctions.instancesECtest
 
 def constant_data():
     r"""
     Returns a dict containing the L-function data which is the same for all curves:
 
-   - 'algebraic' (boolean), whether the L-function is algebraic: True
-   - 'analytic_normalization' (string), translation needed to obtain the analytic normalization: '1/2'
-   - 'coefficient_field' (string), label of the the coefficient field Q: '1.1.1.1'
-   - 'degree' (int), degree of the L-function: 2
-   - 'gamma_factors' (string), encoding of Gamma factors: '[[],[0]]'
-   - 'motivic_weight' (int), motivic weight: 1
-   - 'primitive' (bool), wheher this L-function is primitive: True
-   - 'self_dual' (bool), wheher this L-function is self-dual: True
+   - 'algebraic', whether the L-function is algebraic: True
+   - 'analytic_normalization', translation needed to obtain the analytic normalization: 0.5
+   - 'coefficient_field', label of the the coefficient field Q: '1.1.1.1'
+   - 'degree', degree of the L-function: 2
+   - 'gamma_factors', encoding of Gamma factors: [[],[0]]
+   - 'motivic_weight', motivic weight: 1
+   - 'primitive', wheher this L-function is primitive: True
+   - 'self_dual', wheher this L-function is self-dual: True
+   - 'load_key', person who uploaded the data
 
     """
     return {
         'algebraic': True,
-        'analytic_normalization': '1/2',
+        'analytic_normalization': 0.5,
         'coefficient_field': '1.1.1.1',
         'degree': 2,
-        'gamma_factors': '[[],[0]]',
+        'gamma_factors': [[],[0]],
         'motivic_weight': 1,
         'primitive': True,
         'self_dual': True,
-        'type': ['EC', 'MF']
+        'load_key': "Cremona"
         }
 
 def make_one_euler_factor(E, p):
@@ -132,31 +150,56 @@ def read_line(line):
     E = curves.find_one({'iso': label})
 
     data = constant_data()
+    instances = {}
 
-    data['hash'] = fields[0]
-    data['root_number'] = fields[2]
-    data['special_values'] = fields[3]
-    data['zeros'] = fields[4]
-    data['plot'] = fields[5]
+    # Set the fields in the Instances collection:
 
     cond = data['conductor'] = int(E['conductor'])
     iso = E['lmfdb_iso'].split('.')[1]
-    data['origin'] = ec_url = 'EllipticCurve/Q/%s/%s' % (cond,iso)
-    mf_url = 'ModularForms/GL2/Q/holomorphic/%s/2/1/%s' % (cond,iso)
-    data['instances'] = [ec_url, mf_url]
-    data['order_of_vanishing'] = r = E['rank']
+    instances['url'] = ec_url = 'EllipticCurve/Q/%s/%s' % (cond,iso)
+    instances['Lhash'] = Lhash = fields[0]
+    instances['type'] = 'ECQ'
+
+    # Set the fields in the Lfunctions collection:
+
+    data['Lhash'] = Lhash
+    data['root_number'] = int(fields[2])
+    data['order_of_vanishing'] = r = int(E['rank'])
     data['central_character'] = '%s.1' % cond
     data['st_group'] = 'N(U(1))' if E['cm'] else 'SU(2)'
+    data['leading_term'] = float(E['special_value'])
 
-    # To compute the Euler factors we need the ap which are currently
-    # not in the database so we call Sage.  It might be a good idea to
-    # store in the ec database (1) all ap for p<100; (2) all ap for
-    # bad p.
+    # Values and zeros
+
+    zeros = [float(y) for y in fields[4][1:-1].split(",")]
+    data['positive_zeros'] = [y for y in zeros if y>0]
+    data['z1'] = data['positive_zeros'][0]
+    data['z2'] = data['positive_zeros'][1]
+    data['z3'] = data['positive_zeros'][2]
+
+    # plot data
+
+    plot_xy = [[float(v) for v in vv.split(",")] for vv in fields[5][2:-3].split("],[")]
+    # constant difference in x-coordinate sequence:
+    data['plot_delta'] = plot_xy[1][0]-plot_xy[0][0]
+    # list of y coordinates for x>0:
+    data['plot_values'] = [y for x,y in plot_xy if x>=0]
+
+    # Euler factors: we need the ap which are currently not in the
+    # database so we call Sage.  It might be a good idea to store in
+    # the ec database (1) all ap for p<100; (2) all ap for bad p.
     Esage = EllipticCurve([ZZ(eval(a)) for a in E['ainvs']])
     data['bad_lfactors'] = make_bad_lfactors(Esage)
-    data['euler_factors'] = str(make_euler_factors(Esage))
+    data['euler_factors'] = make_euler_factors(Esage)
 
-    return data['hash'], data
+    # Dirichlet coefficients
+
+    an = Esage.anlist(10)
+    for n in range(2,11):
+        data['A%s' % n] = str(an[n])
+        data['a%s' % n] = [an[n]/sqrt(float(n)),0]
+
+    return Lhash, data, instances
 
 
 def comp_dict_by_label(d1, d2):
@@ -175,6 +218,7 @@ def upload_to_db(base_path, f, test=True):
     print "opened %s" % f
 
     data_to_insert = {}  # will hold all the data to be inserted
+    instances_to_insert = {}  # will hold all the data to be inserted
     t = time.time()
     count = 0
 
@@ -182,12 +226,14 @@ def upload_to_db(base_path, f, test=True):
         count += 1
         if count%1000==0:
             print "read %s lines" % count
-        hash, data = read_line(line)
-        if hash not in data_to_insert:
-            data_to_insert[hash] = data
+        Lhash, data, instance = read_line(line)
+        if Lhash not in data_to_insert:
+            data_to_insert[Lhash] = data
+            instances_to_insert[Lhash] = instance
 
     print "finished reading %s lines from file" % count
     vals = data_to_insert.values()
+
     print("Number of records to insert = %s" % len(vals))
     count = 0
 
@@ -198,8 +244,8 @@ def upload_to_db(base_path, f, test=True):
 
     for val in vals:
         #print val
-        Lfunctions.update({'hash': val['hash']}, {"$set": val}, upsert=True)
+        Lfunctions.update({'Lhash': val['Lhash']}, {"$set": val}, upsert=True)
+        Instances.update({'Lhash': val['Lhash']}, {"$set": instances_to_insert[val['Lhash']]}, upsert=True)
         count += 1
         if count % 1000 == 0:
             print("inserted %s items" % count)
-
