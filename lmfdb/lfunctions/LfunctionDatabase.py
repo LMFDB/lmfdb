@@ -48,11 +48,51 @@ def getEllipticCurveLData(label):
     
 def getGenus2Ldata(label):
     connection = base.getDBConnection()
-    g2 = connection.genus2_curves
+#    g2 = connection.genus2_curves
+    g2 = connection.Lfunctions
     try:
     #    Ldata = g2.Lfunctions.find_one({'hash': hash})
-        Ldata = g2.Lfunctions.find_one({'instances': label})
-    except:
+        Lpointer = g2.instances.find_one({'url': label})
+        Lhash = Lpointer['Lhash']
+        print "Lhash",Lhash
+        Ldata = g2.Lfunctions.find_one({'Lhash': Lhash})
+
+        if Ldata['order_of_vanishing']:
+            central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
+        else:
+            central_value = [0.5 + 0.5*Ldata['motivic_weight'],Ldata['leading_term']]
+        if 'values' not in Ldata:
+            Ldata['values'] = [ central_value ]
+        else:
+            Ldata['values'] += [ central_value ]
+
+        if Ldata['self_dual']:
+            neg_zeros = ["-" + str(pos_zero) for pos_zero in Ldata['positive_zeros']]
+        else:   # can't happen for genus 2 curves
+            dual_L_label = Ldata['conjugate']
+            dual_L_data = LfunctionDatabase.getGenus2Ldata(dual_L_label)
+            neg_zeros = ["-" + str(pos_zero) for pos_zero in dual_L_data['positive_zeros']]
+
+        pos_plot = [
+                      [j * Ldata['plot_delta'], Ldata['plot_values'][j]]
+                              for j in range(len(Ldata['plot_values']))]
+        if Ldata['self_dual']:
+            neg_plot = [ [-1*pt[0], Ldata['root_number'] * pt[1]] for pt in pos_plot ][1:]
+            neg_plot.reverse()
+        else:
+            pass  # need to add this case
+        Ldata['plot'] = neg_plot[:] + pos_plot[:]
+
+
+        neg_zeros.reverse()
+        Ldata['zeros'] = neg_zeros[:]
+        Ldata['zeros'] += [0 for _ in range(Ldata['order_of_vanishing'])]
+        Ldata['zeros'] += [str(pos_zero) for pos_zero in Ldata['positive_zeros']]
+
+
+
+
+    except ValueError:
         Ldata = None
     return Ldata
     

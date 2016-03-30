@@ -73,6 +73,14 @@ def makeLfromdata(L, fromdb=False):
     L.degree = data['degree']
     L.level = data['conductor']
     L.primitive = data['primitive']
+    L.st_group = data['st_group']
+    L.order_of_vanishing = data['order_of_vanishing']
+    if 'motivic_weight' in data:
+        L.motivic_weight = data['motivic_weight']
+    else:
+        L.motivic_weight = ''
+
+    print "LLLLLLLLL",L
     L.selfdual = data['self_dual']
     # Convert L.motivic_weight from python 'int' type to sage integer type.
     # This is necessary because later we need to do L.motivic_weight/2
@@ -329,11 +337,12 @@ class Lfunction_EC_Q(Lfunction):
 
         label_slash = self.label.replace(".","/")
         db_label = "EllipticCurve/Q/" + label_slash
-        self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
-        try:
-            self.lfunc_data['values'] = self.lfunc_data['special_values']
-        except:
-            pass  # this is just here for backward compatibility
+  #      self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
+        self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
+#        try:
+#            self.lfunc_data['values'] = self.lfunc_data['special_values']
+#        except:
+#            pass  # this is just here for backward compatibility
 
         try:
             makeLfromdata(self)
@@ -1642,13 +1651,45 @@ class Lfunction_genus2_Q(Lfunction):
         # to the format expected by the L-function homepage template.
 
         label_slash = self.label.replace(".","/")
-        db_label = "/L/Genus2Curve/Q/" + label_slash
+        db_label = "Genus2Curve/Q/" + label_slash
     #    self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
-        try:
-            self.lfunc_data['values'] = self.lfunc_data['special_values']
-        except:
-            pass  # this is just here for backward compatibility
+        print 'self.lfunc_data'
+        for xx in self.lfunc_data:
+            print xx
+        # need to change this so it shows the nonvanishing derivative
+        if self.lfunc_data['order_of_vanishing']:
+            central_value = [0.5 + 0.5*self.lfunc_data['motivic_weight'], 0]
+        else:
+            central_value = [0.5 + 0.5*self.lfunc_data['motivic_weight'],self.lfunc_data['leading_term']]
+        if 'values' not in self.lfunc_data:
+            self.lfunc_data['values'] = [ central_value ]
+        else:
+            self.lfunc_data['values'] += [ central_value ]
+
+        if self.lfunc_data['self_dual']:
+            neg_zeros = ["-" + str(pos_zero) for pos_zero in self.lfunc_data['positive_zeros']]
+        else:   # can't happen for genus 2 curves
+            dual_L_label = self.lfunc_data['conjugate']
+            dual_L_data = LfunctionDatabase.getGenus2Ldata(dual_L_label)
+            neg_zeros = ["-" + str(pos_zero) for pos_zero in dual_L_data['positive_zeros']]
+
+        pos_plot = [
+                      [j * self.lfunc_data['plot_delta'], self.lfunc_data['plot_values'][j]]
+                              for j in range(len(self.lfunc_data['plot_values']))]
+        if self.lfunc_data['self_dual']:
+            neg_plot = [ [-1*pt[0], self.lfunc_data['root_number'] * pt[1]] for pt in pos_plot ][1:]
+            neg_plot.reverse()
+        else:
+            pass  # need to add this case
+        self.lfunc_data['plot'] = neg_plot[:] + pos_plot[:]
+            
+
+        neg_zeros.reverse()
+        self.lfunc_data['zeros'] = neg_zeros[:]
+        self.lfunc_data['zeros'] += [0 for _ in range(self.lfunc_data['order_of_vanishing'])]
+        self.lfunc_data['zeros'] += [str(pos_zero) for pos_zero in self.lfunc_data['positive_zeros']]
+
         try:
             makeLfromdata(self)
             self.fromDB = True

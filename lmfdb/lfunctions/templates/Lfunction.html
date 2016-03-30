@@ -87,14 +87,14 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
   <table>
 
         <tr>
-        <td> \( d \)</td>
+        <td> {{ KNOWL('lfunction.degree', title="\( d \)") }} </td>
         <td>&nbsp;=&nbsp;</td>
         <td> \({{ degree }}\)
         </td>
         </tr>
 
         <tr>
-        <td> \( N \)</td>
+        <td> {{ KNOWL('lfunction.level', title="\( N \)") }} </td>
         <td>&nbsp;=&nbsp;</td>
         <td> \({{ conductor }}\)
 {% if conductor_factored -%}
@@ -104,17 +104,17 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
         </tr>
 
         <tr>
-        <td> \( \varepsilon \)</td>
+        <td> {{ KNOWL('lfunction.sign', title="\( \\varepsilon \)") }}</td>
         <td>&nbsp;=&nbsp;</td>
         <td> {{ sign }}
         </td>
         </tr>
 
-{% if weight %}
+{% if motivic_weight %}
         <tr>
-        <td> \( w \)</td>
+        <td> {{ KNOWL('lfunction.motivic_weight', title="weight") }} </td>
         <td>&nbsp;=&nbsp;</td>
-        <td> {{ weight }}
+        <td> {{ motivic_weight }}
         </td>
         </tr>
 
@@ -122,7 +122,7 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 
 {% if chi %}
         <tr>
-        <td> \( \chi \)</td>
+        <td> {{ KNOWL('lfunction.central_character', title="\( \\chi \)") }} </td>
         <td>&nbsp;:&nbsp;</td>
         <td> {{ chi }}
         </td>
@@ -130,12 +130,12 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 
 {% endif %}
 
-{% if ST -%}
+{% if st_group -%}
 
         <tr>
-        <td> ST </td>
+        <td> {{ KNOWL('g2c.st_group', title="Sato-Tate") }} </td>
         <td>&nbsp;:&nbsp;</td>
-        <td> {{ ST }}
+        <td> {{ st_group }}
         </td>
         </tr>
 
@@ -158,20 +158,9 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 {% if rank -%}
 
         <tr>
-        <td> Rank </td>
+        <td> Analytic rank </td>
         <td>&nbsp;=&nbsp;</td>
         <td> {{ rank }}
-        </td>
-        </tr>
-
-{% endif %}
-
-{% if satotategroup -%}
-
-        <tr>
-        <td> Sato-Tate group </td>
-        <td>&nbsp;:&nbsp;</td>
-        <td> {{ satotategroup }}
         </td>
         </tr>
 

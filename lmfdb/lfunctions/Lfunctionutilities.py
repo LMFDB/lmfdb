@@ -799,7 +799,9 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['values']):
+        if L.lfunc_data['values']:
+          for x in p2sage(L.lfunc_data['values']):
+            print "s_alg, x",s_alg,"ggg",x,"hhh",p2sage(L.lfunc_data['values'])
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
