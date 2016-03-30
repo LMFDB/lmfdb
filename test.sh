@@ -8,8 +8,14 @@
 # or inside the Sage environment: $ easy_install -U nose
 #                                 $ easy_install -U coverage
 #                                 $ easy_install -U unittest2
-# Second, call it in two ways, either $ ./test.sh for coverage to test all
-# or to test only a part of LMFDB:    $ ./test.sh lmfdb/knowledge
+# Second, call it in three ways, either
+# $ ./test.sh to test all
+# or
+# $ ./test.sh coverage
+# to test all and report test coverage
+# or (for example)
+# $ ./test.sh  lmfdb/knowledge
+# to test only a part of LMFDB
 
 cd `dirname "$0"`
 
@@ -18,9 +24,11 @@ find . -name '*.pyc' -delete
 
 HTML=''
 WHAT=''
-if [[ "$1" == "html" ]]; then
+COVER=''
+if [[ "$1" == "coverage" ]]; then
   rm -rf lmfdb/cover
   HTML='--cover-html'
+  COVER='--with-coverage --cover-erase --cover-package=lmfdb $HTML'
 else
   WHAT="$@"
 fi
@@ -34,10 +42,9 @@ fi
 echo "Using Sage command $SAGE_COMMAND"
 
 if [[ -n $WHAT ]]; then
-   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $WHAT'"
+   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $WHAT $COVER'"
 else
    cd lmfdb
-   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS'"
-   #eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS --with-coverage --cover-erase --cover-package=lmfdb $HTML'"
+   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $COVER'"
 fi
 
