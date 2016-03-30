@@ -301,18 +301,19 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
             if(label_other != label):
                 s = 'Modular form '
                 if character:
-                    s = s + str(level) + '.' + str(weight) + '.' + str(character) + str(label_other)
+                    s += newform_label(level,weight,character,label_other)
                 else:
-                    s = s + str(level) + '.' + str(weight) + str(label_other)
+                    s += newform_label(level,weight,1,label_other)
+
                 url = url_for('emf.render_elliptic_modular_forms', level=level,
                               weight=weight, character=character, label=label_other)
                 friends.append((s, url))
 
     s = 'L-Function '
     if character:
-        s = s + str(level) + '.' + str(weight) + '.' + str(character) + str(label)
+        s += newform_label(level,weight,character,label)
     else:
-        s = s + str(level) + '.' + str(weight) + str(label)
+        s += newform_label(level,weight,1,label)
     # url =
     # "/L/ModularForm/GL2/Q/holomorphic?level=%s&weight=%s&character=%s&label=%s&number=%s"
     # %(level,weight,character,label,0)

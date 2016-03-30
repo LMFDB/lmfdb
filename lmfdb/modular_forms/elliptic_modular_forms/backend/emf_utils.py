@@ -41,34 +41,54 @@ except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
 def newform_label(level, weight, character, label, embedding=None, make_cache_label=False):
+    r"""
+    Uses the label format {level}.{weight}.{character number}.{orbit label}.{embedding}
+    """
     l = ''
     if make_cache_label:
         l = 'emf.'
     if embedding is None:
-        l += "{0}.{1}.{2}{3}".format(level, weight, character, label)
+        l += "{0}.{1}.{2}.{3}".format(level, weight, character, label)
     else:
-        l += "{0}.{1}.{2}{3}.{4}".format(level, weight, character, label, embedding)
+        l += "{0}.{1}.{2}.{3}.{4}".format(level, weight, character, label, embedding)
     return l
 
 def parse_newform_label(label):
     r"""
-    Essentially the inverse of the above. Given "N.k.ix" it returns N,k,i,x
-    or given "N.k.ix.d" return N,k,i,x,d
+    Essentially the inverse of the above with addition that we also parse the previous label format 
+    (without dot between character and label.
+    
+    Given "N.k.i.x" or "N.k.ix" it returns N,k,i,x
+    or given "N.k.i.x.d" or "N.k.ix.d" return N,k,i,x,d
+
     """
     if not isinstance(label,basestring):
         raise ValueError,"Need label in string format"
     l = label.split(".")
-    if len(l) not in [3,4]:
+    ## l[0] = label, l[1] = weight, l[2]="{character}{label}" or {character}
+    ## l[3] = {label} or {embedding}, l[4] is either non-existing or {embedding}
+    if len(l) not in [3,4,5]:
         raise ValueError,"{0} is not a valid newform label!".format(label)
     if not l[0].isdigit() or not l[1].isdigit():
         raise ValueError,"{0} is not a valid newform label!".format(label)
-    level = int(l[0]); weight = int(l[1])
-    character = "".join([x for x in l[2] if x.isdigit()])
-    orbit_label = "".join([x for x in l[2] if x.isalpha()])
-    if orbit_label == "" or not character.isdigit():
+    level = int(l[0]); weight = int(l[1]); orbit_label = ""
+    emb = None
+    try:
+        if len(l) >= 3 and not l[2].isdigit(): # we have N.k.ix or 
+            character = "".join([x for x in l[2] if x.isdigit()])
+            orbit_label = "".join([x for x in l[2] if x.isalpha()])
+            if len(l)==4:
+                emb = int(l[3])
+        elif len(l) >= 4: # we have N.k.i.x or N.k.i.x.j 
+            character = int(l[2])
+            orbit_label = l[3]
+            if len(l)==5:
+                emb = int(l[4])
+        if orbit_label == "" or not orbit_label.isalpha():
+            raise ValueError
+    except ValueError,IndexError:
         raise ValueError,"{0} is not a valid newform label!".format(label)
-    if len(l)==4:
-        emb = int(l[3])
+    if not emb is None:
         return level,weight,int(character),orbit_label,emb
     else:
         return level,weight,int(character),orbit_label
@@ -83,9 +103,15 @@ def parse_space_label(label):
     if not isinstance(label,basestring):
         raise ValueError,"Need label in string format"    
     l = label.split(".")
-    level = int(l[0]); weight = int(l[1]); character = int(l[2])
-    return level,weight,character
-
+    try:
+        if len(l) ==3:
+            level = int(l[0]); weight = int(l[1]); character = int(l[2])
+            return level,weight,character
+        else:
+            raise ValueError
+    except ValueError:
+        raise ValueError,"{0} is not a valid space label!".format(label)   
+    
 def extract_limits_as_tuple(arg, field):
     fld = arg.get(field)
     if isinstance(fld,basestring):
@@ -124,12 +150,31 @@ def extract_data_from_jump_to(s):
         level = 1
         label = "a"
     else:
-        # first see if we have a label or not, i.e. if we have precisely one string of letters at the end
+        # see if we can parse the argument as a label 
+        s = s.replace(" ","") # remove white space
+        try: 
+            t = parse_newform_label(s)
+            if len(t) == 4:
+                args['level'],args['weight'],args['character'],args['label'] = t
+            if len(t) == 5:
+                args['level'],args['weight'],args['character'],args['label'],args['embedding'] = t
+            else:
+                raise ValueError
+            return args
+        except ValueError:
+            pass
+        try:
+            t = parse_space_label(s)
+            if len(t) == 3:
+                args['level'],args['weight'],args['character'] = t
+                return args
+            else:
+                raise ValueError
+        except ValueError:
+            pass
         test = re.findall("[a-z]+", s)
         if len(test) == 1:
             args['label'] = test[0]
-            # emf_logger.debug("label1={0}".format(label))
-            # the first string of integers should be the level
         test = re.findall("\d+", s)
         if not test is None and len(test)>0:
             args['level'] = int(test[0])
@@ -138,7 +183,6 @@ def extract_data_from_jump_to(s):
             if len(test) > 2:  # we also have character
                 args['character']=int(test[2])
     emf_logger.debug("args=%s" % label)
-
     return args
 
 
