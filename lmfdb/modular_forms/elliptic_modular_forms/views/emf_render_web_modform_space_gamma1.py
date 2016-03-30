@@ -90,7 +90,6 @@ def set_info_for_gamma1(level,weight,weight2=None):
             orbit = r['character_orbit']
             k = r['weight']
             parity = r.get('character_parity','n/a')
-            print "parity",parity
             if parity == 'n/a':
                 trivial_trivially = ""
             else:
