@@ -230,15 +230,6 @@ def show_ecnf1(nf):
     if(start < 0):
         start = 0
 
-    if 'download' in info and info['download'] != 0:
-        res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
-        res.rewind()
-        info['curves'] = res  # [ECNF(e) for e in res]
-        info['number'] = nres
-        info['count'] = count
-        info['field_pretty'] = field_pretty
-        info['web_ainvs'] = web_ainvs
-        return download_search(info)
     
     res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
@@ -388,6 +379,17 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
+
+    if 'download' in info and info['download'] != 0:
+        res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
+        res.rewind()
+        info['curves'] = res  # [ECNF(e) for e in res]
+        info['number'] = nres
+        info['count'] = count
+        info['field_pretty'] = field_pretty
+        info['web_ainvs'] = web_ainvs
+        return download_search(info)
+    
     res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
     res = list(res)
