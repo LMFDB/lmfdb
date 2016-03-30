@@ -58,15 +58,15 @@ div.scrollable {
 <table class="ntdata" cellpadding=10 style="width:70%; table-layout:fixed">
 <tr>
 <th>Norm</th>
-<th>{{ KNOWL('nf.ideal.label.hmf', title='Prime') }} </th>
-<th></th>
-<th>Eigenvalue</th>
+<th colspan=3>{{ KNOWL('nf.ideal.label.hmf', title='Prime') }} </th>
+<th colspan=2></th>
+<th colspan=6>Eigenvalue</th>
 </tr>
 {% for entry in info.eigs: %}
 <tr>
 <td>{{entry.prime_norm}}</td>
-<td>${{entry.prime_ideal}}$</td>
-<td></td>
+<td colspan=3>${{entry.prime_ideal}}$</td>
+<td colspan=2></td>
 <td colspan=6><div class=scrollable>${{entry.eigenvalue}}$</div></td>
 </tr>
 {% endfor %}
