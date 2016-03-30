@@ -84,9 +84,9 @@ function set_value(id,val) {
 }
 </script>
 {% if info.grouptype == 0 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(N)\)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma0n',title='\(\Gamma_0(N)\)') %}
 {% elif info.grouptype == 1 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(N)\)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma1n',title='\(\Gamma_1(N)\)') %}
 {% endif %}
 
 {%if info.show_switch is defined %}
