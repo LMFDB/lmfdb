@@ -10,7 +10,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
     #
     def test_url_label(self):
 		L = self.tc.get('/HigherGenus/C/aut/2.12T13.0.2-4-6')
-		assert '[0;2,4,6]' in L.data
+		assert '[ 0; 2, 4, 6 ]' in L.data
 
 
     def test_url_naturallabel(self):
