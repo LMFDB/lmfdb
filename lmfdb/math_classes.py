@@ -280,6 +280,7 @@ class ArtinRepresentation(object):
         myfunc = self.central_char_function()
         wc = id_dirichlet(myfunc, self.conductor(), 2*self.character_field())
         # print "Got wc id = "+str(wc)
+        # FIXME: replace all by WebSmallDirichletCharacter(*wc)
         if wc[0]>100000:
             wc = FakeCharacter(modulus=wc[0], number=wc[1])
         else:
