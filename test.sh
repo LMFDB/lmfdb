@@ -37,6 +37,7 @@ if [[ -n $WHAT ]]; then
    eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $WHAT'"
 else
    cd lmfdb
-   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS --with-coverage --cover-erase --cover-package=lmfdb $HTML'"
+   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS'"
+   #eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS --with-coverage --cover-erase --cover-package=lmfdb $HTML'"
 fi
 
