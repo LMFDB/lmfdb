@@ -552,7 +552,7 @@ class WebCharGroup(WebCharObject):
      
     def __init__(self, **args):
         self._contents = None
-        self.maxrows, self.maxcols = 25, 20
+        self.maxrows, self.maxcols = 35, 30
         self.rowtruncate, self.coltruncate = False, False
         WebCharObject.__init__(self, **args)
 
@@ -642,7 +642,7 @@ class WebChar(WebCharObject):
               'codegauss', 'codejacobi', 'codekloosterman']   
 
     def __init__(self, **args):
-        self.maxcols = 20
+        self.maxcols = 30
         self.coltruncate = False
         WebCharObject.__init__(self, **args)
 
