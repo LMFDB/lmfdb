@@ -64,7 +64,6 @@ def id_dirichlet(fun, N, n):
         test1 = Integer(mod(-test1, N2))
     return (N, crt([test1, ans], [N2, Nodd]))
 
-
 def process_algebraic_integer(seq, root_of_unity):
     return sum(Integer(seq[i]) * root_of_unity ** i for i in range(len(seq)))
 
@@ -247,6 +246,11 @@ class ArtinRepresentation(object):
         if 'central_character' in self._data:
             return self._data['central_character']
         # Build it as a python function, id it, make a lmfdb character
+        # But, if the conductor is too large, this can stall because
+        # the function has to factor arbitrary integers modulo N
+        if Integer(self.conductor()) > 10**40:
+            return None
+
         myfunc = self.central_char_function()
         wc = id_dirichlet(myfunc, self.conductor(), 2*self.character_field())
         wc = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
@@ -255,6 +259,8 @@ class ArtinRepresentation(object):
 
     def det_display(self):
         cc= self.central_character()
+        if cc is None:
+            return 'Not available'
         if cc.order == 2:
             return cc.symbol
         return cc.texname
