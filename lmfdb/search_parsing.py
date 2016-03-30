@@ -206,7 +206,7 @@ def parse_signed_ints(inp, query, qfield, parse_one=None):
     if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
-        parsed = parse_range3(inp, name, split0 = True)
+        parsed = parse_range3(inp, qfield, split0 = True)
         # if there is only one part, we don't need an $or
         if len(parsed) == 1:
             parsed = parsed[0]
@@ -467,8 +467,8 @@ def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, pars
     tmp_query2 = {}
     parse1(info,tmp_query1,field1,name1,qfield1,**kwds1)
     parse2(info,tmp_query2,field2,name2,qfield2,**kwds2)
-    print tmp_query1
-    print tmp_query2
+    #print tmp_query1
+    #print tmp_query2
     def remove_or(D):
         assert len(D) <= 1
         if '$or' in D: return D['$or']
@@ -482,8 +482,8 @@ def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, pars
         # Analogous to collapse_ors, we update D2
         L1 = remove_or(D1)
         L2 = remove_or(D2)
-        print L1
-        print L2
+        #print L1
+        #print L2
         if not L1:
             return L2
         elif not L2:
@@ -491,12 +491,11 @@ def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, pars
         else:
             return [{A.keys()[0]:A.values()[0], B.keys()[0]:B.values()[0]} for A in L1 for B in L2]
     L = combine(tmp_query1,tmp_query2)
-    print L
+    #print L
     if len(L) == 1:
         query.update(L[0])
     else:
         collapse_ors(['$or',L], query)
-    print query
 
 def parse_count(info, default=20):
     try:
