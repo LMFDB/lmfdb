@@ -107,9 +107,8 @@ def hilbert_modular_form_search(**args):
 #    C.hmfs.forms.ensure_index([('level_norm', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
 
     info = to_dict(args)  # what has been entered in the search boxes
-    if 'label' in info and info.get('label'):
-        lab=info.get('label').strip()
-        info['label']=str(lab)
+    if 'label' in info and info['label']:
+        lab=info['label'].strip()
         try:
             split_full_label(lab)
             return hilbert_modular_form_by_label(lab, C)
