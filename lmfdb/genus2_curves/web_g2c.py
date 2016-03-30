@@ -761,7 +761,7 @@ class WebG2C(object):
 
         # Curve
         set_code('curve',
-                 '|R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'
+                 'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'
                  % (self.data['min_eqn'][0],self.data['min_eqn'][1]),
                  pari_not_implemented, # pari code goes here
                  'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'
