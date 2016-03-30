@@ -42,14 +42,6 @@ def id_dirichlet(fun, N, n):
     idemvals = [idemvals[j] * euler_phi(ppows[j])/n for j in range(len(idemvals))]
     ans = [Integer(mod(proots[j], ppows[j])**idemvals[j]) for j in range(len(proots))]
     ans = crt(ans, ppows)
-    #print "*********************************************"
-    #print "n = "+str(n)
-    #print "ppows = "+str(ppows)
-    #print "idems = "+str(idems)
-    #print "idemvals = "+str(idemvals)
-    #print "p2 = "+str(p2)
-    #print "Odd part: chi_%d(%d, - )"%(Nodd,ans)
-    #print "*********************************************"
     # There are cases depending on 2-part of N
     if p2==0:
         return (N, ans)
@@ -57,31 +49,20 @@ def id_dirichlet(fun, N, n):
         return (N, crt([1, ans], [2, Nodd]))
     if p2==2:
         my3=crt([3, 1], [N2, Nodd])
-        #print "My3 = "+str(my3)
         if fun(my3,n) == 0:
             return (N, crt([1, ans], [4, Nodd]))
         else:
             return (N, crt([3, ans], [4, Nodd]))
     # Final case 2^3 | N
-    #print "*********************************************"
-    #print "N2 = "+str(N2)+" and Nodd = "+str(Nodd)
 
     my5=crt([5, 1], [N2, Nodd])
-    #print "my5 = "+str(my5)
     test1 = fun(my5,n) * N2/4/n
-    #print "computed "+str(test1)
     test1 = Integer(mod(5,N2)**test1)
-    #print "would be "+str(crt([test1, ans], [N2, Nodd]))
     minusone = crt([-1,1], [N2, Nodd])
-    #print "minusone = "+str(minusone)
     test2 = (fun(minusone, n) * N2/4/n) % (N2/4)
-    #print "computed "+str(test2)
     if test2 > 0:
         test1 = Integer(mod(-test1, N2))
-    #print "calling CRT with "+str([test1, ans, N2, Nodd])
-    #print "Got "+str(crt([test1, ans], [N2, Nodd]))
     return (N, crt([test1, ans], [N2, Nodd]))
-
 
 def process_algebraic_integer(seq, root_of_unity):
     return sum(Integer(seq[i]) * root_of_unity ** i for i in range(len(seq)))
@@ -265,15 +246,21 @@ class ArtinRepresentation(object):
         if 'central_character' in self._data:
             return self._data['central_character']
         # Build it as a python function, id it, make a lmfdb character
+        # But, if the conductor is too large, this can stall because
+        # the function has to factor arbitrary integers modulo N
+        if Integer(self.conductor()) > 10**40:
+            return None
+
         myfunc = self.central_char_function()
         wc = id_dirichlet(myfunc, self.conductor(), 2*self.character_field())
-        # print "Got wc id = "+str(wc)
         wc = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
         self._data['central_character'] = wc
         return wc
 
     def det_display(self):
         cc= self.central_character()
+        if cc is None:
+            return 'Not available'
         if cc.order == 2:
             return cc.symbol
         return cc.texname
