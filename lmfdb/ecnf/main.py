@@ -473,7 +473,7 @@ def download_search(info):
     if dltype == 'magma':
         s += 'P<x> := PolynomialRing(Rationals()); \n'
         s += 'data := ['
-    elif dltype = 'sage':
+    elif dltype == 'sage':
         s += 'x = polygen(QQ) \n'
         s += 'data = [ '
     else:
