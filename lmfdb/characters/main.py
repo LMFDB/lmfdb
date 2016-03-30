@@ -313,13 +313,13 @@ def render_character_table(modulus=None, conductor=None, order=None):
         G = DirichletGroup_conrey(N)
         for chi in G:
             j = chi.number()
-            c = WebDirichletCharacter(modulus = chi.modulus(),number = chi.number())
+            c = WebDirichletCharacter(modulus = chi.modulus(), number = chi.number())
             add = True
             add &= not conductor or chi.conductor() == conductor
             add &= not order or chi.multiplicative_order() == order
             if add:
 		 if chi.multiplicative_order() == 2 and c.symbol is not None:
-                     ret.append([(j, c.symbol(), chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
+                     ret.append([(j, c.symbol, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
                  else:
                      ret.append([(j, chi, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
         return ret

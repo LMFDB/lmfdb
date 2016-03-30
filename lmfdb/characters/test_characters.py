@@ -54,6 +54,10 @@ class DirichletSearchTest(LmfdbTest):
         W = self.tc.get('/Character/?conductor=15&order=4')
         assert '\displaystyle \chi_{ 45}(17' in W.data
 
+    def test_condsearch(self): 
+        W = self.tc.get('/Character/?conductor=111')
+        assert '111/17' in W.data
+
 class DirichletTableTest(LmfdbTest):
 
     def test_table(self):
