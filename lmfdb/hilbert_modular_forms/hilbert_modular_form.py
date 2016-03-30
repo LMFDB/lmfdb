@@ -22,7 +22,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 
 from markupsafe import Markup
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 from lmfdb.WebNumberField import *
@@ -74,7 +74,7 @@ def hilbert_modular_form_render_webpage():
                  ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         info['counts'] = get_stats().counts()
-        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread)
+        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return hilbert_modular_form_search(**args)
 
@@ -170,7 +170,7 @@ def hilbert_modular_form_search(**args):
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), (
         'Search results', ' ')]
     properties = []
-    return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread)
+    return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info = None, bread = None):
     if info is None: info = {'err':''}
@@ -418,4 +418,44 @@ def render_hmf_webpage(**args):
                    ('Base Change', is_base_change)
                    ]
 
-    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'])
+    return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
+
+
+
+# Learn more box
+
+def learnmore_list():
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels for Hilbert Modular Forms', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+
+
+
+#data quality pages
+@hmf_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of the Hilbert Modular Forms data'
+    bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+             ('Completeness', '')]
+    return render_template("single.html", kid='dq.mf.hilbert.extent',
+                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@hmf_page.route("/Source")
+def how_computed_page():
+    t = 'Source of the Hilbert Modular Forms data'
+    bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+             ('Source', '')]
+    return render_template("single.html", kid='dq.mf.hilbert.source',
+                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@hmf_page.route("/Labels")
+def labels_page():
+    t = 'Label of an Hilbert Modular Form'
+    bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+             ('Labels', '')]
+    return render_template("single.html", kid='mf.hilbert.label',
+                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
