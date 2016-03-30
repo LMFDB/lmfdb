@@ -466,7 +466,7 @@ def download_search(info):
     s = com1 + "\n"
     s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, info['curves'].count())
     s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [[field_poly],[Weierstrass Coefficients]]\n'
+    s += com + '   [[field_poly],[Weierstrass Coefficients, constant first in increasing degree]]\n'
     s += '\n' + com2
     s += '\n'
     
