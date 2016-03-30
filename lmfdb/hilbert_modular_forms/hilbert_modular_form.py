@@ -86,7 +86,7 @@ def split_full_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash(Markup("Error: <span syle='color:black'>%s</span> is not a valid Hilbert modular form label. It must be of the form <NFlabel>-<Condlabel>-<OrbitId> (separated by dashes), such as 2.2.5.1-31.1-a" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid Hilbert modular form label. It must be of the form (number field label) - (level label) - (orbit label) separated by dashes, such as 2.2.5.1-31.1-a" % lab), "error")
         raise ValueError
     field_label = data[0]
     level_label = data[1]
@@ -108,12 +108,14 @@ def hilbert_modular_form_search(**args):
 
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info and info.get('label'):
-        lab=info.get('label').replace(" ", "")
+        lab=info.get('label').strip()
+        info['label']=str(lab)
         try:
             split_full_label(lab)
+            return hilbert_modular_form_by_label(lab, C)
         except ValueError:
             return search_input_error()
-        return hilbert_modular_form_by_label(lab, C)
+
     query = {}
     try:
         parse_nf_string(info,query,'field_label',name="Field")
