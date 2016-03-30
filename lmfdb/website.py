@@ -42,6 +42,7 @@ import motives
 import riemann
 import logging
 import lattice
+import higher_genus_w_automorphisms
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
