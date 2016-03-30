@@ -447,7 +447,7 @@ def number_field_search(**args):
 
     query = {}
     try:
-        parse_galgrp(info,query)
+        parse_galgrp(info,query, qfield='galois')
         parse_ints(info,query,'degree')
         parse_bracketed_posints(info,query,'signature',split=False,exactlength=2)
         parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs_key'),parse_one=make_disc_key)
