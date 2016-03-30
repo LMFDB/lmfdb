@@ -49,8 +49,8 @@ In general "number" means an int or double or string representing a number (e.g.
    - 'root_number' (int): sign of the functional equation: 1 or -1
    - 'leading_term' (number): value of L^{r}(1)/r! where r=order_of_vanishing, e.g. 0.253841860856
    - 'st_group' (string): Sato-Tate group, either 'SU(2)' if not CM or 'N(U(1))' if CM
-   - 'positive_zeros' (list of numbers): list of strictly positive
-     imaginary parts of zeros between 0 and 20.
+   - 'positive_zeros' (list of strings): list of strings representing strictly positive
+      imaginary parts of zeros between 0 and 20.
    - 'z1', 'z2', 'z3' (numbers): the first three positive zeros
    - 'plot_delta' (number): x-increment for plot values
    - 'plot_values' (list of numbers): list of y-coordinates of points on the plot
@@ -169,10 +169,11 @@ def read_line(line):
     data['st_group'] = 'N(U(1))' if E['cm'] else 'SU(2)'
     data['leading_term'] = float(E['special_value'])
 
-    # Values and zeros
+    # Zeros
 
-    zeros = [float(y) for y in fields[4][1:-1].split(",")]
-    data['positive_zeros'] = [y for y in zeros if y>0]
+    zeros = fields[4][1:-1].split(",")
+    # omit negative ones and 0, using only string tests:
+    data['positive_zeros'] = [y for y in zeros if y!='0' and y[0]!='-']
     data['z1'] = data['positive_zeros'][0]
     data['z2'] = data['positive_zeros'][1]
     data['z3'] = data['positive_zeros'][2]
