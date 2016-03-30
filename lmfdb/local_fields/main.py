@@ -85,7 +85,7 @@ def local_field_search(**args):
         return render_field_webpage({'label': info['jump_to']})
 
     try:
-        parse_galgrp(info,query,'gal')
+        parse_galgrp(info,query,'gal', use_bson=False)
         parse_ints(info,query,'p',name='Prime p')
         parse_ints(info,query,'n',name='Degree')
         parse_ints(info,query,'c',name='Discriminant exponent c')
