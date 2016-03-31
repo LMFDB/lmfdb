@@ -1,14 +1,13 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Refine search </h2>
+<h2>Refine search </h2>
 
 <form id='re-search'>
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 
 <table>
-<tr>
 <td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
 <td>{{ KNOWL('g2c.abs_discriminant', title='discriminant')}}</td>
 <td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrasss pts') }}</td>
@@ -20,7 +19,7 @@
 
 <tr>
 <td><input type='text' name='cond' placeholder='169' size=10 value="{{info.cond}}"></td>
-<td><input type='text' name='disc' placeholder='169' size=10 value="{{info.disc}}"></td>
+<td><input type='text' name='abs_disc' placeholder='169' size=10 value="{{info.abs_disc}}"></td>
 <td><input type='text' name='num_rat_wpts' placeholder='1' size=10 value="{{info.num_rat_wpts}}">
 <td><input type='text' name='torsion' placeholder='[2,2,2]' size=10 value="{{info.torsion}}">
 <td><input type='text' name='torsion_order' placeholder='2' size=10 value="{{info.torsion_order}}">
@@ -124,11 +123,14 @@
   <option value="False">False</option>
 {% endif %}
 </select></td>
-
-<td>
-<button type='submit' value='refine'  width="122" style="width: 122px">Search again</button>
-</td>
 </tr>
+<tr>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td><button type='submit' value='refine'  width="122" style="width: 122px">Search again</button></td>
+</tr>
+
 </table>
 </form>
 
