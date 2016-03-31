@@ -125,10 +125,10 @@ def introduction_features():
     return render_template(_single_knowl, title="Features", kid='intro.features', body_class=_bc, bread=b)
 
 
-@app.route("/intro/tutorial")
-def introduction_tutorial():
+@app.route("/intro/zetatour")
+def introduction_zetatour():
     b = bread()
-    b.append(('Tutorial', url_for("introduction_tutorial")))
+    b.append(('Tutorial', url_for("introduction_zetatour")))
     return render_template(_single_knowl, title="A tour of the Riemann zeta function", kid='intro.tutorial', body_class=_bc, bread=b)
 
 
