@@ -17,11 +17,11 @@ class NumberFieldTest(LmfdbTest):
 		assert '148' in L.data # discriminant
 
     def test_search_zeta(self):
-		L = self.tc.get('/NumberField/?natural=Qzeta23&search=Go')
+		L = self.tc.get('/NumberField/?natural=Qzeta23&search=Go', follow_redirects=True)
 		assert '[3]' in L.data # class group
 
     def test_search_sqrt(self):
-		L = self.tc.get('/NumberField/?natural=Qsqrt-163&search=Go')
+		L = self.tc.get('/NumberField/?natural=Qsqrt-163&search=Go', follow_redirects=True)
 		assert '41' in L.data # minpoly
 
     def test_search_disc(self):
@@ -38,7 +38,7 @@ class NumberFieldTest(LmfdbTest):
 
     def test_url_naturallabel(self):
 		L = self.tc.get('/NumberField/junk')
-		assert 'No such field: junk in the database' in L.data # error mesage
+		assert 'Error' in L.data # error mesage
 
 
 

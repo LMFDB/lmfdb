@@ -47,7 +47,7 @@
         table.td.center {text-align : center;}
         </style>
         <h2>
-          Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
+          Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits')}}
         </h2>
         {% if  space.hecke_orbits=={} %}
            Problem with Hecke orbits in the database!
@@ -70,7 +70,7 @@
     {% endif %}
       {% if oldspace_decomposition != '' and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
         <h2> Decomposition of {{old_name}} into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
-        {{ old_name}}  = {{ oldspace_decomposition | safe }} 
+        {{ old_name}}  \(\cong\) {{ oldspace_decomposition | safe }} 
       {% endif %}
         
     {{ test | safe }}

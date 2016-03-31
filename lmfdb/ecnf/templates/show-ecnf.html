@@ -58,6 +58,7 @@ function show_code(system) {
     <div align ="right">
       Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
        {# <a onclick="show_code('pari'); return false" href='#'>pari</a>, #}
+        <a onclick="show_code('pari'); return false" href='#'>gp</a>,
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
 
@@ -143,7 +144,7 @@ cellpadding="5";
         {% endif %}
         </tr>
 
-          <tr><td colspan=5> {{ code(ec.code,'disc_norm') }}</td></tr>
+          <tr><td colspan=5> {{ code(ec.code,'disc') }}</td></tr>
         <tr>
         <td>
           {% if ec.is_minimal %}
@@ -157,7 +158,7 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.fact_disc_norm }}</td>
         </tr>
-        <tr><td colspan=5> {{ code(ec.code,'disc') }}</td></tr>
+        <tr><td colspan=5> {{ code(ec.code,'disc_norm') }}</td></tr>
 
 {% if not ec.is_minimal %}
         <tr>
@@ -211,10 +212,13 @@ cellpadding="5";
 <div>
 <h2> {{ KNOWL('ec.mordell-weil', title="Mordell-Weil rank and generators") }} </h2>
 {% if ec.rk == "?" %}
-{% if ec.rk_bnds != "not recorded" %}
-<b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \le {{ ec.rank_bounds[1] }}\)
+{% if ec.rk_bnds != "not available" %}
+<b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \)
+{% if ec.rank_bounds[1] != "Infinity" %}
+ \(\le {{ec.rank_bounds[1]}}\)
+{% endif %}
 {% else %}
-Rank not yet determined.
+Rank not available.
 {% endif %}
 {% else %}
 <b>Rank:</b> \( {{ ec.rank }} \)
@@ -222,8 +226,8 @@ Rank not yet determined.
  {{ code(ec.code,'rank') }}
 
 {% if ec.rank_bounds[0] %}
-{% if ec.gens == 'not recorded' %}
-<p>No generators recorded.</p>
+{% if ec.gens == 'not available' %}
+<p>No generators available.</p>
 {% else %}
 <p><b>
 {% if ec.rank_bounds[0] == 1 %}
@@ -265,7 +269,7 @@ Generators:
 </div>
 
 <div>
-    <h2>{{KNOWL('local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
+    <h2>{{KNOWL('ec.local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
  {{ code(ec.code,'localdata') }}
 
 {% if ec.local_data %}

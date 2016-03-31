@@ -25,7 +25,7 @@
 <td align=left><input type='text' name='conductor_norm' size=10
                       value="{{info.conductor_norm}}"></td>
 <td>         <select name='include_isogenous'>
-{% if info.number %}
+{% if info.query.number %}
            <option value="off" selected="yes">exclude</option>
            <option value="on">include</option>
 {% else %}
@@ -133,15 +133,41 @@ table td.params {
 
 {% endif %}
 
-{#
+<!-- Download Data!! Whoohooo!! -->
 <form>
 Download all search results for
 <input type="submit" name="Submit" value="gp">
 <input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="mathematica">
+<input type="submit" name="Submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="field" value="{{info.field}}"/>
+<input type="hidden" name="conductor_norm" value="{{info.conductor_norm}}"/>
+<select name="include_isogenous" style="visibility:hidden;">
+{% if info.query.number %}
+           <option value="off" selected="yes">exclude</option>
+           <option value="on">include</option>
+{% else %}
+           <option value="off">exclude</option>
+           <option value="on" selected="yes">include</option>
+{% endif %}
+</select>
+ <select name="include_base_change" style="visibility:hidden;">
+{% if info.include_base_change == "off" %}
+           <option value="off" selected="yes">exclude</option>
+           <option value="on">include</option>
+{% else %}
+           <option value="off">exclude</option>
+           <option value="on" selected="yes">include</option>
+{% endif %}
+</select>
+ <input type="hidden" name="torsion" size=10 value="{{info.torsion}}" />
+ <input type="hidden" name="torsion_structure" size=10 value="{{info.torsion_structure}}" />
+ <input type="hidden" name="jinv" size=20 value="{{info.jinv}}" />
 </form>
-#}
 
+
+
+<!-- Debugging! -->
 {% if DEBUG %}
 <hr>
 <div>

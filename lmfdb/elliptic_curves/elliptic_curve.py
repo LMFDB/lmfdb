@@ -14,8 +14,8 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_spli
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, parse_list, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex
-from lmfdb.search_parsing import clean_input, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
+from lmfdb.elliptic_curves.web_ec import WebEC, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, class_cremona_label, curve_lmfdb_label, curve_cremona_label
+from lmfdb.search_parsing import split_list, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
@@ -241,11 +241,6 @@ def elliptic_curve_search(**args):
         query['number'] = 1
 
     info['query'] = query
-
-    if 'download' in info and info['download'] != '0':
-        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING) ])
-        return download_search(info, res)
-
     cursor = db_ec().find(query)
     nres = cursor.count()
     if(start >= nres):
@@ -262,6 +257,9 @@ def elliptic_curve_search(**args):
     info['start'] = start
     info['count'] = count
     info['more'] = int(start + count < nres)
+
+    if 'download' in info and info['download'] != '0':
+        return download_search(info)
     if nres == 1:
         info['report'] = 'unique match'
     elif nres == 2:
@@ -271,7 +269,6 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
@@ -288,12 +285,12 @@ def search_input_error(info, bread):
 
 @ec_page.route("/<int:conductor>/<iso_label>/")
 def by_double_iso_label(conductor,iso_label):
-    full_iso_label = str(conductor)+"."+iso_label
+    full_iso_label = class_lmfdb_label(conductor,iso_label)
     return render_isogeny_class(full_iso_label)
 
 @ec_page.route("/<int:conductor>/<iso_label>/<int:number>")
 def by_triple_label(conductor,iso_label,number):
-    full_label = str(conductor)+"."+iso_label+str(number)
+    full_label = curve_lmfdb_label(conductor,iso_label,number)
     return render_curve_webpage_by_label(full_label)
 
 # The following function determines whether the given label is in
@@ -525,7 +522,7 @@ def download_EC_all(label):
             elif t in ['torsion_generators', 'torsion_structure']:
                 data1.append([eval(g) for g in d])
             elif t == 'x-coordinates_of_integral_points':
-                data1.append(parse_list(d))
+                data1.append(split_list(d))
             elif t == 'gens':
                 data1.append(parse_points(d))
             elif t in ['iso', 'label', 'lmfdb_iso', 'lmfdb_label']:
@@ -538,7 +535,7 @@ def download_EC_all(label):
     return response
 
 
-def download_search(info, res):
+def download_search(info):
     dltype = info['Submit']
     delim = 'bracket'
     com = r'\\'  # single line comment start
@@ -556,7 +553,7 @@ def download_search(info, res):
         delim = 'magma'
         filename = 'elliptic_curves.m'
     s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, info['curves'].count())
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [Weierstrass Coefficients]\n'
     s += '\n' + com2
@@ -566,7 +563,8 @@ def download_search(info, res):
     else:
         s += 'data = ['
     s += '\\\n'
-    for f in res:
+    #for f in info['curves']:
+    for f in info['curves']:
         entry = str(f['ainvs'])
         entry = entry.replace('u','')
         entry = entry.replace('\'','')

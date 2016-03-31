@@ -594,6 +594,9 @@ class WebG2C(object):
             data['igusa_norm'] ]
         data['num_rat_wpts'] = ZZ(self.num_rat_wpts)
         data['two_selmer_rank'] = ZZ(self.two_selmer_rank)
+        data['analytic_rank'] = ZZ(self.analytic_rank)
+        data['has_square_sha'] = "square" if self.has_square_sha else "twice a square"
+        data['locally_solvable'] = "yes" if self.locally_solvable else "no"
         if len(self.torsion) == 0:
             data['tor_struct'] = '\mathrm{trivial}'
         else:
@@ -710,6 +713,9 @@ class WebG2C(object):
             #       igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
             #('Siegel modular form someday', '.')
             ]
+
+        if not endodata['is_simple_geom']:
+            self.friends += [('Elliptic curve %s' % lab,url_for_ec(lab)) for lab in endodata['spl_facs_labels'] if lab != '']
         #self.downloads = [('Download all stored data', '.')]
 
         # Breadcrumbs
@@ -815,6 +821,16 @@ class WebG2C(object):
                  sage_not_implemented, # sage code goes here
                  pari_not_implemented, # pari code goes here
                  'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'
+                 )
+        set_code('has_square_sha',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'HasSquareSha(Jacobian(C));'
+                 )
+        set_code('locally_solvable',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'f,h:=HyperellipticPolynomials(C); g:=4*f+h^2; HasPointsLocallyEverywhere(g,2) and (#Roots(ChangeRing(g,RealField())) gt 0 or LeadingCoefficient(g) gt 0);'
                  )
         set_code('tor_struct',
                  sage_not_implemented, # sage code goes here

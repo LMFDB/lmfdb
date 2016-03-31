@@ -7,7 +7,9 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
+from lmfdb.search_parsing import split_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label
 
 import sage.all
 from sage.all import EllipticCurve, latex, matrix, ZZ, QQ
@@ -39,6 +41,18 @@ def split_lmfdb_iso_label(lab):
 def split_cremona_label(lab):
     return cremona_label_regex.match(lab).groups()
 
+def curve_lmfdb_label(conductor, iso_class, number):
+    return "%s.%s%s" % (conductor, iso_class, number)
+
+def curve_cremona_label(conductor, iso_class, number):
+    return "%s%s%s" % (conductor, iso_class, number)
+
+def class_lmfdb_label(conductor, iso_class):
+    return "%s.%s" % (conductor, iso_class)
+
+def class_cremona_label(conductor, iso_class):
+    return "%s%s" % (conductor, iso_class)
+
 logger = make_logger("ec")
 
 ecdb = None
@@ -58,15 +72,6 @@ def padic_db():
 
 def trim_galois_image_code(s):
     return s[2:] if s[1].isdigit() else s[1:]
-
-def parse_list(s):
-    """
-    parses a string representing a list of integers, e.g. '[1,2,3]'
-    """
-    s = s.replace(' ','')[1:-1]
-    if s:
-        return [int(a) for a in s.split(",")]
-    return []
 
 def parse_point(s):
     r""" Converts a string representing a point in affine or
@@ -106,7 +111,7 @@ class WebEC(object):
         logger.debug("Constructing an instance of ECisog_class")
         self.__dict__.update(dbdata)
         # Next lines because the hyphens make trouble
-        self.xintcoords = parse_list(dbdata['x-coordinates_of_integral_points'])
+        self.xintcoords = split_list(dbdata['x-coordinates_of_integral_points'])
         self.non_surjective_primes = dbdata['non-surjective_primes']
         # Next lines because the python identifiers cannot start with 2
         self.twoadic_index = dbdata['2adic_index']
@@ -332,7 +337,7 @@ class WebEC(object):
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label)),
             ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
             ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=1, label=iso))]
+            ('Modular form ' + newform_label(cond,2,1,iso), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=1, label=iso))]
 
         self.downloads = [('Download coefficients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
                           ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label))]

@@ -3,24 +3,20 @@
 {% block content %}
 
 <div>
-The database currently contains elliptic curves over a few number
-fields other than $\Q$, mostly quadratic fields.
+{{ KNOWL_INC('dq.ecnf.extent') }}
 </div>
 
-<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over {{
-KNOWL('nf',title = "number fields")}}</h2>
+<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} defined over:
+{# {{KNOWL('nf',title = "number fields")}} #}
+</h2>
 
 <p>
 <ul>
 {% for types in data.fields %}
 <li>
-curves defined over {{types[0]}}:
+{{types[0]}}:
 {% for label,f in types[1] %}
-{% if types[0]=='real quadratic fields' %}
-{% if loop.index0 %},...,{% endif %}
-{% else %}
 {% if loop.index0 %},{% endif %}
-{% endif %}
  <a href="{{f[0]}}">{{f[1]}}</a>
 {% endfor %}
 </li>

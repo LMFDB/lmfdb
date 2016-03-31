@@ -5,6 +5,7 @@ import re
 import pymongo
 import bson
 import yaml
+from sage.misc.cachefunc import cached_function
 from lmfdb.utils import *
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
@@ -50,6 +51,7 @@ def string2list(s):
         return []
     return [int(a) for a in s.split(',')]
 
+@cached_function
 def field_pretty(label):
     d, r, D, i = label.split('.')
     if d == '1':  # Q

@@ -3,7 +3,8 @@ import json
 
 from lmfdb.base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from lmfdb.utils import to_dict, parse_range
+from lmfdb.utils import to_dict
+from lmfdb.search_parsing import parse_range
 import lmfdb.base as base
 
 
