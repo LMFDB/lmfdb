@@ -241,6 +241,17 @@ class WebObject(object):
         C = cls.connect_to_db()
         return gridfs.GridFS(C,coll)
 
+    @classmethod
+    def _find_document_in_db_collection(cls,search={},**kwds):
+        r"""
+        Searches the database for fields matching values in a dict containing
+        values for the keys (or using keywords) in self._key without constructing the object. 
+        """
+        coll = cls.connect_to_db(cls._collection_name)
+        search_pattern = { key : search[key] for key in search.keys() if key in cls._key }
+        search_pattern.update(kwds) ## add keywords
+        return coll.find(search_pattern) 
+    
     def __init__(self,
                  use_separate_db = True,
                  use_gridfs = True,
