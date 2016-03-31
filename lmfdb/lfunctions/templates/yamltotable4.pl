@@ -94,6 +94,7 @@ $rowvals{$key}=$val;
 }
 
 print OUTFILE "</tbody></table>\n";
+print OUTFILE "\n{% endblock %}\n";
 
 ##############
 
