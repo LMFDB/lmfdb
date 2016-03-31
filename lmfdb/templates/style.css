@@ -114,6 +114,18 @@ a.inactive:hover {
     background: inherit;
 }
 
+table tbody tr.trivial {
+    color: {{color.grey}};
+}
+
+table tbody tr.trivial a {
+    color: {{color.grey}};
+}
+table tbody tr.trivial a:hover {
+    color: inherit;
+    background: inherit;
+}
+
 #content a {
 }
 #content .announce {
@@ -714,7 +726,7 @@ table .knowl-link {
 }
 .knowl-inc-edit a {
   padding: 3px 5px 0px 5px;
-  background: {{ color.knowl_hyper_text }};
+  background: {{ color.knowl_l_1 }};
   border-top-left-radius: 5px;
   -moz-border-radius-topleft: 5px;
 } 
