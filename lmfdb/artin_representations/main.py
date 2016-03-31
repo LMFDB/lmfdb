@@ -6,10 +6,12 @@ import pymongo
 ASC = pymongo.ASCENDING
 import flask
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, flash
+from markupsafe import Markup
+
 from lmfdb.artin_representations import artin_representations_page, artin_logger
 from lmfdb.utils import to_dict
-from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_paired_fields, parse_count, parse_start
+from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_paired_fields, parse_count, parse_start, clean_input
 
 from lmfdb.transitive_group import *
 from lmfdb.WebCharacter import WebDirichletCharacter
@@ -40,6 +42,13 @@ def make_cond_key(D):
     D1 = int(D1.log(10))
     return '%04d%s'%(D1,str(D))
 
+def parse_artin_label(label):
+    label = clean_input(label)
+    if re.compile(r'^\d+\.\d+e\d+(_\d+e\d+)*\.\d+t\d\.\d+c\d+$').match(label):
+        return label
+    else:
+        raise ValueError("Error parsing input %s.  It is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1"% label)
+
 
 @artin_representations_page.route("/")
 def index():
@@ -58,6 +67,12 @@ def artin_representation_search(**args):
     if 'natural' in info:
         label = info['natural']
         # test if it is ok
+        try:
+            label = parse_artin_label(label)
+        except ValueError as err:
+            flash(Markup("Error: %s" % (err)), "error")
+            bread = get_bread([('Search results','')])
+            return search_input_error({'err':''}, bread)
         return render_artin_representation_webpage(label)
 
     title = 'Artin representation search results'
@@ -143,16 +158,23 @@ def render_artin_representation_webpage(label):
     if re.compile(r'^\d+$').match(label):
         return artin_representation_search(**{'dimension': label})
 
+    bread = get_bread([(label, ' ')])
+
     # label=dim.cond.nTt.indexcj, c is literal, j is index in conj class
     # Should we have a big try around this to catch bad labels?
-    the_rep = ArtinRepresentation(label)
+    label = clean_input(label)
+    try:
+        the_rep = ArtinRepresentation(label)
+    except:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not the label of an Artin representation in the database." % (label)), "error")
+        return search_input_error({'err':''}, bread)
+              
 
     extra_data = {} # for testing?
     C = getDBConnection()
     extra_data['galois_knowl'] = group_display_knowl(5,3,C) # for testing?
     #artin_logger.info("Found %s" % (the_rep._data))
 
-    bread = get_bread([(label, ' ')])
 
     title = "Artin representation %s" % label
     the_nf = the_rep.number_field_galois_group()
@@ -176,11 +198,12 @@ def render_artin_representation_webpage(label):
     if nf_url:
     	friends.append(("Artin Field", nf_url))
     cc = the_rep.central_character()
-    if cc.modulus <= 100000: 
-        if the_rep.dimension()==1:
-            friends.append(("Corresponding Dirichlet character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
-        else:
-            friends.append(("Determinant character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+    if cc is not None:
+        if cc.modulus <= 100000: 
+            if the_rep.dimension()==1:
+                friends.append(("Corresponding Dirichlet character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+            else:
+                friends.append(("Determinant character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
 
     # once the L-functions are in the database, the link can always be shown
     if the_rep.dimension() <= 6:

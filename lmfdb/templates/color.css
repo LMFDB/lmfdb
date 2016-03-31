@@ -199,7 +199,7 @@
 
 {% elif color_template == 12 %}
     /*Blue.*/
-    {% set col_main_d  = '#FA6900' %} /*Motives*/
+    {% set col_main_d  = '#3E6066' %} /*Motives*/
     {% set col_main_dl = '#23A7C0' %} /*RHC text, footer text*/
     {% set col_main    = '#102D49' %} /*hyperlink text*/ 
     {% set col_main_2  = '#78909c' %} /*Rollover*/ 

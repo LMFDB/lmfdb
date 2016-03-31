@@ -65,9 +65,9 @@ table.ntdata thead tr.space th{
   {% set group=KNOWL('group.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
 {% else %}
   {% if grouptype == 0 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma0n',title='\(\Gamma_0(' ~ level ~ ') \)') %}
   {% elif grouptype == 1 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
   {% endif %}
 {% endif %}
 
@@ -115,7 +115,11 @@ $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$</th>
     {% for xi in table.galois_orbits_reps_numbers  %}
     {% set x = table.galois_orbits_reps[xi] %}
     {% set cell = table.cells[xi][k] %}
-      <tr class="{{row_class.next() }}">
+      {% if cell.trivial_trivially %}
+        <tr class="{{row_class.next()}} trivial">
+      {% else %}
+        <tr class="{{row_class.next() }}">
+      {% endif %}
         <th width="10px" class="left first">
 	  {% if x.url != '' %}
             {{cell.dim}}
@@ -128,10 +132,10 @@ $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$</th>
         </td>
         {% for xc in table.galois_orbit[xi]  %}
           <td align="center" width="0%">
-           {% if xc.url != '' and cell.dim > 0 %}
+           {% if xc.url != '' %}
              <a href="{{xc.url}}">{{ xc.head }}</a>
            {% else %}
-	     <a class="inactive">{{xc.head}}</a>
+	     <span class="inactive">{{xc.head}}</span>
 	   {% endif %}
           </td>
         {% endfor %}
@@ -146,8 +150,9 @@ $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$</th>
   </tbody>
 </table>
 <small>The space is clickable whenever the Hecke orbits are stored for that space.
-The parity is listed as "e" for even, "o" for odd and "n/a" in case we do not have it
-stored in the database.</small>
+The parity is listed as "n/a" in case we do not have it
+stored in the database.  Spaces in grey are trivial because the character and the weight have
+opposite parity.</small>
 
 {% endif %}
 

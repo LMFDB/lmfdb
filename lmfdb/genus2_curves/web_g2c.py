@@ -713,6 +713,9 @@ class WebG2C(object):
             #       igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
             #('Siegel modular form someday', '.')
             ]
+
+        if not endodata['is_simple_geom']:
+            self.friends += [('Elliptic curve %s' % lab,url_for_ec(lab)) for lab in endodata['spl_facs_labels'] if lab != '']
         #self.downloads = [('Download all stored data', '.')]
 
         # Breadcrumbs

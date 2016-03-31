@@ -70,12 +70,15 @@
 </form>
 {% endif %}
     
-<h2>Error</h2>
-    <div>
-  {{ req.err|safe }}
+    {% if req.err != '' %}
+        <h2>Error</h2>
+    {% endif %}
+            <div>
+              {{ req.err|safe }}
     <p>
       Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
       </div>
+
 
 {% else %}
 

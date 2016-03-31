@@ -15,7 +15,7 @@ from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicFie
 
 from lmfdb.lattice import lattice_page, lattice_logger
 from lmfdb.lattice.lattice_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_list
+from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
 
 from markupsafe import Markup
 
@@ -131,29 +131,32 @@ def lattice_search(**args):
         info['err'] = str(err)
         return search_input_error(info)
 
-    count_default = 50
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            err = "Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']
-            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']), "error")
-            info['err'] = str(err)
-            return search_input_error(info)
-    else:
-        info['count'] = count_default
-        count = count_default
+    count = parse_count(info,50)
+    start = parse_start(info)
 
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
+#    count_default = 50
+#    if info.get('count'):
+#        try:
+#            count = int(info['count'])
+#        except:
+#            err = "Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']
+#            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']), "error")
+#            info['err'] = str(err)
+#            return search_input_error(info)
+#    else:
+#        info['count'] = count_default
+#        count = count_default
+
+#    start_default = 0
+#    if info.get('start'):
+#        try:
+#            start = int(info['start'])
+#            if(start < 0):
+#                start += (1 - (start + 1) / count) * count
+#        except:
+#            start = start_default
+#    else:
+#        start = start_default
 
     info['query'] = dict(query)
     res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)]).skip(start).limit(count)
@@ -344,7 +347,7 @@ def completeness_page():
 
 @lattice_page.route("/Source")
 def how_computed_page():
-    t = 'Source of integral lattice data'
+    t = 'Source of the integral lattice data'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Source', '')]
     credit = lattice_credit
