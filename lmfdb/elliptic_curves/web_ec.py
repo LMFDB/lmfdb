@@ -340,7 +340,11 @@ class WebEC(object):
             ('Modular form ' + newform_label(cond,2,1,iso), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=1, label=iso))]
 
         self.downloads = [('Download coefficients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
-                          ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label))]
+                          ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label)),
+                          ('Download Magma code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
+                          ('Download Sage code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
+                          ('Download GP code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp'))
+        ]
 
         self.plot = encode_plot(self.E.plot())
         self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot

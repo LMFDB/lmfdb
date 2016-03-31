@@ -631,3 +631,47 @@ def labels_page():
     return render_template("single.html", kid='ec.q.lmfdb_label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
+@ec_page.route('/<conductor>/<iso>/<number>/download/<download_type>')
+def ec_code_download(**args):
+    response = make_response(ec_code(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+sorted_code_names = ['curve', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'qexp', 'moddeg', 'L1', 'localdata', 'galrep', 'padicreg']
+
+code_names = {'curve': 'Define the curve',
+                 'tors': 'Torsion subgroup',
+                 'intpts': 'Integral points',
+                 'cond': 'Conductor',
+                 'disc': 'Discriminant',
+                 'jinv': 'j-invariant',
+                 'rank': 'Rank',
+                 'reg': 'Regulator',
+                 'real_period': 'Real Period',
+                 'cp': 'Tamagawa numbers',
+                 'ntors': 'Torsion order',
+                 'sha': 'Order of Sha',
+                 'qexp': 'q-expansion of modular form',
+                 'moddeg': 'Modular degree',
+                 'L1': 'Special L-value',
+                 'localdata': 'Local data',
+                 'galrep': 'mod p Galois image',
+                 'padicreg': 'p-adic regulator'}
+
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+
+def ec_code(**args):
+    print("args has keys %s" %  to_dict(args).keys())
+    label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
+    E = WebEC.by_label(label)
+    lang = args['download_type']
+    code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
+    if lang=='gp':
+        lang = 'pari'
+    for k in sorted_code_names:
+        if lang in E.code[k]:
+            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
+            for line in E.code[k][lang]:
+                code += line + "\n"
+    return code
