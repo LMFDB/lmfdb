@@ -14,7 +14,7 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_spli
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex
+from lmfdb.elliptic_curves.web_ec import WebEC, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, class_cremona_label, curve_lmfdb_label, curve_cremona_label
 from lmfdb.search_parsing import split_list, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
 
 import sage.all
@@ -285,12 +285,12 @@ def search_input_error(info, bread):
 
 @ec_page.route("/<int:conductor>/<iso_label>/")
 def by_double_iso_label(conductor,iso_label):
-    full_iso_label = str(conductor)+"."+iso_label
+    full_iso_label = class_lmfdb_label(conductor,iso_label)
     return render_isogeny_class(full_iso_label)
 
 @ec_page.route("/<int:conductor>/<iso_label>/<int:number>")
 def by_triple_label(conductor,iso_label,number):
-    full_label = str(conductor)+"."+iso_label+str(number)
+    full_label = curve_lmfdb_label(conductor,iso_label,number)
     return render_curve_webpage_by_label(full_label)
 
 # The following function determines whether the given label is in
