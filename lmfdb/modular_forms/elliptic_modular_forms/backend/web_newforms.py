@@ -58,7 +58,11 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
      WebModFormSpace_cached
      )
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label, field_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
+        newform_label, 
+        space_label, 
+        field_label,
+        parse_newform_label)
 
 from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 
@@ -272,6 +276,8 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True, **kwargs):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
+        if isinstance(level,basestring):
+            level,weight,character,label = parse_newform_label(level)
         self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
             character_number = character.number
