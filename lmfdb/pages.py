@@ -129,7 +129,7 @@ def introduction_features():
 def introduction_tutorial():
     b = bread()
     b.append(('Tutorial', url_for("introduction_tutorial")))
-    return render_template(_single_knowl, title="Tutorial", kid='intro.tutorial', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A tour of the Riemann zeta function", kid='intro.tutorial', body_class=_bc, bread=b)
 
 
 @app.route("/bigpicture")
