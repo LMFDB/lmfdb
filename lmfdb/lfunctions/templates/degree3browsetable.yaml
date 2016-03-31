@@ -39,7 +39,7 @@ analytic_conductor: 0.010101010101
 epsilon: 1
 url: L/SymmetricPower/2/EllipticCurve/Q/11.a/
 object_url:
-object_name: $\Sym^2$ of rank 0 elliptic curve <a href="EllipticCurve/Q/11.a1">11.a1</a>
+object_name: $\Sym^2$ of rank 0 elliptic curve <a href="/EllipticCurve/Q/11/a/2">11.a2</a>
 self_dual: true
 arithmetic: true
 ---
@@ -100,19 +100,6 @@ object_name: $\Sym^2$ of rank 1 elliptic curve <a href="/EllipticCurve/Q/37.a1">
 self_dual: true
 arithmetic: true
 ---
-first_zero: 1.36848157011749
-Lfunction_texname: $L(s,\rho)$
-muRRR: [0,0]
-deltaRRR: [0,0,1]
-level: 28625
-character: $\chi_{1145}(228,\cdot)$
-analytic_conductor:
-epsilon: e(0.76431)
-url: TensorProducts/
-object_name: tensor product of an <a href="/ArtinRepresentation/3.229.4t5.1c1">Artin representation</a> and a <a href="/Character/Dirichlet/5/2">Dirichlet character</a>
-self_dual: false
-arithmetic: true
----
 first_zero: 1.07683314174049
 Lfunction_texname: $L(s,E_{389.a},\sym^2)$
 nuRC: 1
@@ -141,4 +128,20 @@ object_url:
 object_name: $\GL(3)$ Maass form
 self_dual: false
 arithmetic: false
+---
+
+XXXXXXXXXX
+
+first_zero: 1.36848157011749
+Lfunction_texname: $L(s,\rho)$
+muRRR: [0,0]
+deltaRRR: [0,0,1]
+level: 28625
+character: $\chi_{1145}(228,\cdot)$
+analytic_conductor:
+epsilon: e(0.76431)
+url: TensorProducts/
+object_name: tensor product of an <a href="/ArtinRepresentation/3.229.4t5.1c1">Artin representation</a> and a <a href="/Character/Dirichlet/5/2">Dirichlet character</a>
+self_dual: false
+arithmetic: true
 ---

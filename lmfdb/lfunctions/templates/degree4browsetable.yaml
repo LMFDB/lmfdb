@@ -6,9 +6,9 @@ level: 1331
 character: 1.1
 analytic_conductor: 3.010101010101
 epsilon: 1
-url: L/SymmetricPower/3/EllipticCurve/Q/11.a.1/
+url: L/SymmetricPower/3/EllipticCurve/Q/11.a/
 object_url:
-object_name: $\Sym^3$ of rank 0 elliptic curve <a href="/EllipticCurve/Q/11.a.1">11.a.1</a> 
+object_name: $\Sym^3$ of rank 0 elliptic curve <a href="/EllipticCurve/Q/11/a/2">11.a2</a> 
 self_dual: true
 arithmetic: true
 ---
@@ -19,7 +19,7 @@ level: 169
 character: 1.1
 epsilon: 1
 url: L/Genus2Curve/Q/169/a/
-object_url: Genus2Curve/Q/169/a/
+object_url: Genus2Curve/Q/169/a/169/1
 object_name: genus 2 curve
 self_dual: true
 arithmetic: true
@@ -32,7 +32,8 @@ character: 1.1
 analytic_conductor:
 epsilon: 1
 url: L/ModularForm/GL4/Q/Maass/GL4Maass_1_16.8997_2.27258_-6.0358/
-object_url: ModularForm/GL4/Q/Maass/GL4Maass_1_16.8997_2.27258_-6.0358/
+comment_object_url: ModularForm/GL4/Q/Maass/GL4Maass_1_16.8997_2.27258_-6.0358/
+object_url:
 object_name: $\SL(4,\Z)$ Maass form
 self_dual: false
 arithmetic: false
@@ -45,7 +46,7 @@ character: 1.1
 analytic_conductor: 0.010101010101
 epsilon: 1
 url: L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/
-object_url: ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/
+object_url: ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a
 object_name: Hilbert modular form over $\mathbb Q(\sqrt{5})$
 self_dual: true
 arithmetic: true
@@ -57,7 +58,8 @@ level: 1
 character: 1.1
 epsilon: 1
 url: L/ModularForm/GSp4/Q/Maass/GSp4Maass_1_12.4687_4.72095/
-object_url: ModularForm/GSp4/Q/Maass/GSp4Maass_1_12.4687_4.72095/
+object_url:
+object_url_comment: ModularForm/GSp4/Q/Maass/GSp4Maass_1_12.4687_4.72095/
 object_name: $\Sp(4,\Z)$ Maass form
 self_dual: true
 arithmetic: false
@@ -83,10 +85,24 @@ character: 1.1
 analytic_conductor:
 epsilon: 1
 url: L/ModularForm/GSp4/Q/Maass/GSp4Maass_1_19.8193_8.53107/
-object_url: ModularForm/GSp4/Q/Maass/GSp4Maass_1_19.8193_8.53107/
-object_name: Sp(4,$\mathbb Z$) Maass
+object_url:
+object_url_comment: ModularForm/GSp4/Q/Maass/GSp4Maass_1_19.8193_8.53107/
+object_name: Sp(4,$\mathbb Z$) Maass form
 self_dual: true
 arithmetic: false
+---
+first_zero: 3.10180507133562
+Lfunction_texname: $L(s,E)$
+gammaC: [$\frac12$, $\frac12$]
+level: 4975
+character: 1.1
+analytic_conductor:
+epsilon: -1
+url: L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-199.1-c/0/0/
+object_url: EllipticCurve/2.2.5.1/199.1/c/1
+object_name: Elliptic curve over $\Q(\sqrt{5})$
+self_dual: true
+arithmetic: true
 ---
 
 ********************************************
