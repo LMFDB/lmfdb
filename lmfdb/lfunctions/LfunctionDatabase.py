@@ -52,7 +52,7 @@ def getGenus2Ldata(label,label_type="url"):
     db = connection.Lfunctions
     try:
     #    Ldata = g2.Lfunctions.find_one({'hash': hash})
-        print "looking for label",label
+        print "looking for label",label, "of type", label_type
    #     Lpointer = db.instances.find_one({'url': label})
         if label_type == "url":
             Lpointer = db.instances.find_one({'url': label})

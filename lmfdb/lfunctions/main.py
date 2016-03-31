@@ -608,6 +608,9 @@ def initLfunction(L, args, request):
             ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
         info['bread'] = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
                                       (label, url_for('.l_function_ec_page', label=label))])
+    elif L.Ltype() == 'genus2curveQ':
+        # should use url_for
+        info['friends'] = [('isogeny class ' + L.label, "/Genus2Curve/Q/" + L.label.replace(".","/"))]
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
