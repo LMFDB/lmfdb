@@ -8,6 +8,7 @@ import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label
 
 import sage.all
 from sage.all import EllipticCurve, latex, matrix
@@ -129,7 +130,7 @@ class ECisog_class(object):
         N, iso, number = split_lmfdb_label(self.lmfdb_iso)
 
         self.newform = web_latex(self.E.q_eigenform(10))
-        self.newform_label = self.lmfdb_iso.replace('.', '.2')
+        self.newform_label = newform_label(N,2,1,iso)
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
