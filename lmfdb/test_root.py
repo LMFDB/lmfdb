@@ -37,7 +37,7 @@ class RootTest(LmfdbTest):
         css = self.tc.get("/style.css").data
         # def for knowls:
         assert '*[knowl]' in css
-        assert 'border-bottom: 1px dotted #AAF;' in css
+        assert 'border-bottom: 1px dotted grey;' in css
 
     def test_db(self):
         assert self.C is not None

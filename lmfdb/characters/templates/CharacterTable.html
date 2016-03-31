@@ -1,37 +1,13 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <style type="text/css">
-table.ntdata th.left { 
-    border-right: 2px solid #9b9; 
-    background: #efe;
-    border-bottom: 0;
-    text-align: right;
-}
-
-table.ntdata th.weight {
-  text-align: center;
-  background: #efe;
-  border-bottom: 2px solid #9b9;
-  border-left: 0;
-  vertical-align: center;
-}
-
-table.ntdata thead tr.space {
-  background: #efe;
-  border-bottom: 0;
-}
-
-table.ntdata thead th.spaceleft {
-  border-right: 2px solid #9b9;
-  vertical-align: top;
-}
 .modulus {
     font-family: serif;
     vertical-align: top;
     padding-top: 1em;
-    border-right: 2px solid #8a8;
+    border-right: 2px solid {{color.chi_border}};
 }
 .modulus a { display: inline; font-family: serif; }
 .modulus font { display: inline; font-family: serif }
@@ -46,18 +22,18 @@ table.ntdata thead th.spaceleft {
 #chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
 #chitable td div>a { text-align: right; }
 #chitable td { text-align: right; vertical-align: middle;  white-space: nowrap; }
-#chitable td.a { background: #DFD; }
+#chitable td.a { background: {{color.chi_table_background}}; }
 #chitable td.b { background: none; }
 #chitable th { text-align: right; }
 /*table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }*/
-#chitable a.imprimitive { color: blue;}
-#chitable a.primitive { color:green ;}
+#chitable a.imprimitive { color: {{color.chitable_imprimitive}};}
+#chitable a.primitive { color: {{color.chitable_primitive}} ;}
 
 .primitive {
-  color:green;
+  color:{{color.chitable_primitive}};
 }
 .imprimitive {
-    color:blue;
+    color:{{color.chitable_imprimitive}};
 }
 .heading {
     padding: 30px 30px

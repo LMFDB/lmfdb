@@ -62,7 +62,7 @@ def EC_nf_plot(E, base_field_gen_name):
         return plot([])
     prec = 53
     maxprec = 10 ** 6
-    while prec < maxprec:  # Try to base change to R. May fail if resulting curve is almost singular, so increase precision.
+    while prec < maxprec:  # Try to base change to RR. May fail if resulting curve is almost singular, so increase precision.
         try:
             SR = K.embeddings(RealField(prec))
             X = [E.base_extend(s) for s in SR]
@@ -76,10 +76,23 @@ def EC_nf_plot(E, base_field_gen_name):
     xmax = max([x.xmax() for x in X])
     ymin = min([x.ymin() for x in X])
     ymax = max([x.ymax() for x in X])
-    cols = ["blue", "red", "green", "orange", "brown"]  # Preset colours, because rainbow tends to return too pale ones
-    if n1 > len(cols):
-        cols = rainbow(n1)
-    return sum([EC_R_plot([SR[i](a) for a in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(SR[i].im_gens()[0].n(20))) for i in range(n1)])
+    cols = rainbow(n1) # Default choice of n colours
+    # Howver, these tend to be too pale, so we preset them for small values of n
+    if n1==1:
+        cols=["blue"]
+    elif n1==2:
+        cols=["red","blue"]
+    elif n1==3:
+        cols=["red","limegreen","blue"]
+    elif n1==4:
+        cols = ["red", "orange", "forestgreen", "blue"]
+    elif n1==5:
+        cols = ["red", "orange", "forestgreen", "blue", "darkviolet"] 
+    elif n1==6:
+        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"] 
+    elif n1==7:
+        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"] 
+    return sum([EC_R_plot([SR[i](a) for a in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(SR[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)])
 
 
 class ECNF(object):
@@ -233,7 +246,7 @@ class ECNF(object):
             self.rk_bnds = "%s...%s" % tuple(self.rank_bounds)
         except AttributeError:
             self.rank_bounds = [0, Infinity]
-            self.rk_bnds = "not recorded"
+            self.rk_bnds = "not available"
 
         # Generators
         try:
@@ -241,7 +254,7 @@ class ECNF(object):
                     for P in self.gens]
             self.gens = ", ".join([web_latex(P) for P in gens])
             if self.rk == "?":
-                self.reg = "unknown"
+                self.reg = "not available"
             else:
                 if gens:
                     self.reg = E.regulator_of_points(gens)
@@ -249,8 +262,8 @@ class ECNF(object):
                     self.reg = 1  # otherwise we only get 1.00000...
 
         except AttributeError:
-            self.gens = "not recorded"
-            self.reg = "unknown"
+            self.gens = "not available"
+            self.reg = "not available"
             try:
                 if self.rank == 0:
                     self.reg = 1
@@ -302,7 +315,7 @@ class ECNF(object):
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
             self.friends += [('L-function', self.urls['Lfunction'])]
         if imag_quadratic:
-            self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
+            self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
 
         self.properties = [
             ('Base field', self.field.field_pretty()),

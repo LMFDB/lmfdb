@@ -3,7 +3,7 @@
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
 from flask import render_template, url_for, request, send_file
-from lmfdb.utils import parse_range
+from lmfdb.search_parsing import parse_range
 # import siegel_core
 import input_parser
 import dimensions

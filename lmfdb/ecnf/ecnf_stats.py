@@ -36,8 +36,18 @@ def get_stats():
 def ecnf_summary():
     counts = get_stats().counts()
     #ecnfstaturl = url_for('ecnf.statistics')
-    return r'The database currently contains %s elliptic curves in %s isogeny classes, over %s number fields (not including $\mathbb{Q}$) of degrees up to %s.' % (counts['ncurves_c'], counts['nclasses_c'], counts['nfields'], counts['maxdeg'])
-
+    ec_knowl = '<a knowl="ec">elliptic curves</a>'
+    iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
+    nf_knowl = '<a knowl="nf">number fields</a>'
+    deg_knowl = '<a knowl="nf.degree">degree</a>'
+    return ''.join([r'The database currently contains %s ' % counts['ncurves_c'],
+                    ec_knowl,
+                    r' in %s ' % counts['nclasses_c'],
+                    iso_knowl,
+                    r', over %s ' % counts['nfields'],
+                    nf_knowl, ' (not including $\mathbb{Q}$) of ',
+                    deg_knowl,
+                    r' up to %s.' % counts['maxdeg']])
 
 @app.context_processor
 def ctx_ecnf_summary():

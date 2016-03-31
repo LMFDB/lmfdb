@@ -7,17 +7,13 @@ from flask import render_template, url_for, make_response
 from sage.all import *
 import tempfile
 import os
-import pymongo
 from lmfdb.WebCharacter import *
-from lmfdb.utils import to_dict
-from sage.rings.arith import euler_phi
 
 # from dirichlet_conrey import *
 
 
 def get_character_modulus(a, b, limit=7):
     from dirichlet_conrey import DirichletGroup_conrey
-    # from DirichletCharacter import kronecker_symbol as k
     headers = range(1, limit)
     headers.append("more")
     entries = {}
@@ -57,7 +53,6 @@ def get_character_modulus(a, b, limit=7):
 
 def get_character_conductor(a, b):
     from dirichlet_conrey import DirichletGroup_conrey
-    # from main import kronecker_symbol as k
 
     def line(N):
         l = []
@@ -83,7 +78,6 @@ def get_character_conductor(a, b):
 
 def get_character_order(a, b):
     from dirichlet_conrey import DirichletGroup_conrey
-    #from main import kronecker_symbol as k
 
 
     def line(N):

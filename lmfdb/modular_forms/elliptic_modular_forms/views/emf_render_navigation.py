@@ -7,11 +7,12 @@ Routines for rendering the navigation.
 import json
 from flask import url_for,render_template,request,redirect
 from lmfdb.utils import to_dict
+from lmfdb.search_parsing import parse_range
 from lmfdb.base import getDBConnection
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP,emf_version
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple,parse_range
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple
 
 def _browse_web_modform_spaces_in_ranges(**kwds):
     r"""
@@ -32,9 +33,9 @@ def _browse_web_modform_spaces_in_ranges(**kwds):
     emf_logger.debug("args={0}".format(args))
     for field in ['level', 'weight', 'character']:
         if args.get(field):
-            info[field] = parse_range(args[field])
+            info[field] = parse_range(args[field],use_dollar_vars=True)
         else:
-            info[field] = parse_range(default[field])
+            info[field] = parse_range(default[field],use_dollar_vars=True)
     if info['weight'] == 1:
         return render_template("not_available.html")
     elif (type(info['weight']) == dict) and info['weight'].get('min') == 1:

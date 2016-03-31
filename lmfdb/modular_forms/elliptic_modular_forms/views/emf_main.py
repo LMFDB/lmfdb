@@ -26,7 +26,10 @@ from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.utils import to_dict
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import render_fd_plot,extract_data_from_jump_to
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
+    render_fd_plot,
+    extract_data_from_jump_to,
+    newform_label)
 from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
 from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
@@ -135,7 +138,7 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
         return render_elliptic_modular_form_navigation_wp()
     except KeyError as e:
         emf_logger.debug("catching exceptions. info={0} e={1}".format(info,e))
-        errst = "The orbit {0}.{1}.{2}{3} is not in the database!".format(level,weight,character,label)
+        errst = "The orbit {0} is not in the database!".format(newform_label(level,weight,character,label))
         flash(errst)
         return render_elliptic_modular_form_navigation_wp()
 

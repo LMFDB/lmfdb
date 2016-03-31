@@ -30,8 +30,12 @@ class HomePageTest(LmfdbTest):
         assert '2.13.26.1.2' in L #label (class number 1)
 
     def test_lattice_search(self):
-        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=&minimum=&class_number=&aut=2").data
-        assert '145' in L #search 
+        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=&minimum=&class_number=1&aut=&count=50").data
+        assert '60' in L #search
+
+    def test_lattice_search_next(self):
+        L = self.tc.get("/Lattice/?start=50&dim=&det=&level=&gram=&minimum=&class_number=&aut=2&count=50").data
+        assert '145' in L #search on the next page
 
     def test_lattice_searchdim(self):
         L = self.tc.get("/Lattice/?dim=3").data
@@ -48,6 +52,10 @@ class HomePageTest(LmfdbTest):
     def test_lattice_searchGM(self):
         L = self.tc.get("/Lattice/?dim=&det=&level=&gram=[17%2C6%2C138]&minimum=&class_number=&aut=").data
         assert '4620' in L #gram matrix search
+
+    def test_lattice_searchGM_2(self):
+        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=5%2C3%2C2&minimum=&class_number=&aut=").data
+        assert '2.1.2.1.1' in L #gram matrix search through isometries
 
     def test_latticeZ2(self):
         L = self.tc.get("/Lattice/?label=Z2").data

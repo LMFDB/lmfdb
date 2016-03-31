@@ -6,20 +6,17 @@
 {{ KNOWL_INC('dq.ecnf.extent') }}
 </div>
 
-<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over {{
-KNOWL('nf',title = "number fields")}}</h2>
+<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} defined over:
+{# {{KNOWL('nf',title = "number fields")}} #}
+</h2>
 
 <p>
 <ul>
 {% for types in data.fields %}
 <li>
-over {{types[0]}}:
+{{types[0]}}:
 {% for label,f in types[1] %}
-{% if types[0]!='imaginary quadratic fields' %}
-{% if loop.index0 %},...,{% endif %}
-{% else %}
 {% if loop.index0 %},{% endif %}
-{% endif %}
  <a href="{{f[0]}}">{{f[1]}}</a>
 {% endfor %}
 </li>
