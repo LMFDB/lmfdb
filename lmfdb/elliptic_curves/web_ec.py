@@ -335,9 +335,8 @@ class WebEC(object):
             ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
-            ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label))]
-        if not self.cm:
-            self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
+            ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label)),
+            ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
             ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso))]
         if newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
