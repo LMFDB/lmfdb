@@ -1,0 +1,149 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<h2> Further refine search </h2>
+
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<table border="0">
+
+<tr>
+<td align=left>{{ KNOWL('character.dirichlet.modulus', title='Modulus') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.order', title='Order') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive only') }}</td>
+</tr>
+
+<tr>
+<td align=left><input type='text' name='modulus' size=5 value="{{info.modulus}}"></td>
+<td align=left><input type='text' name='conductor'size=5 value="{{info.conductor}}"></td>
+<td align=left><input type='text' name='order'size=3 value="{{info.order}}"></td>
+<td align=left>
+<select name='parity'>
+    {% for x in ('All', 'Odd', 'Even') %}
+    <option {{ 'selected ' if info.parity == 'x' }} value="{{x}}">{{x}}</option>
+    {% endfor %}
+</select>
+</td>
+<td align=left>
+<select name='primitive'>
+    {% for x in ('All', 'Yes', 'No') %}
+    <option {{ 'selected ' if info.primitive == 'x' }} value="{{x}}">{{x}}</option>
+    {% endfor %}
+</select>
+</td>
+</tr>
+
+<tr> <td colspan=2>
+<button type='submit' value='refine'>Refine or change search</button>
+</td> </tr>
+</table>
+</form>
+
+{% if info.err is defined %}
+
+<h2>Error</h2>
+<div>
+  {{ info.err|safe }}
+  <p>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+
+{% else %}
+
+<style type="text/css">
+table td.center {
+  text-align: center;
+}
+table td.params {
+  text-align: left;
+  font-family: monospace;
+}
+
+</style>
+
+{% if info.number > 0 %}
+
+<h2> Results ({{info.report}})
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+</h2>
+<table>
+<tr>
+  <th class="center">{{ KNOWL('character.dirichlet.conrey', title='Conrey label')}}</th>
+  <th class="center">{{ KNOWL('character.dirichlet.modulus', title='Modulus')}}</th>
+  <th class="center">{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</th>
+  <th align="center">{{ KNOWL('character.dirichlet.order', title='Order') }}</th>
+  <th align="center">{{ KNOWL('character.dirichlet.parity', title='Parity') }}</th>
+  <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
+</tr>
+{#
+{% for chi in info.chars: %}
+<tr>
+<td class="center"><a href="{{mod/num}}">{{}}</a></td>
+<td class="center">{{chi.modulus}}</td>
+<td class="center">{{chi.conductor}}</td>
+<td class="center">{{chi.order}}</td>
+<td class="center">{{chi.order}}</td>
+<td class="center">{{chi.primitive}}</td>
+</tr>
+{% endfor %}
+#}
+{% for (mod,num,cond,order,par,prim,name) in info.chars: %}
+<tr>
+<td class="center"><a href="{{mod}}/{{num}}">{{name}}</a></td>
+<td class="center">{{mod}}</td>
+<td class="center">{{cond}}</td>
+<td class="center">{{order}}</td>
+<td class="center">{{par}}</td>
+<td class="center">{{prim}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+
+{#
+<form>
+Download all search results for
+<input type="submit" name="Submit" value="gp">
+<input type="submit" name="Submit" value="sage">
+<input type="submit" name="Submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="conductor" value="{{info.conductor}}"/>
+<input type="hidden" name="modulus" value="{{info.modulus}}"/>
+<select name="optimal" style="visibility:hidden;">
+{% if info.optimal=='on' %}
+  <option value="">No</option>
+  <option selected="yes" value="on">Yes</option>
+{% else %}
+  <option value="">No</option>
+  <option value="on">Yes</option>
+{% endif %}
+</select>
+</form>
+#}
+
+{% else %}
+<h2> No matches</h2>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}
