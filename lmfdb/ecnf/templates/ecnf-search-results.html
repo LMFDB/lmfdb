@@ -2,6 +2,12 @@
 
 {% block content %}
 
+{% if info.stats %}
+<p>
+{{info.stats|safe}}
+</p>
+{% endif %}
+
 <h2> Refine search </h2>
 
 <form id='re-search'>
