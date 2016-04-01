@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import StringIO
+import ast
 import re
+import time
 import pymongo
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
-from flask import Flask, flash, session, g, render_template, url_for, request, redirect, make_response
+from flask import Flask, flash, session, g, render_template, url_for, request, redirect, make_response, send_file
 from markupsafe import Markup
 import tempfile
 import os
@@ -125,7 +128,7 @@ def index_Q():
     credit =  credit_string
     title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
-    return render_template("browse_search_g2.html", info=info, credit=credit, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
+    return render_template("browse_search_g2.html", info=info, credit=credit, title=title, learnmore=learnmore_list(), bread=bread)
 
 @g2c_page.route("/Q/<int:conductor>/")
 def by_conductor(conductor):
@@ -202,7 +205,10 @@ def render_isogeny_class(iso_class):
 
 def genus2_curve_search(**args):
     info = to_dict(args)
-    print "info", info
+    
+    if 'download' in info and info['download'] == '1':
+        return download_search(info)
+    
     info["st_group_list"] = st_group_list
     info["st_group_dict"] = st_group_dict
     info["real_geom_end_alg_list"] = real_geom_end_alg_list
@@ -224,7 +230,6 @@ def genus2_curve_search(**args):
             data = render_curve_webpage_by_label(info["jump"].strip())
         else:
             data = "Invalid label"
-        print data
         if data == "Invalid label":
             flash(Markup("The label <span style='color:black'>%s</span> is invalid."%(info["jump"])),"error")
             return redirect(url_for(".index"))
@@ -240,8 +245,7 @@ def genus2_curve_search(**args):
         for fld in ('st_group', 'real_geom_end_alg'):
             if info.get(fld): query[fld] = info[fld]
         for fld in ('aut_grp', 'geom_aut_grp'):
-            #Encoded into a GAP ID.
-            parse_bracketed_posints(info,query,fld,exactlength=2)
+            parse_bracketed_posints(info,query,fld,exactlength=2) #Encoded into a GAP ID.
         # igusa and igusa_clebsch invariants not currently searchable
         parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
         parse_ints(info,query,'cond','conductor')
@@ -254,8 +258,6 @@ def genus2_curve_search(**args):
         return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
 
     info["query"] = dict(query)
-    print "query", info["query"]
-    print "info", info
     count = parse_count(info, 50)
     start = parse_start(info)
     cursor = db_g2c().curves.find(query)
@@ -265,17 +267,14 @@ def genus2_curve_search(**args):
     if(start < 0):
         start = 0
 
-    res = cursor.sort([("cond", pymongo.ASCENDING),
-                       ("class", pymongo.ASCENDING),
-                       ("disc_key", pymongo.ASCENDING),
-                       ("label", pymongo.ASCENDING)]).skip(start).limit(count)
+    res = cursor.sort([("cond", pymongo.ASCENDING), ("class", pymongo.ASCENDING),  ("disc_key", pymongo.ASCENDING),  ("label", pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
+
     if nres == 1:
         info["report"] = "unique match"
     else:
         if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1,
-                    min(nres, start + count), nres)
+            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
     res_clean = []
@@ -297,19 +296,65 @@ def genus2_curve_search(**args):
         res_clean.append(v_clean)
 
     info["curves"] = res_clean
-
     info["curve_url"] = lambda dbc: url_for_label(dbc['label'])
     info["isog_url"] = lambda dbc: isog_url_for_label(dbc['label'])
     info["start"] = start
     info["count"] = count
     info["more"] = int(start+count<nres)
+    
     credit = credit_string
     title = 'Genus 2 Curves search results'
-    return render_template("search_results_g2.html", info=info, credit=credit,learnmore=learnmore_list(),
-            bread=bread, title=title)
-    credit =  credit_string
-    title = 'Genus 2 curves over $\Q$'
-    bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
+    return render_template("search_results_g2.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
+
+def download_search(info):
+    dltype = info["submit"]
+    delim = 'bracket'
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    filename = 'genus2_curves.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'genus2_curves.sage'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'genus2_curves.m'
+    s = com1 + "\n"
+    # reissue saved query here
+    res = db_g2c().curves.find(ast.literal_eval(info["query"]))
+    s += com + ' Genus 2 curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, res.count())
+    s += com + ' Below is a list called data. Each entry has the form:\n'
+    s += com + '   [Weierstrass Coefficients]\n'
+    s += '\n' + com2
+    s += '\n'
+    if dltype == 'magma':
+        s += 'data := ['
+    else:
+        s += 'data = ['
+    s += '\\\n'
+    # loop through all search results and grab the curve equations
+    for r in res:
+        entry = str(r['min_eqn'])
+        entry = entry.replace('u','')
+        entry = entry.replace('\'','')
+        s += entry + ',\\\n'
+    s = s[:-3]
+    s += ']\n'
+    if delim == 'brace':
+        s = s.replace('[', '{')
+        s = s.replace(']', '}')
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True)
 
 
 @g2c_page.route("/Completeness")

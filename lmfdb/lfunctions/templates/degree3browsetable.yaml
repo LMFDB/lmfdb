@@ -39,7 +39,7 @@ analytic_conductor: 0.010101010101
 epsilon: 1
 url: L/SymmetricPower/2/EllipticCurve/Q/11.a/
 object_url:
-object_name: $\Sym^2$ of rank 0 elliptic curve <a href="/EllipticCurve/Q/11/a/2">11.a2</a>
+object_name: $\Sym^2$ of an <a href="/EllipticCurve/Q/11/a/2">elliptic curve</a>
 self_dual: true
 arithmetic: true
 ---
@@ -96,7 +96,7 @@ analytic_conductor:
 epsilon: 1
 url: L/SymmetricPower/2/EllipticCurve/Q/37.a/
 object_url:
-object_name: $\Sym^2$ of rank 1 elliptic curve <a href="/EllipticCurve/Q/37.a1">37.a1</a>
+object_name: $\Sym^2$ of an <a href="/EllipticCurve/Q/37.a1">elliptic curve</a>
 self_dual: true
 arithmetic: true
 ---
@@ -111,7 +111,7 @@ analytic_conductor:
 epsilon: 1
 url: L/SymmetricPower/2/EllipticCurve/Q/389.a/
 object_url:
-object_name: $\Sym^2$ of rank 2 elliptic curve <a href="/EllipticCurve/Q/389.a1">389.a1</a>
+object_name: $\Sym^2$ of an <a href="/EllipticCurve/Q/389.a1">elliptic curve</a>
 self_dual: true
 arithmetic: true
 ---

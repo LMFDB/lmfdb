@@ -9,7 +9,7 @@ analytic_conductor: 3.010101010101
 epsilon: -1
 url: L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032
 object_url: ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032
-object_name: odd Maass
+object_name: odd Maass form
 self_dual: true
 arithmetic: false
 ---
@@ -23,7 +23,7 @@ analytic_conductor: 3.010101010101
 epsilon: 1
 url: L/ModularForm/GL2/Q/Maass/4f55570e88aece241f00000c
 object_url: ModularForm/GL2/Q/Maass/4f55570e88aece241f00000c
-object_name: odd Maass
+object_name: odd Maass form
 self_dual: true
 arithmetic: false
 ---
@@ -37,7 +37,7 @@ analytic_conductor: 3.010101010101
 epsilon: 1
 url: L/ModularForm/GL2/Q/Maass/4f55571b88aece241f000013
 object_url: ModularForm/GL2/Q/Maass/4f55571b88aece241f000013
-object_name: even Maass
+object_name: even Maass form
 self_dual: true
 arithmetic: false
 ---
@@ -103,7 +103,7 @@ analytic_conductor: 3.010101010101
 epsilon: -1
 url: L/ModularForm/GL2/Q/Maass/4f4bf1c388aece438d000002/
 object_url: ModularForm/GL2/Q/Maass/4f4bf1c388aece438d000002
-object_name: even Maass
+object_name: even Maass form
 self_dual: true
 arithmetic: false
 ---
@@ -143,7 +143,7 @@ analytic_conductor: 3.310101010101
 epsilon: -1
 url: L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000033
 object_url: ModularForm/GL2/Q/Maass/4cb8503a58bca91458000033
-object_name: odd Maass
+object_name: odd Maass form
 self_dual: true
 arithmetic: false
 ---
@@ -183,7 +183,7 @@ analytic_conductor: 4.310101010101
 epsilon: e(0.602956179)
 url:
 object_url:
-object_name: Maass
+object_name: Maass form
 self_dual: false
 arithmetic: false
 ---
@@ -197,7 +197,7 @@ analytic_conductor: 2.010101010101
 epsilon: 1
 url: L/ArtinRepresentation/2.2e2_37.3t2.1c1
 object_url: [ArtinRepresentation/2.2e2_37.3t2.1c1,,]
-object_name: [Artin&nbsp;representation,Hecke character,even Maass]
+object_name: [Artin&nbsp;representation,Hecke character,even&nbsp;Maass&nbsp;form]
 self_dual: true
 arithmetic: true
 ---
@@ -211,7 +211,7 @@ analytic_conductor: 2.010101010101
 epsilon: 1
 url: L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000000
 object_url: ModularForm/GL2/Q/Maass/4cb8503a58bca91458000000
-object_name: even Maass
+object_name: even Maass form
 self_dual: true
 arithmetic: false
 ---
@@ -337,7 +337,7 @@ analytic_conductor: 4.310101010101
 epsilon: 1
 url: L/ModularForm/GL2/Q/Maass/4f77894788aece4a3f000007
 object_url: ModularForm/GL2/Q/Maass/4f77894788aece4a3f000007
-object_name: odd Maass
+object_name: odd Maass form
 self_dual: true
 arithmetic: false
 

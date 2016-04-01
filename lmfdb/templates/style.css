@@ -1774,9 +1774,9 @@ p.rotation  {
 #sidebar h2:first-child a:first-child,
 #sidebar h2:first-child {
   margin: 0;
-  border-top-right-radius: 0px;
-  -moz-border-radius-topright: 0px;
+  padding-top: 3px;
 }
+
 #sidebar ul:last-child li:last-child,
 #sidebar ul:last-child li:last-child a {
   border-bottom-right-radius: 0px;

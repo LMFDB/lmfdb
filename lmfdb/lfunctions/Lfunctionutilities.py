@@ -94,12 +94,23 @@ def styleTheSign(sign):
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
     truncation = float(10 ** truncationexp)
-    if type(coeff) == complex:
-        rp = coeff.real
-        ip = coeff.imag
-    else:
-        rp = real_part(coeff)
-        ip = imag_part(coeff)
+    try:
+        if type(coeff) == complex:
+            rp = coeff.real
+            ip = coeff.imag
+        else:
+            rp = real_part(coeff)
+            ip = imag_part(coeff)
+    except TypeError:     # mostly a hack for Dirichlet L-functions
+        if seriescoefftype == "serieshtml":
+            if coeff == "I":
+                return " + " + "$i$" + "&middot;" + seriesvar(index, seriestype) 
+            elif coeff == "-I":
+                return "&minus;" + " $i$" + "&middot;" + seriesvar(index, seriestype)
+            else:
+                return " +" + coeff + "&middot;" + seriesvar(index, seriestype)
+        else:
+            return coeff
 # below we use float(abs()) instead of abs() to avoid a sage bug
     if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):  # has a real and an imaginary part
         ans = ""
@@ -749,14 +760,17 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['special_values']):
+        for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
                 val = x[1]
                 break
     if val is None:
-        val = L.sageLfunction.value(s)
+        if L.fromDB:
+            val = "not computed"
+        else:
+            val = L.sageLfunction.value(s)
     if normalization == "arithmetic":
         lfunction_value_tex = L.texname_arithmetic.replace('s)',  sLatex + ')')
     else:
@@ -785,27 +799,34 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['special_values']):
+        if L.lfunc_data['values']:
+          for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
                 val = x[1]
                 break
     if val is None:
-        val = L.sageLfunction.value(s)
+        if L.fromDB:
+            val = "not computed"
+        else:
+            val = L.sageLfunction.value(s)
     # We must test for NaN first, since it would show as zero otherwise
     # Try "RR(NaN) < float(1e-10)" in sage -- GT
 
     lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
     lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
 
-    if CC(val).real().is_NaN():
-        Lval = "\\infty"
-    elif val.abs() < 1e-10:
-        Lval = "0"
-    else:
-        Lval = latex(round(val.real(), number_of_decimals)
+    try:
+        if CC(val).real().is_NaN():
+            Lval = "\\infty"
+        elif val.abs() < 1e-10:
+            Lval = "0"
+        else:
+            Lval = latex(round(val.real(), number_of_decimals)
                          + round(val.imag(), number_of_decimals) * I)
+    except (TypeError, NameError):
+        Lval = val    # if val is text
 
     return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
 
@@ -952,4 +973,5 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
     if abs(abs(sign) - 1) > tol:
         logger.critical("Not enough coefficients to compute the sign of the L-function.")
         sign = "Not able to compute."
+        sign = 1000
     return sign
