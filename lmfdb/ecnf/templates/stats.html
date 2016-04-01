@@ -5,17 +5,22 @@
 {{ KNOWL_INC('dq.ecnf.extent') }}
 </div>
 
-<h2>Fields, number of curves and maximum conductor norm</h2>
-{% for d in info.stats.ncurves %}
-<h3> Degree {{d}} </h3>
-<table>
-<tr><th> Field <th> Number of curves <th> Number of isogeny classes <th> Maximum conductor norm </tr>
-{% for F in info.counts.fields_by_degree[d] %}
-<tr><td> {{F}} <td> {{info.stats.ncurves[d][F]}} <td> {{info.stats.nclasses[d][F]}} <td> {{info.stats.maxnorm[d][F]}} </tr>
+<ul>
+{% for d, ddat in info.stats.iteritems() %}
+<li>
+<a href={{url_for('ecnf.statistics_by_degree', d=d)}}>Degree {{d}}</a>
+<ul>
+{% for s, sdat in ddat.iteritems() %}
+{% if sdat %}
+<li>
+<a href={{url_for('ecnf.statistics_by_signature', d=d, r=s)}}>Signature {{s}}</a>
+</li>
+{% endif %}
 {% endfor %}
-</table>
-
+</ul>
+</li>
 {% endfor %}
+</ul>
 
 {% endblock %}
 </html>

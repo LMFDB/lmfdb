@@ -14,7 +14,7 @@ from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_htm
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
-from lmfdb.ecnf.ecnf_stats import get_stats
+from lmfdb.ecnf.ecnf_stats import get_stats, get_signature_stats, ecnf_field_summary, ecnf_degree_summary, ecnf_signature_summary
 from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import field_pretty
@@ -230,7 +230,6 @@ def show_ecnf1(nf):
     if(start < 0):
         start = 0
 
-    
     res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
     bread = [('Elliptic Curves', url_for(".index")),
@@ -249,6 +248,8 @@ def show_ecnf1(nf):
     info['more'] = int(start + count < nres)
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
+    if nf_label:
+        info['stats'] = ecnf_field_summary(nf_label)
     if nres == 1:
         info['report'] = 'unique match'
     else:
@@ -433,17 +434,76 @@ def search():
     else:
         return redirect(404)
 
-@ecnf_page.route("/stats")
+@ecnf_page.route("/stats/")
 def statistics():
     info = {
         'counts': get_stats().counts(),
         'stats': get_stats().stats(),
     }
     credit = 'John Cremona'
-    t = 'Elliptic curves over number fields: statistics'
+    t = 'Elliptic curves over number fields: overview'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('statistics', ' ')]
     return render_template("stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
+@ecnf_page.route("/stats/<int:d>/")
+def statistics_by_degree(d):
+    stats = get_stats()
+    info = {
+        'counts': stats.counts(),
+        'stats': stats.stats(),
+        'dstats': stats.dstats()[d],
+        'degree': d
+    }
+    if not d in info['counts']['degrees']:
+        if d==1:
+            return redirect(url_for("ec.statistics"))
+        if d<0:
+            info['error'] = "Negative degree!"
+        else:
+            info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
+    info['degree_stats'] = ecnf_degree_summary(d)
+    sigs = ["(%s,%s)" % (r,(d-r)/2) for r in range(d%2,d+1,2)]
+    info['sig_stats'] = dict([(s,get_signature_stats(s)) for s in sigs])
+    credit = 'John Cremona'
+    t = 'Elliptic curves over number fields of degree %s' % d
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('statistics', url_for("ecnf.statistics")),
+              ('degree %s' % d,' ')]
+    return render_template("by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
+@ecnf_page.route("/stats/<int:d>/<r>/")
+def statistics_by_signature(d,r):
+    info = {
+        'counts': get_stats().counts(),
+        'stats': get_stats().stats(),
+        'degree': d,
+    }
+    if isinstance(r,basestring):
+        info['sig_code'] = r
+        info['r'] = r = int(r[1:-1].split(",")[0])
+    else:
+        info['r'] = r
+        info['sig_code'] = '%s.%s' % (d,r),
+    info['sig'] = '(%s,%s)' % (r,(d-r)/2)
+    info['sig_stats'] = ecnf_signature_summary(info['sig'])
+
+    if not d in info['counts']['degrees']:
+        if d==1:
+            return redirect(url_for("ec.statistics"))
+        if d<0:
+            info['error'] = "Negative degree!"
+        else:
+            info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
+    if not r in range(d%2,d+1,2):
+        info['error'] = "Invalid signature %s" % info['sig']
+    credit = 'John Cremona'
+    t = 'Elliptic curves over number fields of degree %s, signature %s' % (d,info['sig'])
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('statistics', url_for("ecnf.statistics")),
+              ('degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
+              ('signature %s' % info['sig'],' ')]
+    return render_template("by_signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 
 def download_search(info):
