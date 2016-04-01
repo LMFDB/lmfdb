@@ -490,10 +490,18 @@ class WebNewForm(WebObject, CachedRepresentation):
                     #emf_logger.debug("c({0})={1}".format(pr,c))
                             #ev[pr]=c
                 self._coefficients[pr]=c
-            if hasattr(self._coefficients[pr],'vector'):
-                prod *= K(self._coefficients[pr].vector())
-            else:
+            try:
                 prod *= K(self._coefficients[pr])
+            except:
+                if hasattr(self._coefficients[pr],'vector'):
+                    if len(self._coefficients[pr],'vector') == len(K.power_basis()):
+                        prod *= K(self._coefficients[pr].vector())
+                    else:
+                        emf_logger.debug("vec={0}".format(self._coefficients[pr].vector()))
+                    raise ArithmeticError,"Wrong size of vectors!"
+                else:
+                    raise ArithmeticError,"Can not compute product of coefficients!"
+            
         return prod
 
     def max_cn(self):
