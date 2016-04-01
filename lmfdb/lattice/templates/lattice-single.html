@@ -26,7 +26,7 @@
     <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>${{info.minimum }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vector')}} list:</td>
+    <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
 <table><tr>
 {% for n in info.shortest %}
@@ -63,7 +63,8 @@ ${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %
 
 <table>
 <tr><td align=right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
-<tr><td align=right>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
+<tr><td>&nbsp;</td></tr>
+<tr><td align=right valign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
 {% for n in info.genus_reps %}
 ${{n}}$
 {% endfor %}

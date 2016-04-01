@@ -266,14 +266,17 @@ def render_lattice_webpage(**args):
     if info['name'] != "" or info['comments'] !="":
         info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
     info['properties'] = [
-        ('Label', '$%s$' % info['label']),
-        ('Dimension', '$%s$' % info['dim']),
-        ('Gram matrix', '$%s$' % info['gram'])
+        ('Dimension', '%s' %info['dim']),
+        ('Determinant', '%s' %info['det']),
+        ('Level', '%s' %info['level']),
+        ('Class number', '%s' %info['class_number']),
+        ('Label', '%s' % info['label'])
         ]
     if info['name'] != "" :
-        info['properties'].append(('Name','%s' % info['name'] ))
-    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends, learnmore=learnmore_list())
+        info['properties']=[('Name','%s' % info['name'] )]+info['properties']
+#    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
+    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
+#friends=friends
 
 def vect_to_sym(v):
     n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
