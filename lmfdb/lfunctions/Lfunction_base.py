@@ -118,6 +118,10 @@ class Lfunction:
         return self.compute_lcalc_zeros(via_N = False, step_size = step_size, upper_bound = upper_bound, lower_bound = lower_bound)
     
     def compute_lcalc_zeros(self, via_N = True, **kwargs):
+
+        if not hasattr(self,"fromDB"):
+            self.fromDB = False
+
         if via_N == True:
             count = kwargs["count"]
             do_negative = kwargs["do_negative"]

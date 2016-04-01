@@ -411,6 +411,9 @@ def initLfunction(L, args, request):
     '''
     info = {'title': L.title}
 #    if 'title_arithmetic' in L:
+    if not hasattr(L, 'fromDB'):
+        L.fromDB = False
+
     try:
         info['title_arithmetic'] = L.title_arithmetic
         info['title_analytic'] = L.title_analytic
@@ -509,12 +512,12 @@ def initLfunction(L, args, request):
     info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
                         replace('/Lfunction/', '/L/Plot/').
                         replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
-    # an inelegant way to remove the plot in certain cases
-    try: 
-        if not L.fromDB and not L.plot:
-            info['plotlink'] = ""
-    except:
-        pass
+#    # an inelegant way to remove the plot in certain cases
+#    try: 
+#        if not L.fromDB and not L.plot:
+#            info['plotlink'] = ""
+#    except:
+#        pass
 
 
     info['bread'] = []
@@ -888,8 +891,9 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         else:
             F = p2sage(pythonL.lfunc_data['plot'])
     else:
-        if pythonL.fromDB:
-            return ""
+     # obsolete, because lfunc_data comes from DB?
+      #  if pythonL.fromDB:
+      #      return ""
         L = pythonL.sageLfunction
         # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
         # SL: Reason, it's not in the distribution of Sage
