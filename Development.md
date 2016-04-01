@@ -51,7 +51,7 @@ folders, e.g. /knowledge/templates/.
 [1] http://docs.python.org/tutorial/modules.html
 [2] http://flask.pocoo.org/docs/blueprints/
 
-Basic Orga / Editorial Board
+Basic Organization / Editorial Board
 ----------------------------
 
 Behind the Scenes:
@@ -97,7 +97,7 @@ Testing
   ```
   it produces beautiful coverage scores in `lmfdb/cover/index.html`
 
-Pro Tipp: Debugging
+Pro Tip: Debugging
 -------------------
 Just add
 ```
