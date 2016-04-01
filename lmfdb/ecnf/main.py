@@ -179,6 +179,8 @@ def index():
     nquintics = counts['nfields_by_degree'][5]
     data['fields'].append(['%s totally real quintic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
 
+    data['degrees'] = counts['degrees']
+
 # data['highlights'] holds data (URL and descriptive text) for a
 # sample of elliptic curves with interesting features:
 
@@ -209,6 +211,13 @@ def index():
                            data=data,
                            bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
+@ecnf_page.route("/random")
+def random_curve():
+    from sage.misc.prandom import randint
+    n = get_stats().counts()['ncurves']
+    n = randint(0,n-1)
+    E = db_ecnf().find()[n]
+    return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 301)
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
@@ -258,7 +267,7 @@ def show_ecnf1(nf):
         else:
             info['report'] = 'displaying all %s matches' % nres
     t = 'Elliptic Curves over %s' % field_pretty(nf_label)
-    return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
+    return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t, learnmore=learnmore_list())
 
 
 @ecnf_page.route("/<nf>/<conductor_label>/")
@@ -434,7 +443,7 @@ def search():
     else:
         return redirect(404)
 
-@ecnf_page.route("/stats/")
+@ecnf_page.route("/overview/")
 def statistics():
     info = {
         'counts': get_stats().counts(),
@@ -466,7 +475,19 @@ def statistics_by_degree(d):
     sigs = ["(%s,%s)" % (r,(d-r)/2) for r in range(d%2,d+1,2)]
     info['sig_stats'] = dict([(s,get_signature_stats(s)) for s in sigs])
     credit = 'John Cremona'
-    t = 'Elliptic curves over number fields of degree %s' % d
+    if d==2:
+        t = 'Elliptic curves over quadratic number fields'
+    elif d==3:
+        t = 'Elliptic curves over cubic number fields'
+    elif d==4:
+        t = 'Elliptic curves over quartic number fields'
+    elif d==5:
+        t = 'Elliptic curves over quintic number fields'
+    elif d==6:
+        t = 'Elliptic curves over sextic number fields'
+    else:
+        t = 'Elliptic curves over number fields of degree %s' % d
+
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('statistics', url_for("ecnf.statistics")),
               ('degree %s' % d,' ')]
@@ -498,7 +519,22 @@ def statistics_by_signature(d,r):
     if not r in range(d%2,d+1,2):
         info['error'] = "Invalid signature %s" % info['sig']
     credit = 'John Cremona'
-    t = 'Elliptic curves over number fields of degree %s, signature %s' % (d,info['sig'])
+    if info['sig'] == '(2,0)':
+        t = 'Elliptic curves over real quadratic number fields'
+    elif info['sig'] == '(0,1)':
+        t = 'Elliptic curves over imaginary quadratic number fields'
+    elif info['sig'] == '(3,0)':
+        t = 'Elliptic curves over totally real cubic number fields'
+    elif info['sig'] == '(1,1)':
+        t = 'Elliptic curves over mixed cubic number fields'
+    elif info['sig'] == '(4,0)':
+        t = 'Elliptic curves over totally real quartic number fields'
+    elif info['sig'] == '(5,0)':
+        t = 'Elliptic curves over totally real quintic number fields'
+    elif info['sig'] == '(6,0)':
+        t = 'Elliptic curves over totally real sextic number fields'
+    else:
+        t = 'Elliptic curves over number fields of degree %s, signature %s' % (d,info['sig'])
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('statistics', url_for("ecnf.statistics")),
               ('degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
