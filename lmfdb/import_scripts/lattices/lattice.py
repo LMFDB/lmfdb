@@ -17,7 +17,7 @@ from sage.all import os
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=37010)
-C['Lattices'].authenticate('editor', '282a29103a17fbad')
+C['Lattices'].authenticate('editor', password)
 lat = C.Lattices.lat
 
 saving = True 
