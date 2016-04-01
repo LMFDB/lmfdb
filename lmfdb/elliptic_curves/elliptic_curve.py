@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import time
-
+import ast
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
@@ -166,6 +166,10 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
 
 def elliptic_curve_search(**args):
     info = to_dict(args)
+
+    if 'download' in info and info['download'] != '0':
+        return download_search(info)
+
     query = {}
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
@@ -247,8 +251,8 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING)
-                       ]).skip(start).limit(count)
+    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING),
+                       ('lmfdb_number', ASCENDING)]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
     info['curve_url'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
@@ -258,11 +262,10 @@ def elliptic_curve_search(**args):
     info['count'] = count
     info['more'] = int(start + count < nres)
 
-    if 'download' in info and info['download'] != '0':
-        return download_search(info)
+    
     if nres == 1:
         info['report'] = 'unique match'
-    elif nres == 2:
+    elif nres == 2: 
         info['report'] = 'displaying both matches'
     else:
         if nres > count or start != 0:
@@ -553,7 +556,7 @@ def download_search(info):
         delim = 'magma'
         filename = 'elliptic_curves.m'
     s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, info['curves'].count())
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [Weierstrass Coefficients]\n'
     s += '\n' + com2
@@ -563,8 +566,9 @@ def download_search(info):
     else:
         s += 'data = ['
     s += '\\\n'
-    #for f in info['curves']:
-    for f in info['curves']:
+    # reissue saved query here
+    res = db_ec().find(ast.literal_eval(info["query"]))
+    for f in res:
         entry = str(f['ainvs'])
         entry = entry.replace('u','')
         entry = entry.replace('\'','')
