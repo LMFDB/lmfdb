@@ -10,21 +10,21 @@
 <table>
 <td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
 <td>{{ KNOWL('g2c.abs_discriminant', title='discriminant')}}</td>
-<td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrasss pts') }}</td>
-<td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>
+<td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrasss') }}</td>
+<td>{{ KNOWL('g2c.torsion', title='torsion')}}</td>
 <td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
 <td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
 <td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
 </tr>
 
 <tr>
-<td><input type='text' name='cond' placeholder='169' size=10 value="{{info.cond}}"></td>
-<td><input type='text' name='abs_disc' placeholder='169' size=10 value="{{info.abs_disc}}"></td>
-<td><input type='text' name='num_rat_wpts' placeholder='1' size=10 value="{{info.num_rat_wpts}}">
-<td><input type='text' name='torsion' placeholder='[2,2,2]' size=10 value="{{info.torsion}}">
-<td><input type='text' name='torsion_order' placeholder='2' size=10 value="{{info.torsion_order}}">
-<td><input type='text' name='two_selmer_rank' placeholder='1' size=10 value="{{info.two_selmer_rank}}">
-<td><input type='text' name='analytic_rank' placeholder='1' size=10 value="{{info.analytic_rank}}">
+<td><input type='text' name='cond' placeholder='169' style="width: 98px" value="{{info.cond}}"></td>
+<td><input type='text' name='abs_disc' placeholder='169' style="width: 98px" value="{{info.abs_disc}}"></td>
+<td><input type='text' name='num_rat_wpts' placeholder='1'  style="width: 98px" value="{{info.num_rat_wpts}}">
+<td><input type='text' name='torsion' placeholder='[2,2,2]'  style="width: 98px" value="{{info.torsion}}">
+<td><input type='text' name='torsion_order' placeholder='2'  style="width: 98px" value="{{info.torsion_order}}">
+<td><input type='text' name='two_selmer_rank' placeholder='1'  style="width: 98px" value="{{info.two_selmer_rank}}">
+<td><input type='text' name='analytic_rank' placeholder='1'  style="width: 98px" value="{{info.analytic_rank}}">
 </tr>
 
 <tr>
@@ -38,7 +38,7 @@
 </tr>
 
 <tr>
-<td><select name='is_gl2_type' width="122" style="width: 122px">
+<td><select name='is_gl2_type' style="width: 108px">
   <option ></option>
 {% if info.is_gl2_type=='True' %}
   <option value="True" selected>True</option>
@@ -52,7 +52,7 @@
 {% endif %}
 </select></td>
 
-<td><select name='st_group' width="122" style="width: 122px" >
+<td><select name='st_group' style="width: 108px" >
     <option ></option>
     {% for G in info.st_group_list %}
         {% if  G == info.st_group %}
@@ -63,7 +63,7 @@
     {% endfor %}
 </select></td>
 
-<td><select name='real_geom_end_alg' width="122" style="width: 122px">
+<td><select name='real_geom_end_alg' style="width: 108px">
     <option ></option>
     {% for G in info.real_geom_end_alg_list %}
         {% if G == info.real_geom_end_alg %}
@@ -74,7 +74,7 @@
     {% endfor %}
 </select></td>
 
-<td><select name='aut_grp' width="122" style="width: 122px">
+<td><select name='aut_grp' style="width: 108px">
     <option ></option>
     {% for G in info.aut_grp_list %}
         {% if G == info.aut_grp %}
@@ -85,7 +85,7 @@
     {% endfor %}
 </select></td>
 
-<td><select name='geom_aut_grp' width="122" style="width: 122px">
+<td><select name='geom_aut_grp' style="width: 108px">
     <option ></option>
     {% for G in info.geom_aut_grp_list %}
         {% if G == info.geom_aut_grp %}
@@ -96,7 +96,7 @@
     {% endfor %}
 </select></td>
 
-<td><select name='locally_solvable' width="122" style="width: 122px">
+<td><select name='locally_solvable' style="width: 108px">
   <option ></option>
 {% if info.locally_solvable=='True' %}
   <option value="True" selected>True</option>
@@ -110,7 +110,7 @@
 {% endif %}
 </select></td>
 
-<td><select name='has_square_sha' width="122" style="width: 122px">
+<td><select name='has_square_sha' style="width: 108px">
   <option ></option>
 {% if info.has_square_sha=='True' %}
   <option value="True" selected>True</option>
@@ -128,7 +128,7 @@
 <td>&nbsp;</td>
 </tr>
 <tr>
-<td><button type='submit' value='refine'  width="122" style="width: 122px">Search again</button></td>
+<td><button type='submit' value='refine'  style="width: 108px">Search again</button></td>
 </tr>
 
 </table>
