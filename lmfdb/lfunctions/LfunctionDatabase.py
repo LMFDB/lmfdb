@@ -52,12 +52,10 @@ def getGenus2Ldata(label,label_type="url"):
     db = connection.Lfunctions
     try:
     #    Ldata = g2.Lfunctions.find_one({'hash': hash})
-        print "looking for label",label, "of type", label_type
    #     Lpointer = db.instances.find_one({'url': label})
         if label_type == "url":
             Lpointer = db.instances.find_one({'url': label})
             Lhash = Lpointer['Lhash']
-            print "Lhash",Lhash
             Ldata = db.Lfunctions.find_one({'Lhash': Lhash})
         elif label_type == "Lhash":
             Ldata = db.Lfunctions.find_one({'Lhash': label})
@@ -84,7 +82,6 @@ def getGenus2Ldata(label,label_type="url"):
         if label.startswith('Character'):  # because those temporarily are missing the plot
             Ldata['plot'] = ""
         else:
-            print "label",label
             pos_plot = [
                       [j * Ldata['plot_delta'], Ldata['plot_values'][j]]
                               for j in range(len(Ldata['plot_values']))]
@@ -99,9 +96,6 @@ def getGenus2Ldata(label,label_type="url"):
         Ldata['zeros'] = neg_zeros[:]
         Ldata['zeros'] += [0 for _ in range(Ldata['order_of_vanishing'])]
         Ldata['zeros'] += [str(pos_zero) for pos_zero in Ldata['positive_zeros']]
-
-
-
 
     except ValueError:
         Ldata = None

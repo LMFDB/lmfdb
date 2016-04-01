@@ -1654,9 +1654,6 @@ class Lfunction_genus2_Q(Lfunction):
         db_label = "Genus2Curve/Q/" + label_slash
     #    self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
-        print 'self.lfunc_data'
-        for xx in self.lfunc_data:
-            print xx
         # need to change this so it shows the nonvanishing derivative
         if self.lfunc_data['order_of_vanishing']:
             central_value = [0.5 + 0.5*self.lfunc_data['motivic_weight'], 0]

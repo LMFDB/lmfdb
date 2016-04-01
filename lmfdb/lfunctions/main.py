@@ -732,7 +732,8 @@ def initLfunction(L, args, request):
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
  #   if L.Ltype() == "genus2curveQ":
-    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
+ #   if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
+    if L.fromDB:
         info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
         info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
         info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")
