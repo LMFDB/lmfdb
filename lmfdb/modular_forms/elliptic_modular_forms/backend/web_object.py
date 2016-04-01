@@ -856,13 +856,23 @@ class WebNumberField(WebDict):
             setattr(self._value, "lmfdb_url",url)
             setattr(self._value, "lmfdb_pretty", field_pretty(self._db_value))
         else:
-            setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
+            if hasattr(self._value,'absolute_polynomial'):
+                setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
+            elif self._value.absolute_degree()==1:
+                setattr(self._value, "lmfdb_pretty", "1.1.1.1")
+            else:
+                emf_logger.critical("could not set lmfdb_pretty for the label")
 
     def set_extended_properties(self):
         if self._has_been_set:
-            setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
-            setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
-
+            if hasattr(self._value,'absolute_polynomial'):
+                setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
+            else:
+                setattr(self._value, "absolute_polynomial_latex",'')
+            if hasattr(self._value,'relative_polynomial'):
+                setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
+            else:
+                setattr(self._value, "relative_polynomial_latex",'')
 
 def web_latex_poly(pol, name='x', keepzeta=False):
     """
