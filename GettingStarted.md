@@ -15,7 +15,7 @@ Installation
 
 * Make sure you have sage (>=7.0) installed and that
   `sage` is available from the commandline.  In particular see
-  [Sage installation](http://doc.sagemath.org/html/en/installation/source.html)
+  [Sage installation](http://doc.sagemath.org/html/en/installation/source.html).
 
 * Install dependencies.  This requires you to have write access to the
   Sage installation directory, so should be no problem on a personal
