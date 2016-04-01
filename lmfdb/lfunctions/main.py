@@ -446,7 +446,8 @@ def initLfunction(L, args, request):
         info['label'] += '.' + str(L.character) + '.' + str(L.label) 
         info['label'] += '.' + request.url.split("/")[-2]  # the embedding
 
-    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
+#    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
+    if L.fromDB:
         if L.motivic_weight % 2 == 0:
            arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
         else:
