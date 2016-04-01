@@ -1,6 +1,6 @@
 Setup
 =====
-To set up yout system for development see [Code development and sharing your work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
+To set up your system for development see [Code development and sharing your work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
 
 Conventions
 ===========
@@ -34,9 +34,9 @@ homepage.html.  Preferably, new css should be added to one of the already existi
  * style.css - contains the majority of the css, for exmaple, for the
    properties and sidebar variables.
  * color.css - contains all color definitions and templates.  Always use a
-   color defined in color.css, preferably one of the col_main_**'s.  If you
+   color defined in color.css, preferably one of the col_main's.  If you
    feel the need to use a color not defined here, please add it to this file.
-   This helps keep the colors organized into a particular theme.
+   This helps keep the colors organized into a particular themes.
 
 Code Organization / Blueprints
 ------------------------------
