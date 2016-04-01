@@ -140,10 +140,10 @@ Code development and sharing your work
 ======================================
 
  * Get a (free) [github](https://github.com/) account if you do not have one
-   already
+   already.
  * Login to github
  * Go to `https://github.com/LMFDB/lmfdb` and click on `Fork` in the upper
-   right corner
+   right corner.
  * On your machine, create a new directory and type
 
 ```
@@ -154,14 +154,14 @@ Code development and sharing your work
   using your own github user id.  Your github repository will be known
   to git as a remote called `origin`.
 
- * Add the (official) LMFDB repository as a remote called `upstream`
+ * Add the (official) LMFDB repository as a remote called `upstream`.
 
 ```
     git remote add upstream git@github.com:LMFDB/lmfdb.git
 ```
  * To run LMFDB, go through the rest of the instructions in
    [Installation](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#installation) and
-   [Running](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running)
+   [Running](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
 
  * You should make a new branch if you want to work on a new feature.
    The following command creates a new branch named `new_feature` and
