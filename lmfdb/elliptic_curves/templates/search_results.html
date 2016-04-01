@@ -153,7 +153,9 @@ Download all search results for
 <input type="submit" name="Submit" value="sage">
 <input type="submit" name="Submit" value="magma">
 <input type="hidden" name="download" value="1"/>
-<input type="hidden" name="conductor" value="{{info.conductor}}"/>
+<input type="hidden" name="query" value="{{info.query}}"/>
+<!-- should be able to use just info.query.-->
+<!--<input type="hidden" name="conductor" value="{{info.conductor}}"/>
 <input type="hidden" name="jinv" value="{{info.jinv}}"/>
 <input type="hidden" name="rank" value="{{info.rank}}"/>
 <input type="hidden" name="torsion" value="{{info.torsion}}"/>
@@ -177,8 +179,8 @@ Download all search results for
 {% else %}
   <option value='include'>include</option>
   <option value='exactly'>exactly</option>
-{% endif %}
-  </select>
+{% endif %} 
+  </select>-->
 </form>
 
 
