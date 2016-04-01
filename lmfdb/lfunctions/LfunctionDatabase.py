@@ -72,30 +72,43 @@ def getGenus2Ldata(label,label_type="url"):
         else:
             Ldata['values'] += [ central_value ]
 
+        pos_plot = [ 
+                  [j * Ldata['plot_delta'], Ldata['plot_values'][j]]
+                          for j in range(min(200, len(Ldata['plot_values'])))]
+
         if Ldata['self_dual']:
             neg_zeros = ["-" + str(pos_zero) for pos_zero in Ldata['positive_zeros']]
+            neg_plot = [ [-1*pt[0], Ldata['root_number'] * pt[1]] for pt in pos_plot ][1:]
+
         else:   # can't happen for genus 2 curves
             dual_L_label = Ldata['conjugate']
             dual_L_data = getGenus2Ldata(dual_L_label, label_type="Lhash")
             neg_zeros = ["-" + str(pos_zero) for pos_zero in dual_L_data['positive_zeros']]
 
-        if label.startswith('Character'):  # because those temporarily are missing the plot
-            Ldata['plot'] = ""
-        else:
-            pos_plot = [
-                      [j * Ldata['plot_delta'], Ldata['plot_values'][j]]
-                              for j in range(len(Ldata['plot_values']))]
-            if Ldata['self_dual']:
-                neg_plot = [ [-1*pt[0], Ldata['root_number'] * pt[1]] for pt in pos_plot ][1:]
-                neg_plot.reverse()
-            else:
-                pass  # need to add this case
-            Ldata['plot'] = neg_plot[:] + pos_plot[:]
+            neg_plot = [
+                  [-1 * j * dual_L_data['plot_delta'], dual_L_data['plot_values'][j]]
+                          for j in range(1,min(200,len(dual_L_data['plot_values'])))]
+#        if label.startswith('Character'):  # because those temporarily are missing the plot
+#            Ldata['plot'] = ""
+#        else:
+#        pos_plot = [
+#                  [j * Ldata['plot_delta'], Ldata['plot_values'][j]]
+#                          for j in range(len(Ldata['plot_values']))]
+#        if Ldata['self_dual']:
+#            neg_plot = [ [-1*pt[0], Ldata['root_number'] * pt[1]] for pt in pos_plot ][1:]
+#            neg_plot.reverse()
+#        else:
+#            pass  # need to add this case
+#        Ldata['plot'] = neg_plot[:] + pos_plot[:]
 
         neg_zeros.reverse()
         Ldata['zeros'] = neg_zeros[:]
         Ldata['zeros'] += [0 for _ in range(Ldata['order_of_vanishing'])]
         Ldata['zeros'] += [str(pos_zero) for pos_zero in Ldata['positive_zeros']]
+
+        neg_plot.reverse()
+        Ldata['plot'] = neg_plot[:] + pos_plot[:]
+        print "Ldata['plot']",Ldata['plot']
 
     except ValueError:
         Ldata = None
