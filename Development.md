@@ -1,3 +1,7 @@
+Setup
+=====
+To set up yout system for development see [Code development and sharing your work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
+
 Conventions
 ===========
 
@@ -23,6 +27,16 @@ The idea is to extend "homepage.html" and replace the content block:
    ... your stuff ...
 {% endblock %}
 
+CSS
+---
+The css should be kept in the .css files in lmfdb/templates/ and loaded into
+homepage.html.  Preferably, new css should be added to one of the already existing .css files.  There are two .css files:
+ * style.css - contains the majority of the css, for exmaple, for the
+   properties and sidebar variables.
+ * color.css - contains all color definitions and templates.  Always use a
+   color defined in color.css, preferably one of the col_main_**'s.  If you
+   feel the need to use a color not defined here, please add it to this file.
+   This helps keep the colors organized into a particular theme.
 
 Code Organization / Blueprints
 ------------------------------
