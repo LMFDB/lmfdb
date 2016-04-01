@@ -21,7 +21,7 @@ AUTHOR: Fredrik Strömberg
 """
 import random
 import sage.plot.plot
-from flask import jsonify
+from flask import jsonify,flash,Markup
 from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec,emf_version
 logger = emf_logger
@@ -135,20 +135,25 @@ def is_modformspace_in_db(space_label):
 
 def extract_limits_as_tuple(arg, field):
     fld = arg.get(field)
-    if isinstance(fld,basestring):
-        tmp = parse_range(fld, use_dollar_vars=False)
-        if isinstance(tmp,dict):
-            limits = (tmp['min'],tmp['max'])
+    try:
+        if isinstance(fld,basestring):
+            tmp = parse_range(fld, use_dollar_vars=False)
+            if isinstance(tmp,dict):
+                limits = (tmp['min'],tmp['max'])
+            else:
+                limits = (tmp,tmp)
+        elif isinstance(fld,(tuple,list)):
+            limits = (int(fld[0]),int(fld[1]))
+        elif isinstance(fld,dict):
+            limits = (fld['min'], fld['max'])
+        elif not fld is None: 
+            limits = (fld,fld)
         else:
-            limits = (tmp,tmp)
-    elif isinstance(fld,(tuple,list)):
-        limits = (int(fld[0]),int(fld[1]))
-    elif isinstance(fld,dict):
-        limits = (fld['min'], fld['max'])
-    elif not fld is None: 
-        limits = (fld,fld)
-    else:
-        limits = None
+            limits = None
+    except (TypeError,ValueError) as e:
+        emf_logger.debug("Error in search parameters. {0} ".format(e))
+        flash(Markup("Error: <span style='color:black'>{0}</span> is not a valid input for <span style='color:black'>{1}</span>.".format(arg.get(field),field)),"error")
+        return None
     return limits
 
 def is_range(arg):
@@ -163,47 +168,50 @@ def is_range(arg):
             return True
     return False
 def extract_data_from_jump_to(s):
+    r"""
+    Try to get a label from the search box
+    """
     label = ''
-
     args = dict()
-    if s == 'delta':
-        weight = 12
-        level = 1
-        label = "a"
-    else:
-        # see if we can parse the argument as a label 
-        s = s.replace(" ","") # remove white space
-        try: 
-            t = parse_newform_label(s)
-            if len(t) == 4:
-                args['level'],args['weight'],args['character'],args['label'] = t
-            if len(t) == 5:
-                args['level'],args['weight'],args['character'],args['label'],args['embedding'] = t
-            else:
-                raise ValueError
-            return args
-        except ValueError:
-            pass
-        try:
+    try:
+        if s == 'delta':
+            weight = 12
+            level = 1
+            label = "a"
+        else:
+            # see if we can parse the argument as a label 
+            s = s.replace(" ","") # remove white space
+            try: 
+                t = parse_newform_label(s)
+                if len(t) == 4:
+                    args['level'],args['weight'],args['character'],args['label'] = t
+                if len(t) == 5:
+                    args['level'],args['weight'],args['character'],args['label'],args['embedding'] = t
+                else:
+                    raise ValueError
+                return args
+            except ValueError:
+                pass
             t = parse_space_label(s)
             if len(t) == 3:
                 args['level'],args['weight'],args['character'] = t
                 return args
             else:
                 raise ValueError
-        except ValueError:
-            pass
-        test = re.findall("[a-z]+", s)
-        if len(test) == 1:
-            args['label'] = test[0]
-        test = re.findall("\d+", s)
-        if not test is None and len(test)>0:
-            args['level'] = int(test[0])
-            if len(test) > 1:  # we also have weight
-                args['weight'] = int(test[1])
-            if len(test) > 2:  # we also have character
-                args['character']=int(test[2])
-    emf_logger.debug("args=%s" % label)
+            test = re.findall("[a-z]+", s)
+            if len(test) == 1:
+                args['label'] = test[0]
+            test = re.findall("\d+", s)
+            if not test is None and len(test)>0:
+                args['level'] = int(test[0])
+                if len(test) > 1:  # we also have weight
+                    args['weight'] = int(test[1])
+                if len(test) > 2:  # we also have character
+                    args['character']=int(test[2])
+    except (TypeError,ValueError) as e:
+        emf_logger.debug("Did not get a valid label from search box: {0} ".format(e))
+        flash(Markup("Error: <span style='color:black'>{0}</span> is not a valid  <span style='color:black'>label</span> for either a newform or a space of modular forms.".format(s)),"error")
+    emf_logger.debug("args={0}".format(s))
     return args
 
 
