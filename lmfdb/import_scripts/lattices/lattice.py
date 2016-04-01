@@ -17,7 +17,11 @@ from sage.all import os
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=37010)
-C['Lattices'].authenticate('editor', '282a29103a17fbad')
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['Lattices'].authenticate('editor', password)
 lat = C.Lattices.lat
 
 saving = True 

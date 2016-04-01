@@ -250,9 +250,10 @@ def render_lattice_webpage(**args):
     info['aut']=int(f['aut'])
 
     ncoeff=20
-    coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
-    info['theta_series']=my_latex(print_q_expansion(coeff))
-    info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
+    if f['theta_series'] != "":
+        coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
+        info['theta_series']=my_latex(print_q_expansion(coeff))
+        info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
 
     info['class_number']=int(f['class_number'])
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
