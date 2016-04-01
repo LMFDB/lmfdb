@@ -602,7 +602,6 @@ def download_search(info, res):
     else:
         s += 'data = ['
     s += '\\\n'
-    cntr = 0
     for f in res:
         wnf = WebNumberField.from_data(f)
         entry = ', '.join(
