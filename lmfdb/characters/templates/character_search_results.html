@@ -13,7 +13,8 @@
 <td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
 <td align=left>{{ KNOWL('character.dirichlet.order', title='Order') }}</td>
 <td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive only') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
+<td align=left>maximum number of characters to display</td>
 </tr>
 
 <tr>
@@ -34,12 +35,17 @@
     {% endfor %}
 </select>
 </td>
+<td align=left> <input type='text' name='limit'size=3 value="{{info.limit}}"> </td>
 </tr>
-
-<tr> <td colspan=2>
+<tr>
+    <td colspan=2>
 <button type='submit' value='refine'>Refine or change search</button>
 </td> </tr>
 </table>
+<input type="hidden" name="lastm" value="{{info.lastm}}"/>
+<input type="hidden" name="lastn" value="{{info.lastn}}"/>
+<input type="hidden" name="startm" value="0"/>
+<input type="hidden" name="startn" value="0"/>
 </form>
 
 {% if info.err is defined %}
@@ -73,7 +79,14 @@ table td.params {
             false">Previous</A>
 {% endif %}
 {% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+<script>
+function submit_next_chars() {
+  $('input[name=startm]') = $('input[name=lastm]').value();
+  $('input[name=startn]') = $('input[name=lastn]').value();
+  $('form[id=re-search]').submit()
+}
+</script>
+<a href="#" class="navlink" onclick="submit_next_chars();return false">Next</A>
 {% endif %}
 </h2>
 <table>
@@ -103,8 +116,8 @@ table td.params {
 <td class="center">{{mod}}</td>
 <td class="center">{{cond}}</td>
 <td class="center">{{order}}</td>
-<td class="center">{{par}}</td>
-<td class="center">{{prim}}</td>
+<td class="center">{{'Odd' if par else 'Even'}}</td>
+<td class="center">{{'&#x2713;'|safe if prim}}</td>
 </tr>
 {% endfor %}
 </table>
@@ -112,11 +125,11 @@ table td.params {
 <hr>
 {% if info.start > 0 %}
 <a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
+   onclick="submit_previous('re-search');return
             false">Previous</A>
 {% endif %}
 {% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+<a href="#" class="navlink" onclick="submit_next_chars();return false">Next</A>
 {% endif %}
 
 {#

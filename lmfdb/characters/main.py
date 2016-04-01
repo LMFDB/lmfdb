@@ -54,17 +54,50 @@ def render_characterNavigation():
 
     info['learnmore'] = learn()
 
+    if 'modbrowse' in args:
+        arg = args['modbrowse']
+        arg = arg.split('-')
+        modulus_start = int(arg[0])
+        modulus_end = int(arg[1])
+        info['title'] = 'Dirichlet Characters of Moduli ' + str(modulus_start) + '-' + str(modulus_end)
+        info['credit'] = 'Sage'
+        h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
+        info['contents'] = c
+        info['headers'] = h
+        info['rows'] = rows
+        info['cols'] = cols
+        return render_template("ModulusList.html", **info)
+
+    elif 'condbrowse' in args:
+        arg = args['condbrowse']
+        arg = arg.split('-')
+        conductor_start = int(arg[0])
+        conductor_end = int(arg[1])
+        info['conductor_start'] = conductor_start
+        info['conductor_end'] = conductor_end
+        info['title'] = 'Dirichlet Characters of Conductors ' + str(conductor_start) + \
+            '-' + str(conductor_end)
+        info['credit'] = "Sage"
+        info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
+        # info['contents'] = c
+        # info['header'] = h
+        # info['rows'] = rows
+        # info['cols'] = cols
+        return render_template("ConductorList.html", **info)
+
     query = {}
     try:
         for c in ('modulus', 'conductor', 'order'):
             if c in args:
                 s = args[c].split('-')
-                print 'arg %s = %s'%(c,s)
                 if len(s) == 1:
                     s = int(s[0])
                     query[c] = (s, s)
                 else:
                     query[c] = (int(s[0]), int(s[1]))
+        for c in ('parity', 'primitive'):
+            if c in args:
+                query[c] = args[c]
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)
@@ -74,15 +107,26 @@ def render_characterNavigation():
                          ('search results', '') ]
     info['credit'] = 'Sage'
     if query:
+        query['limit'] = args.get('limit', 25)
         try:
-           args['chars'] = ListCharacters.CharacterSearch(query).results()
+            L = ListCharacters.CharacterSearch(query).results()
         except Exception, e:
-           args['chars'] = []
-        args['number'] = len(args['chars'])
-        args['start'] = 0
-        args['more'] = 0
+            L = []
+            # should flash a message 'inconsistent search'
+        args['number'] = len(L)
+        args['chars'] = L
         args['title'] = 'Dirichlet Characters'
-
+        if len(L):
+            #args['startm'], args['startn'] = L[0][:2]
+            args['lastm'], args['lastn'] = L[-1][:2]
+            if len(L) == query['limit']:
+                args['report'] = 'first %i results'%(len(L))
+                args['more'] = True
+            else:
+                args['report'] = 'all %i results'%(len(L))
+                args['more'] = False
+            # always false, just navigate previous...
+            args['start'] = 0
         info['info'] = args
         return render_template("character_search_results.html", **info)
     else:
