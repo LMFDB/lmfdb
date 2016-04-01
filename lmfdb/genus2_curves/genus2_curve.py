@@ -4,7 +4,8 @@ import pymongo
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+from flask import Flask, flash, session, g, render_template, url_for, request, redirect, make_response
+from markupsafe import Markup
 import tempfile
 import os
 
@@ -56,26 +57,25 @@ real_geom_end_alg_to_ST0_dict = {
         'R':'USp(4)'
         }
 
-aut_grp_list = ['[2, 1]', '[4, 1]', '[4, 2]', '[6, 2]', '[8, 3]', '[12, 4]']
+aut_grp_list = ['[2,1]', '[4,1]', '[4,2]', '[6,2]', '[8,3]', '[12,4]']
 aut_grp_dict = {
-        '[2, 1]':'C_2',
-        '[4, 1]':'C_4',
-        '[4, 2]':'V_4',
-        '[6, 2]':'C_6',
-        '[8, 3]':'D_8',
-        '[12, 4]':'D_{12}'
+        '[2,1]':'C_2',
+        '[4,1]':'C_4',
+        '[4,2]':'V_4',
+        '[6,2]':'C_6',
+        '[8,3]':'D_8',
+        '[12,4]':'D_{12}'
         }
 
-geom_aut_grp_list = ['[2, 1]', '[4, 2]', '[8, 3]', '[10, 2]', '[12, 4]',
-        '[24, 8]', '[48, 29]']
+geom_aut_grp_list = ['[2,1]', '[4,2]', '[8,3]', '[10,2]', '[12,4]', '[24,8]', '[48,29]']
 geom_aut_grp_dict = {
-        '[2, 1]':'C_2',
-        '[4, 2]':'V_4',
-        '[8, 3]':'D_8',
-        '[10, 2]':'C_{10}',
-        '[12, 4]':'D_{12}',
-        '[24, 8]':'2D_{12}',
-        '[48, 29]':'tilde{S}_4'}
+        '[2,1]':'C_2',
+        '[4,2]':'V_4',
+        '[8,3]':'D_8',
+        '[10,2]':'C_{10}',
+        '[12,4]':'D_{12}',
+        '[24,8]':'2D_{12}',
+        '[48,29]':'tilde{S}_4'}
 
 ###############################################################################
 # Routing for top level, random curves and by conductor:
@@ -84,6 +84,16 @@ geom_aut_grp_dict = {
 @app.route("/G2C")
 def G2C_redirect():
     return redirect(url_for(".index", **request.args))
+
+def learnmore_list():
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Genus 2 curve labels', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+
 
 @g2c_page.route("/")
 def index():
@@ -115,7 +125,7 @@ def index_Q():
     credit =  credit_string
     title = 'Genus 2 curves over $\Q$'
     bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
-    return render_template("browse_search_g2.html", info=info, credit=credit, title=title, bread=bread)
+    return render_template("browse_search_g2.html", info=info, credit=credit, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
 
 @g2c_page.route("/Q/<int:conductor>/")
 def by_conductor(conductor):
@@ -150,11 +160,16 @@ def by_g2c_label(label):
 def render_curve_webpage_by_label(label):
     credit = credit_string
     data = WebG2C.by_label(label)
+    if data == "Invalid label":
+        return data
+    if data == "Data for curve not found":
+        return data
     return render_template("curve_g2.html",
                            properties2=data.properties,
                            credit=credit,
                            data=data,
                            bread=data.bread,
+                           learnmore=learnmore_list(),
                            title=data.title,
                            friends=data.friends)
                            #downloads=data.downloads)
@@ -174,6 +189,7 @@ def render_isogeny_class(iso_class):
     return render_template("isogeny_class_g2.html",
                            properties2=class_data.properties,
                            bread=class_data.bread,
+                           learnmore=learnmore_list(),
                            credit=credit,
                            info=class_data,
                            title=class_data.title,
@@ -186,6 +202,7 @@ def render_isogeny_class(iso_class):
 
 def genus2_curve_search(**args):
     info = to_dict(args)
+    print "info", info
     info["st_group_list"] = st_group_list
     info["st_group_dict"] = st_group_dict
     info["real_geom_end_alg_list"] = real_geom_end_alg_list
@@ -202,30 +219,45 @@ def genus2_curve_search(**args):
     #    return rational_genus2_curves()
 
     if 'jump' in args:
-        return render_curve_webpage_by_label(info["jump"])
-
+        label_regex = re.compile(r'\d+\.[a-z]+.\d+.\d+')
+        if label_regex.match(info["jump"].strip()):
+            data = render_curve_webpage_by_label(info["jump"].strip())
+        else:
+            data = "Invalid label"
+        print data
+        if data == "Invalid label":
+            flash(Markup("The label <span style='color:black'>%s</span> is invalid."%(info["jump"])),"error")
+            return redirect(url_for(".index"))
+        if data == "Data for curve not found":
+            flash(Markup("No genus 2 curve with label <span style='color:black'>%s</span> was found in the database."%(info["jump"])),"error")
+            return redirect(url_for(".index"))
+        return data
     try:
-        parse_signed_ints(info,query,'disc',name='Absolute discriminant',qfield=(None,'abs_disc'))
+        parse_ints(info,query,'abs_disc','absolute discriminant')
         parse_bool(info,query,'is_gl2_type')
+        parse_bool(info,query,'has_square_sha')
+        parse_bool(info,query,'locally_solvable')
         for fld in ('st_group', 'real_geom_end_alg'):
             if info.get(fld): query[fld] = info[fld]
         for fld in ('aut_grp', 'geom_aut_grp'):
             #Encoded into a GAP ID.
             parse_bracketed_posints(info,query,fld,exactlength=2)
         # igusa and igusa_clebsch invariants not currently searchable
-        parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4)
+        parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
         parse_ints(info,query,'cond','conductor')
         parse_ints(info,query,'num_rat_wpts','Weierstrass points')
         parse_ints(info,query,'torsion_order')
         parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
+        parse_ints(info,query,'analytic_rank','analytic rank')
     except ValueError as err:
         info['err'] = str(err)
         return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
 
     info["query"] = dict(query)
+    print "query", info["query"]
+    print "info", info
     count = parse_count(info, 50)
     start = parse_start(info)
-
     cursor = db_g2c().curves.find(query)
     nres = cursor.count()
     if(start >= nres):
@@ -261,6 +293,7 @@ def genus2_curve_search(**args):
             v_clean["is_gl2_type_display"] = ''
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
         v_clean["st_group_name"] = st_group_name(isogeny_class['st_group'])
+        v_clean["analytic_rank"] = v["analytic_rank"]
         res_clean.append(v_clean)
 
     info["curves"] = res_clean
@@ -272,5 +305,32 @@ def genus2_curve_search(**args):
     info["more"] = int(start+count<nres)
     credit = credit_string
     title = 'Genus 2 Curves search results'
-    return render_template("search_results_g2.html", info=info, credit=credit,
+    return render_template("search_results_g2.html", info=info, credit=credit,learnmore=learnmore_list(),
             bread=bread, title=title)
+    credit =  credit_string
+    title = 'Genus 2 curves over $\Q$'
+    bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' ')]
+
+
+@g2c_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of genus 2 curve data over $\Q$'
+    bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Completeness','')]
+    return render_template("single.html", kid='dq.g2c.extent',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@g2c_page.route("/Source")
+def how_computed_page():
+    t = 'Source of genus 2 curve data over $\Q$'
+    bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Source','')]
+    return render_template("single.html", kid='dq.g2c.source',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@g2c_page.route("/Labels")
+def labels_page():
+    t = 'Labels for genus 2 curves over $\Q$'
+    bread = [('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Labels','')]
+    return render_template("single.html", kid='g2c.label',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+
+

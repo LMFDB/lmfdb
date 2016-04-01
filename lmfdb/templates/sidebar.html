@@ -1,4 +1,3 @@
-{%- include "sidebar.css" -%}
 {% import 'color.css' as color %}
 {%- for key, heading, value in sidebar.data -%}
 {%- if BETA or not value.status -%}{# an entire section may be omitted e.g. Motives #}

@@ -23,9 +23,9 @@ import random
 import sage.plot.plot
 from flask import jsonify
 from lmfdb.utils import *
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec,emf_version
 logger = emf_logger
-from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma,QQ,Matrix
+from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma,QQ,Matrix,cached_method
 from sage.misc.cachefunc import cached_function 
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
@@ -34,7 +34,6 @@ from bson.binary import *
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_range
-
 try:
     from dirichlet_conrey import *
 except:
@@ -111,7 +110,29 @@ def parse_space_label(label):
             raise ValueError
     except ValueError:
         raise ValueError,"{0} is not a valid space label!".format(label)   
-    
+
+
+@cached_method
+def is_newform_in_db(newform_label):
+    from .web_newforms import WebNewForm
+    # first check that it is a valid label, otherwise raise ValueError
+    t = parse_newform_label(newform_label)
+    if len(t)==4:
+       level,weight,character,label = t
+    elif len(t)==5:
+        level,weight,character,label,emb = t
+    search = {'level':level,'weight':weight,'character':character,'label':label,'version':float(emf_version)}
+    return WebNewForm._find_document_in_db_collection(search).count() > 0
+
+@cached_method
+def is_modformspace_in_db(space_label):
+    from web_modform_space import WebModFormSpace
+    # first check that we clled with a valid label, otherwise raise ValueError
+    level,weight,character = parse_space_label(space_label)
+    search = {'level':level,'weight':weight,'character':character,'version':float(emf_version)}
+    return WebModFormSpace._find_document_in_db_collection(search).count()>0
+
+
 def extract_limits_as_tuple(arg, field):
     fld = arg.get(field)
     if isinstance(fld,basestring):

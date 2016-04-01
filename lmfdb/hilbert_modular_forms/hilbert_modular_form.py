@@ -104,7 +104,7 @@ def hilbert_modular_form_by_label(lab):
         flash(Markup("No Hilbert modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
         return redirect(url_for(".hilbert_modular_form_render_webpage"))
     else:
-        return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab, data=res))
+        return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab))
 
 
 def hilbert_modular_form_search(**args):

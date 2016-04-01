@@ -9,14 +9,8 @@
       url_for: "introduction"
     - title: Features
       url_for: "introduction_features"
-    - title: Tutorial
-      url_for: "introduction_tutorial"
     - title: Map
       url_for: "bigpicture"
-    - title: Contact
-      url_for: "contact"
-    - title: Citation
-      url_for: "citation"
     - title: Future Plans
       url_for: "roadmap"
 
