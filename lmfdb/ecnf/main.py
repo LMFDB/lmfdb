@@ -4,6 +4,7 @@
 
 import re
 import time
+import ast
 import StringIO
 import pymongo
 ASC = pymongo.ASCENDING
@@ -330,6 +331,10 @@ def show_ecnf(nf, conductor_label, class_label, number):
 
 def elliptic_curve_search(**args):
     info = to_dict(args['data'])
+    
+    if 'download' in info and info['download'] != 0:
+        return download_search(info)
+    
     bread = [('Elliptic Curves', url_for(".index")),
              ('Search Results', '.')]
     if 'jump' in info:
@@ -371,7 +376,7 @@ def elliptic_curve_search(**args):
     count = parse_count(info, 50)
     start = parse_start(info)
 
-# make the query and trim results according to start/count:
+    # make the query and trim results according to start/count:
 
     cursor = db_ecnf().find(query)
     nres = cursor.count()
@@ -379,16 +384,6 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-
-    if 'download' in info and info['download'] != 0:
-        res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
-        res.rewind()
-        info['curves'] = res  # [ECNF(e) for e in res]
-        info['number'] = nres
-        info['count'] = count
-        info['field_pretty'] = field_pretty
-        info['web_ainvs'] = web_ainvs
-        return download_search(info)
     
     res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
@@ -464,7 +459,7 @@ def download_search(info):
         delim = 'magma'
         filename = 'elliptic_curves.m'
     s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, info['curves'].count())
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [[field_poly],[Weierstrass Coefficients, constant first in increasing degree]]\n'
     s += '\n' + com2
@@ -480,7 +475,8 @@ def download_search(info):
         s += 'data = [ '
     s += '\\\n'
     nf_dict = {}
-    for f in info['curves']:
+    res = db_ecnf().find(ast.literal_eval(info["query"]))
+    for f in res:
         nf = str(f['field_label'])
         # look up number field and see if we already have the min poly
         if nf in nf_dict:

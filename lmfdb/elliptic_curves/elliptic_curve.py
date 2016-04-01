@@ -251,9 +251,6 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-
-    print 'searching'
-    print query
     res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING),
                        ('lmfdb_number', ASCENDING)]).skip(start).limit(count)
     info['curves'] = res
@@ -559,7 +556,7 @@ def download_search(info):
         delim = 'magma'
         filename = 'elliptic_curves.m'
     s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate) #, info['curves'].count())
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [Weierstrass Coefficients]\n'
     s += '\n' + com2
@@ -570,11 +567,7 @@ def download_search(info):
         s += 'data = ['
     s += '\\\n'
     # reissue saved query here
-    print "re-issuing query"
-    print s
-    print ast.literal_eval(info['query'])
     res = db_ec().find(ast.literal_eval(info["query"]))
-    print res.count()
     for f in res:
         entry = str(f['ainvs'])
         entry = entry.replace('u','')
