@@ -47,7 +47,7 @@ analytic_conductor: 0.010101010101
 epsilon: 1
 url: L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/
 object_url:
-object_name: <a href="/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a">Hilbert modular form over $\Q(\sqrt{5})$</a>, <a href="/EllipticCurve/2.2.5.1/31.1/a/1">Elliptic curve over $\Q(\sqrt5)$</a>
+object_name: <a href="/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a">Hilbert modular form over $\Q(\sqrt{5})$</a>,<br><a href="/EllipticCurve/2.2.5.1/31.1/a/1">Elliptic curve over $\Q(\sqrt5)$</a>
 self_dual: true
 arithmetic: true
 ---
