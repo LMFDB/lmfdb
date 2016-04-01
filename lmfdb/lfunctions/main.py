@@ -897,7 +897,11 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
         plotStep = .1
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, plotStep)]
-    p = line(F)
+    interpolation = spline(F)
+    F_interp = [(i, interpolation(i)) for i in srange(-30, 30, 0.05)]
+    p = line(F_interp)
+#    p = line(F)    # temporary hack while the correct interpolation is being implemented
+    
     styleLfunctionPlot(p, 10)
     fn = tempfile.mktemp(suffix=".png")
     p.save(filename=fn)
