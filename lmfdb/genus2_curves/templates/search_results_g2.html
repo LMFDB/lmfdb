@@ -174,6 +174,15 @@
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
 {% endif %}
 
+<form>
+Download all search results for
+<input type="submit" name="submit" value="gp">
+<input type="submit" name="submit" value="sage">
+<input type="submit" name="submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="query" value="{{info.query}}"/>
+</form>
+
 {% endif %}
 
 <!--
