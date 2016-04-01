@@ -2,7 +2,6 @@
 {% block content %}
 
 <h2> Further refine search </h2>
-
 <form id='re-search'>
 <input type="hidden" name="start" value="{{info.start}}"/>
 <table border="0">
@@ -33,6 +32,7 @@
 <td align=left><input type='text' name='aut' size=10 value="{{info.aut}}"> </td>
 </tr>
 
+<tr>&nbsp;</tr>
 <tr>
 <td align=left colspan=2>Maximum number of integral lattices to display</td>
 <td align=left><input type='text' name='count' value={{info.count}} size=10></td>

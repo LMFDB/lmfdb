@@ -31,7 +31,7 @@ class HomePageTest(LmfdbTest):
 
     def test_lattice_search(self):
         L = self.tc.get("/Lattice/?dim=&det=&level=&gram=&minimum=&class_number=1&aut=&count=50").data
-        assert '60' in L #search
+        assert '56' in L #search
 
     def test_lattice_search_next(self):
         L = self.tc.get("/Lattice/?start=50&dim=&det=&level=&gram=&minimum=&class_number=&aut=2&count=50").data
@@ -71,5 +71,5 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/random").data
         assert 'redirected automatically' in L # random lattice
         L = self.tc.get("/Lattice/random", follow_redirects=True)
-        assert 'Normalized minimal vector list:' in L.data # check redirection
+        assert 'Normalized minimal vectors:' in L.data # check redirection
 

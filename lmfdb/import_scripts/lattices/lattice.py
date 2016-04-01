@@ -17,7 +17,11 @@ from sage.all import os
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=37010)
-C['Lattices'].authenticate('editor', '282a29103a17fbad')
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['Lattices'].authenticate('editor', password)
 lat = C.Lattices.lat
 
 saving = True 
@@ -40,6 +44,17 @@ def base_label(dimension,determinant,level,class_number):
 
 def last_label(base_label, n):
     return ".".join([str(base_label),str(n)])
+
+# The following create_index command checks if there is an index on
+# label, dimension, determinant and level. 
+
+lat.create_index('label')
+lat.create_index('dim')
+lat.create_index('det')
+lat.create_index('level')
+
+print "finished indices"
+
 
 ## Main importing function
 
