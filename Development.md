@@ -111,7 +111,7 @@ and use "pp <var name>" to pretty print variables and
 to continue executing code use the "n" command.
 When you get lost, the command "bt" shows you exactly where you
 are and "up" helps you to get on step up on the stack.
-Of course, "help '<command>'" will tell you more...
+Of course, "help <command>" will tell you more...
 
 Git Tips
 =========
