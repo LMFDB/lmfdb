@@ -37,6 +37,7 @@ ${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %
     
 </table>
 
+{% if info.theta_series %}
 <h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
 
 <!--<p>-->
@@ -55,6 +56,7 @@ ${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %
 <button id="morebutton">More coefficients</button>
 </form></p>
 
+{% endif %}
 
 
 <h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>
