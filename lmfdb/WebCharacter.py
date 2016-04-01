@@ -976,7 +976,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def codeisprimitive(self):
         return { 'sage': 'chi.is_primitive()',
-                 'pari': '#znconreyconductor(G,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
+                 'pari': '#znconreyconductor(g,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
 
     @property
     def codecond(self):
@@ -1092,7 +1092,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
     @property
     def codegenvalues(self):
         return { 'sage': 'chi_sage.values_on_gens()',
-                 'pari': '[ znchareval(g,chi,x) | x <- g.gen ]' }
+                 'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ value in Q/Z' }
 
     def value(self, val):
         val = int(val)
@@ -1107,7 +1107,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
     @property
     def codevalue(self):
         return { 'sage': 'chi_sage(x) # x integer',
-                 'pari': 'znchareval(g,chi,x) \\\\ x integer' }
+                 'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
 
     def gauss_sum(self, val):
         val = int(val)
