@@ -10,7 +10,7 @@ Installation
   ```
 
   but **follow the instructions below instead** (see *Code development
-  and sharing your work*) to set up your own fork on github and clone
+  and sharing your work* if you would like to set up to do this instead) to set up your own fork on github and clone
   from there if you want to carry out development on the code.
 
 * Make sure you have sage (>=7.0) installed and that
