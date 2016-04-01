@@ -101,8 +101,8 @@ my %rowvals=@_;
 
 $multipleobject=0;
 
-my $truesymbol = "&#x25CF;";
-my $falsesymbol = "&#x25CB;";
+my $truesymbol = '&#10004;'; #"&#x25CF;";
+my $falsesymbol = ''; #"&#x25CB;";
 
 if(my $tmp=$rowvals{delta}) {
 
