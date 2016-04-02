@@ -54,7 +54,6 @@ def get_signature_stats(s):
 
 def ecnf_summary():
     counts = get_stats().counts()
-    #ecnfstaturl = url_for('ecnf.statistics')
     ec_knowl = '<a knowl="ec">elliptic curves</a>'
     iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
     nf_knowl = '<a knowl="nf">number fields</a>'

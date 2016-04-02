@@ -438,19 +438,19 @@ def search():
     else:
         return redirect(404)
 
-@ecnf_page.route("/overview/")
-def statistics():
+@ecnf_page.route("/browse/")
+def browse():
     info = {
         'counts': get_stats().counts(),
         'stats': get_stats().stats(),
     }
     credit = 'John Cremona'
-    t = 'Elliptic curves over number fields: overview'
+    t = 'Elliptic curves over number fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('statistics', ' ')]
+             ('browse', ' ')]
     return render_template("stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
-@ecnf_page.route("/stats/<int:d>/")
+@ecnf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
     stats = get_stats()
     info = {
@@ -484,11 +484,10 @@ def statistics_by_degree(d):
         t = 'Elliptic curves over number fields of degree %s' % d
 
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('statistics', url_for("ecnf.statistics")),
               ('degree %s' % d,' ')]
     return render_template("by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
-@ecnf_page.route("/stats/<int:d>/<r>/")
+@ecnf_page.route("/browse/<int:d>/<r>/")
 def statistics_by_signature(d,r):
     info = {
         'counts': get_stats().counts(),
@@ -531,7 +530,6 @@ def statistics_by_signature(d,r):
     else:
         t = 'Elliptic curves over number fields of degree %s, signature %s' % (d,info['sig'])
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('statistics', url_for("ecnf.statistics")),
               ('degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
               ('signature %s' % info['sig'],' ')]
     return render_template("by_signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
