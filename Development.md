@@ -1,3 +1,7 @@
+Setup
+=====
+To set up your system for development see [Code development and sharing your work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
+
 Conventions
 ===========
 
@@ -23,6 +27,16 @@ The idea is to extend "homepage.html" and replace the content block:
    ... your stuff ...
 {% endblock %}
 
+CSS
+---
+The css should be kept in the .css files in lmfdb/templates/ and loaded into
+homepage.html.  Preferably, new css should be added to one of the already existing .css files.  There are two .css files:
+ * style.css - contains the majority of the css, for exmaple, for the
+   properties and sidebar variables.
+ * color.css - contains all color definitions and templates.  Always use a
+   color defined in color.css, preferably one of the col_main's.  If you
+   feel the need to use a color not defined here, please add it to this file.
+   This helps keep the colors organized into a particular themes.
 
 Code Organization / Blueprints
 ------------------------------
@@ -37,7 +51,7 @@ folders, e.g. /knowledge/templates/.
 [1] http://docs.python.org/tutorial/modules.html
 [2] http://flask.pocoo.org/docs/blueprints/
 
-Basic Orga / Editorial Board
+Basic Organization / Editorial Board
 ----------------------------
 
 Behind the Scenes:
@@ -83,7 +97,7 @@ Testing
   ```
   it produces beautiful coverage scores in `lmfdb/cover/index.html`
 
-Pro Tipp: Debugging
+Pro Tip: Debugging
 -------------------
 Just add
 ```
@@ -97,7 +111,7 @@ and use "pp <var name>" to pretty print variables and
 to continue executing code use the "n" command.
 When you get lost, the command "bt" shows you exactly where you
 are and "up" helps you to get on step up on the stack.
-Of course, "help [<command>]" will tell you more...
+Of course, "help `<command>`" will tell you more...
 
 Git Tips
 =========

@@ -3,33 +3,38 @@
 {% block content %}
 
 <div>
-The database currently contains elliptic curves over a few number
-fields other than $\Q$, mostly quadratic fields.
+{{ KNOWL_INC('dq.ecnf.extent') }}
 </div>
 
-<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over {{
-KNOWL('nf',title = "number fields")}}</h2>
+<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} defined over:
+{# {{KNOWL('nf',title = "number fields")}} #}
+</h2>
 
 <p>
 <ul>
 {% for types in data.fields %}
 <li>
-curves defined over {{types[0]}}:
+{{types[0]}}:
 {% for label,f in types[1] %}
-{% if types[0]=='real quadratic fields' %}
-{% if loop.index0 %},...,{% endif %}
-{% else %}
 {% if loop.index0 %},{% endif %}
-{% endif %}
  <a href="{{f[0]}}">{{f[1]}}</a>
 {% endfor %}
 </li>
 {% endfor %}
+<li><a href={{url_for('ecnf.browse')}}>All available fields</a>
 </ul>
 </p>
 
+<h3> Browse {{ KNOWL('ec',title='elliptic curves')}} by degree of base
+  {{KNOWL('nf',title = "number field")}}:
+{% for d in data.degrees-%}
+{%-if loop.index0-%}, {% endif %}
+<a href={{url_for('ecnf.statistics_by_degree', d=d)}}>{{d}}</a>
+{%-endfor-%}
+</h3>
+
 <p>
-Curves with interesting properties:
+<h3>Curves with interesting properties:</h3>
 <ul>
 {% for item in data.highlights %}
 <li><a href="{{item[1]}}">{{item[0]}}</a></li>
@@ -37,6 +42,7 @@ Curves with interesting properties:
 </ul>
 </p>
 
+<h3>A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the database</h3>
 
 <h2> Find a specific curve by label</h2>
 <form>
@@ -87,6 +93,23 @@ Please enter a value or leave blank:
          </select>
   </td>
  </tr>
+
+    <tr>
+          <td align=right>
+          {{ KNOWL('ec.j_invariant', title="j-invariant") }}
+          </td>
+          <td>
+          <input type='text' name='jinv' example=" (818172355/1024)*a-(2133314821/512)" size=20 value="{{jinv}}" />
+          </td>
+          <td colspan=2>
+          <span class="formexample">
+          e.g. (818172355/1024)*a-(2133314821/512) over 2.2.89.1</span>
+          </td>
+
+          <td align=right>&nbsp; </td>
+          <td align=right>&nbsp; </td>
+          <td align=right>&nbsp; </td>
+      </tr>
 
     <tr>
           <td align=right>

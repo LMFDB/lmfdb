@@ -1,5 +1,5 @@
-artin_location = ("limbo", "artrep20130914")
-galois_group_location = ("limbo", "nfgal20130914")
+artin_location = ("artin", "representations")
+galois_group_location = ("artin", "field_data")
 
 from type_generation import String, Array, Dict, Int, Anything, Float
 
@@ -43,25 +43,30 @@ LenPair = Dict({
     "val": TooLargeInt
 })
 
+Galois_Conjugate = Dict(
+    {
+    	"LocalFactors": FiniteSequence(Anything),
+    	"Character": Anything,
+    	"Sign": Int,
+    	"HardFactors": FiniteSequence(IndexAt1),
+    	"GalOrbIndex": Int
+    })
+
+
 Dokchitser_ArtinRepresentation = Dict({
     "_id": Anything,
+    "Baselabel": String,
     "Dim": Int,
     "Indicator": Int,
     "Conductor": TooLargeInt,
-    "HardFactors": FiniteSequence(IndexAt1),
     "HardPrimes": FiniteSequence(TooLargeInt),
     "BadPrimes": FiniteSequence(TooLargeInt),
-    "LocalFactors": FiniteSequence(Anything),
-    "DBIndex": IndexAt1,        # Starting at 1 
-    "NFGal": FiniteSequence(Anything),
-    "Character": Anything,
-    "Sign": Int,
+    "NFGal": LabelString,
     "CharacterField": Int,
-    "Conductor_plus": LenPair,                             # Added after Tim, by inject_conductor_len.py
-    "Galois_nt": Array(Int,Int),                           # Added after Tim by jj
-    # Next is whether or not to show this in a search page because of redundancies
-    "Show": Int,                                           # Added after Tim by jj
-    "galorbit": Anything,                                  # Added after Tim by jj
+    "Conductor_key": String,
+    "Galois_nt": Array(Int,Int),                          
+    "Hide": Int,                                           
+    "GaloisConjugates": FiniteSequence(Galois_Conjugate)
 })
 
 
@@ -76,11 +81,10 @@ Dokchitser_FrobResolvent = Dict(
         "Classes": Anything
     })
 
-Dokchitser_ArtinRepresentation_Short = Dict(
+ArtinRepresentation_Short = Dict(
     {
-        "Dim": Int,
-        "Conductor": TooLargeInt,
-        "DBIndex": IndexAt1,        # Starting at 1
+        "Baselabel": String,
+        "GalConj": Int,
         "CharacterField": Int,
         "Character": Dokchitser_Character
     })
@@ -95,22 +99,20 @@ Dokchitser_ConjugacyClass = Dict(
 
 Dokchitser_NumberFieldGaloisGroup = Dict({
     "_id": Anything,
-    "ArtinReps": FiniteSequence(Dokchitser_ArtinRepresentation_Short),
+    "ArtinReps": FiniteSequence(ArtinRepresentation_Short),
     "ComplexConjugation": Int,
     "ConjClasses": FiniteSequence(Dokchitser_ConjugacyClass),
-    "DBIndex": IndexAt1,                    # Starting at 1
     "FrobResolvents": Array(Dokchitser_FrobResolvent),
     "Frobs": PrimeIndexedSequence(Int),
     "G-Gens": FiniteSet(PermutationAsList),
     "G-Name": Custom_GroupLabel,
-    "Polynomial": PolynomialAsSequenceTooLargeInt,
+    "Polynomial": String, #PolynomialAsSequenceTooLargeInt,
     "QpRts": FiniteSequence(PolynomialAsSequenceTooLargeInt),
     "QpRts-minpoly": PolynomialAsSequenceInt,
     "QpRts-p": Int,
     "QpRts-prec": Int,
     "Size": TooLargeInt,
-    "TransitiveDegree": Int,
-    "label": LabelString                 # Added after Tim, by link_tim_other.py script
+    "TransitiveDegree": Int
 })
 
 

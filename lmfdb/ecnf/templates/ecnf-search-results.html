@@ -2,6 +2,12 @@
 
 {% block content %}
 
+{% if info.stats %}
+<p>
+{{info.stats|safe}}
+</p>
+{% endif %}
+
 <h2> Refine search </h2>
 
 <form id='re-search'>
@@ -17,6 +23,7 @@
 <td align=left>{{ KNOWL('ec.base_change',title="base change") }} curves</td>
 <td align=left>{{ KNOWL('ec.torsion_order',title="torsion order") }}</td>
 <td align=left>{{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}</td>
+<td align=left>{{ KNOWL('ec.j_invariant', title="j-invariant") }}</td>
 </tr>
 
 <tr>
@@ -48,6 +55,9 @@
           </td>
           <td>
           <input type='text' name='torsion_structure' size=10 value="{{info.torsion_structure}}" />
+          </td>
+          <td>
+          <input type='text' name='jinv' size=20 value="{{info.jinv}}" />
           </td>
 
 </tr>
@@ -129,15 +139,19 @@ table td.params {
 
 {% endif %}
 
-{#
+<!-- Download Data!! Whoohooo!! -->
 <form>
 Download all search results for
 <input type="submit" name="Submit" value="gp">
 <input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="mathematica">
+<input type="submit" name="Submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="query" value="{{info.query}}"/>
 </form>
-#}
 
+
+
+<!-- Debugging! -->
 {% if DEBUG %}
 <hr>
 <div>

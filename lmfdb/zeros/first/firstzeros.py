@@ -1,7 +1,7 @@
 import flask
 import lmfdb.utils
 import os
-from flask import render_template, request
+from flask import render_template, request, url_for
 
 FirstZeros = flask.Blueprint('first L-function zeros', __name__, template_folder="templates")
 logger = lmfdb.utils.make_logger(FirstZeros)
@@ -27,7 +27,11 @@ def firstzeros():
     # return render_template("first_zeros.html", start=start, end=end,
     # limit=limit, degree=degree, signature_r=signature_r,
     # signature_c=signature_c)
-    return render_template("first_zeros.html", start=start, end=end, limit=limit, degree=degree, title="First zero search", bread=[("First zeros search", " "), ])
+    title = "Search for first zeros of L-functions"
+    bread=[("L-functions", url_for("l_functions.l_function_top_page")), ("First zeros search", " "), ]
+    return render_template("first_zeros.html",
+                           start=start, end=end, limit=limit,
+                           degree=degree, title=title, bread=bread)
 
 
 @FirstZeros.route("/list")

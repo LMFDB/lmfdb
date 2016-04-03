@@ -37,14 +37,14 @@ class RootTest(LmfdbTest):
         css = self.tc.get("/style.css").data
         # def for knowls:
         assert '*[knowl]' in css
-        assert 'border-bottom: 1px dotted #AAF;' in css
+        assert 'border-bottom: 1px dotted grey;' in css
 
     def test_db(self):
         assert self.C is not None
         known_dbnames = self.C.database_names()
         expected_dbnames = ['Lfunctions', 'elliptic_curves', 'numberfields', 'localfields',
                             'MaassWaveForm', 'HTPicard', 'Lfunction',
-                            'upload', 'knowledge', 'hmfs', 'bmfs', 'userdb'
+                            'upload', 'knowledge', 'hmfs', 'bmfs', 'userdb',
                             'modularforms', 'hgm', 'genus2_curves']
         for dbn in expected_dbnames:
             assert dbn in known_dbnames, 'db "%s" missing' % dbn

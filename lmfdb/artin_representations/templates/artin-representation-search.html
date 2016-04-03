@@ -2,7 +2,9 @@
 {% block content %}
 {# Refine search page #}
 
-<form>
+<form id="re-search">
+<input type="hidden" name="start" value="{{start}}"/>
+<input type="hidden" name="paging" value="0"/>
   <table>
     <tr>
       <td>{{ KNOWL('artin.dimension',title="Dimension") }}</td>
@@ -68,29 +70,31 @@
 </form>
 {% endif %}
     
-<h2>Error</h2>
-    <div>
-  {{ req.err|safe }}
+    {% if req.err != '' %}
+        <h2>Error</h2>
+    {% endif %}
+            <div>
+              {{ req.err|safe }}
     <p>
       Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
       </div>
+
 
 {% else %}
 
 
 
 
-<h2> Results: showing {{data_count}} results </h2>
-{% if data_count > 0 %}
+<h2> Results: {{report}} </h2>
+{% if nres > 0 %}
 <div>
-  Galois conjugate representations are grouped into single lines.  Some representations may be
-  listed more than once if they are presented in terms of different defining polynomials.
+  Galois conjugate representations are grouped into single lines.  
 </div>
 
 <div>
 	<table border=1 cellpadding=5 class="ntdata">
 
-	<thead><tr><th>Result</th>
+	<thead><tr><th>Label</th>
         <th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
 	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
@@ -101,27 +105,36 @@
 	</tr></thead>
 	<tbody>
 
-        {% for galclass in data%}
-        {% set outer_loop = loop %}
+        {% for artin in data%}
+        {% set art = initfunc(artin['Baselabel'],1) %}
+        {% set galccsize = art.galois_conjugacy_size() %}
           <tr><td>
-          {% for artin in galclass %}
-            <a href = "{{artin.url_for()}}">{{outer_loop.index}}.{{loop.index}}</a>
+          {% for cnt in range(galccsize) %}
+        {% set artx = initfunc(artin['Baselabel'],cnt+1) %}
+        {% if sign_code == 0 or sign_code == art.sign() %}
+            <a href = "{{artx.url_for()}}">{{art.baselabel()}}c{{cnt+1}}</a>
+        {% endif %}
           {% endfor %}
-          {% set artin = galclass[0] %}
             </td>
-            <td>${{artin.dimension()}}$</td>
-          <td>${{artin.factored_conductor_latex()}}$</td>
-          <td>{{ artin.field_knowl()|safe }}</td>
+            <td align="center">${{art.dimension()}}$</td>
+          <td>${{art.factored_conductor_latex()}}$</td>
+          <td>{{ art.field_knowl()|safe }}</td>
 
 	  {# <td align="center">{{artin.number_field_galois_group().G_name()}}</td> #}
-	  <td align="center">{{artin.pretty_galois_knowl() | safe }} </td>
-{#	  <td>${{artin.processed_root_number()}}$</td> #}
-	  <td> ${{artin.indicator()}}$</td>
-	  <td>${{artin.trace_complex_conjugation()}}$</td>
+	  <td align="center">{{art.pretty_galois_knowl() | safe }} </td>
+	  <td align="center"> ${{artin.Indicator}}$</td>
+	  <td align="center">${{art.trace_complex_conjugation()}}$</td>
 	  </tr>
         {% endfor %}
 	</tbody>
 	</table>
+     {% if start > 0 %}
+         <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+      {% endif %}
+       {% if start +req.count  < nres %}
+   <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+    {% endif %}
+
   {% endif %}
 {% endif %}
 

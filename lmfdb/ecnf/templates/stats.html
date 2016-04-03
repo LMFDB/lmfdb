@@ -1,0 +1,27 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+{{ KNOWL_INC('dq.ecnf.extent') }}
+</div>
+
+<h3>Browse by field degree or signature:</h3>
+<ul>
+{% for d, ddat in info.stats.iteritems() %}
+<li>
+<a href={{url_for('ecnf.statistics_by_degree', d=d)}}>Degree {{d}}</a>
+<ul>
+{% for s, sdat in ddat.iteritems() %}
+{% if sdat %}
+<li>
+<a href={{url_for('ecnf.statistics_by_signature', d=d, r=s)}}>Signature {{s}}</a>
+</li>
+{% endif %}
+{% endfor %}
+</ul>
+</li>
+{% endfor %}
+</ul>
+
+{% endblock %}
+</html>

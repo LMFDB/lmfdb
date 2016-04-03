@@ -165,42 +165,6 @@ function draw_fd() {
 	mainWindow = window.open(url,'Plot of fundamental domain','width=400,height=400,scrollbars=yes,resizable=yes')
 }
 
-function check_coefficient_form() {
-    s="This might take some time. Are you sure you want to use these parameters?";
-    var agree=true;
-    var prec_set=false;
-    var number_set=false;
-    var level = document.get_coefficients.level.value;
-    var weight = document.get_coefficients.weight.value;
-    var character= document.get_coefficients.character.value;
-    var label = document.get_coefficients.label.value;
-    var d= document.get_coefficients.number.value
-    if(d < 0 ||  d > 10000) {	
-	agree=confirm(s);
-    }
-    var d= document.get_coefficients.prec.value
-    if(d < 0 ||  d > 100) {	
-	agree=confirm(s);
-    }
-    if (agree) {
-	if(document.get_coefficients.format[0].checked) {
-	    format="q-exp"
-	} else {
-	    format="embeddings";
-	}
-	if(label != '') {
-	    label="&label="+label;
-	}
-	document.get_coefficients.submit()
-	/*url="/ModularForm/GL2/Q/holomorphic/";
-	url=url+"?level="+level+"&weight="+weight+label+"&character="+character; 
-	url=url+"&get_coeffs=1&number="+d;
-	mainWindow = window.open(url,'Fourier Coefficients','width=400,height=400,scrollbars=yes,resizable=yes')*/
-	    /*document.get_tables_of_stuff.submit();*/
-    }
-  }
-    
-
 
 function eventTrigger (e) {
     if (! e)

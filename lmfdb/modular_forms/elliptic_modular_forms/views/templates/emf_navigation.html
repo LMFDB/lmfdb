@@ -1,5 +1,5 @@
 {% extends "homepage.html" %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <script type="text/javascript" src="{{url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
@@ -84,20 +84,18 @@ function set_value(id,val) {
 }
 </script>
 {% if info.grouptype == 0 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(N)\)') %}
-    {% set chi = 1%}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma0n',title='\(\Gamma_0(N)\)') %}
 {% elif info.grouptype == 1 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(N)\)') %}
-    {% set chi = -1%}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma1n',title='\(\Gamma_1(N)\)') %}
 {% endif %}
 
 {%if info.show_switch is defined %}
-  {% if info.groupother == 1 %}
-  {% set groupotherchar = -1 %}
+  {% if info.grouptype == 0 %}
+   {% set groupother = 1 %}
   {% else %}
-  {% set groupotherchar = 1 %}
+   {% set groupother = 0 %}
   {%endif%}
-  <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.render_elliptic_modular_forms',character=groupotherchar)}}">Switch to \(\Gamma_{{info.groupother}}(N)\)</a></h2></div>
+  <div style="float:right;margin-right:30px;"><h2 style="font-size:1.2em"><a href="{{url_for('.browse_web_modform_spaces_in_ranges',group=groupother)}}">Switch to \(\Gamma_{{info.groupother}}(N)\)</a></h2></div>
 {%endif%}
 
 <h1>Browse holomorphic {{KNOWL('mf.elliptic.newform',title='newforms')}} for {{group}}</h1>
@@ -115,32 +113,7 @@ The table below gives the dimensions of the space of holomorphic
 {% endif %}
 </div>
 
-<style>
-table.ntdata th.left {
-  border-right: 2px solid #9b9;
-  background: #efe;
-  border-bottom: 0;
-  text-align: right;
-}
-table.ntdata td { text-align: left; }
-table.ntdata th.weight {
-  text-align: left;
-  background: #efe;
-  border-bottom: 2px solid #9b9;
-  border-left: 0;
-  vertical-align: center;
-}
-table.ntdata thead tr.space {
-  background: #efe;
-  border-bottom: 0;
-}
 
-table.ntdata thead th.spaceleft {
-  border-right: 2px solid #9b9;
-  vertical-align: top;
-}
-
-</style>
       {% set table = info.browse_table %}
       {% set rows = info.browse_table.rows %}
       <table class="ntdata">
@@ -154,7 +127,7 @@ table.ntdata thead th.spaceleft {
           <tr class="space">
             <th class="spaceleft"></th>
             {% for N in table.col_heads  %}
-	    {% set col_url = url_for('emf.render_elliptic_modular_forms',level=N,character=chi) %}
+	    {% set col_url = url_for('emf.render_elliptic_modular_forms',level=N,group=info.grouptype) %}
             <th class="level"><a href="{{col_url}}">{{N}}</a></th>
             {% endfor %}
           </tr>
@@ -164,7 +137,7 @@ table.ntdata thead th.spaceleft {
           <tr>
             <th class="left">
               {% set k = table.row_heads[loop.index-1] %}
-              {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,character=chi) %}
+              {% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,group=info.grouptype) %}
               <a href="{{ row_url }}">{{ k }}</a>
             </th>
             {% for cell in row  %}

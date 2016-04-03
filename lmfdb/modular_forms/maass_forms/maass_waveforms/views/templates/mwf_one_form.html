@@ -28,7 +28,7 @@ var oTable = $("table#coeffs").dataTable(
      }, 
      "sDom": 't<"paging"ip><"bottom"lfr><"filterbox">',
      "sScorollX": "300px", 
-    "aLengthMenu": [[20, 50, 100, 200, -1], [20, 50, 100,  200, "All"]],
+    "aLengthMenu": [[20, 50, 100, 200, 500, -1], [20, 50, 100,  200, 500, "All"]],
      "bStateSave": false,
      "bAutoWidth": false,
      "oSearch": { "sSearch": "", "bRegex": false, "bSmart": true },
@@ -83,10 +83,7 @@ $('#coeffs').css('width','400px')
 
 <h2>The first few {{KNOWL('mf.maass.mwf.fourierexpansion',title='Fourier Coefficients')}}</h2>
 {% if MF.coeffs is defined and MF.num_coeff > 0%}
-{# <table class="ntdata" id="coeffs" valign="top" border="1"> #}
-<table>
-<tr><td>
-<table class="ntdata" id="coeffs">
+ <table class="ntdata" id="coeffs">
   <colgroup>
     <col/>
     {% for k in range(1,ncols)  %}
@@ -115,7 +112,7 @@ $('#coeffs').css('width','400px')
     </tr>
   </thead>
   <tbody>
-    {% set nnrows = 200 %}
+    {% set nnrows = 500 %}
     {%if nrows < nnrows %}
      {% set nnrows = nrows %}
     {%endif%}
@@ -162,18 +159,13 @@ $('#coeffs').css('width','400px')
     </tr>
     {% endfor %}
    </tbody>
-</table>
-</td></tr>
-<tr><td>
-<p>
+ </table>
 {# <form name="search" method = "get" action="{{url_for('mwf.render_one_maass_waveform',maass_id=maassid)}}">
   <input type="hidden" name="id" value="{{maassid}}">
   <input type="hidden" name="download" value="coefficients">
   <button type="submit" name="Submit" value="Get more">Download coefficients</button>	
 </form> #}
-    </td>
-    </tr>
-</table>
+
 {# { KNOWL('metadata.knowl-tag') } #}
     
 {% if plotlink %}

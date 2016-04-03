@@ -42,7 +42,7 @@ def l_function_history():
     bc = [('L-functions', url_for('.l_function_top_page')),
           (t, url_for('.l_function_history'))]
     return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc)
-    
+
 
 
 
@@ -69,6 +69,11 @@ def l_function_degree3_browse_page():
     info = {"bread": get_bread(3, [])}
     return render_template("Degree3.html", title='Degree 3 L-functions', **info)
 
+# Degree 4 L-functions browsing page ##############################################
+@l_function_page.route("/degree4/")
+def l_function_degree4_browse_page():
+    info = {"bread": get_bread(4, [])}
+    return render_template("Degree4.html", title='Degree 4 L-functions', **info)
 
 
 # Degree browsing page #########################################################
@@ -179,7 +184,7 @@ def set_info_for_start_page():
     info['title'] = 'L-functions'
     info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
 
-    info['learnmore'] = [('History of L-functions', '/L/history')]
+    info['learnmore'] = [('History of L-functions', url_for('.l_function_history'))]
 
     return info
 
@@ -330,11 +335,9 @@ def l_function_nf_page(label):
 
 
 # L-function of Artin representation    ########################################
-@l_function_page.route("/ArtinRepresentation/<dimension>/<conductor>/<tim_index>/")
-def l_function_artin_page(dimension, conductor, tim_index):
-    args = {'dimension': dimension, 'conductor': conductor,
-            'tim_index': tim_index}
-    return render_single_Lfunction(ArtinLfunction, args, request)
+@l_function_page.route("/ArtinRepresentation/<label>/")
+def l_function_artin_page(label):
+    return render_single_Lfunction(ArtinLfunction, {'label': label}, request)
 
 # L-function of hypergeometric motive   ########################################
 @l_function_page.route("/Motive/Hypergeometric/Q/<label>/<t>")
@@ -368,8 +371,11 @@ def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
     logger.debug(args)
     logger.debug(temp_args)
+
+    L = Lclass(**args)
+    # removing this from the try, because it makes debugging difficult
     try:
-        L = Lclass(**args)
+        pass #L = Lclass(**args)
     except Exception as ex:
         from flask import current_app
         if not current_app.debug:
@@ -405,6 +411,9 @@ def initLfunction(L, args, request):
     '''
     info = {'title': L.title}
 #    if 'title_arithmetic' in L:
+    if not hasattr(L, 'fromDB'):
+        L.fromDB = False
+
     try:
         info['title_arithmetic'] = L.title_arithmetic
         info['title_analytic'] = L.title_analytic
@@ -421,13 +430,27 @@ def initLfunction(L, args, request):
 
     info['Ltype'] = L.Ltype()
 
-    # Here we should decide which values are indeed special values
-    # According to Brian, odd degree has special value at 1, and even
-    # degree has special value at 1/2.
-    # (however, I'm not sure this is true if L is not primitive -- GT)
+    try:
+        info['label'] = L.label
+    except:
+        info['label'] = ""
 
-    # Now we usually display both
+    info['knowltype'] = ""   # will be things like g2c.q, ec.q, ...
     if L.Ltype() == "genus2curveQ":
+        info['knowltype'] = "g2c.q"
+    elif L.Ltype() == "ellipticcurveQ":
+        info['knowltype'] = "ec.q"
+    elif L.Ltype() == "dirichlet":
+        info['knowltype'] = "character.dirichlet"
+        info['label'] = str(L.charactermodulus) + "." + str(L.characternumber)
+    elif L.Ltype() == "ellipticmodularform":
+        info['knowltype'] = "mf"
+        info['label'] =  str(L.level) + '.' + str(L.weight) 
+        info['label'] += '.' + str(L.character) + '.' + str(L.label) 
+        info['label'] += '.' + request.url.split("/")[-2]  # the embedding
+
+#    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
+    if L.fromDB:
         if L.motivic_weight % 2 == 0:
            arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
         else:
@@ -449,13 +472,18 @@ def initLfunction(L, args, request):
         info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
         info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
 
+        info['st_group'] = L.st_group
+        info['rank'] = L.order_of_vanishing
+        info['motivic_weight'] = L.motivic_weight
+
+
     elif L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
-    #    if is_even(L.degree) :
-    #        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
-    #    if is_odd(L.degree):
-    #        info['sv_edge'] = specialValueString(L, 1, '1')
-        info['sv_edge'] = specialValueString(L, 1, '1')
-        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+        try:
+            info['sv_edge'] = specialValueString(L, 1, '1')
+            info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+        except:
+            info['sv_critical'] = "L(1/2): not computed"
+            info['sv_edge'] = "L(1): not computed"
 
     info['args'] = args
 
@@ -484,6 +512,13 @@ def initLfunction(L, args, request):
     info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
                         replace('/Lfunction/', '/L/Plot/').
                         replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
+#    # an inelegant way to remove the plot in certain cases
+#    try: 
+#        if not L.fromDB and not L.plot:
+#            info['plotlink'] = ""
+#    except:
+#        pass
+
 
     info['bread'] = []
     info['properties2'] = set_gaga_properties(L)
@@ -521,7 +556,7 @@ def initLfunction(L, args, request):
                              maass_id = prev_form_id) )
             else:
                 prev_data = ('','','')
-                
+
             info['navi'] = ( prev_data, next_data )
 
         else:
@@ -577,6 +612,9 @@ def initLfunction(L, args, request):
             ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
         info['bread'] = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
                                       (label, url_for('.l_function_ec_page', label=label))])
+    elif L.Ltype() == 'genus2curveQ':
+        # should use url_for
+        info['friends'] = [('isogeny class ' + L.label, "/Genus2Curve/Q/" + L.label.replace(".","/"))]
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
@@ -665,8 +703,6 @@ def initLfunction(L, args, request):
         info['friends'] = [('Siegel Modular Form ' + weight + '_' + L.orbit, friendlink)]
 
     elif L.Ltype() == "artin":
-        # info['zeroeslink'] = ''
-        # info['plotlink'] = ''
         info['friends'] = [('Artin representation', L.artin.url_for())]
         if L.sign == 0:           # The root number is now unknown
             info['zeroeslink'] = ''
@@ -698,7 +734,9 @@ def initLfunction(L, args, request):
     info['eulerproduct'] = lfuncEPtex(L, "abstract")
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
-    if L.Ltype() == "genus2curveQ":
+ #   if L.Ltype() == "genus2curveQ":
+ #   if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
+    if L.fromDB:
         info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
         info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
         info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")
@@ -848,8 +886,14 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
     if hasattr(pythonL,"lfunc_data"):
-        F = p2sage(pythonL.lfunc_data['plot'])
-    else:    
+        if pythonL.lfunc_data is None:
+            return ""
+        else:
+            F = p2sage(pythonL.lfunc_data['plot'])
+    else:
+     # obsolete, because lfunc_data comes from DB?
+      #  if pythonL.fromDB:
+      #      return ""
         L = pythonL.sageLfunction
         # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
         # SL: Reason, it's not in the distribution of Sage
@@ -859,7 +903,11 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
         plotStep = .1
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, plotStep)]
-    p = line(F)
+    interpolation = spline(F)
+    F_interp = [(i, interpolation(i)) for i in srange(-30, 30, 0.05)]
+    p = line(F_interp)
+#    p = line(F)    # temporary hack while the correct interpolation is being implemented
+    
     styleLfunctionPlot(p, 10)
     fn = tempfile.mktemp(suffix=".png")
     p.save(filename=fn)
@@ -882,7 +930,10 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
     if hasattr(L,"lfunc_data"):
-        website_zeros = p2sage(L.lfunc_data['zeros'])
+        if L.lfunc_data is None:
+            return "<span>" + L.zeros + "</span>"
+        else:
+            website_zeros = p2sage(L.lfunc_data['zeros'])
     else:
         # This depends on mathematical information, all below is formatting
         # More semantic this way
@@ -893,21 +944,29 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     negativeZeros = []
 
     for zero in website_zeros:
-        if zero.abs() < 1e-10:
+        if abs(float(zero)) < 1e-10:
             zero = 0
-        if zero < 0:
-            negativeZeros.append(zero)
+        if float(zero) < 0:
+            negativeZeros.append(str(zero))
         else:
-            positiveZeros.append(zero)
+            positiveZeros.append(str(zero))
 
+    zero_truncation = 25   # show at most 25 positive and negative zeros
+                           # later: implement "show more"
+    negativeZeros = negativeZeros[-1*zero_truncation:]
+    positiveZeros = positiveZeros[:zero_truncation]
     # Format the html string to render
-    positiveZeros = str(positiveZeros)
-    negativeZeros = str(negativeZeros)
+#    positiveZeros = str(positiveZeros)
+#    negativeZeros = str(negativeZeros)
+    positiveZeros = ", ".join(positiveZeros)
+    negativeZeros = ", ".join(negativeZeros)
     if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
-        negativeZeros = negativeZeros.replace("]", ", ]")
+       # negativeZeros = negativeZeros.replace("]", ", ]")
+        negativeZeros = negativeZeros + ", "
 
     return "<span class='redhighlight'>{0}</span><span class='positivezero'>{1}</span>".format(
-        negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
+     #   negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
+        negativeZeros.replace("-","&minus;"), positiveZeros)
 
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):
@@ -955,7 +1014,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return DedekindZeta(label=str(arg2))
 
     elif arg1 == "ArtinRepresentation":
-        return ArtinLfunction(dimension=arg2, conductor=arg3, tim_index=arg4)
+        return ArtinLfunction(label=str(arg2))
 
     elif arg1 == "SymmetricPower":
         return SymmetricPowerLfunction(power=arg2, underlying_type=arg3, field=arg4, label=arg5)
@@ -968,7 +1027,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == "Genus2Curve" and arg2 == "Q":
         return Lfunction_genus2_Q(label=str(arg3)+'.'+str(arg4))
-    
+
     elif arg1 == 'Lcalcurl':
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
 

@@ -9,14 +9,8 @@
       url_for: "introduction"
     - title: Features
       url_for: "introduction_features"
-    - title: Tutorial
-      url_for: "introduction_tutorial"
     - title: Map
       url_for: "bigpicture"
-    - title: Contact
-      url_for: "contact"
-    - title: Citation
-      url_for: "citation"
     - title: Future Plans
       url_for: "roadmap"
 
@@ -45,7 +39,6 @@
           url_for: "l_functions.l_function_degree_page"
           url_args:
             degree: 'degree4'
-          status: beta
         - title: "5+"
           status: future
    secondpart:
@@ -59,6 +52,11 @@
         - title: Operations
           url_for: "tensor_products.index"
           status: beta
+        - title: dummy
+          status: future
+        - title: Local L-functions
+          status: future
+          colspan: onecolumn
 
 3ModForm:
    type: multilevel
@@ -79,6 +77,7 @@
            status: future
          - title: Half-integral
            status: future
+           colspan: onecolumn
          - title: Noncongruence
            status: future
            colspan: onecolumn
@@ -106,6 +105,7 @@
    type: multilevel
    heading:
       title: Varieties
+      url_for: "varieties"
    parts:
      - title: Curves
        style: rotate
@@ -121,6 +121,7 @@
                colspan: onecolumn
              - title: $\Q$-curves
                status: future
+               colspan: onecolumn
            colspan: onecolumn
          - title: "Genus 2:"
            part3:
@@ -163,6 +164,7 @@
    type: simple
    heading:
       title: Fields
+      url_for: "fields"
    parts:
     - title: "Number fields:"
       part2:
@@ -173,11 +175,13 @@
       colspan: onecolumn
     - title: Function fields
       status: future
+      colspan: onecolumn
 
 6Repn:
    type: simple
    heading:
       title: Representations
+      url_for: "representations"
    parts:
     - title: "Characters:"
       url_for: "characters.render_characterNavigation"
@@ -192,14 +196,13 @@
       url_for: "artin_representations.index"
     - title: Galois
       status: future
-    - title: dummy
-      status: future
+      colspan: onecolumn
     - title: Weil-Deligne
       status: future
-    - title: dummy
-      status: future
+      colspan: onecolumn
     - title: Automorphic
       status: future
+      colspan: onecolumn
 
 7Mot:
    type: simple
@@ -227,14 +230,17 @@
    type: simple
    heading:
       title: Groups
+      url_for: "groups"
    parts:
     - title: Galois groups
       url_for: "galois_groups.index"
-    - title: dummy
+      colspan: onecolumn
+    - title: Sato-Tate groups
       status: future
+      colspan: onecolumn
     - title: Lattices
       url_for: "lattice.lattice_render_webpage"
-      status: future
+      status: beta
     - title: Subgroups of
       part2:
          - title: $\SL(2)$

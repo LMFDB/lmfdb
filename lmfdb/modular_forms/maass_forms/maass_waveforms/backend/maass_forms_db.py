@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ### Class for computing and storing Maass waveforms.
 ### Use either mongodd or SQL
 

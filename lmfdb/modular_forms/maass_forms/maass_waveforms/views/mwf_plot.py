@@ -16,7 +16,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
     yMin = int(min_level)
     extraSpace = 40
     length_R = xMax - xMin
-    length_level = yMax - yMin
+    length_level = yMax - yMin + 1
     if length_level < 15:
         heightfactor = heightfactor * 2
     height = length_level * heightfactor + extraSpace

@@ -9,8 +9,6 @@
 {% if col.computes_dimensions() %}
 {% if dimensions %}
 {% include 'includes/dimension_table.html' %}
-<h2>Available samples</h2>
-{% include [ [ 'includes/avail/', col.name(), '_avail_forms.html']|join, 'Not_available.html'] %}
 
 <h3>New search</h3>
 {% endif %}
