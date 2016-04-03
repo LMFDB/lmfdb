@@ -121,5 +121,5 @@ galrep:
 
 padicreg:
   sage: |
-    [E.padic_regulator(p) for p in primes(3,20)]
+    [E.padic_regulator(p) for p in primes(3,20) if E.conductor().valuation(p)<2]
 

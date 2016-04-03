@@ -9,8 +9,7 @@ import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.search_parsing import split_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label
-
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 import sage.all
 from sage.all import EllipticCurve, latex, matrix, ZZ, QQ
 
@@ -327,20 +326,28 @@ class WebEC(object):
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(self.E.q_eigenform(10))
-
+        self.newform_label = newform_label(cond,2,1,iso)
+        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso)
+        newform_exists_in_db = is_newform_in_db(self.newform_label)
         self.make_code_snippets()
 
         self.friends = [
             ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
-            ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label)),
-            ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
-            ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-            ('Modular form ' + newform_label(cond,2,1,iso), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=1, label=iso))]
+            ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label))]
+        if not self.cm:
+            self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
+            ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso))]
+        if newform_exists_in_db:
+            self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
         self.downloads = [('Download coefficients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
-                          ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label))]
+                          ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label)),
+                          ('Download Magma code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
+                          ('Download Sage code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
+                          ('Download GP code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp'))
+        ]
 
         self.plot = encode_plot(self.E.plot())
         self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot

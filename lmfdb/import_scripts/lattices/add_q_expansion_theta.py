@@ -11,10 +11,16 @@ import json
 import sage.all
 from sage.all import os, gp, matrix
 
+
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=37010)
-C['Lattices'].authenticate('editor', '282a29103a17fbad')
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['Lattices'].authenticate('editor', password)
 lat = C.Lattices.lat
+
 
 def check_add_qexp(dim, min_det=1, max_det=None, fix=False):
     count = 0
@@ -30,7 +36,7 @@ def check_add_qexp(dim, min_det=1, max_det=None, fix=False):
           % (lat_set.count(), dim, min_det, max_det))
     if lat_set.count() == 0:
         return None
-    print("checking wheter the q expansion is stored...")
+    print("checking whether the q expansion is stored...")
     for l in lat_set:
         print("Testing lattice %s" % l['label'])
         if l['theta_series'] == "":

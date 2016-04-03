@@ -483,12 +483,12 @@ def number_field_search(**args):
 
     fields = C.numberfields.fields
 
-    res = fields.find(
-        query).sort([('degree', ASC), ('disc_abs_key', ASC), ('disc_sign', ASC), ('label', ASC)])
+    res = fields.find(query)
 
     if 'download' in info and info['download'] != '0':
         return download_search(info, res)
 
+    res = res.sort([('degree', ASC), ('disc_abs_key', ASC), ('disc_sign', ASC), ('label', ASC)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -604,7 +604,6 @@ def download_search(info, res):
     s += '\\\n'
     for f in res:
         wnf = WebNumberField.from_data(f)
-        cgi = wnf.class_group_invariants()
         entry = ', '.join(
             [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
         s += '[' + entry + ']' + ',\\\n'

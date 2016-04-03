@@ -250,9 +250,10 @@ def render_lattice_webpage(**args):
     info['aut']=int(f['aut'])
 
     ncoeff=20
-    coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
-    info['theta_series']=my_latex(print_q_expansion(coeff))
-    info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
+    if f['theta_series'] != "":
+        coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
+        info['theta_series']=my_latex(print_q_expansion(coeff))
+        info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
 
     info['class_number']=int(f['class_number'])
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
@@ -265,14 +266,17 @@ def render_lattice_webpage(**args):
     if info['name'] != "" or info['comments'] !="":
         info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
     info['properties'] = [
-        ('Label', '$%s$' % info['label']),
-        ('Dimension', '$%s$' % info['dim']),
-        ('Gram matrix', '$%s$' % info['gram'])
+        ('Dimension', '%s' %info['dim']),
+        ('Determinant', '%s' %info['det']),
+        ('Level', '%s' %info['level']),
+        ('Class number', '%s' %info['class_number']),
+        ('Label', '%s' % info['label'])
         ]
     if info['name'] != "" :
-        info['properties'].append(('Name','%s' % info['name'] ))
-    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], friends=friends, learnmore=learnmore_list())
+        info['properties']=[('Name','%s' % info['name'] )]+info['properties']
+#    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
+    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
+#friends=friends
 
 def vect_to_sym(v):
     n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
