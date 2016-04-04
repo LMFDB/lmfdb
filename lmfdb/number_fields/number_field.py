@@ -452,7 +452,7 @@ def number_field_search(**args):
         parse_bracketed_posints(info,query,'signature',split=False,exactlength=2)
         parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs_key'),parse_one=make_disc_key)
         parse_ints(info,query,'class_number')
-        parse_bracketed_posints(info,query,'class_group',split=False,check_divisibility='decreasing')
+        parse_bracketed_posints(info,query,'class_group',split=False,check_divisibility='increasing')
         parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',mode='complement',to_string=True)
         if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'some':
             mode = 'append'
@@ -483,12 +483,12 @@ def number_field_search(**args):
 
     fields = C.numberfields.fields
 
-    res = fields.find(
-        query).sort([('degree', ASC), ('disc_abs_key', ASC), ('disc_sign', ASC), ('label', ASC)])
+    res = fields.find(query)
 
     if 'download' in info and info['download'] != '0':
         return download_search(info, res)
 
+    res = res.sort([('degree', ASC), ('disc_abs_key', ASC), ('disc_sign', ASC), ('label', ASC)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -604,7 +604,6 @@ def download_search(info, res):
     s += '\\\n'
     for f in res:
         wnf = WebNumberField.from_data(f)
-        cgi = wnf.class_group_invariants()
         entry = ', '.join(
             [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
         s += '[' + entry + ']' + ',\\\n'

@@ -91,6 +91,7 @@ $rowvals{$key}=$val;
 }
 
 print OUTFILE "</tbody></table>\n";
+print OUTFILE "\n{% endblock %}\n\n";
   
 ##############
 
@@ -100,8 +101,8 @@ my %rowvals=@_;
 
 $multipleobject=0;
 
-my $truesymbol = "&#x25CF;";
-my $falsesymbol = "&#x25CB;";
+my $truesymbol = '&#10004;'; #"&#x25CF;";
+my $falsesymbol = ''; #"&#x25CB;";
 
 if(my $tmp=$rowvals{deltaRRR}) {
 
@@ -129,7 +130,7 @@ if(my $tmp=$rowvals{epsilon}) {
 
 }
 
-if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "triv" }
+if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "1" }
 
 if($rowvals{arithmetic} eq "true") { $rowvals{arithmetic}=$truesymbol }
 else {$rowvals{arithmetic}=$falsesymbol }

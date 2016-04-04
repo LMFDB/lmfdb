@@ -94,6 +94,7 @@ $rowvals{$key}=$val;
 }
 
 print OUTFILE "</tbody></table>\n";
+print OUTFILE "\n{% endblock %}\n";
 
 ##############
 
@@ -103,8 +104,9 @@ my %rowvals=@_;
 
 $multipleobject=0;
 
-my $truesymbol = "&#x25CF;";
-my $falsesymbol = "&#x25CB;";
+# Now checkmark
+my $truesymbol = '&#10004;'; # "&#x25CF;";
+my $falsesymbol = ''; # "&#x25CB;";
 
 if(my $tmp=$rowvals{gammaC}) {
 
@@ -133,7 +135,7 @@ if(my $tmp=$rowvals{epsilon}) {
 
 }
 
-if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "triv" }
+if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "1" }
 
 if($rowvals{arithmetic} eq "true") { $rowvals{arithmetic}=$truesymbol }
 else {$rowvals{arithmetic}=$falsesymbol }

@@ -153,32 +153,7 @@ Download all search results for
 <input type="submit" name="Submit" value="sage">
 <input type="submit" name="Submit" value="magma">
 <input type="hidden" name="download" value="1"/>
-<input type="hidden" name="conductor" value="{{info.conductor}}"/>
-<input type="hidden" name="jinv" value="{{info.jinv}}"/>
-<input type="hidden" name="rank" value="{{info.rank}}"/>
-<input type="hidden" name="torsion" value="{{info.torsion}}"/>
-<input type="hidden" name="torsion_structure" value="{{info.torsion_structure}}"/>
-<input type="hidden" name="sha" value="{{info.sha}}"/>
-<input type="hidden" name="surj_primes" value="{{info.surj_primes}}" />
-<input type="hidden" name="nonsurj_primes" value="{{info.nonsurj_primes}}"/>
-<select name="optimal" style="visibility:hidden;">
-{% if info.optimal=='on' %}
-  <option value="">No</option>
-  <option selected="yes" value="on">Yes</option>
-{% else %}
-  <option value="">No</option>
-  <option value="on">Yes</option>
-{% endif %}
-</select>
-<select name="surj_quantifier" style="visibility:hidden;">
-{% if info.surj_quantifier=='exactly' %}
-  <option value='include'>include</option>
-  <option selected="yes" value='exactly'>exactly</option>
-{% else %}
-  <option value='include'>include</option>
-  <option value='exactly'>exactly</option>
-{% endif %}
-  </select>
+<input type="hidden" name="query" value="{{info.query}}"/>
 </form>
 
 
