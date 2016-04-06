@@ -405,37 +405,33 @@ class G2C_stats(object):
         self._stats = stats
         g2c_logger.debug("... finished computing genus 2 curve stats.")
 
+download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
+download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =['}
+download_assignment_end = {'magma':'];','sage':']','gp':']'}
+download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
+download_make_data = {
+'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
+'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
+'gp':''
+}
+download_make_data_comment = {'magma': 'To create a list of curves, type "curves:= make_data();"','sage':'To create a list of curves, type "curves = make_data()"', 'gp':''}
 
 def download_search(info):
-    dltype = info["submit"]
-    delim = 'bracket'
-    com = r'\\'  # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    filename = 'genus2_curves.gp'
+    lang = info["submit"]
+    filename = 'genus2_curves' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
-    if dltype == 'sage':
-        com = '#'
-        filename = 'genus2_curves.sage'
-    if dltype == 'magma':
-        com = ''
-        com1 = '/*'
-        com2 = '*/'
-        delim = 'magma'
-        filename = 'genus2_curves.m'
-    s = com1 + "\n"
     # reissue saved query here
     res = g2cdb().curves.find(ast.literal_eval(info["query"]))
-    s += com + ' Genus 2 curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, res.count())
-    s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [Weierstrass Coefficients]\n'
-    s += '\n' + com2
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, res.count())
+    s += c + ' Below is a list called data. Each entry has the form:\n'
+    s += c + '   [[f coeffs],[h coeffs]]\n'
+    s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
+    s += c + '\n'
+    s += c + ' ' + download_make_data_comment[lang] + '\n'
     s += '\n'
-    if dltype == 'magma':
-        s += 'data := ['
-    else:
-        s += 'data = ['
-    s += '\\\n'
+    s += download_assignment_start[lang] + '\\\n'
     # loop through all search results and grab the curve equations
     for r in res:
         entry = str(r['min_eqn'])
@@ -443,14 +439,9 @@ def download_search(info):
         entry = entry.replace('\'','')
         s += entry + ',\\\n'
     s = s[:-3]
-    s += ']\n'
-    if delim == 'brace':
-        s = s.replace('[', '{')
-        s = s.replace(']', '}')
-    if delim == 'magma':
-        s = s.replace('[', '[*')
-        s = s.replace(']', '*]')
-        s += ';'
+    s += download_assignment_end[lang]
+    s += '\n\n'
+    s += download_make_data[lang]
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
