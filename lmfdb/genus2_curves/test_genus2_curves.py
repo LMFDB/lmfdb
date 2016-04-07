@@ -11,6 +11,24 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/?cond=100-200&count=100')
         assert '196.a.21952.1' in L.data
 
+    def test_disc_search(self):
+        L = self.tc.get('/Genus2Curve/Q/?start=0&count=50&cond=1988&abs_disc=&num_rat_wpts=&torsion=&torsion_order=&two_selmer_rank=&analytic_rank=&is_gl2_type=&st_group=&real_geom_end_alg=&aut_grp=&geom_aut_grp=&locally_solvable=&has_square_sha=')
+        assert '1988.a.3976.1' in L.data
+
+    def test_torsion(self):
+        L = self.tc.get('/Genus2Curve/Q/976/a/999424/1')
+        assert '\Z/{29}\Z' in L.data
+        L = self.tc.get('/Genus2Curve/Q/118606.a.118606.1')
+        assert 'trivial' in L.data
+
+    def test_sha_loc_solv(self):
+        L = self.tc.get('/Genus2Curve/Q/?start=0&count=50&has_square_sha=True')
+        assert '169.a.169.1' in L.data
+        L = self.tc.get('/Genus2Curve/Q/?start=0&count=50&cond=&abs_disc=&num_rat_wpts=&torsion=&torsion_order=&two_selmer_rank=&analytic_rank=&is_gl2_type=&st_group=&real_geom_end_alg=&aut_grp=&geom_aut_grp=&locally_solvable=True&has_square_sha=False')
+        assert 'displaying all 0 matches' in L.data
+        L = self.tc.get('/Genus2Curve/Q/?start=0&count=50&cond=&abs_disc=&num_rat_wpts=&torsion=&torsion_order=&two_selmer_rank=&analytic_rank=&is_gl2_type=&st_group=&real_geom_end_alg=&aut_grp=&geom_aut_grp=&locally_solvable=False')
+        assert '336.a.172032.1' in L.data
+
     def test_by_double_iso_label(self):
         L = self.tc.get('/Genus2Curve/Q/336/a/')
         assert '336.a.172032.1' in L.data
