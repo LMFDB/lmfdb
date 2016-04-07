@@ -20,6 +20,19 @@ from werkzeug.contrib.cache import SimpleCache
 # logfocus
 logfocus = None
 
+# global db connection instance (will be set by the first call to
+# getDBConnection() and should always be obtained from that)
+_C = None
+
+
+DEFAULT_DB_PORT = 37010
+DEFAULT_DB_HOST = 'localhost'
+DEFAULT_DB_REPLICA_SET = None
+from pymongo import ReadPreference
+DEFAULT_DB_READ_PREFERENCE = ReadPreference.NEAREST 
+
+# FIXME: there is no need for this global variable
+dbport = DEFAULT_DB_PORT
 
 def set_logfocus(lf):
     global logfocus
@@ -30,35 +43,26 @@ def get_logfocus():
     global logfocus
     return logfocus
 
-# global db connection instance (will be set by the first call to
-# getDBConnection() and should always be obtained from that)
-_C = None
+
 
 def getDBConnection():
     return _C
 
-def makeDBConnection(dbport):
+def makeDBConnection(dbport = DEFAULT_DB_PORT, dbhost = DEFAULT_DB_HOST, dbreplicaset = DEFAULT_DB_REPLICA_SET, dbreadpreference = DEFAULT_DB_READ_PREFERENCE):
     global _C
     if not _C:
         logging.info("establishing db connection at port %s ..." % dbport)
         import pymongo
+        from pymongo import MongoClient
         logging.info("using pymongo version %s" % pymongo.version)
-        if pymongo.version_tuple[0] < 3:
-            from pymongo import Connection
-            _C = Connection(port=dbport)
-        else:
-            from pymongo.mongo_client import MongoClient
-            _C = MongoClient(port=dbport)
+        _C = MongoClient(port = dbport, host = dbhost, replicaSet = dbreplicaset, read_preference = dbreadpreference)
         mongo_info = _C.server_info()
         logging.info("mongodb version: %s" % mongo_info["version"])
 
-AUTO_RECONNECT_MAX = 10
-AUTO_RECONNECT_DELAY = 1
+
+
+# global for  _db_reconnect
 AUTO_RECONNECT_ATTEMPTS = 0
-DEFAULT_DB_PORT = 37010
-dbport = DEFAULT_DB_PORT
-
-
 def _db_reconnect(func):
     """
     Wrapper to automatically reconnect when mongodb throws a AutoReconnect exception.
@@ -68,6 +72,8 @@ def _db_reconnect(func):
       * http://paste.pocoo.org/show/224441/
     and similar workarounds
     """
+    AUTO_RECONNECT_MAX = 10
+    AUTO_RECONNECT_DELAY = 1
     def retry(*args, **kwargs):
         global AUTO_RECONNECT_ATTEMPTS
         while True:
@@ -92,9 +98,9 @@ def _db_reconnect(func):
 # _db_reconnect(Connection._send_message_with_response)
 
 
-def _init(dbport):
+def _init(dbport = DEFAULT_DB_PORT, dbhost = DEFAULT_DB_HOST, dbreplicaset = DEFAULT_DB_REPLICA_SET, dbreadpreference = DEFAULT_DB_READ_PREFERENCE):
     import pymongo
-    makeDBConnection(dbport)
+    makeDBConnection(dbport, dbhost, dbreplicaset, dbreadpreference)
     C = getDBConnection()
 
     from os.path import dirname, join
