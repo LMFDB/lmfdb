@@ -108,7 +108,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
 
     #info['name'] = name
     info['title'] = 'Modular Form ' + WNF.hecke_orbit_label
-    
+    info['learnmore'] = [('History of Modular forms', url_for('holomorphic_mf_history'))]    
     if 'error' in info:
         return info
     # info['name']=WNF._name
