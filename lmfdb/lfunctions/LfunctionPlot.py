@@ -415,7 +415,8 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             lid = "(" + str(x) + "," + str(y) + ")"
-            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/"
+     #       linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/"
+            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/"
             WS = WebModFormSpace(level = x, weight = y)
             numlabels = len(WS.hecke_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
@@ -426,7 +427,8 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             numpluslabels = 0
             numminuslabels = 0
             for label in thelabels:  # looping over Galois orbit
-                linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/" + label
+      #          linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/" + label
+                linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/" + label
                 MF = WebNewForm(level = x, weight = y, label = label)   # one of the Galois orbits for weight y, level x
                 numberwithlabel = MF.dimension  # number of forms in the Galois orbit
                 if x == 1:  # For level 1, the sign is always plus
@@ -589,7 +591,8 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             lid = "(" + str(x) + "," + str(y) + ")"
-            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/0/"
+       #     linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/0/"
+            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/"
             WS = WebModFormSpace(level = x, weight = y)  # space of modular forms of weight y, level x
             galois_orbits = WS.hecke_orbits   # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
