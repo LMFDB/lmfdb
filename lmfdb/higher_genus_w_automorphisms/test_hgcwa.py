@@ -19,3 +19,6 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
 
 
+    def test_search_genus_group(self):
+               	L = self.tc.get('/HigherGenus/C/aut/?genus=2&trangplabel=6T1&signature=&count=20&Submit=Search')
+                assert '2 matches' in L.data
