@@ -328,9 +328,11 @@ def render_hmf_webpage(**args):
         ('Download to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
         ('Download to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
         ]
-    info['friends'] = [('L-function',
-                        url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
-
+    if hmf_field['narrow_class_no'] == 1:
+        info['friends'] = [('L-function',
+                            url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
+    else:
+        info['friends'] = [('L-function not available', "")]
     if data['dimension'] == 1:   # Try to attach associated elliptic curve
         lab = split_class_label(info['label'])
         ec_from_hmf = db_ecnf().find_one({"label": label + '1'})
