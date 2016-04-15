@@ -83,25 +83,120 @@ md.inlinePatterns.add('knowltagtitle', KnowlTagPatternWithTitle(knowltagtitle_re
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
 
-def md_preprocess(txt):
+def first_bracketed_string(text, depth=0, lbrack="{", rbrack="}"):
+    """If text is of the form {A}B, return {A},B.
+
+    Otherwise, return "",text.
+
+    """
+
+    thetext = text.strip()
+
+    if not thetext:
+        logging.error("empty string sent to first_bracketed_string()")
+        return ""
+
+    previouschar = ""
+       # we need to keep track of the previous character becaause \{ does not
+       # count as a bracket
+
+    if depth == 0 and thetext[0] != lbrack:
+        return "",thetext
+
+    elif depth == 0:
+        firstpart = lbrack
+        depth = 1
+        thetext = thetext[1:]
+    else:
+        firstpart = ""   # should be some number of brackets?
+
+    while depth > 0 and thetext:
+        currentchar = thetext[0]
+        if currentchar == lbrack and previouschar != "\\":
+            depth += 1
+        elif currentchar == rbrack and previouschar != "\\":
+            depth -= 1
+        firstpart += currentchar
+        if previouschar == "\\" and currentchar == "\\":
+            previouschar = "\n"
+        else:
+            previouschar = currentchar
+
+        thetext = thetext[1:]
+
+    if depth == 0:
+        return firstpart, thetext
+    else:
+        logging.error("no matching bracket %s in %s XX", lbrack, thetext)
+        return "",firstpart[1:]   # firstpart should be everything
+                                  # but take away the bracket that doesn't match
+
+def ref_to_link(txt):
+
+    text = txt.group(1)  # because it was a match in a regular expression
+
+    thecite, everythingelse = first_bracketed_string(text)
+    thecite = thecite[1:-1]    # strip curly brackets
+    thecite = thecite.replace("\\","")  # \href --> href
+
+    refs = thecite.split(",")
+    ans = ""
+
+    print "refs",refs
+
+    for ref in refs:
+        ref = ref.strip()    # because \cite{A, B, C,D} can have spaces
+        this_link = ""
+        if ref.startswith("href"):
+            the_link = re.sub(".*{([^}]+)}{.*", r"\1", ref)
+            click_on = re.sub(".*}{([^}]+)}\s*", r"\1", ref)
+            this_link = '{{ LINK_EXT("' + click_on + '","' + the_link + '") }}'
+        elif ref.startswith("doi"):
+            ref = ref.replace(":","")  # could be doi:: or doi: or doi
+            the_doi = ref[3:]    # remove the "doi"
+            this_link = '{{ LINK_EXT("' + the_doi + '","http://dx.doi.org/' + the_doi + '") }}'
+        elif ref.lower().startswith("mr"):
+            ref = ref.replace(":","") 
+            the_mr = ref[2:]    # remove the "MR"
+            this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
+            this_link += '"http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1='
+            this_link += the_mr + '") }}'
+        elif ref.lower().startswith("arxiv"):
+            ref = ref.replace(":","")  
+            the_arx = ref[5:]    # remove the "arXiv"
+            this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
+            this_link += '"http://arxiv.org/abs/'
+            this_link += the_arx + '") }}'
+
+  
+        if this_link:
+            if ans:
+                ans += ", "
+            ans += this_link
+
+    return '[' + ans + ']' + " " + everythingelse
+
+def md_preprocess(text):
     """
     Markdown preprocessor: html paragraph breaks before display math,
     \cite{MR:...} and \cite{arXiv:...} converted to links.
     """
-    knowl_content = txt
+    knowl_content = text
 
     # put a blank line above display equations so that knowls open in the correct location
     knowl_content = re.sub(r"([^\n])\n\\begin{eq",r"\1\n\n\\begin{eq",knowl_content)
 
-    knowl_content = re.sub(r"\\cite{MR[:]{0,2}([^}]+)}",   # 0, 1, or 2 colons after MR
-              r"[{{ LINK_EXT('MR\1', 'http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1=\1') }}]",
-              knowl_content)
+#    knowl_content = re.sub(r"\\cite{MR[:]{0,2}([^}]+)}",   # 0, 1, or 2 colons after MR
+#              r"[{{ LINK_EXT('MR\1', 'http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1=\1') }}]",
+#              knowl_content)
+#
+#    knowl_content = re.sub(r"(?i)\\cite{arxiv[:]{0,2}([^}]+)}",    # case insensitive: arXiv or arxiv
+#              r"[{{ LINK_EXT('arXiv:\1', 'http://arxiv.org/abs/\1') }}]",
+#              knowl_content)
 
-    knowl_content = re.sub(r"(?i)\\cite{arxiv[:]{0,2}([^}]+)}",    # case insensitive: arXiv or arxiv
-              r"[{{ LINK_EXT('arXiv:\1', 'http://arxiv.org/abs/\1') }}]",
-              knowl_content)
-
-    knowl_content = re.sub(r"\\cite{([^}]+)}",r"[\1]",knowl_content)
+#    knowl_content = re.sub(r"\\cite{([^}]+)}",r"[\1]",knowl_content)
+    while "\\cite{" in knowl_content:
+        knowl_content = re.sub(r"\\cite({.*)",ref_to_link,knowl_content,0,re.DOTALL)
 
     return knowl_content
 
