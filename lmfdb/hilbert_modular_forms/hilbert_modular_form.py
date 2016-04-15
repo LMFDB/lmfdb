@@ -415,14 +415,14 @@ def render_hmf_webpage(**args):
     if 'q_expansions' in data:
         info['q_expansions'] = data['q_expansions']
 
-    properties2 = [('Base Field', '%s' % info['field'].field_pretty()),
+    properties2 = [('Base field', '%s' % info['field'].field_pretty()),
                    ('Weight', '%s' % data['weight']),
-                   ('Level Norm', '%s' % data['level_norm']),
+                   ('Level norm', '%s' % data['level_norm']),
                    ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
                    ('Label', '%s' % data['label_suffix']),
                    ('Dimension', '%s' % data['dimension']),
                    ('CM', is_CM),
-                   ('Base Change', is_base_change)
+                   ('Base change', is_base_change)
                    ]
 
     return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())

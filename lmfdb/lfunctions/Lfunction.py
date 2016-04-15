@@ -677,8 +677,9 @@ class Lfunction_HMF(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,f)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-        self.title = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp "
-                      + "form with parallel weight " + str(self.weight)
+        self.title = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp form " 
+                      + "over " + F.field_pretty() 
+                      + " with parallel weight " + str(self.weight)
                       + ", level norm " + str(f['level_norm']) )
         if self.character:
             self.title += ", and character " + str(self.character)
