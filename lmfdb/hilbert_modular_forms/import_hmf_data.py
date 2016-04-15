@@ -5,6 +5,7 @@ import sys
 import time
 import sage.misc.preparser
 import subprocess
+from sage.interfaces.magma import magma
 
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from pymongo.mongo_client import MongoClient
@@ -38,9 +39,18 @@ def parse_label(field_label, weight, level_label, label_suffix):
         weight_label = str(weight) + '-'
     return field_label + '-' + weight_label + level_label + '-' + label_suffix
 
-P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
+P = sage.rings.polynomial.polynomial_ring_constructor.PolynomialRing(sage.rings.rational_field.RationalField(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
 
+
+def add_narrow_classno_data():
+    # Adds narrow class number data to all fields
+    for F in hmf_fields.find():
+         Fcoeff = fields.find_one({'label' : F['label']})['coeffs']
+         magma.eval('F<w> := NumberField(Polynomial([' + str(Fcoeff) + ']));')
+         hplus = magma.eval('NarrowClassNumber(F);')
+         hmf_fields.update({ '_id': F['_id'] }, { "$set": {'narrow_class_no': int(hplus)} })
+         print Fcoeff, hplus
 
 def import_all_data(n):
     nstr = str(n)

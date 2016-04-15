@@ -43,12 +43,8 @@ def makeDBConnection(dbport):
         logging.info("establishing db connection at port %s ..." % dbport)
         import pymongo
         logging.info("using pymongo version %s" % pymongo.version)
-        if pymongo.version_tuple[0] < 3:
-            from pymongo import Connection
-            _C = Connection(port=dbport)
-        else:
-            from pymongo.mongo_client import MongoClient
-            _C = MongoClient(port=dbport)
+        from pymongo.mongo_client import MongoClient
+        _C = MongoClient(port=dbport)
         mongo_info = _C.server_info()
         logging.info("mongodb version: %s" % mongo_info["version"])
 
