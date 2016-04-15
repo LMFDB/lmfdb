@@ -132,7 +132,10 @@ def first_bracketed_string(text, depth=0, lbrack="{", rbrack="}"):
                                   # but take away the bracket that doesn't match
 
 def ref_to_link(txt):
+    """ Convert citations to links
 
+        In a future version the bibliographic entry will be downloaded and saved.
+    """
     text = txt.group(1)  # because it was a match in a regular expression
 
     thecite, everythingelse = first_bracketed_string(text)
@@ -186,15 +189,6 @@ def md_preprocess(text):
     # put a blank line above display equations so that knowls open in the correct location
     knowl_content = re.sub(r"([^\n])\n\\begin{eq",r"\1\n\n\\begin{eq",knowl_content)
 
-#    knowl_content = re.sub(r"\\cite{MR[:]{0,2}([^}]+)}",   # 0, 1, or 2 colons after MR
-#              r"[{{ LINK_EXT('MR\1', 'http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1=\1') }}]",
-#              knowl_content)
-#
-#    knowl_content = re.sub(r"(?i)\\cite{arxiv[:]{0,2}([^}]+)}",    # case insensitive: arXiv or arxiv
-#              r"[{{ LINK_EXT('arXiv:\1', 'http://arxiv.org/abs/\1') }}]",
-#              knowl_content)
-
-#    knowl_content = re.sub(r"\\cite{([^}]+)}",r"[\1]",knowl_content)
     while "\\cite{" in knowl_content:
         knowl_content = re.sub(r"\\cite({.*)",ref_to_link,knowl_content,0,re.DOTALL)
 
