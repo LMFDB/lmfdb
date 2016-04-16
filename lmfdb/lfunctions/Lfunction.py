@@ -1708,7 +1708,7 @@ class Lfunction_genus2_Q(Lfunction):
         self.texnamecompleted1ms_arithmetic = "\\Lambda(A, " + str(self.motivic_weight + 1) + "-s)"
 #        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
 #                      + "of conductor " + str(isoclass['cond']))
-        self.title_end = ("where $A$ is a genus 2 curve "
+        self.title_end = ("where $A$ is the Jacobian of a genus 2 curve "
 #                      + "of conductor " + str(isoclass['cond']))
                       + "with label " + self.label)
         self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
