@@ -303,10 +303,18 @@ def by_triple_label(conductor,iso_label,number):
 @ec_page.route("/<label>")
 def by_ec_label(label):
     ec_logger.debug(label)
+
+    # First see if we have an LMFDB label of a curve or class:
     try:
         N, iso, number = split_lmfdb_label(label)
+        if number:
+            return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
+        else:
+            return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+
     except AttributeError:
         ec_logger.debug("%s not a valid lmfdb label, trying cremona")
+        # Next see if we have a Cremona label of a curve or class:
         try:
             N, iso, number = split_cremona_label(label)
         except AttributeError:
@@ -317,26 +325,21 @@ def by_ec_label(label):
             else:
                 return elliptic_curve_jump_error(label, {})
 
-        # We permanently redirect to the lmfdb label
         if number: # it's a curve
-            data = db_ec().find_one({'label': label})
-            if data is None:
-                return elliptic_curve_jump_error(label, {})
-            ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            #return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
-            return render_curve_webpage_by_label(data['label'])
-        else: # it's an isogeny class
-            data = db_ec().find_one({'iso': label})
-            if data is None:
-                return elliptic_curve_jump_error(label, {})
-            ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            #return redirect(url_for(".by_ec_label", label=data['iso']), 301)
-            return render_isogeny_class(data['iso'])
+            label_type = 'label'
+        else:
+            label_type = 'iso'
 
-    if number:
-        return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
-    else:
-        return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+        data = db_ec().find_one({label_type: label})
+        if data is None:
+            return elliptic_curve_jump_error(label, {})
+        ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
+        iso = data['lmfdb_iso'].split(".")[1]
+        if number:
+            return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=data['lmfdb_number']))
+        else:
+            return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+
 
 def by_weierstrass(eqn):
     w = weierstrass_eqn_regex.match(eqn)
