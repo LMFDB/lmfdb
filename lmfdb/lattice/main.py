@@ -8,7 +8,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma, random_object_from_collection
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
@@ -23,7 +23,7 @@ lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
 
 
-# usiliary functions for displays 
+# utilitary functions for displays 
 
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
@@ -87,12 +87,9 @@ def lattice_render_webpage():
 
 
 @lattice_page.route("/random")
-def random_lattice():    # Random Lattice
-    from sage.misc.prandom import randint
-    n = get_stats().counts()['nlattice']
-    n = randint(0,n-1)
-    C = getDBConnection()
-    res = C.Lattices.lat.find()[n]
+def random_lattice():
+    # Random Lattice
+    res = random_object_from_collection( getDBConnection().Lattices.lat )
     return redirect(url_for(".render_lattice_webpage", label=res['label']))
 
 

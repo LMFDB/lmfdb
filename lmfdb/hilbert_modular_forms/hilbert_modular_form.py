@@ -22,7 +22,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 
 from markupsafe import Markup
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, web_latex_split_on_pm
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, web_latex_split_on_pm, random_object_from_collection
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 from lmfdb.WebNumberField import *
@@ -32,12 +32,7 @@ hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A 
 
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
-    from sage.misc.prandom import randint
-    n = get_stats().counts()['nforms']
-    n = randint(0,n-1)
-    C = getDBConnection()
-    res = C.hmfs.forms.find()[n]
-    return hilbert_modular_form_by_label(res)
+    return hilbert_modular_form_by_label( random_object_from_collection( getDBConnection().hmfs.forms ) )
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*', '')
