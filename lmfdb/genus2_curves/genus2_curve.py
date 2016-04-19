@@ -12,7 +12,7 @@ from markupsafe import Markup
 import tempfile
 import os
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, comma
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, comma, random_object_from_collection
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_signed_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
@@ -140,10 +140,7 @@ def by_conductor(conductor):
 
 @g2c_page.route("/Q/random")
 def random_curve():
-    from sage.misc.prandom import randint
-    n = g2cdb().curves.count()
-    n = randint(0,n-1)
-    label = g2cdb().curves.find()[n]['label']
+    label = random_object_from_collection(g2cdb().curves)['label']
     # This version leaves the word 'random' in the URL:
     #return render_curve_webpage_by_label(label)
     # This version uses the curve's own URL:

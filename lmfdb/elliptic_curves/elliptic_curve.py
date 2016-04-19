@@ -10,7 +10,7 @@ import tempfile
 import os
 import StringIO
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_split_on_pm, comma
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_split_on_pm, comma, random_object_from_collection
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -110,10 +110,7 @@ def rational_elliptic_curves(err_args=None):
 
 @ec_page.route("/random")
 def random_curve():
-    from sage.misc.prandom import randint
-    n = get_stats().counts()['ncurves']
-    n = randint(0,n-1)
-    label = db_ec().find()[n]['label']
+    label = random_object_from_collection( db_ec() )['label']
     # This version leaves the word 'random' in the URL:
     # return render_curve_webpage_by_label(label)
     # This version uses the curve's own URL:
