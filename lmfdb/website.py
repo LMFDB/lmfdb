@@ -224,6 +224,12 @@ def get_configuration():
     #FIXME logfile isn't used
     logfile = "flasklog"
 
+    # default options to pass to the MongoClient
+    from pymongo import ReadPreference
+    mongo_client_options = {"port": 37010, "host": "localhost", "replicaset": None, "read_preference": ReadPreference.NEAREST};
+    read_preference_classes = {"PRIMARY": ReadPreference.PRIMARY, "PRIMARY_PREFERRED": ReadPreference.PRIMARY_PREFERRED , "SECONDARY": ReadPreference.SECONDARY, "SECONDARY_PREFERRED": ReadPreference.SECONDARY_PREFERRED, "NEAREST": ReadPreference.NEAREST };
+
+
         
     # deals with argv's
     if not sys.argv[0].endswith('nosetests'):
@@ -279,9 +285,6 @@ def get_configuration():
     import os
     #perhaps the filename could be an argv
     mongo_client_config_filename = "mongoclient.config"
-    from pymongo import ReadPreference
-    mongo_client_options = {"port": 37010, "host": "localhost", "replicaset": None, "read_preference": ReadPreference.NEAREST};
-    read_preference_classes = {"PRIMARY": ReadPreference.PRIMARY, "PRIMARY_PREFERRED": ReadPreference.PRIMARY_PREFERRED , "SECONDARY": ReadPreference.SECONDARY, "SECONDARY_PREFERRED": ReadPreference.SECONDARY_PREFERRED, "NEAREST": ReadPreference.NEAREST };
     """
     Example mongoclient.config equivalent to default
     [db]
