@@ -226,7 +226,7 @@ def get_configuration():
 
     # default options to pass to the MongoClient
     from pymongo import ReadPreference
-    mongo_client_options = {"port": 37010, "host": "localhost", "replicaset": None, "read_preference": ReadPreference.NEAREST};
+    mongo_client_options = {"port": DEFAULT_DB_PORT, "host": "localhost", "replicaset": None, "read_preference": ReadPreference.NEAREST};
     read_preference_classes = {"PRIMARY": ReadPreference.PRIMARY, "PRIMARY_PREFERRED": ReadPreference.PRIMARY_PREFERRED , "SECONDARY": ReadPreference.SECONDARY, "SECONDARY_PREFERRED": ReadPreference.SECONDARY_PREFERRED, "NEAREST": ReadPreference.NEAREST };
 
 
