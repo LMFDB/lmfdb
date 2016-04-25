@@ -598,10 +598,17 @@ def download_search(info, res):
     else:
         s += 'data = ['
     s += '\\\n'
+    Qx = PolynomialRing(QQ,'x')
+    str2pol = lambda s: Qx([QQ(str(c)) for c in s.split(',')])
     for f in res:
-        wnf = WebNumberField.from_data(f)
-        entry = ', '.join(
-            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
+#        wnf = WebNumberField.from_data(f)
+#        entry = ', '.join(
+#            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
+        pol = str2pol(f['coeffs'])
+        D = decodedisc(f['disc_abs_key'], f['disc_sign'])
+        gal_t = f['galois']['t']
+        cl = string2list(f['class_group'])
+        entry = ', '.join([str(pol), str(D), str(gal_t), str(cl)])
         s += '[' + entry + ']' + ',\\\n'
     s = s[:-3]
     if dltype == 'gp':
