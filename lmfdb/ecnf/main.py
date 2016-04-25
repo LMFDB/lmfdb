@@ -11,7 +11,7 @@ ASC = pymongo.ASCENDING
 from urllib import quote, unquote
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, flash, send_file
-from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
+from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
@@ -214,10 +214,7 @@ def index():
 
 @ecnf_page.route("/random")
 def random_curve():
-    from sage.misc.prandom import randint
-    n = get_stats().counts()['ncurves']
-    n = randint(0,n-1)
-    E = db_ecnf().find()[n]
+    E = random_object_from_collection(db_ecnf())
     return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 301)
 
 @ecnf_page.route("/<nf>/")

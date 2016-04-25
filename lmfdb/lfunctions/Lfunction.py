@@ -677,8 +677,9 @@ class Lfunction_HMF(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,f)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-        self.title = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp "
-                      + "form with parallel weight " + str(self.weight)
+        self.title = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp form " 
+                      + "over " + F.field_pretty() 
+                      + " with parallel weight " + str(self.weight)
                       + ", level norm " + str(f['level_norm']) )
         if self.character:
             self.title += ", and character " + str(self.character)
@@ -1707,7 +1708,7 @@ class Lfunction_genus2_Q(Lfunction):
         self.texnamecompleted1ms_arithmetic = "\\Lambda(A, " + str(self.motivic_weight + 1) + "-s)"
 #        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
 #                      + "of conductor " + str(isoclass['cond']))
-        self.title_end = ("where $A$ is a genus 2 curve "
+        self.title_end = ("where $A$ is the Jacobian of a genus 2 curve "
 #                      + "of conductor " + str(isoclass['cond']))
                       + "with label " + self.label)
         self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
