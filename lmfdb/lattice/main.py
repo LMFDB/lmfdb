@@ -453,10 +453,7 @@ def download_search2(info):
         s += c+ 'Full list of genus_representatives downloaded from the LMFDB on %s. \n'%(mydate)
     s += '\n'
     s += download_assignment_start[lang] + '\\\n'
-
-# reissue saved query here
-
-    res = getDBConnection().Lattices.lat.find(ast.literal_eval(info["label"]))
+    res = getDBConnection().Lattices.lat.find_one({'label': info["query"]})
     print res
 
     if info['download'] == '3':
