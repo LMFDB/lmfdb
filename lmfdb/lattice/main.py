@@ -4,7 +4,7 @@ ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 import flask
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
 
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
@@ -18,6 +18,11 @@ from lmfdb.lattice.lattice_stats import get_stats
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
 
 from markupsafe import Markup
+
+import time
+import os
+import ast
+import StringIO
 
 lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
@@ -109,8 +114,11 @@ def lattice_by_label_or_name(lab, C):
 
 def lattice_search(**args):
     C = getDBConnection()
-#    C.Lattices.lat.ensure_index([('dim', ASC), ('label', ASC)])
     info = to_dict(args)  # what has been entered in the search boxes
+
+    if 'download' in info:
+        return download_search(info)
+
     if 'label' in info and info.get('label'):
         return lattice_by_label_or_name(info.get('label'), C)
     query = {}
@@ -248,8 +256,13 @@ def render_lattice_webpage(**args):
     if f['dim']==1:
         info['shortest']=str(f['shortest']).strip('[').strip(']')
     else:
-        info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
-
+        if info['dim']*info['kissing']<100:
+            info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
+        else:
+            max_vect_num=int(round(100/(info['dim'])));
+            info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
+            info['all_shortest']="no"
+            info['shortest_full']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
 
     ncoeff=20
     if f['theta_series'] != "":
@@ -262,13 +275,23 @@ def render_lattice_webpage(**args):
     if f['dim']==1:
         info['genus_reps']=str(f['genus_reps']).strip('[').strip(']')
     else:
-        info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
+        if info['dim']*info['class_number']<50:
+            info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
+        else:
+            max_matrix_num=int(round(25/(info['dim'])));
+            info['all_genus_rep']="no"
+            info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
+            info['genus_reps_full']=[vect_to_matrix(n) for n in f['genus_reps']]
+
+    if 'download' in info:
+        print info
+        return download_search2(info)
 
     if f['name'] != "":
         if f['name']==str(f['name']):
             info['name']= str(f['name'])
         else:
-            info['name']=", ".join(str(i) for i in f['name'])
+            info['name']=str(", ".join(str(i) for i in f['name']))
     else:
         info['name'] == ""
     info['comments']=str(f['comments'])
@@ -276,8 +299,9 @@ def render_lattice_webpage(**args):
         t = "Integral Lattice %s" % info['label']
     else:
         t = "Integral Lattice "+info['label']+" ("+info['name']+")"
-    if info['name'] != "" or info['comments'] !="":
-        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
+#This part code was for the dinamic knowl with comments, since the test is displayed this is redundant
+#    if info['name'] != "" or info['comments'] !="":
+#        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
     info['properties'] = [
         ('Dimension', '%s' %info['dim']),
         ('Determinant', '%s' %info['det']),
@@ -379,4 +403,77 @@ def labels_page():
     credit = lattice_credit
     return render_template("single.html", kid='lattice.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+
+#download 
+download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
+download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =['}
+download_assignment_end = {'magma':'];','sage':']','gp':']'}
+download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
+
+def download_search(info):
+    lang = info["submit"]
+    filename = 'integral_lattices' + download_file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    # reissue saved query here
+
+    res = getDBConnection().Lattices.lat.find(ast.literal_eval(info["query"]))
+
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n'%(mydate, res.count())
+    s += '\n'
+    s += download_assignment_start[lang] + '\\\n'
+    # loop through all search results and grab the gram matrix
+    for r in res:
+        if lang == "gp":
+            entry = "Mat"+"("+str(r['gram'])+"~"+")"
+        else:
+            entry = "Matrix"+"("+str(r['gram'])+")"
+        s += entry + ',\\\n'
+    s = s[:-3]
+    s += download_assignment_end[lang]
+    s += '\n\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True)
+
+def download_search2(info):
+    lang = info["submit"]
+    if info['download'] == '2':
+        filename = 'shortest_vectors' + download_file_suffix[lang]
+    else:
+        filename = 'genus_representatives' + download_file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    if info['download'] == '2':
+        s += c+ 'Full list of shortest_vectors downloaded from the LMFDB on %s. \n'%(mydate)
+    else:
+        s += c+ 'Full list of genus_representatives downloaded from the LMFDB on %s. \n'%(mydate)
+    s += '\n'
+    s += download_assignment_start[lang] + '\\\n'
+
+# reissue saved query here
+
+    res = getDBConnection().Lattices.lat.find(ast.literal_eval(info["label"]))
+    print res
+
+    if info['download'] == '3':
+        for r in info["genus_reps_full"]:
+            if lang == "gp":
+                entry = "Mat"+"("+str(r)+"~"+")"
+            else:
+                entry = "Matrix"+"("+str(r)+")"
+        s += entry + ',\\\n'
+    else:
+        entry=info["shortest_full"]
+        s += entry + ',\\\n'
+    s = s[:-3]
+    s += download_assignment_end[lang]
+    s += '\n\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True)
 

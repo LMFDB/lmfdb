@@ -22,10 +22,10 @@
     <tr><td align=right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>${{info.minimum }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
 <table><tr>
@@ -33,8 +33,17 @@
     $({{info.shortest}})$
 {% else %}
     {% for n in info.shortest %}
-        ${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
+        ${{n}}${% if not loop.last %},{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
     {% endfor %}
+    {% if info.all_shortest == "no" %} ... </tr>
+        <tr><form>
+        Download the complete list for
+        <input type="submit" name="submit" value="gp">
+        <input type="submit" name="submit" value="sage">
+        <input type="submit" name="submit" value="magma">
+        <input type="hidden" name="download" value="2"/>
+        </form></tr>
+    {% endif %}
 {% endif %}
 </tr></table>
 </td></tr>
@@ -77,8 +86,17 @@
         $({{info.genus_reps}})$
     {% else %}
         {% for n in info.genus_reps %}
-            ${{n}}$
+            ${{n}}${% if not loop.last %},{% endif %}
         {% endfor %}
+    {% endif %}
+    {% if info.all_genus_rep == "no" %} ... 
+        <form>
+         Download the complete list for
+        <input type="submit" name="submit" value="gp">
+        <input type="submit" name="submit" value="sage">
+        <input type="submit" name="submit" value="magma">
+        <input type="hidden" name="download" value="3"/>
+        </form>
     {% endif %}
     </td></tr>
     </table>
@@ -86,7 +104,8 @@
 
 <br>
 {% if info.name or info.comments %}
-<h2><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs={{info.knowl_args}}>Comments</a></h2>
+<!--<h2><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs={{info.knowl_args}}>Comments</a></h2>-->
+<h2>Comments</h2>
 
 {% if info.name != " " %}
 <p>This integral lattice is known with {{KNOWL('lattice.name', title='name')}} {{ info.name }}.</p>
