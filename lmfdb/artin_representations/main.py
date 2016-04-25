@@ -57,7 +57,7 @@ def index():
     if len(args) == 0:
         learnmore = [#('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
-                ('Galois group labels', url_for(".labels_page"))]
+                ('Artin representations labels', url_for(".labels_page"))]
         return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore)
     else:
         return artin_representation_search(**args)
