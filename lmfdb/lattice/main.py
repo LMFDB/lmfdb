@@ -254,7 +254,14 @@ def render_lattice_webpage(**args):
 
     info['class_number']=int(f['class_number'])
     info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
-    info['name']=str(f['name'])
+
+    if f['name'] != "":
+        if f['name']==str(f['name']):
+            info['name']= str(f['name'])
+        else:
+            info['name']=", ".join(str(i) for i in f['name'])
+    else:
+        info['name'] == ""
     info['comments']=str(f['comments'])
     if info['name'] == "":
         t = "Integral Lattice %s" % info['label']
