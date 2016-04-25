@@ -243,11 +243,13 @@ def render_lattice_webpage(**args):
     info['hermite']=str(f['hermite'])
     info['minimum']=int(f['minimum'])
     info['kissing']=int(f['kissing'])
+    info['aut']=int(f['aut'])
+
     if f['dim']==1:
         info['shortest']=str(f['shortest']).strip('[').strip(']')
     else:
         info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
-    info['aut']=int(f['aut'])
+
 
     ncoeff=20
     if f['theta_series'] != "":

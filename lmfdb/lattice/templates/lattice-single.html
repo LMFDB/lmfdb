@@ -33,7 +33,7 @@
     $({{info.shortest}})$
 {% else %}
     {% for n in info.shortest %}
-    ${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
+        ${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
     {% endfor %}
 {% endif %}
 </tr></table>
@@ -65,20 +65,24 @@
 
 <h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>
 
-<table>
-<tr><td align=right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
-<tr><td>&nbsp;</td></tr>
-<tr><td align=right valign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
-{% if info.dim == 1 %}
-    $({{info.genus_reps}})$
-{% else %}
-    {% for n in info.genus_reps %}
-        ${{n}}$
-    {% endfor %}
-{% endif %}
-</td></tr>
-</table>
+{% if info.class_number == 0 %}
+<p> The {{ KNOWL('lattice.class_number', title='Class number') }} of the integral lattice {{info.label}} is not available.</p>
 
+{% else %}
+    <table>
+    <tr><td align=right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td align=right valign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
+    {% if info.dim == 1 %}
+        $({{info.genus_reps}})$
+    {% else %}
+        {% for n in info.genus_reps %}
+            ${{n}}$
+        {% endfor %}
+    {% endif %}
+    </td></tr>
+    </table>
+{% endif %}
 
 <br>
 {% if info.name or info.comments %}
@@ -113,5 +117,6 @@ $(function() {
     $("#morebutton").click(function(e) {more_handler(e)});
 });
 </script>
+
 
 {% endblock %}
