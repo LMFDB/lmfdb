@@ -29,10 +29,14 @@
     <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
 <table><tr>
-{% for n in info.shortest %}
-${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
-{% endfor %}</tr>
-</table>
+{% if info.dim == 1 %}
+    $({{info.shortest}})$
+{% else %}
+    {% for n in info.shortest %}
+    ${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
+    {% endfor %}
+{% endif %}
+</tr></table>
 </td></tr>
     
 </table>
@@ -65,9 +69,13 @@ ${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %
 <tr><td align=right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
 <tr><td>&nbsp;</td></tr>
 <tr><td align=right valign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
-{% for n in info.genus_reps %}
-${{n}}$
-{% endfor %}
+{% if info.dim == 1 %}
+    $({{info.genus_reps}})$
+{% else %}
+    {% for n in info.genus_reps %}
+        ${{n}}$
+    {% endfor %}
+{% endif %}
 </td></tr>
 </table>
 

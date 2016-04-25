@@ -243,7 +243,10 @@ def render_lattice_webpage(**args):
     info['hermite']=str(f['hermite'])
     info['minimum']=int(f['minimum'])
     info['kissing']=int(f['kissing'])
-    info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
+    if f['dim']==1:
+        info['shortest']=str(f['shortest']).strip('[').strip(']')
+    else:
+        info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
     info['aut']=int(f['aut'])
 
     ncoeff=20
@@ -253,7 +256,11 @@ def render_lattice_webpage(**args):
         info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
 
     info['class_number']=int(f['class_number'])
-    info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
+
+    if f['dim']==1:
+        info['genus_reps']=str(f['genus_reps']).strip('[').strip(']')
+    else:
+        info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
 
     if f['name'] != "":
         if f['name']==str(f['name']):
