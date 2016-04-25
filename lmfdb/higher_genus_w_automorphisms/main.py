@@ -10,15 +10,13 @@ from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
-from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, parse_list, clean_input
+from lmfdb.search_parsing import parse_ints, parse_count, parse_start, parse_list, clean_input
 
-from sage.all import ZZ, var, PolynomialRing, QQ, Permutation
+from sage.all import Permutation
 
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page, logger
 
 from lmfdb.genus2_curves.data import group_dict
-
-from lmfdb.transitive_group import *
 
 
 HGCwA_credit = 'J. Paulhus'
@@ -35,8 +33,12 @@ def get_bread(breads=[]):
 def groupid_to_meaningful(groupid):
     if groupid[0] < 120:
         return group_dict[str(groupid).replace(" ", "")]
-    else:
-        return groupid
+    elif groupid[0]==168 and groupid[1]==42:
+        return 'PSL(2,7)'
+    elif groupid[0]==120 and groupid[1]==34:
+        return 'S_5'
+    else:    
+        return str(groupid)
 
 def tfTOyn(bool):
     if bool:
@@ -96,7 +98,7 @@ def higher_genus_w_automorphisms_search(**args):
         return render_hgcwa_webpage({'label': info['jump_to']})
 
     try:
-        parse_galgrp(info,query,'trangplabel',use_bson=False)
+        parse_list(info,query,'group', name='Group')
         parse_ints(info,query,'genus',name='Genus')
         parse_list(info,query,'signature',name='Signature')
     except ValueError:
@@ -105,7 +107,7 @@ def higher_genus_w_automorphisms_search(**args):
     start = parse_start(info)
     
     res = C.curve_automorphisms.families.find(query).sort([(
-         'g', pymongo.ASCENDING),  ('label', pymongo.ASCENDING)])
+         'g', pymongo.ASCENDING), ('dim', pymongo.ASCENDING)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -147,55 +149,70 @@ def render_hgcwa_webpage(args):
             info['label'] = label
             return search_input_error(info, bread)
         g = data['genus']
-        GG = data['trangplabel']
+        GG = data['group']
         gn = GG[0]
         gt = GG[1]
     
 
         group = groupid_to_meaningful(data['group'])
+        if group == str(GG) or group == "[" + str(gn)+","+str(gt)+"]":
+            spname=False
+        else:
+            spname=True
         title = 'Family of genus ' + str(g) + ' curves with automorphism group $' + group +'$'
-    
+        smallgroup="(" + str(gn) + "," +str(gt) +")"   
 
         prop2 = [
             ('Genus', '\(%d\)' % g),
-            ('Group', group_display_short(gn,gt,C)),
+            ('Small Group', '\(%s\)' %  smallgroup),
             ('Signature', '\(%s\)' % sign_display(data['signature']))
         ]
         info.update({'genus': data['genus'],
-                    'genvecs': perm_display(data['gen_vectors']),
+                    'genvecs': data['gen_vectors'],
                     'sign': sign_display(data['signature']),   
                     'group': groupid_to_meaningful(data['group']),
                     'g0':data['g0'],
-                    'dim':data['r']-3,
-                    'r':data['r'],
-                    'ishyp':  tfTOyn(data['hyperelliptic']),
-                    'deg':data['degree'],
-                    'trgroup': group_display_short(gn,gt,C)
-                    })
-        		   
-        if 'hyp_eqn' in data:
-            info.update({'eqn': data['hyp_eqn']})
+                    'dim':data['dim'],
+                     'r':data['r'],
+                     'gpid': smallgroup
+                   })
 
+        if spname:
+            info.update({'specialname': True})
+        		   
+        if 'eqn' in data:
+            info.update({'eqn': data['eqn']})
+
+        if 'hyperelliptic' in data:
+            info.update({'ishyp':  tfTOyn(data['hyperelliptic'])})
+            
+        if 'hyp_involution' in data:
+            info.update({'hypinv': data['hyp_involution']})
+            
         gg = "/GaloisGroup/" + str(gn) + "T" + str(gt)
             
         if 'full_auto' in data:
-            info.update({'fullauto': groupid_to_meaningful(data['full_auto']),  'signH':sign_display(data['signH']), 'higgenlabel' : data['full_label'] })
+            info.update({'fullauto': groupid_to_meaningful(data['full_auto']),
+                         'signH':sign_display(data['signH']),
+                         'higgenlabel' : data['full_label'] })
             higgenstrg = "/HigherGenus/C/aut/" + data['full_label']
-            friends = [('Automorphism group', gg), (
-                       'Family of full automorphisms',  higgenstrg  )]
+            friends = [('Family of full automorphisms',  higgenstrg  )]
         else:
-            friends = [('Automorphism group', gg )]
+            friends = [ ]
         
 
         
         bread = get_bread([(label, ' ')])
-        learnmore = [('Completeness of the data', url_for(".completeness_page")),
+        learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
 
         downloads = [('Download this example', '.')]
             
-        return render_template("hgcwa-show-curve.html", credit=HGCwA_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore, downloads=downloads)
+        return render_template("hgcwa-show-curve.html", credit=HGCwA_credit,
+                               title=title, bread=bread, info=info,
+                               properties2=prop2, friends=friends,
+                               learnmore=learnmore, downloads=downloads)
 
 
 def perm_display(L):
@@ -224,7 +241,9 @@ def completeness_page():
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
-    return render_template("single.html", kid='dq.curve.highergenus.aut.extent', credit=HGCwA_credit, title=t, bread=bread, learnmore=learnmore)
+    return render_template("single.html", kid='dq.curve.highergenus.aut.extent',
+                           credit=HGCwA_credit, title=t, bread=bread,
+                           learnmore=learnmore)
 
 
 @higher_genus_w_automorphisms_page.route("/Labels")
@@ -233,7 +252,9 @@ def labels_page():
     bread = get_bread([("Labels", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page"))]
-    return render_template("single.html", kid='dq.curve.highergenus.aut.label',learnmore=learnmore, credit=HGCwA_credit, title=t, bread=bread)
+    return render_template("single.html", kid='dq.curve.highergenus.aut.label',
+                           learnmore=learnmore, credit=HGCwA_credit, title=t,
+                           bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/Source")
 def how_computed_page():
