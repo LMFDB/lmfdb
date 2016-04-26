@@ -40,14 +40,6 @@
         {% for e in info.download_shortest %} 
             <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
         {% endfor %}</td><tr>
-<!--<form>-->
-<!--        Download the complete list for -->
-<!--        <input type="submit" name="submit" value="gp">-->
-<!--        <input type="submit" name="submit" value="sage">-->
-<!--        <input type="submit" name="submit" value="magma">-->
-<!--        <input type="hidden" name="download" value="2"/>-->
-<!--        <input type="hidden" name="query" value="{{info.label}}"/>-->
-<!--        </form></tr>-->
     {% else %}
         </tr></table></td></tr>
     {% endif %}
@@ -98,14 +90,6 @@
         {% for e in info.download_genus_reps %} 
         <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
         {% endfor %}</td></tr>
-<!--        <form>-->
-<!--         Download the complete list for-->
-<!--        <input type="submit" name="submit" value="gp">-->
-<!--        <input type="submit" name="submit" value="sage">-->
-<!--        <input type="submit" name="submit" value="magma">-->
-<!--        <input type="hidden" name="download" value="3"/>-->
-<!--        <input type="hidden" name="query" value="{{info.label}}"/>-->
-<!--        </form>-->
     {% endif %}
     </td></tr>
     </table>

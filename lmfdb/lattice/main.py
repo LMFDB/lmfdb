@@ -173,7 +173,7 @@ def lattice_search(**args):
         A=query['gram'];
         n=len(A[0])
         d=matrix(A).determinant()
-        result=[B for B in C.Lattices.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])==True]
+        result=[B for B in C.Lattices.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
         if len(result)>0:
             result=result[0]['gram']
             query_gram={ 'gram' : result }
@@ -287,9 +287,7 @@ def render_lattice_webpage(**args):
             info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
             info['genus_reps_full']=[vect_to_matrix(n) for n in f['genus_reps']]
             info['download_genus_reps'] = [
-                ('gp', url_for(".render_lattice_webpage_download", label=info['label'], lang='gp', obj='genus_reps')),
-                ('magma', url_for(".render_lattice_webpage_download", label=info['label'], lang='magma',obj='genus_reps')),
-                ('sage', url_for(".render_lattice_webpage_download", label=info['label'], lang='sage',obj='genus_reps'))]
+                (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma','sage']]
 
 
 #    if 'download' in info:
@@ -465,42 +463,4 @@ def download_lattice_full_lists_g(**args):
     outstr += download_assignment_end[pg]
     outstr += '*/\n'
     return outstr
-
-
-
-#def download_search2(info):
-#    lang = info["submit"]
-#    if info['download'] == '2':
-#        filename = 'shortest_vectors' + download_file_suffix[lang]
-#    else:
-#        filename = 'genus_representatives' + download_file_suffix[lang]
-#    mydate = time.strftime("%d %B %Y")
-#    c = download_comment_prefix[lang]
-#    s =  '\n'
-#    if info['download'] == '2':
-#        s = 'Full list of shortest_vectors downloaded from the LMFDB on %s.'%(mydate)
-#    else:
-#        s = 'Full list of genus_representatives downloaded from the LMFDB on %s. \n'%(mydate)
-#    s += '\n'
-#    s += download_assignment_start[lang] + '\\\n'
-#    res = getDBConnection().Lattices.lat.find_one({'label': info["query"]})
-#    print res
-
-#    if info['download'] == '3':
-#        for r in info["genus_reps_full"]:
-#            if lang == "gp":
-#                entry = "Mat"+"("+str(r)+"~"+")"
-#            else:
-#                entry = "Matrix"+"("+str(r)+")"
-#        s += entry + ',\\\n'
-#    else:
-#        entry=info["shortest_full"]
-#        s += entry + ',\\\n'
-#    s = s[:-3]
-#    s += download_assignment_end[lang]
-#    s += '\n\n'
-#    strIO = StringIO.StringIO()
-#    strIO.write(s)
-#    strIO.seek(0)
-#    return send_file(strIO, attachment_filename=filename, as_attachment=True)
 

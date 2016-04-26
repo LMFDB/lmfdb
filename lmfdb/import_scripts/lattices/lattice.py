@@ -92,7 +92,7 @@ def do_import(ll):
         A=data['gram'];
         n=len(A[0])
         d=matrix(A).determinant()
-        result=[B for B in C.Lattices.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])==True]
+        result=[B for B in lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
         if len(result)>0:
             print "... the lattice with base label "+ blabel + " is isometric to " + str(result[0]['gram'])
             print "***********"
@@ -102,7 +102,7 @@ def do_import(ll):
         print "lattice already in the database"
         lattice.update(data)
     if saving:
-        lat.save(lattice)
+        lat.update({'label': label} , {"$set": lattice}, upsert=True)
 
 
 
