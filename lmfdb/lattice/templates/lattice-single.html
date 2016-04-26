@@ -39,9 +39,13 @@
     <td>Download the complete list for 
         {% for e in info.download_shortest %} 
             <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-        {% endfor %}</td><tr>
+        {% endfor %}</td></tr>
     {% else %}
-        </tr></table></td></tr>
+        </tr></table></td><tr><td></td><td>Download this {% if info.kissing == 2 %} vector {% else %} list {% endif %} for 
+        {% for e in info.download_shortest %} 
+            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+        {% endfor %}</td></tr>
+
     {% endif %}
 {% endif %}
 </table>
@@ -84,13 +88,15 @@
         {% for n in info.genus_reps %}
             ${{n}}${% if not loop.last %},{% endif %}
         {% endfor %}
-    {% endif %}
-    {% if info.all_genus_rep == "no" %} ... 
-        </td></tr><td></td><td>Download the complete list for
-        {% for e in info.download_genus_reps %} 
-        <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-        {% endfor %}</td></tr>
-    {% endif %}
+        {% if info.all_genus_rep == "no" %} ... 
+            </td></tr><tr><td></td><td>Download the complete list for
+        {% else %}
+            </td></tr><tr><td></td><td>Download this {% if info.class_number == 1 %} matrix {% else %} list {% endif %} for
+        {% endif %}
+            {% for e in info.download_genus_reps %} 
+            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+            {% endfor %}</td></tr>
+        {% endif %}
     </td></tr>
     </table>
 {% endif %}

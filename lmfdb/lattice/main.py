@@ -262,11 +262,8 @@ def render_lattice_webpage(**args):
             max_vect_num=int(round(100/(info['dim'])));
             info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
             info['all_shortest']="no"
-            info['shortest_full']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
-            info['download_shortest'] = [
-                ('gp', url_for(".render_lattice_webpage_download", label=info['label'], lang='gp', obj='shortest_vectors')),
-                ('magma', url_for(".render_lattice_webpage_download", label=info['label'], lang='magma',obj='shortest_vectors')),
-                ('sage', url_for(".render_lattice_webpage_download", label=info['label'], lang='sage',obj='shortest_vectors'))]
+    info['download_shortest'] = [
+        (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
     ncoeff=20
     if f['theta_series'] != "":
@@ -285,14 +282,8 @@ def render_lattice_webpage(**args):
             max_matrix_num=int(round(25/(info['dim'])));
             info['all_genus_rep']="no"
             info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
-            info['genus_reps_full']=[vect_to_matrix(n) for n in f['genus_reps']]
-            info['download_genus_reps'] = [
-                (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma','sage']]
-
-
-#    if 'download' in info:
-#        print info
-#        return download_search2(info)
+    info['download_genus_reps'] = [
+        (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma','sage']]
 
     if f['name'] != "":
         if f['name']==str(f['name']):
