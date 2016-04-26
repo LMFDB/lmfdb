@@ -73,3 +73,23 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/random", follow_redirects=True)
         assert 'Normalized minimal vectors:' in L.data # check redirection
 
+    def test_downloadstring(self):
+        L = self.tc.get("/Lattice/5.648.12.1.1").data
+        assert 'matrix' in L
+
+    def test_downloadstring2(self):
+        L = self.tc.get("/Lattice/2.156.312.1.2").data
+        assert 'vector' in L 
+
+    def test_downloadstring_search(self):
+        L = self.tc.get("/Lattice/?class_number=8").data
+        assert 'Download all search results for' in L 
+
+    def test_download_shortest(self):
+        L = self.tc.get("/Lattice/13.14.28.8.1/download/magma/shortest_vectors").data
+        assert 'data :=[' in L 
+ 
+    def test_download_genus(self):
+        L = self.tc.get("/Lattice/4.5.5.1.1/download/gp/genus_reps").data
+        assert ']~),' in L 
+
