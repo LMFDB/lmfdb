@@ -26,7 +26,7 @@ password = pw_dict['data']['password']
 C['Lattices'].authenticate('editor', password)
 lat = C.Lattices.lat
 
-saving = False 
+saving = True 
 
 def sd(f):
   for k in f.keys():
