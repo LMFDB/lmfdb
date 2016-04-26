@@ -16,6 +16,7 @@ from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicFie
 from lmfdb.lattice import lattice_page, lattice_logger
 from lmfdb.lattice.lattice_stats import get_stats
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
+from lmfdb.lattice.isom import isom
 
 from markupsafe import Markup
 
@@ -90,10 +91,9 @@ def lattice_render_webpage():
     else:
         return lattice_search(**args)
 
-
+# Random Lattice
 @lattice_page.route("/random")
 def random_lattice():
-    # Random Lattice
     res = random_object_from_collection( getDBConnection().Lattices.lat )
     return redirect(url_for(".render_lattice_webpage", label=res['label']))
 
@@ -334,38 +334,6 @@ def vect_to_sym(v):
             M[j,i] = v[k]
             k=k+1
     return [[int(M[i,j]) for i in range(n)] for j in range(n)]
-
-
-# function for checking isometries
-def isom(A,B):
-    # First check that A is a symmetric matrix.
-    if not matrix(A).is_symmetric():
-        return False
-    # Then check A against the viable database candidates.
-    else:
-        n=len(A[0])
-        m=len(B[0])
-        Avec=[]
-        Bvec=[]
-        for i in range(n):
-            for j in range(i,n):
-                if i==j:
-                    Avec+=[A[i][j]]
-                else:
-                    Avec+=[2*A[i][j]]
-        for i in range(m):
-            for j in range(i,m):
-                if i==j:
-                    Bvec+=[B[i][j]]
-                else:
-                    Bvec+=[2*B[i][j]]
-        Aquad=QuadraticForm(ZZ,len(A[0]),Avec)
-    # check positive definite
-        if Aquad.is_positive_definite():
-            Bquad=QuadraticForm(ZZ,len(B[0]),Bvec)
-            return Aquad.is_globally_equivalent_to(Bquad)
-        else:
-            return False
 
 
 #auxiliary function for displaying more coefficients of the theta series

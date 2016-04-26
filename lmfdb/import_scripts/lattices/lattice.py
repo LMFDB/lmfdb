@@ -15,6 +15,8 @@ import json
 import sage.all
 from sage.all import os
 
+from lmfdb.lattice.isom import isom
+
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=37010)
 import yaml
@@ -85,7 +87,16 @@ def do_import(ll):
 
     if lattice is None:
         print "new lattice"
-        lattice = data
+        print "check for isometries..."
+        A=data['gram'];
+        n=len(A[0])
+        d=matrix(A).determinant()
+        result=[B for B in C.Lattices.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])==True]
+        if len(result)>0:
+            print "... the lattice is isometric to "
+            print result[0]['gram']
+        else:
+            lattice = data
     else:
         print "lattice already in the database"
         lattice.update(data)
