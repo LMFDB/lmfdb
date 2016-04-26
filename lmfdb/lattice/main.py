@@ -263,6 +263,10 @@ def render_lattice_webpage(**args):
             info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
             info['all_shortest']="no"
             info['shortest_full']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
+            info['download_shortest'] = [
+                ('gp', url_for(".render_lattice_webpage_download", label=info['label'], lang='gp', obj='shortest_vectors')),
+                ('magma', url_for(".render_lattice_webpage_download", label=info['label'], lang='magma',obj='shortest_vectors')),
+                ('sage', url_for(".render_lattice_webpage_download", label=info['label'], lang='sage',obj='shortest_vectors'))]
 
     ncoeff=20
     if f['theta_series'] != "":
@@ -282,10 +286,15 @@ def render_lattice_webpage(**args):
             info['all_genus_rep']="no"
             info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
             info['genus_reps_full']=[vect_to_matrix(n) for n in f['genus_reps']]
+            info['download_genus_reps'] = [
+                ('gp', url_for(".render_lattice_webpage_download", label=info['label'], lang='gp', obj='genus_reps')),
+                ('magma', url_for(".render_lattice_webpage_download", label=info['label'], lang='magma',obj='genus_reps')),
+                ('sage', url_for(".render_lattice_webpage_download", label=info['label'], lang='sage',obj='genus_reps'))]
 
-    if 'download' in info:
-        print info
-        return download_search2(info)
+
+#    if 'download' in info:
+#        print info
+#        return download_search2(info)
 
     if f['name'] != "":
         if f['name']==str(f['name']):
@@ -438,39 +447,92 @@ def download_search(info):
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True)
 
-def download_search2(info):
-    lang = info["submit"]
-    if info['download'] == '2':
-        filename = 'shortest_vectors' + download_file_suffix[lang]
-    else:
-        filename = 'genus_representatives' + download_file_suffix[lang]
-    mydate = time.strftime("%d %B %Y")
-    c = download_comment_prefix[lang]
-    s =  '\n'
-    if info['download'] == '2':
-        s += c+ 'Full list of shortest_vectors downloaded from the LMFDB on %s. \n'%(mydate)
-    else:
-        s += c+ 'Full list of genus_representatives downloaded from the LMFDB on %s. \n'%(mydate)
-    s += '\n'
-    s += download_assignment_start[lang] + '\\\n'
-    res = getDBConnection().Lattices.lat.find_one({'label': info["query"]})
-    print res
 
-    if info['download'] == '3':
-        for r in info["genus_reps_full"]:
-            if lang == "gp":
-                entry = "Mat"+"("+str(r)+"~"+")"
-            else:
-                entry = "Matrix"+"("+str(r)+")"
-        s += entry + ',\\\n'
-    else:
-        entry=info["shortest_full"]
-        s += entry + ',\\\n'
-    s = s[:-3]
-    s += download_assignment_end[lang]
-    s += '\n\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True)
+@lattice_page.route('/<label>/download/<lang>/<obj>')
+def render_lattice_webpage_download(**args):
+    if args['obj'] == 'shortest_vectors':
+        response = make_response(download_lattice_full_lists_v(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+    elif args['obj'] == 'genus_reps':
+        response = make_response(download_lattice_full_lists_g(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+
+
+def download_lattice_full_lists_v(**args):
+    C = getDBConnection()
+    data = None
+    label = str(args['label'])
+    res = C.Lattices.lat.find_one({'label': label})
+    mydate = time.strftime("%d %B %Y")
+    if res is None:
+        return "No such lattice"
+    outstr = 'Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n'%(mydate)
+    pg = args['lang']
+    outstr += download_assignment_start[pg] + '\\\n'
+    outstr+= str(res['shortest']) + ',\\\n'
+    outstr += download_assignment_end[pg]
+    outstr += '*/\n'
+    return outstr
+
+
+def download_lattice_full_lists_g(**args):
+    C = getDBConnection()
+    data = None
+    label = str(args['label'])
+    res = C.Lattices.lat.find_one({'label': label})
+    mydate = time.strftime("%d %B %Y")
+    if res is None:
+        return "No such lattice"
+    outstr = 'Full list of genus representatives downloaded from the LMFDB on %s. \n'%(mydate)
+    pg = args['lang']
+    outstr += download_assignment_start[pg] + '\\\n'
+    for r in res['genus_reps']:
+        if pg == "gp":
+            entry = "Mat"+"("+str(r)+"~"+")"
+        else:
+            entry = "Matrix"+"("+str(r)+")"
+        outstr += entry + ',\\\n'
+    outstr += download_assignment_end[pg]
+    outstr += '*/\n'
+    return outstr
+
+
+
+#def download_search2(info):
+#    lang = info["submit"]
+#    if info['download'] == '2':
+#        filename = 'shortest_vectors' + download_file_suffix[lang]
+#    else:
+#        filename = 'genus_representatives' + download_file_suffix[lang]
+#    mydate = time.strftime("%d %B %Y")
+#    c = download_comment_prefix[lang]
+#    s =  '\n'
+#    if info['download'] == '2':
+#        s = 'Full list of shortest_vectors downloaded from the LMFDB on %s.'%(mydate)
+#    else:
+#        s = 'Full list of genus_representatives downloaded from the LMFDB on %s. \n'%(mydate)
+#    s += '\n'
+#    s += download_assignment_start[lang] + '\\\n'
+#    res = getDBConnection().Lattices.lat.find_one({'label': info["query"]})
+#    print res
+
+#    if info['download'] == '3':
+#        for r in info["genus_reps_full"]:
+#            if lang == "gp":
+#                entry = "Mat"+"("+str(r)+"~"+")"
+#            else:
+#                entry = "Matrix"+"("+str(r)+")"
+#        s += entry + ',\\\n'
+#    else:
+#        entry=info["shortest_full"]
+#        s += entry + ',\\\n'
+#    s = s[:-3]
+#    s += download_assignment_end[lang]
+#    s += '\n\n'
+#    strIO = StringIO.StringIO()
+#    strIO.write(s)
+#    strIO.seek(0)
+#    return send_file(strIO, attachment_filename=filename, as_attachment=True)
 
