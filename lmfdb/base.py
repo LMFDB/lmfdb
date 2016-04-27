@@ -135,6 +135,7 @@ app.jinja_env.trim_blocks = True
 
 # enable break and continue in jinja loops
 app.jinja_env.add_extension('jinja2.ext.loopcontrols')
+app.jinja_env.add_extension('jinja2.ext.do')
 
 # the following context processor inserts
 #  * empty info={} dict variable
