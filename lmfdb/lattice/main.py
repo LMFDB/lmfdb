@@ -259,7 +259,7 @@ def render_lattice_webpage(**args):
         if info['dim']*info['kissing']<100:
             info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
         else:
-            max_vect_num=int(round(100/(info['dim'])));
+            max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
             info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
             info['all_shortest']="no"
     info['download_shortest'] = [
@@ -279,7 +279,7 @@ def render_lattice_webpage(**args):
         if info['dim']*info['class_number']<50:
             info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
         else:
-            max_matrix_num=int(round(25/(info['dim'])));
+            max_matrix_num=min(int(round(25/(info['dim']))), info['class_number']);
             info['all_genus_rep']="no"
             info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
     info['download_genus_reps'] = [
