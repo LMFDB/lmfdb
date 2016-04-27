@@ -115,18 +115,13 @@ class HMFstats(object):
         # the hint() her tells mongo to use that index (these have
         # been created for this)
         for d in degrees:
-            print("Degree %s" % d)
             dstats[d] = {}
             dstats[d]['fields'] = [F['label'] for F in fields.find({'degree':d},['label']).hint('degree_1')]
-            print("fields done")
             dstats[d]['nfields'] = len(dstats[d]['fields'])
-            print("nfields done")
             dstats[d]['nforms'] = forms.find({'deg':d}).hint('deg_1').count()
-            print("nforms done")
             dstats[d]['maxnorm'] = max(forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
             dstats[d]['counts'] = {}
             for F in dstats[d]['fields']:
-                print("Field %s" % F)
                 ff = forms.find({'field_label':F}, ['label', 'level_norm']).hint('field_label_1')
                 fln = [f['level_norm'] for f in ff]
                 dstats[d]['counts'][F] = {}
