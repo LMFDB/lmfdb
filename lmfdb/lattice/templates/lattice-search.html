@@ -42,62 +42,63 @@
 </form>
 
 {% if info.err is defined %}
-
-<h2>Error</h2>
-<div>
-<!--  {{ info.err|safe }}-->
-Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-
+    <h2>Error</h2>
+    <div>
+    <!--  {{ info.err|safe }}-->
+    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+    </div>
 {% else %}
+    {% if info.report == "no matches" %}
+        <h2> No matches</h2>
+    {% else %}
+        <h2> Results ({{info.report}})
+        {% if info.start > 0 %}
+            <a href="#" class="navlink"
+               onclick="decrease_start_by_count_and_submit_form('re-search');return
+                        false">Previous</A>
+        {% endif %}
+        {% if info.more > 0 %}
+            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+        {% endif %}
+        </h2>
 
-{% if info.report == "no matches" %}
+        <table>
+        <tr>
+        <th>{{ KNOWL('lattice.label', title='Label') }}</th>
+        <th>{{ KNOWL('lattice.dimension', title='Dimension') }}</th>
+        <th>{{ KNOWL('lattice.determinant', title='Determinant') }}</th>
+        <th>{{ KNOWL('lattice.level', title='Level')}}</th>
+        <th>{{ KNOWL('lattice.gram', title='Gram Matrix') }}</th>
+        </tr>
+        {% for l in info.lattices %}
+            <tr>
+            <td align='left'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
+            <td>{{l.dim}}</td>
+            <td>{{l.det}}</td>
+            <td>{{l.level}}</td>
+            <td>${{l.gram}}$</td>
+            </tr>
+        {% endfor %}
+        </table>
+        <hr>
+        {% if info.start > 0 %}
+            <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+        {% endif %}
+        {% if info.more > 0 %}
+            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+        {% endif %}
+        <br>
 
-<h2> No matches</h2>
-
-{% else %}
-<h2> Results ({{info.report}})
-
-{% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</A>
+        <form>
+        Download all search results for
+        <input type="submit" name="submit" value="gp">
+        <input type="submit" name="submit" value="sage">
+        <input type="submit" name="submit" value="magma">
+        <input type="hidden" name="download" value="1"/>
+        <input type="hidden" name="query" value="{{info.query}}"/>
+        </form>
+    {% endif %}
 {% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-</h2>
-
-<table>
-<tr>
-<th>{{ KNOWL('lattice.label', title='Label') }}</th>
-<th>{{ KNOWL('lattice.dimension', title='Dimension') }}</th>
-<th>{{ KNOWL('lattice.determinant', title='Determinant') }}</th>
-<th>{{ KNOWL('lattice.level', title='Level')}}</th>
-<th>{{ KNOWL('lattice.gram', title='Gram Matrix') }}</th>
-</tr>
-{% for l in info.lattices %}
-<tr>
-<td align='left'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
-<td>{{l.dim}}</td>
-<td>{{l.det}}</td>
-<td>{{l.level}}</td>
-<td>${{l.gram}}$</td>
-</tr>
-{% endfor %}
-</table>
-<hr>
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-{% endif %}
-<br>
-{% endif %}
-
-{% endif %}
-
 <!--<br>-->
 <!--{% if DEBUG %}-->
 <!--<p class="tex2jax_ignore">  Results for database query {{ info.query }}</p>-->

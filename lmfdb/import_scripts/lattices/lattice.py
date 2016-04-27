@@ -14,6 +14,8 @@ import re
 import json
 import sage.all
 from sage.all import os
+from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
+from lmfdb.lattice.isom import isom
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=37010)
@@ -85,12 +87,22 @@ def do_import(ll):
 
     if lattice is None:
         print "new lattice"
-        lattice = data
+        print "***********"
+        print "check for isometries..."
+        A=data['gram'];
+        n=len(A[0])
+        d=matrix(A).determinant()
+        result=[B for B in lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
+        if len(result)>0:
+            print "... the lattice with base label "+ blabel + " is isometric to " + str(result[0]['gram'])
+            print "***********"
+        else:
+            lattice = data
     else:
         print "lattice already in the database"
         lattice.update(data)
     if saving:
-        lat.save(lattice)
+        lat.update({'label': label} , {"$set": lattice}, upsert=True)
 
 
 
