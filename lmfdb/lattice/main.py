@@ -370,10 +370,10 @@ def labels_page():
     return render_template("single.html", kid='lattice.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
-#download 
+#download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
-download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =['}
-download_assignment_end = {'magma':'];','sage':']','gp':']'}
+download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
+download_assignment_end = {'magma':';','sage':'','gp':''}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
 def download_search(info):
@@ -425,12 +425,13 @@ def download_lattice_full_lists_v(**args):
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
-    outstr = 'Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n'%(mydate)
     pg = args['lang']
+    c = download_comment_prefix[pg]
+    outstr = c + ' Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[pg] + '\\\n'
-    outstr+= str(res['shortest']) + ',\\\n'
+    outstr += str(res['shortest'])
     outstr += download_assignment_end[pg]
-    outstr += '*/\n'
+    outstr += '\n'
     return outstr
 
 
@@ -442,16 +443,17 @@ def download_lattice_full_lists_g(**args):
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
-    outstr = 'Full list of genus representatives downloaded from the LMFDB on %s. \n'%(mydate)
     pg = args['lang']
-    outstr += download_assignment_start[pg] + '\\\n'
-    for r in res['genus_reps']:
-        if pg == "gp":
-            entry = "Mat"+"("+str(r)+"~"+")"
-        else:
-            entry = "Matrix"+"("+str(r)+")"
-        outstr += entry + ',\\\n'
+    c = download_comment_prefix[pg]
+    mat_start = "Mat(" if pg == 'gp' else "Matrix("
+    mat_end = "~)" if pg == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+
+    outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
+    outstr += download_assignment_start[pg] + '[\\\n'
+    outstr += ",\\\n".join([entry(r) for r in res['genus_reps']])
+    outstr += ']'
     outstr += download_assignment_end[pg]
-    outstr += '*/\n'
+    outstr += '\n'
     return outstr
 
