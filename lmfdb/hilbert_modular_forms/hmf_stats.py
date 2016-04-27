@@ -26,7 +26,7 @@ def get_degree_stats(d):
     global the_HMFstats
     if the_HMFstats is None:
         the_HMFstats = HMFstats()
-    return the_HMFstats.dstats()[d]
+    return the_HMFstats.stats()[d]
 
 def hmf_summary():
     counts = get_stats().counts()
@@ -57,7 +57,7 @@ def hmf_degree_summary(d):
                     r' up to %s.' % stats['maxnorm']])
 
 def hmf_field_summary(F):
-    stats = get_dstats()
+    stats = get_stats()
     hmf_knowl = '<a knowl="mf.hilbert">Hilbert modular forms</a>'
     nf_knowl = '<a knowl="nf.totally_real">totally real number field</a>'
     level_knowl = '<a knowl="mf.hilbert.level_norm">level norm</a>'
@@ -80,20 +80,20 @@ class HMFstats(object):
         self.fields = lmfdb.base.getDBConnection().hmfs.fields
         self.forms = lmfdb.base.getDBConnection().hmfs.forms
         self._counts = {}
-        self._dstats = {}
+        self._stats = {}
 
     def counts(self):
         self.init_hmf_count()
         return self._counts
 
-    def dstats(self):
-        self.init_hmf_count()
-        return self._dstats
+    def stats(self):
+        self.init_hmf_stats()
+        return self._stats
 
     def init_hmf_count(self):
         if self._counts:
             return
-        logger.debug("Computing HMF counts...")
+        print("Computing HMF counts...")
         forms = self.forms
         fields = self.fields
         counts = {}
@@ -111,26 +111,37 @@ class HMFstats(object):
         counts['maxdeg'] = max_deg = max(degrees)
         counts['max_deg_c'] = comma(max_deg)
 
-        dstats = {}
+        counts['fields_by_degree'] = dict([(d,[F['label'] for F in fields.find({'degree':d},['label']).hint('degree_1')]) for d in degrees])
+        counts['nfields_by_degree'] = dict([(d,len(counts['fields_by_degree'][d])) for d in degrees])
+        self._counts  = counts
+
+    def init_hmf_stats(self):
+        if self._stats:
+            return
+        if not self._counts:
+            self.init_hmf_count()
+        print("Computing HMF stats...")
+        forms = self.forms
+        fields = self.fields
+        stats = {}
         # the hint() her tells mongo to use that index (these have
         # been created for this)
-        for d in degrees:
-            dstats[d] = {}
-            dstats[d]['fields'] = [F['label'] for F in fields.find({'degree':d},['label']).hint('degree_1')]
-            dstats[d]['nfields'] = len(dstats[d]['fields'])
-            dstats[d]['nforms'] = forms.find({'deg':d}).hint('deg_1').count()
-            dstats[d]['maxnorm'] = max(forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
-            dstats[d]['counts'] = {}
-            for F in dstats[d]['fields']:
+        field_sort_key = lambda F: int(F.split(".")[2]) # by discriminant
+        for d in self._counts['degrees']:
+            stats[d] = {}
+            stats[d]['fields'] = [F['label'] for F in fields.find({'degree':d},['label']).hint('degree_1')]
+            stats[d]['fields'].sort(key=field_sort_key)
+            stats[d]['nfields'] = len(stats[d]['fields'])
+            stats[d]['nforms'] = forms.find({'deg':d}).hint('deg_1').count()
+            stats[d]['maxnorm'] = max(forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
+            stats[d]['counts'] = {}
+            for F in stats[d]['fields']:
                 ff = forms.find({'field_label':F}, ['label', 'level_norm']).hint('field_label_1')
                 fln = [f['level_norm'] for f in ff]
-                dstats[d]['counts'][F] = {}
-                dstats[d]['counts'][F]['nforms'] = len(fln)
-                dstats[d]['counts'][F]['maxnorm'] = max(fln)
-                dstats[d]['counts'][F]['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), field_pretty(F))
-                dstats[d]['counts'][F]['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
+                stats[d]['counts'][F] = {}
+                stats[d]['counts'][F]['nforms'] = len(fln)
+                stats[d]['counts'][F]['maxnorm'] = max(fln)
+                stats[d]['counts'][F]['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), field_pretty(F))
+                stats[d]['counts'][F]['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
 
-        self._counts  = counts
-        self._dstats = dstats
-        logger.debug("... finished computing HMF counts.")
-        #logger.debug("%s" % self._counts)
+        self._stats = stats

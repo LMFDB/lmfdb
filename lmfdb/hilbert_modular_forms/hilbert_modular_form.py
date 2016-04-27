@@ -69,7 +69,6 @@ def hilbert_modular_form_render_webpage():
                  ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         info['counts'] = get_stats().counts()
-        info['stats'] = get_stats().dstats()
         return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return hilbert_modular_form_search(**args)
@@ -469,7 +468,7 @@ def labels_page():
 def browse():
     info = {
         'counts': get_stats().counts(),
-        'dstats': get_stats().dstats(),
+        'stats': get_stats().stats(),
         'extent': dict([(d,hmf_degree_summary(d)) for d in get_stats().counts()['degrees']]),
         'full_extent': hmf_summary()
     }
@@ -493,7 +492,7 @@ def statistics_by_degree(d):
             info['error'] = "The database does not contain any Hilbert modular forms over fields of degree %s" % d
         d = 'bad'
     else:
-        info['dstats'] = stats.dstats()[d]
+        info['stats'] = stats.stats()[d]
         info['degree_stats'] = hmf_degree_summary(d)
     credit = 'John Cremona'
     if d==2:

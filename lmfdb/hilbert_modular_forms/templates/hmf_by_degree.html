@@ -17,7 +17,8 @@
 
 <table>
 <tr><th>Field<th>Number of newforms<th>Maximum level norm</tr>
-{% for F, dat in info.dstats.counts.iteritems() %}
+{% for F in info.stats.fields %}
+{% set dat = info.stats.counts[F] %}
 <tr>
 <td>{{dat['field_knowl'] | safe}}
 <td><a href={{dat['forms']}}>{{dat['nforms']}}</a>
