@@ -370,10 +370,10 @@ def labels_page():
     return render_template("single.html", kid='lattice.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
-#download 
+#download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
-download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =['}
-download_assignment_end = {'magma':'];','sage':']','gp':']'}
+download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
+download_assignment_end = {'magma':';','sage':'','gp':''}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
 def download_search(info):
@@ -386,19 +386,20 @@ def download_search(info):
 
     c = download_comment_prefix[lang]
     s =  '\n'
-    s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n'%(mydate, res.count())
-    s += '\n'
-    s += download_assignment_start[lang] + '\\\n'
+    s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, res.count())
+    # The list entries are matrices of different sizes.  Sage and gp
+    # do not mind this but Magma requires a different sort of list.
+    list_start = '[*' if lang=='magma' else '['
+    list_end = '*]' if lang=='magma' else ']'
+    s += download_assignment_start[lang] + list_start + '\\\n'
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
     # loop through all search results and grab the gram matrix
-    for r in res:
-        if lang == "gp":
-            entry = "Mat"+"("+str(r['gram'])+"~"+")"
-        else:
-            entry = "Matrix"+"("+str(r['gram'])+")"
-        s += entry + ',\\\n'
-    s = s[:-3]
+    s += ",\\\n".join([entry(r['gram']) for r in res])
+    s += list_end
     s += download_assignment_end[lang]
-    s += '\n\n'
+    s += '\n'
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
@@ -425,12 +426,13 @@ def download_lattice_full_lists_v(**args):
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
-    outstr = 'Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n'%(mydate)
-    pg = args['lang']
-    outstr += download_assignment_start[pg] + '\\\n'
-    outstr+= str(res['shortest']) + ',\\\n'
-    outstr += download_assignment_end[pg]
-    outstr += '*/\n'
+    lang = args['lang']
+    c = download_comment_prefix[lang]
+    outstr = c + ' Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n\n'%(mydate)
+    outstr += download_assignment_start[lang] + '\\\n'
+    outstr += str(res['shortest'])
+    outstr += download_assignment_end[lang]
+    outstr += '\n'
     return outstr
 
 
@@ -442,16 +444,17 @@ def download_lattice_full_lists_g(**args):
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
-    outstr = 'Full list of genus representatives downloaded from the LMFDB on %s. \n'%(mydate)
-    pg = args['lang']
-    outstr += download_assignment_start[pg] + '\\\n'
-    for r in res['genus_reps']:
-        if pg == "gp":
-            entry = "Mat"+"("+str(r)+"~"+")"
-        else:
-            entry = "Matrix"+"("+str(r)+")"
-        outstr += entry + ',\\\n'
-    outstr += download_assignment_end[pg]
-    outstr += '*/\n'
+    lang = args['lang']
+    c = download_comment_prefix[lang]
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+
+    outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
+    outstr += download_assignment_start[lang] + '[\\\n'
+    outstr += ",\\\n".join([entry(r) for r in res['genus_reps']])
+    outstr += ']'
+    outstr += download_assignment_end[lang]
+    outstr += '\n'
     return outstr
 
