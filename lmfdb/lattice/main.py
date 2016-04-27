@@ -303,10 +303,13 @@ def render_lattice_webpage(**args):
     info['properties'] = [
         ('Dimension', '%s' %info['dim']),
         ('Determinant', '%s' %info['det']),
-        ('Level', '%s' %info['level']),
-        ('Class number', '%s' %info['class_number']),
-        ('Label', '%s' % info['label'])
-        ]
+        ('Level', '%s' %info['level'])]
+    if info['class_number'] == 0:
+        info['properties']=[('Class number', 'not available')]+info['properties']
+    else:
+        info['properties']=[('Class number', '%s' %info['class_number'])]+info['properties']
+    info['properties']=info['properties']+[('Label', '%s' % info['label'])]
+
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
