@@ -145,10 +145,10 @@ class ECisog_class(object):
                              ('optimal',self.optimal_flags[i])])
                        for i, c in enumerate(self.db_curves)]
 
-        self.friends = [
-        ('L-function', self.lfunction_link),
-        ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
-        ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso))]
+        self.friends =  [('L-function', self.lfunction_link)]
+        if not self.CM:
+            self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
+                             ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso))]
         if newform_exists_in_db:
             self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
 
