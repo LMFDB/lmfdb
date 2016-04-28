@@ -152,7 +152,8 @@ def extract_limits_as_tuple(arg, field):
             limits = None
     except (TypeError,ValueError) as e:
         emf_logger.debug("Error in search parameters. {0} ".format(e))
-        flash(Markup("Error: <span style='color:black'>{0}</span> is not a valid input for <span style='color:black'>{1}</span>.".format(arg.get(field),field)),"error")
+        msg = safe_non_valid_input_error(arg.get(field),field)
+        flash(msg,"error")
         return None
     return limits
 
@@ -210,10 +211,21 @@ def extract_data_from_jump_to(s):
                     args['character']=int(test[2])
     except (TypeError,ValueError) as e:
         emf_logger.debug("Did not get a valid label from search box: {0} ".format(e))
-        flash(Markup("Error: <span style='color:black'>{0}</span> is not a valid  <span style='color:black'>label</span> for either a newform or a space of modular forms.".format(s)),"error")
+        msg = safe_non_valid_input_error(s," either a newform or a space of modular forms.")
+        flash(msg,"error")
     emf_logger.debug("args={0}".format(s))
     return args
 
+def safe_non_valid_input_error(user_input,field_name):
+    r"""
+    Returns a formatted error message where all non-fixed parameters
+    (in particular user input) is escaped.
+    """
+    msg  = Markup("Error: <span style='color:black'>")+Markup.escape(user_input)
+    msg += Markup("</span>")
+    msg += Markup(" is not a valid input for <span style='color:black'>")
+    msg += Markup.escape(field_name)+Markup("</span>")
+    return msg
 
 def ajax_more2(callback, *arg_list, **kwds):
     r"""
