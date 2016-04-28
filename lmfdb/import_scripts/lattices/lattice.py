@@ -54,6 +54,8 @@ lat.create_index('label')
 lat.create_index('dim')
 lat.create_index('det')
 lat.create_index('level')
+lat.create_index('aut')
+lat.create_index('class_number')
 
 print "finished indices"
 

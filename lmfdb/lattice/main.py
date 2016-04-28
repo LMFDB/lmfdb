@@ -76,13 +76,15 @@ def lattice_render_webpage():
     args = request.args
     if len(args) == 0:
         counts = get_stats().counts()
-        dim_list= range(2, counts['max_dim']+1, 1)
-        class_number_list=range(1, counts['max_class_number']+1, 1)
-        det_list_endpoints = [1, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+        dim_list= range(1, counts['max_dim']+1, 1)
+        max_class_number=20
+        class_number_list=range(1, max_class_number+1, 1)
+        det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
 #        if counts['max_det']>3000:
 #            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
-        info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list}
+        name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14"]
+        info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
         credit = lattice_credit
         t = 'Integral Lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
@@ -164,7 +166,7 @@ def lattice_search(**args):
 #        start = start_default
 
     info['query'] = dict(query)
-    res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)]).skip(start).limit(count)
+    res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC)]).skip(start).limit(count)
     nres = res.count()
 
     # here we are checking for isometric lattices if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
