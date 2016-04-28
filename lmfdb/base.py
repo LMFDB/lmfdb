@@ -151,9 +151,30 @@ branch = "prod"
 if (os.getenv('BETA')=='1'):
     branch = "beta"
 
+# function for incrementing the version (for disply of beta versions)
+def version_increment(v):
+    abc = v.split(".")
+    if len(abc)==3:
+        a, b, c = abc
+    else:
+        a, b = abc
+    if b=='9':
+        a = str(int(a)+1)
+        b = '0'
+    else:
+        b = str(int(b)+1)
+    return ".".join([a,b])
+
+LMFDB_RELEASE_VERSION = open('lmfdb/version.txt').read().splitlines()[0]
+LMFDB_VERSION = LMFDB_RELEASE_VERSION
+LMFDB_BETA_VERSION = version_increment(LMFDB_RELEASE_VERSION) + 'beta'
+
 @app.before_request
 def set_beta_state():
+    global LMFDB_VERSION
     g.BETA = (os.getenv('BETA')=='1') or is_debug_mode()
+    if g.BETA:
+        LMFDB_VERSION = LMFDB_BETA_VERSION
 
 @app.context_processor
 def ctx_proc_userdata():
@@ -236,6 +257,7 @@ def git_infos():
 git_rev, git_date = git_infos()
 from sage.env import SAGE_VERSION
 
+
 """
 Creates link to the source code at the most recent commit.
 """
@@ -252,6 +274,7 @@ _latest_changeset = '<a href="%s">%s</a>' % (_url_changeset, git_date)
 def link_to_current_source():
     return {'current_source': _current_source,
             'latest_changeset': _latest_changeset,
+            'lmfdb_version': 'LMFDB version %s' % LMFDB_VERSION,
             'sage_version': 'SageMath version %s' % SAGE_VERSION}
 
 # end: google code links
