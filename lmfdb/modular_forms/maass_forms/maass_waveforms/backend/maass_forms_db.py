@@ -390,6 +390,8 @@ class MaassDB(object):
         limit = limit0
 
         # print "SHow collection:",self._show_collection
+        if fields is not None: # make sure that fields is a list 
+            fields = list(fields)
         for collection in self._show_collection:
             if verbose > 0:
                 print "skip=", skip

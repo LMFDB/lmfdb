@@ -19,7 +19,7 @@ from sage.rings.arith import primes
 
 from lmfdb.transitive_group import *
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, comma
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, comma, random_object_from_collection
 from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
@@ -214,11 +214,7 @@ def number_field_render_webpage():
 
 @nf_page.route("/random")
 def random_nfglobal():
-    from sage.misc.prandom import randint
-    C = getDBConnection()
-    init_nf_count()
-    n = randint(0,nfields-1)
-    label = C.numberfields.fields.find()[n]['label']
+    label = random_object_from_collection( getDBConnection().numberfields.fields )['label']
     #This version leaves the word 'random' in the URL:
     #return render_field_webpage({'label': label})
     #This version uses the number field's own URL:
@@ -483,12 +479,12 @@ def number_field_search(**args):
 
     fields = C.numberfields.fields
 
-    res = fields.find(
-        query).sort([('degree', ASC), ('disc_abs_key', ASC), ('disc_sign', ASC), ('label', ASC)])
+    res = fields.find(query)
 
     if 'download' in info and info['download'] != '0':
         return download_search(info, res)
 
+    res = res.sort([('degree', ASC), ('disc_abs_key', ASC), ('disc_sign', ASC), ('label', ASC)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -602,11 +598,22 @@ def download_search(info, res):
     else:
         s += 'data = ['
     s += '\\\n'
+    Qx = PolynomialRing(QQ,'x')
+    str2pol = lambda s: Qx([QQ(str(c)) for c in s.split(',')])
     for f in res:
-        wnf = WebNumberField.from_data(f)
-        cgi = wnf.class_group_invariants()
-        entry = ', '.join(
-            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
+        ##  We should try to avoid using database specific information here
+        ##  Kept for now for speed
+#        wnf = WebNumberField.from_data(f)
+#        entry = ', '.join(
+#            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
+        pol = str2pol(f['coeffs'])
+        D = decodedisc(f['disc_abs_key'], f['disc_sign'])
+        gal_t = f['galois']['t']
+        if 'class_group' in f:
+            cl = string2list(f['class_group'])
+        else:
+            cl = [-1]
+        entry = ', '.join([str(pol), str(D), str(gal_t), str(cl)])
         s += '[' + entry + ']' + ',\\\n'
     s = s[:-3]
     if dltype == 'gp':

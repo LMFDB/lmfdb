@@ -464,13 +464,13 @@ class WebNewForm(WebObject, CachedRepresentation):
             (p, r) = (int(p), int(r))
             pr = p**r
             cp = self._coefficients.get(p)
-#            emf_logger.debug("c{0} = {1}".format(p,cp))
             if cp is None:
                 if ev.has_eigenvalue(p):
                     cp = ev[p]
                 elif ev.max_coefficient_in_db() >= p:
                     ev.init_dynamic_properties()
                     cp = ev[p]
+            #emf_logger.debug("c{0} = {1}, parent={2}".format(p,cp,cp.parent()))
             if cp is None:
                 raise IndexError,"p={0} is outside the range of computed primes (primes up to {1})! for label:{2}".format(p,max(ev.primes()),self.label)
             if self._coefficients.get(pr) is None:
@@ -490,7 +490,18 @@ class WebNewForm(WebObject, CachedRepresentation):
                     #emf_logger.debug("c({0})={1}".format(pr,c))
                             #ev[pr]=c
                 self._coefficients[pr]=c
-            prod *= self._coefficients[pr]
+            try:
+                prod *= K(self._coefficients[pr])
+            except:
+                if hasattr(self._coefficients[pr],'vector'):
+                    if len(self._coefficients[pr].vector()) == len(K.power_basis()):
+                        prod *= K(self._coefficients[pr].vector())
+                    else:
+                        emf_logger.debug("vec={0}".format(self._coefficients[pr].vector()))
+                        raise ArithmeticError,"Wrong size of vectors!"
+                else:
+                    raise ArithmeticError,"Can not compute product of coefficients!"
+            
         return prod
 
     def max_cn(self):

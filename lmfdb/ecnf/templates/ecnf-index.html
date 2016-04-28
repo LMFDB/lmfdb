@@ -21,11 +21,20 @@
 {% endfor %}
 </li>
 {% endfor %}
+<li><a href={{url_for('ecnf.browse')}}>All available fields</a>
 </ul>
 </p>
 
+<h3> Browse {{ KNOWL('ec',title='elliptic curves')}} by degree of base
+  {{KNOWL('nf',title = "number field")}}:
+{% for d in data.degrees-%}
+{%-if loop.index0-%}, {% endif %}
+<a href={{url_for('ecnf.statistics_by_degree', d=d)}}>{{d}}</a>
+{%-endfor-%}
+</h3>
+
 <p>
-Curves with interesting properties:
+<h3>Curves with interesting properties:</h3>
 <ul>
 {% for item in data.highlights %}
 <li><a href="{{item[1]}}">{{item[0]}}</a></li>
@@ -33,6 +42,7 @@ Curves with interesting properties:
 </ul>
 </p>
 
+<h3>A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the database</h3>
 
 <h2> Find a specific curve by label</h2>
 <form>

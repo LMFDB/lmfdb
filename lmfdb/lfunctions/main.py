@@ -371,8 +371,11 @@ def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
     logger.debug(args)
     logger.debug(temp_args)
+
+    L = Lclass(**args)
+    # removing this from the try, because it makes debugging difficult
     try:
-        L = Lclass(**args)
+        pass #L = Lclass(**args)
     except Exception as ex:
         from flask import current_app
         if not current_app.debug:
@@ -408,6 +411,9 @@ def initLfunction(L, args, request):
     '''
     info = {'title': L.title}
 #    if 'title_arithmetic' in L:
+    if not hasattr(L, 'fromDB'):
+        L.fromDB = False
+
     try:
         info['title_arithmetic'] = L.title_arithmetic
         info['title_analytic'] = L.title_analytic
@@ -442,8 +448,16 @@ def initLfunction(L, args, request):
         info['label'] =  str(L.level) + '.' + str(L.weight) 
         info['label'] += '.' + str(L.character) + '.' + str(L.label) 
         info['label'] += '.' + request.url.split("/")[-2]  # the embedding
+    elif L.Ltype() == "riemann":
+        info['knowltype'] = "riemann"
+        info['label'] = "zeta"
+    elif L.Ltype() == "maass":
+        info['knowltype'] = "degree" + str(L.degree)
+        info['label'] = re.sub(".*/([^/]+)/$",r"\1",request.url)  # should have an id from somewhere?
 
-    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and L.fromDB:
+
+#    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
+    if L.fromDB:
         if L.motivic_weight % 2 == 0:
            arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
         else:
@@ -464,6 +478,11 @@ def initLfunction(L, args, request):
         info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
         info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
         info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
+
+        info['st_group'] = L.st_group
+        info['rank'] = L.order_of_vanishing
+        info['motivic_weight'] = L.motivic_weight
+
 
     elif L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
         try:
@@ -500,12 +519,12 @@ def initLfunction(L, args, request):
     info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
                         replace('/Lfunction/', '/L/Plot/').
                         replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
-    # an inelegant way to remove the plot in certain cases
-    try: 
-        if not L.fromDB and not L.plot:
-            info['plotlink'] = ""
-    except:
-        pass
+#    # an inelegant way to remove the plot in certain cases
+#    try: 
+#        if not L.fromDB and not L.plot:
+#            info['plotlink'] = ""
+#    except:
+#        pass
 
 
     info['bread'] = []
@@ -600,6 +619,9 @@ def initLfunction(L, args, request):
             ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
         info['bread'] = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
                                       (label, url_for('.l_function_ec_page', label=label))])
+    elif L.Ltype() == 'genus2curveQ':
+        # should use url_for
+        info['friends'] = [('isogeny class ' + L.label, "/Genus2Curve/Q/" + L.label.replace(".","/"))]
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
@@ -720,7 +742,8 @@ def initLfunction(L, args, request):
     info['functionalequation'] = lfuncFEtex(L, "analytic")
     info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
  #   if L.Ltype() == "genus2curveQ":
-    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and L.fromDB:
+ #   if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
+    if L.fromDB:
         info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
         info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
         info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")
@@ -875,6 +898,9 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         else:
             F = p2sage(pythonL.lfunc_data['plot'])
     else:
+     # obsolete, because lfunc_data comes from DB?
+      #  if pythonL.fromDB:
+      #      return ""
         L = pythonL.sageLfunction
         # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
         # SL: Reason, it's not in the distribution of Sage
@@ -884,7 +910,11 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
         plotStep = .1
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-30, 30, plotStep)]
-    p = line(F)
+    interpolation = spline(F)
+    F_interp = [(i, interpolation(i)) for i in srange(-30, 30, 0.05)]
+    p = line(F_interp)
+#    p = line(F)    # temporary hack while the correct interpolation is being implemented
+    
     styleLfunctionPlot(p, 10)
     fn = tempfile.mktemp(suffix=".png")
     p.save(filename=fn)
@@ -921,21 +951,29 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     negativeZeros = []
 
     for zero in website_zeros:
-        if zero.abs() < 1e-10:
+        if abs(float(zero)) < 1e-10:
             zero = 0
-        if zero < 0:
-            negativeZeros.append(zero)
+        if float(zero) < 0:
+            negativeZeros.append(str(zero))
         else:
-            positiveZeros.append(zero)
+            positiveZeros.append(str(zero))
 
+    zero_truncation = 25   # show at most 25 positive and negative zeros
+                           # later: implement "show more"
+    negativeZeros = negativeZeros[-1*zero_truncation:]
+    positiveZeros = positiveZeros[:zero_truncation]
     # Format the html string to render
-    positiveZeros = str(positiveZeros)
-    negativeZeros = str(negativeZeros)
+#    positiveZeros = str(positiveZeros)
+#    negativeZeros = str(negativeZeros)
+    positiveZeros = ", ".join(positiveZeros)
+    negativeZeros = ", ".join(negativeZeros)
     if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
-        negativeZeros = negativeZeros.replace("]", ", ]")
+       # negativeZeros = negativeZeros.replace("]", ", ]")
+        negativeZeros = negativeZeros + ", "
 
     return "<span class='redhighlight'>{0}</span><span class='positivezero'>{1}</span>".format(
-        negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
+     #   negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
+        negativeZeros.replace("-","&minus;"), positiveZeros)
 
 
 def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, temp_args):

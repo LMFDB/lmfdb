@@ -17,7 +17,7 @@ table,td {
 
   <table>
       <tr><td> Genus:  </td><td> {{ info.genus }} </td></tr>
-      <tr><td> Dimension of the family: </td><td> {{info.dim}} </td></tr>
+      <tr><td>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family:')}}</td><td> {{info.dim}} </td></tr>
 
        {% if info.eqn  %}
           <tr><td>Model of curve(s) in the family:</td><td>${{info.eqn}}$</td></tr>
@@ -29,46 +29,48 @@ table,td {
 
 <p> <h2>Group </h2>
   <table>
-       <tr><td>Permutation group:</td> <td>{{info.trgroup}}</td></tr>
- <!--<tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr> -->
+   {% if info.specialname %}
+   <tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr>
+   {% endif %}
+     <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td><td>SmallGroup{{info.gpid}}</td></tr>
     </table>
 </p>
 
 {% if info.fullauto  %}
-The full automorphism group for this family is ${{info.fullauto}}$ with signature {{info.signH}}.
+The full automorphism group for this family is ${{info.fullauto}}$ with signature ${{info.signH}}$.
     {% endif %}
 
 
-  <h2>Cover</h2> <table>
+<h2>Cover</h2><table>
       <tr><td> Quotient genus: </td> <td>{{info.g0}}</td></tr>
       <tr><td> Number of {{ KNOWL('curve.highergenus.aut.branchpoints', title='branch points') }}: </td> <td>{{info.r}}</td></tr>
-      	<tr><td> {{ KNOWL('curve.highergenus.aut.degree',title='Degree of the covering')}}: </td> <td>{{info.deg}}</td></tr>
       <tr><td> {{ KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
       <tr> &nbsp;</tr> </table> 
 
-      <table><tr><td> {{ KNOWL('curve.highergenus.aut.generating_vectors', title='Generating vector')}} in {{info.trgroup}}:</td> <td>      
+      <table><tr><td> {{ KNOWL('curve.highergenus.aut.generating_vectors', title='Generating vector')}} in ${{info.group}}$:</td> <td>      
         <tbody>
         {% for gen in info.genvecs%}
-        <tr> <td> </td> <td><center>{{gen}}</center></td></tr>
+        <tr> <td> </td> <td>{{gen}}</td></tr>
         {% endfor %}
  </td></tr>
           </table>
 
 
+ {% if info.ishyp %}     
 
   <p><h2>Other Data</h2>
     <table>
      
-      <tr><td>Hyperelliptic curves:</td><td>{{info.ishyp}}</td></tr>
+      <tr><td>Hyperelliptic curve(s):</td><td>{{info.ishyp}}</td></tr>
    {% if info.hypinv  %}
-       <tr><td>Hyperelliptic Involution:</td> <td>{{info.hypinv}}</td></tr>
+       <tr><td>Hyperelliptic involution:</td> <td>{{info.hypinv}}</td></tr>
    {% endif %}
   
     </table>
   </p>
   
 
- 
+ {% endif %}
 
 
 

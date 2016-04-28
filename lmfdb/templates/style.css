@@ -1618,16 +1618,19 @@ div.codebox {
 /* Styling of Maass form plot */
 
 div.maassformplot {
-        width: 720px;
-        height: 800px;
+    position: absolute;
+            width: 720px;
+    /*    height: 800px;
         overflow: hidden;
-        position: relative;
+        position: relative; */
 }
 
 div.maassformplot img {
-        position: absolute;
-        top: -200px;
-        left: -870px;
+    width:100%;
+    height:auto;
+/*    position: absolute;
+    top: -200px;
+    left: -870px;*/
 }
 
 /* End of styling of Maass form plot */
@@ -1774,9 +1777,9 @@ p.rotation  {
 #sidebar h2:first-child a:first-child,
 #sidebar h2:first-child {
   margin: 0;
-  border-top-right-radius: 0px;
-  -moz-border-radius-topright: 0px;
+  padding-top: 3px;
 }
+
 #sidebar ul:last-child li:last-child,
 #sidebar ul:last-child li:last-child a {
   border-bottom-right-radius: 0px;

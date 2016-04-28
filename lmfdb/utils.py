@@ -15,8 +15,16 @@ from copy import copy
 from werkzeug import cached_property
 from flask import url_for
 
-cache = SimpleCache()
+def random_object_from_collection(collection):
+    import pymongo
+    if pymongo.version_tuple[0] < 3:
+        return collection.aggregate({ '$sample': { 'size': 1 } }, cursor = {} ).next()
+    else:
+        # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
+        return collection.aggregate([{ '$sample': { 'size': 1 } } ]).next()
 
+
+cache = SimpleCache()
 
 def cached(timeout=15 * 60, key='cache::%s::%s'):
     def decorator(f):

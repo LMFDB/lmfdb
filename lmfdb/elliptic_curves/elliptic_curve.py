@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import time
-
+import ast
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
@@ -10,7 +10,7 @@ import tempfile
 import os
 import StringIO
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_split_on_pm, comma
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_split_on_pm, comma, random_object_from_collection
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -110,10 +110,7 @@ def rational_elliptic_curves(err_args=None):
 
 @ec_page.route("/random")
 def random_curve():
-    from sage.misc.prandom import randint
-    n = get_stats().counts()['ncurves']
-    n = randint(0,n-1)
-    label = db_ec().find()[n]['label']
+    label = random_object_from_collection( db_ec() )['label']
     # This version leaves the word 'random' in the URL:
     # return render_curve_webpage_by_label(label)
     # This version uses the curve's own URL:
@@ -166,6 +163,10 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
 
 def elliptic_curve_search(**args):
     info = to_dict(args)
+
+    if 'download' in info and info['download'] != '0':
+        return download_search(info)
+
     query = {}
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
@@ -247,8 +248,8 @@ def elliptic_curve_search(**args):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING)
-                       ]).skip(start).limit(count)
+    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING),
+                       ('lmfdb_number', ASCENDING)]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
     info['curve_url'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
@@ -258,11 +259,10 @@ def elliptic_curve_search(**args):
     info['count'] = count
     info['more'] = int(start + count < nres)
 
-    if 'download' in info and info['download'] != '0':
-        return download_search(info)
+    
     if nres == 1:
         info['report'] = 'unique match'
-    elif nres == 2:
+    elif nres == 2: 
         info['report'] = 'displaying both matches'
     else:
         if nres > count or start != 0:
@@ -300,10 +300,18 @@ def by_triple_label(conductor,iso_label,number):
 @ec_page.route("/<label>")
 def by_ec_label(label):
     ec_logger.debug(label)
+
+    # First see if we have an LMFDB label of a curve or class:
     try:
         N, iso, number = split_lmfdb_label(label)
+        if number:
+            return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
+        else:
+            return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+
     except AttributeError:
         ec_logger.debug("%s not a valid lmfdb label, trying cremona")
+        # Next see if we have a Cremona label of a curve or class:
         try:
             N, iso, number = split_cremona_label(label)
         except AttributeError:
@@ -314,26 +322,21 @@ def by_ec_label(label):
             else:
                 return elliptic_curve_jump_error(label, {})
 
-        # We permanently redirect to the lmfdb label
         if number: # it's a curve
-            data = db_ec().find_one({'label': label})
-            if data is None:
-                return elliptic_curve_jump_error(label, {})
-            ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            #return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
-            return render_curve_webpage_by_label(data['label'])
-        else: # it's an isogeny class
-            data = db_ec().find_one({'iso': label})
-            if data is None:
-                return elliptic_curve_jump_error(label, {})
-            ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            #return redirect(url_for(".by_ec_label", label=data['iso']), 301)
-            return render_isogeny_class(data['iso'])
+            label_type = 'label'
+        else:
+            label_type = 'iso'
 
-    if number:
-        return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
-    else:
-        return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+        data = db_ec().find_one({label_type: label})
+        if data is None:
+            return elliptic_curve_jump_error(label, {})
+        ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
+        iso = data['lmfdb_iso'].split(".")[1]
+        if number:
+            return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=data['lmfdb_number']))
+        else:
+            return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+
 
 def by_weierstrass(eqn):
     w = weierstrass_eqn_regex.match(eqn)
@@ -553,7 +556,7 @@ def download_search(info):
         delim = 'magma'
         filename = 'elliptic_curves.m'
     s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, info['curves'].count())
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [Weierstrass Coefficients]\n'
     s += '\n' + com2
@@ -563,8 +566,9 @@ def download_search(info):
     else:
         s += 'data = ['
     s += '\\\n'
-    #for f in info['curves']:
-    for f in info['curves']:
+    # reissue saved query here
+    res = db_ec().find(ast.literal_eval(info["query"]))
+    for f in res:
         entry = str(f['ainvs'])
         entry = entry.replace('u','')
         entry = entry.replace('\'','')

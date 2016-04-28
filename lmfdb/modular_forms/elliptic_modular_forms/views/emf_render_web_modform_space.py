@@ -67,6 +67,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
         ("Character \(\chi_{%s}(%s, \cdot)\)" % (level, character), url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=character)))
     # emf_logger.debug("friends={0}".format(friends))
     info['bread'] = bread
+    info['learnmore'] = [('History of Modular forms', url_for('holomorphic_mf_history'))]
     emf_logger.debug("info={0}".format(info))
     if info.has_key('space'):
         emf_logger.debug("space={0}".format(info['space']))        
@@ -92,6 +93,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         return info
     try:
         WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = character, update_from_db=True)
+        WMFS.update_from_db() ## Need to call an extra time for some reason...
         if not WMFS.has_updated():
             stop = False
             orbit = WMFS.character.character.galois_orbit()

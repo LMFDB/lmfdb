@@ -2,8 +2,9 @@
 {% block content %}
 
 <p>
-The database currently contains {{info.count}} genus 2 curves
-over the rational numbers.
+The database currently contains {{info["counts"]["ncurves_c"]}} <a title="Genus 2 curves [g2c.g2curve]" knowl="g2c.g2curve" kwargs="">genus 2 curves</a> over $\Q$
+of <a title="Genus 2 curves [g2c.abs_discriminant]" knowl="g2c.abs_discriminant" kwargs="">absolute discriminant</a> up to {{info["counts"]["max_D_c"]}}.
+Here are some <a href={{info["stats_url"]}}>further statistics</a>.
 </p>
 
 <h2> Browse {{ KNOWL('g2c.g2curve', title='genus 2 curves over $\Q$') }} </h2>
@@ -17,7 +18,7 @@ By {{ KNOWL('ag.conductor', title='conductor')}}:
 <p>
 By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
 {% for rnge in info.discriminant_list %}
-<a href="?disc={{rnge}}">{{rnge}}</a>
+<a href="?abs_disc={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p>
 <p>
@@ -39,10 +40,8 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 
 
 <h2> Search </h2>
-
 <form>
 <table>
-<tr>Please enter a value or leave blank:</tr>
 <tr>
 <td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
 <td><input type='text' name='cond' placeholder='169' size=10>
@@ -83,7 +82,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 <td><input type='text' name='torsion_order' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2 </span></td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\Q\)-automorphism group') }}</td>
-<td><select name='aut_grp' width="122" style="width: 122px">
+<td><select name='aut_grp_id' width="122" style="width: 122px">
         <option ></option>
     {% for G in info.aut_grp_list %}
         <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
@@ -95,7 +94,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 <td><input type='text' name='torsion' placeholder='[2,2,2]' size=10>
 <td><span class="formexample"> e.g. [2,2,2] </span></td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\overline{\Q}\)-automorphism group') }}</td>
-<td><select name='geom_aut_grp' width="122" style="width: 122px">
+<td><select name='geom_aut_grp_id' width="122" style="width: 122px">
         <option ></option>
     {% for G in info.geom_aut_grp_list %}
         <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
@@ -128,6 +127,8 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 <td>Maximum number of curves to display</td>
 <td><input type='text' name='count' value=50 size=10></td>
 <td><span class="formexample"> &nbsp;</td>
+</tr>
+<tr>
 <td><button type='submit' value='Search'>Search</button></td>
 </tr>
 </table>
