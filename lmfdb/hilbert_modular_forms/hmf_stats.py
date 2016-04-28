@@ -136,11 +136,13 @@ class HMFstats(object):
             stats[d]['maxnorm'] = max(forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
             stats[d]['counts'] = {}
             for F in stats[d]['fields']:
-                ff = forms.find({'field_label':F}, ['label', 'level_norm']).hint('field_label_1')
-                fln = [f['level_norm'] for f in ff]
+                print("Field %s" % F)
+                pipeline = [{"$match": {'field_label':F}}, {"$group":{"_id":"level_norm", "nforms": {"$sum": int(1)}, "maxnorm" : {"$max": '$level_norm'}}}]
+                res = forms.aggregate(pipeline).next()
+                print("result = %s" % res)
                 stats[d]['counts'][F] = {}
-                stats[d]['counts'][F]['nforms'] = len(fln)
-                stats[d]['counts'][F]['maxnorm'] = max(fln)
+                stats[d]['counts'][F]['nforms'] = res['nforms']
+                stats[d]['counts'][F]['maxnorm'] = res['maxnorm']
                 stats[d]['counts'][F]['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), field_pretty(F))
                 stats[d]['counts'][F]['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
 
