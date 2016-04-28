@@ -44,7 +44,7 @@ def check_add_qexp(dim, min_det=1, max_det=None, fix=False):
             if fix:
                 M=l['gram']
                 exp=[int(i) for i in gp("Vec(1+2*'x*Ser(qfrep("+str(gp(matrix(M)))+",150,0)))")]
-                lat.update({'theta_series': l['theta_series']}, {"$set": {'theta_series': exp}}, upsert=True)
+                lat.update({'label': l['label']}, {"$set": {'theta_series': exp}}, upsert=True)
                 print("Fixed lattice %s" % l['label'])
         else:
             print("q expansion stored")

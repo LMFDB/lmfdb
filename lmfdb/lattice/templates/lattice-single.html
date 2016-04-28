@@ -29,7 +29,10 @@
     <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
 {% if info.dim == 1 %}
-    $({{info.shortest}})$</td></tr>
+    $({{info.shortest}})$</td></tr><tr><td></td><td>Download this vector for 
+        {% for e in info.download_shortest %} 
+            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+        {% endfor %}</td></tr>
 {% else %}
     <table><tr>
     {% for n in info.shortest %}
@@ -83,7 +86,10 @@
     <tr><td>&nbsp;</td></tr>
     <tr><td align=right valign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
     {% if info.dim == 1 %}
-        $({{info.genus_reps}})$
+        $({{info.genus_reps}})$</td></tr><tr><td></td><td>Download this matrix for
+            {% for e in info.download_genus_reps %} 
+            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+            {% endfor %}</td></tr>
     {% else %}
         {% for n in info.genus_reps %}
             ${{n}}${% if not loop.last %},{% endif %}
