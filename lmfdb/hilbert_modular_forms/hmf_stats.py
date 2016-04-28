@@ -136,10 +136,12 @@ class HMFstats(object):
             stats[d]['maxnorm'] = max(forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
             stats[d]['counts'] = {}
             for F in stats[d]['fields']:
-                print("Field %s" % F)
-                pipeline = [{"$match": {'field_label':F}}, {"$group":{"_id":"level_norm", "nforms": {"$sum": int(1)}, "maxnorm" : {"$max": '$level_norm'}}}]
+                #print("Field %s" % F)
+                pipeline = [{"$match": {'field_label':F}},
+                            {"$project" : { 'level_norm' : 1 }},
+                            {"$group":{"_id":"level_norm", "nforms": {"$sum": 2}, "maxnorm" : {"$max": '$level_norm'}}}]
                 res = forms.aggregate(pipeline).next()
-                print("result = %s" % res)
+                #print("result = %s" % res)
                 stats[d]['counts'][F] = {}
                 stats[d]['counts'][F]['nforms'] = res['nforms']
                 stats[d]['counts'][F]['maxnorm'] = res['maxnorm']
