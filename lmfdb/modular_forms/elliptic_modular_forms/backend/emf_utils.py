@@ -153,6 +153,10 @@ def extract_limits_as_tuple(arg, field):
     except (TypeError,ValueError) as e:
         emf_logger.debug("Error in search parameters. {0} ".format(e))
         msg = safe_non_valid_input_error(arg.get(field),field)
+        if field == 'label':
+            msg += " Need a label which is a sequence of letters, for instance 'a' or 'ab' for input"
+        else:
+            msg += " Need either a positive integer or a range of positive integers as input."
         flash(msg,"error")
         return None
     return limits
@@ -210,8 +214,9 @@ def extract_data_from_jump_to(s):
                 if len(test) > 2:  # we also have character
                     args['character']=int(test[2])
     except (TypeError,ValueError) as e:
-        emf_logger.debug("Did not get a valid label from search box: {0} ".format(e))
-        msg = safe_non_valid_input_error(s," either a newform or a space of modular forms.")
+        emf_logger.error("Did not get a valid label from search box: {0} ".format(e))
+        msg  = safe_non_valid_input_error(s," either a newform or a space of modular forms.")
+        msg += " Need input of the form 1.12.1 (for a space) or 1.12.1.a (for a  newform)."
         flash(msg,"error")
     emf_logger.debug("args={0}".format(s))
     return args
