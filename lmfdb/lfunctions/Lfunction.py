@@ -121,7 +121,7 @@ def makeLfromdata(L, fromdb=False):
 
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
         base_power_int = int(data['coeff_info'][0][2:-3])
-        print 'base_power_int',base_power_int
+        #print 'base_power_int',base_power_int
         L.dirichlet_coefficients_analytic = L.dirichlet_coefficients_arithmetic[:]
         for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
             an = L.dirichlet_coefficients_arithmetic[n]
@@ -150,7 +150,7 @@ def makeLfromdata(L, fromdb=False):
                 else:
                     L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
                     L.dirichlet_coefficients_analytic[n] = exp(2*pi*I*float(an_power_int)/float(this_base_power_int)).n()
-        print "rename L.dirichlet_coefficients_analytic"
+        #print "rename L.dirichlet_coefficients_analytic"
         L.dirichlet_coefficients = L.dirichlet_coefficients_analytic[:]
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
