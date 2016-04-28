@@ -325,8 +325,12 @@ def render_elliptic_modular_form_navigation_wp(**args):
         weight_range = filter(is_even,weight_range)
     if len(weight_range)>1:
         info['weight_range']="{0}-{1}".format(limits_weight[0],limits_weight[1])
+    elif len(weight_range)==1:
+        info['weight_range']="{0}".format(limits_weight[0])
     if len(level_range)>1:
         info['level_range']="{0}-{1}".format(limits_level[0],limits_level[1])
+    if len(level_range)==1:
+        info['level_range']="{0}".format(limits_level[0])        
     for n in level_range:
         info['table'][n]={}
         for k in weight_range:
