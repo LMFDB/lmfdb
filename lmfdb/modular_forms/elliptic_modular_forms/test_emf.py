@@ -25,7 +25,10 @@ class EmfTest(LmfdbTest):
             for k in weights:
                 for g in range(2):
                     print("testing (N,k,g) = (%s,%s,%s)" % (N,k,g))
-                    self.tc.get("/ModularForm/GL2/Q/holomorphic/%s/%s/?group=%s" % (N,k,g))
+                    url  = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/?group={2}".format(N,k,g)
+                    rv = self.tc.get(url,follow_redirects=True)
+                    self.assertTrue(rv.status_code==200,"Request failed for {0}".format(url))
+                    self.assertFalse('Error:' in rv.data,"Error in the data for {0}".format(url))
 
     def test_delta(self):
         r"""
@@ -117,3 +120,7 @@ class EmfTest(LmfdbTest):
         assert 'The table below gives the dimensions of the space of' in page.data
         #page = self.tc.get("", follow_redirects=True)
         #assert '' in page.data
+    def test_character_parity(self):
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/99/3/?group=1',
+                           follow_redirects=True)
+        self.assertFalse('n/a' in page.data)
