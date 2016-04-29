@@ -76,14 +76,14 @@ def lattice_render_webpage():
     args = request.args
     if len(args) == 0:
         counts = get_stats().counts()
-        dim_list= range(1, counts['max_dim']+1, 1)
+        dim_list= range(1, 11, 1)
         max_class_number=20
         class_number_list=range(1, max_class_number+1, 1)
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
 #        if counts['max_det']>3000:
 #            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
-        name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14"]
+        name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
         credit = lattice_credit
         t = 'Integral Lattices'
@@ -255,17 +255,20 @@ def render_lattice_webpage(**args):
     info['kissing']=int(f['kissing'])
     info['aut']=int(f['aut'])
 
-    if f['dim']==1:
-        info['shortest']=str(f['shortest']).strip('[').strip(']')
+    if f['shortest']=="":
+        info['shortest']==f['shortest']
     else:
-        if info['dim']*info['kissing']<100:
-            info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
+        if f['dim']==1:
+            info['shortest']=str(f['shortest']).strip('[').strip(']')
         else:
-            max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
-            info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
-            info['all_shortest']="no"
-    info['download_shortest'] = [
-        (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
+            if info['dim']*info['kissing']<100:
+                info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
+            else:
+                max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
+                info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
+                info['all_shortest']="no"
+        info['download_shortest'] = [
+            (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
     ncoeff=20
     if f['theta_series'] != "":
