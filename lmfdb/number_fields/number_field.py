@@ -484,7 +484,7 @@ def number_field_search(**args):
     if 'download' in info and info['download'] != '0':
         return download_search(info, res)
 
-    res = res.sort([('degree', ASC), ('disc_abs_key', ASC), ('disc_sign', ASC), ('label', ASC)])
+    res = res.sort([('degree', ASC), ('disc_abs_key', ASC),('disc_sign', ASC)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
