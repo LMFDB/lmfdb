@@ -240,7 +240,6 @@
       colspan: onecolumn
     - title: Lattices
       url_for: "lattice.lattice_render_webpage"
-      status: beta
     - title: Subgroups of
       part2:
          - title: $\SL(2)$
