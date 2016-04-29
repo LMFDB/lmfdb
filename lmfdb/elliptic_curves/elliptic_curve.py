@@ -222,6 +222,12 @@ def elliptic_curve_search(**args):
         parse_ints(info,query,'rank')
         parse_ints(info,query,'sha','analytic order of &#1064;')
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,process=str,check_divisibility='increasing')
+        if 'include_cm' in info:
+            if info['include_cm'] == 'exclude':
+                query['cm'] = 0
+            elif info['include_cm'] == 'only':
+                query['cm'] = {'$ne' : 0}
+
         parse_primes(info, query, 'surj_primes', name='surjective primes',
                      qfield='non-surjective_primes', mode='complement')
         if info.get('surj_quantifier') == 'exactly':
