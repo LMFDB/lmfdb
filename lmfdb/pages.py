@@ -137,6 +137,11 @@ def bigpicture():
     b = [('Big Picture', url_for('bigpicture'))]
     return render_template("bigpicture.html", title="A Map of the LMFDB", body_class=_bc, bread=b)
 
+@app.route("/universe")
+def universe():
+    b = [('LMFDB universe', url_for('universe'))]
+    return render_template("universe.html", title="The LMFDB universe", body_class=_bc, bread=b)
+
 
 @app.route("/roadmap")
 def roadmap():
