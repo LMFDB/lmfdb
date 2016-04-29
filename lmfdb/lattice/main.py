@@ -298,6 +298,8 @@ def render_lattice_webpage(**args):
     else:
         info['name'] == ""
     info['comments']=str(f['comments'])
+    if 'Leech' in info['comments']: # no need to duplicate as it is in the name
+        info['comments'] = ''
     if info['name'] == "":
         t = "Integral Lattice %s" % info['label']
     else:
