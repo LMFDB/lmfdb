@@ -354,11 +354,8 @@ class Lfunction_EC_Q(Lfunction):
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.title = ("L-function $L(s,E)$ for the Elliptic Curve Isogeny " +
-                      "Class " + self.label)
         self.properties = [('Degree ', '%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
-#        self.credit = 'Sage'
         self.credit = ''
         self.citation = ''
   #      self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E,
@@ -372,8 +369,7 @@ class Lfunction_EC_Q(Lfunction):
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
         self.texnamecompleteds_arithmetic = "\\Lambda(E,s)"
         self.texnamecompleted1ms_arithmetic = "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-        self.title_end = ("where $E$ is an elliptic curve "
-                      + "of conductor " + str(self.level))
+        self.title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
         self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
         self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
         self.title = "$" + self.texname + "$" + ", " + self.title_end
