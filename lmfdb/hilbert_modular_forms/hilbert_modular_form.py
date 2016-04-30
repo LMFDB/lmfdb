@@ -445,7 +445,7 @@ def completeness_page():
     t = 'Completeness of the Hilbert Modular Forms data'
     bread = [('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Completeness', '')]
-    return render_template("single.html", kid='dq.mf.hilbert.extent',
+    return render_template("single.html", kid='dq.mf.hilbert.completeness',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @hmf_page.route("/Source")
