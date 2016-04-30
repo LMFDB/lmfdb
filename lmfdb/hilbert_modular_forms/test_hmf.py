@@ -7,7 +7,7 @@ class HMFTest(LmfdbTest):
     def test_home(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/')
         assert 'Hilbert' in L.data
-        assert 'newforms' in L.data
+        assert 'cusp forms' in L.data
         assert 'modular' in L.data
         assert 'Browse' in L.data
         assert 'Search' in L.data
@@ -80,3 +80,12 @@ class HMFTest(LmfdbTest):
     def test_Lfun_link(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/4.4.2048.1/holomorphic/4.4.2048.1-784.2-a')
         assert 'L/ModularForm/GL2/TotallyReal/4.4.2048.1/holomorphic/4.4.2048.1-784.2-a' in L.data
+
+    def test_browse(self):
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/')
+        assert 'by field degree' in L.data
+        assert 'database currently contains' in L.data
+
+    def test_browse_by_degree(self):
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/2/')
+        assert 'Number of newforms' in L.data

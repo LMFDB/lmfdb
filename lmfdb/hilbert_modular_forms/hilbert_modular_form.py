@@ -9,7 +9,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 from sage.misc.preparser import preparse
 from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
-from lmfdb.hilbert_modular_forms.hmf_stats import get_stats
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, hmf_summary, hmf_degree_summary
 
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.ecnf.WebEllipticCurve import db_ecnf
@@ -416,7 +416,7 @@ def render_hmf_webpage(**args):
                    ('Weight', '%s' % data['weight']),
                    ('Level norm', '%s' % data['level_norm']),
                    ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
-                   ('Label', '%s' % data['label_suffix']),
+                   ('Label', '%s' % data['label']),
                    ('Dimension', '%s' % data['dimension']),
                    ('CM', is_CM),
                    ('Base change', is_base_change)
@@ -463,3 +463,57 @@ def labels_page():
              ('Labels', '')]
     return render_template("single.html", kid='mf.hilbert.label',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+
+@hmf_page.route("/browse/")
+def browse():
+    info = {
+        'counts': get_stats().counts(),
+        'stats': get_stats().stats(),
+        'extent': dict([(d,hmf_degree_summary(d)) for d in get_stats().counts()['degrees']]),
+        'full_extent': hmf_summary()
+    }
+    credit = 'John Voight'
+    t = 'Hilbert modular forms'
+    bread = [('Hilbert modular forms', url_for("hmf.hilbert_modular_form_render_webpage")),
+             ('browse', ' ')]
+    return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
+@hmf_page.route("/browse/<int:d>/")
+def statistics_by_degree(d):
+    stats = get_stats()
+    info = {
+        'counts': stats.counts(),
+        'degree': d
+    }
+    if not d in info['counts']['degrees']:
+        if d==1:
+            info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('emf.render_elliptic_modular_forms')
+        else:
+            info['error'] = "The database does not contain any Hilbert modular forms over fields of degree %s" % d
+        d = 'bad'
+    else:
+        info['stats'] = stats.stats()[d]
+        info['degree_stats'] = hmf_degree_summary(d)
+    credit = 'John Cremona'
+    if d==2:
+        t = 'Hilbert modular forms over real quadratic number fields'
+    elif d==3:
+        t = 'Hilbert modular forms over totally real cubic number fields'
+    elif d==4:
+        t = 'Hilbert modular forms over totally real quartic number fields'
+    elif d==5:
+        t = 'Hilbert modular forms over totally real quintic number fields'
+    elif d==6:
+        t = 'Hilbert modular forms over totally real sextic number fields'
+    else:
+        t = 'Hilbert modular forms over totally real fields of degree %s' % d
+
+    bread = [('Hilbert modular forms', url_for("hmf.hilbert_modular_form_render_webpage")),
+              ('degree %s' % d,' ')]
+
+    if d=='bad':
+        t = 'Hilbert modular forms'
+        bread = bread[:-1]
+
+    return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+
