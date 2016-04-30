@@ -260,6 +260,9 @@ def render_lattice_webpage(**args):
     else:
         if f['dim']==1:
             info['shortest']=str(f['shortest']).strip('[').strip(']')
+        elif f['name']=="Leech"
+            info['shortest']=[str([[1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2], [1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3], [1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2]])]
+            info['all_shortest']="no"
         else:
             if info['dim']*info['kissing']<100:
                 info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
