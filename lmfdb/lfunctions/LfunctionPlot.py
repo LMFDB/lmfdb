@@ -276,7 +276,6 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
             try:
                 linkurl = url_for('.l_function_maass_gln_page', group=group,
                                   level=level, char=char, R=R, ap_id=ap_id)
-                print 'linkurl', linkurl
             except Exception as ex:  # catch when running a test
                 linkurl = lid
             ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
