@@ -379,8 +379,9 @@ def render_single_Lfunction(Lclass, args, request):
     logger.debug(args)
     logger.debug(temp_args)
 
+    L = Lclass(**args)
     try:
-        L = Lclass(**args)
+        pass
     except Exception as ex:
         from flask import current_app
         if not current_app.debug:
@@ -954,7 +955,7 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
         if L.lfunc_data is None:
             return "<span>" + L.zeros + "</span>"
         else:
-            website_zeros = p2sage(L.lfunc_data['zeros'])
+            website_zeros = L.lfunc_data['zeros']
     else:
         # This depends on mathematical information, all below is formatting
         # More semantic this way

@@ -20,7 +20,10 @@ def p2sage(s):
 
     x = PolynomialRing(RationalField(),"x").gen()
     a = PolynomialRing(RationalField(),"a").gen()
-    z = sage_eval(str(s), locals={'x' : x, 'a' : a})
+    try:
+        z = sage_eval(str(s), locals={'x' : x, 'a' : a})
+    except:
+        z = s
     if type(z) in [list, tuple]:
         return [p2sage(x) for x in z]
     else:
