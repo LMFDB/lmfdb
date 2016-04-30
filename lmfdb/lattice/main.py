@@ -260,9 +260,6 @@ def render_lattice_webpage(**args):
     else:
         if f['dim']==1:
             info['shortest']=str(f['shortest']).strip('[').strip(']')
-        elif f['name']=="Leech"
-            info['shortest']=[str([[1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2], [1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3], [1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2]])]
-            info['all_shortest']="no"
         else:
             if info['dim']*info['kissing']<100:
                 info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
@@ -270,6 +267,13 @@ def render_lattice_webpage(**args):
                 max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
                 info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
                 info['all_shortest']="no"
+        info['download_shortest'] = [
+            (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
+
+    if f['name']==['Leech']:
+        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
+str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
+        info['all_shortest']="no"
         info['download_shortest'] = [
             (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
