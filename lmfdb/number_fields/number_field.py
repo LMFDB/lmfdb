@@ -484,7 +484,7 @@ def number_field_search(**args):
     if 'download' in info and info['download'] != '0':
         return download_search(info, res)
 
-    res = res.sort([('degree', ASC), ('disc_abs_key', ASC), ('disc_sign', ASC), ('label', ASC)])
+    res = res.sort([('degree', ASC), ('disc_abs_key', ASC),('disc_sign', ASC)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -598,10 +598,22 @@ def download_search(info, res):
     else:
         s += 'data = ['
     s += '\\\n'
+    Qx = PolynomialRing(QQ,'x')
+    str2pol = lambda s: Qx([QQ(str(c)) for c in s.split(',')])
     for f in res:
-        wnf = WebNumberField.from_data(f)
-        entry = ', '.join(
-            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
+        ##  We should try to avoid using database specific information here
+        ##  Kept for now for speed
+#        wnf = WebNumberField.from_data(f)
+#        entry = ', '.join(
+#            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
+        pol = str2pol(f['coeffs'])
+        D = decodedisc(f['disc_abs_key'], f['disc_sign'])
+        gal_t = f['galois']['t']
+        if 'class_group' in f:
+            cl = string2list(f['class_group'])
+        else:
+            cl = [-1]
+        entry = ', '.join([str(pol), str(D), str(gal_t), str(cl)])
         s += '[' + entry + ']' + ',\\\n'
     s = s[:-3]
     if dltype == 'gp':

@@ -599,6 +599,7 @@ def initLfunction(L, args, request):
                  url_for('.l_function_dirichlet_page',
                          modulus=nmod,number=nnum))
         info['navi'] = (Lprev,Lnext)
+        #print info['navi']
         snum = str(L.characternumber)
         smod = str(L.charactermodulus)
         charname = WebDirichlet.char2tex(smod, snum)

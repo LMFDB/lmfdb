@@ -130,6 +130,7 @@ def makeLfromdata(L, fromdb=False):
 
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
         base_power_int = int(data['coeff_info'][0][2:-3])
+        #print 'base_power_int',base_power_int
         L.dirichlet_coefficients_analytic = L.dirichlet_coefficients_arithmetic[:]
         for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
             an = L.dirichlet_coefficients_arithmetic[n]
@@ -158,6 +159,8 @@ def makeLfromdata(L, fromdb=False):
                 else:
                     L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
                     L.dirichlet_coefficients_analytic[n] = exp(2*pi*I*float(an_power_int)/float(this_base_power_int)).n()
+
+        #print "rename L.dirichlet_coefficients_analytic"
         L.dirichlet_coefficients = L.dirichlet_coefficients_analytic[:]
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
@@ -361,11 +364,8 @@ class Lfunction_EC_Q(Lfunction):
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.title = ("L-function $L(s,E)$ for the Elliptic Curve Isogeny " +
-                      "Class " + self.label)
         self.properties = [('Degree ', '%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
-#        self.credit = 'Sage'
         self.credit = ''
         self.citation = ''
   #      self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E,
@@ -379,8 +379,7 @@ class Lfunction_EC_Q(Lfunction):
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
         self.texnamecompleteds_arithmetic = "\\Lambda(E,s)"
         self.texnamecompleted1ms_arithmetic = "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-        self.title_end = ("where $E$ is an elliptic curve "
-                      + "of conductor " + str(self.level))
+        self.title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
         self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
         self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
         self.title = "$" + self.texname + "$" + ", " + self.title_end

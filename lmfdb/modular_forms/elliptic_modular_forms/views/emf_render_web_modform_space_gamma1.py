@@ -25,7 +25,7 @@ from sage.all import uniq
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
 #from lmfdb.modular_forms.elliptic_modular_forms.backend.cached_interfaces import WebModFormSpace_cached
-
+from lmfdb.WebCharacter import ConreyCharacter
 ###
 ###
 
@@ -89,10 +89,18 @@ def set_info_for_gamma1(level,weight,weight2=None):
             xi = r['cchi']
             orbit = r['character_orbit']
             k = r['weight']
+            ## This is probably still quicker if it is in the database
             parity = r.get('character_parity','n/a')
             if parity == 'n/a':
-                trivial_trivially = ""
-            else:
+                chi = ConreyCharacter(level,xi)
+                if chi.is_odd():
+                    parity = -1
+                elif chi.is_even():
+                    parity = 1
+                else:
+                    emf_logger.critical("Could not determine the parity of ConreyCharacter({0},{1})".format(xi,level))
+                    trivial_trivially = ""
+            if parity != 'n/a':
                 if k % 2 == (1 + parity)/2:   # is space empty because of parity?
                     trivial_trivially = "yes"
                 else:
@@ -101,7 +109,6 @@ def set_info_for_gamma1(level,weight,weight2=None):
                 parity = 'even'
             elif parity == -1:
                 parity = 'odd'
-
             d = r.get('d_newf',"n/a")
             indb = r.get('in_wdb',0)
             if d == 0:

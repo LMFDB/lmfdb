@@ -9,14 +9,14 @@
 
 <tr>
 <td align=left> 
-Genus:</td><td align=left> <input type='text' name='genus' size=3 value="">
+Genus:</td><td align=left> <input type='text' name='genus' size=3 value="{{info.genus}}">
 </td>
 <td align=left> 
-Group: <td align=left> <input type="text" name="trangplabel" size="8" value="" > 
+Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
 
 <td align=left> 
 {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
-<td align=left> <input type="text" name="signature" size="15" value="" >
+<td align=left> <input type="text" name="signature" size="15" value="{{info.signature}}" >
 
 
 </tr>
@@ -44,7 +44,7 @@ Group: <td align=left> <input type="text" name="trangplabel" size="8" value="" >
 <td><button type='submit' value='Find'>Find</button></td>
 </tr>
 <tr>
-<td colspan="3" rowspan="2"><span class="formexample"> a higher genus curve with automorphisms label, e.g. 4.g4_1.0.4.4-4-4-4</span></td>
+<td colspan="3" rowspan="2"><span class="formexample"> a higher genus curve with automorphisms label, e.g. 3.4-2.0.2-2-2-2-2-2</span></td>
 </tr>
 </table>
 </form>
@@ -70,8 +70,7 @@ Group: <td align=left> <input type="text" name="trangplabel" size="8" value="" >
 
   <th>Label</th>
   <th>Genus</th>
-  <th>Dimension</th>
-  <th>Group</th>
+  <th>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension')}}</th>
   <th>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma group')}}</th>
   <th>Signature</th>
 <!--<th>{{KNOWL('lf.slope_content',title='label')}}</th>-->
@@ -84,10 +83,9 @@ Group: <td align=left> <input type="text" name="trangplabel" size="8" value="" >
 
   <td align='left'><a href="/HigherGenus/C/aut/{{field.label}}">{{field.label}}</a></td>
     <td>{{field.genus}}</td>
-  <td>{{field.r}}</td>
-  <td>{{info.group_display(field.trangplabel)}}</td>
+  <td>{{field.dim}}</td>
   <td>{{field.group}}</td>
-    <td>${{info.sign_display(field.signature)}}$</td>
+   <td>${{info.sign_display(field.signature)}}$</td>
 
 
 </tr>

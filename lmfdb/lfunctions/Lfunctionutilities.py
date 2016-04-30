@@ -12,9 +12,19 @@ from lmfdb.base import getDBConnection
 ###############################################################
 
 def p2sage(s):
-    # convert python type to sage
-    # this interprets strings, so e.g. '1/2' gets converted to Rational
-    return sage_eval(str(s))
+    # convert numbers which have be stored as strings into a sage type
+
+    # I really don't like the use of sage_eval here. It may be ok as long
+    # as we are only calling this function on trusted input from the database,
+    # but someone is going to forget that someday... --JWB
+
+    x = PolynomialRing(RationalField(),"x").gen()
+    a = PolynomialRing(RationalField(),"a").gen()
+    z = sage_eval(str(s), locals={'x' : x, 'a' : a})
+    if type(z) in [list, tuple]:
+        return [p2sage(x) for x in z]
+    else:
+        return z
 
 def pair2complex(pair):
     ''' Turns the pair into a complex number.

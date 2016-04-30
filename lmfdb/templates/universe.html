@@ -1,0 +1,420 @@
+{% extends "homepage.html" %} {% block content %} 
+
+
+<div id="svg_main">
+    <!-- SVG + Description Boxes -->
+    <div id="lmdfb_map"></div>
+	<div id="svg_description"></div>
+    <div id="svg_examples"></div>
+</div>
+
+
+
+<style>
+
+div#svg_main
+{
+    /*background-color: yellow;*/
+    position        : relative;
+    padding         : 0 0 8% 0;
+}
+
+
+div#svg_description{
+    /*background-color: #E8E8E8;*/
+    position: absolute;
+    top: 76%;
+    left: 0;
+    width: 38%;
+    height: 135px;
+    margin: 0;
+    padding: 0 1%;
+    font-family: Verdana,sans-serif;
+
+	font-family		: Verdana, sans-serif;
+    text-align      : left;
+}
+div#svg_description p:first-child{
+    margin			: 5px 0;
+    padding			: 0;
+    border			: 0;
+    font-weight     : 600;
+    text-align      : center;
+}
+div#svg_description p:last-child{
+    margin			: 0;
+    padding			: 0;
+    border			: 0;
+    font-weight     : 400;
+    text-align      : left;
+}
+
+
+
+div#svg_examples{
+    /*background-color: pink;*/
+    position: absolute;
+    top: 76%;
+    right: 0;
+    width: 38%;
+    height: 100px;
+    margin: 0 1%;
+    padding: 0 0 4% 0;
+    font-family: Verdana,sans-serif;
+
+	font-family		: Verdana, sans-serif;
+    text-align      : center;
+}
+
+/*
+div#svg_examples{
+    background-color: rgba(240, 240, 240, 0.1);
+}*/
+    div#svg_examples p{
+        margin			: 5px 0;
+        padding			: 0;
+        border			: 0;
+        font-weight     : 600;
+    }
+
+    div#svg_examples ul{
+        margin			: 0;
+        padding			: 0em;
+        border			: 0;
+        list-style-type:none;
+    }
+    div#svg_examples a{
+        text-decoration: none;
+        color: #111;
+    }
+
+
+        div#svg_examples li{
+            margin			: 0;
+            padding			: 0.5em;
+            border			: 0;
+            background-color: #f1f1f1;
+
+            list-style-type:none;
+        }
+        div#svg_examples a:nth-child(2n) > li{
+            background-color: #E1E1E1;
+        }
+
+
+svg{
+	width:100%;
+}
+svg *{
+	font-family: Verdana, sans-serif;
+	font-style: normal;
+}
+
+tspan, textPath, rect{
+	cursor:pointer;
+}
+/*	font-family: Verdana, sans-serif;*/
+
+
+/* This part isn't necessary it's just a container for developing */
+div.unnecessary{
+	background-color: #ffffff;
+	width: 800px;
+	margin: 0 auto;
+	padding: 1em;
+}
+@media only screen and ( max-width: 842px ) {
+
+	div.unnecessary{
+		width: 95%;
+	}
+
+
+}
+
+
+
+</style>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="/static/js/snap.svg-min.js"></script>
+<script>
+// This is the snap.svg script way of controlling the files.
+var s = Snap("#lmdfb_map");
+var svg_desc = "svg_description" // CSS selector for description div box
+var svg_examples = "svg_examples";
+var clickSwitch = 0;
+var clickID = "";
+
+// JSON object list for editing the SVG descriptions easily
+// opaque_id is the id of the element that gets its opacity turned down
+// No more than three list items!
+var svg = {
+    "json":[
+        {"name": "Automorphic",
+            "id":"#path4148, #tspan3183, #tspan3181",
+            "opaque_id":"#path4148",
+            "description":"Automorphic forms are L_2 functions on certain double coset spaces of the adelic points of a linear algebraic group.",
+            "list": "AItem1, Item1, Item1",
+            "list_link": "#first, #second, #third",
+            "url": "#"},
+        {"name": "Cohomology",
+            "id":"#tspan37006",
+            "opaque_id":"#tspan37006",
+            "description":"Cohomology description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "Convolution",
+            "id":"#textPath10975",
+            "opaque_id":"#textPath10975",
+            "description":"Convolution description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "Converse Theorems",
+            "id":"#tspan37244",
+            "opaque_id":"#tspan37244",
+            "description":"Converse Theorems description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "Deformation",
+            "id":"#textPath5407",
+            "opaque_id":"#textPath5407",
+            "description":"Deformation description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "Galois Representations",
+            "id":"#rect36171, #tspan36212, #tspan36216",
+            "opaque_id":"#rect36171",
+            "description":"Galois Representations description here...1",
+            "list": "GItem1, Item1, Item1",
+            "list_link": "#first, #second, #third",
+            "url": "#"},
+        {"name": "Hasse-Weil L-functions",
+            "id":"#tspan4334",
+            "opaque_id":"#tspan4334",
+            "description":"Hasse-Weil L-functions description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "Integral Representations",
+            "id":"#tspan36454",
+            "opaque_id":"#tspan36454",
+            "description":"Integral Representations description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "L-Functions",
+            "id":"#rect4676, #tspan37328",
+            "opaque_id":"#rect4676",
+            "description":"L-Functions description here...",
+            "list": "LItem1, Item1, Item1",
+            "list_link": "#first, #second, #third",
+            "url": "#"},
+        {"name": "Motivic",
+            "id":"#path4674",
+            "opaque_id":"#path4674",
+            "description":"Motivic description here...1",
+            "list": "MItem1, Item1, Item1",
+            "list_link": "#first, #second, #third",
+            "url": "#"},
+        {"name": "Modularity",
+            "id":"#tspan36967",
+            "opaque_id":"#text36965",
+            "description":"Modularity description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "Operation",
+            "id":"#textPath5714",
+            "opaque_id":"#textPath5714",
+            "description":"Operation description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "Perfectoid Spaces",
+            "id":"#tspan36924",
+            "opaque_id":"#tspan36924",
+            "description":"Perfectoid Spaces description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "Schur functors",
+            "id":"#textPath4145",
+            "opaque_id":"#textPath4145",
+            "description":"Schur functors description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"},
+        {"name": "Shimura Varieties",
+            "id":"#tspan17133",
+            "opaque_id":"#textPath17141",
+            "description":"Shimura Varieties are algebraic varieties uniformized by the same linear algebraic groups that give rise to automorphic forms.",
+            "list": "",
+            "list_link": "",
+            "url": "http://www.lmfdb.org/knowledge/show/mf.elliptic.shimura_correspondence"},
+        {"name": "Transfer",
+            "id":"#textPath3211",
+            "opaque_id":"#textPath3211",
+            "description":"Transfer description here...",
+            "list": "",
+            "list_link": "",
+            "url": "#"}
+
+    ]
+}
+
+
+// This loads the SVG file and loops through the json objects to
+// create all of the interactive SVG elements.
+var tux = Snap.load("/static/images/lmfdbmap.svg", function ( loadedFragment ) {
+    s.append( loadedFragment );
+
+    var count, IDList = "";
+    for( i = 0; i < svg.json.length; i++){
+
+        //This allows you to have multiple elements that trigger the description text
+        count = svg.json[i].id.split(",");
+        //This catalogs the list of all clickable elements
+        IDList += svg.json[i].id + ", ";
+
+        for(var j = 0; j < count.length; j++) {
+            s.select(count[j]).mouseover( svg_element_mouse_in(
+                svg.json[i].opaque_id, svg.json[i].description, svg.json[i].list, svg.json[i].list_link
+            ) );
+            s.select(count[j]).mouseout( svg_element_mouse_out(
+                svg.json[i].opaque_id
+            ) );
+            s.select(count[j]).click( svg_element_mouse_click(
+                svg.json[i].opaque_id, svg.json[i].description, svg.json[i].list, svg.json[i].list_link, svg.json[i].url
+            ) );
+            s.select(count[j]).dblclick( svg_element_mouse_dblclick(
+                svg.json[i].url
+            ) );
+        }
+    }
+    //Gets rid of the extra ", " at the end.
+    IDList = IDList.substring(0,IDList.length - 2);
+
+
+    // This jQuery function clears the infoboxes and selection when not clicking
+    // a mathematical object in the SVG.
+    $(document).ready(function(){
+
+        $(document).click(function(event) {
+            if(!$(event.target).is(IDList)) {
+                clickSwitch = 0;
+                if(clickID != ""){
+                    s.select( clickID ).attr({"fill-opacity": 1.0});
+                    clickID = "";
+                }
+                fillNewInformation( "", "", "");
+            }
+        });
+    });
+
+
+
+
+} );
+
+
+// This function fills the description and examples boxes with information.
+var fillNewInformation = function ( description_text, description_list, description_list_link) {
+  //Fills description DIV
+  document.getElementById( svg_desc ).innerHTML = "<p></p>";
+  document.getElementById( svg_desc ).innerHTML += "<p>" + description_text + "</p>";
+
+  //Fills related objects list/DIV
+  split_list = description_list.split(",");
+  split_list_links = description_list_link.split(",");
+  var list_html = document.getElementById( svg_examples );
+
+  if(split_list.length > 1){  //If more than one item, i.e. a single space.
+      list_html.innerHTML = "<p>Examples</p>";
+
+      var temp_string = "";
+      for(i = 0; i < split_list.length; i++){
+          temp_string = temp_string + "<a href=\"" + split_list_links[i] + "\">\n" + "<li>" + split_list[i] + "</li>\n" + "</a>\n";
+      };
+      list_html.innerHTML += "<ul>" + temp_string + "</ul>"
+
+  } else {
+    list_html.innerHTML = " ";
+  }
+ };
+
+
+// Function for what happens when the mouse goes over an object.
+var svg_element_mouse_in = function ( svg_element_id, description_text, description_list, description_list_link ) {
+    return function() {
+        if( clickID != svg_element_id){
+          //Turns the opacity of target svg object down
+          s.select( svg_element_id ).attr({"fill-opacity": 0.7});
+        }
+
+        if( clickSwitch == 0 ){
+          fillNewInformation( description_text, description_list, description_list_link);
+        }
+
+    };
+};
+
+// Function for what happens when the mouse stops being over an object.
+var svg_element_mouse_out = function ( svg_element_id ) {
+    return function() {
+        if( clickID != svg_element_id){
+          //Turns the opacity of target svg object back to full
+          s.select( svg_element_id ).attr({"fill-opacity": 1.0});
+        }
+
+        if( clickSwitch == 0 ){
+          //Empties description/list DIV
+          fillNewInformation( "", "", "");
+        }
+    };
+};
+
+// Function for what happens when you click an object.
+var svg_element_mouse_click = function (  svg_element_id, description_text, description_list, description_list_link, url  ) {
+    return function() {
+
+        if( clickSwitch == 0){
+          clickSwitch = 1;
+          clickID = svg_element_id;
+          s.select( svg_element_id ).attr({"fill-opacity": 0.6});
+
+        } else if(clickSwitch == 1 && clickID == svg_element_id) {
+          window.location.href = url;
+
+        } else if( clickSwitch == 1 && clickID != svg_element_id) {
+
+          //Reset other clicked item
+          s.select( clickID ).attr({"fill-opacity": 1.0});
+
+          //Set the new item and reset the old information
+          clickID = svg_element_id;
+          s.select( svg_element_id ).attr({"fill-opacity": 0.6});
+          fillNewInformation( description_text, description_list, description_list_link);
+
+        }
+    };
+};
+
+// Function for what happens when you click an object.
+var svg_element_mouse_dblclick = function ( url ) {
+    return function() {
+        //Goes to URL on click
+        window.location.href = url;
+    };
+};
+
+
+</script>
+
+
+{% endblock %}

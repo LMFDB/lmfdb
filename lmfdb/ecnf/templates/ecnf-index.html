@@ -75,6 +75,14 @@ Please enter a value or leave blank:
            <option value="on" selected="yes">include</option>
          </select>
   </td>
+  <td align=right>{{ KNOWL('ec.q_curve',title="Q_curves") }} </td>
+  <td>
+         <select name='include_Q_curves'>
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+         </select>
+  </td>
     </tr>
 
    <tr>
@@ -92,13 +100,22 @@ Please enter a value or leave blank:
            <option value="on" selected="yes">include</option>
          </select>
   </td>
+     <td align=right>{{ KNOWL('ec.complex_multiplication',title =
+     "CM") }}  curves </td>
+     <td>
+         <select name='include_cm'>
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+         </select>
+     </td>
  </tr>
 
     <tr>
           <td align=right>
           {{ KNOWL('ec.j_invariant', title="j-invariant") }}
           </td>
-          <td>
+          <td colspan=2>
           <input type='text' name='jinv' example=" (818172355/1024)*a-(2133314821/512)" size=20 value="{{jinv}}" />
           </td>
           <td colspan=2>
