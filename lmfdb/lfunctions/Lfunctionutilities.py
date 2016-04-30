@@ -734,8 +734,10 @@ def lfuncFEtex(L, fmt):
         ans += "("
         if L.mu_fe != []:
             for mu in range(len(L.mu_fe) - 1):
-                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, 5) + ", "
-            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, 5)
+                prec = len(str(L.mu_fe[mu]))
+                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, prec) + ", "
+            prec = len(str(L.mu_fe[-1]))
+            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, prec)
         else:
             ans += "\\ "
         ans += ":"
@@ -799,7 +801,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        if L.lfunc_data['values']:
+        if 'values' in L.lfunc_data.keys():
           for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact

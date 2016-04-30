@@ -63,7 +63,7 @@ def getGenus2Ldata(label,label_type="url"):
             # we are just filling in the dual data  
             return Ldata
             
-        if Ldata['order_of_vanishing']:
+        if Ldata['order_of_vanishing'] or 'leading_term' not in Ldata.keys():
             central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
         else:
             central_value = [0.5 + 0.5*Ldata['motivic_weight'],Ldata['leading_term']]
@@ -108,7 +108,6 @@ def getGenus2Ldata(label,label_type="url"):
 
         neg_plot.reverse()
         Ldata['plot'] = neg_plot[:] + pos_plot[:]
-        print "Ldata['plot']",Ldata['plot']
 
     except ValueError:
         Ldata = None
