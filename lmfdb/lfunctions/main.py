@@ -653,7 +653,7 @@ def initLfunction(L, args, request):
 
     elif L.Ltype() == 'hilbertmodularform':
         friendlink = '/'.join(friendlink.split('/')[:-1])
-        info['friends'] = [('Hilbert Modular Form', friendlink.rpartition('/')[0])]
+        info['friends'] = [('Hilbert modular form ' + L.label, friendlink.rpartition('/')[0])]
 
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number Field', friendlink)]
