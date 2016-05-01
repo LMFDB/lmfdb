@@ -270,6 +270,13 @@ def render_lattice_webpage(**args):
         info['download_shortest'] = [
             (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
+    if f['name']==['Leech']:
+        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
+str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
+        info['all_shortest']="no"
+        info['download_shortest'] = [
+            (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
+
     ncoeff=20
     if f['theta_series'] != "":
         coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
@@ -440,7 +447,10 @@ def download_lattice_full_lists_v(**args):
     c = download_comment_prefix[lang]
     outstr = c + ' Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '\\\n'
-    outstr += str(res['shortest'])
+    if res['name']==['Leech']:
+        outstr += str(res['shortest']).replace("'", "").replace("u", "")
+    else:
+        outstr += str(res['shortest'])
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
