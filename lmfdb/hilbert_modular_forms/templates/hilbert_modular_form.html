@@ -17,7 +17,7 @@
 <table>
 <tr><td>{{ KNOWL('mf.hilbert.weight_vector', title='Weight') }}<td> {{ info.weight }} </tr>
 <tr><td> {{ KNOWL('mf.hilbert.level_norm', title='Level') }}<td> ${{ info.level_ideal }}$ </tr>
-<tr><td> Label<td> ${{ info.label_suffix }}$ </tr>
+<tr><td> Label<td> {{ info.label }} </tr>
 <tr><td> {{ KNOWL('mf.hilbert.dimension', title='Dimension') }}<td> {{ info.dimension }} </tr>
 <tr><td> Is {{ KNOWL('mf.cm', title='CM') }}<td> {{ info.is_CM }} </tr>
 <tr><td> Is {{ KNOWL('mf.base_change', title='base change') }}<td> {{ info.is_base_change }} </tr>
