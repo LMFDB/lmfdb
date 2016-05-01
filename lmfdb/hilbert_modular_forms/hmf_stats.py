@@ -151,13 +151,14 @@ class HMFstats(object):
     def stats_for_field(self, F):
         forms = self.forms
         fields = self.fields
-        pipeline = [{"$match": {'field_label':F}},
-                    {"$project" : { 'level_norm' : 1 }},
-                    {"$group":{"_id":"level_norm", "nforms": {"$sum": 2}, "maxnorm" : {"$max": '$level_norm'}}}]
-        res = forms.aggregate(pipeline).next()
+        # pipeline = [{"$match": {'field_label':F}},
+        #             {"$project" : { 'level_norm' : 1 }},
+        #             {"$group":{"_id":"level_norm", "nforms": {"$sum": 2}, "maxnorm" : {"$max": '$level_norm'}}}]
+        # res = forms.aggregate(pipeline).next()
+        res = [f['level_norm'] for f in forms.find({'field_label':F}, ['level_norm'])]
         stats = {}
-        stats['nforms'] = res['nforms']
-        stats['maxnorm'] = res['maxnorm']
+        stats['nforms'] = len(res) # res['nforms']
+        stats['maxnorm'] = max(res+[0]) # res['maxnorm']
         stats['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), field_pretty(F))
         stats['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
         return stats
