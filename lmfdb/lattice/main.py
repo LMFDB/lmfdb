@@ -447,7 +447,10 @@ def download_lattice_full_lists_v(**args):
     c = download_comment_prefix[lang]
     outstr = c + ' Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '\\\n'
-    outstr += str(res['shortest'])
+    if res['name']==['Leech']:
+        outstr += str(res['shortest']).strip('u').replace("'", "")
+    else:
+        outstr += str(res['shortest'])
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
