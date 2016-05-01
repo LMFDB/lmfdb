@@ -1132,7 +1132,9 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     def jacobi_sum(self, val):
         mod, num = self.modulus, self.number
-        val = int(val[0])
+        val = int(val)
+        if gcd(mod, val) > 1:
+            raise Exception ("n must be prime to modulus = %s"%mod)
         psi = self.H[val]
         chi = self.chi.sage_character()
         psi = psi.sage_character()

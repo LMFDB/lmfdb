@@ -198,7 +198,7 @@ def dc_calc(calc, modulus, number):
         else:
             return flask.abort(404)
     except Exception, e:
-        return "<span style='color:red;'>ERROR: %s</span>" % e
+        return "<span style='color:red;'>%s</span>" % e
 
 @characters_page.route("/Hecke/")
 @characters_page.route("/Hecke/<number_field>")
