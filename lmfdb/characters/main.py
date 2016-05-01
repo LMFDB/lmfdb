@@ -85,49 +85,23 @@ def render_characterNavigation():
         # info['cols'] = cols
         return render_template("ConductorList.html", **info)
 
-    query = {}
-    try:
-        for c in ('modulus', 'conductor', 'order'):
-            if c in args:
-                s = args[c].split('-')
-                if len(s) == 1:
-                    s = int(s[0])
-                    query[c] = (s, s)
-                else:
-                    query[c] = (int(s[0]), int(s[1]))
-        for c in ('parity', 'primitive'):
-            if c in args:
-                query[c] = args[c]
-    except ValueError as err:
-        info['err'] = str(err)
-        return search_input_error(info, bread)
-  
-    info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('search results', '') ]
-    info['credit'] = 'Sage'
-    if query:
-        query['limit'] = args.get('limit', 25)
+    if args != {}:
         try:
-            L = ListCharacters.CharacterSearch(query).results()
-        except Exception, e:
-            L = []
-            # should flash a message 'inconsistent search'
-        args['number'] = len(L)
-        args['chars'] = L
-        args['title'] = 'Dirichlet Characters'
-        if len(L):
-            #args['startm'], args['startn'] = L[0][:2]
-            args['lastm'], args['lastn'] = L[-1][:2]
-            if len(L) == query['limit']:
-                args['report'] = 'first %i results'%(len(L))
-                args['more'] = True
-            else:
-                args['report'] = 'all %i results'%(len(L))
-                args['more'] = False
-            # always false, just navigate previous...
-            args['start'] = 0
-        info['info'] = args
+            search = ListCharacters.CharacterSearch(query)
+        except Exception, err:
+            info['err'] = str(err)
+            return search_input_error(info, bread)
+        except ValueError as err:
+            info['err'] = str(err)
+            return search_input_error(info, bread)
+  
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                             ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                             ('search results', '') ]
+
+        info['credit'] = 'Sage'
+        info['info'] = search.results()
+        
         return render_template("character_search_results.html", **info)
     else:
        info['title'] = 'Dirichlet Characters'

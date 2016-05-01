@@ -86,7 +86,7 @@ class CharacterSearch:
         self.mmax = 100000
         self.modulus = query.get('modulus', None)
         if self.modulus:
-            self.mmin, self.mmax = self.modulus
+            self.mmin, self.mmax = self.parse_range(self.modulus)
             if self.mmin > self.mmax:
                 raise Exception('Empty search')
             if self.mmax > 100000:
@@ -94,7 +94,7 @@ class CharacterSearch:
                 self.mmax = 100000
         self.conductor = query.get('conductor', None)
         if self.conductor:
-            self.cmin, self.cmax = self.conductor
+            self.cmin, self.cmax = self.parse_range(self.conductor)
             if self.cmin % 4 == 2:
                 self.cmin += 1
             if self.cmax % 4 == 2:
@@ -103,7 +103,7 @@ class CharacterSearch:
                 raise Exception('Empty search')
         self.order = query.get('order', None)
         if self.order:
-            self.omin, self.omax = self.order
+            self.omin, self.omax = self.parse_range(self.order)
             if self.omin > self.omax:
                 raise Exception('Empty search')
         self.limit = query.get('limit', 25)
@@ -126,6 +126,13 @@ class CharacterSearch:
         print 'start at %s'%(self.startm, self.startn)
         """
 
+    def parse_range(self, arg):
+        s = arg.split('-')
+        if len(s) == 1:
+            s = int(s[0])
+            return (s, s)
+        else:
+            return s[:2]
 
     def charinfo(self, chi):
         return (chi.modulus(), chi.number(), chi.conductor(),
@@ -133,6 +140,25 @@ class CharacterSearch:
                 WebDirichlet.char2tex(chi.modulus(), chi.number()))
 
     def results(self):
+        info = {}
+        L = self.list_valid()
+        if len(L):
+            #args['startm'], args['startn'] = L[0][:2]
+            info['lastm'], info['lastn'] = L[-1][:2]
+            if len(L) == self.limit:
+                info['report'] = 'first %i results'%(len(L))
+                info['more'] = True
+            else:
+                info['report'] = 'all %i results'%(len(L))
+                info['more'] = False
+            # always false, just navigate previous page...
+            info['start'] = 0
+        info['number'] = len(L)
+        info['chars'] = L
+        info['title'] = 'Dirichlet Characters'
+        return info
+
+    def list_valid(self):
         """
         OK, always search by modulus for the moment
         """
