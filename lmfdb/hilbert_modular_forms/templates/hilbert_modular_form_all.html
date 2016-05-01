@@ -37,13 +37,10 @@ sextic fields
 including <a href="?field_label=6.6.300125.1">6.6.300125.1</a>,
 <a href="?field_label=6.6.1397493.1">6.6.1397493.1</a>
 </li>
-{# commenting out until the /browse and /browse/degree are faster
 <li><a href={{url_for('hmf.browse')}}>All available fields</a>
 </li>
-#}
 </ul>
 
-{# commenting out until the /browse and /browse/degree are faster
 <h3>Browse {{ KNOWL('mf.hilbert', title='Hilbert cusp forms') }} in
   the database by degree of the base field:
 {% for d in info.counts.degrees-%}
@@ -51,7 +48,6 @@ including <a href="?field_label=6.6.300125.1">6.6.300125.1</a>,
 <a href={{url_for('hmf.statistics_by_degree', d=d)}}>{{d}}</a>
 {%-endfor-%}
 </h3>
-#}
 
 
 <p>A <a href={{url_for('.random_hmf')}}>random Hilbert modular form</a> from the database</p>
