@@ -6,8 +6,8 @@ level: 1
 character: 1.1
 analytic_conductor:
 epsilon: 1
-url: L/ModularForm/GL4/Q/Maass/GL4Maass_1_16.8997_2.27258_-6.0358/
-comment_object_url: ModularForm/GL4/Q/Maass/GL4Maass_1_16.8997_2.27258_-6.0358/
+url: L/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/
+comment_object_url: ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/
 object_url:
 object_name: $\SL(4,\Z)$ Maass form
 self_dual: false
@@ -19,9 +19,9 @@ gammaR: [$4.720i$, $-4.720i$, $12.46i$, $-12.46i$]
 level: 1
 character: 1.1
 epsilon: 1
-url: L/ModularForm/GSp4/Q/Maass/GSp4Maass_1_12.4687_4.72095/
+url: L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/
 object_url:
-object_url_comment: ModularForm/GSp4/Q/Maass/GSp4Maass_1_12.4687_4.72095/
+object_url_comment: ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/
 object_name: $\Sp(4,\Z)$ Maass form
 self_dual: true
 arithmetic: false
@@ -71,9 +71,9 @@ level: 1
 character: 1.1
 analytic_conductor:
 epsilon: 1
-url: L/ModularForm/GSp4/Q/Maass/GSp4Maass_1_19.8193_8.53107/
+url: L/ModularForm/GSp4/Q/Maass/1/1/19.81936_8.531078/2.06692296/
 object_url:
-object_url_comment: ModularForm/GSp4/Q/Maass/GSp4Maass_1_19.8193_8.53107/
+object_url_comment: ModularForm/GSp4/Q/Maass/1/1/19.81936_8.531078/2.06692296/
 object_name: Sp(4,$\mathbb Z$) Maass form
 self_dual: true
 arithmetic: false
