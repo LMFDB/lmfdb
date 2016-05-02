@@ -134,8 +134,7 @@ class HMFstats(object):
             for d in self._counts['degrees']:
                 statsd = stats[int(d)]
                 for F in statsd['fields']:
-                    FF = field_pretty(F) if d!=4 else F
-                    statsd['counts'][F]['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), FF)
+                    statsd['counts'][F]['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), F)
                     statsd['counts'][F]['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
                 self._stats[d] = statsd
         else:
@@ -175,7 +174,6 @@ class HMFstats(object):
         stats['nforms'] = len(res) # res['nforms']
         stats['maxnorm'] = max(res+[0]) # res['maxnorm']
         d = F.split('.')[0]
-        FF = field_pretty(F) if d!='4' else F
-        stats['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), FF)
+        stats['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), F)
         stats['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
         return stats
