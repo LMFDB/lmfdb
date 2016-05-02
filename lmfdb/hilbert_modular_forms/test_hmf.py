@@ -84,7 +84,8 @@ class HMFTest(LmfdbTest):
     def test_browse(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/')
         assert 'by field degree' in L.data
-        assert 'database currently contains' in L.data
+        assert 'database contains' in L.data
+        assert 'data is complete up to' in L.data
 
     def test_browse_by_degree(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/2/')

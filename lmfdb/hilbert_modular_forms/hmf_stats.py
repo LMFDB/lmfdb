@@ -50,7 +50,7 @@ def hmf_degree_summary(d):
     level_knowl = '<a knowl="mf.hilbert.level_norm">level norm</a>'
     return ''.join([r'The database currently contains %s ' % stats['nforms'],
                     hmf_knowl,
-                    r' defined over ',
+                    r' defined over %s ' % stats['nfields'],
                     nf_knowl,
                     r' of degree %s, with ' % d,
                     level_knowl,
@@ -87,9 +87,9 @@ class HMFstats(object):
         return self._counts
 
     def stats(self, d=None):
+        self.init_hmf_stats() # read all from yaml file
         if d:
-            return self.stats_for_degree(d) # cached
-        self.init_hmf_stats() # computes all
+            return self._stats[d]
         return self._stats
 
     def init_hmf_count(self):
@@ -118,17 +118,28 @@ class HMFstats(object):
         counts['max_disc_by_degree'] = dict([(d,max(counts['discs_by_degree'][d])) for d in degrees])
         counts['nfields_by_degree'] = dict([(d,len(counts['fields_by_degree'][d])) for d in degrees])
         self._counts  = counts
+        print("Finished computing HMF counts")
 
-    def init_hmf_stats(self):
+    def init_hmf_stats(self, use_yaml_file=True): # it works with False but is much slower
         if self._stats:
             return
         if not self._counts:
             self.init_hmf_count()
         print("Computing HMF stats...")
-        forms = self.forms
-        fields = self.fields
-        for d in self._counts['degrees']:
-            self._stats[d] = self.stats_for_degree(d)
+        if use_yaml_file:
+            import yaml
+            import os.path
+            #print("Reading hmf stats yaml file")
+            stats = yaml.load(open(os.path.join(os.getcwd(), "lmfdb/hilbert_modular_forms/hmf_stats.yaml")))
+            for d in self._counts['degrees']:
+                statsd = stats[int(d)]
+                for F in statsd['fields']:
+                    statsd['counts'][F]['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), F)
+                    statsd['counts'][F]['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
+                self._stats[d] = statsd
+        else:
+            for d in self._counts['degrees']:
+                self._stats[d] = self.stats_for_degree(d)
 
     def stats_for_degree(self, d):
         if not d in self._stats:
@@ -138,6 +149,9 @@ class HMFstats(object):
             stats['fields'] = [F['label'] for F in fields.find({'degree':d},['label']).hint('degree_1')]
             field_sort_key = lambda F: int(F.split(".")[2]) # by discriminant
             stats['fields'].sort(key=field_sort_key)
+            # NB the only reason for keeping the list of fields here
+            # is that we can sort them, while the keys of stats.counts
+            # are the fields in a random order
             stats['nfields'] = len(stats['fields'])
             stats['nforms'] = forms.find({'deg':d}).hint('deg_1').count()
             stats['maxnorm'] = max(forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
@@ -159,6 +173,7 @@ class HMFstats(object):
         stats = {}
         stats['nforms'] = len(res) # res['nforms']
         stats['maxnorm'] = max(res+[0]) # res['maxnorm']
-        stats['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), field_pretty(F))
+        d = F.split('.')[0]
+        stats['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), F)
         stats['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
         return stats
