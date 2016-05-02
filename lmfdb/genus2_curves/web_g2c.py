@@ -541,9 +541,7 @@ class WebG2C(object):
     @staticmethod
     def by_label(label):
         """
-        Searches for a specific elliptic curve in the curves
-        collection by its label
-        label is string separated by "."
+        Searches for a specific genus 2 curve in the curves collection by its label
         """
         try:
             data = g2cdb().curves.find_one({"label" : label})

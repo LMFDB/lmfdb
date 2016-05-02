@@ -17,7 +17,7 @@ from lmfdb.search_parsing import parse_bool, parse_ints, parse_signed_ints, pars
 from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
-from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, isog_label, st_group_name, st0_group_name, aut_group_name, boolean_name, globally_solvable_name
+from lmfdb.genus2_curves.web_g2c import WebG2C, g2cdb, list_to_min_eqn, isog_label, st_group_name, st0_group_name, aut_group_name, boolean_name, globally_solvable_name
 
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
@@ -27,13 +27,6 @@ credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight,
 # global database connection and stats objects
 ###############################################################################
 
-the_g2cdb = None
-def g2cdb():
-    global the_g2cdb
-    if the_g2cdb is None:
-        the_g2cdb = lmfdb.base.getDBConnection().genus2_curves
-    return the_g2cdb
-    
 the_g2cstats = None
 def g2cstats():
     global the_g2cstats
@@ -88,10 +81,6 @@ geom_aut_grp_dict = {
 ###############################################################################
 # Routing for top level, random_curve, by_conductor, and stats
 ###############################################################################
-
-@app.route("/G2C")
-def G2C_redirect():
-    return redirect(url_for(".index", **request.args))
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
