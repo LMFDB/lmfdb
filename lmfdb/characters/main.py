@@ -197,8 +197,10 @@ def dc_calc(calc, modulus, number):
             return WebDirichletCharacter(**args).kloosterman_sum(val)
         else:
             return flask.abort(404)
-    except Exception, e:
-        return "<span style='color:red;'>ERROR: %s</span>" % e
+    except Warning, e:
+        return "<span style='color:gray;'>%s</span>" % e
+    except Exception:
+        return "<span style='color:red;'>Error: bad input</span>"
 
 @characters_page.route("/Hecke/")
 @characters_page.route("/Hecke/<number_field>")
