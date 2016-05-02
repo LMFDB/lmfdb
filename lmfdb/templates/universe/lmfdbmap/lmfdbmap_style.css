@@ -1,0 +1,120 @@
+
+div#svg_main
+{
+    /*background-color: yellow;*/
+    position        : relative;
+    padding         : 0 0 8% 0;
+}
+
+
+div#svg_description{
+    /*background-color: #E8E8E8;*/
+    position: absolute;
+    top: 76%;
+    left: 0;
+    width: 38%;
+    height: 135px;
+    margin: 0;
+    padding: 0 1%;
+    font-family: Verdana,sans-serif;
+
+	font-family		: Verdana, sans-serif;
+    text-align      : left;
+}
+div#svg_description p:first-child{
+    margin			: 5px 0;
+    padding			: 0;
+    border			: 0;
+    font-weight     : 600;
+    text-align      : center;
+}
+div#svg_description p:last-child{
+    margin			: 0;
+    padding			: 0;
+    border			: 0;
+    font-weight     : 400;
+    text-align      : left;
+}
+
+
+
+div#svg_examples{
+    /*background-color: pink;*/
+    position: absolute;
+    top: 76%;
+    right: 0;
+    width: 38%;
+    height: 100px;
+    margin: 0 1%;
+    padding: 0 0 4% 0;
+    font-family: Verdana,sans-serif;
+
+	font-family		: Verdana, sans-serif;
+    text-align      : center;
+}
+
+/*
+div#svg_examples{
+    background-color: rgba(240, 240, 240, 0.1);
+}*/
+    div#svg_examples p{
+        margin			: 5px 0;
+        padding			: 0;
+        border			: 0;
+        font-weight     : 600;
+    }
+
+    div#svg_examples ul{
+        margin			: 0;
+        padding			: 0em;
+        border			: 0;
+        list-style-type:none;
+    }
+    div#svg_examples a{
+        text-decoration: none;
+        color: #111;
+    }
+
+
+        div#svg_examples li{
+            margin			: 0;
+            padding			: 0.5em;
+            border			: 0;
+            background-color: #f1f1f1;
+
+            list-style-type:none;
+        }
+        div#svg_examples a:nth-child(2n) > li{
+            background-color: #E1E1E1;
+        }
+
+
+svg{
+	width:100%;
+}
+svg *{
+	font-family: Verdana, sans-serif;
+	font-style: normal;
+}
+
+tspan, textPath, rect{
+	cursor:pointer;
+}
+/*	font-family: Verdana, sans-serif;*/
+
+
+/* This part isn't necessary it's just a container for developing */
+div.unnecessary{
+	background-color: #ffffff;
+	width: 800px;
+	margin: 0 auto;
+	padding: 1em;
+}
+@media only screen and ( max-width: 842px ) {
+
+	div.unnecessary{
+		width: 95%;
+	}
+
+
+}
