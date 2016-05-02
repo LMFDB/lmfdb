@@ -89,7 +89,8 @@ var fillNewInformation = function ( description_text, description_list, descript
         var temp_string = "";
         for(i = 0; i < split_list.length; i++)
         {
-            temp_string = temp_string + "<a href=\"" + split_list_links[i] + "\">\n" + "<li>" + split_list[i] + "</li>\n" + "</a>\n";
+      //      temp_string = temp_string + "<a href=\"" + split_list_links[i] + "\">\n" + "<li>" + split_list[i] + "</li>\n" + "</a>\n";
+            temp_string = temp_string + "<li>" + split_list[i] + "</li>\n";
         };
         list_html.innerHTML += "<ul>" + temp_string + "</ul>"
 
