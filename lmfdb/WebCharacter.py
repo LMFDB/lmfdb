@@ -1134,7 +1134,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         mod, num = self.modulus, self.number
         val = int(val)
         if gcd(mod, val) > 1:
-            raise Warning ("n must be prime to modulus = %s"%mod)
+            raise Warning ("n must be coprime to the modulus : %s"%mod)
         psi = self.H[val]
         chi = self.chi.sage_character()
         psi = psi.sage_character()
