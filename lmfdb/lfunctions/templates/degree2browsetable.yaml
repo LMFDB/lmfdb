@@ -48,8 +48,8 @@ level: 1
 character: 1.1
 analytic_conductor: 0.010101010101
 epsilon: 1
-url: L/ModularForm/GL2/Q/holomorphic/1/12/0/
-object_url: ModularForm/GL2/Q/holomorphic/1/12/0/a/
+url: L/ModularForm/GL2/Q/holomorphic/1/12/1/
+object_url: ModularForm/GL2/Q/holomorphic/1/12/1/a/
 object_name: holomorphic
 self_dual: true
 arithmetic: true
@@ -61,8 +61,8 @@ level: 7
 character: $\left(\frac{-7}{\cdot}\right)$
 analytic_conductor: 0.010101010101
 epsilon: 1
-url: L/ModularForm/GL2/Q/holomorphic/7/3/3/a/0/
-object_url: [,,ModularForm/GL2/Q/holomorphic/7/3/3/a/]
+url: L/ModularForm/GL2/Q/holomorphic/7/3/6/a/0/
+object_url: [,,ModularForm/GL2/Q/holomorphic/7/3/6/a/]
 object_name: [K3 surface,Hecke character,holomorphic]
 self_dual: true
 arithmetic: true
@@ -74,8 +74,8 @@ level: 5
 character: $\left(\frac{5}{\cdot}\right)$
 analytic_conductor: 0.010101010101
 epsilon: e(0.101086789678)
-url: L/ModularForm/GL2/Q/holomorphic/5/6/2/a/1/
-object_url: ModularForm/GL2/Q/holomorphic/5/6/2/a/
+url: L/ModularForm/GL2/Q/holomorphic/5/6/4/a/1/
+object_url: ModularForm/GL2/Q/holomorphic/5/6/4/a/
 object_name: holomorphic
 self_dual: false
 arithmetic: true
@@ -87,8 +87,8 @@ level: 3
 character: $\left(\frac{-3}{\cdot}\right)$
 analytic_conductor: 0.010101010101
 epsilon: e(0.15625280945586)
-url: L/ModularForm/GL2/Q/holomorphic/3/9/1/a/1/
-object_url: ModularForm/GL2/Q/holomorphic/3/9/1/a/
+url: L/ModularForm/GL2/Q/holomorphic/3/9/2/a/1/
+object_url: ModularForm/GL2/Q/holomorphic/3/9/2/a/
 object_name: holomorphic
 self_dual: false
 arithmetic: true
@@ -128,7 +128,7 @@ character: 11.1
 analytic_conductor: 0.010101010101
 epsilon: 1
 url: L/EllipticCurve/Q/11.a
-object_url: [EllipticCurve/Q/11.a,ModularForm/GL2/Q/holomorphic/11/2/0/a/]
+object_url: [EllipticCurve/Q/11.a,ModularForm/GL2/Q/holomorphic/11/2/1/a/]
 object_name: [elliptic curve,holomorphic]
 self_dual: true
 arithmetic: true
@@ -154,8 +154,8 @@ level: 5
 character: $\left(\frac{5}{\cdot}\right)$
 analytic_conductor: 0.010101010101
 epsilon: e(0.89891321032)
-url: L/ModularForm/GL2/Q/holomorphic/5/6/2/a/0/
-object_url: ModularForm/GL2/Q/holomorphic/5/6/2/a/
+url: L/ModularForm/GL2/Q/holomorphic/5/6/4/a/0/
+object_url: ModularForm/GL2/Q/holomorphic/5/6/4/a/
 object_name: holomorphic
 self_dual: false
 arithmetic: true
@@ -168,7 +168,7 @@ character: 36.1
 analytic_conductor: 0.010101010101
 epsilon: 1
 url: L/EllipticCurve/Q/36.a/
-object_url: [EllipticCurve/Q/36.a,,ModularForm/GL2/Q/holomorphic/36/2/0/a/]
+object_url: [EllipticCurve/Q/36.a,,ModularForm/GL2/Q/holomorphic/36/2/1/a/]
 object_name: [CM elliptic curve,Hecke character,holomorphic]
 self_dual: true
 arithmetic: true

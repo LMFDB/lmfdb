@@ -9,8 +9,9 @@
 <ul>
 {% for d in info.counts.degrees %}
 <li>
-<a href={{url_for('hmf.statistics_by_degree', d=d)}}>Degree {{d}}</a>:
-<br> {{ info.extent[d] | safe }}
+<a href={{url_for('hmf.statistics_by_degree', d=d)}}>
+{{ info.counts.nfields_by_degree[d] }} fields</a> of degree {{d}}, of
+discriminants up to {{ info.counts.max_disc_by_degree[d] }}
 </li>
 {% endfor %}
 </ul>

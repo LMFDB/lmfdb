@@ -16,17 +16,17 @@ logger = make_logger("hmf")
 
 the_HMFstats = None
 
-def get_stats():
+def get_counts():
     global the_HMFstats
     if the_HMFstats is None:
         the_HMFstats = HMFstats()
-    return the_HMFstats
+    return the_HMFstats.counts()
 
-def get_degree_stats(d):
+def get_stats(d=None):
     global the_HMFstats
     if the_HMFstats is None:
         the_HMFstats = HMFstats()
-    return the_HMFstats.stats()[d]
+    return the_HMFstats.stats(d)
 
 def hmf_summary():
     counts = get_stats().counts()
@@ -40,11 +40,11 @@ def hmf_summary():
                 ])
 
 @app.context_processor
-def ctx_hmff_summary():
+def ctx_hmf_summary():
     return {'hmf_summary': hmf_summary}
 
 def hmf_degree_summary(d):
-    stats = get_degree_stats(d)
+    stats = get_stats(d)
     hmf_knowl = '<a knowl="mf.hilbert">Hilbert modular forms</a>'
     nf_knowl = '<a knowl="nf.totally_real">totally real number fields</a>'
     level_knowl = '<a knowl="mf.hilbert.level_norm">level norm</a>'
@@ -86,8 +86,10 @@ class HMFstats(object):
         self.init_hmf_count()
         return self._counts
 
-    def stats(self):
-        self.init_hmf_stats()
+    def stats(self, d=None):
+        if d:
+            return self.stats_for_degree(d) # cached
+        self.init_hmf_stats() # computes all
         return self._stats
 
     def init_hmf_count(self):
@@ -112,6 +114,8 @@ class HMFstats(object):
         counts['max_deg_c'] = comma(max_deg)
 
         counts['fields_by_degree'] = dict([(d,[F['label'] for F in fields.find({'degree':d},['label']).hint('degree_1')]) for d in degrees])
+        counts['discs_by_degree'] = dict([(d,[F['discriminant'] for F in fields.find({'degree':d},['discriminant']).hint('degree_1')]) for d in degrees])
+        counts['max_disc_by_degree'] = dict([(d,max(counts['discs_by_degree'][d])) for d in degrees])
         counts['nfields_by_degree'] = dict([(d,len(counts['fields_by_degree'][d])) for d in degrees])
         self._counts  = counts
 
@@ -123,29 +127,38 @@ class HMFstats(object):
         print("Computing HMF stats...")
         forms = self.forms
         fields = self.fields
-        stats = {}
-        # the hint() her tells mongo to use that index (these have
-        # been created for this)
-        field_sort_key = lambda F: int(F.split(".")[2]) # by discriminant
         for d in self._counts['degrees']:
-            stats[d] = {}
-            stats[d]['fields'] = [F['label'] for F in fields.find({'degree':d},['label']).hint('degree_1')]
-            stats[d]['fields'].sort(key=field_sort_key)
-            stats[d]['nfields'] = len(stats[d]['fields'])
-            stats[d]['nforms'] = forms.find({'deg':d}).hint('deg_1').count()
-            stats[d]['maxnorm'] = max(forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
-            stats[d]['counts'] = {}
-            for F in stats[d]['fields']:
-                #print("Field %s" % F)
-                pipeline = [{"$match": {'field_label':F}},
-                            {"$project" : { 'level_norm' : 1 }},
-                            {"$group":{"_id":"level_norm", "nforms": {"$sum": 2}, "maxnorm" : {"$max": '$level_norm'}}}]
-                res = forms.aggregate(pipeline).next()
-                #print("result = %s" % res)
-                stats[d]['counts'][F] = {}
-                stats[d]['counts'][F]['nforms'] = res['nforms']
-                stats[d]['counts'][F]['maxnorm'] = res['maxnorm']
-                stats[d]['counts'][F]['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), field_pretty(F))
-                stats[d]['counts'][F]['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
+            self._stats[d] = self.stats_for_degree(d)
 
-        self._stats = stats
+    def stats_for_degree(self, d):
+        if not d in self._stats:
+            forms = self.forms
+            fields = self.fields
+            stats = {}
+            stats['fields'] = [F['label'] for F in fields.find({'degree':d},['label']).hint('degree_1')]
+            field_sort_key = lambda F: int(F.split(".")[2]) # by discriminant
+            stats['fields'].sort(key=field_sort_key)
+            stats['nfields'] = len(stats['fields'])
+            stats['nforms'] = forms.find({'deg':d}).hint('deg_1').count()
+            stats['maxnorm'] = max(forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
+            stats['counts'] = {}
+            for F in stats['fields']:
+                #print("Field %s" % F)
+                stats['counts'][F] = self.stats_for_field(F)
+            self._stats[d] = stats
+        return self._stats[d]
+
+    def stats_for_field(self, F):
+        forms = self.forms
+        fields = self.fields
+        # pipeline = [{"$match": {'field_label':F}},
+        #             {"$project" : { 'level_norm' : 1 }},
+        #             {"$group":{"_id":"level_norm", "nforms": {"$sum": 2}, "maxnorm" : {"$max": '$level_norm'}}}]
+        # res = forms.aggregate(pipeline).next()
+        res = [f['level_norm'] for f in forms.find({'field_label':F}, ['level_norm'])]
+        stats = {}
+        stats['nforms'] = len(res) # res['nforms']
+        stats['maxnorm'] = max(res+[0]) # res['maxnorm']
+        stats['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), field_pretty(F))
+        stats['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
+        return stats
