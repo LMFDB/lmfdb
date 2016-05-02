@@ -88,7 +88,7 @@ def render_stgroup_by_label(label):
     st0 = stdb().st0_groups.find_one({'label':data['identity_component']})
     if not st0:
         title = "Sato-Tate group lookup error"
-        bread = [('Sato-Tate groups', url_for(".index"))]
+        bread = [('Sato-Tate groups', ' ')]
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate identity component currently in the database." % (data['identity_component'])),"error")
         return render_template("error.html", title=title, properties=[], bread=bread, learnmore=learnmore_list())
     info['st0_name']=st0['pretty']
