@@ -3,8 +3,8 @@ import re
 import tempfile
 import os
 from pymongo import ASCENDING, DESCENDING
-from lmfdb.base import getDBConnection
-from lmfdb.utils import comma, make_logger, web_latex, encode_plot
+import lmfdb.base
+from lmfdb.utils import comma, web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
@@ -14,19 +14,17 @@ from lmfdb.WebNumberField import *
 from itertools import izip
 from flask import url_for, make_response
 
-logger = make_logger("g2c")
-
 ###############################################################################
 # Database connection
 ###############################################################################
 
-g2cdb = None
+the_g2cdb = None
 
-def db_g2c():
-    global g2cdb
-    if g2cdb is None:
-        g2cdb = getDBConnection().genus2_curves
-    return g2cdb
+def g2cdb():
+    global the_g2cdb
+    if the_g2cdb is None:
+        the_g2cdb = lmfdb.base.getDBConnection().genus2_curves
+    return the_g2cdb
 
 ###############################################################################
 # Recovering the isogeny class
@@ -273,6 +271,16 @@ def st_group_name(name):
         return '\\mathrm{USp}(4)'
     else:
         return name
+        
+def aut_group_name(name):
+    return group_dict[name]
+
+def boolean_name(value):
+    return '\\mathrm{True}' if value else '\\mathrm{False}'
+    
+def globally_solvable_name(value):
+    return boolean_name(value) if value in [0,1] else '\\mathrm{unknown}'
+
 
 ###############################################################################
 # Data obtained from Sato-Tate invariants
@@ -526,7 +534,6 @@ class WebG2C(object):
 
             - dbdata: the data from the database
         """
-        #logger.debug("Constructing an instance of G2Cisog_class")
         self.__dict__.update(dbdata)
         self.__dict__.update(endodbdata)
         self.make_curve()
@@ -534,23 +541,19 @@ class WebG2C(object):
     @staticmethod
     def by_label(label):
         """
-        Searches for a specific elliptic curve in the curves
-        collection by its label, which can be either in LMFDB or
-        Cremona format.
-        label is string separated by "."
+        Searches for a specific genus 2 curve in the curves collection by its label
         """
         try:
-            print label
-            data = db_g2c().curves.find_one({"label" : label})
-            endodata = db_g2c().endomorphisms.find_one({"label" : label})
+            data = g2cdb().curves.find_one({"label" : label})
+            endodata = g2cdb().endomorphisms.find_one({"label" : label})
         except AttributeError:
             return "Invalid label" # caller must catch this and raise an error
         if data:
             if endodata:
                 return WebG2C(data, endodata)
             else:
-                return "Endomorphism data for curve not found"
-        return "Data for curve not found" # caller must catch this and raise an error
+                return "No genus 2 endomorphism data found for label"
+        return "No genus 2 curve data not found for label" # caller must catch this and raise an error
 
     ###########################################################################
     # Main data creation for individual curves
@@ -594,6 +597,9 @@ class WebG2C(object):
             data['igusa_norm'] ]
         data['num_rat_wpts'] = ZZ(self.num_rat_wpts)
         data['two_selmer_rank'] = ZZ(self.two_selmer_rank)
+        data['analytic_rank'] = ZZ(self.analytic_rank)
+        data['has_square_sha'] = "square" if self.has_square_sha else "twice a square"
+        data['locally_solvable'] = "yes" if self.locally_solvable else "no"
         if len(self.torsion) == 0:
             data['tor_struct'] = '\mathrm{trivial}'
         else:
@@ -602,7 +608,7 @@ class WebG2C(object):
                 tor_struct ])
 
         # Data derived from Sato-Tate group:
-        isogeny_class = db_g2c().isogeny_classes.find_one({'label' :
+        isogeny_class = g2cdb().isogeny_classes.find_one({'label' :
             isog_label(self.label)})
         st_data = get_st_data(isogeny_class)
         for key in st_data.keys():
@@ -705,12 +711,12 @@ class WebG2C(object):
                     g20 = self.g2inv[0],
                     g21 = self.g2inv[1],
                     g22 = self.g2inv[2]))
-            #('Twists2',
-            #   url_for(".index_Q",
-            #       igusa_clebsch = str(self.igusa_clebsch)))  #doesn't work.
             #('Siegel modular form someday', '.')
             ]
-        self.downloads = [('Download all stored data', '.')]
+
+        if not endodata['is_simple_geom']:
+            self.friends += [('Elliptic curve %s' % lab,url_for_ec(lab)) for lab in endodata['spl_facs_labels'] if lab != '']
+        #self.downloads = [('Download all stored data', '.')]
 
         # Breadcrumbs
         iso = self.label.split('.')[1]
@@ -815,6 +821,16 @@ class WebG2C(object):
                  sage_not_implemented, # sage code goes here
                  pari_not_implemented, # pari code goes here
                  'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'
+                 )
+        set_code('has_square_sha',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'HasSquareSha(Jacobian(C));'
+                 )
+        set_code('locally_solvable',
+                 sage_not_implemented, # sage code goes here
+                 pari_not_implemented, # pari code goes here
+                 'f,h:=HyperellipticPolynomials(C); g:=4*f+h^2; HasPointsLocallyEverywhere(g,2) and (#Roots(ChangeRing(g,RealField())) gt 0 or LeadingCoefficient(g) gt 0);'
                  )
         set_code('tor_struct',
                  sage_not_implemented, # sage code goes here

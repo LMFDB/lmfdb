@@ -169,17 +169,17 @@ def do_import(ll):
         data['label'] = label
         data['ramps'] = [str(x) for x in prime_factors(D)]
         subs = [[makels(z[0]), z[1]] for z in subs]
-    zk = [str(z) for z in zk]
-    zk = [z.replace('x','a') for z in zk]
-    data['zk'] = zk
+        zk = [str(z) for z in zk]
+        zk = [z.replace('x','a') for z in zk]
+        data['zk'] = zk
         data['subs'] = subs
-    dak = data['disc_abs_key']
-    if len(dak)<19:
-      dakhash=int(dak)
-    else:
-      dakhash = int(dak[0:19])
-    data['dischash'] = dakhash *data['disc_sign']
-    data['coeffhash'] = hashlib.md5(data['coeffs']).hexdigest()
+        dak = data['disc_abs_key']
+        if len(dak)<19:
+          dakhash=int(dak)
+        else:
+          dakhash = int(dak[0:19])
+        data['dischash'] = dakhash *data['disc_sign']
+        data['coeffhash'] = hashlib.md5(data['coeffs']).hexdigest()
 ############
         if h>0:
             data['class_number'] = h

@@ -204,7 +204,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
                            character, self,include_in_update=update_hecke_orbits),
-            WebDict('oldspace_decomposition', required=False),
+            WebList('oldspace_decomposition', required=False),
             WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True),
             WebList('zeta_orders',value=[],save_to_db=True),
@@ -224,6 +224,13 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     def only_rational(self):
         return self._properties['hecke_orbits'].only_rational()
+
+    def data_from_dimension_db(self):
+        res = self.connect_to_db()[self._dimension_table_name].find_one({'space_label':self.space_label})
+        # make sure that the return value is always a dict.
+        if res == None:
+            return {}
+        return res
 
     def __repr__(self):
         if self.character.is_trivial():

@@ -12,9 +12,22 @@ from lmfdb.base import getDBConnection
 ###############################################################
 
 def p2sage(s):
-    # convert python type to sage
-    # this interprets strings, so e.g. '1/2' gets converted to Rational
-    return sage_eval(str(s))
+    # convert numbers which have be stored as strings into a sage type
+
+    # I really don't like the use of sage_eval here. It may be ok as long
+    # as we are only calling this function on trusted input from the database,
+    # but someone is going to forget that someday... --JWB
+
+    x = PolynomialRing(RationalField(),"x").gen()
+    a = PolynomialRing(RationalField(),"a").gen()
+    try:
+        z = sage_eval(str(s), locals={'x' : x, 'a' : a})
+    except:
+        z = s
+    if type(z) in [list, tuple]:
+        return [p2sage(x) for x in z]
+    else:
+        return z
 
 def pair2complex(pair):
     ''' Turns the pair into a complex number.
@@ -94,12 +107,23 @@ def styleTheSign(sign):
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
     truncation = float(10 ** truncationexp)
-    if type(coeff) == complex:
-        rp = coeff.real
-        ip = coeff.imag
-    else:
-        rp = real_part(coeff)
-        ip = imag_part(coeff)
+    try:
+        if type(coeff) == complex:
+            rp = coeff.real
+            ip = coeff.imag
+        else:
+            rp = real_part(coeff)
+            ip = imag_part(coeff)
+    except TypeError:     # mostly a hack for Dirichlet L-functions
+        if seriescoefftype == "serieshtml":
+            if coeff == "I":
+                return " + " + "$i$" + "&middot;" + seriesvar(index, seriestype) 
+            elif coeff == "-I":
+                return "&minus;" + " $i$" + "&middot;" + seriesvar(index, seriestype)
+            else:
+                return " +" + coeff + "&middot;" + seriesvar(index, seriestype)
+        else:
+            return coeff
 # below we use float(abs()) instead of abs() to avoid a sage bug
     if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):  # has a real and an imaginary part
         ans = ""
@@ -403,7 +427,8 @@ def lfuncEPtex(L, fmt):
     """ Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
-    if L.Ltype() == "genus2curveQ" and fmt == "arithmetic":
+#    if L.Ltype() == "genus2curveQ" and fmt == "arithmetic":
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and fmt == "arithmetic":
         return lfuncEPhtml(L, fmt)
 
     ans = ""
@@ -473,11 +498,18 @@ def lfuncEPhtml(L,fmt):
     ans = ""
  #   ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
     ans += texform_gen + "where, for " + pgoodset + ",\n"
-    ans += "\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
-    ans += "with $b_p = a_p^2 - a_{p^2}$. "
+    if L.degree == 4 and L.motivic_weight == 1:
+        ans += "\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
+        ans += "with $b_p = a_p^2 - a_{p^2}$. "
+    elif L.degree == 2 and L.motivic_weight == 1:
+        ans += "\[F_p(T) = 1 - a_p T + p T^2 .\]"
+    else:
+        ans += "\(F_p\) is a polynomial of degree " + str(L.degree) + ". "
   #  ans += "If $p \mid "  + str(L.level) + "$, then $F_p$ is a polynomial of degree at most 3, "
-    ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most 3, "
-    ans += "with $F_p(0) = 1$."
+  #  ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most 3, "
+    ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most "
+    ans += str(L.degree - 1) + ". "
+#    ans += "with $F_p(0) = 1$."
     factN = list(factor(L.level))
     bad_primes = []
     for lf in L.bad_lfactors:
@@ -490,7 +522,10 @@ def lfuncEPhtml(L,fmt):
             good_primes.append(this_prime)
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th><th class='weight galois'>$\Gal(F_p)$</th></tr>\n"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th>"
+    if L.degree > 2:
+        eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
+    eptable += "</tr>\n"
     eptable += "</thead>"
     numfactors = len(L.localfactors)
     goodorbad = "bad"
@@ -501,19 +536,19 @@ def lfuncEPhtml(L,fmt):
             eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
                         "$" + thispolygal[0] + "$" +
                         "</td>")
-            eptable += "<td class='galois'>" 
-       #     eptable += group_display_knowl(4,thispolygal[1][0],C) 
-            this_gal_group = thispolygal[1]
-            if this_gal_group[0]==[0,0]:
-                pass   # do nothing, because the local faco is 1
-            elif this_gal_group[0]==[1,1]:
-                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
-            else:
-                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
-            for j in range(1,len(thispolygal[1])):
-                eptable += "$\\times$"
-                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-            eptable += "</td>"
+            if L.degree > 2:
+                eptable += "<td class='galois'>" 
+                this_gal_group = thispolygal[1]
+                if this_gal_group[0]==[0,0]:
+                    pass   # do nothing, because the local faco is 1
+                elif this_gal_group[0]==[1,1]:
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
+                else:
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+                for j in range(1,len(thispolygal[1])):
+                    eptable += "$\\times$"
+                    eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                eptable += "</td>"
             eptable += "</tr>\n"
 
         except IndexError:
@@ -529,13 +564,14 @@ def lfuncEPhtml(L,fmt):
         eptable += ("<tr" + firsttime + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + thispolygal[0] + "$" +
                     "</td>")
-        this_gal_group = thispolygal[1]
-        eptable += "<td class='galois'>"
-        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
-        for j in range(1,len(thispolygal[1])):
-            eptable += "$\\times$"
-            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-        eptable += "</td>"
+        if L.degree > 2:
+            eptable += "<td class='galois'>"
+            this_gal_group = thispolygal[1]
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
         eptable += "</tr>\n"
 
 
@@ -546,17 +582,18 @@ def lfuncEPhtml(L,fmt):
     firsttime = " id='moreep'"
     for j in good_primes2:
         this_prime_index = prime_pi(j) - 1
+        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
         eptable += ("<tr" + firsttime +  " class='more nodisplay'" + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index], galois=True)[0] + "$" +
                     "</td>")
-        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
-        this_gal_group = thispolygal[1]
-        eptable += "<td class='galois'>"
-        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
-        for j in range(1,len(thispolygal[1])):
-            eptable += "$\\times$"
-            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-        eptable += "</td>"
+        if L.degree > 2:
+            this_gal_group = thispolygal[1]
+            eptable += "<td class='galois'>"
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
 
         eptable += "</tr>\n"
         firsttime = ""
@@ -710,8 +747,10 @@ def lfuncFEtex(L, fmt):
         ans += "("
         if L.mu_fe != []:
             for mu in range(len(L.mu_fe) - 1):
-                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, 5) + ", "
-            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, 5)
+                prec = len(str(L.mu_fe[mu]))
+                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, prec) + ", "
+            prec = len(str(L.mu_fe[-1]))
+            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, prec)
         else:
             ans += "\\ "
         ans += ":"
@@ -736,14 +775,17 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['special_values']):
+        for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
                 val = x[1]
                 break
     if val is None:
-        val = L.sageLfunction.value(s)
+        if L.fromDB:
+            val = "not computed"
+        else:
+            val = L.sageLfunction.value(s)
     if normalization == "arithmetic":
         lfunction_value_tex = L.texname_arithmetic.replace('s)',  sLatex + ')')
     else:
@@ -772,27 +814,34 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['special_values']):
+        if 'values' in L.lfunc_data.keys():
+          for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
                 val = x[1]
                 break
     if val is None:
-        val = L.sageLfunction.value(s)
+        if L.fromDB:
+            val = "not computed"
+        else:
+            val = L.sageLfunction.value(s)
     # We must test for NaN first, since it would show as zero otherwise
     # Try "RR(NaN) < float(1e-10)" in sage -- GT
 
     lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
     lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
 
-    if CC(val).real().is_NaN():
-        Lval = "\\infty"
-    elif val.abs() < 1e-10:
-        Lval = "0"
-    else:
-        Lval = latex(round(val.real(), number_of_decimals)
+    try:
+        if CC(val).real().is_NaN():
+            Lval = "\\infty"
+        elif val.abs() < 1e-10:
+            Lval = "0"
+        else:
+            Lval = latex(round(val.real(), number_of_decimals)
                          + round(val.imag(), number_of_decimals) * I)
+    except (TypeError, NameError):
+        Lval = val    # if val is text
 
     return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
 
@@ -939,4 +988,5 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
     if abs(abs(sign) - 1) > tol:
         logger.critical("Not enough coefficients to compute the sign of the L-function.")
         sign = "Not able to compute."
+        sign = 1000
     return sign

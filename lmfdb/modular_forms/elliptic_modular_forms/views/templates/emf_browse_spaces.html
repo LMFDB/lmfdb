@@ -1,5 +1,5 @@
 {% extends "homepage.html" %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <script type="text/javascript" src="{{url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
@@ -84,9 +84,9 @@ function set_value(id,val) {
 }
 </script>
 {% if info.grouptype == 0 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(N)\)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma0n',title='\(\Gamma_0(N)\)') %}
 {% elif info.grouptype == 1 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(N)\)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma1n',title='\(\Gamma_1(N)\)') %}
 {% endif %}
 
 {%if info.show_switch is defined %}
@@ -147,34 +147,7 @@ The table below gives the dimensions of the space of holomorphic
 , with trivial {{KNOWL('character.dirichlet', title='character')}}.
 {% endif %}
 </div>
-
-<style>
-table.ntdata th.left {
-  border-right: 2px solid #9b9;
-  background: #efe;
-  border-bottom: 0;
-  text-align: right;
-}
-table.ntdata td { text-align: left; }
-table.ntdata td.center { text-align: center; }
-table.ntdata th.weight {
-  text-align: left;
-  background: #efe;
-  border-bottom: 2px solid #9b9;
-  border-left: 0;
-  vertical-align: center;
-}
-table.ntdata thead tr.space {
-  background: #efe;
-  border-bottom: 0;
-}
-
-table.ntdata thead th.spaceleft {
-  border-right: 2px solid #9b9;
-  vertical-align: top;
-}
-</style>
-
+ {% set has_na = [] %}
       <table class="ntdata">
         <thead>
           <tr class="space">
@@ -218,6 +191,7 @@ table.ntdata thead th.spaceleft {
                  <a href="{{url}}">{{dim}}</a>
                  {% elif in_db == -1 %}
                      n/a
+              {% do has_na.append(1) %}
                  {% else %}
                      {{dim}}
                  {% endif %}
@@ -231,8 +205,11 @@ table.ntdata thead th.spaceleft {
         </tbody>
       </table>
     </td>
-    <small>"n/a" means that there is no information about this space in our
-      database. The dimension is clickable whenever the Hecke orbits are stored for that space.
+    <small>
+    {% if has_na %}
+    "n/a" means that there is no information about this space in our database.
+    {% endif %}
+    The dimension is clickable whenever the Hecke orbits are stored for that space.
 </small>
 
 {% endif %}
@@ -244,10 +221,10 @@ table.ntdata thead th.spaceleft {
         Search by {{KNOWL('mf.elliptic.label',title="label")}} of a
         form, or of a space of forms
         <form name="search" method = "post" action="{{url_for('.render_elliptic_modular_forms')}}">	  
-          <input type="text" name="jump_to" value="" placeholder="1.12.1a"> 
+          <input type="text" name="jump_to" value="" placeholder="1.12.1.a"> 
 	  <button type="submit" value="Find">Find</button>
         </form>
-        <span class="formexample"> e.g. 1.12.1a or 11.6 </span>
+        <span class="formexample"> e.g. 1.12.1.a or 11.6 </span>
       </div>
 
 

@@ -25,7 +25,7 @@ from sage.all import uniq
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
 #from lmfdb.modular_forms.elliptic_modular_forms.backend.cached_interfaces import WebModFormSpace_cached
-
+from lmfdb.WebCharacter import ConreyCharacter
 ###
 ###
 
@@ -89,6 +89,26 @@ def set_info_for_gamma1(level,weight,weight2=None):
             xi = r['cchi']
             orbit = r['character_orbit']
             k = r['weight']
+            ## This is probably still quicker if it is in the database
+            parity = r.get('character_parity','n/a')
+            if parity == 'n/a':
+                chi = ConreyCharacter(level,xi)
+                if chi.is_odd():
+                    parity = -1
+                elif chi.is_even():
+                    parity = 1
+                else:
+                    emf_logger.critical("Could not determine the parity of ConreyCharacter({0},{1})".format(xi,level))
+                    trivial_trivially = ""
+            if parity != 'n/a':
+                if k % 2 == (1 + parity)/2:   # is space empty because of parity?
+                    trivial_trivially = "yes"
+                else:
+                    trivial_trivially = ""
+            if parity == 1:
+                parity = 'even'
+            elif parity == -1:
+                parity = 'odd'
             d = r.get('d_newf',"n/a")
             indb = r.get('in_wdb',0)
             if d == 0:
@@ -101,7 +121,8 @@ def set_info_for_gamma1(level,weight,weight2=None):
                 table['galois_orbits_reps'][xi]={
                     'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xi),  # yes, {{{ is required
                     'chi': "{0}".format(xi),
-                    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi) }
+                    'url': url_for('characters.render_Dirichletwebpage', modulus=level, number=xi),
+                    'parity':parity}
                 table['galois_orbit'][xi]= [
                     {
                     #'head' : "\(\chi_{{{0}}}({1},\cdot) \)".format(level,xci),  # yes, {{{ is required
@@ -117,7 +138,7 @@ def set_info_for_gamma1(level,weight,weight2=None):
             if len(orbit)>table['maxGalCount']:
                 table['maxGalCount']=len(orbit)
             table['cells'][xi]={}
-            table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d}
+            table['cells'][xi][k] ={'N': level, 'k': k, 'chi': xi, 'url': url, 'dim': d, 'trivial_trivially': trivial_trivially,}
     table['galois_orbits_reps_numbers']=table['galois_orbits_reps'].keys()
     table['galois_orbits_reps_numbers'].sort()
     #emf_logger.debug("Table:{0}".format(table))

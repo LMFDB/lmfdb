@@ -10,7 +10,7 @@ An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title=
 <style type="text/css">
 .error_message {
    padding: 4px;
-   color: red;
+   color: {{color.red}};
    font-size: 120%;
    font-weight: bold;
    margin: 20px;
@@ -103,6 +103,16 @@ Please enter a value or leave blank:
            </td>
            <td><span class="formexample"> e.g. 0 </span>
            </td>
+   <td>
+    {{ KNOWL('ec.complex_multiplication',title="CM") }}
+    </td>
+     <td>
+         <select name='include_cm'>
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+         </select>
+     </td>
     </tr>
 
     <tr>

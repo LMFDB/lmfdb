@@ -30,10 +30,13 @@ class Lfunction:
             whether L-function is selfdual
         """
 
-        self.selfdual = True
-        for n in range(1, min(8, len(self.dirichlet_coefficients))):
-            if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
-                self.selfdual = False
+        if not hasattr(self, 'selfdual'):
+    #    if 'selfdual' not in self:
+     #   if self.selfdual not in [True, False]:
+            self.selfdual = True
+            for n in range(1, min(8, len(self.dirichlet_coefficients))):
+                if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
+                    self.selfdual = False
 
     def Lkey(self):
         # Lkey should be a dictionary
@@ -115,14 +118,22 @@ class Lfunction:
         return self.compute_lcalc_zeros(via_N = False, step_size = step_size, upper_bound = upper_bound, lower_bound = lower_bound)
     
     def compute_lcalc_zeros(self, via_N = True, **kwargs):
+
+        if not hasattr(self,"fromDB"):
+            self.fromDB = False
+
         if via_N == True:
             count = kwargs["count"]
             do_negative = kwargs["do_negative"]
+            if self.fromDB:
+                return "not available"
             return self.sageLfunction.find_zeros_via_N(count, do_negative)
         else:
             T1 = kwargs["lower_bound"]
             T2 = kwargs["upper_bound"]
             stepsize = kwargs["step_size"]
+            if self.fromDB:
+                return "not available"
             return self.sageLfunction.find_zeros(T1, T2, stepsize)
     
     def compute_zeros(algorithm , **kwargs):

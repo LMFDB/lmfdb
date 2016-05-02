@@ -9,7 +9,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 import sage.all
 from sage.all import ZZ, latex, AbelianGroup, pari, gap
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, list_to_latex_matrix
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, list_to_latex_matrix
 
 MAX_GROUP_DEGREE = 23
 
@@ -563,6 +563,7 @@ aliases['GL(3,2)'] = [(7, 5), (8, 37)]
 aliases['A7'] = [(7, 6)]
 aliases['S7'] = [(7, 7)]
 aliases['C4XC2'] = [(8, 2)]
+aliases['C2XC4'] = [(8, 2)]
 aliases['C2XC2XC2'] = [(8, 3)]
 aliases['Q8'] = [(8, 5)]
 aliases['D8'] = [(8, 6),(16,7)]
@@ -575,6 +576,7 @@ aliases['S8'] = [(8, 50)]
 aliases['C3XC3'] = [(9, 2)]
 aliases['D9'] = [(9, 3)]
 aliases['S3XC3'] = [(6, 5), (9, 4)]
+aliases['C3XS3'] = [(6, 5), (9, 4)]
 aliases['S3XS3'] = [(6, 9), (9, 8), (12, 16)]
 aliases['M9'] = [(9, 14), (12, 47)]
 aliases['PSL(2,8)'] = [(9, 27)]
@@ -593,6 +595,7 @@ aliases['M11'] = [(11, 6)]
 aliases['A11'] = [(11, 7)]
 aliases['S11'] = [(11, 8)]
 aliases['C6XC2'] = [(12, 2)]
+aliases['C2XC6'] = [(12, 2)]
 aliases['A12'] = [(12, 300)]
 aliases['S12'] = [(12, 301)]
 aliases['D13'] = [(13, 2)]

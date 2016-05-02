@@ -9,14 +9,8 @@
       url_for: "introduction"
     - title: Features
       url_for: "introduction_features"
-    - title: Tutorial
-      url_for: "introduction_tutorial"
     - title: Map
       url_for: "bigpicture"
-    - title: Contact
-      url_for: "contact"
-    - title: Citation
-      url_for: "citation"
     - title: Future Plans
       url_for: "roadmap"
 
@@ -45,7 +39,6 @@
           url_for: "l_functions.l_function_degree_page"
           url_args:
             degree: 'degree4'
-          status: beta
         - title: "5+"
           status: future
    secondpart:
@@ -247,7 +240,6 @@
       colspan: onecolumn
     - title: Lattices
       url_for: "lattice.lattice_render_webpage"
-      status: beta
     - title: Subgroups of
       part2:
          - title: $\SL(2)$

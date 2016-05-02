@@ -24,7 +24,7 @@
 {% if not space.has_updated_from_db() %}
 {% if wmfs_rep_url is defined %}
 <p>This space is a Galois conjugate of <a href="{{ wmfs_rep_url }}"> \( S_&#123; {{space.weight}} &#125;(\chi_&#123;{{space.level}} &#125;({{ wmfs_rep_number }}, \cdot)) \)</a></p>
-{% else %}
+{% elif space.data_from_dimension_db().get('in_wdb',0) == 0  %}
 <h3>Unfortunately, we do not have this space in the database, yet.</h3>
 {% endif %}
 {% else %}
@@ -36,7 +36,7 @@
    {% if space.weight % 2 != 0 and space.character.value(-1) == 1 %}
      The weight is odd and the character is even.
    {% endif %}
-    {% else %}
+ {% else %}
 
       {% if extra_info is defined %}
         <span style="font-size:50%">({{ extra_info | safe }})</span>
@@ -47,7 +47,7 @@
         table.td.center {text-align : center;}
         </style>
         <h2>
-          Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbits',title='irreducible Hecke orbits')}}
+          Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits')}}
         </h2>
         {% if  space.hecke_orbits=={} %}
            Problem with Hecke orbits in the database!
@@ -67,13 +67,12 @@
       {% else %}
         {{ name_new }} {{ nontrivial_new_info }}
       {% endif %}
-
-      {% if space.oldspace_decomposition != {} and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
+    {% endif %}
+      {% if oldspace_decomposition != '' and space.dimension_cusp_forms > space.dimension_new_cusp_forms %}
         <h2> Decomposition of {{old_name}} into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
-        {{ space.oldspace_decomposition | safe }}
+        {{ old_name}}  \(\cong\) {{ oldspace_decomposition | safe }} 
       {% endif %}
         
-    {% endif %}
     {{ test | safe }}
   {% endif %}
 {% endif %}

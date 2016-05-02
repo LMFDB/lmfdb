@@ -7,17 +7,13 @@ from flask import render_template, url_for, make_response
 from sage.all import *
 import tempfile
 import os
-import pymongo
 from lmfdb.WebCharacter import *
-from lmfdb.utils import to_dict
-from sage.rings.arith import euler_phi
 
 # from dirichlet_conrey import *
 
 
 def get_character_modulus(a, b, limit=7):
     from dirichlet_conrey import DirichletGroup_conrey
-    # from DirichletCharacter import kronecker_symbol as k
     headers = range(1, limit)
     headers.append("more")
     entries = {}
@@ -57,8 +53,6 @@ def get_character_modulus(a, b, limit=7):
 
 def get_character_conductor(a, b):
     from dirichlet_conrey import DirichletGroup_conrey
-    # from main import kronecker_symbol as k
-    
 
     def line(N):
         l = []
@@ -67,7 +61,6 @@ def get_character_conductor(a, b):
         while count < 7:
             if modulus % N == 0:
                 G = DirichletGroup_conrey(modulus)
-               
                 for chi in G:
                     j = chi.number()
                     c = WebDirichletCharacter(modulus = chi.modulus(),number = chi.number())
@@ -75,7 +68,7 @@ def get_character_conductor(a, b):
                         break
                     elif chi.conductor() == N:
                         count += 1
-                        l.append((modulus, j, chi.is_primitive(), chi.multiplicative_order(), c.symbol_numerator()))
+                        l.append((modulus, j, chi.is_primitive(), chi.multiplicative_order(), c.symbol))
             modulus += N
             if count == 0:
                 break
@@ -85,7 +78,6 @@ def get_character_conductor(a, b):
 
 def get_character_order(a, b):
     from dirichlet_conrey import DirichletGroup_conrey
-    #from main import kronecker_symbol as k
 
 
     def line(N):
@@ -99,7 +91,7 @@ def get_character_order(a, b):
                     break
                 elif chi.multiplicative_order() == N:
                     count += 1
-                    l.append((modulus, chi.number(), chi.is_primitive(), chi.multiplicative_order(), c.symbol_numerator()))
+                    l.append((modulus, chi.number(), chi.is_primitive(), chi.multiplicative_order(), c.symbol))
             if count == 8:
                 break
         return l

@@ -6,11 +6,11 @@
 {# Underlying group #}
 <h2>
   Underlying
-  {%- if type=='Dirichlet' -%}
-  {{ KNOWL('character.unit_group', title="Unit group") }}
-  {%- elif type=='Hecke' -%}
-  {{ KNOWL('character.ray_class_group', title="Ray class group") }}
-  {%- endif %}
+  {% if type=='Dirichlet' %}
+  {{ KNOWL('character.unit_group', title="unit group") }}
+  {% elif type=='Hecke' %}
+  {{ KNOWL('character.ray_class_group', title="ray class group") }}
+  {% endif %}
   modulo {{modulus}}
 </h2>
 
@@ -26,28 +26,17 @@
 
 
 <table class="props">
-  <tr> <td> {{ addcode(codeorder,'span') }} </td> </tr>
-  <tr>
-    <td>Order</td>
-    <td>=</td>
-    <td>{{ order }}</td>
-  </tr>
+  <tr> <td colspan="3"> {{ addcode(codeorder,'div') }} </td> </tr>
+  <tr> <td>Order</td> <td>=</td> <td>{{ order }}</td> </tr>
 
-  <tr> <td> {{ addcode(codestruct,'span') }} </td> </tr>
-  <tr>
-    <td>Structure</td>
-    <td>=</td>
-    <td>{{ structure }}</td>
-  </tr>
-  <tr> <td> {{ addcode(codegen,'span') }} </td> </tr>
-  <tr>
-    <td> Generators </td>
-    <td>=</td>
-    <td>{{ generators }}</td>
-  </tr>
+  <tr> <td colspan="3"> {{ addcode(codestruct,'div') }} </td> </tr>
+  <tr> <td>Structure</td> <td>=</td> <td>{{ structure }}</td> </tr>
+  <tr> <td colspan="3"> {{ addcode(codegen,'div') }} </td> </tr>
+  <tr> <td> Generators </td> <td>=</td> <td>{{ generators }}</td> </tr>
 
 </table>
 
+{% if contents %}
 {# Characters #}
 <h2> {%if rowtruncate%}First characters{% else %}Characters{%endif%}</h2>
 <table class="ntdata" id="chitable">
@@ -76,6 +65,7 @@
     {% endfor %} 
   </tbody>    
 </table>
+{% endif %}
 
 {% endblock %}
 

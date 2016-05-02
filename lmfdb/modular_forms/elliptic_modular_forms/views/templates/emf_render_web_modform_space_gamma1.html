@@ -1,5 +1,5 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <script type="text/javascript" src="{{ url_for('.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
@@ -17,35 +17,6 @@ $("#plot").load(function() {
 </script>
 
 <style>
-table.ntdata th.left {
-  border-right: 2px solid #9b9;
-  background: #efe;
-  border-bottom: 0;
-  text-align: right;
-}
-
-table.ntdata th.first {
-  text-align: center;
-  font-weight: normal;
-}
-
-table.ntdata td { text-align: left; }
-table.ntdata th.weight {
-  text-align: left;
-  background: #efe;
-  border-bottom: 2px solid #9b9;
-  border-left: 0;
-  vertical-align: center;
-}
-table.ntdata thead tr.space {
-  background: #efe;
-  border-bottom: 0;
-}
-
-table.ntdata .label {
-  display: block;
-  padding: 5px 10px 5px 10px;
-}
 
 table.dimtable thead th.spaceleft {
   border-right: 0;
@@ -58,15 +29,15 @@ table.dimtable tbody td.spaceleft {
 }
 
 table.ntdata tbody tr:nth-child(odd) {
-    background: #FFF;
+    background: {{color.emf_table_background_off}};
 }
 
 table.dimtable tbody td:nth-child(even) {
-    background: #FFF;
+    background: {{color.emf_table_background_off}};
 }
 
 table.dimtable tbody td.even {
-    background: #EFE;
+    background: {{color.emf_table_background}};
 }
 
 table.ntdata thead tr.space th{
@@ -91,12 +62,12 @@ table.ntdata thead tr.space th{
 {% include 'geometric.html' %}
 
 {% if level == 1 %}
-  {% set group=KNOWL('mf.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
+  {% set group=KNOWL('group.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
 {% else %}
   {% if grouptype == 0 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma0n',title='\(\Gamma_0(' ~ level ~ ') \)') %}
   {% elif grouptype == 1 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
   {% endif %}
 {% endif %}
 
@@ -114,6 +85,8 @@ where the direct sum is over all {{ KNOWL('character.dirichlet',title='Dirichlet
 If $\chi$ and $\chi'$ are in the same {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit')}},
 then $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$ and $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi')$
 are Galois conjugate, so in particular they have the same dimension.
+Note that this dimension is automatically zero if the {{KNOWL('character.dirichlet.parity',title='parity')}} of the character
+is not the same as the parity of the weight. 
 </p>
 
 <p>
@@ -122,7 +95,6 @@ for \( \Gamma_0({{level}}) \) of {{ KNOWL('mf.elliptic.weight',title='weight') }
 {{ KNOWL('character.dirichlet',title='characters') }} in each {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit')}},
 with links to each space.
 </p>
-
 {% set row_class = cycler('odd', 'even') %}
 
 {% if showGaloisOrbits %}
@@ -135,14 +107,19 @@ $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$</th>
 <!--
       <th class="weight" colspan="{{table.maxGalCount}}">Characters $\chi$ grouped by Galois orbit</th>
 -->
-      <th class="weight" colspan="{{table.maxGalCount}}">$S_{ {{k}} }(\chi_{ {{level}} }(n,\cdot)):=S^{new}_{ {{k}} }(\Gamma_0({{level}}),\chi_{ {{level}} }(n,\cdot))$ &nbsp; for characters $\chi$ grouped by Galois orbit</th>
+    <th class="weight border-right">Parity</th>  
+    <th class="weight" colspan="{{table.maxGalCount}}">$S_{ {{k}} }(\chi_{ {{level}} }(n,\cdot)):=S^{new}_{ {{k}} }(\Gamma_0({{level}}),\chi_{ {{level}} }(n,\cdot))$ &nbsp; for characters $\chi$ grouped by Galois orbit</th>
     </tr>
   </thead>
   <tbody>
     {% for xi in table.galois_orbits_reps_numbers  %}
     {% set x = table.galois_orbits_reps[xi] %}
     {% set cell = table.cells[xi][k] %}
-      <tr class="{{row_class.next() }}">
+      {% if cell.trivial_trivially %}
+        <tr class="{{row_class.next()}} trivial">
+      {% else %}
+        <tr class="{{row_class.next() }}">
+      {% endif %}
         <th width="10px" class="left first">
 	  {% if x.url != '' %}
             {{cell.dim}}
@@ -150,12 +127,15 @@ $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$</th>
 	    {{ x.head }}
 	  {% endif %}
         </th>
+        <td class="border-right center">
+            {{ x.parity }}
+        </td>
         {% for xc in table.galois_orbit[xi]  %}
           <td align="center" width="0%">
-           {% if xc.url != '' and cell.dim > 0 %}
+           {% if xc.url != '' %}
              <a href="{{xc.url}}">{{ xc.head }}</a>
            {% else %}
-	     <a class="inactive">{{xc.head}}</a>
+	     <span class="inactive">{{xc.head}}</span>
 	   {% endif %}
           </td>
         {% endfor %}
@@ -169,7 +149,9 @@ $S_{ {{k}} }^{new}(\Gamma_0({{level}}), \chi)$</th>
     {% endfor %}
   </tbody>
 </table>
-<small>The space is clickable whenever the Hecke orbits are stored for that space.</small>
+<small>The space is clickable whenever the Hecke orbits are stored for that space.
+Spaces in grey are trivial because the character and the weight have
+opposite parity.</small>
 
 {% endif %}
 

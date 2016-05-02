@@ -1,9 +1,9 @@
 {% extends "homepage.html" %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 {% if lock %}
-    <div style="color: red; font-weight: bold; font-size: 200%;">Concurrent Edit!!!</div>
+    <div style="color: {{color.red}}; font-weight: bold; font-size: 200%;">Concurrent Edit!!!</div>
 
     <div>
      The Knowl {{ k.title }} is currently or has been recently edited by 

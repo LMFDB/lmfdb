@@ -25,7 +25,10 @@ class EmfTest(LmfdbTest):
             for k in weights:
                 for g in range(2):
                     print("testing (N,k,g) = (%s,%s,%s)" % (N,k,g))
-                    self.tc.get("/ModularForm/GL2/Q/holomorphic/%s/%s/?group=%s" % (N,k,g))
+                    url  = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/?group={2}".format(N,k,g)
+                    rv = self.tc.get(url,follow_redirects=True)
+                    self.assertTrue(rv.status_code==200,"Request failed for {0}".format(url))
+                    self.assertFalse('Error:' in rv.data,"Error in the data for {0}".format(url))
 
     def test_delta(self):
         r"""
@@ -57,12 +60,22 @@ class EmfTest(LmfdbTest):
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/')
         assert '0.2538' in page.data
 
+    def test_triv_character(self):
+        r"""
+        Check that some forms from issue 815 work.
+        """
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/8/1/a/")
+        assert '1016q^{7}' in page.data
+        assert '1.955904533356' in page.data
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/3/6/1/a/")
+        assert '168q^{8}' in page.data
+
     def test_non_triv_character(self):
         r"""
         Check that non-trivial characters are also working.
         """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/2/4/a/")
-        assert r'where</div> \(\alpha ^{2} \) \(\mathstrut -\mathstrut  \alpha  \) \(\mathstrut +\mathstrut  1\)\(\mathstrut=0\)' in page.data
+        assert r'where \(\zeta_{6}=e^{\frac{2\pi i}{ 6 } }\) is a primitive 6-th root of unity.' in page.data
         assert r'\(\mathstrut+\) \(\bigl(2 \zeta_{6} \) \(\mathstrut-  2\bigr)q^{3} \)' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/4/9/a/")
         assert r'where</div> \(\alpha ^{2} \) \(\mathstrut +\mathstrut  4\)\(\mathstrut=0\)' in page.data
@@ -107,3 +120,7 @@ class EmfTest(LmfdbTest):
         assert 'The table below gives the dimensions of the space of' in page.data
         #page = self.tc.get("", follow_redirects=True)
         #assert '' in page.data
+    def test_character_parity(self):
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/99/3/?group=1',
+                           follow_redirects=True)
+        self.assertFalse('n/a' in page.data)

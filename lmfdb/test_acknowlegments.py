@@ -25,14 +25,14 @@ class HomePageTest(LmfdbTest):
     #
     # Link to workshops page
     def test_workshops(self):
-        homepage = self.tc.get("/workshops").data
+        homepage = self.tc.get("/acknowledgment/activities").data
         assert 'Computational Aspects of the Langlands Program' in homepage
        
         
     # 
     # External Links on workshops page
     def test_workshoplinks(self):
-        homepage = self.tc.get("/workshops").data
+        homepage = self.tc.get("/acknowledgment/activities").data
         self.check_external(homepage, "http://people.oregonstate.edu/~swisherh/CRTNTconference/index.html", 'Galois')                 
         self.check_external(homepage, "http://www2.warwick.ac.uk/fac/sci/maths/research/events/2013-2014/nonsymp/lmfdb/",'elliptic curves over number fields' )
         self.check_external(homepage, "http://hobbes.la.asu.edu/lmfdb-14/",'Arizona State University' )

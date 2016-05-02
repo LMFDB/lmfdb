@@ -1,29 +1,30 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Refine search </h2>
+<h2>Refine search </h2>
 
 <form id='re-search'>
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 
 <table>
-<tr>
 <td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
-<td>{{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}</td>
-<td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}</td>
-<td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>
+<td>{{ KNOWL('g2c.abs_discriminant', title='discriminant')}}</td>
+<td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrass') }}</td>
+<td>{{ KNOWL('g2c.torsion', title='torsion')}}</td>
 <td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
 <td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
+<td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
 </tr>
 
 <tr>
-<td><input type='text' name='cond' placeholder='169' size=10 value="{{info.cond}}"></td>
-<td><input type='text' name='disc' placeholder='169' size=10 value="{{info.disc}}"></td>
-<td><input type='text' name='num_rat_wpts' placeholder='1' size=10 value="{{info.num_rat_wpts}}">
-<td><input type='text' name='torsion' placeholder='[2,2,2]' size=10 value="{{info.torsion}}">
-<td><input type='text' name='torsion_order' placeholder='2' size=10 value="{{info.torsion_order}}">
-<td><input type='text' name='two_selmer_rank' placeholder='1' size=10 value="{{info.two_selmer_rank}}">
+<td><input type='text' name='cond' placeholder='169' style="width: 100px" value="{{info.cond}}"></td>
+<td><input type='text' name='abs_disc' placeholder='169' style="width: 100px" value="{{info.abs_disc}}"></td>
+<td><input type='text' name='num_rat_wpts' placeholder='1'  style="width: 100px" value="{{info.num_rat_wpts}}">
+<td><input type='text' name='torsion' placeholder='[2,2,2]'  style="width: 100px" value="{{info.torsion}}">
+<td><input type='text' name='torsion_order' placeholder='2'  style="width: 100px" value="{{info.torsion_order}}">
+<td><input type='text' name='two_selmer_rank' placeholder='1'  style="width: 100px" value="{{info.two_selmer_rank}}">
+<td><input type='text' name='analytic_rank' placeholder='1'  style="width: 100px" value="{{info.analytic_rank}}">
 </tr>
 
 <tr>
@@ -32,10 +33,12 @@
 <td>{{ KNOWL('g2c.st_group_identity_component', title='\(\mathrm{ST}^0\)') }}</td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\mathrm{Aut}(X)\)') }}</td>
 <td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
+<td>{{ KNOWL('g2c.locally_solvable',   title='locally solvable') }}</td>
+<td>{{ KNOWL('g2c.has_square_sha',   title='square &#1064;*') }}</td>
 </tr>
 
 <tr>
-<td><select name='is_gl2_type' width="122" style="width: 122px">
+<td><select name='is_gl2_type' style="width: 110px">
   <option ></option>
 {% if info.is_gl2_type=='True' %}
   <option value="True" selected>True</option>
@@ -49,7 +52,7 @@
 {% endif %}
 </select></td>
 
-<td><select name='st_group' width="122" style="width: 122px" >
+<td><select name='st_group' style="width: 110px" >
     <option ></option>
     {% for G in info.st_group_list %}
         {% if  G == info.st_group %}
@@ -60,7 +63,7 @@
     {% endfor %}
 </select></td>
 
-<td><select name='real_geom_end_alg' width="122" style="width: 122px">
+<td><select name='real_geom_end_alg' style="width: 110px">
     <option ></option>
     {% for G in info.real_geom_end_alg_list %}
         {% if G == info.real_geom_end_alg %}
@@ -71,10 +74,10 @@
     {% endfor %}
 </select></td>
 
-<td><select name='aut_grp' width="122" style="width: 122px">
+<td><select name='aut_grp_id' style="width: 110px">
     <option ></option>
     {% for G in info.aut_grp_list %}
-        {% if G == info.aut_grp %}
+        {% if G == info.aut_grp_id %}
             <option value='{{G}}' selected>{{info.aut_grp_dict[G]}}</option>
         {% else %}
             <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
@@ -82,22 +85,56 @@
     {% endfor %}
 </select></td>
 
-<td><select name='geom_aut_grp' width="122" style="width: 122px">
+<td><select name='geom_aut_grp_id' style="width: 110px">
     <option ></option>
     {% for G in info.geom_aut_grp_list %}
-        {% if G == info.geom_aut_grp %}
+        {% if G == info.geom_aut_grp_id %}
             <option value='{{G}}' selected>{{info.geom_aut_grp_dict[G]}}</option>
         {% else %}
             <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
         {% endif %}
     {% endfor %}
 </select></td>
-<td>
-<button type='submit' value='refine'  width="122" style="width: 122px">Search again</button>
-</td>
+
+<td><select name='locally_solvable' style="width: 110px">
+  <option ></option>
+{% if info.locally_solvable=='True' %}
+  <option value="True" selected>True</option>
+{% else %}
+  <option value="True">True</option>
+{% endif %}
+{% if info.locally_solvable == 'False' %}
+  <option value="False" selected>False</option>
+{% else %}
+  <option value="False">False</option>
+{% endif %}
+</select></td>
+
+<td><select name='has_square_sha' style="width: 110px">
+  <option ></option>
+{% if info.has_square_sha=='True' %}
+  <option value="True" selected>True</option>
+{% else %}
+  <option value="True">True</option>
+{% endif %}
+{% if info.has_square_sha == 'False' %}
+  <option value="False" selected>False</option>
+{% else %}
+  <option value="False">False</option>
+{% endif %}
+</select></td>
 </tr>
+<tr>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td><button type='submit' value='refine'  style="width: 110px">Search again</button></td>
+</tr>
+
 </table>
 </form>
+
+{% if info.err is not defined %}
 
 <h2> Results ({{info.report}})
 {% if info.start > 0 %}
@@ -115,6 +152,7 @@
     <th>{{ KNOWL('g2c.equation', title='Equation') }}</th>
     <th>{{ KNOWL('g2c.st_group', title='Sato Tate group') }}</th>
     <th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</th>
+    <th>{{ KNOWL('g2c.analytic_rank', title='rank*') }}</th>
 </tr>
 {% for curve in info.curves: %}
 <tr>
@@ -123,6 +161,7 @@
     <td> \({{curve.equation_formatted}}\) </td>
     <td align=center> \({{curve.st_group_name}}\) </td>
     <td align=center> {{curve.is_gl2_type_display | safe}} </td>
+    <td align=center> {{curve.analytic_rank}} </td>
 </tr>
 {% endfor %}
 </table>
@@ -135,11 +174,15 @@
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
 {% endif %}
 
-<!--
-    <br>
-    <p class="tex2jax_ignore">
-    Results for database query {{ info.query }}
-    </p>
--->
+<form>
+Download all search results for
+<input type="submit" name="submit" value="gp">
+<input type="submit" name="submit" value="sage">
+<input type="submit" name="submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="query" value="{{info.query}}"/>
+</form>
+
+{% endif %}
 
 {% endblock %}

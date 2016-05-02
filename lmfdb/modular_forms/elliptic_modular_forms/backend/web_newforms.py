@@ -58,7 +58,11 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
      WebModFormSpace_cached
      )
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label, field_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
+        newform_label, 
+        space_label, 
+        field_label,
+        parse_newform_label)
 
 from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 
@@ -231,8 +235,12 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         recs = self._collection.find({'hecke_orbit_label':self.hecke_orbit_label})
         if recs.count()==0:
             return 0
-        prec_in_db = max(rec['prec'] for rec in recs)
-        return next_prime(prec_in_db)-1
+        prec_in_db = [rec['prec'] for rec in recs]
+        if prec_in_db != []:
+            max_prec_in_db = max(prec_in_db)
+            return next_prime(max_prec_in_db)-1
+        else:
+            return 0
         
     def __getitem__(self, p):
         if self.auto_update and not self.has_eigenvalue(p):
@@ -268,6 +276,8 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True, **kwargs):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
+        if isinstance(level,basestring):
+            level,weight,character,label = parse_newform_label(level)
         self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
             character_number = character.number
@@ -301,7 +311,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebNumberField('coefficient_field'),
             WebInt('coefficient_field_degree'),
             WebList('twist_info', required = False),
-            WebBool('is_cm', required = False),
+            WebInt('is_cm', required = False),
             WebInt('cm_disc', required = False, default_value=0),
             WebDict('_cm_values',required=False),
             WebBool('is_cuspidal',default_value=True),
@@ -428,7 +438,7 @@ class WebNewForm(WebObject, CachedRepresentation):
           Reimplement the recursive algorithm in sage modular/hecke/module.py
           We do this because of a bug in sage with .eigenvalue()
         """
-        from sage.rings import arith
+        from sage.arith.all import factor
         ev = self.eigenvalues
 
         c2 = self._coefficients.get(2)
@@ -447,37 +457,51 @@ class WebNewForm(WebObject, CachedRepresentation):
         else:
             KZ = K
         #emf_logger.debug("K= {0}".format(K))
-        F = arith.factor(n)
+        F = factor(n)
         for p, r in F:
             #emf_logger.debug("parent_char_val[{0}]={1}".format(p,self.parent.character_used_in_computation.value(p)))
             #emf_logger.debug("char_val[{0}]={1}".format(p,self.character.value(p)))
             (p, r) = (int(p), int(r))
             pr = p**r
             cp = self._coefficients.get(p)
-#            emf_logger.debug("c{0} = {1}".format(p,cp))
             if cp is None:
                 if ev.has_eigenvalue(p):
                     cp = ev[p]
                 elif ev.max_coefficient_in_db() >= p:
                     ev.init_dynamic_properties()
                     cp = ev[p]
+            #emf_logger.debug("c{0} = {1}, parent={2}".format(p,cp,cp.parent()))
             if cp is None:
                 raise IndexError,"p={0} is outside the range of computed primes (primes up to {1})! for label:{2}".format(p,max(ev.primes()),self.label)
             if self._coefficients.get(pr) is None:
                 if r == 1:
                     c = cp
                 else:
-                    eps = KZ(self.parent.character_used_in_computation.value(p))
                     # a_{p^r} := a_p * a_{p^{r-1}} - eps(p)p^{k-1} a_{p^{r-2}}
                     apr1 = self.coefficient_n_recursive(pr//p)
                     #ap = self.coefficient_n_recursive(p)
-                    k = self.weight
                     apr2 = self.coefficient_n_recursive(pr//(p*p))
-                    c = cp*apr1 - eps*(p**(k-1)) * apr2
+                    val = self.parent.character_used_in_computation.value(p)
+                    if val == 0:
+                        c = cp*apr1
+                    else:
+                        eps = KZ(val)
+                        c = cp*apr1 - eps*(p**(self.weight-1)) * apr2
                     #emf_logger.debug("c({0})={1}".format(pr,c))
                             #ev[pr]=c
                 self._coefficients[pr]=c
-            prod *= self._coefficients[pr]
+            try:
+                prod *= K(self._coefficients[pr])
+            except:
+                if hasattr(self._coefficients[pr],'vector'):
+                    if len(self._coefficients[pr].vector()) == len(K.power_basis()):
+                        prod *= K(self._coefficients[pr].vector())
+                    else:
+                        emf_logger.debug("vec={0}".format(self._coefficients[pr].vector()))
+                        raise ArithmeticError,"Wrong size of vectors!"
+                else:
+                    raise ArithmeticError,"Can not compute product of coefficients!"
+            
         return prod
 
     def max_cn(self):

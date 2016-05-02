@@ -37,11 +37,10 @@ class HomePageTest(LmfdbTest):
         """
         homepage = self.tc.get("/").data
         self.check(homepage,"/L/Riemann/",  r'\[\zeta(1/2) \approx -1.4603545088\]')
-        self.check(homepage,"/NumberField/3.1.23.1", r'Regulator:<td>&nbsp;&nbsp;<td>\( 0.281199574322962 \)')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/1/a/", '0.2993668')
         self.check(homepage,"/L/ModularForm/GL2/Q/holomorphic/1/12/1/a/0/", 'approx 0.839345512')
-        self.check(homepage,"/EllipticCurve/Q/234446/a/1", r'y^2 + x y = x^{3} -  x^{2} - 79 x + 289')
-        self.check(homepage,"/L/EllipticCurve/Q/234446.a/", 'L-function $L(s,E)$ for the Elliptic Curve Isogeny Class 234446.a')
+        self.check(homepage,"/EllipticCurve/Q/5077/a/1", r'y^2 + y = x^{3} - 7 x + 6')
+        self.check(homepage,"/L/EllipticCurve/Q/5077.a/", 'is an elliptic curve in isogeny class 5077.a')
 
     # Box 3
     def test_box3(self):
