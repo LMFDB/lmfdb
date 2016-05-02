@@ -75,11 +75,10 @@ def by_label(label):
 def render_stgroup_by_label(label):
     credit = credit_string
     data = stdb().st_groups.find_one({'label': label})
-    print data
     info = {}
     if data is None:
         title = "Sato-Tate group lookup error"
-        bread = [('Sato-Tate groups', url_for(".index"))]
+        bread = [('Sato-Tate groups', ' ')]
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate group currently in the database." % (label)),"error")
         return render_template("error.html", title=title, properties=[], bread=bread, learnmore=learnmore_list())
     for attr in ['label','weight','degree','pretty','real_dimension','components']:
