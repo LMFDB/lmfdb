@@ -16,8 +16,8 @@ from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, comma, random_
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_signed_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
-from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label
-from lmfdb.genus2_curves.web_g2c import WebG2C, g2cdb, list_to_min_eqn, isog_label, st_group_name, st0_group_name, aut_group_name, boolean_name, globally_solvable_name
+from lmfdb.genus2_curves.isog_class import G2Cisog_class, url_for_label, isog_url_for_label, st_group_name, st_group_href
+from lmfdb.genus2_curves.web_g2c import WebG2C, g2cdb, list_to_min_eqn, isog_label, st0_group_name, aut_group_name, boolean_name, globally_solvable_name
 
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
@@ -302,6 +302,7 @@ def genus2_curve_search(**args):
             v_clean["is_gl2_type_display"] = ''
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
         v_clean["st_group_name"] = st_group_name(isogeny_class['st_group'])
+        v_clean["st_group_href"] = st_group_href(isogeny_class['st_group'])
         v_clean["analytic_rank"] = v["analytic_rank"]
         res_clean.append(v_clean)
 
