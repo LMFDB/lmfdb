@@ -244,6 +244,7 @@ def get_configuration():
                                         # undocumented, see below
                                         "enable-reloader", "disable-reloader",
                                         "enable-debugger", "disable-debugger",
+                                        "enable-profiler"
                                         ])
         except getopt.GetoptError, err:
             sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
@@ -280,6 +281,8 @@ def get_configuration():
                 flask_options["use_debugger"] = True
             elif opt == "--disable-debugger":
                 flask_options["use_debugger"] = False
+            elif opt =="--enable-profiler":
+                flask_options["PROFILE"] = True
       except:
           pass # something happens on the server -> TODO: FIXME
     
@@ -322,6 +325,7 @@ def get_configuration():
 
 configuration = None
 
+
 def main():
     set_logfocus(logfocus)
     logging.info("... done.")
@@ -333,6 +337,12 @@ def main():
     global configuration
     if not configuration:
         configuration = get_configuration()
+    if "PROFILE" in configuration['flask_options'] and configuration['flask_options']["PROFILE"]:
+        print "Profiling!"
+        from werkzeug.contrib.profiler import ProfilerMiddleware
+        app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions = [30], sort_by=('cumulative','time','calls'))
+        del configuration['flask_options']["PROFILE"]
+
     app.run(**configuration['flask_options'])
 
 if True:
