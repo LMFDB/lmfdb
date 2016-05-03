@@ -216,7 +216,7 @@ class ECNF(object):
             else:
                 self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
             # The line below will need to change once we have curves over non-quadratic fields
-            # that properly contain the Hilbert class field of an imaginary quadratic field
+            # that contain the Hilbert class field of an imaginary quadratic field
             if self.signature == [0,1] and self.abs_disc == -self.cm:
                 self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.U(1)'),'\\mathrm{U}(1)')
             else:
