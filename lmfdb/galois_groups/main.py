@@ -199,6 +199,7 @@ def render_group_webpage(args):
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
+        data['label_raw'] = label.lower()
         title = 'Galois Group: ' + label
         wgg = WebGaloisGroup.from_data(data)
         n = data['n']
