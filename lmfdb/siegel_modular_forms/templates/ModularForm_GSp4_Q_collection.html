@@ -1,13 +1,20 @@
 {% extends 'homepage.html' %}
 {% block content %}
+
+
+
+{% if (col.name() not in ["Gamma0_2", "Gamma1_2", "Gamma_2", "Gamma0_3", "Gamma0_3_psi_3", "Gamma0_4", "Gamma0_4_psi_4", "Gamma0_4_half"]) %}
 <h2>Available samples</h2>
-{% include [ [ 'includes/avail/', col.name(), '_avail_forms.html']|join, 'Not_available.html'] %}
+{% include [['includes/avail/', col.name(), '_avail_forms.html']|join] %}
+<!--{% include [ [ 'includes/avail/', col.name(), '_avail_forms.html']|join, 'Not_available.html'] %}-->
+{% endif %}
 
 {% if not error %}
 
-<h2>Dimensions</h2>
+
 {% if col.computes_dimensions() %}
 {% if dimensions %}
+<h2>Dimensions</h2>
 {% include 'includes/dimension_table.html' %}
 
 <h3>New search</h3>
@@ -44,12 +51,13 @@
   </table> 
 </form>
 
-{% else %}
-<p>- not implemented -</p>
+
 {% endif %}
 
+{% if (col.name() not in ["Gamma1_2", "Gamma0_4_half"]) %}
 <h2>Miscellaneous</h2>
 {% include [ ['',col.description()]|join, 'Not_available.html'] %}
+{% endif %}
 
 {% else %}
 {% include 'None.html' %}
