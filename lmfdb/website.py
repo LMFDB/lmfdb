@@ -85,6 +85,7 @@ map(root_static_file, ['favicon.ico'])
 @app.route("/robots.txt")
 def robots_txt():
     if "www.lmfdb.org".lower() in request.url_root.lower():
+        import os
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
