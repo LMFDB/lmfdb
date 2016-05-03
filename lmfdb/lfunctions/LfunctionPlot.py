@@ -207,6 +207,7 @@ def getWidthAndHeight(gls):
     yMax = 0
     for l in LfunctionList:
         splitId = l['origin'].split('/')[6].split('_')
+        print splitId, l['origin']
         if float(splitId[0]) > xMax:
             xMax = float(splitId[0])
         if float(splitId[1]) > yMax:

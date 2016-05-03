@@ -11,7 +11,7 @@ import re
 
 from flask import url_for
 
-from Lfunctionutilities import (p2sage, seriescoeff,
+from Lfunctionutilities import (p2sage, string2number, seriescoeff,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
                                 number_of_coefficients_needed,
@@ -88,20 +88,20 @@ def makeLfromdata(L, fromdb=False):
     # when we write Gamma-factors in the arithmetic normalization.
     L.motivic_weight = ZZ(data['motivic_weight'])
     if 'root_number' in data:
-        L.sign = p2sage(data['root_number'])
+        L.sign = string2number(data['root_number'])
            # p2sage converts from the python string format in the database.
     else:
         L.sign = exp(2*pi*I*float(data['sign_arg'])).n()
 
     L.mu_fe = []
     for i in range(0,len(data['gamma_factors'][0])):
-        L.mu_fe.append(p2sage(data['analytic_normalization']) +
-                       p2sage(data['gamma_factors'][0][i]))
+        L.mu_fe.append(string2number(data['analytic_normalization']) +
+                       string2number(data['gamma_factors'][0][i]))
 
     L.nu_fe = []
     for i in range(0,len(data['gamma_factors'][1])):
-        L.nu_fe.append(p2sage(data['analytic_normalization']) +
-                       p2sage(data['gamma_factors'][1][i]))
+        L.nu_fe.append(string2number(data['analytic_normalization']) +
+                       string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
 
     # start items specific to hyperelliptic curves

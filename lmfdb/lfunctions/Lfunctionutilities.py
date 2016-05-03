@@ -29,6 +29,25 @@ def p2sage(s):
     else:
         return z
 
+def string2number(s):
+    # a start to replace p2sage (used for the paramters in the FE)
+
+    strs = str(s)
+    try:
+        if 'I' in strs:
+            return CDF(strs)
+        elif '/' in strs:
+            return Rational(strs)
+        elif strs=='0.5':  # Temporary fix because 0.5 in db for EC
+            return Rational('1/2')
+        elif '.' in strs:
+            return float(strs)
+        else:
+            return Integer(strs)
+    except:
+        return s
+
+    
 def pair2complex(pair):
     ''' Turns the pair into a complex number.
     '''
