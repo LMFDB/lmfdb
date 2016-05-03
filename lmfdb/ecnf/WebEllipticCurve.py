@@ -215,6 +215,12 @@ class ECNF(object):
                 self.End = "\(\Z[\sqrt{%s}]\)" % (d4)
             else:
                 self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
+            if self.signature == [0,1] and self.abs_disc == -self.cm:
+                self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.U(1)'),'\\mathrm{U}(1)')
+            else:
+                self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.N(U(1))'),'N(\\mathrm{U}(1))')
+        else:
+            self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.SU(2)'),'\\mathrm{SU}(2)')
 
         # Q-curve / Base change
         self.qc = "no"
