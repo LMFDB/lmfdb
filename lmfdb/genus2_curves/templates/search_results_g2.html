@@ -159,7 +159,7 @@
     <td> <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a> </td>
     <td> <a href = "{{info.isog_url(curve)}}"> {{curve.isog_label}} </a> </td>
     <td> \({{curve.equation_formatted}}\) </td>
-    <td align=center> \({{curve.st_group_name}}\) </td>
+    <td align=center> {{curve.st_group_href|safe}} </td>
     <td align=center> {{curve.is_gl2_type_display | safe}} </td>
     <td align=center> {{curve.analytic_rank}} </td>
 </tr>

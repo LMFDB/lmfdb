@@ -14,10 +14,10 @@
 
 <h2> {{ KNOWL('st_group.identity_component', title='Identity Component') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('st_group.st0_name', title='Name') }}:</td><td>${{info['st0_name']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.identity_component', title='Name') }}:</td><td>${{info['st0_name']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.index', title='Index') }}:</td><td>${{info['components']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.real_dimension', title='Real Dimension') }}:</td><td>${{info['real_dimension']}}$</td></tr>
-    <tr><td>{{ KNOWL('st_group.st0_description', title='Description') }}:</td><td>${{info['st0_description']}}$</td></tr>
+    <tr><td>Description:</td><td>${{info['st0_description']}}$</td></tr>
 </table>
 
 {% if info['components'] > 1 %}
