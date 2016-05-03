@@ -78,8 +78,8 @@ class HMFTest(LmfdbTest):
         assert 'heckeEigenvaluesArray := [4, -4,' in L.data
 
     def test_Lfun_link(self):
-        L = self.tc.get('/ModularForm/GL2/TotallyReal/4.4.2048.1/holomorphic/4.4.2048.1-784.2-a')
-        assert 'L/ModularForm/GL2/TotallyReal/4.4.2048.1/holomorphic/4.4.2048.1-784.2-a' in L.data
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a')
+        assert         'L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a' in L.data
 
     def test_browse(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/')
