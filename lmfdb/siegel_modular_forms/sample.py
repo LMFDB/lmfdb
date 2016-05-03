@@ -38,8 +38,8 @@ class DataBase():
         return col.find( *dct)
 
     def __del__( self):
-        self.__client.close()
-
+#        self.__client.close()
+        pass
 
 
 class Sample_class (sage.structure.sage_object.SageObject):
@@ -201,7 +201,7 @@ def export( collection, name):
     doc['Fourier_coefficients'] = dict(( ( fc['det'], fc['data']) for fc in fcs))
 
     evs = DB.find( { 'owner_id': id, 'data_type': 'ev'})
-    print evs
+#    print evs
     doc['eigenvalues'] = dict( ( (ev['index'], ev['data']) for ev in evs))
 
     doc.pop( '_id')

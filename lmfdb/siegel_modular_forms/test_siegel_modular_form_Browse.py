@@ -16,7 +16,7 @@ class HomePageTest(LmfdbTest):
         Check that the links work.
         """
         homepage = self.tc.get("/ModularForm/GSp/Q/").data
-        self.check(homepage, "/ModularForm/GSp/Q/Sp4Z_j/",  'Enter either a')
+        self.check(homepage, "/ModularForm/GSp/Q/Sp4Z_j/",  'Upsilon')
         self.check(homepage, "/ModularForm/GSp/Q/Kp/",  'in level 277, the')
         self.check(homepage, "/ModularForm/GSp/Q/Sp6Z/",  'Miyawaki (1)')
         self.check(homepage, "/ModularForm/GSp/Q/Sp8Z/",  'Other_II (2)')

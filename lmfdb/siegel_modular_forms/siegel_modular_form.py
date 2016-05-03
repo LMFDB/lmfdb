@@ -40,7 +40,7 @@ def rescan_collection():
             try:
                 if f.endswith('.json'):
                     c = f[:-5]
-                    print c
+#                    print c
                 colns[c] = Collection( c, location = static)
             except Exception as e:
                 print str(e)
@@ -168,7 +168,7 @@ def ModularForm_GSp4_Q_top_level( page = None):
         if name:
             a,b = name.split('.')
             f = StringIO.StringIO( sample.export( a, b))
-            print f.getvalue()
+#            print f.getvalue()
             f.seek(0)
             return send_file( f,
                               attachment_filename = name + '.json',
@@ -230,7 +230,7 @@ def prepare_collection_page( col, args, bread):
     dim_args = args.get( 'dim_args')
     if not dim_args:
         dim_args = col.dim_args_default
-    print dim_args
+#    print dim_args
     if dim_args:
         try:
             dim_args = eval( dim_args)
