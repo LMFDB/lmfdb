@@ -907,6 +907,7 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
     pythonL = generateLfunctionFromUrl(
         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
 
+    plotrange = 30
     if hasattr(pythonL,"lfunc_data"):
         if pythonL.lfunc_data is None:
             return ""
@@ -924,7 +925,6 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         # FIXME there could be a filename collission
         #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
         plotStep = .1
-        plotrange = 30
         if pythonL._Ltype == "hilbertmodularform":
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
