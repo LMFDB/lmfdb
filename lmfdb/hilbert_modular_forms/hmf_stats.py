@@ -130,7 +130,8 @@ class HMFstats(object):
             import yaml
             import os.path
             #print("Reading hmf stats yaml file")
-            stats = yaml.load(open(os.path.join(os.getcwd(), "lmfdb/hilbert_modular_forms/hmf_stats.yaml")))
+            _curdir = os.path.dirname(os.path.abspath(__file__))
+            stats = yaml.load(open(os.path.join(_curdir, "hmf_stats.yaml")))
             for d in self._counts['degrees']:
                 statsd = stats[int(d)]
                 for F in statsd['fields']:
