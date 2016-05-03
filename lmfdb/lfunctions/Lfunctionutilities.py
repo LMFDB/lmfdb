@@ -988,5 +988,5 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
     if abs(abs(sign) - 1) > tol:
         logger.critical("Not enough coefficients to compute the sign of the L-function.")
         sign = "Not able to compute."
-        sign = 1000
+        sign = 1 # wrong, but we need some type of error handling here.
     return sign

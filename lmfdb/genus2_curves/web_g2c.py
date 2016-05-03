@@ -553,7 +553,7 @@ class WebG2C(object):
                 return WebG2C(data, endodata)
             else:
                 return "No genus 2 endomorphism data found for label"
-        return "No genus 2 curve data not found for label" # caller must catch this and raise an error
+        return "No genus 2 curve data found for label" # caller must catch this and raise an error
 
     ###########################################################################
     # Main data creation for individual curves

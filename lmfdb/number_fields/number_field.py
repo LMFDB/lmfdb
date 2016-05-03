@@ -333,7 +333,10 @@ def render_field_webpage(args):
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = []
     if nf.can_class_number():
-        info['friends'].append(('L-function', "/L/NumberField/%s" % label))
+        # hide ones that take a lond time to compute on the fly
+        # note that the first degree 4 number field missed the zero of the zeta function
+        if abs(D**n) < 50000000:
+            info['friends'].append(('L-function', "/L/NumberField/%s" % label))
     info['friends'].append(('Galois group', "/GaloisGroup/%dT%d" % (n, t)))
     if 'dirichlet_group' in info:
         info['friends'].append(('Dirichlet group', url_for("characters.dirichlet_group_table",
