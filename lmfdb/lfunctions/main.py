@@ -925,7 +925,8 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         # FIXME there could be a filename collission
         #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
         plotStep = .1
-        if pythonL._Ltype == "hilbertmodularform":
+    #    if pythonL._Ltype == "hilbertmodularform":
+        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurveQ"]:
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
     interpolation = spline(F)
