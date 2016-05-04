@@ -33,7 +33,7 @@
 {% endif %}
 
 {% if info['subsups'] > 1 %}
-<h2> {{ KNOWL('st_group.lattice_neighbors', title='Subgoups and Supergroups') }} </h2>
+<h2> Subgoups and Supergroups </h2>
 <table>
     <tr><td>{{ KNOWL('st_group.subgroups', title='Minimal Supergroups') }}:</td><td>{{info['supgroups']|safe}}</td></tr>
     <tr><td>{{ KNOWL('st_group.supgroups', title='Maximal Subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
