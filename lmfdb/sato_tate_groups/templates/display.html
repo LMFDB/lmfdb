@@ -35,8 +35,8 @@
 {% if info['subsups'] > 1 %}
 <h2> Subgoups and Supergroups </h2>
 <table>
-    <tr><td>{{ KNOWL('st_group.subgroups', title='Minimal Supergroups') }}:</td><td>{{info['supgroups']|safe}}</td></tr>
-    <tr><td>{{ KNOWL('st_group.supgroups', title='Maximal Subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
+    <tr><td>{{ KNOWL('st_group.supgroups', title='Minimal Supergroups') }}:</td><td>{{info['supgroups']|safe}}</td></tr>
+    <tr><td>{{ KNOWL('st_group.subgroups', title='Maximal Subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
 </table>
 {% endif %}
 
