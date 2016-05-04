@@ -11,7 +11,7 @@
     <tr><td>{{ KNOWL('st_group.degree', title='Degree') }}:</td><td>${{info['degree']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.real_dimension', title='$\mathbb{R}$-dimension') }}:</td><td>${{info['real_dimension']}}$</td></tr>
     <tr><td>{{ KNOWL('st_group.components', title='Components') }}:</td><td>${{info['components']}}$</td></tr>
-    <tr><td>{{ KNOWL('st_group.ambient', title='Subgroup of') }}:</td><td>${{info['ambient']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.ambient', title='Contained in') }}:</td><td>${{info['ambient']}}$</td></tr>
 </table>
 
 <h2> {{ KNOWL('st_group.identity_component', title='Identity Component') }} </h2>
@@ -35,10 +35,10 @@
 {% endif %}
 
 {% if info['subsups'] > 1 %}
-<h2> {{ KNOWL('st_group.lattice_neighbors', title='Subgoups and Supergroups') }} </h2>
+<h2> {{ KNOWL('st_group.subsupgroups', title='Subgoups and Supergroups') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('st_group.subgroups', title='Minimal Supergroups') }}:</td><td>{{info['supgroups']|safe}}</td></tr>
-    <tr><td>{{ KNOWL('st_group.supgroups', title='Maximal Subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
+    <tr><td>{{ KNOWL('st_group.subgroups', title='Maximal Subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
+    <tr><td>{{ KNOWL('st_group.supgroups', title='Minimal Supergroups') }}:</td><td>{{info['supgroups']|safe}}</td></tr>
 </table>
 {% endif %}
 

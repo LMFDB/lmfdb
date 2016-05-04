@@ -39,6 +39,17 @@ def stdb():
         the_stdb = getDBConnection().sato_tate_groups
     return the_stdb
 
+# centralize db access here so that we can switch collection names when needed
+# stdb() should not be called elsewhere
+def st_groups():
+    return stdb().st_groups
+
+def st0_groups():
+    return stdb().st0_groups
+
+def small_groups():
+    return stdb().small_groups
+
 ###############################################################################
 # Utility functions
 ###############################################################################
@@ -54,11 +65,10 @@ def string_matrix(m):
         return ''
     return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(m[i]) for i in range(len(m))]) + '\\end{bmatrix}'
 
-def stgroup_link(weight, degree, name):
-    label = '%d.%d.%s'%(weight,degree,name)
-    data = stdb().groups.find_one({'label':label})
+def stgroup_link(label):
+    data = st_groups().find_one({'label':label})
     if not data:
-        return name
+        return label
     return '''<a href=%s>\(%s\)</a>'''% (url_for('.by_label', label=label), data['pretty'])
     
 def stgroup_ambient(weight, degree):
@@ -71,7 +81,7 @@ def trace_moments(moments):
     return ''
     
 def st0_pretty(st0_name):
-    data = stdb().groups0.find_one({'name':st0_name})
+    data = st0_groups().find_one({'name':st0_name})
     if data and 'pretty' in data:
         return data['pretty']
     return st0_name
@@ -108,7 +118,7 @@ def index():
 
 @st_page.route('/random')
 def random():
-    data = random_object_from_collection(stdb().groups)
+    data = random_object_from_collection(st_groups())
     return redirect(url_for('.by_label', label=data['label']))
 
 @st_page.route('/<label>')
@@ -133,7 +143,7 @@ def search_by_label(label):
     if name in ec_groups:
         return render_by_label(ec_groups[name])
     else:
-        data = stdb().groups.find_one({'weight':int(1),'degree':int(4),'name':name})
+        data = st_groups().find_one({'weight':int(1),'degree':int(4),'name':name})
         if not data:
             flash(Markup("Error: <span style='color:black'>%s</span> is not the label or name of a Sato-Tate group currently in the database" % label),"error")
             return redirect(url_for(".index"))
@@ -159,7 +169,7 @@ def search(**args):
         except ValueError as err:
             info['err'] = str(err)
             return render_template('results.html', info=info, title='Sato-Tate groups search input rror', bread=bread, credit=credit_string)
-        cursor = stdb().groups.find(query)
+        cursor = st_groups().find(query)
     info['query'] = dict(query)
     count = parse_count(info, 50)
     start = parse_start(info)
@@ -211,7 +221,7 @@ def search(**args):
 
 def render_by_label(label):
     credit = credit_string
-    data = stdb().groups.find_one({'label': label})
+    data = st_groups().find_one({'label': label})
     info = {}
     if data is None:
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate group currently in the database." % (label)),'error')
@@ -220,13 +230,13 @@ def render_by_label(label):
         info[attr] = data[attr]
     info['ambient'] = stgroup_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
-    st0 = stdb().groups0.find_one({'name':data['identity_component']})
+    st0 = st0_groups().find_one({'name':data['identity_component']})
     if not st0:
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate identity component currently in the database." % (data['identity_component'])),'error')
         return redirect(url_for(".index"))
     info['st0_name']=st0['pretty']
     info['st0_description']=st0['description']
-    G = stdb().small_groups.find_one({'label':data['component_group']})
+    G = small_groups().find_one({'label':data['component_group']})
     if not G:
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate component group currently in the database." % (data['component_group'])),'error')
         return redirect(url_for(".index"))
@@ -235,8 +245,8 @@ def render_by_label(label):
     info['cyclic']=boolean_name(G['cyclic'])
     info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
     info['numgens']=len(info['gens'])
-    info['subgroups'] = comma_separated_list([stgroup_link(data['weight'],data['degree'],name) for name in data['subgroups']])
-    info['supgroups'] = comma_separated_list([stgroup_link(data['weight'],data['degree'],name) for name in data['supgroups']])
+    info['subgroups'] = comma_separated_list([stgroup_link(sub) for sub in data['subgroups']])
+    info['supgroups'] = comma_separated_list([stgroup_link(sup) for sup in data['supgroups']])
     info['subsups'] = len(info['subgroups'])+len(info['supgroups'])
     if data['moments']:
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%n for n in range(len(data['moments'][0])-1)]]
@@ -255,7 +265,7 @@ def render_by_label(label):
         ('Name', '\(%s\)'%info['pretty']),
         ('Weight', '%d'%info['weight']),
         ('Degree', '%d'%info['degree']),
-        ('Subgroup of','\(%s\)'%info['ambient']),
+        ('Contained in','\(%s\)'%info['ambient']),
         ('Identity Component', '\(%s\)'%info['st0_name']),
         ('Real dimension', '%d'%info['real_dimension']),
         ('Component group', '\(%s\)'%info['component_group']),
