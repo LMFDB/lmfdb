@@ -16,7 +16,16 @@ credit_string = 'Andrew Sutherland'
 
 # use a list and a dictionary (for pretty printing) so that we can control the display order (switch to ordered dictionary once everyone is on python 3.1)
 st0_list = ( 'U(1)', 'SU(2)', 'U(1)_2', 'SU(2)_2','U(1)xU(1)', 'U(1)xSU(2)','SU(2)xSU(2)','USp(4)' )
-st0_dict = {} # populated below
+st0_dict = {
+    'U(1)':'\\mathrm{U}(1)',
+    'SU(2)':'\\mathrm{SU}(2)',
+    'U(1)_2':'\\mathrm{U}(1)_2',
+    'SU(2)_2':'\\mathrm{SU}(2)_2',
+    'U(1)xU(1)':'\\mathrm{U}(1)x\\mathrm{U}(1)',
+    'U(1)xSU(2)':'\\mathrm{U}(1)x\\mathrm{SU}(2)',
+    'SU(2)xSU(2)':'\\mathrm{SU}(2)x\\mathrm{SU}(2)',
+    'USp(4)':'\\mathrm{USp}(4)'
+}
 
 ###############################################################################
 # Database connection
@@ -28,8 +37,6 @@ def stdb():
     global the_stdb
     if the_stdb is None:
         the_stdb = getDBConnection().sato_tate_groups
-        for r in the_stdb.st0_groups.find():
-            st0_dict[r['label']] = r['pretty']
     return the_stdb
 
 ###############################################################################
@@ -49,7 +56,7 @@ def string_matrix(m):
 
 def stgroup_link(weight, degree, name):
     label = '%d.%d.%s'%(weight,degree,name)
-    data = stdb().st_groups.find_one({'label':label})
+    data = stdb().groups.find_one({'label':label})
     if not data:
         return name
     return '''<a href=%s>\(%s\)</a>'''% (url_for('.by_label', label=label), data['pretty'])
@@ -62,6 +69,12 @@ def trace_moments(moments):
         if m[0] == 'a_1'or m[0] == 's_1':
             return m[1:10]
     return ''
+    
+def st0_pretty(st0_name):
+    data = stdb().groups0.find_one({'name':st0_name})
+    if data and 'pretty' in data:
+        return data['pretty']
+    return st0_name
     
 ###############################################################################
 # Learnmore display functions
@@ -86,9 +99,8 @@ def index():
         return search(**request.args)
     weight_list= [0,1]
     degree_list=range(1, 5, 1)
-    group_list = [ '1.2.N(U(1))', '1.2.SU(2)', '1.4.G_{3,3}', '1.4.USp(4)' ]
-    group_dict = { '1.2.N(U(1))':'N(\\mathrm{U}(1))', '1.2.SU(2)':'\\mathrm{SU}(2)', '1.4.G_{3,3}':'G_{3,3}', '1.4.USp(4)':'\\mathrm{USp}(4)' }
-    stdb()  # make sure st0_dict has been loaded
+    group_list = [ '1.2.1.2.1a', '1.2.3.1.1a', '1.4.6.1.1a', '1.4.10.1.1a' ]
+    group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))', '1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
     title = 'Sato-Tate groups'
     bread = [('Sato-Tate groups', '.')]
@@ -96,33 +108,43 @@ def index():
 
 @st_page.route('/random')
 def random():
-    data = random_object_from_collection(stdb().st_groups)
+    data = random_object_from_collection(stdb().groups)
     return redirect(url_for('.by_label', label=data['label']))
 
 @st_page.route('/<label>')
 def by_label(label):
-    return render_by_label(label)
-    
+    return search_by_label(label)
+
 ###############################################################################
 # Searching
 ###############################################################################
+
+ec_groups = { 'U(1)':'1.2.1.1.1a', 'N(U(1))':'1.2.1.2.1a', 'SU(2)':'1.2.3.1.1a' }
+
+def search_by_label(label):
+    label_regex = re.compile(r'\d+.\d+.\d+.\d+.\d+[a-z]+$')
+    if label_regex.match(label.strip()):
+        return render_by_label(label.strip())
+    label_regex = re.compile(r'\d+.\d+.\d+.\d+.\d+$')
+    if label_regex.match(label.strip()):
+        return render_by_label(label.strip()+'a')
+    # backward compatibility for old labels coming from ec or g2c
+    name = label.strip().split('.')[-1]
+    if name in ec_groups:
+        return render_by_label(ec_groups[name])
+    else:
+        data = stdb().groups.find_one({'weight':int(1),'degree':int(4),'name':name})
+        if not data:
+            flash(Markup("Error: <span style='color:black'>%s</span> is not the label or name of a Sato-Tate group currently in the database" % label),"error")
+            return redirect(url_for(".index"))
+        else:
+            return render_by_label(data['label'])
 
 def search(**args):
     info = to_dict(args)
     query = {}
     if 'label' in info:
-        label_regex = re.compile(r'\d+.\d+.\S+')
-        if label_regex.match(info['label'].strip()):
-            return render_by_label(info['label'].strip())
-        else:
-            query = { 'name':info['label'] }
-            cursor = stdb().st_groups.find(query)
-            print cursor.count()
-            if cursor.count() == 0:
-                flash(Markup("Error: <span style='color:black'>%s</span> is not the name of a Sato-Tate group currently in the database"%(info["label"])),"error")
-                return redirect(url_for(".index"))
-            if cursor.count() == 1:
-                return render_by_label(cursor.next()['label'])
+        return search_by_label(info['label'])
     info['st0_list'] = st0_list
     info['st0_dict'] = st0_dict
     bread = [('Sato-Tate groups', url_for('.index')),('Search Results', '.')]
@@ -137,7 +159,7 @@ def search(**args):
         except ValueError as err:
             info['err'] = str(err)
             return render_template('results.html', info=info, title='Sato-Tate groups search input rror', bread=bread, credit=credit_string)
-        cursor = stdb().st_groups.find(query)
+        cursor = stdb().groups.find(query)
     info['query'] = dict(query)
     count = parse_count(info, 50)
     start = parse_start(info)
@@ -167,7 +189,7 @@ def search(**args):
         v_clean['pretty'] = v['pretty']
         v_clean['ambient'] = stgroup_ambient(v['weight'],v['degree'])
         v_clean['real_dimension'] = v['real_dimension']
-        v_clean['identity_component'] = st0_dict[v['identity_component']]
+        v_clean['identity_component'] = st0_pretty(v['identity_component'])
         v_clean['components'] = v['components']
         v_clean['trace_zero_density'] = v['trace_zero_density']
         v_clean['trace_moments'] = trace_moments(v['moments'])
@@ -189,7 +211,7 @@ def search(**args):
 
 def render_by_label(label):
     credit = credit_string
-    data = stdb().st_groups.find_one({'label': label})
+    data = stdb().groups.find_one({'label': label})
     info = {}
     if data is None:
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate group currently in the database." % (label)),'error')
@@ -198,7 +220,7 @@ def render_by_label(label):
         info[attr] = data[attr]
     info['ambient'] = stgroup_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
-    st0 = stdb().st0_groups.find_one({'label':data['identity_component']})
+    st0 = stdb().groups0.find_one({'name':data['identity_component']})
     if not st0:
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate identity component currently in the database." % (data['identity_component'])),'error')
         return redirect(url_for(".index"))
@@ -272,5 +294,5 @@ def how_computed_page():
 def labels_page():
     t = 'Labels for Sato-Tate groups'
     bread = [('Sato-Tate groups', url_for('.index')), ('Labels','')]
-    return render_template('single.html', kid='st.label',
+    return render_template('single.html', kid='st_group.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
