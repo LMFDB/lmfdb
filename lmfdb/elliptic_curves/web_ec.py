@@ -340,8 +340,10 @@ class WebEC(object):
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label))]
         if not self.cm:
-            self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
-            ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso))]
+            if N<=300:
+                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso))]
+            if N<=50:
+                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', label=self.lmfdb_iso))]
         if newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
