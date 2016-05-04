@@ -21,9 +21,9 @@ st0_dict = {
     'SU(2)':'\\mathrm{SU}(2)',
     'U(1)_2':'\\mathrm{U}(1)_2',
     'SU(2)_2':'\\mathrm{SU}(2)_2',
-    'U(1)xU(1)':'\\mathrm{U}(1)x\\mathrm{U}(1)',
-    'U(1)xSU(2)':'\\mathrm{U}(1)x\\mathrm{SU}(2)',
-    'SU(2)xSU(2)':'\\mathrm{SU}(2)x\\mathrm{SU}(2)',
+    'U(1)xU(1)':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
+    'U(1)xSU(2)':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
+    'SU(2)xSU(2)':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
     'USp(4)':'\\mathrm{USp}(4)'
 }
 
@@ -252,14 +252,14 @@ def render_by_label(label):
     if 'trace_histogram' in data:
         prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="200" height="114"/>' % data['trace_histogram'])]
     prop2 += [
+        ('Name', '\(%s\)'%info['pretty']),
         ('Weight', '%d'%info['weight']),
         ('Degree', '%d'%info['degree']),
-        ('Name', '\(%s\)'%info['pretty']),
         ('Subgroup of','\(%s\)'%info['ambient']),
-        ('Real dimension', '%d'%info['real_dimension']),
         ('Identity Component', '\(%s\)'%info['st0_name']),
-        ('Components', '%d'%info['components']),
+        ('Real dimension', '%d'%info['real_dimension']),
         ('Component group', '\(%s\)'%info['component_group']),
+        ('Components', '%d'%info['components']),
     ]
     bread = [
         ('Sato-Tate groups', url_for('.index')),
