@@ -341,6 +341,9 @@ def elliptic_curve_search(**args):
     
     if 'download' in info and info['download'] != 0:
         return download_search(info)
+
+    if not 'query' in info:
+        info['query'] = {}
     
     bread = [('Elliptic Curves', url_for(".index")),
              ('Search Results', '.')]
@@ -351,8 +354,6 @@ def elliptic_curve_search(**args):
         try:
             nf, cond_label, iso_label, number = split_full_label(label.strip())
         except ValueError:
-            if not 'query' in info:
-                info['query'] = {}
             info['err'] = ''
             return search_input_error(info, bread)
 
