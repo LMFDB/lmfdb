@@ -56,7 +56,7 @@ def small_groups():
 
 def boolean_name(value):
     return '\\mathrm{True}' if value else '\\mathrm{False}'
-    
+
 def comma_separated_list(list):
     return ', '.join(list)
 
@@ -65,27 +65,33 @@ def string_matrix(m):
         return ''
     return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(m[i]) for i in range(len(m))]) + '\\end{bmatrix}'
 
-def stgroup_link(label):
+def st_link(label):
     data = st_groups().find_one({'label':label})
     if not data:
         return label
     return '''<a href=%s>\(%s\)</a>'''% (url_for('.by_label', label=label), data['pretty'])
-    
-def stgroup_ambient(weight, degree):
+
+def st_ambient(weight, degree):
     return '\\mathrm{USp}(%d)'%degree if weight%2 == 1 else '\\mathrm{O}(%d)'%degree
-    
+
 def trace_moments(moments):
     for m in moments:
         if m[0] == 'a_1'or m[0] == 's_1':
             return m[1:10]
     return ''
-    
+
 def st0_pretty(st0_name):
     data = st0_groups().find_one({'name':st0_name})
     if data and 'pretty' in data:
         return data['pretty']
     return st0_name
-    
+
+def sg_pretty(sg_label):
+    data = small_groups().find_one({'label':sg_label})
+    if data and 'pretty' in data:
+        return data['pretty']
+    return sg_label
+
 ###############################################################################
 # Learnmore display functions
 ###############################################################################
@@ -178,7 +184,7 @@ def search(**args):
         start -= (1 + (start - nres) / count) * count
     if (start < 0):
         start = 0
-    res = cursor.sort([('weight', ASCENDING), ('degree', ASCENDING),  ('identity_component', ASCENDING),  ('name', ASCENDING)]).skip(start).limit(count)
+    res = cursor.sort([('degree', ASCENDING), ('real_dimension', ASCENDING), ('identity_component', ASCENDING), ('name', ASCENDING)]).skip(start).limit(count)
     nres = res.count()
 
     if nres == 1:
@@ -195,12 +201,12 @@ def search(**args):
         v_clean['label'] = v['label']
         v_clean['weight'] = v['weight']
         v_clean['degree'] = v['degree']
-        v_clean['name'] = v['name']
-        v_clean['pretty'] = v['pretty']
-        v_clean['ambient'] = stgroup_ambient(v['weight'],v['degree'])
         v_clean['real_dimension'] = v['real_dimension']
         v_clean['identity_component'] = st0_pretty(v['identity_component'])
+        v_clean['name'] = v['name']
+        v_clean['pretty'] = v['pretty']
         v_clean['components'] = v['components']
+        v_clean['component_group'] = sg_pretty(v['component_group'])
         v_clean['trace_zero_density'] = v['trace_zero_density']
         v_clean['trace_moments'] = trace_moments(v['moments'])
         res_clean.append(v_clean)
@@ -228,7 +234,7 @@ def render_by_label(label):
         return redirect(url_for(".index"))
     for attr in ['label','weight','degree','pretty','real_dimension','components']:
         info[attr] = data[attr]
-    info['ambient'] = stgroup_ambient(info['weight'],info['degree'])
+    info['ambient'] = st_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
     st0 = st0_groups().find_one({'name':data['identity_component']})
     if not st0:
@@ -245,8 +251,8 @@ def render_by_label(label):
     info['cyclic']=boolean_name(G['cyclic'])
     info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
     info['numgens']=len(info['gens'])
-    info['subgroups'] = comma_separated_list([stgroup_link(sub) for sub in data['subgroups']])
-    info['supgroups'] = comma_separated_list([stgroup_link(sup) for sup in data['supgroups']])
+    info['subgroups'] = comma_separated_list([st_link(sub) for sub in data['subgroups']])
+    info['supgroups'] = comma_separated_list([st_link(sup) for sup in data['supgroups']])
     info['subsups'] = len(info['subgroups'])+len(info['supgroups'])
     if data['moments']:
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%n for n in range(len(data['moments'][0])-1)]]
@@ -260,16 +266,16 @@ def render_by_label(label):
         info['probabilities'] = []
     prop2 = [('Label', '%s'%info['label'])]
     if 'trace_histogram' in data:
-        prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="200" height="114"/>' % data['trace_histogram'])]
+        prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % data['trace_histogram'])]
     prop2 += [
         ('Name', '\(%s\)'%info['pretty']),
         ('Weight', '%d'%info['weight']),
         ('Degree', '%d'%info['degree']),
+        ('Real dimension', '%d'%info['real_dimension']),
+        ('Components', '%d'%info['components']),
         ('Contained in','\(%s\)'%info['ambient']),
         ('Identity Component', '\(%s\)'%info['st0_name']),
-        ('Real dimension', '%d'%info['real_dimension']),
         ('Component group', '\(%s\)'%info['component_group']),
-        ('Components', '%d'%info['components']),
     ]
     bread = [
         ('Sato-Tate groups', url_for('.index')),

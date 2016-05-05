@@ -57,12 +57,12 @@
     <th>{{ KNOWL('st_group.label', title='label') }}</th>
     <th>{{ KNOWL('st_group.weight', title='wt') }}</th>
     <th>{{ KNOWL('st_group.degree', title='deg') }}</th>
-    <th>{{ KNOWL('st_group.name', title='name') }}</th>
-    <th>{{ KNOWL('st_group.ambient', title='in') }}</th>
     <th>{{ KNOWL('st_group.real_dimension', title='\(\mathrm{dim}_{\mathbb{R}}\)') }}</th>
-    <th>{{ KNOWL('st_group.identity_component', title='\(\mathrm{ST}^0\)') }}</th>
-    <th>{{ KNOWL('st_group.components', title='c') }}</th>
-    <th>{{ KNOWL('st_group.trace_zero_density', title='\(\mathrm{P}[t=0]\)') }}</th>
+    <th>{{ KNOWL('st_group.identity_component', title='\(\mathrm{G}^0\)') }}</th>
+    <th>{{ KNOWL('st_group.name', title='name') }}</th>
+    <th>{{ KNOWL('st_group.component_group', title='\(\mathrm{G}/\mathrm{G}^0\)') }}</th>
+    <th>{{ KNOWL('st_group.components', title='\(\#\mathrm{G}/\mathrm{G^0}\)') }}</th>
+    <th>{{ KNOWL('st_group.trace_zero_density', title='\(\mathrm{P}[t\!=\!0]\)') }}</th>
     <th colspan="11">{{ KNOWL('st_group.trace_moments', title='trace moments') }} \(M_0\ \ldots\ M_8\)</th>
 </tr>
 {% for group in info.stgroups: %}
@@ -70,10 +70,10 @@
     <td> <a href = "{{info.stgroup_url(group)}}"> {{group.label}} </a> </td>
     <td align=right> {{group.weight}} </td>
     <td align=right> {{group.degree}} </td>
-    <td> ${{group.pretty}}$ </td>
-    <td> ${{group.ambient}}$ </td>
     <td align=right> {{group.real_dimension}} </td>
     <td> ${{group.identity_component}}$ </td>
+    <td> ${{group.pretty}}$ </td>
+    <td> ${{group.component_group}}$ </td>
     <td align=right> {{group.components}} </td>
     <td align=center> {{group.trace_zero_density}} </td>
     {% for m in group.trace_moments %}
