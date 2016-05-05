@@ -11,14 +11,15 @@ DSC = pymongo.DESCENDING
 def get_knowls():
     _C = getDBConnection()
     knowls = _C.knowledge.knowls
-    try:
-        knowls.ensure_index('authors')
-        # _keywords is used for the full text search
-        knowls.ensure_index('title')
-        knowls.ensure_index('cat')
-        knowls.ensure_index('_keywords')
-    except pymongo.errors.OperationFailure:
-        pass
+# See issue #1169
+#    try:
+#        knowls.ensure_index('authors')
+#        # _keywords is used for the full text search
+#        knowls.ensure_index('title')
+#        knowls.ensure_index('cat')
+#        knowls.ensure_index('_keywords')
+#    except pymongo.errors.OperationFailure:
+#        pass
     return knowls
 
 
@@ -45,7 +46,8 @@ def save_history(knowl, who):
     TODO also calculate a diff with python's difflib and store it here.
     """
     history = getDBConnection().knowledge.history
-    history.ensure_index("time")
+#   See issue #1169
+#   history.ensure_index("time")
     h_item = {'_id': knowl.id,
               'title': knowl.title,
               'time': datetime.utcnow(),
@@ -83,7 +85,8 @@ def set_locked(knowl, who):
     when a knowl is edited, a lock is created. who is the user id.
     """
     history = getDBConnection().knowledge.history
-    history.ensure_index("time")
+# See issue #1169
+#   history.ensure_index("time")
     lock_item = {'_id': knowl.id,
                  'title': knowl.title,
                  'time': datetime.utcnow(),
