@@ -32,16 +32,23 @@ def database_query(db_name, coll_name):
     if db_name not in C.database_names():
         return "No such database."
     db = getattr(C, db_name)
-    if coll_name not in db.collection_names():
-        return "No such collection."
+    
+    try:
+        collection = getattr(db, coll_name)
+    except Expecptio as e:
+        return "No such collection. Error: %s" % e
+# see issue #1170
+#    if coll_name not in db.collection_names():
+#        return "No such collection."
 
     args = to_dict(request.args)
     info = dict(args)
     collection = getattr(db, coll_name)
-    try:
-        collection.ensure_index('metadata', background=True)
-    except pymongo.errors.OperationFailure:
-        pass
+# See issue #1169    
+#    try:
+#        collection.ensure_index('metadata', background=True)
+#    except pymongo.errors.OperationFailure:
+#        pass
     metadata = collection.find_one({'metadata': 'metadata'})
     if metadata:
         del metadata['_id']
