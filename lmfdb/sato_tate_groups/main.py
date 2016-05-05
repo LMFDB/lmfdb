@@ -266,16 +266,16 @@ def render_by_label(label):
         info['probabilities'] = []
     prop2 = [('Label', '%s'%info['label'])]
     if 'trace_histogram' in data:
-        prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="200" height="114"/>' % data['trace_histogram'])]
+        prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % data['trace_histogram'])]
     prop2 += [
         ('Name', '\(%s\)'%info['pretty']),
         ('Weight', '%d'%info['weight']),
         ('Degree', '%d'%info['degree']),
+        ('Real dimension', '%d'%info['real_dimension']),
+        ('Components', '%d'%info['components']),
         ('Contained in','\(%s\)'%info['ambient']),
         ('Identity Component', '\(%s\)'%info['st0_name']),
-        ('Real dimension', '%d'%info['real_dimension']),
         ('Component group', '\(%s\)'%info['component_group']),
-        ('Components', '%d'%info['components']),
     ]
     bread = [
         ('Sato-Tate groups', url_for('.index')),
