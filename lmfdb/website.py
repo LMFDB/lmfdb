@@ -315,6 +315,13 @@ def get_configuration():
                         except ValueError:
                             #it wasn't a number...
                             pass;
+                elif key == "replicaset":
+                    #if the string is empty
+                    if not value:
+                        #enforcing None to be the default if
+                        mongo_client_options["replicaset"] = None
+                    else: 
+                        mongo_client_options["replicaset"] = value
                 else:
                     mongo_client_options[key] = value        
 
