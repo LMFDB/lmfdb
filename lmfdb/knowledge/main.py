@@ -286,12 +286,20 @@ def edit(ID):
     from knowl import is_locked, set_locked
     lock = False
     if request.args.get("lock", "") != 'ignore':
-        lock = is_locked(knowl.id)
+        try:
+            lock = is_locked(knowl.id)
+        except:
+            logger.info("Oops, failed to get the lock")
+            pass;
     # lock, if either lock is false or (lock is active), current user is editing again
     author_edits = lock and lock['who'] == current_user.get_id()
     logger.debug(author_edits)
     if not lock or author_edits:
-        set_locked(knowl, current_user.get_id())
+        try:
+            set_locked(knowl, current_user.get_id())
+        except:
+            logger.info("Oops, failed to set the lock")
+            pass;
     if author_edits:
         lock = False
 

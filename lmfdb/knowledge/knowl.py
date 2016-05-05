@@ -67,14 +67,17 @@ def get_history(limit=25):
 def is_locked(knowlid, delta_min=10):
     """
     returns a lock (as True), if there has been a lock in the last @delta_min minutes; else False.
-    attention, it discardes all locks prior to @delta_min!
+    attention, it discards all locks prior to @delta_min!
     """
     from datetime import datetime, timedelta
     now = datetime.utcnow()
     tdelta = timedelta(minutes=delta_min)
     time = now - tdelta
     history = getDBConnection().knowledge.history
+    #try:
     history.remove({'state': 'locked', 'time': {'$lt': time}})
+    #except:
+    #    return None 
     # search for both: either locked OR has been saved in the last 10 min
     lock = history.find_one({'_id': knowlid, 'time': {'$gte': time}})
     return lock or False
