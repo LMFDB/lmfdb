@@ -1,5 +1,5 @@
 from plot_dom import *
-
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 
 import lmfdb
 import gridfs
