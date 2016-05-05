@@ -55,16 +55,16 @@ def makeDBConnection(port, **kwargs):
             _C = MongoReplicaSetClient(port = port,  **kwargs)
         mongo_info = _C.server_info()
         logging.info("mongodb version: %s" % mongo_info["version"])
-        logging.info("_C = %s", _C)
+        logging.info("_C = %s", (_C,) )
         #the reads are not necessarily from host/address
         #those depend on the cursor, and can be checked with cursor.conn_id or cursor.address 
         if pymongo.version_tuple[0] >= 3:
-            logging.info("_C.address = %s" % _C.address)
+            logging.info("_C.address = %s" % (_C.address,) )
         else:
-            logging.info("_C.host = %s" % _C.host)
+            logging.info("_C.host = %s" % (_C.host,) )
 
-        logging.info("_C.nodes = %s" %  _C.nodes)
-        logging.info("_C.read_preference = %s" %  _C.read_preference)
+        logging.info("_C.nodes = %s" %  (_C.nodes,) )
+        logging.info("_C.read_preference = %s" %  (_C.read_preference,) )
 
 
 
