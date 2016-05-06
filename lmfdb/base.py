@@ -140,7 +140,7 @@ def _init(port, **kwargs):
         list(cursor)
         logging.info("MongoClient conection is reading from: %s" % (cursor.address,));
     elif kwargs.get("replicaset",None) is not None:
-        cursor = C.test.test.find()
+        cursor = C.test.test.find().limit(-1)
         list(cursor)
         logging.info("MongoReplicaSetClient connection is reading from: %s" % (cursor.conn_id,));
     else:
