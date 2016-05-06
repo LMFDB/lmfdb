@@ -9,8 +9,8 @@
       url_for: "introduction"
     - title: Features
       url_for: "introduction_features"
-    - title: Map
-      url_for: "bigpicture"
+    - title: Universe
+      url_for: "universe"
     - title: Future Plans
       url_for: "roadmap"
 

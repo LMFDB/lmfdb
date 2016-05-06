@@ -35,11 +35,11 @@ links:
   - [ 0,0 ]
 ---
 title: Explore and Learn
-image: map
+image: smalluniverse
 content: <p>The LMFDB makes visible the connections predicted by the Langlands program.
-    Knowls offer background information when you need it.</p><p><a href="/bigpicture">LMFDB map</a></p>
+    Knowls offer background information when you need it.</p><p><a href="/universe">LMFDB universe</a></p>
 # content: <p>The LMFDB makes visible the connections predicted by the Langlands program.
-#     Knowls offer background information when you need it.</p><p><a href="/bigpicture">LMFDB map</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class="knowl" href="/knowledge/">Knowledge</a></p>
+#     Knowls offer background information when you need it.</p><p><a href="/universe">LMFDB universe</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class="knowl" href="/knowledge/">Knowledge</a></p>
 control: 0
 links:
   - [ 0,0 ]
