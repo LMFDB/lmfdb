@@ -22,7 +22,7 @@ def find_one( dct, collection = 'collections'):
     db = client.siegel_modular_forms
     col = db[collection]
     doc = col.find_one( dct)
-    client.close()
+    #client.close()
     return doc
 
 def find_all( dct, collection = 'samples'):
@@ -35,7 +35,7 @@ def find_all( dct, collection = 'samples'):
     db = client.siegel_modular_forms
     col = db[collection]
     docs = col.find( dct)
-    client.close()
+    #client.close()
     return docs
 
 
@@ -51,7 +51,7 @@ class Collection (sage.structure.sage_object.SageObject):
             # we get the data describing the collection 'name' from a json file
             fip = urllib.urlopen( location + '/' + name + '.json')
             doc = json.load( fip)
-            fip.close()
+            #fip.close()
         else:
             # otherwise we retrieve the data from the db  
             doc = find_one( { 'name': name})

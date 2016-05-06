@@ -28,7 +28,7 @@ def fetch( dct):
     db = client.siegel_modular_forms
     hps = db.dimensions
     item = hps.find_one( dct)
-    client.close()
+#    client.close()
     return item
 
 
