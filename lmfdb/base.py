@@ -133,6 +133,18 @@ def _init(port, **kwargs):
     except pymongo.errors.PyMongoError as err:
         logging.error("authentication: FAILED -- aborting")
         raise err
+    #read something from the db    
+    #and check from where was it read
+    if pymongo.version_tuple[0] >= 3:
+        cursor = C.test.test.find().limit(-1)
+        list(cursor)
+        logging.info("MongoClient conection is reading from: %s" % (cursor.address,));
+    elif kwargs.get("replicaset",None) is not None:
+        cursor = C.test.test.find()
+        list(cursor)
+        logging.info("MongoReplicaSetClient connection is reading from: %s" % (cursor.conn_id,));
+    else:
+        logging.info("MongoClient conection is reading from: %s" % (C.host,));
 
 app = Flask(__name__)
 
