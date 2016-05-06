@@ -276,6 +276,7 @@ def test():
 @knowledge_page.route("/edit/<ID>")
 @login_required
 def edit(ID):
+    from pymongo.errors import OperationFailure 
     if not allowed_knowl_id.match(ID):
         flask.flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
@@ -286,12 +287,20 @@ def edit(ID):
     from knowl import is_locked, set_locked
     lock = False
     if request.args.get("lock", "") != 'ignore':
-        lock = is_locked(knowl.id)
+        try:
+            lock = is_locked(knowl.id)
+        except OperationFailure as e:
+            logger.info("Oops, failed to get the lock. Error: %s" %e)
+            pass;
     # lock, if either lock is false or (lock is active), current user is editing again
     author_edits = lock and lock['who'] == current_user.get_id()
     logger.debug(author_edits)
     if not lock or author_edits:
-        set_locked(knowl, current_user.get_id())
+        try:
+            set_locked(knowl, current_user.get_id())
+        except OperationFailure as e:
+            logger.info("Oops, failed to set the lock. Error: %s" %e)
+            pass;
     if author_edits:
         lock = False
 
