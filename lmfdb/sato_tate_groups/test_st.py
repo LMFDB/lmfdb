@@ -41,7 +41,7 @@ class SatoTateGroupTest(LmfdbTest):
         L = self.tc.get('/SatoTateGroup/1.4.1.48.48a')
         assert '33' in L.data
 
-    def test_acompleteness(self):
+    def test_completeness(self):
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
         #assert 'of 3' in L.data
         L = self.tc.get('/SatoTateGroup/U(1)')
@@ -60,4 +60,9 @@ class SatoTateGroupTest(LmfdbTest):
         assert '1.4.3.4.1a' in L.data
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=19/24')
         assert '1.4.1.24.14a' in L.data
+        
+    def test_favourites(self):
+        for label in [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]:
+            L = self.tc.get('/SatoTateGroup/'+label)
+            assert "Moment Statistics" in L.data
 

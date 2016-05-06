@@ -115,8 +115,8 @@ def index():
         return search(**request.args)
     weight_list= [1]
     degree_list=range(1, 5, 1)
-    group_list = [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.3.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]
-    group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.3.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
+    group_list = [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]
+    group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.4.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
     title = 'Sato-Tate groups'
     bread = [('Sato-Tate groups', '.')]
