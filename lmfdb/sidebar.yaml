@@ -237,7 +237,6 @@
       colspan: onecolumn
     - title: Sato-Tate groups
       url_for: "st.index"
-      status: beta
       colspan: onecolumn
     - title: Lattices
       url_for: "lattice.lattice_render_webpage"
