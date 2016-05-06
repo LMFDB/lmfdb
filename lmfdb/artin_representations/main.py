@@ -207,7 +207,20 @@ def render_artin_representation_webpage(label):
 
     # once the L-functions are in the database, the link can always be shown
     #if the_rep.dimension() <= 6:
-    if int(the_rep.conductor())**the_rep.dimension() <= 50000000:
+    if the_rep.dimension() == 1:
+        # Zeta is loaded differently
+        if cc.modulus == 1 and cc.number == 1:
+            friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
+        else:
+            lfuncdb = base.getDBConnection().Lfunctions.instances
+            # looking for Lhash dirichlet_L_modulus.number
+            mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
+            lres = lfuncdb.find_one({'Lhash': mylhash})
+            if lres is not None:
+                friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
+
+    # Dimension > 1
+    elif int(the_rep.conductor())**the_rep.dimension() <= 50000000:
         friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                           label=the_rep.label())))
     info={}
