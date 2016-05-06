@@ -93,7 +93,6 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
-        assert 'Character group' in W.data
         assert  '/NumberField/1.1.1.1' in W.data
      
     #@unittest2.skip("wait for new DirichletConrey")
@@ -104,7 +103,6 @@ class DirichletCharactersTest(LmfdbTest):
             This test also makes sure the code scales a little bit.
         """
         W = self.tc.get('/Character/Dirichlet/40487/5')
-        assert 'Character group' in W.data
         assert '40486' in W.data
         assert '12409' in W.data, "log on generator"
 
@@ -129,7 +127,6 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_dirichletchar(self):
         W = self.tc.get('/Character/Dirichlet/531/40')
-        assert 'Character group' in W.data
         assert '/Character/Dirichlet/531/391' in W.data
         assert '(356,235)' in W.data, "generators"
         assert 'Kloosterman sum' in W.data
