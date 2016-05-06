@@ -206,7 +206,8 @@ def render_artin_representation_webpage(label):
                 friends.append(("Determinant character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
 
     # once the L-functions are in the database, the link can always be shown
-    if the_rep.dimension() <= 6:
+    #if the_rep.dimension() <= 6:
+    if int(the_rep.conductor())**the_rep.dimension() <= 50000000:
         friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                           label=the_rep.label())))
     info={}
