@@ -102,7 +102,7 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
         <td align="left">{{ f.coefficient_field.relative_polynomial_latex('x') }}</td>
         {% else %}
         <td align="left">$\Q(\alpha_{ {{loop.index}} })$</td>
-        <td align="left">{{ f.coefficient_field.relative_polynomial_latex('x') if f.coefficient_field.degree() > 1 else '\(x\)'}}</td>
+        <td align="left">{{ f.coefficient_field.relative_polynomial_latex('x') }}</td>
         {% endif %}
       </tr>
         {% endif %}
