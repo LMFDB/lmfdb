@@ -859,7 +859,8 @@ class WebNumberField(WebDict):
             if hasattr(self._value,'absolute_polynomial'):
                 setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
             elif self._value.absolute_degree()==1:
-                setattr(self._value, "lmfdb_pretty", "1.1.1.1")
+                setattr(self._value, "lmfdb_pretty", field_pretty('1.1.1.1'))
+                setattr(self._value, "lmfdb_label", '1.1.1.1')
             else:
                 emf_logger.critical("could not set lmfdb_pretty for the label")
 
