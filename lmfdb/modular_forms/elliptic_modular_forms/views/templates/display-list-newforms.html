@@ -34,9 +34,14 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
              {% if vars.update({'cyclotomicorder': f.coefficient_field.variable_name()[4:]}) %} {% endif %}
          {% endif %}
        <tr>
+	 {% if not f.get_db_record() %}
+	   <td valign="top">{{ f.hecke_orbit_label }}</td>
+	   <td colspan="3"> This Hecke orbit is unfortunately not available. </td>
+	   {% else %}
       <td valign="top"><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
       <td align="center" valign="top">
-        {{ f.dimension }}</td>
+	{{ f.dimension }}
+        </td>
 	<td align="center" valign="top">
         {% if f.coefficient_field.lmfdb_label == '1.1.1.1'%}
 <a title = "{{ f.coefficient_field.lmfdb_pretty }}[nf.field.data]" knowl= "nf.field.data" kwargs="label={{ f.coefficient_field.lmfdb_label }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
@@ -48,7 +53,8 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
 	    {% endif %}
 	 {% endif %}
         {% set varname = '\\alpha_{%s}' % loop.index %}
-        <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
+	      <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
+	{% endif %}
       </tr>
     {% endfor %}
   </tbody>
