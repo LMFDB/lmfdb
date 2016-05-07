@@ -220,7 +220,7 @@ def render_artin_representation_webpage(label):
                 friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
 
     # Dimension > 1
-    elif int(the_rep.conductor())**the_rep.dimension() <= 50000000:
+    elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
         friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                           label=the_rep.label())))
     info={}
