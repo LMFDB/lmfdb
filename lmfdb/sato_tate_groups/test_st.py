@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-from lmfdb.base import LmfdbTest
+from lmfdb.base import LmfdbTest, getDBConnection
 import math
 import unittest2
 
@@ -42,16 +42,30 @@ class SatoTateGroupTest(LmfdbTest):
         assert '33' in L.data
 
     def test_completeness(self):
+        print ""
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
-        #assert 'of 3' in L.data
+        assert '3 matches' in L.data
         L = self.tc.get('/SatoTateGroup/U(1)')
         assert '1.2.1.1.1a' in L.data
         L = self.tc.get('/SatoTateGroup/N(U(1))')
         assert '1.2.1.2.1a' in L.data
         L = self.tc.get('/SatoTateGroup/SU(2)')
         assert '1.2.3.1.1a' in L.data
+        stdb = getDBConnection().sato_tate_groups.st_groups
+        data = stdb.find({'weight':int(1),'degree':int(2)})
+        assert data.count() == 3
+        for r in data:
+            print 'Checking Sato-Tate group ' + r['label']
+            L = self.tc.get('/SatoTateGroup/?label='+r['label'])
+            assert r['label'] in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4')
         assert 'of 52' in L.data
+        data = stdb.find({'weight':int(1),'degree':int(4)})
+        assert data.count() == 52
+        for r in data:
+            print 'Checking Sato-Tate group ' + r['label']
+            L = self.tc.get('/SatoTateGroup/?label='+r['label'])
+            assert r['label'] in L.data and 'Moment Statistics' in L.data
         
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
