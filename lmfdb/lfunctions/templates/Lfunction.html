@@ -200,13 +200,23 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
   {% if sv_edge_arithmetic %}
         <tr class="arithmetic">
         <td> ${{ sv_edge_arithmetic[0] }}$ </td>
+        {% if sv_edge_arithmetic[1] == 'not computed' %}
+        <td>&nbsp;</td>
+        <td> not available </td>
+        {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
         <td> ${{ sv_edge_arithmetic[1] }}$ </td>
+        {% endif %}
         </tr>
         <tr class="analytic nodisplay">
         <td> ${{ sv_edge_analytic[0] }}$ </td>
+        {% if sv_edge_analytic[1] == 'not computed' %}
+        <td>&nbsp;</td>
+        <td> not available </td>
+        {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
         <td> ${{ sv_edge_analytic[1] }}$ </td>
+        {% endif %}
         </tr>
   {% endif %}
 
