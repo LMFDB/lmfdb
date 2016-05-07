@@ -22,7 +22,7 @@ class UsersTestCase(LmfdbTest):
         # ))
 
     def tearDown(self):
-        self.users.remove("$test_user")
+        pass # self.users.remove("$test_user")
 
     ### helpers
     def get_me(self, id='$test_user'):

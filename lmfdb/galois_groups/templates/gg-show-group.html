@@ -10,6 +10,8 @@ table.reptable td, table.reptable th {
 }
 </style>
 
+{% set KNOWL_ID = "gg.%s"|format(info['label_raw']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
   <p><h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
     <table>
@@ -121,5 +123,7 @@ list of indecomposable integral representations:
     </table>
   {% endif %}
 {% endif %}
+
+<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}

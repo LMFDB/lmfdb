@@ -19,17 +19,12 @@ from sage.rings.arith import primes
 
 from lmfdb.transitive_group import *
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, comma, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, comma, random_object_from_collection
+from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of this data'
 
-# Remove whitespace first in all cases
-# Matches a list of integers and ranges
-LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
-LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$')
-PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
-IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
 FIELD_LABEL_RE = re.compile(r'^\d+\.\d+\.(\d+(e\d+)?(t\d+(e\d+)?)*)\.\d+$')
 
 nfields = None
@@ -81,7 +76,7 @@ def ctx_number_fields():
 
 def global_numberfield_summary():
     init_nf_count()
-    return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('.render_class_group_data'))
+    return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('number_fields.render_class_group_data'))
 
 def group_display_shortC(C):
     def gds(nt):
@@ -102,61 +97,6 @@ def poly_to_field_label(pol):
     #if one:
     #    return one['label']
     #return None
-
-
-def parse_field_string(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
-    if F == 'Q':
-        return '1.1.1.1'
-    if F == 'Qi':
-        return '2.0.4.1'
-    # Change unicode dash with minus sign
-    F = F.replace(u'\u2212', '-')
-    # remove non-ascii characters from F
-    F = F.decode('utf8').encode('ascii', 'ignore')
-    fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
-    if len(F) == 0:
-        return "Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial."
-    if F[0] == 'Q':
-        if F[1:5] in ['sqrt', 'root']:
-            try:
-                d = ZZ(str(F[5:])).squarefree_part()
-            except ValueError:
-                return fail_string
-            if d % 4 in [2, 3]:
-                D = 4 * d
-            else:
-                D = d
-            absD = D.abs()
-            s = 0 if D < 0 else 2
-            return '2.%s.%s.1' % (s, str(absD))
-        if F[1:5] == 'zeta':
-            try:
-                d = ZZ(str(F[5:]))
-            except ValueError:
-                return fail_string
-            if d < 1:
-                return fail_string
-            if d % 4 == 2:
-                d /= 2  # Q(zeta_6)=Q(zeta_3), etc)
-            if d == 1:
-                return '1.1.1.1'
-            deg = euler_phi(d)
-            if deg > 23:
-                return '%s is not ' % F
-            adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
-            return '%s.0.%s.1' % (deg, adisc)
-        return fail_string
-    # check if a polynomial was entered
-    F = F.replace('X', 'x')
-    if 'x' in F:
-        F1 = F.replace('^', '**')
-        # print F
-        F1 = poly_to_field_label(F1)
-        if F1:
-            return F1
-        return str(F + ' is not ')
-    return F
-
 
 @app.route("/NF")
 def NF_redirect():
@@ -274,11 +214,7 @@ def number_field_render_webpage():
 
 @nf_page.route("/random")
 def random_nfglobal():
-    from sage.misc.prandom import randint
-    C = getDBConnection()
-    init_nf_count()
-    n = randint(0,nfields-1)
-    label = C.numberfields.fields.find()[n]['label']
+    label = random_object_from_collection( getDBConnection().numberfields.fields )['label']
     #This version leaves the word 'random' in the URL:
     #return render_field_webpage({'label': label})
     #This version uses the number field's own URL:
@@ -314,17 +250,13 @@ def render_field_webpage(args):
     info = {}
     bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
 
-    if 'label' in args:
-        label = clean_input(args['label'])
-        nf = WebNumberField(label)
-        data = {}
+    # This function should not be called unless label is set.
+    label = clean_input(args['label'])
+    nf = WebNumberField(label)
+    data = {}
     if nf.is_null():
         bread.append(('Search results', ' '))
-        label2 = re.sub(r'[<>]', '', args['label'])
-        if 'You need to enter a field' in label2:
-            info['err'] = label2
-        else:
-            info['err'] = 'No such field: %s in the database' % label2
+        info['err'] = 'There is no field with label %s in the database' % label2
         info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
         return search_input_error(info, bread)
 
@@ -401,7 +333,10 @@ def render_field_webpage(args):
     info['downloads'] = [('worksheet', '/')]
     info['friends'] = []
     if nf.can_class_number():
-        info['friends'].append(('L-function', "/L/NumberField/%s" % label))
+        # hide ones that take a lond time to compute on the fly
+        # note that the first degree 4 number field missed the zero of the zeta function
+        if abs(D**n) < 50000000:
+            info['friends'].append(('L-function', "/L/NumberField/%s" % label))
     info['friends'].append(('Galois group', "/GaloisGroup/%dT%d" % (n, t)))
     if 'dirichlet_group' in info:
         info['friends'].append(('Dirichlet group', url_for("characters.dirichlet_group_table",
@@ -467,45 +402,13 @@ def format_coeffs(coeffs):
 #    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
 #    return render_template("number_field_all.html", info = info)
 
-def split_label(label):
-    """
-      Parses number field labels. Allows for 3.1.2e2_11.1
-    """
-    tmp = label.split(".")
-    tmp[2] = parse_product(tmp[2])
-    return ".".join(tmp)
-
-
-def parse_product(symbol):
-    tmp = symbol.split("_")
-    return str(prod(parse_power(pair) for pair in tmp))
-
-
-def parse_power(pair):
-    try:
-        tmp = pair.split("e")
-        return ZZ(tmp[0]) ** ZZ(tmp[1])
-    except:
-        return ZZ(pair)
-
-
 @nf_page.route("/<label>")
 def by_label(label):
-    if FIELD_LABEL_RE.match(label):
-        return render_field_webpage({'label': split_label(label)})
-    parsed_label = parse_field_string(label)
-    # This will cause a reasonable error page to be displayed if not valid
-    if FIELD_LABEL_RE.match(parsed_label):
-        return render_field_webpage({'label': split_label(parsed_label)})
-    else:
-        return render_field_webpage({'label': parsed_label})
-
-def parse_list(L):
-    L = str(L)
-    if re.search("\\d", L):
-        return [int(a) for a in L[1:-1].split(',')]
-    return []
-    # return eval(str(L)) works but using eval() is insecure
+    try:
+        return render_field_webpage({'label': nf_string_to_label(label)})
+    except ValueError:
+        bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search results', ' ')]
+        return search_input_error({'err':''}, bread)
 
 # input is a sage int
 
@@ -521,81 +424,6 @@ def make_disc_key(D):
         D1 = int(Dz.log(10))
     return s, '%03d%s' % (D1, str(Dz))
 
-# We need to have a first level parsing of discs to have it
-# as sage ints
-# If we have an error, raise a parse error.  Should not be needed since we screen the inputs
-
-
-def parse_discs(arg):
-    # parsing can be thrown off by spaces
-    if type(arg) == str:
-        arg = arg.replace(' ', '')
-    if ',' in arg:
-        return [parse_discs(a)[0] for a in arg.split(',')]
-    elif '-' in arg[1:]:
-        ix = arg.index('-', 1)
-        start, end = arg[:ix], arg[ix + 1:]
-        low, high = 'i', 'i'
-        if start:
-            low = ZZ(str(start))
-        if end:
-            high = ZZ(str(end))
-        if low == 'i':
-            raise Exception('parsing error')
-        if high == 'i':
-            raise Exception('parsing error')
-        return [[low, high]]
-    else:
-        return [ZZ(str(arg))]
-
-# Input is the output of parse_discs, [[-5,-2], 10, 11, [16,100]]
-# Output is a list of key/value pairs for the query
-
-
-def list_to_query(dlist):
-    # we need to split intervals which span 0
-    x = 0
-    while x < len(dlist):
-        if type(dlist[x]) == list:
-            if dlist[x][0] < 0 and dlist[x][1] > 0:  # split into pos/neg parts
-                low, high = dlist[x][0], dlist[x][1]
-                dlist[x] = [low, ZZ(-1)]
-                dlist.insert(x + 1, [ZZ(1), high])
-                x += 1
-            # elif dlist[x][0] > dlist[x][1]:  # bogus entry
-            #  dlist.pop(x)
-            #  x -= 1 # to offset the increment below
-        x += 1
-
-    # if there is only one part, we don't need an $or
-    if len(dlist) == 1:
-        dlist = dlist[0]
-        if type(dlist) == list:
-            s0, d0 = make_disc_key(dlist[0])
-            s1, d1 = make_disc_key(dlist[1])
-            if s0 < 0:
-                return [['disc_sign', s0], ['disc_abs_key', {'$gte': d1, '$lte': d0}]]
-            else:
-                return [['disc_sign', s0], ['disc_abs_key', {'$lte': d1, '$gte': d0}]]
-        else:
-            s0, d0 = make_disc_key(dlist)
-            return [['disc_sign', s0], ['disc_abs_key', d0]]
-    # Now dlist has length >1
-    ans = []
-    for x in dlist:
-        if type(x) == list:
-            s0, d0 = make_disc_key(x[0])
-            s1, d1 = make_disc_key(x[1])
-            if s0 < 0:
-                ans.append({'disc_sign': s0, 'disc_abs_key': {'$gte': d1, '$lte': d0}})
-            else:
-                ans.append({'disc_sign': s0, 'disc_abs_key': {'$lte': d1, '$gte': d0}})
-        else:
-            s0, d0 = make_disc_key(x)
-            ans.append({'disc_sign': s0, 'disc_abs_key': d0})
-    return [['$or', ans]]
-
-
 def number_field_search(**args):
     info = to_dict(args)
 
@@ -606,117 +434,35 @@ def number_field_search(**args):
     # for k in info.keys():
     #  nf_logger.debug(str(k) + ' ---> ' + str(info[k]))
     # nf_logger.debug('******************* '+ str(info['search']))
-        
+
     if 'natural' in info:
-        field_id = info['natural']
-        field_id_parsed = parse_field_string(info['natural'])
-        if FIELD_LABEL_RE.match(field_id_parsed):
-            field_id_parsed = split_label(field_id_parsed)  # allows factored labels 11.11.11e20.1
-        return render_field_webpage({'label': field_id_parsed, 'label_orig': field_id})
+        query = {'label_orig': info['natural']}
+        try:
+            parse_nf_string(info,query,'natural',name="Label",qfield='label')
+            return redirect(url_for(".by_label", label= clean_input(query['label'])))
+        except ValueError:
+            query['err'] = info['err']
+            return search_input_error(query, bread)
+
     query = {}
-    dlist = []
-    for field in ['galois_group', 'degree', 'signature', 'discriminant', 'class_number', 'class_group']:
-        if info.get(field):
-            info[field] = clean_input(info[field])
-            if field in ['class_group', 'signature']:
-                # different regex for the two types
-                if (field == 'signature' and PAIR_RE.match(info[field])) or (field == 'class_group' and IF_RE.match(info[field])):
-                    query[field] = info[field][1:-1]
-                else:
-                    name = 'class group' if field == 'class_group' else 'signature'
-                    info['err'] = 'Error parsing input for %s.  It needs to be a pair of integers in square brackets, such as [2,3] or [3,3]' % name
-                    return search_input_error(info, bread)
-            else:
-                if field == 'galois_group':
-                    try:
-                        gcs = complete_group_codes(info[field])
-                        if len(gcs) == 1:
-                            query['galois'] = make_galois_pair(gcs[0][0], gcs[0][1])
-# list(gcs[0])
-                        if len(gcs) > 1:
-                            query['galois'] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
-                    except NameError as code:
-                        info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
-                        return search_input_error(info, bread)
-                else:  # not signature, class group, or galois group
-                    ran = info[field]
-                    ran = ran.replace('..', '-')
-                    if LIST_RE.match(ran):
-                        if field == 'discriminant':
-                            # dlist will contain the disc conditions
-                            # as sage ints
-                            dlist = parse_discs(ran)
-                            # now convert to a query
-                            tmp = list_to_query(dlist)
-                            # Two cases, could be a list of sign/inequalties
-                            # or an '$or'
-                            if len(tmp) == 1:
-                                tmp = tmp[0]
-                            else:
-                                query[tmp[0][0]] = tmp[0][1]
-                                tmp = tmp[1]
-                        else:
-                            tmp = parse_range2(ran, field)
-                        # work around syntax for $or
-                        # we have to foil out multiple or conditions
-                        if tmp[0] == '$or' and '$or' in query:
-                            newors = []
-                            for y in tmp[1]:
-                                oldors = [dict.copy(x) for x in query['$or']]
-                                for x in oldors:
-                                    x.update(y)
-                                newors.extend(oldors)
-                            tmp[1] = newors
-                        query[tmp[0]] = tmp[1]
-                    else:
-                        name = re.sub('_', ' ', field)
-                        info['err'] = 'Error parsing input for %s.  It needs to be an integer (such as 5), a range of integers (such as 2-100 or 2..100), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-100).' % name
-                        return search_input_error(info, bread)
-    if info.get('ur_primes'):
-        # now we want a list of strings, no spaces, which might be big ints
-        info['ur_primes'] = clean_input(info['ur_primes'])
-        if LIST_SIMPLE_RE.match(info['ur_primes']):
-            ur_primes = info['ur_primes'].split(',')
-            # Assuming this will be the only nor in the query
-            query['$nor'] = [{'ramps': x} for x in ur_primes]
+    try:
+        parse_galgrp(info,query, qfield='galois')
+        parse_ints(info,query,'degree')
+        parse_bracketed_posints(info,query,'signature',split=False,exactlength=2)
+        parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs_key'),parse_one=make_disc_key)
+        parse_ints(info,query,'class_number')
+        parse_bracketed_posints(info,query,'class_group',split=False,check_divisibility='increasing')
+        parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',mode='complement',to_string=True)
+        if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'some':
+            mode = 'append'
         else:
-            info['err'] = 'Error parsing input for unramified primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
-            return search_input_error(info, bread)
-    if info.get('ram_primes'):
-        # now we want a list of strings, no spaces, which might be big ints
-        info['ram_primes'] = clean_input(info['ram_primes'])
-        if LIST_SIMPLE_RE.match(info['ram_primes']):
-            ram_primes = info['ram_primes'].split(',')
-            if str(info['ram_quantifier']) == 'some':
-                query['ramps'] = {'$all': ram_primes}
-            else:
-                query['ramps'] = ram_primes
-        else:
-            info['err'] = 'Error parsing input for ramified primes.  It needs to be an integer (such as 5), or a comma-separated list of integers (such as 2,3,11).'
-            return search_input_error(info, bread)
+            mode = 'exact'
+        parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
+    except ValueError:
+        return search_input_error(info, bread)
+    count = parse_count(info)
+    start = parse_start(info)
 
-    count_default = 20
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-            info['count'] = count
-    else:
-        info['count'] = count_default
-        count = count_default
-    info['count'] = int(info['count'])
-
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
     if info.get('paging'):
         try:
             paging = int(info['paging'])
@@ -732,16 +478,16 @@ def number_field_search(**args):
         one = C.numberfields.fields.find_one(query)
         if one:
             label = one['label']
-            return render_field_webpage({'label': label})
+            return redirect(url_for(".by_label", clean_input(label)))
 
     fields = C.numberfields.fields
 
-    res = fields.find(
-        query).sort([('degree', ASC), ('disc_abs_key', ASC), ('disc_sign', ASC), ('label', ASC)])
+    res = fields.find(query)
 
     if 'download' in info and info['download'] != '0':
         return download_search(info, res)
 
+    res = res.sort([('degree', ASC), ('disc_abs_key', ASC),('disc_sign', ASC)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -855,11 +601,22 @@ def download_search(info, res):
     else:
         s += 'data = ['
     s += '\\\n'
+    Qx = PolynomialRing(QQ,'x')
+    str2pol = lambda s: Qx([QQ(str(c)) for c in s.split(',')])
     for f in res:
-        wnf = WebNumberField.from_data(f)
-        cgi = wnf.class_group_invariants()
-        entry = ', '.join(
-            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
+        ##  We should try to avoid using database specific information here
+        ##  Kept for now for speed
+#        wnf = WebNumberField.from_data(f)
+#        entry = ', '.join(
+#            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
+        pol = str2pol(f['coeffs'])
+        D = decodedisc(f['disc_abs_key'], f['disc_sign'])
+        gal_t = f['galois']['t']
+        if 'class_group' in f:
+            cl = string2list(f['class_group'])
+        else:
+            cl = [-1]
+        entry = ', '.join([str(pol), str(D), str(gal_t), str(cl)])
         s += '[' + entry + ']' + ',\\\n'
     s = s[:-3]
     if dltype == 'gp':

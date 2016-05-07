@@ -47,25 +47,29 @@ def createLid(group, objectName, level, sign, parameters):
 ## the database.
 ## ============================================
 def getAllMaassGraphHtml(degree):
-    conn = base.getDBConnection()
-    db = conn.Lfunction
-    collection = db.LemurellMaassHighDegree
-    groups = collection.group(['group'], {'degree': degree},
-                              {'csum': 0},
-                              'function(obj,prev) { prev.csum += 1; }')
+##    conn = base.getDBConnection()
+##    db = conn.Lfunctions
+##    collection = db.Lfunctions
+##    groups = collection.group(['group'], {'degree': degree},
+##                              {'csum': 0},
+##                              'function(obj,prev) { prev.csum += 1; }')
+
+    if degree == 3:
+        groups = [ ["GL3", [1 , 4] ] ] 
+    elif degree == 4:
+        groups = [ ["GSp4", [1]], ["GL4", [1]] ] 
 
     ans = ""
-    for docGroup in groups:
-        g = docGroup['group']
+    for i in range(0, len(groups)):
+        g = groups[i][0]
         # logger.debug(g)
         ans += getGroupHtml(g)
-        levels = collection.group(['level'], {'degree': degree, 'group': g},
-                                  {'csum': 0},
-                                  'function(obj,prev) { prev.csum += 1; }')
+##        levels = collection.group(['conductor'], {'degree': degree, 'group': g},
+##                                  {'csum': 0},
+##                                  'function(obj,prev) { prev.csum += 1; }')
         # logger.debug(levels)
-        for docLevel in levels:
-            l = math.trunc(docLevel['level'])
-            # logger.debug(l)
+        for j in range(0, len(groups[i][1])):
+            l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
 
     return(ans)
@@ -186,18 +190,14 @@ def getGraphInfo(gls):
 
 
 def getWidthAndHeight(gls):
-    conn = base.getDBConnection()
-    db = conn.Lfunction
-    collection = db.LemurellMaassHighDegree
-    if len(gls) > 2:
-        LfunctionList = collection.find({'group': group, 'level': level, 'sign':
-                                        sign}, {'_id': True})
-    else:
-        LfunctionList = collection.find({'group': gls[0], 'level': gls[1]
-                                         }, {'_id': True, 'sign': True})
+    ## TODO: This should be adjusted
+    ##return ((700,450))
 
-    index1 = 2
-    index2 = 3
+    conn = base.getDBConnection()
+    db = conn.Lfunctions
+    collection = db.Lfunctions
+    LfunctionList = collection.find({'group': gls[0], 'conductor': gls[1]
+                                         },{'origin': True, 'root_number': True})
 
     xfactor = 20
     yfactor = 20
@@ -206,11 +206,12 @@ def getWidthAndHeight(gls):
     xMax = 0
     yMax = 0
     for l in LfunctionList:
-        splitId = l['_id'].split("_")
-        if float(splitId[index1]) > xMax:
-            xMax = float(splitId[index1])
-        if float(splitId[index2]) > yMax:
-            yMax = float(splitId[index2])
+        splitId = l['origin'].split('/')[6].split('_')
+
+        if float(splitId[0]) > xMax:
+            xMax = float(splitId[0])
+        if float(splitId[1]) > yMax:
+            yMax = float(splitId[1])
 
     xMax = math.ceil(xMax)
     yMax = math.ceil(yMax)
@@ -225,6 +226,69 @@ def getWidthAndHeight(gls):
 ## signs (of the functional equation).
 ## ============================================
 
+
+def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
+    from sage.misc.sage_eval import sage_eval
+    
+    xfactor = 20
+    yfactor = 20
+    extraSpace = 20
+    ticlength = 4
+    radius = 3
+
+    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
+    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
+
+    conn = base.getDBConnection()
+    db = conn.Lfunctions
+    collection = db.Lfunctions
+    paralist = []
+    xMax = 0
+    yMax = 0
+    for gls in glslist:
+        group = gls[0]
+        level = gls[1]
+
+        LfunctionList = collection.find(
+                {'group': group, 'conductor': level}, {'origin': True, 'root_number': True})
+
+        for l in LfunctionList:
+            splitOrigin = l['origin'].split('/')
+            char = splitOrigin[5]
+            R = splitOrigin[6]
+            ap_id = splitOrigin[7]
+            splitId = R.split('_')
+            paralist.append((splitId[0], splitId[1], l['origin'], group, level,
+                             char, R, ap_id, l['root_number']))
+            if float(splitId[0]) > xMax:
+                xMax = float(splitId[0])
+            if float(splitId[1]) > yMax:
+                yMax = float(splitId[1])
+
+    xMax = int(math.ceil(xMax))
+    yMax = int(math.ceil(yMax))
+    width = xfactor * xMax + extraSpace
+    height = yfactor * yMax + extraSpace
+
+    ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
+
+    for (x, y, lid, group, level, char, R, ap_id, sign) in paralist:
+        if float(x)>0 and float(y)>0:  #Only one of dual pair
+            try:
+                linkurl = url_for('.l_function_maass_gln_page', group=group,
+                                  level=level, char=char, R=R, ap_id=ap_id)
+            except Exception as ex:  # catch when running a test
+                linkurl = lid
+            ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
+            ans += "<circle cx='" + str(float(x) * xfactor)[0:7]
+            ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
+            ans += "' r='" + str(radius)
+            ans += "' style='fill:" + signtocolour(sage_eval(sign)) + "'>"
+            ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
+            ans += "</circle></a>\n"
+
+    ans += "</svg>"
+    return(ans)
 
 def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
     from sage.misc.sage_eval import sage_eval
@@ -415,7 +479,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             lid = "(" + str(x) + "," + str(y) + ")"
-            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/"
+            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/"
             WS = WebModFormSpace(level = x, weight = y)
             numlabels = len(WS.hecke_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
@@ -426,7 +490,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             numpluslabels = 0
             numminuslabels = 0
             for label in thelabels:  # looping over Galois orbit
-                linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/0/" + label
+                linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/" + label
                 MF = WebNewForm(level = x, weight = y, label = label)   # one of the Galois orbits for weight y, level x
                 numberwithlabel = MF.dimension  # number of forms in the Galois orbit
                 if x == 1:  # For level 1, the sign is always plus
@@ -589,7 +653,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             lid = "(" + str(x) + "," + str(y) + ")"
-            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/0/"
+            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/"
             WS = WebModFormSpace(level = x, weight = y)  # space of modular forms of weight y, level x
             galois_orbits = WS.hecke_orbits   # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit

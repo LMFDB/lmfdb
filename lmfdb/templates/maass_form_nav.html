@@ -1,5 +1,5 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block title %}Maass Form Page{% endblock %}
 
 {% block body %}
@@ -16,14 +16,14 @@ table.maass_table td {
 	font-size: 80%;
 }
 table.maass_table tr.odd {
-        background-color: #ffffff;
+        background-color: {{color.maas_table_bkg}};
 }
 table.maass_table td.id {
 	text-align: right;
 }
 
 table.maass_table td.highlight {
-	background-color: #9e9;
+	background-color: {{color.maas_table_bkg_hl}};
 }
 
 table#maass_table_outer td {

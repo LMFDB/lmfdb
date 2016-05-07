@@ -3,8 +3,8 @@ default(realprecision,1000);
 default(new_galois_format, 1);
 
 /* timeouts */
-shortt = 2*60; /* in seconds */
-longt = 5*60;
+shortt = 30; /* in seconds */
+longt = 3*60;
 /*
 shortt = 2;
 longt = 5;
@@ -15,6 +15,7 @@ assoc(entry, lis, bnd=-1) =my(b);b=#lis;if(bnd>-1,b=bnd);for(j=1,b,if(lis[j]==en
 
 /* Needs to be adjusted for higher degree polynomials */
 galt(pol) = return(polgalois(pol)[3]);
+galt(pol) = if(poldegree(pol)<12, return(polgalois(pol)[3]), return(galtord(pol)[1]));
 
 mult(lis) =
 {

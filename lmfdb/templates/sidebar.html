@@ -1,8 +1,8 @@
-{%- include "sidebar.css" -%}
-
+{% import 'color.css' as color %}
 {%- for key, heading, value in sidebar.data -%}
 {%- if BETA or not value.status -%}{# an entire section may be omitted e.g. Motives #}
 
+{% if user_is_authenticated or key != '9Know' %}
 {{heading | safe}}
 
 {% if value.type == 'L' %}
@@ -32,7 +32,7 @@
   {%- if entry.status -%}
     {%- if BETA -%}
       {%- if loop.index is even -%}{# want alternating colours here #}
-        <tr bgcolor="#fff">
+        <tr bgcolor="{{color.sidebar_background_off}}">
       {%- else -%}
         <tr>
       {%- endif -%}{# end alternating colours #}
@@ -79,7 +79,7 @@
     {%- endif -%}{# this concludes the BETA flag #}
   {%- else -%}{# this look through entries with status not set #}
     {%- if loop.index is even -%}{# want alternating colours here #}
-      <tr bgcolor="#fff">
+      <tr bgcolor="{{color.sidebar_background_off}}">
     {%- else -%}
       <tr>
     {%- endif -%}
@@ -212,6 +212,7 @@
 {# nothing needs doing as only the header appears, e.g. Knowledge #}
 
 {% endif %} {# if value.type == ... #}
+{%- endif -%} {# user_is_authenticated or not Knowledge #}
 {%- endif -%} {# if BETA or not value.status #}
 {%- endfor -%} {# for key, heading, value in sidebar.data #}
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import time
-
+import ast
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
@@ -10,12 +10,12 @@ import tempfile
 import os
 import StringIO
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input, parse_torsion_structure
-from lmfdb.number_fields.number_field import parse_list
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_split_on_pm, comma, random_object_from_collection
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, parse_list, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex
+from lmfdb.elliptic_curves.web_ec import WebEC, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, class_cremona_label, curve_lmfdb_label, curve_cremona_label
+from lmfdb.search_parsing import split_list, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
@@ -71,6 +71,9 @@ def learnmore_list():
             ('Source of the data', url_for(".how_computed_page")),
             ('Elliptic Curve labels', url_for(".labels_page"))]
 
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 #########################
 #  Search/navigate
@@ -103,14 +106,11 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list(), **err_args)
+    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), **err_args)
 
 @ec_page.route("/random")
 def random_curve():
-    from sage.misc.prandom import randint
-    n = get_stats().counts()['ncurves']
-    n = randint(0,n-1)
-    label = db_ec().find()[n]['label']
+    label = random_object_from_collection( db_ec() )['label']
     # This version leaves the word 'random' in the URL:
     # return render_curve_webpage_by_label(label)
     # This version uses the curve's own URL:
@@ -163,6 +163,10 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
 
 def elliptic_curve_search(**args):
     info = to_dict(args)
+
+    if 'download' in info and info['download'] != '0':
+        return download_search(info)
+
     query = {}
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
@@ -211,115 +215,47 @@ def elliptic_curve_search(**args):
         else:
             query['label'] = ''
 
-    if info.get('jinv'):
-        j = clean_input(info['jinv'])
-        j = j.replace('+', '')
-        if not QQ_RE.match(j):
-            info['err'] = 'Error parsing input for the j-invariant.  It needs to be a rational number.'
-            return search_input_error(info, bread)
-        query['jinv'] = str(QQ(j)) # to simplify e.g. 1728/1
+    try:
+        parse_rational(info,query,'jinv','j-invariant')
+        parse_ints(info,query,'conductor')
+        parse_ints(info,query,'torsion','torsion order')
+        parse_ints(info,query,'rank')
+        parse_ints(info,query,'sha','analytic order of &#1064;')
+        parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,process=str,check_divisibility='increasing')
+        if 'include_cm' in info:
+            if info['include_cm'] == 'exclude':
+                query['cm'] = 0
+            elif info['include_cm'] == 'only':
+                query['cm'] = {'$ne' : 0}
 
-    for field in ['conductor', 'torsion', 'rank', 'sha']:
-        if info.get(field):
-            info[field] = clean_input(info[field])
-            ran = info[field]
-            ran = ran.replace('..', '-').replace(' ', '')
-            if not LIST_RE.match(ran):
-                names = {'conductor': 'conductor', 'torsion': 'torsion order', 'rank':
-                         'rank', 'sha': 'analytic order of &#1064;'}
-                info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).' % names[field]
-                return search_input_error(info, bread)
-            # Past input check
-            tmp = parse_range2(ran, field)
-            # work around syntax for $or
-            # we have to foil out multiple or conditions
-            if tmp[0] == '$or' and '$or' in query:
-                newors = []
-                for y in tmp[1]:
-                    oldors = [dict.copy(x) for x in query['$or']]
-                    for x in oldors:
-                        x.update(y)
-                    newors.extend(oldors)
-                tmp[1] = newors
-            query[tmp[0]] = tmp[1]
+        parse_primes(info, query, 'surj_primes', name='surjective primes',
+                     qfield='non-surjective_primes', mode='complement')
+        if info.get('surj_quantifier') == 'exactly':
+            mode = 'exact'
+        else:
+            mode = 'append'
+        parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
+                     qfield='non-surjective_primes',mode=mode)
+    except ValueError as err:
+        info['err'] = str(err)
+        return search_input_error(info, bread)
+
+    count = parse_count(info,100)
+    start = parse_start(info)
 
     if 'optimal' in info and info['optimal'] == 'on':
         # fails on 990h3
         query['number'] = 1
 
-    if 'torsion_structure' in info and info['torsion_structure']:
-        res = parse_torsion_structure(info['torsion_structure'],2)
-        if 'Error' in res:
-            info['err'] = res
-            return search_input_error(info, bread)
-        #update info for repeat searches
-        info['torsion_structure'] = str(res).replace(' ','')
-        query['torsion_structure'] = [str(r) for r in res]
-
-    if info.get('surj_primes'):
-        info['surj_primes'] = clean_input(info['surj_primes'])
-        format_ok = LIST_POSINT_RE.match(info['surj_primes'])
-        if format_ok:
-            surj_primes = [int(p) for p in info['surj_primes'].split(',')]
-            format_ok = all([ZZ(p).is_prime(proof=False) for p in surj_primes])
-        if format_ok:
-            query['non-surjective_primes'] = {"$nin": surj_primes}
-        else:
-            info['err'] = 'Error parsing input for surjective primes.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).'
-            return search_input_error(info, bread)
-
-    if info.get('nonsurj_primes'):
-        info['nonsurj_primes'] = clean_input(info['nonsurj_primes'])
-        format_ok = LIST_POSINT_RE.match(info['nonsurj_primes'])
-        if format_ok:
-            nonsurj_primes = [int(p) for p in info['nonsurj_primes'].split(',')]
-            format_ok = all([ZZ(p).is_prime(proof=False) for p in nonsurj_primes])
-        if format_ok:
-            if info['surj_quantifier'] == 'exactly':
-                nonsurj_primes.sort()
-                query['non-surjective_primes'] = nonsurj_primes
-            else:
-                if 'non-surjective_primes' in query:
-                    query['non-surjective_primes'] = { "$nin": surj_primes, "$all": nonsurj_primes }
-                else:
-                    query['non-surjective_primes'] = { "$all": nonsurj_primes }
-        else:
-            info['err'] = 'Error parsing input for nonsurjective primes.  It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).'
-            return search_input_error(info, bread)
-
-    if 'download' in info and info['download'] != '0':
-        res = db_ec().find(query).sort([ ('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING) ])
-        return download_search(info, res)
-    
-    count_default = 100
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        count = count_default
-    info['count'] = count
-
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
-
+    info['query'] = query
     cursor = db_ec().find(query)
     nres = cursor.count()
     if(start >= nres):
         start -= (1 + (start - nres) / count) * count
     if(start < 0):
         start = 0
-    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING), ('lmfdb_number', ASCENDING)
-                       ]).skip(start).limit(count)
+    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING),
+                       ('lmfdb_number', ASCENDING)]).skip(start).limit(count)
     info['curves'] = res
     info['format_ainvs'] = format_ainvs
     info['curve_url'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
@@ -328,16 +264,17 @@ def elliptic_curve_search(**args):
     info['start'] = start
     info['count'] = count
     info['more'] = int(start + count < nres)
+
+    
     if nres == 1:
         info['report'] = 'unique match'
-    elif nres == 2:
+    elif nres == 2: 
         info['report'] = 'displaying both matches'
     else:
         if nres > count or start != 0:
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
@@ -354,12 +291,12 @@ def search_input_error(info, bread):
 
 @ec_page.route("/<int:conductor>/<iso_label>/")
 def by_double_iso_label(conductor,iso_label):
-    full_iso_label = str(conductor)+"."+iso_label
+    full_iso_label = class_lmfdb_label(conductor,iso_label)
     return render_isogeny_class(full_iso_label)
 
 @ec_page.route("/<int:conductor>/<iso_label>/<int:number>")
 def by_triple_label(conductor,iso_label,number):
-    full_label = str(conductor)+"."+iso_label+str(number)
+    full_label = curve_lmfdb_label(conductor,iso_label,number)
     return render_curve_webpage_by_label(full_label)
 
 # The following function determines whether the given label is in
@@ -369,10 +306,18 @@ def by_triple_label(conductor,iso_label,number):
 @ec_page.route("/<label>")
 def by_ec_label(label):
     ec_logger.debug(label)
+
+    # First see if we have an LMFDB label of a curve or class:
     try:
         N, iso, number = split_lmfdb_label(label)
+        if number:
+            return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
+        else:
+            return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+
     except AttributeError:
         ec_logger.debug("%s not a valid lmfdb label, trying cremona")
+        # Next see if we have a Cremona label of a curve or class:
         try:
             N, iso, number = split_cremona_label(label)
         except AttributeError:
@@ -383,26 +328,21 @@ def by_ec_label(label):
             else:
                 return elliptic_curve_jump_error(label, {})
 
-        # We permanently redirect to the lmfdb label
         if number: # it's a curve
-            data = db_ec().find_one({'label': label})
-            if data is None:
-                return elliptic_curve_jump_error(label, {})
-            ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            #return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
-            return render_curve_webpage_by_label(data['label'])
-        else: # it's an isogeny class
-            data = db_ec().find_one({'iso': label})
-            if data is None:
-                return elliptic_curve_jump_error(label, {})
-            ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
-            #return redirect(url_for(".by_ec_label", label=data['iso']), 301)
-            return render_isogeny_class(data['iso'])
+            label_type = 'label'
+        else:
+            label_type = 'iso'
 
-    if number:
-        return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=number))
-    else:
-        return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+        data = db_ec().find_one({label_type: label})
+        if data is None:
+            return elliptic_curve_jump_error(label, {})
+        ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
+        iso = data['lmfdb_iso'].split(".")[1]
+        if number:
+            return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=data['lmfdb_number']))
+        else:
+            return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+
 
 def by_weierstrass(eqn):
     w = weierstrass_eqn_regex.match(eqn)
@@ -591,7 +531,7 @@ def download_EC_all(label):
             elif t in ['torsion_generators', 'torsion_structure']:
                 data1.append([eval(g) for g in d])
             elif t == 'x-coordinates_of_integral_points':
-                data1.append(parse_list(d))
+                data1.append(split_list(d))
             elif t == 'gens':
                 data1.append(parse_points(d))
             elif t in ['iso', 'label', 'lmfdb_iso', 'lmfdb_label']:
@@ -604,7 +544,7 @@ def download_EC_all(label):
     return response
 
 
-def download_search(info, res):
+def download_search(info):
     dltype = info['Submit']
     delim = 'bracket'
     com = r'\\'  # single line comment start
@@ -622,7 +562,7 @@ def download_search(info, res):
         delim = 'magma'
         filename = 'elliptic_curves.m'
     s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [Weierstrass Coefficients]\n'
     s += '\n' + com2
@@ -632,6 +572,8 @@ def download_search(info, res):
     else:
         s += 'data = ['
     s += '\\\n'
+    # reissue saved query here
+    res = db_ec().find(ast.literal_eval(info["query"]))
     for f in res:
         entry = str(f['ainvs'])
         entry = entry.replace('u','')
@@ -677,7 +619,7 @@ def completeness_page():
              ('Completeness', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.ec.extent',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @ec_page.route("/Source")
 def how_computed_page():
@@ -687,7 +629,7 @@ def how_computed_page():
              ('Source', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.ec.source',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Labels")
 def labels_page():
@@ -697,5 +639,49 @@ def labels_page():
              ('Labels', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='ec.q.lmfdb_label',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
+@ec_page.route('/<conductor>/<iso>/<number>/download/<download_type>')
+def ec_code_download(**args):
+    response = make_response(ec_code(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+sorted_code_names = ['curve', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'qexp', 'moddeg', 'L1', 'localdata', 'galrep', 'padicreg']
+
+code_names = {'curve': 'Define the curve',
+                 'tors': 'Torsion subgroup',
+                 'intpts': 'Integral points',
+                 'cond': 'Conductor',
+                 'disc': 'Discriminant',
+                 'jinv': 'j-invariant',
+                 'rank': 'Rank',
+                 'reg': 'Regulator',
+                 'real_period': 'Real Period',
+                 'cp': 'Tamagawa numbers',
+                 'ntors': 'Torsion order',
+                 'sha': 'Order of Sha',
+                 'qexp': 'q-expansion of modular form',
+                 'moddeg': 'Modular degree',
+                 'L1': 'Special L-value',
+                 'localdata': 'Local data',
+                 'galrep': 'mod p Galois image',
+                 'padicreg': 'p-adic regulator'}
+
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+
+def ec_code(**args):
+    print("args has keys %s" %  to_dict(args).keys())
+    label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
+    E = WebEC.by_label(label)
+    lang = args['download_type']
+    code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
+    if lang=='gp':
+        lang = 'pari'
+    for k in sorted_code_names:
+        if lang in E.code[k]:
+            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
+            for line in E.code[k][lang]:
+                code += line + "\n"
+    return code

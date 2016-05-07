@@ -1,0 +1,90 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<style>
+table.number_table td
+{
+text-align:right;
+}
+
+
+</style>
+
+<div>
+{{ KNOWL_INC('dq.curve.highergenus.aut.extent') }}
+</div>
+
+
+      <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
+
+       <p>
+By genus:
+{% for gen in info.genus_list %}
+<a href="?genus={{gen}}">{{gen}}</a>
+{% endfor %}
+</p>
+
+
+
+    <h2>Find specific automorphisms of higher genus curve</h2>
+
+    <form name="search" method = "get" action="{{search}}">
+        <table class="">
+	  <tr>
+	    <td>
+	  Search by {{KNOWL('dq.curve.highergenus.aut.label',title="label")}}
+          <input type="text" name="jump_to" value=""
+        placeholder="2.12-4.0.2-2-2-3">
+	    </td>
+	    <td>
+          <button type="submit" value="Find">Find</button>
+	      </td>
+	      <td>
+		<span class="formexample">family with automorphisms label, e.g. 2.12-4.0.2-2-2-3 </span>
+	      </td>
+	    </tr>
+	  </table>
+	  </form>
+
+
+
+        <h2>Search</h2>
+      <form name="search" method = "get" action="{{search}}">
+        <table class="">
+          <tr align=left>
+            <td align=right>
+            Genus:
+            </td><td><input type="integer" name="genus" value=""
+      placeholder="3"></td>
+      <td>
+	<span class="formexample">e.g. 4, or a range like 3..5</span>
+      </td>
+          </tr>
+
+          <tr>
+            <td align=right>
+	      Group:
+            </td><td><input type="text" name="group" value="" placeholder="[4,2]"></td>
+      <td>
+	<span class="formexample">e.g. [4,2]</span>
+      </td>
+          </tr>
+	  <tr>
+            <td align=right>
+              {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
+            </td><td><input type="list" name="signature" value="" placeholder="[0,2,3,3,6]"></td>
+      <td>
+	<span class="formexample">e.g. [0,2,3,3,6].</span>
+      </td> </tr>
+          <tr>
+          <td align=right>
+              Maximum number of families to display:
+            </td><td><input type="text" name="count" value="20" size="10"></td>
+          </tr>
+  </table>
+        <button type="submit" name="Submit" value="Search">Search</button>
+      </form>
+   
+
+{% endblock %}

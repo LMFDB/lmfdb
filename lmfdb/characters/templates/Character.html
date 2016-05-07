@@ -35,7 +35,7 @@
         {% endif %}
 
         {# Values on generators #}
-        {% if modulus>2 %}
+        {% if modulus>2 and genvalues %}
             <h2>
                 {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
             </h2>
@@ -55,13 +55,15 @@
             {{ KNOWL('character.dirichlet.values', title="Values") }}
            {% endif %}
         </h2>
-        <table class="values">
-          <thead>
-           <tr>{% for a in groupelts %}<td>{{a}}</td>{%endfor%}</tr>
-           </thead>
-           <tr>{% for v in values %}<td>{{v}}</td>{%endfor%}</tr>
-         </table>
-        {% endif %}
+        {# I don't know why you need the 'overflow:auto' twice --David F #}
+        <div style='overflow:auto'>
+            <table class="values" style='overflow:auto'>
+                <thead>
+                    <tr>{% for a in groupelts %}<td>{{a}}</td>{%endfor%}</tr>
+                </thead>
+                <tr>{% for v in values %}<td>{{v}}</td>{%endfor%}</tr>
+            </table>
+        </div>
 
         {% set value_default = 2 %}
         <form> value  at 
@@ -70,6 +72,7 @@
             <span class="formexample"> e.g. {{value_default}} </span>
         </form>
         <div class="output"><span id="calc-value-output"></span></div>
+        {% endif %}
         
                 
         {# Basic properties #}
@@ -125,7 +128,7 @@
 
         {# sums #}
         
-        {% if type=='Dirichlet' %}
+        {% if type=='Dirichlet' and values %}
 
         {# Gauss sum #}
 
@@ -187,7 +190,7 @@ function value_handler(evt) {
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-value-output"]);
      });
 }
-        {% if type=='Dirichlet' %}
+        {% if type=='Dirichlet' and values %}
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
@@ -200,7 +203,7 @@ function gauss_handler(evt) {
 function jacobi_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-jacobi-input").val();
-   $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus,number=number) }}" + "?val=" + val,
+   $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus, number=number) }}" + "?val=" + val,
      function() {
        {# tell mathjx to render the output #}
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);

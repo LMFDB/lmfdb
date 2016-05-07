@@ -120,10 +120,11 @@ def set_info():
 @login_page.route("/profile/<userid>")
 @login_required
 def profile(userid):
-    try:
-        getDBConnection().knowledge.knowls.ensure_index('title')
-    except pymongo.errors.OperationFailure:
-        pass
+    # See issue #1169
+    #try:
+    #    getDBConnection().knowledge.knowls.ensure_index('title')
+    #except pymongo.errors.OperationFailure:
+    #    pass
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
     userknowls = getDBConnection(

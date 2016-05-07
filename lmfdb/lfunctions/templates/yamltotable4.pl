@@ -9,8 +9,8 @@
 #######################
 
 if($#ARGV != 1){
-     die "\nThis program converts the degree 3 yaml file into an html table\n",
-            "The syntax is:  \n\t lamltotable.prl  inputfile outputfile\n\n"
+     die "\nThis program converts the degree 4 yaml file into an html table\n",
+            "The syntax is:  \n\t yamltotable.prl  inputfile outputfile\n\n"
 } # ARGV if
 
 my ($infile, $outfile) = ($ARGV[0],$ARGV[1]);
@@ -35,25 +35,25 @@ $line = <INFILE>;  # throw away first line
 $rowfinished=0;
 %rowvals=();
 
-print OUTFILE qq|
+#<style type="text/css">
+#.ntdata .td { text-align: center;}
+#</style>
 
-<style type="text/css">
-.ntdata .td { text-align: center;}
-</style>
+print OUTFILE qq|
 
 
 <table border=1 cellpadding=5>
 <tbody>
 <tr align="center">
 <td align="center">First&nbsp;complex<br>critical&nbsp;zero</td>
-<td align="center">Underlying<br>object</td>
-<td align="center">\$N\$</td>
-<td align="center">\$\\chi\$</td>
-<td align="center">arithmetic</td>
-<td align="center">self-dual</td>
+<th align="center">{{ KNOWL('lfunction.underlying_object', title='underlying object') }}</th>
+<th align="center">{{ KNOWL('lfunction.level', title='\$N\$') }}</th>
+<th align="center">{{ KNOWL('lfunction.central_character', title='\$\\chi\$') }}</th>
+<th align="center">{{ KNOWL('lfunction.arithmetic', title='arithmetic') }}</th>
+<th align="center">{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>
 <td align="center">\$\\Gamma_{\\R}\$ parameters</td>
 <td align="center">\$\\Gamma_{\\C}\$ parameters</td>
-<td align="center">\$\\varepsilon\$</td>
+<th align="center">{{ KNOWL('lfunction.sign', title='\$\\\\varepsilon\$') }}</th>
 </tr>
 |;
 
@@ -94,6 +94,7 @@ $rowvals{$key}=$val;
 }
 
 print OUTFILE "</tbody></table>\n";
+print OUTFILE "\n{% endblock %}\n";
 
 ##############
 
@@ -103,8 +104,9 @@ my %rowvals=@_;
 
 $multipleobject=0;
 
-my $truesymbol = "&#x25CF;";
-my $falsesymbol = "&#x25CB;";
+# Now checkmark
+my $truesymbol = '&#10004;'; # "&#x25CF;";
+my $falsesymbol = ''; # "&#x25CB;";
 
 if(my $tmp=$rowvals{gammaC}) {
 
@@ -133,7 +135,7 @@ if(my $tmp=$rowvals{epsilon}) {
 
 }
 
-if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "-" }
+if($rowvals{character} =~ /\.1 *$/) { $rowvals{character} = "1" }
 
 if($rowvals{arithmetic} eq "true") { $rowvals{arithmetic}=$truesymbol }
 else {$rowvals{arithmetic}=$falsesymbol }

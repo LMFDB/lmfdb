@@ -32,8 +32,14 @@ import json
 import sage.all
 from sage.all import os
 
-from pymongo.connection import Connection
-forms = Connection(port=37010).halfintegralmf.forms
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=37010)
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['halfintegralmf'].authenticate('editor', password)
+forms = C.forms
 
 saving = True 
 

@@ -19,13 +19,18 @@ _curdir = os.path.dirname(os.path.abspath(__file__))
 contribs = yaml.load_all(open(os.path.join(_curdir, "..", "CONTRIBUTORS.yaml")))
 contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 
+
+
+
 @app.route("/acknowledgment")
 def acknowledgment():
-    return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs)
+    bread = [("Acknowledgments" , '')]
+    return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs, bread = bread)
 
-@app.route("/workshops")
+@app.route("/acknowledgment/activities")
 def workshops():
-    return render_template("workshops.html", title="LMFDB Workshops", contribs = contribs)
+    bread = [("Acknowledgments" , url_for('.acknowledgment')) , ("Activities", '')]
+    return render_template("workshops.html", title="LMFDB Activities", contribs = contribs, bread = bread)
 
 
 class Box(object):
@@ -120,17 +125,22 @@ def introduction_features():
     return render_template(_single_knowl, title="Features", kid='intro.features', body_class=_bc, bread=b)
 
 
-@app.route("/intro/tutorial")
-def introduction_tutorial():
+@app.route("/intro/zetatour")
+def introduction_zetatour():
     b = bread()
-    b.append(('Tutorial', url_for("introduction_tutorial")))
-    return render_template(_single_knowl, title="Tutorial", kid='intro.tutorial', body_class=_bc, bread=b)
+    b.append(('Tutorial', url_for("introduction_zetatour")))
+    return render_template(_single_knowl, title="A tour of the Riemann zeta function", kid='intro.tutorial', body_class=_bc, bread=b)
 
 
 @app.route("/bigpicture")
 def bigpicture():
     b = [('Big Picture', url_for('bigpicture'))]
     return render_template("bigpicture.html", title="A Map of the LMFDB", body_class=_bc, bread=b)
+
+@app.route("/universe")
+def universe():
+    b = [('LMFDB universe', url_for('universe'))]
+    return render_template("universe.html", title="The LMFDB universe", body_class=_bc, bread=b)
 
 
 @app.route("/roadmap")
@@ -157,6 +167,13 @@ def varieties_history():
     b.append(('History', url_for("varieties_history")))
     return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
 
+@app.route("/ModularForm/GL2/Q/holomorphic/history")
+def holomorphic_mf_history():
+    t = 'History'
+    b = [("Modular forms", url_for('modular_form_toplevel'))]
+    b.append(('Holomorphic', url_for("emf.render_elliptic_modular_forms")))
+    b.append(('History', url_for("holomorphic_mf_history")))
+    return render_template(_single_knowl, title="A brief history of holomorphic GL(2) modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
 
 
 @app.route('/Field')

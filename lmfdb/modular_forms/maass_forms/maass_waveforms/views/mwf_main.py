@@ -194,7 +194,7 @@ def render_one_maass_waveform_wp(info):
     level = info['MF'].level
     dim = info['MF'].dim
     numc = info['MF'].num_coeff
-    if info['MF'].has_plot() and level == 1: # Bara level = 1 har rätt format för tillfället //Lemurell
+    if info['MF'].has_plot(): # and level == 1: # Bara level = 1 har rätt format för tillfället //Lemurell
         info['plotlink'] = url_for('mwf.plot_maassform', maass_id=maass_id)
     # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
     Llink = "/L" + url_for('mwf.render_one_maass_waveform', maass_id=maass_id)  # + '/?db=' + info['db']

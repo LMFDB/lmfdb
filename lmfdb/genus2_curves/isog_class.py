@@ -6,25 +6,23 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.base import getDBConnection
-from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st_group_name, st0_group_name
+from lmfdb.utils import comma, web_latex, encode_plot
+from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st0_group_name, st_group_name, st_group_href
 from lmfdb.genus2_curves.web_g2c import gl2_statement_base, factorsRR_raw_to_pretty, fod_statement, intlist_to_poly
 from sage.all import QQ, PolynomialRing, factor,ZZ, NumberField, expand, var
 from lmfdb.WebNumberField import field_pretty
-
-logger = make_logger("g2c")
 
 ###############################################################################
 # Database connection
 ###############################################################################
 
-g2cdb = None
+the_g2cdb = None
 
-def db_g2c():
-    global g2cdb
-    if g2cdb is None:
-        g2cdb = getDBConnection().genus2_curves
-    return g2cdb
+def g2cdb():
+    global the_g2cdb
+    if the_g2cdb is None:
+        the_g2cdb = lmfdb.base.getDBConnection().genus2_curves
+    return the_g2cdb
 
 ###############################################################################
 # Pretty print functions
@@ -188,7 +186,6 @@ class G2Cisog_class(object):
 
             - dbdata: the data from the database
         """
-        logger.debug("Constructing an instance of G2Cisog_class")
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -199,12 +196,12 @@ class G2Cisog_class(object):
         curves collection by its label.
         """
         try:
-            data = db_g2c().isogeny_classes.find_one({"label" : label})
+            data = g2cdb().isogeny_classes.find_one({"label" : label})
         except AttributeError:
             return "Invalid label" # caller must catch this and raise an error
         if data:
             return G2Cisog_class(data)
-        return "Class not found" # caller must catch this and raise an error
+        return "No genus 2 isogeny class data found for label" # caller must catch this and raise an error
 
     ###########################################################################
     # Main data creation for individual isogeny classes
@@ -212,7 +209,7 @@ class G2Cisog_class(object):
 
     def make_class(self):
         # Data
-        curves_data = db_g2c().curves.find({"class" :
+        curves_data = g2cdb().curves.find({"class" :
             self.label}).sort([("disc_key", pymongo.ASCENDING),
                                ("label", pymongo.ASCENDING)])
         self.curves = [ {"label" : c['label'], "equation_formatted" :
@@ -224,6 +221,7 @@ class G2Cisog_class(object):
 
         # Data derived from Sato-Tate group
         self.st_group_name = st_group_name(self.st_group)
+        self.st_group_href = st_group_href(self.st_group)
         self.st0_group_name = st0_group_name(self.real_geom_end_alg)
         # Later used in Lady Gaga box:
         self.real_geom_end_alg_disp = [r'\End(J_{\overline{\Q}}) \otimes \R',
@@ -234,8 +232,8 @@ class G2Cisog_class(object):
             self.is_gl2_type_name = 'no'
 
         # Endomorphism data
-        curve = db_g2c().curves.find_one({"class" : self.label})
-        endodata = db_g2c().endomorphisms.find_one({"label" :
+        curve = g2cdb().curves.find_one({"class" : self.label})
+        endodata = g2cdb().endomorphisms.find_one({"label" :
             curve['label']})
         self.gl2_statement_base = \
             gl2_statement_base(endodata['factorsRR_base'], r'\(\Q\)')
@@ -262,7 +260,7 @@ class G2Cisog_class(object):
                 ('Label', self.label),
                 ('Number of curves', str(self.ncurves)),
                 ('Conductor','%s' % self.cond),
-                ('Sato-Tate group', '\(%s\)' % self.st_group_name),
+                ('Sato-Tate group', self.st_group_href),
                 ('\(%s\)' % self.real_geom_end_alg_disp[0],
                  '\(%s\)' % self.real_geom_end_alg_disp[1]),
                 ('\(\mathrm{GL}_2\)-type','%s' % self.is_gl2_type_name)
@@ -270,7 +268,7 @@ class G2Cisog_class(object):
         x = self.label.split('.')[1]
         self.friends = [('L-function',
             url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x))]
-        self.downloads = [('Download Euler factors', ".")]
+        #self.downloads = [('Download Euler factors', ".")]
         #self.downloads = [
         #        ('Download Euler factors', "."),
         #            url_for(".download_g2c_eulerfactors", label=self.label)),

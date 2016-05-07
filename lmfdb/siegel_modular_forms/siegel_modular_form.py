@@ -3,7 +3,7 @@
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
 from flask import render_template, url_for, request, send_file
-from lmfdb.utils import parse_range
+from lmfdb.search_parsing import parse_range
 # import siegel_core
 import input_parser
 import dimensions
@@ -18,6 +18,9 @@ from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms import smf_logger
 import json
 import StringIO
+
+from flask import flash, redirect
+
 
 DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 COLNS = None
@@ -37,7 +40,7 @@ def rescan_collection():
             try:
                 if f.endswith('.json'):
                     c = f[:-5]
-                    print c
+#                    print c
                 colns[c] = Collection( c, location = static)
             except Exception as e:
                 print str(e)
@@ -102,17 +105,32 @@ def ModularForm_GSp4_Q_Sp4Z_j():
     jrange = xrange(0, 21)
     krange = xrange(10, 21)
     if request.args.get('j'):
-        jr = parse_range(request.args.get('j'))
-        if type(jr) is int:
-            jrange = xrange(jr, jr+20+1);
-        else:
-            jrange = xrange(jr['$gte'], jr['$lte'])
+        try:
+            jr = parse_range(request.args.get('j'))
+            if type(jr) is int:
+                jrange = xrange(jr, jr+20+1);
+            else:
+                jrange = xrange(jr['$gte'], jr['$lte'])
+        except:
+            error="Error parsing input for j.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." 
+            flash(error, "error")
+            return redirect(url_for(".ModularForm_GSp4_Q_Sp4Z_j"))
+
     if request.args.get('k'):
-        kr = parse_range(request.args.get('k'))
-        if type(kr) is int:
-            krange = xrange(kr, kr+10+1);
-        else:
-            krange = xrange(kr['$gte'], kr['$lte'])
+        try:
+            kr = parse_range(request.args.get('k'))
+            if type(kr) is int:
+                if kr<4:
+                    kr=4
+                krange = xrange(kr, kr+10+1);
+            else:
+                if kr['$gte']<4:
+                    kr['$gte']=4
+                krange = xrange(kr['$gte'], kr['$lte'])
+        except:
+            error="Error parsing input for k.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." 
+            flash(error, "error")
+            return redirect(url_for(".ModularForm_GSp4_Q_Sp4Z_j"))
     jrange = [x for x in jrange if x%2==0]
     try:
         dimtable = dimensions.dimension_table_Sp4Z_j(krange, jrange)
@@ -150,7 +168,7 @@ def ModularForm_GSp4_Q_top_level( page = None):
         if name:
             a,b = name.split('.')
             f = StringIO.StringIO( sample.export( a, b))
-            print f.getvalue()
+#            print f.getvalue()
             f.seek(0)
             return send_file( f,
                               attachment_filename = name + '.json',
@@ -212,7 +230,7 @@ def prepare_collection_page( col, args, bread):
     dim_args = args.get( 'dim_args')
     if not dim_args:
         dim_args = col.dim_args_default
-    print dim_args
+#    print dim_args
     if dim_args:
         try:
             dim_args = eval( dim_args)
@@ -292,6 +310,8 @@ def prepare_sample_page( sam, args, bread):
         except Exception as e:
             info['error'] = 'list of l: %s' % str(e)
             info['evs_to_show'] = []
+    if info['evs_to_show']==[]:
+        info['evs_to_show']=[2,3,4,5,7,9,11,13,17,19]
 
     info['fcs_to_show'] = args.get( 'dets', [])
     if info['fcs_to_show'] != []:
@@ -300,7 +320,8 @@ def prepare_sample_page( sam, args, bread):
         except Exception as e:
             info['error'] = 'list of det(F): %s' % str(e)
             info['fcs_to_show'] = []
-
+    if info['fcs_to_show']==[]:
+        info['fcs_to_show']=sam.available_Fourier_coefficients()[:5]
     null_ideal = sam.field().ring_of_integers().ideal(0)
     info['ideal_l'] = args.get( 'modulus', null_ideal)
     if info['ideal_l'] != 0:
@@ -324,7 +345,11 @@ def prepare_sample_page( sam, args, bread):
                 except:
                     return 'Reduction undefined'
         info['ideal_l'].reduce = apple
-        
+    info['properties2']=[('Type', "%s"%sam.type()),
+                         ('Weight', "%s"%sam.weight()),
+                         ('Hecke Eigenform', "%s"%sam.is_eigenform()),
+                         ('Degree of Field', "%s"%sam.field().degree())]
+    
     bread.append( (sam.collection()[0] + '.' + sam.name(), '/' + sam.collection()[0] + '.' + sam.name()))
     return render_template( "ModularForm_GSp4_Q_sample.html",
                             title='Siegel modular forms sample ' + sam.collection()[0] + '.'+ sam.name(),

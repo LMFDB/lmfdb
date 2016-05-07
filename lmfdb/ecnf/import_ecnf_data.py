@@ -70,6 +70,7 @@ from lmfdb.base import _init as init
 from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
+from lmfdb.ecnf.ecnf_stats import field_data
 
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from pymongo.mongo_client import MongoClient
@@ -99,6 +100,9 @@ nfcurves.ensure_index('conductor_norm')
 nfcurves.ensure_index('rank')
 nfcurves.ensure_index('torsion')
 nfcurves.ensure_index('jinv')
+nfcurves.ensure_index('number')
+nfcurves.ensure_index('degree')
+nfcurves.ensure_index('field_label')
 
 print "finished indices"
 
@@ -106,7 +110,6 @@ print "finished indices"
 # but only want to do this once for each label, so we will maintain a
 # dict of label:field pairs:
 nf_lookup_table = {}
-
 
 def nf_lookup(label):
     r"""
@@ -229,14 +232,6 @@ def point_list(P):
     """
     return [K_list(c) for c in list(P)]
 
-
-def field_data(s):
-    r"""
-    Returns full field data from field label.
-    """
-    deg, r1, abs_disc, n = [int(c) for c in s.split(".")]
-    sig = [r1, (deg - r1) // 2]
-    return [s, deg, sig, abs_disc]
 
 
 #@cached_function

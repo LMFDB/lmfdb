@@ -9,7 +9,8 @@ import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
+from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input
 from sage.all import ZZ, var, PolynomialRing, QQ
 from lmfdb.local_fields import local_fields_page, logger
 
@@ -43,8 +44,29 @@ def group_display_shortC(C):
         return group_display_short(nt[0], nt[1], C)
     return gds
 
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
+def lf_knowl_guts(label, C):
+    f = C.localfields.fields.find_one({'label':label})
+    ans = 'Local number field %s<br><br>'% label
+    ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
+    GG = f['gal']
+    ans += 'Degree: %s<br>' % str(GG[0])
+    ans += 'Ramification index $e$: %s<br>' % str(f['e'])
+    ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
+    ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
+    ans += 'Galois group $G$: %s<br>' % group_display_knowl(GG[0], GG[1], C)
+    ans += '<div align="right">'
+    ans += '<a href="%s">%s home page</a>' % (str(url_for("local_fields.by_label", label=label)),label)
+    ans += '</div>'
+    return ans
+
+def local_field_data(label):
+    C = getDBConnection()
+    return lf_knowl_guts(label, C)
+
+@app.context_processor
+def ctx_local_fields():
+    return {'local_field_data': local_field_data}
 
 @local_fields_page.route("/")
 def index():
@@ -52,7 +74,10 @@ def index():
     if len(request.args) != 0:
         return local_field_search(**request.args)
     info = {'count': 20}
-    return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info)
+    learnmore = [#('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page")),
+                ('Local field labels', url_for(".labels_page"))]
+    return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore)
 
 
 @local_fields_page.route("/<label>")
@@ -80,69 +105,16 @@ def local_field_search(**args):
     if 'jump_to' in info:
         return render_field_webpage({'label': info['jump_to']})
 
-    for param in ['p', 'n', 'c', 'e', 'gal']:
-        if info.get(param):
-            info[param] = clean_input(info[param])
-            if param == 'gal':
-                try:
-                    gcs = complete_group_codes(info[param])
-                    if len(gcs) == 1:
-                        tmp = ['gal', list(gcs[0])]
-                    if len(gcs) > 1:
-                        tmp = [{'gal': list(x)} for x in gcs]
-                        tmp = ['$or', tmp]
-                except NameError as code:
-                    info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
-                    return search_input_error(info, bread)
-            else:
-                ran = info[param]
-                ran = ran.replace('..', '-')
-                if LIST_RE.match(ran):
-                    tmp = parse_range2(ran, param)
-                else:
-                    names = {'p': 'prime p', 'n': 'degree', 'c':
-                             'discriminant exponent c', 'e': 'ramification index e'}
-                    info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
-                    return search_input_error(info, bread)
-            # work around syntax for $or
-            # we have to foil out multiple or conditions
-            if tmp[0] == '$or' and '$or' in query:
-                newors = []
-                for y in tmp[1]:
-                    oldors = [dict.copy(x) for x in query['$or']]
-                    for x in oldors:
-                        x.update(y)
-                    newors.extend(oldors)
-                tmp[1] = newors
-            query[tmp[0]] = tmp[1]
-
-    count_default = 20
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        count = count_default
-    info['count'] = count
-
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
-    if info.get('paging'):
-        try:
-            paging = int(info['paging'])
-            if paging == 0:
-                start = 0
-        except:
-            pass
+    try:
+        parse_galgrp(info,query,'gal', use_bson=False)
+        parse_ints(info,query,'p',name='Prime p')
+        parse_ints(info,query,'n',name='Degree')
+        parse_ints(info,query,'c',name='Discriminant exponent c')
+        parse_ints(info,query,'e',name='Ramification index e')
+    except ValueError:
+        return search_input_error(info, bread)
+    count = parse_count(info)
+    start = parse_start(info)
 
     # logger.debug(query)
     res = C.localfields.fields.find(query).sort([('p', pymongo.ASCENDING), (
@@ -246,7 +218,10 @@ def render_field_webpage(args):
             friends.append(('Discriminant root field', rffriend))
 
         bread = get_bread([(label, ' ')])
-        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
+        learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page")),
+                ('Local field labels', url_for(".labels_page"))]
+        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore)
 
 
 def show_slopes(sl):
@@ -279,3 +254,32 @@ def printquad(code, p):
 
 def search_input_error(info, bread):
     return render_template("lf-search.html", info=info, title='Local Field Search Input Error', bread=bread)
+
+@local_fields_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of the local field data'
+    bread = get_bread([("Completeness", )])
+    learnmore = [('Source of the data', url_for(".how_computed_page")),
+                ('Local field labels', url_for(".labels_page"))]
+    return render_template("single.html", kid='dq.lf.extent',
+                           credit=LF_credit, title=t, bread=bread, 
+                           learnmore=learnmore)
+
+@local_fields_page.route("/Labels")
+def labels_page():
+    t = 'Labels for local number fields'
+    bread = get_bread([("Labels", '')])
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page"))]
+    return render_template("single.html", kid='lf.field.label',learnmore=learnmore, credit=LF_credit, title=t, bread=bread)
+
+@local_fields_page.route("/Source")
+def how_computed_page():
+    t = 'Source of the local field data'
+    bread = get_bread([("Source", '')])
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                #('Source of the data', url_for(".how_computed_page")),
+                ('Local field labels', url_for(".labels_page"))]
+    return render_template("single.html", kid='dq.lf.source',
+                           credit=LF_credit, title=t, bread=bread, 
+                           learnmore=learnmore)

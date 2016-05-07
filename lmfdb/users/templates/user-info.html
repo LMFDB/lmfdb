@@ -1,4 +1,5 @@
 {% extends 'homepage.html' %}
+{% import 'color.css' as color %}
 {% block content %}  
 
 {% if user_is_authenticated %}
@@ -80,7 +81,7 @@
          <td><input id="pw2" name="password2" type="password" /></td></tr>
      <tr><td class="forminfo">Matching?</td>
          <td class="forminfo" id="pwstatus">empty</td></tr>
-     <tr><td colspan="2" class="forminfo" style="color: red;">Don't use your usual password due to security concerns!</td></tr>
+     <tr><td colspan="2" class="forminfo" style="color: {{color.red}};">Don't use your usual password due to security concerns!</td></tr>
      <tr><td colspan="2" class="spacing" /></tr>
      <tr><td/>
          <td><button name="submit" type="submit">Change Password</button></td>
