@@ -70,8 +70,11 @@ def EC_nf_plot(E, base_field_gen_name):
         except ArithmeticError:
             prec *= 2
     if prec >= maxprec:
-        return text("Unable to plot", (1, 1), fontsize="xx-large")
-    X = [e.plot() for e in X]
+        return text("Unable to plot", (1, 1), fontsize=36)
+    try:
+        X = [e.plot() for e in X]
+    except:
+        return text("Unable to plot", (1, 1), fontsize=36)
     xmin = min([x.xmin() for x in X])
     xmax = max([x.xmax() for x in X])
     ymin = min([x.ymin() for x in X])
