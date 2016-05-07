@@ -75,6 +75,10 @@ def EC_nf_plot(E, base_field_gen_name):
         X = [e.plot() for e in X]
     except:
         return text("Unable to plot", (1, 1), fontsize=36)
+    xmin = min([x.xmin() for x in X])
+    xmax = max([x.xmax() for x in X])
+    ymin = min([x.ymin() for x in X])
+    ymax = max([x.ymax() for x in X])
     cols = rainbow(n1) # Default choice of n colours
     # Howver, these tend to be too pale, so we preset them for small values of n
     if n1==1:
