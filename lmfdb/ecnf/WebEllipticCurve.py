@@ -2,7 +2,7 @@ import os
 import yaml
 from flask import url_for
 from urllib import quote
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RR, rainbow, implicit_plot, plot, text, Infinity
+from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RR, rainbow, implicit_plot, plot, text, Infinity, sqrt
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
@@ -56,7 +56,7 @@ def inflate_interval(a,b,r):
 def plot_zone_union(R,S):
     return(min(R[0],S[0]),max(R[1],S[1]),min(R[2],S[2]),max(R[3],S[3]))
 
-# Finds a suitable plotting zone for the component a <= x <= b of the EC y^2+h(x)*y=f(x) 
+# Finds a suitable plotting zone for the component a <= x <= b of the EC y**2+h(x)*y=f(x) 
 def EC_R_plot_zone_piece(f,h,a,b):
     npts=50
     Y=[]
@@ -75,12 +75,12 @@ def EC_R_plot_zone_piece(f,h,a,b):
     (a,b)=inflate_interval(a,b,1.3)
     return (a,b,ymin,ymax)
 
-# Finds a suitable plotting zone for the EC y^2+h(x)*y=f(x) 
+# Finds a suitable plotting zone for the EC y**2+h(x)*y=f(x) 
 def EC_R_plot_zone(f,h):
     F=f+h**2/4
     F1=F.derivative()
     F2=F1.derivative()
-    G=F*F2-F1^2/2
+    G=F*F2-F1**2/2
     ZF=[z[0] for z in F.roots()]
     ZG=[z[0] for z in G.roots()]
     xi=max(ZG)
