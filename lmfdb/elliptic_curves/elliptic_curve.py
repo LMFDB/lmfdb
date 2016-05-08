@@ -89,19 +89,17 @@ def rational_elliptic_curves(err_args=None):
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
                 err_args[field] = ''
             err_args['count'] = '100'
-    # counts = get_stats().counts()
+    counts = get_stats().counts()
 
-    conductor_list_endpoints = [1, 100, 1000, 10000, 100000]
     conductor_list = ["%s-%s" % (start, end - 1) for start, end in zip(conductor_list_endpoints[:-1],
                                                                        conductor_list_endpoints[1:])]
-    # rank_list = range(counts['max_rank'] + 1)
-    rank_list = range(5)
+    rank_list = range(counts['max_rank'] + 1)
     torsion_list = range(1,11) + [12, 16]
     info = {
         'rank_list': rank_list,
         'torsion_list': torsion_list,
         'conductor_list': conductor_list,
-        # 'counts': counts,
+        'counts': counts,
         'stats_url': url_for(".statistics")
     }
     credit = 'John Cremona and Andrew Sutherland'
