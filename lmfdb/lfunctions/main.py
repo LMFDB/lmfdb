@@ -12,7 +12,7 @@ import numpy
 import pymongo
 from Lfunction import *
 import LfunctionPlot as LfunctionPlot
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict'
 import bson
 from Lfunctionutilities import (p2sage, lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 truncatenumber, styleTheSign, specialValueString, specialValueTriple)
@@ -633,7 +633,7 @@ def initLfunction(L, args, request):
                                       (label, url_for('.l_function_ec_page', label=label))])
     elif L.Ltype() == 'genus2curveQ':
         # should use url_for
-        info['friends'] = [('isogeny class ' + L.label, "/Genus2Curve/Q/" + L.label.replace(".","/"))]
+        info['friends'] = [('Isogeny class ' + L.label, "/Genus2Curve/Q/" + L.label.replace(".","/"))]
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
