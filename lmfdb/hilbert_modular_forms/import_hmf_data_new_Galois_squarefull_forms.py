@@ -16,10 +16,10 @@ C= MongoClient(port=dbport)
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 import yaml
-# pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-# username = pw_dict['data']['username']
-# password = pw_dict['data']['password']
-# C['hmfs'].authenticate(username, password)
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['hmfs'].authenticate(username, password)
 hmf_forms = C.hmfs.forms
 hmf_fields = C.hmfs.fields
 fields = C.numberfields.fields
@@ -272,7 +272,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
                 # Add 0,1,-1 to allow for Atkin-Lehner eigenvalues, if not computed
                 print "As sets, ignoring 0,1,-1, the eigenvalues match!"
                 if test:
-                    print("Would now replace permuted form data %s into hmf_fields" % info)
+                    print("Would now replace permuted form data %s with %s" % (existing_form, info))
                 else:
                     existing_form['hecke_eigenvalues'] = info['hecke_eigenvalues']
                     hmf_forms.save(existing_form)
