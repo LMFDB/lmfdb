@@ -44,20 +44,6 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
  <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
 <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
 
-{% elif BETA %}
-<div align='center'><div style="display: inline-block; vertical-align:top;">{{ KNOWL('lfunction.normalization', title='Normalization') }}:  &nbsp; 
-</div>
-<div style="display: inline-block; vertical-align:top;">
-<button class='active'>analytic</button>
-</div>
-<div style="display: inline-block; align:left;">
-<button class='inactive'>arithmetic</button>
-<br>
-<span style="font-size: 80%;">
-(not yet available)
-</span>
-</div>
-</div>
 {% endif %}
 
 {% if knowltype and label %}
