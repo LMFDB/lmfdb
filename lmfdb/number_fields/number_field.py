@@ -286,6 +286,7 @@ def render_field_webpage(args):
     data['class_group_invs'] = nf.class_group_invariants()
     data['signature'] = nf.signature()
     data['coefficients'] = nf.coeffs()
+    nf.make_code_snippets()
     D = nf.disc()
     ram_primes = D.prime_factors()
     data['disc_factor'] = nf.disc_factored_latex()

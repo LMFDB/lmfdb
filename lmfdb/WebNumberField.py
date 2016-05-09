@@ -153,8 +153,6 @@ class WebNumberField:
             self._data = self._get_dbdata()
         else:
             self._data = data
-        if self._data is not None:
-            self.make_code_snippets()
 
     # works with a string, or a list of coefficients
     @classmethod
