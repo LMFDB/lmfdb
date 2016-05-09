@@ -768,7 +768,8 @@ def initLfunction(L, args, request):
     else:
         lcalcUrl = request.url + '&download=lcalcfile'
 
-    info['downloads'] = [('Lcalcfile', lcalcUrl)]
+    if L.Ltype() != 'dirichlet':
+        info['downloads'] = [('Lcalcfile', lcalcUrl)]
     return info
 
 
