@@ -675,13 +675,14 @@ def ec_code(**args):
     print("args has keys %s" %  to_dict(args).keys())
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
     E = WebEC.by_label(label)
+    Ecode = E.code()
     lang = args['download_type']
     code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
     if lang=='gp':
         lang = 'pari'
     for k in sorted_code_names:
-        if lang in E.code[k]:
+        if lang in Ecode[k]:
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            for line in E.code[k][lang]:
+            for line in Ecode[k][lang]:
                 code += line + "\n"
     return code
