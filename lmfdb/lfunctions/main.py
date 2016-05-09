@@ -526,11 +526,11 @@ def initLfunction(L, args, request):
                         replace('/Lfunction/', '/L/Plot/').
                         replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
 #    # an inelegant way to remove the plot in certain cases
-#    try: 
-#        if not L.fromDB and not L.plot:
-#            info['plotlink'] = ""
-#    except:
-#        pass
+    if L.Ltype() == 'ellipticmodularform':
+        if ( (L.number == 1 and (1 + L.level) * L.weight > 100) or 
+               (L.number > 1 and L.level * L.weight > 50)):
+            info['zeroeslink'] = ""
+            info['plotlink'] = ""
 
 
     info['bread'] = []
