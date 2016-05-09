@@ -5,6 +5,7 @@ def check_orbit_list(a):
     return set([anum(c) for c in a]) == set(range(1,len(a)+1))
 
 version = 1.3
+trivial_only = False
 print "Statistics for emf version %.1f with trivial character" % version
 from pymongo import MongoClient
 conn = MongoClient(host='localhost',port=int(37010))
@@ -13,9 +14,13 @@ mf = conn.modularforms2
 spaces = mf.webmodformspace
 forms = mf.webnewforms
 vspaces = spaces.find({'version':float(version)})
-tspaces = spaces.find({'version':float(version),'character':int(1)})
-uspaces = spaces.find({'version':float(version),'character':int(1),'dimension_new_cusp_forms':{'$gt':int(0)}})
-print "%d of %d spaces have trivial character, of which %d are nonempty" % (tspaces.count(), vspaces.count(), uspaces.count())
+if trivial_only:
+    tspaces = spaces.find({'version':float(version),'character':int(1)})
+    uspaces = spaces.find({'version':float(version),'character':int(1),'dimension_new_cusp_forms':{'$gt':int(0)}})
+    print "%d of %d spaces have trivial character, of which %d are nonempty" % (tspaces.count(), vspaces.count(), uspaces.count())
+else:
+    uspaces = spaces.find({'version':float(version),'dimension_new_cusp_forms':{'$gt':int(0)}})
+    print "%d of %d spaces are nonempty" % (vspaces.count(), uspaces.count())
 stab = dict()
 for s in uspaces:
     stab[s['space_label']] = (s['hecke_orbits'],s['dimension_new_cusp_forms'])
@@ -34,4 +39,4 @@ for label in stab:
     orbits = orbits.rewind()
     odims = [r['dimension'] for r in orbits] 
     if sum(odims) != stab[label][1]:
-        print "Hecke orbit dimensions %s do not sum to %d for space %s" % (odims, stab[label][1], stab[label][0])
+        print "Hecke orbit dimensions %s do not sum to %d for space %s" % (odims, stab[label][1], label)
