@@ -200,13 +200,15 @@ class ECNF(object):
         self.j = web_latex(j)
 
         self.fact_j = None
-        if j.is_zero():
-            self.fact_j = web_latex(j)
-        else:
-            try:
-                self.fact_j = web_latex(j.factor())
-            except (ArithmeticError, ValueError):  # if not all prime ideal factors principal
-                pass
+        # See issue 1258: some j factorizations work bu take too long (e.g. EllipticCurve/6.6.371293.1/1.1/a/1)
+        # If these are really wanted, they could be precomputed and stored in the db
+        # if j.is_zero():
+        #     self.fact_j = web_latex(j)
+        # else:
+        #     try:
+        #         self.fact_j = web_latex(j.factor())
+        #     except (ArithmeticError, ValueError):  # if not all prime ideal factors principal
+        #         pass
 
         # CM and End(E)
         self.cm_bool = "no"
