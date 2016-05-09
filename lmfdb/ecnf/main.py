@@ -255,8 +255,9 @@ def show_ecnf1(nf):
     info['more'] = int(start + count < nres)
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
-    if nf_label:
-        info['stats'] = ecnf_field_summary(nf_label)
+    #don't risk recomputing all the ecnf stats just to show curves for a single number field
+    #if nf_label:
+        #info['stats'] = ecnf_field_summary(nf_label)
     if nres == 1:
         info['report'] = 'unique match'
     else:
