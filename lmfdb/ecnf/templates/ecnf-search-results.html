@@ -53,37 +53,37 @@
          </select>
 </td>
 <td>         <select name='include_Q_curves'>
-{% if info.include_Q_curves == "include" %}
-           <option value="include" selected="yes">include</option>
+{% if info.include_Q_curves == "only" %}
+           <option value="include">include</option>
            <option value="exclude">exclude</option>
-           <option value="only">only</option>
+           <option value="only" selected="yes">only</option>
 {% else %}
 {% if info.include_Q_curves == "exclude" %}
            <option value="include">include</option>
            <option value="exclude" selected="yes">exclude</option>
            <option value="only">only</option>
 {% else %}
-           <option value="include">include</option>
+           <option value="include" selected="yes">include</option>
            <option value="exclude">exclude</option>
-           <option value="only" selected="yes">only</option>
+           <option value="only">only</option>
 {% endif %}
 {% endif %}
          </select>
 </td>
 <td>         <select name='include_cm'>
-{% if info.include_cm == "include" %}
-           <option value="include" selected="yes">include</option>
+{% if info.include_cm == "only" %}
+           <option value="include">include</option>
            <option value="exclude">exclude</option>
-           <option value="only">only</option>
+           <option value="only" selected="yes">only</option>
 {% else %}
 {% if info.include_cm == "exclude" %}
            <option value="include">include</option>
            <option value="exclude" selected="yes">exclude</option>
            <option value="only">only</option>
 {% else %}
-           <option value="include">include</option>
+           <option value="include" selected="yes">include</option>
            <option value="exclude">exclude</option>
-           <option value="only" selected="yes">only</option>
+           <option value="only">only</option>
 {% endif %}
 {% endif %}
          </select>
