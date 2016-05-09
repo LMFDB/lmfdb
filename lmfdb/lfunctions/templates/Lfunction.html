@@ -44,7 +44,9 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
  <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
 <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
 
-{% elif BETA %}
+{% elif Ltype=="riemann" %}
+
+{% elif algebraic %}
 <div align='center'><div style="display: inline-block; vertical-align:top;">{{ KNOWL('lfunction.normalization', title='Normalization') }}:  &nbsp; 
 </div>
 <div style="display: inline-block; vertical-align:top;">
