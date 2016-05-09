@@ -100,36 +100,39 @@ def EC_R_plot(ainvs, xmin, xmax, ymin, ymax, colour, legend):
 Rx=PolynomialRing(RR,'x')
 
 def EC_nf_plot(E, base_field_gen_name):
-    K = E.base_field()
-    n1 = K.signature()[0]
-    if n1 == 0:
-        return plot([])
-    R=[]
-    S=K.embeddings(RR)
-    for s in S:
-        A=[s(c) for c in E.ainvs()]
-        R.append(EC_R_plot_zone(Rx([A[4],A[3],A[1],1]),Rx([A[2],A[0]]))) 
-    xmin = min([r[0] for r in R])
-    xmax = max([r[1] for r in R])
-    ymin = min([r[2] for r in R])
-    ymax = max([r[3] for r in R])
-    cols = rainbow(n1) # Default choice of n colours
-    # However, these tend to be too pale, so we preset them for small values of n
-    if n1==1:
-        cols=["blue"]
-    elif n1==2:
-        cols=["red","blue"]
-    elif n1==3:
-        cols=["red","limegreen","blue"]
-    elif n1==4:
-        cols = ["red", "orange", "forestgreen", "blue"]
-    elif n1==5:
-        cols = ["red", "orange", "forestgreen", "blue", "darkviolet"]
-    elif n1==6:
-        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"]
-    elif n1==7:
-        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
-    return sum([EC_R_plot([S[i](c) for c in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(S[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)]) 
+    try:
+        K = E.base_field()
+        n1 = K.signature()[0]
+        if n1 == 0:
+            return plot([])
+        R=[]
+        S=K.embeddings(RR)
+        for s in S:
+            A=[s(c) for c in E.ainvs()]
+            R.append(EC_R_plot_zone(Rx([A[4],A[3],A[1],1]),Rx([A[2],A[0]]))) 
+        xmin = min([r[0] for r in R])
+        xmax = max([r[1] for r in R])
+        ymin = min([r[2] for r in R])
+        ymax = max([r[3] for r in R])
+        cols = rainbow(n1) # Default choice of n colours
+        # However, these tend to be too pale, so we preset them for small values of n
+        if n1==1:
+            cols=["blue"]
+        elif n1==2:
+            cols=["red","blue"]
+        elif n1==3:
+            cols=["red","limegreen","blue"]
+        elif n1==4:
+            cols = ["red", "orange", "forestgreen", "blue"]
+        elif n1==5:
+            cols = ["red", "orange", "forestgreen", "blue", "darkviolet"]
+        elif n1==6:
+            cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"]
+        elif n1==7:
+            cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
+        return sum([EC_R_plot([S[i](c) for c in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(S[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)]) 
+    except:
+        return text("Unable to plot", (1, 1), fontsize=36)
 
 class ECNF(object):
 
