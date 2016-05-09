@@ -5,7 +5,13 @@
 
 {% block body -%}
 <div id="header">
-    <div id="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" /></a></div>
+    <div id="logo"><a href="/">
+{% if BETA %}
+    <img src="{{ url_for('static', filename='images/lmfdb-logo-beta.png') }}" />
+{% else %}
+    <img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" />
+{% endif %}
+</a></div>
     <div class="right">
       <div class="bread">
         {% if bread %}

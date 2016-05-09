@@ -12,12 +12,12 @@ function error(msg) {
 
 /* beta logo displayed /w delay, -beta is default, so that it shows up when js
  * is disabled */
-$(function() {
-  $("#logo img").attr("src", '/static/images/lmfdb-logo.png');
-  window.setTimeout(function() {
-    $("#logo img").attr("src", '/static/images/lmfdb-logo-beta.png');
-  }, 2000);
-});
+//$(function() {
+//  $("#logo img").attr("src", '/static/images/lmfdb-logo.png');
+//  window.setTimeout(function() {
+//    $("#logo img").attr("src", '/static/images/lmfdb-logo-beta.png');
+//  }, 2000);
+//});
 
 //var revealed = false;
 ///* only show main content after processing all the latex */

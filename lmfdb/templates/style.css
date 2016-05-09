@@ -862,7 +862,7 @@ table.euler tr .galois {
 }
 
 body.knowl #header {
-  background: {{ color.knowl_border }}; 
+    background: {{color.knowl_header_background}};
 }
 body.knowl #header #title {
     color: {{color.knowl_title_text}};
