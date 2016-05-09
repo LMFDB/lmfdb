@@ -463,6 +463,7 @@
 /* Knowl colors */
 {% set knowl_error = 'purple' %}
 {% set knowl_border = '#DDF' %}
+{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
 {% set knowl_hover = '#DDF' %}
 {% set knowl_background = '#EEF' %}
 {% set knowl_hyper_text = '#006' %}
