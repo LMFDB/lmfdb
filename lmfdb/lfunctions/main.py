@@ -619,11 +619,11 @@ def initLfunction(L, args, request):
         for i in range(1, L.nr_of_curves_in_class + 1):
             info['friends'].append(('Elliptic curve ' + label + str(i), friendlink + str(i)))
         if L.modform:
-            info['friends'].append(('Modular form ' + label.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms",
-                                                                                        level=L.modform['level'], weight=2, character=0, label=L.modform['iso'])))
-            info['friends'].append(('L-function ' + label.replace('.', '.2'),
-                                    url_for('.l_function_emf_page', level=L.modform['level'],
-                                            weight=2, character=0, label=L.modform['iso'], number=0)))
+            info['friends'].append(('Modular form ' + label.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=L.modform['level'], weight=2, character=1, label=L.modform['iso'])))
+            # We don't want the modular form's L-function to be a friend of the elliptic curve L-function since they are the same!
+            # info['friends'].append(('L-function ' + label.replace('.', '.2'),
+            #                         url_for('.l_function_emf_page', level=L.modform['level'],
+            #                             weight=2, character=1, label=L.modform['iso'], number=0)))
         info['friends'].append(
             ('Symmetric square L-function', url_for(".l_function_ec_sym_page",
                                                     power='2', label=label)))
