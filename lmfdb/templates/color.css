@@ -380,8 +380,8 @@
 {% set sidebar_background_h2_hover = col_main_2 %}
 {% set sidebar_bkg_highlight = col_main_l %}
 {% set sidebar_bkg_highlight_knowl = col_knowl_d %}
-{% set sidebar_text_future = grey %}
-{% set sidebar_text_beta = purple %}
+{% set sidebar_text_future = 'grey' %}
+{% set sidebar_text_beta = 'purple' %}
 {% set sidebar_background_off = white %}
 
 
