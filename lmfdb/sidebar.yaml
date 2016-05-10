@@ -179,7 +179,22 @@
       status: future
       colspan: onecolumn
 
-6Repn:
+6Modl:
+   type: multilevel
+   status: beta
+   heading:
+      title: Mod $\ell$ eigensystems
+      url_for: "mod_l_eigensystems"
+   parts:
+     - title: GL(2)
+       style: rotate
+       part2:
+         - title: mod $\ell$ modular forms 
+           url_for: "modlmf.modlmf_render_webpage"
+           status: beta
+
+
+7Repn:
    type: simple
    heading:
       title: Representations
@@ -199,6 +214,9 @@
     - title: Galois
       status: future
       colspan: onecolumn
+    - title: mod $\ell$ Galois
+      status: beta
+      colspan: onecolumn
     - title: Weil-Deligne
       status: future
       colspan: onecolumn
@@ -206,7 +224,7 @@
       status: future
       colspan: onecolumn
 
-7Mot:
+8Mot:
    type: simple
    status: beta
    heading:
@@ -228,7 +246,7 @@
     - title: $G_2$
       status: future
 
-8Groups:
+9Groups:
    type: simple
    heading:
       title: Groups
@@ -253,7 +271,7 @@
       status: future
       colspan: onecolumn
 
-9Know:
+10Know:
    type: single
    heading:
        title: Knowledge
