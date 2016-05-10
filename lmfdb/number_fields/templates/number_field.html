@@ -127,6 +127,21 @@
         intermediate fields are shown with their multiplicities.
         {% endif %}
 
+        {% if info.resinfo !=[] %}
+        <h2>{{ KNOWL('nf.sibling', title='Sibling fields') }}</h2>
+        {% for r in info.resinfo %}
+            <div>
+            <table>
+            <tr><td>
+            {% if r[0] == 'ae' %}
+                {{ KNOWL('nf.arithmetically_equivalent', title='Arithmetically equvalently siblings') }}:
+                <td> {{ r[1][0] |safe }}
+            {% endif %}
+            </table>
+            </div>
+        {% endfor %}
+        {% endif %}
+
 {% if nf.unit_galois_action() %}
         <p><h2> {{ KNOWL('nf.multiplicative_gal_module', title='Multiplicative Galois module structure') }}</h2>
             <table>

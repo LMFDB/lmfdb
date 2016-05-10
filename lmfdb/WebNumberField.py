@@ -286,6 +286,51 @@ class WebNumberField:
             return [str(u) for u in zkstrings]
         return list(pari(self.poly()).nfbasis())
 
+    # Used by subfields and resolvent functions to
+    # take coefficients for fields and either return
+    # information about the item, or a usable knowl
+
+    # We need to return information in 2 ways: (1) list of knowls
+    # and (2) list of label/polynomials
+    def myhelper(self, coefmult):
+        coef = string2list(coefmult[0])
+        subfield = self.from_coeffs(coef)
+        C = base.getDBConnection()
+        if subfield._data is None:
+            deg = len(coef) - 1
+            mypol = sage.all.latex(coeff_to_poly(coef))
+            mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+            return [mypol, coefmult[1]]
+        return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
+
+    # returns resolvent dictionary
+    # ae means arithmetically equivalent fields
+    def resolvents(self):
+        if not self.haskey('res'):
+            self._data['res'] = {}
+        return self._data['res']
+
+    def arith_equiv_labels(self):
+        resall = self.resolvents()
+        if 'ae' in resall:
+            ae = [self.from_coeffs(str(a)) for a in resall['ae']]
+            return ['' if a._data is None else a.label for a in ae]
+        return []
+
+    def arith_equiv_knowls(self):
+        resall = self.resolvents()
+        if 'ae' in resall:
+            helpout = [self.myhelper([a,1]) for a in resall['ae']]
+            return [a[0] for a in helpout]
+        return []
+
+    def arith_equiv_raw(self):
+        resall = self.resolvents()
+        if 'ae' in resall:
+            return [string2list(a) for a in resall['ae']]
+        return []
+
     def subfields(self):
         if not self.haskey('subs'):
             return []
@@ -295,18 +340,7 @@ class WebNumberField:
         subs = self.subfields()
         if subs == []:
             return []
-        C = base.getDBConnection()
-        def myhelper(coefmult):
-            coef = string2list(coefmult[0])
-            subfield = self.from_coeffs(coef)
-            if subfield._data is None:
-                deg = len(coef) - 1
-                mypol = sage.all.latex(coeff_to_poly(coef))
-                mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
-                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
-                return [mypol, coefmult[1]]
-            return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
-        subs = [myhelper(a) for a in subs]
+        subs = [self.myhelper(a) for a in subs]
         subs = [do_mult(a) for a in subs]
         return ', '.join(subs)
 

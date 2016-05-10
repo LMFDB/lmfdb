@@ -354,6 +354,15 @@ def render_field_webpage(args):
                                                            char_number_list=','.join(
                                                                [str(a) for a in dirichlet_chars]),
                                                            poly=info['polynomial'])))
+    resinfo=[]
+    if len(nf.arith_equiv_knowls())>0:
+        ae = nf.arith_equiv_knowls()
+        resinfo.append(('ae', ae))
+        ae = nf.arith_equiv_labels()[0] # Maybe change latter if there is >1
+        if ae != '':
+            info['friends'].append(('Arithmetically equivalent sibling',url_for(".by_label", label=ae)))
+
+    info['resinfo'] = resinfo
     info['learnmore'] = [('Global number field labels', url_for(
         ".render_labels_page")), 
         (Completename, url_for(".render_discriminants_page")),
