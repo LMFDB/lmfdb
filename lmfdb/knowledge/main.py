@@ -179,6 +179,22 @@ def ref_to_link(txt):
 
     return '[' + ans + ']' + " " + everythingelse
 
+def md_latex_accents(text):
+    """
+    Convert \"o to &ouml; and similar TeX-style markup.
+    """
+
+    knowl_content = text
+
+    knowl_content = re.sub(r'\\"([a-zA-Z])',r"&\1uml;",knowl_content)
+    knowl_content = re.sub(r'\\"{([a-zA-Z])}',r"&\1uml;",knowl_content)
+    knowl_content = re.sub(r"\\'([a-zA-Z])",r"&\1acute;",knowl_content)
+    knowl_content = re.sub(r"\\'{([a-zA-Z])}",r"&\1acute;",knowl_content)
+    knowl_content = re.sub(r"\\`([a-zA-Z])",r"&\1grave;",knowl_content)
+    knowl_content = re.sub(r"\\`{([a-zA-Z])}",r"&\1grave;",knowl_content)
+
+    return knowl_content
+
 def md_preprocess(text):
     """
     Markdown preprocessor: html paragraph breaks before display math,
@@ -191,6 +207,8 @@ def md_preprocess(text):
 
     while "\\cite{" in knowl_content:
         knowl_content = re.sub(r"\\cite({.*)",ref_to_link,knowl_content,0,re.DOTALL)
+
+    knowl_content = md_latex_accents(knowl_content)
 
     return knowl_content
 

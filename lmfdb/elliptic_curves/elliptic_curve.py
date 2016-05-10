@@ -369,7 +369,7 @@ def render_isogeny_class(iso_class):
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=False)
     if class_data == "Class not found":
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True)
-    class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
+    class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number=10)
 
     return render_template("iso_class.html",
                            properties2=class_data.properties,
@@ -381,11 +381,12 @@ def render_isogeny_class(iso_class):
                            downloads=class_data.downloads,
                            learnmore=learnmore_list())
 
+@ec_page.route("/modular_form_display/<label>")
 @ec_page.route("/modular_form_display/<label>/<number>")
-def modular_form_display(label, number):
+def modular_form_display(label, number=10):
     try:
         number = int(number)
-    except:
+    except ValueError:
         number = 10
     if number < 10:
         number = 10
@@ -448,7 +449,7 @@ def render_curve_webpage_by_label(label):
 
     if data.twoadic_label:
         credit = credit.replace(' and',',') + ' and Jeremy Rouse'
-    data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
+    data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number=10)
 
     return render_template("curve.html",
                            properties2=data.properties,
@@ -675,13 +676,14 @@ def ec_code(**args):
     print("args has keys %s" %  to_dict(args).keys())
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
     E = WebEC.by_label(label)
+    Ecode = E.code()
     lang = args['download_type']
     code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
     if lang=='gp':
         lang = 'pari'
     for k in sorted_code_names:
-        if lang in E.code[k]:
+        if lang in Ecode[k]:
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            for line in E.code[k][lang]:
+            for line in Ecode[k][lang]:
                 code += line + "\n"
     return code

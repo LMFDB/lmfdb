@@ -102,7 +102,7 @@ class DimensionTable(object):
         return "n/a"
 
     @cached_method
-    def is_in_db(self, N=1, k=4, character=0):
+    def is_in_db(self, N=1, k=4, character=1):
         factors = connect_db()['Newform_factors.files'] #i'm not checking the database to see what is going on here
         key = {'k': int(k), 'N': int(N), 'chi': int(character)}
         emf_logger.debug("in is_in_db: key:{0}".format(key))

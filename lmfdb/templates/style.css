@@ -1692,13 +1692,13 @@ div.maassformplot img {
 
 
 #sidebar .beta { 
-    color:{{color.sidebar_text_beta}};
+    color: purple; /*{{color.sidebar_text_beta}};*/
     display: inherit;
 }
 
 
 #sidebar .beta a { 
-    color:{{color.sidebar_text_beta}};
+    color: purple; /*{{color.sidebar_text_beta}};*/
 }
 
 

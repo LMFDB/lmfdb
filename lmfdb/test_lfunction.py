@@ -5,6 +5,8 @@ from lfunctions.LfunctionLcalc import createLcalcfile_ver1
 from base import LmfdbTest
 import math
 import unittest2
+from modular_forms.elliptic_modular_forms import emf_logger
+emf_logger.setLevel(100)
 
 
 class LfunctionTest(LmfdbTest):
@@ -26,6 +28,7 @@ class LfunctionTest(LmfdbTest):
     def test_Lec(self):
         L = self.tc.get('/L/EllipticCurve/Q/56.a/')
         assert 'Graph' in L.data
+        assert '/ModularForm/GL2/Q/holomorphic/56/2/1/a/' in L.data
 
     def test_Lemf(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/')

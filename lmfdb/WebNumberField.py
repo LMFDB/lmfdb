@@ -5,6 +5,7 @@ import re
 import pymongo
 import bson
 import yaml
+import hashlib
 from sage.misc.cachefunc import cached_function
 from lmfdb.utils import *
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
@@ -152,8 +153,6 @@ class WebNumberField:
             self._data = self._get_dbdata()
         else:
             self._data = data
-        if self._data is not None:
-            self.make_code_snippets()
 
     # works with a string, or a list of coefficients
     @classmethod
@@ -162,7 +161,8 @@ class WebNumberField:
             coeffs = list2string(coeffs)
         if isinstance(coeffs, str):
             nfdb = base.getDBConnection().numberfields.fields
-            f = nfdb.find_one({'coeffs': coeffs})
+            chash = hashlib.md5(coeffs).hexdigest()
+            f = nfdb.find_one({'coeffhash': chash, 'coeffs': coeffs})
             if f is None:
                 return cls('a')  # will initialize data to None
             return cls(f['label'], f)

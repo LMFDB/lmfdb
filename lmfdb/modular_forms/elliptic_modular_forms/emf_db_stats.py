@@ -20,7 +20,7 @@ if trivial_only:
     print "%d of %d spaces have trivial character, of which %d are nonempty" % (tspaces.count(), vspaces.count(), uspaces.count())
 else:
     uspaces = spaces.find({'version':float(version),'dimension_new_cusp_forms':{'$gt':int(0)}})
-    print "%d of %d spaces are nonempty" % (vspaces.count(), uspaces.count())
+    print "%d of %d spaces are nonempty" % (uspaces.count(), vspaces.count())
 stab = dict()
 for s in uspaces:
     stab[s['space_label']] = (s['hecke_orbits'],s['dimension_new_cusp_forms'])

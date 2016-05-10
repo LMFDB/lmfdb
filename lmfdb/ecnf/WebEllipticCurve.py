@@ -200,13 +200,16 @@ class ECNF(object):
         self.j = web_latex(j)
 
         self.fact_j = None
+        # See issue 1258: some j factorizations work bu take too long (e.g. EllipticCurve/6.6.371293.1/1.1/a/1)
+        # If these are really wanted, they could be precomputed and stored in the db
         if j.is_zero():
             self.fact_j = web_latex(j)
         else:
-            try:
-                self.fact_j = web_latex(j.factor())
-            except (ArithmeticError, ValueError):  # if not all prime ideal factors principal
-                pass
+            if self.field.K().degree() < 3: #j.numerator_ideal().norm()<1000000000000:
+                try:
+                    self.fact_j = web_latex(j.factor())
+                except (ArithmeticError, ValueError):  # if not all prime ideal factors principal
+                    pass
 
         # CM and End(E)
         self.cm_bool = "no"
@@ -362,30 +365,35 @@ class ECNF(object):
         for E0 in self.base_change:
             self.friends += [('Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
 
-        self.make_code_snippets()
+        self._code = None # will be set if needed by get_code()
+
+    def code(self):
+        if self._code == None:
+            self.make_code_snippets()
+        return self._code
 
     def make_code_snippets(self):
         # read in code.yaml from current directory:
 
         _curdir = os.path.dirname(os.path.abspath(__file__))
-        self.code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+        self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
 
         # Fill in placeholders for this specific curve:
 
         gen = self.field.generator_name().replace("\\","") # phi not \phi
         for lang in ['sage', 'magma', 'pari']:
-            self.code['field'][lang] = self.code['field'][lang] % self.field.poly()
+            self._code['field'][lang] = self._code['field'][lang] % self.field.poly()
             if gen != 'a':
-                self.code['field'][lang] = self.code['field'][lang].replace("<a>","<%s>" % gen)
-                self.code['field'][lang] = self.code['field'][lang].replace("a=","%s=" % gen)
+                self._code['field'][lang] = self._code['field'][lang].replace("<a>","<%s>" % gen)
+                self._code['field'][lang] = self._code['field'][lang].replace("a=","%s=" % gen)
 
         for lang in ['sage', 'magma', 'pari']:
-            self.code['curve'][lang] = self.code['curve'][lang] % self.ainvs
+            self._code['curve'][lang] = self._code['curve'][lang] % self.ainvs
 
-        for k in self.code:
+        for k in self._code:
             if k != 'prompt':
-                for lang in self.code[k]:
-                    self.code[k][lang] = self.code[k][lang].split("\n")
+                for lang in self._code[k]:
+                    self._code[k][lang] = self._code[k][lang].split("\n")
                     # remove final empty line
-                    if len(self.code[k][lang][-1])==0:
-                        self.code[k][lang] = self.code[k][lang][:-1]
+                    if len(self._code[k][lang][-1])==0:
+                        self._code[k][lang] = self._code[k][lang][:-1]
