@@ -26,7 +26,8 @@ from lmfdb.base import app
 from flask import url_for
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version, emf_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
+from lmfdb.number_fields.number_field import poly_to_field_label
+from lmfdb.WebNumberField import field_pretty
 from lmfdb.utils import web_latex_split_on_pm
 
 from sage.rings.power_series_poly import PowerSeries_poly
@@ -832,17 +833,8 @@ class WebNumberField(WebDict):
         K = self._value
         if hasattr(K, "lmfdb_label"):
             return K.lmfdb_label
-        
-        if K.absolute_degree() == 1:
-            p = 'x'
         else:
-            p = K.absolute_polynomial()
-            if p.degree() > 4:
-                return ''
-
-        l = poly_to_field_label(p)
-        
-        return l
+            return ''
 
     def from_db(self, k):
         return k
