@@ -232,15 +232,11 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         Check how many coefficients we can generate from the eigenvalues in the database.
         """
         from sage.all import next_prime
-        recs = list(self._file_collection.find(self.key_dict()))
-        if len(recs) == 0:
+        prec_in_db = list(self._file_collection.find(self.key_dict(), ['prec']))
+        if len(prec_in_db) == 0:
             return 0
-        prec_in_db = [rec['prec'] for rec in recs]
-        if prec_in_db != []:
-            max_prec_in_db = max(prec_in_db)
-            return next_prime(max_prec_in_db)-1
-        else:
-            return 0
+        max_prec_in_db = max(r['prec'] for r in prec_in_db)
+        return next_prime(max_prec_in_db)-1
         
     def __getitem__(self, p):
         if self.auto_update and not self.has_eigenvalue(p):
