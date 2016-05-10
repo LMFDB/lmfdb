@@ -55,7 +55,7 @@ def _browse_web_modform_spaces_in_ranges(**kwds):
     if limits_weight[0] > k_max_db:
         emf_logger.debug("limits_weight={0} > k_max_db={1}".format(limits_weight, k_max_db))
         return render_template("not_available.html")
-    if info['character'] == 0:
+    if info['character'] == 1:
         info['grouptype'] = 0
         info['groupother'] = 1
         dimtbl = DimensionTable(0)
