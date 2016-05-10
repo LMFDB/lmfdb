@@ -76,22 +76,6 @@ Rank not yet determined.
 <p>Not available.</p>
 {% endif %}
 
-<script type="text/javascript">
-var number_of_coefficients = 10;
-function more_handler(evt) {
-    number_of_coefficients += number_of_coefficients;
-    evt.preventDefault();
-    $("#modform_output").load("/EllipticCurve/Q/modular_form_display/{{info.lmfdb_label}}/"+number_of_coefficients,
-        function() {
-            {# tell mathjx to render the output #}
-            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "modform_output"]);
-        });
-}
-$(function() {
-    $("#morebutton").click(function(e) {more_handler(e)});
-});
-</script>
-
 {% if DEBUG %}
 <hr>
 <div>
