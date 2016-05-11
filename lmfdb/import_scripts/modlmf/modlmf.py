@@ -23,7 +23,7 @@ pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['mod_l_eigenvalues'].authenticate('editor', password)
-modlmf = C.modlmf
+modlmf = C['mod_l_eigenvalues'].modlmf
 
 saving = True 
 
@@ -41,8 +41,8 @@ def string2list(s):
   return [int(a) for a in s.split(',')]
 
 
-def base_label(dimension,determinant,level,class_number):
-    return ".".join([str(dimension),str(determinant),str(level),str(class_number)])
+def base_label(characteristic, deg, level, weight, dirchar):
+    return ".".join([str(characteristic),str(deg),str(level),str(weight), str(dirchar)])
 
 def last_label(base_label, n):
     return ".".join([str(base_label),str(n)])
@@ -50,12 +50,13 @@ def last_label(base_label, n):
 # The following create_index command checks if there is an index on
 # label, dimension, determinant and level. 
 
-lat.create_index('label')
-lat.create_index('dim')
-lat.create_index('det')
-lat.create_index('level')
-lat.create_index('aut')
-lat.create_index('class_number')
+
+modlmf.create_index('characteristic')
+modlmf.create_index('deg')
+modlmf.create_index('level')
+modlmf.create_index('conductor')
+modlmf.create_index('weight')
+modlmf.create_index('dirchar')
 
 print "finished indices"
 
@@ -73,38 +74,29 @@ def label_lookup(base_label):
     return 1	
 
 def do_import(ll):
-    dim,det,level,gram,density,hermite,minimum,kissing,shortest,aut,theta_series,class_number,genus_reps,name,comments = ll
-    mykeys = ['dim','det','level','gram','density','hermite', 'minimum','kissing','shortest','aut','theta_series','class_number','genus_reps','name','comments']
+    characteristic,deg,level,conductor,weight,dirchar,atkinlehner,n_coeffs,coeffs = ll
+    mykeys = ['characteristic','deg','level','conductor','weight','dirchar','atkinlehner','n_coeffs','coeffs']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
-	
-    blabel = base_label(data['dim'],data['det'],data['level'], data['class_number'])
+
+    blabel = base_label(data['characteristic'],data['deg'],data['level'], data['weight'], data['dirchar'])
     data['base_label'] = blabel
     data['index'] = label_lookup(blabel)
     label= last_label(blabel, data['index'])
     data['label'] = label
- 
-    lattice = lat.find_one({'label': label})
+# we need still to organize this better with respect to tie breaks 
 
-    if lattice is None:
-        print "new lattice"
-        print "***********"
-        print "check for isometries..."
-        A=data['gram'];
-        n=len(A[0])
-        d=matrix(A).determinant()
-        result=[B for B in lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
-        if len(result)>0:
-            print "... the lattice with base label "+ blabel + " is isometric to " + str(result[0]['gram'])
-            print "***********"
-        else:
-            lattice = data
+    modl_mf = modlmf.find_one({'label': label})
+
+    if modl_mf is None:
+        print "new mod l modular form"
+        modl_mf = data
     else:
-        print "lattice already in the database"
-        lattice.update(data)
+        print "mod l modular form already in the database"
+        modl_mf.update(data)
     if saving:
-        lat.update({'label': label} , {"$set": lattice}, upsert=True)
+        modlmf.update({'label': label} , {"$set": modl_mf}, upsert=True)
 
 
 
