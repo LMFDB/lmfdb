@@ -216,7 +216,7 @@ class WebEC(object):
             data['minq_info'] = '(itself)'
         else:
             minq_ainvs = [str(c) for c in minq.ainvs()]
-            data['minq_label'] = db_ec().find_one({'ainvs': minq_ainvs})['lmfdb_label']
+            data['minq_label'] = db_ec().find_one({'jinv':str(self.E.j_invariant()),'ainvs': minq_ainvs})['lmfdb_label']
             data['minq_info'] = '(by %s)' % minqD
 
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
