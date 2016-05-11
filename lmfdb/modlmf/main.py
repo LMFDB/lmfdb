@@ -26,7 +26,7 @@ import ast
 import StringIO
 
 modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
-#connection = connection.mod_l_eigenvalues.modlmf
+
 
 # utilitary functions for displays 
 
@@ -89,33 +89,36 @@ def modlmf_render_webpage():
 # Random modlmf
 @modlmf_page.route("/random")
 def random_modlmf():
-    res = random_object_from_collection( connection )
+    res = random_object_from_collection( getDBConnection().mod_l_eigenvalues.modlmf )
     return redirect(url_for(".render_modlmf_webpage", label=res['label']))
 
-
-modlmf_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
+modlmf_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
 def split_modlmf_label(lab):
     return modlmf_label_regex.match(lab).groups()
 
-def modlmf_by_label_or_name(lab, C):
-    if C.modlmfs.lat.find({'$or':[{'label': lab}, {'name': lab}]}).limit(1).count() > 0:
+def modlmf_by_label(lab, C):
+    if C.modlmfs.lat.find({'label': lab}).limit(1).count() > 0:
         return render_modlmf_webpage(label=lab)
     if modlmf_label_regex.match(lab):
-        flash(Markup("The integral modlmf <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash(Markup("The mod &#x2113; modular form <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
     else:
-        flash(Markup("No integral modlmf in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash(Markup("No mod &#x2113; modular form in the database has label <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".modlmf_render_webpage"))
 
+
+
+
+
 def modlmf_search(**args):
-    C = connection
+    C = getDBConnection()
     info = to_dict(args)  # what has been entered in the search boxes
 
     if 'download' in info:
         return download_search(info)
 
     if 'label' in info and info.get('label'):
-        return modlmf_by_label_or_name(info.get('label'), C)
+        return modlmf_by_label(info.get('label'), C)
     query = {}
     try:
         for field, name in (('dim','Dimension'),('det','Determinant'),('level',None),
@@ -218,9 +221,16 @@ def search_input_error(info, bread=None):
         bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
     return render_template("modlmf-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
 
+
+
+
+
+
+
+
 @modlmf_page.route('/<label>')
 def render_modlmf_webpage(**args):
-    C = connection()
+    C = getDBConnection()
     data = None
     if 'label' in args:
         lab = args.get('label')
@@ -346,7 +356,7 @@ def theta_display(label, number):
         number = 30
     if number > 150:
         number = 150
-    C = connection()
+    C = getDBConnection()
     data = C.modlmfs.lat.find_one({'label': label})
     coeff=[data['theta_series'][i] for i in range(number+1)]
     return print_q_expansion(coeff)
@@ -392,7 +402,7 @@ def download_search(info):
     mydate = time.strftime("%d %B %Y")
     # reissue saved query here
 
-    res = connection.modlmfs.lat.find(ast.literal_eval(info["query"]))
+    res = getDBConnection().modlmfs.lat.find(ast.literal_eval(info["query"]))
 
     c = download_comment_prefix[lang]
     s =  '\n'
@@ -429,7 +439,7 @@ def render_modlmf_webpage_download(**args):
 
 
 def download_modlmf_full_lists_v(**args):
-    C = connection
+    C = getDBConnection()
     data = None
     label = str(args['label'])
     res = C.modlmfs.lat.find_one({'label': label})
@@ -450,7 +460,7 @@ def download_modlmf_full_lists_v(**args):
 
 
 def download_modlmf_full_lists_g(**args):
-    C = connection
+    C = getDBConnection()
     data = None
     label = str(args['label'])
     res = C.modlmfs.lat.find_one({'label': label})

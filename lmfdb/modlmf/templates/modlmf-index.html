@@ -55,7 +55,6 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 </p>
 
 
-
 <h2> Find a specific {{ KNOWL('modlmf.definition', title='mod &#x2113; modular form') }} by {{KNOWL('modlmf.label', title='label')}}</h2>
 
 <form>
@@ -69,8 +68,6 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 <p>Please enter a value or leave blank:</p>
 <form>
 <table>
-
-
 <tr>
 <td align= right>{{ KNOWL('modlmf.characteristic', title='Characteristic') }}:</td>
 <td><input type='text' name='characteristic' placeholder='3' size=10>
@@ -108,22 +105,47 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 <td><input type='text' name='dirchar' placeholder='1.1' size=10>
 <td><span class="formexample"> e.g. 1.1</td>
 </tr>
+</table>
 
 
-
-
-
-
-<tr><td align=left colspan='3'>Maximum number of mod &#x2113; modular forms to display <input type='text' name='count' value=50 size='5' />
+<table id="a_n">
+<tr>
+<td colspan=3>Coefficient of the {{KNOWL('modlmf.q_expansion', title='q expansion')}} at 
+<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size='3' example=3 > 
+<span class="formexample">e.g. 5, 3</span>
+</td><td>
+  <button type='button' id='more_modp_button'>more</button>
 </td>
 </tr>
+</table>
 
+<table>
 <tr>
-<td colspan=3><button type='submit' value='Search'>Search</button>
+<td align=left colspan='3'>Maximum number of mod &#x2113; modular forms to display <input type='text' name='count' value=50 size='5'/></td>
+<td colspan='3'><button type='submit' value='Search'>Search</button>
 </td>
 </tr>
 </table>
 </form>
 
 
+<script>
+//Try to get tbody first with jquery children. works faster!
+var tbody = $('#a_n').children('tbody');
+
+//Then if no tbody just select your table 
+var table = tbody.length ? tbody : $('#a_n');
+
+
+$('#more_modp_button').click(function(){
+    //Add row
+    table.append("<tr><td align='right' colspan=3>Coefficient of the {{KNOWL('modlmf.q_expansion', title='q expansion')}} at <input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size=3 example=3 > <span class='formexample'>e.g. 5 ; 3</span>");
+    return false;
+})
+
+function deleteRow(btn) {
+  var row = btn.parentNode.parentNode;
+  row.parentNode.removeChild(row);
+}
+</script>
 {% endblock %}
