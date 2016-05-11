@@ -9,15 +9,18 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 from sage.misc.preparser import preparse
 from lmfdb.half_integral_weight_forms import hiwf_page, hiwf_logger
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range2, web_latex_split_on_pm, comma, clean_input
-from lmfdb.number_fields.number_field import parse_list
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_split_on_pm, comma
+#clean_input
+#parse_range2, 
+#from lmfdb.number_fields.number_field import parse_list
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, parse_range
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
+#, parse_range
 
-from lmfdb.number_fields.number_field import parse_list, parse_field_string
+#from lmfdb.number_fields.number_field import parse_list, parse_field_string
 
 from lmfdb.WebNumberField import *
 
