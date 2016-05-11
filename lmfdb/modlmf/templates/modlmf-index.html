@@ -23,44 +23,45 @@
 </p>
 {% endif %}
 
-<h2> Browse {{ KNOWL('modlmf.definition', title='Integral modlmfs') }}</h2>
+<h2> Browse {{ KNOWL('modlmf.definition', title='mod &#x2113; Modular Forms') }}</h2>
 
 <p>
-By {{ KNOWL('modlmf.dimension', title='Dimension') }}: 
-{% for rnge in info.dim_list %}
-<a href="?dim={{rnge}}">{{rnge}}</a>
+By {{ KNOWL('modlmf.characteristic', title='characteristic') }}: 
+{% for rnge in info.characteristic_list %}
+<a href="?characteristic={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
+
+<p>
+By {{ KNOWL('modlmf.level', title='level') }}:
+{% for rnge in info.level_list %}
+<a href="?level={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('modlmf.determinant', title='Determinant') }}:
-{% for rnge in info.det_list %}
-<a href="?det={{rnge}}">{{rnge}}</a>
+By {{ KNOWL('modlmf.weight', title='weight') }}: 
+{% for rnge in info.weight_list %}
+<a href="?weight={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('modlmf.class_number', title='Class number') }}: 
-{% for rnge in info.class_number_list %}
-<a href="?class_number={{rnge}}">{{rnge}}</a>
+Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular forms") }}:
+{% for rnge in info.label_list%}
+<a href="?label={{rnge}}">&nbsp;{{rnge}}&nbsp;</a>
 {% endfor %}
 </p>
-<p>
-Some of our favourite {{ KNOWL('modlmf.definition', title='integral modlmfs') }}:
-{% for rnge in info.name_list %}
-<a href="?label={{rnge}}"> {{rnge}} </a>
-{% endfor %}
-</p>
-<p>A <a href={{url_for('.random_modlmf')}}>random integral modlmf</a> from the database.
+<p>A <a href={{url_for('.random_modlmf')}}>random mod &#x2113; modular form</a> from the database.
 <br>
 </p>
 
 
 
-<h2> Find a specific {{ KNOWL('modlmf.definition', title='integral modlmf') }} by {{KNOWL('modlmf.label', title='label')}} or by {{KNOWL('modlmf.name', title='name')}}</h2>
+<h2> Find a specific {{ KNOWL('modlmf.definition', title='mod &#x2113; modular form') }} by {{KNOWL('modlmf.label', title='label')}}</h2>
 
 <form>
-<input type='text' name='label' placeholder='3.4.8.1.2'>
+<input type='text' name='label' placeholder='2.1.1.0.1.1'>
 <button type='submit'>Label</button>
-<br><span class="formexample">e.g. 3.4.8.1.2, D3, E8, A14, Leech</span>
+<br><span class="formexample">e.g. 2.1.1.0.1.1</span>
 </form>
 
 <h2> Search </h2>

@@ -25,7 +25,7 @@ import os
 import ast
 import StringIO
 
-modlmf_credit = 'To be done'
+modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
 #connection = connection.mod_l_eigenvalues.modlmf
 
 # utilitary functions for displays 
@@ -72,14 +72,11 @@ def modlmf_render_webpage():
     if len(args) == 0:
         counts = get_stats().counts()
         characteristic_list= [2,3,5,7,11]
-        max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
-        det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
-#        if counts['max_det']>3000:
-#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
-        det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
-        name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
-        info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
+        level_list_endpoints = [1, 10, 20, 30, 40, 50]
+        level_list = ["%s-%s" % (start, end - 1) for start, end in zip(level_list_endpoints[:-1], level_list_endpoints[1:])]
+        weight_list= [1, 2, 3, 4, 5]
+        label_list = ["2.1.1.0.1.1","2.1.3.0.1.1"]
+        info = {'characteristic_list': characteristic_list, 'level_list': level_list,'weight_list': weight_list, 'label_list': label_list}
         credit = modlmf_credit
         t = 'mod &#x2113; Modular Forms'
         bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage"))]
