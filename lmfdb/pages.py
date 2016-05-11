@@ -198,9 +198,9 @@ def fields_history():
 
 @app.route('/Mod_l_eigensystems')
 def mod_l_eigensystems():
-    t = 'Mod l eigensystems'
+    t = 'Mod &#8467; eigensystems'
     b = [(t, url_for('mod_l_eigensystems'))]
-    return render_template('single.html', kid='modl_eigenvalue_systems.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
+    return render_template('single.html', kid='mod&#8467;_eigenvalue_systems.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 
 @app.route('/Representation')

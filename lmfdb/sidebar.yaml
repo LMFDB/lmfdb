@@ -183,13 +183,13 @@
    type: multilevel
    status: beta
    heading:
-      title: Mod $\ell$ eigensystems
+      title: Mod &#8467; eigensystems
       url_for: "mod_l_eigensystems"
    parts:
      - title: GL(2)
        style: rotate
        part2:
-         - title: mod $\ell$ modular forms 
+         - title: mod &#8467; modular forms 
            url_for: "modlmf.modlmf_render_webpage"
            status: beta
 
@@ -214,7 +214,7 @@
     - title: Galois
       status: future
       colspan: onecolumn
-    - title: mod $\ell$ Galois
+    - title: mod &#8467; Galois
       status: beta
       colspan: onecolumn
     - title: Weil-Deligne
