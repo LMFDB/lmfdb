@@ -362,6 +362,15 @@ def render_field_webpage(args):
         if gc != '':
             info['friends'].append(('Galois closure',url_for(".by_label", label=gc)))
 
+    if len(nf.sibling_knowls())>0:
+        sibs = nf.sibling_knowls()
+        resinfo.append(('sib', sibs))
+        siblabels = nf.sibling_labels()
+        for jj in range(len(siblabels)):
+            mysib = siblabels[jj]
+            if mysib != '':
+                info['friends'].append(("Degree %s sibling"%siblabels[jj][0] ,url_for(".by_label", label=mysib)))
+
     if len(nf.arith_equiv_knowls())>0:
         ae = nf.arith_equiv_knowls()
         resinfo.append(('ae', ae))
