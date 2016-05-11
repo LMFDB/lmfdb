@@ -355,6 +355,13 @@ def render_field_webpage(args):
                                                                [str(a) for a in dirichlet_chars]),
                                                            poly=info['polynomial'])))
     resinfo=[]
+    if len(nf.galois_closure_knowls())>0:
+        gc = nf.galois_closure_knowls()
+        resinfo.append(('gc', gc))
+        gc = nf.galois_closure_labels()[0] # Maybe change latter if there is >1
+        if gc != '':
+            info['friends'].append(('Galois closure',url_for(".by_label", label=gc)))
+
     if len(nf.arith_equiv_knowls())>0:
         ae = nf.arith_equiv_knowls()
         resinfo.append(('ae', ae))

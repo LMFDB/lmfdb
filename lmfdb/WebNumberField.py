@@ -311,6 +311,20 @@ class WebNumberField:
             self._data['res'] = {}
         return self._data['res']
 
+    def galois_closure_labels(self):
+        resall = self.resolvents()
+        if 'gal' in resall:
+            gal = [self.from_coeffs(str(a)) for a in resall['gal']]
+            return ['' if a._data is None else a.label for a in gal]
+        return []
+
+    def galois_closure_knowls(self):
+        resall = self.resolvents()
+        if 'gal' in resall:
+            helpout = [self.myhelper([a,1]) for a in resall['gal']]
+            return [a[0] for a in helpout]
+        return []
+
     def arith_equiv_labels(self):
         resall = self.resolvents()
         if 'ae' in resall:

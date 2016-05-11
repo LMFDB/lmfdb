@@ -43,6 +43,8 @@
                 </tr> 
   {% elif info.is_galois %}
             <tr><td colspan="3">Extension is Galois</tr>
+  {% else %}
+            <tr><td colspan="3">Extension is not Galois</tr>
   {% endif %}
 
           </table>
@@ -129,17 +131,22 @@
 
         {% if info.resinfo !=[] %}
         <h2>{{ KNOWL('nf.sibling', title='Sibling fields') }}</h2>
+        <div>
+        <table>
         {% for r in info.resinfo %}
-            <div>
-            <table>
-            <tr><td>
             {% if r[0] == 'ae' %}
+              <tr><td>
                 {{ KNOWL('nf.arithmetically_equivalent', title='Arithmetically equvalently siblings') }}:
                 <td> {{ r[1][0] |safe }}
             {% endif %}
-            </table>
-            </div>
+            {% if r[0] == 'gc' %}
+              <tr><td>
+                {{ KNOWL('nf.galois_closure', title='Galois closure') }}:
+                <td> {{ r[1][0] |safe }}
+            {% endif %}
         {% endfor %}
+        </table>
+        </div>
         {% endif %}
 
 {% if nf.unit_galois_action() %}
