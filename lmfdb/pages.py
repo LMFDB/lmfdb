@@ -149,6 +149,12 @@ def roadmap():
     b = [(t, url_for('roadmap'))]
     return render_template('roadmap.html', title=t, body_class=_bc, bread=b)
 
+@app.route("/news")
+def news():
+    t = "News"
+    b = [(t, url_for('news'))]
+    return render_template(_single_knowl, title="LMFDB in the news", kid='doc.news.in_the_news', body_class=_bc, bread=b)
+
 ## INTRO PAGES END
 
 @app.route('/Variety')
