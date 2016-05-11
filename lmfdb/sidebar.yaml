@@ -13,6 +13,8 @@
       url_for: "universe"
     - title: Future Plans
       url_for: "roadmap"
+    - title: News
+      url_for: "news"
 
 2L-functions:
    type: L
