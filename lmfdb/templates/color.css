@@ -16,7 +16,7 @@
     {% set col_visited = col_main %} /* visited links in body */
     {% set col_body_text = col_main %} /* links in body*/
     {% set col_sidebar_text = col_main%} /* Sidebar text in body and header, under Dat, gets over-written for the rest.*/
-    {% set col_sidebar_links = col_main%} /* Sidebar link text */
+    {% set col_sidebar_links = colmain %} /* Sidebar link text */
     {% set col_sidebar_header_links = col_main %} /* Sidebar header links */
     {% set col_search_border = col_main%}
     {% set col_main_2  = '#afa' %} /* Main link hovers*/
