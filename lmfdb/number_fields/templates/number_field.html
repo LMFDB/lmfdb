@@ -144,6 +144,11 @@
                 {{ KNOWL('nf.galois_closure', title='Galois closure') }}:
                 <td> {{ r[1][0] |safe }}
             {% endif %}
+            {% if r[0] == 'sex' %}
+              <tr><td>
+                {{ KNOWL('nf.sextic_twin', title='Twin sextic algebra') }}:
+                <td> {{ r[1] |safe }}
+            {% endif %}
             {% if r[0] == 'sib' %}
                 {% for sib in r[1] %}
                   <tr><td> {{sib[0]|safe}} 

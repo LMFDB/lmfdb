@@ -179,6 +179,17 @@ class WebNumberField:
         else:
             raise Exception('wrong type')
 
+    # Just a shell which should be used in a limited way since we don't
+    # initialize much
+    @classmethod
+    def fakenf(cls, coeffs):
+        if isinstance(coeffs, list):
+            coeffs = list2string(coeffs)
+        coefstr = string2list(coeffs)
+        n = len(coefstr)-1
+        data = {'coeffs': coeffs, 'degree': n}
+        return cls('Degree %d field'%d, data)
+
     @classmethod
     def from_polredabs(cls, pol):
         return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])
@@ -235,6 +246,8 @@ class WebNumberField:
 
     # Return a nice string for the Galois group
     def galois_string(self):
+        if not self.haskey('galois'):
+            return 'Not computed'
         n = self._data['degree']
         t = self._data['galois']['t']
         C = base.getDBConnection()
@@ -322,11 +335,24 @@ class WebNumberField:
         resall = self.resolvents()
         if 'sib' in resall:
             helpout = [self.myhelper([a,1]) for a in resall['sib']]
-            helpout2 = [a[0] for a in helpout]
-            degs = [len(string2list(a))-1 for a in resall['sib']]
-            for j in range(len(helpout2)):
-                helpout2[j] = ['Degree %d'%degs[j], helpout2[j]]
+            degrees = [len(string2list(a))-1 for a in resall['sib']]
+            helpout2 = [['Degree %d'%degrees[j], helpout[j][0]] for j in range(len(helpout))]
             return helpout2
+        return []
+
+    def sextic_twin_labels(self):
+        resall = self.resolvents()
+        if 'sex' in resall:
+            sex = [self.from_coeffs(str(a)) for a in resall['sex']]
+            return ['' if a._data is None else a.label for a in sex]
+        return []
+
+    # Maybe this should only return true siblings
+    def sextic_twin_knowls(self):
+        resall = self.resolvents()
+        if 'sex' in resall:
+            helpout = [self.myhelper([a,1]) for a in resall['sex']]
+            return [a[0] for a in helpout]
         return []
 
     def galois_closure_labels(self):
@@ -355,12 +381,6 @@ class WebNumberField:
         if 'ae' in resall:
             helpout = [self.myhelper([a,1]) for a in resall['ae']]
             return [a[0] for a in helpout]
-        return []
-
-    def arith_equiv_raw(self):
-        resall = self.resolvents()
-        if 'ae' in resall:
-            return [string2list(a) for a in resall['ae']]
         return []
 
     def subfields(self):

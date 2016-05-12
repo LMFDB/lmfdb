@@ -151,14 +151,14 @@ table.ntdata a {
 <thead>
 <tr>
 <th>Label</th>
-<th>Name</th>
+<th>{{KNOWL('gg.simple_name', title='Name')}}</th>
 <th>Order</th>
-<th>Parity</th>
-<th>Solvable</th>
+<th>{{ KNOWL('gg.parity', 'Parity') }} </th>
+<th>{{ KNOWL('gg.solvable', 'Solvable') }}</th>
 {% if info.show_subs %}
-<th>Subfields</th>
+<th>{{ KNOWL('gg.subfields', title='Subfields') }}</th>
 {% endif %}
-<th>Other Low Degree Representations</th>
+<th>{{ KNOWL('gg.other_representations', 'Low Degree Siblings') }} </th>
 </tr>
 </thead>
 <tbody>
