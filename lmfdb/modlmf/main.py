@@ -228,17 +228,19 @@ def search_input_error(info, bread=None):
 
 
 
+
+
 @modlmf_page.route('/<label>')
 def render_modlmf_webpage(**args):
     C = getDBConnection()
     data = None
     if 'label' in args:
         lab = args.get('label')
-        data = C.modlmfs.lat.find_one({'$or':[{'label': lab }, {'name': lab }]})
+        data = C.mod_l_eigenvalues.modlmf.find_one({'label': lab })
     if data is None:
-        t = "Integral modlmfs Search Error"
+        t = "mod &#x2113; modular form search error"
         bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral modlmf in the database." % (lab)),"error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; modular form in the database." % (lab)),"error")
         return render_template("modlmf-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
@@ -247,107 +249,38 @@ def render_modlmf_webpage(**args):
 
     bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage")), ('%s' % data['label'], ' ')]
     credit = modlmf_credit
-    f = C.modlmfs.lat.find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
-    info['dim']= int(f['dim'])
-    info['det']= int(f['det'])
-    info['level']=int(f['level'])
-    info['gram']=vect_to_matrix(f['gram'])
-    info['density']=str(f['density'])
-    info['hermite']=str(f['hermite'])
-    info['minimum']=int(f['minimum'])
-    info['kissing']=int(f['kissing'])
-    info['aut']=int(f['aut'])
-
-    if f['shortest']=="":
-        info['shortest']==f['shortest']
-    else:
-        if f['dim']==1:
-            info['shortest']=str(f['shortest']).strip('[').strip(']')
-        else:
-            if info['dim']*info['kissing']<100:
-                info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
-            else:
-                max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
-                info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
-                info['all_shortest']="no"
-        info['download_shortest'] = [
-            (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
-
-    if f['name']==['Leech']:
-        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
-str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
-        info['all_shortest']="no"
-        info['download_shortest'] = [
-            (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
+    f = C.mod_l_eigenvalues.modlmf.find_one({'characteristic':data['characteristic'], 'deg' : data['deg'], 'level' : data['level'],'conductor' : data['conductor'],'min_weight': data['min_weight'], 'dirchar' : data['dirchar'], 'atkinlehner': data['atkinlehner'],'n_coeffs': data['n_coeffs'],'coeffs': data['coeffs']})
+    for m in ['characteristic','deg','level','conductor','min_weight', 'n_coeffs']:
+        info[m]=int(f[m])
+    for m in ['coeffs', 'atkinlehner']:
+        info[m]=f[m]
+    info['dirchar']=str('dirchar')
 
     ncoeff=20
-    if f['theta_series'] != "":
-        coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
-        info['theta_series']=my_latex(print_q_expansion(coeff))
-        info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
+    p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+    if f['coeffs'] != "":
+        coeff=[f['coeffs'][i] for i in range(ncoeff+1)]
+        info['q_exp']=my_latex(print_q_expansion(coeff))
+        info['q_exp'] = url_for(".q_exp_display", label=f['label'], number="")
+        info['table_list']=[[p_range[i], f['coeffs'][p_range[i]]] for i in range(len(p_range)-1)]
+        info['download_q_exp'] = [
+            (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i, obj='coeffs')) for i in ['gp', 'magma','sage']]
 
-    info['class_number']=int(f['class_number'])
-
-    if f['dim']==1:
-        info['genus_reps']=str(f['genus_reps']).strip('[').strip(']')
-    else:
-        if info['dim']*info['class_number']<50:
-            info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
-        else:
-            max_matrix_num=min(int(round(25/(info['dim']))), info['class_number']);
-            info['all_genus_rep']="no"
-            info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
-    info['download_genus_reps'] = [
-        (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma','sage']]
-
-    if f['name'] != "":
-        if f['name']==str(f['name']):
-            info['name']= str(f['name'])
-        else:
-            info['name']=str(", ".join(str(i) for i in f['name']))
-    else:
-        info['name'] == ""
-    info['comments']=str(f['comments'])
-    if 'Leech' in info['comments']: # no need to duplicate as it is in the name
-        info['comments'] = ''
-    if info['name'] == "":
-        t = "Integral modlmf %s" % info['label']
-    else:
-        t = "Integral modlmf "+info['label']+" ("+info['name']+")"
-#This part code was for the dinamic knowl with comments, since the test is displayed this is redundant
-#    if info['name'] != "" or info['comments'] !="":
-#        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
+        t = "mod &#x2113; Modular Form "+info['label']
     info['properties'] = [
-        ('Dimension', '%s' %info['dim']),
-        ('Determinant', '%s' %info['det']),
-        ('Level', '%s' %info['level'])]
-    if info['class_number'] == 0:
-        info['properties']=[('Class number', 'not available')]+info['properties']
-    else:
-        info['properties']=[('Class number', '%s' %info['class_number'])]+info['properties']
-    info['properties']=info['properties']+[('Label', '%s' % info['label'])]
-
-    if info['name'] != "" :
-        info['properties']=[('Name','%s' % info['name'] )]+info['properties']
-#    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
+        ('Field characteristic', '%s' %info['characteristic'])
+        ('Field degree', '%s' %info['deg'])
+        ('Level', '%s' %info['level']),
+        ('Conductor', '%s' %info['conductor']),
+        ('Minimal weight', '%s' %info['min_weight']),
+        ('Label', '%s' %info['label'])]
     return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
-#friends=friends
 
-def vect_to_sym(v):
-    n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
-    M = matrix(n)
-    k = 0
-    for i in range(n):
-        for j in range(i, n):
-            M[i,j] = v[k]
-            M[j,i] = v[k]
-            k=k+1
-    return [[int(M[i,j]) for i in range(n)] for j in range(n)]
 
 
 #auxiliary function for displaying more coefficients of the theta series
 @modlmf_page.route('/theta_display/<label>/<number>')
-def theta_display(label, number):
+def q_exp_display(label, number):
     try:
         number = int(number)
     except:
@@ -357,8 +290,8 @@ def theta_display(label, number):
     if number > 150:
         number = 150
     C = getDBConnection()
-    data = C.modlmfs.lat.find_one({'label': label})
-    coeff=[data['theta_series'][i] for i in range(number+1)]
+    data = C.mod_l_eigenvalues.modlmf.find_one({'label': label})
+    coeff=[data['coeffs'][i] for i in range(number+1)]
     return print_q_expansion(coeff)
 
 

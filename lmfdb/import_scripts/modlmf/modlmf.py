@@ -74,13 +74,13 @@ def label_lookup(base_label):
     return 1	
 
 def do_import(ll):
-    characteristic,deg,level,conductor,weight,dirchar,atkinlehner,n_coeffs,coeffs = ll
-    mykeys = ['characteristic','deg','level','conductor','weight','dirchar','atkinlehner','n_coeffs','coeffs']
+    characteristic,deg,level,conductor,min_weight,dirchar,atkinlehner,n_coeffs,coeffs = ll
+    mykeys = ['characteristic','deg','level','conductor','min_weight','dirchar','atkinlehner','n_coeffs','coeffs']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
 
-    blabel = base_label(data['characteristic'],data['deg'],data['level'], data['weight'], data['dirchar'])
+    blabel = base_label(data['characteristic'],data['deg'],data['level'], data['min_weight'], data['dirchar'])
     data['base_label'] = blabel
     data['index'] = label_lookup(blabel)
     label= last_label(blabel, data['index'])

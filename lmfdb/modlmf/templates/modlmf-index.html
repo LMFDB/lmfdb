@@ -69,13 +69,13 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 <form>
 <table>
 <tr>
-<td align= right>{{ KNOWL('modlmf.characteristic', title='Characteristic') }}:</td>
+<td align= right>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}:</td>
 <td><input type='text' name='characteristic' placeholder='3' size=10>
 <td><span class="formexample"> e.g. 3 or 5_2</td>
 </tr>
 
 <tr>
-<td align= right>{{ KNOWL('modlmf.deg', title='Degree of the finite field') }}:</td>
+<td align= right>{{ KNOWL('modlmf.deg', title='Field degree') }}:</td>
 <td><input type='text' name='deg' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1 </td>
 </tr>
@@ -94,29 +94,46 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 
 </tr>
 <tr>
-<td align= right>{{ KNOWL('modlmf.weight', title='Weight') }}:</td>
+<td align= right>{{ KNOWL('modlmf.weight', title='Minimal weight') }}:</td>
 <td><input type='text' name='weight' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2</td>
 </tr>
 
 </tr>
 <tr>
-<td align= right>{{ KNOWL('modlmf.dirchar', title='Dirichlet character label') }}:</td>
+<td align= right>{{ KNOWL('modlmf.dirchar', title='Character label') }}:</td>
 <td><input type='text' name='dirchar' placeholder='1.1' size=10>
 <td><span class="formexample"> e.g. 1.1</td>
 </tr>
+
+<tr>
+<td align= right>Group:</td><td> <select name='group'>
+           <option value="gamma0" selected="$\Gamma_0$" >$\Gamma_0$</option>
+           <option value="gamma1">$\Gamma_1$</option>
+         </select></td>
+</tr>
+
+
 </table>
 
 
 <table id="a_n">
 <tr>
-<td colspan=3>Coefficient of the {{KNOWL('modlmf.q_expansion', title='q expansion')}} at 
-<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size='3' example=3 > 
-<span class="formexample">e.g. 5, 3</span>
+<td> {{KNOWL('modlmf.q_expansion', title='Coefficient')}} of q<sup>n</sup> for n=<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size='3' example=3 ></td><td> as an {{KNOWL('finitefields.structure', title='element of <span style="text-decoration: overline"> &#120125;<sub>&#x2113;</sub></span>')}} 
 </td><td>
   <button type='button' id='more_modp_button'>more</button>
 </td>
 </tr>
+</table>
+
+<table>
+<tr>
+<td colspan=3 align= right>Up to twists: <select name='twist'>
+           <option value="no" selected="no" >no</option>
+           <option value="yes">yes</option>
+         </select></td>
+</tr>
+
 </table>
 
 <table>
@@ -139,7 +156,7 @@ var table = tbody.length ? tbody : $('#a_n');
 
 $('#more_modp_button').click(function(){
     //Add row
-    table.append("<tr><td align='right' colspan=3>Coefficient of the {{KNOWL('modlmf.q_expansion', title='q expansion')}} at <input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size=3 example=3 > <span class='formexample'>e.g. 5 ; 3</span>");
+    table.append("<tr><td align='right'> n=<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size=3 example=3></tr>");
     return false;
 })
 

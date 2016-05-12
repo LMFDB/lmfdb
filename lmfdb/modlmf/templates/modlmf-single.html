@@ -8,25 +8,35 @@
 <!--</script>-->
 
 
-{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
+{% set KNOWL_ID = "modlmf.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
-<h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
-<p>${{info.gram}}$</p>
 
-<h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }} </h2>
+<h2> {{ KNOWL('modlmf.invariants', title='mod &#x2113; Modular Forms Invariants') }} </h2>
 
+
+
+,,,,min_weight,,atkinlehner,n_coeffs,coeffs
 <table>
-    <tr><td align=right>{{ KNOWL('lattice.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>${{info.minimum }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
+    <tr><td align=right>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}:</td><td>${{info.characteristic}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.deg', title='Field degree') }}:</td><td>${{info.deg}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.conductor', title='Conductor') }}:</td><td>${{info.conductor}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.min_weight', title='Minimal weight') }}:</td><td>${{info.min_weight }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td>${{info.dirchar}}$</td></tr>
+
+
+    <tr><td align=right>{{ KNOWL('modlmf.atkinlehner', title='Atkin-Lehner eigenvalues')}}:</td>
+
+
+<td>
+
+${{info.minimum }}$</td></tr>
+
+
+
+    <tr><td align=right>{{ KNOWL('modlmf.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
 {% if info.dim == 1 %}
     $({{info.shortest}})$</td></tr><tr><td></td><td>Download this vector for 
@@ -57,7 +67,7 @@
 </table>
 
 {% if info.theta_series %}
-<h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
+<h2> {{ KNOWL('modlmf.theta', title='Theta Series') }} </h2>
 
 <!--<p>-->
 <!--<form>-->
@@ -78,16 +88,16 @@
 {% endif %}
 
 
-<h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>
+<h2> {{ KNOWL('modlmf.genus', title='Genus Structure') }} </h2>
 
 {% if info.class_number == 0 %}
-    <p> The {{ KNOWL('lattice.class_number', title='Class number') }} of the integral lattice {{info.label}} is not available.</p>
+    <p> The {{ KNOWL('modlmf.class_number', title='Class number') }} of the integral lattice {{info.label}} is not available.</p>
 
 {% else %}
     <table>
-    <tr><td align=right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
     <tr><td>&nbsp;</td></tr>
-    <tr><td align=right valign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
+    <tr><td align=right valign=top>{{ KNOWL('modlmf.genus', title='Genus representatives') }}:</td><td>
     {% if info.dim == 1 %}
         $({{info.genus_reps}})$</td></tr><tr><td></td><td>Download this matrix for
             {% for e in info.download_genus_reps %} 
@@ -112,13 +122,13 @@
 
 <br>
 {% if info.name or info.comments %}
-<!--<h2><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs={{info.knowl_args}}>Comments</a></h2>-->
+<!--<h2><a title = "{{info.label}} [modlmf.data]" knowl= "modlmf.data" kwargs={{info.knowl_args}}>Comments</a></h2>-->
 <h2>Comments</h2>
 
 
 
 {% if info.name != "" %}
-<p>This {{ KNOWL('lattice.definition', title='integral lattice') }} {{KNOWL('lattice.name', title='is')}} the {{ info.name }} lattice.</p>
+<p>This {{ KNOWL('modlmf.definition', title='integral lattice') }} {{KNOWL('modlmf.name', title='is')}} the {{ info.name }} modlmf.</p>
 {% endif %}
 
 {% if info.comments != "" %}
@@ -127,7 +137,7 @@
 {% endif %}
 
 
-{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
+{% set KNOWL_ID = "modlmf.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 <script type="text/javascript">

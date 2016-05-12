@@ -83,6 +83,10 @@
          - title: Noncongruence
            status: future
            colspan: onecolumn
+         - title: mod &#8467; 
+           url_for: "modlmf.modlmf_render_webpage"
+           status: beta
+           colspan: onecolumn
      - title: GL(3)
        style: rotate
        part2:
@@ -179,22 +183,7 @@
       status: future
       colspan: onecolumn
 
-6Modl:
-   type: multilevel
-   status: beta
-   heading:
-      title: Mod &#8467; eigensystems
-      url_for: "mod_l_eigensystems"
-   parts:
-     - title: GL(2)
-       style: rotate
-       part2:
-         - title: mod &#8467; modular forms 
-           url_for: "modlmf.modlmf_render_webpage"
-           status: beta
-
-
-7Repn:
+6Repn:
    type: simple
    heading:
       title: Representations
@@ -211,11 +200,11 @@
       colspan: onecolumn
     - title: Artin
       url_for: "artin_representations.index"
-    - title: Galois
+    - title: "Galois:"
       status: future
-      colspan: onecolumn
-    - title: mod &#8467; Galois
-      status: beta
+      part2:
+         - title: mod &#8467;
+           status: future
       colspan: onecolumn
     - title: Weil-Deligne
       status: future
@@ -224,7 +213,7 @@
       status: future
       colspan: onecolumn
 
-8Mot:
+7Mot:
    type: simple
    status: beta
    heading:
@@ -246,7 +235,7 @@
     - title: $G_2$
       status: future
 
-9Groups:
+8Groups:
    type: simple
    heading:
       title: Groups
@@ -271,7 +260,7 @@
       status: future
       colspan: onecolumn
 
-10Know:
+9Know:
    type: single
    heading:
        title: Knowledge
