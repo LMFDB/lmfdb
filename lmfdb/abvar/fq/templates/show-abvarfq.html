@@ -1,8 +1,15 @@
 {% extends "homepage.html" %}
 
 {% block content %}
+
 <style>
 <div.ip>span { white-space: nowrap; font-family: serif; }
+
+table.reptable td, table.reptable th {
+    text-align:center;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
 </style>
 
 {% macro code(codes, item) %}
@@ -56,12 +63,85 @@ function show_code(system) {
   </style>
 #}
 
-    <div align ="right">
+    <!--<div align ="right">
       Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
        {# <a onclick="show_code('pari'); return false" href='#'>pari</a>, #}
         <a onclick="show_code('pari'); return false" href='#'>gp</a>,
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
-    </div>
+    </div>-->
+
+<p>
+<table>
+    <tr><td>Base field:<td>&nbsp;&nbsp;<td>${{cl.base_field}}$</tr>
+    <tr><td>Dimension:<td>&nbsp;&nbsp;<td>${{cl.g}}$</tr>
+    <tr><td>Weil polynomial:<td>&nbsp;&nbsp;<td>${{cl.polynomial}}$</tr>
+    <tr><td>Weil numbers:<td>&nbsp;&nbsp;<td>${{cl.weyl_numbers}}$</tr>
+    {% if cl.is_simple %}
+    <tr><td>Galois group:<td>&nbsp;&nbsp;<td>${{cl.galois_group}}$</tr>
+    {% endif %}
+<\table>
+    {% if cl.is_simple %}
+    This isogeny class contains simple abelian varieties.</br>
+    {% endif %}
+    {% if cl.is_primitive %}
+    This isogeny class is primitive.
+    {% else %}
+    This isogeny class is a base-change from a smaller field.
+    {% endif %}
+<\p>
+
+<p><h2>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</h2>
+
+{% if cl.is_ordinary %}
+This isogeny class is ordinary.
+{% endif %}
+{% if cl.is_supersingular %}
+This isogeny class is supersingular.
+{% endif %}
+
+<table>
+    <tr><td>$p$-rank:<td>&nbsp;&nbsp;<td>${{cl.p_rank}}</tr>
+    <tr><td>Slopes:<td>&nbsp;&nbsp;<td>{{cl.slopes}}</tr>
+</table>
+</p>
+
+<p><h2>Point counts<\h2>
+
+{{ KNOWL('ag.point_count',title="Point count of the abelian variety") }}:
+
+<table class = "ntdata">
+   <tr><td>$r$</td>
+       {% for r in some_range %}
+       <td> $r$ <\td>
+       {% endfor %}
+       </tr>
+   <tr><td>$A(\F_{q^r})$<\td>
+       {% for r in some_range %}
+       <td> cl.abvar_pointcount[r] </td>
+   </tr>
+</table>
+
+<table>
+    <tr><td>Known to be a Jacobian?<td>&nbsp;&nbsp;<td>{{cl.jacobian}}</tr>
+</table>
+
+{% if cl.jacobian == "yes" %}
+{{ KNOWL('abvar.curve_point_count',title="Point count of the curve") }}
+{% else %}
+{{ KNOWL('abvar.curve_point_count',title="Point count of the (virtual) curve") }}
+{% endif }
+
+</p>
+
+<p><h2>Decomposition</h2>
+
+<blockquote>
+    {{cl.decompositioninfo|safe}}
+</blockquote>
+</p>
+
+
+</p>
 
 <div>
   <h2>  Base field   {{ cl.field.knowl()|safe }} </h2>
