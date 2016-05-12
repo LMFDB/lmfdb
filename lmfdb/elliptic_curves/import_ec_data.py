@@ -56,6 +56,16 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'sha': (int) analytic order of sha (rounded value of sha_an)
    - 'sha_primes': (list of ints) primes dividing sha
    - 'torsion_primes': (list of ints) primes dividing torsion
+
+Extra data fields added May 2016 to avoid computation on the fly:
+   - 'xainvs': (string) '[a1,a2,a3,a4,a6]' (will replace 'ainvs' in due course)
+   - 'equation': (string)
+   - 'local_data': (dict)
+   - 'signD': (sign of discriminant) int
+   - 'min_quad_twist': (dict) {label:string, disc: int}
+   - 'heights': (list of floats) heights of generators
+   - 'aplist': (list of ints) a_p for p<100
+   - 'anlist': (list of ints) a_p for p<20
 """
 
 import os.path
@@ -69,7 +79,7 @@ import glob
 import pymongo
 from lmfdb import base
 from sage.rings.all import ZZ
-
+from lmfdb.utils import web_latex
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from pymongo.mongo_client import MongoClient
 print "getting connection"
@@ -562,3 +572,66 @@ def add_numerical_iso_codes(N1,N2):
         data = {}
         data['iso_nlabel'] = numerical_iso_label(C['lmfdb_iso'])
         curves.update_one({'_id': C['_id']}, {"$set": data}, upsert=True)
+
+# one-off script to add extra data for curves already in the database
+
+def make_extra_data(C):
+    """
+    C is a database elliptic curve entry.  Returns a dict with which to update the entry.
+    """
+    E = EllipticCurve([int(a) for a in C['ainvs']])
+    data = {}
+    # convert from a list of strings to a single string, e.g. from ['0','0','0','1','1'] to '[0,0,0,1,1]'
+    data['xainvs'] = ''.join(['[',','.join(C['ainvs']),']'])
+    data['equation'] = web_latex(E)
+    data['signD'] = int(E.discriminant().sign())
+    data['local_data'] = dict([(str(ld.prime().gen()),
+                                {'ord_cond':int(ld.conductor_valuation()),
+                                 'ord_disc':int(ld.discriminant_valuation()),
+                                 'ord_den_j':int(max(0,-(E.j_invariant().valuation(ld.prime().gen())))),
+                                 'reduction_type':int(ld.bad_reduction_type()),
+                                 'kodaira_symbol':web_latex(ld.kodaira_symbol()).replace('$',''),
+                                 'cp':int(ld.tamagawa_number())}) for ld in E.local_data()])
+    Etw, Dtw = E.minimal_quadratic_twist()
+    if Etw.conductor()==E.conductor():
+        data['min_quad_twist'] = {'label':C['lmfdb_label'], 'disc':int(1)}
+    else:
+        # Later this should be changed to look for xainvs but now all curves have ainvs
+        minq_ainvs = [str(c) for c in Etw.ainvs()]
+        r = curves.find_one({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs})
+        minq_label = "" if r is None else r['lmfdb_label']
+        data['min_quad_twist'] = {'label':minq_label, 'disc':int(Dtw)}
+    from lmfdb.elliptic_curves.web_ec import parse_points
+    gens = [E(g) for g in parse_points(C['gens'])]
+    data['heights'] = [float(P.height()) for P in gens]
+    if C['number']==1:
+        data['aplist'] = E.aplist(100,python_ints=True)
+        data['anlist'] = E.anlist(20,python_ints=True)
+    return data
+
+def add_extra_data(N1,N2,store=False):
+    """
+    Add these fields to curves in the db with conductors from N1 to N2:
+
+    - 'equation': (string)
+    - 'local_data': (dict)
+    - 'signD': (sign of discriminant) int
+    - 'min_quad_twist': (dict) {label:string, disc: int}
+    - 'heights': (list of floats) heights of generators
+    - 'aplist': (list of ints) a_p for p<100
+    - 'anlist': (list of ints) a_n for n<20
+    """
+    query = {}
+    query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
+    res = curves.find(query)
+    res = res.sort([('conductor', pymongo.ASCENDING)])
+    n = 0
+    for C in res:
+        n += 1
+        if n%100==0:
+            print C['lmfdb_label']
+        data = make_extra_data(C)
+        if store:
+            curves.update_one({'_id': C['_id']}, {"$set": data}, upsert=True)
+        else:
+            print("Not writing to database.\n%s" % data)
