@@ -185,3 +185,36 @@ def how_computed_page():
 @abvarfq_page.route("/Labels")
 def labels_page():
     pass
+
+def decomposition_display(current_class, factors):
+    if len(factors) == 1 and factors[0][1] == 1:
+        return 'This is a simple isogeny class.'
+    ans = ''
+    for factor in factors:
+        if ans != '':
+            ans += '$\times$ '
+        ans += factor_display_knowl(factor[0]) + '<sup>factor[1]</sup> '
+    return ans
+
+    
+def factor_display_knowl(label):
+    return '<a title = " [abvar.decomposition.data]" knowl="abvar.decomposition.data" kwargs="label=' + str(label) + '">' + label + '</a>'
+    
+def decomposition_data(label):
+    C = base.getDBConnection()
+    return decomposition_knowl_guts(label,C)
+    
+def decomposition_knowl_guts(label,C):
+    abvar = C.abvarfq.find_one({ 'label' : label })
+    inf = '<div><h4>Dimension:</h4> ' + str(abvar['g']) + '/n'
+    inf += '<h4>Number field:</h4> ' + str(abvar['number_field']) + '/n'
+    inf += '<h4>Galois group:</h4> ' + str(abvar['galois_group']) + '/n'
+    inf += '<h4>$p$-rank</h4> ' + str(abvar['p_rank']) + '</div>'
+    inf += '<div align="right">'
+    inf += '<a href="/abvar/fq/%s">%s home page</a>' % (label, label)
+    inf += '</div>'
+                                  
+    
+            
+            
+    
