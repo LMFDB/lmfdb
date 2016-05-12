@@ -322,7 +322,8 @@ class WebNewForm(WebObject, CachedRepresentation):
                                     level = level,
                                     weight = weight,
                                     character = character_number,
-                                    update_hecke_orbits=False)
+                                    update_hecke_orbits=False,
+                                    update_from_db=update_from_db)
 #                                    include_in_update = True if parent is None
 #                                    else False),
             )

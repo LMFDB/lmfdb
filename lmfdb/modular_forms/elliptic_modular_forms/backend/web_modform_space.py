@@ -173,7 +173,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         _collection_name = 'webmodformspace'
         _dimension_table_name = 'dimension_table'
 
-    def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
+    def __init__(self, level=1, weight=12, character=1,cuspidal=True, new=True, prec=10, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
 
         # I added this reduction since otherwise there is a problem with
         # caching the hecke orbits (since they have self as  parent)
@@ -203,6 +203,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
             WebBool('cuspidal', value=cuspidal),
+            WebBool('new', value=new),
             WebInt('prec', value=int(prec)), #precision of q-expansions
             WebSageObject('group'),
             WebInt('sturm_bound'),
@@ -246,13 +247,14 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
 class WebModFormSpaceProperty(WebProperty):
 
-    def __init__(self, name, level=1, weight=12, character=1, value=None,update_hecke_orbits=False,include_in_update=False):
+    def __init__(self, name, level=1, weight=12, character=1, value=None, update_from_db=True, \
+                 update_hecke_orbits=False,include_in_update=False):
         self.level = level
         self.weight = weight
         self.character = character
         emf_logger.debug("CCCCharacter = {0}".format(self.character))
         if value is None:
-            value = WebModFormSpace_cached(self.level, self.weight, self.character,update_hecke_orbits=update_hecke_orbits)
+            value = WebModFormSpace_cached(self.level, self.weight, self.character, update_from_db=Update_from_db, update_hecke_orbits=update_hecke_orbits)
         emf_logger.debug("CCCCharacter = {0}".format(self.character))
         super(WebModFormSpaceProperty, self).__init__(name,
                                                       include_in_update=include_in_update,

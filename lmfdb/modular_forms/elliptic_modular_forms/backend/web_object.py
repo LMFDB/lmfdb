@@ -577,7 +577,8 @@ class WebObject(object):
                 
 
     def update_from_db(self, ignore_non_existent = True, \
-                       add_to_fs_query=None, add_to_db_query=None):
+                       add_to_fs_query=None, add_to_db_query=None, \
+                       update_from_fs=True, include_only=None):
         r"""
         Updates the properties of ```self``` from the database using params and dbkey.
         """
@@ -611,9 +612,12 @@ class WebObject(object):
             if coll.find(key).count()>0:
                 props_to_fetch = { }  #p.name:True for p in self._key}
                 for p in self._db_properties:
-                    if p.include_in_update and (not p.name in self._fs_properties or p._extend_fs_with_db):
+                    if p.include_in_update \
+                        and (not p.name in self._fs_properties or p._extend_fs_with_db) \
+                        and (include_only is None or p.name in include_only):
                         props_to_fetch[p.name] = True
                         p.has_been_set(False)
+                print props_to_fetch
 #                props_to_fetch = {p.name:True for p in self._db_properties
 #                                  if (p.include_in_update and not p.name in self._fs_properties)
 #                                  or p.name in self._key}
@@ -634,7 +638,7 @@ class WebObject(object):
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
                 succ_db = False
-        if self._use_gridfs:
+        if self._use_gridfs and update_from_fs:
             fs = self._files
             file_key = self.file_key_dict()
             if add_to_fs_query is not None:
@@ -678,9 +682,14 @@ class WebObject(object):
         '''
         coll = cls.connect_to_db(cls._collection_name)
         if float(pymongo.version_tuple[0])>=3:
-            for s in coll.find(query, projection = cls._key):
+            for s in coll.find(query):
                 s.pop('_id')
-                yield cls(**s)
+                if s.has_key('zeta_orders'):
+                    s.pop('zeta_orders')
+                if s.has_key('hecke_orbits'):
+                    s.pop('hecke_orbits')
+                print s
+                yield cls(update_from_db=False, **s)
         else:
             for s in coll.find(query, fields = cls._key):
                 s.pop('_id')
