@@ -5,8 +5,8 @@
 {% set white = 'white' %}
 {% set black = 'black'%}
 
-{% set color_template = 17 %}
-/*0, 1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18*/
+{% set color_template = 19 %}
+/*0, 1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19*/
 
 {% if color_template == 0 %}
     /*Original LMFDB colors*/
@@ -159,19 +159,19 @@
    {% elif color_template == 17 %}
     /*john blue*/
 
-  {% set col_main_ld = '#4FC3F7' %} /*P1-300*/ /*Header and Footer*/
+  {% set col_main_ld = '#64B5F6' %} /*P1-300*/ /*Header and Footer*/
   {% set col_main_dl = 'black' %} /*Header and Footer Text*/
-  {% set col_main    = '#0277BD' %} /*P1-800*/ /*Links*/
+  {% set col_main    = '#1565C0' %} /*P1-800*/ /*Links*/
   {% set col_visited = '#0091EA' %} /*A1-700*/ /* visited links in body */
-  {% set col_body_text = '#0277BD' %} /*P1-800*//* links in body*/
+  {% set col_body_text = '#1565C0' %} /*P1-800*//* links in body*/
   {% set col_sidebar_text = 'black' %} /* Sidebar text in body and header, under Dat, gets over-written for the rest.*/
-  {% set col_sidebar_links = '#0277BD' %} /*P1-800 *//* Sidebar link text */
-  {% set col_sidebar_header_links = '#01579B' %} /*P1-900 */ /* Sidebar header links */
-  {% set col_search_border = '#01579B' %} /*P1-900*/
+  {% set col_sidebar_links = '#1565C0' %} /*P1-800 *//* Sidebar link text */
+  {% set col_sidebar_header_links = '#0D47A1' %} /*P1-900 */ /* Sidebar header links */
+  {% set col_search_border = '#0D47A1' %} /*P1-900*/
   {% set col_main_2  = '#FFF59D' %} /*A2-100*/ /*Main Link Hovers*/
-  {% set col_main_l  = '#81D4FA' %} /*P1-200*/ /*Tabs*/
-  {% set col_main_lg = '#01579B' %} /*P1-900*/ /*Shadow and Bottom Border*/
-  {% set col_main_ll = '#E1F5FE' %} /*P1-50*/ /*Box Background*/
+  {% set col_main_l  = '#90CAF9' %} /*P1-200*/ /*Tabs*/
+  {% set col_main_lg = '#0D47A1' %} /*P1-900*/ /*Shadow and Bottom Border*/
+  {% set col_main_ll = '#E3F2FD' %} /*P1-50*/ /*Box Background*/
   {% set col_main_d  = 'black' %} /*?00*/ /*Beta text*/
   {% set col_main_g  = '#474' %} /*?00*/ /*???*/
     
@@ -185,12 +185,12 @@
 	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
 	{% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
 	{% set knowl_background = '#FFFDE7' %} /*P2-50*/
-	{% set knowl_hyper_text = '#0277BD' %} /*P1-800*/
+	{% set knowl_hyper_text = '#1565C0' %} /*P1-800*/
 	{% set knowl_title_text = 'black' %} /**/
-	{% set knowl_underline = '#0277BD' %} /*P1-800*/
+	{% set knowl_underline = '#1565C0' %} /*P1-800*/
 	{% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
 	{% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#01579B'%} /*P1-900*/
+	{% set knowl_shadow = '#0D47A1'%} /*P1-900*/
 
 	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
 	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
@@ -242,6 +242,57 @@
 	{% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
 	{% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
 	{% set knowl_shadow = '#1A237E'%} /*P1-900*/
+
+	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+	/* td.sorting */
+	{% set knowl_ld_1 = '#c4c4ff'%}
+	{% set knowl_l_1 = '#D3D6FF' %}
+	{% set knowl_l_2 = '#DADCFF' %}
+	{% set knowl_l_3 = '#E0E2FF' %}
+	{% set knowl_l_4 = '#EAEBFF' %}
+	{% set knowl_l_5 = '#F2F3FF' %}
+	{% set knowl_l_6 = '#F9F9FF' %}
+	{% set knowl_l_7 = '#d1d1ff' %}
+	{% set knowl_l_8 = '#d5d5ff' %}
+	{% set knowl_l_9 = '#eef'    %}  
+
+
+   {% elif color_template == 19 %}
+    /*red*/
+
+  {% set col_main_ld = '#E57373' %} /*P1-300*/ /*Header and Footer*/
+  {% set col_main_dl = 'black' %} /*Header and Footer Text*/
+  {% set col_main    = '#C62828' %} /*P1-800*/ /*Links*/
+  {% set col_visited = '#D50000' %} /*A1-700*/ /* visited links in body */
+  {% set col_body_text = '#C62828' %} /*P1-800*//* links in body*/
+  {% set col_sidebar_text = 'black' %} /* Sidebar text in body and header, under Dat, gets over-written for the rest.*/
+  {% set col_sidebar_links = '#C62828' %} /*P1-800 *//* Sidebar link text */
+  {% set col_sidebar_header_links = '#B71C1C' %} /*P1-900 */ /* Sidebar header links */
+  {% set col_search_border = '#1A237E' %} /*P1-900*/
+  {% set col_main_2  = '#FFF59D' %} /*A2-100*/ /*Main Link Hovers*/
+  {% set col_main_l  = '#EF9A9A' %} /*P1-200*/ /*Tabs*/
+  {% set col_main_lg = '#B71C1C' %} /*P1-900*/ /*Shadow and Bottom Border*/
+  {% set col_main_ll = '#FFEBEE' %} /*P1-50*/ /*Box Background*/
+  {% set col_main_d  = 'black' %} /*?00*/ /*Beta text*/
+  {% set col_main_g  = '#474' %} /*?00*/ /*???*/
+    
+    /* Body colors */
+    {% set body_background = 'white' %}  /*P1-?*/
+    {% set body_text = black%} 
+ 
+ 	/* Knowl colors */
+	{% set knowl_error = 'purple' %}
+	{% set knowl_border = '#FFF59D' %} /*P2-200*/
+	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+	{% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
+	{% set knowl_background = '#FFFDE7' %} /*P2-50*/
+	{% set knowl_hyper_text = '#C62828' %} /*P1-800*/
+	{% set knowl_title_text = 'black' %} /**/
+	{% set knowl_underline = '#C62828' %} /*P1-800*/
+	{% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
+	{% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
+	{% set knowl_shadow = '#B71C1C'%} /*P1-900*/
 
 	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
 	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
