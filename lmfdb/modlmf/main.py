@@ -11,7 +11,7 @@ from lmfdb.base import app, getDBConnection
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma, random_object_from_collection
 
 import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
+from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, conway_polynomial
 
 from lmfdb.modlmf import modlmf_page, modlmf_logger
 from lmfdb.modlmf.modlmf_stats import get_stats
@@ -98,7 +98,7 @@ def split_modlmf_label(lab):
     return modlmf_label_regex.match(lab).groups()
 
 def modlmf_by_label(lab, C):
-    if C.modlmfs.lat.find({'label': lab}).limit(1).count() > 0:
+    if C.mod_l_eigenvalues.modlmf.find({'label': lab}).limit(1).count() > 0:
         return render_modlmf_webpage(label=lab)
     if modlmf_label_regex.match(lab):
         flash(Markup("The mod &#x2113; modular form <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
@@ -106,9 +106,6 @@ def modlmf_by_label(lab, C):
         flash(Markup("No mod &#x2113; modular form in the database has label <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".modlmf_render_webpage"))
 
-
-
-    characteristic,deg,level,conductor,min_weight,dirchar,atkinlehner,n_coeffs,coeffs = ll
 
 def modlmf_search(**args):
     C = getDBConnection()
@@ -203,15 +200,22 @@ def render_modlmf_webpage(**args):
         info[m]=f[m]
     info['dirchar']=str(f['dirchar'])
 
-    ncoeff=50
+    if f['deg'] == int(1):
+        info['field']=str('&#120125;<sub>%s</sub>' %f['characteristic'])
+    else:
+
+        try:
+            pol=str(conway_polynomial(f['characteristic'], f['deg']))
+            info['field']=str('&#120125;<sub>%s<sup>%s</sup></sub>&#120125;<sub>%s</sub>[x]/(%s)' %(str(f['characteristic']), str(f['deg']), str(f['characteristic']), pol))
+        except:
+            info['field']=""
+
+    ncoeff=int(round(50/f['deg']))
     if f['coeffs'] != "":
         coeff=[f['coeffs'][i] for i in range(ncoeff+1)]
         info['q_exp']=my_latex(print_q_expansion(coeff))
         info['q_exp_display'] = url_for(".q_exp_display", label=f['label'], number="")
-        if f['deg']==int(1):
-            p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
-        else:
-            p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+        p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
         info['table_list']=[[p_range[i], f['coeffs'][p_range[i]]] for i in range(len(p_range))]
         info['download_q_exp'] = [
             (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
