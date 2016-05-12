@@ -57,3 +57,6 @@ class Abvar_isoclass(object):
             data = db().find_one({"label": label})
         except AttributeError:
             raise ValueError("Label not found in database")
+
+    def make_class(self):
+        pass

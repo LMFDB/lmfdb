@@ -4,11 +4,13 @@ import time
 import ast
 import StringIO
 from pymongo import ASCENDING, DESCENDING
+import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import to_dict
 from lmfdb.abvar.fq import abvarfq_page
 from lmfdb.search_parsing import parse_ints, parse_newton_polygon, parse_list_start, parse_abvar_decomp, parse_count, parse_start
-from isog_class import validate_label
+from isog_class import validate_label, Abvar_isoclass
+from stats import AbvarFqStats
 from flask import flash, render_template, url_for, request, redirect, make_response, send_file
 from markupsafe import Markup
 from sage.misc.cachefunc import cached_function
@@ -21,6 +23,10 @@ from sage.rings.all import PolynomialRing
 @cached_function
 def db():
     return lmfdb.base.getDBConnection().abvar.fq_isog
+
+@cached_function
+def db_stats():
+    return lmfdb.base.getDBConnection().abvar.fq_stats
 
 #########################
 #    Top level
@@ -58,9 +64,10 @@ def abelian_varieties():
         return abelian_variety_search(**args)
     else:
         info = {}
-        # table[q][g] = number of polys
-        # col_heads = list of qs
-        # row_heads = list of gs
+        stats = AbvarFqStats()
+        info['col_heads'] = stats.counts['qs']
+        info['row_heads'] = stats.counts['gs']
+        info['table'] = stats.count['gq_count']
         return render_template("abvarfq-index.html", title="Abelian Varieties over Finite Fields",
                                info=info, credit=credit, bread=get_bread(), learnmore=learnmore_list())
 
@@ -117,12 +124,24 @@ def abelian_variety_search(**args):
 
     res = cursor.sort([]).skip(start).limit(count)
     res = list(res)
-    info['abvars'] = [res
+    info['abvars'] = [Abvar_isoclass(x) for x in res]
+    info['number'] = nres
+    info['start'] = start
+    info['count'] = count
+    info['more'] = int(start + count < nres)
+    if nres == 1:
+        info['report'] = 'unique_match'
+    elif nres > count or start != 0:
+        info['report'] = 'displaying matches %s-%s of %s' %(start + 1, min(nres, start+count), nres)
+    else:
+        info['report'] = 'displaying all %s matches' % nres
+    t = 'Abelian Variety search results'
+    return render_template("abvarfq-search-results.html", info=info, credit=abvarfq_credit, bread=bread, title=t)
 
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
     if bread is None: bread = get_bread(('Search Results', '.'))
-    return render_template("abvarfq-search-results.html", info=info, title='Abelian Variety Search Input Error', bread=bread)
+    return render_template("abvarfq-search-results.html", info=info, title='Abelian Variety search input error', bread=bread)
 
 @abvarfq_page.route("/<label>")
 def by_label(label):
