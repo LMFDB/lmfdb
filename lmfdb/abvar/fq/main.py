@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 import re
+import time
+import ast
+import StringIO
 from pymongo import ASCENDING, DESCENDING
 from lmfdb.base import app
+from lmfdb.utils import to_dict
 from lmfdb.abvar.fq import abvarfq_page
-from flask import render_template, url_for, request, redirect, make_response, send_file
+from isog_class import validate_label
+from flask import flash, render_template, url_for, request, redirect, make_response, send_file
+from markupsafe import Markup
 from sage.misc.cachefunc import cached_function
+from sage.rings.all import PolynomialRing
 
 #########################
 #   Database connection
 #########################
 
 @cached_function
-def db_ec():
+def db():
     return lmfdb.base.getDBConnection().abvar.fq_isog
 
 #########################
@@ -24,8 +31,7 @@ def get_bread(*breads):
     map(bc.append, breads)
     return bc
 
-def get_credit():
-    return 'Kiran Kedlaya'
+abvarfq_credit = 'Kiran Kedlaya'
 
 @app.route("/EllipticCurves/Fq")
 def ECFq_redirect():
@@ -65,21 +71,104 @@ def abelian_varieties_by_g(g):
 def abelian_varieties_by_gq(g, q):
     return abelian_variety_search(g=g, q=q, **request.args)
 
-def abelian_variety_search(**args):
-    pass
+@abvarfq_page.route("/<int:g>/<int:q>/<iso>")
+def abelian_varieties_by_gqi(g, q, iso):
+    label = "%s.%s.%s"%(g, q, iso)
+    return by_label(label)
 
-def search_input_error(info, bread):
-    return render_template("abvarfq-search-results.html", info=info, title='Abelian Variety Search Input Error', bread=get_bread(bread))
+def abelian_variety_search(**args):
+    info = to_dict(args['data'])
+
+    if 'download' in info and info['download'] != 0:
+        return download_search(info)
+
+    bread = get_bread(('Search Results', '.'))
+    if 'jump' in info:
+        return by_label(info.get('label',''))
+    query = {}
+
+    try:
+        parse_ints(info,query,'q')
+        parse_ints(info,query,'g')
+        if 'simple_only' in info and info['simple_only'] == 'yes':
+            query['decomposition'] = {'$size' : 1}
+        parse_ints(info,query,'p_rank')
+        parse_bracketed_rationals(info,query,'slopes'
+
+def search_input_error(info=None, bread=None):
+    if info is None: info = {'err':'','query':{}}
+    if bread is None: bread = get_bread(('Search Results', '.'))
+    return render_template("abvarfq-search-results.html", info=info, title='Abelian Variety Search Input Error', bread=bread)
 
 @abvarfq_page.route("/<label>")
 def by_label(label):
-    pass
-
-def by_poly(poly):
-    pass
+    label = label.replace(" ", "")
+    try:
+        validate_label(label)
+    except ValueError as err:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label: %s." % (label, str(err))), "error")
+        return search_input_error()
+    try:
+        cl = AbvarFq_isoclass.by_label(label)
+    except ValueError:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not in the database." % (label)), "error")
+        return search_input_error()
+    return render_template("show-abvarfq.html",
+                           credit=abvarfq_credit,
+                           title='Abelian Variety isogeny class %s over %s'%(label, cl.field),
+                           bread=get_bread(('Search Results', '.')),
+                           cl=cl,
+                           learnmore=learnmore_list())
 
 def download_search(info):
-    pass
+    dltype = info['Submit']
+    R = PolynomialRing(ZZ, 'x')
+    delim = 'bracket'
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    filename = 'weil_polynomials.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'weil_polynomials.sage'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'weil_polynomials.m'
+    s = com1 + "\n"
+    s += com + " Weil polynomials downloaded from the LMFDB on %s.\n"%(mydate)
+    s += com + " Below is a list (called data), collecting the weight 1 L-polynomial\n"
+    s += com + " attached to each isogeny class of an abelian variety.\n"
+    s += "\n" + com2
+    s += "\n"
+
+    if dltype == 'magma':
+        s += 'P<x> := PolynomialRing(Integers()); \n'
+        s += 'data := ['
+    else:
+        if dltype == 'sage':
+            s += 's = polygen(ZZ) \n'
+        s += 'data = [ '
+    s += '\\\n'
+    res = db().find(ast.literal_eval(info["query"]))
+    for f in res:
+        poly = R([int(c) for c in f['polynomial']])
+        s += str(poly) + ',\\\n'
+    s = s[:-3]
+    s += ']\n'
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO,
+                     attachment_filename=filename,
+                     as_attachment=True)
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():
@@ -95,4 +184,4 @@ def how_computed_page():
 
 @abvarfq_page.route("/Labels")
 def labels_page():
-                                pass
+    pass
