@@ -1,0 +1,208 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+{% if info.stats %}
+<p>
+{{info.stats|safe}}
+</p>
+{% endif %}
+
+<h2> Refine search </h2>
+
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+
+<table border="0">
+
+<tr>
+<td align=left>{{ KNOWL('ag.field_of_definition',title = "cardinality of the base field") }}</td>
+<td align=left>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
+<td align=left>{{ KNOWL('ab_var.simple',title="simple only") }}</td>
+<td align=left>{{ KNOWL('ag.primitive',title="primitive only") }}</td>
+<td align=left>{{ KNOWL('ab_var.p_rank',title="p-rank") }}</td>
+<td align=left>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</td>
+<td align=left>initial coefficients</td>
+<td align=left>{{ KNOWL('ag.point_count',title="point count of the abelian variety") }}</td>
+<td align=left>{{ KNOWL('ab_var.curve_point_count',title="point count of the curve") }}</td>
+<td align=left>{{ KNOWL('ab_var.decomposition',title="isogeny factors decomposition") }}</td>
+</tr>
+
+<tr>
+<td><input type='text' name='q' size=10 value="{{info.q}}" /></td>
+<td align=left><input type='text' name='conductor_norm' size=10
+                      value="{{info.conductor_norm}}"></td>
+<td>         <select name='include_isogenous'>
+{% if info.query.number %}
+           <option value="off" selected="yes">exclude</option>
+           <option value="on">include</option>
+{% else %}
+           <option value="off">exclude</option>
+           <option value="on" selected="yes">include</option>
+{% endif %}
+         </select>
+</td>
+<td>         <select name='include_base_change'>
+{% if info.include_base_change == "off" %}
+           <option value="off" selected="yes">exclude</option>
+           <option value="on">include</option>
+{% else %}
+           <option value="off">exclude</option>
+           <option value="on" selected="yes">include</option>
+{% endif %}
+         </select>
+</td>
+<td>         <select name='include_Q_curves'>
+{% if info.include_Q_curves == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.include_Q_curves == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+         </select>
+</td>
+<td>         <select name='include_cm'>
+{% if info.include_cm == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.include_cm == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+         </select>
+</td>
+          <td>
+          <input type='text' name='torsion' size=6 value="{{info.torsion}}" />
+          </td>
+          <td>
+          <input type='text' name='torsion_structure' size=8 value="{{info.torsion_structure}}" />
+          </td>
+          <td>
+          <input type='text' name='jinv' size=20 value="{{info.jinv}}" />
+          </td>
+
+</tr>
+
+<tr>
+<td>
+<button type='submit' value='refine'>Search again</button>
+</td> </tr>
+</table>
+
+</form>
+
+{% if info.err is defined %}
+
+<h2>Error</h2>
+<div>
+  {{ info.err|safe }}
+  <p>
+  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+</div>
+
+{% else %}
+
+<style type="text/css">
+table td.center {
+  text-align: center;
+  padding : 4px;
+}
+table td.params {
+  text-align: left;
+  font-family: monospace;
+}
+</style>
+
+
+<h2> Results ({{info.report}})
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+
+</h2>
+<table>
+<tr>
+  <th class="center">{{ KNOWL('ec.curve_label',title = "curve label") }}</th>
+  <th class="center">{{ KNOWL('nf',title = "base field") }}</th>
+  <th class="center">{{ KNOWL('ec.conductor',title = "conductor") }} norm</th>
+  <th class="center">{{ KNOWL('ec.conductor_label',title = "conductor label") }}</th>
+  <th class="center">{{ KNOWL('ec.isogeny_class',title = "isogeny class")}} label</th>
+  <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass coefficients') }}</th>
+</tr>
+{% for curve in info.curves: %}
+<tr>
+<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{curve.short_label}}</a></td>
+<td class="center">
+ {{ curve.field_knowl|safe }}
+</td>
+<td class="center">{{curve.conductor_norm}}</td>
+<td class="center">{{curve.conductor_label}}</td>
+<td class="center"><a href="{{ url_for('.show_ecnf_isoclass',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label) }} ">{{curve.short_class_label}}</a></td>
+<td class="left"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{info.web_ainvs(curve.field_label,curve.ainvs)}}</a></td>
+</tr>
+{% endfor %}
+</table>
+
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+
+{% endif %}
+
+<!-- Download Data!! Whoohooo!! -->
+<form>
+Download all search results for
+<input type="submit" name="Submit" value="gp">
+<input type="submit" name="Submit" value="sage">
+<input type="submit" name="Submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="query" value="{{info.query}}"/>
+</form>
+
+
+
+<!-- Debugging! -->
+{% if DEBUG %}
+<hr>
+<div>
+Query was: {{info.query}}
+</div>
+<div>
+info.include_base_change =  {{info.include_base_change}}
+</div>
+Start = {{info.start}}, Count = {{info.count}}
+Field label = {{info.field}}
+{% endif %}
+
+
+
+{% endblock %}
