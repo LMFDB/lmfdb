@@ -1,8 +1,5 @@
 r"""
-
 Routines for rendering the navigation.
-
-
 """
 import json
 from flask import url_for,render_template,request,redirect
@@ -13,13 +10,6 @@ from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP,emf_version
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple
-
-def _browse_web_modform_spaces_in_ranges(**kwds):
-    r"""
-    Renders the webpage for browsing modular forms of given level and/or weight ranges.
-    """
-    return render_elliptic_modular_form_navigation_wp(**kwds)
-
 
 def render_elliptic_modular_form_navigation_wp(**args):
     r"""
@@ -40,7 +30,6 @@ def render_elliptic_modular_form_navigation_wp(**args):
     weight = my_get(info, 'weight', None, int)
     character = my_get(info, 'character', 1, int)
     label = info.get('label', '')
-    #disp = ClassicalMFDisplay('modularforms2')
     emf_logger.debug("info={0}".format(info))
     emf_logger.debug("level=%s, %s" % (level, type(level)))
     emf_logger.debug("label=%s, %s" % (label, type(label)))
@@ -144,5 +133,3 @@ def render_elliptic_modular_form_navigation_wp(**args):
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
     return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)
-
-    

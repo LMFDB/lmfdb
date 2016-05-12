@@ -16,7 +16,9 @@
 r"""
 Main file for viewing elliptical modular forms.
 
-AUTHOR: Fredrik Strömberg
+AUTHORS: 
+ - Fredrik Strömberg
+ - Stephan Ehlen
 
 """
 from flask import render_template, url_for, request, redirect, make_response, send_file, send_from_directory,flash
@@ -52,7 +54,6 @@ def body_class():
 
 met = ['GET', 'POST']
 
-# Used to be in the experimental part
 @emf.route("/ranges", methods=["GET"])
 @emf.route("/ranges/", methods=["GET"])
 def browse_web_modform_spaces_in_ranges(**kwds):
@@ -64,7 +65,7 @@ def browse_web_modform_spaces_in_ranges(**kwds):
     level=request.args.getlist('level')
     weight=request.args.getlist('weight')
     group=request.args.getlist('group')
-    return _browse_web_modform_spaces_in_ranges(level=level,weight=weight,group=group)
+    return render_elliptic_modular_form_navigation_wp(level=level,weight=weight,group=group)
 
 
 @emf.route("/", methods=met)
@@ -213,31 +214,8 @@ def get_qexp_latex(level, weight, character, label, prec=10, **kwds):
 
 
 ###
-###  Routines that used to be in /experimental/ folder.
+###  Helper functions.
 ###
-@emf.route("/Dots/<min_level>/<max_level>/<min_weight>/<max_weight>/",methods=met)
-def show_dots(min_level, max_level, min_weight, max_weight):
-    info = {}
-    info['contents'] = [paintSvgHolomorphic(min_level, max_level, min_weight, max_weight,char=1)]
-    info['min_level'] = min_level
-    info['max_level'] = max_level
-    info['min_weight'] = min_weight
-    info['max_weight'] = max_weight
-    return render_template("emf_browse_graph.html", title='Browsing dimensions of modular forms in the database', **info)
-
-
-@emf.route("/DotsPlot/<min_level>/<max_level>/<min_weight>/<max_weight>/<complete>/",methods=met)
-def show_dots2(min_level, max_level, min_weight, max_weight,complete):
-    info = {}
-    char = 1
-    info['contents'] = [paintSvgHolomorphic2(min_level, max_level, min_weight, max_weight,char,complete=complete)]
-    info['min_level'] = min_level
-    info['max_level'] = max_level
-    info['min_weight'] = min_weight
-    info['max_weight'] = max_weight
-    return render_template("emf_browse_graph.html", title='Browsing dimensions of modular forms in the database', **info)
-
-
 
 def get_args(request, level=0, weight=0, character=-1, group=2, label='', keys=[]):
     r"""
