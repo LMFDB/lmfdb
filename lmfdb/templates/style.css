@@ -99,7 +99,7 @@ h2.link > a {
   margin-bottom: 10px;
 }
 
-/* TODO: where is this?  Hyperlinks? */
+/* Body links, sidebar links, and sidebar header text. */
 a {
     color: {{color.a_text}};
   text-decoration: none;
@@ -452,13 +452,18 @@ body.knowl #header {
     background: {{ color.sidebar_background_hover }};
 }
 #sidebar a {
+    color: {{color.col_sidebar_links}}; /* sets header and body sidebar links.*/
     display: block;
 }
 #sidebar li a {
+    color: {{color.col_sidebar_text}}; /* sets the text below Data */
     background: {{ color.sidebar_background_li }};
   padding: 5px;
 }
-#sidebar h2 a { padding: 5px; }
+#sidebar h2 a {
+    color: {{color.col_sidebar_header_links}}; /* sets sidebar header links*/
+    padding: 5px;
+}
 #sidebar h2 a:hover {
   background: {{ color.sidebar_background_h2_hover }};
 }
