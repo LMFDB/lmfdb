@@ -25,7 +25,7 @@ AUTHORS:
 from lmfdb.base import app
 from flask import url_for
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version, emf_logger
-from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
+from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db
 from lmfdb.number_fields.number_field import poly_to_field_label
 from lmfdb.WebNumberField import field_pretty
 from lmfdb.utils import web_latex_split_on_pm
@@ -36,7 +36,7 @@ from sage.all import SageObject,dumps,loads, QQ, NumberField, latex
 import pymongo
 import gridfs
 import re
-import datetime
+from datetime import datetime
 
 class WebProperty(object):
     r"""
@@ -536,7 +536,7 @@ class WebObject(object):
         #print meta_key
         dbd = self.db_dict()
         ## Add modification data
-        dbd['modification_date'] = datetime.datetime.utcnow()
+        dbd['modification_date'] = datetime.utcnow()
         #emf_logger.debug("update with dbd={0} and key:{1}".format(dbd,key))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
@@ -714,10 +714,10 @@ class WebObjectTest(WebObject):
 
 
 class WebDate(WebProperty):
-    _default_value = datetime.datetime(1970, 1, 1, 0, 0)
+    _default_value = datetime.now()
 
     def __init__(self, name, value=None, save_to_fs=False, save_to_db=True, **kwargs):
-        date_fn = lambda t: datetime.datetime(t.year,t.month,t.day,t.hour,t.minute)
+        date_fn = lambda t: datetime(t.year, t.month, t.day, t.hour, t.minute, t.second)
         super(WebDate, self).__init__(name, value, date_fn, date_fn, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
     
     
@@ -842,22 +842,25 @@ class WebNumberField(WebDict):
     def extend_from_db(self):
         setattr(self._value, "lmfdb_label", self._db_value)
         if not self._db_value is None and self._db_value != '':
-            try:
-                url =  url_for("number_fields.by_label", label=self._db_value)
-            except RuntimeError:
-                emf_logger.critical("could not set url for the label")
-                url = ''
-            setattr(self._value, "lmfdb_url",url)
-            setattr(self._value, "lmfdb_pretty", field_pretty(self._db_value))
+            label = self._db_value
+            setattr(self._value, "lmfdb_pretty", field_pretty(label))
         else:
             if hasattr(self._value,'absolute_polynomial'):
                 setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
+                label = ''
             elif self._value.absolute_degree()==1:
-                setattr(self._value, "lmfdb_pretty", field_pretty('1.1.1.1'))
-                setattr(self._value, "lmfdb_label", '1.1.1.1')
+                label = '1.1.1.1'
+                setattr(self._value, "lmfdb_pretty", field_pretty(label))
+                setattr(self._value, "lmfdb_label", label)
             else:
                 emf_logger.critical("could not set lmfdb_pretty for the label")
-
+        try:
+            url =  url_for("number_fields.by_label", label=label)
+        except RuntimeError:
+            emf_logger.critical("could not set url for the label")
+            url = ''
+        setattr(self._value, "lmfdb_url", url)
+            
     def set_extended_properties(self):
         if self._has_been_set:
             if hasattr(self._value,'absolute_polynomial'):

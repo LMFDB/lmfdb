@@ -142,8 +142,9 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     sage: M.dimension
     0
     sage: M.dimension=1
-    sage: M.dimension_newspace=1
+    sage: M.dimension_new_cusp_forms=1
     sage: M.dimension_cusp_forms=1
+    sage: M.dimension_modular_form=1
     sage: f = WebNewForm(1,12,1,'a')
     sage: f.q_expansion = delta_qexp(20)
     sage: f.save_to_db()
