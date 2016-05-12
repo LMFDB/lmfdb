@@ -32,11 +32,22 @@
 <button id="morebutton">More coefficients</button>
 </form></p>
 
+
+
+{% if info.deg == 1 %}
+<p>List of $a_p$ for the primes up to $50$. </p>
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<tr><td>$p$</td>{% for p in info.table_list %}<td>${{p[0]}}$</td>{% endfor %}</tr>
+<tr><td>$a_p$</td>{% for p in info.table_list %}<td>${{p[1]}}$</td>{% endfor %}</tr>
+</table>
+
+{% else %}
 <p>List of $a_p$ for the primes up to $100$. </p>
 <table class="ntdata" cellpadding=3 style="table-layout:fixed">
 <tr><td>$p$</td><td>$a_p$</td></tr>
 {% for p in info.table_list %}<tr><td>${{p[0]}}$</td><td>${{p[1]}}$</td></tr>{% endfor %}
 </table>
+{% endif %}
 
 <p>Download all the coefficients stored in the database for the q-expansion for
 {% for e in info.download_q_exp %} 

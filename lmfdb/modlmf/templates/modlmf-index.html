@@ -70,7 +70,7 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 <tr>
 <td align= right>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}:</td>
 <td><input type='text' name='characteristic' placeholder='3' size=10>
-<td><span class="formexample"> e.g. 3 or 5_2</td>
+<td><span class="formexample"> e.g. 3 </td>
 </tr>
 
 <tr>
@@ -116,7 +116,7 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 
 <table id="a_n">
 <tr>
-<td> {{KNOWL('modlmf.q_expansion', title='Coefficient')}} of q<sup>n</sup> for n:<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size='3' example=3 ></td><td> as an {{KNOWL('finitefields.structure', title='element of <span style="text-decoration: overline"> &#120125;<sub>&#x2113;</sub></span>')}} 
+<td> {{KNOWL('modlmf.q_expansion', title='Coefficient')}} of q<sup>n</sup> for n:<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='req_coeff' size='3' example=3 ></td><td> as an {{KNOWL('finitefields.structure', title='element of <span style="text-decoration: overline"> &#120125;<sub>&#x2113;</sub></span>')}} 
 </td><td>
   <button type='button' id='more_modp_button'>more</button>
 </td>
@@ -147,7 +147,7 @@ var table = tbody.length ? tbody : $('#a_n');
 
 $('#more_modp_button').click(function(){
     //Add row
-    table.append("<tr><td align='right'> n:<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size=3 example=3></tr>");
+    table.append("<tr><td align='right'> n:<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='req_coeff' size=3 example=3></td><td><button type='button' value='Delete Row' onclick='deleteRow(this)'>less</button></td></tr>");
     return false;
 })
 

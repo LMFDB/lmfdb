@@ -164,13 +164,13 @@ def modlmf_search(**args):
         res_clean.append(v_clean)
 
     info['modlmfs'] = res_clean
-    t = 'Integral modlmfs Search Results'
+    t = 'mod &#x2113; Modular Forms Search Results'
     bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
     properties = []
     return render_template("modlmf-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info, bread=None):
-    t = 'Integral modlmfs Search Error'
+    t = 'mod &#x2113; Modular Forms Search Error'
     if bread is None:
         bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
     return render_template("modlmf-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
@@ -203,12 +203,15 @@ def render_modlmf_webpage(**args):
         info[m]=f[m]
     info['dirchar']=str(f['dirchar'])
 
-    ncoeff=20
+    ncoeff=50
     if f['coeffs'] != "":
         coeff=[f['coeffs'][i] for i in range(ncoeff+1)]
         info['q_exp']=my_latex(print_q_expansion(coeff))
         info['q_exp_display'] = url_for(".q_exp_display", label=f['label'], number="")
-        p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+        if f['deg']==int(1):
+            p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+        else:
+            p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
         info['table_list']=[[p_range[i], f['coeffs'][p_range[i]]] for i in range(len(p_range))]
         info['download_q_exp'] = [
             (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
@@ -231,9 +234,9 @@ def q_exp_display(label, number):
     try:
         number = int(number)
     except:
-        number = 20
-    if number < 20:
-        number = 30
+        number = 50
+    if number < 50:
+        number = 50
     if number > 150:
         number = 150
     C = getDBConnection()
@@ -291,7 +294,9 @@ def download_search(info):
     list_start = '[*' if lang=='magma' else '['
     list_end = '*]' if lang=='magma' else ']'
     s += download_assignment_start[lang] + list_start + '\\\n'
-    s += ",\\\n".join([entry(r['characteristic']) for r in res]).join([entry(r['deg']) for r in res]).join([entry(r['level']) for r in res]).join([entry(r['min_weight']) for r in res]).join([entry(r['conductor']) for r in res])
+    for r in res:
+        for m in ['characteristic', 'deg', 'level', 'min_weight', 'conductor']:
+            s += ",\\\n".join(str(r[m]))
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
