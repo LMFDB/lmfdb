@@ -36,7 +36,7 @@ from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
 from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
 
-from emf_render_navigation import render_elliptic_modular_form_navigation_wp,_browse_web_modform_spaces_in_ranges
+from emf_render_navigation import render_elliptic_modular_form_navigation_wp
 
 emf_logger.setLevel(int(10))
 
