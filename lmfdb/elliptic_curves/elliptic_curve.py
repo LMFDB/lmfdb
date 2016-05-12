@@ -369,7 +369,7 @@ def render_isogeny_class(iso_class):
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=False)
     if class_data == "Class not found":
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True)
-    class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number=10)
+    class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
 
     return render_template("iso_class.html",
                            properties2=class_data.properties,
@@ -383,27 +383,13 @@ def render_isogeny_class(iso_class):
 
 @ec_page.route("/modular_form_display/<label>")
 @ec_page.route("/modular_form_display/<label>/<number>")
-def modular_form_display(label, number=10):
+def modular_form_display(label, number):
     try:
         number = int(number)
     except ValueError:
         number = 10
     if number < 10:
         number = 10
-    # if number > 100000:
-    #     number = 20
-    # if number > 50000:
-    #     return "OK, I give up."
-    # if number > 20000:
-    #     return "This incident will be reported to the appropriate authorities."
-    # if number > 9600:
-    #     return "You have been banned from this website."
-    # if number > 4800:
-    #     return "Seriously."
-    # if number > 2400:
-    #     return "I mean it."
-    # if number > 1200:
-    #     return "Please stop poking me."
     if number > 1000:
         number = 1000
     data = db_ec().find_one({'lmfdb_label': label})
@@ -449,7 +435,7 @@ def render_curve_webpage_by_label(label):
 
     if data.twoadic_label:
         credit = credit.replace(' and',',') + ' and Jeremy Rouse'
-    data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number=10)
+    data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     return render_template("curve.html",
                            properties2=data.properties,
@@ -673,7 +659,6 @@ Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def ec_code(**args):
-    print("args has keys %s" %  to_dict(args).keys())
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
     E = WebEC.by_label(label)
     Ecode = E.code()
