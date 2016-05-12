@@ -111,10 +111,10 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
       {{ code(data.code,'gens') }}
       <div style='overflow:auto'><p>
       <table>
-        <tr><td>\(P\)</td>
+        <tr><td>\(P\)</td><td>&nbsp;=&nbsp;</td>
           {% for pt in data.mw.generators %}<td>{{pt}}</td>{% endfor %}
           </tr>
-        <tr><td>\(\hat{h}(P)\)</td>
+        <tr><td>\(\hat{h}(P)\)</td><td>&nbsp;&approx;&nbsp;</td>
           {% for ht in data.mw.heights %}<td>{{ht}}</td>{% endfor %}
           </tr>
         </table>
