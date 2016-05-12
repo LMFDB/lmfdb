@@ -135,29 +135,32 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     EXAMPLES::
     - We assume that we are starting from scratch.
-    TODO: UPDATE THIS documentation! It is quite old. M.newforms has been replaced by M.hecke_orbits and takes WebNewForm objects.
 
     sage: M=WebModFormSpace(1,12)
-    sage: M.galois_orbit_name
-    ''
-    sage: M.galois_orbit_name='1.12.1'
+    sage: M.space_label
+    '1.12.1'
+    sage: M.dimension
+    0
     sage: M.dimension=1
     sage: M.dimension_newspace=1
     sage: M.dimension_cusp_forms=1
-    sage: M.newforms = {'a': delta_qexp(20)}
+    sage: f = WebNewForm(1,12,1,'a')
+    sage: f.q_expansion = delta_qexp(20)
+    sage: f.save_to_db()
+    sage: M.hecke_orbits = {'a': f}
     sage: M.save_to_db()
-    {'galois_orbit_name': '1.12.1', 'character': 1, 'weight': 12, 'level': 1}
-    sage: M1=WebModFormSpace(1,12)
-    sage: M1.galois_orbit_name
-    ''
-    sage: M1.newforms
+    sage: M._clear_cache_()
+    sage: f._clear_cache()
+    sage: del(M)
+    sage: del(f)
+    sage: M=WebModFormSpace(1,12, update_from_db=False)
+    sage: M.hecke_orbits
     {}
-    sage: M1.update_from_db()
-    sage: M1.newforms
-    {'a': q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - \
-    115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - \
-    6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)}
-
+    sage: M.update_from_db()
+    sage: M.hecke_orbits
+    {'a': WebNewform in S_12(1,chi_1) with label a}
+    sage: M.hecke_orbits['a'].q_expansion
+    q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - 115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - 6905934*q^17 + 2727432*q^18 + O(q^19)
     """
 
     _key = ['level', 'weight', 'character','version']
