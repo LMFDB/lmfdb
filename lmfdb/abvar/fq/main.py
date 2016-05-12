@@ -33,8 +33,8 @@ def db_stats():
 #########################
 
 def get_bread(*breads):
-    bc = [('Abelian Varieties', url_for("abvar.index")),
-          ('Fq', url_for("abvarfq.index"))]
+    bc = [('Abelian Varieties', url_for(".abelian_varieties")),
+          ('Fq', url_for(".abelian_varieties"))]
     map(bc.append, breads)
     return bc
 
@@ -67,9 +67,9 @@ def abelian_varieties():
         stats = AbvarFqStats()
         info['col_heads'] = stats.counts['qs']
         info['row_heads'] = stats.counts['gs']
-        info['table'] = stats.count['gq_count']
+        info['table'] = stats.counts['qg_count']
         return render_template("abvarfq-index.html", title="Abelian Varieties over Finite Fields",
-                               info=info, credit=credit, bread=get_bread(), learnmore=learnmore_list())
+                               info=info, credit=abvarfq_credit, bread=get_bread(), learnmore=learnmore_list())
 
 @abvarfq_page.route("/<int:g>/")
 def abelian_varieties_by_g(g):
