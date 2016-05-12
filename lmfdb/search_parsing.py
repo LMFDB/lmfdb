@@ -497,6 +497,18 @@ def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, pars
     else:
         collapse_ors(['$or',L], query)
 
+@search_parser
+def parse_newton_polygon(inp, query, qfield):
+    pass
+
+@search_parser
+def parse_list_start(inp, query, qfield):
+    pass
+
+@search_parser
+def parse_abvar_decomp(inp, query, qfield):
+    pass
+
 def parse_count(info, default=20):
     try:
         info['count'] = int(info['count'])

@@ -162,7 +162,7 @@ Please enter a value or leave blank:
            {{ KNOWL('abvar.p_rank',title="p-rank") }}
        </td>
        <td>
-           <input type='text' name='p-rank' example="2" size=10 value="{{p-rank}}" />
+           <input type='text' name='p_rank' example="2" size=10 value="{{p_rank}}" />
        </td>
        <td>
            <span class="formexample"> e.g. 2 </span>
@@ -174,7 +174,7 @@ Please enter a value or leave blank:
        <input type='text' name='newton_polygon' example="[0,0,1,1]" size=10 value="{{newton_polygon}}" />
        </td>
        <td>
-       <span class="formexample"> e.g. [0,0,1,1] (slopes) or [(4,1),(7,6)] (breaks) </span>
+       <span class="formexample"> e.g. [0,1/2,1/2,1] (slopes) or [(1,0),(3,1)] (breaks) </span>
        </td>
    </tr>
 
@@ -192,7 +192,7 @@ Please enter a value or leave blank:
 
     <tr>
           <td>
-          {{ KNOWL('ag.point_count',title="point count of the abelian variety") }}
+          {{ KNOWL('ag.point_count',title="point counts of the abelian variety") }}
           </td>
           <td>
               <input type='text' name='abvar_point_count' example="[75,7125]" size=10 value="{{abvar_point_count}}" />
@@ -201,7 +201,7 @@ Please enter a value or leave blank:
           <span class="formexample"> e.g. [75,7125] </span>
           </td>
           <td>
-              {{ KNOWL('abvar.curve_point_count',title="point count of the curve") }}
+              {{ KNOWL('abvar.curve_point_count',title="point counts of the curve") }}
           </td>
           <td>
               <input type='text' name='curve_point_count' example="[9,87]" size=10 value="{{curve_point_count}}"/>
@@ -216,10 +216,10 @@ Please enter a value or leave blank:
               {{ KNOWL('abvar.decomposition',title="isogeny factors decomposition") }}
           </td>
           <td>
-              <input type='text' name='decomposition' example="[2,9.2.l_u,C2]" size=10 value="{{decomposition}}"/>
+              <input type='text' name='decomposition' example="[2,3^2,9.2.l_u,4T1]" size=10 value="{{decomposition}}"/>
           </td>
           <td>
-              <span class="formexample"> e.g. [2,9.2.l_u,C2] </span>
+              <span class="formexample"> e.g. [2,2.9.l_u,4T1] </span>
           </td>
       </tr>
 

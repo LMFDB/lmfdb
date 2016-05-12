@@ -7,6 +7,7 @@ from pymongo import ASCENDING, DESCENDING
 from lmfdb.base import app
 from lmfdb.utils import to_dict
 from lmfdb.abvar.fq import abvarfq_page
+from lmfdb.search_parsing import parse_ints, parse_newton_polygon, parse_list_start, parse_abvar_decomp, parse_count, parse_start
 from isog_class import validate_label
 from flask import flash, render_template, url_for, request, redirect, make_response, send_file
 from markupsafe import Markup
@@ -92,8 +93,31 @@ def abelian_variety_search(**args):
         parse_ints(info,query,'g')
         if 'simple_only' in info and info['simple_only'] == 'yes':
             query['decomposition'] = {'$size' : 1}
+        if 'primitive_only' in info and info['primitive_only'] == 'yes':
+            query['primitive_models'] = []
         parse_ints(info,query,'p_rank')
-        parse_bracketed_rationals(info,query,'slopes'
+        parse_newton_polygon(info,query,'newton_polygon',qfield='slopes')
+        parse_list_start(info,query,'initial_coefficients',qfield='polynomial')
+        parse_list_start(info,query,'abvar_point_count',qfield='A_counts')
+        parse_list_start(info,query,'curve_point_count',qfield='C_counts')
+        parse_abvar_decomp(info,query,'decomposition')
+    except ValueError:
+        return search_input_error(info, bread)
+
+    info['query'] = query
+    count = parse_count(info, 50)
+    start = parse_start(info)
+
+    cursor = db().find(query)
+    nres = cursor.count()
+    if start >= nres:
+        start -= (1 + (start - nres) / count) * count
+    if start < 0:
+        start = 0
+
+    res = cursor.sort([]).skip(start).limit(count)
+    res = list(res)
+    info['abvars'] = [res
 
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
