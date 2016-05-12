@@ -10,15 +10,21 @@
 
 {% if color_template == 0 %}
     /*Original LMFDB colors*/
-    {% set col_main_d  = '#040' %} 
-    {% set col_main_dl = '#060' %}
-    {% set col_main    = '#292' %} 
-    {% set col_main_2  = '#afa' %} 
-    {% set col_main_l  = '#bfb' %}
-    {% set col_main_lg = '#8b8' %}
-    {% set col_main_ld = '#dfd' %}
-    {% set col_main_ll = '#efe' %}
-    {% set col_main_g  = '#474' %}
+    {% set col_main_d  = '#040' %} /* Header and footer */
+    {% set col_main_dl = '#060' %} /* Header and footer text*/
+    {% set col_main    = '#292' %}*/ /* Links */
+    {% set col_visited = col_main %} /* visited links in body */
+    {% set col_body_text = col_main %} /* links in body*/
+    {% set col_sidebar_text = col_main%} /* Sidebar text in body and header, under Dat, gets over-written for the rest.*/
+    {% set col_sidebar_links = col_main%} /* Sidebar link text */
+    {% set col_sidebar_header_links = col_main %} /* Sidebar header links */
+    {% set col_search_border = col_main%}
+    {% set col_main_2  = '#afa' %} /* Main link hovers*/
+    {% set col_main_l  = '#bfb' %} /* Tabs*/
+    {% set col_main_lg = '#8b8' %} /* Shadow and bottom border*/
+    {% set col_main_ld = '#dfd' %} /* Box background*/
+    {% set col_main_ll = '#efe' %} /* Beta text*/
+    {% set col_main_g  = '#474' %} /* ?*/
     /* Body colors */
     {% set body_background = white %}
     {% set body_text = black%}
@@ -229,25 +235,11 @@
 
 {% endif %}
 
-/*Greens found in code probably not used*/
-/*These can probably be removed along with come code in style.css*/
-/*{% set col_main_ldl_1 = '#c4ffc4'%}*/
-/*{% set col_main_ld_1 = '#d1ffd1' %}*/
-/*{% set col_main_ld_2 = '#d5ffd5' %}*/
-/*{% set col_main_ll_1 = '#e2ffe2'%}*/
 
 /* Different reds*/
 {% set red = 'red' %}
 {% set col_light_red_1 = '#FDD' %}
 {% set col_light_red_2 = '#FEE' %}
-
-/*Reds found in code probably not used, as above*/
-/* {% set col_light_red_3 = '#EDD' %}
-{% set col_light_red_4 = '#ffc4c4' %}
-{% set col_light_red_5 = '#ffd1d1' %}
-{% set col_light_red_6 = '#ffd5d5' %}
-{% set col_light_red_7 = '#ffd2d2' %}
-{% set col_light_red_8 = '#ffe2e2' %}*/
 
 /* Blues */
 {% set steel_blue = '#3C769D' %}
@@ -301,9 +293,9 @@
 
 
 /* Content colors*/
-{% set content_text = col_main %}
-{% set content_text_h3 = col_main %}
-{% set content_border = col_main %}
+{% set content_text = 'black' %} /* Body section text TODO: change*/
+{% set content_text_h3 = col_main %} /* TODO: where is this used? */
+{% set content_border = col_main %} /* TODO: where is this used? */
 {% set connent_background = col_main_ll %}
 {% set content_border_red = col_red_1 %}
 {% set content_background_red = col_light_red_1 %}
@@ -321,16 +313,11 @@
 {% set footer_text = col_main_dl %}
 
 /* a colors */
-{% set a_text = col_main %}
+{% set a_text = col_body_text %} /* This occurs in for some hyperlinks, and sidebar header text.*/
 {% set a_inactive = black %}
-{% set a_text_visited = col_main %}
-{% if color_template == 6 %}
-  {% set a_text_hover = col_main %}
-  {% set a_background_hover = box_tab_text %}
-{% else %}
-  {% set a_text_hover = black %}
-  {% set a_background_hover = col_main_l %}
-{% endif %}
+{% set a_text_visited = col_visted %} /* This occurs for the rest of the hyperlinks, and sidebar header text, i.e., once visited*/
+{% set a_text_hover = black %}
+{% set a_background_hover = col_main_l %}
 
 {% set a_nav_text = white %}
 {% set a_nav_background = col_main %}
@@ -340,7 +327,7 @@
 {% set hr_border = col_main_l %}
 
 /* Upper right hand corner searchbox */
-{% set search_border = col_main %}
+{% set search_border = col_search_border %}
 {% set search_background = col_main_ld %}
 
 /* Header colors*/
@@ -368,13 +355,9 @@
 /* Sidebar: left hand side sidebar. */
 {% set sidebar_background = col_main_ll%}
 {% set sidebar_background_h2 = col_main_l %} /*sidebar tab background*/
-{% if color_template == 6 %}
-  {% set sidebar_text = col_main_l %}
-  {% set sidebar_text_h2 = white %}
-{% else %}
-  {% set sidebar_text = col_main %}
-  {% set sidebar_text_h2 = col_main_d %}
-{% endif %}
+{% set sidebar_text = 'black' %}/*sidebar non-header non-link non-future text*/
+{% set sidebar_text_h2 = 'black' %} /* non-link sidebar header text.*/
+
 {% set sidebar_background_hover = col_main_l %}
 {% set sidebar_background_li = col_main_ll %}
 {% set sidebar_background_h2_hover = col_main_2 %}
