@@ -67,8 +67,6 @@ The table below gives the number of isogeny classes of abelian varieties of dime
         <tr class="space">
             <th class="spaceleft"></th>
             {% for q in info.col_heads  %}
-            <!--{% set col_url = url_for('emf.render_ab_var_isogeny_class',q=q) %}
-            <th class="level"><a href="{{col_url}}">{{q}}</a></th>-->
             <th class="level">{{q}}</a></th>
             {% endfor %}
         </tr>
@@ -77,15 +75,13 @@ The table below gives the number of isogeny classes of abelian varieties of dime
         {% for g in info.row_heads  %}
         <tr>
             <th class="left">
-                <th class="left">{{g}}</th>
-                    <!--{% set row_url = url_for('emf.render_elliptic_modular_forms',weight=k,group=info.grouptype) %}
-                    <a href="{{ row_url }}">{{ k }}</a>-->                    
+                <th class="left">{{g}}</th>            
                 </th>
                 {% for q in info.col_heads  %}
                 <td class="center">
                     {% if table[q] is defined and table[q][g] is defined and table[q][g] is defined %}
                       {% set size = table[q][g] %}
-                      {% set url = url_for('ab_var.abelian_variety_isoclasses_by_qg',q=q,g=g) %}
+                      {% set url = url_for('abvar.abelian_varieties_by_gq',q=q,g=g) %}
                       <a href="{{url}}">{{size}}</a>
                     {% else %}
                     {% do has_na.append(1) %}
@@ -106,8 +102,8 @@ The table below gives the number of isogeny classes of abelian varieties of dime
 
 
 
-<h2> Find a specific  {{KNOWL('abvar.isogeny_class',title="isogeny class") }} by the {{ KNOWL('ab_var.fq.weil_polynomial',title="coefficients of its Weil polynomial") }} or
-  {{ KNOWL('ab_var.fq.lmfdb_label',title="LMFDB label") }} </h2>
+<h2> Find a specific  {{KNOWL('abvar.isogeny_class',title="isogeny class") }} by the {{ KNOWL('abvar.fq.weil_polynomial',title="coefficients of its Weil polynomial") }} or
+  {{ KNOWL('abvar.fq.lmfdb_label',title="LMFDB label") }} </h2>
 <!--{% if err_msg %}
 <form action={{url_for('ec.rational_elliptic_curves')}}>
 {% else %}-->
@@ -142,7 +138,7 @@ Please enter a value or leave blank:
 
    <tr>
        <td>
-       {{ KNOWL('ab_var.simple',title="simple only") }}
+       {{ KNOWL('abvar.simple',title="simple only") }}
        </td>
        <td>
        <select name='simple_only'>
@@ -163,7 +159,7 @@ Please enter a value or leave blank:
        
    <tr>
        <td>
-           {{ KNOWL('ab_var.p_rank',title="p-rank") }}
+           {{ KNOWL('abvar.p_rank',title="p-rank") }}
        </td>
        <td>
            <input type='text' name='p-rank' example="2" size=10 value="{{p-rank}}" />
@@ -199,13 +195,13 @@ Please enter a value or leave blank:
           {{ KNOWL('ag.point_count',title="point count of the abelian variety") }}
           </td>
           <td>
-              <input type='text' name='ab_var_point_count' example="[75,7125]" size=10 value="{{ab_var_point_count}}" />
+              <input type='text' name='abvar_point_count' example="[75,7125]" size=10 value="{{abvar_point_count}}" />
           </td>
           <td>
           <span class="formexample"> e.g. [75,7125] </span>
           </td>
           <td>
-              {{ KNOWL('ab_var.curve_point_count',title="point count of the curve") }}
+              {{ KNOWL('abvar.curve_point_count',title="point count of the curve") }}
           </td>
           <td>
               <input type='text' name='curve_point_count' example="[9,87]" size=10 value="{{curve_point_count}}"/>
@@ -217,7 +213,7 @@ Please enter a value or leave blank:
       
       <tr>
           <td>
-              {{ KNOWL('ab_var.decomposition',title="isogeny factors decomposition") }}
+              {{ KNOWL('abvar.decomposition',title="isogeny factors decomposition") }}
           </td>
           <td>
               <input type='text' name='decomposition' example="[2,9.2.l_u,C2]" size=10 value="{{decomposition}}"/>
