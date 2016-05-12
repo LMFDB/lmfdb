@@ -130,7 +130,11 @@
         {% endif %}
 
         {% if info.resinfo !=[] %}
-        <h2>{{ KNOWL('nf.sibling', title='Sibling fields') }}</h2>
+           {% if info.degree == 6 %}
+        <h2>{{ KNOWL('nf.sibling', title='Sibling') }} algebras</h2>
+           {% else %}
+        <h2>{{ KNOWL('nf.sibling', title='Sibling') }} fields</h2>
+           {% endif %}
         <div>
         <table>
         {% for r in info.resinfo %}
