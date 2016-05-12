@@ -5,7 +5,7 @@
 {% set white = 'white' %}
 {% set black = 'black'%}
 
-{% set color_template = 15 %}
+{% set color_template = 0 %}
 /*0, 1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19*/
 
 {% if color_template == 0 %}
