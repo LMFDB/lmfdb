@@ -19,86 +19,49 @@
 <tr>
 <td align=left>{{ KNOWL('ag.field_of_definition',title = "cardinality of the base field") }}</td>
 <td align=left>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
-<td align=left>{{ KNOWL('ab_var.simple',title="simple only") }}</td>
+<td align=left>{{ KNOWL('abvar.simple',title="simple only") }}</td>
 <td align=left>{{ KNOWL('ag.primitive',title="primitive only") }}</td>
-<td align=left>{{ KNOWL('ab_var.p_rank',title="p-rank") }}</td>
+<td align=left>{{ KNOWL('abvar.p_rank',title="p-rank") }}</td>
 <td align=left>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</td>
-<td align=left>initial coefficients</td>
-<td align=left>{{ KNOWL('ag.point_count',title="point count of the abelian variety") }}</td>
-<td align=left>{{ KNOWL('ab_var.curve_point_count',title="point count of the curve") }}</td>
-<td align=left>{{ KNOWL('ab_var.decomposition',title="isogeny factors decomposition") }}</td>
 </tr>
 
 <tr>
 <td><input type='text' name='q' size=10 value="{{info.q}}" /></td>
-<td align=left><input type='text' name='conductor_norm' size=10
-                      value="{{info.conductor_norm}}"></td>
-<td>         <select name='include_isogenous'>
-{% if info.query.number %}
-           <option value="off" selected="yes">exclude</option>
-           <option value="on">include</option>
-{% else %}
-           <option value="off">exclude</option>
-           <option value="on" selected="yes">include</option>
-{% endif %}
-         </select>
-</td>
-<td>         <select name='include_base_change'>
-{% if info.include_base_change == "off" %}
-           <option value="off" selected="yes">exclude</option>
-           <option value="on">include</option>
-{% else %}
-           <option value="off">exclude</option>
-           <option value="on" selected="yes">include</option>
-{% endif %}
-         </select>
-</td>
-<td>         <select name='include_Q_curves'>
-{% if info.include_Q_curves == "only" %}
-           <option value="include">include</option>
-           <option value="exclude">exclude</option>
-           <option value="only" selected="yes">only</option>
-{% else %}
-{% if info.include_Q_curves == "exclude" %}
-           <option value="include">include</option>
-           <option value="exclude" selected="yes">exclude</option>
-           <option value="only">only</option>
-{% else %}
-           <option value="include" selected="yes">include</option>
-           <option value="exclude">exclude</option>
-           <option value="only">only</option>
-{% endif %}
-{% endif %}
-         </select>
-</td>
-<td>         <select name='include_cm'>
-{% if info.include_cm == "only" %}
-           <option value="include">include</option>
-           <option value="exclude">exclude</option>
-           <option value="only" selected="yes">only</option>
-{% else %}
-{% if info.include_cm == "exclude" %}
-           <option value="include">include</option>
-           <option value="exclude" selected="yes">exclude</option>
-           <option value="only">only</option>
-{% else %}
-           <option value="include" selected="yes">include</option>
-           <option value="exclude">exclude</option>
-           <option value="only">only</option>
-{% endif %}
-{% endif %}
-         </select>
-</td>
-          <td>
-          <input type='text' name='torsion' size=6 value="{{info.torsion}}" />
-          </td>
-          <td>
-          <input type='text' name='torsion_structure' size=8 value="{{info.torsion_structure}}" />
-          </td>
-          <td>
-          <input type='text' name='jinv' size=20 value="{{info.jinv}}" />
-          </td>
+<td><input type='text' name='g' size=10 value="{{info.g}}" /></td>
+<td><select name='simple_only'>
+    {% if info.simple_only == "yes" %}
+    <option value ="no">no</option>
+    <option value ="yes" selected = "yes">yes</option>
+    {% else %}
+    <option value ="no" selected = "no">no</option>
+    <option value ="yes">yes</option>
+    {% endif %}
+    </select></td>
+<td><select name='primitive_only'>
+    {% if info.primitive_only == "yes" %}
+    <option value ="no">no</option>
+    <option value ="yes" selected = "yes">yes</option>
+    {% else %}
+    <option value ="no" selected = "no">no</option>
+    <option value ="yes">yes</option>
+    {% endif %}
+    </select></td>
+<td><input type='text' name='p-rank' size=10 value="{{info.p-rank}}" /></td>
+<td><input type='text' name='newton_polygon' size=10 value="{{info.newton_polygon}}" /></td>
+</tr>
 
+<tr>
+<td align=left>initial coefficients</td>
+<td align=left>{{ KNOWL('ag.point_count',title="point count of the abelian variety") }}</td>
+<td align=left>{{ KNOWL('abvar.curve_point_count',title="point count of the curve") }}</td>
+<td align=left>{{ KNOWL('abvar.decomposition',title="isogeny factors decomposition") }}</td>
+</tr>
+
+<tr>
+<td><input type='text' name='initial_coefficients' size=10 value="{{info.initial_coefficients}}" /></td>
+<td><input type='text' name='abvar_point_count' size=10 value="{{info.abvar_point_count}}" /></td>
+<td><input type='text' name='curve_point_count' size=10 value="{{info.curve_point_count}}"/></td>
+<td><input type='text' name='decomposition' size=10 value="{{decomposition}}"/></td>
 </tr>
 
 <tr>
@@ -145,23 +108,23 @@ table td.params {
 </h2>
 <table>
 <tr>
-  <th class="center">{{ KNOWL('ec.curve_label',title = "curve label") }}</th>
-  <th class="center">{{ KNOWL('nf',title = "base field") }}</th>
-  <th class="center">{{ KNOWL('ec.conductor',title = "conductor") }} norm</th>
-  <th class="center">{{ KNOWL('ec.conductor_label',title = "conductor label") }}</th>
-  <th class="center">{{ KNOWL('ec.isogeny_class',title = "isogeny class")}} label</th>
-  <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass coefficients') }}</th>
+  <th class="center">{{ KNOWL('abvar.fq.lmfdb_label',title="LMFDB label") }}</th>
+  <th class="center">{{ KNOWL('ag.dimension',title = "dimension") }}</th>
+  <th class="center">{{ KNOWL('ag.field_of_definition',title = "base field") }}</th>
+  <th class="center">{{ KNOWL('abvar.fq.weil_polynomial',title="Weil polynomial") }}</th>
+  <th class="center">{{ KNOWL('abvar.p_rank',title="p-rank") }}</th>
+  <th align="left">{{ KNOWL('abvar.decomposition',title="decomposition type") }}</th>
 </tr>
-{% for curve in info.curves: %}
+{% for abvar in info.abvars: %}
 <tr>
-<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{curve.short_label}}</a></td>
+<td class="center"><a href="{{ url_for('abvarfq.by_label',label=abvar.label) }} ">{{abvar.label}}</a></td>
 <td class="center">
- {{ curve.field_knowl|safe }}
+ {{abvar.g}}
 </td>
-<td class="center">{{curve.conductor_norm}}</td>
-<td class="center">{{curve.conductor_label}}</td>
-<td class="center"><a href="{{ url_for('.show_ecnf_isoclass',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label) }} ">{{curve.short_class_label}}</a></td>
-<td class="left"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{info.web_ainvs(curve.field_label,curve.ainvs)}}</a></td>
+<td class="center">{{abvar.base_field}}</td>
+<td class="center">{{abvar.polynomial}}</td>
+<td class="center">{{abvar.p-rank}}</td>
+<td class="left">{{abvar.decomposition}}</td>
 </tr>
 {% endfor %}
 </table>
