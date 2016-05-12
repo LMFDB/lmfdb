@@ -63,10 +63,9 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 <br><span class="formexample">e.g. 2.1.1.0.1.1</span>
 </form>
 
-<h2> Search </h2>
-
-<p>Please enter a value or leave blank:</p>
+<h2> Search</h2>
 <form>
+<button type='submit' value='Search'>Search</button>
 <table>
 <tr>
 <td align= right>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}:</td>
@@ -88,14 +87,14 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 </tr>
 <tr>
 <td align= right>{{ KNOWL('modlmf.conductor', title='Conductor') }}:</td>
-<td><input type='text' name='level' placeholder='1' size=10>
+<td><input type='text' name='conductor' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1</td>
 </tr>
 
 </tr>
 <tr>
 <td align= right>{{ KNOWL('modlmf.weight', title='Minimal weight') }}:</td>
-<td><input type='text' name='weight' placeholder='2' size=10>
+<td><input type='text' name='min_weight' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2</td>
 </tr>
 
@@ -108,18 +107,16 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 
 <tr>
 <td align= right>Group:</td><td> <select name='group'>
-           <option value="gamma0" selected="$\Gamma_0$" >$\Gamma_0$</option>
-           <option value="gamma1">$\Gamma_1$</option>
+           <option value="gamma0" selected >Gamma_0</option>
+           <option value="gamma1">Gamma_1</option>
          </select></td>
 </tr>
-
-
 </table>
 
 
 <table id="a_n">
 <tr>
-<td> {{KNOWL('modlmf.q_expansion', title='Coefficient')}} of q<sup>n</sup> for n=<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size='3' example=3 ></td><td> as an {{KNOWL('finitefields.structure', title='element of <span style="text-decoration: overline"> &#120125;<sub>&#x2113;</sub></span>')}} 
+<td> {{KNOWL('modlmf.q_expansion', title='Coefficient')}} of q<sup>n</sup> for n:<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size='3' example=3 ></td><td> as an {{KNOWL('finitefields.structure', title='element of <span style="text-decoration: overline"> &#120125;<sub>&#x2113;</sub></span>')}} 
 </td><td>
   <button type='button' id='more_modp_button'>more</button>
 </td>
@@ -136,13 +133,7 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 
 </table>
 
-<table>
-<tr>
-<td align=left colspan='3'>Maximum number of mod &#x2113; modular forms to display <input type='text' name='count' value=50 size='5'/></td>
-<td colspan='3'><button type='submit' value='Search'>Search</button>
-</td>
-</tr>
-</table>
+<p>Maximum number of mod &#x2113; modular forms to display <input type='text' name='count' value=50 size='5'/></p>
 </form>
 
 
@@ -156,7 +147,7 @@ var table = tbody.length ? tbody : $('#a_n');
 
 $('#more_modp_button').click(function(){
     //Add row
-    table.append("<tr><td align='right'> n=<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size=3 example=3></tr>");
+    table.append("<tr><td align='right'> n:<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size=3 example=3></tr>");
     return false;
 })
 

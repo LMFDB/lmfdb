@@ -7,38 +7,51 @@
 <table border="0">
 
 <tr>
-<td align=left>{{ KNOWL('lattice.dimension', title='Dimension') }}</td>
-<td align=left>{{ KNOWL('lattice.determinant', title='Determinant') }}</td>
-<td align=left>{{ KNOWL('lattice.level', title='Level') }}</td>
-<td align=left>{{ KNOWL('lattice.gram', title='Gram matrix') }}</td>
+<td align=left>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}</td>
+<td align=left>{{ KNOWL('modlmf.deg', title='Field degree') }}</td>
+<td align=left>{{ KNOWL('modlmf.level', title='Level') }}</td>
+<td align= right>{{ KNOWL('modlmf.conductor', title='Conductor') }}</td>
+</tr>
+
+
+<tr>
+<td align=left><input type='text' name='characteristic' value={{info.characteristic}} size=10></td>
+<td align=left><input type='text' name='deg' value={{info.deg}} size=10></td>
+<td align=left><input type='text' name='level' value={{info.level}} size=10></td>
+<td align=left><input type='text' name='conductor' value={{info.conductor}} size=10></td>
+</tr>
+
+</tr>
+<td align=left>{{ KNOWL('modlmf.weight', title='Minimal weight') }}</td>
+<td align=left>{{ KNOWL('modlmf.dirchar', title='Character label') }}</td>
+<td align= right>Group:</td><td> <select name='group'>
+           <option value="gamma0" selected >Gamma_0</option>
+           <option value="gamma1">Gamma_1</option>
+         </select></td>
+<td colspan=3 align= right>Up to twists: <select name='twist'>
+           <option value="no" selected="no" >no</option>
+           <option value="yes">yes</option>
+         </select></td>
 </tr>
 
 <tr>
-<td align=left><input type='text' name='dim' size=10 value="{{info.dim}}"></td>
-<td align=left><input type='text' name='det' size=10 value="{{info.det}}"></td>
-<td align=left><input type='text' name='level' size=10 value="{{info.level}}"></td>
-<td align=left><input type='text' name='gram' size=10 value="{{info.gram}}"></td>
-</tr>
-
-<tr>
-<td align=left>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length</td>
-<td align=left>{{ KNOWL('lattice.class_number', title='Class number') }}</td>
-<td align=left>{{ KNOWL('lattice.group_order', title='Group order') }}</td>
-</tr>
-
-<tr>
-<td align=left><input type='text' name='minimum' size=10 value="{{info.minimum}}"> </td>
-<td align=left><input type='text' name='class_number' size=10 value="{{info.class_number}}"> </td>
-<td align=left><input type='text' name='aut' size=10 value="{{info.aut}}"> </td>
-</tr>
-
-<tr>&nbsp;</tr>
-<tr>
-<td align=left colspan=2>Maximum number of integral lattices to display</td>
-<td align=left><input type='text' name='count' value={{info.count}} size=10></td>
-<td><button type='submit' size=10  value='refine'>Search again</button></td>
+<td align=left><input type='text' name='min_weight' value={{info.min_weight}} size=10>
+<td align=left><input type='text' name='dirchar' value={{info.dirchar}} size=10>
 </tr>
 </table>
+
+
+<table id="a_n">
+<tr>
+<td> {{KNOWL('modlmf.q_expansion', title='Coefficient')}} of q<sup>n</sup> for n:<input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='index_coeff' size='3' example=3 ></td><td> as an {{KNOWL('finitefields.structure', title='element of <span style="text-decoration: overline"> &#120125;<sub>&#x2113;</sub></span>')}} 
+</td><td>
+  <button type='button' id='more_modp_button'>more</button>
+</td>
+</tr>
+</table>
+
+
+<button type='submit' size=10  value='refine'>Search again</button></td>
 </form>
 
 {% if info.err is defined %}
@@ -64,19 +77,21 @@
 
         <table>
         <tr>
-        <th>{{ KNOWL('lattice.label', title='Label') }}</th>
-        <th>{{ KNOWL('lattice.dimension', title='Dimension') }}</th>
-        <th>{{ KNOWL('lattice.determinant', title='Determinant') }}</th>
-        <th>{{ KNOWL('lattice.level', title='Level')}}</th>
-        <th>{{ KNOWL('lattice.gram', title='Gram Matrix') }}</th>
+        <th>{{ KNOWL('modlmf.label', title='Label') }}</th>
+        <th>{{ KNOWL('modlmf.characteristic', title='Field characteristic'') }}</th>
+        <th>{{ KNOWL('modlmf.degree', title='Field degree') }}</th>
+        <th>{{ KNOWL('modlmf.level', title='Level')}}</th>
+        <th>{{ KNOWL('modlmf.conductor', title='Conductor') }}</th>
+        <th>{{ KNOWL('modlmf.minimal_weight', title='Minimal weight') }}</th>
         </tr>
-        {% for l in info.lattices %}
+        {% for l in info.modlmfs %}
             <tr>
-            <td align='left'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
-            <td>{{l.dim}}</td>
-            <td>{{l.det}}</td>
+            <td align='left'><a href="{{url_for('modlmf.render_modlmf_webpage', label=l.label)}}">{{l.label}} </a></td>
+            <td>{{l.characteristic}}</td>
+            <td>{{l.deg}}</td>
             <td>{{l.level}}</td>
-            <td>${{l.gram}}$</td>
+            <td>${{l.conductor}}$</td>
+            <td>${{l.min_weight}}$</td>
             </tr>
         {% endfor %}
         </table>

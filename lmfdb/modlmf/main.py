@@ -108,7 +108,7 @@ def modlmf_by_label(lab, C):
 
 
 
-
+    characteristic,deg,level,conductor,min_weight,dirchar,atkinlehner,n_coeffs,coeffs = ll
 
 def modlmf_search(**args):
     C = getDBConnection()
@@ -121,63 +121,21 @@ def modlmf_search(**args):
         return modlmf_by_label(info.get('label'), C)
     query = {}
     try:
-        for field, name in (('dim','Dimension'),('det','Determinant'),('level',None),
-                            ('minimum','Minimal vector length'), ('class_number',None), ('aut','Group order')):
+        for field, name in (('characteristic','Field characteristic'),('deg','Field degree'),('level', 'Level'),
+                            ('conductor','Conductor'), ('min_weight', 'Minimal weight')):
             parse_ints(info, query, field, name)
-        # Check if length of gram is triangular
-        gram = info.get('gram')
-        if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
-            raise ValueError
-        parse_list(info, query, 'gram', process=vect_to_sym)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info)
 
+# miss search by character, search up to twists and gamma0, gamma1
+
     count = parse_count(info,50)
     start = parse_start(info)
 
-#    count_default = 50
-#    if info.get('count'):
-#        try:
-#            count = int(info['count'])
-#        except:
-#            err = "Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']
-#            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']), "error")
-#            info['err'] = str(err)
-#            return search_input_error(info)
-#    else:
-#        info['count'] = count_default
-#        count = count_default
-
-#    start_default = 0
-#    if info.get('start'):
-#        try:
-#            start = int(info['start'])
-#            if(start < 0):
-#                start += (1 - (start + 1) / count) * count
-#        except:
-#            start = start_default
-#    else:
-#        start = start_default
-
     info['query'] = dict(query)
-    res = C.modlmfs.lat.find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC)]).skip(start).limit(count)
+    res = C.mod_l_eigenvalues.modlmf.find(query).sort([('characteristic', ASC), ('deg', ASC), ('level', ASC), ('min_weight', ASC), ('conductor', ASC)]).skip(start).limit(count)
     nres = res.count()
-
-    # here we are checking for isometric modlmfs if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
-
-    if nres==0 and info.get('gram'):
-        A=query['gram'];
-        n=len(A[0])
-        d=matrix(A).determinant()
-        result=[B for B in C.modlmfs.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
-        if len(result)>0:
-            result=result[0]['gram']
-            query_gram={ 'gram' : result }
-            query.update(query_gram)
-            res = C.modlmfs.lat.find(query)
-            nres = res.count()
 
     if(start >= nres):
         start -= (1 + (start - nres) / count) * count
@@ -201,15 +159,11 @@ def modlmf_search(**args):
     res_clean = []
     for v in res:
         v_clean = {}
-        v_clean['label']=v['label']
-        v_clean['dim']=v['dim']
-        v_clean['det']=v['det']
-        v_clean['level']=v['level']
-        v_clean['gram']=vect_to_matrix(v['gram'])
+        for m in ['label','characteristic','deg','level','min_weight','conductor']:
+            v_clean[m]=v[m]
         res_clean.append(v_clean)
 
     info['modlmfs'] = res_clean
-
     t = 'Integral modlmfs Search Results'
     bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
     properties = []
@@ -220,13 +174,6 @@ def search_input_error(info, bread=None):
     if bread is None:
         bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
     return render_template("modlmf-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
-
-
-
-
-
-
-
 
 
 
@@ -254,22 +201,22 @@ def render_modlmf_webpage(**args):
         info[m]=int(f[m])
     for m in ['coeffs', 'atkinlehner']:
         info[m]=f[m]
-    info['dirchar']=str('dirchar')
+    info['dirchar']=str(f['dirchar'])
 
     ncoeff=20
-    p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
     if f['coeffs'] != "":
         coeff=[f['coeffs'][i] for i in range(ncoeff+1)]
         info['q_exp']=my_latex(print_q_expansion(coeff))
-        info['q_exp'] = url_for(".q_exp_display", label=f['label'], number="")
-        info['table_list']=[[p_range[i], f['coeffs'][p_range[i]]] for i in range(len(p_range)-1)]
+        info['q_exp_display'] = url_for(".q_exp_display", label=f['label'], number="")
+        p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+        info['table_list']=[[p_range[i], f['coeffs'][p_range[i]]] for i in range(len(p_range))]
         info['download_q_exp'] = [
-            (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i, obj='coeffs')) for i in ['gp', 'magma','sage']]
+            (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
 
         t = "mod &#x2113; Modular Form "+info['label']
     info['properties'] = [
-        ('Field characteristic', '%s' %info['characteristic'])
-        ('Field degree', '%s' %info['deg'])
+        ('Field characteristic', '%s' %info['characteristic']),
+        ('Field degree', '%s' %info['deg']),
         ('Level', '%s' %info['level']),
         ('Conductor', '%s' %info['conductor']),
         ('Minimal weight', '%s' %info['min_weight']),
@@ -279,7 +226,7 @@ def render_modlmf_webpage(**args):
 
 
 #auxiliary function for displaying more coefficients of the theta series
-@modlmf_page.route('/theta_display/<label>/<number>')
+@modlmf_page.route('/q_exp_display/<label>/<number>')
 def q_exp_display(label, number):
     try:
         number = int(number)
@@ -331,25 +278,20 @@ download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
 def download_search(info):
     lang = info["submit"]
-    filename = 'integral_modlmfs' + download_file_suffix[lang]
+    filename = 'mod_l_modular_forms' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
     # reissue saved query here
 
-    res = getDBConnection().modlmfs.lat.find(ast.literal_eval(info["query"]))
+    res = getDBConnection().mod_l_eigenvalues.modlmfs.find(ast.literal_eval(info["query"]))
 
     c = download_comment_prefix[lang]
     s =  '\n'
-    s += c + ' Integral modlmfs downloaded from the LMFDB on %s. Found %s modlmfs.\n\n'%(mydate, res.count())
-    # The list entries are matrices of different sizes.  Sage and gp
-    # do not mind this but Magma requires a different sort of list.
+    s += c + ' Mod l modular forms downloaded from the LMFDB on %s. Found %s mod l modular forms.\n\n'%(mydate, res.count())
+    s += ' Each entry is given in the following format: field characteristic, field degree, level, minimal weight, conductor.\n\n'
     list_start = '[*' if lang=='magma' else '['
     list_end = '*]' if lang=='magma' else ']'
     s += download_assignment_start[lang] + list_start + '\\\n'
-    mat_start = "Mat(" if lang == 'gp' else "Matrix("
-    mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
-    # loop through all search results and grab the gram matrix
-    s += ",\\\n".join([entry(r['gram']) for r in res])
+    s += ",\\\n".join([entry(r['characteristic']) for r in res]).join([entry(r['deg']) for r in res]).join([entry(r['level']) for r in res]).join([entry(r['min_weight']) for r in res]).join([entry(r['conductor']) for r in res])
     s += list_end
     s += download_assignment_end[lang]
     s += '\n'
@@ -359,58 +301,27 @@ def download_search(info):
     return send_file(strIO, attachment_filename=filename, as_attachment=True)
 
 
-@modlmf_page.route('/<label>/download/<lang>/<obj>')
+@modlmf_page.route('/<label>/download/<lang>/')
 def render_modlmf_webpage_download(**args):
-    if args['obj'] == 'shortest_vectors':
-        response = make_response(download_modlmf_full_lists_v(**args))
-        response.headers['Content-type'] = 'text/plain'
-        return response
-    elif args['obj'] == 'genus_reps':
-        response = make_response(download_modlmf_full_lists_g(**args))
-        response.headers['Content-type'] = 'text/plain'
-        return response
+    response = make_response(download_modlmf_full_lists(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 
-def download_modlmf_full_lists_v(**args):
+
+def download_modlmf_full_lists(**args):
     C = getDBConnection()
     data = None
     label = str(args['label'])
-    res = C.modlmfs.lat.find_one({'label': label})
+    res = C.mod_l_eigenvalues.modlmf.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such modlmf"
     lang = args['lang']
     c = download_comment_prefix[lang]
-    outstr = c + ' Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n\n'%(mydate)
+    outstr = c + ' List of q-expansion coefficients downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '\\\n'
-    if res['name']==['Leech']:
-        outstr += str(res['shortest']).replace("'", "").replace("u", "")
-    else:
-        outstr += str(res['shortest'])
+    outstr += str(res['coeffs']).replace("'", "").replace("u", "")
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
-
-
-def download_modlmf_full_lists_g(**args):
-    C = getDBConnection()
-    data = None
-    label = str(args['label'])
-    res = C.modlmfs.lat.find_one({'label': label})
-    mydate = time.strftime("%d %B %Y")
-    if res is None:
-        return "No such modlmf"
-    lang = args['lang']
-    c = download_comment_prefix[lang]
-    mat_start = "Mat(" if lang == 'gp' else "Matrix("
-    mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
-
-    outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
-    outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in res['genus_reps']])
-    outstr += ']'
-    outstr += download_assignment_end[lang]
-    outstr += '\n'
-    return outstr
-
