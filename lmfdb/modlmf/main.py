@@ -11,7 +11,7 @@ from lmfdb.base import app, getDBConnection
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma, random_object_from_collection
 
 import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, conway_polynomial
+from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, conway_polynomial, prime_range
 
 from lmfdb.modlmf import modlmf_page, modlmf_logger
 from lmfdb.modlmf.modlmf_stats import get_stats
@@ -215,7 +215,7 @@ def render_modlmf_webpage(**args):
         coeff=[f['coeffs'][i] for i in range(ncoeff+1)]
         info['q_exp']=my_latex(print_q_expansion(coeff))
         info['q_exp_display'] = url_for(".q_exp_display", label=f['label'], number="")
-        p_range=pime_range(100)
+        p_range=prime_range(100)
         info['table_list']=[[p_range[i], f['coeffs'][p_range[i]]] for i in range(len(p_range))]
         info['download_q_exp'] = [
             (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
