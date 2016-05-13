@@ -198,6 +198,7 @@ def render_modlmf_webpage(**args):
         info[m]=int(f[m])
     info['atkinlehner']=f['atkinlehner']
     info['dirchar']=str(f['dirchar'])
+    info['label']=str(f['label'])
 
     info['coeffs']=[str(s).replace('x','a').replace('*','') for s in f['coeffs']]
 
@@ -231,12 +232,12 @@ def render_modlmf_webpage(**args):
 
         t = "Mod &#x2113; Modular Form "+info['label']
     info['properties'] = [
+        ('Label', '%s' %info['label']),
         ('Field characteristic', '%s' %info['characteristic']),
         ('Field degree', '%s' %info['deg']),
         ('Level', '%s' %info['level']),
         ('Conductor', '%s' %info['conductor']),
-        ('Minimal weight', '%s' %info['min_weight']),
-        ('Label', '%s' %info['label'])]
+        ('Minimal weight', '%s' %info['min_weight'])]
     return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
 
 
