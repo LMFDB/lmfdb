@@ -208,12 +208,10 @@ def render_modlmf_webpage(**args):
     except:
         info['conductor']=int(0)
 
-    if f['deg'] == int(1):
-        info['field']=str('&#120125;<sub>%s</sub>' %f['characteristic'])
-    else:
+    if f['deg'] != int(1):
         try:
             pol=str(conway_polynomial(f['characteristic'], f['deg'])).replace('x','a').replace('*','')
-            info['field']=str('&#120125;<sub>%s<sup>%s</sup></sub>=&#120125;<sub>%s</sub>$[a]$, where $%s=0$.' %(str(f['characteristic']), str(f['deg']), str(f['characteristic']), pol))
+            info['field']= pol
         except:
             info['field']=""
 
@@ -230,7 +228,7 @@ def render_modlmf_webpage(**args):
         info['download_q_exp'] = [
             (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
 
-        t = "Mod &#x2113; Modular Form "+info['label']
+        t = "Mod "+str(info['characteristic'])+" Modular Form "+info['label']
     info['properties'] = [
         ('Label', '%s' %info['label']),
         ('Field characteristic', '%s' %info['characteristic']),
@@ -248,9 +246,9 @@ def q_exp_display(label, number):
     try:
         number = int(number)
     except:
-        number = 50
-    if number < 50:
-        number = 50
+        number = 20
+    if number < 20:
+        number = 20
     if number > 150:
         number = 150
     C = getDBConnection()
