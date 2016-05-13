@@ -9,7 +9,7 @@ from lmfdb.base import app
 from lmfdb.utils import to_dict
 from lmfdb.abvar.fq import abvarfq_page
 from lmfdb.search_parsing import parse_ints, parse_newton_polygon, parse_list_start, parse_abvar_decomp, parse_count, parse_start
-from isog_class import validate_label, Abvar_isoclass
+from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
 from flask import flash, render_template, url_for, request, redirect, make_response, send_file
 from markupsafe import Markup
@@ -118,9 +118,10 @@ def abelian_variety_search(**args):
     if start < 0:
         start = 0
 
-    res = cursor.sort([]).skip(start).limit(count)
+    #res = cursor.sort([]).skip(start).limit(count)
+    res = cursor.skip(start).limit(count)
     res = list(res)
-    info['abvars'] = [Abvar_isoclass(x) for x in res]
+    info['abvars'] = [AbvarFq_isoclass(x) for x in res]
     info['number'] = nres
     info['start'] = start
     info['count'] = count
@@ -154,7 +155,7 @@ def by_label(label):
         return search_input_error()
     return render_template("show-abvarfq.html",
                            credit=abvarfq_credit,
-                           title='Abelian Variety isogeny class %s over %s'%(label, cl.field),
+                           title='Abelian Variety isogeny class %s over $%s$'%(label, cl.field()),
                            bread=get_bread(('Search Results', '.')),
                            cl=cl,
                            learnmore=learnmore_list())
@@ -227,7 +228,7 @@ def labels_page():
 
 def decomposition_display(current_class, factors):
     if len(factors) == 1 and factors[0][1] == 1:
-        return 'This is a simple isogeny class.'
+        return 'simple'
     ans = ''
     for factor in factors:
         if ans != '':

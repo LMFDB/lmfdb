@@ -16,6 +16,14 @@ import re
 import json
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
+
+#mypath = os.path.realpath(__file__)
+#while os.path.basename(mypath) != 'lmfdb':
+#    mypath = os.path.dirname(mypath)
+## now move up one more time...
+#mypath = os.path.dirname(mypath)
+#sys.path.append(mypath)
+
 from lmfdb.WebNumberField import WebNumberField
 
 from pymongo.mongo_client import MongoClient

@@ -62,14 +62,12 @@
     <tbody>
         {% for g in info.row_heads  %}
         <tr>
-            <th class="left">
                 <th class="left">{{g}}</th>            
-            </th>
             {% for q in info.col_heads  %}
-            <td class="center">
+            <td class="left">
                 {% if table[q] is defined and table[q][g] is defined %}
                 {% set size = table[q][g] %}
-                {% set url = url_for('abvar.abelian_varieties_by_gq',g=g,q=q) %}
+                {% set url = url_for('abvarfq.abelian_varieties_by_gq',g=g,q=q) %}
                 <a href="{{url}}">{{size}}</a>
                 {% else %}
                 {% do has_na.append(1) %}
