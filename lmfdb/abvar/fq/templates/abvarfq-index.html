@@ -2,57 +2,45 @@
 
 {% block content %}
 
-{#
-<div>
-An {{ KNOWL('ag.abelian_variety') }} is a smooth connected projective {{ KNOWL('ag.variety') }} whose points admit an algebraic group law.
-</div>
-#}
 <style type="text/css">
-.error_message {
-   padding: 4px;
-   color: {{color.red}};
-   font-size: 120%;
-   font-weight: bold;
-   margin: 20px;
-}
+    .error_message {
+        padding: 4px;
+        color: {{color.red}};
+        font-size: 120%;
+        font-weight: bold;
+        margin: 20px;
+    }
 </style>
-<!--{% if err_msg %}
-<p class="error_message">
-{{err_msg}}
-</p>
-<p>
-  <input type=button value="Search again" onClick="history.go(-1)">
-</p>
 
-{% else %}-->
+
 <div>
-{{ KNOWL_INC('dq.abvar.fq.extent') }}
+    {{ KNOWL_INC('dq.abvar.fq.extent') }}
 </div>
 
 <h2> Browse {{ KNOWL('abvar.isogeny_class',title='isogeny classes')}} of {{ KNOWL('ag.abelian_variety',title='abelian varieties')}} over finite fields</h2>
 
 <p>
-By {{ KNOWL('ag.field_of_definition',title = "field of definition")}} and {{ KNOWL('ag.dimension', title="dimension")}}:
+<h3>By {{ KNOWL('ag.field_of_definition',title = "field of definition")}} and {{ KNOWL('ag.dimension', title="dimension")}}:</h3>
 
 {% set table = info.table %}
 
-<!-- check if the table is empty -->
-{% set vars = {'emptytable': true} %}
-{% for column in table %}
-{% if table[column] | length  > 0 %}
-{% if vars.update({'emptytable': false}) %} {% endif %}
-{% endif %}
-{% endfor %}
-
+<!-- check if the table is empty--> 
+ {% set vars = {'emptytable': true} %}
+ {% for column in table %}
+ {% if table[column] | length  > 0 %}
+ {% if vars.update({'emptytable': false}) %} {% endif %}
+ {% endif %}
+ {% endfor %}
+ 
 {% if vars.emptytable %}
 <em>  There are no results available in the requested range. </em>
 
 {% else %}
 
 <div> 
-
-The table below gives the number of isogeny classes of abelian varieties of dimension $g$ defined over the field $\F_q$.
-
+    
+    The table below gives the number of isogeny classes of abelian varieties of dimension $g$ defined over the field $\F_q$.
+    
 </div>
 
 {% set has_na = [] %}
@@ -61,7 +49,7 @@ The table below gives the number of isogeny classes of abelian varieties of dime
         <tr class="space">
             <th class="spaceleft">Dimension</th>
             <th class="level" colspan="{{info.col_heads|length}}">
-	     <span style="display:block;float:left;margin-right:3px;">Cardinality of base field \(q\)</span>            
+                <span style="display:block;float:left;margin-right:3px;">Cardinality of base field \(q\)</span>            
             </th>
         </tr>
         <tr class="space">
@@ -76,166 +64,170 @@ The table below gives the number of isogeny classes of abelian varieties of dime
         <tr>
             <th class="left">
                 <th class="left">{{g}}</th>            
-                </th>
-                {% for q in info.col_heads  %}
-                <td class="center">
-                    {% if table[q] is defined and table[q][g] is defined and table[q][g] is defined %}
-                      {% set size = table[q][g] %}
-                      {% set url = url_for('abvar.abelian_varieties_by_gq',q=q,g=g) %}
-                      <a href="{{url}}">{{size}}</a>
-                    {% else %}
-                    {% do has_na.append(1) %}
-                    <small style="color:gray">n/a</small>
-                    {% endif %}
-                </td>
-                {% endfor %}
-           </tr>
-           {% endfor %}
-       </tbody>
+            </th>
+            {% for q in info.col_heads  %}
+            <td class="center">
+                {% if table[q] is defined and table[q][g] is defined %}
+                {% set size = table[q][g] %}
+                {% set url = url_for('abvar.abelian_varieties_by_gq',g=g,q=q) %}
+                <a href="{{url}}">{{size}}</a>
+                {% else %}
+                {% do has_na.append(1) %}
+                <small style="color:gray">n/a</small>
+                {% endif %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
-<!--</td>-->
-<small>
+
+
     {% if has_na %}
+    <small>
     "n/a" means that there is no information about this space in our database.
+    </small>
     {% endif %}
-</p>
+    
+{% endif %}
 
-
-
-<h2> Find a specific  {{KNOWL('abvar.isogeny_class',title="isogeny class") }} by the {{ KNOWL('abvar.fq.weil_polynomial',title="coefficients of its Weil polynomial") }} or
-  {{ KNOWL('abvar.fq.lmfdb_label',title="LMFDB label") }} </h2>
+<h2> Find a specific  {{KNOWL('abvar.isogeny_class',title="isogeny class") }} by <!--the {{ KNOWL('abvar.fq.weil_polynomial',title="coefficients of its Weil polynomial") }} or-->
+    {{ KNOWL('abvar.fq.lmfdb_label',title="LMFDB label") }} </h2>
 <!--{% if err_msg %}
-<form action={{url_for('ec.rational_elliptic_curves')}}>
-{% else %}-->
+ <form action={{url_for('ec.rational_elliptic_curves')}}>
+ {% else %}-->
 <form>
-<!--{% endif %}-->
-<input type='text' name='label' size=25 example="2.9.m_u">
-<button type='submit' name='jump' value='abelian variety isogeny class label'
-        >polynomial coefficients or isogeny class label</button>
-<br><span class="formexample">e.g. 2.9.m_u or [0,1,1,-2,0] or [-3024, 46224]
-</span>
+    <!--{% endif %}-->
+    <input type='text' name='label' size=25 example="2.9.m_u">
+        <button type='submit' name='jump' value='abelian variety isogeny class label'
+            ><!--polynomial coefficients or--> isogeny class label</button>
+        <br><span class="formexample">e.g. 2.9.m_u <!--or [0,1,1,-2,0] or [-3024, 46224]-->
+        </span>
 </form>
 
 <h2> Search </h2>
 Please enter a value or leave blank:
 <p></p>
 <form>
-  <table>
-    <tr>
-      <td>{{ KNOWL('ag.field_of_definition',title = "cardinality of the base field") }}</td>
-     <td>
-       <input type='text' name='q' example="389" size=10 value="{{q}}" />
-     </td>
-     <td><span class="formexample"> e.g. 81 or 3-49</span></td>
+    <table>
+        <tr>
+            <td>{{ KNOWL('ag.field_of_definition',title = "cardinality of the base field") }}</td>
+            <td>
+                <input type='text' name='q' example="81" size=10 value="{{info.q}}" />
+            </td>
+            <td><span class="formexample"> e.g. 81 or 3-49</span></td>
+            <td>
+                {{ KNOWL('abvar.simple',title="simple only") }}
+            </td>
+            <td>
+                <select name='simple_only'>
+                    <option value="no" selected="yes">no</option>
+                    <option value="yes">yes</option>
+                </select>
+            </td>
+            
 
-      <td>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
-     <td>
-       <input type='text' name='g' example="5" size=10 value="{{g}}" />
-     </td>
-     <td><span class="formexample"> e.g. 2 or 3-5</span></td>
-    </tr>
-
-
-   <tr>
-       <td>
-       {{ KNOWL('abvar.simple',title="simple only") }}
-       </td>
-       <td>
-       <select name='simple_only'>
-           <option value="no" selected="yes">no</option>
-           <option value="yes">yes</option>
-       </select>
-       </td>
-       <td>
-       {{ KNOWL('ag.primitive',title="primitive only") }}
-       </td>
-       <td>
-           <select name='primitive_only'>
-               <option value="no" selected="yes">no</option>
-               <option value="yes">yes</option>
-           </select>
-       </td>
-    </tr>
-       
-   <tr>
-       <td>
-           {{ KNOWL('abvar.p_rank',title="p-rank") }}
-       </td>
-       <td>
-           <input type='text' name='p_rank' example="2" size=10 value="{{p_rank}}" />
-       </td>
-       <td>
-           <span class="formexample"> e.g. 2 </span>
-       </td>
-       <td>
-       {{ KNOWL('lf.newton_polygon',title="Newton polygon") }}
-       </td>
-       <td>
-       <input type='text' name='newton_polygon' example="[0,0,1,1]" size=10 value="{{newton_polygon}}" />
-       </td>
-       <td>
-       <span class="formexample"> e.g. [0,1/2,1/2,1] (slopes) or [(1,0),(3,1)] (breaks) </span>
-       </td>
-   </tr>
-
-    <tr>
-          <td>
-          initial coefficients
-          </td>
-          <td>
-          <input type='text' name='initial_coefficients' example="[1,-1,3,9]" size=10 value="{{initial_coefficients}}" />
-          </td>
-          <td>
-          <span class="formexample"> e.g. [1,-1,3,9] </span>
-          </td>
-      </tr>
-
-    <tr>
-          <td>
-          {{ KNOWL('ag.point_count',title="point counts of the abelian variety") }}
-          </td>
-          <td>
-              <input type='text' name='abvar_point_count' example="[75,7125]" size=10 value="{{abvar_point_count}}" />
-          </td>
-          <td>
-          <span class="formexample"> e.g. [75,7125] </span>
-          </td>
-          <td>
-              {{ KNOWL('abvar.curve_point_count',title="point counts of the curve") }}
-          </td>
-          <td>
-              <input type='text' name='curve_point_count' example="[9,87]" size=10 value="{{curve_point_count}}"/>
-          </td>
-          <td>
-              <span class="formexample"> e.g. [9,87] </span>
-          </td>
-      </tr>
-      
-      <tr>
-          <td>
-              {{ KNOWL('abvar.decomposition',title="isogeny factors decomposition") }}
-          </td>
-          <td>
-              <input type='text' name='decomposition' example="[2,3^2,9.2.l_u,4T1]" size=10 value="{{decomposition}}"/>
-          </td>
-          <td>
-              <span class="formexample"> e.g. [2,2.9.l_u,4T1] </span>
-          </td>
-      </tr>
-
-<tr>
-<td align=left colspan=4>Maximum number of isogeny classes to display <input type='text' name='count' value={{count}} size=10 />
-</td>
-</tr>
-
-
-  </table>
-<p></p>
-<td><button type='submit' value='Search'>Search</button></td>
-
+        </tr>
+        
+        
+        <tr>
+            <td>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
+            <td>
+                <input type='text' name='g' example="5" size=10 value="{{info.g}}" />
+            </td>
+            <td><span class="formexample"> e.g. 2 or 3-5</span></td>
+            <td>
+                {{ KNOWL('ag.primitive',title="primitive only") }}
+            </td>
+            <td>
+                <select name='primitive_only'>
+                    <option value="no" selected="yes">no</option>
+                    <option value="yes">yes</option>
+                </select>
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                {{ KNOWL('abvar.p_rank',title="$p$-rank") }}
+            </td>
+            <td>
+                <input type='text' name='p_rank' example="2" size=10 value="{{info.p_rank}}" />
+            </td>
+            <td>
+                <span class="formexample"> e.g. 2 </span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {{ KNOWL('lf.newton_polygon',title="Newton polygon") }}
+            </td>
+            <td colspan=3>
+                <input type='text' name='newton_polygon' example="[0,1/2,1/2,1]" size=40 value="{{info.newton_polygon}}" />
+            </td>
+            <td>
+                <span class="formexample"> e.g. [0,1/2,1/2,1] (slopes) or [(1,0),(3,1)] (breaks) </span>
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                initial coefficients
+            </td>
+            <td colspan=3>
+                <input type='text' name='initial_coefficients' example="[1,-1,3,9]" size=40 value="{{info.initial_coefficients}}" />
+            </td>
+            <td>
+                <span class="formexample"> e.g. [1,-1,3,9] </span>
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                {{ KNOWL('ag.point_count',title="point counts of the abelian variety") }}
+            </td>
+            <td colspan=3>
+                <input type='text' name='abvar_point_count' example="[75,7125]" size=40 value="{{info.abvar_point_count}}" />
+            </td>
+            <td>
+                <span class="formexample"> e.g. [75,7125] </span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {{ KNOWL('abvar.curve_point_count',title="point counts of the curve") }}
+            </td>
+            <td colspan=3>
+                <input type='text' name='curve_point_count' example="[9,87]" size=40 value="{{info.curve_point_count}}"/>
+            </td>
+            <td>
+                <span class="formexample"> e.g. [9,87] </span>
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                {{ KNOWL('abvar.decomposition',title="isogeny factors decomposition") }}
+            </td>
+            <td colspan=3>
+                <input type='text' name='decomposition' example="[2,3^2,9.2.l_u,4T1]" size=40 value="{{info.decomposition}}"/>
+            </td>
+            <td>
+                <span class="formexample"> e.g. [2,2.9.l_u,4T1] </span>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan=2>Maximum number of isogeny classes to display</td><td> <input type='text' name='count'  size=10 value="{{info.count}}" />
+            </td>
+        </tr>
+        
+        
+    </table>
+    <p></p>
+    <td><button type='submit' value='Search'>Search</button></td>
+    
 </form>
-
-<!--{% endif %}-->
 
 
 {% endblock %}

@@ -4,7 +4,6 @@ from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
 from flask import url_for
 from lmfdb.elliptic_curves.ec_stats import format_percentage
-from lmfdb.main import db
 from sage.structure.unique_representation import UniqueRepresentation
 from sage.misc.lazy_attribute import lazy_attribute
 
@@ -18,13 +17,14 @@ class AbvarFqStats(UniqueRepresentation):
 
     @lazy_attribute
     def counts(self):
+        from main import db
         logger.debug("Computing abelian variety counts")
         avdb = db()
         counts = {}
         counts['nclasses'] = ncurves = avdb.count()
         counts['nclasses_c'] = comma(ncurves)
-        counts['gs'] = gs = avdb.aggregate({}, {'g':'$g'})
-        counts['qs'] = qs = avdb.aggregate({}, {'q':'$q'})
+        counts['gs'] = gs = avdb.distinct('g',{})  
+        counts['qs'] = qs = avdb.distinct('q',{})
         counts['qg_count'] = {}
         for q in qs:
             counts['qg_count'][q] = {}
