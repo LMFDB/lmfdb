@@ -15,6 +15,7 @@ import re
 import json
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
+from lmfdb.WebNumberField import WebNumberField
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=37010)
@@ -52,6 +53,7 @@ db.create_index('known_jacobian')
 db.create_index('principally_polarizable')
 
 print "finished indices"
+R = PolynomialRing(QQ,'x')
 
 ## Main importing function
 
@@ -61,7 +63,9 @@ def do_import(ll):
     data = {}
     for key, val in zip(mykeys, ll):
         data[key] = val
-    data['number_field']
+    f = R(polynomial)
+    nf = WebNumberField.from_polynomial(f)
+    data['number_field'] = "" if nf.label == 'a' else nf.label
     isoclass = db.find_one({'label': label})
 
     if isoclass is None:
