@@ -259,7 +259,7 @@ def q_exp_display(label, number):
 
 
 #data quality pages
-@modlmf_page.route("Completeness")
+@modlmf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the mod &#8467; modular form data'
     bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Completeness', '')]
@@ -267,7 +267,7 @@ def completeness_page():
     return render_template("single.html", kid='dq.modlmf.extent',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
-@modlmf_page.route("Source")
+@modlmf_page.route("/Source")
 def how_computed_page():
     t = 'Source of the mod &#8467; modular form data'
     bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Source', '')]
@@ -275,7 +275,7 @@ def how_computed_page():
     return render_template("single.html", kid='dq.modlmf.source',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
-@modlmf_page.route("Labels")
+@modlmf_page.route("/Labels")
 def labels_page():
     t = 'Label of a mod &#x2113; modular forms'
 
