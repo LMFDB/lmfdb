@@ -25,21 +25,11 @@ import os
 import ast
 import StringIO
 
-rep_galois_modl_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
+rep_galois_modl_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
 
 
 
 # utilitary functions for displays 
-
-def vect_to_matrix(v):
-    return str(latex(matrix(v)))
-
-def print_q_expansion(list):
-     list=[str(c) for c in list]
-     Qa=PolynomialRing(QQ,'a')
-     a = QQ['a'].gen()
-     Qq=PowerSeriesRing(Qa,'q')
-     return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
 
 def my_latex(s):
     ss = ""
@@ -54,7 +44,7 @@ def my_latex(s):
 #breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
-    bc = [("rep_galois_modl", url_for(".index"))]
+    bc = [("mod &#x2113; Galois representation", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -62,7 +52,7 @@ def get_bread(breads=[]):
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Labels for integral rep_galois_modls', url_for(".labels_page"))]
+            ('Labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
