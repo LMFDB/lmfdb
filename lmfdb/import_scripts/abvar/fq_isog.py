@@ -15,6 +15,15 @@ import re
 import json
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
+
+mypath = os.path.realpath(__file__)
+while os.path.basename(mypath) != 'lmfdb':
+    mypath = os.path.dirname(mypath)
+# now move up one more time...
+mypath = os.path.dirname(mypath)
+sys.path.append(mypath)
+
+
 from lmfdb.WebNumberField import WebNumberField
 
 from pymongo.mongo_client import MongoClient
@@ -25,6 +34,7 @@ username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['abvar'].authenticate(username, password)
 db = C.abvar.fq_isog
+
 
 saving = True
 
@@ -58,8 +68,8 @@ R = PolynomialRing(QQ,'x')
 ## Main importing function
 
 def do_import(ll):
-    label,polynomial,angle_numbers,p_rank,slopes,A_counts,C_counts,known_jacobian,principally_polarizable,decomposition,brauer_invariants,primitive_models = ll
-    mykeys = ['label','polynomial','angle_numbers','p_rank','slopes','A_counts','C_counts','known_jacobian','principally_polarizable','decomposition','brauer_invariants','primitive_models']
+    label,g, q, polynomial,angle_numbers,p_rank,slopes,A_counts,C_counts,known_jacobian,principally_polarizable,decomposition,brauer_invariants,primitive_models = ll
+    mykeys = ['label','g','q','polynomial','angle_numbers','p_rank','slopes','A_counts','C_counts','known_jacobian','principally_polarizable','decomposition','brauer_invariants','primitive_models']
     data = {}
     for key, val in zip(mykeys, ll):
         data[key] = val

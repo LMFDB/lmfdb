@@ -2,122 +2,66 @@
 
 {% block content %}
 
-<style>
-<div.ip>span { white-space: nowrap; font-family: serif; }
 
-table.reptable td, table.reptable th {
-    text-align:center;
-    padding-top: 6px;
-    padding-bottom: 6px;
-}
-</style>
-
-{% macro code(codes, item) %}
-{% set code = codes() %}
-{% for L in code[item] %}
-{# N.B. whitespace is preserved in the following div since the CSS has
-white-space: pre in order to keep line breaks! #}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for c in code[item][L] %}{{code.prompt[L]}}&nbsp;{{c}}<br>{% endfor %}</div>
-{% endfor %}
-{% endmacro %}
-
-<script>
-var cur_system = null;
-function show_code(system) {
-    $('.sage').hide();
-    $('.pari').hide();
-    $('.magma').hide();
-    if (cur_system == system) {
-      $('.'+system).hide();
-      cur_system = null;
-      } else {
-      $('.'+system).show();
-      cur_system = system;
-    }
-  }
-</script>
-
-{#
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
-
-</script><style type="text/css">
-  .sagecell .CodeMirror-scroll {
-    height: auto;
-    overflow-y: hidden;
-    overflow-x: auto;
-  }
-
-  .sagecell-practice .CodeMirror-scroll {
-    height: 150px;
-  }
-
-  .sagecell button.sagecell_evalButton {
-      font-size: 80%;
-  }
-
-  .sagecell_sessionContainer {
-      margin-bottom:1em;
-  
-  }
-
-  </style>
-#}
-
-    <!--<div align ="right">
-      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
-       {# <a onclick="show_code('pari'); return false" href='#'>pari</a>, #}
-        <a onclick="show_code('pari'); return false" href='#'>gp</a>,
-        <a onclick="show_code('magma'); return false" href='#'>magma</a>
-    </div>-->
+<h2>Invariants</h2>
 
 <p>
 <table>
-    <tr><td>Base field:<td>&nbsp;&nbsp;<td>${{cl.base_field}}$</tr>
+    <tr><td>Base field:<td>&nbsp;&nbsp;<td>${{cl.field()}}$</tr>
     <tr><td>Dimension:<td>&nbsp;&nbsp;<td>${{cl.g}}$</tr>
-    <tr><td>Weil polynomial:<td>&nbsp;&nbsp;<td>${{cl.polynomial}}$</tr>
-    <tr><td>Weil numbers:<td>&nbsp;&nbsp;<td>${{cl.weyl_numbers}}$</tr>
+    <tr><td>Weil polynomial:<td>&nbsp;&nbsp;<td>${{cl.good_polynomial()}}$</tr>
+    <tr><td>Weil numbers:<td>&nbsp;&nbsp;<td>${{cl.weil_numbers()}}$</tr>
     {% if cl.is_simple %}
-    <tr><td>Galois group:<td>&nbsp;&nbsp;<td>${{cl.galois_group}}$</tr>
+    <tr><td>Galois group:<td>&nbsp;&nbsp;<td>${{cl.galois_group()}}$</tr>
     {% endif %}
-<\table>
-    {% if cl.is_simple %}
-    This isogeny class contains simple abelian varieties.</br>
-    {% endif %}
-    {% if cl.is_primitive %}
-    This isogeny class is primitive.
-    {% else %}
-    This isogeny class is a base-change from a smaller field.
-    {% endif %}
-<\p>
+</table>
+</p>
+
+<p>
+{% if cl.is_simple() %}
+This isogeny class contains simple abelian varieties.</br>
+{% endif %}
+
+{% if cl.is_primitive() %}
+This isogeny class is primitive.
+{% else %}
+This isogeny class is a base-change from a smaller field.
+{% endif %}
+</p>
+    
+
 
 <p><h2>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</h2>
 
-{% if cl.is_ordinary %}
+{% if cl.is_ordinary() %}
 This isogeny class is ordinary.
 {% endif %}
-{% if cl.is_supersingular %}
+{% if cl.is_supersingular() %}
 This isogeny class is supersingular.
 {% endif %}
 
 <table>
-    <tr><td>$p$-rank:<td>&nbsp;&nbsp;<td>${{cl.p_rank}}</tr>
-    <tr><td>Slopes:<td>&nbsp;&nbsp;<td>{{cl.slopes}}</tr>
+    <tr><td>$p$-rank:<td>&nbsp;&nbsp;<td>${{cl.p_rank}}$</tr>
+    <tr><td>Slopes:<td>&nbsp;&nbsp;<td>${{cl.slopes}}$</tr>
 </table>
 </p>
 
-<p><h2>Point counts<\h2>
+
+
+<p><h2>Point counts</h2>
 
 {{ KNOWL('ag.point_count',title="Point count of the abelian variety") }}:
 
 <table class = "ntdata">
    <tr><td>$r$</td>
-       {% for r in some_range %}
-       <td> $r$ <\td>
+       {% for r in range(1,cl.g+1) %} <!--change this!!!-->
+       <td> ${{ r }}$ </td>
        {% endfor %}
        </tr>
-   <tr><td>$A(\F_{q^r})$<\td>
-       {% for r in some_range %}
-       <td> cl.abvar_pointcount[r] </td>
+   <tr><td>$A(\F_{q^r})$</td>
+       {% for count in cl.abvar_pointcount %} <!-- change this!!! --> 
+       <td> {{ count }} </td>
+       {% endfor %}
    </tr>
 </table>
 
@@ -129,17 +73,18 @@ This isogeny class is supersingular.
 {{ KNOWL('abvar.curve_point_count',title="Point count of the curve") }}
 {% else %}
 {{ KNOWL('abvar.curve_point_count',title="Point count of the (virtual) curve") }}
-{% endif }
+{% endif %}
 
 <table class = "ntdata">
     <tr><td>$r$</td>
-        {% for r in some_range %}
-        <td> $r$ <\td>
+        {% for r in range(1,cl.g+1) %} <!-- change this!!! --> 
+        <td> ${{ r }}$ </td>
             {% endfor %}
             </tr>
-    <tr><td>$C(\F_{q^r})$<\td>
-        {% for r in some_range %}
-        <td> cl.curve_pointcount[r] </td>
+    <tr><td>$C(\F_{q^r})$</td>
+        {% for count in cl.curve_pointcount %} <!-- change this!!! --> 
+        <td>{{ count }}</td>
+        {% endfor %}
         </tr>
 </table>
 
@@ -153,16 +98,5 @@ This isogeny class is supersingular.
 </p>
 
 
-
-<!--{% if DEBUG %}
-<hr>
-<div>
-Raw elliptic curve data: {{ ec.__dict__ }}
-</div>
-<hr>
-<div>
-Raw number field data: {{ ec.field.__dict__ }}
-</div>
-{% endif %}-->
 
 {% endblock %}
