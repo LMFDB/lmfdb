@@ -48,6 +48,22 @@ ${{n}}${% if not loop.last %},  {% endif %}
     <tr><td align=right>{{ KNOWL('rep_galois_modl.proj_image_label', title='Projective image label') }}:</td><td>{{info.projective_label}}</td></tr>
 </table>
 
+<h2> {{ KNOWL('rep_galois_modl.ramified_primes', title='Ramified primes')}} </h2>
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<tr><td>$p$</td><td>Characteristic polynomial of $\rho(\mathrm{Frob}_p)$</td><td>Type</td>
+<td>Order of $\rho(\mathrm{Frob}_p)$</td><td>Projective order of $\rho(\mathrm{Frob}_p)$</td></tr>
+{% for p in info.bad_prime_list%}
+    <tr>
+    {% for i in range(5) %}
+        {% if p[i] =="" %}
+            <td>{{p[i]}}</td>
+        {% else %}
+            <td>${{p[i]}}$</td>
+        {% endif %}
+    {% endfor %}
+    </tr>
+{% endfor %}
+</table>
 
 <h2> {{ KNOWL('rep_galois_modl.unramified_primes', title='Unramified primes')}} </h2>
 
@@ -67,22 +83,6 @@ ${{n}}${% if not loop.last %},  {% endif %}
 </table>
 
 
-<h2> {{ KNOWL('rep_galois_modl.ramified_primes', title='Ramified primes')}} </h2>
-<table class="ntdata" cellpadding=3 style="table-layout:fixed">
-<tr><td>$p$</td><td>Characteristic polynomial of $\rho(\mathrm{Frob}_p)$</td><td>Type</td>
-<td>Order of $\rho(\mathrm{Frob}_p)$</td><td>Projective order of $\rho(\mathrm{Frob}_p)$</td></tr>
-{% for p in info.bad_prime_list%}
-    <tr>
-    {% for i in range(5) %}
-        {% if p[i] =="" %}
-            <td>{{p[i]}}</td>
-        {% else %}
-            <td>${{p[i]}}$</td>
-        {% endif %}
-    {% endfor %}
-    </tr>
-{% endfor %}
-</table>
 
 <h2>Fields associated</h2>
 
