@@ -44,7 +44,7 @@ def my_latex(s):
 #breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
-    bc = [("mod &#x2113; Galois representation", url_for(".index"))]
+    bc = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -77,7 +77,7 @@ def rep_galois_modl_render_webpage():
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
         credit = rep_galois_modl_credit
         t = 'Integral rep_galois_modls'
-        bread = [('rep_galois_modl', url_for(".rep_galois_modl_render_webpage"))]
+        bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".rep_galois_modl_render_webpage"))]
         info['counts'] = get_stats().counts()
         return render_template("rep_galois_modl-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
@@ -96,7 +96,7 @@ def split_rep_galois_modl_label(lab):
     return rep_galois_modl_label_regex.match(lab).groups()
 
 def rep_galois_modl_by_label_or_name(lab, C):
-    if C.rep_galois_modls.lat.find({'$or':[{'label': lab}, {'name': lab}]}).limit(1).count() > 0:
+    if C.mod_l_galois.reps.find({'$or':[{'label': lab}, {'name': lab}]}).limit(1).count() > 0:
         return render_rep_galois_modl_webpage(label=lab)
     if rep_galois_modl_label_regex.match(lab):
         flash(Markup("The integral rep_galois_modl <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
@@ -156,7 +156,7 @@ def rep_galois_modl_search(**args):
 #        start = start_default
 
     info['query'] = dict(query)
-    res = C.rep_galois_modls.lat.find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC)]).skip(start).limit(count)
+    res = C.mod_l_galois.reps.find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC)]).skip(start).limit(count)
     nres = res.count()
 
     # here we are checking for isometric rep_galois_modls if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
@@ -165,12 +165,12 @@ def rep_galois_modl_search(**args):
         A=query['gram'];
         n=len(A[0])
         d=matrix(A).determinant()
-        result=[B for B in C.rep_galois_modls.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
+        result=[B for B in C.mod_l_galois.reps.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
         if len(result)>0:
             result=result[0]['gram']
             query_gram={ 'gram' : result }
             query.update(query_gram)
-            res = C.rep_galois_modls.lat.find(query)
+            res = C.mod_l_galois.reps.find(query)
             nres = res.count()
 
     if(start >= nres):
@@ -205,15 +205,21 @@ def rep_galois_modl_search(**args):
     info['rep_galois_modls'] = res_clean
 
     t = 'Integral rep_galois_modls Search Results'
-    bread = [('rep_galois_modls', url_for(".rep_galois_modl_render_webpage")),('Search Results', ' ')]
+
+    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")), ('Search Results', ' ')]
     properties = []
     return render_template("rep_galois_modl-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info, bread=None):
     t = 'Integral rep_galois_modls Search Error'
     if bread is None:
-        bread = [('rep_galois_modls', url_for(".rep_galois_modl_render_webpage")),('Search Results', ' ')]
+        bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")),('Search Results', ' ')]
     return render_template("rep_galois_modl-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
+
+
+
+
+
 
 @rep_galois_modl_page.route('/<label>')
 def render_rep_galois_modl_webpage(**args):
@@ -221,20 +227,20 @@ def render_rep_galois_modl_webpage(**args):
     data = None
     if 'label' in args:
         lab = args.get('label')
-        data = C.rep_galois_modls.lat.find_one({'$or':[{'label': lab }, {'name': lab }]})
+        data = C.mod_l_galois.reps.find_one({'$or':[{'label': lab }, {'name': lab }]})
     if data is None:
         t = "Integral rep_galois_modls Search Error"
-        bread = [('rep_galois_modl', url_for(".rep_galois_modl_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral rep_galois_modl in the database." % (lab)),"error")
+        bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".rep_galois_modl_render_webpage"))]
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an mod &#x2113; Galois representation in the database." % (lab)),"error")
         return render_template("rep_galois_modl-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
 
     info['friends'] = []
 
-    bread = [('rep_galois_modl', url_for(".rep_galois_modl_render_webpage")), ('%s' % data['label'], ' ')]
+    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")), ('%s' % data['label'], ' ')]
     credit = rep_galois_modl_credit
-    f = C.rep_galois_modls.lat.find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
+    f = C.mod_l_galois.reps.find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
     info['dim']= int(f['dim'])
     info['det']= int(f['det'])
     info['level']=int(f['level'])
@@ -297,10 +303,8 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     info['comments']=str(f['comments'])
     if 'Leech' in info['comments']: # no need to duplicate as it is in the name
         info['comments'] = ''
-    if info['name'] == "":
-        t = "Integral rep_galois_modl %s" % info['label']
-    else:
-        t = "Integral rep_galois_modl "+info['label']+" ("+info['name']+")"
+    
+    t = "Mod &#x2113; Galois representation"+info['label']
 #This part code was for the dinamic knowl with comments, since the test is displayed this is redundant
 #    if info['name'] != "" or info['comments'] !="":
 #        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
@@ -320,40 +324,12 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     return render_template("rep_galois_modl-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
 #friends=friends
 
-def vect_to_sym(v):
-    n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
-    M = matrix(n)
-    k = 0
-    for i in range(n):
-        for j in range(i, n):
-            M[i,j] = v[k]
-            M[j,i] = v[k]
-            k=k+1
-    return [[int(M[i,j]) for i in range(n)] for j in range(n)]
-
-
-#auxiliary function for displaying more coefficients of the theta series
-@rep_galois_modl_page.route('/theta_display/<label>/<number>')
-def theta_display(label, number):
-    try:
-        number = int(number)
-    except:
-        number = 20
-    if number < 20:
-        number = 30
-    if number > 150:
-        number = 150
-    C = getDBConnection()
-    data = C.rep_galois_modls.lat.find_one({'label': label})
-    coeff=[data['theta_series'][i] for i in range(number+1)]
-    return print_q_expansion(coeff)
-
 
 #data quality pages
 @rep_galois_modl_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the integral rep_galois_modl data'
-    bread = [('rep_galois_modl', url_for(".rep_galois_modl_render_webpage")),
+    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")),
              ('Completeness', '')]
     credit = rep_galois_modl_credit
     return render_template("single.html", kid='dq.rep_galois_modl.extent',
@@ -362,7 +338,7 @@ def completeness_page():
 @rep_galois_modl_page.route("/Source")
 def how_computed_page():
     t = 'Source of the integral rep_galois_modl data'
-    bread = [('rep_galois_modl', url_for(".rep_galois_modl_render_webpage")),
+    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")),
              ('Source', '')]
     credit = rep_galois_modl_credit
     return render_template("single.html", kid='dq.rep_galois_modl.source',
@@ -371,7 +347,7 @@ def how_computed_page():
 @rep_galois_modl_page.route("/Labels")
 def labels_page():
     t = 'Label of an integral rep_galois_modl'
-    bread = [('rep_galois_modl', url_for(".rep_galois_modl_render_webpage")),
+    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")),
              ('Labels', '')]
     credit = rep_galois_modl_credit
     return render_template("single.html", kid='rep_galois_modl.label',
@@ -389,7 +365,7 @@ def download_search(info):
     mydate = time.strftime("%d %B %Y")
     # reissue saved query here
 
-    res = getDBConnection().rep_galois_modls.lat.find(ast.literal_eval(info["query"]))
+    res = getDBConnection().rep_galois_modls.reps.find(ast.literal_eval(info["query"]))
 
     c = download_comment_prefix[lang]
     s =  '\n'
@@ -429,7 +405,7 @@ def download_rep_galois_modl_full_lists_v(**args):
     C = getDBConnection()
     data = None
     label = str(args['label'])
-    res = C.rep_galois_modls.lat.find_one({'label': label})
+    res = C.mod_l_galois.reps.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such rep_galois_modl"
@@ -450,7 +426,7 @@ def download_rep_galois_modl_full_lists_g(**args):
     C = getDBConnection()
     data = None
     label = str(args['label'])
-    res = C.rep_galois_modls.lat.find_one({'label': label})
+    res = C.mod_l_galois.reps.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such rep_galois_modl"
