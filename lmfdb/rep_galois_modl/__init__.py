@@ -13,4 +13,4 @@ def body_class():
 
 import main
 
-app.register_blueprint(rep_galois_modl_page, url_prefix="/Representation/Galois/mod_l")
+app.register_blueprint(rep_galois_modl_page, url_prefix="/Representation/Galois/ModL")
