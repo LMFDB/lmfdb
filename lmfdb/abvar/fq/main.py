@@ -24,10 +24,6 @@ from sage.rings.all import PolynomialRing
 def db():
     return lmfdb.base.getDBConnection().abvar.fq_isog
 
-@cached_function
-def db_stats():
-    return lmfdb.base.getDBConnection().abvar.fq_stats
-
 #########################
 #    Top level
 #########################

@@ -60,3 +60,5 @@ class Abvar_isoclass(object):
 
     def make_class(self):
         pass
+
+    
