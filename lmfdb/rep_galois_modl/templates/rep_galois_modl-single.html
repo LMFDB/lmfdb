@@ -86,9 +86,11 @@ ${{n}}${% if not loop.last %},  {% endif %}
 
 <h2>Fields associated</h2>
 
-<table>
-    <tr><td>Polynomial with splitting field $\overline{K}^{\mathrm{ker}(\rho)}$:</td><td>${{info.poly_ker}}$</td></tr>
-    <tr><td>Polynomial with splitting field $\overline{K}^{\mathrm{ker}(\rho)}$:</td><td>${{info.poly_proj_ker}}$</td></tr>
+<h3>Linear representation</h3>
+<p>Polynomial with splitting field $\overline{K}^{\mathrm{ker}(\rho)}$:$${{info.poly_ker}}$$</p>
+
+<h3>Projective representation</h3>
+<p>Polynomial with splitting field $\overline{K}^{\mathrm{ker}(\mathbb{P}\rho)}$:$${{info.poly_proj_ker}}$$</p>
 </table>
 
 <h2>Related objects</h2>
