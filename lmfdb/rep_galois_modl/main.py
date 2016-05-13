@@ -44,7 +44,7 @@ def my_latex(s):
 #breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
-    bc = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index"))]
+    bc = [('Representations', "/Representation"),("mod &#x2113;", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -76,8 +76,8 @@ def rep_galois_modl_render_webpage():
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
         credit = rep_galois_modl_credit
-        t = 'Integral rep_galois_modls'
-        bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".rep_galois_modl_render_webpage"))]
+        t = 'Mod &#x2113; Galois representations'
+        bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage"))]
         info['counts'] = get_stats().counts()
         return render_template("rep_galois_modl-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
@@ -86,7 +86,7 @@ def rep_galois_modl_render_webpage():
 # Random rep_galois_modl
 @rep_galois_modl_page.route("/random")
 def random_rep_galois_modl():
-    res = random_object_from_collection( getDBConnection().rep_galois_modls.lat )
+    res = random_object_from_collection( getDBConnection().mod_l_galois.reps )
     return redirect(url_for(".render_rep_galois_modl_webpage", label=res['label']))
 
 
@@ -131,47 +131,11 @@ def rep_galois_modl_search(**args):
     count = parse_count(info,50)
     start = parse_start(info)
 
-#    count_default = 50
-#    if info.get('count'):
-#        try:
-#            count = int(info['count'])
-#        except:
-#            err = "Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']
-#            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input. It needs to be a positive integer." % info['count']), "error")
-#            info['err'] = str(err)
-#            return search_input_error(info)
-#    else:
-#        info['count'] = count_default
-#        count = count_default
-
-#    start_default = 0
-#    if info.get('start'):
-#        try:
-#            start = int(info['start'])
-#            if(start < 0):
-#                start += (1 - (start + 1) / count) * count
-#        except:
-#            start = start_default
-#    else:
-#        start = start_default
-
     info['query'] = dict(query)
     res = C.mod_l_galois.reps.find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC)]).skip(start).limit(count)
     nres = res.count()
 
-    # here we are checking for isometric rep_galois_modls if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
 
-    if nres==0 and info.get('gram'):
-        A=query['gram'];
-        n=len(A[0])
-        d=matrix(A).determinant()
-        result=[B for B in C.mod_l_galois.reps.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
-        if len(result)>0:
-            result=result[0]['gram']
-            query_gram={ 'gram' : result }
-            query.update(query_gram)
-            res = C.mod_l_galois.reps.find(query)
-            nres = res.count()
 
     if(start >= nres):
         start -= (1 + (start - nres) / count) * count
@@ -204,16 +168,16 @@ def rep_galois_modl_search(**args):
 
     info['rep_galois_modls'] = res_clean
 
-    t = 'Integral rep_galois_modls Search Results'
+    t = 'Mod &#x2113; Galois representations Search Results'
 
-    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")), ('Search Results', ' ')]
+    bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".index")), ('Search Results', ' ')]
     properties = []
     return render_template("rep_galois_modl-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info, bread=None):
-    t = 'Integral rep_galois_modls Search Error'
+    t = 'Mod &#x2113; Galois representations Search Results Error'
     if bread is None:
-        bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")),('Search Results', ' ')]
+        bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".index")),('Search Results', ' ')]
     return render_template("rep_galois_modl-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
 
 
@@ -227,100 +191,71 @@ def render_rep_galois_modl_webpage(**args):
     data = None
     if 'label' in args:
         lab = args.get('label')
-        data = C.mod_l_galois.reps.find_one({'$or':[{'label': lab }, {'name': lab }]})
+        data = C.mod_l_galois.reps.find_one({'label': lab })
     if data is None:
-        t = "Integral rep_galois_modls Search Error"
-        bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".rep_galois_modl_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an mod &#x2113; Galois representation in the database." % (lab)),"error")
+        t = "Mod &#x2113; Galois representations Search Error"
+        bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage"))]
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; Galois representation in the database." % (lab)),"error")
         return render_template("rep_galois_modl-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
 
     info['friends'] = []
 
-    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")), ('%s' % data['label'], ' ')]
+
+    bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage")), ('%s' % data['label'], ' ')]
     credit = rep_galois_modl_credit
-    f = C.mod_l_galois.reps.find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
-    info['dim']= int(f['dim'])
-    info['det']= int(f['det'])
-    info['level']=int(f['level'])
-    info['gram']=vect_to_matrix(f['gram'])
-    info['density']=str(f['density'])
-    info['hermite']=str(f['hermite'])
-    info['minimum']=int(f['minimum'])
-    info['kissing']=int(f['kissing'])
-    info['aut']=int(f['aut'])
+    f = C.mod_l_galois.reps.find_one({'base_field':data['base_field'],'rep_type':data['rep_type'],'image_type':data['image_type'],'image_label':data['image_label'],'image_at':data['image_at'], 'projective_type':data['projective_type'],'projective_label':data['projective_label'],'poly_ker':data['poly_ker'],'poly_proj_ker':data['poly_proj_ker'], 'related_objects':data['related_objects'],'dim':data['dim'],'field_char':data['field_char'],'field_deg':data['field_deg'],'conductor':data['conductor'], 'weight': data['weight'],'abs_irr':data['abs_irr'],'image_order':data['image_order'],'degree_proj_field':data['degree_proj_field'], 'primes_conductor':data['primes_conductor'],'bad_prime_list':data['bad_prime_list'],'good_prime_list':data['good_prime_list']})
+    for m in ['base_field','image_type','image_label','image_at','projective_type','projective_label','related_objects', 'label']:
+        info[m]=str(f[m])
+    for m in ['dim','field_char','field_deg','conductor','weight','abs_irr','image_order','degree_proj_field']:
+        info[m]=int(f[m])
+    info['primes_conductor']=[int(i) for i in f['primes_conductor']]
 
-    if f['shortest']=="":
-        info['shortest']==f['shortest']
+    for m in ['poly_ker','poly_proj_ker']:
+        info[m]=str(f[m]).replace("*", "")
+
+    if f['rep_type'] =="symp":
+        info['rep_type']="Symplectic"
+    elif f['rep_type'] =="orth":
+        info['rep_type']="Orthogonal"
     else:
-        if f['dim']==1:
-            info['shortest']=str(f['shortest']).strip('[').strip(']')
-        else:
-            if info['dim']*info['kissing']<100:
-                info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
-            else:
-                max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
-                info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
-                info['all_shortest']="no"
-        info['download_shortest'] = [
-            (i, url_for(".render_rep_galois_modl_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
+        info['rep_type']="Linear"
 
-    if f['name']==['Leech']:
-        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
-str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
-        info['all_shortest']="no"
-        info['download_shortest'] = [
-            (i, url_for(".render_rep_galois_modl_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
-    ncoeff=20
-    if f['theta_series'] != "":
-        coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
-        info['theta_series']=my_latex(print_q_expansion(coeff))
-        info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
+    if info['field_deg'] > int(1):
+        try:
+            pol=str(conway_polynomial(f['characteristic'], f['deg'])).replace("*", "")
+            info['field_str']=str('$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' %(str(f['field_char']), str(f['field_char']), pol))
+        except:
+            info['field_str']=""
 
-    info['class_number']=int(f['class_number'])
 
-    if f['dim']==1:
-        info['genus_reps']=str(f['genus_reps']).strip('[').strip(']')
-    else:
-        if info['dim']*info['class_number']<50:
-            info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
-        else:
-            max_matrix_num=min(int(round(25/(info['dim']))), info['class_number']);
-            info['all_genus_rep']="no"
-            info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
-    info['download_genus_reps'] = [
-        (i, url_for(".render_rep_galois_modl_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma','sage']]
+    info['bad_prime_list']=[]
+    info['good_prime_list']=[]
+    for n in f['bad_prime_list']:
+        try:
+            n1=[int(n[0]), str(n[1]), str(n[2]), int(n[3]), int(n[4])]
+        except:
+            n1=[int(n[0]), str(n[1]), str(n[2]), str(n[3]), str(n[4])]
+        info['bad_prime_list'].append(n1)
+    info['len_good']=[int(i+1) for i in range(len(f['good_prime_list'][0][1]))]
+    for n in f['good_prime_list']:
+        try:
+            n1=[int(n[0]), [str(m) for m in n[1]], str(n[2]), int(n[3]), int(n[4])]
+        except:
+            n1=[int(n[0]), [str(m) for m in n[1]], str(n[2]), str(n[3]), str(n[4])]
+        info['good_prime_list'].append(n1)
 
-    if f['name'] != "":
-        if f['name']==str(f['name']):
-            info['name']= str(f['name'])
-        else:
-            info['name']=str(", ".join(str(i) for i in f['name']))
-    else:
-        info['name'] == ""
-    info['comments']=str(f['comments'])
-    if 'Leech' in info['comments']: # no need to duplicate as it is in the name
-        info['comments'] = ''
-    
-    t = "Mod &#x2113; Galois representation"+info['label']
-#This part code was for the dinamic knowl with comments, since the test is displayed this is redundant
-#    if info['name'] != "" or info['comments'] !="":
-#        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
+        info['download_list'] = [
+            (i, url_for(".render_rep_galois_modl_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
+
+    t = "Mod &#x2113; Galois representation "+info['label']
     info['properties'] = [
+        ('Label', '%s' %info['label']),
         ('Dimension', '%s' %info['dim']),
-        ('Determinant', '%s' %info['det']),
-        ('Level', '%s' %info['level'])]
-    if info['class_number'] == 0:
-        info['properties']=[('Class number', 'not available')]+info['properties']
-    else:
-        info['properties']=[('Class number', '%s' %info['class_number'])]+info['properties']
-    info['properties']=info['properties']+[('Label', '%s' % info['label'])]
-
-    if info['name'] != "" :
-        info['properties']=[('Name','%s' % info['name'] )]+info['properties']
-#    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
+        ('Field characteristic', '%s' %info['field_char']),
+        ('Conductor', '%s' %info['conductor']),]
     return render_template("rep_galois_modl-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
 #friends=friends
 
@@ -329,7 +264,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
 @rep_galois_modl_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the integral rep_galois_modl data'
-    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")),
+    bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage")),
              ('Completeness', '')]
     credit = rep_galois_modl_credit
     return render_template("single.html", kid='dq.rep_galois_modl.extent',
@@ -338,7 +273,7 @@ def completeness_page():
 @rep_galois_modl_page.route("/Source")
 def how_computed_page():
     t = 'Source of the integral rep_galois_modl data'
-    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")),
+    bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage")),
              ('Source', '')]
     credit = rep_galois_modl_credit
     return render_template("single.html", kid='dq.rep_galois_modl.source',
@@ -347,7 +282,7 @@ def how_computed_page():
 @rep_galois_modl_page.route("/Labels")
 def labels_page():
     t = 'Label of an integral rep_galois_modl'
-    bread = [('Representations', "/Representation"),("mod &#x2113; Galois representation", url_for(".index")),
+    bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage")),
              ('Labels', '')]
     credit = rep_galois_modl_credit
     return render_template("single.html", kid='rep_galois_modl.label',
@@ -389,7 +324,7 @@ def download_search(info):
     return send_file(strIO, attachment_filename=filename, as_attachment=True)
 
 
-@rep_galois_modl_page.route('/<label>/download/<lang>/<obj>')
+@rep_galois_modl_page.route('/<label>/download/<lang>/')
 def render_rep_galois_modl_webpage_download(**args):
     if args['obj'] == 'shortest_vectors':
         response = make_response(download_rep_galois_modl_full_lists_v(**args))
