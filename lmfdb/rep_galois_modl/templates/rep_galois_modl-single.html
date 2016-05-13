@@ -2,149 +2,98 @@
 
 {% block content %}
 
-<!--<script type="text/javascript">-->
-<!--var clean_uri = location.protocol + "//" + location.host + location.pathname;-->
-<!--window.history.replaceState({}, document.title, clean_uri);-->
-<!--</script>-->
-
 
 {% set KNOWL_ID = "rep_galois_modl.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
-<h2> {{ KNOWL('rep_galois_modl.gram', title='Gram Matrix') }} </h2>
-<p>${{info.gram}}$</p>
+<h2> {{ KNOWL('rep_galois_modl.irreducible', title='Irreducible')}} {{ KNOWL('rep_galois_modl.definition', title='mod &#x2113; Galois representation')}} </h2>
+<p align='center'>$\rho\colon(\mathrm{Gal}(\overline{K}/K))\to
+{% if info.rep_type == "Symplectic" %}
+    \mathrm{GSp}_
+{% else %}
+    \mathrm{GL}_
+{% endif %}
+{{info.dim}}(\mathbb{F}_{
+{% if info.field_deg >1%}
+    {{info.field_char}}^{{info.field_deg}}
+{% else %}
+    {{info.field_char}}
+{% endif %}
+})$
+</p>
 
-<h2> {{ KNOWL('rep_galois_modl.invariants', title='rep_galois_modl Invariants') }} </h2>
 
 <table>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.dimension', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.density', title='Density') }}:</td><td>${{info.density }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.minimal_vector', title='Minimal vector')}} length:</td><td>${{info.minimum }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
-<td>
-{% if info.dim == 1 %}
-    $({{info.shortest}})$</td></tr><tr><td></td><td>Download this vector for 
-        {% for e in info.download_shortest %} 
-            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-        {% endfor %}</td></tr>
-{% else %}
-    {% if info.shortest == "" %}
-        not available</td></tr>
-    {% else %}
-        <table><tr>
-        {% for n in info.shortest %}
-            ${{n}}${% if not loop.last %},{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
-        {% endfor %}
-        {% if info.all_shortest == "no" %} ... </tr></table></td><tr><td></td>
-        <td>Download the complete list for 
-            {% for e in info.download_shortest %} 
-                <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
-        {% else %}
-            </tr></table></td><tr><td></td><td>Download this {% if info.kissing == 2 %} vector {% else %} list {% endif %} for 
-            {% for e in info.download_shortest %} 
-                <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
-        {% endif %}
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.base_field', title='Base Field') }}:</td><td>${{info.base_field}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.dim', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.conductor', title='Conductor') }}:</td><td>${{info.conductor}}$</td></tr>
+    <tr><td align=right>Primes dividing the {{ KNOWL('rep_galois_modl.conductor', title='conductor') }}:</td><td>
+{% for n in info.primes_conductor %}
+${{n}}${% if not loop.last %},  {% endif %}
+{% endfor %}
+</td></tr>
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.weight', title='Weight') }}:</td><td>${{info.weight }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.abs_irred', title='Absolutely irreducible') }}:</td><td>{% if info.abs_irr == 0%}No{% else %}Yes{% endif %}</td></tr>
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.rep_type', title='Representation type') }}:</td><td>{{info.rep_type }}</td></tr>
+    <tr><td align=right>Characteristic of the {{ KNOWL('rep_galois_modl.field_def', title='field of definition') }}:</td><td>${{info.field_char}}$</td></tr>
+    <tr><td align=right>Degree of the {{ KNOWL('rep_galois_modl.field_def', title='field of definition') }}:</td><td>${{info.field_deg}}$</td></tr>
+    {% if info.field_str %}
+        <tr><td align=right>{{ KNOWL('finite_fields.structure', title='Field structure') }}:</td><td>{{info.field_str| safe}}</td></tr>
     {% endif %}
-{% endif %}
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.image_type', title='Image type') }}:</td><td>{{info.image_type }}</td></tr>
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.image_label', title='Image label') }}:</td><td>{{info.image_label }}</td></tr>
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.image_at', title='Image attribute') }}:</td><td>{{info.image_at }}</td></tr>
+
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.proj_image_type', title='Projective image type') }}:</td><td>{{info.projective_type}}</td></tr>
+    <tr><td align=right>{{ KNOWL('rep_galois_modl.proj_image_label', title='Projective image label') }}:</td><td>{{info.projective_label}}</td></tr>
 </table>
 
-{% if info.theta_series %}
-<h2> {{ KNOWL('rep_galois_modl.theta', title='Theta Series') }} </h2>
 
-<!--<p>-->
-<!--<form>-->
-<!--<p>-->
-<!--<div>Display the $q$ expansion up to power <input type='text' name='ncoeff' placeholder='20' value={{info.ncoeff}} size=5> <button type='submit' value='display'>Display</button></div></p>-->
-<!--<p>-->
-<!--<div style="overflow:auto;padding: 10px">${{info.theta_series }}$</div>-->
-<!--</p>-->
-<!--</form>-->
-<!--</p>-->
+<h2> {{ KNOWL('rep_galois_modl.unramified_primes', title='Unramified primes')}} </h2>
 
-<p><form>
-<div class="output"><span id="theta_output">{{info.theta_series}}</span></div>
-<div class="emptyspace"><br></div>
-<button id="morebutton">More coefficients</button>
-</form></p>
-
-{% endif %}
-
-
-<h2> {{ KNOWL('rep_galois_modl.genus', title='Genus Structure') }} </h2>
-
-{% if info.class_number == 0 %}
-    <p> The {{ KNOWL('rep_galois_modl.class_number', title='Class number') }} of the integral rep_galois_modl {{info.label}} is not available.</p>
-
-{% else %}
-    <table>
-    <tr><td align=right>{{ KNOWL('rep_galois_modl.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
-    <tr><td>&nbsp;</td></tr>
-    <tr><td align=right valign=top>{{ KNOWL('rep_galois_modl.genus', title='Genus representatives') }}:</td><td>
-    {% if info.dim == 1 %}
-        $({{info.genus_reps}})$</td></tr><tr><td></td><td>Download this matrix for
-            {% for e in info.download_genus_reps %} 
-            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<tr><td>$p$</td>
+{% for i in info['len_good']%}
+    {% if i ==1 %}
+        <td>$a_{p}$</td>
     {% else %}
-        {% for n in info.genus_reps %}
-            ${{n}}${% if not loop.last %},{% endif %}
-        {% endfor %}
-        {% if info.all_genus_rep == "no" %} ... 
-            </td></tr><tr><td></td><td>Download the complete list for
+        <td>$a_{p^{{i}}}$</td>
+    {% endif%}
+{% endfor %}<td>Characteristic polynomial of $\rho(\mathrm{Frob}_p)$</td>
+<td>Order of $\rho(\mathrm{Frob}_p)$</td><td>Projective order of $\rho(\mathrm{Frob}_p)$</td></tr>
+{% for p in info.good_prime_list%}
+    <tr><td>${{p[0]}}$</td>{% for i in p[1] %}<td>${{i}}$</td>{% endfor %}<td>${{p[2]}}$</td><td>${{p[3]}}$</td><td>${{p[4]}}$</td></tr>
+{% endfor %}
+</table>
+
+
+<h2> {{ KNOWL('rep_galois_modl.ramified_primes', title='Ramified primes')}} </h2>
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<tr><td>$p$</td><td>Characteristic polynomial of $\rho(\mathrm{Frob}_p)$</td><td>Type</td>
+<td>Order of $\rho(\mathrm{Frob}_p)$</td><td>Projective order of $\rho(\mathrm{Frob}_p)$</td></tr>
+{% for p in info.bad_prime_list%}
+    <tr>
+    {% for i in range(5) %}
+        {% if p[i] =="" %}
+            <td>{{p[i]}}</td>
         {% else %}
-            </td></tr><tr><td></td><td>Download this {% if info.class_number == 1 %} matrix {% else %} list {% endif %} for
+            <td>${{p[i]}}$</td>
         {% endif %}
-            {% for e in info.download_genus_reps %} 
-            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
-        {% endif %}
-    </td></tr>
-    </table>
-{% endif %}
+    {% endfor %}
+    </tr>
+{% endfor %}
+</table>
 
-<br>
-{% if info.name or info.comments %}
-<!--<h2><a title = "{{info.label}} [rep_galois_modl.data]" knowl= "rep_galois_modl.data" kwargs={{info.knowl_args}}>Comments</a></h2>-->
-<h2>Comments</h2>
+<h2>Fields associated</h2>
 
+<table>
+    <tr><td>Polynomial with splitting field $\overline{K}^{\mathrm{ker}(\rho)}$:</td><td>${{info.poly_ker}}$</td></tr>
+    <tr><td>Polynomial with splitting field $\overline{K}^{\mathrm{ker}(\rho)}$:</td><td>${{info.poly_proj_ker}}$</td></tr>
+</table>
 
+<h2>Related objects</h2>
 
-{% if info.name != "" %}
-<p>This {{ KNOWL('rep_galois_modl.definition', title='integral rep_galois_modl') }} {{KNOWL('rep_galois_modl.name', title='is')}} the {{ info.name }} rep_galois_modl.</p>
-{% endif %}
-
-{% if info.comments != "" %}
-<p>{{info.comments}}.</p>
-{% endif %}
-{% endif %}
-
-
-{% set KNOWL_ID = "rep_galois_modl.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
-
-<script type="text/javascript">
-var number_of_coefficients = 20;
-function more_handler(evt) {
-    number_of_coefficients = number_of_coefficients + 10;
-    evt.preventDefault();
-    $("#theta_output").load("{{info.theta_display}}"+number_of_coefficients,
-        function() {
-            {# tell mathjx to render the output #}
-            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "theta_output"]);
-        });
-}
-$(function() {
-    $("#morebutton").click(function(e) {more_handler(e)});
-});
-</script>
-
-
+<p>
+{{info.related_objects}}
+</p>
 {% endblock %}
