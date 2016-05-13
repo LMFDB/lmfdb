@@ -213,7 +213,7 @@ def render_rep_galois_modl_webpage(**args):
     info['primes_conductor']=[int(i) for i in f['primes_conductor']]
 
     for m in ['poly_ker','poly_proj_ker']:
-        info[m]=str(f[m]).replace("*", "")
+        info[m]=str(f[m]).replace("*", "").strip('(').strip(')')
 
     if f['rep_type'] =="symp":
         info['rep_type']="Symplectic"
