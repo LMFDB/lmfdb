@@ -7,8 +7,9 @@ from pymongo import ASCENDING, DESCENDING
 from flask import url_for, make_response
 import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
+from lmfdb.search_parsing import split_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
-
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 import sage.all
 from sage.all import EllipticCurve, latex, matrix, ZZ, QQ
 
@@ -39,6 +40,18 @@ def split_lmfdb_iso_label(lab):
 def split_cremona_label(lab):
     return cremona_label_regex.match(lab).groups()
 
+def curve_lmfdb_label(conductor, iso_class, number):
+    return "%s.%s%s" % (conductor, iso_class, number)
+
+def curve_cremona_label(conductor, iso_class, number):
+    return "%s%s%s" % (conductor, iso_class, number)
+
+def class_lmfdb_label(conductor, iso_class):
+    return "%s.%s" % (conductor, iso_class)
+
+def class_cremona_label(conductor, iso_class):
+    return "%s%s" % (conductor, iso_class)
+
 logger = make_logger("ec")
 
 ecdb = None
@@ -58,15 +71,6 @@ def padic_db():
 
 def trim_galois_image_code(s):
     return s[2:] if s[1].isdigit() else s[1:]
-
-def parse_list(s):
-    """
-    parses a string representing a list of integers, e.g. '[1,2,3]'
-    """
-    s = s.replace(' ','')[1:-1]
-    if s:
-        return [int(a) for a in s.split(",")]
-    return []
 
 def parse_point(s):
     r""" Converts a string representing a point in affine or
@@ -106,7 +110,7 @@ class WebEC(object):
         logger.debug("Constructing an instance of ECisog_class")
         self.__dict__.update(dbdata)
         # Next lines because the hyphens make trouble
-        self.xintcoords = parse_list(dbdata['x-coordinates_of_integral_points'])
+        self.xintcoords = split_list(dbdata['x-coordinates_of_integral_points'])
         self.non_surjective_primes = dbdata['non-surjective_primes']
         # Next lines because the python identifiers cannot start with 2
         self.twoadic_index = dbdata['2adic_index']
@@ -182,6 +186,9 @@ class WebEC(object):
                 data['EndE'] = "\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = "\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
+            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.N(U(1))'),'N(\\mathrm{U}(1))')
+        else:
+            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.SU(2)'),'\\mathrm{SU}(2)')
 
         # modular degree
 
@@ -209,7 +216,7 @@ class WebEC(object):
             data['minq_info'] = '(itself)'
         else:
             minq_ainvs = [str(c) for c in minq.ainvs()]
-            data['minq_label'] = db_ec().find_one({'ainvs': minq_ainvs})['lmfdb_label']
+            data['minq_label'] = db_ec().find_one({'jinv':str(self.E.j_invariant()),'ainvs': minq_ainvs})['lmfdb_label']
             data['minq_info'] = '(by %s)' % minqD
 
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
@@ -315,28 +322,37 @@ class WebEC(object):
             local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
             local_data.append(local_data_p)
 
-        if len(bad_primes)>1:
-            bsd['tamagawa_factors'] = r' \cdot '.join(str(c.factor()) for c in tamagawa_numbers)
-        else:
-            bsd['tamagawa_factors'] = ''
+        cp_fac = [cp.factor() for cp in tamagawa_numbers]
+        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+        bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         bsd['tamagawa_product'] = sage.misc.all.prod(tamagawa_numbers)
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(self.E.q_eigenform(10))
-
-        self.make_code_snippets()
+        self.newform_label = newform_label(cond,2,1,iso)
+        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso)
+        newform_exists_in_db = is_newform_in_db(self.newform_label)
+        self._code = None
 
         self.friends = [
             ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
-            ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label)),
-            ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
-            ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-            ('Modular form ' + self.lmfdb_iso.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=int(N), weight=2, character=0, label=iso))]
+            ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label))]
+        if not self.cm:
+            if N<=300:
+                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso))]
+            if N<=50:
+                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', label=self.lmfdb_iso))]
+        if newform_exists_in_db:
+            self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
-        self.downloads = [('Download coeffients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
-                          ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label))]
+        self.downloads = [('Download coefficients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=100)),
+                          ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label)),
+                          ('Download Magma code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
+                          ('Download Sage code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
+                          ('Download GP code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp'))
+        ]
 
         self.plot = encode_plot(self.E.plot())
         self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
@@ -358,21 +374,26 @@ class WebEC(object):
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
 
+    def code(self):
+        if self._code == None:
+            self.make_code_snippets()
+        return self._code
+
     def make_code_snippets(self):
         # read in code.yaml from current directory:
 
         _curdir = os.path.dirname(os.path.abspath(__file__))
-        self.code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+        self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
 
         # Fill in placeholders for this specific curve:
 
         for lang in ['sage', 'pari', 'magma']:
-            self.code['curve'][lang] = self.code['curve'][lang] % (self.data['ainvs'],self.label)
+            self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.label)
 
-        for k in self.code:
+        for k in self._code:
             if k != 'prompt':
-                for lang in self.code[k]:
-                    self.code[k][lang] = self.code[k][lang].split("\n")
+                for lang in self._code[k]:
+                    self._code[k][lang] = self._code[k][lang].split("\n")
                     # remove final empty line
-                    if len(self.code[k][lang][-1])==0:
-                        self.code[k][lang] = self.code[k][lang][:-1]
+                    if len(self._code[k][lang][-1])==0:
+                        self._code[k][lang] = self._code[k][lang][:-1]

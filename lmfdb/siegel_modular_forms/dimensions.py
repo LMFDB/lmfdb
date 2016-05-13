@@ -28,7 +28,7 @@ def fetch( dct):
     db = client.siegel_modular_forms
     hps = db.dimensions
     item = hps.find_one( dct)
-    client.close()
+#    client.close()
     return item
 
 
@@ -71,7 +71,7 @@ def dimension_Gamma1_2( wt_range, j):
       <li>Second entry: The codimension of the subspace of cusp forms.</li>
       <li>Third entry: The subspace of cusp forms.</li>
     </ul>
-    <p> More precisely, The trilple $[a,b,c]$ in
+    <p> More precisely, The triple $[a,b,c]$ in
     <ul>
       <li>
         row <span class="emph">All</span>
@@ -121,6 +121,20 @@ def dimension_Sp4Z_2( wt_range):
     </ul>
     """
     return _dimension_Gamma_2( wt_range, 2, group = 'Sp4(Z)')
+
+def dimension_table_Sp4Z_j(wt_range, j_range):
+    result = {}
+    for wt in wt_range:
+        result[wt] = {}
+    for j in j_range:
+        if is_odd(j):
+            for wt in wt_range:
+                result[wt][j]=0
+        else:
+            _,olddim= dimension_Sp4Z_j(wt_range, j)
+            for wt in wt_range:
+                result[wt][j]=olddim[wt]['Total']
+    return result
 
 def dimension_Sp4Z_j( wt_range, j):
     """
@@ -191,7 +205,7 @@ def _dimension_Gamma_2( wt_range, j, group = 'Gamma(2)'):
     if 'Sp4(Z)' == group and 2 == j and wt_range[0] < 4:
         wt_range1 = [ k for k in wt_range if k < 4]
         wt_range2 = [ k for k in wt_range if k >= 4]
-        print wt_range1, wt_range2
+#        print wt_range1, wt_range2
         if wt_range2 != []: 
             headers, dct = _dimension_Gamma_2( wt_range2, j, group)
         else:
@@ -451,7 +465,7 @@ def dimension_Gamma0_3_psi_3( wt_range):
     for k in wt_range:
         dims =  _dimension_Gamma0_3_psi_3( k)
         dct[k] = dict( (headers[j],dims[j]) for j in range( len( headers)))
-    print headers, dct
+#    print headers, dct
     return headers, dct
 
 

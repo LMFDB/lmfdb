@@ -30,7 +30,7 @@ function show_code(system) {
 -->
 
 
-<h2>Elliptic curves in class {{cl.short_label}}</h2>
+<h2>Elliptic curves in class {{cl.short_class_label}} over   {{ cl.field_knowl|safe }}</h2>
 <table>
 <tr>
 <th>{{ KNOWL('ec.curve_label',title = "Curve label") }}</th>
@@ -44,6 +44,17 @@ function show_code(system) {
 {% endfor %}
 </table>
 
+<h2>{{ KNOWL('ec.rank',title='Rank') }}</h2>
+
+{% if cl.rk == "?" %}
+{% if cl.rk_bnds != "not recorded" %}
+<b>Rank</b> \(r\) satisfies \({{ cl.rank_bounds[0] }} \le r \le {{ cl.rank_bounds[1] }}\)
+{% else %}
+Rank not yet determined.
+{% endif %}
+{% else %}
+<b>Rank:</b> \( {{ cl.rank }} \)
+{% endif %}
 
 
 <h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
@@ -64,22 +75,6 @@ function show_code(system) {
 {% else %}
 <p>Not available.</p>
 {% endif %}
-
-<script type="text/javascript">
-var number_of_coefficients = 10;
-function more_handler(evt) {
-    number_of_coefficients += number_of_coefficients;
-    evt.preventDefault();
-    $("#modform_output").load("/EllipticCurve/Q/modular_form_display/{{info.lmfdb_label}}/"+number_of_coefficients,
-        function() {
-            {# tell mathjx to render the output #}
-            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "modform_output"]);
-        });
-}
-$(function() {
-    $("#morebutton").click(function(e) {more_handler(e)});
-});
-</script>
 
 {% if DEBUG %}
 <hr>

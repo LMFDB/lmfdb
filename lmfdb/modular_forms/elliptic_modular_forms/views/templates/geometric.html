@@ -1,3 +1,4 @@
+{% import 'color.css' as color %}
 {% if geometric is defined %}
 {% if grouptype==0 or level == 1 or level == 2%}
   {% set w="217" %} {%set h="320"%}
@@ -11,17 +12,17 @@
   vertical-align:top;
   height:{{h}}px;
   width:{{w}}px;
-  background-color:lightblue;
-  text-color:white;
+  background-color:{{color.emf_fundom_background}};
+  text-color:{{color.emf_fundom_text}};
 }
 </style>
 {% if level == 1 %}
-  {% set group=KNOWL('mf.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
+  {% set group=KNOWL('group.sl2z',title='\(\mathrm{SL}_2(\mathbb{Z})\)') %}
 {% else %}
   {% if grouptype == 0 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma0n',title='\(\Gamma_0(' ~ level ~ ') \)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma0n',title='\(\Gamma_0(' ~ level ~ ') \)') %}
   {% elif grouptype == 1 %}
-    {% set group=KNOWL('mf.sl2.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
+    {% set group=KNOWL('group.sl2z.subgroup.gamma1n',title='\(\Gamma_1(' ~ level ~  ')\)') %}
   {% endif %}
 {% endif %}
 
@@ -42,9 +43,9 @@
         <tr>
           <td valign="top">
             <table>
-              <tr><th>{{KNOWL('mf.sl2z.subgroup.index',title='index')}}</th><td>{{G.index}}</td></tr>
-              <tr><th>{{KNOWL('mf.sl2z.subgroup.genus',title='genus')}}</th><td>{{G.genus}}</td></tr>
-              <tr><th>{{KNOWL('mf.sl2z.subgroup.cusps',title='cusps')}}</th>
+              <tr><th>{{KNOWL('group.subgroup.index',title='index')}}</th><td>{{G.index}}</td></tr>
+              <tr><th>{{KNOWL('group.sl2z.genus_subgroup',title='genus')}}</th><td>{{G.genus}}</td></tr>
+              <tr><th>{{KNOWL('group.fuchsian.cusps',title='cusps')}}</th>
 		<td>
                   {% for c in G.cusps%}
 		  {% if c.is_infinity() %}
@@ -56,7 +57,7 @@
 		  ({{ G.cusps|count }} cusps)
 	        </td>
 	      </tr>
-              <tr><th colspan="2" style="text-align:left;">Number of {{KNOWL('mf.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}} of </th></tr>
+              <tr><th colspan="2" style="text-align:left;">Number of {{KNOWL('group.sl2z.subgroup.ellipticfxpts',title='elliptic fixed points')}} of </th></tr>
               <tr><th>order 2</th><td>{{G.nu2}}</td></tr>
               <tr><th>order 3</th><td>{{G.nu3}}</td></tr>
             </table>

@@ -2,18 +2,9 @@
 {% block content %}
 {# Offers options to browse and search #}
 
-<p>
-This database contains {{ info.nfields }}
-{{KNOWL('nf', title='global number fields')}} of
-{{KNOWL('nf.degree', title='degree')}} $n\leq {{ info.maxdeg }}$.  The data is
-complete in a variety of ways, see 
-<a href="Discriminants">completeness of global number field data</a>
-for details.
-In addition, extensive data on
-<a href="QuadraticImaginaryClassGroups">class groups of quadratic imaginary
-fields</a> is available for download.
-
-</p>
+<div>
+{{ KNOWL_INC('dq.nf.extent') }}
+</div>
 
 <h2> Browse {{KNOWL('nf', title='global number fields')}} </h2>
 
@@ -110,14 +101,13 @@ Enter values into one or more boxes to restrict the search.
 <span class="formexample"> e.g. 5</span></td>
 <td>
 <td align=left>{{KNOWL('nf.ideal_class_group', title = 'class group')}} structure
-  <td><input type='text' name='class_group' size=10 example='[2,2]'>
-<span class="formexample"> e.g. [ ], [3], or [2,2]</span></td>
+  <td><input type='text' name='class_group' size=10 example='[2,4]'>
+<span class="formexample"> e.g. [ ], [3], or [2,4]</span></td>
 </tr>
 <tr>
 <td align="left" colspan="4">Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size="6" />
-</td><td>
+<tr><td>
 <button type='submit' name='search' value='Search'>Search</button></td>
-</tr>
 
 
 </table>

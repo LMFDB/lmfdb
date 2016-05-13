@@ -102,7 +102,7 @@ class DimensionTable(object):
         return "n/a"
 
     @cached_method
-    def is_in_db(self, N=1, k=4, character=0):
+    def is_in_db(self, N=1, k=4, character=1):
         factors = connect_db()['Newform_factors.files'] #i'm not checking the database to see what is going on here
         key = {'k': int(k), 'N': int(N), 'chi': int(character)}
         emf_logger.debug("in is_in_db: key:{0}".format(key))
@@ -141,12 +141,6 @@ class ClassicalMFDisplay(MFDisplay):
         Conn = lmfdb.base.getDBConnection()
         #if dbname == '':
         dbname = 'modularforms2'
-        self._files = Conn[dbname].Newform_factors.files
-        try:
-            emf_logger.debug("files db : {0} with nr. of recs:{1}".format(self._files,self._files.find().count()))
-        except:
-            pass
-            emf_logger.debug("Could not connect to pymongo!")
             
     #set_table_browsing is used in ./modular_forms/elliptic_modular_forms/views/emf_render_navigation.py, line 65 (method is _browse_web_modform_spaces_in_ranges, but it just returns render_elliptic_modular_form_navigation_wp, which is in ./modular_forms/elliptic_modular_forms/views/emf_render_navigation.py)
     def set_table_browsing(self, skip=[0, 0], limit=[(2, 16), (1, 50)], keys=['Weight', 'Level'], character=0, dimension_table=None, dimension_fun=dimension_new_cusp_forms, title='Dimension of newforms', check_db=True):

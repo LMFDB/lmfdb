@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import pymongo
+import urllib2
 ASC = pymongo.ASCENDING
+DESC = pymongo.DESCENDING
 import flask
 import yaml
 import lmfdb.base as base
@@ -64,6 +66,15 @@ def api_query(db, collection, id = None):
     format = request.args.get("_format", "html")
     offset = int(request.args.get("_offset", 0))
     DELIM = request.args.get("_delim", ",")
+    fields = request.args.get("_fields", None)
+    sortby = request.args.get("_sort", None)
+
+    if fields:
+        fields = fields.split(DELIM)
+
+    if sortby:
+        sortby = sortby.split(DELIM)
+
     if offset > 10000:
         if format != "html":
             flask.abort(404)
@@ -71,13 +82,24 @@ def api_query(db, collection, id = None):
             flask.flash("offset too large, please refine your query.", "error")
             return flask.redirect(url_for(".api_query", db=db, collection=collection))
 
+    # sort = [('fieldname1', ASC/DESC), ...]
+    if sortby is not None:
+        sort = []
+        for key in sortby:
+            if key.startswith("-"):
+                sort.append((key[1:], DESC))
+            else:
+                sort.append((key, ASC))
+    else:
+        sort = None
+
     # preparing the actual database query q
     C = base.getDBConnection()
     q = {}
 
     if id is not None:
-        if id.startswith("ObjectId-"):
-            q["_id"] = ObjectId(id[9:])
+        if id.startswith('ObjectId('):
+            q["_id"] = ObjectId(id[10:-2])
         else:
             q["_id"] = id
         single_object = True
@@ -85,6 +107,7 @@ def api_query(db, collection, id = None):
         single_object = False
 
     for qkey, qval in request.args.iteritems():
+        from ast import literal_eval
         try:
             if qkey.startswith("_"):
                 continue
@@ -101,7 +124,6 @@ def api_query(db, collection, id = None):
             elif qval.startswith("lf"):
                 qval = [float(_) for _ in qval[2:].split(DELIM)]
             elif qval.startswith("py"):     # literal evaluation
-                from ast import literal_eval
                 qval = literal_eval(qval[2:])
             elif qval.startswith("cs"):     # containing string in list
                 qval = { "$in" : [qval[2:]] }
@@ -109,6 +131,8 @@ def api_query(db, collection, id = None):
                 qval = { "$in" : [int(qval[2:])] }
             elif qval.startswith("cf"):
                 qval = { "$in" : [float(qval[2:])] }
+            elif qval.startswith("cpy"):
+                qval = { "$in" : [literal_eval(qval[3:])] }
         except:
             # no suitable conversion for the value, keep it as string
             pass
@@ -117,11 +141,12 @@ def api_query(db, collection, id = None):
         q[qkey] = qval
 
     # executing the query "q" and replacing the _id in the result list
-    data = list(C[db][collection].find(q).skip(offset).limit(100))
+    api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
+    data = list(C[db][collection].find(q, projection = fields, sort=sort).skip(offset).limit(100))
     for document in data:
         oid = document["_id"]
         if type(oid) == ObjectId:
-            document["_id"] = "ObjectId-%s" % oid
+            document["_id"] = "ObjectId('%s')" % oid
         elif isinstance(oid, basestring):
             document["_id"] = str(oid)
 
@@ -160,9 +185,11 @@ def api_query(db, collection, id = None):
         location = "%s/%s" % (db, collection)
         title = "API - " + location
         bc = [("API", url_for(".index")), (location, query)]
+        query_unquote = urllib2.unquote(data["query"])
         return render_template("collection.html",
                                title=title,
                                single_object=single_object,
+                               query_unquote = query_unquote,
                                url_args = url_args,
                                bread=bc,
                                **data)

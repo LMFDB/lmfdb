@@ -1,15 +1,27 @@
 {% extends "base.html" %}
+{% import 'color.css' as color %}
+
+{% import 'color.css' as color %}
 
 {% block body -%}
 <div id="header">
-    <div id="logo"><a href="/"><img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" /></a></div>
+    <div id="logo"><a href="/">
+{% if BETA %}
+    <img src="{{ url_for('static', filename='images/lmfdb-logo-beta.png') }}" />
+{% else %}
+    <img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" />
+{% endif %}
+</a></div>
     <div class="right">
       <div class="bread">
         {% if bread %}
-          <a href="/">Top</a>
+          <a href="/">&#8962;</a>
+{# there's a house symbol &#x1f3e0; but it does not work on all browsers#}
           {% for b in bread -%}
-            &rarr; <a href="{{ b[1] }}">{{ b[0]|striptags }}</a>
-          {%- endfor %}
+            &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
+          {% endfor %}
+         {% else %}
+          <a href="/">&#8962;</a>
          {% endif %}
       </div>
       <div class="topright">

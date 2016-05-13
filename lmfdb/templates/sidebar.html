@@ -1,8 +1,8 @@
-{%- include "sidebar.css" -%}
-
+{% import 'color.css' as color %}
 {%- for key, heading, value in sidebar.data -%}
 {%- if BETA or not value.status -%}{# an entire section may be omitted e.g. Motives #}
 
+{% if user_is_authenticated or BETA or key != '9Know' %}
 {{heading | safe}}
 
 {% if value.type == 'L' %}
@@ -18,7 +18,8 @@
   <tr>
   {% for item in value.secondpart.parts %}
      {% if not item.status or BETA %}
-    <td>{{item.url | safe}}</td>
+  {% if item.colspan == "onecolumn" %}<td colspan=2>{% else %}<td>{% endif %}
+      {{item.url | safe}}</td>
     {%- if loop.index is even -%}</tr><tr>{%- endif -%}
      {% endif %}
   {% endfor %}</tr>
@@ -31,7 +32,7 @@
   {%- if entry.status -%}
     {%- if BETA -%}
       {%- if loop.index is even -%}{# want alternating colours here #}
-        <tr bgcolor="#fff">
+        <tr bgcolor="{{color.sidebar_background_off}}">
       {%- else -%}
         <tr>
       {%- endif -%}{# end alternating colours #}
@@ -45,7 +46,7 @@
         <table class="short2">
         <tr class="bor">
         {%- for pt2 in entry.part2 -%}
-          {%- if pt2.colspan == "onecolumn"%}
+          {%- if pt2.colspan == "onecolumn%" -%}
             {%- if loop.index is even -%}</tr><tr>{%- endif -%}
             <td colspan="2">
           {%- else -%}
@@ -78,7 +79,7 @@
     {%- endif -%}{# this concludes the BETA flag #}
   {%- else -%}{# this look through entries with status not set #}
     {%- if loop.index is even -%}{# want alternating colours here #}
-      <tr bgcolor="#fff">
+      <tr bgcolor="{{color.sidebar_background_off}}">
     {%- else -%}
       <tr>
     {%- endif -%}
@@ -165,39 +166,34 @@
       </tr><tr>
     {%- endif -%}{# if loop.index is even #}
   {%- endif -%}{# if entry.colspan == "onecolumn" #}
-  {%- if entry.status -%}
-    {%- if BETA -%}
-      <td scope="col" width="50%">{{entry.url | safe}}
-    {%- endif -%}
-  {%- else -%}
-    <td scope="col" width="50%">{{entry.url | safe}}
-  {%- endif -%}{# if entry.status #}
+  {%- if BETA or not entry.status -%}
+  {%- if entry.colspan == "onecolumn" -%}
+    <td colspan=2>
+      {%- else -%}
+    <td scope="col" width="20%">
+      {%- endif -%}
+      {{entry.url | safe}}
+  {%- endif -%}    {# if BETA or not entry.status #}
   {%- if entry.part2 -%}
-    <td scope="col" width="30%">
+    <td scope="col" width="40%">
     {%- for pt2 in entry.part2 -%}
-      {%- if pt2.status -%}
-        {%- if BETA -%}
+      {%- if BETA or not pt2.status -%}
           <span class="subtitle">{{ pt2.url | safe }}</span>
-        {%- endif -%}
-      {%- else -%}{# if pt2.status #}
-        <span class="subtitle">{{ pt2.url | safe }}</span>
       {%- endif -%}
       {%- if pt2.part3 -%}
         <div class="parts">
-        {%- for pt3 in pt2.part3 -%}
-          {%- if pt3.status == "future" -%}
-            {%- if BETA -%}
-              <span class="subitem">{{ pt3.url | safe}}</span>
+          {%- for pt3 in pt2.part3 -%}
+            {%- if BETA or not pt3.status -%}
+            {%- if pt3.status == "beta" -%}
+            <span class="beta", class="subitem">
+            {%- else -%}
+            <span class="subitem">
             {%- endif -%}
-          {%- elif pt3.status == "beta" -%}
-            {%- if BETA -%}
-              <span class="beta", class="subitem">{{ pt3.url | safe}}</span>
             {%- endif -%}
-          {%- else -%}
-            <span class="subitem">{{ pt3.url | safe}}</span>
-          {%- endif -%}{# if pt3.status == "future" #}
-        {%- endfor -%}{# for pt3 in pt2.part3 #}
-                      </div>
+            {{ pt3.url | safe}}
+            </span>
+          {%- endfor -%}{# for pt3 in pt2.part3 #}
+        </div>
       {%- endif -%} {# if pt2.part3 #}
     {%- endfor -%} {# for pt2 in entry.part2 #}
     </td>
@@ -216,6 +212,7 @@
 {# nothing needs doing as only the header appears, e.g. Knowledge #}
 
 {% endif %} {# if value.type == ... #}
+{%- endif -%} {# user_is_authenticated or not Knowledge #}
 {%- endif -%} {# if BETA or not value.status #}
 {%- endfor -%} {# for key, heading, value in sidebar.data #}
 

@@ -18,16 +18,20 @@ from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.hmf_check_find import (is_fundamental_discriminant, rqf_iterator)
 from lmfdb.ecnf.WebEllipticCurve import ECNF
 
-print "calling base._init()"
-dbport = 37010
-init(dbport, '')
-print "getting connection"
-conn = getDBConnection()
-print "setting nfcurves, qcurves and fields"
-nfcurves = conn.elliptic_curves.nfcurves
-qcurves = conn.elliptic_curves.curves
-fields = conn.numberfields.fields
+from lmfdb.website import DEFAULT_DB_PORT as dbport
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+C['admin'].authenticate('lmfdb', 'lmfdb')
 
+print "authenticating on the elliptic_curves database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['elliptic_curves'].authenticate(username, password)
+print "setting nfcurves and qcurves"
+nfcurves = C.elliptic_curves.nfcurves
+qcurves = C.elliptic_curves.curves
 
 def MWShaInfo(E, HeightBound=None, test_saturation=False, verbose=False):
     r"""
@@ -275,13 +279,16 @@ def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, test_satur
     res = nfcurves.find(query)
     print("%s curves over field %s found" % (res.count(), field))
     res.sort([('conductor_norm', pymongo.ASCENDING)])
-    # extract the class labels all at the start, since otherwose the
+    # extract the class labels all at the start, since otherwise the
     # cursor might timeout:
     classes = [r['short_class_label'] for r in res]
     for isoclass in classes:
-        if True:  # verbose:
+        res = nfcurves.find_one({'field_label': field, 'short_class_label': isoclass, 'number':int(1)})
+        if 'rank' in res or 'rank_bounds' in res:
+            print("Isogeny class %s already has rank data" % isoclass)
+        else:
             print("Getting generators for isogeny class %s" % isoclass)
-        get_generators(field, isoclass, test_saturation=test_saturation, verbose=verbose, store=store)
+            get_generators(field, isoclass, test_saturation=test_saturation, verbose=verbose, store=store)
 
 #
 #

@@ -124,8 +124,9 @@
      {% endif %}
 <br>
 <br>
+{% if info.number < 100001 %}
 <form>
-Download all search results for 
+Download all {{info.number}} search results for
 <input type="submit" name="Submit" value="gp">
 <input type="submit" name="Submit" value="sage">
 <input type="submit" name="Submit" value="magma">
@@ -142,6 +143,9 @@ Download all search results for
 <input type="hidden" name="discriminant" value="{{info.discriminant}}"/>
 
 </form>
+{% else %}
+There are too many fields in the search results for downloading.
+{% endif %} {# provide download links? #}
 {% endif %} {# info.number > 0 #}
 {% endif %}
 

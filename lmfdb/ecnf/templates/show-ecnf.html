@@ -5,6 +5,15 @@
 <div.ip>span { white-space: nowrap; font-family: serif; }
 </style>
 
+{% macro code(codes, item) %}
+{% set code = codes() %}
+{% for L in code[item] %}
+{# N.B. whitespace is preserved in the following div since the CSS has
+white-space: pre in order to keep line breaks! #}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for c in code[item][L] %}{{code.prompt[L]}}&nbsp;{{c}}<br>{% endfor %}</div>
+{% endfor %}
+{% endmacro %}
+
 <script>
 var cur_system = null;
 function show_code(system) {
@@ -47,13 +56,12 @@ function show_code(system) {
   </style>
 #}
 
-{#
     <div align ="right">
       Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sage</a>,
-        <a onclick="show_code('pari'); return false" href='#'>pari</a>,
+       {# <a onclick="show_code('pari'); return false" href='#'>pari</a>, #}
+        <a onclick="show_code('pari'); return false" href='#'>gp</a>,
         <a onclick="show_code('magma'); return false" href='#'>magma</a>
     </div>
-#}
 
 <div>
   <h2>  Base field   {{ ec.field.knowl()|safe }} </h2>
@@ -61,9 +69,10 @@ function show_code(system) {
  {{ KNOWL('nf.generator', 'Generator') }} \({{
  ec.field.generator_name() }}\), with {{
  KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
- \({{ec.field.poly()}}\); {{ KNOWL('nf.class_number', 'class number')
+ {{ec.field.latex_poly}}; {{ KNOWL('nf.class_number', 'class number')
  }} \({{ec.field.class_number()}}\).
 </p>
+    {{ code(ec.code,'field') }}
 </div>
 
 <style type="text/css">
@@ -74,11 +83,11 @@ cellpadding="5";
 }
 </style>
 
-<div>
 <h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass equation') }}</h2>
-<p>
+<div style='overflow-x:auto; overflow-y:hidden'>
 {{ ec.equn }}
-</p>
+</div>
+    {{ code(ec.code,'curve') }}
 <p>
   {% if ec.is_minimal %}
   This is a {{ KNOWL('ec.global_minimal_model','global minimal model')}}.
@@ -92,12 +101,14 @@ cellpadding="5";
   No {{ KNOWL('ec.global_minimal_model','global minimal model')}} exists.
   {% endif %}
   {% endif %}
+    {{ code(ec.code,'is_min') }}
 </p>
 
 
 <h2>{{ KNOWL('ec.invariants', title='Invariants')}}</h2>
 
-        <table id="invariants">
+    <div style='overflow:auto'>
+      <table id="invariants">
         <tr>
         <td>
          \(\mathfrak{N} \)</td>
@@ -106,6 +117,7 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.fact_cond }}</td>
         </tr>
+        <tr><td colspan=5>    {{ code(ec.code,'cond') }}</td></tr>
 
         <tr>
         <td>
@@ -115,6 +127,7 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.fact_cond_norm }}</td>
         </tr>
+        <tr><td colspan=5>    {{ code(ec.code,'cond_norm') }}</td></tr>
 
         <tr>
         <td>
@@ -132,6 +145,7 @@ cellpadding="5";
         {% endif %}
         </tr>
 
+          <tr><td colspan=5> {{ code(ec.code,'disc') }}</td></tr>
         <tr>
         <td>
           {% if ec.is_minimal %}
@@ -145,6 +159,7 @@ cellpadding="5";
         <td>=</td>
         <td>{{ ec.fact_disc_norm }}</td>
         </tr>
+        <tr><td colspan=5> {{ code(ec.code,'disc_norm') }}</td></tr>
 
 {% if not ec.is_minimal %}
         <tr>
@@ -178,6 +193,7 @@ cellpadding="5";
         <td>{{ ec.fact_j }}</td>
         {% endif %}
         </tr>
+        <tr><td colspan=5>     {{ code(ec.code,'jinv') }}</td></tr>
 
         <tr>
         <td> \( \text{End} (E) \)</td>
@@ -189,6 +205,14 @@ cellpadding="5";
             )
         </td>
         </tr>
+        <tr><td colspan=5>     {{ code(ec.code,'cm') }}</td></tr>
+
+        <tr>
+        <td> \( \text{ST} (E) \)</td>
+        <td>=</td>
+        <td>{{ ec.ST|safe }}</td>
+        </td>
+        </tr>
 
 </table>
 </div>
@@ -196,18 +220,22 @@ cellpadding="5";
 <div>
 <h2> {{ KNOWL('ec.mordell-weil', title="Mordell-Weil rank and generators") }} </h2>
 {% if ec.rk == "?" %}
-{% if ec.rk_bnds != "not recorded" %}
-<b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \le {{ ec.rank_bounds[1] }}\)
+{% if ec.rk_bnds != "not available" %}
+<b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \)
+{% if ec.rank_bounds[1] != "Infinity" %}
+ \(\le {{ec.rank_bounds[1]}}\)
+{% endif %}
 {% else %}
-Rank not yet determined.
+Rank not available.
 {% endif %}
 {% else %}
 <b>Rank:</b> \( {{ ec.rank }} \)
 {% endif %}
+ {{ code(ec.code,'rank') }}
 
 {% if ec.rank_bounds[0] %}
-{% if ec.gens == 'not recorded' %}
-<p>No generators recorded.</p>
+{% if ec.gens == 'not available' %}
+<p>No generators available.</p>
 {% else %}
 <p><b>
 {% if ec.rank_bounds[0] == 1 %}
@@ -220,9 +248,12 @@ Generators:
 
 {% endif %}
 {% endif %}
+ {{ code(ec.code,'gens') }}
+
 <p>
 <b>Regulator:</b>
 {{ ec.reg }}
+ {{ code(ec.code,'reg') }}
 </p>
 </div>
 
@@ -233,17 +264,21 @@ Generators:
 <th>Structure:</th>
 <td>{{ ec.tor_struct_pretty }}</td>
 </tr>
+<tr><td colspan=2> {{ code(ec.code,'tors') }}</td></tr>
+<tr><td colspan=2> {{ code(ec.code,'ntors') }}</td></tr>
     {% if ec.tr %}
 <tr>
 <th>{% if ec.tr==1 %}Generator{% else %}Generators{% endif %}:</th>
 <td>{{ ec.torsion_gens }}</td>
 </tr>
+<tr><td colspan=2> {{ code(ec.code,'torgens') }}</td></tr>
     {% endif %}
 </table>
 </div>
 
 <div>
-    <h2>{{KNOWL('local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
+    <h2>{{KNOWL('ec.local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
+ {{ code(ec.code,'localdata') }}
 
 {% if ec.local_data %}
 <table cellpadding="5">

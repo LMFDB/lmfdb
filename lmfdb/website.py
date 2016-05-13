@@ -10,8 +10,6 @@
 start this via $ sage -python website.py --port <portnumber>
 add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
-from base import *
-
 import pages
 import api
 import hilbert_modular_forms
@@ -27,6 +25,7 @@ import lfunctions
 # import maass_form_picard
 # import maass_waveforms
 import genus2_curves
+import sato_tate_groups
 import users
 import knowledge
 import upload
@@ -43,11 +42,15 @@ import hypergm
 import motives
 import riemann
 import logging
+import lattice
+import higher_genus_w_automorphisms
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
 
 import sys
+#import base
+from base import app, render_template, request, DEFAULT_DB_PORT, set_logfocus, _init
 
 @app.errorhandler(404)
 def not_found_404(error):
@@ -65,7 +68,7 @@ def not_found_500(error):
 
 
 def root_static_file(name):
-    import flask
+    from flask import redirect
 
     def static_fn():
         import os
@@ -74,7 +77,7 @@ def root_static_file(name):
             return open(fn).read()
         import logging
         logging.critical("root_static_file: file %s not found!" % fn)
-        return flask.redirect(404)
+        return redirect(404)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
 map(root_static_file, ['favicon.ico'])
 
@@ -82,6 +85,7 @@ map(root_static_file, ['favicon.ico'])
 @app.route("/robots.txt")
 def robots_txt():
     if "www.lmfdb.org".lower() in request.url_root.lower():
+        import os
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
@@ -133,7 +137,7 @@ def set_menu_cookie(response):
 
 @app.route('/_menutoggle/<show>')
 def menutoggle(show):
-    from flask import g
+    from flask import g, redirect
     g.show_menu = show != "False"
     url = request.referrer or url_for('index')
     return redirect(url)
@@ -154,6 +158,7 @@ def example(blah=None):
 @app.route("/ModularForm/")
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
+    from flask import redirect
     return redirect(url_for("mf.render_modular_form_main_page"))
     # return render_template("modular_form_space.html", info = { })
 
@@ -212,15 +217,23 @@ def get_configuration():
         # but let's keep track of it anyway.
 
     # default options to pass to the app.run()
-    options = {"port": 37777, "host": "127.0.0.1", "debug": False}
+    flask_options = {"port": 37777, "host": "127.0.0.1", "debug": False}
     # Default option to pass to _init
     threading_opt = False 
     # the logfocus can be set to the string-name of a logger you want
     # follow on the debug level and all others will be set to warning
     logfocus = None
+    #FIXME logfile isn't used
     logfile = "flasklog"
-    import base
-    dbport = base.DEFAULT_DB_PORT
+
+    # default options to pass to the MongoClient
+    from pymongo import ReadPreference
+    mongo_client_options = {"port": DEFAULT_DB_PORT, "host": "localhost", "replicaset": None, "read_preference": ReadPreference.NEAREST};
+    read_preference_classes = {"PRIMARY": ReadPreference.PRIMARY, "PRIMARY_PREFERRED": ReadPreference.PRIMARY_PREFERRED , "SECONDARY": ReadPreference.SECONDARY, "SECONDARY_PREFERRED": ReadPreference.SECONDARY_PREFERRED, "NEAREST": ReadPreference.NEAREST };
+
+
+        
+    # deals with argv's
     if not sys.argv[0].endswith('nosetests'):
       try:
         import getopt
@@ -231,6 +244,7 @@ def get_configuration():
                                         # undocumented, see below
                                         "enable-reloader", "disable-reloader",
                                         "enable-debugger", "disable-debugger",
+                                        "enable-profiler"
                                         ])
         except getopt.GetoptError, err:
             sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
@@ -242,15 +256,16 @@ def get_configuration():
                 usage()
                 sys.exit()
             elif opt in ("-p", "--port"):
-                options["port"] = int(arg)
+                flask_options["port"] = int(arg)
             elif opt in ("-h", "--host"):
-                options["host"] = arg
+                flask_options["host"] = arg
+            #FIXME logfile isn't used
             elif opt in ("-l", "--log"):
                 logfile = arg
             elif opt in ("--dbport"):
-                dbport = int(arg)
+                mongo_client_options["port"] = int(arg)
             elif opt == "--debug":
-                options["debug"] = True
+                flask_options["debug"] = True
             elif opt == "--logfocus":
                 logfocus = arg
                 logging.getLogger(arg).setLevel(logging.DEBUG)
@@ -259,26 +274,83 @@ def get_configuration():
             # --debug is set, in which case they default to True but can
             # be turned off)
             elif opt == "--enable-reloader":
-                options["use_reloader"] = True
+                flask_options["use_reloader"] = True
             elif opt == "--disable-reloader":
-                options["use_reloader"] = False
+                flask_options["use_reloader"] = False
             elif opt == "--enable-debugger":
-                options["use_debugger"] = True
+                flask_options["use_debugger"] = True
             elif opt == "--disable-debugger":
-                options["use_debugger"] = False
+                flask_options["use_debugger"] = False
+            elif opt =="--enable-profiler":
+                flask_options["PROFILE"] = True
       except:
           pass # something happens on the server -> TODO: FIXME
-    return { 'flask_options' : options, 'dbport' : dbport}
+    
+    #deals with kwargs for mongoclient 
+    import os
+    #perhaps the filename could be an argv
+    mongo_client_config_filename = "mongoclient.config"
+    """
+    Example mongoclient.config equivalent to default
+    [db]
+    port = 37010
+    host = localhost
+    replicaset =
+    read_preference = NEAREST
+    """
+    config_dir = '/'.join( os.path.dirname(os.path.abspath(__file__)).split('/')[0:-1])
+    mongo_client_config_filename = '{0}/{1}'.format(config_dir,mongo_client_config_filename)
+    if os.path.exists(mongo_client_config_filename):
+        from ConfigParser import ConfigParser;
+        parser = ConfigParser()
+        parser.read(mongo_client_config_filename);
+        for key, value in parser.items("db"):
+            if key in mongo_client_options.keys():
+                if key == "port":
+                    mongo_client_options["port"] = int(value);
+                elif key == "read_preference":
+                    if value in read_preference_classes:
+                        mongo_client_options["read_preference"] = read_preference_classes[value];
+                    else:
+                        try:
+                            mongo_client_options["read_preference"] = int(value);
+                        except ValueError:
+                            #it wasn't a number...
+                            pass;
+                elif key == "replicaset":
+                    #if the string is empty
+                    if not value:
+                        #enforcing None to be the default if
+                        mongo_client_options["replicaset"] = None
+                    else: 
+                        mongo_client_options["replicaset"] = value
+                else:
+                    mongo_client_options[key] = value        
 
-configuration = get_configuration()
+
+
+
+    return { 'flask_options' : flask_options, 'mongo_client_options' : mongo_client_options}
+
+configuration = None
+
 
 def main():
-    base.set_logfocus(logfocus)
+    set_logfocus(logfocus)
     logging.info("... done.")
 
     # just for debugging
     # if options["debug"]:
     #  logging.info(str(app.url_map))
+
+    global configuration
+    if not configuration:
+        configuration = get_configuration()
+    if "PROFILE" in configuration['flask_options'] and configuration['flask_options']["PROFILE"]:
+        print "Profiling!"
+        from werkzeug.contrib.profiler import ProfilerMiddleware
+        app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions = [30], sort_by=('cumulative','time','calls'))
+        del configuration['flask_options']["PROFILE"]
 
     app.run(**configuration['flask_options'])
 
@@ -300,9 +372,10 @@ if True:
     ch.setFormatter(formatter)
     root_logger.addHandler(ch)
 
+    if not configuration:
+        configuration = get_configuration()
     logging.info("configuration: %s" % configuration)
-    import base
-    base._init(configuration['dbport'])
+    _init(**configuration['mongo_client_options'])
     app.logger.addHandler(file_handler)
 
 def getDownloadsFor(path):

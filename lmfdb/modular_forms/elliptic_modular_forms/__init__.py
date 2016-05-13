@@ -8,10 +8,13 @@ default_bprec = 53  # The default number of bits of precision to compute for flo
 default_display_bprec = 26  # The default number of bits of precision to display for floating point data
 from sage.env import SAGE_VERSION
 version_major, version_minor = [int(x) for x in SAGE_VERSION.split('.')[:2]]
-if (version_major, version_minor) >= (6,8):
-    emf_version = 1.3
-else:
-    emf_version = 1.1
+#if (version_major, version_minor) >= (6,9):
+#    emf_version = 1.3
+#elif (version_major, version_minor) >= (6,8):
+#    emf_version = 1.3
+#else:
+#    emf_version = 1.1
+emf_version = 1.3
 
 EMF_TOP = "Holomorphic Modular Forms"  # The name to use for the top of this catergory
 EMF = "emf"  # The current blueprint name
@@ -28,7 +31,7 @@ N_max_db = 5000
 k_max_db = 12
 N_max_extra_comp = 500
 
-use_cache= True
+use_cache = True
 
 import views
 import backend

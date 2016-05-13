@@ -19,13 +19,18 @@ _curdir = os.path.dirname(os.path.abspath(__file__))
 contribs = yaml.load_all(open(os.path.join(_curdir, "..", "CONTRIBUTORS.yaml")))
 contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 
+
+
+
 @app.route("/acknowledgment")
 def acknowledgment():
-    return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs)
+    bread = [("Acknowledgments" , '')]
+    return render_template("acknowledgment.html", title="Acknowledgments", contribs = contribs, bread = bread)
 
-@app.route("/workshops")
+@app.route("/acknowledgment/activities")
 def workshops():
-    return render_template("workshops.html", title="LMFDB Workshops", contribs = contribs)
+    bread = [("Acknowledgments" , url_for('.acknowledgment')) , ("Activities", '')]
+    return render_template("workshops.html", title="LMFDB Activities", contribs = contribs, bread = bread)
 
 
 class Box(object):
@@ -61,13 +66,14 @@ def index():
         the_boxes = load_boxes()
     boxes = the_boxes
     tmpl = "index-boxes.html"
+    bread = None
     # We used to have an old version of the home page:
     # tmpl = "index-boxes.html" if g.BETA else "index.html"
 
     return render_template(tmpl,
         titletag="The L-functions and modular forms database",
         title="",
-        bread=None,
+        bread=bread,
         boxes = boxes)
 
 # Harald suggested putting the following in base.pybut it does not work either there or here!
@@ -119,17 +125,22 @@ def introduction_features():
     return render_template(_single_knowl, title="Features", kid='intro.features', body_class=_bc, bread=b)
 
 
-@app.route("/intro/tutorial")
-def introduction_tutorial():
+@app.route("/intro/zetatour")
+def introduction_zetatour():
     b = bread()
-    b.append(('Tutorial', url_for("introduction_tutorial")))
-    return render_template(_single_knowl, title="Tutorial", kid='intro.tutorial', body_class=_bc, bread=b)
+    b.append(('Tutorial', url_for("introduction_zetatour")))
+    return render_template(_single_knowl, title="A tour of the Riemann zeta function", kid='intro.tutorial', body_class=_bc, bread=b)
 
 
 @app.route("/bigpicture")
 def bigpicture():
     b = [('Big Picture', url_for('bigpicture'))]
     return render_template("bigpicture.html", title="A Map of the LMFDB", body_class=_bc, bread=b)
+
+@app.route("/universe")
+def universe():
+    b = [('LMFDB universe', url_for('universe'))]
+    return render_template("universe.html", title="The LMFDB universe", body_class=_bc, bread=b)
 
 
 @app.route("/roadmap")
@@ -138,7 +149,85 @@ def roadmap():
     b = [(t, url_for('roadmap'))]
     return render_template('roadmap.html', title=t, body_class=_bc, bread=b)
 
+@app.route("/news")
+def news():
+    t = "News"
+    b = [(t, url_for('news'))]
+    return render_template(_single_knowl, title="LMFDB in the news", kid='doc.news.in_the_news', body_class=_bc, bread=b)
+
 ## INTRO PAGES END
+
+@app.route('/Variety')
+def varieties():
+    t = 'Varieties'
+    b = [(t, url_for('varieties'))]
+    lm = [('History of varieties', '/Variety/history')]
+    return render_template('single.html', title=t, kid='varieties.about', bread=b) #, learnmore=lm)
+
+
+@app.route("/Variety/history")
+def varieties_history():
+    t = 'Varieties'
+    b = [(t, url_for('varieties'))]
+    b.append(('History', url_for("varieties_history")))
+    return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
+
+@app.route("/ModularForm/GL2/Q/holomorphic/history")
+def holomorphic_mf_history():
+    t = 'History'
+    b = [("Modular forms", url_for('modular_form_toplevel'))]
+    b.append(('Holomorphic', url_for("emf.render_elliptic_modular_forms")))
+    b.append(('History', url_for("holomorphic_mf_history")))
+    return render_template(_single_knowl, title="A brief history of holomorphic GL(2) modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
+
+
+@app.route('/Field')
+def fields():
+    t = 'Fields'
+    b = [(t, url_for('fields'))]
+    lm = [('History of fields', '/Field/history')]
+    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
+
+@app.route("/Field/history")
+def fields_history():
+    t = 'Fields'
+    b = [(t, url_for('fields'))]
+    b.append(('History', url_for("fields_history")))
+    return render_template(_single_knowl, title="A brief history of fields", kid='f.history', body_class=_bc, bread=b)
+
+
+@app.route('/Representation')
+def representations():
+    t = 'Representations'
+    b = [(t, url_for('representations'))]
+    lm = [('History of representations', '/Representation/history')]
+    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
+
+
+@app.route("/Representation/history")
+def representations_history():
+    t = 'Representations'
+    b = [(t, url_for('representations'))]
+    b.append(('History', url_for("representations_history")))
+    return render_template(_single_knowl, title="A brief history of representations", kid='rep.history', body_class=_bc, bread=b)
+
+
+
+@app.route('/Group')
+def groups():
+    t = 'Groups'
+    b = [(t, url_for('groups'))]
+    lm = [('History of groups', '/Group/history')]
+    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
+
+
+@app.route("/Group/history")
+def groups_history():
+    t = 'Groups'
+    b = [(t, url_for('groups'))]
+    b.append(('History', url_for("groups_history")))
+    return render_template(_single_knowl, title="A brief history of groups", kid='g.history', body_class=_bc, bread=b)
+
 
 
 @app.route("/editorial-board")

@@ -68,17 +68,20 @@ import random
 import glob
 import pymongo
 from lmfdb import base
-from lmfdb.website import dbport
 from sage.rings.all import ZZ
 
-print "calling base._init()"
-dbport=37010
-base._init(dbport, '')
+from lmfdb.website import DEFAULT_DB_PORT as dbport
+from pymongo.mongo_client import MongoClient
 print "getting connection"
-conn = base.getDBConnection()
+C= MongoClient(port=dbport)
+print "authenticating on the elliptic_curves database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['elliptic_curves'].authenticate(username, password)
 print "setting curves"
-# curves = conn.elliptic_curves.test
-curves = conn.elliptic_curves.curves
+curves = C.elliptic_curves.curves
 
 # The following create_index command checks if there is an index on
 # label, conductor, rank and torsion. If there is no index it creates
@@ -359,13 +362,15 @@ def alllabels(line):
         raise ValueError("Inconsistent data in alllabels file: %s" % line)
     label = data[0] + data[1] + data[2]
     lmfdb_label = data[3] + '.' + data[4] + data[5]
+    lmfdb_iso = data[3] + '.' + data[4]
+    iso_nlabel = numerical_iso_label(lmfdb_iso)
     return label, {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
         'number': int(data[2]),
         'lmfdb_label': lmfdb_label,
-        'lmfdb_iso': data[3] + '.' + data[4],
-        'iso_nlabel': numerical_iso_label(C['lmfdb_iso']),
+        'lmfdb_iso': lmfdb_iso,
+        'iso_nlabel': iso_nlabel,
         'lmfdb_number': data[5]
     }
 

@@ -24,11 +24,7 @@ login_manager = LoginManager()
 import pwdmanager
 from pwdmanager import LmfdbUser, LmfdbAnonymousUser
 
-# TODO update this url, needed for the user login token
-base_url = "http://www.l-functions.org"
-# TODO: Not sure this should be changed from l-functions -> lmfdb, because
-# I don't really understand how this is used. Paul
-
+base_url = "http://beta.lmfdb.org"
 
 @login_manager.user_loader
 def load_user(userid):
@@ -120,10 +116,11 @@ def set_info():
 @login_page.route("/profile/<userid>")
 @login_required
 def profile(userid):
-    try:
-        getDBConnection().knowledge.knowls.ensure_index('title')
-    except pymongo.errors.OperationFailure:
-        pass
+    # See issue #1169
+    #try:
+    #    getDBConnection().knowledge.knowls.ensure_index('title')
+    #except pymongo.errors.OperationFailure:
+    #    pass
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
     userknowls = getDBConnection(

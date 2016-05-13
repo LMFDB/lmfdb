@@ -1,4 +1,7 @@
+import os
+import yaml
 from flask import url_for
+from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text, Infinity
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
@@ -31,6 +34,7 @@ field_list = {}  # cached collection of enhanced WebNumberFields, keyed by label
 def FIELD(label):
     nf = WebNumberField(label, gen_name=special_names.get(label, 'a'))
     nf.parse_NFelt = lambda s: nf.K()([QQ(str(c)) for c in s])
+    nf.latex_poly = web_latex(nf.poly())
     return nf
 
 def make_field(label):
@@ -58,7 +62,7 @@ def EC_nf_plot(E, base_field_gen_name):
         return plot([])
     prec = 53
     maxprec = 10 ** 6
-    while prec < maxprec:  # Try to base change to R. May fail if resulting curve is almost singular, so increase precision.
+    while prec < maxprec:  # Try to base change to RR. May fail if resulting curve is almost singular, so increase precision.
         try:
             SR = K.embeddings(RealField(prec))
             X = [E.base_extend(s) for s in SR]
@@ -66,16 +70,32 @@ def EC_nf_plot(E, base_field_gen_name):
         except ArithmeticError:
             prec *= 2
     if prec >= maxprec:
-        return text("Unable to plot", (1, 1), fontsize="xx-large")
-    X = [e.plot() for e in X]
+        return text("Unable to plot", (1, 1), fontsize=36)
+    try:
+        X = [e.plot() for e in X]
+    except:
+        return text("Unable to plot", (1, 1), fontsize=36)
     xmin = min([x.xmin() for x in X])
     xmax = max([x.xmax() for x in X])
     ymin = min([x.ymin() for x in X])
     ymax = max([x.ymax() for x in X])
-    cols = ["blue", "red", "green", "orange", "brown"]  # Preset colours, because rainbow tends to return too pale ones
-    if n1 > len(cols):
-        cols = rainbow(n1)
-    return sum([EC_R_plot([SR[i](a) for a in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(SR[i].im_gens()[0].n(20))) for i in range(n1)])
+    cols = rainbow(n1) # Default choice of n colours
+    # Howver, these tend to be too pale, so we preset them for small values of n
+    if n1==1:
+        cols=["blue"]
+    elif n1==2:
+        cols=["red","blue"]
+    elif n1==3:
+        cols=["red","limegreen","blue"]
+    elif n1==4:
+        cols = ["red", "orange", "forestgreen", "blue"]
+    elif n1==5:
+        cols = ["red", "orange", "forestgreen", "blue", "darkviolet"] 
+    elif n1==6:
+        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"] 
+    elif n1==7:
+        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"] 
+    return sum([EC_R_plot([SR[i](a) for a in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(SR[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)])
 
 
 class ECNF(object):
@@ -180,13 +200,16 @@ class ECNF(object):
         self.j = web_latex(j)
 
         self.fact_j = None
+        # See issue 1258: some j factorizations work bu take too long (e.g. EllipticCurve/6.6.371293.1/1.1/a/1)
+        # If these are really wanted, they could be precomputed and stored in the db
         if j.is_zero():
             self.fact_j = web_latex(j)
         else:
-            try:
-                self.fact_j = web_latex(j.factor())
-            except (ArithmeticError, ValueError):  # if not all prime ideal factors principal
-                pass
+            if self.field.K().degree() < 3: #j.numerator_ideal().norm()<1000000000000:
+                try:
+                    self.fact_j = web_latex(j.factor())
+                except (ArithmeticError, ValueError):  # if not all prime ideal factors principal
+                    pass
 
         # CM and End(E)
         self.cm_bool = "no"
@@ -198,6 +221,14 @@ class ECNF(object):
                 self.End = "\(\Z[\sqrt{%s}]\)" % (d4)
             else:
                 self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
+            # The line below will need to change once we have curves over non-quadratic fields
+            # that contain the Hilbert class field of an imaginary quadratic field
+            if self.signature == [0,1] and ZZ(-self.abs_disc*self.cm).is_square():
+                self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.U(1)'),'\\mathrm{U}(1)')
+            else:
+                self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.N(U(1))'),'N(\\mathrm{U}(1))')
+        else:
+            self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.SU(2)'),'\\mathrm{SU}(2)')
 
         # Q-curve / Base change
         self.qc = "no"
@@ -229,7 +260,7 @@ class ECNF(object):
             self.rk_bnds = "%s...%s" % tuple(self.rank_bounds)
         except AttributeError:
             self.rank_bounds = [0, Infinity]
-            self.rk_bnds = "not recorded"
+            self.rk_bnds = "not available"
 
         # Generators
         try:
@@ -237,7 +268,7 @@ class ECNF(object):
                     for P in self.gens]
             self.gens = ", ".join([web_latex(P) for P in gens])
             if self.rk == "?":
-                self.reg = "unknown"
+                self.reg = "not available"
             else:
                 if gens:
                     self.reg = E.regulator_of_points(gens)
@@ -245,8 +276,8 @@ class ECNF(object):
                     self.reg = 1  # otherwise we only get 1.00000...
 
         except AttributeError:
-            self.gens = "not recorded"
-            self.reg = "unknown"
+            self.gens = "not available"
+            self.reg = "not available"
             try:
                 if self.rank == 0:
                     self.reg = 1
@@ -271,27 +302,34 @@ class ECNF(object):
         self.urls = {}
         # It's useful to be able to use this class out of context, when calling url_for will fail:
         try:
-            self.urls['curve'] = url_for(".show_ecnf", nf=self.field_label, conductor_label=self.conductor_label, class_label=self.iso_label, number=self.number)
+            self.urls['curve'] = url_for(".show_ecnf", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number)
         except RuntimeError:
             return
-        self.urls['class'] = url_for(".show_ecnf_isoclass", nf=self.field_label, conductor_label=self.conductor_label, class_label=self.iso_label)
-        self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=self.conductor_label)
+        self.urls['class'] = url_for(".show_ecnf_isoclass", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label)
+        self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=quote(self.conductor_label))
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
 
-        if self.field.is_real_quadratic():
+        sig = self.signature
+        real_quadratic = sig == [2,0]
+        totally_real = sig[1] == 0
+        imag_quadratic = sig == [0,1]
+
+        if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
+            self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
 
-        if self.field.is_imag_quadratic():
+        if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field_label=self.field_label, jinv=self.jinv))]
-        if self.field.is_real_quadratic():
+        if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
-        if self.field.is_imag_quadratic():
-            self.friends += [('Bianchi Modular Form %s not yet available' % self.bmf_label, '')]
+            self.friends += [('L-function', self.urls['Lfunction'])]
+        if imag_quadratic:
+            self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
 
         self.properties = [
             ('Base field', self.field.field_pretty()),
@@ -306,7 +344,8 @@ class ECNF(object):
         self.properties += [
             ('Conductor', self.cond),
             ('Conductor norm', self.cond_norm),
-            ('j-invariant', self.j),
+            # See issue #796 for why this is hidden
+            # ('j-invariant', self.j),
             ('CM', self.cm_bool)]
 
         if self.base_change:
@@ -325,3 +364,36 @@ class ECNF(object):
 
         for E0 in self.base_change:
             self.friends += [('Base-change of %s /\(\Q\)' % E0, url_for("ec.by_ec_label", label=E0))]
+
+        self._code = None # will be set if needed by get_code()
+
+    def code(self):
+        if self._code == None:
+            self.make_code_snippets()
+        return self._code
+
+    def make_code_snippets(self):
+        # read in code.yaml from current directory:
+
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+
+        # Fill in placeholders for this specific curve:
+
+        gen = self.field.generator_name().replace("\\","") # phi not \phi
+        for lang in ['sage', 'magma', 'pari']:
+            self._code['field'][lang] = self._code['field'][lang] % self.field.poly()
+            if gen != 'a':
+                self._code['field'][lang] = self._code['field'][lang].replace("<a>","<%s>" % gen)
+                self._code['field'][lang] = self._code['field'][lang].replace("a=","%s=" % gen)
+
+        for lang in ['sage', 'magma', 'pari']:
+            self._code['curve'][lang] = self._code['curve'][lang] % self.ainvs
+
+        for k in self._code:
+            if k != 'prompt':
+                for lang in self._code[k]:
+                    self._code[k][lang] = self._code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self._code[k][lang][-1])==0:
+                        self._code[k][lang] = self._code[k][lang][:-1]

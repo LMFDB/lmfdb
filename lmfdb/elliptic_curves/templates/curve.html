@@ -5,10 +5,11 @@
 </style>
 
 {% macro code(codes, item) %}
-{% for L in codes[item] %}
+{% set code = codes() %}
+{% for L in code[item] %}
 {# N.B. whitespace is preserved in the following div since the CSS has
 white-space: pre in order to keep line breaks! #}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for c in code[item][L] %}{{code.prompt[L]}}&nbsp;{{c}}<br>{% endfor %}</div>
 {% endfor %}
 {% endmacro %}
 
@@ -81,7 +82,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     </div>
 #}
 
-    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
     <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
     <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
 
@@ -110,10 +111,10 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
       {{ code(data.code,'gens') }}
       <div style='overflow:auto'><p>
       <table>
-        <tr><td>\(P\)</td>
+        <tr><td>\(P\)</td><td>&nbsp;=&nbsp;</td>
           {% for pt in data.mw.generators %}<td>{{pt}}</td>{% endfor %}
           </tr>
-        <tr><td>\(\hat{h}(P)\)</td>
+        <tr><td>\(\hat{h}(P)\)</td><td>&nbsp;&approx;&nbsp;</td>
           {% for ht in data.mw.heights %}<td>{{ht}}</td>{% endfor %}
           </tr>
         </table>
@@ -193,6 +194,12 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         </td>
         </tr>
 
+        <tr>
+        <td> \( \text{ST} (E) \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.data.ST|safe }}</td>
+        </tr>
+
        </table>
 
     <h2> {{ KNOWL('ec.q.bsd_invariants', title='BSD invariants') }} </h2>
@@ -270,7 +277,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         <tr>
         <td> &#1064;\(_{\text{an}} \) </td>
         <td>&nbsp;
-          {% if data.rank > 1 %}&approx;{% else %}={% endif %}
+          {%- if data.rank > 1 -%}&approx;{% else %}={% endif %}
         &nbsp;</td>
         <td>\({{data.bsd.sha }}\)
           {% if data.rank > 1 %}
@@ -316,7 +323,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
       <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} attached to the curve </h3>
     {{ code(data.code,'L1') }}
     <p>
-        \( {{ data.bsd.lder_name }} = {{ data.bsd.lder }} \)
+        \( {{ data.bsd.lder_name }} \) &approx; \( {{ data.bsd.lder }} \)
     </p>
 
     <h2> Local data </h2>
@@ -374,7 +381,7 @@ to this elliptic curve is surjective.
 <p>
 The image of the {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached to this elliptic curve
 is the subgroup of $\GL(2,\Z_2)$ with {{KNOWL('ec.rouse_label', title='Rouse label')}}
- <a href="{{data.data.twoadic_rouse_url}}">{{data.twoadic_label}}</a>.
+ <a href="{{data.data.twoadic_rouse_url}}" target="_blank">{{data.twoadic_label}}</a>.
 </p>
 <p>
 This subgroup is the pull-back of the subgroup of
@@ -394,7 +401,7 @@ data.twoadic_index }}.
 The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
 representations')}} of an elliptic curve with {{
 KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
-are non-surjective for all primes \( p \).  We only show the image for
+are non-surjective for all odd primes \( p \).  We only show the image for
 primes \( p\le 37 \).
 {% else %}
 The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
@@ -478,7 +485,7 @@ $(function() {
 });
 </script>
 
-    {% set KNOWL_ID = "ec.q.%s"|format(data['label']) %}
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
     <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% if DEBUG %}

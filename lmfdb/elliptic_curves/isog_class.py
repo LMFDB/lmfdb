@@ -8,6 +8,7 @@ import lmfdb.base
 from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 
 import sage.all
 from sage.all import EllipticCurve, latex, matrix
@@ -129,8 +130,9 @@ class ECisog_class(object):
         N, iso, number = split_lmfdb_label(self.lmfdb_iso)
 
         self.newform = web_latex(self.E.q_eigenform(10))
-        self.newform_label = self.lmfdb_iso.replace('.', '.2')
-        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=0, label=iso)
+        self.newform_label = newform_label(N,2,1,iso)
+        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
+        newform_exists_in_db = is_newform_in_db(self.newform_label)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
 
@@ -143,11 +145,14 @@ class ECisog_class(object):
                              ('optimal',self.optimal_flags[i])])
                        for i, c in enumerate(self.db_curves)]
 
-        self.friends = [
-        ('L-function', self.lfunction_link),
-        ('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
-        ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso)),
-        ('Modular form ' + self.newform_label, self.newform_link)]
+        self.friends =  [('L-function', self.lfunction_link)]
+        if not self.CM:
+            if int(N)<=300:
+                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso))]
+            if int(N)<=50:
+                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', label=self.lmfdb_iso))]
+        if newform_exists_in_db:
+            self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
 
         self.properties = [('Label', self.lmfdb_iso),
                            ('Number of curves', str(self.ncurves)),
@@ -158,7 +163,7 @@ class ECisog_class(object):
                            ]
 
 
-        self.downloads = [('Download coeffients of newform', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=100)),
+        self.downloads = [('Download coefficients of newform', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=100)),
                          ('Download stored data for all curves', url_for(".download_EC_all", label=self.lmfdb_iso))]
 
         if self.lmfdb_iso == self.iso:

@@ -1,74 +1,76 @@
 {% extends 'homepage.html' %}
 {% block content %}
 <p>
-  The database contains information about {{ number_of_samples }} <em>samples</em> of
-  scalar and vector valued Siegel modular forms or associated $L$-series of degree $\ge 2$. Moreover,
-  it provides information about {{ number_of_collections }}
-  <a title="Collection of Siegel modular forms [mf.siegel.collection]" knowl="mf.siegel.collection" kwargs="">
-    collections of Siegel modular forms
-  </a>.
+  The database contains information about {{ number_of_samples
+  }} examples of scalar and vector
+  valued <a knowl="mf.siegel"> Siegel modular forms</a>, as well as
+  dimension formulas for spaces of Siegel modular forms.  The examples
+  not in the image of a lift from a lower rank group are almost all of
+  the known examples in the literature, and most published dimension
+  formulas are included.
 </p> 
 
-<h2>Browse
-  <a class="knowl-title" knowl="mf.siegel">
-    samples
+<h2>Browse examples</h2>
+<p>
+In each of these spaces we give explicit examples of Siegel modular forms,
+as well as dimension formulas and some additional information.
+</p>
+<p>
+<a href="/ModularForm/GSp/Q/Sp4Z_j/">
+    $M_{k,j}\left(\textrm{Sp}(4,\mathbb{Z})\right)$ 
+</a>
+<br />
+<a href="/ModularForm/GSp/Q/Kp/">
+    $M_2\left(K(p)\right)$ 
+ </a>
+<br />
+ <a href="/ModularForm/GSp/Q/Sp6Z/">
+    $M_{k}\left(\textrm{Sp}(6,\mathbb{Z})\right)$ 
+ </a>
+ &nbsp;
+  <a href="/ModularForm/GSp/Q/Sp8Z/">
+    $M_k\left(\textrm{Sp}(8,\mathbb{Z})\right)$ 
   </a>
-</h2>
+</p>
+
+<h2>Browse dimension formulas</h2>
 <p>
-  By collection:
-  {% for col in cols_with_forms|sort( attribute = 'order') %}
-  <a href="{{ col.name() }}">
-    ${{ col.latex_name() }}$ 
+For these spaces we provide dimension formulas and some additional information.
+</p>
+<p>
+   <a href="/ModularForm/GSp/Q/Gamma0_2/">
+    $M_{k,j}\left(\Gamma_0(2)\right)$
+   </a>
+   &nbsp;
+    <a href="/ModularForm/GSp/Q/Gamma1_2/">
+    $M_{k,j}\left(\Gamma_1(2)\right)$
+    </a>
+    &nbsp;
+    <a href="/ModularForm/GSp/Q/Gamma_2/">
+    $M_{k,j}\left(\Gamma(2)\right)$
   </a>
-  &nbsp;
-  {% endfor %}
-</p>
-<p>
-  By degree:
-  {% for n in [2,3,4] %}
-  <a href = "{{ url_for( 'ModularForm_GSp4_Q_top_level', page='search_results', query='{\"degree\":\"' ~ n ~ '\"}') }}">${{ n }}$</a>
-  {% endfor %}
-</p>
-<p>
-  By weight:
-  {% set d = { 1:9,10:19,20:29,30:39,40:49,50:99} %}
-  {% for n in d|sort %}
-  <a href = "{{ url_for( 'ModularForm_GSp4_Q_top_level', page='search_results', query='{\"weight\":{ \"$gte\":\"' ~ n ~ '\", \"$lte\":\"' ~ d[n] ~'\"}}') }}">${{ n }}$-${{ d[n] }}$</a>
-  {% endfor %}  
-</p>
-<p>
-  By degree of its field of definition:
-  {% for n in [1,2,3,4,5,6,7,8] %}
-  <a href = "{{ url_for( 'ModularForm_GSp4_Q_top_level', page='search_results', query='{\"degree_of_field\":\"' ~ n ~ '\"}') }}">${{ n }}$</a>
-  {% endfor %}
-</p>
-
-</br>
-
-<h2>Browse collections</h2>
-<p>
-  {% for col in cols|sort( attribute = 'order') %}
-  <a href="{{ col.name() }}">
-    ${{ col.latex_name() }}$
+  <br />
+    <a href="/ModularForm/GSp/Q/Gamma0_3/">
+    $M_k\left(\Gamma_0(3)\right)$
+  </a> &nbsp;
+    <a href="/ModularForm/GSp/Q/Gamma0_3_psi_3/">
+    $M_k\left(\Gamma_0(3),\psi_3\right)$
   </a>
-  &nbsp;
-  {% endfor %}
+  <br />
+    <a href="/ModularForm/GSp/Q/Gamma0_4/">
+    $M_k\left(\Gamma_0(4)\right)$
+    </a>
+    &nbsp;
+    <a href="/ModularForm/GSp/Q/Gamma0_4_psi_4/">
+    $M_k\left(\Gamma_0(4),\psi_4\right)$
+  </a>
+  <br />
+    <a href="/ModularForm/GSp/Q/Gamma0_4_half/">
+    $M_{k-1/2}\left(\Gamma_0(4)\right)$
+  </a>
+  <br />
+  
 </p>
 
-<br/>
-
-<h2>Search for dimensions</h2>
-{% include 'includes/form_for_dimension_search.html' %}
-
-<h2>Search for samples</h2>
-<p>{% include 'includes/form_for_sample_search.html' %}</p>
-
-<h2>
-  Find a specific form by its
-  <a title="LMFDB label of a Siegel modular form [smf.lmfd_label]" knowl="ec.lmfdb_label" kwargs="">
-    LMFDB label
-  </a>
-</h2>
-<p>{% include 'includes/form_for_label_search.html' %}</p>
 
 {% endblock %}

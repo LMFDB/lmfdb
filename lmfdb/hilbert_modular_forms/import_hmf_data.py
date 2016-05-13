@@ -5,13 +5,21 @@ import sys
 import time
 import sage.misc.preparser
 import subprocess
-from lmfdb import base
-from lmfdb.website import dbport
+from sage.interfaces.magma import magma
 
-base._init(dbport, '')
-C = base.getDBConnection()
+from lmfdb.website import DEFAULT_DB_PORT as dbport
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
+
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['hmfs'].authenticate(username, password)
 hmf_forms = C.hmfs.forms
 hmf_fields = C.hmfs.fields
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 fields = C.numberfields.fields
 
 # hmf_forms.create_index('field_label')
@@ -31,9 +39,18 @@ def parse_label(field_label, weight, level_label, label_suffix):
         weight_label = str(weight) + '-'
     return field_label + '-' + weight_label + level_label + '-' + label_suffix
 
-P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
+P = sage.rings.polynomial.polynomial_ring_constructor.PolynomialRing(sage.rings.rational_field.RationalField(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
 
+
+def add_narrow_classno_data():
+    # Adds narrow class number data to all fields
+    for F in hmf_fields.find():
+         Fcoeff = fields.find_one({'label' : F['label']})['coeffs']
+         magma.eval('F<w> := NumberField(Polynomial([' + str(Fcoeff) + ']));')
+         hplus = magma.eval('NarrowClassNumber(F);')
+         hmf_fields.update({ '_id': F['_id'] }, { "$set": {'narrow_class_no': int(hplus)} })
+         print Fcoeff, hplus
 
 def import_all_data(n):
     nstr = str(n)
@@ -324,3 +341,31 @@ def attach_new_label(f):
     except ValueError:
         hmf_forms.remove(f)
         print "REMOVED!"
+
+def make_stats():
+    degrees = hmf_fields.distinct('degree')
+    stats = {}
+    for d in degrees:
+        statsd = {}
+        statsd['fields'] = [F['label'] for F in hmf_fields.find({'degree':d},['label']).hint('degree_1')]
+        field_sort_key = lambda F: int(F.split(".")[2]) # by discriminant
+        statsd['fields'].sort(key=field_sort_key)
+        statsd['nfields'] = len(statsd['fields'])
+        statsd['nforms'] = hmf_forms.find({'deg':d}).hint('deg_1').count()
+        statsd['maxnorm'] = max(hmf_forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
+        statsd['counts'] = {}
+        for F in statsd['fields']:
+            #print("Field %s" % F)
+            res = [f['level_norm'] for f in hmf_forms.find({'field_label':F}, ['level_norm'])]
+            statsdF = {}
+            statsdF['nforms'] = len(res)
+            statsdF['maxnorm'] = max(res+[0])
+            statsd['counts'][F] = statsdF
+        stats[d] = statsd
+    return stats
+
+# To store these in a yaml file, after loading the current file do
+# sage: hst = make_stats() # takes a few minutes
+# sage: sage: hst_yaml_file = open("lmfdb/hilbert_modular_forms/hst_stats.yaml", 'w')
+# sage: yaml.safe_dump(hst, hst_yaml_file)
+# sage: hst_yaml_file.close()

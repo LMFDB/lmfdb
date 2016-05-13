@@ -1,5 +1,5 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <script type="text/javascript">
@@ -48,7 +48,7 @@ text-align: center;
 </tr>
 {% for c in info.curves %}
 {% if c.optimal %}
-<tr bgcolor="lightgreen">
+<tr bgcolor="{{color.ec_background}}">
 {% else %}
 <tr>
 {% endif %}

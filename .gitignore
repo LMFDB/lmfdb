@@ -1,6 +1,6 @@
-password
-password.py
+password*
 config.ini
+mongoclient.config
 
 *.pyc
 *.pyo

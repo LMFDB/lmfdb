@@ -16,14 +16,32 @@ from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 
-print "calling base._init()"
-dbport = 37010
-init(dbport, '')
-print "getting connection"
-conn = getDBConnection()
+from lmfdb.website import DEFAULT_DB_PORT as dbport
+from pymongo.mongo_client import MongoClient
+C= MongoClient(port=dbport)
+C['admin'].authenticate('lmfdb', 'lmfdb')
+
+print "authenticating on the elliptic_curves database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['elliptic_curves'].authenticate(username, password)
 print "setting nfcurves"
-nfcurves = conn.elliptic_curves.nfcurves
-qcurves = conn.elliptic_curves.curves
+nfcurves = C.elliptic_curves.nfcurves
+qcurves = C.elliptic_curves.curves
+
+print "setting hmfs, forms, fields"
+hmfs = C.hmfs
+forms = hmfs.forms
+fields = hmfs.fields
+
+flabels = fields.distinct('label')
+flab2 = [fld for fld in flabels if '2.2.' in fld]
+flab3 = [fld for fld in flabels if '3.3.' in fld]
+flab4 = [fld for fld in flabels if '4.4.' in fld]
+flab5 = [fld for fld in flabels if '5.5.' in fld]
+flab6 = [fld for fld in flabels if '6.6.' in fld]
 
 #
 #
@@ -34,6 +52,7 @@ qcurves = conn.elliptic_curves.curves
 #
 
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
+from lmfdb.ecnf.import_ecnf_data import make_curves_line
 
 
 def make_conductor(ecnfdata, hfield):
@@ -46,9 +65,6 @@ def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
     real, check whether the ideal label agrees with the level_label of
     the associated Hilbert Modular Form.
     """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
     query = {}
     query['field_label'] = field_label
     query['conductor_norm'] = {'$gte': int(min_norm)}
@@ -116,9 +132,6 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
     real, test whether a Hilbert Modular Form exists with the same
     label.
     """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
     query = {}
     query['field_label'] = field_label
     query['number'] = 1  # only look at first curve in each isogeny class
@@ -371,12 +384,9 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     assumed totally real, for level norms in the given range, test
     whether an elliptic curve exists with the same label.
     """
-    hmfs = conn.hmfs
-    forms = hmfs.forms
-    fields = hmfs.fields
     query = {}
     query['field_label'] = field_label
-    if fields.count({'label': field_label}) == 0:
+    if fields.find({'label': field_label}).count() == 0:
         if verbose:
             print("No HMF data for field %s" % field_label)
         return None
@@ -388,6 +398,8 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     else:
         max_norm = 'infinity'
     cursor = forms.find(query)
+    cursor.sort([('level_norm', pymongo.ASCENDING)])
+    labels = [f['label'] for f in cursor]
     nfound = 0
     nnotfound = 0
     nok = 0
@@ -403,8 +415,9 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     # disagreement: e.g. curve_ap[conductor_label][iso_label] =
     # aplist.
 
-    for f in cursor:
-        curve_label = f['label']
+    for curve_label in labels:
+        # We find the forms again since otherwise the cursor might timeout during the loop.
+        f = forms.find_one({'label': curve_label})
         ec = nfcurves.find_one({'field_label': field_label, 'class_label': curve_label, 'number': 1})
         if ec:
             if verbose:
@@ -453,16 +466,17 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     else:
         return
 
+    if outfilename==None:
+        return
+
     # Step 2: for each newform for which there was no curve, create a
     # Magma file containing code to search for such a curve.
 
     # First output Magma code to define the field and primes:
-    if outfilename:
-        output_magma_field(field_label, K.K(), primes, outfilename)
-        if verbose:
-            print("...output definition of field and primes finished")
-    if outfilename:
-        outfile = file(outfilename, mode="a")
+    output_magma_field(field_label, K.K(), primes, outfilename)
+    if verbose:
+        print("...output definition of field and primes finished")
+    outfile = file(outfilename, mode="a")
 
     for nf_label in missing_curves:
         if verbose:
@@ -474,6 +488,218 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
             if verbose:
                 print("... found form, outputting Magma search code")
             output_magma_curve_search(K, form, outfilename, verbose=verbose)
+
+
+def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=None, verbose=False):
+    r""" Go through all Hilbert Modular Forms with the given field label,
+    assumed totally real, for level norms in the given range, test
+    whether an elliptic curve exists with the same label; if not, find
+    the curves using Magma; output these to a file.
+    """
+    query = {}
+    query['field_label'] = field_label
+    if fields.find({'label': field_label}).count() == 0:
+        if verbose:
+            print("No HMF data for field %s" % field_label)
+        return None
+
+    query['dimension'] = 1  # only look at rational newforms
+    query['level_norm'] = {'$gte': int(min_norm)}
+    if max_norm:
+        query['level_norm']['$lte'] = int(max_norm)
+    else:
+        max_norm = 'infinity'
+    cursor = forms.find(query)
+    cursor.sort([('level_norm', pymongo.ASCENDING)])
+    labels = [f['label'] for f in cursor]
+    nfound = 0
+    nnotfound = 0
+    nok = 0
+    missing_curves = []
+    K = HilbertNumberField(field_label)
+    primes = [P['ideal'] for P in K.primes_iter(100)]
+    curve_ap = {}  # curve_ap[conductor_label] will be a dict iso -> ap
+    form_ap = {}  # form_ap[conductor_label]  will be a dict iso -> ap
+
+    # Step 1: look at all newforms, check that there is an elliptic
+    # curve of the same label, and if so compare ap-lists.  The
+    # dicts curve_ap and form_ap store these when there is
+    # disagreement: e.g. curve_ap[conductor_label][iso_label] =
+    # aplist.
+
+    for curve_label in labels:
+        # We find the forms again since otherwise the cursor might timeout during the loop.
+        f = forms.find_one({'label': curve_label})
+        ec = nfcurves.find_one({'field_label': field_label, 'class_label': curve_label, 'number': 1})
+        if ec:
+            if verbose:
+                print("curve with label %s found in the database" % curve_label)
+            nfound += 1
+            ainvsK = [K.K()([QQ(str(c)) for c in ai]) for ai in ec['ainvs']]
+            E = EllipticCurve(ainvsK)
+            good_flags = [E.has_good_reduction(P) for P in primes]
+            good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
+            aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes[:30]]
+            f_aplist = [int(a) for a in f['hecke_eigenvalues'][:40]]
+            f_aplist = [ap for ap, flag in zip(f_aplist, good_flags) if flag][:30]
+            if aplist == f_aplist:
+                nok += 1
+                if verbose:
+                    print("Curve %s and newform agree!" % ec['short_label'])
+            else:
+                print("Curve %s does NOT agree with newform" % ec['short_label'])
+                if verbose:
+                    print("ap from curve: %s" % aplist)
+                    print("ap from  form: %s" % f_aplist)
+                if not ec['conductor_label'] in curve_ap:
+                    curve_ap[ec['conductor_label']] = {}
+                    form_ap[ec['conductor_label']] = {}
+                curve_ap[ec['conductor_label']][ec['iso_label']] = aplist
+                form_ap[ec['conductor_label']][f['label_suffix']] = f_aplist
+        else:
+            if verbose:
+                print("No curve with label %s found in the database!" % curve_label)
+            missing_curves.append(f['short_label'])
+            nnotfound += 1
+
+    # Report progress:
+
+    n = nfound + nnotfound
+    if nnotfound:
+        print("Out of %s newforms, %s curves were found in the database and %s were not found" % (n, nfound, nnotfound))
+    else:
+        print("Out of %s newforms, all %s had curves with the same label and ap" % (n, nfound))
+    if nfound == nok:
+        print("All curves agree with matching newforms")
+    else:
+        print("%s curves agree with matching newforms, %s do not" % (nok, nfound - nok))
+    if nnotfound:
+        print("%s missing curves" % len(missing_curves))
+    else:
+        return
+
+    # Step 2: for each newform for which there was no curve, call interface to Magma's EllipticCurveSearch()
+
+    if outfilename:
+        outfile = file(outfilename, mode="w")
+    def output(L):
+        if outfilename:
+            outfile.write(L)
+        if verbose:
+            sys.stdout.write(L)
+
+    for nf_label in missing_curves:
+        if verbose:
+            print("Curve %s is missing from the database..." % nf_label)
+        form = forms.find_one({'field_label': field_label, 'short_label': nf_label})
+        if not form:
+            print("... form %s not found!" % nf_label)
+        else:
+            if verbose:
+                print("... found form, calling Magma search")
+
+            N = K.ideal(form['level_label'])
+            neigs = len(form['hecke_eigenvalues'])
+            if verbose:
+                print("Using %s ap from Hilbert newform" % neigs)
+            Plist = [P['ideal'] for P in K.primes_iter(neigs)]
+            goodP = [(i, P) for i, P in enumerate(Plist) if not P.divides(N)]
+            label = form['short_label']
+            aplist = [int(form['hecke_eigenvalues'][i]) for i, P in goodP]
+            curves = EllipticCurveSearch(K.K(), Plist, N, aplist)
+            if not curves:
+                if verbose:
+                    print("No curves found by Magma, trying again...")
+                curves = EllipticCurveSearch(K.K(), Plist, N, aplist)
+                if verbose:
+                    if curves:
+                        print("Success!")
+                    else:
+                        print("Still no success, giving up")
+            #curves = EllipticCurveSearch(K.K(), [], N, [])
+            E = None
+            if curves:
+                E = curves[0]
+                print("%s curves for %s found, first is %s" % (len(curves),nf_label,E.ainvs()))
+            else:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("!!! No curves for %s found (using %s ap) !!!" % (nf_label,len(aplist)))
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+        if E!=None:
+            ec = {}
+            ec['field_label'] = field_label
+            ec['conductor_label'] = form['level_label']
+            ec['iso_label'] = form['label_suffix']
+            ec['number'] = int(1)
+            ec['conductor_ideal'] = form['level_ideal'].replace(" ","")
+            ec['conductor_norm'] = form['level_norm']
+            ai = E.ainvs()
+            ec['ainvs'] = [[str(c) for c in list(a)] for a in ai]
+            ec['cm'] = '?'
+            ec['base_change'] = []
+            output(make_curves_line(ec) + "\n")
+            if outfilename:
+                outfile.flush()
+
+def EllipticCurveSearch(K, Plist, N, aplist):
+    r""" Call Magma's own EllipticCurveSearch() function to find and
+    elliptic curve E defined over K with conductor N and ap as in the
+    list.
+
+    INPUT:
+
+    - `K` (number field) -- the base field
+    - `Plist` (list) -- a list of primes of K
+    - `N` (ideal) -- an integral ideal of K
+    - `aplist` (list) -- a list of integers a(P) indexed by the P in Plist not dividing N
+
+    OUTPUT:
+
+    A list (possibly empty) of elliptic curves defined over K with
+    conductor N and traces of Frobenius given by the a(P).
+    """
+    # Create a new magma instance for each search:
+    mag = Magma()
+    # Define the number field in Magma and the list of primes
+    mag.eval("Qx<x> := PolynomialRing(RationalField());\n")
+    disc = K.discriminant()
+    name = K.gen()
+    pol = K.defining_polynomial()
+    mag.eval("Qx<x> := PolynomialRing(RationalField());\n")
+    mag.eval("K<%s> := NumberField(%s);\n" % (name, pol))
+    mag.eval("OK := Integers(K);\n")
+    mag.eval("Plist := [];\n")
+    for P in Plist:
+        Pgens = P.gens_reduced()
+        Pmagma = "(%s)*OK" % Pgens[0]
+        if len(Pgens) > 1:
+            Pmagma += "+(%s)*OK" % Pgens[1]
+        mag.eval("Append(~Plist,%s);\n" % Pmagma)
+
+    mag.eval('SetColumns(0);\n')
+    mag.eval('effort := 400;\n')
+
+    Ngens = N.gens_reduced()
+    Nmagma = "(%s)*OK" % Ngens[0]
+    if len(Ngens) > 1:
+        Nmagma += "+(%s)*OK" % Ngens[1]
+    mag.eval('N := %s;' % Nmagma)
+    mag.eval('aplist := %s;' % aplist)
+    mag.eval('goodP := [P: P in Plist | Valuation(N,P) eq 0];\n')
+    mag.eval('goodP := [goodP[i]: i in [1..#(aplist)]];\n')
+    mag.eval('curves := EllipticCurveSearch(N,effort : Primes:=goodP, Traces:=aplist);\n')
+    mag.eval('curves := [E: E in curves | &and[TraceOfFrobenius(E,goodP[i]) eq aplist[i] : i in [1..#(aplist)]]];\n')
+    mag.eval('ncurves := #curves;')
+    ncurves = mag('ncurves;').sage()
+    if ncurves==0:
+        return []
+    Elist = [0 for i in range(ncurves)]
+    for i in range(ncurves):
+        mag.eval('E := curves[%s];\n' % (i+1))
+        Elist[i] = EllipticCurve(mag('aInvariants(E);\n').sage())
+    mag.quit()
+    return Elist
 
 
 def magma_output_iter(infilename):
@@ -566,3 +792,36 @@ def rqf_iterator(d1, d2):
     for d in srange(d1, d2 + 1):
         if is_fundamental_discriminant(d):
             yield d, '2.2.%s.1' % d
+
+
+def add_numeric_iso_labels(min_conductor_norm=0, max_conductor_norm=None, fix=False):
+    r""" One-off utility to add a numeric conversion of the letter-coded
+    class labels 'a'->0', 'z'->25, 'ba'->26, etc. for sorting
+    purposes.
+    """
+    from sage.databases.cremona import class_to_int
+    count = 0
+    query = {}
+    query['conductor_norm'] = {'$gte' : int(min_conductor_norm)}
+    if max_conductor_norm:
+        query['conductor_norm']['$lte'] = int(max_conductor_norm)
+    else:
+        max_conductor_norm = oo
+    curves_to_fix = nfcurves.find(query)
+    print("%s curves to examine of conductor norm between %s and %s."
+          % (curves_to_fix.count(),min_conductor_norm,max_conductor_norm))
+    for c in curves_to_fix:
+        count = count+1
+        if count%100==0: print("%s: %s" % (count, c['label']))
+        fix_data = {}
+        lab = c['iso_label']
+        if 'CM' in lab:
+            nlab = -1 - class_to_int(lab[2:])
+            print("converting label %s to %s" % (lab, nlab))
+        else:
+            nlab = class_to_int(lab.lower())
+        fix_data['iso_nlabel'] = nlab
+        #print("using fixed data %s for form %s" % (fix_data,c['label']))
+        if fix:
+            nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
+
