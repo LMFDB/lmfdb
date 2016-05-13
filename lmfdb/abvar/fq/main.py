@@ -68,7 +68,7 @@ def abelian_varieties():
         info['col_heads'] = stats.counts['qs']
         info['row_heads'] = stats.counts['gs']
         info['table'] = stats.counts['qg_count']
-        return render_template("abvarfq-index.html", title="Abelian Varieties over Finite Fields",
+        return render_template("abvarfq-index.html", title="Isogeny Classes of Abelian Varieties over Finite Fields",
                                info=info, credit=abvarfq_credit, bread=get_bread(), learnmore=learnmore_list())
 
 @abvarfq_page.route("/<int:g>/")
