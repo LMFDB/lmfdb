@@ -215,7 +215,7 @@ def render_modlmf_webpage(**args):
         coeff=[f['coeffs'][i] for i in range(ncoeff+1)]
         info['q_exp']=my_latex(print_q_expansion(coeff))
         info['q_exp_display'] = url_for(".q_exp_display", label=f['label'], number="")
-        p_range=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+        p_range=pime_range(100)
         info['table_list']=[[p_range[i], f['coeffs'][p_range[i]]] for i in range(len(p_range))]
         info['download_q_exp'] = [
             (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
