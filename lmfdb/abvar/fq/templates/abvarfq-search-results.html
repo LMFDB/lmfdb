@@ -121,10 +121,10 @@ table td.params {
 <td class="center">
  {{abvar.g}}
 </td>
-<td class="center">{{abvar.base_field}}</td>
-<td class="center">{{abvar.polynomial}}</td>
-<td class="center">{{abvar.p_rank}}</td>
-<td class="left">{{abvar.decomposition}}</td>
+<td class="center">${{ abvar.field() }}$</td>
+<td class="center">{{ abvar.formatted_polynomial() }}</td>
+<td class="center">$ {{ abvar.p_rank }}$</td>
+<td class="center">{{abvar.decompositioninfo}}</td>
 </tr>
 {% endfor %}
 </table>

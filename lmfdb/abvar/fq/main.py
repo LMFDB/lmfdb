@@ -228,7 +228,7 @@ def labels_page():
 
 def decomposition_display(current_class, factors):
     if len(factors) == 1 and factors[0][1] == 1:
-        return 'This is a simple isogeny class.'
+        return 'simple'
     ans = ''
     for factor in factors:
         if ans != '':

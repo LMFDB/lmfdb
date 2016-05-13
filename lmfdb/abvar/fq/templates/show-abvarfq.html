@@ -9,8 +9,8 @@
 <table>
     <tr><td>Base field:<td>&nbsp;&nbsp;<td>${{cl.field()}}$</tr>
     <tr><td>Dimension:<td>&nbsp;&nbsp;<td>${{cl.g}}$</tr>
-    <tr><td>Weil polynomial:<td>&nbsp;&nbsp;<td>${{cl.good_polynomial()}}$</tr>
-    <tr><td>Weil numbers:<td>&nbsp;&nbsp;<td>${{cl.weil_numbers()}}$</tr>
+    <tr><td>Weil polynomial:<td>&nbsp;&nbsp;<td>{{cl.formatted_polynomial()}}</tr>
+    <tr><td>Frobenius angles:<td>&nbsp;&nbsp;<td>${{cl.frob_angles()}}$</tr>
     {% if cl.is_simple %}
     <tr><td>Galois group:<td>&nbsp;&nbsp;<td>${{cl.galois_group()}}$</tr>
     {% endif %}
@@ -42,15 +42,15 @@ This isogeny class is supersingular.
 
 <table>
     <tr><td>$p$-rank:<td>&nbsp;&nbsp;<td>${{cl.p_rank}}$</tr>
-    <tr><td>Slopes:<td>&nbsp;&nbsp;<td>${{cl.slopes}}$</tr>
+    <tr><td>Slopes:<td>&nbsp;&nbsp;<td>${{cl.display_slopes()}}$</tr>
 </table>
 </p>
 
 
 
-<p><h2>Point counts</h2>
+<p><h2>Point counts</h2></p>
 
-{{ KNOWL('ag.point_count',title="Point count of the abelian variety") }}:
+<p>{{ KNOWL('ag.point_count',title="Point count of the abelian variety") }}:
 
 <table class = "ntdata">
    <tr><td>$r$</td>
@@ -59,17 +59,27 @@ This isogeny class is supersingular.
        {% endfor %}
        </tr>
    <tr><td>$A(\F_{q^r})$</td>
-       {% for count in cl.abvar_pointcount %} <!-- change this!!! --> 
-       <td> {{ count }} </td>
+       {% for count in cl.C_counts %} <!-- change this!!! --> 
+       <td> ${{ count }}$ </td>
        {% endfor %}
    </tr>
 </table>
+</p>
 
-<table>
-    <tr><td>Known to be a Jacobian?<td>&nbsp;&nbsp;<td>{{cl.jacobian}}</tr>
-</table>
+<p>
+{% if cl.known_jacobian == "1" %}
+    This isogeny class contains a Jacobian.
+{% else %}
+    {% if cl.known_jacobian == "0" %}
+        It is unknown whether this isogeny class contains a Jacobian.
+    {% else %}
+        This isogeny class does not contain a Jacobian.
+    {% endif %}
+{% endif %}
+</p>
 
-{% if cl.jacobian == "yes" %}
+<p>
+{% if cl.known_jacobian == "1" %}
 {{ KNOWL('abvar.curve_point_count',title="Point count of the curve") }}
 {% else %}
 {{ KNOWL('abvar.curve_point_count',title="Point count of the (virtual) curve") }}
@@ -82,7 +92,7 @@ This isogeny class is supersingular.
             {% endfor %}
             </tr>
     <tr><td>$C(\F_{q^r})$</td>
-        {% for count in cl.curve_pointcount %} <!-- change this!!! --> 
+        {% for count in cl.C_counts %} <!-- change this!!! --> 
         <td>{{ count }}</td>
         {% endfor %}
         </tr>
@@ -92,9 +102,13 @@ This isogeny class is supersingular.
 
 <p><h2>{{ KNOWL('abvar.decomposition',title="Decomposition") }}</h2>
 
+{% if cl.is_simple() %}
+This is a simple isogeny class.
+{% else %}
 <blockquote>
     {{cl.decompositioninfo|safe}}
 </blockquote>
+{% endif %}
 </p>
 
 

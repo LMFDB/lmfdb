@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from lmfdb.utils import comma, make_logger
+from lmfdb.utils import comma, make_logger, web_latex_split_on_pm
 
 from lmfdb.base import getDBConnection
 
@@ -63,52 +63,74 @@ class AbvarFq_isoclass(object):
             raise ValueError("Label not found in database")
 
     def make_class(self):
-        self.g = self.__dict__['g']
-        self.p_rank = self.__dict__['p_rank']
-        self.slopes = self.__dict__['slopes']
-        self.abvar_pointcount = self.__dict__['C_counts']
-        self.jacobian = self.__dict__['known_jacobian']
-        self.curve_pointcount = self.__dict__['A_counts']
-        self.decompositioninfo = self.__dict__['decomposition']
-        #pass
+        from main import decomposition_display
+        self.decompositioninfo = decomposition_display(self,self.decomposition)
         
     def field(self):
-        q = self.__dict__['q']
+        q = self.q
         return '\F_{%s}'%q
     
-    def good_polynomial(self):
+    def formatted_polynomial(self):
         coeffs = self.__dict__['polynomial']
         R = PolynomialRing(QQ, 'x')
-        return R(coeffs)
+        f = R(coeffs)
+        return web_latex_split_on_pm(f)
         
-    def weil_numbers(self): #FIX THIS!!
-        return 'a'
+    def weil_numbers(self):
+        q = self.q
+        ans = ""
+        for angle in self.angle_numbers:
+            if ans != "":
+                ans += ", "
+            ans += "\sqrt{" +str(q) + "}" + "\exp(i \pi {0}\ldots), ".format(angle)
+            ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
+        return ans
+        
+    def frob_angles(self):
+        ans = ""
+        for angle in self.angle_numbers:
+            if ans != "":
+                ans += ", "
+            ans += str(angle) + ", " + str(-angle)
+        return ans
         
     def galois_group(self):
         return 'b'
     
     def is_simple(self):
-        if len(self.decompositioninfo) == 1:
-            if self.decompositioninfo[0][1] == 1:
+        if len(self.decomposition) == 1:
+            if self.decomposition[0][1] == 1:
                 return True
         else:
             return False
             
-    def is_primitive(self):
-        if self.__dict__['primitive_models'] == "":
+    def is_primitive(self): #we don't know this
+        if self.primitive_models == "":
             return True
         else:
             return False
             
     def is_ordinary(self):
-        return "we don't know"
+        if self.__dict__['p_rank'] == self.__dict__['g']:
+            return True
+        else:
+            return False
         
     def is_supersingular(self):
-        return "we don't know"
-    
-    
-    
-    
-    #de
+        for slope in self.__dict__['slopes']:
+            if slope != '1/2':
+                return False
+        return True
+        
+    def display_slopes(self):
+        ans = "["
+        for slope in self.slopes:
+            if ans != "[":
+                ans += ", "
+            ans += slope
+        ans += "]"
+        return ans
+            
+        
 
     
