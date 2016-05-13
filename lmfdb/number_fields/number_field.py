@@ -550,14 +550,14 @@ def frobs(K):
             dec = [[x, dec.count(x)] for x in vals]
             dec2 = ["$" + str(x[0]) + ('^{' + str(x[1]) + '}$' if x[1] > 1 else '$') for x in dec]
             s = '$'
-            old = 2
+            firstone = 1
             for j in dec:
-                if old == 1:
-                    s += '\: '
+                if firstone == 0:
+                    s += '{,}\,'
                 s += str(j[0])
                 if j[1] > 1:
                     s += '^{' + str(j[1]) + '}'
-                old = j[1]
+                firstone = 0
             s += '$'
             ans.append([p, s])
         else:
