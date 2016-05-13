@@ -142,7 +142,7 @@ def api_query(db, collection, id = None):
 
     # executing the query "q" and replacing the _id in the result list
     api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
-    data = list(C[db][collection].find(q, fields = fields, sort=sort).skip(offset).limit(100))
+    data = list(C[db][collection].find(q, projection = fields, sort=sort).skip(offset).limit(100))
     for document in data:
         oid = document["_id"]
         if type(oid) == ObjectId:
