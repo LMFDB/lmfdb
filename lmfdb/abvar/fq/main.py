@@ -85,7 +85,7 @@ def abelian_varieties_by_gqi(g, q, iso):
     return by_label(label)
 
 def abelian_variety_search(**args):
-    info = to_dict(args['data'])
+    info = to_dict(args)
 
     if 'download' in info and info['download'] != 0:
         return download_search(info)
