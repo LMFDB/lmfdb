@@ -553,11 +553,13 @@ def frobs(K):
             old = 2
             for j in dec:
                 if old == 1:
-                    s += '\: '
+                    s += '{,}'
+                    #s += '\: '
                 s += str(j[0])
                 if j[1] > 1:
                     s += '^{' + str(j[1]) + '}'
-                old = j[1]
+                #old = j[1]
+                old = 1
             s += '$'
             ans.append([p, s])
         else:
