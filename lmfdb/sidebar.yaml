@@ -83,6 +83,10 @@
          - title: Noncongruence
            status: future
            colspan: onecolumn
+         - title: mod &#8467; 
+           url_for: "modlmf.modlmf_render_webpage"
+           status: future
+           colspan: onecolumn
      - title: GL(3)
        style: rotate
        part2:
@@ -194,10 +198,13 @@
            url_for:  "characters.render_Heckewebpage"
            status: beta
       colspan: onecolumn
-    - title: Artin
-      url_for: "artin_representations.index"
-    - title: Galois
+    - title: "Galois:"
       status: future
+      part2:
+         - title: Artin
+           url_for: "artin_representations.index"
+         - title: mod &#8467;
+           status: future
       colspan: onecolumn
     - title: Weil-Deligne
       status: future
