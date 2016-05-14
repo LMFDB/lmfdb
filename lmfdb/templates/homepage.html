@@ -28,34 +28,39 @@
           <form method="GET" action="{{ url_for('search') }}" id="search-topright">
             <input type="text" placeholder="search ..." name="q" size="13" />
           </form>
-            &middot;
-          <a href="{{ feedbackpage }}" target=_blank">
-             Feedback</a>
-            &middot;
-          {% if g.show_menu %}
-             <a href="{{ url_for("menutoggle", show=False)}}">Hide Menu</a>
-          {% else %}
-             <a href="{{ url_for("menutoggle", show=True)}}">Show Menu</a>
-          {% endif %}
-            &middot;
           {% if user_is_admin -%}
-            <a href="{{ url_for('users.register') }}">Registertokens</a>
             &middot;
+            <a href="{{ url_for('users.register') }}">RT</a>
           {% endif %}
           {% if user_is_authenticated -%}
+            &middot;
             <a href="{{ url_for('users.info') }}">{{ username }}</a> 
             &middot;
             <a href="{{ url_for('users.logout') }}">Logout</a>
           {%- else -%}
             {# <a href="{{ url_for('users.register_new') }}">Register</a>
             &middot; #}
+            {% if BETA %}
+            &middot;
             <a href="{{ url_for('users.info') }}">Login</a>
+            {% endif %}
           {%- endif %}
           <br/>
+<!--
           <span id="communication-wrapper">
             <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
             <span id="communication"></span>
           </span>
+-->
+      </div>
+      <div class="undertopright">
+          <a href="{{ url_for('contact') }}" target=_blank">Feedback</a>
+            &middot;
+          {% if g.show_menu %}
+             <a href="{{ url_for("menutoggle", show=False)}}">Hide Menu</a>
+          {% else %}
+             <a href="{{ url_for("menutoggle", show=True)}}">Show Menu</a>
+          {% endif %}
       </div>
 {# deleting the confusing prev/next character links, 
    but leaving the code in case it is useful later

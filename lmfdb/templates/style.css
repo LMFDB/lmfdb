@@ -204,7 +204,7 @@ body.knowl #header {
     font-size: 180%;
     font-weight: bold;
     font-family: sans-serif;
-    min-height: 100px;
+    min-height: 82px;
     position: relative;
     color: {{color.header_text_title}};
 }
@@ -231,7 +231,8 @@ body.knowl #header {
   font-family: sans-serif;
   min-height: 18px;
   font-size: 90%;
-  padding: 2px 5px;
+  padding-top: 5px;
+  padding-right: 5px;
   position: absolute;
   top: 0px;
   right: 0px;
@@ -243,6 +244,19 @@ body.knowl #header {
   display: none;
   padding: 4px;
 }
+#header .undertopright {
+  text-align: right;
+  white-space:nowrap;
+  color: {{color.header_text_topright}};
+  font-family: sans-serif;
+  min-height: 18px;
+  font-size: 90%;
+  padding-right: 5px;
+}
+#header .undertopright a {
+    color: {{color.header_text_topright}};
+}
+
 #header #navi {
   white-space: nowrap;
   text-align: right;

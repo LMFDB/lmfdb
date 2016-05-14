@@ -45,6 +45,7 @@ import logging
 import lattice
 import higher_genus_w_automorphisms
 import modlmf
+import rep_galois_modl
 
 import raw
 from modular_forms.maass_forms.picard import mwfp
