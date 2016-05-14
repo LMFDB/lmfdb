@@ -21,7 +21,6 @@ where $a$ satisfies ${{info.field | safe}}$.
 <h2> {{ KNOWL('modlmf.invariants', title='Properties') }} </h2>
 
 <table>
-<<<<<<< HEAD
     <tr><td align=right>{{ KNOWL('finite_fields.structure', title='Coefficient field') }}:</td><td>
 {% if info.deg > 1 %}
 $\F_{ {{info.characteristic}}^{{info.deg}} }\cong \F[a]$ where $a$ satisfies ${{info.field | safe}}=0$
@@ -35,7 +34,6 @@ $\F_{ {{info.characteristic}} }$
     <tr><td align=right>{{ KNOWL('modlmf.min_weight', title='Minimal weight') }}:</td><td>${{info.min_weight }}$</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td>{{info.dirchar}}</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.label', title='Label') }}:</td><td>{{info.label}}</td></tr>
-=======
     <tr><td align=right>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}:</td><td>${{info.characteristic}}$</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.deg', title='Field degree') }}:</td><td>${{info.deg}}$</td></tr>
     {% if info.field %}
@@ -45,7 +43,6 @@ $\F_{ {{info.characteristic}} }$
     <tr><td align=right>{{ KNOWL('modlmf.conductor', title='Conductor') }}:</td><td>${{info.conductor}}$</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.min_weight', title='Minimal weight') }}:</td><td>${{info.min_weight }}$</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td>{{info.dirchar}}</td></tr>
->>>>>>> beta
     {% if info.level !=1 %}
         <tr><td align=right>{{ KNOWL('modlmf.atkinlehner', title='Atkin-Lehner eigenvalues')}}:</td>
             <td>
@@ -56,23 +53,10 @@ $\F_{ {{info.characteristic}} }$
     {% endif %}
 </table>
 
-<<<<<<< HEAD
 <br>
 
 <h2> {{ KNOWL('modlmf.eigenvalues', title='Hecke eigenvalues') }} </h2>
 
-=======
-<h2> {{ KNOWL('modlmf.q_expansion', title='q-expansion') }} </h2>
-
-<p><form>
-<div class="output"><span id="q_exp_output">{{info.q_exp}}</span></div>
-<div class="emptyspace"><br></div>
-<button id="morebutton">More coefficients</button>
-</form></p>
-
-
-<p>List of $a_p$ for the primes up to $100$. </p>
->>>>>>> beta
 {% if info.deg == 1 %}
 <table class="ntdata" cellpadding=3 style="table-layout:fixed">
 <tr><td>$p$</td>{% for p in info.table_list %}<td>${{p[0]}}$</td>{% endfor %}</tr>
@@ -86,11 +70,7 @@ $\F_{ {{info.characteristic}} }$
 </table>
 {% endif %}
 
-<<<<<<< HEAD
 <p>Download all the coefficients stored in the database for the <i>q</i>-expansion for
-=======
-<p>Download all the coefficients stored in the database for the q-expansion for
->>>>>>> beta
 {% for e in info.download_q_exp %} 
             <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
             {% endfor %}
