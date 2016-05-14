@@ -2,7 +2,7 @@ import os
 import yaml
 from flask import url_for
 from urllib import quote
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RealField, rainbow, implicit_plot, plot, text, Infinity
+from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RR, rainbow, implicit_plot, plot, text, Infinity, sqrt
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
@@ -47,56 +47,92 @@ def make_field(label):
 def web_ainvs(field_label, ainvs):
     return web_latex([make_field(field_label).parse_NFelt(x) for x in ainvs])
 
+def inflate_interval(a,b,r): 
+    c=(a+b)/2
+    d=(b-a)/2
+    d*=r
+    return (c-d,c+d)
+
+def plot_zone_union(R,S):
+    return(min(R[0],S[0]),max(R[1],S[1]),min(R[2],S[2]),max(R[3],S[3]))
+
+# Finds a suitable plotting zone for the component a <= x <= b of the EC y**2+h(x)*y=f(x) 
+def EC_R_plot_zone_piece(f,h,a,b):
+    npts=50
+    Y=[]
+    g=f+h**2/4
+    t=a
+    s=(b-a)/npts
+    for i in range(npts+1):
+        y=g(t)
+        if y>0:
+            y=sqrt(y)
+            w=h(t)/2
+            Y.append(y-w)
+            Y.append(-y-w)
+        t+=s
+    (ymin,ymax)=inflate_interval(min(Y),max(Y),1.2)
+    (a,b)=inflate_interval(a,b,1.3)
+    return (a,b,ymin,ymax)
+
+# Finds a suitable plotting zone for the EC y**2+h(x)*y=f(x) 
+def EC_R_plot_zone(f,h):
+    F=f+h**2/4
+    F1=F.derivative()
+    F2=F1.derivative()
+    G=F*F2-F1**2/2
+    ZF=[z[0] for z in F.roots()]
+    ZG=[z[0] for z in G.roots()]
+    xi=max(ZG)
+    if len(ZF)==1:
+        return EC_R_plot_zone_piece(f,h,ZF[0],2*xi-ZF[0])
+    if len(ZF)==3:
+        return plot_zone_union(EC_R_plot_zone_piece(f,h,ZF[0],ZF[1]),EC_R_plot_zone_piece(f,h,ZF[2],2*xi-ZF[2]))
+    return EC_R_plot_zone_piece(f,h,ZF[0],2*ZF[1]-ZF[0])
+
 def EC_R_plot(ainvs, xmin, xmax, ymin, ymax, colour, legend):
     x = var('x')
     y = var('y')
     c = (xmin + xmax) / 2
     d = (xmax - xmin)
-    return implicit_plot(y ** 2 + ainvs[0] * x * y + ainvs[2] * y - x ** 3 - ainvs[1] * x ** 2 - ainvs[3] * x - ainvs[4], (x, xmin, xmax), (y, ymin, ymax), plot_points=1000, aspect_ratio="automatic", color=colour) + plot(0, xmin=c - 1e-5 * d, xmax=c + 1e-5 * d, ymin=ymin, ymax=ymax, aspect_ratio="automatic", color=colour, legend_label=legend)  # Add an extra plot outside the visible frame because implicit plots are buggy: their legend does not show (http://trac.sagemath.org/ticket/15903)
+    return implicit_plot(y ** 2 + ainvs[0] * x * y + ainvs[2] * y - x ** 3 - ainvs[1] * x ** 2 - ainvs[3] * x - ainvs[4], (x, xmin, xmax), (y, ymin, ymax), plot_points=500, aspect_ratio="automatic", color=colour) + plot(0, xmin=c - 1e-5 * d, xmax=c + 1e-5 * d, ymin=ymin, ymax=ymax, aspect_ratio="automatic", color=colour, legend_label=legend)  # Add an extra plot outside the visible frame because implicit plots are buggy: their legend does not show (http://trac.sagemath.org/ticket/15903)
 
+Rx=PolynomialRing(RR,'x')
 
 def EC_nf_plot(E, base_field_gen_name):
-    K = E.base_field()
-    n1 = K.signature()[0]
-    if n1 == 0:
-        return plot([])
-    prec = 53
-    maxprec = 10 ** 6
-    while prec < maxprec:  # Try to base change to RR. May fail if resulting curve is almost singular, so increase precision.
-        try:
-            SR = K.embeddings(RealField(prec))
-            X = [E.base_extend(s) for s in SR]
-            break
-        except ArithmeticError:
-            prec *= 2
-    if prec >= maxprec:
-        return text("Unable to plot", (1, 1), fontsize=36)
     try:
-        X = [e.plot() for e in X]
+        K = E.base_field()
+        n1 = K.signature()[0]
+        if n1 == 0:
+            return plot([])
+        R=[]
+        S=K.embeddings(RR)
+        for s in S:
+            A=[s(c) for c in E.ainvs()]
+            R.append(EC_R_plot_zone(Rx([A[4],A[3],A[1],1]),Rx([A[2],A[0]]))) 
+        xmin = min([r[0] for r in R])
+        xmax = max([r[1] for r in R])
+        ymin = min([r[2] for r in R])
+        ymax = max([r[3] for r in R])
+        cols = rainbow(n1) # Default choice of n colours
+        # However, these tend to be too pale, so we preset them for small values of n
+        if n1==1:
+            cols=["blue"]
+        elif n1==2:
+            cols=["red","blue"]
+        elif n1==3:
+            cols=["red","limegreen","blue"]
+        elif n1==4:
+            cols = ["red", "orange", "forestgreen", "blue"]
+        elif n1==5:
+            cols = ["red", "orange", "forestgreen", "blue", "darkviolet"]
+        elif n1==6:
+            cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"]
+        elif n1==7:
+            cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
+        return sum([EC_R_plot([S[i](c) for c in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(S[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)]) 
     except:
         return text("Unable to plot", (1, 1), fontsize=36)
-    xmin = min([x.xmin() for x in X])
-    xmax = max([x.xmax() for x in X])
-    ymin = min([x.ymin() for x in X])
-    ymax = max([x.ymax() for x in X])
-    cols = rainbow(n1) # Default choice of n colours
-    # Howver, these tend to be too pale, so we preset them for small values of n
-    if n1==1:
-        cols=["blue"]
-    elif n1==2:
-        cols=["red","blue"]
-    elif n1==3:
-        cols=["red","limegreen","blue"]
-    elif n1==4:
-        cols = ["red", "orange", "forestgreen", "blue"]
-    elif n1==5:
-        cols = ["red", "orange", "forestgreen", "blue", "darkviolet"] 
-    elif n1==6:
-        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"] 
-    elif n1==7:
-        cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"] 
-    return sum([EC_R_plot([SR[i](a) for a in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(SR[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)])
-
 
 class ECNF(object):
 
