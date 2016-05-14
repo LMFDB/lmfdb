@@ -34,6 +34,15 @@ $\F_{ {{info.characteristic}} }$
     <tr><td align=right>{{ KNOWL('modlmf.min_weight', title='Minimal weight') }}:</td><td>${{info.min_weight }}$</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td>{{info.dirchar}}</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.label', title='Label') }}:</td><td>{{info.label}}</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}:</td><td>${{info.characteristic}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.deg', title='Field degree') }}:</td><td>${{info.deg}}$</td></tr>
+    {% if info.field %}
+        <tr><td align=right>{{ KNOWL('finite_fields.structure', title='Coefficient field') }}:</td><td>{{info.field | safe}}</td></tr>
+    {% endif %}
+    <tr><td align=right>{{ KNOWL('modlmf.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.conductor', title='Conductor') }}:</td><td>${{info.conductor}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.min_weight', title='Minimal weight') }}:</td><td>${{info.min_weight }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td>{{info.dirchar}}</td></tr>
     {% if info.level !=1 %}
         <tr><td align=right>{{ KNOWL('modlmf.atkinlehner', title='Atkin-Lehner eigenvalues')}}:</td>
             <td>
