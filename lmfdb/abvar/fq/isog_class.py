@@ -9,6 +9,9 @@ from sage.misc.cachefunc import cached_function
 from sage.rings.all import Integer
 from sage.all import PolynomialRing, QQ
 
+from lmfdb.genus2_curves.isog_class import list_to_factored_poly_otherorder
+from lmfdb.transitive_group import group_display_knowl
+
 logger = make_logger("abvarfq")
 
 #########################
@@ -65,16 +68,15 @@ class AbvarFq_isoclass(object):
     def make_class(self):
         from main import decomposition_display
         self.decompositioninfo = decomposition_display(self,self.decomposition)
+        self.formatted_polynomial, galois_gp = list_to_factored_poly_otherorder(self.polynomial,galois=True,vari = 'x')
+        if self.is_simple():
+            C = getDBConnection()
+            galois_gp = galois_gp[0]
+            self.galois = group_display_knowl(galois_gp[0],galois_gp[1],C)            
         
     def field(self):
         q = self.q
         return '\F_{%s}'%q
-    
-    def formatted_polynomial(self):
-        coeffs = self.__dict__['polynomial']
-        R = PolynomialRing(QQ, 'x')
-        f = R(coeffs)
-        return web_latex_split_on_pm(f)
         
     def weil_numbers(self):
         q = self.q
@@ -91,11 +93,8 @@ class AbvarFq_isoclass(object):
         for angle in self.angle_numbers:
             if ans != "":
                 ans += ", "
-            ans += str(angle) + ", " + str(-angle)
+            ans += "\pm" + str(angle) 
         return ans
-        
-    def galois_group(self):
-        return 'b'
     
     def is_simple(self):
         if len(self.decomposition) == 1:

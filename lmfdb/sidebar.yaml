@@ -159,11 +159,16 @@
            colspan: onecolumn 
          - title: Higher
            status: future
-     - title: $/\F_{q}$
+     - title: $\,$
        style: rotate
+       status: future_rotated
        part2:
-         - title: Abelian varieties
-           url_for: "abvarfq.abelian_varieties"
+         - title: Abelian Varieties
+           status: future
+           part3:
+              - title: $/\F_{q}$
+                status: future
+                colspan: onecolumn   
 
 5Fields:
    type: simple

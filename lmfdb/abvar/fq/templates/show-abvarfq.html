@@ -9,23 +9,23 @@
 <table>
     <tr><td>Base field:<td>&nbsp;&nbsp;<td>${{cl.field()}}$</tr>
     <tr><td>Dimension:<td>&nbsp;&nbsp;<td>${{cl.g}}$</tr>
-    <tr><td>Weil polynomial:<td>&nbsp;&nbsp;<td>{{cl.formatted_polynomial()}}</tr>
+    <tr><td>Weil polynomial:<td>&nbsp;&nbsp;<td>${{cl.formatted_polynomial}}$</tr>
     <tr><td>Frobenius angles:<td>&nbsp;&nbsp;<td>${{cl.frob_angles()}}$</tr>
     {% if cl.is_simple %}
-    <tr><td>Galois group:<td>&nbsp;&nbsp;<td>${{cl.galois_group()}}$</tr>
+    <tr><td>Galois group:<td>&nbsp;&nbsp;<td>{{cl.galois|safe}}</tr>
     {% endif %}
 </table>
 </p>
 
 <p>
 {% if cl.is_simple() %}
-This isogeny class contains simple abelian varieties.</br>
+This isogeny class is simple.</br>
 {% endif %}
 
 {% if cl.is_primitive() %}
 This isogeny class is primitive.
 {% else %}
-This isogeny class is a base-change from a smaller field.
+This isogeny class is not primitive.
 {% endif %}
 </p>
     
@@ -87,12 +87,12 @@ This isogeny class is supersingular.
 
 <table class = "ntdata">
     <tr><td>$r$</td>
-        {% for r in range(1,cl.g+1) %} <!-- change this!!! --> 
+        {% for r in range(1,cl.g+1) %}  
         <td> ${{ r }}$ </td>
             {% endfor %}
             </tr>
     <tr><td>$C(\F_{q^r})$</td>
-        {% for count in cl.C_counts %} <!-- change this!!! --> 
+        {% for count in cl.C_counts %} 
         <td>{{ count }}</td>
         {% endfor %}
         </tr>

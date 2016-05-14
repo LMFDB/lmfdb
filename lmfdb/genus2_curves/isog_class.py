@@ -34,11 +34,12 @@ def list_to_poly(s):
 def list_to_factored_poly(s):
     return str(factor(PolynomialRing(ZZ, 't')(s))).replace('*','')
 
-def list_to_factored_poly_otherorder(s, galois=False):
+def list_to_factored_poly_otherorder(s, galois=False, vari = 'T'):
     """ Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
         and the second entry a list describing the Galois groups
         of the factors.
+        vari allows to choose the variable of the polynomial to be returned.
     """
     gal_list=[]
     if len(s) == 1:
@@ -83,9 +84,9 @@ def list_to_factored_poly_otherorder(s, galois=False):
                     elif vcf[i] == -1:
                         outstr += '-'
                     if i == 1:
-                        outstr += 'T'
+                        outstr += vari  #instead of putting in T for the variable, put in a variable of your choice
                     elif i > 1:
-                        outstr += 'T^{' + str(i) + '}'
+                        outstr += vari + '^{' + str(i) + '}'
         if len(sfacts) > 1 or v[1] > 1:
             outstr += ')'
         if v[1] > 1:
