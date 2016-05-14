@@ -84,7 +84,7 @@ sha:
   magma: MordellWeilShaInformation(E);
 
 qexp:
-  sage:  E.q_eigenform(10)
+  sage:  E.q_eigenform(20)
   pari:  |
     xy = elltaniyama(E);
     deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)

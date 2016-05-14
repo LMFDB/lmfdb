@@ -294,14 +294,20 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 {# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 
     <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
-    <h3> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h3>
+    <h3> {{KNOWL('ec.q.modular_form', title='Modular form')}}
+          {{data.newform_label}} </h3>
           {{ code(data.code,'qexp') }}
     <p>
+{#
     <form>
+#}
         <div class="output"><span id="modform_output">{{ data.data.newform | safe }}</span></div>
         <div class="emptyspace"><br></div>
+{#
         <button id="morebutton">More coefficients</button>
     </form>
+#}
+      For more coefficients, see the Downloads section to the right.
     </p>
 
     <h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
@@ -350,14 +356,14 @@ text-align: center;
 {% for pr in data.local_data %}
 <tr>
 <td> \({{pr.p}}\)</td>
-<td>\({{pr.tamagawa_number}}\)</td>
-<td>{{pr.kodaira_symbol}}</td>
+<td>\({{pr.cp}}\)</td>
+<td>{{pr.kod}}</td>
 <td>
-{% if pr.reduction_type==0 %}
+{% if pr.red==0 %}
  Additive
- {% elif pr.reduction_type==1 %}
+ {% elif pr.red==1 %}
   Split multiplicative
-  {% elif pr.reduction_type==-1 %}
+  {% elif pr.red==-1 %}
    Non-split multiplicative
 {% endif %}
 </td>
