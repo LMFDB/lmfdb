@@ -8,8 +8,8 @@ ASC = pymongo.ASCENDING
 import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, redirect
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, random_object_from_collection
 from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input
 from sage.all import ZZ, var, PolynomialRing, QQ
 from lmfdb.local_fields import local_fields_page, logger
@@ -255,6 +255,11 @@ def printquad(code, p):
 def search_input_error(info, bread):
     return render_template("lf-search.html", info=info, title='Local Field Search Input Error', bread=bread)
 
+@local_fields_page.route("/random")
+def random_field():
+    label = random_object_from_collection(base.getDBConnection().localfields.fields)['label']
+    return redirect(url_for(".by_label", label=label), 301)
+
 @local_fields_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the local field data'
@@ -283,3 +288,4 @@ def how_computed_page():
     return render_template("single.html", kid='dq.lf.source',
                            credit=LF_credit, title=t, bread=bread, 
                            learnmore=learnmore)
+
