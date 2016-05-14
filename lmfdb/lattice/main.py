@@ -322,7 +322,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
         info['properties']=[('Class number', 'not available')]+info['properties']
     else:
         info['properties']=[('Class number', '%s' %info['class_number'])]+info['properties']
-    info['properties']=info['properties']+[('Label', '%s' % info['label'])]
+    info['properties']=[('Label', '%s' % info['label'])]+info['properties']
 
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
