@@ -6,16 +6,16 @@ import pymongo
 ASC = pymongo.ASCENDING
 import flask
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, flash
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, flash, redirect
 from markupsafe import Markup
 
 from lmfdb.artin_representations import artin_representations_page, artin_logger
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_paired_fields, parse_count, parse_start, clean_input
 
 from lmfdb.transitive_group import *
 from lmfdb.WebCharacter import WebDirichletCharacter
-import re
+import re, random
 
 
 from lmfdb.math_classes import *
@@ -233,6 +233,14 @@ def render_artin_representation_webpage(label):
     #info['pol11']=str(the_rep.central_char(11))
 
     return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info)
+
+@artin_representations_page.route("/random")
+def random_representation():
+    rep = random_object_from_collection(ArtinRepresentation.collection())
+    num = random.randrange(0, len(rep['GaloisConjugates']))
+    label = rep['Baselabel']+"c"+str(num+1)
+    return redirect(url_for(".render_artin_representation_webpage", label=label), 301)
+
 
 @artin_representations_page.route("/Completeness")
 def completeness_page():
