@@ -73,6 +73,9 @@ def render_elliptic_modular_form_navigation_wp(**args):
         limits_weight = (weight, weight)
     elif limits_weight is None:
         limits_weight = (2, 12) # default values
+    # we don't have weight 1 in database, reset range here to exclude it
+    if limits_weight[0]==1:
+        limits_weight=(2,limits_weight[1])
     if is_set['level']:
         limits_level = (level, level) 
     elif limits_level is None:
@@ -105,13 +108,10 @@ def render_elliptic_modular_form_navigation_wp(**args):
         s['cchi']=int(1)
     else:
         s['gamma1_label']={"$exists":True}
-    g = db_dim.find(s).sort([('level',int(1)),('weight',int(1))])
+    # g = db_dim.find(s).sort([('level',int(1)),('weight',int(1))]) never used
     table = {}
     info['table'] = {}
     level_range = range(limits_level[0],limits_level[1]+1)
-    # we don't have weight 1 in database
-    if limits_weight[0]==1:
-        limits_weight=(2,limits_weight[1])
     weight_range = range(limits_weight[0],limits_weight[1]+1)
     if group == 0:
         weight_range = filter(is_even,weight_range)
