@@ -254,7 +254,7 @@ class WebModFormSpaceProperty(WebProperty):
         self.character = character
         emf_logger.debug("CCCCharacter = {0}".format(self.character))
         if value is None:
-            value = WebModFormSpace_cached(self.level, self.weight, self.character, update_from_db=Update_from_db, update_hecke_orbits=update_hecke_orbits)
+            value = WebModFormSpace_cached(self.level, self.weight, self.character, update_from_db=update_from_db, update_hecke_orbits=update_hecke_orbits)
         emf_logger.debug("CCCCharacter = {0}".format(self.character))
         super(WebModFormSpaceProperty, self).__init__(name,
                                                       include_in_update=include_in_update,

@@ -675,7 +675,7 @@ class WebObject(object):
         if succ_fs: self._has_updated_from_fs = True
 
     @classmethod
-    def find(cls, query):
+    def find(cls, query, projection = None):
         r'''
           Search the database using ```query``` and return
           an iterator over the set of matching objects of this WebObject
