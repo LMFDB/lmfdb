@@ -296,6 +296,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                             include_in_update = True if character is None
                             else False),
             WebStr('character_naming_scheme', value='Conrey'),
+            WebStr('sage_version', value=''),
             WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character_number, label)),
             WebStr('label', default_value=label),
             WebInt('dimension'),
