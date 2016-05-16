@@ -32,9 +32,9 @@ modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Robert
 
 def print_q_expansion(list):
      list=[str(c) for c in list]
-     Qa=PolynomialRing(QQ,'a')
-     a = QQ['a'].gen()
-     Qq=PowerSeriesRing(Qa,'q')
+     Qb=PolynomialRing(QQ,'b')
+     b = QQ['b'].gen()
+     Qq=PowerSeriesRing(Qb['a'],'q')
      return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
 
 def my_latex(s):
@@ -78,8 +78,8 @@ def modlmf_render_webpage():
         label_list = ["2.1.1.0.1.1","2.1.3.0.1.1"]
         info = {'characteristic_list': characteristic_list, 'level_list': level_list,'weight_list': weight_list, 'label_list': label_list}
         credit = modlmf_credit
-        t = 'mod &#x2113; Modular Forms'
-        bread = [('Modular Forms', "/ModularForm"),('GL(2)',""),('mod &#x2113;', url_for(".modlmf_render_webpage"))]
+        t = 'Mod &#x2113; Modular Forms'
+        bread = [('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage"))]
         info['counts'] = get_stats().counts()
         return render_template("modlmf-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
@@ -161,15 +161,15 @@ def modlmf_search(**args):
         res_clean.append(v_clean)
 
     info['modlmfs'] = res_clean
-    t = 'mod &#x2113; Modular Forms Search Results'
-    bread=[('Modular Forms', "/ModularForm"),('GL(2)',""),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
+    t = 'Mod &#x2113; Modular Forms Search Results'
+    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
     properties = []
     return render_template("modlmf-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info, bread=None):
     t = 'mod &#x2113; Modular Forms Search Error'
     if bread is None:
-        bread=[('Modular Forms', "/ModularForm"),('GL(2)',""),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
+        bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
     return render_template("modlmf-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
 
 
@@ -182,7 +182,7 @@ def render_modlmf_webpage(**args):
         lab = args.get('label')
         data = C.mod_l_eigenvalues.modlmf.find_one({'label': lab })
     if data is None:
-        t = "mod &#x2113; modular form search error"
+        t = "Mod &#x2113; modular form search error"
         bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage"))]
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; modular form in the database." % (lab)),"error")
         return render_template("modlmf-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
@@ -191,43 +191,51 @@ def render_modlmf_webpage(**args):
 
     info['friends'] = []
 
-    bread=[('Modular Forms', "/ModularForm"),('GL(2)',""),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('%s' % data['label'], ' ')]
+    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('%s' % data['label'], ' ')]
     credit = modlmf_credit
     f = C.mod_l_eigenvalues.modlmf.find_one({'characteristic':data['characteristic'], 'deg' : data['deg'], 'level' : data['level'],'conductor' : data['conductor'],'min_weight': data['min_weight'], 'dirchar' : data['dirchar'], 'atkinlehner': data['atkinlehner'],'n_coeffs': data['n_coeffs'],'coeffs': data['coeffs']})
-    for m in ['characteristic','deg','level','conductor','min_weight', 'n_coeffs']:
+    for m in ['characteristic','deg','level','min_weight', 'n_coeffs']:
         info[m]=int(f[m])
-    for m in ['coeffs', 'atkinlehner']:
-        info[m]=f[m]
+    info['atkinlehner']=f['atkinlehner']
     info['dirchar']=str(f['dirchar'])
+    info['label']=str(f['label'])
 
-    if f['deg'] == int(1):
-        info['field']=str('&#120125;<sub>%s</sub>' %f['characteristic'])
-    else:
+    info['coeffs']=[str(s).replace('x','a').replace('*','') for s in f['coeffs']]
 
+#this fix will be removed once the conductor are all computed
+    try:
+        info['conductor']=int(f['conductor'])
+    except:
+        info['conductor']=int(0)
+
+    if f['deg'] != int(1):
         try:
-            pol=str(conway_polynomial(f['characteristic'], f['deg']))
-            info['field']=str('&#120125;<sub>%s<sup>%s</sup></sub>&#120125;<sub>%s</sub>[x]/(%s)' %(str(f['characteristic']), str(f['deg']), str(f['characteristic']), pol))
+            pol=str(conway_polynomial(f['characteristic'], f['deg'])).replace('x','a').replace('*','')
+            info['field']= pol
         except:
             info['field']=""
 
-    ncoeff=int(round(50/f['deg']))
+
+    ncoeff=int(round(20/f['deg']))
+    av_coeffs=min(f['n_coeffs'],100)
+    info['av_coeffs']=int(av_coeffs)
     if f['coeffs'] != "":
-        coeff=[f['coeffs'][i] for i in range(ncoeff+1)]
+        coeff=[info['coeffs'][i] for i in range(ncoeff+1)]
         info['q_exp']=my_latex(print_q_expansion(coeff))
         info['q_exp_display'] = url_for(".q_exp_display", label=f['label'], number="")
-        p_range=prime_range(100)
-        info['table_list']=[[p_range[i], f['coeffs'][p_range[i]]] for i in range(len(p_range))]
+        p_range=prime_range(av_coeffs)
+        info['table_list']=[[p_range[i], info['coeffs'][p_range[i]]] for i in range(len(p_range))]
         info['download_q_exp'] = [
             (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
 
-        t = "mod &#x2113; Modular Form "+info['label']
+        t = "Mod "+str(info['characteristic'])+" Modular Form "+info['label']
     info['properties'] = [
+        ('Label', '%s' %info['label']),
         ('Field characteristic', '%s' %info['characteristic']),
         ('Field degree', '%s' %info['deg']),
         ('Level', '%s' %info['level']),
         ('Conductor', '%s' %info['conductor']),
-        ('Minimal weight', '%s' %info['min_weight']),
-        ('Label', '%s' %info['label'])]
+        ('Minimal weight', '%s' %info['min_weight'])]
     return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
 
 
@@ -238,9 +246,9 @@ def q_exp_display(label, number):
     try:
         number = int(number)
     except:
-        number = 50
-    if number < 50:
-        number = 50
+        number = 20
+    if number < 20:
+        number = 20
     if number > 150:
         number = 150
     C = getDBConnection()
@@ -250,27 +258,27 @@ def q_exp_display(label, number):
 
 
 #data quality pages
-@modlmf_page.route("Completeness")
+@modlmf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the mod &#8467; modular form data'
-    bread=[('Modular Forms', "/ModularForm"),('GL(2)',""),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Completeness', '')]
+    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Completeness', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='dq.modlmf.extent',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
-@modlmf_page.route("Source")
+@modlmf_page.route("/Source")
 def how_computed_page():
     t = 'Source of the mod &#8467; modular form data'
-    bread=[('Modular Forms', "/ModularForm"),('GL(2)',""),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Source', '')]
+    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Source', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='dq.modlmf.source',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
-@modlmf_page.route("Labels")
+@modlmf_page.route("/Labels")
 def labels_page():
     t = 'Label of a mod &#x2113; modular forms'
 
-    bread=[('Modular Forms', "/ModularForm"),('GL(2)',""),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('Labels', '')]
+    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('Labels', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='modlmf.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))

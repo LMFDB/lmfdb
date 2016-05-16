@@ -13,5 +13,5 @@ def body_class():
 
 import main
 
-app.register_blueprint(modlmf_page, url_prefix="/ModularForm/GL2/mod_l")
+app.register_blueprint(modlmf_page, url_prefix="/ModularForm/GL2/ModL")
 
