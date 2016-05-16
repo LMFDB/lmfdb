@@ -1,0 +1,123 @@
+{% extends "homepage.html" %}
+{% import 'color.css' as color %}
+{% block content %}
+<div>
+{{ KNOWL_INC('dq.rep_galois_modl.extent') }}
+</div>
+
+<style type="text/css">
+.error_message {
+   padding: 4px;
+   color: {{color.red}};
+   font-size: 120%;
+   font-weight: bold;
+   margin: 20px;
+}
+</style>
+{% if err_msg %}
+<p class="error_message">
+{{err_msg}}
+</p>
+<p>
+  <input type=button value="Search again" onClick="history.go(-1)">
+</p>
+{% endif %}
+
+<h2> Browse {{ KNOWL('rep_galois_modl.definition', title='Mod &#x2113; Galois representation') }}</h2>
+
+<!--<p>-->
+<!--By {{ KNOWL('rep_galois_modl.dimension', title='Dimension') }}: -->
+<!--{% for rnge in info.dim_list %}-->
+<!--<a href="?dim={{rnge}}">{{rnge}}</a>-->
+<!--{% endfor %}-->
+<!--</p>-->
+<!--<p>-->
+<!--By {{ KNOWL('rep_galois_modl.determinant', title='Determinant') }}:-->
+<!--{% for rnge in info.det_list %}-->
+<!--<a href="?det={{rnge}}">{{rnge}}</a>-->
+<!--{% endfor %}-->
+<!--</p>-->
+<!--<p>-->
+<!--By {{ KNOWL('rep_galois_modl.class_number', title='Class number') }}: -->
+<!--{% for rnge in info.class_number_list %}-->
+<!--<a href="?class_number={{rnge}}">{{rnge}}</a>-->
+<!--{% endfor %}-->
+<!--</p>-->
+<!--<p>-->
+<!--Some of our favourite {{ KNOWL('rep_galois_modl.definition', title='integral rep_galois_modls') }}:-->
+<!--{% for rnge in info.name_list %}-->
+<!--<a href="?label={{rnge}}"> {{rnge}} </a>-->
+<!--{% endfor %}-->
+</p>
+<p>A <a href={{url_for('.random_rep_galois_modl')}}>random mod &#x2113; Galois representation</a> from the database.
+<br>
+</p>
+
+
+
+<!--<h2> Find a specific {{ KNOWL('rep_galois_modl.definition', title='integral rep_galois_modl') }} by {{KNOWL('rep_galois_modl.label', title='label')}} or by {{KNOWL('rep_galois_modl.name', title='name')}}</h2>-->
+
+<!--<form>-->
+<!--<input type='text' name='label' placeholder='3.4.8.1.2'>-->
+<!--<button type='submit'>Label</button>-->
+<!--<br><span class="formexample">e.g. 3.4.8.1.2, D3, E8, A14, Leech</span>-->
+<!--</form>-->
+
+<!--<h2> Search </h2>-->
+
+<!--<p>Please enter a value or leave blank:</p>-->
+<!--<form>-->
+<!--<table>-->
+<!--<tr>-->
+<!--<td align= right>{{ KNOWL('rep_galois_modl.dimension', title='Dimension') }}:</td>-->
+<!--<td><input type='text' name='dim' placeholder='3' size=10>-->
+<!--<td><span class="formexample"> e.g. 3 or 2-5</td>-->
+<!--</tr>-->
+
+<!--<tr>-->
+<!--<td align= right>{{ KNOWL('rep_galois_modl.determinant', title='Determinant') }}:</td>-->
+<!--<td><input type='text' name='det' placeholder='1' size=10>-->
+<!--<td><span class="formexample"> e.g. 1 or 10-100</td>-->
+<!--</tr>-->
+<!--<tr>-->
+<!--<td align= right>{{ KNOWL('rep_galois_modl.level', title='Level') }}:</td>-->
+<!--<td><input type='text' name='level' placeholder='48' size=10>-->
+<!--<td><span class="formexample"> e.g. 48 or 40-100</td>-->
+<!--</tr>-->
+
+<!--<tr>-->
+<!--<td align= right>{{ KNOWL('rep_galois_modl.gram', title='Gram matrix') }}:</td>-->
+<!--<td><input type='text' name='gram' placeholder='[5,1,23]' size=10>-->
+<!--<td><span class="formexample"> e.g. $[5,1,23]$ for the {{ KNOWL('rep_galois_modl.gram', title='Gram matrix') }} $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$</td>-->
+<!--</tr>-->
+<!--<tr>-->
+<!--<td align= right>{{ KNOWL('rep_galois_modl.minimal_vector', title='Minimal vector')}} length:</td>-->
+<!--<td><input type='text' name='minimum' placeholder='1' size=10>-->
+<!--<td><span class="formexample"> e.g. 1</td>-->
+<!--</tr>-->
+
+<!--<tr>-->
+<!--<td align= right>{{ KNOWL('rep_galois_modl.class_number', title='Class number') }}:</td>-->
+<!--<td><input type='text' name='class_number' placeholder='1' size=10>-->
+<!--<td><span class="formexample"> e.g. 1</td>-->
+<!--</tr>-->
+
+<!--<tr>-->
+<!--<td align= right>{{ KNOWL('rep_galois_modl.group_order', title='Group order') }}:</td>-->
+<!--<td><input type='text' name='aut' placeholder='2' size=10>-->
+<!--<td><span class="formexample"> e.g. 696729600</td>-->
+<!--</tr>-->
+
+<!--<tr><td align=left colspan='3'>Maximum number of integral rep_galois_modls to display <input type='text' name='count' value=50 size='5' />-->
+<!--</td>-->
+<!--</tr>-->
+
+<!--<tr>-->
+<!--<td colspan=3><button type='submit' value='Search'>Search</button>-->
+<!--</td>-->
+<!--</tr>-->
+<!--</table>-->
+<!--</form>-->
+
+
+{% endblock %}
