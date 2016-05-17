@@ -217,7 +217,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             self._ap = {}
             for i in range(len(c)):
                 p = primes_to_lc[i]
-                self._ap[p] = c[i]
+        
         else:
             self._ap = {}
 
@@ -444,7 +444,8 @@ class WebNewForm(WebObject, CachedRepresentation):
             K = c2.parent()
         else:
             if ev.max_coefficient_in_db() >= 2:
-                ev.init_dynamic_properties()
+                if not ev.has_eigenvalue(2):
+                    ev.init_dynamic_properties()
             else:
                 raise StopIteration,"Newform does not have eigenvalue a(2)!"
             self._coefficients[2]=ev[2]
