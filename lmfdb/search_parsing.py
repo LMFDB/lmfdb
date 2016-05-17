@@ -272,7 +272,8 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
     if process is None: process = lambda x: x
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
-        (exactlength is not None and inp.count(',') != exactlength - 1)):
+        (exactlength is not None and inp.count(',') != exactlength - 1) or
+        (exactlength is not None and inp == '[]' and exactlength > 0)):
         if exactlength == 2:
             lstr = "pair of integers"
             example = "[2,3] or [3,3]"
@@ -290,6 +291,9 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             example = "[1,2,3] or [5,6]"
         raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
     else:
+        if inp == '[]': # fixes bug in the code below (split never returns an empty list)
+            query[qfield] = []
+            return
         if check_divisibility == 'decreasing':
             # Check that each entry divides the previous
             L = [int(a) for a in inp[1:-1].split(',')]
