@@ -457,6 +457,32 @@ class WebObject(object):
         rec = coll.find_one(self.key_dict())
         return rec
 
+    def get_file(self, add_to_fs_query=None):
+        r"""
+          Get the file from gridfs.
+        """
+        if not self._use_gridfs:
+            raise ValueError('We do not use gridfs for this class.')
+        fs = self._files
+        file_key = self.file_key_dict()
+        if add_to_fs_query is not None:
+            file_key.update(add_to_fs_query)
+        emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
+        emf_logger.debug("file_key: {0} fs={1}".format(file_key,self._file_collection))
+        if fs.exists(file_key):
+            coll = self._file_collection
+            r = coll.find_one(file_key)
+            fid = r['_id']
+            #emf_logger.debug("col={0}".format(coll))
+            #emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
+            try: 
+                d = loads(fs.get(fid).read())
+            except ValueError as e:
+                raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,r))
+        else:
+            raise IndexError("File not found with file_key = {}".format(file_key))
+        return d
+
     def authorize(self):
         r"""
         Need to be authorized to insert data
@@ -661,24 +687,8 @@ class WebObject(object):
                     raise IndexError("DB record does not exist")
                 succ_db = False
         if self._use_gridfs and update_from_fs:
-            fs = self._files
-            file_key = self.file_key_dict()
-            if add_to_fs_query is not None:
-                file_key.update(add_to_fs_query)
-            emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
-            emf_logger.debug("file_key: {0} fs={1}".format(file_key,self._file_collection))
-            if fs.exists(file_key):
-                coll = self._file_collection
-                r = coll.find_one(file_key)
-                fid = r['_id']
-                #emf_logger.debug("col={0}".format(coll))
-                #emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
-                try: 
-                    d = loads(fs.get(fid).read())
-                except ValueError as e:
-                    raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,r))
-                #emf_logger.debug("type(d)={0}".format(type(d)))                                
-                #emf_logger.debug("d.keys()={0}".format(d.keys()))                
+            try:
+                d = self.get_file(add_to_fs_query)
                 for p in self._fs_properties:
                     #emf_logger.debug("p={0}, update:{1}".format(p,p.include_in_update))
                     #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
@@ -688,11 +698,12 @@ class WebObject(object):
                         
                         p.set_from_fs(d[p.name])
                 succ_fs = True
-            else:
+                emf_logger.debug("loaded from fs")
+            except IndexError e:
+                emf_logger.debug(e)
                 if not ignore_non_existent:
-                    raise IndexError("File does not exist")
+                    raise IndexError(e)
                 succ_fs = False
-            emf_logger.debug("loaded from fs")
         if succ_db: self._has_updated_from_db = True
         if succ_fs: self._has_updated_from_fs = True
 
