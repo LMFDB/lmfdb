@@ -302,6 +302,11 @@ class WebObject(object):
         #    assert k in self._db_properties, \
         #           "The file key has to be contained in self._db_properties. This is not the case for {0}".format(k)
 
+        # check that the file key is contained in the _fs_properties
+        for k in self._file_key:
+            assert k in self._fs_properties, \
+                   "The file key has to be contained in self._db_properties. This is not the case for {0}".format(k)
+
         #print hasattr(self, 'level')
 
         for key, value in kwargs.iteritems():
