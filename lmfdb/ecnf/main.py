@@ -395,7 +395,7 @@ def elliptic_curve_search(**args):
             query['cm'] = 0
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
-    print query
+
     info['query'] = query
     count = parse_count(info, 50)
     start = parse_start(info)
