@@ -699,7 +699,7 @@ class WebObject(object):
                         p.set_from_fs(d[p.name])
                 succ_fs = True
                 emf_logger.debug("loaded from fs")
-            except IndexError e:
+            except IndexError as e:
                 emf_logger.debug(e)
                 if not ignore_non_existent:
                     raise IndexError(e)
