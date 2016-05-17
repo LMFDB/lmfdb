@@ -272,7 +272,8 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
     if process is None: process = lambda x: x
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
-        (exactlength is not None and inp.count(',') != exactlength - 1)):
+        (exactlength is not None and inp.count(',') != exactlength - 1) or
+        (exactlength is not None and inp == '[]' and exactlength > 0)):
         if exactlength == 2:
             lstr = "pair of integers"
             example = "[2,3] or [3,3]"
