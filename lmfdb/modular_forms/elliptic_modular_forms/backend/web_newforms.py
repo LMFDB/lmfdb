@@ -201,11 +201,10 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             **kwargs
             )
 
-    def update_from_db(self, ignore_non_existent = True, \
-                       add_to_fs_query=None, add_to_db_query=None):
+    def update_from_db(self, **kwargs):
 
         self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
-        super(WebEigenvalues,self).update_from_db(ignore_non_existent, add_to_fs_query, add_to_db_query)
+        super(WebEigenvalues,self).update_from_db(**kwargs)
         #print "_ap=",self._ap
 
     def init_dynamic_properties(self):
@@ -346,8 +345,10 @@ class WebNewForm(WebObject, CachedRepresentation):
         emf_logger.debug("After init properties 3")
 
     def update_from_db(self, **kwargs):
-
-        self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
+        # for now we add asking for a certain precision to the db query as the existing
+        # records do not have this information stored in the file_collection
+        # this should change in an upcoming version
+        self._add_to_db_query = {'prec': {'$gt': int(self.prec-1)}}
         super(WebNewForm,self).update_from_db(**kwargs)
 
     def __repr__(self):

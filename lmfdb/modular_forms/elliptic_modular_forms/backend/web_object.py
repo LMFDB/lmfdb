@@ -315,6 +315,10 @@ class WebObject(object):
             self._add_to_db_query = None
         if not hasattr(self, '_add_to_fs_query'):
             self._add_to_fs_query = None
+        if not hasattr(self, '_sort'):
+            self._sort = []
+        if not hasattr(self, '_sort_files'):
+            self._sort_files = []
                 
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
@@ -449,12 +453,23 @@ class WebObject(object):
         """
         return { p.name : p.to_fs() for p in self._fs_properties }
 
-    def get_db_record(self):
+    def get_db_record(self, add_to_db_query = None):
         r"""
           Get the db record from the database. This is the mongodb record in self._collection_name.
         """
         coll = self._collection
-        rec = coll.find_one(self.key_dict())
+        if add_to_db_query is None:
+            add_to_db_query = self._add_to_db_query
+        elif self._add_to_db_query is not None:
+            q=add_to_db_query
+            add_to_db_query = copy(self._add_to_db_query)
+            add_to_db_query.update(q)
+        if add_to_db_query is not None:
+            key = self.key_dict().update(add_to_db_query)
+        else:
+            key = self.key_dict()
+        sort = self._sort
+        rec = coll.find_one(key, sort = sort)
         return rec
 
     def get_file(self, add_to_fs_query=None):
@@ -464,14 +479,22 @@ class WebObject(object):
         if not self._use_gridfs:
             raise ValueError('We do not use gridfs for this class.')
         fs = self._files
-        file_key = self.file_key_dict()
+        if add_to_fs_query is None:
+            add_to_fs_query = self._add_to_fs_query
+        elif self._add_to_fs_query is not None:
+            q=add_to_fs_query
+            add_to_fs_query = copy(self._add_to_fs_query)
+            add_to_fs_query.update(q)
         if add_to_fs_query is not None:
-            file_key.update(add_to_fs_query)
+            file_key = self.file_key().update(add_to_fs_query)
+        else:
+            key = self.file_key()
+        sort = self._sort_files
         emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
         emf_logger.debug("file_key: {0} fs={1}".format(file_key,self._file_collection))
         if fs.exists(file_key):
             coll = self._file_collection
-            r = coll.find_one(file_key)
+            r = coll.find_one(file_key, sort = sort)
             fid = r['_id']
             #emf_logger.debug("col={0}".format(coll))
             #emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
@@ -632,19 +655,6 @@ class WebObject(object):
         """
         self._has_updated_from_db = False
         self._has_updated_from_fs = False
-        if add_to_db_query is None:
-            add_to_db_query = self._add_to_db_query
-        elif self._add_to_db_query is not None:
-            q=add_to_db_query
-            add_to_db_query = copy(self._add_to_db_query)
-            add_to_db_query.update(q)
-
-        if add_to_fs_query is None:
-            add_to_fs_query = self._add_to_fs_query
-        elif self._add_to_fs_query is not None:
-            q=add_to_fs_query
-            add_to_fs_query = copy(self._add_to_fs_query)
-            add_to_fs_query.update(q)
             
         #emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
         #emf_logger.debug("self._add_to_fs_query: {0}".format(self._add_to_fs_query))
@@ -652,25 +662,15 @@ class WebObject(object):
         succ_db = False
         succ_fs = False
         if self._use_separate_db or not self._use_gridfs:
-            coll = self._collection
-            key = self.key_dict()
-            if add_to_db_query is not None:
-                key.update(add_to_db_query)
-            emf_logger.debug("key: {0} for {1}".format(key,self._collection_name))
-            if coll.find(key).count()>0:
-                props_to_fetch = { }  #p.name:True for p in self._key}
-                for p in self._db_properties:
-                    if p.include_in_update \
-                        and (not p.name in self._fs_properties or p._extend_fs_with_db) \
-                        and (include_only is None or p.name in include_only):
-                        props_to_fetch[p.name] = True
-                        p.has_been_set(False)
-                print props_to_fetch
-#                props_to_fetch = {p.name:True for p in self._db_properties
-#                                  if (p.include_in_update and not p.name in self._fs_properties)
-#                                  or p.name in self._key}
-                emf_logger.debug("props_to_fetch: {0}".format(props_to_fetch))                
-                rec = coll.find_one(key, projection = props_to_fetch)
+            props_to_fetch = { }  #p.name:True for p in self._key}
+            for p in self._db_properties:
+                if p.include_in_update \
+                  and (not p.name in self._fs_properties or p._extend_fs_with_db) \
+                  and (include_only is None or p.name in include_only):
+                    props_to_fetch[p.name] = True
+                    p.has_been_set(False)
+            try:
+                rec = self.get_db_record(add_to_db_query, projection = props_to_fetch) 
                 for pn in props_to_fetch:
                     p = self._properties[pn]
                     if rec.has_key(pn):
@@ -681,7 +681,7 @@ class WebObject(object):
                         except NotImplementedError:
                             continue
                 succ_db = True
-            else:
+            except:
                 emf_logger.critical("record with key:{0} was not found!".format(key))
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
@@ -695,7 +695,6 @@ class WebObject(object):
                     if p.include_in_update and d.has_key(p.name):
                         emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                         p.has_been_set(False)
-                        
                         p.set_from_fs(d[p.name])
                 succ_fs = True
                 emf_logger.debug("loaded from fs")
