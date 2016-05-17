@@ -345,6 +345,12 @@ class WebNewForm(WebObject, CachedRepresentation):
         self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec,init_dynamic_properties=False)
         emf_logger.debug("After init properties 3")
 
+    def update_from_db(self, ignore_non_existent = True, \
+                       add_to_fs_query=None, add_to_db_query=None):
+
+        self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
+        super(WebNewForm,self).update_from_db(ignore_non_existent, add_to_fs_query, add_to_db_query)
+
     def __repr__(self):
         if self.dimension == 0:
             s = "Zero "
