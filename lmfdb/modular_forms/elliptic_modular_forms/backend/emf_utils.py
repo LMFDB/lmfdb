@@ -190,7 +190,7 @@ def extract_data_from_jump_to(s):
                 t = parse_newform_label(s)
                 if len(t) == 4:
                     args['level'],args['weight'],args['character'],args['label'] = t
-                if len(t) == 5:
+                elif len(t) == 5:
                     args['level'],args['weight'],args['character'],args['label'],args['embedding'] = t
                 else:
                     raise ValueError
