@@ -30,6 +30,7 @@ AUTHORS:
 import re
 
 from flask import url_for
+import pymongo
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebObject,
@@ -202,8 +203,9 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             )
 
     def update_from_db(self, **kwargs):
-
         self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
+        self._sort = [('prec', pymongo.ASCENDING)]
+        self._sort_files = [('prec', pymongo.ASCENDING)]
         super(WebEigenvalues,self).update_from_db(**kwargs)
         #print "_ap=",self._ap
 
@@ -263,7 +265,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
 class WebNewForm(WebObject, CachedRepresentation):
 
     _key = ['level', 'weight', 'character', 'label','version']
-    _file_key = ['hecke_orbit_label','version']
+    _file_key = ['hecke_orbit_label','version', 'prec']
     if emf_version > 1.3:
         _collection_name = 'webnewforms2'
     else:
@@ -344,12 +346,27 @@ class WebNewForm(WebObject, CachedRepresentation):
         self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec,init_dynamic_properties=False)
         emf_logger.debug("After init properties 3")
 
-    def update_from_db(self, **kwargs):
-        # for now we add asking for a certain precision to the db query as the existing
-        # records do not have this information stored in the file_collection
-        # this should change in an upcoming version
-        self._add_to_db_query = {'prec': {'$gt': int(self.prec-1)}}
+    def update_from_db(self, ignore_precision = False, **kwargs):
+        # this finds the (file) record with the
+        # lowest precision (=smallest record)
+        # above or equal to self.prec
+        if not ignore_precision:
+            self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
+            self._sort_files = [('prec', pymongo.ASCENDING)]
+        else:
+            # However, if ignore_precision is True,
+            # then we just ignore this field
+            # This is for compatibility reasons
+            # as older versions did not have the prec stored in the fs
+            self._file_key.remove('prec')
+            self._add_to_fs_query = None
+            self._sort_files = []
         super(WebNewForm,self).update_from_db(**kwargs)
+        if ignore_precision:
+            # restore file_key
+            self._file_key.append('prec')
+            self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
+            self._sort_files = [('prec', pymongo.ASCENDING)]
 
     def __repr__(self):
         if self.dimension == 0:
