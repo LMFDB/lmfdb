@@ -574,8 +574,30 @@ class WebObject(object):
             raise IndexError("Record does not exist")
         fid = r['_id']
         fs.delete(fid)
-                
 
+    def update_db_properties_from_dict(self, d):
+        for p in self.db_properties():
+            pn = p.name
+            if d.has_key(pn):
+                try:
+                    p.set_from_db(d[pn])
+                    if not p.name in self._fs_properties:
+                        p.has_been_set(True)
+                except NotImplementedError:
+                    continue
+        return True
+
+    def update_fs_properties_from_dict(self, d):
+        for p in self.fs_properties():
+            pn = p.name
+            if d.has_key(pn):
+                try:
+                    p.set_from_fs(d[pn])
+                    p.has_been_set(True)
+                except NotImplementedError:
+                    continue
+        return True
+    
     def update_from_db(self, ignore_non_existent = True, \
                        add_to_fs_query=None, add_to_db_query=None, \
                        update_from_fs=True, include_only=None):
@@ -684,12 +706,10 @@ class WebObject(object):
         if float(pymongo.version_tuple[0])>=3:
             for s in coll.find(query):
                 s.pop('_id')
-                if s.has_key('zeta_orders'):
-                    s.pop('zeta_orders')
-                if s.has_key('hecke_orbits'):
-                    s.pop('hecke_orbits')
-                print s
-                yield cls(update_from_db=False, **s)
+                k = {key:s[key] for key in cls._key}
+                o = cls(update_from_db=False, **k)
+                o.update_db_properties_from_dict(s)
+                yield o
         else:
             for s in coll.find(query, fields = cls._key):
                 s.pop('_id')
@@ -872,14 +892,18 @@ class WebNumberField(WebDict):
             
     def set_extended_properties(self):
         if self._has_been_set:
-            if hasattr(self._value,'absolute_polynomial'):
-                setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
-            else:
-                setattr(self._value, "absolute_polynomial_latex",'')
-            if hasattr(self._value,'relative_polynomial'):
-                setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
-            else:
-                setattr(self._value, "relative_polynomial_latex",'')
+            try:
+                if hasattr(self._value,'absolute_polynomial'):
+                    setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
+                else:
+                    setattr(self._value, "absolute_polynomial_latex",'')
+                    if hasattr(self._value,'relative_polynomial'):
+                        setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
+                    else:
+                        setattr(self._value, "relative_polynomial_latex",'')
+            except AttributeError as e:
+                    emf_logger.debug(e)
+                    pass
 
 def web_latex_poly(pol, name='x', keepzeta=False):
     """

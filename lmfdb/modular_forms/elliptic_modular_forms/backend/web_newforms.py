@@ -217,7 +217,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             self._ap = {}
             for i in range(len(c)):
                 p = primes_to_lc[i]
-        
+                self._ap[p] = c[i]
         else:
             self._ap = {}
 
@@ -407,13 +407,13 @@ class WebNewForm(WebObject, CachedRepresentation):
         """
         if len(nrange) == 0:
             return []
-        if len(nrange) > 1:
-            emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[1]))
-        else:
-            emf_logger.debug("computing coeffs in range {0}--{0}".format(nrange[0]))
         if not isinstance(nrange, list):
             M = nrange
             nrange = range(0, M)
+        if len(nrange) > 1:
+            emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[-1]))
+        else:
+            emf_logger.debug("computing coeffs in range {0}--{0}".format(nrange[0]))
         res = []
         recompute = False
         for n in nrange:
