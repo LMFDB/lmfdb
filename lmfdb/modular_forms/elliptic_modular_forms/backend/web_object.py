@@ -294,18 +294,12 @@ class WebObject(object):
         self._files = self.get_files_from_gridfs(self._collection_name)
         emf_logger.debug('Connected to db and got files!')
         # Initialize _db_properties and _db_properties to be easily accesible
+        for k in self._key:
+            self._properties[k].save_to_db = True
+        for k in self._file_key:
+            self._properties[k].save_to_fs = True
         self._db_properties = self._properties.db_properties()
         self._fs_properties = self._properties.fs_properties()
-
-        # check that the file key is contained in the _db_properties
-        #for k in self._file_key:
-        #    assert k in self._db_properties, \
-        #           "The file key has to be contained in self._db_properties. This is not the case for {0}".format(k)
-
-        # check that the file key is contained in the _fs_properties
-        for k in self._file_key:
-            assert k in self._fs_properties, \
-                   "The file key has to be contained in self._db_properties. This is not the case for {0}".format(k)
 
         #print hasattr(self, 'level')
 
