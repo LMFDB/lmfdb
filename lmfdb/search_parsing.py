@@ -290,6 +290,9 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             example = "[1,2,3] or [5,6]"
         raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
     else:
+        if inp == '[]': # fixes bug in the code below (split never returns an empty list)
+            query[qfield] = []
+            return
         if check_divisibility == 'decreasing':
             # Check that each entry divides the previous
             L = [int(a) for a in inp[1:-1].split(',')]
