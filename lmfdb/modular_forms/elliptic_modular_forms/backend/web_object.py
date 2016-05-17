@@ -453,7 +453,7 @@ class WebObject(object):
         """
         return { p.name : p.to_fs() for p in self._fs_properties }
 
-    def get_db_record(self, add_to_db_query = None):
+    def get_db_record(self, add_to_db_query = None, projection = None):
         r"""
           Get the db record from the database. This is the mongodb record in self._collection_name.
         """
@@ -472,7 +472,10 @@ class WebObject(object):
         sort = self._sort
         emf_logger.debug("add_to_db_query: {0}".format(add_to_db_query))
         emf_logger.debug("key: {0} coll={1}".format(key,self._collection))
-        rec = coll.find_one(key, sort = sort)
+        if projection is not None:
+            rec = coll.find_one(key, sort = sort, projection = projection)
+        else:
+            rec = coll.find_one(key, sort = sort)
         return rec
 
     def get_file(self, add_to_fs_query=None):
@@ -675,7 +678,7 @@ class WebObject(object):
                     p.has_been_set(False)
             emf_logger.debug("properties to fetch: {}".format(props_to_fetch))
             try:
-                rec = self.get_db_record(add_to_db_query, projection = props_to_fetch) 
+                rec = self.get_db_record(add_to_db_query, projection = props_to_fetch)
                 for pn in props_to_fetch:
                     p = self._properties[pn]
                     if rec.has_key(pn):
