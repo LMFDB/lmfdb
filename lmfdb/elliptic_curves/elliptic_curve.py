@@ -3,6 +3,7 @@ import re
 import time
 import ast
 from pymongo import ASCENDING, DESCENDING
+from operator import mul
 import lmfdb.base
 from lmfdb.base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, send_file
@@ -222,6 +223,9 @@ def elliptic_curve_search(**args):
         parse_ints(info,query,'rank')
         parse_ints(info,query,'sha','analytic order of &#1064;')
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,process=str,check_divisibility='increasing')
+        # speed up slow torsion_structure searches by also setting torsion
+        if 'torsion_structure' in query and not 'torsion' in query:
+            query['torsion'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
         if 'include_cm' in info:
             if info['include_cm'] == 'exclude':
                 query['cm'] = 0
