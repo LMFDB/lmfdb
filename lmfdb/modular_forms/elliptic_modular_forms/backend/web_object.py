@@ -673,6 +673,7 @@ class WebObject(object):
                   and (include_only is None or p.name in include_only):
                     props_to_fetch[p.name] = True
                     p.has_been_set(False)
+            emf_logger.debug("properties to fetch: {}".format(props_to_fetch))
             try:
                 rec = self.get_db_record(add_to_db_query, projection = props_to_fetch) 
                 for pn in props_to_fetch:

@@ -274,7 +274,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True, **kwargs):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         if isinstance(level,basestring) or kwargs.has_key('hecke_orbit_label'):
-            hecke_orbit_label = kwds.get('hecke_orbit_label', level)
+            hecke_orbit_label = kwargs.get('hecke_orbit_label', level)
             level,weight,character,label = parse_newform_label(hecke_orbit_label)
         self._reduction = (type(self),(level,weight,character,label),{'parent':parent,'update_from_db':update_from_db})
         if isinstance(character, WebChar):
@@ -305,7 +305,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebqExp('q_expansion'),
             WebDict('_coefficients'),
             WebDict('_embeddings'),
-            WebInt('prec',value=0), 
+            WebInt('prec',value=0, save_to_db=False), 
             WebNumberField('base_ring'),
             WebNumberField('coefficient_field'),
             WebInt('coefficient_field_degree'),
