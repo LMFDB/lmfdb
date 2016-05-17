@@ -82,12 +82,13 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     url3 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight)
     url4 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight, character=character)
     bread = [(EMF_TOP, url1)]
-    bread.append(("of level %s" % level, url2))
-    bread.append(("weight %s" % weight, url3))
+    bread.append(("Level %s" % level, url2))
+    bread.append(("Weight %s" % weight, url3))
     if int(character) == 0:
-        bread.append(("trivial character", url4))
+        bread.append(("Trivial Character", url4))
     else:
-        bread.append(("\( %s \)" % (WNF.character.latex_name), url4))
+        bread.append(("Character \( %s \)" % (WNF.character.latex_name), url4))
+    bread.append(("Newform %d.%d.%d.%s" % (level, weight, int(character), label),''))
     info['bread'] = bread
     
     properties2 = list()
