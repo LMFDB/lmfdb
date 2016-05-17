@@ -187,7 +187,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             WebSageObject('v', None, vector),
             WebDict('meta',value={}),
             WebStr('hecke_orbit_label', value=hecke_orbit_label),
-            WebInt('prec', value=prec, save_to_db = False),
+            WebInt('prec', value=prec, save_to_db = False, save_to_fs=True),
             WebFloat('version', value=float(emf_version),
                      save_to_fs=True, save_to_db=True),
         )
@@ -305,7 +305,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebqExp('q_expansion'),
             WebDict('_coefficients'),
             WebDict('_embeddings'),
-            WebInt('prec',value=0, save_to_db=False), 
+            WebInt('prec',value=0, save_to_db=False, save_to_fs=True), 
             WebNumberField('base_ring'),
             WebNumberField('coefficient_field'),
             WebInt('coefficient_field_degree'),
