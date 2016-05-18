@@ -735,6 +735,7 @@ class WebObject(object):
         if self._use_gridfs and update_from_fs:
             try:
                 d, m = self.get_file(add_to_fs_query)
+                self._file_record_length = m['length']
                 for p in self._fs_properties:
                     #emf_logger.debug("p={0}, update:{1}".format(p,p.include_in_update))
                     #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
