@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # HeckeCharacters.py
 
-from sage.all import gp, xmrange, Integer, pari, gcd
+from sage.all import gp, xmrange, Integer, pari, gcd, LCM
 from sage.misc.cachefunc import cached_method
 from sage.groups.abelian_gps.abelian_group import AbelianGroup_class
 from sage.groups.abelian_gps.abelian_group_element import AbelianGroupElement
@@ -90,9 +90,6 @@ class HeckeCharGroup(DualAbelianGroup_class):
         names = tuple([ "chi%i"%i for i in range(ray_class_group.ngens()) ])
         if base_ring is None:
             from sage.rings.number_field.number_field import CyclotomicField
-            # FIXME: following is deprecated starting from sage 7.1
-            # replace by from sage.arith.all import LCM
-            from sage.rings.arith import LCM
             base_ring = CyclotomicField(LCM(ray_class_group.gens_orders()))
         DualAbelianGroup_class.__init__(self, ray_class_group, names, base_ring)
         """ ray_class_group accessible as self.group() """
