@@ -584,6 +584,19 @@ class WebNewForm(WebObject, CachedRepresentation):
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
 
+    def create_duplicate_record(prec=10):
+        ### creates a duplicate record (fs) of this webnewform
+        ### with lower precision to load faster on the web
+        if prec>=self.prec:
+            raise ValueError("Need lower precision, self.prec = {}".format(self.prec))
+        self.prec=prec
+        self.q_expansion = self.q_expansion.truncate_powerseries(prec)
+        self._coefficients = {n:c for n,c in self._coefficients.iteritems() if n<prec}
+        self._embeddings['values'] = {n:c for n,c in self._embeddings['values'].iteritems() if n<prec}
+        self._embeddings['prec'] = prec
+        self.save_to_db()
+        
+
 from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import multiply_mat_vec
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
