@@ -717,16 +717,19 @@ class WebObject(object):
         if succ_fs: self._has_updated_from_fs = True
 
     @classmethod
-    def find(cls, query={}, projection = None):
+    def find(cls, query={}, projection = None, sort=[]):
         r'''
           Search the database using ```query``` and return
           an iterator over the set of matching objects of this WebObject
         '''
         coll = cls.connect_to_db(cls._collection_name)
         if float(pymongo.version_tuple[0])>=3:
-            for s in coll.find(query):
+            for s in coll.find(query, sort=sort):
                 s.pop('_id')
-                k = {key:s[key] for key in cls._key}
+                try:
+                    k = {key:s[key] for key in cls._key}
+                except KeyError as e:
+                    emf_logger.critical("Malformed data in the database {}, {}".format(e,s))
                 o = cls(update_from_db=False, **k)
                 o.update_db_properties_from_dict(s)
                 yield o
