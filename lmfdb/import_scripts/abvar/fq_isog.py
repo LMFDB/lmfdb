@@ -32,8 +32,8 @@ import yaml
 ## Main importing function
 
 def do_import(ll, db, saving, R, show_update):
-    label,g,q,polynomial,angle_numbers,angle_ranks,number_field,p_rank,slopes,A_counts,C_counts,known_jacobian,principally_polarizable,decomposition,brauer_invariants,primitive_models = ll
-    mykeys = ['label','g','q','polynomial','angle_numbers','angle_ranks','number_field','p_rank','slopes','A_counts','C_counts','known_jacobian','principally_polarizable','decomposition','brauer_invariants','primitive_models']
+    label,g,q,polynomial,angle_numbers,angle_ranks,p_rank,slopes,A_counts,C_counts,known_jacobian,principally_polarizable,decomposition,brauer_invariants,primitive_models = ll
+    mykeys = ['label','g','q','polynomial','angle_numbers','angle_ranks','p_rank','slopes','A_counts','C_counts','known_jacobian','principally_polarizable','decomposition','brauer_invariants','primitive_models']
     data = {}
     for key, val in zip(mykeys, ll):
         data[key] = val
