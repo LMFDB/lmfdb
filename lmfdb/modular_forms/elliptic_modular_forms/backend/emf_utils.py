@@ -108,7 +108,29 @@ def parse_space_label(label):
         else:
             raise ValueError
     except ValueError:
-        raise ValueError,"{0} is not a valid space label!".format(label)   
+        raise ValueError,"{0} is not a valid space label!".format(label)
+
+@cached_function
+def dimension_from_db(level,weight,chi=None,group='gamma0'):
+    import json
+    db = lmfdb.base.getDBConnection()['modularforms2']['webmodformspace_dimension']
+    q = db.find_one({'group':group})
+    dim_table = {}
+    if q:
+        dim_table = q.get('data',{})
+        dim_table = json.loads(dim_table)
+    if group=='gamma0' and chi!=None:
+        d,t = dim_table.get(str(level),{}).get(str(weight),{}).get(str(chi),[-1,0])
+        return  d,t
+    elif chi is None:
+        d,t = dim_table.get(str(level),{}).get(str(weight),[-1,0])
+        return  d,t
+    elif chi == 'all':
+        res = {level: {weight:{}}}
+        dtable = dim_table.get(str(level),{}).get(str(weight),{})
+        for i in dtable.keys():
+            res[level][weight][int(i)] = dtable[i]
+        return res
 
 
 @cached_method
