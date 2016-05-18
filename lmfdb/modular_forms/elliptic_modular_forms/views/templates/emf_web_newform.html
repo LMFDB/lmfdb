@@ -48,9 +48,10 @@ The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is
     {% else %}
         $\Q({{ polvars['coefficient_field']}})$
     {% endif %}
-    where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} {{coeff_field[0] | safe}} over $\Q$. 
+where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}}
+<div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$. 
     {% if coeff_field|length >2 and coeff_field[2]>2 %}
-    <br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is {{coeff_field[1]}}.
+    <br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}} </div>.
     {% endif %}
 {% endif %}
 </div>

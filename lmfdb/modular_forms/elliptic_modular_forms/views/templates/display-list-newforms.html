@@ -105,10 +105,14 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
         {% if f.coefficient_field.lmfdb_label %}
         <td align="left">$\Q(\alpha_{ {{loop.index}} })\cong$ 
 <a title = "{{ f.coefficient_field.lmfdb_pretty }}[nf.field.data]" knowl= "nf.field.data" kwargs="label={{ f.coefficient_field.lmfdb_label }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
-        <td align="left">{{ f.coefficient_field.relative_polynomial_latex('x') }}</td>
+<td align="left">
+{{ f.coefficient_field.relative_polynomial_latex('x') }}
+</td>
         {% else %}
         <td align="left">$\Q(\alpha_{ {{loop.index}} })$</td>
-        <td align="left">{{ f.coefficient_field.relative_polynomial_latex('x') }}</td>
+	<td align="left">
+	  {{ f.coefficient_field.relative_polynomial_latex('x') }}
+	</td>
         {% endif %}
       </tr>
         {% endif %}
