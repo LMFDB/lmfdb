@@ -894,21 +894,19 @@ class WebNumberField(WebDict):
             label = self._db_value
             setattr(self._value, "lmfdb_pretty", field_pretty(label))
         else:
-            if hasattr(self._value,'absolute_polynomial'):
-                setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
-                label = ''
-            elif self._value.absolute_degree()==1:
+            if self._value.absolute_degree()==1:
                 label = '1.1.1.1'
                 setattr(self._value, "lmfdb_pretty", field_pretty(label))
                 setattr(self._value, "lmfdb_label", label)
             else:
                 emf_logger.critical("could not set lmfdb_pretty for the label")
-        try:
-            url =  url_for("number_fields.by_label", label=label)
-        except RuntimeError:
-            emf_logger.critical("could not set url for the label")
-            url = ''
-        setattr(self._value, "lmfdb_url", url)
+                label = ''
+        if label != '':
+            try:
+                url =  url_for("number_fields.by_label", label=label)
+                setattr(self._value, "lmfdb_url", url)
+            except RuntimeError:
+                emf_logger.critical("could not set url for the label")
             
     def set_extended_properties(self):
         if self._has_been_set:
