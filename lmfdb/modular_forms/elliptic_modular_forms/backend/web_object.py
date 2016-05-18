@@ -24,6 +24,7 @@ AUTHORS:
 """
 from lmfdb.base import app
 from flask import url_for
+from copy import copy
 from lmfdb.modular_forms.elliptic_modular_forms import emf_version, emf_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db
 from lmfdb.number_fields.number_field import poly_to_field_label
@@ -216,16 +217,23 @@ class WebObject(object):
 
     _collection_name = None
     _key = None
+    _key_multi = None
     _file_key = None
+    _file_key_multi = None
     _properties = None
     _has_updated_from_db = False
     _has_updated_from_fs = False
     
     r"""
           _key: a list - The parameters that are needed to initialize a WebObject of this type.
+          _key_multi: a list or string - this is just added to the file key but these are properties 
+                            that do not uniquely identify the
+                           (mathematical) object and one mathematical object can have several files
+                           with varying values of the keys in _key_multi (example "prec" of a q-expansion)
           _file_key:  a string - the field in the database that is the unique identifier for this object
                  This can also be a list of strings if the key is a compound.
-          _collection_name: a database collection name to use
+          _file_key_multi: list or string - same as _key_multi but for the files
+          _collection_name: a string -  a database collection name to use
                             We assume that the gridfs collection is given by 'collection_name.files'
     """
 
@@ -322,10 +330,10 @@ class WebObject(object):
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
             emf_logger.debug('Update requested')
-            try:
-                self.update_from_db()
-            except Exception as e:
-                raise RuntimeError(str(e))
+            #try:
+            self.update_from_db()
+            #except Exception as e:
+            #    raise RuntimeError(str(e))
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
         if init_dynamic_properties:
             emf_logger.debug('init_dynamic_properties will be called')
@@ -419,22 +427,27 @@ class WebObject(object):
         """
         pass
         
-    def file_key_dict(self):
+    def file_key_dict(self, include_multi = True):
         r"""
         Return a dictionary where the keys are the dbkeys of ``self``` and
         the values are the corresponding values of ```self```.
         """
         emf_logger.debug('key: {0}'.format(self._key))
         #emf_logger.debug('properties: {0}'.format(self._properties))
-        return { key : self._properties[key].to_db() for key in self._file_key }
+        keys = self._file_key
+        if include_multi and self._file_key_multi is not None:
+            keys +=  self._file_key_multi
+        return { key : self._properties[key].to_db() for key in keys }
 
-    def key_dict(self):
+    def key_dict(self, include_multi = True):
         r"""
         Return a dictionary where the keys are the keys of ``self``` and
         the values are the corresponding values of ```self```.
         """
-
-        return { key : self._properties[key].to_db() for key in self._key }
+        keys = self._key
+        if include_multi and self._key_multi is not None:
+            keys +=  self._key_multi
+        return { key : self._properties[key].to_db() for key in keys}
 
     def db_dict(self):
         r"""
@@ -477,9 +490,9 @@ class WebObject(object):
             rec = coll.find_one(key, sort = sort)
         return rec
 
-    def get_file(self, add_to_fs_query=None):
+    def get_file(self, add_to_fs_query=None, get_all=False, meta_only=False):
         r"""
-          Get the file from gridfs.
+          Get the file(s) from gridfs.
         """
         if not self._use_gridfs:
             raise ValueError('We do not use gridfs for this class.')
@@ -490,27 +503,54 @@ class WebObject(object):
             q=add_to_fs_query
             add_to_fs_query = copy(self._add_to_fs_query)
             add_to_fs_query.update(q)
+        file_key = self.file_key_dict(include_multi = get_all)
         if add_to_fs_query is not None:
-            file_key = self.file_key_dict()
             file_key.update(add_to_fs_query)
-        else:
-            file_key = self.file_key_dict()
         sort = self._sort_files
         emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
         emf_logger.debug("file_key: {0} fs={1}".format(file_key,self._file_collection))
+        results = []
         if fs.exists(file_key):
             coll = self._file_collection
-            m = coll.find_one(file_key, sort = sort)
-            fid = m['_id']
-            #emf_logger.debug("col={0}".format(coll))
-            #emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
-            try: 
-                d = loads(fs.get(fid).read())
-            except ValueError as e:
-                raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,r))
+            if get_all:
+                files = coll.find(file_key, sort = sort)
+            else:
+                files = [coll.find_one(file_key, sort = sort)]
+            for m in files:
+                fid = m['_id']
+                #emf_logger.debug("col={0}".format(coll))
+                #emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
+                if not meta_only:
+                    try: 
+                        d = loads(fs.get(fid).read())
+                        results.append((d,m))
+                    except ValueError as e:
+                        raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,r))
+                else:
+                    results.append(m)
         else:
             raise IndexError("File not found with file_key = {}".format(file_key))
-        return d, m
+        emf_logger.debug("len(results) = {}".format(len(results)))
+        if len(results) == 1:
+            return results[0]
+        else:
+            return results
+
+    def get_files(self, add_to_fs_query=None):
+        if add_to_fs_query is None:
+            add_to_fs_query = {}
+        if self._file_key_multi is None:
+            return self.get_file(add_to_fs_query)
+        else:
+            return self.get_file(add_to_fs_query, get_all=True)
+
+    def get_file_list(self, add_to_fs_query=None):
+        if add_to_fs_query is None:
+            add_to_fs_query = {}
+        if self._file_key_multi is None:
+            return self.get_file(add_to_fs_query, meta_only=True)
+        else:
+            return self.get_file(add_to_fs_query, get_all=True, meta_only=True)
 
     def authorize(self):
         r"""

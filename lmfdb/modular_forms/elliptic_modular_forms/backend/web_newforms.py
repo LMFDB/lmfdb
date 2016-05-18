@@ -264,7 +264,8 @@ class WebEigenvalues(WebObject, CachedRepresentation):
 class WebNewForm(WebObject, CachedRepresentation):
 
     _key = ['level', 'weight', 'character', 'label', 'version']
-    _file_key = ['hecke_orbit_label','version', 'prec']
+    _file_key = ['hecke_orbit_label','version']
+    _file_key_multi = ['prec']
     if emf_version > 1.3:
         _collection_name = 'webnewforms2'
     else:
@@ -527,6 +528,16 @@ class WebNewForm(WebObject, CachedRepresentation):
                     raise ArithmeticError,"Can not compute product of coefficients!"
             
         return prod
+
+    def available_precs(self):
+        r"""
+        The precision is the number of computed Fourier coefficients.
+        We have several records in the database for each newform, 
+        each in a different precision.
+        This method returns a list of the precisions that are available in the database for this newform.
+        """
+        files = self.get_file_list()
+        return [x['prec'] for x in files]
 
     def max_cn(self):
         r"""
