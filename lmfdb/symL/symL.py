@@ -23,7 +23,7 @@ import sage.rings.all
 
 from sage.schemes.elliptic_curves.constructor import EllipticCurve
 
-from sage.rings.arith import binomial
+from sage.all import binomial
 from sympowlmfdb import sympowlmfdb
 
 
