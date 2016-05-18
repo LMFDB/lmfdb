@@ -264,14 +264,14 @@ class WebEigenvalues(WebObject, CachedRepresentation):
     
 class WebNewForm(WebObject, CachedRepresentation):
 
-    _key = ['level', 'weight', 'character', 'label','version']
+    _key = ['level', 'weight', 'character', 'label', 'version']
     _file_key = ['hecke_orbit_label','version', 'prec']
     if emf_version > 1.3:
         _collection_name = 'webnewforms2'
     else:
         _collection_name = 'webnewforms'
 
-    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True, **kwargs):
+    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True,**kwargs):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         if isinstance(level,basestring) or kwargs.has_key('hecke_orbit_label'):
             hecke_orbit_label = kwargs.get('hecke_orbit_label', level)
@@ -330,12 +330,12 @@ class WebNewForm(WebObject, CachedRepresentation):
 #                                    include_in_update = True if parent is None
 #                                    else False),
             )
-        emf_logger.debug("After init properties 1")
+        emf_logger.debug("After init properties 1, update_from_db = {}".format(update_from_db))
         super(WebNewForm, self).__init__(
             update_from_db=update_from_db,
             **kwargs
             )
-        emf_logger.debug("After init properties 2 prec={0}".format(self.prec))
+        emf_logger.debug("After init properties 2")
         # We're setting the WebEigenvalues property after calling __init__ of the base class
         # because it will set hecke_orbit_label from the db first
 
@@ -344,7 +344,9 @@ class WebNewForm(WebObject, CachedRepresentation):
         ## unless we (later) request a coefficient which is not
         ## in self._coefficients
         
-        self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec,init_dynamic_properties=False)
+        self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec, \
+                                              init_dynamic_properties=False, \
+                                              update_from_db = update_from_db)
         emf_logger.debug("After init properties 3")
 
     def update_from_db(self, ignore_precision = False, **kwargs):
