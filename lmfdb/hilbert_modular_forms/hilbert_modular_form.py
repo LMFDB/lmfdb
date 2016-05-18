@@ -6,7 +6,6 @@ import pymongo
 import lmfdb.base
 from lmfdb.base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from sage.misc.preparser import preparse
 from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_summary, hmf_degree_summary
