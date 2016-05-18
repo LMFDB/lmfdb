@@ -65,8 +65,16 @@
                 <th class="left">{{g}}</th>            
             {% for q in info.col_heads  %}
             <td class="left">
-                {% if table[q] is defined and table[q][g] is defined %}
+                <!--{% if table[q] is defined and table[q][g] is defined %}
                 {% set size = table[q][g] %}
+                {% set url = url_for('abvarfq.abelian_varieties_by_gq',g=g,q=q) %}
+                <a href="{{url}}">{{size}}</a>
+                {% else %}
+                {% do has_na.append(1) %}
+                <small style="color:gray">n/a</small>
+                {% endif %}-->
+                {% set size = table[q][g] %}
+                {% if size > 0 %}
                 {% set url = url_for('abvarfq.abelian_varieties_by_gq',g=g,q=q) %}
                 <a href="{{url}}">{{size}}</a>
                 {% else %}
@@ -83,7 +91,7 @@
 
     {% if has_na %}
     <small>
-    "n/a" means that there is no information about this space in our database.
+    "n/a" means that the isogeny classes of abelian varieties of this dimension over this field are not in the database yet.
     </small>
     {% endif %}
     
