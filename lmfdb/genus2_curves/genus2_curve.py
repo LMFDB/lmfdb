@@ -5,6 +5,7 @@ import re
 import time
 import pymongo
 from pymongo import ASCENDING, DESCENDING
+from operator import mul
 import lmfdb.base
 from lmfdb.base import app
 from flask import Flask, flash, session, g, render_template, url_for, request, redirect, make_response, send_file
@@ -257,6 +258,8 @@ def genus2_curve_search(**args):
         parse_ints(info,query,'cond','conductor')
         parse_ints(info,query,'num_rat_wpts','Weierstrass points')
         parse_ints(info,query,'torsion_order')
+        if 'torsion' in query and not 'torsion_order' in query:
+            query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion']],1)
         parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
         parse_ints(info,query,'analytic_rank','analytic rank')
         # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
