@@ -5,12 +5,12 @@
 
 
 {% if space is defined %}
-  {% if character is not defined or character.order() == 1%}
+  {% if space.character is not defined or space.character.order == 1%}
     {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.level) %}
     {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.level) %}
   {% else %}
-    {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
-    {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.character.latex_name()) %}
+    {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.character.latex_name) %}
+    {% set old_name = "\( S_{%s}^{\mathrm{old}}(%s) \)"|format(space.weight, space.character.latex_name) %}
   {% endif %}
 {% endif %}
 
