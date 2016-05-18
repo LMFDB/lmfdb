@@ -68,7 +68,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     emf_logger.debug("PREC: {0}".format(prec))
     emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
-        WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label)
+        WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label, prec=prec)
         emf_logger.critical("defined webnewform for rendering!")
         # if info.has_key('download') and info.has_key('tempfile'):
         #     WNF._save_to_file(info['tempfile'])

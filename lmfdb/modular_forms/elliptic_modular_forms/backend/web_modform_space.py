@@ -86,12 +86,13 @@ class WebHeckeOrbits(WebDict):
     Collection of WebNewforms for easy access by name.
     """
 
-    def __init__(self, name, level, weight, character, parent=None,**kwds):
+    def __init__(self, name, level, weight, character, parent=None, prec=10, **kwds):
         emf_logger.debug("Get Hecke orbits! {0},{1},{2},{3},{4},kwds={5}".format(name,level,weight,character,type(parent),kwds))
         self.level = level
         self.weight = weight
         self.character = character
         self.parent = parent
+        self.prec = prec
         super(WebHeckeOrbits, self).__init__(
             name, None, save_to_db=True, save_to_fs=False,**kwds
             )
@@ -109,7 +110,7 @@ class WebHeckeOrbits(WebDict):
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached,WebNewForm
         res = {}
         for lbl in l:
-            F = WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
+            F = WebNewForm(self.level, self.weight, self.character, lbl, prec = self.prec, parent=self.parent)
             if F.coefficient_field.absolute_degree() > 1:
                 self._only_rational = False
             #F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
@@ -208,7 +209,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebSageObject('group'),
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
-                           character, self,include_in_update=update_hecke_orbits),
+                           character, self,  prec=prec, include_in_update=update_hecke_orbits),
             WebList('oldspace_decomposition', required=False),
             WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True),

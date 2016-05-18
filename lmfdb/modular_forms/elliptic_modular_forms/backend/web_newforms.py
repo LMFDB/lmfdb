@@ -602,7 +602,7 @@ from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 
 def WebNewForm_cached(level,weight,character,label,parent=None, **kwds):
     if use_cache: 
-        M = WebModFormSpace_cached(level, weight, character)
+        M = WebModFormSpace_cached(level, weight, character, **kwds)
         return M.hecke_orbits[label]
     else:
         F = WebNewForm(level,weight,character,label,**kwds)
