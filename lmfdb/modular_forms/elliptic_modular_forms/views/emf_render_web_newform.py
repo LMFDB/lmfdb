@@ -135,8 +135,15 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     br_is_QQ = (bdeg == 1)
     if cf_is_QQ:
         info['satake'] = WNF.satake
-    info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
-    info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
+    c30 = WNF.coefficient(3).list()[0]
+    if c30.parent().absolute_degree() == 1 and len(c30.height().str())>20 or len(c30.list()[0].height().str())>15:
+        info['qexp'] = ""
+        info['qexp_display'] = ''
+        info["hide_qexp"] = True
+    else:
+        info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
+        info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
+        info["hide_qexp"] = False
     info['max_cn_qexp'] = WNF.q_expansion.prec()
     ## All combinations should be tested...
     ## 13/4/4/a -> base ring = coefficient_field = QQ(zeta_6)
@@ -194,6 +201,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
                 else:
                     info['polynomial_st'] += 'is a primitive {0}-th root of unity.</div>'.format(z1)
     else:
+        info['polynomial_st'] = ''
+    if info["hide_qexp"]:
         info['polynomial_st'] = ''
     info['degree'] = int(cdeg)
     if cdeg==1:

@@ -15,7 +15,8 @@
 <div id="qexp">
 <!-- from emf_web_newform.html -->
   <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
-  <div>
+<div>
+  {% if not hide_qexp %}
     <form>
         <div class="output">
           <span id="qexp_display">{{ qexp | safe }}</span>
@@ -26,7 +27,10 @@
         </div>
         <button id="morebutton">Show more coefficients</button>
         <small>(To download coefficients, see below.)</small>
-    </form>
+	</form>
+	{% else %}
+	<small>The Fourier coefficients of this newform are huge. They are available for download below.</small>
+	{% endif %}
 </div>
 </div>
 <br>
@@ -62,7 +66,7 @@ that preserve the character are shown in the table below.
 <table class="ntdata">
 <thead>
   <tr><th>\(n\)</th>
-    {% for n in range(1,4) %}
+    {% for n in range(2,6) %}
     <th>{{n}}</th>
     {% endfor %}
   </tr>
@@ -73,9 +77,9 @@ that preserve the character are shown in the table below.
     <th style="border-right:solid black 1px">
       \( v_{ {{h}} }(a(n)) \)
     </th>
-    {% for n in range(1,4) %}
+    {% for n in range(2,6) %}
     <td style="white-space:nowrap;" align=right>
-      \({{ embeddings[n][h] |replace("*I", "i")}}\)
+      {{ embeddings[n][h] |replace("*I", "i")}}
     </td>
     {% endfor %}
   </tr>
