@@ -764,21 +764,29 @@ class WebObject(object):
           an iterator over the set of matching objects of this WebObject
         '''
         coll = cls.connect_to_db(cls._collection_name)
-        if float(pymongo.version_tuple[0])>=3:
-            for s in coll.find(query, sort=sort):
-                s.pop('_id')
-                try:
-                    k = {key:s[key] for key in cls._key}
-                    o = cls(update_from_db=False, **k)
-                    o.update_db_properties_from_dict(s)
-                    yield o
-                except KeyError as e:
-                    emf_logger.critical("Malformed data in the database {}, {}".format(e,s))
-                    continue
-        else:
-            for s in coll.find(query, fields = cls._key):
-                s.pop('_id')
-                yield cls(**s)                
+        for s in coll.find(query, sort=sort, projection=projection):
+            s.pop('_id')
+            try:
+                k = {key:s[key] for key in cls._key}
+                o = cls(update_from_db=False, **k)
+                o.update_db_properties_from_dict(s)
+                yield o
+            except KeyError as e:
+                emf_logger.critical("Malformed data in the database {}, {}".format(e,s))
+                continue
+
+    @classmethod
+    def count(cls, query={}):
+        r'''
+          Search the database using ```query``` and return
+          the number of results
+        '''
+        coll = cls.connect_to_db(cls._collection_name)
+        return coll.find(query).count()
+    
+    def __repr__(self):
+        return "WebObject"
+        
     def __repr__(self):
         return "WebObject"
 
