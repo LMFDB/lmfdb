@@ -400,6 +400,39 @@ class WebNewForm(WebObject, CachedRepresentation):
             c = self.coefficients([n])[0] 
         return c
 
+    def first_nonvanishing_coefficient(self, return_index = True):
+        r"""
+         Return the first Fourier coefficient of self
+         of index >1 that does not vanish.
+         if return_index is True, we also return the index of that coefficient
+        """
+        for n in range(2,self.prec):
+            if self.coefficient(n) != 0:
+                if return_index:
+                    return n, self.coefficient(n)
+                else:
+                    return self.coefficient(n)
+
+    def complexity_of_first_nonvanishing_coefficients(self, number_of_coefficients=3):
+        m = 0
+        n = 0
+        j = 0
+        while j < self.prec and n < number_of_coefficients:
+            c = self.coefficient(j)
+            j+=1
+            if c != 0:
+                n += 1
+            else:
+                continue
+            l = c.list()
+            if l[0].parent().absolute_degree() == 1:
+                a = len(str(max(r.height() for r in l)))*len(l)
+            else:
+                a = len(str(max(r.height()*len(s.list()) for s in l for r in s.list())))*len(l)
+            if a > m:
+                m = a
+        return m
+
     def coefficient_embedding(self,n,i):
         r"""
         Return the i-th complex embedding of coefficient C(n).
