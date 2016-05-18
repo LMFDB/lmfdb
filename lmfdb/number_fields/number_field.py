@@ -14,8 +14,7 @@ from lmfdb.WebNumberField import *
 import re
 
 import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod
-from sage.rings.arith import primes
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod, primes
 
 from lmfdb.transitive_group import *
 
