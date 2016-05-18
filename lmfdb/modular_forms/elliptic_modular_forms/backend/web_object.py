@@ -576,9 +576,9 @@ class WebObject(object):
             file_key.update(self.db_dict())
         try:
             t = fs.put(s, **file_key)
-            emf_logger.debug("Inserted file t={0}, filekey={1}".format(t,file_key))
+            emf_logger.debug("Inserted file with filekey={1}".format(t,file_key))
         except Exception, e:
-            emf_logger.debug("Could not insert file s={0}, filekey={1}".format(s,file_key))     
+            emf_logger.debug("Could not insert file with filekey={1}".format(s,file_key))
             emf_logger.warn("Error inserting record: {0}".format(e))
         #fid = coll.find_one(key)['_id']
         # insert extended record
