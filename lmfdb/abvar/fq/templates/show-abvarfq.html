@@ -22,11 +22,41 @@
 This isogeny class is simple.</br>
 {% endif %}
 
-{% if cl.is_primitive() %}
+<!--{% if cl.is_primitive() %}
 This isogeny class is primitive.
 {% else %}
 This isogeny class is not primitive.
-{% endif %}
+{% endif %}-->
+
+<!--
+ {% if cl.known_jacobian == "1" %}
+ This isogeny class contains a Jacobian.
+ {% else %}
+ {% if cl.known_jacobian == "-1" %}
+ This isogeny class does not contain a Jacobian.
+ {% if cl.principally_polarizable == "1" %}
+ This isogeny class is principally polarizable.
+ {% else %}
+ {% if cl.principally_polarizable == "-1" %}
+ This isogeny class is not principally polarizable.
+ {% else %}
+ It is unknown whether this isogeny class is principally polarizable.
+ {% endif %}
+ {% endif %}
+ {% else %}
+ It is unknown whether this isogeny class contains a Jacobian.
+ {% if cl.principally_polarizable == "1" %}
+ This isogeny class is principally polarizable.
+ {% else %}
+ {% if cl.principally_polarizable == "-1" %}
+ This isogeny class is not principally polarizable.
+ {% else %}
+ It is unknown whether this isogeny class is principally polarizable.
+ {% endif %}
+ {% endif %}
+ {% endif %}
+ {% endif %}
+-->
 </p>
     
 
@@ -66,17 +96,35 @@ This isogeny class is supersingular.
 </table>
 </p>
 
-<p>
+<!--<p>
 {% if cl.known_jacobian == "1" %}
-    This isogeny class contains a Jacobian.
+This isogeny class contains a Jacobian.
 {% else %}
-    {% if cl.known_jacobian == "0" %}
-        It is unknown whether this isogeny class contains a Jacobian.
-    {% else %}
-        This isogeny class does not contain a Jacobian.
-    {% endif %}
+{% if cl.known_jacobian == "-1" %}
+This isogeny class does not contain a Jacobian.
+{% if cl.principally_polarizable == "1" %}
+This isogeny class is principally polarizable.
+{% else %}
+{% if cl.principally_polarizable == "-1" %}
+This isogeny class is not principally polarizable.
+{% else %}
+It is unknown whether this isogeny class is principally polarizable.
 {% endif %}
-</p>
+{% endif %}
+{% else %}
+It is unknown whether this isogeny class contains a Jacobian.
+ {% if cl.principally_polarizable == "1" %}
+ This isogeny class is principally polarizable.
+ {% else %}
+ {% if cl.principally_polarizable == "-1" %}
+ This isogeny class is not principally polarizable.
+ {% else %}
+ It is unknown whether this isogeny class is principally polarizable.
+ {% endif %}
+ {% endif %}
+{% endif %}
+{% endif %}
+</p>-->
 
 <p>
 {% if cl.known_jacobian == "1" %}

@@ -111,26 +111,41 @@ class AbvarFq_isoclass(object):
         return ans
     
     def is_simple(self):
-        if len(self.decomposition) == 1:
-            if self.decomposition[0][1] == 1:
+        if len(self.decomposition)== 1:
+            #old simple_maker just outputed the label, with no multiplicity
+            if len(self.decomposition[0]) == 1:
+                return True
+            #new simple_maker outputs the label and multiplicity 1
+            elif self.decomposition[0][1] == 1:
                 return True
         else:
             return False
+    
+        ### This is what this will look like once all self.decomposition is fixed:
+        #if len(self.decomposition) == 1:
+        #    if self.decomposition[0][1] == 1:
+        #        return True
+        #else:
+        #    return False
             
-    def is_primitive(self): #we don't know this
-        if self.primitive_models == '':
-            return True
-        else:
-            return False
+    
+    
+    def is_primitive(self): 
+        pass
+    ### Not implemented yet
+    #    if self.primitive_models == '':
+    #        return True
+    #    else:
+    #        return False
             
     def is_ordinary(self):
-        if self.__dict__['p_rank'] == self.__dict__['g']:
+        if self.p_rank == self.g:
             return True
         else:
             return False
         
     def is_supersingular(self):
-        for slope in self.__dict__['slopes']:
+        for slope in self.slopes:
             if slope != '1/2':
                 return False
         return True
