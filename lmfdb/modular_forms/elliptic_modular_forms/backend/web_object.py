@@ -728,11 +728,12 @@ class WebObject(object):
                 s.pop('_id')
                 try:
                     k = {key:s[key] for key in cls._key}
+                    o = cls(update_from_db=False, **k)
+                    o.update_db_properties_from_dict(s)
+                    yield o
                 except KeyError as e:
                     emf_logger.critical("Malformed data in the database {}, {}".format(e,s))
-                o = cls(update_from_db=False, **k)
-                o.update_db_properties_from_dict(s)
-                yield o
+                    continue
         else:
             for s in coll.find(query, fields = cls._key):
                 s.pop('_id')
