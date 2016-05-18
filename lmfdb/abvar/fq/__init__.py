@@ -13,4 +13,4 @@ def body_class():
 
 import main
 
-app.register_blueprint(abvarfq_page, url_prefix="/AbelianVariety/Fq")
+app.register_blueprint(abvarfq_page, url_prefix="/Variety/Abelian/Fq")

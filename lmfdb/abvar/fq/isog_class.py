@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
 
-from lmfdb.utils import comma, make_logger, web_latex_split_on_pm
+from lmfdb.utils import comma, make_logger
 
 from lmfdb.base import getDBConnection
 
 from sage.misc.cachefunc import cached_function
 from sage.rings.all import Integer
 from sage.all import PolynomialRing, QQ
+
+from lmfdb.genus2_curves.isog_class import list_to_factored_poly_otherorder
+from lmfdb.transitive_group import group_display_knowl
 
 logger = make_logger("abvarfq")
 
@@ -65,16 +68,29 @@ class AbvarFq_isoclass(object):
     def make_class(self):
         from main import decomposition_display
         self.decompositioninfo = decomposition_display(self,self.decomposition)
+        self.formatted_polynomial, galois_gp = list_to_factored_poly_otherorder(self.polynomial,galois=True,vari = 'x')
+        if self.is_simple():
+            C = getDBConnection()
+            galois_gp = galois_gp[0]
+            self.galois = group_display_knowl(galois_gp[0],galois_gp[1],C)            
+        
+    def p(self):
+        q = Integer(self.q)
+        p, _ = q.is_prime_power(get_data=True)
+        return p
+    
+    def r(self):
+        q = Integer(self.q)
+        _, r = q.is_prime_power(get_data=True)
+        return r
         
     def field(self):
-        q = self.q
-        return '\F_{%s}'%q
-    
-    def formatted_polynomial(self):
-        coeffs = self.__dict__['polynomial']
-        R = PolynomialRing(QQ, 'x')
-        f = R(coeffs)
-        return web_latex_split_on_pm(f)
+        p = self.p()
+        r = self.r()
+        if r == 1:
+            return '\F_{' + '{0}'.format(p) + '}'
+        else:
+            return '\F_{' + '{0}^{1}'.format(p,r) + '}'
         
     def weil_numbers(self):
         q = self.q
@@ -82,54 +98,72 @@ class AbvarFq_isoclass(object):
         for angle in self.angle_numbers:
             if ans != "":
                 ans += ", "
-            ans += "\sqrt{" +str(q) + "}" + "\exp(i \pi {0}\ldots), ".format(angle)
-            ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
+            ans += '\sqrt{' +str(q) + '}' + '\exp(\pm i \pi {0}\ldots)'.format(angle)
+            #ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
         return ans
         
     def frob_angles(self):
-        ans = ""
+        ans = ''
         for angle in self.angle_numbers:
-            if ans != "":
-                ans += ", "
-            ans += str(angle) + ", " + str(-angle)
+            if ans != '':
+                ans += ', '
+            ans += '\pm' + str(angle) 
         return ans
-        
-    def galois_group(self):
-        return 'b'
     
     def is_simple(self):
-        if len(self.decomposition) == 1:
-            if self.decomposition[0][1] == 1:
+        if len(self.decomposition)== 1:
+            #old simple_maker just outputed the label, with no multiplicity
+            if len(self.decomposition[0]) == 1:
+                return True
+            #new simple_maker outputs the label and multiplicity 1
+            elif self.decomposition[0][1] == 1:
                 return True
         else:
             return False
+    
+        ### This is what this will look like once all self.decomposition is fixed:
+        #if len(self.decomposition) == 1:
+        #    if self.decomposition[0][1] == 1:
+        #        return True
+        #else:
+        #    return False
             
-    def is_primitive(self): #we don't know this
-        if self.primitive_models == "":
-            return True
-        else:
-            return False
+    
+    
+    def is_primitive(self): 
+        pass
+    ### Not implemented yet
+    #    if self.primitive_models == '':
+    #        return True
+    #    else:
+    #        return False
             
     def is_ordinary(self):
-        if self.__dict__['p_rank'] == self.__dict__['g']:
+        if self.p_rank == self.g:
             return True
         else:
             return False
         
     def is_supersingular(self):
-        for slope in self.__dict__['slopes']:
+        for slope in self.slopes:
             if slope != '1/2':
                 return False
         return True
         
     def display_slopes(self):
-        ans = "["
+        ans = '['
         for slope in self.slopes:
-            if ans != "[":
-                ans += ", "
+            if ans != '[':
+                ans += ', '
             ans += slope
-        ans += "]"
+        ans += ']'
         return ans
+        
+    def length_A_counts(self):
+        return len(self.A_counts)
+        
+    def length_C_counts(self):
+        return len(self.C_counts)
             
         
 

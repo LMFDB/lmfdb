@@ -77,8 +77,24 @@ def abelian_varieties_by_gq(g, q):
 
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
 def abelian_varieties_by_gqi(g, q, iso):
-    label = "%s.%s.%s"%(g, q, iso)
-    return by_label(label)
+    label = abvar_label(g,q,iso)
+    try:
+        validate_label(label)
+    except ValueError as err:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label: %s." % (label, str(err))), "error")
+        return search_input_error()
+    try:
+        cl = AbvarFq_isoclass.by_label(label)
+    except ValueError:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not in the database." % (label)), "error")
+        return search_input_error()
+    return render_template("show-abvarfq.html",
+                           credit=abvarfq_credit,
+                           title='Abelian Variety isogeny class %s over $%s$'%(label, cl.field()),
+                           bread=get_bread(('Search Results', '.')),
+                           cl=cl,
+                           learnmore=learnmore_list())
+
 
 def abelian_variety_search(**args):
     info = to_dict(args)
@@ -148,17 +164,8 @@ def by_label(label):
     except ValueError as err:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label: %s." % (label, str(err))), "error")
         return search_input_error()
-    try:
-        cl = AbvarFq_isoclass.by_label(label)
-    except ValueError:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not in the database." % (label)), "error")
-        return search_input_error()
-    return render_template("show-abvarfq.html",
-                           credit=abvarfq_credit,
-                           title='Abelian Variety isogeny class %s over $%s$'%(label, cl.field()),
-                           bread=get_bread(('Search Results', '.')),
-                           cl=cl,
-                           learnmore=learnmore_list())
+    g, q, iso = split_label(label)
+    return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
 
 def download_search(info):
     dltype = info['Submit']
@@ -253,8 +260,16 @@ def decomposition_knowl_guts(label,C):
     inf += '<div align="right">'
     inf += '<a href="/abvar/fq/%s">%s home page</a>' % (label, label)
     inf += '</div>'
+              
+lmfdb_label_regex = re.compile(r'(\d+)\.(\d+)\.([a-z_]+)')
                                   
+def split_label(lab):
+    return lmfdb_label_regex.match(lab).groups()
     
-            
+def abvar_label(g, q, iso):
+    return "%s.%s.%s" % (g, q, iso)
+    
+
+                
             
     
