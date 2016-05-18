@@ -62,7 +62,6 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
         newform_label, 
         space_label, 
-        field_label,
         parse_newform_label)
 
 from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
@@ -584,7 +583,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
 
-    def create_duplicate_record(prec=10):
+    def create_duplicate_record(self, prec=10):
         ### creates a duplicate record (fs) of this webnewform
         ### with lower precision to load faster on the web
         if prec>=self.prec:
