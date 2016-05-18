@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from lmfdb.utils import comma, make_logger, web_latex_split_on_pm
+from lmfdb.utils import comma, make_logger
 
 from lmfdb.base import getDBConnection
 
@@ -74,9 +74,23 @@ class AbvarFq_isoclass(object):
             galois_gp = galois_gp[0]
             self.galois = group_display_knowl(galois_gp[0],galois_gp[1],C)            
         
+    def p(self):
+        q = Integer(self.q)
+        p, _ = q.is_prime_power(get_data=True)
+        return p
+    
+    def r(self):
+        q = Integer(self.q)
+        _, r = q.is_prime_power(get_data=True)
+        return r
+        
     def field(self):
-        q = self.q
-        return '\F_{%s}'%q
+        p = self.p()
+        r = self.r()
+        if r == 1:
+            return '\F_{' + '{0}'.format(p) + '}'
+        else:
+            return '\F_{' + '{0}^{1}'.format(p,r) + '}'
         
     def weil_numbers(self):
         q = self.q
@@ -84,16 +98,16 @@ class AbvarFq_isoclass(object):
         for angle in self.angle_numbers:
             if ans != "":
                 ans += ", "
-            ans += "\sqrt{" +str(q) + "}" + "\exp(i \pi {0}\ldots), ".format(angle)
-            ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
+            ans += '\sqrt{' +str(q) + '}' + '\exp(\pm i \pi {0}\ldots)'.format(angle)
+            #ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
         return ans
         
     def frob_angles(self):
-        ans = ""
+        ans = ''
         for angle in self.angle_numbers:
-            if ans != "":
-                ans += ", "
-            ans += "\pm" + str(angle) 
+            if ans != '':
+                ans += ', '
+            ans += '\pm' + str(angle) 
         return ans
     
     def is_simple(self):
@@ -104,7 +118,7 @@ class AbvarFq_isoclass(object):
             return False
             
     def is_primitive(self): #we don't know this
-        if self.primitive_models == "":
+        if self.primitive_models == '':
             return True
         else:
             return False
@@ -122,13 +136,19 @@ class AbvarFq_isoclass(object):
         return True
         
     def display_slopes(self):
-        ans = "["
+        ans = '['
         for slope in self.slopes:
-            if ans != "[":
-                ans += ", "
+            if ans != '[':
+                ans += ', '
             ans += slope
-        ans += "]"
+        ans += ']'
         return ans
+        
+    def length_A_counts(self):
+        return len(self.A_counts)
+        
+    def length_C_counts(self):
+        return len(self.C_counts)
             
         
 
