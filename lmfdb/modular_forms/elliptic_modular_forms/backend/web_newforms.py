@@ -574,9 +574,12 @@ class WebNewForm(WebObject, CachedRepresentation):
         files = self.get_file_list()
         return [x['prec'] for x in files]
 
+    def max_available_prec(self):
+        return max(self.available_precs())
+
     def delete_file_with_prec(self, prec):
-        files = self.get_file_list({'prec': prec})
-        for f in files:
+        files = self.get_file_list({'prec': int(prec)})
+        for f in files.values():
             self._files.delete(f['_id'])
 
     def max_cn(self):
