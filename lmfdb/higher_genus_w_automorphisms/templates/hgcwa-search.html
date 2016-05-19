@@ -29,13 +29,26 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 
 <td align=right>
 	       Hyperelliptic Curve(s):
-            </td>  <td> <select name='hyperelliptic'>
-                     <option value='0'>include</option>
-                     <option value='False'>exclude</option>
-                   <option value='True'>only</option>
-    
-                  </select>
-                </td> 
+</td>
+
+  <td> <select name='inc_hyper'>
+{% if info.inc_hyper == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_hyper == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
+
 
 </tr>
 

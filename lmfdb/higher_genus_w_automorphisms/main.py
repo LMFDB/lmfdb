@@ -102,7 +102,11 @@ def higher_genus_w_automorphisms_search(**args):
         parse_ints(info,query,'genus',name='Genus')
         parse_list(info,query,'signature',name='Signature')
         parse_ints(info,query,'dim',name='Dimension of the family')
-        parse_bool(info,query,'hyperelliptic', minus_one_to_zero=False)
+        if 'inc_hyper' in info:
+            if info['inc_hyper'] == 'exclude':
+                query['hyperelliptic'] = False
+            elif info['inc_hyper'] == 'only':
+                query['hyperelliptic'] = True
     except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)
