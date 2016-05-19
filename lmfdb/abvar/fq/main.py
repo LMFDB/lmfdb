@@ -61,7 +61,7 @@ def abelian_varieties():
     else:
         info = {}
         stats = AbvarFqStats()
-        info['col_heads'] = stats.counts['qs']
+        info['col_heads'] = sorted(int(b) for b in stats.counts['qs'])[:23] # q < 50
         info['row_heads'] = stats.counts['gs']
         info['table'] = stats.counts['qg_count']
         return render_template("abvarfq-index.html", title="Isogeny Classes of Abelian Varieties over Finite Fields",
@@ -69,11 +69,16 @@ def abelian_varieties():
 
 @abvarfq_page.route("/<int:g>/")
 def abelian_varieties_by_g(g):
-    return abelian_variety_search(g=g, **request.args)
+    D = to_dict(request.args)
+    if 'g' not in D: D['g'] = g
+    return abelian_variety_search(**D)
 
 @abvarfq_page.route("/<int:g>/<int:q>/")
 def abelian_varieties_by_gq(g, q):
-    return abelian_variety_search(g=g, q=q, **request.args)
+    D = to_dict(request.args)
+    if 'g' not in D: D['g'] = g
+    if 'q' not in D: D['q'] = q
+    return abelian_variety_search(**D)
 
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
 def abelian_varieties_by_gqi(g, q, iso):
@@ -116,7 +121,7 @@ def abelian_variety_search(**args):
             query['primitive_models'] = []
         parse_ints(info,query,'p_rank')
         parse_newton_polygon(info,query,'newton_polygon',qfield='slopes')
-        parse_list_start(info,query,'initial_coefficients',qfield='polynomial')
+        parse_list_start(info,query,'initial_coefficients',qfield='polynomial',index_shift=1)
         parse_list_start(info,query,'abvar_point_count',qfield='A_counts')
         parse_list_start(info,query,'curve_point_count',qfield='C_counts')
         parse_abvar_decomp(info,query,'decomposition')

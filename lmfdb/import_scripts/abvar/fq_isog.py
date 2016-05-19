@@ -61,7 +61,8 @@ def do_import(ll, db, saving, R, show_update):
 
 # Loop over files
 
-def do_import_all(*paths):
+def do_import_all(*paths, **kwds):
+    start = kwds.get('start',None)
     C= MongoClient(port=37010)
     pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
     username = pw_dict['data']['username']
@@ -91,8 +92,27 @@ def do_import_all(*paths):
         fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
         counter = 0
         for line in fn.readlines():
-            line.strip()
+            line = line.strip()
             if re.match(r'\S',line):
+                if start is not None:
+                    if line.startswith('["%s'%start):
+                        start = None
+                    else:
+                        continue
                 l = json.loads(line)
                 counter += 1
                 do_import(l, db, saving, R, (counter%100)==0)
+
+def label_progress(filename, label):
+    found = None
+    counter = 0
+    startcheck = '["%s"'%label
+    with open(filename) as F:
+        for line in F.readlines():
+            counter += 1
+            if line.startswith(startcheck):
+                found = counter
+    if found is None:
+        print "Label %s not found" % label
+    else:
+        print "Label %s is at %s/%s"%(label, found, counter)

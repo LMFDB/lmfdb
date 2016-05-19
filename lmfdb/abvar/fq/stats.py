@@ -23,8 +23,8 @@ class AbvarFqStats(UniqueRepresentation):
         counts = {}
         counts['nclasses'] = ncurves = avdb.count()
         counts['nclasses_c'] = comma(ncurves)
-        counts['gs'] = gs = avdb.distinct('g',{})  
-        counts['qs'] = qs = avdb.distinct('q',{})
+        counts['gs'] = gs = avdb.distinct('g')
+        counts['qs'] = qs = avdb.distinct('q')
         counts['qg_count'] = {}
         for q in qs:
             counts['qg_count'][q] = {}

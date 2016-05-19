@@ -507,6 +507,8 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
     bparts = BRACKETING_RE.split(inp)
     parts = []
     for part in bparts:
+        if not part:
+            continue
         if part[0] == '[':
             parts.append(part)
         else:
