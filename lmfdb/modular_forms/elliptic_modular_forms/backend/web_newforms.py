@@ -634,7 +634,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
 
-    def create_small_record(self, min_prec=20, want_prec=100, max_length = 52428800):
+    def create_small_record(self, min_prec=20, want_prec=100, max_length = 5242880):
         ### creates a duplicate record (fs) of this webnewform
         ### with lower precision to load faster on the web
         ### we aim to have at most max_length bytes
@@ -642,7 +642,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         if min_prec>=self.prec:
             raise ValueError("Need lower precision, self.prec = {}".format(self.prec))
         l = self._file_record_length
-        if l > max_length:
+        if l > max_length or self.prec > want_prec:
             nl = float(l)/float(self.prec)*float(want_prec)
             if nl > max_length:
                 prec = max([floor(float(self.prec)/float(l)*float(max_length)), min_prec])
