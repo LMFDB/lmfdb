@@ -210,6 +210,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     properties2 = [('Level', str(level)),
                        ('Weight', str(weight)),
                        ('Character', '$' + WNF.character.latex_name + '$'),
+                       ('Label', WNF.hecke_orbit_label),
                        ('Dimension of Galois orbit', str(WNF.dimension))]
     if (ZZ(level)).is_squarefree():
         info['twist_info'] = WNF.twist_info
@@ -240,10 +241,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if WNF.is_cm is None or WNF.is_cm==-1:
         s = '- Unknown (insufficient data)<br>'
     elif WNF.is_cm == 1:
-        s = 'Is a CM-form<br>'
+        s = 'Yes<br>'
     else:
-        s = 'Is not a CM-form<br>'
-    properties2.append(('CM info', s))
+        s = 'No<br>'
+    properties2.append(('CM', s))
     alev = WNF.atkin_lehner_eigenvalues()
     info['atkinlehner'] = None
     if isinstance(alev,dict) and len(alev.keys())>0 and level != 1:
