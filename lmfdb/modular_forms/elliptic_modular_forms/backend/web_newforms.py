@@ -68,7 +68,8 @@ from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 
 from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
-     emf_logger
+     emf_logger,
+     default_max_height
      )
 
 from sage.rings.number_field.number_field_base import (
@@ -644,7 +645,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     def url(self):
         return url_for('emf.render_elliptic_modular_forms', level=self.level, weight=self.weight, character=self.character.number, label=self.label)
 
-    def create_small_record(self, min_prec=20, want_prec=100, max_length = 5242880):
+    def create_small_record(self, min_prec=10, want_prec=100, max_length = 5242880, max_height_qexp = default_max_height):
         ### creates a duplicate record (fs) of this webnewform
         ### with lower precision to load faster on the web
         ### we aim to have at most max_length bytes
@@ -660,7 +661,11 @@ class WebNewForm(WebObject, CachedRepresentation):
                 prec = want_prec
             emf_logger.debug("Creating a new record with prec = {}".format(prec))
             self.prec=prec
-            self.q_expansion = self.q_expansion.truncate_powerseries(prec)
+            include_qexp = self.complexity_of_first_nonvanishing_coefficients() <= default_max_height
+            if include_qexp:
+                self.q_expansion = self.q_expansion.truncate_powerseries(prec)
+            else:
+                self.q_expansion = self.q_expansion.truncate_powerseries(1)
             self._coefficients = {n:c for n,c in self._coefficients.iteritems() if n<prec}
             self._embeddings['values'] = {n:c for n,c in self._embeddings['values'].iteritems() if n<prec}
             self._embeddings['prec'] = prec
