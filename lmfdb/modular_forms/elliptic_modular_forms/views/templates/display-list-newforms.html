@@ -18,14 +18,16 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
     </tr>
     </thead>
   <tbody>
-<!-- check of the table is empty -->
+<!-- check if the table is empty -->
 {% set vars = {'cyclotomicorder': 0} %}
 {% for column in table %}
    {% if table[column] | length  > 0 %}
-    {% if vars.update({'cyclotomicorder': 0}) %} {% endif %}
+     {% if vars.update({'cyclotomicorder': 0}) %} {% endif %}
    {% endif %}
 {% endfor %}
-    {% set at_least_one_qexp_shown = False %}
+    
+{% set qexp = {'visible': false, 'hidden': false} %}
+    
     {% for label in orbits %}
        {% set f = orbits2[label] %}
          {# determine if the ciefficient field is cyclotomic #}
@@ -54,18 +56,19 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
 	      {% set varname = '\\alpha_{%s}' % loop.index %}
 	     {%endif%}
 	      {% if f.complexity_of_first_nonvanishing_coefficients() > max_height %}
-            <td>The Fourier coefficients of this newform are large. They are available for download.</td>
-	    {% else %}
-	       {% set at_least_one_qexp_shown = True %}
-	      <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
+	        {% if qexp.update({'hidden': true}) %} {% endif %}
+                 <td>$q + \ldots^\ast$</td>
+		{% else %}
+		 {% if qexp.update({'visible': true}) %} {% endif %}
+	        <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
 	  {% endif %}
-	  {% endif %}
+	  {% endif %}    
       </tr>
     {% endfor %}
   </tbody>
 </table>
 
-{% if ord is defined and at_least_one_qexp_shown %}
+{% if ord is defined and qexp['visible'] %}
     {% for n in zeta_ord %}
             {% if n==4 %}
                 <p> where \( \zeta_{ {{n}} } = i\)
@@ -79,6 +82,10 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
         {% else %}.</p>
         {% endif %}
     {% endfor %}
+{% endif %}
+
+{% if qexp['hidden'] %}
+<p>${}^\ast$: The Fourier coefficients of this newform are large. They are available for download.</p>
 {% endif %}
 
 {% if not onlyrat %}

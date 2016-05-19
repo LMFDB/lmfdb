@@ -13,6 +13,9 @@ class EmfTest(LmfdbTest):
     def runTest():
         pass
     def test_browse_page(self):
+        r"""
+        Check browsing for elliptic modular forms
+        """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/")
         assert '"/ModularForm/GL2/Q/holomorphic/24/?group=0">24' in page.data
         assert '"/ModularForm/GL2/Q/holomorphic/23/12/1/?group=0">19' in page.data
@@ -120,6 +123,7 @@ class EmfTest(LmfdbTest):
         assert 'The table below gives the dimensions of the space of' in page.data
         #page = self.tc.get("", follow_redirects=True)
         #assert '' in page.data
+        
     def test_character_parity(self):
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/99/3/?group=1',
                            follow_redirects=True)
