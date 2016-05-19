@@ -649,26 +649,25 @@ class WebObject(object):
         return True
         
 
-    def delete_from_db(self, all=False):
+    def delete_from_db(self, delete_all=False):
         r"""
         Deletes ```self``` to the database, i.e.
         deletes the meta record and the file in the gridfs file system.
         """
         coll = self._collection
         key = self.key_dict()
-        if all:
+        if delete_all:
             r = coll.delete_many(key) # delete meta records
         else:
-            r = coll.delete_one(key) # delete meta records
+            r = coll.delete_one(key) # delete meta record
         if r.deleted_count == 0:
             emf_logger.debug("There was no meta record present matching {0}".format(key))
-        fs = self._files
-        file_key = self.file_key_dict()
-        r = self._file_collection.find_one(file_key)
-        if r is None:
-            raise IndexError("Record does not exist")
-        fid = r['_id']
-        fs.delete(fid)
+        files = self.get_files() if delete_all else [self.get_file()]
+        for f in files:
+            try:
+                self._files.delete(f['_id'])
+            except:
+                raise IndexError("Error deleting file {}".format(f['_id']))
 
     def update_db_properties_from_dict(self, d):
         for p in self.db_properties():
