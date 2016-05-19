@@ -35,7 +35,7 @@ else
   WHAT="$@"
 fi
 
-ARGS='-v -s --testmatch="(?:^|[\b_\./-])[Tt]est_"'
+ARGS='-v -s --testmatch="(?:^|\/)[Tt]est_"'
 
 SAGE_COMMAND=$SAGE
 if [[ "$SAGE_COMMAND" == "" ]]; then
