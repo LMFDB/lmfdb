@@ -434,7 +434,7 @@ class WebObject(object):
         """
         emf_logger.debug('key: {0}'.format(self._key))
         #emf_logger.debug('properties: {0}'.format(self._properties))
-        keys = self._file_key
+        keys = copy(self._file_key)
         if include_multi and self._file_key_multi is not None:
             keys +=  self._file_key_multi
         return { key : self._properties[key].to_db() for key in keys }
@@ -444,7 +444,7 @@ class WebObject(object):
         Return a dictionary where the keys are the keys of ``self``` and
         the values are the corresponding values of ```self```.
         """
-        keys = self._key
+        keys = copy(self._key)
         if include_multi and self._key_multi is not None:
             keys +=  self._key_multi
         return { key : self._properties[key].to_db() for key in keys}
@@ -490,7 +490,7 @@ class WebObject(object):
             rec = coll.find_one(key, sort = sort)
         return rec
 
-    def get_file(self, add_to_fs_query=None, get_all=False, meta_only=False):
+    def get_file(self, add_to_fs_query=None, get_all=False, meta_only=False, ignore_multi_if_failed=True):
         r"""
           Get the file(s) from gridfs.
         """
@@ -503,8 +503,8 @@ class WebObject(object):
             q=add_to_fs_query
             add_to_fs_query = copy(self._add_to_fs_query)
             add_to_fs_query.update(q)
-        file_key = self.file_key_dict(include_multi = get_all)
-        if add_to_fs_query is not None:
+        file_key = self.file_key_dict(include_multi = not get_all)
+        if add_to_fs_query is not None and not get_all:
             file_key.update(add_to_fs_query)
         sort = self._sort_files
         emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
@@ -531,7 +531,7 @@ class WebObject(object):
         else:
             raise IndexError("File not found with file_key = {}".format(file_key))
         emf_logger.debug("len(results) = {}".format(len(results)))
-        if len(results) == 1:
+        if len(results) == 1 and not get_all:
             return results[0]
         else:
             return results

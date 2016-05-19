@@ -201,13 +201,17 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             init_dynamic_properties=init_dynamic_properties,
             **kwargs
             )
+        #remember the precision we got after updating for every query (not only update_from_db uses this)
+        self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
 
     def update_from_db(self, **kwargs):
         self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
         self._sort = [('prec', pymongo.ASCENDING)]
         self._sort_files = [('prec', pymongo.ASCENDING)]
+        emf_logger.debug(self._add_to_fs_query)
         super(WebEigenvalues,self).update_from_db(**kwargs)
-        #print "_ap=",self._ap
+        #remember the precision we got after updating for every query (not only update_from_db uses this)
+        self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
 
     def init_dynamic_properties(self):
         emf_logger.debug("E = {0}".format(self.E))
@@ -350,7 +354,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                                               update_from_db = update_from_db)
         emf_logger.debug("After init properties 3")
 
-    def update_from_db(self, ignore_precision = False, **kwargs):
+    def update_from_db(self, ignore_precision = False, ignore_precision_if_failed = True, **kwargs):
         # this finds the (file) record with the
         # lowest precision (=smallest record)
         # above or equal to self.prec
@@ -367,11 +371,14 @@ class WebNewForm(WebObject, CachedRepresentation):
             self._add_to_fs_query = None
             self._sort_files = []
         super(WebNewForm,self).update_from_db(**kwargs)
+        if not self.has_updated() and ignore_precision_if_failed:
+            self.update_from_db(ignore_precision = True, ignore_precision_if_failed = False)
         if ignore_precision:
             # restore file_key_multi
             self._file_key_multi = file_key_multi
-            self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
             self._sort_files = [('prec', pymongo.ASCENDING)]
+        #remember the precision we just got from the db for queries
+        self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
 
     def __repr__(self):
         if self.dimension == 0:
@@ -579,7 +586,7 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     def delete_file_with_prec(self, prec):
         files = self.get_file_list({'prec': int(prec)})
-        for f in files.values():
+        for f in files:
             self._files.delete(f['_id'])
 
     def max_cn(self):
