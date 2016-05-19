@@ -266,7 +266,7 @@ def download_hmf_sage(**args):
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
     if f["hecke_polynomial"] != 'x':
-        outstr += 'hecke_pol = ' + f["hecke_polynomial"] + '\n'
+        outstr += 'heckePol = ' + f["hecke_polynomial"] + '\n'
         outstr += 'K.<e> = NumberField(heckePol)\n'
     else:
         outstr += 'heckePol = x\nK = QQ\ne = 1\n'
