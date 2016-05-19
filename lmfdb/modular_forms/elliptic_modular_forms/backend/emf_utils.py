@@ -193,6 +193,7 @@ def is_range(arg):
         if arg.split(sep)>1:
             return True
     return False
+
 def extract_data_from_jump_to(s):
     r"""
     Try to get a label from the search box
