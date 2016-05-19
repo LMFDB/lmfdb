@@ -277,7 +277,7 @@ def download_hmf_sage(**args):
 
     outstr += 'AL_eigenvalues = {}\n'
     for s in f["AL_eigenvalues"]:
-        outstr += 'ALEigenvalues[ZF.ideal(s[0])] = s[1]\n'
+        outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
 
     outstr += '\n# EXAMPLE:\n# pp = ZF.ideal(2).factor()[0][0]\n# hecke_eigenvalues[pp]\n'
 
