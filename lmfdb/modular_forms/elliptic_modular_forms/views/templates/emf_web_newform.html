@@ -223,24 +223,31 @@ are shown in the table below. Note that these include embeddings that do not pre
   </ul>
 </div>
   {% endif %}
-<h2>Download {{KNOWL('mf.elliptic.fouriercoefficients',title='Fourier coefficients')}} </h2>
+<h2>Download this Newform </h2>
 
-The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1 }} \).
+The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn }} \).
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
 <input type="hidden" name="download" value="coefficients"/>
 <input type="hidden" name="max_num" value="{{max_cn - 1}}"/>
 
 <table>
-<tr><td rowspan=4>Choose format to download:</td>
-<td>
-      <label><input type=radio name="format" checked
-    value="q_expansion" onclick="return selectCFormat(event)">
-    text file of the q-expansion</label>
-</td>
+  <tr><td rowspan=5>Choose format to download:</td>
+  <td>
+    <label><input type=radio name="format" value="sage" checked
+    onclick="return selectCFormat(event)">
+    .sage file (contains more information)</label>
+  </td>
+</tr>
+<tr>
+    <td>
+    <label><input type=radio name="format" value="sobj" checked
+    onclick="return selectCFormat(event)">
+    .sobj file for sage (only coefficients)</label>
+  </td>
 </tr>
 <tr>
 <td>
-      <label><input type=radio name="format" checked
+      <label><input type=radio name="format" 
     value="coefficients" onclick="return selectCFormat(event)">
     text file of the algebraic coefficients in a table</label>
 </td>
@@ -255,9 +262,9 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1
 </tr>
 <tr>
 <td>
-    <label><input type=radio name="format" value="sage"
-    onclick="return selectCFormat(event)">
-    sage object (representing a list of algebraic numbers) </label>
+      <label><input type=radio name="format" 
+    value="q_expansion" onclick="return selectCFormat(event)">
+    text file of the q-expansion</label>
 </td>
 </tr>
 <tr>
@@ -265,9 +272,9 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1
 <td>
   {% set examplemax = 100 %}
   {% if max_cn - 1 < 100 %}
-    {% set examplemax = max_cn - 1 %}
+    {% set examplemax = max_cn %}
   {% endif %}
-  <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn - 1 }})
+  <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn }})
   <br><span class=" " id="num_error"></span>
 </td>
 </tr>
@@ -278,28 +285,6 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1
   </div>
   </form>
 
-{#
-<h2>Download this newform as {{KNOWL('sage',title='Sage')}} Object</h2>
-<form name="download_object_form" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
-  <input type="hidden" name="download" value="object">
-  <input type="hidden" name="level" value="{{level }}">
-  <input type="hidden" name="character" value="{{character }}">
-  <input type="hidden" name="weight" value="{{weight }}">
-  <input type="hidden" name="label" value="{{label }}">
-  <input type="submit" name="Submit" value="Download" Onclick="document.download.submit()">
-</form>
-<div class="formexample"> 
-<!--  Note: In order to use this data file you currently need to download
-  and import the entire lmfdb from:  
-<a href="https://github.com/LMFDB/lmfdb">lmfdb at github</a>. -->
-<form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
-  Note: In order to use this data file you currently need to download
-  <input type="hidden" name="download" value="file">
-  <input type="hidden" name="download_file" value="web_modforms.py">
-  <a href="javascript:void(0);"
-  OnClick="document.download_file.submit()">web_modforms.py</a>
- </form>
-#}
 </div>
 {% endif %}
 </div>

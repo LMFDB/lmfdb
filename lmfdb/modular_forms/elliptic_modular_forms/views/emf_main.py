@@ -144,7 +144,7 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
         return render_elliptic_modular_form_navigation_wp()
 
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils import download_web_modform,get_coefficients
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils import get_coefficients
 
 @emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>", methods=['GET', 'POST'])
 def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
@@ -154,6 +154,9 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
         emf_logger.critical("Download called without specifying what to download! info={0}".format(info))
         return ""
     emf_logger.debug("in get_downloads: info={0}".format(info))
+    if info['download'] == 'coefficients':
+        info['tempfile'] = "/tmp/tmp_web_mod_form.txt"
+        return get_coefficients(info)
     if info['download'] == 'file':
         # there are only a certain number of fixed files that we want people to download
         filename = info['download_file']
@@ -163,13 +166,7 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
                 emf_logger.debug("Dirname:{0}, Filename:{1}".format(dirname, filename))
                 return send_from_directory(dirname, filename, as_attachment=True, attachment_filename=filename)
             except IOError:
-                info['error'] = "Could not find  file! "
-    if info['download'] == 'coefficients':
-        info['tempfile'] = "/tmp/tmp_web_mod_form.txt"
-        return get_coefficients(info)
-    if info['download'] == 'object':
-        return download_web_modform(info)
-        info['error'] = "Could not find  file! "
+                info['error'] = "Could not find file! "
 
 @emf.route("/Plots/<int:grouptype>/<int:level>/")
 def render_plot(grouptype=0, level=1):

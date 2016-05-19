@@ -100,7 +100,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     
     if WNF.dimension==0:
         info['error'] = "This space is empty!"
-    info['title'] = 'Modular Form ' + WNF.hecke_orbit_label
+    info['title'] = 'Newform ' + WNF.hecke_orbit_label
     info['learnmore'] = [('History of Modular forms', url_for('holomorphic_mf_history'))]    
     if 'error' in info:
         return info
@@ -330,7 +330,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         friends.append((s, url))
     info['properties2'] = properties2
     info['friends'] = friends
-    info['max_cn'] = WNF.max_cn()
+    info['max_cn'] = WNF.max_available_prec()
     return info
 
 import flask

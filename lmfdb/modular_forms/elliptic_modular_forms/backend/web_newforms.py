@@ -90,6 +90,7 @@ from sage.all import (
      Integer,
      matrix,
      PowerSeriesRing,
+     QQ,
      Matrix,
      vector,
      latex,
@@ -147,7 +148,7 @@ class WebqExp(WebPoly):
             return None
         #print "f", f
         try:
-            f = f.truncate_powerseries(f.degree())
+            f = f.truncate_powerseries(f.degree()+1)
             return f
         except:
             return f
@@ -172,8 +173,15 @@ class WebqExp(WebPoly):
             return s
         else:
             return ''
-            
-        
+
+    def set_from_coefficients(self, coeffs):
+        QR = PowerSeriesRing(QQ,name='q',order='neglex')
+        q = QR.gen()
+        res = 0*q**0
+        for n, c in coeffs.iteritems():
+            res += c*q**n
+        res = res.add_bigoh(len(coeffs.keys())+1)
+        self.set_value(res)
 
 
 class WebEigenvalues(WebObject, CachedRepresentation):
@@ -194,7 +202,8 @@ class WebEigenvalues(WebObject, CachedRepresentation):
         )
 
         self.auto_update = True
-        self._ap = {}        
+        self._ap = {}
+        self._add_to_fs_query = {'prec': {'$gt': int(prec-1)}}
         super(WebEigenvalues, self).__init__(
             use_gridfs=True,
             use_separate_db=False,
@@ -277,7 +286,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     else:
         _collection_name = 'webnewforms'
 
-    def __init__(self, level=1, weight=12, character=1, label='a', prec=None, parent=None, update_from_db=True,**kwargs):
+    def __init__(self, level=1, weight=12, character=1, label='a', prec=10, parent=None, update_from_db=True,**kwargs):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         if isinstance(level,basestring) or kwargs.has_key('hecke_orbit_label'):
             hecke_orbit_label = kwargs.get('hecke_orbit_label', level)
@@ -337,11 +346,16 @@ class WebNewForm(WebObject, CachedRepresentation):
 #                                    else False),
             )
         emf_logger.debug("After init properties 1, update_from_db = {}".format(update_from_db))
+        self._add_to_fs_query = {'prec': {'$gt': int(prec-1)}}
+        emf_logger.debug("add_to_fs_query = {}".format(self._add_to_fs_query))
         super(WebNewForm, self).__init__(
             update_from_db=update_from_db,
             **kwargs
             )
         emf_logger.debug("After init properties 2")
+
+        self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
+        
         # We're setting the WebEigenvalues property after calling __init__ of the base class
         # because it will set hecke_orbit_label from the db first
 
@@ -353,6 +367,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec, \
                                               init_dynamic_properties=False, \
                                               update_from_db = update_from_db)
+        
         emf_logger.debug("After init properties 3")
 
     def update_from_db(self, ignore_precision = False, ignore_precision_if_failed = True, **kwargs):
@@ -390,6 +405,9 @@ class WebNewForm(WebObject, CachedRepresentation):
         return s
 
     def init_dynamic_properties(self):
+        emf_logger.debug("q_expansion.prec = {}".format(self.q_expansion.prec()))
+        if not self.q_expansion.prec >= self.prec:
+            self._properties['q_expansion'].set_from_coefficients(self._coefficients)
         self._properties['q_expansion'].maxprec = self.prec
         
     def q_expansion_latex(self, prec=None, name=None):
@@ -424,7 +442,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     def complexity_of_first_nonvanishing_coefficients(self, number_of_coefficients=3):
         m = 0
         n = 0
-        j = 0
+        j = 2
         while j < self.prec and n < number_of_coefficients:
             c = self.coefficient(j)
             j+=1
@@ -440,6 +458,17 @@ class WebNewForm(WebObject, CachedRepresentation):
             if a > m:
                 m = a
         return m
+
+    def coefficient_embeddings(self, prec):
+        if not 'values' in self._embeddings:
+            return {}
+        else:
+            if prec < self.prec:
+                emb = {'values': {n: c for n, c in self._embeddings['values'][n].items() if n<prec},
+                           'bitprec': self._embeddings['bitprec'],
+                           'prec': prec}
+            else:
+                return self._embeddings
 
     def coefficient_embedding(self,n,i):
         r"""
@@ -480,9 +509,9 @@ class WebNewForm(WebObject, CachedRepresentation):
             M = nrange
             nrange = range(0, M)
         if len(nrange) > 1:
-            emf_logger.debug("computing coeffs in range {0}--{1}".format(nrange[0],nrange[-1]))
+            emf_logger.debug("getting coeffs in range {0}--{1}".format(nrange[0],nrange[-1]))
         else:
-            emf_logger.debug("computing coeffs in range {0}--{0}".format(nrange[0]))
+            emf_logger.debug("getting coeffs in range {0}--{0}".format(nrange[0]))
         res = []
         recompute = False
         for n in nrange:
@@ -651,7 +680,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         ### we aim to have at most max_length bytes
         ### but at least min_prec coefficients and we desire to have want_prec
         if min_prec>=self.prec:
-            raise ValueError("Need lower precision, self.prec = {}".format(self.prec))
+            raise ValueError("Need higher precision, self.prec = {}".format(self.prec))
         l = self._file_record_length
         if l > max_length or self.prec > want_prec:
             nl = float(l)/float(self.prec)*float(want_prec)
@@ -670,7 +699,44 @@ class WebNewForm(WebObject, CachedRepresentation):
             self._embeddings['values'] = {n:c for n,c in self._embeddings['values'].iteritems() if n<prec}
             self._embeddings['prec'] = prec
             self.save_to_db()
-        
+
+    def download_to_sage(self, prec=None):
+        r"""
+        Minimal version for now to download to sage.
+        Does not work for high values of prec for large degree number fields (timeout).
+        """
+        if prec is None:
+            prec = self.prec
+        x = "var('x')\n"
+        if self.base_ring.absolute_degree() == 1:
+            br = ''
+        else:
+            br = "K.<brgen>=NumberField(crpol)\n".format(brgen=str(self.base_ring.gen()), crpol=self.base_ring.polynomial())
+        s =  x + br + \
+          "L.<{cfgen}> = NumberField({cfpol})\n".format(
+              cfgen=str(self.base_ring.gen()), cfpol=self.absolute_polynomial
+              )
+        s = s + "D = DirichletGroup({N})\n".format(
+            N = self.level
+            )
+        C = self.character.sage_character.parent()
+        if C.zeta_order()>2:
+            s = s + "{Dzeta}=CyclotomicField({Dzord}).gen()\n".format(Dzord=C.zeta_order(), Dzeta = C.zeta())
+        s = s + "coeffs = '{}'".format(self.coefficients(range(prec)))
+        s = s + "f = {{'coefficients': coeffs, 'level' : {level}, 'weight': {weight}, 'character': D.Element(D,{vog}), 'label': '{label}','dimension': {dim}, 'is_cm': {cm} , 'cm_discriminant': {cm_disc}, 'atkin_lehner': {al}, 'explicit_formulas': {ep}}}".format(
+            level=self.level, weight=self.weight, vog = self.character.sage_character.values_on_gens(), label=self.hecke_orbit_label, dim=self.dimension, cm=self.is_cm, cm_disc=None if not self.is_cm else self.cm_disc , al=self.atkin_lehner_eigenvalues(),
+            ep = self.explicit_formulas
+            )
+        s = s + "\n\n#EXAMPLE\n"
+        s = s + "#sage: f['q_expansion'][7]\n#{}\n".format(self.coefficient(7))
+        s = s + "#sage: f['character']\n#{}".format(self.character.sage_character)
+        emf_logger.debug("Generated sage file for {}".format(self.hecke_orbit_label))
+        return s
+
+    def dump_coefficients(self, prec):
+        if prec is None:
+            prec = self.prec
+        return dumps(self.coefficients(range(prec)))
 
 from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import multiply_mat_vec

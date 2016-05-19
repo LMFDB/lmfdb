@@ -185,6 +185,9 @@ class WebProperties(object):
     def list(self):
         return self._d.values()
 
+    def as_dict(self):
+        return { p.name: p.value() for p in self } 
+
     def __getitem__(self, n):
         return self._d[n]
 
@@ -223,6 +226,10 @@ class WebObject(object):
     _properties = None
     _has_updated_from_db = False
     _has_updated_from_fs = False
+    _add_to_db_query = None
+    _add_to_fs_query = None
+    _sort = None
+    _sort_files = None
     
     r"""
           _key: a list - The parameters that are needed to initialize a WebObject of this type.
@@ -318,20 +325,17 @@ class WebObject(object):
             #emf_logger.debug("Adding {0} : {1}".format(p.name,p))
             self.__dict__[p.name] = p
 
-        if not hasattr(self, '_add_to_db_query'):
-            self._add_to_db_query = None
-        if not hasattr(self, '_add_to_fs_query'):
-            self._add_to_fs_query = None
-        if not hasattr(self, '_sort'):
+        if self._sort is None:
             self._sort = []
-        if not hasattr(self, '_sort_files'):
+        if self._sort_files is None:
             self._sort_files = []
+        emf_logger.debug("For {} have self._add_to_fs_query = {}".format(self.__class__, self._add_to_fs_query))
                 
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
             emf_logger.debug('Update requested')
             #try:
-            self.update_from_db()
+            self.update_from_db(add_to_fs_query = self._add_to_fs_query, add_to_db_query = self._add_to_db_query)
             #except Exception as e:
             #    raise RuntimeError(str(e))
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
@@ -497,6 +501,7 @@ class WebObject(object):
         if not self._use_gridfs:
             raise ValueError('We do not use gridfs for this class.')
         fs = self._files
+        emf_logger.debug("{} self._add_to_fs_query: {}".format(self.__class__, self._add_to_fs_query))
         if add_to_fs_query is None:
             add_to_fs_query = self._add_to_fs_query
         elif self._add_to_fs_query is not None:
@@ -507,7 +512,7 @@ class WebObject(object):
         if add_to_fs_query is not None and not get_all:
             file_key.update(add_to_fs_query)
         sort = self._sort_files
-        emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
+        emf_logger.debug("{} add_to_fs_query: {}".format(self.__class__, add_to_fs_query))
         emf_logger.debug("file_key: {0} fs={1}".format(file_key,self._file_collection))
         results = []
         if fs.exists(file_key):
@@ -537,16 +542,12 @@ class WebObject(object):
             return results
 
     def get_files(self, add_to_fs_query=None):
-        if add_to_fs_query is None:
-            add_to_fs_query = {}
         if self._file_key_multi is None:
             return self.get_file(add_to_fs_query)
         else:
             return self.get_file(add_to_fs_query, get_all=True)
 
     def get_file_list(self, add_to_fs_query=None):
-        if add_to_fs_query is None:
-            add_to_fs_query = {}
         if self._file_key_multi is None:
             return self.get_file(add_to_fs_query, meta_only=True)
         else:
@@ -755,6 +756,12 @@ class WebObject(object):
                 succ_fs = False
         if succ_db: self._has_updated_from_db = True
         if succ_fs: self._has_updated_from_fs = True
+
+    def properties_as_dict(self):
+        r"""
+          Return all WebProperties of ```self``` in a dict.
+        """
+        return self._properties.as_dict()
 
     @classmethod
     def find(cls, query={}, projection = None, sort=[]):
