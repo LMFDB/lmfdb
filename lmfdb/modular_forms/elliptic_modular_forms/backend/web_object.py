@@ -662,7 +662,7 @@ class WebObject(object):
             r = coll.delete_one(key) # delete meta record
         if r.deleted_count == 0:
             emf_logger.debug("There was no meta record present matching {0}".format(key))
-        files = self.get_files() if delete_all else [self.get_file()]
+        files = self.get_file_list() if delete_all else [self.get_file()]
         for f in files:
             try:
                 self._files.delete(f['_id'])
