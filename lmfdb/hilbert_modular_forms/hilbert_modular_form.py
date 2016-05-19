@@ -310,6 +310,7 @@ def render_hmf_webpage(**args):
     hmf_field = C.hmfs.fields.find_one({'label': data['field_label']})
     gen_name = findvar(hmf_field['ideals'])
     nf = WebNumberField(data['field_label'], gen_name=gen_name)
+    info['hmf_field'] = hmf_field
     info['field'] = nf
     info['base_galois_group'] = nf.galois_string()
     info['field_degree'] = nf.degree()
