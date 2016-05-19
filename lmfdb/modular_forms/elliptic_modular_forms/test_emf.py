@@ -128,3 +128,22 @@ class EmfTest(LmfdbTest):
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/99/3/?group=1',
                            follow_redirects=True)
         self.assertFalse('n/a' in page.data)
+
+    def test_hide(self):
+        r"""
+        Test that large Fourier coefficients are not shown.
+        """
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/25/36/1/')
+        assert 'The Fourier coefficients of this newform are large. They are available for download.' in page.data
+
+    def test_coefficient_fields(self):
+        r"""
+        Test the display of coefficient fields.
+        """
+        page  = self.tc.get('ModularForm/GL2/Q/holomorphic/9/8/1/')
+        assert 'Minimal polynomial' in page.data
+        assert '\Q(\sqrt{10})' in page.data
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/11/6/1/')
+        assert '3.3.54492.1' in page.data
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/18/4/1/')
+        assert 'Minimal polynomial' not in page.data
