@@ -131,19 +131,32 @@ class EmfTest(LmfdbTest):
 
     def test_hide(self):
         r"""
-        Test that large Fourier coefficients are not shown.
+        Test that very large Fourier coefficients are not shown.
         """
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/25/36/1/')
-        assert 'The Fourier coefficients of this newform are large. They are available for download.' in page.data
+        assert 'The Fourier coefficients of this newform are large.' in page.data
 
     def test_coefficient_fields(self):
         r"""
         Test the display of coefficient fields.
         """
-        page  = self.tc.get('ModularForm/GL2/Q/holomorphic/9/8/1/')
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/9/8/1/')
         assert 'Minimal polynomial' in page.data
         assert '\Q(\sqrt{10})' in page.data
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/11/6/1/')
         assert '3.3.54492.1' in page.data
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/18/4/1/')
         assert 'Minimal polynomial' not in page.data
+
+    def test_download(self):
+        r"""
+        Test download function
+        """
+        response = self.tc.post('ModularForm/GL2/Q/holomorphic/Download/',
+                             content_type='multipart/form-data',
+                                data={'level': 25, 'weight': 36, 'character': 1, 'label': 'f', 'number': 10, 'format': 'sage', 'download': 'coefficients'}, follow_redirects=True)
+        assert "NumberField(x^16 - 380304819268*x^14" in response.data
+        response = self.tc.post('ModularForm/GL2/Q/holomorphic/Download/',
+                             content_type='multipart/form-data',
+                                data={'level': 25, 'weight': 36, 'character': 1, 'label': 'f', 'number': 800, 'format': 'embeddings', 'download': 'coefficients'}, follow_redirects=True)
+        assert "799	-5.0969" in response.data
