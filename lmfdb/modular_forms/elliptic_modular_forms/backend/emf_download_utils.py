@@ -24,13 +24,13 @@ def get_coefficients(info):
     label=my_get(info,'label','',str)
     emf_logger.debug("info={0}".format(info))
     if character == '':
-        character = 0
+        character = 1
     label = info.get('label', '')
     if info['format']=="sage":
         ending = "sage"
         f = WebNewForm(level, weight, character, label, prec=number)
         s = f.download_to_sage(number)
-    if info['format']=="sobj":
+    elif info['format']=="sobj":
         ending = "sobj"
         f = WebNewForm(level, weight, character, label, prec=number)
         s = f.dump_coefficients(number)

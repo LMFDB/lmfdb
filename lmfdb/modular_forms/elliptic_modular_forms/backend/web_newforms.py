@@ -714,7 +714,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             br = "K.<brgen>=NumberField(crpol)\n".format(brgen=str(self.base_ring.gen()), crpol=self.base_ring.polynomial())
         s =  x + br + \
           "L.<{cfgen}> = NumberField({cfpol})\n".format(
-              cfgen=str(self.base_ring.gen()), cfpol=self.absolute_polynomial
+              cfgen=str(self.coefficient_field.gen()), cfpol=self.absolute_polynomial
               )
         s = s + "D = DirichletGroup({N})\n".format(
             N = self.level
@@ -722,13 +722,12 @@ class WebNewForm(WebObject, CachedRepresentation):
         C = self.character.sage_character.parent()
         if C.zeta_order()>2:
             s = s + "{Dzeta}=CyclotomicField({Dzord}).gen()\n".format(Dzord=C.zeta_order(), Dzeta = C.zeta())
-        s = s + "coeffs = '{}'".format(self.coefficients(range(prec)))
-        s = s + "f = {{'coefficients': coeffs, 'level' : {level}, 'weight': {weight}, 'character': D.Element(D,{vog}), 'label': '{label}','dimension': {dim}, 'is_cm': {cm} , 'cm_discriminant': {cm_disc}, 'atkin_lehner': {al}, 'explicit_formulas': {ep}}}".format(
+        s = s + "f = {{'coefficients': {coeffs}, 'level' : {level}, 'weight': {weight}, 'character': D.Element(D,{vog}), 'label': '{label}','dimension': {dim}, 'is_cm': {cm} , 'cm_discriminant': {cm_disc}, 'atkin_lehner': {al}, 'explicit_formulas': {ep}}}".format(coeffs = self.coefficients(range(prec)),
             level=self.level, weight=self.weight, vog = self.character.sage_character.values_on_gens(), label=self.hecke_orbit_label, dim=self.dimension, cm=self.is_cm, cm_disc=None if not self.is_cm else self.cm_disc , al=self.atkin_lehner_eigenvalues(),
             ep = self.explicit_formulas
             )
         s = s + "\n\n#EXAMPLE\n"
-        s = s + "#sage: f['q_expansion'][7]\n#{}\n".format(self.coefficient(7))
+        s = s + "#sage: f['coefficients'][7]\n#{}\n".format(self.coefficient(7))
         s = s + "#sage: f['character']\n#{}".format(self.character.sage_character)
         emf_logger.debug("Generated sage file for {}".format(self.hecke_orbit_label))
         return s
