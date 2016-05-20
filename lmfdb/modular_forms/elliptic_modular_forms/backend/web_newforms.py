@@ -405,10 +405,10 @@ class WebNewForm(WebObject, CachedRepresentation):
         return s
 
     def init_dynamic_properties(self):
-        emf_logger.debug("q_expansion.prec = {}".format(self.q_expansion.prec()))
-        if not self.q_expansion.prec >= self.prec:
-            self._properties['q_expansion'].set_from_coefficients(self._coefficients)
-        self._properties['q_expansion'].maxprec = self.prec
+        if self.q_expansion is not None:
+            if not self.q_expansion.prec >= self.prec:
+                self._properties['q_expansion'].set_from_coefficients(self._coefficients)
+            self._properties['q_expansion'].maxprec = self.prec
         
     def q_expansion_latex(self, prec=None, name=None):
         return self._properties['q_expansion'].latex(prec, name, keepzeta=True)
