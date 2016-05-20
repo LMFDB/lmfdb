@@ -609,7 +609,14 @@ class WebNewForm(WebObject, CachedRepresentation):
         This method returns a list of the precisions that are available in the database for this newform.
         """
         files = self.get_file_list()
-        return [x['prec'] for x in files]
+        try:
+            return [x['prec'] for x in files]
+        except KeyError:
+            #backwards compatibility
+            try:
+                return [self.get_db_record()['prec']]
+            except KeyError:
+                return [self.prec]
 
     def max_available_prec(self):
         return max(self.available_precs())
