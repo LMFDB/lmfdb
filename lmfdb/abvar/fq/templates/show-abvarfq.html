@@ -12,13 +12,14 @@
     <tr><td>Weil polynomial:<td>&nbsp;&nbsp;<td>${{cl.formatted_polynomial}}$</tr>
     <tr><td>Frobenius angles:<td>&nbsp;&nbsp;<td>${{cl.frob_angles()}}$</tr>
     {% if cl.is_simple %}
-    <tr><td>Galois group:<td>&nbsp;&nbsp;<td>{{cl.galois|safe}}</tr>
+    <tr><td>Number field:<td>&nbsp;&nbsp;<td>{{cl.display_number_field()|safe}}</tr>
+    <tr><td>Galois group:<td>&nbsp;&nbsp;<td>{{cl.display_galois_group()|safe}}</tr>
     {% endif %}
 </table>
 </p>
 
 <p>
-{% if cl.is_simple() %}
+{% if cl.is_simple %}
 This isogeny class is simple.</br>
 {% endif %}
 
@@ -150,7 +151,7 @@ It is unknown whether this isogeny class contains a Jacobian.
 
 <p><h2>{{ KNOWL('abvar.decomposition',title="Decomposition") }}</h2>
 
-{% if cl.is_simple() %}
+{% if cl.is_simple %}
 This is a simple isogeny class.
 {% else %}
 <blockquote>

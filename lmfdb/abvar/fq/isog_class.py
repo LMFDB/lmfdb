@@ -7,10 +7,11 @@ from lmfdb.base import getDBConnection
 
 from sage.misc.cachefunc import cached_function
 from sage.rings.all import Integer
-from sage.all import PolynomialRing, QQ
+from sage.all import PolynomialRing, QQ, factor, PariError
 
 from lmfdb.genus2_curves.isog_class import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
+from lmfdb.WebNumberField import WebNumberField, nf_display_knowl, field_pretty
 
 logger = make_logger("abvarfq")
 
@@ -68,11 +69,28 @@ class AbvarFq_isoclass(object):
     def make_class(self):
         from main import decomposition_display
         self.decompositioninfo = decomposition_display(self,self.decomposition)
-        self.formatted_polynomial, galois_gp = list_to_factored_poly_otherorder(self.polynomial,galois=True,vari = 'x')
+        self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial,galois=False,vari = 'x')
+        #in some cases the abelian variety can be simple but not have a field or Galois group attached because the Weil polynomial is not irreducible. This gives them then.
         if self.is_simple():
-            C = getDBConnection()
-            galois_gp = galois_gp[0]
-            self.galois = group_display_knowl(galois_gp[0],galois_gp[1],C)            
+            if self.number_field == "":
+                factors = factor(PolynomialRing(QQ, 'x')(self.polynomial))
+                factors_list = [[v[0],v[1]] for v in factors]
+                if len(factors_list) > 1: #then the isogeny class is not really simple...
+                    logger.debug("WARNING! The class thought it was simple but it wasnt")
+                    self.is_simple = False
+                else: 
+                    try:
+                        nf = WebNumberField.from_polynomial(factors_list[0][0])
+                        if nf.label == 'a':
+                            nf = None
+                    except PariError:
+                        nf = None
+                    if nf is None:                    
+                        self.number_field = ""
+                        self.galois_t = ""
+                    else:
+                        self.number_field = nf.label
+                        self.galois_t = nf.galois_t()
         
     def p(self):
         q = Integer(self.q)
@@ -114,11 +132,14 @@ class AbvarFq_isoclass(object):
         if len(self.decomposition)== 1:
             #old simple_maker just outputed the label, with no multiplicity
             if len(self.decomposition[0]) == 1:
+                self.is_simple = True
                 return True
             #new simple_maker outputs the label and multiplicity 1
             elif self.decomposition[0][1] == 1:
+                self.is_simple = True
                 return True
         else:
+            self.is_simple = False
             return False
     
         ### This is what this will look like once all self.decomposition is fixed:
@@ -164,6 +185,20 @@ class AbvarFq_isoclass(object):
         
     def length_C_counts(self):
         return len(self.C_counts)
+        
+    def display_number_field(self):
+        if self.number_field == "":
+            return "The number field of this isogeny class is not in the database."
+        else:
+            C = getDBConnection()
+            return nf_display_knowl(self.number_field,C,field_pretty(self.number_field))
+    
+    def display_galois_group(self):
+        if self.galois_t == "": #the number field was not found in the database
+            return "The Galois group of this isogeny class is not in the database."
+        else:
+            C = getDBConnection()
+            return group_display_knowl(2*self.g,self.galois_t,C)  
             
         
 
