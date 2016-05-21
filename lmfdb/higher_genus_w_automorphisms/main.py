@@ -10,7 +10,7 @@ from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
-from lmfdb.search_parsing import parse_ints, parse_count, parse_start, parse_list, clean_input
+from lmfdb.search_parsing import parse_ints, parse_count, parse_bool, parse_start, parse_list, clean_input
 
 from sage.all import Permutation
 
@@ -101,6 +101,12 @@ def higher_genus_w_automorphisms_search(**args):
         parse_list(info,query,'group', name='Group')
         parse_ints(info,query,'genus',name='Genus')
         parse_list(info,query,'signature',name='Signature')
+        parse_ints(info,query,'dim',name='Dimension of the family')
+        if 'inc_hyper' in info:
+            if info['inc_hyper'] == 'exclude':
+                query['hyperelliptic'] = False
+            elif info['inc_hyper'] == 'only':
+                query['hyperelliptic'] = True
     except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)

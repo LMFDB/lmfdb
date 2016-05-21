@@ -266,7 +266,7 @@ def download_hmf_sage(**args):
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
     if f["hecke_polynomial"] != 'x':
-        outstr += 'hecke_pol = ' + f["hecke_polynomial"] + '\n'
+        outstr += 'heckePol = ' + f["hecke_polynomial"] + '\n'
         outstr += 'K.<e> = NumberField(heckePol)\n'
     else:
         outstr += 'heckePol = x\nK = QQ\ne = 1\n'
@@ -277,7 +277,7 @@ def download_hmf_sage(**args):
 
     outstr += 'AL_eigenvalues = {}\n'
     for s in f["AL_eigenvalues"]:
-        outstr += 'ALEigenvalues[ZF.ideal(s[0])] = s[1]\n'
+        outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
 
     outstr += '\n# EXAMPLE:\n# pp = ZF.ideal(2).factor()[0][0]\n# hecke_eigenvalues[pp]\n'
 
@@ -310,6 +310,7 @@ def render_hmf_webpage(**args):
     hmf_field = C.hmfs.fields.find_one({'label': data['field_label']})
     gen_name = findvar(hmf_field['ideals'])
     nf = WebNumberField(data['field_label'], gen_name=gen_name)
+    info['hmf_field'] = hmf_field
     info['field'] = nf
     info['base_galois_group'] = nf.galois_string()
     info['field_degree'] = nf.degree()
