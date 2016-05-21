@@ -33,10 +33,12 @@ f:
   sage: f = N[{newform_number}]
 
 qexp:
-  sage: f.q_expansion() # note that sage often uses an isomorphic number field
+  sage: |
+    f.q_expansion() # note that sage often uses an isomorphic number field
 
 coefficient_field:
-  sage: K = f.hecke_eigenvalue_field() # note that sage often uses an isomorphic number field
+  sage: |
+    K = f.hecke_eigenvalue_field() # note that sage often uses an isomorphic number field
 
 absolute_polynomial:
   sage: K.absolute_polynomial()
