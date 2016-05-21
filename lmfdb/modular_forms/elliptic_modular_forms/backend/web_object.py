@@ -530,7 +530,7 @@ class WebObject(object):
                         d = loads(fs.get(fid).read())
                         results.append((d,m))
                     except ValueError as e:
-                        raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,r))
+                        raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,m))
                 else:
                     results.append(m)
         else:
