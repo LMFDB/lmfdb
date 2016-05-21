@@ -75,7 +75,7 @@ class EmfTest(LmfdbTest):
                     url = "ModularForm/GL2/Q/holomorphic/%s/%s/%s/%s/"%(l[0],l[1],l[2],l[3])
                     print "Checking %s"%url
                     page = self.tc.get(url, follow_redirects=True)
-                    if not "Fourier coefficients" in page.data and r['hecke_orbit_label'] in page.data:
+                    if not ("Coefficient field" in page.data and "Download this Newform" in page.data and r['hecke_orbit_label'] in page.data):
                         print 'Failed on', url
                         errors.append(r['hecke_orbit_label'])
         if errors:

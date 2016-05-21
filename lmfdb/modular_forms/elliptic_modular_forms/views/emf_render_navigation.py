@@ -1,8 +1,5 @@
 r"""
-
 Routines for rendering the navigation.
-
-
 """
 import json
 from flask import url_for,render_template,request,redirect
@@ -13,13 +10,6 @@ from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP,emf_version
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple
-
-def _browse_web_modform_spaces_in_ranges(**kwds):
-    r"""
-    Renders the webpage for browsing modular forms of given level and/or weight ranges.
-    """
-    return render_elliptic_modular_form_navigation_wp(**kwds)
-
 
 def render_elliptic_modular_form_navigation_wp(**args):
     r"""
@@ -40,12 +30,6 @@ def render_elliptic_modular_form_navigation_wp(**args):
     weight = my_get(info, 'weight', None, int)
     character = my_get(info, 'character', 1, int)
     label = info.get('label', '')
-    #disp = ClassicalMFDisplay('modularforms2')
-    emf_logger.debug("info={0}".format(info))
-    emf_logger.debug("level=%s, %s" % (level, type(level)))
-    emf_logger.debug("label=%s, %s" % (label, type(label)))
-    emf_logger.debug("wt=%s, %s" % (weight, type(weight)))
-    emf_logger.debug("character=%s, %s" % (character, type(character)))
     if('plot' in info and level is not None):
         return render_fd_plot(level, info)
     is_set = dict()
@@ -90,17 +74,13 @@ def render_elliptic_modular_form_navigation_wp(**args):
     if group == 0:
         info['grouptype'] = 0; info['groupother'] = 1
     else:
-        info['grouptype'] = 1; info['groupother'] = 0
-    emf_logger.debug("group=%s, %s" % (group, type(group)))
-    emf_logger.debug("level:{0},level_range={1}".format(level,limits_level))
-    emf_logger.debug("weight:{0},weight_range={1}".format(weight,limits_weight))    
+        info['grouptype'] = 1; info['groupother'] = 0    
     # Special case: if the range reduces to a singleton for both level
     # and weight then we return a single page rather than a table:
     if limits_weight[0] == limits_weight[1] and limits_level[0] == limits_level[1]:
         return redirect(url_for("emf.render_elliptic_modular_forms",
           level=limits_level[0],weight=limits_weight[0],group=group), code=301)
     info['show_switch'] = True
-    emf_logger.debug("dimension table name={0}".format(dimension_table_name))
     db_dim = getDBConnection()['modularforms2'][dimension_table_name]
     s = {'level':{"$lt":int(limits_level[1]+1),"$gt":int(limits_level[0]-1)},
          'weight' : {"$lt":int(limits_weight[1]+1),"$gt":int(limits_weight[0]-1)}}
@@ -144,5 +124,3 @@ def render_elliptic_modular_form_navigation_wp(**args):
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
     return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)
-
-    
