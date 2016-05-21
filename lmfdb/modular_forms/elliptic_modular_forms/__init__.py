@@ -32,7 +32,10 @@ N_max_db = 5000
 k_max_db = 12
 N_max_extra_comp = 500
 
-use_cache = True
+## Don't ever change this, see
+## https://github.com/LMFDB/lmfdb/pull/1409#issuecomment-220733555
+use_cache = False
+
 
 import views
 import backend
