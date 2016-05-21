@@ -38,11 +38,11 @@ def rewrite_collection(db,incoll,outcoll,func, batchsize=10000):
         db[outcoll].insert_many(outrecs)
     print "inserted %d records in %.3f secs"%(cnt, time()-start)
     indexes = db[incoll].index_information()
-    keys = [(k,indexes[k]['key']) for k in indexes]
+    keys = [(k,indexes[k]['key']) for k in indexes if k ne '_id_']
     keys.sort() # sort indexes by keyname so (attr1) < (attr1,attr2) < (attr1,attr2,attr3) < ...
     for i in range(len(keys)):
         now = time()
-        key = [(a[0],1 if a[1] > 0 else -1) for a in keys[i][1]] # deal with legacy floats (1.0 vs 1)
+        key = [(a[0],int(1) if a[1] > 0 else int(-1)) for a in keys[i][1]] # deal with legacy floats (1.0 vs 1)
         db[outcoll].create_index(key)
         print "created index %s in %.3f secs"%(keys[i][0],time()-now)
     print "Rewrote %s to %s, total time %.3f secs"%(incoll, outcoll, time()-start)
