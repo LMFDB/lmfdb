@@ -31,7 +31,8 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
     render_fd_plot,
     extract_data_from_jump_to,
-    newform_label)
+    newform_label,
+    parse_newform_label)
 from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
 from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
