@@ -34,3 +34,12 @@ f:
 
 qexp:
   sage: f.q_expansion()
+
+coefficient_field:
+  sage: K = f.hecke_eigenvalue_field()
+
+absolute_polynomial:
+  sage: K.absolute_polynomial()
+
+relative_polynomial:
+  sage: K.relative_polynomial()

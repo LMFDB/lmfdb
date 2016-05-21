@@ -72,6 +72,7 @@ function show_code(system) {
 
 <h3>Coefficient field</h3>
 <div>
+  {{ code(code_snippets, 'coefficient_field') }}
 <!-- from emf_web_newform.html -->
 The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is 
 {% if is_rational ==1 %}
@@ -84,9 +85,11 @@ The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is
         $\Q({{ polvars['coefficient_field']}})$
     {% endif %}
 where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}}
-<div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$. 
+<div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$.
+    {{code(code_snippets, 'absolute_polynomial')}}
     {% if coeff_field|length >2 and coeff_field[2]>2 %}
-    <br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}} </div>.
+<br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}} </div>.
+     {{ code(code_snippets, 'relative_polynomial') }}
     {% endif %}
 {% endif %}
 </div>
