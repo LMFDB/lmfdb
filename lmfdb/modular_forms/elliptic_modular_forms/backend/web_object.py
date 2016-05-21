@@ -542,7 +542,7 @@ class WebObject(object):
             return results
 
     def get_files(self, add_to_fs_query=None):
-        if self._file_key_multi is None:
+        if self._file_key_multi is None or add_to_fs_query is not None:
             return self.get_file(add_to_fs_query)
         else:
             return self.get_file(add_to_fs_query, get_all=True)
