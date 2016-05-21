@@ -90,24 +90,9 @@ pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.exts
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
-print "setting curves"
+print "setting curves and curves2"
 curves = C.elliptic_curves.curves
-
-# The following create_index command checks if there is an index on
-# label, conductor, rank and torsion. If there is no index it creates
-# one.  Need: once torsion structure is computed, we should have an
-# index on that too.
-
-curves.create_index('label')
-curves.create_index('conductor')
-curves.create_index('rank')
-curves.create_index('torsion')
-curves.create_index('degree')
-curves.create_index('jinv')
-curves.create_index('sha')
-curves.create_index('cm')
-
-print "finished indices"
+curves2 = C.elliptic_curves.curves2
 
 
 def parse_tgens(s):
@@ -636,15 +621,26 @@ def add_extra_data(N1,N2,store=False):
     res = res.sort([('conductor', pymongo.ASCENDING)])
     n = 0
     res = list(res) # since the cursor times out after a few thousand curves
+    newcurves = []
     for C in res:
         n += 1
         if n%100==0:
             print C['lmfdb_label']
+        if n%1000==0:
+            if store and len(newcurves):
+                curves2.insert_many(newcurves)
+                newcurves = []
         else:
             sys.stdout.write(".")
             sys.stdout.flush()
         data = make_extra_data(C['label'],C['number'],C['ainvs'],C['gens'])
+        C.update(data)
         if store:
-            curves.update_one({'_id': C['_id']}, {"$set": data}, upsert=True)
+            newcurves.append(C)
         else:
-            print("Not writing to database.\n%s" % data)
+            print("Not writing updated %s to database.\n" % C['label'])
+    # insert the final left-overs since the last full batch
+    if store and len(newcurves):
+        curves2.insert_many(newcurves)
+
+    print("\nfinished updating conductors from %s to %s" % (N1,N2))

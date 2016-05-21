@@ -60,7 +60,7 @@ padicdb = None
 def db_ec():
     global ecdb
     if ecdb is None:
-        ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
+        ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves2
     return ecdb
 
 def padic_db():

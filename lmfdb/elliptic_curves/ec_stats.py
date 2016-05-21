@@ -4,6 +4,7 @@ from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
+from lmfdb.elliptic_curves.web_ec import db_ec
 from flask import url_for
 
 def format_percentage(num, denom):
@@ -36,7 +37,7 @@ class ECstats(object):
 
     def __init__(self):
         logger.debug("Constructing an instance of ECstats")
-        self.ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
+        self.ecdb = db_ec()
         self._counts = {}
         self._stats = {}
 
