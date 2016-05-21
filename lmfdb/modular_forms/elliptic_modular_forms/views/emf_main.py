@@ -38,11 +38,17 @@ from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
 
 from emf_render_navigation import render_elliptic_modular_form_navigation_wp
 
-emf_logger.setLevel(int(10))
+emf_logger.setLevel(int(100))
 
 @emf.context_processor
 def body_class():
     return {'body_class': EMF}
+
+def db_emf():
+    global emfdb
+    if emfdb is None:
+        emfdb = lmfdb.base.getDBConnection().modularforms2.webnewforms
+    return emfdb
 
 #################
 # Top level
@@ -167,6 +173,12 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
                 return send_from_directory(dirname, filename, as_attachment=True, attachment_filename=filename)
             except IOError:
                 info['error'] = "Could not find file! "
+
+@emf.route("/random")
+def random_curve():
+    label = random_object_from_collection( WebNewForm._collection_name )['hecke_orbit_label']
+    level, weight, character, label = parse_newform_label(label)
+    return redirect(url_for(".render_elliptic_modular_forms", level, weight, character, label), 301)
 
 @emf.route("/Plots/<int:grouptype>/<int:level>/")
 def render_plot(grouptype=0, level=1):
