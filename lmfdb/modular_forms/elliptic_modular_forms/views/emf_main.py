@@ -25,7 +25,7 @@ from flask import render_template, url_for, request, redirect, make_response, se
 import os
 from lmfdb.base import app, db
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
