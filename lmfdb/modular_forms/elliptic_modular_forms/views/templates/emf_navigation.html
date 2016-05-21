@@ -100,7 +100,8 @@ function set_value(id,val) {
 
 <h1>Browse holomorphic {{KNOWL('mf.elliptic.newform',title='newforms')}} for {{group}}</h1>
 
-<div>
+  <div>
+<p>Go to a <a href={{url_for('.random_form')}}>random modular form</a> from the database</p>
       {% if info.browse_table.rows is defined %}
       {#{KNOWLl('mf.elliptic.browse.all.info') } #}
 The table below gives the dimensions of the space of holomorphic 

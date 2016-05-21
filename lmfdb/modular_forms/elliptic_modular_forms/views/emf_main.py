@@ -178,7 +178,7 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
                 info['error'] = "Could not find file! "
 
 @emf.route("/random")
-def random_curve():
+def random_form():
     label = random_object_from_collection( db_emf() )['hecke_orbit_label']
     level, weight, character, label = parse_newform_label(label)
     args={}
