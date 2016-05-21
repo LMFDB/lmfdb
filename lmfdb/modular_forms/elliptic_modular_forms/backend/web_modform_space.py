@@ -245,7 +245,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
          # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "../code.yaml")))
-
+        
         # Fill in placeholders for this specific space:
         for lang in ['sage', 'magma']:
             if self.character.order == 1:
