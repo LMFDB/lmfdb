@@ -543,13 +543,19 @@ class WebObject(object):
 
     def get_files(self, add_to_fs_query=None):
         if self._file_key_multi is None or add_to_fs_query is not None:
-            return self.get_file(add_to_fs_query)
+            l = self.get_file(add_to_fs_query)
+            if isinstance(l,dict):
+                l = [l]
+            return l
         else:
             return self.get_file(add_to_fs_query, get_all=True)
 
     def get_file_list(self, add_to_fs_query=None):
         if self._file_key_multi is None or add_to_fs_query is not None:
-            return self.get_file(add_to_fs_query, meta_only=True)
+            l = self.get_file(add_to_fs_query, meta_only=True)
+            if isinstance(l,dict):
+                l = [l]
+            return l
         else:
             return self.get_file(add_to_fs_query, get_all=True, meta_only=True)
 
