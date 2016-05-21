@@ -48,7 +48,7 @@ function show_code(system) {
       <th>{{ KNOWL('mf.elliptic.label',title='Label')}}</th>
       <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
       <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Field')}}</th>
-      <th align="left" colspan="2">{{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion of eigenform')}}</th>
+      <th align="left">{{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion of eigenform')}}</th>
     </tr>
     </thead>
   <tbody>
@@ -98,7 +98,7 @@ function show_code(system) {
 	        <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
 	  {% endif %}
 		{% endif %}
-	<td>{{ code(f.code, 'f')}}{{ code(f.code, 'qexp')}}</td>
+	<tr><td colspan="4">{{ code(f.code, 'f')}}{{ code(f.code, 'qexp')}}</td></tr>
       </tr>
     {% endfor %}
   </tbody>
