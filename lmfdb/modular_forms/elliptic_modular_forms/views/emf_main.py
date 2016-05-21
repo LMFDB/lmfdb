@@ -181,6 +181,7 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
 def random_curve():
     label = random_object_from_collection( db_emf() )['hecke_orbit_label']
     level, weight, character, label = parse_newform_label(label)
+    args={}
     args['level'] = level
     args['weight'] = weight
     args['character'] = character
