@@ -941,12 +941,13 @@ class WebNumberField(WebDict):
         r"""
         We store the LMFDB label of the absolute field in the db.
         """
-        if self._db_value_has_been_set and not self._db_value is None:
-            return self._db_value
-        
+
         K = self._value
         if hasattr(K, "lmfdb_label"):
             return K.lmfdb_label
+        
+        if self._db_value_has_been_set and not self._db_value is None:
+            return self._db_value
         else:
             return ''
 
