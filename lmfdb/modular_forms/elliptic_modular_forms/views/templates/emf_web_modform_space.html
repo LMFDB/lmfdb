@@ -3,7 +3,6 @@
 {#                                             #}
 {% extends 'homepage.html' %}
 
-
 {% if space is defined %}
   {% if space.character is not defined or space.character.order == 1%}
     {% set new_name = "\( S_{%s}^{\mathrm{new}}(%s) \)"|format(space.weight, space.level) %}
@@ -27,7 +26,7 @@
 {% elif space.data_from_dimension_db().get('in_wdb',0) == 0  %}
 <h3>Unfortunately, we do not have this space in the database, yet.</h3>
 {% endif %}
-{% else %}
+{% endif %}
 {% if space.dimension_new_cusp_forms == 0 %}
   <h3>There are no newforms of this weight, level and character.</h3>
    {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
@@ -36,6 +35,7 @@
    {% if space.weight % 2 != 0 and space.character.value(-1) == 1 %}
      The weight is odd and the character is even.
    {% endif %}
+
  {% else %}
 
       {% if extra_info is defined %}
@@ -49,7 +49,7 @@
         <h2>
           Decomposition of {{new_name}} into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits')}}
         </h2>
-        {% if  space.hecke_orbits=={} %}
+        {% if space.hecke_orbits=={} %}
            Problem with Hecke orbits in the database!
         {% else %}
           {% set orbits = space.hecke_orbits | sort %}
@@ -74,6 +74,6 @@
       {% endif %}
         
     {{ test | safe }}
-  {% endif %}
+
 {% endif %}
 {% endblock %}

@@ -77,7 +77,7 @@
         <th>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}</th>
         <th>{{ KNOWL('modlmf.degree', title='Field degree') }}</th>
         <th>{{ KNOWL('modlmf.level', title='Level')}}</th>
-        <th>{{ KNOWL('modlmf.conductor', title='Conductor') }}</th>
+<!--        <th>{{ KNOWL('modlmf.conductor', title='Conductor') }}</th>-->
         <th>{{ KNOWL('modlmf.minimal_weight', title='Minimal weight') }}</th>
         </tr>
         {% for l in info.modlmfs %}
@@ -86,7 +86,7 @@
             <td>{{l.characteristic}}</td>
             <td>{{l.deg}}</td>
             <td>{{l.level}}</td>
-            <td>${{l.conductor}}$</td>
+<!--            <td>${{l.conductor}}$</td>-->
             <td>${{l.min_weight}}$</td>
             </tr>
         {% endfor %}

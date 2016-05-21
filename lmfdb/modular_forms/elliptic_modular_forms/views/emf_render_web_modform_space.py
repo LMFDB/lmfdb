@@ -91,7 +91,8 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         return info
     try:
         WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = character, update_from_db=True)
-        WMFS.update_from_db() ## Need to call an extra time for some reason...
+        if not WMFS.has_updated():
+            WMFS.update_from_db() ## Need to call an extra time for some reason...
         if not WMFS.has_updated():
             stop = False
             orbit = WMFS.character.character.galois_orbit()
