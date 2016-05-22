@@ -6,7 +6,7 @@ import StringIO
 from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict, make_logger
 from lmfdb.abvar.fq import abvarfq_page
 from lmfdb.search_parsing import parse_ints, parse_newton_polygon, parse_list_start, parse_abvar_decomp, parse_count, parse_start
 from isog_class import validate_label, AbvarFq_isoclass
@@ -15,6 +15,9 @@ from flask import flash, render_template, url_for, request, redirect, make_respo
 from markupsafe import Markup
 from sage.misc.cachefunc import cached_function
 from sage.rings.all import PolynomialRing
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple
+
+logger = make_logger("abvarfq")
 
 #########################
 #   Database connection
@@ -57,15 +60,16 @@ def learnmore_list_remove(matchstring):
 def abelian_varieties():
     args = request.args
     if args:
-        return abelian_variety_search(**args)
+        info = to_dict(args)
+        #information has been entered, but not requesting to change the parameters of the table
+        if not('table_field_range' in info) and not('table_dimension_range' in info):
+            return abelian_variety_search(**args)
+        #information has been entered, requesting to change the parameters of the table
+        else:
+            return abelian_variety_browse(**args)
+    # no information was entered                   
     else:
-        info = {}
-        stats = AbvarFqStats()
-        info['col_heads'] = sorted(int(b) for b in stats.counts['qs'])[:23] # q < 50
-        info['row_heads'] = stats.counts['gs']
-        info['table'] = stats.counts['qg_count']
-        return render_template("abvarfq-index.html", title="Isogeny Classes of Abelian Varieties over Finite Fields",
-                               info=info, credit=abvarfq_credit, bread=get_bread(), learnmore=learnmore_list())
+        return abelian_variety_browse(**args)
 
 @abvarfq_page.route("/<int:g>/")
 def abelian_varieties_by_g(g):
@@ -155,6 +159,49 @@ def abelian_variety_search(**args):
         info['report'] = 'displaying all %s matches' % nres
     t = 'Abelian Variety search results'
     return render_template("abvarfq-search-results.html", info=info, credit=abvarfq_credit, bread=bread, title=t)
+    
+def abelian_variety_browse(**args):
+    info = to_dict(args)
+    if not('table_dimension_range' in info) or (info['table_dimension_range']==''):
+        info['table_dimension_range'] = "1-6"
+    if not('table_field_range' in info)  or (info['table_field_range']==''):
+        info['table_field_range'] = "2-32"
+        
+    table_limits_dimension = extract_limits_as_tuple(info,'table_dimension_range')
+    table_limits_field = extract_limits_as_tuple(info,'table_field_range')
+    
+    s = {'g':{"$lt":int(table_limits_dimension[1]+1),"$gt":int(table_limits_dimension[0]-1)},'q' : {"$lt":int(table_limits_field[1]+1),"$gt":int(table_limits_field[0]-1)}}
+    look = db().find(s)#.sort([('g',int(1)),('q',int(1))])
+    qs = look.distinct('q')
+    gs = look.distinct('g')
+    info['table'] = {}
+    table_dimension_range = range(table_limits_dimension[0],table_limits_dimension[1])
+    table_field_range = range(table_limits_field[0],table_limits_field[1])
+    
+    if len(table_dimension_range) == 1:
+        info['table_dimension_range'] = "{0}".format(table_limits_dimension[0])
+    elif len(table_dimension_range) > 1:
+        info['table_dimension_range'] = "{0}-{1}".format(table_limits_dimension[0],table_limits_dimension[1])
+    if len(table_field_range) == 1:
+        info['table_field_range'] = "{0}".format(table_limits_field[0])
+    elif len(table_field_range) > 1:
+        info['table_field_range'] = "{0}-{1}".format(table_limits_field[0],table_limits_field[1])
+    
+    for q in qs:
+        info['table'][q] = {}
+        for g in gs:
+            info['table'][q][g] = 0
+    for q in qs:
+        for g in gs:
+            try:
+                info['table'][q][g] = db().find({'g': g, 'q': q}).count()
+            except KeyError:
+                pass
+        
+    info['col_heads'] = sorted(int(q) for q in qs)
+    info['row_heads'] = sorted(int(g) for g in gs)
+        
+    return render_template("abvarfq-index.html", title="Isogeny Classes of Abelian Varieties over Finite Fields", info=info, credit=abvarfq_credit, bread=get_bread(), learnmore=learnmore_list())    
 
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
@@ -247,7 +294,6 @@ def decomposition_display(current_class, factors):
             ans += '$\times$ '
         ans += factor_display_knowl(factor[0]) + '<sup>factor[1]</sup> '
     return ans
-
     
 def factor_display_knowl(label):
     return '<a title = " [abvar.decomposition.data]" knowl="abvar.decomposition.data" kwargs="label=' + str(label) + '">' + label + '</a>'

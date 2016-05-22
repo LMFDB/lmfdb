@@ -55,7 +55,7 @@
         <tr class="space">
             <th class="spaceleft"></th>
             {% for q in info.col_heads  %}
-            <th class="level">{{q}}</a></th>
+            <th class="center" text-align="center">{{q}}</th>
             {% endfor %}
         </tr>
     </thead>
@@ -64,15 +64,7 @@
         <tr>
                 <th class="left">{{g}}</th>            
             {% for q in info.col_heads  %}
-            <td class="left">
-                <!--{% if table[q] is defined and table[q][g] is defined %}
-                {% set size = table[q][g] %}
-                {% set url = url_for('abvarfq.abelian_varieties_by_gq',g=g,q=q) %}
-                <a href="{{url}}">{{size}}</a>
-                {% else %}
-                {% do has_na.append(1) %}
-                <small style="color:gray">n/a</small>
-                {% endif %}-->
+            <td>
                 {% set size = table[q][g] %}
                 {% if size > 0 %}
                 {% set url = url_for('abvarfq.abelian_varieties_by_gq',g=g,q=q) %}
@@ -96,6 +88,24 @@
     {% endif %}
     
 {% endif %}
+
+
+<h3>Change the range covered by the table</h3>
+<!--<form name="browse" method = "get" action="{{url_for('abvarfq.abelian_varieties')}}">-->
+<form>
+    <table>
+        <tr>
+            <td>{{ KNOWL('ag.field_of_definition',title = "cardinality of the base field") }} range:</td>
+            <td><input type="text" name="table_field_range" example="2-32" value={{table_field_range}}></td>
+        </tr>
+        <tr>
+            <td>{{ KNOWL('ag.dimension',title = "dimension") }} range:</td>
+            <td><input type="text" name="table_dimension_range" example="1-6" value={{table_dimension_range}}></td>
+        </tr>
+    </table>
+    <button type="submit" value='Search'>Make new table</button>
+</form>
+
 
 <h2> Find a specific  {{KNOWL('abvar.isogeny_class',title="isogeny class") }} by <!--the {{ KNOWL('abvar.fq.weil_polynomial',title="coefficients of its Weil polynomial") }} or-->
     {{ KNOWL('abvar.fq.lmfdb_label',title="LMFDB label") }} </h2>
