@@ -1,7 +1,41 @@
-
 {# 
 info in this page is set by set_info_for_web_newform in emf_render_web_newform.py
 #}
+
+{% macro code(codes, item) %}
+{% for L in codes[item] %}
+{# N.B. whitespace is preserved in the following div since the CSS has
+white-space: pre in order to keep line breaks! #}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
+{% endfor %}
+{% endmacro %}
+
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    $('.magma').hide();
+    if (cur_system == system) {
+      $('.'+system).hide();
+      cur_system = null;
+    } else {
+      $('.'+system).show();
+      $('.'+system).css('display','inline-block');
+      cur_system = system;
+    }
+}
+</script>
+
+<div align ="right">
+  Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sagemath</a>,
+  <a onclick="show_code('magma'); return false" href='#'>magma</a>
+</div>
+
+{% if space.character.order == 1 %}
+{{ code(space.code,'newforms-triv-char') }}
+{% else %}
+{{ code(space.code,'newforms-nontriv-char') }}
+{% endif %}
 
 {% if not q_expansion_prec is defined %}
   {# The number of coefficient of the q-expansion which we show on this page #}
@@ -18,6 +52,7 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
     </tr>
     </thead>
   <tbody>
+ 
 <!-- check if the table is empty -->
 {% set vars = {'cyclotomicorder': 0} %}
 {% for column in table %}
@@ -62,7 +97,8 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
 		 {% if qexp.update({'visible': true}) %} {% endif %}
 	        <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
 	  {% endif %}
-	  {% endif %}    
+		{% endif %}
+	<tr><td colspan="4">{{ code(f.code, 'f')}}{{ code(f.code, 'qexp')}}</td></tr>
       </tr>
     {% endfor %}
   </tbody>

@@ -1,8 +1,32 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
+{% macro code(codes, item) %}
+{% for L in codes[item] %}
+{# N.B. whitespace is preserved in the following div since the CSS has
+white-space: pre in order to keep line breaks! #}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
+{% endfor %}
+{% endmacro %}
+
+<script>
+var cur_system = null;
+function show_code(system) {
+    $('.sage').hide();
+    if (cur_system == system) {
+      $('.'+system).hide();
+      cur_system = null;
+    } else {
+      $('.'+system).show();
+      $('.'+system).css('display','inline-block');
+      cur_system = system;
+    }
+}
+</script>
+
+<div align ="right">
+  Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sagemath</a>
+</div>
 
 {% set KNOWL_ID = "mf.%s.%s.%s.%s"|format(level,weight,character,label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
@@ -12,10 +36,18 @@
    {{ error | safe }}
 {% else %}
 
+{% if character == 1 %}
+{{ code(code_snippets,'newforms-triv-char') }}
+{% else %}
+{{ code(code_snippets,'newforms-nontriv-char') }}
+{% endif %}
+{{ code(code_snippets, 'f')}}
+
 <div id="qexp">
 <!-- from emf_web_newform.html -->
   <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
 <div>
+  {{ code(code_snippets, 'qexp')}}
   {% if not hide_qexp %}
     <form>
         <div class="output">
@@ -40,6 +72,7 @@
 
 <h3>Coefficient field</h3>
 <div>
+  <div>{{ code(code_snippets, 'coefficient_field') }}</div>
 <!-- from emf_web_newform.html -->
 The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is 
 {% if is_rational ==1 %}
@@ -52,9 +85,11 @@ The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is
         $\Q({{ polvars['coefficient_field']}})$
     {% endif %}
 where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}}
-<div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$. 
+<div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$.
+    {{code(code_snippets, 'absolute_polynomial')}}
     {% if coeff_field|length >2 and coeff_field[2]>2 %}
-    <br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}} </div>.
+<br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}} </div>.
+     {{ code(code_snippets, 'relative_polynomial') }}
     {% endif %}
 {% endif %}
 </div>

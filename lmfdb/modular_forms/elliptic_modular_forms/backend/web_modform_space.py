@@ -27,6 +27,7 @@ AUTHORS:
  
  """
 
+import os, yaml
 from flask import url_for
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
@@ -216,6 +217,8 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebList('zeta_orders',value=[],save_to_db=True),
             WebDate('creation_date',value=None,save_to_db=True)
                     )
+
+        self.make_code_snippets()
             
         emf_logger.debug("Have set properties of space 1 !!")
         super(WebModFormSpace, self).__init__(update_from_db=update_from_db, **kwargs)
@@ -237,6 +240,28 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         if res == None:
             return {}
         return res
+
+    def make_code_snippets(self):
+         # read in code.yaml from numberfields directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code = yaml.load(open(os.path.join(_curdir, "../code.yaml")))
+        
+        # Fill in placeholders for this specific space:
+        for lang in ['sage', 'magma']:
+            if self.character.order == 1:
+                self.code['newforms-triv-char'][lang] = self.code['newforms-triv-char'][lang].format(
+                    N=self.level, k=self.weight)
+            else:
+                self.code['newforms-nontriv-char'][lang] = self.code['newforms-nontriv-char'][lang].format(
+                    N=self.level, k=self.weight, elt=list(self.character.sage_character.element()))
+
+        for k in self.code:
+            if k != 'prompt' and k != 'f':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]
 
     def __repr__(self):
         if self.character.is_trivial():
