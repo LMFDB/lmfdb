@@ -1,3 +1,4 @@
+from pymongo import WriteConcern
 from time import time
 #
 # rewrite_collection(db,incoll,outcoll,func)
@@ -22,7 +23,8 @@ def rewrite_collection(db,incoll,outcoll,func, batchsize=1000):
         return
     start = time()
     inrecs = db[incoll].find()
-    db.create_collection(outcoll)
+    # increase wtimeout to avoid BulkWriteErrors caused by timeouts
+    db.create_collection(outcoll,write_concern=WriteConcern(wtimeout=int(60000)))
     outrecs = []
     cnt = 0
     tot = inrecs.count()
@@ -36,6 +38,7 @@ def rewrite_collection(db,incoll,outcoll,func, batchsize=1000):
             outrecs=[]
     if outrecs:
         db[outcoll].insert_many(outrecs)
+    assert db[outcoll].count() == tot
     print "inserted %d records in %.3f secs"%(cnt, time()-start)
     indexes = db[incoll].index_information()
     keys = [(k,indexes[k]['key']) for k in indexes if k != '_id_']
