@@ -45,7 +45,12 @@ class EmfTest(LmfdbTest):
             l = s['space_label'].split('.')
             url = "ModularForm/GL2/Q/holomorphic/%s/%s/%s/"%(l[0],l[1],l[2])
             print "Checking %s (%d Hecke orbits, total dimension %d)"%(url,len(s['hecke_orbits']),s['dimension_new_cusp_forms'])
-            page = self.tc.get(url, follow_redirects=True)
+            try:
+                page = self.tc.get(url, follow_redirects=True)
+            except:
+                print "Internal server error on page "+url
+                errors.append(s['space_label'])
+                continue
             if s['dimension_new_cusp_forms'] == 0:
                 if not "no newforms of this weight, level and character" in page.data:
                     print "Failed on", url
@@ -70,7 +75,12 @@ class EmfTest(LmfdbTest):
                         errors.append(r['hecke_orbit_label'])
                     url = "ModularForm/GL2/Q/holomorphic/%s/%s/%s/%s/"%(l[0],l[1],l[2],l[3])
                     print "Checking %s"%url
-                    page = self.tc.get(url, follow_redirects=True)
+                    try:
+                        page = self.tc.get(url, follow_redirects=True)
+                    except:
+                        print "Internal server error on page "+url
+                        errors.append(r['hecke_orbit_label'])
+                        continue
                     if not ("Coefficient field" in page.data and "Download this Newform" in page.data and r['hecke_orbit_label'] in page.data):
                         print 'Failed on', url
                         errors.append(r['hecke_orbit_label'])
