@@ -16,7 +16,7 @@ from time import time
 #
 # For collections with large records, you will want to specify a batchsize smaller than 10000
 #
-def rewrite_collection(db,incoll,outcoll,func, batchsize=10000):
+def rewrite_collection(db,incoll,outcoll,func, batchsize=1000):
     if outcoll in db.collection_names():
         print "Collection %s already exists, unable to write"%(outcoll)
         return
