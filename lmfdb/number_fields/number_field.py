@@ -455,9 +455,10 @@ def number_field_search(**args):
         parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',mode='complement',to_string=True)
         if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'some':
             mode = 'append'
+            parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
         else:
-            mode = 'exact'
-        parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
+            mode = 'liststring'
+            parse_primes(info,query,'ram_primes','ramified primes','ramps_all',mode,to_string=True)
     except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)
