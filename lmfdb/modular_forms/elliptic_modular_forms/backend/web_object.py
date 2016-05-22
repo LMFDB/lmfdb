@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 #*****************************************************************************
 #  Copyright (C) 2014
 #  Stephan Ehlen <stephan.j.ehlen@gmail.com>
@@ -530,7 +530,7 @@ class WebObject(object):
                         d = loads(fs.get(fid).read())
                         results.append((d,m))
                     except ValueError as e:
-                        raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,r))
+                        raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,m))
                 else:
                     results.append(m)
         else:
@@ -775,7 +775,10 @@ class WebObject(object):
           Search the database using ```query``` and return
           an iterator over the set of matching objects of this WebObject
         '''
-        coll = cls.connect_to_db(cls._collection_name)
+        if self._use_gridfs and not self._use_separate_db:
+            coll = cls.connect_to_db(cls._file_collection_name)
+        else:
+            coll = cls.connect_to_db(cls._collection_name)
         for s in coll.find(query, sort=sort, projection=projection):
             s.pop('_id')
             try:

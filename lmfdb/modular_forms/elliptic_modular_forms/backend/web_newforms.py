@@ -235,6 +235,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
                 self._ap[p] = c[i]
         else:
             self._ap = {}
+        self.prec = self._ap(len(self._ap)-1)
 
     def primes(self):
         return self._ap.keys()
