@@ -783,7 +783,7 @@ class WebObject(object):
             s.pop('_id')
             try:
                 k = {key:s[key] for key in cls._key}
-                o = cls(update_from_db=False, **k)
+                o = cls(update_from_db=False, init_dynamic_properties=False, **k)
                 o.update_db_properties_from_dict(s)
                 yield o
             except KeyError as e:
