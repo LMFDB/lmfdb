@@ -770,13 +770,13 @@ class WebObject(object):
         return self._properties.as_dict()
 
     @classmethod
-    def find(cls, query={}, projection = None, sort=[]):
+    def find(cls, query={}, projection = None, sort=[], gridfs_only=False):
         r'''
           Search the database using ```query``` and return
           an iterator over the set of matching objects of this WebObject
         '''
-        if self._use_gridfs and not self._use_separate_db:
-            coll = cls.connect_to_db(cls._file_collection_name)
+        if gridfs_only: # stupid hack, should be a property of the class or standard that way
+            coll = cls.connect_to_db(cls._collection_name).files
         else:
             coll = cls.connect_to_db(cls._collection_name)
         for s in coll.find(query, sort=sort, projection=projection):
