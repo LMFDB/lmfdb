@@ -96,11 +96,11 @@
     <table>
         <tr>
             <td>{{ KNOWL('ag.field_of_definition',title = "cardinality of the base field") }} range:</td>
-            <td><input type="text" name="table_field_range" example="2-32" value={{table_field_range}}></td>
+            <td><input type="text" name="table_field_range" example="2-32" value="{{info.table_field_range}}"></td>
         </tr>
         <tr>
             <td>{{ KNOWL('ag.dimension',title = "dimension") }} range:</td>
-            <td><input type="text" name="table_dimension_range" example="1-6" value={{table_dimension_range}}></td>
+            <td><input type="text" name="table_dimension_range" example="1-6" value="{{info.table_dimension_range}}"></td>
         </tr>
     </table>
     <button type="submit" value='Search'>Make new table</button>
