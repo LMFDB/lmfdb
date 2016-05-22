@@ -233,9 +233,9 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             for i in range(len(c)):
                 p = primes_to_lc[i]
                 self._ap[p] = c[i]
+            self.prec = self._ap[len(self._ap)-1]
         else:
             self._ap = {}
-        self.prec = self._ap[len(self._ap)-1]
 
     def primes(self):
         return self._ap.keys()
