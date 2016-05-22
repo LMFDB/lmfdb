@@ -663,12 +663,13 @@ class WebObject(object):
         """
         coll = self._collection
         key = self.key_dict()
-        if delete_all:
-            r = coll.delete_many(key) # delete meta records
-        else:
-            r = coll.delete_one(key) # delete meta record
-        if r.deleted_count == 0:
-            emf_logger.debug("There was no meta record present matching {0}".format(key))
+        if self._use_separate_db or not self._use_gridfs:
+            if delete_all:
+                r = coll.delete_many(key) # delete meta records
+            else:
+                r = coll.delete_one(key) # delete meta record
+                if r.deleted_count == 0:
+                    emf_logger.debug("There was no meta record present matching {0}".format(key))
         files = self.get_file_list() if delete_all else [self.get_file(meta_only=True)]
         for f in files:
             try:
