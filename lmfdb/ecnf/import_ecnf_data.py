@@ -72,9 +72,9 @@ from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
-C= MongoClient(port=dbport)
+from lmfdb.base import getDBConnection
+print "getting connection"
+C= getDBConnection()
 
 print "authenticating on the elliptic_curves database"
 import yaml

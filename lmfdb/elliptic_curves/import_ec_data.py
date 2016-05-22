@@ -80,10 +80,9 @@ import pymongo
 from lmfdb import base
 from sage.rings.all import ZZ
 from lmfdb.utils import web_latex
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
+from lmfdb.base import getDBConnection
 print "getting connection"
-C= MongoClient(port=dbport)
+C= getDBConnection()
 print "authenticating on the elliptic_curves database"
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
@@ -638,9 +637,27 @@ def add_extra_data(N1,N2,store=False):
         if store:
             newcurves.append(C)
         else:
-            print("Not writing updated %s to database.\n" % C['label'])
+            pass
+            #print("Not writing updated %s to database.\n" % C['label'])
     # insert the final left-overs since the last full batch
     if store and len(newcurves):
         curves2.insert_many(newcurves)
 
     print("\nfinished updating conductors from %s to %s" % (N1,N2))
+
+def add_extra_data1(C):
+    """Add these fields to a single curve record in the db (for use with
+    the rewrite script in data_mgt/utilities/rewrite.py):
+
+   - 'xainvs': (string) '[a1,a2,a3,a4,a6]' (will replace 'ainvs' in due course)
+   - 'equation': (string)
+   - 'local_data': (list of dicts, one per prime)
+   - 'signD': (sign of discriminant) int (+1 or -1)
+   - 'min_quad_twist': (dict) {label:string, disc: int} #NB Cremona label
+   - 'heights': (list of floats) heights of generators
+   - 'aplist': (list of ints) a_p for p<100
+   - 'anlist': (list of ints) a_p for p<20
+
+    """
+    C.update(make_extra_data(C['label'],C['number'],C['ainvs'],C['gens']))
+    return C
