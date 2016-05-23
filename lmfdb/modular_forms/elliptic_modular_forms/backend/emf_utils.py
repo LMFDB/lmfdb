@@ -21,6 +21,7 @@ AUTHOR: Fredrik Strömberg
 """
 import random
 import sage.plot.plot
+from sage.all import AlphabeticStrings
 from flask import jsonify,flash,Markup
 from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec,emf_version
@@ -31,7 +32,6 @@ from lmfdb.modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
 import lmfdb.base
 from bson.binary import *
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_range
 try:
@@ -109,7 +109,50 @@ def parse_space_label(label):
         else:
             raise ValueError
     except ValueError:
-        raise ValueError,"{0} is not a valid space label!".format(label)   
+        raise ValueError,"{0} is not a valid space label!".format(label)
+
+@cached_function
+def orbit_index_from_label(label):
+    r"""
+    Inverse of the above
+    """
+    res = 0
+    A = AlphabeticStrings()
+    x = A.gens()
+    label = str(label)
+    l = list(label)
+    
+    su = A(l.pop().upper())
+    res = x.index(su)
+    l.reverse()
+    i = 1
+    for s in l:
+        su = A(s.upper())
+        res+=(1+x.index(su))*26**i
+        i+=1
+    return res
+
+@cached_function
+def dimension_from_db(level,weight,chi=None,group='gamma0'):
+    import json
+    db = lmfdb.base.getDBConnection()['modularforms2']['webmodformspace_dimension']
+    q = db.find_one({'group':group})
+    dim_table = {}
+    if q:
+        dim_table = q.get('data',{})
+        dim_table = json.loads(dim_table)
+    if group=='gamma0' and chi!=None:
+        d,t = dim_table.get(str(level),{}).get(str(weight),{}).get(str(chi),[-1,0])
+        return  d,t
+    elif chi is None:
+        d,t = dim_table.get(str(level),{}).get(str(weight),[-1,0])
+        return  d,t
+    elif chi == 'all':
+        res = {level: {weight:{}}}
+        dtable = dim_table.get(str(level),{}).get(str(weight),{})
+        for i in dtable.keys():
+            res[level][weight][int(i)] = dtable[i]
+        return res
 
 
 @cached_method
@@ -172,6 +215,7 @@ def is_range(arg):
         if arg.split(sep)>1:
             return True
     return False
+
 def extract_data_from_jump_to(s):
     r"""
     Try to get a label from the search box
@@ -190,7 +234,7 @@ def extract_data_from_jump_to(s):
                 t = parse_newform_label(s)
                 if len(t) == 4:
                     args['level'],args['weight'],args['character'],args['label'] = t
-                if len(t) == 5:
+                elif len(t) == 5:
                     args['level'],args['weight'],args['character'],args['label'],args['embedding'] = t
                 else:
                     raise ValueError
@@ -463,55 +507,6 @@ def dirichlet_character_conrey_galois_orbits_reps(N):
 def conrey_character_from_number(N,c):
     D = DirichletGroup_conrey(N)
     return DirichletCharacter_conrey(D,c)
-
-@cached_function
-def dimension_from_db(level,weight,chi=None,group='gamma0'):
-    import json
-    db = lmfdb.base.getDBConnection()['modularforms2']['webmodformspace_dimension']
-    q = db.find_one({'group':group})
-    dim_table = {}
-    if q:
-        dim_table = q.get('data',{})
-        dim_table = json.loads(dim_table)
-    if group=='gamma0' and chi!=None:
-        d,t = dim_table.get(str(level),{}).get(str(weight),{}).get(str(chi),[-1,0])
-        return  d,t
-    elif chi is None:
-        d,t = dim_table.get(str(level),{}).get(str(weight),[-1,0])
-        return  d,t
-    elif chi == 'all':
-        res = {level: {weight:{}}}
-        dtable = dim_table.get(str(level),{}).get(str(weight),{})
-        for i in dtable.keys():
-            res[level][weight][int(i)] = dtable[i]
-        return res
-
-def field_label(F, pretty = True, check=False):
-    r"""
-      Returns the LMFDB label of the field F.
-    """
-    if F.absolute_degree() == 1:
-        p = 'x'
-    else:
-        pp = F.absolute_polynomial()
-        x = pp.parent().gen()
-        p = str(pp).replace(str(x), 'x')
-    l = poly_to_field_label(p)
-    if l is None:
-        if check:
-            return False
-        else:
-            if pretty:
-                return web_latex_split_on_pm(pp)
-            else:
-                return pp
-    else:
-        if check:
-            return True
-    if pretty:
-        return field_pretty(l)
-    else:
-        return l
 
 @cached_function
 def dirichlet_character_conrey_galois_orbit_embeddings(N,xi):

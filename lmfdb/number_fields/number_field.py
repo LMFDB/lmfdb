@@ -14,8 +14,7 @@ from lmfdb.WebNumberField import *
 import re
 
 import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod
-from sage.rings.arith import primes
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod, primes
 
 from lmfdb.transitive_group import *
 
@@ -286,6 +285,7 @@ def render_field_webpage(args):
     data['class_group_invs'] = nf.class_group_invariants()
     data['signature'] = nf.signature()
     data['coefficients'] = nf.coeffs()
+    nf.make_code_snippets()
     D = nf.disc()
     ram_primes = D.prime_factors()
     data['disc_factor'] = nf.disc_factored_latex()
@@ -549,14 +549,14 @@ def frobs(K):
             dec = [[x, dec.count(x)] for x in vals]
             dec2 = ["$" + str(x[0]) + ('^{' + str(x[1]) + '}$' if x[1] > 1 else '$') for x in dec]
             s = '$'
-            old = 2
+            firstone = 1
             for j in dec:
-                if old == 1:
-                    s += '\: '
+                if firstone == 0:
+                    s += '{,}\,'
                 s += str(j[0])
                 if j[1] > 1:
                     s += '^{' + str(j[1]) + '}'
-                old = j[1]
+                firstone = 0
             s += '$'
             ans.append([p, s])
         else:

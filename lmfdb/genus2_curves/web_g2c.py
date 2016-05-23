@@ -515,7 +515,7 @@ def spl_statement(coeffss, lmfdb_labels, condnorms):
                 % (url_for_ec(lmfdb_label), lmfdb_label)
         # Otherwise give defining equation:
         else:
-            statement += """<br>\(4 y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
+            statement += """<br>\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
             \(g_4 = %s\)<br>\
             \(g_6 = %s\)<br>\
             Conductor norm: %s"""\

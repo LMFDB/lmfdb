@@ -16,9 +16,9 @@ import sage.all
 from sage.all import os
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
 from lmfdb.lattice.isom import isom
+from lmfdb.base import getDBConnection
 
-from pymongo.mongo_client import MongoClient
-C= MongoClient(port=37010)
+C= getDBConnection()
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']

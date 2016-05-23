@@ -8,6 +8,7 @@ import ast
 import StringIO
 import pymongo
 ASC = pymongo.ASCENDING
+from operator import mul
 from urllib import quote, unquote
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, flash, send_file
@@ -255,8 +256,9 @@ def show_ecnf1(nf):
     info['more'] = int(start + count < nres)
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
-    if nf_label:
-        info['stats'] = ecnf_field_summary(nf_label)
+    #don't risk recomputing all the ecnf stats just to show curves for a single number field
+    #if nf_label:
+        #info['stats'] = ecnf_field_summary(nf_label)
     if nres == 1:
         info['report'] = 'unique match'
     else:
@@ -368,6 +370,8 @@ def elliptic_curve_search(**args):
         parse_nf_elt(info,query,'jinv',name='j-invariant')
         parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
+        if 'torsion_structure' in query and not 'torsion_order' in query:
+            query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
     except ValueError:
         return search_input_error(info, bread)
 

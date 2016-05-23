@@ -2,28 +2,20 @@
 
 {% block content %}
 
-<!--<script type="text/javascript">-->
-<!--var clean_uri = location.protocol + "//" + location.host + location.pathname;-->
-<!--window.history.replaceState({}, document.title, clean_uri);-->
-<!--</script>-->
-
-
 {% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
-<h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
-<p>${{info.gram}}$</p>
 
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }} </h2>
 
 <table>
-    <tr><td align=right>{{ KNOWL('lattice.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}\dots$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}\dots$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>${{info.minimum }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
@@ -59,16 +51,6 @@
 {% if info.theta_series %}
 <h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
 
-<!--<p>-->
-<!--<form>-->
-<!--<p>-->
-<!--<div>Display the $q$ expansion up to power <input type='text' name='ncoeff' placeholder='20' value={{info.ncoeff}} size=5> <button type='submit' value='display'>Display</button></div></p>-->
-<!--<p>-->
-<!--<div style="overflow:auto;padding: 10px">${{info.theta_series }}$</div>-->
-<!--</p>-->
-<!--</form>-->
-<!--</p>-->
-
 <p><form>
 <div class="output"><span id="theta_output">{{info.theta_series}}</span></div>
 <div class="emptyspace"><br></div>
@@ -76,6 +58,9 @@
 </form></p>
 
 {% endif %}
+
+<h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
+<p>${{info.gram}}$</p>
 
 
 <h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>

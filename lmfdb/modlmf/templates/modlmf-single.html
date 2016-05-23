@@ -1,0 +1,90 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+
+{% set KNOWL_ID = "modlmf.%s"|format(info['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+<h2> {{ KNOWL('modlmf.q_expansion', title='<i>q</i>-expansion') }} </h2>
+
+<p><form>
+<div class="output"><span id="q_exp_output">{{info.q_exp}}</span></div>
+<div class="emptyspace"><br></div>
+<button id="morebutton">More coefficients</button>
+</form>
+{% if info.deg > 1 %}
+where $a$ satisfies ${{info.field | safe}}$.
+{% endif %}
+</p>
+
+<h2> {{ KNOWL('modlmf.invariants', title='Properties') }} </h2>
+
+<table>
+    <tr><td align=right>{{ KNOWL('finite_fields.structure', title='Coefficient field') }}:</td><td>
+{% if info.deg > 1 %}
+$\F_{ {{info.characteristic}}^{{info.deg}} }\cong \F[a]$ where $a$ satisfies ${{info.field | safe}}=0$
+{% else %}
+$\F_{ {{info.characteristic}} }$
+{% endif %}</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+    {% if info.conductor != 0%}
+        <tr><td align=right>{{ KNOWL('modlmf.conductor', title='Conductor') }}:</td><td>${{info.conductor}}$</td></tr>
+    {% endif %}
+    <tr><td align=right>{{ KNOWL('modlmf.min_weight', title='Minimal weight') }}:</td><td>${{info.min_weight }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td>{{info.dirchar}}</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.label', title='Label') }}:</td><td>{{info.label}}</td></tr>
+    {% if info.level !=1 %}
+        <tr><td align=right>{{ KNOWL('modlmf.atkinlehner', title='Atkin-Lehner eigenvalues')}}:</td>
+            <td>
+            {%for n in info.atkinlehner %}
+                $W({{n[0]}})\colon{{n[1]}}${% if not loop.last %},  {% endif %}
+            {% endfor %}
+            </td></tr>
+    {% endif %}
+</table>
+
+<br>
+
+<h2> {{ KNOWL('modlmf.eigenvalues', title='Hecke eigenvalues') }} </h2>
+
+{% if info.deg == 1 %}
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<tr><td>$p$</td>{% for p in info.table_list %}<td>${{p[0]}}$</td>{% endfor %}</tr>
+<tr><td>$a_p$</td>{% for p in info.table_list %}<td>${{p[1]}}$</td>{% endfor %}</tr>
+</table>
+
+{% else %}
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<tr><td>$p$</td><td>$a_p$</td></tr>
+{% for p in info.table_list %}<tr><td>${{p[0]}}$</td><td>${{p[1]}}$</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+<p>Download all the coefficients stored in the database for the <i>q</i>-expansion for
+{% for e in info.download_q_exp %} 
+            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+            {% endfor %}
+</p>
+
+{% set KNOWL_ID = "modlmf.%s"|format(info['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+
+<script type="text/javascript">
+var number_of_coefficients = 20;
+function more_handler(evt) {
+    number_of_coefficients = number_of_coefficients + 10;
+    evt.preventDefault();
+    $("#q_exp_output").load("{{info.q_exp_display}}"+number_of_coefficients,
+        function() {
+            {# tell mathjx to render the output #}
+            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "q_exp_output"]);
+        });
+}
+$(function() {
+    $("#morebutton").click(function(e) {more_handler(e)});
+});
+</script>
+
+
+{% endblock %}

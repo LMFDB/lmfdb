@@ -3,6 +3,7 @@ import re
 import time
 import ast
 from pymongo import ASCENDING, DESCENDING
+from operator import mul
 import lmfdb.base
 from lmfdb.base import app
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, send_file
@@ -222,6 +223,9 @@ def elliptic_curve_search(**args):
         parse_ints(info,query,'rank')
         parse_ints(info,query,'sha','analytic order of &#1064;')
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,process=str,check_divisibility='increasing')
+        # speed up slow torsion_structure searches by also setting torsion
+        if 'torsion_structure' in query and not 'torsion' in query:
+            query['torsion'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
         if 'include_cm' in info:
             if info['include_cm'] == 'exclude':
                 query['cm'] = 0
@@ -381,28 +385,15 @@ def render_isogeny_class(iso_class):
                            downloads=class_data.downloads,
                            learnmore=learnmore_list())
 
+@ec_page.route("/modular_form_display/<label>")
 @ec_page.route("/modular_form_display/<label>/<number>")
 def modular_form_display(label, number):
     try:
         number = int(number)
-    except:
+    except ValueError:
         number = 10
     if number < 10:
         number = 10
-    # if number > 100000:
-    #     number = 20
-    # if number > 50000:
-    #     return "OK, I give up."
-    # if number > 20000:
-    #     return "This incident will be reported to the appropriate authorities."
-    # if number > 9600:
-    #     return "You have been banned from this website."
-    # if number > 4800:
-    #     return "Seriously."
-    # if number > 2400:
-    #     return "I mean it."
-    # if number > 1200:
-    #     return "Please stop poking me."
     if number > 1000:
         number = 1000
     data = db_ec().find_one({'lmfdb_label': label})
@@ -672,16 +663,16 @@ Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def ec_code(**args):
-    print("args has keys %s" %  to_dict(args).keys())
     label = curve_lmfdb_label(args['conductor'], args['iso'], args['number'])
     E = WebEC.by_label(label)
+    Ecode = E.code()
     lang = args['download_type']
     code = "%s %s code for working with elliptic curve %s\n\n" % (Comment[lang],Fullname[lang],label)
     if lang=='gp':
         lang = 'pari'
     for k in sorted_code_names:
-        if lang in E.code[k]:
+        if lang in Ecode[k]:
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            for line in E.code[k][lang]:
+            for line in Ecode[k][lang]:
                 code += line + "\n"
     return code

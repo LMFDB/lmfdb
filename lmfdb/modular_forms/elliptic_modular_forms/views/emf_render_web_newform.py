@@ -27,7 +27,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebN
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec,EMF_TOP
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec, EMF_TOP, default_max_height
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty, nf_display_knowl
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label
@@ -68,12 +68,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     emf_logger.debug("PREC: {0}".format(prec))
     emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
-        WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label)
-        emf_logger.critical("defined webnewform for rendering!")
-        # if info.has_key('download') and info.has_key('tempfile'):
-        #     WNF._save_to_file(info['tempfile'])
-        #     info['filename']=str(weight)+'-'+str(level)+'-'+str(character)+'-'+label+'.sobj'
-        #     return info
+        WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label, prec=prec)
+        info['character_order'] = WNF.character.order
+        info['code_snippets'] = WNF.code
+        emf_logger.debug("defined webnewform for rendering!")
     except IndexError as e:
         WNF = None
         info['error'] = e.message
@@ -82,12 +80,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     url3 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight)
     url4 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight, character=character)
     bread = [(EMF_TOP, url1)]
-    bread.append(("of level %s" % level, url2))
-    bread.append(("weight %s" % weight, url3))
-    if int(character) == 0:
-        bread.append(("trivial character", url4))
-    else:
-        bread.append(("\( %s \)" % (WNF.character.latex_name), url4))
+    bread.append(("Level %s" % level, url2))
+    bread.append(("Weight %s" % weight, url3))
+    bread.append(("Character \( %s \)" % (WNF.character.latex_name), url4))
+    bread.append(("Newform %d.%d.%d.%s" % (level, weight, int(character), label),''))
     info['bread'] = bread
     
     properties2 = list()
@@ -103,15 +99,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     
     if WNF.dimension==0:
         info['error'] = "This space is empty!"
-
-#    emf_logger.debug("WNF={0}".format(WNF))    
-
-    #info['name'] = name
-    info['title'] = 'Modular Form ' + WNF.hecke_orbit_label
+    info['title'] = 'Newform ' + WNF.hecke_orbit_label
     info['learnmore'] = [('History of Modular forms', url_for('holomorphic_mf_history'))]    
     if 'error' in info:
         return info
-    # info['name']=WNF._name
     ## Until we have figured out how to do the embeddings correctly we don't display the Satake
     ## parameters for non-trivial characters....
 
@@ -134,8 +125,18 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     br_is_QQ = (bdeg == 1)
     if cf_is_QQ:
         info['satake'] = WNF.satake
-    info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
-    info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
+    if WNF.complexity_of_first_nonvanishing_coefficients() > default_max_height:
+        info['qexp'] = ""
+        info['qexp_display'] = ''
+        info['hide_qexp'] = True
+        n,c = WNF.first_nonvanishing_coefficient()
+        info['trace_nv'] = latex(c.trace())
+        info['norm_nv'] = '\\approx ' + latex(c.norm().n())
+        info['index_nv'] = n
+    else:
+        info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
+        info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
+        info["hide_qexp"] = False
     info['max_cn_qexp'] = WNF.q_expansion.prec()
     ## All combinations should be tested...
     ## 13/4/4/a -> base ring = coefficient_field = QQ(zeta_6)
@@ -194,29 +195,22 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
                     info['polynomial_st'] += 'is a primitive {0}-th root of unity.</div>'.format(z1)
     else:
         info['polynomial_st'] = ''
+    if info["hide_qexp"]:
+        info['polynomial_st'] = ''
     info['degree'] = int(cdeg)
     if cdeg==1:
         info['is_rational'] = 1
         info['coeff_field_pretty'] = [ WNF.coefficient_field.lmfdb_url, WNF.coefficient_field.lmfdb_pretty ]
     else:
         info['is_rational'] = 0
-    # info['q_exp_embeddings'] = WNF.print_q_expansion_embeddings()
-    # if(int(info['degree'])>1 and WNF.dimension()>1):
-    #    s = 'One can embed it into \( \mathbb{C} \) as:'
-        # bprec = 26
-        # print s
-    #    info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
-    # elif(int(info['degree'])>1):
-    #    s = 'There are '+str(info['degree'])+' embeddings into \( \mathbb{C} \):'
-        # bprec = 26
-        # print s
-    #    info['embeddings'] =  ajax_more2(WNF.print_q_expansion_embeddings,{'prec':[5,10,25,50],'bprec':[26,53,106]},text=['more coeffs.','higher precision'])
-    # else:
-    #    info['embeddings'] = ''
     emf_logger.debug("PREC2: {0}".format(prec))
     info['embeddings'] = WNF._embeddings['values'] #q_expansion_embeddings(prec, bprec,format='latex')
     info['embeddings_len'] = len(info['embeddings'])
-    properties2 = []
+    properties2 = [('Level', str(level)),
+                       ('Weight', str(weight)),
+                       ('Character', '$' + WNF.character.latex_name + '$'),
+                       ('Label', WNF.hecke_orbit_label),
+                       ('Dimension of Galois orbit', str(WNF.dimension))]
     if (ZZ(level)).is_squarefree():
         info['twist_info'] = WNF.twist_info
         if isinstance(info['twist_info'], list) and len(info['twist_info'])>0:
@@ -225,10 +219,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
                 s = 'Is minimal<br>'
             else:
                 s = 'Is a twist of lower level<br>'
-            properties2 = [('Twist info', s)]
+            properties2 += [('Twist info', s)]
     else:
         info['twist_info'] = 'Twist info currently not available.'
-        properties2 = [('Twist info', 'not available')]
+        properties2 += [('Twist info', 'not available')]
     args = list()
     for x in range(5, 200, 10):
         args.append({'digits': x})
@@ -246,10 +240,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if WNF.is_cm is None or WNF.is_cm==-1:
         s = '- Unknown (insufficient data)<br>'
     elif WNF.is_cm == 1:
-        s = 'Is a CM-form<br>'
+        s = 'Yes<br>'
     else:
-        s = 'Is not a CM-form<br>'
-    properties2.append(('CM info', s))
+        s = 'No<br>'
+    properties2.append(('CM', s))
     alev = WNF.atkin_lehner_eigenvalues()
     info['atkinlehner'] = None
     if isinstance(alev,dict) and len(alev.keys())>0 and level != 1:
@@ -335,31 +329,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         friends.append((s, url))
     info['properties2'] = properties2
     info['friends'] = friends
-    info['max_cn'] = WNF.max_cn()
+    info['max_cn'] = WNF.max_available_prec()
     return info
 
 import flask
-
-
-## @emf.route("/Qexp/<int:level>/<int:weight>/<int:character>/<label>")
-## def get_qexp(level, weight, character, label, **kwds):
-##     emf_logger.debug(
-##         "get_qexp for: level={0},weight={1},character={2},label={3}".format(level, weight, character, label))
-##     prec = my_get(request.args, "prec", default_prec, int)
-##     latex = my_get(request.args, "latex", False, bool)
-##     if not arg:
-##         return flask.abort(404)
-##     try:
-##         WNF = WebNewForm(level, weight, chi=character, label=label, prec=prec, verbose=2)
-##         nc = max(prec, 5)
-##         if not latex:
-##             c = WNF.print_q_expansion(nc)
-##         else:
-##             c = WNF.q_expansion_latex(nc)
-##         return c
-##     except Exception as e:
-##         return "<span style='color:red;'>ERROR: %s</span>" % e.message
-
-## @emf.route("/qexp_latex/<int:level>/<int:weight>/<int:character>/<label>")
-## def get_qexp_latex(level, weight, character, label, **kwds):
-##     return get_qexp(level, weight, character, label, latex=True, **kwds)
