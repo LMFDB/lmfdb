@@ -74,7 +74,6 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
         emf_logger.debug("dimension={0}".format(info['space'].dimension))
     if info.has_key('error'):
         emf_logger.debug("error={0}".format(info['error']))
-    print info['code']
     return render_template("emf_web_modform_space.html", **info)
 
     
