@@ -72,9 +72,9 @@ from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
-C= MongoClient(port=dbport)
+from lmfdb.base import getDBConnection
+print "getting connection"
+C= getDBConnection()
 
 print "authenticating on the elliptic_curves database"
 import yaml
@@ -87,24 +87,6 @@ nfcurves = C.elliptic_curves.nfcurves
 qcurves = C.elliptic_curves.curves
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
-
-# The following ensure_index command checks if there is an index on
-# label, conductor, rank and torsion. If there is no index it creates
-# one.  Need: once torsion structure is computed, we should have an
-# index on that too.
-
-# The following have not yet been thoroughly thought about!
-nfcurves.ensure_index('label')
-nfcurves.ensure_index('short_label')
-nfcurves.ensure_index('conductor_norm')
-nfcurves.ensure_index('rank')
-nfcurves.ensure_index('torsion')
-nfcurves.ensure_index('jinv')
-nfcurves.ensure_index('number')
-nfcurves.ensure_index('degree')
-nfcurves.ensure_index('field_label')
-
-print "finished indices"
 
 # We have to look up number fields in the database from their labels,
 # but only want to do this once for each label, so we will maintain a

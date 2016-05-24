@@ -1,8 +1,6 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
 
 {% set KNOWL_ID = "mf.%s.%s.%s.%s"|format(level,weight,character,label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
@@ -12,34 +10,43 @@
    {{ error | safe }}
 {% else %}
 
+{% if character == 1 %}
+{{ place_code('newforms-triv-char') }}
+{% else %}
+{{ place_code('newforms-nontriv-char') }}
+{% endif %}
+{{ place_code('f')}}
+
 <div id="qexp">
 <!-- from emf_web_newform.html -->
   <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
 <div>
+  {{ place_code('qexp')}}
   {% if not hide_qexp %}
     <form>
         <div class="output">
           <span id="qexp_display">{{ qexp | safe }}</span>
         </div>
-	<div class="output">{{ polynomial_st | safe }}
-	</div>
-	<div class="emptyspace"><br>
+    <div class="output">{{ polynomial_st | safe }}
+    </div>
+    <div class="emptyspace"><br>
         </div>
         <button id="morebutton">Show more coefficients</button>
         <small>(To download coefficients, see below.)</small>
-	</form>
-	{% else %}
-	<p>The Fourier coefficients of this newform are large.
-	They are available for download below.<br>
-	The first non-zero Fourier coefficient $a(n)$ with $n>1$ is $a({{ index_nv }})$ and has trace ${{ trace_nv }}$ and norm ${{ norm_nv }}$.
-	</p>
-	{% endif %}
+    </form>
+    {% else %}
+    <p>The Fourier coefficients of this newform are large.
+    They are available for download below.<br>
+    The first non-zero Fourier coefficient $a(n)$ with $n>1$ is $a({{ index_nv }})$ and has trace ${{ trace_nv }}$ and norm ${{ norm_nv }}$.
+    </p>
+    {% endif %}
 </div>
 </div>
 <br>
 
 <h3>Coefficient field</h3>
 <div>
+  <div>{{ place_code('coefficient_field') }}</div>
 <!-- from emf_web_newform.html -->
 The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is 
 {% if is_rational ==1 %}
@@ -52,9 +59,11 @@ The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is
         $\Q({{ polvars['coefficient_field']}})$
     {% endif %}
 where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}}
-<div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$. 
+<div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$.
+    {{place_code('absolute_polynomial')}}
     {% if coeff_field|length >2 and coeff_field[2]>2 %}
-    <br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}} </div>.
+<br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}} </div>.
+     {{ place_code('relative_polynomial') }}
     {% endif %}
 {% endif %}
 </div>
