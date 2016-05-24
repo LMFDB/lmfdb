@@ -175,7 +175,14 @@ class ECisog_class(object):
                       ('$\Q$', url_for(".rational_elliptic_curves")),
                       ('%s' % N, url_for(".by_conductor", conductor=N)),
                       ('%s' % iso, ' ')]
-
+        self.code = {}
+        self.code['show'] = {'sage':''} # use default show names
+        self.code['class'] = {'sage':'E = EllipticCurve("%s1")\n'%(self.lmfdb_iso) + 'E.isogeny_class()\n'}
+        self.code['curves'] = {'sage':'E.isogeny_class().curves'}
+        self.code['rank'] = {'sage':'E.rank()'}
+        self.code['q_eigenform'] = {'sage':'E.q_eigenform(10)'}
+        self.code['matrix'] = {'sage':'E.isogeny_class().matrix()'}
+        self.code['plot'] = {'sage':'E.isogeny_graph().plot(edge_labels=True)'}
 
 def make_graph(M):
     """

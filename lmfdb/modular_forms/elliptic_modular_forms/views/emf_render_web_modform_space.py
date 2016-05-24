@@ -170,6 +170,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     friends.append(("Dirichlet character \(" + WMFS.character.latex_name + "\)", WMFS.character.url()))
     friends = uniq(friends)
     info['friends'] = friends
+    info['code'] = WMFS.code
     
     return info
 
