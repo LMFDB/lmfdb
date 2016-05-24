@@ -166,6 +166,9 @@ table td.params {
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
 {% endif %}
 
+<br>
+<br>
+{% if info.number < 100001 %}
 
 <form>
 Download all search results for
@@ -175,6 +178,9 @@ Download all search results for
 <input type="hidden" name="download" value="1"/>
 <input type="hidden" name="query" value="{{info.query}}"/>
 </form>
+{% else %}
+There are too many curves in the search results for downloading.
+{% endif %} {# provide download links? #}
 
 
 {% else %}
