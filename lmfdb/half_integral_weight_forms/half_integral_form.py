@@ -6,7 +6,6 @@ import pymongo
 import lmfdb.base
 from lmfdb.base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from sage.misc.preparser import preparse
 from lmfdb.half_integral_weight_forms import hiwf_page, hiwf_logger
 
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_split_on_pm, comma
