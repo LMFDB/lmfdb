@@ -389,7 +389,7 @@ class WebEC(object):
 
         for lang in ['sage', 'pari', 'magma']:
             self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.label)
-
+        return
         for k in self._code:
             if k != 'prompt':
                 for lang in self._code[k]:

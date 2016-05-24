@@ -745,6 +745,7 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     def make_code_snippets(self):
         self.code = deepcopy(self.parent.code)
+        self.code['show'] = {'sage':''}
         # Fill in placeholders for this specific newform:
         self.code['f']['sage'] = self.code['f']['sage'].format(newform_number=self.sage_newform_number())
 

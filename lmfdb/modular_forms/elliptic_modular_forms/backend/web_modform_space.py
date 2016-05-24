@@ -245,7 +245,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
          # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "../code.yaml")))
-        
+        self.code['show'] = {'sage':'','magma':''}
         # Fill in placeholders for this specific space:
         for lang in ['sage', 'magma']:
             if self.character.order == 1:
@@ -254,14 +254,6 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             else:
                 self.code['newforms-nontriv-char'][lang] = self.code['newforms-nontriv-char'][lang].format(
                     N=self.level, k=self.weight, elt=list(self.character.sage_character.element()))
-
-        for k in self.code:
-            if k != 'prompt' and k != 'f':
-                for lang in self.code[k]:
-                    self.code[k][lang] = self.code[k][lang].split("\n")
-                    # remove final empty line
-                    if len(self.code[k][lang][-1])==0:
-                        self.code[k][lang] = self.code[k][lang][:-1]
 
     def __repr__(self):
         if self.character.is_trivial():

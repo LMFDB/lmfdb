@@ -74,6 +74,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
         emf_logger.debug("dimension={0}".format(info['space'].dimension))
     if info.has_key('error'):
         emf_logger.debug("error={0}".format(info['error']))
+    print info['code']
     return render_template("emf_web_modform_space.html", **info)
 
     
@@ -170,6 +171,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     friends.append(("Dirichlet character \(" + WMFS.character.latex_name + "\)", WMFS.character.url()))
     friends = uniq(friends)
     info['friends'] = friends
+    info['code'] = WMFS.code
     
     return info
 

@@ -70,7 +70,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     try:
         WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label, prec=prec)
         info['character_order'] = WNF.character.order
-        info['code_snippets'] = WNF.code
+        info['code'] = WNF.code
         emf_logger.debug("defined webnewform for rendering!")
     except IndexError as e:
         WNF = None

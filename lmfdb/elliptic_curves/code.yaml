@@ -1,7 +1,7 @@
 prompt:
-  sage:   'sage:'
-  pari:   'gp:'
-  magma:  'magma:'
+  sage:   'sage'
+  pari:   'gp'
+  magma:  'magma'
 
 logo:
   sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
