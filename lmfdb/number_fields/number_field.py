@@ -383,7 +383,7 @@ def render_field_webpage(args):
     except AttributeError:
         pass
 #    del info['_id']
-    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info)
+    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info)
 
 
 def format_coeffs2(coeffs):
@@ -455,9 +455,10 @@ def number_field_search(**args):
         parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',mode='complement',to_string=True)
         if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'some':
             mode = 'append'
+            parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
         else:
-            mode = 'exact'
-        parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
+            mode = 'liststring'
+            parse_primes(info,query,'ram_primes','ramified primes','ramps_all',mode)
     except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)

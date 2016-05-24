@@ -75,8 +75,10 @@ ${{n}}${% if not loop.last %},  {% endif %}
     {% else %}
         <td>$a_{p^{{i}}}$</td>
     {% endif%}
+
 {% endfor %}<td>{{ KNOWL('gal.modl.frobp.char_poly', title='Characteristic polynomial')}} of $\rho(\mathrm{Frob}_p)$</td>
 <td>{{ KNOWL('gal.modl.frobp.order', title='Order')}} of $\rho(\mathrm{Frob}_p)$</td><td>{{ KNOWL('gal.modl.frobp.proj_order', title='Projective order')}} of $\rho(\mathrm{Frob}_p)$</td></tr>
+
 {% for p in info.good_prime_list%}
     <tr><td>${{p[0]}}$</td>{% for i in p[1] %}<td>${{i}}$</td>{% endfor %}<td>${{p[2]}}$</td><td>${{p[3]}}$</td><td>${{p[4]}}$</td></tr>
 {% endfor %}
@@ -85,6 +87,7 @@ ${{n}}${% if not loop.last %},  {% endif %}
 
 
 <h2>Fields associated</h2>
+
 
 <h3>{{ KNOWL('gal.modl.linear_rep', title='Linear representation')}}</h3>
 <p>Polynomial with splitting field $\overline{K}^{\mathrm{ker}(\rho)}$:&nbsp;&nbsp; ${{info.poly_ker}}$</p>

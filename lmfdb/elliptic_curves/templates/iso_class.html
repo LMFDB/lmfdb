@@ -2,30 +2,7 @@
 {% import 'color.css' as color %}
 {% block content %}
 
-<script type="text/javascript">
-var cur_system = null;
-function show_code(system) {
-    $('.sage').hide();
-    $('.pari').hide();
-    $('.magma').hide();
-    if (cur_system == null) {
-      $('.'+system).show();
-      cur_system = system;
-    } else {
-      $('.'+system).hide();
-      cur_system = null;
-    }
-}
-</script>
-
-        <div align="right">
-          Show commands for:
-          <a onclick="show_code('sage'); return false" href='#'>sage</a>
-        </div>
-        <div class='sage nodisplay code'>
-          sage: E = EllipticCurve('{{info.lmfdb_iso}}1')<br>
-          sage: E.isogeny_class()
-        </div>
+{{ place_code('class') }}
 
 <style type="text/css">
 #isogeny_class_table th, #isogeny_class_table td {
@@ -36,7 +13,7 @@ text-align: center;
 
 
 <h2>Elliptic curves in class {{info.lmfdb_iso}}</h2>
-<div class='sage nodisplay code'>sage: E.isogeny_class().curves</div>
+{{ place_code('curves') }}
 <table id = "isogeny_class_table">
 <tr>
 <th>{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
@@ -69,7 +46,7 @@ text-align: center;
 </table>
 
 <h2>Rank</h2>
-<div class='sage nodisplay code'>sage: E.rank()</div>
+{{ place_code('rank') }}
 <p>
 {% if info.ncurves==1 %} The elliptic curve {{info.curves[0].label}} has
 {% else %} The elliptic curves in class {{info.lmfdb_iso}} have
@@ -80,7 +57,7 @@ rank \({{ info.rank}}\).
 <h2><a href="{{info.newform_link}}">
             Modular form {{ info.newform_label }}</a>
 </h2>
-<div class='sage nodisplay code'>sage: E.q_eigenform(10)</div>
+{{ place_code('q_eigenform') }}
 <div>
     <form>
         <div class="output">
@@ -97,15 +74,13 @@ rank \({{ info.rank}}\).
 
 <h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
 
-<div class='sage nodisplay code'>sage: E.isogeny_class().matrix()</div>
+{{ place_code('matrix') }}
 <p>
   \({{info.isogeny_matrix_str}}\)
 </p>
 
 <h2> {{ KNOWL('ec.isogeny_graph', title='Isogeny graph') }} </h2>
-<div class='sage nodisplay code'>
-  sage: E.isogeny_graph().plot(edge_labels=True)
-</div>
+{{ place_code('plot') }}
 <center>
   <img src="{{info.graph_img}}" />
 </center>

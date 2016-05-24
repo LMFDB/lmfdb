@@ -372,6 +372,7 @@ def render_isogeny_class(iso_class):
     return render_template("iso_class.html",
                            properties2=class_data.properties,
                            info=class_data,
+                           code=class_data.code,
                            bread=class_data.bread,
                            credit=credit,
                            title=class_data.title,
@@ -435,10 +436,14 @@ def render_curve_webpage_by_label(label):
         credit = credit.replace(' and',',') + ' and Jeremy Rouse'
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
+    code = data.code()
+    code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     return render_template("curve.html",
                            properties2=data.properties,
                            credit=credit,
                            data=data,
+                           # set default show names but actually code snippets are filled in only when needed
+                           code=code,
                            bread=data.bread, title=data.title,
                            friends=data.friends,
                            downloads=data.downloads,
