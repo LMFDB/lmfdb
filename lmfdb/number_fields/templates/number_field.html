@@ -2,41 +2,9 @@
 {% block content %}
 {# Displays individual number field homepage #}
 
-{% macro code(codes, item) %}
-{% for L in codes[item] %}
-{# N.B. whitespace is preserved in the following div since the CSS has
-white-space: pre in order to keep line breaks! #}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
-{% endfor %}
-{% endmacro %}
-
-<script>
-var cur_system = null;
-function show_code(system) {
-    $('.sage').hide();
-    $('.pari').hide();
-    $('.magma').hide();
-    if (cur_system == system) {
-      $('.'+system).hide();
-      cur_system = null;
-    } else {
-      $('.'+system).show();
-      $('.'+system).css('display','inline-block');
-      cur_system = system;
-    }
-}
-</script>
-
-    <div align ="right">
-      Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sagemath</a>,
-        <a onclick="show_code('pari'); return false" href='#'>pari/gp</a>,
-        <a onclick="show_code('magma'); return false" href='#'>magma</a>
-    </div>
-    
-
 {% set nf = info.wnf %}
 <p>
-   {{ code(nf.code,'field') }}
+   {{ place_code('field') }}
 </p>
 
         {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
@@ -51,18 +19,18 @@ function show_code(system) {
         {% endif %}
         <p>
             {{ info.polynomial }}
-        {{ code(nf.code,'poly') }}
+        {{ place_code('poly') }}
         </p>
 
         <p><h2> {{ KNOWL('nf.invariants', title='Invariants') }}</h2>
         <p>
           <table>
-            <tr><td>Degree:<td>&nbsp;&nbsp;<td>${{info.degree}}$<td>{{ code(nf.code,'degree') }}
-            <tr><td>Signature:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ code(nf.code,'signature') }}
-             <tr><td>Discriminant:<td>&nbsp;&nbsp;<td>{{info.discriminant}}<td>{{ code(nf.code,'discriminant') }}
-            <tr><td>Ramified primes:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ code(nf.code,'ramified_primes') }}
+            <tr><td>Degree:<td>&nbsp;&nbsp;<td>${{info.degree}}$<td>{{ place_code('degree') }}
+            <tr><td>Signature:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ place_code('signature') }}
+             <tr><td>Discriminant:<td>&nbsp;&nbsp;<td>{{info.discriminant}}<td>{{ place_code('discriminant') }}
+            <tr><td>Ramified primes:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
   {% if info.is_abelian %}
-			<tr><td colspan="3">&nbsp;</tr>
+            <tr><td colspan="3">&nbsp;</tr>
             <tr><td colspan="3">Extension is Galois and abelian</tr>
                 <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
             <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet group") }}:
@@ -88,40 +56,40 @@ function show_code(system) {
 {% endif %}
         <p>
             {{ info.integral_basis }}
-            {{ code(nf.code,'integral_basis') }}
+            {{ place_code('integral_basis') }}
         </p>
 
         <p><h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
-	<p>
+    <p>
           {{ info.class_group }}
           {{ info.grh_label|safe }}
-          {{ code(nf.code,'class_group') }}
+          {{ place_code('class_group') }}
         </p>
 
 
         <p><h2> {{ KNOWL('nf.unit_group', title='Unit group') }}</h2>
         <p>
-          {{ code(nf.code,'unit_group') }}
+          {{ place_code('unit_group') }}
 
           <table>
             <tr><td>Rank:<td>&nbsp;&nbsp;<td>${{info.unit_rank}}$
-            <td>{{ code(nf.code,'unit_rank') }}</tr>
+            <td>{{ place_code('unit_rank') }}</tr>
             <tr><td>Torsion generator:<td>&nbsp;&nbsp;<td>{{info.root_of_unity}}
-            <td>{{ code(nf.code,'unit_torsion_gen') }}</tr>
+            <td>{{ place_code('unit_torsion_gen') }}</tr>
 {% if info.unit_rank==1 %}
             <tr><td>Fundamental unit:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
                 {{ info.grh_label|safe }}
-              <td>{{ code(nf.code,'fundamental_units') }}
+              <td>{{ place_code('fundamental_units') }}
             </tr>
             {% endif %}
             {% if info.unit_rank>1 %}
             <tr><td>Fundamental units:<td>&nbsp;&nbsp;<td>{{info.fund_units|safe}}
                 {{ info.grh_label|safe }}
-            <td>{{ code(nf.code,'fundamental_units') }}</tr>
+            <td>{{ place_code('fundamental_units') }}</tr>
             {% endif %}
             <tr><td>Regulator:<td>&nbsp;&nbsp;<td>{{info.regulator}}
           {{ info.grh_label|safe }}
-            <td>{{ code(nf.code,'regulator') }}
+            <td>{{ place_code('regulator') }}
            </tr>
           </table>
         </p>
@@ -130,7 +98,7 @@ function show_code(system) {
         <p><h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
         <p>
             {{ info.galois_group | safe }}:
-            {{ code(nf.code,'galois_group') }}
+            {{ place_code('galois_group') }}
             <table>
             <tr><td>{{ info.phrase }}</tr>
             <tr><td>
@@ -174,20 +142,20 @@ function show_code(system) {
 {% endif %}
         <p><h2> {{ KNOWL('nf.frobenius_cycle_types', title='Frobenius cycle types') }}</h2>
            <table class="ntdata" style='text-align: center'>
-	    <thead>
+        <thead>
              <tr><th>$p$</th>
             {% for p in info.frob_data %}
             <td>{{ p[0] | safe }} </td>
             {% endfor %}
              </tr>
-	    </thead>
-	    <tbody>
+        </thead>
+        <tbody>
              <tr><th>Cycle type</th>
             {% for p in info.frob_data %}
             <td>{{ p[1] | safe }} </td>
             {% endfor %}
              </tr>
-	     </tbody>
+         </tbody>
            </table>
         </p>
 
@@ -199,48 +167,48 @@ function show_code(system) {
    Cycle lengths which are repeated in a cycle type are indicated by
    exponents.
         <p>
-          {{ code(nf.code,'prime_cycle_types') }}
+          {{ place_code('prime_cycle_types') }}
         </p>
 
 {% if info.get("tim_number_field", False) %}
-	<p><h2> {{ KNOWL('artin', title='Artin representations') }}</h2>
+    <p><h2> {{ KNOWL('artin', title='Artin representations') }}</h2>
         <div>
-	<center>
-	<table>
+    <center>
+    <table>
 
-	<thead><tr>
+    <thead><tr>
     <th></th>
     <th>Label</th>
-	<th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
-	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
-	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
-	<th>{{ KNOWL('artin.gg_quotient', title='$G$') }}</th>
-	{# <th>{{ KNOWL('artin.root_number', title='Root number') }}</th> #}
-	<th>{{ KNOWL('artin.frobenius_schur_indicator', title='Ind') }}</th>
+    <th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
+    <th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
+    <th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
+    <th>{{ KNOWL('artin.gg_quotient', title='$G$') }}</th>
+    {# <th>{{ KNOWL('artin.root_number', title='Root number') }}</th> #}
+    <th>{{ KNOWL('artin.frobenius_schur_indicator', title='Ind') }}</th>
         <th>{{ KNOWL('artin.trace_of_complex_conj', title='$\chi(c)$')}}</th>
-	</tr></thead>
-	<tbody>
+    </tr></thead>
+    <tbody>
         {% for artin in info["tim_number_field"].artin_representations()%}
           <tr> <td align="left">
               {{info.mydecomp[loop.index-1]|safe}}
               <td align="left"><a href = "{{artin.url_for()}}">{{artin.label()}}</a></td><td align="center">${{artin.dimension()}}$</td>
-{#	  <td align="center">${{artin.conductor_equation()}}$</td> #}
-	  <td align="center">${{artin.factored_conductor_latex()}}$</td>
-	  {% if artin.number_field_galois_group().url_for() %}
-	     <td align="center"><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></td>
-	  {% else %}
-	      <td align="center">${{artin.number_field_galois_group().polredabslatex()}}$</td>
-	  {% endif %}
-	  <td align="center">{{artin.number_field_galois_group().G_name()}}</td>
-	{#  <td align="center">${{artin.number_field_galois_group().size()}}$</td> #}
-	  {# <td align="center">${{artin.processed_root_number()}}$</td> #}
-	  <td align="center"> ${{artin.indicator()}}$</td>
-	  <td align="center">${{artin.trace_complex_conjugation()}}$</td>
-	  </tr>
+{#    <td align="center">${{artin.conductor_equation()}}$</td> #}
+      <td align="center">${{artin.factored_conductor_latex()}}$</td>
+      {% if artin.number_field_galois_group().url_for() %}
+         <td align="center"><a href="{{artin.number_field_galois_group().url_for()}}">${{artin.number_field_galois_group().polredabslatex()}}$</a></td>
+      {% else %}
+          <td align="center">${{artin.number_field_galois_group().polredabslatex()}}$</td>
+      {% endif %}
+      <td align="center">{{artin.number_field_galois_group().G_name()}}</td>
+    {#  <td align="center">${{artin.number_field_galois_group().size()}}$</td> #}
+      {# <td align="center">${{artin.processed_root_number()}}$</td> #}
+      <td align="center"> ${{artin.indicator()}}$</td>
+      <td align="center">${{artin.trace_complex_conjugation()}}$</td>
+      </tr>
         {% endfor %}
-	</tbody>
-	</table>
-	</center>
+    </tbody>
+    </table>
+    </center>
         </div>
         <br />
         <div>
@@ -250,8 +218,8 @@ function show_code(system) {
         permutation representation coming from this field.  Representations
         which appear with multiplicity greater than one are indicated
         by exponents on the *.
-	</div>
-	{% endif %}
+    </div>
+    {% endif %}
 
         <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 

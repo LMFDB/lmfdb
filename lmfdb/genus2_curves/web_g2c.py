@@ -515,7 +515,7 @@ def spl_statement(coeffss, lmfdb_labels, condnorms):
                 % (url_for_ec(lmfdb_label), lmfdb_label)
         # Otherwise give defining equation:
         else:
-            statement += """<br>\(4 y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
+            statement += """<br>\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
             \(g_4 = %s\)<br>\
             \(g_6 = %s\)<br>\
             Conductor norm: %s"""\
@@ -736,110 +736,26 @@ class WebG2C(object):
              ]
 
         # Make code that is used on the page:
-        self.make_code_snippets()
-
-    def make_code_snippets(self):
-        sagecode = dict()
-        gpcode = dict()
-        magmacode = dict()
-
-        # Utility function to save typing!
-        def set_code(key, s, g, m):
-            sagecode[key] = s
-            gpcode[key] = g
-            magmacode[key] = m
-        sage_not_implemented = '# (not yet implemented)'
-        pari_not_implemented = '\\\\ (not yet implemented)'
-        magma_not_implemented = '// (not yet implemented)'
-
-        # Prompt
-        set_code('prompt',
-                 'sage:',
-                 'gp:',
-                 'magma:')
-
-        # Logo
-        set_code('logo',
-                 '<img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">',
-                 '<img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">',
-                 '<img src = "http://i.stack.imgur.com/0468s.png" width="50px">')
-        # Overwrite the above until we get something which looks reasonable
-        set_code('logo', '', '', '')
-
-        # Curve
-        set_code('curve',
-                 'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'
-                 % (self.data['min_eqn'][0],self.data['min_eqn'][1]),
-                 pari_not_implemented, # pari code goes here
-                 'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'
-                 % (self.data['min_eqn'][0],self.data['min_eqn'][1])
-                 )
+        self.code = {}
+        self.code['show'] = {'sage':'','magma':''} # use default show names
+        self.code['curve'] = {'sage':'R.<x> = PolynomialRing(QQ); C = HyperellipticCurve(R(%s), R(%s))'%(self.data['min_eqn'][0],self.data['min_eqn'][1]),
+                              'magma':'R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R!%s, R!%s);'%(self.data['min_eqn'][0],self.data['min_eqn'][1])}
         if self.data['disc'] % 4096 == 0:
             ind2 = [a[0] for a in self.data['isogeny_class']['bad_lfactors']].index(2)
             bad2 = self.data['isogeny_class']['bad_lfactors'][ind2][1]
             magma_cond_option = ': ExcFactors:=[*<2,Valuation('+str(self.data['cond'])+',2),R!'+str(bad2)+'>*]'
         else:
             magma_cond_option = ''
-        set_code('cond',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'Conductor(LSeries(C%s)); Factorization($1);'
-                 % magma_cond_option
-                 )
-        set_code('disc',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'Discriminant(C); Factorization(Integers()!$1);'
-                 )
-        set_code('igusa_clebsch',
-                 'C.igusa_clebsch_invariants(); [factor(a) for a in _]',
-                 pari_not_implemented, # pari code goes here
-                 'IgusaClebschInvariants(C); [Factorization(Integers()!a): a in $1];'
-                 )
-        set_code('igusa',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'IgusaInvariants(C); [Factorization(Integers()!a): a in $1];'
-                 )
-        set_code('g2',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'G2Invariants(C);'
-                 )
-        set_code('aut',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'AutomorphismGroup(C); IdentifyGroup($1);'
-                 )
-        set_code('autQbar',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'AutomorphismGroup(ChangeRing(C,AlgebraicClosure(Rationals()))); IdentifyGroup($1);'
-                 )
-        set_code('num_rat_wpts',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 '#Roots(HyperellipticPolynomials(SimplifiedModel(C)));'
-                 )
-        set_code('two_selmer',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'
-                 )
-        set_code('has_square_sha',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'HasSquareSha(Jacobian(C));'
-                 )
-        set_code('locally_solvable',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'f,h:=HyperellipticPolynomials(C); g:=4*f+h^2; HasPointsLocallyEverywhere(g,2) and (#Roots(ChangeRing(g,RealField())) gt 0 or LeadingCoefficient(g) gt 0);'
-                 )
-        set_code('tor_struct',
-                 sage_not_implemented, # sage code goes here
-                 pari_not_implemented, # pari code goes here
-                 'TorsionSubgroup(Jacobian(SimplifiedModel(C))); AbelianInvariants($1);'
-                 )
-
-        self.code = {'sage': sagecode, 'pari': gpcode, 'magma': magmacode}
+        self.code['cond'] = {'magma': 'Conductor(LSeries(C%s)); Factorization($1);'% magma_cond_option}
+        self.code['disc'] = {'magma':'Discriminant(C); Factorization(Integers()!$1);'}
+        self.code['igusa_clebsch'] = {'sage':'C.igusa_clebsch_invariants(); [factor(a) for a in _]',
+                                      'magma':'IgusaClebschInvariants(C); [Factorization(Integers()!a): a in $1];'}
+        self.code['igusa'] = {'magma':'IgusaInvariants(C); [Factorization(Integers()!a): a in $1];'}
+        self.code['g2'] = {'magma':'G2Invariants(C);'}
+        self.code['aut'] = {'magma':'AutomorphismGroup(C); IdentifyGroup($1);'}
+        self.code['autQbar'] = {'magma':'AutomorphismGroup(ChangeRing(C,AlgebraicClosure(Rationals()))); IdentifyGroup($1);'}
+        self.code['num_rat_wpts'] = {'magma':'#Roots(HyperellipticPolynomials(SimplifiedModel(C)));'}
+        self.code['two_selmer'] = {'magma':'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'}
+        self.code['has_square_sha'] = {'magma':'HasSquareSha(Jacobian(C));'}
+        self.code['locally_solvable'] = {'magma':'f,h:=HyperellipticPolynomials(C); g:=4*f+h^2; HasPointsLocallyEverywhere(g,2) and (#Roots(ChangeRing(g,RealField())) gt 0 or LeadingCoefficient(g) gt 0);'}
+        self.code['tor_struct'] = {'magma':'TorsionSubgroup(Jacobian(SimplifiedModel(C))); AbelianInvariants($1);'}

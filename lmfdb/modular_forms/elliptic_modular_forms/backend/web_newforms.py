@@ -236,6 +236,7 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             for i in range(len(c)):
                 p = primes_to_lc[i]
                 self._ap[p] = c[i]
+            self.prec = self._ap.keys()[len(self._ap)-1]
         else:
             self._ap = {}
 
@@ -745,6 +746,7 @@ class WebNewForm(WebObject, CachedRepresentation):
 
     def make_code_snippets(self):
         self.code = deepcopy(self.parent.code)
+        self.code['show'] = {'sage':''}
         # Fill in placeholders for this specific newform:
         self.code['f']['sage'] = self.code['f']['sage'].format(newform_number=self.sage_newform_number())
 

@@ -324,13 +324,15 @@ def show_ecnf(nf, conductor_label, class_label, number):
     bread.append((ec.conductor_label, ec.urls['conductor']))
     bread.append((ec.iso_label, ec.urls['class']))
     bread.append((ec.number, ec.urls['curve']))
+    code = ec.code()
+    code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     info = {}
-
     return render_template("show-ecnf.html",
                            credit=ecnf_credit,
                            title=title,
                            bread=bread,
                            ec=ec,
+                           code = code,
                            #        properties = ec.properties,
                            properties2=ec.properties,
                            friends=ec.friends,

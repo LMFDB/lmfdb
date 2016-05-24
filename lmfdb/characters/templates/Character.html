@@ -3,7 +3,7 @@
 
 {% block description %}
  
-        {{ addcode(codeinit,'div') }}
+        {{ place_code('init') }}
 
         {# Kronecker symbol #}
         {% if symbol %}
@@ -12,7 +12,7 @@
             {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
         </h2>
 
-        {{ addcode(codesymbol,'div') }}
+        {{ place_code('symbol') }}
         <p> {{ symbol }} </p>
         {% endif %}
         {% endif %}
@@ -22,7 +22,7 @@
             <h2>
                 Inducing {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
             </h2>
-            {{ addcode(codeinducing, 'div') }}
+            {{ place_code('inducing') }}
            <p>
             <a href="{{ url_character(
                 type = type,
@@ -39,7 +39,7 @@
             <h2>
                 {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
             </h2>
-            {{ addcode(codegenvalues, 'div') }}
+            {{ place_code('genvalues') }}
             <p>
                 {{ generators }} &rarr; {{ genvalues }}
             </p>
@@ -80,16 +80,16 @@
         <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
 
         <table class="props">
-            <tr> <td colspan='3'> {{ addcode(codecond,'div') }} </td> </tr>
+            <tr> <td colspan='3'> {{ place_code('cond') }} </td> </tr>
             <tr> <td>Conductor</td> <td>=</td> <td>{{ conductor }}</td> </tr>
-            <tr> <td colspan='3'> {{ addcode(codeorder,'div') }} </td> </tr>
+            <tr> <td colspan='3'> {{ place_code('order') }} </td> </tr>
             <tr> <td> Order </td> <td>=</td> <td>{{ order }}</td> </tr>
             {% if parity %}
-            <tr> <td colspan='3'> {{ addcode(codeparity,'div') }} </td> </tr>
+            <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
             <tr> <td> Parity </td> <td>=</td> <td> {{ parity }}</td> </tr>
             {% endif %}
             <tr> <td> Real </td> <td>=</td> <td> {{ isreal }} </td> </tr>
-            <tr> <td colspan='3'> {{ addcode(codeisprimitive,'div') }} </td> </tr>
+            <tr> <td colspan='3'> {{ place_code('isprimitive') }} </td> </tr>
             <tr> <td> Primitive </td> <td>=</td> <td> {{ isprimitive }} </td> </tr>
         </table>
 
@@ -97,7 +97,7 @@
         <h2>
             {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }}
         </h2>
-          {{ addcode(codegaloisorbit,'div') }}
+          {{ place_code('galoisorbit') }}
         <p>
         {% for mod,num,label,prim in galoisorbit %}
         {% if loop.index > limit %} ... {% break %} {% endif %}
@@ -135,7 +135,7 @@
         <h2>
             {{ KNOWL('character.dirichlet.gauss_sum', title='Gauss sum') }}
         </h2>
-        {{ addcode(codegauss,'div') }}
+        {{ place_code('gauss') }}
         {% set gauss_default = 2 %}
         <form> \( \tau_{ a }( \chi_{ {{modulus}} }({{number}},&middot;) )\;\)  at \(\;a = \)
             <input id="calc-gauss-input" size=10 placeholder={{gauss_default}}>
@@ -150,7 +150,7 @@
         <h2>
             {{ KNOWL('character.dirichlet.jacobi_sum', title='Jacobi sum') }}
         </h2>
-        {{ addcode(codejacobi,'div') }}
+        {{ place_code('jacobi') }}
         {% set jacobi_default = 1 %}
         <form> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\chi_{ {{modulus}} }(n,&middot;)) \;\) for \( \; n = \)
             <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
@@ -165,7 +165,7 @@
         <h2>
             {{ KNOWL('character.dirichlet.kloosterman_sum', title='Kloosterman sum') }}
         </h2>
-        {{ addcode(codekloosterman,'div') }}
+        {{ place_code('kloosterman') }}
         {% set kloosterman_default_a = 1 %}
         {% set kloosterman_default_b = 2 %} 
         <form> \(K(a,b,\chi_{ {{modulus}} }({{number}},&middot;)) \;\) at \(\; a,b = \)
