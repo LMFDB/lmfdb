@@ -458,7 +458,7 @@ def number_field_search(**args):
             parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
         else:
             mode = 'liststring'
-            parse_primes(info,query,'ram_primes','ramified primes','ramps_all',mode,to_string=True)
+            parse_primes(info,query,'ram_primes','ramified primes','ramps_all',mode)
     except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)
