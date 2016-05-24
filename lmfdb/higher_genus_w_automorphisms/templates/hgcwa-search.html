@@ -9,7 +9,7 @@
 
 <tr>
 <td align=left> 
-Genus:</td><td align=left> <input type='text' name='genus' size=3 value="{{info.genus}}">
+Genus:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
 </td>
 <td align=left> 
 Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
@@ -17,6 +17,37 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 <td align=left> 
 {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
 <td align=left> <input type="text" name="signature" size="15" value="{{info.signature}}" >
+
+</tr>
+
+<tr>
+  
+  <td align=left> 
+{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
+<td align=left> <input type="text" name="dim" size="5" value="{{info.dim}}" > 
+
+
+<td align=right>
+	       Hyperelliptic Curve(s):
+</td>
+
+  <td> <select name='inc_hyper'>
+{% if info.inc_hyper == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_hyper == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
 
 
 </tr>

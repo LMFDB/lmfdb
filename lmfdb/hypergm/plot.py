@@ -1,6 +1,6 @@
 import sage
 
-from sage.rings.arith import lcm, gcd
+from sage.all import lcm, gcd
 from sage.plot.graphics import Graphics
 from sage.plot.line import line
 from sage.plot.circle import circle

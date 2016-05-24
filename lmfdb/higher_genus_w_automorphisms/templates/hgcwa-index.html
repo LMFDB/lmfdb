@@ -18,11 +18,16 @@ text-align:right;
 
       <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
 
-       <p>
+<p>
 By genus:
 {% for gen in info.genus_list %}
 <a href="?genus={{gen}}">{{gen}}</a>
-{% endfor %}
+{% endfor %}</p>
+
+<p>Hyperelliptic curves by genus:
+{% for gen in info.genus_list %}
+<a href="?genus={{gen}}&hyperelliptic=True">{{gen}}</a>
+{% endfor %} 
 </p>
 
 
@@ -76,7 +81,25 @@ By genus:
             </td><td><input type="list" name="signature" value="" placeholder="[0,2,3,3,6]"></td>
       <td>
 	<span class="formexample">e.g. [0,2,3,3,6].</span>
-      </td> </tr>
+	  </td> </tr>
+	 <tr><td align=right>
+              {{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
+            </td><td><input type="integer" name="dim" value="" placeholder="1"></td>
+      <td>
+	<span class="formexample">e.g. 1, or a range like 0..2</span>
+	 </td> </tr>
+              <tr>  <td align=right>
+	       Hyperelliptic Curve(s):
+            </td>  <td> <select name='hyperelliptic'>
+                    <option value='include'>include </option>
+		    <option value='exclude'>exclude</option>
+                    <option value='only'>only</option>
+                 
+                  </select>
+                </td>  <td>
+	<span class="formexample"></span>
+	 </td></tr>
+	 
           <tr>
           <td align=right>
               Maximum number of families to display:
