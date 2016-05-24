@@ -178,7 +178,7 @@ class WebNumberField:
         pol = PolynomialRing(QQ, 'x')(str(pol))
         pol *= pol.denominator()
         R = pol.parent()
-        pol = R(pari(pol).polredabs())
+        pol = R(pari(pol).polredbest().polredabs())
         return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])
 
     # If we already have the database entry
