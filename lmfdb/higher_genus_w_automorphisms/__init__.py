@@ -3,7 +3,9 @@ from lmfdb.base import app
 from lmfdb.utils import make_logger
 from flask import Blueprint
 
-higher_genus_w_automorphisms_page = Blueprint("higher_genus_w_automorphisms", __name__, template_folder='templates', static_folder="static")
+higher_genus_w_automorphisms_page = Blueprint("higher_genus_w_automorphisms",
+                                       __name__, template_folder='templates',
+                                       static_folder="static")
 logger = make_logger(higher_genus_w_automorphisms_page)
 
 

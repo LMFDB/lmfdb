@@ -9,10 +9,12 @@
       url_for: "introduction"
     - title: Features
       url_for: "introduction_features"
-    - title: Map
-      url_for: "bigpicture"
+    - title: Universe
+      url_for: "universe"
     - title: Future Plans
       url_for: "roadmap"
+    - title: News
+      url_for: "news"
 
 2L-functions:
    type: L
@@ -79,6 +81,10 @@
            status: future
            colspan: onecolumn
          - title: Noncongruence
+           status: future
+           colspan: onecolumn
+         - title: mod &#8467; 
+           url_for: "modlmf.modlmf_render_webpage"
            status: future
            colspan: onecolumn
      - title: GL(3)
@@ -192,10 +198,13 @@
            url_for:  "characters.render_Heckewebpage"
            status: beta
       colspan: onecolumn
-    - title: Artin
-      url_for: "artin_representations.index"
-    - title: Galois
+    - title: "Galois:"
       status: future
+      part2:
+         - title: Artin
+           url_for: "artin_representations.index"
+         - title: mod &#8467;
+           status: future
       colspan: onecolumn
     - title: Weil-Deligne
       status: future
@@ -236,11 +245,10 @@
       url_for: "galois_groups.index"
       colspan: onecolumn
     - title: Sato-Tate groups
-      status: future
+      url_for: "st.index"
       colspan: onecolumn
     - title: Lattices
       url_for: "lattice.lattice_render_webpage"
-      status: beta
     - title: Subgroups of
       part2:
          - title: $\SL(2)$

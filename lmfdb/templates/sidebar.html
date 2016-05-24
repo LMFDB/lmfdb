@@ -2,6 +2,7 @@
 {%- for key, heading, value in sidebar.data -%}
 {%- if BETA or not value.status -%}{# an entire section may be omitted e.g. Motives #}
 
+{% if user_is_authenticated or BETA or key != '9Know' %}
 {{heading | safe}}
 
 {% if value.type == 'L' %}
@@ -211,6 +212,7 @@
 {# nothing needs doing as only the header appears, e.g. Knowledge #}
 
 {% endif %} {# if value.type == ... #}
+{%- endif -%} {# user_is_authenticated or not Knowledge #}
 {%- endif -%} {# if BETA or not value.status #}
 {%- endfor -%} {# for key, heading, value in sidebar.data #}
 

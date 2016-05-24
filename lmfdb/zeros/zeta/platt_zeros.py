@@ -14,8 +14,9 @@ from math import log, floor
 import mpmath
 mpmath.mp.prec = 300
 
-data_location = os.path.expanduser('~/data/zeros/zeta/')
-
+zeta_folder =  os.path.expanduser('~/data/zeros/zeta/')
+data_location = os.path.join(zeta_folder, 'data/')
+db_location = os.path.join(zeta_folder,'index.db')
 
 def list_zeros(filename,
                offset,
@@ -48,7 +49,7 @@ def list_zeros(filename,
 
     """
 
-    db = sqlite3.connect(data_location + 'index.db')
+    db = sqlite3.connect(db_location)
     c = db.cursor()
 
     eps = mpmath.mpf(2) ** (-101)     # The (absolute!) precision to which
@@ -161,7 +162,7 @@ def zeros_starting_at_t(t, number_of_zeros=1000):
     if t < 14:
         t = 14
     query = 'select * from zero_index where t <= %d order by t desc limit 1' % float(t)
-    c = sqlite3.connect(data_location + 'index.db').cursor()
+    c = sqlite3.connect(db_location).cursor()
     c.execute(query)
     t0, N0, filename, offset, block_number = c.fetchone()
     return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, t_start=t)
@@ -173,7 +174,7 @@ def zeros_starting_at_N(N, number_of_zeros=1000):
         N = 0
 
     query = 'select * from zero_index where N <= %d order by N desc limit 1' % N
-    c = sqlite3.connect(data_location + 'index.db').cursor()
+    c = sqlite3.connect(db_location).cursor()
     c.execute(query)
     t0, N0, filename, offset, block_number = c.fetchone()
     return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, N_start=N)
@@ -182,5 +183,5 @@ if __name__ == "__main__":
     t = float(sys.argv[1])
     count = int(sys.argv[2])
     _print = int(sys.argv[3])
-    c = sqlite3.connect(data_location + 'index.db').cursor()
+    c = sqlite3.connect(db_location).cursor()
     zeros = zeros_starting_at_t(t, count, _print=_print)

@@ -5,17 +5,16 @@
 <div>
 {{ KNOWL_INC('dq.gg.extent') }}
 </div>
-<div>
 
-      <h2>Browse {{KNOWL('gg.galois_group', title="Galois groups")}}</h2>
-<div/>
+<h2>Browse {{KNOWL('gg.galois_group', title="Galois groups")}}</h2>
 
-<div>
+
+<p>
 Browse by degree $n$ :
 {% for n in info.degree_list: %}
-<a href="?n={{n}}">{{n}}</a>
+    <a href="?n={{n}}">{{n}}</a>
 {% endfor %}
-</div>
+</p>
 
 <p>
 Browse by type:
@@ -29,29 +28,24 @@ Browse by type:
 <a href="?prim=-1">Imprimitive</a>
 <p>
 
+<p>
+A <a href={{url_for('.random_group')}}>random Galois group</a> from the database.
+</p>
 
 <h2>Find a specific Galois group</h2>
 
-
-    <form name="search" method = "get" action="{{search}}">
-        <table class="">
-	  <tr>
-	    <td>
-	      Search by {{KNOWL('gg.label',title="label")}}
-	      <input type="text" name="jump_to" value="" placeholder="8T14"> 
-	      <button type="submit" value="Find">Find</button>
-	    </td>
-	    <td>
-	      <span class="formexample">a Galois group label, e.g. 6T3</span>
-	    </td>
-	  </tr>
-	</table>
-        </form>
+<div>
+<form name="search" method = "get" action="{{search}}">
+Search by {{KNOWL('gg.label',title="Galois group label")}}
+<input type="text" name="jump_to" value="" placeholder="8T14"> 
+<button type="submit" value="Find">Find</button>
+<span class="formexample"> e.g. 6T3</span>
+</form>
+</div>
 
 
-
-        <h2>Search</h2>
-      <form name="search" method = "get" action="{{search}}">
+<h2>Search</h2>
+<form name="search" method = "get" action="{{search}}">
         <table class="">
           <tr>
             <td colspan="2" align="center">
@@ -92,7 +86,7 @@ Browse by type:
            </td>
           </tr>
           <tr>
-            <td>
+            <td align="right">
           {{KNOWL('gg.degree',title='Degree')}}:
             </td><td><input type="text" name="n" value="" placeholder="6"></td>
 	    <td>
@@ -100,7 +94,7 @@ Browse by type:
 	    </td>
           </tr>
           <tr>
-            <td>
+            <td align="right">
               {{KNOWL('gg.tnumber',title='$t$')}} :
             </td><td><input type="text" name="t" value="" placeholder="3"></td>
 	    <td>

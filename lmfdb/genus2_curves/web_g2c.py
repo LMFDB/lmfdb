@@ -107,6 +107,15 @@ def ring_pretty(L, f):
         return r'\Z [' + str(f//2) + r'\sqrt{' + str(D) + r'}]'
     return r'\Z [\frac{1 +' + str(f) + r'\sqrt{' + str(D) + r'}}{2}]'
 
+def st_group_name(st_group):
+    return '\\mathrm{USp}(4)' if st_group == 'USp(4)' else st_group
+
+def url_for_st_group(st_group):
+    return url_for('st.by_label', label='1.4.'+st_group)
+    
+def st_group_href(st_group):
+    return '<a href="%s">$%s$</a>' % (url_for_st_group(st_group),st_group_name(st_group))
+
 ###############################################################################
 # Plot functions
 ###############################################################################
@@ -266,12 +275,6 @@ def st0_group_name(name):
     else:
         return name
 
-def st_group_name(name):
-    if name == 'USp(4)':
-        return '\\mathrm{USp}(4)'
-    else:
-        return name
-        
 def aut_group_name(name):
     return group_dict[name]
 
@@ -291,6 +294,7 @@ def get_st_data(isogeny_class):
     data = {}
     data['isogeny_class'] = isogeny_class
     data['st_group_name'] = st_group_name(isogeny_class['st_group'])
+    data['st_group_href'] = st_group_href(isogeny_class['st_group'])
     data['st0_group_name'] = st0_group_name(isogeny_class['real_geom_end_alg'])
     # Later used in Lady Gaga box:
     data['real_geom_end_alg_disp'] = [ r'\End(J_{\overline{\Q}}) \otimes \R',
@@ -511,7 +515,7 @@ def spl_statement(coeffss, lmfdb_labels, condnorms):
                 % (url_for_ec(lmfdb_label), lmfdb_label)
         # Otherwise give defining equation:
         else:
-            statement += """<br>\(4 y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
+            statement += """<br>\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
             \(g_4 = %s\)<br>\
             \(g_6 = %s\)<br>\
             Conductor norm: %s"""\
@@ -541,9 +545,7 @@ class WebG2C(object):
     @staticmethod
     def by_label(label):
         """
-        Searches for a specific elliptic curve in the curves
-        collection by its label
-        label is string separated by "."
+        Searches for a specific genus 2 curve in the curves collection by its label
         """
         try:
             data = g2cdb().curves.find_one({"label" : label})
@@ -555,7 +557,7 @@ class WebG2C(object):
                 return WebG2C(data, endodata)
             else:
                 return "No genus 2 endomorphism data found for label"
-        return "No genus 2 curve data not found for label" # caller must catch this and raise an error
+        return "No genus 2 curve data found for label" # caller must catch this and raise an error
 
     ###########################################################################
     # Main data creation for individual curves
@@ -695,7 +697,7 @@ class WebG2C(object):
                ('Conductor','%s' % self.cond),
                ('Discriminant', '%s' % data['disc']),
                ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['ic_norm'])),
-               ('Sato-Tate group', '\(%s\)' % data['st_group_name']),
+               ('Sato-Tate group', data['st_group_href']),
                ('\(%s\)' % data['real_geom_end_alg_disp'][0],
                 '\(%s\)' % data['real_geom_end_alg_disp'][1]),
                ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]

@@ -20,7 +20,6 @@ from werkzeug.contrib.cache import SimpleCache
 # logfocus
 logfocus = None
 
-
 def set_logfocus(lf):
     global logfocus
     logfocus = lf
@@ -34,30 +33,43 @@ def get_logfocus():
 # getDBConnection() and should always be obtained from that)
 _C = None
 
+DEFAULT_DB_PORT = 37010
+#FIXME perhaps the global dbport removed
+dbport = DEFAULT_DB_PORT
+
+
 def getDBConnection():
     return _C
 
-def makeDBConnection(dbport):
+def makeDBConnection(port, **kwargs):
     global _C
     if not _C:
-        logging.info("establishing db connection at port %s ..." % dbport)
+        logging.info("establishing db connection at port %s ..." % port)
         import pymongo
         logging.info("using pymongo version %s" % pymongo.version)
-        if pymongo.version_tuple[0] < 3:
-            from pymongo import Connection
-            _C = Connection(port=dbport)
+        if pymongo.version_tuple[0] >= 3 or kwargs.get("replicaset",None) is None:
+            from pymongo import MongoClient
+            _C = MongoClient(port = port,  **kwargs)
         else:
-            from pymongo.mongo_client import MongoClient
-            _C = MongoClient(port=dbport)
+            from pymongo import MongoReplicaSetClient
+            _C = MongoReplicaSetClient(port = port,  **kwargs)
         mongo_info = _C.server_info()
         logging.info("mongodb version: %s" % mongo_info["version"])
+        logging.info("_C = %s", (_C,) )
+        #the reads are not necessarily from host/address
+        #those depend on the cursor, and can be checked with cursor.conn_id or cursor.address 
+        if pymongo.version_tuple[0] >= 3:
+            logging.info("_C.address = %s" % (_C.address,) )
+        else:
+            logging.info("_C.host = %s" % (_C.host,) )
 
-AUTO_RECONNECT_MAX = 10
-AUTO_RECONNECT_DELAY = 1
+        logging.info("_C.nodes = %s" %  (_C.nodes,) )
+        logging.info("_C.read_preference = %s" %  (_C.read_preference,) )
+
+
+
+# Global to track of many auto reconnect attempts for _db_reconnect
 AUTO_RECONNECT_ATTEMPTS = 0
-DEFAULT_DB_PORT = 37010
-dbport = DEFAULT_DB_PORT
-
 
 def _db_reconnect(func):
     """
@@ -68,6 +80,11 @@ def _db_reconnect(func):
       * http://paste.pocoo.org/show/224441/
     and similar workarounds
     """
+    # maximal number of auto reconnect attempts
+    AUTO_RECONNECT_MAX = 10
+    # delay between attempts
+    AUTO_RECONNECT_DELAY = 1
+
     def retry(*args, **kwargs):
         global AUTO_RECONNECT_ATTEMPTS
         while True:
@@ -92,9 +109,9 @@ def _db_reconnect(func):
 # _db_reconnect(Connection._send_message_with_response)
 
 
-def _init(dbport):
+def _init(port, **kwargs):
     import pymongo
-    makeDBConnection(dbport)
+    makeDBConnection(port = port, **kwargs)
     C = getDBConnection()
 
     from os.path import dirname, join
@@ -116,6 +133,18 @@ def _init(dbport):
     except pymongo.errors.PyMongoError as err:
         logging.error("authentication: FAILED -- aborting")
         raise err
+    #read something from the db    
+    #and check from where was it read
+    if pymongo.version_tuple[0] >= 3:
+        cursor = C.test.test.find().limit(-1)
+        list(cursor)
+        logging.info("MongoClient conection is reading from: %s" % (cursor.address,));
+    elif kwargs.get("replicaset",None) is not None:
+        cursor = C.test.test.find().limit(-1)
+        list(cursor)
+        logging.info("MongoReplicaSetClient connection is reading from: %s" % (cursor.conn_id,));
+    else:
+        logging.info("MongoClient conection is reading from: %s" % (C.host,));
 
 app = Flask(__name__)
 
@@ -133,6 +162,7 @@ app.jinja_env.trim_blocks = True
 
 # enable break and continue in jinja loops
 app.jinja_env.add_extension('jinja2.ext.loopcontrols')
+app.jinja_env.add_extension('jinja2.ext.do')
 
 # the following context processor inserts
 #  * empty info={} dict variable

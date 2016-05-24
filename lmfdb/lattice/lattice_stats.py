@@ -21,7 +21,7 @@ def get_stats():
 
 def lattice_summary():
     counts = get_stats().counts()
-    return r"<p>The database currently contains %s <a title='integral lattices [lattice.definition]' knowl='lattice.definition' kwargs=''>integral lattices</a>. The largest <a title='dimension [lattice.dimension]' knowl='lattice.dimension' kwargs=''>dimension</a> is %s and the largest <a title='determinant [lattice.determinant]' knowl='lattice.determinant' kwargs=''>determinant</a> is %s. It includes data from the <a title='Catalogue of Lattices [lattice.catalogue_of_lattices]' knowl='lattice.catalogue_of_lattices' kwargs=''>Catalogue of Lattices</a>.</p><p>In the case of <a title='primitive [lattice.primitive]' knowl='lattice.primitive' kwargs=''>primitive</a> <a title='integral lattices [lattice.definition]' knowl='lattice.definition' kwargs=''>integral lattices</a> of <a title='class number[lattice.class_number]' knowl='lattice.class_number' kwargs=''>class number</a> one the database is complete.</p>" % (str(counts['nlattice_c']), str(counts['max_dim_c']), str(counts['max_det']))
+    return r"<p>The database currently contains %s <a title='integral lattices [lattice.definition]' knowl='lattice.definition' kwargs=''>integral lattices</a>. It includes data from the <a title='Catalogue of Lattices [lattice.catalogue_of_lattices]' knowl='lattice.catalogue_of_lattices' kwargs=''>Catalogue of Lattices</a>.<br>The largest  <a title='Class number [lattice.class_number]' knowl='lattice.class_number' kwargs=''>class number</a> is %s, the largest <a title='dimension [lattice.dimension]' knowl='lattice.dimension' kwargs=''>dimension</a> is %s and the largest <a title='determinant [lattice.determinant]' knowl='lattice.determinant' kwargs=''>determinant</a> is %s.</br>In the case of <a title='primitive [lattice.primitive]' knowl='lattice.primitive' kwargs=''>primitive</a> <a title='integral lattices [lattice.definition]' knowl='lattice.definition' kwargs=''>integral lattices</a> of <a title='class number[lattice.class_number]' knowl='lattice.class_number' kwargs=''>class number</a> one the database is complete.</p>" % (str(counts['nlattice_c']), str(counts['max_class_number_c']), str(counts['max_dim_c']), str(counts['max_det']))
 
 
 @app.context_processor
@@ -64,5 +64,6 @@ class Latticestats(object):
         counts['max_det'] = comma(max_det)
         max_class_number = lattice.find().sort('class_number', DESCENDING).limit(1)[0]['class_number']
         counts['max_class_number'] = max_class_number
+        counts['max_class_number_c'] = comma(max_class_number)
         self._counts  = counts
         logger.debug("... finished computing Lattice counts.")

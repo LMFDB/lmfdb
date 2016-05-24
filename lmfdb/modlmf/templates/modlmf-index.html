@@ -1,0 +1,159 @@
+{% extends "homepage.html" %}
+{% import 'color.css' as color %}
+{% block content %}
+<div>
+{{ KNOWL_INC('dq.modlmf.extent') }}
+</div>
+
+<style type="text/css">
+.error_message {
+   padding: 4px;
+   color: {{color.red}};
+   font-size: 120%;
+   font-weight: bold;
+   margin: 20px;
+}
+</style>
+{% if err_msg %}
+<p class="error_message">
+{{err_msg}}
+</p>
+<p>
+  <input type=button value="Search again" onClick="history.go(-1)">
+</p>
+{% endif %}
+
+<h2> Browse {{ KNOWL('modlmf.definition', title='mod &#x2113; modular forms') }}</h2>
+
+<p>
+By {{ KNOWL('modlmf.characteristic', title='characteristic') }}: 
+{% for rnge in info.characteristic_list %}
+<a href="?characteristic={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
+
+<p>
+By {{ KNOWL('modlmf.level', title='level') }}:
+{% for rnge in info.level_list %}
+<a href="?level={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
+<p>
+By {{ KNOWL('modlmf.weight', title='weight') }}: 
+{% for rnge in info.weight_list %}
+<a href="?weight={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
+<p>
+Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular forms") }}:
+{% for rnge in info.label_list%}
+<a href="?label={{rnge}}">&nbsp;{{rnge}}&nbsp;</a>
+{% endfor %}
+</p>
+<p>A <a href={{url_for('.random_modlmf')}}>random mod &#x2113; modular form</a> from the database.
+<br>
+</p>
+
+
+<h2> Find a specific {{ KNOWL('modlmf.definition', title='mod &#x2113; modular form') }} by {{KNOWL('modlmf.label', title='label')}}</h2>
+
+<form>
+<input type='text' name='label' placeholder='2.1.1.0.1.1'>
+<button type='submit'>Label</button>
+<br><span class="formexample">e.g. 2.1.1.0.1.1</span>
+</form>
+
+<h2> Search</h2>
+<form>
+<button type='submit' value='Search'>Search</button>
+<table>
+<tr>
+<td align= right>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}:</td>
+<td><input type='text' name='characteristic' placeholder='3' size=10>
+<td><span class="formexample"> e.g. 3 </td>
+</tr>
+
+<tr>
+<td align= right>{{ KNOWL('modlmf.deg', title='Field degree') }}:</td>
+<td><input type='text' name='deg' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1 </td>
+</tr>
+<tr>
+<td align= right>{{ KNOWL('modlmf.level', title='Level') }}:</td>
+<td><input type='text' name='level' placeholder='3' size=10>
+<td><span class="formexample"> e.g. 3 or 40-100</td>
+</tr>
+
+</tr>
+<tr>
+<td align= right>{{ KNOWL('modlmf.conductor', title='Conductor') }}:</td>
+<td><input type='text' name='conductor' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1</td>
+</tr>
+
+</tr>
+<tr>
+<td align= right>{{ KNOWL('modlmf.weight', title='Minimal weight') }}:</td>
+<td><input type='text' name='min_weight' placeholder='2' size=10>
+<td><span class="formexample"> e.g. 2</td>
+</tr>
+
+</tr>
+<tr>
+<td align= right>{{ KNOWL('modlmf.dirchar', title='Character label') }}:</td>
+<td><input type='text' name='dirchar' placeholder='1.1' size=10>
+<td><span class="formexample"> e.g. 1.1</td>
+</tr>
+
+<tr>
+<td align= right>Group:</td><td> <select name='group'>
+           <option value="gamma0" selected >Gamma_0</option>
+           <option value="gamma1">Gamma_1</option>
+         </select></td>
+</tr>
+</table>
+
+
+<table id="a_n">
+<tr>
+<td> {{KNOWL('modlmf.q_expansion', title='Coefficient')}} of <i>q<sup>n</sup></i> for <i>n=</i><input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='req_coeff' size='3' example=3 ></td><td> as an {{KNOWL('finite_fields.structure', title='element of <i><span style="text-decoration: overline"> &#120125;</span><sub>&#x2113;</sub></i>')}} 
+</td><td>
+  <button type='button' id='more_modp_button'>more</button>
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td colspan=3 align= right>Up to twists: <select name='twist'>
+           <option value="no" selected="no" >no</option>
+           <option value="yes">yes</option>
+         </select></td>
+</tr>
+
+</table>
+
+<p>Maximum number of mod &#x2113; modular forms to display <input type='text' name='count' value=50 size='5'/></p>
+</form>
+
+
+<script>
+//Try to get tbody first with jquery children. works faster!
+var tbody = $('#a_n').children('tbody');
+
+//Then if no tbody just select your table 
+var table = tbody.length ? tbody : $('#a_n');
+
+
+$('#more_modp_button').click(function(){
+    //Add row
+    table.append("<tr><td align='right'><i>n=</i><input type='text' name='index_coeff' size=5 example= 5> is <input type='text' name='req_coeff' size=3 example=3></td><td><button type='button' value='Delete Row' onclick='deleteRow(this)'>less</button></td></tr>");
+    return false;
+})
+
+function deleteRow(btn) {
+  var row = btn.parentNode.parentNode;
+  row.parentNode.removeChild(row);
+}
+</script>
+{% endblock %}

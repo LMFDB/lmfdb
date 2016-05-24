@@ -23,7 +23,7 @@ from flask import render_template, url_for, send_file,flash
 from lmfdb.utils import to_dict 
 from sage.all import uniq
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached, WebModFormSpace
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP, default_max_height
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 ###
 ###
@@ -67,6 +67,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
         ("Character \(\chi_{%s}(%s, \cdot)\)" % (level, character), url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=character)))
     # emf_logger.debug("friends={0}".format(friends))
     info['bread'] = bread
+    info['learnmore'] = [('History of Modular forms', url_for('holomorphic_mf_history'))]
     emf_logger.debug("info={0}".format(info))
     if info.has_key('space'):
         emf_logger.debug("space={0}".format(info['space']))        
@@ -74,8 +75,6 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     if info.has_key('error'):
         emf_logger.debug("error={0}".format(info['error']))
     return render_template("emf_web_modform_space.html", **info)
-
-
 
     
 def set_info_for_modular_form_space(level=None, weight=None, character=None, label=None, **kwds):
@@ -92,6 +91,8 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         return info
     try:
         WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = character, update_from_db=True)
+        if not WMFS.has_updated():
+            WMFS.update_from_db() ## Need to call an extra time for some reason...
         if not WMFS.has_updated():
             stop = False
             orbit = WMFS.character.character.galois_orbit()
@@ -131,6 +132,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         #        F = 
         #        WMFS.hecke_orbits.append(F)
         info['space'] = WMFS
+        info['max_height'] = default_max_height
 #    info['old_decomposition'] = WMFS.oldspace_decomposition()
     info['oldspace_decomposition']=''
     try: 

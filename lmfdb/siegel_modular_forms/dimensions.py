@@ -28,7 +28,7 @@ def fetch( dct):
     db = client.siegel_modular_forms
     hps = db.dimensions
     item = hps.find_one( dct)
-    client.close()
+#    client.close()
     return item
 
 
@@ -205,7 +205,7 @@ def _dimension_Gamma_2( wt_range, j, group = 'Gamma(2)'):
     if 'Sp4(Z)' == group and 2 == j and wt_range[0] < 4:
         wt_range1 = [ k for k in wt_range if k < 4]
         wt_range2 = [ k for k in wt_range if k >= 4]
-        print wt_range1, wt_range2
+#        print wt_range1, wt_range2
         if wt_range2 != []: 
             headers, dct = _dimension_Gamma_2( wt_range2, j, group)
         else:
@@ -465,7 +465,7 @@ def dimension_Gamma0_3_psi_3( wt_range):
     for k in wt_range:
         dims =  _dimension_Gamma0_3_psi_3( k)
         dct[k] = dict( (headers[j],dims[j]) for j in range( len( headers)))
-    print headers, dct
+#    print headers, dct
     return headers, dct
 
 

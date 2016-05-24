@@ -834,11 +834,11 @@ class WebChar(WebCharObject):
     def friends(self):
         f = []
         cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
-        f.append( ("Character group", cglink) )
+        f.append( ("character group", cglink) )
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
-        if self.type == 'Dirichlet' and self.chi.is_primitive():
-            f.append( ('L function', '/L'+ url_character(type=self.type,
+        if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
+            f.append( ('L-function', '/L'+ url_character(type=self.type,
                                     number_field=self.nflabel,
                                     modulus=self.modlabel,
                                     number=self.numlabel) ) )
@@ -1132,7 +1132,9 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     def jacobi_sum(self, val):
         mod, num = self.modulus, self.number
-        val = int(val[0])
+        val = int(val)
+        if gcd(mod, val) > 1:
+            raise Warning ("n must be coprime to the modulus : %s"%mod)
         psi = self.H[val]
         chi = self.chi.sage_character()
         psi = psi.sage_character()

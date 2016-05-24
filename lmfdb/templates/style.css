@@ -99,7 +99,7 @@ h2.link > a {
   margin-bottom: 10px;
 }
 
-/* TODO: where is this?  Hyperlinks? */
+/* Body links, sidebar links, and sidebar header text. */
 a {
     color: {{color.a_text}};
   text-decoration: none;
@@ -204,7 +204,7 @@ body.knowl #header {
     font-size: 180%;
     font-weight: bold;
     font-family: sans-serif;
-    min-height: 100px;
+    min-height: 82px;
     position: relative;
     color: {{color.header_text_title}};
 }
@@ -231,7 +231,8 @@ body.knowl #header {
   font-family: sans-serif;
   min-height: 18px;
   font-size: 90%;
-  padding: 2px 5px;
+  padding-top: 5px;
+  padding-right: 5px;
   position: absolute;
   top: 0px;
   right: 0px;
@@ -243,6 +244,19 @@ body.knowl #header {
   display: none;
   padding: 4px;
 }
+#header .undertopright {
+  text-align: right;
+  white-space:nowrap;
+  color: {{color.header_text_topright}};
+  font-family: sans-serif;
+  min-height: 18px;
+  font-size: 90%;
+  padding-right: 5px;
+}
+#header .undertopright a {
+    color: {{color.header_text_topright}};
+}
+
 #header #navi {
   white-space: nowrap;
   text-align: right;
@@ -452,13 +466,18 @@ body.knowl #header {
     background: {{ color.sidebar_background_hover }};
 }
 #sidebar a {
+    color: {{color.col_sidebar_links}}; /* sets header and body sidebar links.*/
     display: block;
 }
 #sidebar li a {
+    color: {{color.col_sidebar_text}}; /* sets the text below Data */
     background: {{ color.sidebar_background_li }};
   padding: 5px;
 }
-#sidebar h2 a { padding: 5px; }
+#sidebar h2 a {
+    color: {{color.col_sidebar_header_links}}; /* sets sidebar header links*/
+    padding: 5px;
+}
 #sidebar h2 a:hover {
   background: {{ color.sidebar_background_h2_hover }};
 }
@@ -862,7 +881,7 @@ table.euler tr .galois {
 }
 
 body.knowl #header {
-  background: {{ color.knowl_border }}; 
+    background: {{color.knowl_header_background}};
 }
 body.knowl #header #title {
     color: {{color.knowl_title_text}};
@@ -1618,16 +1637,19 @@ div.codebox {
 /* Styling of Maass form plot */
 
 div.maassformplot {
-        width: 720px;
-        height: 800px;
+    position: absolute;
+            width: 720px;
+    /*    height: 800px;
         overflow: hidden;
-        position: relative;
+        position: relative; */
 }
 
 div.maassformplot img {
-        position: absolute;
-        top: -200px;
-        left: -870px;
+    width:100%;
+    height:auto;
+/*    position: absolute;
+    top: -200px;
+    left: -870px;*/
 }
 
 /* End of styling of Maass form plot */
@@ -1689,13 +1711,13 @@ div.maassformplot img {
 
 
 #sidebar .beta { 
-    color:{{color.sidebar_text_beta}};
+    color: purple; /*{{color.sidebar_text_beta}};*/
     display: inherit;
 }
 
 
 #sidebar .beta a { 
-    color:{{color.sidebar_text_beta}};
+    color: purple; /*{{color.sidebar_text_beta}};*/
 }
 
 

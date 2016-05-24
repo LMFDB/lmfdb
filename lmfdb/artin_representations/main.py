@@ -6,16 +6,16 @@ import pymongo
 ASC = pymongo.ASCENDING
 import flask
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, flash
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, flash, redirect
 from markupsafe import Markup
 
 from lmfdb.artin_representations import artin_representations_page, artin_logger
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_paired_fields, parse_count, parse_start, clean_input
 
 from lmfdb.transitive_group import *
 from lmfdb.WebCharacter import WebDirichletCharacter
-import re
+import re, random
 
 
 from lmfdb.math_classes import *
@@ -57,7 +57,7 @@ def index():
     if len(args) == 0:
         learnmore = [#('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
-                ('Galois group labels', url_for(".labels_page"))]
+                ('Artin representations labels', url_for(".labels_page"))]
         return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore)
     else:
         return artin_representation_search(**args)
@@ -206,7 +206,21 @@ def render_artin_representation_webpage(label):
                 friends.append(("Determinant character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
 
     # once the L-functions are in the database, the link can always be shown
-    if the_rep.dimension() <= 6:
+    #if the_rep.dimension() <= 6:
+    if the_rep.dimension() == 1:
+        # Zeta is loaded differently
+        if cc.modulus == 1 and cc.number == 1:
+            friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
+        else:
+            lfuncdb = base.getDBConnection().Lfunctions.instances
+            # looking for Lhash dirichlet_L_modulus.number
+            mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
+            lres = lfuncdb.find_one({'Lhash': mylhash})
+            if lres is not None:
+                friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
+
+    # Dimension > 1
+    elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
         friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                           label=the_rep.label())))
     info={}
@@ -219,6 +233,14 @@ def render_artin_representation_webpage(label):
     #info['pol11']=str(the_rep.central_char(11))
 
     return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info)
+
+@artin_representations_page.route("/random")
+def random_representation():
+    rep = random_object_from_collection(ArtinRepresentation.collection())
+    num = random.randrange(0, len(rep['GaloisConjugates']))
+    label = rep['Baselabel']+"c"+str(num+1)
+    return redirect(url_for(".render_artin_representation_webpage", label=label), 301)
+
 
 @artin_representations_page.route("/Completeness")
 def completeness_page():

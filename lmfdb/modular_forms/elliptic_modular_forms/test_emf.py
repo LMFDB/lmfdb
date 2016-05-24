@@ -13,6 +13,9 @@ class EmfTest(LmfdbTest):
     def runTest():
         pass
     def test_browse_page(self):
+        r"""
+        Check browsing for elliptic modular forms
+        """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/")
         assert '"/ModularForm/GL2/Q/holomorphic/24/?group=0">24' in page.data
         assert '"/ModularForm/GL2/Q/holomorphic/23/12/1/?group=0">19' in page.data
@@ -25,7 +28,10 @@ class EmfTest(LmfdbTest):
             for k in weights:
                 for g in range(2):
                     print("testing (N,k,g) = (%s,%s,%s)" % (N,k,g))
-                    self.tc.get("/ModularForm/GL2/Q/holomorphic/%s/%s/?group=%s" % (N,k,g))
+                    url  = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/?group={2}".format(N,k,g)
+                    rv = self.tc.get(url,follow_redirects=True)
+                    self.assertTrue(rv.status_code==200,"Request failed for {0}".format(url))
+                    self.assertFalse('Error:' in rv.data,"Error in the data for {0}".format(url))
 
     def test_delta(self):
         r"""
@@ -117,3 +123,40 @@ class EmfTest(LmfdbTest):
         assert 'The table below gives the dimensions of the space of' in page.data
         #page = self.tc.get("", follow_redirects=True)
         #assert '' in page.data
+        
+    def test_character_parity(self):
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/99/3/?group=1',
+                           follow_redirects=True)
+        self.assertFalse('n/a' in page.data)
+
+    def test_hide(self):
+        r"""
+        Test that very large Fourier coefficients are not shown.
+        """
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/25/36/1/')
+        assert 'The Fourier coefficients of this newform are large.' in page.data
+
+    def test_coefficient_fields(self):
+        r"""
+        Test the display of coefficient fields.
+        """
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/9/8/1/')
+        assert 'Minimal polynomial' in page.data
+        assert '\Q(\sqrt{10})' in page.data
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/11/6/1/')
+        assert '3.3.54492.1' in page.data
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/18/4/1/')
+        assert 'Minimal polynomial' not in page.data
+
+    def test_download(self):
+        r"""
+        Test download function
+        """
+        response = self.tc.post('ModularForm/GL2/Q/holomorphic/Download/',
+                             content_type='multipart/form-data',
+                                data={'level': 25, 'weight': 36, 'character': 1, 'label': 'f', 'number': 10, 'format': 'sage', 'download': 'coefficients'}, follow_redirects=True)
+        assert "NumberField(x^16 - 380304819268*x^14" in response.data
+        response = self.tc.post('ModularForm/GL2/Q/holomorphic/Download/',
+                             content_type='multipart/form-data',
+                                data={'level': 25, 'weight': 36, 'character': 1, 'label': 'f', 'number': 800, 'format': 'embeddings', 'download': 'coefficients'}, follow_redirects=True)
+        assert "799	-5.0969" in response.data

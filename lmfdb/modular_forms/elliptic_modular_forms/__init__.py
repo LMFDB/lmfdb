@@ -6,6 +6,7 @@ import flask
 default_prec = 10   # The default number of terms in a q-expansion
 default_bprec = 53  # The default number of bits of precision to compute for floating point data
 default_display_bprec = 26  # The default number of bits of precision to display for floating point data
+default_max_height = 90
 from sage.env import SAGE_VERSION
 version_major, version_minor = [int(x) for x in SAGE_VERSION.split('.')[:2]]
 #if (version_major, version_minor) >= (6,9):
@@ -31,7 +32,10 @@ N_max_db = 5000
 k_max_db = 12
 N_max_extra_comp = 500
 
-use_cache= True
+## Don't ever change this, see
+## https://github.com/LMFDB/lmfdb/pull/1409#issuecomment-220733555
+use_cache = False
+
 
 import views
 import backend

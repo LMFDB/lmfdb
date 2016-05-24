@@ -203,7 +203,7 @@ function gauss_handler(evt) {
 function jacobi_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-jacobi-input").val();
-   $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus,number=number) }}" + "?val=" + val,
+   $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus, number=number) }}" + "?val=" + val,
      function() {
        {# tell mathjx to render the output #}
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);

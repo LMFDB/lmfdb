@@ -186,6 +186,9 @@ class WebEC(object):
                 data['EndE'] = "\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = "\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
+            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.N(U(1))'),'N(\\mathrm{U}(1))')
+        else:
+            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.SU(2)'),'\\mathrm{SU}(2)')
 
         # modular degree
 
@@ -213,7 +216,7 @@ class WebEC(object):
             data['minq_info'] = '(itself)'
         else:
             minq_ainvs = [str(c) for c in minq.ainvs()]
-            data['minq_label'] = db_ec().find_one({'ainvs': minq_ainvs})['lmfdb_label']
+            data['minq_label'] = db_ec().find_one({'jinv':str(self.E.j_invariant()),'ainvs': minq_ainvs})['lmfdb_label']
             data['minq_info'] = '(by %s)' % minqD
 
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
@@ -329,7 +332,7 @@ class WebEC(object):
         self.newform_label = newform_label(cond,2,1,iso)
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso)
         newform_exists_in_db = is_newform_in_db(self.newform_label)
-        self.make_code_snippets()
+        self._code = None
 
         self.friends = [
             ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
@@ -337,8 +340,10 @@ class WebEC(object):
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label))]
         if not self.cm:
-            self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso)),
-            ('Symmetric 4th power L-function', url_for("l_functions.l_function_ec_sym_page", power='4', label=self.lmfdb_iso))]
+            if N<=300:
+                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso))]
+            if N<=50:
+                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', label=self.lmfdb_iso))]
         if newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
@@ -369,21 +374,26 @@ class WebEC(object):
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
 
+    def code(self):
+        if self._code == None:
+            self.make_code_snippets()
+        return self._code
+
     def make_code_snippets(self):
         # read in code.yaml from current directory:
 
         _curdir = os.path.dirname(os.path.abspath(__file__))
-        self.code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+        self._code =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
 
         # Fill in placeholders for this specific curve:
 
         for lang in ['sage', 'pari', 'magma']:
-            self.code['curve'][lang] = self.code['curve'][lang] % (self.data['ainvs'],self.label)
+            self._code['curve'][lang] = self._code['curve'][lang] % (self.data['ainvs'],self.label)
 
-        for k in self.code:
+        for k in self._code:
             if k != 'prompt':
-                for lang in self.code[k]:
-                    self.code[k][lang] = self.code[k][lang].split("\n")
+                for lang in self._code[k]:
+                    self._code[k][lang] = self._code[k][lang].split("\n")
                     # remove final empty line
-                    if len(self.code[k][lang][-1])==0:
-                        self.code[k][lang] = self.code[k][lang][:-1]
+                    if len(self._code[k][lang][-1])==0:
+                        self._code[k][lang] = self._code[k][lang][:-1]

@@ -130,8 +130,15 @@ allroots = [myroots(pp, nfcc, z) for pp in allpols]
 
 outfile.write(str(nfcc)+"\n")
 outfile.write(str(allroots)+"\n")
-plist = [ar.any_prime_to_cc_index(p) for p in primes_first_n(bound)]
-for j in plist:
-    outfile.write(str(plist[j])+"\n")
+j=0
+p=1
+while j<bound:
+    p = next_prime(p)
+    outfile.write(str(ar.any_prime_to_cc_index(p))+"\n")
+    j+=1
+  
+#plist = [ar.any_prime_to_cc_index(p) for p in primes_first_n(bound)]
+#for j in plist:
+#    outfile.write(str(j)+"\n")
 
 outfile.close()

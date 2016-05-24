@@ -39,22 +39,14 @@ By {{ KNOWL('artin.gg_quotient',title="group") }}:
 <a href="?group=A7">$A_7$</a>,
 <a href="?group=S7">$S_7$</a>
 
-<h2>Go to a specific Artin representation by {{KNOWL('artin.label',title='label')}}
+<p>
+A <a href={{url_for('.random_representation')}}>random Artin representation</a> from the database.
+</p>
 
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>Artin representation:&nbsp;&nbsp;</td>
-<td ><input type='text' name='natural' size='30' example='3.2e3_7e5.7t3.1c1'> </td>
-<td><button type='submit' name='search' value='Go'>label</button></td>
-</tr>
-<tr>
-<td colspan="3" rowspan="2"><span class="formexample"> e.g.,
-3.2e3_7e5.7t3.1c1
-</span></td>
-</tr>
-</table>
-</form>
+<h2>Go to a specific Artin representation by {{KNOWL('artin.label',title='label')}}</h2>
+
+<div><form>
+Artin representation: <input type='text' name='natural' size='30' example='3.2e3_7e5.7t3.1c1'> <button type='submit' name='search' value='Go'>label</button> <span class="formexample">e.g., 3.2e3_7e5.7t3.1c1</span></form></div>
 
 
 <h2> Search for an Artin representation </h2>
@@ -63,43 +55,43 @@ Enter values into one or more boxes to restrict the search.
 <form>
   <table>
     <tr>
-        <td>{{ KNOWL('artin.dimension',title="Dimension") }}</td>
+        <td align="right">{{ KNOWL('artin.dimension',title="Dimension") }}</td>
         <td><input type='text' name='dimension' placeholder="2" size=15></td>
         <td><span class="formexample"> e.g. 1, 2-4 </span></td>
     </tr>
 
     <tr>
-        <td>{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
+        <td align="right">{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
         <td><input type='text' name='conductor' placeholder="50-100,150-210" size=15></td>
         <td><span class="formexample"> e.g. 50, 100-200</span></td>
     </tr>
 
     <tr>
-        <td>{{ KNOWL('artin.gg_quotient',title="Group") }}</td>
+        <td align="right">{{ KNOWL('artin.gg_quotient',title="Group") }}</td>
         <td><input type='text' name='group' placeholder="A5" size=15></td>
         <td><span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
     </tr>
 
     <tr>
-        <td>Ramified primes</td>
+        <td align="right">Ramified primes</td>
         <td><input type='text' name='ramified' placeholder="2" size=15></td>
         <td><span class="formexample"> e.g. 2, 3 (no range allowed)</span></td>
     </tr>
     
     <tr>
-        <td>Unramified primes</td>
+        <td align="right">Unramified primes</td>
         <td><input type='text' name='unramified' placeholder="5,7" size=15></td>
         <td><span class="formexample"> e.g. 5, 7, 13  (no range allowed)</span></td>
     </tr>
     
     <tr>
-        <td>{{ KNOWL('artin.root_number',title="Root number") }}</td>
+        <td align="right">{{ KNOWL('artin.root_number',title="Root number") }}</td>
         <td><input type='text' name='root_number' placeholder="1" size=15></td>
         <td><span class="formexample"> at the moment, one of 1 or -1 </span></td>
     </tr>
 
     <tr>
-        <td>{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
+        <td align="right">{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
         <td><input type='text' name='frobenius_schur_indicator' placeholder="1" size=15></td>
         <td><span class="formexample"> +1 for orthogonal, -1 for symplectic, 0 for non-real character </span></td>
     </tr>

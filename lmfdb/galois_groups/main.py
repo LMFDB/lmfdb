@@ -7,8 +7,8 @@ ASC = pymongo.ASCENDING
 import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, make_logger, list_to_latex_matrix
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, redirect
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, make_logger, list_to_latex_matrix, random_object_from_collection
 from lmfdb.search_parsing import LIST_RE, clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start
 import os
 import re
@@ -199,6 +199,7 @@ def render_group_webpage(args):
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
+        data['label_raw'] = label.lower()
         title = 'Galois Group: ' + label
         wgg = WebGaloisGroup.from_data(data)
         n = data['n']
@@ -281,6 +282,10 @@ def render_group_webpage(args):
 def search_input_error(info, bread):
     return render_template("gg-search.html", info=info, title='Galois Group Search Input Error', bread=bread)
 
+@galois_groups_page.route("/random")
+def random_group():
+    label = random_object_from_collection(base.getDBConnection().transitivegroups.groups)['label']
+    return redirect(url_for(".by_label", label=label), 301)
 
 @galois_groups_page.route("/Completeness")
 def completeness_page():

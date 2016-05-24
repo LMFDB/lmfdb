@@ -7,7 +7,7 @@ class HMFTest(LmfdbTest):
     def test_home(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/')
         assert 'Hilbert' in L.data
-        assert 'newforms' in L.data
+        assert 'cusp forms' in L.data
         assert 'modular' in L.data
         assert 'Browse' in L.data
         assert 'Search' in L.data
@@ -19,7 +19,7 @@ class HMFTest(LmfdbTest):
         assert 'edirect' in L.data
 
     def test_EC(self): #778
-        L = self.tc.get('/ModularForm/GL2/TotallyReal/3.3.733.1/holomorphic/3.3.733.1-146.1-a')
+        L = self.tc.get('ModularForm/GL2/TotallyReal/6.6.300125.1/holomorphic/6.6.300125.1-631.2-d')
         assert 'Elliptic curve not available' in L.data     #TODO remove or change url when
                                                             #the elliptic curve is in the database
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.89.1/holomorphic/2.2.89.1-2.1-a')
@@ -78,5 +78,15 @@ class HMFTest(LmfdbTest):
         assert 'heckeEigenvaluesArray := [4, -4,' in L.data
 
     def test_Lfun_link(self):
-        L = self.tc.get('/ModularForm/GL2/TotallyReal/4.4.2048.1/holomorphic/4.4.2048.1-784.2-a')
-        assert 'L/ModularForm/GL2/TotallyReal/4.4.2048.1/holomorphic/4.4.2048.1-784.2-a' in L.data
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a')
+        assert         'L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a' in L.data
+
+    def test_browse(self):
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/')
+        assert 'by field degree' in L.data
+        assert 'database contains' in L.data
+        assert 'data is complete up to' in L.data
+
+    def test_browse_by_degree(self):
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/2/')
+        assert 'Number of newforms' in L.data

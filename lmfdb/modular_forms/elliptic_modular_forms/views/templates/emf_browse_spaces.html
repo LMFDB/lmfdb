@@ -147,7 +147,7 @@ The table below gives the dimensions of the space of holomorphic
 , with trivial {{KNOWL('character.dirichlet', title='character')}}.
 {% endif %}
 </div>
-
+ {% set has_na = [] %}
       <table class="ntdata">
         <thead>
           <tr class="space">
@@ -191,6 +191,7 @@ The table below gives the dimensions of the space of holomorphic
                  <a href="{{url}}">{{dim}}</a>
                  {% elif in_db == -1 %}
                      n/a
+              {% do has_na.append(1) %}
                  {% else %}
                      {{dim}}
                  {% endif %}
@@ -204,8 +205,11 @@ The table below gives the dimensions of the space of holomorphic
         </tbody>
       </table>
     </td>
-    <small>"n/a" means that there is no information about this space in our
-      database. The dimension is clickable whenever the Hecke orbits are stored for that space.
+    <small>
+    {% if has_na %}
+    "n/a" means that there is no information about this space in our database.
+    {% endif %}
+    The dimension is clickable whenever the Hecke orbits are stored for that space.
 </small>
 
 {% endif %}

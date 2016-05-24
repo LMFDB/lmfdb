@@ -5,10 +5,11 @@
 </style>
 
 {% macro code(codes, item) %}
-{% for L in codes[item] %}
+{% set code = codes() %}
+{% for L in code[item] %}
 {# N.B. whitespace is preserved in the following div since the CSS has
 white-space: pre in order to keep line breaks! #}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for c in code[item][L] %}{{code.prompt[L]}}&nbsp;{{c}}<br>{% endfor %}</div>
 {% endfor %}
 {% endmacro %}
 
@@ -110,10 +111,10 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
       {{ code(data.code,'gens') }}
       <div style='overflow:auto'><p>
       <table>
-        <tr><td>\(P\)</td>
+        <tr><td>\(P\)</td><td>&nbsp;=&nbsp;</td>
           {% for pt in data.mw.generators %}<td>{{pt}}</td>{% endfor %}
           </tr>
-        <tr><td>\(\hat{h}(P)\)</td>
+        <tr><td>\(\hat{h}(P)\)</td><td>&nbsp;&approx;&nbsp;</td>
           {% for ht in data.mw.heights %}<td>{{ht}}</td>{% endfor %}
           </tr>
         </table>
@@ -191,6 +192,12 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
         <td>({%if not data.data.CMD %}no {%endif %}
 {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
         </td>
+        </tr>
+
+        <tr>
+        <td> \( \text{ST} (E) \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.data.ST|safe }}</td>
         </tr>
 
        </table>

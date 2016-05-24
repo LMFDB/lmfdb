@@ -47,8 +47,10 @@ take you to the associated Dirichlet L-function.
     },
     change: function( event, ui ) {
       $("#modRange" ).text( ui.values[ 0 ] + " - " + ui.values[ 1 ] );
+      $("#charGraph").hide();
       $("#charGraph").attr( 'src', '{{url_for(".browseGraphChar")}}?min_cond=' + ui.values[ 0 ] + '&max_cond=' + ui.values[ 1 ] + '&max_order=' + {{maxOrder}} + '&min_order=1');
       $("#charGraph").attr( 'height', 60 + 30 * (ui.values[ 1 ]-ui.values[ 0 ]+1));
+      $("#charGraph").show();
     }
   });
 

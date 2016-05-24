@@ -2,53 +2,54 @@
 
 {% block content %}
 
-<!--<script type="text/javascript">-->
-<!--var clean_uri = location.protocol + "//" + location.host + location.pathname;-->
-<!--window.history.replaceState({}, document.title, clean_uri);-->
-<!--</script>-->
-
-
 {% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
-<h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
-<p>${{info.gram}}$</p>
 
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }} </h2>
 
 <table>
-    <tr><td align=right>{{ KNOWL('lattice.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.label', title='Label') }}:</td><td>${{info.label}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}\dots$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}\dots$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length:</td><td>${{info.minimum }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.kissing', title='Kissing Number') }}:</td><td>${{info.kissing }}$</td></tr>
-    <tr><td align=right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
     <tr><td align=right>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
-<table><tr>
-{% for n in info.shortest %}
-${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
-{% endfor %}</tr>
-</table>
-</td></tr>
-    
+{% if info.dim == 1 %}
+    $({{info.shortest}})$</td></tr><tr><td></td><td>Download this vector for 
+        {% for e in info.download_shortest %} 
+            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+        {% endfor %}</td></tr>
+{% else %}
+    {% if info.shortest == "" %}
+        not available</td></tr>
+    {% else %}
+        <table><tr>
+        {% for n in info.shortest %}
+            ${{n}}${% if not loop.last %},{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
+        {% endfor %}
+        {% if info.all_shortest == "no" %} ... </tr></table></td><tr><td></td>
+        <td>Download the complete list for 
+            {% for e in info.download_shortest %} 
+                <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+            {% endfor %}</td></tr>
+        {% else %}
+            </tr></table></td><tr><td></td><td>Download this {% if info.kissing == 2 %} vector {% else %} list {% endif %} for 
+            {% for e in info.download_shortest %} 
+                <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+            {% endfor %}</td></tr>
+        {% endif %}
+    {% endif %}
+{% endif %}
 </table>
 
 {% if info.theta_series %}
 <h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
-
-<!--<p>-->
-<!--<form>-->
-<!--<p>-->
-<!--<div>Display the $q$ expansion up to power <input type='text' name='ncoeff' placeholder='20' value={{info.ncoeff}} size=5> <button type='submit' value='display'>Display</button></div></p>-->
-<!--<p>-->
-<!--<div style="overflow:auto;padding: 10px">${{info.theta_series }}$</div>-->
-<!--</p>-->
-<!--</form>-->
-<!--</p>-->
 
 <p><form>
 <div class="output"><span id="theta_output">{{info.theta_series}}</span></div>
@@ -58,32 +59,56 @@ ${{n}}${% if not loop.last %}, {% else %}.{% endif %}{% if loop.index % 3 == 0 %
 
 {% endif %}
 
+<h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
+<p>${{info.gram}}$</p>
+
 
 <h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>
 
-<table>
-<tr><td align=right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
-<tr><td>&nbsp;</td></tr>
-<tr><td align=right valign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
-{% for n in info.genus_reps %}
-${{n}}$
-{% endfor %}
-</td></tr>
-</table>
+{% if info.class_number == 0 %}
+    <p> The {{ KNOWL('lattice.class_number', title='Class number') }} of the integral lattice {{info.label}} is not available.</p>
 
+{% else %}
+    <table>
+    <tr><td align=right>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td align=right valign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
+    {% if info.dim == 1 %}
+        $({{info.genus_reps}})$</td></tr><tr><td></td><td>Download this matrix for
+            {% for e in info.download_genus_reps %} 
+            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+            {% endfor %}</td></tr>
+    {% else %}
+        {% for n in info.genus_reps %}
+            ${{n}}${% if not loop.last %},{% endif %}
+        {% endfor %}
+        {% if info.all_genus_rep == "no" %} ... 
+            </td></tr><tr><td></td><td>Download the complete list for
+        {% else %}
+            </td></tr><tr><td></td><td>Download this {% if info.class_number == 1 %} matrix {% else %} list {% endif %} for
+        {% endif %}
+            {% for e in info.download_genus_reps %} 
+            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+            {% endfor %}</td></tr>
+        {% endif %}
+    </td></tr>
+    </table>
+{% endif %}
 
 <br>
 {% if info.name or info.comments %}
-<h2><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs={{info.knowl_args}}>Comments</a></h2>
+<!--<h2><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs={{info.knowl_args}}>Comments</a></h2>-->
+<h2>Comments</h2>
 
-{% if info.name != " " %}
-<p>This integral lattice is known with {{KNOWL('lattice.name', title='name')}} {{ info.name }}.</p>
+
+
+{% if info.name != "" %}
+<p>This {{ KNOWL('lattice.definition', title='integral lattice') }} {{KNOWL('lattice.name', title='is')}} the {{ info.name }} lattice.</p>
 {% endif %}
 
-{% if info.comments != " " %}
+{% if info.comments != "" %}
 <p>{{info.comments}}.</p>
 {% endif %}
-
 {% endif %}
 
 
@@ -105,5 +130,6 @@ $(function() {
     $("#morebutton").click(function(e) {more_handler(e)});
 });
 </script>
+
 
 {% endblock %}

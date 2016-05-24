@@ -47,7 +47,7 @@ var cur_invstyle = null;
 function show_invs(invstyle) {
     $('.igusa_clebsch').hide();
     $('.igusa').hide();
-    $('.g2').hide();
+    $('.G2').hide();
     $('.'+invstyle).show();
   }
 </script>
@@ -119,10 +119,10 @@ function show_invs(invstyle) {
 <div class='igusa nodisplay'>
     <p>{{code(data.code,['magma'],'igusa')}}</p>
 </div>
-<h3 class='g2 nodisplay'>
+<h3 class='G2 nodisplay'>
     {{KNOWL("g2c.g2_invariants", title="G2 invariants")}}
 </h3>
-<div class='g2 nodisplay'>
+<div class='G2 nodisplay'>
     <p>{{code(data.code,['magma'],'g2')}}</p>
 </div>
 
@@ -190,17 +190,17 @@ function show_invs(invstyle) {
         <td>&nbsp;=&nbsp;</td>
         <td>{{ data.data.igusa_norm_factor_latex[4] }}</td>
     </tr>
-    <tr class='g2 nodisplay'>
+    <tr class='G2 nodisplay'>
         <td> \( g_1 \) </td>
         <td>&nbsp;=&nbsp;</td>
         <td>\({{ data.data.g2[0] }}\)</td>
     </tr>
-    <tr class='g2 nodisplay'>
+    <tr class='G2 nodisplay'>
         <td> \( g_2 \) </td>
         <td>&nbsp;=&nbsp;</td>
         <td>\({{ data.data.g2[1] }}\)</td>
     </tr>
-    <tr class='g2 nodisplay'>
+    <tr class='G2 nodisplay'>
         <td> \( g_3 \) </td>
         <td>&nbsp;=&nbsp;</td>
         <td>\({{ data.data.g2[2] }}\)</td>
@@ -208,9 +208,9 @@ function show_invs(invstyle) {
 </table>
 
 <div class="toggle">Alternative geometric invariants:
-    <span class='igusa g2 nodisplay'><a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>,</span>
-    <span class='igusa_clebsch g2'><a onclick="show_invs('igusa'); return false" href='#'>Igusa</a><span class='igusa_clebsch'>,</span></span>
-    <span class='igusa_clebsch igusa'><a onclick="show_invs('g2'); return false" href='#'>G2</a></span>
+    <span class='igusa G2 nodisplay'><a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>,</span>
+    <span class='igusa_clebsch G2'><a onclick="show_invs('igusa'); return false" href='#'>Igusa</a>,</span>
+    <span class='igusa_clebsch igusa'><a onclick="show_invs('G2'); return false" href='#'>G2</a></span>
 </div>
 
 <h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
@@ -266,18 +266,14 @@ function show_invs(invstyle) {
 <br>
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
-{% if data.data.real_geom_end_alg == 'R'%}
-    \(\mathrm{ST} \simeq {{ data.data.st_group_name }}\)
-{% else %}
 <table>
     <tr>
-        <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>\({{ data.data.st_group_name}}\)</td>
+        <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.data.st_group_href|safe}}</td>
     </tr>
     <tr>
         <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.data.st0_group_name}}\) </td>
     </tr>
 </table>
-{% endif %}
 
 <br>
 

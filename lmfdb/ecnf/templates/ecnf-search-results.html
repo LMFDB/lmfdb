@@ -21,6 +21,8 @@
 <td align=left>{{ KNOWL('ec.conductor',title = "conductor") }} norm</td>
 <td align=left>{{ KNOWL('ec.isogeny',title="isogenous") }} curves</td>
 <td align=left>{{ KNOWL('ec.base_change',title="base change") }} curves</td>
+<td align=left>{{ KNOWL('ec.q_curve',title="Q-curves") }}</td>
+<td align=left>{{ KNOWL('ec.complex_multiplication',title="CM") }} curves</td>
 <td align=left>{{ KNOWL('ec.torsion_order',title="torsion order") }}</td>
 <td align=left>{{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}</td>
 <td align=left>{{ KNOWL('ec.j_invariant', title="j-invariant") }}</td>
@@ -50,11 +52,47 @@
 {% endif %}
          </select>
 </td>
+<td>         <select name='include_Q_curves'>
+{% if info.include_Q_curves == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.include_Q_curves == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+         </select>
+</td>
+<td>         <select name='include_cm'>
+{% if info.include_cm == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.include_cm == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+         </select>
+</td>
           <td>
-          <input type='text' name='torsion' size=10 value="{{info.torsion}}" />
+          <input type='text' name='torsion' size=6 value="{{info.torsion}}" />
           </td>
           <td>
-          <input type='text' name='torsion_structure' size=10 value="{{info.torsion_structure}}" />
+          <input type='text' name='torsion_structure' size=8 value="{{info.torsion_structure}}" />
           </td>
           <td>
           <input type='text' name='jinv' size=20 value="{{info.jinv}}" />

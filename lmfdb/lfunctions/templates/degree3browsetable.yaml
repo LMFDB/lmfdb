@@ -7,7 +7,7 @@ level: 1
 character: 1.1
 analytic_conductor: 3.010101010101
 epsilon: 1
-url: L/ModularForm/GL3/Q/Maass/GL3Maass_1_16.4031_0.17112/
+url: L/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.4216864/
 object_url:
 object_name: $\SL(3,\Z)$ Maass form
 self_dual: false
@@ -65,7 +65,7 @@ level: 4
 character: 1.1
 analytic_conductor: 
 epsilon: 1
-url: L/ModularForm/GL3/Q/Maass/GL3Maass_4_8.23979_2.64122/
+url: L/ModularForm/GL3/Q/Maass/4/1/8.239796_2.641226/1.066042 +/
 object_url:
 object_name: $\GL(3)$ Maass form
 self_dual: false
@@ -79,7 +79,7 @@ level: 4
 character: 1.1
 analytic_conductor:
 epsilon: e(1/3)
-url: L/ModularForm/GL3/Q/Maass/GL3Maass_4_9.63244_1.37406/
+url: L/ModularForm/GL3/Q/Maass/4/1/9.632444_1.374060/0.15012282/
 object_url:
 object_name: $\GL(3)$ Maass form
 self_dual: false
@@ -123,7 +123,7 @@ level: 4
 character: 1.1
 analytic_conductor: 
 epsilon: e(2/3)
-url: L/ModularForm/GL3/Q/Maass/GL3Maass_4_8.95466_2.93659/
+url: L/ModularForm/GL3/Q/Maass/4/1/8.954662_2.936591/0.36025530/
 object_url:
 object_name: $\GL(3)$ Maass form
 self_dual: false

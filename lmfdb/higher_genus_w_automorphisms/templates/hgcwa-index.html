@@ -18,24 +18,35 @@ text-align:right;
 
       <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
 
-        TO DO List by genus
+<p>
+By genus:
+{% for gen in info.genus_list %}
+<a href="?genus={{gen}}">{{gen}}</a>
+{% endfor %}</p>
+
+<p>Hyperelliptic curves by genus:
+{% for gen in info.genus_list %}
+<a href="?genus={{gen}}&hyperelliptic=True">{{gen}}</a>
+{% endfor %} 
+</p>
 
 
-    <h2>Find specific automorphisms of  higher genus curve</h2>
+
+    <h2>Find specific automorphisms of higher genus curve</h2>
 
     <form name="search" method = "get" action="{{search}}">
         <table class="">
 	  <tr>
 	    <td>
-	  Search by {{KNOWL('lf.field.label',title="label")}}
+	  Search by {{KNOWL('dq.curve.highergenus.aut.label',title="label")}}
           <input type="text" name="jump_to" value=""
-        placeholder="2.6T3.0.2-2-2-3">
+        placeholder="2.12-4.0.2-2-2-3">
 	    </td>
 	    <td>
           <button type="submit" value="Find">Find</button>
 	      </td>
 	      <td>
-		<span class="formexample">family with automorphisms label, e.g. 2.6T3.0.2-2-2-3 </span>
+		<span class="formexample">family with automorphisms label, e.g. 2.12-4.0.2-2-2-3 </span>
 	      </td>
 	    </tr>
 	  </table>
@@ -48,40 +59,55 @@ text-align:right;
         <table class="">
           <tr align=left>
             <td align=right>
-            genus:
-            </td><td><input type="integer" name="g" value=""
+            Genus:
+            </td><td><input type="integer" name="genus" value=""
       placeholder="3"></td>
       <td>
 	<span class="formexample">e.g. 4, or a range like 3..5</span>
       </td>
           </tr>
+
           <tr>
             <td align=right>
-              {{KNOWL('curve.highergenus.aut.signature',title='signature')}}:
-            </td><td><input type="list" name="sign" value="" placeholder="[0,2,3,3,6]"></td>
+	      Group:
+            </td><td><input type="text" name="group" value="" placeholder="[4,2]"></td>
+      <td>
+	<span class="formexample">e.g. [4,2]</span>
+      </td>
+          </tr>
+	  <tr>
+            <td align=right>
+              {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
+            </td><td><input type="list" name="signature" value="" placeholder="[0,2,3,3,6]"></td>
       <td>
 	<span class="formexample">e.g. [0,2,3,3,6].</span>
-      </td>
-          </tr>
-          <tr>
-            <td align=right>
-              <!-- {{KNOWL('lf.ramification_index',title='Group')}} :-->
-	      Group:
-            </td><td><input type="list" name="group" value="" placeholder="[6,2]"></td>
+	  </td> </tr>
+	 <tr><td align=right>
+              {{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
+            </td><td><input type="integer" name="dim" value="" placeholder="1"></td>
       <td>
-	<span class="formexample">e.g. [2,1], or [4,2]</span>
-      </td>
-          </tr>
+	<span class="formexample">e.g. 1, or a range like 0..2</span>
+	 </td> </tr>
+              <tr>  <td align=right>
+	       Hyperelliptic Curve(s):
+            </td>  <td> <select name='hyperelliptic'>
+                    <option value='include'>include </option>
+		    <option value='exclude'>exclude</option>
+                    <option value='only'>only</option>
+                 
+                  </select>
+                </td>  <td>
+	<span class="formexample"></span>
+	 </td></tr>
+	 
           <tr>
           <td align=right>
-              Maximum number of fields to display:
-            </td><td><input type="text" name="count" value="{{info.count}}" size="10"></td>
+              Maximum number of families to display:
+            </td><td><input type="text" name="count" value="20" size="10"></td>
           </tr>
   </table>
         <button type="submit" name="Submit" value="Search">Search</button>
       </form>
-
-
-
+   
 
 {% endblock %}

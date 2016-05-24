@@ -8,10 +8,11 @@ import ast
 import StringIO
 import pymongo
 ASC = pymongo.ASCENDING
+from operator import mul
 from urllib import quote, unquote
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, flash, send_file
-from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
+from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD
 from lmfdb.ecnf import ecnf_page, logger
@@ -214,10 +215,7 @@ def index():
 
 @ecnf_page.route("/random")
 def random_curve():
-    from sage.misc.prandom import randint
-    n = get_stats().counts()['ncurves']
-    n = randint(0,n-1)
-    E = db_ecnf().find()[n]
+    E = random_object_from_collection(db_ecnf())
     return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 301)
 
 @ecnf_page.route("/<nf>/")
@@ -258,8 +256,9 @@ def show_ecnf1(nf):
     info['more'] = int(start + count < nres)
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
-    if nf_label:
-        info['stats'] = ecnf_field_summary(nf_label)
+    #don't risk recomputing all the ecnf stats just to show curves for a single number field
+    #if nf_label:
+        #info['stats'] = ecnf_field_summary(nf_label)
     if nres == 1:
         info['report'] = 'unique match'
     else:
@@ -344,6 +343,9 @@ def elliptic_curve_search(**args):
     
     if 'download' in info and info['download'] != 0:
         return download_search(info)
+
+    if not 'query' in info:
+        info['query'] = {}
     
     bread = [('Elliptic Curves', url_for(".index")),
              ('Search Results', '.')]
@@ -354,8 +356,6 @@ def elliptic_curve_search(**args):
         try:
             nf, cond_label, iso_label, number = split_full_label(label.strip())
         except ValueError:
-            if not 'query' in info:
-                info['query'] = {}
             info['err'] = ''
             return search_input_error(info, bread)
 
@@ -370,6 +370,8 @@ def elliptic_curve_search(**args):
         parse_nf_elt(info,query,'jinv',name='j-invariant')
         parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
+        if 'torsion_structure' in query and not 'torsion_order' in query:
+            query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
     except ValueError:
         return search_input_error(info, bread)
 
@@ -381,6 +383,18 @@ def elliptic_curve_search(**args):
         query['base_change'] = []
     else:
         info['include_base_change'] = "on"
+
+    if 'include_Q_curves' in info:
+        if info['include_Q_curves'] == 'exclude':
+            query['q_curve'] = False
+        elif info['include_Q_curves'] == 'only':
+            query['q_curve'] = True
+
+    if 'include_cm' in info:
+        if info['include_cm'] == 'exclude':
+            query['cm'] = 0
+        elif info['include_cm'] == 'only':
+            query['cm'] = {'$ne' : 0}
 
     info['query'] = query
     count = parse_count(info, 50)

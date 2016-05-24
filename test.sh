@@ -3,6 +3,8 @@
 # It also generates a coverage report when the "coverage" module is installed.
 # When you specify the argument 'html', a HTML report will be generated, too.
 
+# Note: to run the tests, sage must be in your path.  If necessary do
+# export PATH=$PATH:/path/to/sage
 # To run it, first install or upgrade "nose", "unittest2" and "coverage".
 # e.g. $ pip install --user -U nose coverage unittest2
 # or inside the Sage environment: $ easy_install -U nose
@@ -33,7 +35,7 @@ else
   WHAT="$@"
 fi
 
-ARGS='-v -s --testmatch="(?:^|[\b_\./-])[Tt]est_"'
+ARGS='-v -s --testmatch="(?:^|\/)[Tt]est_"'
 
 SAGE_COMMAND=$SAGE
 if [[ "$SAGE_COMMAND" == "" ]]; then

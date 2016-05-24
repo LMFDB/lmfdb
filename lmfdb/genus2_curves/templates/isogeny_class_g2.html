@@ -14,6 +14,9 @@ text-align: center;
 }
 </style>
 
+{% set KNOWL_ID = "g2c.%s"|format(info.label) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
 <h2>Genus 2 curves in {{KNOWL("g2c.isogeny_class", title="isogeny class" )}} {{info.label}}</h2>
 <table id = "isogeny_class_table">
 <tr>
@@ -49,10 +52,10 @@ text-align: center;
 
 <h2>{{ KNOWL('g2c.st_group', title='Sato-Tate group')}}</h2>
 <p>
-{% if info.real_geom_end_alg == 'R'%}
-\(\mathrm{ST} = {{ info.st_group_name }}\)
+{% if info.st_group == 'USp(4)'%}
+\(\mathrm{ST} =\) {{ info.st_group_href|safe }}
 {% else %}
-\(\mathrm{ST} = {{ info.st_group_name }}, \quad \mathrm{ST}^0 = {{ info.st0_group_name}}\)
+\(\mathrm{ST} =\) {{ info.st_group_href|safe }}, \(\quad \mathrm{ST}^0 = {{ info.st0_group_name}}\)
 {% endif %}
 </p>
 

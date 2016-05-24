@@ -6,10 +6,9 @@ import pymongo
 import lmfdb.base
 from lmfdb.base import app, getDBConnection
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from sage.misc.preparser import preparse
 from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
-from lmfdb.hilbert_modular_forms.hmf_stats import get_stats
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_summary, hmf_degree_summary
 
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.ecnf.WebEllipticCurve import db_ecnf
@@ -22,7 +21,7 @@ from flask import render_template, render_template_string, request, abort, Bluep
 
 from markupsafe import Markup
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, web_latex_split_on_pm
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, web_latex_split_on_pm, random_object_from_collection
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 from lmfdb.WebNumberField import *
@@ -32,12 +31,7 @@ hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A 
 
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
-    from sage.misc.prandom import randint
-    n = get_stats().counts()['nforms']
-    n = randint(0,n-1)
-    C = getDBConnection()
-    res = C.hmfs.forms.find()[n]
-    return hilbert_modular_form_by_label(res)
+    return hilbert_modular_form_by_label( random_object_from_collection( getDBConnection().hmfs.forms ) )
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*', '')
@@ -73,8 +67,8 @@ def hilbert_modular_form_render_webpage():
         bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
                  ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
-        info['counts'] = get_stats().counts()
-        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list())
+        info['counts'] = get_counts()
+        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
     else:
         return hilbert_modular_form_search(**args)
 
@@ -272,7 +266,7 @@ def download_hmf_sage(**args):
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
     if f["hecke_polynomial"] != 'x':
-        outstr += 'hecke_pol = ' + f["hecke_polynomial"] + '\n'
+        outstr += 'heckePol = ' + f["hecke_polynomial"] + '\n'
         outstr += 'K.<e> = NumberField(heckePol)\n'
     else:
         outstr += 'heckePol = x\nK = QQ\ne = 1\n'
@@ -283,7 +277,7 @@ def download_hmf_sage(**args):
 
     outstr += 'AL_eigenvalues = {}\n'
     for s in f["AL_eigenvalues"]:
-        outstr += 'ALEigenvalues[ZF.ideal(s[0])] = s[1]\n'
+        outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
 
     outstr += '\n# EXAMPLE:\n# pp = ZF.ideal(2).factor()[0][0]\n# hecke_eigenvalues[pp]\n'
 
@@ -316,6 +310,7 @@ def render_hmf_webpage(**args):
     hmf_field = C.hmfs.fields.find_one({'label': data['field_label']})
     gen_name = findvar(hmf_field['ideals'])
     nf = WebNumberField(data['field_label'], gen_name=gen_name)
+    info['hmf_field'] = hmf_field
     info['field'] = nf
     info['base_galois_group'] = nf.galois_string()
     info['field_degree'] = nf.degree()
@@ -328,9 +323,11 @@ def render_hmf_webpage(**args):
         ('Download to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
         ('Download to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
         ]
-    info['friends'] = [('L-function',
-                        url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
-
+    if hmf_field['narrow_class_no'] == 1 and nf.disc()**2 * data['level_norm'] < 40000:
+        info['friends'] = [('L-function',
+                            url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
+    else:
+        info['friends'] = [('L-function not available', "")]
     if data['dimension'] == 1:   # Try to attach associated elliptic curve
         lab = split_class_label(info['label'])
         ec_from_hmf = db_ecnf().find_one({"label": label + '1'})
@@ -415,14 +412,14 @@ def render_hmf_webpage(**args):
     if 'q_expansions' in data:
         info['q_expansions'] = data['q_expansions']
 
-    properties2 = [('Base Field', '%s' % info['field'].field_pretty()),
+    properties2 = [('Base field', '%s' % info['field'].field_pretty()),
                    ('Weight', '%s' % data['weight']),
-                   ('Level Norm', '%s' % data['level_norm']),
+                   ('Level norm', '%s' % data['level_norm']),
                    ('Level', '$' + teXify_pol(data['level_ideal']) + '$'),
-                   ('Label', '%s' % data['label_suffix']),
+                   ('Label', '%s' % data['label']),
                    ('Dimension', '%s' % data['dimension']),
                    ('CM', is_CM),
-                   ('Base Change', is_base_change)
+                   ('Base change', is_base_change)
                    ]
 
     return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
@@ -466,3 +463,54 @@ def labels_page():
              ('Labels', '')]
     return render_template("single.html", kid='mf.hilbert.label',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+
+@hmf_page.route("/browse/")
+def browse():
+    info = {
+        'counts': get_counts()
+    }
+    credit = 'John Voight'
+    t = 'Hilbert modular forms'
+    bread = [('Hilbert modular forms', url_for("hmf.hilbert_modular_form_render_webpage")),
+             ('browse', ' ')]
+    return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove("Completeness"))
+
+@hmf_page.route("/browse/<int:d>/")
+def statistics_by_degree(d):
+    counts = get_counts()
+    info = {}
+    if not d in counts['degrees']:
+        if d==1:
+            info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('emf.render_elliptic_modular_forms')
+        else:
+            info['error'] = "The database does not contain any Hilbert modular forms over fields of degree %s" % d
+        d = 'bad'
+    else:
+        info['counts'] = counts
+        info['degree_stats'] = hmf_degree_summary(d)
+        info['degree'] = d
+        info['stats'] = get_stats(d)
+
+    credit = 'John Cremona'
+    if d==2:
+        t = 'Hilbert modular forms over real quadratic number fields'
+    elif d==3:
+        t = 'Hilbert modular forms over totally real cubic number fields'
+    elif d==4:
+        t = 'Hilbert modular forms over totally real quartic number fields'
+    elif d==5:
+        t = 'Hilbert modular forms over totally real quintic number fields'
+    elif d==6:
+        t = 'Hilbert modular forms over totally real sextic number fields'
+    else:
+        t = 'Hilbert modular forms over totally real fields of degree %s' % d
+
+    bread = [('Hilbert modular forms', url_for("hmf.hilbert_modular_form_render_webpage")),
+              ('degree %s' % d,' ')]
+
+    if d=='bad':
+        t = 'Hilbert modular forms'
+        bread = bread[:-1]
+
+    return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove("Completeness"))
+

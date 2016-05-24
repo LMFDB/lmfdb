@@ -12,10 +12,42 @@ from lmfdb.base import getDBConnection
 ###############################################################
 
 def p2sage(s):
-    # convert python type to sage
-    # this interprets strings, so e.g. '1/2' gets converted to Rational
-    return sage_eval(str(s))
+    # convert numbers which have be stored as strings into a sage type
 
+    # I really don't like the use of sage_eval here. It may be ok as long
+    # as we are only calling this function on trusted input from the database,
+    # but someone is going to forget that someday... --JWB
+
+    x = PolynomialRing(RationalField(),"x").gen()
+    a = PolynomialRing(RationalField(),"a").gen()
+    try:
+        z = sage_eval(str(s), locals={'x' : x, 'a' : a})
+    except:
+        z = s
+    if type(z) in [list, tuple]:
+        return [p2sage(x) for x in z]
+    else:
+        return z
+
+def string2number(s):
+    # a start to replace p2sage (used for the paramters in the FE)
+
+    strs = str(s)
+    try:
+        if 'I' in strs:
+            return CDF(strs)
+        elif '/' in strs:
+            return Rational(strs)
+        elif strs=='0.5':  # Temporary fix because 0.5 in db for EC
+            return Rational('1/2')
+        elif '.' in strs:
+            return float(strs)
+        else:
+            return Integer(strs)
+    except:
+        return s
+
+    
 def pair2complex(pair):
     ''' Turns the pair into a complex number.
     '''
@@ -734,8 +766,10 @@ def lfuncFEtex(L, fmt):
         ans += "("
         if L.mu_fe != []:
             for mu in range(len(L.mu_fe) - 1):
-                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, 5) + ", "
-            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, 5)
+                prec = len(str(L.mu_fe[mu]))
+                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, prec) + ", "
+            prec = len(str(L.mu_fe[-1]))
+            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, prec)
         else:
             ans += "\\ "
         ans += ":"
@@ -799,7 +833,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        if L.lfunc_data['values']:
+        if 'values' in L.lfunc_data.keys():
           for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
@@ -973,5 +1007,5 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
     if abs(abs(sign) - 1) > tol:
         logger.critical("Not enough coefficients to compute the sign of the L-function.")
         sign = "Not able to compute."
-        sign = 1000
+        sign = 1 # wrong, but we need some type of error handling here.
     return sign

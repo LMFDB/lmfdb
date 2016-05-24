@@ -14,31 +14,38 @@
 <tr>
 <td align=left>{{ KNOWL('ec.q.conductor', title='Conductor') }}</td>
 <td align=left>{{ KNOWL('ec.q.j_invariant', title='j-invariant') }}</td>
+<td align=left>{{ KNOWL('ec.complex_multiplication',title="CM") }} </td>
 <td align=left>{{ KNOWL('ec.q.rank', title='Rank') }}</td>
 <td align=left>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</td>
 <td align=left>{{ KNOWL('ec.q.torsion_subgroup', title='Torsion structure') }}</td>
 <td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
-<td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
 </tr>
 
 <tr>
 <td align=left><input type='text' name='conductor' size=10 value={{info.conductor}}></td>
 <td align=left><input type='text' name='jinv'size=5 value={{info.jinv}}></td>
-<td align=left><input type='text' name='rank'size=2 value={{info.rank}}></td>
-<td align=left><input type='text' name='torsion' size=5 value={{info.torsion}}> </td>
-<td align=left><input type='text' name='torsion_structure' size=5 value={{info.torsion_structure}}> </td>
-<td align=left><input type='text' name='sha' size=5 value={{info.sha}}> </td>
-<td align=left>
-<select name='optimal'>
-{% if info.optimal=='on' %}
-  <option value="">No</option>
-  <option selected="yes" value="on">Yes</option>
+<td>         <select name='include_cm'>
+{% if info.include_cm == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
 {% else %}
-  <option value="">No</option>
-  <option value="on">Yes</option>
+{% if info.include_cm == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
 {% endif %}
-</select>
+{% endif %}
+         </select>
 </td>
+<td align=left><input type='text' name='rank'size=2 value={{info.rank}}></td>
+<td align=left><input type='text' name='torsion' size=6 value={{info.torsion}}> </td>
+<td align=left><input type='text' name='torsion_structure' size=7 value={{info.torsion_structure}}> </td>
+<td align=left><input type='text' name='sha' size=5 value={{info.sha}}> </td>
 </tr>
 
 <tr>
@@ -46,8 +53,7 @@
 </td>
 <td align=left colspan=2>{{KNOWL('ec.q.non-surjective_prime', title='non-surjective primes')}} 
 </td>
-<td align=left colspan=3>Maximum number of curves to display
-</td>
+<td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
 </tr>
 <tr>
 <td align=left>
@@ -65,11 +71,25 @@
   </select>
 <input type='text' name='nonsurj_primes' size=10  value={{info.nonsurj_primes}}>
 </td>
-<td align=left colspan=3><input type='text' name='count' value={{info.count}} size=10>
+<td align=left>
+<select name='optimal'>
+{% if info.optimal=='on' %}
+  <option value="">No</option>
+  <option selected="yes" value="on">Yes</option>
+{% else %}
+  <option value="">No</option>
+  <option value="on">Yes</option>
+{% endif %}
+</select>
 </td>
 </tr>
 
-<tr> <td>
+<tr>
+<td align=left colspan=2>Maximum number of curves to display
+</td>
+<td align=left><input type='text' name='count' value={{info.count}} size=10>
+</td>
+<td colspan=3>
 <button type='submit' value='refine'>Refine or change search</button>
 </td> </tr>
 </table>

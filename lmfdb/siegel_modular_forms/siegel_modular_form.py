@@ -19,6 +19,9 @@ from lmfdb.siegel_modular_forms import smf_logger
 import json
 import StringIO
 
+from flask import flash, redirect
+
+
 DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
 COLNS = None
 DB = None
@@ -37,7 +40,7 @@ def rescan_collection():
             try:
                 if f.endswith('.json'):
                     c = f[:-5]
-                    print c
+#                    print c
                 colns[c] = Collection( c, location = static)
             except Exception as e:
                 print str(e)
@@ -102,21 +105,32 @@ def ModularForm_GSp4_Q_Sp4Z_j():
     jrange = xrange(0, 21)
     krange = xrange(10, 21)
     if request.args.get('j'):
-        jr = parse_range(request.args.get('j'))
-        if type(jr) is int:
-            jrange = xrange(jr, jr+20+1);
-        else:
-            jrange = xrange(jr['$gte'], jr['$lte'])
+        try:
+            jr = parse_range(request.args.get('j'))
+            if type(jr) is int:
+                jrange = xrange(jr, jr+20+1);
+            else:
+                jrange = xrange(jr['$gte'], jr['$lte'])
+        except:
+            error="Error parsing input for j.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." 
+            flash(error, "error")
+            return redirect(url_for(".ModularForm_GSp4_Q_Sp4Z_j"))
+
     if request.args.get('k'):
-        kr = parse_range(request.args.get('k'))
-        if type(kr) is int:
-            if kr<4:
-                kr=4
-            krange = xrange(kr, kr+10+1);
-        else:
-            if kr['$gte']<4:
-                kr['$gte']=4
-            krange = xrange(kr['$gte'], kr['$lte'])
+        try:
+            kr = parse_range(request.args.get('k'))
+            if type(kr) is int:
+                if kr<4:
+                    kr=4
+                krange = xrange(kr, kr+10+1);
+            else:
+                if kr['$gte']<4:
+                    kr['$gte']=4
+                krange = xrange(kr['$gte'], kr['$lte'])
+        except:
+            error="Error parsing input for k.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." 
+            flash(error, "error")
+            return redirect(url_for(".ModularForm_GSp4_Q_Sp4Z_j"))
     jrange = [x for x in jrange if x%2==0]
     try:
         dimtable = dimensions.dimension_table_Sp4Z_j(krange, jrange)
@@ -154,7 +168,7 @@ def ModularForm_GSp4_Q_top_level( page = None):
         if name:
             a,b = name.split('.')
             f = StringIO.StringIO( sample.export( a, b))
-            print f.getvalue()
+#            print f.getvalue()
             f.seek(0)
             return send_file( f,
                               attachment_filename = name + '.json',
@@ -216,7 +230,7 @@ def prepare_collection_page( col, args, bread):
     dim_args = args.get( 'dim_args')
     if not dim_args:
         dim_args = col.dim_args_default
-    print dim_args
+#    print dim_args
     if dim_args:
         try:
             dim_args = eval( dim_args)

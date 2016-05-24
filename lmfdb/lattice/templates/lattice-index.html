@@ -43,6 +43,12 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 <a href="?class_number={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p>
+<p>
+Some of our favourite {{ KNOWL('lattice.definition', title='integral lattices') }}:
+{% for rnge in info.name_list %}
+<a href="?label={{rnge}}"> {{rnge}} </a>
+{% endfor %}
+</p>
 <p>A <a href={{url_for('.random_lattice')}}>random integral lattice</a> from the database.
 <br>
 </p>
@@ -54,7 +60,7 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 <form>
 <input type='text' name='label' placeholder='3.4.8.1.2'>
 <button type='submit'>Label</button>
-<br><span class="formexample">e.g. 3.4.8.1.2, $D3$, $E8$, Leech lattice</span>
+<br><span class="formexample">e.g. 3.4.8.1.2, D3, E8, A14, Leech</span>
 </form>
 
 <h2> Search </h2>
@@ -106,10 +112,6 @@ By {{ KNOWL('lattice.class_number', title='Class number') }}:
 </td>
 </tr>
 
-<!--<tr><td align= right>{{ KNOWL('lattice.name', title='Name') }}:</td>-->
-<!--<td><input type='text' name='name' placeholder='D3' size=10>-->
-<!--<td><span class="formexample"> e.g. $D3$, $E8$, Leech lattice</td>-->
-<!--</tr>-->
 <tr>
 <td colspan=3><button type='submit' value='Search'>Search</button>
 </td>

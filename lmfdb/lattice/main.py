@@ -4,11 +4,11 @@ ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 import flask
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
 
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma
+from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma, random_object_from_collection
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
@@ -16,14 +16,20 @@ from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicFie
 from lmfdb.lattice import lattice_page, lattice_logger
 from lmfdb.lattice.lattice_stats import get_stats
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
+from lmfdb.lattice.isom import isom
 
 from markupsafe import Markup
+
+import time
+import os
+import ast
+import StringIO
 
 lattice_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
 
 
-# usiliary functions for displays 
+# utilitary functions for displays 
 
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
@@ -70,13 +76,15 @@ def lattice_render_webpage():
     args = request.args
     if len(args) == 0:
         counts = get_stats().counts()
-        dim_list= range(2, counts['max_dim']+1, 1)
-        class_number_list=range(1, counts['max_class_number']+1, 1)
-        det_list_endpoints = [1, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+        dim_list= range(1, 11, 1)
+        max_class_number=20
+        class_number_list=range(1, max_class_number+1, 1)
+        det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
 #        if counts['max_det']>3000:
 #            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
-        info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list}
+        name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
+        info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
         credit = lattice_credit
         t = 'Integral Lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
@@ -85,14 +93,10 @@ def lattice_render_webpage():
     else:
         return lattice_search(**args)
 
-
+# Random Lattice
 @lattice_page.route("/random")
-def random_lattice():    # Random Lattice
-    from sage.misc.prandom import randint
-    n = get_stats().counts()['nlattice']
-    n = randint(0,n-1)
-    C = getDBConnection()
-    res = C.Lattices.lat.find()[n]
+def random_lattice():
+    res = random_object_from_collection( getDBConnection().Lattices.lat )
     return redirect(url_for(".render_lattice_webpage", label=res['label']))
 
 
@@ -112,8 +116,11 @@ def lattice_by_label_or_name(lab, C):
 
 def lattice_search(**args):
     C = getDBConnection()
-#    C.Lattices.lat.ensure_index([('dim', ASC), ('label', ASC)])
     info = to_dict(args)  # what has been entered in the search boxes
+
+    if 'download' in info:
+        return download_search(info)
+
     if 'label' in info and info.get('label'):
         return lattice_by_label_or_name(info.get('label'), C)
     query = {}
@@ -159,7 +166,7 @@ def lattice_search(**args):
 #        start = start_default
 
     info['query'] = dict(query)
-    res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('label', ASC)]).skip(start).limit(count)
+    res = C.Lattices.lat.find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC)]).skip(start).limit(count)
     nres = res.count()
 
     # here we are checking for isometric lattices if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
@@ -168,7 +175,7 @@ def lattice_search(**args):
         A=query['gram'];
         n=len(A[0])
         d=matrix(A).determinant()
-        result=[B for B in C.Lattices.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])==True]
+        result=[B for B in C.Lattices.lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
         if len(result)>0:
             result=result[0]['gram']
             query_gram={ 'gram' : result }
@@ -246,8 +253,29 @@ def render_lattice_webpage(**args):
     info['hermite']=str(f['hermite'])
     info['minimum']=int(f['minimum'])
     info['kissing']=int(f['kissing'])
-    info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
     info['aut']=int(f['aut'])
+
+    if f['shortest']=="":
+        info['shortest']==f['shortest']
+    else:
+        if f['dim']==1:
+            info['shortest']=str(f['shortest']).strip('[').strip(']')
+        else:
+            if info['dim']*info['kissing']<100:
+                info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
+            else:
+                max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
+                info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
+                info['all_shortest']="no"
+        info['download_shortest'] = [
+            (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
+
+    if f['name']==['Leech']:
+        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
+str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
+        info['all_shortest']="no"
+        info['download_shortest'] = [
+            (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
     ncoeff=20
     if f['theta_series'] != "":
@@ -256,22 +284,46 @@ def render_lattice_webpage(**args):
         info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
 
     info['class_number']=int(f['class_number'])
-    info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
-    info['name']=str(f['name'])
+
+    if f['dim']==1:
+        info['genus_reps']=str(f['genus_reps']).strip('[').strip(']')
+    else:
+        if info['dim']*info['class_number']<50:
+            info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
+        else:
+            max_matrix_num=min(int(round(25/(info['dim']))), info['class_number']);
+            info['all_genus_rep']="no"
+            info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
+    info['download_genus_reps'] = [
+        (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma','sage']]
+
+    if f['name'] != "":
+        if f['name']==str(f['name']):
+            info['name']= str(f['name'])
+        else:
+            info['name']=str(", ".join(str(i) for i in f['name']))
+    else:
+        info['name'] == ""
     info['comments']=str(f['comments'])
+    if 'Leech' in info['comments']: # no need to duplicate as it is in the name
+        info['comments'] = ''
     if info['name'] == "":
         t = "Integral Lattice %s" % info['label']
     else:
         t = "Integral Lattice "+info['label']+" ("+info['name']+")"
-    if info['name'] != "" or info['comments'] !="":
-        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
+#This part code was for the dinamic knowl with comments, since the test is displayed this is redundant
+#    if info['name'] != "" or info['comments'] !="":
+#        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
     info['properties'] = [
         ('Dimension', '%s' %info['dim']),
         ('Determinant', '%s' %info['det']),
-        ('Level', '%s' %info['level']),
-        ('Class number', '%s' %info['class_number']),
-        ('Label', '%s' % info['label'])
-        ]
+        ('Level', '%s' %info['level'])]
+    if info['class_number'] == 0:
+        info['properties']=[('Class number', 'not available')]+info['properties']
+    else:
+        info['properties']=[('Class number', '%s' %info['class_number'])]+info['properties']
+    info['properties']=[('Label', '%s' % info['label'])]+info['properties']
+
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
@@ -288,38 +340,6 @@ def vect_to_sym(v):
             M[j,i] = v[k]
             k=k+1
     return [[int(M[i,j]) for i in range(n)] for j in range(n)]
-
-
-# function for checking isometries
-def isom(A,B):
-    # First check that A is a symmetric matrix.
-    if not matrix(A).is_symmetric():
-        return False
-    # Then check A against the viable database candidates.
-    else:
-        n=len(A[0])
-        m=len(B[0])
-        Avec=[]
-        Bvec=[]
-        for i in range(n):
-            for j in range(i,n):
-                if i==j:
-                    Avec+=[A[i][j]]
-                else:
-                    Avec+=[2*A[i][j]]
-        for i in range(m):
-            for j in range(i,m):
-                if i==j:
-                    Bvec+=[B[i][j]]
-                else:
-                    Bvec+=[2*B[i][j]]
-        Aquad=QuadraticForm(ZZ,len(A[0]),Avec)
-    # check positive definite
-        if Aquad.is_positive_definite():
-            Bquad=QuadraticForm(ZZ,len(B[0]),Bvec)
-            return Aquad.is_globally_equivalent_to(Bquad)
-        else:
-            return False
 
 
 #auxiliary function for displaying more coefficients of the theta series
@@ -366,4 +386,95 @@ def labels_page():
     credit = lattice_credit
     return render_template("single.html", kid='lattice.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+
+#download
+download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
+download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
+download_assignment_end = {'magma':';','sage':'','gp':''}
+download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
+
+def download_search(info):
+    lang = info["submit"]
+    filename = 'integral_lattices' + download_file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    # reissue saved query here
+
+    res = getDBConnection().Lattices.lat.find(ast.literal_eval(info["query"]))
+
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, res.count())
+    # The list entries are matrices of different sizes.  Sage and gp
+    # do not mind this but Magma requires a different sort of list.
+    list_start = '[*' if lang=='magma' else '['
+    list_end = '*]' if lang=='magma' else ']'
+    s += download_assignment_start[lang] + list_start + '\\\n'
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    # loop through all search results and grab the gram matrix
+    s += ",\\\n".join([entry(r['gram']) for r in res])
+    s += list_end
+    s += download_assignment_end[lang]
+    s += '\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True)
+
+
+@lattice_page.route('/<label>/download/<lang>/<obj>')
+def render_lattice_webpage_download(**args):
+    if args['obj'] == 'shortest_vectors':
+        response = make_response(download_lattice_full_lists_v(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+    elif args['obj'] == 'genus_reps':
+        response = make_response(download_lattice_full_lists_g(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+
+
+def download_lattice_full_lists_v(**args):
+    C = getDBConnection()
+    data = None
+    label = str(args['label'])
+    res = C.Lattices.lat.find_one({'label': label})
+    mydate = time.strftime("%d %B %Y")
+    if res is None:
+        return "No such lattice"
+    lang = args['lang']
+    c = download_comment_prefix[lang]
+    outstr = c + ' Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n\n'%(mydate)
+    outstr += download_assignment_start[lang] + '\\\n'
+    if res['name']==['Leech']:
+        outstr += str(res['shortest']).replace("'", "").replace("u", "")
+    else:
+        outstr += str(res['shortest'])
+    outstr += download_assignment_end[lang]
+    outstr += '\n'
+    return outstr
+
+
+def download_lattice_full_lists_g(**args):
+    C = getDBConnection()
+    data = None
+    label = str(args['label'])
+    res = C.Lattices.lat.find_one({'label': label})
+    mydate = time.strftime("%d %B %Y")
+    if res is None:
+        return "No such lattice"
+    lang = args['lang']
+    c = download_comment_prefix[lang]
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+
+    outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
+    outstr += download_assignment_start[lang] + '[\\\n'
+    outstr += ",\\\n".join([entry(r) for r in res['genus_reps']])
+    outstr += ']'
+    outstr += download_assignment_end[lang]
+    outstr += '\n'
+    return outstr
 

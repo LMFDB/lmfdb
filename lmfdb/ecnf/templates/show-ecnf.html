@@ -6,10 +6,11 @@
 </style>
 
 {% macro code(codes, item) %}
-{% for L in codes[item] %}
+{% set code = codes() %}
+{% for L in code[item] %}
 {# N.B. whitespace is preserved in the following div since the CSS has
 white-space: pre in order to keep line breaks! #}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for c in code[item][L] %}{{code.prompt[L]}}&nbsp;{{c}}<br>{% endfor %}</div>
 {% endfor %}
 {% endmacro %}
 
@@ -205,6 +206,13 @@ cellpadding="5";
         </td>
         </tr>
         <tr><td colspan=5>     {{ code(ec.code,'cm') }}</td></tr>
+
+        <tr>
+        <td> \( \text{ST} (E) \)</td>
+        <td>=</td>
+        <td>{{ ec.ST|safe }}</td>
+        </td>
+        </tr>
 
 </table>
 </div>

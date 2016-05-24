@@ -11,7 +11,7 @@ import re
 
 from flask import url_for
 
-from Lfunctionutilities import (p2sage, seriescoeff,
+from Lfunctionutilities import (p2sage, string2number, seriescoeff,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
                                 number_of_coefficients_needed,
@@ -81,20 +81,29 @@ def makeLfromdata(L, fromdb=False):
         L.motivic_weight = ''
 
     L.selfdual = data['self_dual']
+    if 'credit' in data.keys():
+        L.credit = data['credit']
     # Convert L.motivic_weight from python 'int' type to sage integer type.
     # This is necessary because later we need to do L.motivic_weight/2
     # when we write Gamma-factors in the arithmetic normalization.
     L.motivic_weight = ZZ(data['motivic_weight'])
     if 'root_number' in data:
-        L.sign = p2sage(data['root_number'])
+        L.sign = string2number(data['root_number'])
            # p2sage converts from the python string format in the database.
     else:
         L.sign = exp(2*pi*I*float(data['sign_arg'])).n()
-    L.mu_fe = [x+p2sage(data['analytic_normalization'])
-        for x in p2sage(data['gamma_factors'])[0]]
-    L.nu_fe = [x+p2sage(data['analytic_normalization'])
-        for x in p2sage(data['gamma_factors'])[1]]
+
+    L.mu_fe = []
+    for i in range(0,len(data['gamma_factors'][0])):
+        L.mu_fe.append(string2number(data['analytic_normalization']) +
+                       string2number(data['gamma_factors'][0][i]))
+
+    L.nu_fe = []
+    for i in range(0,len(data['gamma_factors'][1])):
+        L.nu_fe.append(string2number(data['analytic_normalization']) +
+                       string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
+
     # start items specific to hyperelliptic curves
     L.langlands = True
     L.poles = []
@@ -104,7 +113,7 @@ def makeLfromdata(L, fromdb=False):
     # end items specific to hyperelliptic curves
     L.numcoeff = 30
     # an(analytic) = An(arithmetic)/n^(motivic_weight/2), where an/An are Dir. coeffs
-
+    
     if 'dirichlet_coefficients' in data:
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     else:
@@ -121,7 +130,7 @@ def makeLfromdata(L, fromdb=False):
 
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
         base_power_int = int(data['coeff_info'][0][2:-3])
-        print 'base_power_int',base_power_int
+        #print 'base_power_int',base_power_int
         L.dirichlet_coefficients_analytic = L.dirichlet_coefficients_arithmetic[:]
         for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
             an = L.dirichlet_coefficients_arithmetic[n]
@@ -150,7 +159,8 @@ def makeLfromdata(L, fromdb=False):
                 else:
                     L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
                     L.dirichlet_coefficients_analytic[n] = exp(2*pi*I*float(an_power_int)/float(this_base_power_int)).n()
-        print "rename L.dirichlet_coefficients_analytic"
+
+        #print "rename L.dirichlet_coefficients_analytic"
         L.dirichlet_coefficients = L.dirichlet_coefficients_analytic[:]
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
@@ -354,11 +364,8 @@ class Lfunction_EC_Q(Lfunction):
         self.texname = "L(s,E)"
         self.texnamecompleteds = "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.title = ("L-function $L(s,E)$ for the Elliptic Curve Isogeny " +
-                      "Class " + self.label)
         self.properties = [('Degree ', '%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
-#        self.credit = 'Sage'
         self.credit = ''
         self.citation = ''
   #      self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E,
@@ -372,8 +379,7 @@ class Lfunction_EC_Q(Lfunction):
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
         self.texnamecompleteds_arithmetic = "\\Lambda(E,s)"
         self.texnamecompleted1ms_arithmetic = "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-        self.title_end = ("where $E$ is an elliptic curve "
-                      + "of conductor " + str(self.level))
+        self.title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
         self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
         self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
         self.title = "$" + self.texname + "$" + ", " + self.title_end
@@ -677,8 +683,9 @@ class Lfunction_HMF(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,f)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-        self.title = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp "
-                      + "form with parallel weight " + str(self.weight)
+        self.title = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp form " 
+                      + "over " + F.field_pretty() 
+                      + " with parallel weight " + str(self.weight)
                       + ", level norm " + str(f['level_norm']) )
         if self.character:
             self.title += ", and character " + str(self.character)
@@ -816,35 +823,13 @@ class Lfunction_Dirichlet(Lfunction):
             self.label = str(self.charactermodulus) + "." + str(self.characternumber)
             label_slash = self.label.replace(".","/")
             db_label = "Character/Dirichlet/" + label_slash
-        #    self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
             self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
-  #          if self.lfunc_data['self_dual']:
-  #              neg_zeros = ["-" + pos_zero for pos_zero in self.lfunc_data['positive_zeros']]
-  #          else:
-  #              dual_L_label = self.lfunc_data['conjugate']
-  #              dual_L_data = LfunctionDatabase.getEllipticCurveLData(dual_L_label)
-  #              neg_zeros = ["-" + pos_zero for pos_zero in dual_L_data['positive_zeros']]
-#
-#            neg_zeros.reverse()
-#            self.lfunc_data['zeros'] = neg_zeros[:]
-#            self.lfunc_data['zeros'] += [0 for _ in range(self.lfunc_data['order_of_vanishing'])]
-#            self.lfunc_data['zeros'] += self.lfunc_data['positive_zeros']
-#                
-#            self.lfunc_data["plot"] = []
             makeLfromdata(self, fromdb=True)
             self.fromDB = True
-#            self.plot = ""
-#            try:
-#                makeLfromdata(self)
-#                self.fromDB = True
-#            except:
-#                print "oooooooooooops"
-#                self.fromDB = False
-#                self.zeros = "zeros not available"
-#                self.plot = ""
-#
-#                chival = [ CC(z.real,z.imag) for z in chi.values()]
-#                self.dirichlet_coefficients = [ chival[k % self.level] for k in range(1,self.numcoeff) ]
+            if not self.selfdual:  #TODO: This should be done on a general level
+                modnumDual = self.lfunc_data['conjugate'].split('_')[2]
+                numDual = modnumDual.split('.')[1]
+                self.dual_link = "/L/Character/Dirichlet/%s/%s" % (self.level, numDual)
 
             self.poles = []
             self.residues = []
@@ -911,121 +896,149 @@ class Lfunction_Dirichlet(Lfunction):
 class Lfunction_Maass(Lfunction):
     """Class representing the L-function of a Maass form
 
-    Compulsory parameters: dbid
+    Compulsory parameters: dbid (if not from DB
 
     Possible parameters: dbName  (the name of the database for the Maass form)
                         dbColl  (the name of the collection for the Maass form)
-
+                        fromDB  (True if data is in Lfuntions database
     """
     def __init__(self, **args):
         constructor_logger(self, args)
 
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+
+        if not 'fromDB' in args.keys():
+            self.fromDB = False
+            
         # Check for compulsory arguments
-        if not 'dbid' in args.keys():
+        if not 'dbid' in args.keys() and not self.fromDB:
             raise KeyError("You have to supply dbid for the L-function of a "
                            + "Maass form")
 
         self._Ltype = "maass"
 
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
         self.initStandard()
         self.algebraic = False
 
-        [dbName, dbColl, dbEntry] = LfunctionDatabase.getLmaassByDatabaseId(args['dbid'])
-        # Fetch the information from the database
-        if dbColl == 'LemurellMaassHighDegree':  # Data from Lemurell
+        if self.fromDB:
+            self.dbid = "ModularForm/%s/Q/Maass/%s/%s/%s/%s/" % (
+                self.group, self.level, self.char, self.R, self.ap_id)
 
-            # Extract the L-function information from the database entry
-            self.__dict__.update(dbEntry)
-
-            # Extract L-function information from lcalfile in the database
-            import LfunctionLcalc
-            LfunctionLcalc.parseLcalcfile_ver1(self, self.lcalcfile)
-
-        elif dbColl == 'FarmerMaass':
-            self.__dict__.update(dbEntry)
-
-        elif dbColl == 'LemurellTest':
-            self.__dict__.update(dbEntry)
-            aa = self.real_shiftsR[0]
-            self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
-            self.lambda_fe = [0.5 * self.mu_fe[0], 0.5 * self.mu_fe[1]]
-            self.title = ("$L(s,f)$, where $f$ is a Maass cusp form with "
-                          + "level %s, eigenvalue %s, and %s" % (
-                          self.level, self.eigenvalue, self.characterName))
-
-        else:  # GL2 data from Then or Stromberg
-
-            DB = LfunctionDatabase.getMaassDb()
-            self.mf = WebMaassForm(DB, self.dbid, get_dirichlet_c_only=1)
-            self.group = 'GL2'
-
-            # Extract the L-function information from the Maass form object
-            self.symmetry = self.mf.symmetry
-            self.eigenvalue = float(self.mf.R)
-            self.level = int(self.mf.level)
-            self.charactermodulus = self.level
-            self.weight = int(self.mf.weight)
-            self.characternumber = int(self.mf.character)
-
-            if self.level > 1:
-                try:
-                    self.fricke = self.mf.fricke()
-                except:
-                    raise KeyError('No Fricke information available for '
-                                   + 'Maass form so not able to compute '
-                                   + 'the L-function. ')
-            else:  # no fricke for level 1
-                self.fricke = 1
-
-            # Todo: If self has dimension >1, link to specific L-functions
-            self.dirichlet_coefficients = self.mf.coeffs
-            if self.dirichlet_coefficients[0] == 0:
-                self.dirichlet_coefficients.pop(0)
-
-            # Set properties of the L-function
-            self.coefficient_type = 2
-            self.checkselfdual()
-            self.primitive = True
-            self.degree = 2
-            self.quasidegree = 2
-            if self.symmetry == "odd" or self.symmetry == 1:
-                self.sign = -self.fricke
-                aa = 1
-            else:
-                self.sign = self.fricke
-                aa = 0
+            self.lfunc_data = LfunctionDatabase.getGenus2Ldata(self.dbid)
+            if self.lfunc_data is None:
+                raise KeyError("No Maass L-function with that data in the database.")
             
-            self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
-            self.nu_fe = []           
-            self.kappa_fe = [0.5, 0.5]
-            self.lambda_fe = [0.5 * aa + self.eigenvalue *
-                              I / 2, 0.5 * aa - self.eigenvalue * I / 2]
-            self.Q_fe = float(sqrt(self.level)) / float(math.pi)
-            # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
-
+            makeLfromdata(self, fromdb=True)
+            if not self.selfdual:
+                self.dual_link = '/L' + self.lfunc_data['conjugate']
 
             self.texname = "L(s,f)"
             self.texnamecompleteds = "\\Lambda(s,f)"
-
             if self.selfdual:
                 self.texnamecompleted1ms = "\\Lambda(1-s,f)"
             else:
                 self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+            self.title = ("$L(s,f)$, where $f$ is a Maass cusp form of "
+                          + "level $%s$ on $%s$" % (
+                          self.level, self.group))
 
-            if self.characternumber != 1:
-                self.characterName = (" character \(\chi_{%s}(%s,\cdot)\)"
-                                 % (self.level, self.characternumber))
-            else:
-                self.characterName = " trivial character"
-            self.title = ("$L(s,f)$, where $f$ is a Maass cusp form with "
-                          + "level %s and $R= %s$" % (
-                          self.level, self.eigenvalue))
-            self.citation = ''
-            self.credit = self.mf.contributor_name
+        else:
+            self.algebraic = False
+            [dbName, dbColl, dbEntry] = LfunctionDatabase.getLmaassByDatabaseId(args['dbid'])
+            # Fetch the information from the database
+            if dbColl == 'LemurellMaassHighDegree':  # Data from Lemurell
 
-        generateSageLfunction(self)
+                # Extract the L-function information from the database entry
+                self.__dict__.update(dbEntry)
+
+                # Extract L-function information from lcalfile in the database
+                import LfunctionLcalc
+                LfunctionLcalc.parseLcalcfile_ver1(self, self.lcalcfile)
+
+            elif dbColl == 'FarmerMaass':
+                self.__dict__.update(dbEntry)
+
+            elif dbColl == 'LemurellTest':
+                self.__dict__.update(dbEntry)
+                aa = self.real_shiftsR[0]
+                self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
+                self.lambda_fe = [0.5 * self.mu_fe[0], 0.5 * self.mu_fe[1]]
+                self.title = ("$L(s,f)$, where $f$ is a Maass cusp form with "
+                              + "level %s, eigenvalue %s, and %s" % (
+                              self.level, self.eigenvalue, self.characterName))
+
+            else:  # GL2 data from Then or Stromberg
+
+                DB = LfunctionDatabase.getMaassDb()
+                self.mf = WebMaassForm(DB, self.dbid, get_dirichlet_c_only=1)
+                self.group = 'GL2'
+
+                # Extract the L-function information from the Maass form object
+                self.symmetry = self.mf.symmetry
+                self.eigenvalue = float(self.mf.R)
+                self.level = int(self.mf.level)
+                self.charactermodulus = self.level
+                self.weight = int(self.mf.weight)
+                self.characternumber = int(self.mf.character)
+
+                if self.level > 1:
+                    try:
+                        self.fricke = self.mf.fricke()
+                    except:
+                        raise KeyError('No Fricke information available for '
+                                       + 'Maass form so not able to compute '
+                                       + 'the L-function. ')
+                else:  # no fricke for level 1
+                    self.fricke = 1
+
+                # Todo: If self has dimension >1, link to specific L-functions
+                self.dirichlet_coefficients = self.mf.coeffs
+                if self.dirichlet_coefficients[0] == 0:
+                    self.dirichlet_coefficients.pop(0)
+
+                # Set properties of the L-function
+                self.coefficient_type = 2
+                self.checkselfdual()
+                self.primitive = True
+                self.degree = 2
+                self.quasidegree = 2
+                if self.symmetry == "odd" or self.symmetry == 1:
+                    self.sign = -self.fricke
+                    aa = 1
+                else:
+                    self.sign = self.fricke
+                    aa = 0
+                
+                self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
+                self.nu_fe = []           
+                self.kappa_fe = [0.5, 0.5]
+                self.lambda_fe = [0.5 * aa + self.eigenvalue *
+                                  I / 2, 0.5 * aa - self.eigenvalue * I / 2]
+                self.Q_fe = float(sqrt(self.level)) / float(math.pi)
+                # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
+
+
+                self.texname = "L(s,f)"
+                self.texnamecompleteds = "\\Lambda(s,f)"
+
+                if self.selfdual:
+                    self.texnamecompleted1ms = "\\Lambda(1-s,f)"
+                else:
+                    self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+
+                if self.characternumber != 1:
+                    self.characterName = (" character \(\chi_{%s}(%s,\cdot)\)"
+                                     % (self.level, self.characternumber))
+                else:
+                    self.characterName = " trivial character"
+                self.title = ("$L(s,f)$, where $f$ is a Maass cusp form with "
+                              + "level %s and $R= %s$" % (
+                              self.level, self.eigenvalue))
+                self.citation = ''
+                self.credit = self.mf.contributor_name
+
+            generateSageLfunction(self)
 
     def Lkey(self):
         return {"dbid": self.dbid}
@@ -1707,7 +1720,7 @@ class Lfunction_genus2_Q(Lfunction):
         self.texnamecompleted1ms_arithmetic = "\\Lambda(A, " + str(self.motivic_weight + 1) + "-s)"
 #        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
 #                      + "of conductor " + str(isoclass['cond']))
-        self.title_end = ("where $A$ is a genus 2 curve "
+        self.title_end = ("where $A$ is the Jacobian of a genus 2 curve "
 #                      + "of conductor " + str(isoclass['cond']))
                       + "with label " + self.label)
         self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end

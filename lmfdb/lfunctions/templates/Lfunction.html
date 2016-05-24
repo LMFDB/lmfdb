@@ -44,7 +44,9 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
  <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
 <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
 
-{% elif BETA %}
+{% elif Ltype=="riemann" %}
+
+{% elif algebraic %}
 <div align='center'><div style="display: inline-block; vertical-align:top;">{{ KNOWL('lfunction.normalization', title='Normalization') }}:  &nbsp; 
 </div>
 <div style="display: inline-block; vertical-align:top;">
@@ -200,13 +202,23 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
   {% if sv_edge_arithmetic %}
         <tr class="arithmetic">
         <td> ${{ sv_edge_arithmetic[0] }}$ </td>
+        {% if sv_edge_arithmetic[1] == 'not computed' %}
+        <td>&nbsp;</td>
+        <td> not available </td>
+        {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
         <td> ${{ sv_edge_arithmetic[1] }}$ </td>
+        {% endif %}
         </tr>
         <tr class="analytic nodisplay">
         <td> ${{ sv_edge_analytic[0] }}$ </td>
+        {% if sv_edge_analytic[1] == 'not computed' %}
+        <td>&nbsp;</td>
+        <td> not available </td>
+        {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
         <td> ${{ sv_edge_analytic[1] }}$ </td>
+        {% endif %}
         </tr>
   {% endif %}
 
@@ -228,7 +240,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
   </div>
  {% endif %}
 
-{% if not dirichlet_arithmetic %}
+{% if not dirichlet_arithmetic and algebraic %}
 <h2>Particular Values</h2>
 {#
 {% if dirichlet_arithmetic -%}

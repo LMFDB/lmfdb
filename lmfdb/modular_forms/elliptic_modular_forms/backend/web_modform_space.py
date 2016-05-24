@@ -27,6 +27,7 @@ AUTHORS:
  
  """
 
+import os, yaml
 from flask import url_for
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
@@ -86,12 +87,13 @@ class WebHeckeOrbits(WebDict):
     Collection of WebNewforms for easy access by name.
     """
 
-    def __init__(self, name, level, weight, character, parent=None,**kwds):
+    def __init__(self, name, level, weight, character, parent=None, prec=10, **kwds):
         emf_logger.debug("Get Hecke orbits! {0},{1},{2},{3},{4},kwds={5}".format(name,level,weight,character,type(parent),kwds))
         self.level = level
         self.weight = weight
         self.character = character
         self.parent = parent
+        self.prec = prec
         super(WebHeckeOrbits, self).__init__(
             name, None, save_to_db=True, save_to_fs=False,**kwds
             )
@@ -109,7 +111,7 @@ class WebHeckeOrbits(WebDict):
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached,WebNewForm
         res = {}
         for lbl in l:
-            F = WebNewForm(self.level, self.weight, self.character, lbl, parent=self.parent)
+            F = WebNewForm(self.level, self.weight, self.character, lbl, prec = self.prec, parent=self.parent)
             if F.coefficient_field.absolute_degree() > 1:
                 self._only_rational = False
             #F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
@@ -135,29 +137,33 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
     EXAMPLES::
     - We assume that we are starting from scratch.
-    TODO: UPDATE THIS documentation! It is quite old. M.newforms has been replaced by M.hecke_orbits and takes WebNewForm objects.
 
     sage: M=WebModFormSpace(1,12)
-    sage: M.galois_orbit_name
-    ''
-    sage: M.galois_orbit_name='1.12.1'
+    sage: M.space_label
+    '1.12.1'
+    sage: M.dimension
+    0
     sage: M.dimension=1
-    sage: M.dimension_newspace=1
+    sage: M.dimension_new_cusp_forms=1
     sage: M.dimension_cusp_forms=1
-    sage: M.newforms = {'a': delta_qexp(20)}
+    sage: M.dimension_modular_form=1
+    sage: f = WebNewForm(1,12,1,'a')
+    sage: f.q_expansion = delta_qexp(20)
+    sage: f.save_to_db()
+    sage: M.hecke_orbits = {'a': f}
     sage: M.save_to_db()
-    {'galois_orbit_name': '1.12.1', 'character': 1, 'weight': 12, 'level': 1}
-    sage: M1=WebModFormSpace(1,12)
-    sage: M1.galois_orbit_name
-    ''
-    sage: M1.newforms
+    sage: M._clear_cache_()
+    sage: f._clear_cache()
+    sage: del(M)
+    sage: del(f)
+    sage: M=WebModFormSpace(1,12, update_from_db=False)
+    sage: M.hecke_orbits
     {}
-    sage: M1.update_from_db()
-    sage: M1.newforms
-    {'a': q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - \
-    115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - \
-    6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)}
-
+    sage: M.update_from_db()
+    sage: M.hecke_orbits
+    {'a': WebNewform in S_12(1,chi_1) with label a}
+    sage: M.hecke_orbits['a'].q_expansion
+    q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - 115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - 6905934*q^17 + 2727432*q^18 + O(q^19)
     """
 
     _key = ['level', 'weight', 'character','version']
@@ -169,7 +175,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         _collection_name = 'webmodformspace'
         _dimension_table_name = 'dimension_table'
 
-    def __init__(self, level=1, weight=12, character=1,cuspidal=True, prec=10, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
+    def __init__(self, level=1, weight=12, character=1,cuspidal=True, new=True, prec=10, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
 
         # I added this reduction since otherwise there is a problem with
         # caching the hecke orbits (since they have self as  parent)
@@ -199,17 +205,20 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('dimension_modular_forms'),
             WebInt('dimension_new_cusp_forms'),
             WebBool('cuspidal', value=cuspidal),
+            WebBool('new', value=new),
             WebInt('prec', value=int(prec)), #precision of q-expansions
             WebSageObject('group'),
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
-                           character, self,include_in_update=update_hecke_orbits),
+                           character, self,  prec=prec, include_in_update=update_hecke_orbits),
             WebList('oldspace_decomposition', required=False),
             WebInt('bitprec', value=bitprec),
             WebFloat('version', value=float(emf_version), save_to_fs=True),
             WebList('zeta_orders',value=[],save_to_db=True),
             WebDate('creation_date',value=None,save_to_db=True)
                     )
+
+        self.make_code_snippets()
             
         emf_logger.debug("Have set properties of space 1 !!")
         super(WebModFormSpace, self).__init__(update_from_db=update_from_db, **kwargs)
@@ -225,6 +234,35 @@ class WebModFormSpace(WebObject, CachedRepresentation):
     def only_rational(self):
         return self._properties['hecke_orbits'].only_rational()
 
+    def data_from_dimension_db(self):
+        res = self.connect_to_db()[self._dimension_table_name].find_one({'space_label':self.space_label})
+        # make sure that the return value is always a dict.
+        if res == None:
+            return {}
+        return res
+
+    def make_code_snippets(self):
+         # read in code.yaml from numberfields directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        self.code = yaml.load(open(os.path.join(_curdir, "../code.yaml")))
+        
+        # Fill in placeholders for this specific space:
+        for lang in ['sage', 'magma']:
+            if self.character.order == 1:
+                self.code['newforms-triv-char'][lang] = self.code['newforms-triv-char'][lang].format(
+                    N=self.level, k=self.weight)
+            else:
+                self.code['newforms-nontriv-char'][lang] = self.code['newforms-nontriv-char'][lang].format(
+                    N=self.level, k=self.weight, elt=list(self.character.sage_character.element()))
+
+        for k in self.code:
+            if k != 'prompt' and k != 'f':
+                for lang in self.code[k]:
+                    self.code[k][lang] = self.code[k][lang].split("\n")
+                    # remove final empty line
+                    if len(self.code[k][lang][-1])==0:
+                        self.code[k][lang] = self.code[k][lang][:-1]
+
     def __repr__(self):
         if self.character.is_trivial():
             return "Space of (Web) Modular Forms of level {N}, weight {k}, and trivial character".format(
@@ -235,13 +273,14 @@ class WebModFormSpace(WebObject, CachedRepresentation):
 
 class WebModFormSpaceProperty(WebProperty):
 
-    def __init__(self, name, level=1, weight=12, character=1, value=None,update_hecke_orbits=False,include_in_update=False):
+    def __init__(self, name, level=1, weight=12, character=1, value=None, update_from_db=True, \
+                 update_hecke_orbits=False,include_in_update=False):
         self.level = level
         self.weight = weight
         self.character = character
         emf_logger.debug("CCCCharacter = {0}".format(self.character))
         if value is None:
-            value = WebModFormSpace_cached(self.level, self.weight, self.character,update_hecke_orbits=update_hecke_orbits)
+            value = WebModFormSpace_cached(self.level, self.weight, self.character, update_from_db=update_from_db, update_hecke_orbits=update_hecke_orbits)
         emf_logger.debug("CCCCharacter = {0}".format(self.character))
         super(WebModFormSpaceProperty, self).__init__(name,
                                                       include_in_update=include_in_update,

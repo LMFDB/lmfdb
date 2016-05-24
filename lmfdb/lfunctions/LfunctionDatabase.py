@@ -7,6 +7,7 @@ from lmfdb.lfunctions import logger
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
      import MaassDB
 
+from Lfunctionutilities import p2sage
 
 def getLmaassByDatabaseId(dbid):
     collList = [('Lfunction','LemurellMaassHighDegree'),
@@ -63,7 +64,7 @@ def getGenus2Ldata(label,label_type="url"):
             # we are just filling in the dual data  
             return Ldata
             
-        if Ldata['order_of_vanishing']:
+        if Ldata['order_of_vanishing'] or 'leading_term' not in Ldata.keys():
             central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
         else:
             central_value = [0.5 + 0.5*Ldata['motivic_weight'],Ldata['leading_term']]
@@ -78,7 +79,8 @@ def getGenus2Ldata(label,label_type="url"):
 
         if Ldata['self_dual']:
             neg_zeros = ["-" + str(pos_zero) for pos_zero in Ldata['positive_zeros']]
-            neg_plot = [ [-1*pt[0], Ldata['root_number'] * pt[1]] for pt in pos_plot ][1:]
+            root_number = p2sage(Ldata['root_number'])
+            neg_plot = [ [-1*pt[0], root_number * pt[1]] for pt in pos_plot ][1:]
 
         else:   # can't happen for genus 2 curves
             dual_L_label = Ldata['conjugate']
@@ -108,7 +110,7 @@ def getGenus2Ldata(label,label_type="url"):
 
         neg_plot.reverse()
         Ldata['plot'] = neg_plot[:] + pos_plot[:]
-        print "Ldata['plot']",Ldata['plot']
+        #print "Ldata['plot']",Ldata['plot']
 
     except ValueError:
         Ldata = None
