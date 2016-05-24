@@ -179,6 +179,6 @@ class EmfTest(LmfdbTest):
         Test that a space that is nontrivially zero is clickable and the page tells us that the space has no newforms.
         """
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/5/4')
-        assert "" in page.data
-        page = self.tc.get('ModularForm/GL2/Q/holomorphic/5/4')
+        assert "ModularForm/GL2/Q/holomorphic/5/4/4/" in page.data
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/5/4/4')
         assert "There are no newforms" in page.data
