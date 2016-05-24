@@ -42,10 +42,9 @@ class RootTest(LmfdbTest):
     def test_db(self):
         assert self.C is not None
         known_dbnames = self.C.database_names()
-        expected_dbnames = ['Lfunctions', 'elliptic_curves', 'numberfields', 'localfields',
-                            'MaassWaveForm', 'HTPicard', 'Lfunction',
-                            'upload', 'knowledge', 'hmfs', 'bmfs', 'userdb',
-                            'modularforms', 'hgm', 'genus2_curves']
+        expected_dbnames = ['Lfunctions', 'elliptic_curves', 'numberfields', 'localfields', 'artin',
+                            'HTPicard', 'upload', 'knowledge', 'hmfs', 'bmfs', 'userdb', 'Lattices', 'MaassWaveForms',
+                            'modularforms2', 'hgm', 'genus2_curves', 'siegel_modular_forms', 'sato_tate_groups']
         for dbn in expected_dbnames:
             assert dbn in known_dbnames, 'db "%s" missing' % dbn
 

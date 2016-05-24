@@ -68,10 +68,9 @@ import pymongo
 from lmfdb import base
 from sage.rings.all import ZZ
 
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
+from lmfdb.base import getDBConnection
 print "getting connection"
-C= MongoClient(port=dbport)
+C= getDBConnection()
 print "authenticating on the elliptic_curves database"
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))

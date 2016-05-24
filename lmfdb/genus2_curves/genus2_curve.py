@@ -172,6 +172,7 @@ def render_curve_webpage_by_label(label):
                            properties2=data.properties,
                            credit=credit,
                            data=data,
+                           code=data.code,
                            bread=data.bread,
                            learnmore=learnmore_list(),
                            title=data.title,

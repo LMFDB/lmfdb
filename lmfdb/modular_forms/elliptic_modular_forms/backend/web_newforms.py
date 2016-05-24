@@ -28,6 +28,7 @@ AUTHORS:
  """
 
 import re
+from copy import deepcopy
 
 from flask import url_for
 import pymongo
@@ -62,7 +63,9 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
         newform_label, 
         space_label, 
-        parse_newform_label)
+        parse_newform_label,
+        orbit_index_from_label
+    )
 
 from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 
@@ -346,14 +349,13 @@ class WebNewForm(WebObject, CachedRepresentation):
 #                                    include_in_update = True if parent is None
 #                                    else False),
             )
-        emf_logger.debug("After init properties 1, update_from_db = {}".format(update_from_db))
+
         self._add_to_fs_query = {'prec': {'$gt': int(prec-1)}}
-        emf_logger.debug("add_to_fs_query = {}".format(self._add_to_fs_query))
+
         super(WebNewForm, self).__init__(
             update_from_db=update_from_db,
             **kwargs
             )
-        emf_logger.debug("After init properties 2")
 
         self._add_to_fs_query = {'prec': {'$gt': int(self.prec-1)}}
         
@@ -368,8 +370,8 @@ class WebNewForm(WebObject, CachedRepresentation):
         self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec, \
                                               init_dynamic_properties=False, \
                                               update_from_db = update_from_db)
-        
-        emf_logger.debug("After init properties 3")
+
+        self.make_code_snippets()
 
     def update_from_db(self, ignore_precision = False, ignore_precision_if_failed = True, **kwargs):
         # this finds the (file) record with the
@@ -737,6 +739,21 @@ class WebNewForm(WebObject, CachedRepresentation):
         s = s + "#sage: f['character']\n#{}".format(self.character.sage_character)
         emf_logger.debug("Generated sage file for {}".format(self.hecke_orbit_label))
         return s
+
+    def sage_newform_number(self):
+        ##store this in the db!!
+        return orbit_index_from_label(self.label)
+
+    def make_code_snippets(self):
+        self.code = deepcopy(self.parent.code)
+        self.code['show'] = {'sage':''}
+        # Fill in placeholders for this specific newform:
+        self.code['f']['sage'] = self.code['f']['sage'].format(newform_number=self.sage_newform_number())
+
+        self.code['f']['sage'] = self.code['f']['sage'].split("\n")
+        # remove final empty line
+        if len(self.code['f']['sage'][-1])==0:
+            self.code['f']['sage'] = self.code['f']['sage'][:-1]
 
     def dump_coefficients(self, prec):
         if prec is None:

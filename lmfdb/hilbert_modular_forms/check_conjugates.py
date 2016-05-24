@@ -19,10 +19,10 @@ from lmfdb.website import DEFAULT_DB_PORT as dbport
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals,
  conjideals, str2ideal, HilbertNumberField)
-from pymongo import MongoClient
 
-from pymongo.mongo_client import MongoClient
-C= MongoClient(port=dbport)
+from lmfdb.base import getDBConnection
+print "getting connection"
+C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by default
 
 print "authenticating on the hmfs database"

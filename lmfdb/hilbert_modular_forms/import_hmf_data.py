@@ -7,9 +7,9 @@ import sage.misc.preparser
 import subprocess
 from sage.interfaces.magma import magma
 
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
-C= MongoClient(port=dbport)
+from lmfdb.base import getDBConnection
+print "getting connection"
+C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 import yaml

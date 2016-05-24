@@ -250,9 +250,13 @@ def parse_primes(inp, query, qfield, mode=None, to_string=False):
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if format_ok:
         if to_string:
+            primes = sorted(primes)
             primes = [str(p) for p in primes]
         if mode == 'complement':
             query[qfield] = {"$nin": primes}
+        elif mode == 'liststring':
+            primes = [str(p) for p in primes]
+            query[qfield] = ",".join(primes)
         elif mode == 'exact':
             query[qfield] = sorted(primes)
         elif mode == "append":
