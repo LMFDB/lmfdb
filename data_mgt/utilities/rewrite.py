@@ -15,7 +15,7 @@ from time import time
 #
 # Example usage: rewrite_collection(db,"old_stuff","new_stuff",lambda x: x)
 #
-# For collections with large records, you will want to specify a batchsize smaller than 10000
+# For collections with large records, you will want to specify a batchsize smaller than 1000
 #
 def rewrite_collection(db,incoll,outcoll,func, batchsize=1000):
     if outcoll in db.collection_names():
