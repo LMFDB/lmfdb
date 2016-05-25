@@ -23,20 +23,29 @@
 </tr>
 <tr>
 <td align='left'> {{KNOWL('nf.discriminant', title='discriminant')}} range <td align='left' colspan='2'> <input type='text' name='discriminant' size='20' value="{{info.discriminant}}"></td>
-<td align=right>
-{% if info.ram_quantifier == 'some' %}
+<td align=right colspan="2">
+ {{KNOWL('nf.ramified_prime', title='ramified primes')}}
+{% if info.ram_quantifier == 'contained' %}
 <select name = "ram_quantifier">
-  <option selected='yes' value='some'>some</option>
-  <option value='all'>all</option>
+  <option value='contained' selected='yes'>contained in</option>
+  <option value='exactly'>exactly</option>
+  <option value='include'>include</option>
+</select>
+{% elif info.ram_quantifier == 'exactly' %}
+<select name = "ram_quantifier">
+  <option value='contained'>contained in</option>
+  <option value='exactly' selected='yes'>exactly</option>
+  <option value='include'>include</option>
 </select>
 {% else %}
 <select name = "ram_quantifier">
-  <option value='some'>some</option>
-  <option selected='yes' value='all'>all</option>
+  <option value='contained'>contained in</option>
+  <option value='exactly' >exactly</option>
+  <option value='include' selected='yes'>include</option>
 </select>
 {% endif %}
-<td align=left>
- {{KNOWL('nf.ramified_prime', title='ramified primes')}}<td align=left> <input type='text' name='ram_primes' size=5 value="{{info.ram_primes}}"></td>
+ <td align=left> <input type='text' name='ram_primes' size=5 value="{{info.ram_primes}}"></td>
+
 </tr>
 
 <tr>
