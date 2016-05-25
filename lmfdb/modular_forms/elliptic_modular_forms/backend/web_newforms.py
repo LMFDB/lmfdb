@@ -369,7 +369,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         
         self.eigenvalues = WebEigenvalues(self.hecke_orbit_label, prec = self.prec, \
                                               init_dynamic_properties=False, \
-                                              update_from_db = update_from_db)
+                                              update_from_db = False)
 
         self.make_code_snippets()
 
