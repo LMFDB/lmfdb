@@ -277,7 +277,7 @@ def curves(line):
 
     Sample input line:
 
-    2.0.4.1 [65,18,1] a 1 [65,18,1] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
+    2.0.4.1 65.18.1 a 1 [65,18,1] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
     """
     # Parse the line and form the full label:
     data = split(line)
