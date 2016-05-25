@@ -379,10 +379,10 @@ def endo_statement(factorsQQ, factorsRR, ring, fieldstring):
                     % (ring[0], fieldstring)
         # Otherwise mention whether the order is Eichler:
         elif ring[1] == 1:
-            statement += """an Eichler order of index \(%s\) in \(\End (J_{%s}) \otimes \Q\)"""\
+            statement += """an Eichler order of index \(%s\) in a maximal order of \(\End (J_{%s}) \otimes \Q\)"""\
                 % (ring[0], fieldstring)
         else:
-            statement += """a non-Eichler order of index \(%s\) in \(\End (J_{%s}) \otimes \Q\)"""\
+            statement += """a non-Eichler order of index \(%s\) in a maximal order of \(\End (J_{%s}) \otimes \Q\)"""\
                 % (ring[0], fieldstring)
     # Finally the case of two factors. We can prettify to some extent, since we
     # can describe the maximal order here
