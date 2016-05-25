@@ -21,6 +21,7 @@ AUTHOR: Fredrik Strömberg
 """
 import random
 import sage.plot.plot
+from sage.all import AlphabeticStrings
 from flask import jsonify,flash,Markup
 from lmfdb.utils import *
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec,emf_version
@@ -109,6 +110,27 @@ def parse_space_label(label):
             raise ValueError
     except ValueError:
         raise ValueError,"{0} is not a valid space label!".format(label)
+
+@cached_function
+def orbit_index_from_label(label):
+    r"""
+    Inverse of the above
+    """
+    res = 0
+    A = AlphabeticStrings()
+    x = A.gens()
+    label = str(label)
+    l = list(label)
+    
+    su = A(l.pop().upper())
+    res = x.index(su)
+    l.reverse()
+    i = 1
+    for s in l:
+        su = A(s.upper())
+        res+=(1+x.index(su))*26**i
+        i+=1
+    return res
 
 @cached_function
 def dimension_from_db(level,weight,chi=None,group='gamma0'):

@@ -298,7 +298,7 @@ class WebDirichlet(WebCharObject):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
             self.H = H = DirichletGroup_conrey(m)
-        self.credit = 'Sage'
+        self.credit = 'SageMath'
         self.codelangs = ('pari', 'sage')
 
     def _char_desc(self, c, mod=None, prim=None):
@@ -454,7 +454,7 @@ class WebHecke(WebCharObject):
         #self.number = lmfdb_label2hecke(self.numlabel)
         # make this canonical
         self.modlabel = self.ideal2label(self._modulus)
-        self.credit = "Pari, Sage"
+        self.credit = "Pari, SageMath"
         self.codelangs = ('pari', 'sage')
         self.parity = None
         logger.debug('###### WebHeckeComputed')
@@ -599,7 +599,7 @@ class WebHecke(WebCharObject):
 class WebCharFamily(WebCharObject):
     """ compute first groups """
     _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
-            'nfpol', 'codeinit', 'headers', 'contents' ]   
+            'nfpol', 'code', 'headers', 'contents' ]   
     headers = [ 'modulus', 'order', 'structure', 'first characters' ]
 
     def __init__(self, **args):
@@ -886,7 +886,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     @property
     def codeinit(self):
         return {
-                'sage': 'H = DirichletGroup_conrey(%i)\n'%(self.modulus),
+                'sage': 'H = DirichletGroup_conrey(%i)'%(self.modulus),
                 'pari': 'g = idealstar(,%i,2)'%(self.modulus)
                 }
 
@@ -914,7 +914,7 @@ class WebSmallDirichletGroup(WebDirichletGroup):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
             self.H = Integers(m).unit_group()
-        self.credit = 'Sage'
+        self.credit = 'SageMath'
         self.codelangs = ('pari', 'sage')
 
     @property
@@ -1019,12 +1019,11 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
             return { 'sage': 'kronecker_character(%i)'%m }
         return None
 
-
     @property
     def codegaloisorbit(self):
         return { 'sage': 'chi_sage.galois_orbit()',
                  'pari': [
-                     '[mod,num,order] = [%i,%i,%i]'%(self.modulus,self.num,self.order),
+                     '[mod,num,order] = [%i,%i,%i]'%(self.modulus,self.number,self.order),
                      '[Mod(num,mod)^k | k<-[1..order-1], gcd(k,order)==1]',
                      #'order = charorder(g,chi)',
                      #'[ chi*k % order | k <-[1..order-1], gcd(k,order)==1 ]'
@@ -1196,7 +1195,7 @@ class WebHeckeExamples(WebHecke):
                      #'4.4.2403.1',
                      #'4.2.283.1',
                      ]
-        self.credit = "Pari, Sage"
+        self.credit = "Pari, SageMath"
         self.codelangs = ('pari', 'sage')
 
     @property
@@ -1226,7 +1225,7 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
 
     def _compute(self):
         self.k = self.label2nf(self.nflabel)
-        self.credit = 'Pari, Sage'
+        self.credit = 'Pari, SageMath'
         self.codelangs = ('pari', 'sage')
 
     def first_moduli(self, bound=200):

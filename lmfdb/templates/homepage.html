@@ -1,7 +1,18 @@
 {% extends "base.html" %}
 {% import 'color.css' as color %}
 
-{% import 'color.css' as color %}
+{% macro place_code(item) %}
+{% if code and code[item] %}
+{% for L in code[item] %}
+{% if code[item][L] %}
+{% set lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]] %}
+{% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
+{# keep the line below as is to avoid annoying line breaks #}
+<div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<br>{% endfor %}</div>
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endmacro %}
 
 {% block body -%}
 <div id="header">
@@ -198,7 +209,32 @@
         {%- endfor %}
       </div>
     {%- endwith %}
-    
+    {% if code %}
+        <script>
+        var cur_lang = null;
+        function show_code(new_lang) {
+           {% for lang in code['show'] %}
+           $('.{{lang}}').hide();
+           {% endfor %}
+            if (cur_lang == new_lang) {
+              cur_lang = null;
+            } else {
+              $('.'+new_lang).show();
+              $('.'+new_lang).css('display','inline-block');
+              cur_lang = new_lang;
+            }
+        }
+        </script>
+        <div align="right">
+            Show commands for:
+            {% set slash = joiner("/ ") %}
+            {% for lang in code['show'] %}
+            {# override show names for standard languages to ensure consistency #}
+            {% set show = 'Pari/GP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else code['show']['lang'] %}
+            {{slash()}}<a onclick="show_code('{{lang}}'); return false" href='#'>{{show}}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
     {% block content -%}
     There is nothing here. This is just a template.
     {%- endblock content %}

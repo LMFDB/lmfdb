@@ -425,11 +425,3 @@ class ECNF(object):
 
         for lang in ['sage', 'magma', 'pari']:
             self._code['curve'][lang] = self._code['curve'][lang] % self.ainvs
-
-        for k in self._code:
-            if k != 'prompt':
-                for lang in self._code[k]:
-                    self._code[k][lang] = self._code[k][lang].split("\n")
-                    # remove final empty line
-                    if len(self._code[k][lang][-1])==0:
-                        self._code[k][lang] = self._code[k][lang][:-1]
