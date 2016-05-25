@@ -51,7 +51,7 @@ def rewrite_collection(db,incoll,outcoll,func, batchsize=1000, reindex=True):
 #
 def reindex_collection(db,incoll,outcoll):
     indexes = db[incoll].index_information()
-    keys = [(k,indexes[k]['key']) for k in indexes]
+    keys = [(k,indexes[k]['key']) for k in indexes if k != '_id_']
     keys.sort() # sort indexes by keyname so (attr1) < (attr1,attr2) < (attr1,attr2,attr3) < ...
     for i in range(len(keys)):
         now = time()
