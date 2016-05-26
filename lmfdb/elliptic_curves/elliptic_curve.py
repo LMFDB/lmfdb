@@ -99,12 +99,8 @@ def rational_elliptic_curves(err_args=None):
 
 @ec_page.route("/random")
 def random_curve():
-    label = random_object_from_collection( db_ec() )['label']
-    # This version leaves the word 'random' in the URL:
-    # return render_curve_webpage_by_label(label)
-    # This version uses the curve's own URL:
-    return redirect(url_for(".by_ec_label", label=label), 301)
-
+    label = random_object_from_collection( db_ec() )['lmfdb_label']
+    return render_curve_webpage_by_label(label)
 
 @ec_page.route("/curve_of_the_day")
 def todays_curve():
