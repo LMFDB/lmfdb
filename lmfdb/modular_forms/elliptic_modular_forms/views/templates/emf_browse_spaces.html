@@ -121,7 +121,7 @@ function set_value(id,val) {
 {%endif%}
 
 <h1>Browse holomorphic {{KNOWL('mf.elliptic.newform',title='newforms')}} for {{group}}</h1>
-    <p>Go to a <a href={{url_for('.random_form')}}>random modular form</a> from the database.</p>
+{#    <p>Go to a <a href={{url_for('.random_form')}}>random modular form</a> from the database.</p> #}
 {% set table = info.table %}
 <!-- check of the table is empty -->
 {% set vars = {'emptytable': true} %}
