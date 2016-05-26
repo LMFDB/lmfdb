@@ -328,6 +328,10 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebNumberField('base_ring'),
             WebNumberField('coefficient_field'),
             WebInt('coefficient_field_degree'),
+            WebInt('_coeff_cplxty'), #complexity of coefficients, used to hide q_expansions, for instance
+            WebInt('_nv_coeff_trace'), #trace of first a(n) \neq 0 with n>1
+            WebInt('_nv_coeff_norm'), #norm of first a(n) \neq 0 with n>1
+            WebInt('_nv_coeff_index'), #smallest n s.t. a(n) \neq 0 with n>1
             WebList('twist_info', required = False),
             WebInt('is_cm', required = False),
             WebInt('cm_disc', required = False, default_value=0),
@@ -442,25 +446,37 @@ class WebNewForm(WebObject, CachedRepresentation):
                 else:
                     return self.coefficient(n)
 
+    def first_nonvanishing_coefficient_norm(self):
+        if not self._properties['_nv_coeff_norm'].has_been_set():
+            self._nv_coeff_norm = self.first_nonvanishing_coefficient().norm()
+        return self._nv_coeff_norm
+
+    def first_nonvanishing_coefficient_trace(self):
+        if not self._properties['_nv_coeff_trace'].has_been_set():
+            self._nv_coeff_trace = self.first_nonvanishing_coefficient().trace()
+        return self._nv_coeff_trace
+
     def complexity_of_first_nonvanishing_coefficients(self, number_of_coefficients=3):
-        m = 0
-        n = 0
-        j = 2
-        while j < self.prec and n < number_of_coefficients:
-            c = self.coefficient(j)
-            j+=1
-            if c != 0:
-                n += 1
-            else:
-                continue
-            l = c.list()
-            if l[0].parent().absolute_degree() == 1:
-                a = len(str(max(r.height() for r in l)))*len(l)
-            else:
-                a = len(str(max(r.height()*len(s.list()) for s in l for r in s.list())))*len(l)
-            if a > m:
-                m = a
-        return m
+        if not self._properties['_coeff_cplxty'].has_been_set():
+            m = 0
+            n = 0
+            j = 2
+            while j < self.prec and n < number_of_coefficients:
+                c = self.coefficient(j)
+                j+=1
+                if c != 0:
+                    n += 1
+                else:
+                    continue
+                l = c.list()
+                if l[0].parent().absolute_degree() == 1:
+                    a = len(str(max(r.height() for r in l)))*len(l)
+                else:
+                    a = len(str(max(r.height()*len(s.list()) for s in l for r in s.list())))*len(l)
+                if a > m:
+                    m = a
+            self._coeff_cplxtym = m
+        return self._coeff_cplxtym
 
     def coefficient_embeddings(self, prec):
         if not 'values' in self._embeddings:
