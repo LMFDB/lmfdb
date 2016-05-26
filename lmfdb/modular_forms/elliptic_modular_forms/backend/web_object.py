@@ -607,31 +607,32 @@ class WebObject(object):
         except OperationFailure:
             emf_logger.critical("Authentication failed. You are not authorized to save data to the database!")
             return False
-        file_key = self.file_key_dict()
-        coll = self._file_collection
-        if fs.exists(file_key):
-            emf_logger.debug("File exists with key={0}".format(file_key))
-            if not update:
+        if self._use_gridfs:
+            file_key = self.file_key_dict()
+            coll = self._file_collection
+            if fs.exists(file_key):
+                emf_logger.debug("File exists with key={0}".format(file_key))
+                if not update:
+                    return True
+                else:
+                    fid = coll.find_one(file_key, projection=['_id'])['_id']
+                    fs.delete(fid)
+                    emf_logger.debug("Deleted file with fid={0}".format(fid))
+            # insert
+            s = dumps(self.fs_dict())
+            if not self._use_separate_db:
+                file_key.update(self.db_dict())
+            try:
+                t = fs.put(s, **file_key)
+                emf_logger.debug("Inserted file with filekey={1}".format(t,file_key))
+            except Exception, e:
+                emf_logger.debug("Could not insert file with filekey={1}".format(s,file_key))
+                emf_logger.warn("Error inserting record: {0}".format(e))
+            #fid = coll.find_one(key)['_id']
+            # insert extended record
+            if not self._use_separate_db:
+                self.logout()
                 return True
-            else:
-                fid = coll.find_one(file_key, projection=['_id'])['_id']
-                fs.delete(fid)
-                emf_logger.debug("Deleted file with fid={0}".format(fid))
-        # insert
-        s = dumps(self.fs_dict())
-        if not self._use_separate_db:
-            file_key.update(self.db_dict())
-        try:
-            t = fs.put(s, **file_key)
-            emf_logger.debug("Inserted file with filekey={1}".format(t,file_key))
-        except Exception, e:
-            emf_logger.debug("Could not insert file with filekey={1}".format(s,file_key))
-            emf_logger.warn("Error inserting record: {0}".format(e))
-        #fid = coll.find_one(key)['_id']
-        # insert extended record
-        if not self._use_separate_db:
-            self.logout()
-            return True
         coll = self._collection
         key = self.key_dict()
         #key.update(file_key)
