@@ -205,7 +205,7 @@ class WebEC(object):
             D = self.signD * prod([ld['p']**ld['ord_disc'] for ld in local_data])
             data['disc'] = D
             Nfac = Factorization([(ZZ(ld['p']),ld['ord_cond']) for ld in local_data])
-            Dfac = Factorization([(ZZ(ld['p']),ld['ord_disc']) for ld in local_data])
+            Dfac = Factorization([(ZZ(ld['p']),ld['ord_disc']) for ld in local_data], unit=ZZ(self.signD))
 
             data['minq_D'] = minqD = self.min_quad_twist['disc']
             minq_label = self.min_quad_twist['label']
@@ -220,7 +220,7 @@ class WebEC(object):
                 data['an'] = self.anlist
                 data['ap'] = self.aplist
             else:
-                r = db_ec.find_one({'lmfdb_label':self.lmfdb_label, 'number':1}, ['anlist','aplist'])
+                r = db_ec().find_one({'lmfdb_iso':self.lmfdb_iso, 'number':1}, ['anlist','aplist'])
                 data['an'] = r['anlist']
                 data['ap'] = r['aplist']
 
