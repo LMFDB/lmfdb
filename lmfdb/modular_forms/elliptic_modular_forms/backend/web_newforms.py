@@ -318,11 +318,12 @@ class WebCoeffs(WebProperty):
             raise TypeError("Expected coeffs to be of type dict, got {}".format(type(coeffs)))
         if len(coeffs) == 0:
             return coeffs
-        self.set_elt_type()
+        self.set_elt_type(coeffs)
         return coeffs
 
-    def set_elt_type(self, elt_type=None):
-        coeffs = self._value
+    def set_elt_type(self, coeffs=None, elt_type=None):
+        if coeffs is None:
+            coeffs = self._value
         if elt_type is None:
             if isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_absolute):
                 self._elt_type = 'nfabs'
