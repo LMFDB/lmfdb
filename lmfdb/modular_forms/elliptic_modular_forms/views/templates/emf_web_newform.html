@@ -234,7 +234,7 @@ are shown in the table below. Note that these include embeddings that do not pre
   {% endif %}
 <h2>Download this Newform </h2>
 
-The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn }} \).
+The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1 }} \).
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
 <input type="hidden" name="download" value="coefficients"/>
 <input type="hidden" name="max_num" value="{{max_cn}}"/>
@@ -283,7 +283,7 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn }} 
   {% if max_cn  < 100 %}
     {% set examplemax = max_cn %}
   {% endif %}
-  <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn }})
+  <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn - 1 }})
   <br><span class=" " id="num_error"></span>
 </td>
 </tr>

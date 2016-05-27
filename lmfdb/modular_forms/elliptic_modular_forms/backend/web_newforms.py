@@ -356,9 +356,11 @@ class WebCoeffs(WebProperty):
                 convert_to = 'poly'
         if convert_to == 'poly':
             if self._elt_type == 'nfabs':
+                emf_logger.debug("Converting from nfabs to poly!")
                 R = PolynomialRing(QQ,names=str(self._value.values()[0].parent().gen()))
                 self._value  = {k: R(str(v)) for k,v in self._value.iteritems()}
             elif self._elt_type == 'nfrel':
+                emf_logger.debug("Converting from nfrel to poly!")
                 R = PolynomialRing(QQ,names=str(self._value.values()[0].parent().base_ring().gen()))
                 T = PolynomialRing(R,names=str(self._value.values()[0].parent().gen()))
                 #R = PolynomialRing(QQ, names=[str(self._value.values()[0].parent().base_ring().gen()),\
