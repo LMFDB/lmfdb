@@ -392,7 +392,7 @@ class WebCoeffs(WebProperty):
             return self._nv_coeff_trace
         try:
             a = self.first_nonvanishing_coefficient()
-            self._nv_coeff_norm = a.trace()
+            self._nv_coeff_trace = a.trace()
             return self._nv_coeff_trace
         except AttributeError as e:
             emf_logger.critical(e)
