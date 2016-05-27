@@ -278,6 +278,172 @@ class WebEigenvalues(WebObject, CachedRepresentation):
 
     def __repr__(self):
         return "Collection of {0} eigenvalues.".format(len(self._ap))
+        
+        
+
+class WebCoeffs(WebProperty):
+    
+    def __init__(self, name,
+                default_value=None, convert_to = 'auto',
+                     save_to_db=True, save_to_fs=True):
+        if default_value is None:
+            default_value = {}
+        self._convert_to = convert_to
+        self._elt_type = None
+        self._coeff_cplxty = 0 #complexity of coefficients, used to hide q_expansions, for instance
+        self._nv_coeff_index = None #smallest n s.t. a(n) \neq 0 with n>1
+        self._nv_coeff_norm = None #norm of first a(n) \neq 0 with n>1
+        self._nv_coeff_trace = None  #trace of first a(n) \neq 0 with n>1
+        super(WebCoeffs, self).__init__(name, default_value=default_value)
+
+    def from_db(self, coeffs_props):
+        if not coeffs_props is None:
+            self._coeff_cplxty = coeffs_props['coeffs_cplxty']
+            self._nv_coeff_index = coeffs_props['nv_coeff_index']
+            self._nv_coeff_norm = Integer(coeffs_props['nv_coeff_norm'])
+            self._nv_coeff_trace = Integer(coeffs_props['nv_coeff_trace'])
+
+    def to_db(self):
+        return {'coeffs_cplxty': self._coeff_cplxty,
+                    'nv_coeff_index': self._nv_coeff_index,
+                    'nv_coeff_norm': str(self._nv_coeff_norm),
+                    '_nv_coeff_trace': str(self._nv_coeff_trace)}
+    
+
+    def from_fs(self, coeffs):
+        if not isinstance(coeffs, dict):
+            raise TypeError("Expected coeffs to be of type dict, got {}".format(type(coeffs)))
+        if isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_absolute):
+            self._elt_type = 'nfabs'
+        elif isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_relative):
+            self._elt_type = 'nfrel'
+        elif isinstance(coeffs.values()[0], sage.rings.rational.Rational):
+            self._elt_type = 'rational'
+        elif isinstance(coeffs.values()[0], sage.rings.polynomial.polynomial_element.Polynomial_generic_dense):
+            self._elt_type = 'poly'
+        return coeffs
+
+    def to_fs(self):
+        convert_to = self._convert_to
+        #more types to come?
+        if not convert_to in ['auto', 'poly', None]:
+            raise NotImplementedError("convert to {} not Implemented".format(convert_to))
+        if convert_to is None:
+            return self._value
+        if convert_to == 'auto':
+            if self._elt_type == 'nfrel':
+                convert_to = 'poly'
+        if convert_to == 'poly':
+            if self._elt_type == 'rational':
+                return self._db_value
+            elif self._elt_type == 'nfabs':
+                R = PolynomialRing(QQ,names=str(self._value.values()[0].parent().gen()))
+                return map(lambda x: R(x.list()), self._value)
+            elif self._elt_type == 'nfrel':
+                R = PolynomialRing(QQ,names=str(self._value.values()[0].parent().base_ring().gen()))
+                T = PolynomialRing(R,names=str(self._value.values()[0].parent().gen()))
+                #R = PolynomialRing(QQ, names=[str(self._value.values()[0].parent().base_ring().gen()),\
+                #                                  str(self._value.values()[0].parent().gen())])
+                return map(lambda x: T(str(x)), self._value)
+        return self._value
+
+    def value(self):
+        return self
+
+    def __getitem__(self, n):
+        return self._value[n]
+
+    def get(self,n,default=None):
+        return self._value.get(n,default)
+
+    def first_nonvanishing_coefficient(self, return_index=False)
+        r"""
+        The smallest a(n) with n>1, such that a(n) is nonzero
+        """
+        if self._nv_coeff_index is not None:
+            a = self.get(self._nv_coeff_index)
+            if return_index:
+                return n, a
+            else:
+                return a
+        else:
+            for n in range(2,len(self._value)):
+                a = self.get(n)
+                if a != 0:
+                    if return_index:
+                        return n, a
+                    else:
+                        return a
+
+    def first_nonvanishing_coefficient_norm(self):
+        if self._nv_coeff_norm is not None:
+            return self._nv_coeff_norm
+        try:
+            a = self.first_nonvanishing_coefficient()
+            self._nv_coeff_norm = a.norm()
+            return self._nv_coeff_norm
+        except AttributeError as e:
+            emf_logger.critical(e)
+        
+    def first_nonvanishing_coefficient_trace(self):
+        if self._nv_coeff_trace is not None:
+            return self._nv_coeff_trace
+        try:
+            a = self.first_nonvanishing_coefficient()
+            self._nv_coeff_norm = a.trace()
+            return self._nv_coeff_trace
+        except AttributeError as e:
+            emf_logger.critical(e)
+
+    def coefficient_complexity(self, number_of_coefficients=3):
+        #works for polynomial type elements as well as for number field elements
+        if self._coeff_cplxty == 0:
+            m = 0
+            n = 0
+            j = 2
+            while j < len(self._value) and n < number_of_coefficients:
+                c = self.get(j)
+                j+=1
+                if c != 0:
+                    n += 1
+                else:
+                    continue
+                l = c.list()
+                if isinstance(l[0], sage.rings.rational.Rational):
+                    # in case of an absolute number field or a polynomial in one variable over QQ
+                    a = len(str(max(r.height() for r in l)))*len(l)
+                else:
+                    # in case of a relative number field element
+                    # or a polynomial ring over a polynomial ring mimicking the relative extension
+                    a = len(str(max(r.height()*len(s.list()) for s in l for r in s.list())))*len(l)
+                if a > m:
+                    m = a
+            self._coeff_cplxty = m
+        return self._coeff_cplxtym
+
+    def __setitem__(self, n, v):
+        self._value[n] = v
+        if n>1 and v != 0:
+            if self._nv_coeff_index is None or self._nv_coeff_index > n:
+                #setting first non-vanishing (n>1) coefficient and its norm and trace automatically
+                self._nv_coeff_index = n
+                self.first_nonvanishing_coefficient_norm()
+                self.first_nonvanishing_coefficient_trace()
+
+    def iteritems(self):
+        return self._value.iteritems()
+
+    def __iter__(self):
+        return self._value.itervalues()
+
+    def __len__(self):
+        return len(self._value)
+
+    def __contains__(self, a):
+        return a in self._value
+
+    def __repr__(self):
+        return "Collection of {0} coefficients.".format(len(self._value))
 
     
 class WebNewForm(WebObject, CachedRepresentation):
@@ -322,16 +488,12 @@ class WebNewForm(WebObject, CachedRepresentation):
             WebStr('label', default_value=label),
             WebInt('dimension'),
             WebqExp('q_expansion'),
-            WebDict('_coefficients'),
+            WebCoeffs('_coefficients'),
             WebDict('_embeddings'),
             WebInt('prec',value=0, save_to_db=False, save_to_fs=True), 
             WebNumberField('base_ring'),
             WebNumberField('coefficient_field'),
             WebInt('coefficient_field_degree'),
-            WebInt('_coeff_cplxty'), #complexity of coefficients, used to hide q_expansions, for instance
-            WebInt('_nv_coeff_trace'), #trace of first a(n) \neq 0 with n>1
-            WebInt('_nv_coeff_norm'), #norm of first a(n) \neq 0 with n>1
-            WebInt('_nv_coeff_index'), #smallest n s.t. a(n) \neq 0 with n>1
             WebList('twist_info', required = False),
             WebInt('is_cm', required = False),
             WebInt('cm_disc', required = False, default_value=0),
@@ -439,44 +601,16 @@ class WebNewForm(WebObject, CachedRepresentation):
          of index >1 that does not vanish.
          if return_index is True, we also return the index of that coefficient
         """
-        for n in range(2,self.prec):
-            if self.coefficient(n) != 0:
-                if return_index:
-                    return n, self.coefficient(n)
-                else:
-                    return self.coefficient(n)
+        return self._coefficients.first_nonvanishing_coefficient()
 
     def first_nonvanishing_coefficient_norm(self):
-        if not self._properties['_nv_coeff_norm'].has_been_set():
-            self._nv_coeff_norm = self.first_nonvanishing_coefficient().norm()
-        return self._nv_coeff_norm
+        return self._coefficients.first_nonvanishing_coefficient_norm()
 
     def first_nonvanishing_coefficient_trace(self):
-        if not self._properties['_nv_coeff_trace'].has_been_set():
-            self._nv_coeff_trace = self.first_nonvanishing_coefficient().trace()
-        return self._nv_coeff_trace
+        return self._coefficients.first_nonvanishing_coefficient_trace()
 
     def complexity_of_first_nonvanishing_coefficients(self, number_of_coefficients=3):
-        if not self._properties['_coeff_cplxty'].has_been_set():
-            m = 0
-            n = 0
-            j = 2
-            while j < self.prec and n < number_of_coefficients:
-                c = self.coefficient(j)
-                j+=1
-                if c != 0:
-                    n += 1
-                else:
-                    continue
-                l = c.list()
-                if l[0].parent().absolute_degree() == 1:
-                    a = len(str(max(r.height() for r in l)))*len(l)
-                else:
-                    a = len(str(max(r.height()*len(s.list()) for s in l for r in s.list())))*len(l)
-                if a > m:
-                    m = a
-            self._coeff_cplxtym = m
-        return self._coeff_cplxtym
+        return self._coefficients.coefficient_complexity(number_of_coefficients)
 
     def coefficient_embeddings(self, prec):
         if not 'values' in self._embeddings:
@@ -716,12 +850,13 @@ class WebNewForm(WebObject, CachedRepresentation):
                 prec = want_prec
             emf_logger.debug("Creating a new record with prec = {}".format(prec))
             self.prec=prec
-            include_qexp = self.complexity_of_first_nonvanishing_coefficients() <= default_max_height
-            if include_qexp:
+            include_coeffs = self.complexity_of_first_nonvanishing_coefficients() <= default_max_height
+            if include_coeffs:
                 self.q_expansion = self.q_expansion.truncate_powerseries(prec)
+                self._coefficients = {n:c for n,c in self._coefficients.iteritems() if n<prec}
             else:
                 self.q_expansion = self.q_expansion.truncate_powerseries(1)
-            self._coefficients = {n:c for n,c in self._coefficients.iteritems() if n<prec}
+                self._coefficients.save_to_fs = False
             self._embeddings['values'] = {n:c for n,c in self._embeddings['values'].iteritems() if n<prec}
             self._embeddings['prec'] = prec
             self.save_to_db()

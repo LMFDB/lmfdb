@@ -130,8 +130,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         info['qexp_display'] = ''
         info['hide_qexp'] = True
         n,c = WNF.first_nonvanishing_coefficient()
-        info['trace_nv'] = latex(c.trace())
-        info['norm_nv'] = '\\approx ' + latex(c.norm().n())
+        info['trace_nv'] = latex(WNF.first_nonvanishing_coefficient_trace())
+        info['norm_nv'] = '\\approx ' + latex(WNF.first_nonvanishing_coefficient_norm().n())
         info['index_nv'] = n
     else:
         info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
