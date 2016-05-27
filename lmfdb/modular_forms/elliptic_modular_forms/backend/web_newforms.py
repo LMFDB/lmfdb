@@ -336,6 +336,8 @@ class WebCoeffs(WebProperty):
             self._elt_type = elt_type
 
     def to_fs(self):
+        if len(self._value) == 0:
+            return self._value
         convert_to = self._convert_to
         #more types to come?
         if not convert_to in ['auto', 'poly', None]:
@@ -358,6 +360,7 @@ class WebCoeffs(WebProperty):
                 T = PolynomialRing(R,names=str(self._value.values()[0].parent().gen()))
                 #R = PolynomialRing(QQ, names=[str(self._value.values()[0].parent().base_ring().gen()),\
                 #                                  str(self._value.values()[0].parent().gen())])
+                self._elt_type = 'poly'
                 return {k: T(str(v)) for k,v in self._value.iteritems()}
         return self._value
 
