@@ -295,7 +295,7 @@ class WebCoeffs(WebProperty):
         self._nv_coeff_index = None #smallest n s.t. a(n) \neq 0 with n>1
         self._nv_coeff_norm = None #norm of first a(n) \neq 0 with n>1
         self._nv_coeff_trace = None  #trace of first a(n) \neq 0 with n>1
-        super(WebCoeffs, self).__init__(name, default_value=default_value)
+        super(WebCoeffs, self).__init__(name, default_value=default_value, save_to_db=save_to_db, save_to_fs=save_to_fs)
 
     def from_db(self, coeffs_props):
         if not coeffs_props is None:
