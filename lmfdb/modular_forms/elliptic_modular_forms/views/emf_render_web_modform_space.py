@@ -100,7 +100,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
             dimension_table_name = WebModFormSpace._dimension_table_name
             db_dim = getDBConnection()['modularforms2'][dimension_table_name]
             rep = db_dim.find_one({'level': level, 'weight': weight, 'character_orbit': {'$in': [character]}})
-            if not rep is None:
+            if not rep is None and not rep['cchi'] == character: # don't link back to myself!
                 info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=rep['cchi'])
                 info['wmfs_rep_number'] =  rep['cchi']
         if 'download' in info and 'tempfile' in info:

@@ -27,7 +27,7 @@ AUTHORS:
  
  """
 
-import re
+import re, sage
 from copy import deepcopy
 
 from flask import url_for
@@ -100,7 +100,8 @@ from sage.all import (
      primes_first_n,
      floor,
      loads,
-     dumps
+     dumps,
+     PolynomialRing
      )
 
 from sage.matrix.matrix_integer_dense import Matrix_integer_dense
@@ -344,7 +345,7 @@ class WebCoeffs(WebProperty):
                 T = PolynomialRing(R,names=str(self._value.values()[0].parent().gen()))
                 #R = PolynomialRing(QQ, names=[str(self._value.values()[0].parent().base_ring().gen()),\
                 #                                  str(self._value.values()[0].parent().gen())])
-                return map(lambda x: T(str(x)), self._value)
+                return {k: T(str(x)) for k,v in self._value.iteritems()}
         return self._value
 
     def value(self):
@@ -419,7 +420,7 @@ class WebCoeffs(WebProperty):
                 if a > m:
                     m = a
             self._coeff_cplxty = m
-        return self._coeff_cplxtym
+        return self._coeff_cplxty
 
     def __setitem__(self, n, v):
         self._value[n] = v
