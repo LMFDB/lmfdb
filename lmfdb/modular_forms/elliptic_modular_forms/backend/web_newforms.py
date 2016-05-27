@@ -303,17 +303,21 @@ class WebCoeffs(WebProperty):
             self._nv_coeff_index = coeffs_props['nv_coeff_index']
             self._nv_coeff_norm = Integer(coeffs_props['nv_coeff_norm'])
             self._nv_coeff_trace = Integer(coeffs_props['nv_coeff_trace'])
+            self._elt_type = coeffs_props['elt_type']
 
     def to_db(self):
         return {'coeffs_cplxty': self._coeff_cplxty,
                     'nv_coeff_index': self._nv_coeff_index,
                     'nv_coeff_norm': str(self._nv_coeff_norm),
-                    '_nv_coeff_trace': str(self._nv_coeff_trace)}
+                    'nv_coeff_trace': str(self._nv_coeff_trace),
+                    'elt_type': self._elt_type}
     
 
     def from_fs(self, coeffs):
         if not isinstance(coeffs, dict):
             raise TypeError("Expected coeffs to be of type dict, got {}".format(type(coeffs)))
+        if len(coeffs) == 0:
+            return coeffs
         if isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_absolute):
             self._elt_type = 'nfabs'
         elif isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_relative):
