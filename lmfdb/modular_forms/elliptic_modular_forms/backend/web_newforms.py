@@ -341,6 +341,8 @@ class WebCoeffs(WebProperty):
         return self._value
 
     def convert(self):
+        if len(self._value) == 0:
+            pass
         convert_to = self._convert_to
         #more types to come?
         if not convert_to in ['auto', 'poly', None]:
@@ -353,11 +355,9 @@ class WebCoeffs(WebProperty):
             if self._elt_type == 'nfrel':
                 convert_to = 'poly'
         if convert_to == 'poly':
-            if self._elt_type == 'rational':
-                return self._db_value
-            elif self._elt_type == 'nfabs':
+            if self._elt_type == 'nfabs':
                 R = PolynomialRing(QQ,names=str(self._value.values()[0].parent().gen()))
-                return map(lambda x: R(x.list()), self._value)
+                self._value  = {k: R(str(v)) for k,v in self._value.iteritems()}
             elif self._elt_type == 'nfrel':
                 R = PolynomialRing(QQ,names=str(self._value.values()[0].parent().base_ring().gen()))
                 T = PolynomialRing(R,names=str(self._value.values()[0].parent().gen()))
@@ -869,7 +869,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             else:
                 prec = want_prec
             emf_logger.debug("Creating a new record with prec = {}".format(prec))
-            self.prec=prec
+            self.prec = prec
             include_coeffs = self.complexity_of_first_nonvanishing_coefficients() <= default_max_height
             if include_coeffs:
                 self.q_expansion = self.q_expansion.truncate_powerseries(prec)
