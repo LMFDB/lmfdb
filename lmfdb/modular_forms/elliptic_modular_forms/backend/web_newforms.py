@@ -899,7 +899,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                   cfgen=str(self.coefficient_field.gen()), cfpol=self.absolute_polynomial
                   )
         elif self.coefficient_field.relative_degree() > 1:
-            s += 'y = polygen(K)'
+            s += "y = polygen(K)\n"
             s +=  "L.<{cfgen}> = NumberField({cfpol})\n".format(
                   cfgen=str(self.coefficient_field.gen()), cfpol=self.coefficient_field.relative_polynomial().change_variable_name('y')
                   )
@@ -907,10 +907,8 @@ class WebNewForm(WebObject, CachedRepresentation):
             N = self.level
             )
         C = self.character.sage_character.parent()
-        if C.zeta_order()>2 and not self.coefficient_field.is_relative():
-            s = s + "{Dzeta}=CyclotomicField({Dzord}).gen()\n".format(Dzord=C.zeta_order(), Dzeta = C.zeta())
-        s = s + "f = {{'coefficients': {coeffs}, 'level' : {level}, 'weight': {weight}, 'character': D.Element(D,{vog}), 'label': '{label}','dimension': {dim}, 'is_cm': {cm} , 'cm_discriminant': {cm_disc}, 'atkin_lehner': {al}, 'explicit_formulas': {ep}}}".format(coeffs = self.coefficients(range(prec)),
-            level=self.level, weight=self.weight, vog = self.character.sage_character.values_on_gens(), label=self.hecke_orbit_label, dim=self.dimension, cm=self.is_cm, cm_disc=None if not self.is_cm else self.cm_disc , al=self.atkin_lehner_eigenvalues(),
+        s = s + "f = {{'coefficients': {coeffs}, 'level' : {level}, 'weight': {weight}, 'character': D.Element(D,vector({elt})), 'label': '{label}','dimension': {dim}, 'is_cm': {cm} , 'cm_discriminant': {cm_disc}, 'atkin_lehner': {al}, 'explicit_formulas': {ep}}}".format(coeffs = self.coefficients(range(prec)),
+            level=self.level, weight=self.weight, elt = self.character.sage_character.element(), label=self.hecke_orbit_label, dim=self.dimension, cm=self.is_cm, cm_disc=None if not self.is_cm else self.cm_disc , al=self.atkin_lehner_eigenvalues(),
             ep = self.explicit_formulas
             )
         s = s + "\n\n#EXAMPLE\n"
