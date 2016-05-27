@@ -303,9 +303,9 @@ class WebCoeffs(WebProperty):
             self._nv_coeff_index = coeffs_props['nv_coeff_index']
             self._nv_coeff_norm = Integer(coeffs_props['nv_coeff_norm'])
             self._nv_coeff_trace = Integer(coeffs_props['nv_coeff_trace'])
-            self._elt_type = coeffs_props['elt_type']
 
     def to_db(self):
+        self.convert()
         return {'coeff_cplxty': self._coeff_cplxty,
                     'nv_coeff_index': self._nv_coeff_index,
                     'nv_coeff_norm': str(self._nv_coeff_norm),
@@ -337,14 +337,16 @@ class WebCoeffs(WebProperty):
             self._elt_type = elt_type
 
     def to_fs(self):
-        if len(self._value) == 0:
-            return self._value
+        self.convert()
+        return self._value
+
+    def convert(self):
         convert_to = self._convert_to
         #more types to come?
         if not convert_to in ['auto', 'poly', None]:
             raise NotImplementedError("convert to {} not Implemented".format(convert_to))
         if convert_to is None:
-            return self._value
+            pass
         if self._elt_type is None:
             self.set_elt_type()
         if convert_to == 'auto':
@@ -362,8 +364,7 @@ class WebCoeffs(WebProperty):
                 #R = PolynomialRing(QQ, names=[str(self._value.values()[0].parent().base_ring().gen()),\
                 #                                  str(self._value.values()[0].parent().gen())])
                 self._elt_type = 'poly'
-                return {k: T(str(v)) for k,v in self._value.iteritems()}
-        return self._value
+                self._value = {k: T(str(v)) for k,v in self._value.iteritems()}
 
     def value(self):
         return self
