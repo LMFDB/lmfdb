@@ -75,10 +75,6 @@ from lmfdb.modular_forms.elliptic_modular_forms import (
      default_max_height
      )
 
-from sage.rings.number_field.number_field_base import (
-     NumberField
-     )
-
 from sage.rings.power_series_poly import PowerSeries_poly
 
 from sage.all import (
@@ -101,7 +97,8 @@ from sage.all import (
      floor,
      loads,
      dumps,
-     PolynomialRing
+     PolynomialRing,
+     NumberField
      )
 
 from sage.matrix.matrix_integer_dense import Matrix_integer_dense
