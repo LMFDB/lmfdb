@@ -186,6 +186,14 @@ def render_Dirichletwebpage(modulus=None, number=None):
             info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
             return render_template('Character.html', **info)
 
+@characters_page.route('/Dirichlet/random')
+def random_Dirichletwebpage():
+    modulus = randint(1,99999)
+    number = randint(1,modulus-1)
+    while gcd(modulus,number) > 1:
+        number = randint(1,modulus-1)
+    return redirect(url_for('.render_Dirichletwebpage', modulus=str(modulus), number=str(number)))
+
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
     val = request.args.get("val", [])

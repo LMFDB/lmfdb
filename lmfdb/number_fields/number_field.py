@@ -453,9 +453,13 @@ def number_field_search(**args):
         parse_ints(info,query,'class_number')
         parse_bracketed_posints(info,query,'class_group',split=False,check_divisibility='increasing')
         parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',mode='complement',to_string=True)
-        if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'some':
+        # modes are now contained (in), exactly, include
+        if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
             mode = 'append'
             parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
+        elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
+            parse_primes(info,query,'ram_primes','ramified primes','ramps_all','subsets',to_string=False)
+            pass # build list
         else:
             mode = 'liststring'
             parse_primes(info,query,'ram_primes','ramified primes','ramps_all',mode)
