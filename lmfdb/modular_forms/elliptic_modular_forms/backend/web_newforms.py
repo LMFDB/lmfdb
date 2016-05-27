@@ -475,7 +475,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     else:
         _collection_name = 'webnewforms'
 
-    def __init__(self, level=1, weight=12, character=1, label='a', prec=10, parent=None, update_from_db=True,**kwargs):
+    def __init__(self, level=1, weight=12, character=1, label='a', prec=0, parent=None, update_from_db=True,**kwargs):
         emf_logger.debug("In WebNewForm {0}".format((level,weight,character,label,parent,update_from_db)))
         if isinstance(level,basestring) or kwargs.has_key('hecke_orbit_label'):
             hecke_orbit_label = kwargs.get('hecke_orbit_label', level)

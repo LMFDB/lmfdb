@@ -175,7 +175,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         _collection_name = 'webmodformspace'
         _dimension_table_name = 'dimension_table'
 
-    def __init__(self, level=1, weight=12, character=1,cuspidal=True, new=True, prec=10, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
+    def __init__(self, level=1, weight=12, character=1,cuspidal=True, new=True, prec=0, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
 
         # I added this reduction since otherwise there is a problem with
         # caching the hecke orbits (since they have self as  parent)
