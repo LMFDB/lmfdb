@@ -179,13 +179,14 @@ class WebqExp(WebPoly):
             return ''
 
     def set_from_coefficients(self, coeffs):
-        QR = PowerSeriesRing(QQ,name='q',order='neglex')
-        q = QR.gen()
-        res = 0*q**0
-        for n, c in coeffs.iteritems():
-            res += c*q**n
-        res = res.add_bigoh(len(coeffs.keys())+1)
-        self.set_value(res)
+        if not len(coeffs) == 0:
+            QR = PowerSeriesRing(coeffs.values()[0].parent(),name='q',order='neglex')
+            q = QR.gen()
+            res = 0*q**0
+            for n, c in coeffs.iteritems():
+                res += c*q**n
+            res = res.add_bigoh(len(coeffs.keys())+1)
+            self.set_value(res)
 
 
 class WebEigenvalues(WebObject, CachedRepresentation):
