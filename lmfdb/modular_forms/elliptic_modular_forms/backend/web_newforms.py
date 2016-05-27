@@ -295,18 +295,18 @@ class WebCoeffs(WebProperty):
         self._nv_coeff_index = None #smallest n s.t. a(n) \neq 0 with n>1
         self._nv_coeff_norm = None #norm of first a(n) \neq 0 with n>1
         self._nv_coeff_trace = None  #trace of first a(n) \neq 0 with n>1
-        super(WebCoeffs, self).__init__(name, default_value=default_value, save_to_db=save_to_db, save_to_fs=save_to_fs)
+        super(WebCoeffs, self).__init__(name, default_value=default_value, save_to_db=save_to_db, save_to_fs=save_to_fs, extend_fs_with_db = True)
 
     def from_db(self, coeffs_props):
         if not coeffs_props is None:
-            self._coeff_cplxty = coeffs_props['coeffs_cplxty']
+            self._coeff_cplxty = coeffs_props['coeff_cplxty']
             self._nv_coeff_index = coeffs_props['nv_coeff_index']
             self._nv_coeff_norm = Integer(coeffs_props['nv_coeff_norm'])
             self._nv_coeff_trace = Integer(coeffs_props['nv_coeff_trace'])
             self._elt_type = coeffs_props['elt_type']
 
     def to_db(self):
-        return {'coeffs_cplxty': self._coeff_cplxty,
+        return {'coeff_cplxty': self._coeff_cplxty,
                     'nv_coeff_index': self._nv_coeff_index,
                     'nv_coeff_norm': str(self._nv_coeff_norm),
                     'nv_coeff_trace': str(self._nv_coeff_trace),
