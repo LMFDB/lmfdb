@@ -86,11 +86,13 @@ Enter values into one or more boxes to restrict the search.
    <td><input type='text' name='ur_primes' size=10 example='2,3'>
 <span class="formexample"> e.g. 2,3</span></td>
 <td>
-<td align=left><select name='ram_quantifier'>
-  <option value='some'>some</option>
-  <option value='all'>all</option>
+<td>
+set of {{KNOWL('nf.ramified_prime', title='ramified primes')}} 
+<select name='ram_quantifier'>
+  <option value='contained'>subset of</option>
+  <option value='exactly' selected='yes'>equal to</option>
+  <option value='include'>superset of</option>
   </select>
-{{KNOWL('nf.ramified_prime', title='ramified primes')}} 
   <td><input type='text' name='ram_primes' size=10 example='2,3'>
 <span class="formexample"> e.g. 2,3</span></td>
 </tr>
