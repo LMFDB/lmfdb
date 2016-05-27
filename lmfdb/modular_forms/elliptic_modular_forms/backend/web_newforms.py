@@ -887,6 +887,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                 self.q_expansion = self.q_expansion.truncate_powerseries(1)
                 self._coefficients = {}
                 self.prec = 0
+                self.coefficient_field = NumberField(self.absolute_polynomial, str(self.coefficient_field.gen()))
             self._embeddings['values'] = {n:c for n,c in self._embeddings['values'].iteritems() if n<prec}
             self._embeddings['prec'] = prec
             self.save_to_db()

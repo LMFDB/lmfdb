@@ -965,7 +965,7 @@ class WebNumberField(WebDict):
             label = self._db_value
             setattr(self._value, "lmfdb_pretty", field_pretty(label))
         else:
-            if self._value.absolute_degree()==1:
+            if self._value == QQ:
                 label = '1.1.1.1'
                 setattr(self._value, "lmfdb_pretty", field_pretty(label))
                 setattr(self._value, "lmfdb_label", label)
