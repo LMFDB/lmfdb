@@ -362,7 +362,8 @@ class WebCoeffs(WebProperty):
         The smallest a(n) with n>1, such that a(n) is nonzero
         """
         if self._nv_coeff_index is not None:
-            a = self.get(self._nv_coeff_index)
+            n = self._nv_coeff_index
+            a = self.get(n)
             if return_index:
                 return n, a
             else:
