@@ -908,7 +908,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             )
         C = self.character.sage_character.parent()
         s = s + "f = {{'coefficients': {coeffs}, 'level' : {level}, 'weight': {weight}, 'character': D.Element(D,vector({elt})), 'label': '{label}','dimension': {dim}, 'is_cm': {cm} , 'cm_discriminant': {cm_disc}, 'atkin_lehner': {al}, 'explicit_formulas': {ep}}}".format(coeffs = self.coefficients(range(prec)),
-            level=self.level, weight=self.weight, elt = self.character.sage_character.element(), label=self.hecke_orbit_label, dim=self.dimension, cm=self.is_cm, cm_disc=None if not self.is_cm else self.cm_disc , al=self.atkin_lehner_eigenvalues(),
+            level=self.level, weight=self.weight, elt = list(self.character.sage_character.element()), label=self.hecke_orbit_label, dim=self.dimension, cm=self.is_cm, cm_disc=None if not self.is_cm else self.cm_disc , al=self.atkin_lehner_eigenvalues(),
             ep = self.explicit_formulas
             )
         s = s + "\n\n#EXAMPLE\n"
