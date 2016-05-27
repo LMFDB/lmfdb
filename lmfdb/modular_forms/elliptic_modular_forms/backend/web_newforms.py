@@ -858,7 +858,8 @@ class WebNewForm(WebObject, CachedRepresentation):
                 self._coefficients = {n:c for n,c in self._coefficients.iteritems() if n<prec}
             else:
                 self.q_expansion = self.q_expansion.truncate_powerseries(1)
-                self._coefficients.save_to_fs = False
+                self._coefficients = {}
+                self.prec = 0
             self._embeddings['values'] = {n:c for n,c in self._embeddings['values'].iteritems() if n<prec}
             self._embeddings['prec'] = prec
             self.save_to_db()
