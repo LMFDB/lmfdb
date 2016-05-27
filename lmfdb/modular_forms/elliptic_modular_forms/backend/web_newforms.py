@@ -322,6 +322,7 @@ class WebCoeffs(WebProperty):
         return coeffs
 
     def set_elt_type(self, elt_type=None):
+        coeffs = self._value
         if elt_type is None:
             if isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_absolute):
                 self._elt_type = 'nfabs'
