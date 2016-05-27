@@ -165,7 +165,7 @@ class WebqExp(WebPoly):
 
     def to_db(self):
         if not self.value() is None:
-            if self.value().base_ring().absolute_degree() > 1:
+            if not self.value().base_ring() == QQ:
                 return ''
             f = self.value().truncate_powerseries(1001)
             s = str(f)
