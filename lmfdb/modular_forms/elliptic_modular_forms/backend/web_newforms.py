@@ -318,15 +318,21 @@ class WebCoeffs(WebProperty):
             raise TypeError("Expected coeffs to be of type dict, got {}".format(type(coeffs)))
         if len(coeffs) == 0:
             return coeffs
-        if isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_absolute):
-            self._elt_type = 'nfabs'
-        elif isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_relative):
-            self._elt_type = 'nfrel'
-        elif isinstance(coeffs.values()[0], sage.rings.rational.Rational):
-            self._elt_type = 'rational'
-        elif isinstance(coeffs.values()[0], sage.rings.polynomial.polynomial_element.Polynomial_generic_dense):
-            self._elt_type = 'poly'
+        self.set_elt_type()
         return coeffs
+
+    def set_elt_type(self, elt_type=None):
+        if elt_type is None:
+            if isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_absolute):
+                self._elt_type = 'nfabs'
+            elif isinstance(coeffs.values()[0], sage.rings.number_field.number_field_element.NumberFieldElement_relative):
+                self._elt_type = 'nfrel'
+            elif isinstance(coeffs.values()[0], sage.rings.rational.Rational):
+                self._elt_type = 'rational'
+            elif isinstance(coeffs.values()[0], sage.rings.polynomial.polynomial_element.Polynomial_generic_dense):
+                self._elt_type = 'poly'
+        else:
+            self._elt_type = elt_type
 
     def to_fs(self):
         convert_to = self._convert_to
@@ -335,6 +341,8 @@ class WebCoeffs(WebProperty):
             raise NotImplementedError("convert to {} not Implemented".format(convert_to))
         if convert_to is None:
             return self._value
+        if self._elt_type is None:
+            self.set_elt_type()
         if convert_to == 'auto':
             if self._elt_type == 'nfrel':
                 convert_to = 'poly'
