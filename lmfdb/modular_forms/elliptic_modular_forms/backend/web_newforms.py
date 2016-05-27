@@ -345,7 +345,7 @@ class WebCoeffs(WebProperty):
                 T = PolynomialRing(R,names=str(self._value.values()[0].parent().gen()))
                 #R = PolynomialRing(QQ, names=[str(self._value.values()[0].parent().base_ring().gen()),\
                 #                                  str(self._value.values()[0].parent().gen())])
-                return {k: T(str(x)) for k,v in self._value.iteritems()}
+                return {k: T(str(v)) for k,v in self._value.iteritems()}
         return self._value
 
     def value(self):
