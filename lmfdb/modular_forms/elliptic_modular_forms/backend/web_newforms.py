@@ -602,7 +602,7 @@ class WebNewForm(WebObject, CachedRepresentation):
          of index >1 that does not vanish.
          if return_index is True, we also return the index of that coefficient
         """
-        return self._coefficients.first_nonvanishing_coefficient()
+        return self._coefficients.first_nonvanishing_coefficient(return_index=return_index)
 
     def first_nonvanishing_coefficient_norm(self):
         return self._coefficients.first_nonvanishing_coefficient_norm()
