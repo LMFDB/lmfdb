@@ -356,7 +356,7 @@ class WebCoeffs(WebProperty):
     def get(self,n,default=None):
         return self._value.get(n,default)
 
-    def first_nonvanishing_coefficient(self, return_index=False)
+    def first_nonvanishing_coefficient(self, return_index=False):
         r"""
         The smallest a(n) with n>1, such that a(n) is nonzero
         """
