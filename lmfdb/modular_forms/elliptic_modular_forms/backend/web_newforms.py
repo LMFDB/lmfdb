@@ -378,6 +378,12 @@ class WebCoeffs(WebProperty):
     def get(self,n,default=None):
         return self._value.get(n,default)
 
+    def values(self):
+        return self._value.values()
+
+    def keys(self):
+        return self._value.keys()
+
     def first_nonvanishing_coefficient(self, return_index=False):
         r"""
         The smallest a(n) with n>1, such that a(n) is nonzero
