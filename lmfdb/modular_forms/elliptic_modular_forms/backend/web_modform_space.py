@@ -206,7 +206,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('dimension_new_cusp_forms'),
             WebBool('cuspidal', value=cuspidal),
             WebBool('new', value=new),
-            WebInt('prec', value=int(prec)), #precision of q-expansions
+            #WebInt('prec', value=int(prec)), #precision of q-expansions -- removed, does not make much sense for the space here
             WebSageObject('group'),
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
