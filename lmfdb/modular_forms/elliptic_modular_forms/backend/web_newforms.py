@@ -933,7 +933,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         # Fill in placeholders for this specific newform:
         self.code['f']['sage'] = self.code['f']['sage'].format(newform_number=self.sage_newform_number())
 
-        self.code['f']['sage'] = self.code['f']['sage'].split("\n")
+        #self.code['f']['sage'] = self.code['f']['sage'].split("\n")
         # remove final empty line
         if len(self.code['f']['sage'][-1])==0:
             self.code['f']['sage'] = self.code['f']['sage'][:-1]
