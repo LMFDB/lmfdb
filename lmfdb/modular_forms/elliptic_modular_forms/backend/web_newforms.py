@@ -900,7 +900,7 @@ class WebNewForm(WebObject, CachedRepresentation):
         if self.base_ring.absolute_degree() > 1:
             s += "K.<{brgen}>=NumberField({crpol})\n".format(brgen=str(self.base_ring.gen()), crpol=self.base_ring.polynomial().change_variable_name('x'))
         if self.coefficient_field.is_absolute():
-            if self.coefficient_field.absolute_degree() > 1
+            if self.coefficient_field.absolute_degree() > 1:
                 s +=  "L.<{cfgen}> = NumberField({cfpol})\n".format(
                     cfgen=str(self.coefficient_field.gen()), cfpol=self.absolute_polynomial
                   )
