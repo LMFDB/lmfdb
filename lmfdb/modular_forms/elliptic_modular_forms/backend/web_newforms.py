@@ -903,7 +903,7 @@ class WebNewForm(WebObject, CachedRepresentation):
             s +=  "L.<{cfgen}> = NumberField({cfpol})\n".format(
                   cfgen=str(self.coefficient_field.gen()), cfpol=self.absolute_polynomial
                   )
-        elif self.coefficient_field.relative_degree() > 1:
+        elif self.coefficient_field.is_relative() and self.coefficient_field.relative_degree() > 1:
             s += "y = polygen(K)\n"
             s +=  "L.<{cfgen}> = NumberField({cfpol})\n".format(
                   cfgen=str(self.coefficient_field.gen()), cfpol=self.coefficient_field.relative_polynomial().change_variable_name('y')
