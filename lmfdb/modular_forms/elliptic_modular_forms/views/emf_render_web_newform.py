@@ -68,7 +68,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     emf_logger.debug("PREC: {0}".format(prec))
     emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
-        WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label, prec=prec)
+        WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label)
         info['character_order'] = WNF.character.order
         info['code'] = WNF.code
         emf_logger.debug("defined webnewform for rendering!")
@@ -134,6 +134,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         info['norm_nv'] = '\\approx ' + latex(WNF.first_nonvanishing_coefficient_norm().n())
         info['index_nv'] = n
     else:
+        if WNF.prec < prec:
+            #get WNF record at larger prec
+            WNF.prec = prec
+            WNF.update_from_db()
         info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
         info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
         info["hide_qexp"] = False
