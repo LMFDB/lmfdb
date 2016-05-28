@@ -635,7 +635,7 @@ class WebNewForm(WebObject, CachedRepresentation):
     def first_nonvanishing_coefficient_trace(self):
         return self._coefficients.first_nonvanishing_coefficient_trace()
 
-    def complexity_of_first_nonvanishing_coefficients(self, number_of_coefficients=3):
+    def complexity_of_first_nonvanishing_coefficients(self, number_of_coefficients=4):
         return self._coefficients.coefficient_complexity(number_of_coefficients)
 
     def coefficient_embeddings(self, prec):
