@@ -20,7 +20,7 @@
 {% elif space.weight % 2 != 0 and space.character.value(-1) == 1 %}
 {% set trivially_zero = 2 %}
 {% else %}
-{% set trivially_zero = 2 %}
+{% set trivially_zero = 0 %}
 {% endif %}
 
 {% if error is defined %}
