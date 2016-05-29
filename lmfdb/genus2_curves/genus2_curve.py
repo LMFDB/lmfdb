@@ -266,6 +266,8 @@ def genus2_curve_search(**args):
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
+    bread = info.get('bread',(('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Search Results', '.')))
+
     query = {}
     try:
         parse_ints(info,query,'abs_disc','absolute discriminant')
@@ -334,7 +336,6 @@ def genus2_curve_search(**args):
     info["count"] = count
     info["more"] = int(start+count<nres)
     
-    bread = info.get('bread',(('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Search Results', '.')))
     title = info.get('title','Genus 2 Curve search results')
     credit = credit_string
     
