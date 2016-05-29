@@ -69,6 +69,8 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
         WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label)
+        if not WNF.has_updated():
+            raise IndexError()
         info['character_order'] = WNF.character.order
         info['code'] = WNF.code
         emf_logger.debug("defined webnewform for rendering!")
