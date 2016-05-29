@@ -7,6 +7,7 @@ import logging
 
 import re
 
+from random import randint
 from flask import request, make_response
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
