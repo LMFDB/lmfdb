@@ -123,6 +123,7 @@ class WebChar(WebObject, CachedRepresentation):
             self.name = "Character nr. {0} of modulus {1}".format(self.number,self.modulus)
             emb = dirichlet_character_conrey_galois_orbit_embeddings(self.modulus,self.number)
             self.set_embeddings(emb)
+            c = self.character
             if self.conductor == 0:            
                 self.conductor = c.conductor()
             if self.order == 0:
