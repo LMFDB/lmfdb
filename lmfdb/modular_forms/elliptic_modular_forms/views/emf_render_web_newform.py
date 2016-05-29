@@ -98,7 +98,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     friends = uniq(friends)
     friends.append(("Dirichlet character \(" + WNF.character.latex_name + "\)", WNF.character.url()))
     
-    if WNF.dimension==0:
+    if WNF.dimension==0 and not info.has_key('error']):
         info['error'] = "This space is empty!"
     info['title'] = 'Newform ' + WNF.hecke_orbit_label
     info['learnmore'] = [('History of Modular forms', url_for('holomorphic_mf_history'))]    
