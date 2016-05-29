@@ -57,7 +57,7 @@ class WebChar(WebObject, CachedRepresentation):
     _file_key = ['modulus', 'number','version']
     _collection_name = 'webchar'
     
-    def __init__(self, modulus=1, number=1, update_from_db=True, compute=False, init_dynamic_properties=True):
+    def __init__(self, modulus=1, number=1, update_from_db=True, compute_values=False, init_dynamic_properties=True):
         r"""
         Init self.
 
