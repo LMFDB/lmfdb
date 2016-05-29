@@ -75,7 +75,6 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         info['code'] = WNF.code
         emf_logger.debug("defined webnewform for rendering!")
     except IndexError as e:
-        WNF = None
         info['error'] = e.message
     url1 = url_for("emf.render_elliptic_modular_forms")
     url2 = url_for("emf.render_elliptic_modular_forms", level=level)
