@@ -70,7 +70,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     try:
         WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label)
         if not WNF.has_updated():
-            raise IndexError()
+            raise IndexError("Unfortunately, we do not have this newform in the database.")
         info['character_order'] = WNF.character.order
         info['code'] = WNF.code
         emf_logger.debug("defined webnewform for rendering!")
