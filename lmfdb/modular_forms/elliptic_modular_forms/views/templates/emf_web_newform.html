@@ -7,7 +7,7 @@
 
 
 {% if error is defined %}
-   {{ error | safe }}
+   <h3>{{ error | safe }}</h3>
 {% else %}
 
 {% if character == 1 %}
@@ -62,7 +62,7 @@ where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial'
 <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$.
     {{place_code('absolute_polynomial')}}
     {% if coeff_field|length >2 and coeff_field[2]>2 %}
-<br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}} </div>.
+<br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}}.</div>
      {{ place_code('relative_polynomial') }}
     {% endif %}
 {% endif %}
@@ -234,10 +234,10 @@ are shown in the table below. Note that these include embeddings that do not pre
   {% endif %}
 <h2>Download this Newform </h2>
 
-The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn }} \).
+The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1 }} \).
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
 <input type="hidden" name="download" value="coefficients"/>
-<input type="hidden" name="max_num" value="{{max_cn}}"/>
+<input type="hidden" name="max_num" value="{{max_cn - 1}}"/>
 
 <table>
   <tr><td rowspan=5>Choose format to download:</td>
@@ -281,9 +281,9 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn }} 
 <td>
   {% set examplemax = 100 %}
   {% if max_cn  < 100 %}
-    {% set examplemax = max_cn %}
+    {% set examplemax = max_cn-1 %}
   {% endif %}
-  <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn }})
+  <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn - 1 }})
   <br><span class=" " id="num_error"></span>
 </td>
 </tr>
@@ -297,11 +297,11 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn }} 
 </div>
 {% endif %}
 </div>
-{% endif %}
 
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% include 'emf_web_newform_post_load_scripts.html' %}
+{% endif %}
 
 
 {% endblock %}
