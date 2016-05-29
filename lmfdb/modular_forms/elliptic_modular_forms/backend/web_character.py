@@ -223,7 +223,7 @@ class WebCharProperty(WebInt):
         self.number = number
         c = None
         if not kwargs.has_key('value'):
-            c = WebChar_cached(modulus, number, update_from_db=True, compute=True)
+            c = WebChar_cached(modulus, number, update_from_db=True, compute_values=False)
         elif kwargs['value'] is not None:
             c = kwargs.pop('value')
         else:
