@@ -804,7 +804,11 @@ class WebNewForm(WebObject, CachedRepresentation):
                 return [self.prec]
 
     def max_available_prec(self):
-        return max(self.available_precs())
+        try:
+            ps = self.available_precs()
+        except IndexError:
+            ps = [0]
+        return max(ps)
 
     def delete_file_with_prec(self, prec):
         files = self.get_file_list({'prec': int(prec)})
