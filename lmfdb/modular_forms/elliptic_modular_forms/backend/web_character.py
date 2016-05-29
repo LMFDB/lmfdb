@@ -245,7 +245,7 @@ class WebCharProperty(WebInt):
 
     def from_db(self, n):
         emf_logger.debug('converting {0} from store in WebCharProperty {1}'.format(n, self.name))
-        return WebChar(self.modulus, n, compute=True)
+        return WebChar(self.modulus, n, compute_values=False)
 
     def from_fs(self, n):
         return self.from_db(n)
