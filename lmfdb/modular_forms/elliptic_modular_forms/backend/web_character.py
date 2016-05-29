@@ -227,7 +227,7 @@ class WebCharProperty(WebInt):
         elif kwargs['value'] is not None:
             c = kwargs.pop('value')
         else:
-            self._default_value = WebChar_cached(modulus, number, update_from_db=True, compute=True)
+            self._default_value = WebChar_cached(modulus, number, update_from_db=True, compute_values=False)
         if c is None:
             super(WebCharProperty, self).__init__(name, **kwargs)
         else:
