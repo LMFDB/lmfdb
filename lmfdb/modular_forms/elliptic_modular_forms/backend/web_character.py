@@ -62,7 +62,7 @@ class WebChar(WebObject, CachedRepresentation):
         Init self.
 
         """
-        emf_logger.debug("In WebChar {0}".format((modulus,number,update_from_db,compute)))
+        emf_logger.debug("In WebChar {0}".format((modulus,number,update_from_db,compute_values)))
         if isinstance(modulus,basestring):
             try:
                 m,n=modulus.split('.')
