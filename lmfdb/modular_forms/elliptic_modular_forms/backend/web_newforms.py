@@ -304,6 +304,10 @@ class WebCoeffs(WebProperty):
 
     def to_db(self):
         self.convert()
+        self.first_nonvanishing_coefficient()
+        self.coefficient_complexity()
+        self.first_nonvanishing_coefficient_norm()
+        self.first_nonvanishing_coefficient_trace()
         return {'coeff_cplxty': self._coeff_cplxty,
                     'nv_coeff_index': self._nv_coeff_index,
                     'nv_coeff_norm': str(self._nv_coeff_norm),
@@ -396,10 +400,12 @@ class WebCoeffs(WebProperty):
             for n in range(2,len(self._value)):
                 a = self.get(n)
                 if a != 0:
+                    self._nv_coeff_index = n
                     if return_index:
                         return n, a
                     else:
                         return a
+            raise ValueError("Need more coefficients to determine first nonvanishing coefficient.")
 
     def first_nonvanishing_coefficient_norm(self):
         if self._nv_coeff_norm is not None:
