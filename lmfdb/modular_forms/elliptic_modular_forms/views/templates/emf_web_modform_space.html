@@ -15,27 +15,34 @@
 
 {% block content %}
 
+{% if space.weight % 2 == 0 and space.character.value(-1) == -1 %}
+{% set trivially_zero = 1 %}
+{% elif space.weight % 2 != 0 and space.character.value(-1) == 1 %}
+{% set trivially_zero = 2 %}
+{% else %}
+{% set trivially_zero = 0 %}
+{% endif %}
+
 {% if error is defined %}
 {{ error | safe }}
 <br>
 {# { sage_version | safe} #}
 {% else %}
-{% if not space.has_updated_from_db() %}
-{% if wmfs_rep_url is defined %}
-<p>This space is a Galois conjugate of <a href="{{ wmfs_rep_url }}"> \( S_&#123; {{space.weight}} &#125;(\chi_&#123;{{space.level}} &#125;({{ wmfs_rep_number }}, \cdot)) \)</a></p>
-{% elif space.data_from_dimension_db().get('in_wdb',0) == 0  %}
-<h3>Unfortunately, we do not have this space in the database, yet.</h3>
-{% endif %}
-{% endif %}
-{% if space.dimension_new_cusp_forms == 0 %}
-  <h3>There are no newforms of this weight, level and character.</h3>
-   {% if  space.weight % 2 == 0 and space.character.value(-1) == -1 %}
+{% if not space.has_updated_from_db() and not trivially_zero > 0 %}
+  {% if wmfs_rep_url is defined %}
+    <p>This space is a Galois conjugate of <a href="{{ wmfs_rep_url }}"> \( S_&#123; {{space.weight}} &#125;(\chi_&#123;{{space.level}} &#125;({{ wmfs_rep_number }}, \cdot)) \)</a></p>
+  {% elif space.data_from_dimension_db().get('in_wdb',0) == 0  %}
+    <h3>Unfortunately, we do not have this space in the database, yet.</h3>
+  {% else %}
+    <h3>Unfortunately, this space is currently unavailable.</h3>
+  {% endif %}
+{% elif space.dimension_new_cusp_forms == 0 or trivially_zero > 0 %}
+<h3>There are no newforms of this weight, level and character.</h3>
+   {% if trivially_zero == 1 %}
      The weight is even and the character is odd.
-   {% endif %}
-   {% if space.weight % 2 != 0 and space.character.value(-1) == 1 %}
+   {% elif trivially_zero == 2 %}
      The weight is odd and the character is even.
    {% endif %}
-
  {% else %}
 
       {% if extra_info is defined %}

@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
-import re
-import tempfile
-import os
+# -*- coding: utf-8 -*-
 from pymongo import ASCENDING, DESCENDING
-import lmfdb.base
-from lmfdb.utils import comma, web_latex, encode_plot
+from lmfdb.base import getDBConnection
+from lmfdb.utils import web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
-from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.data import group_dict
-from sage.all import latex, matrix, ZZ, QQ, PolynomialRing, factor, implicit_plot
-from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
-from lmfdb.WebNumberField import *
+from lmfdb.number_fields.number_field import field_pretty
+from sage.all import latex, ZZ, QQ, CC, PolynomialRing, factor, implicit_plot, real, sqrt, var
+from sage.plot.text import text
 from itertools import izip
-from flask import url_for, make_response
+from flask import url_for
 
 ###############################################################################
 # Database connection
@@ -23,14 +20,14 @@ the_g2cdb = None
 def g2cdb():
     global the_g2cdb
     if the_g2cdb is None:
-        the_g2cdb = lmfdb.base.getDBConnection().genus2_curves
+        the_g2cdb = getDBConnection().genus2_curves
     return the_g2cdb
 
 ###############################################################################
 # Recovering the isogeny class
 ###############################################################################
 
-def isog_label(label):
+def isogeny_class_label(label):
     L = label.split(".")
     return L[0]+ "." + L[1]
 
@@ -134,8 +131,7 @@ def eqn_list_to_curve_plot(L):
     g = f+h**2/4
     if len(g.real_roots())==0 and g(0)<0:
         return text("$X(\mathbb{R})=\emptyset$",(1,1),fontsize=50)
-    X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in
-            g.derivative().base_extend(CC).roots()]
+    X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in g.derivative().base_extend(CC).roots()]
     a,b = inflate_interval(min(X0),max(X0),1.5)
     groots = [a]+g.real_roots()+[b]
     if b-a<1e-7:
@@ -503,19 +499,19 @@ def spl_fod_statement(is_simple_geom, spl_fod_label, spl_fod_poly):
 def spl_statement(coeffss, lmfdb_labels, condnorms):
     if len(coeffss) == 1:
         statement = """Decomposes up to isogeny as the square of an elliptic curve</p>\
-        <p>Elliptic curve that admits a small isogeny:"""
+        <p>Elliptic curve isogeny class representative that admits a low degree isogeny:"""
     else:
-        statement = """Decomposes up to isogeny into two distinct elliptic curve isogeny classes</p>\
-        <p>Elliptic curves that represent these classes and admit small isogenies:"""
+        statement = """Decomposes up to isogeny into two non-isogenous elliptic curves</p>\
+        <p>Elliptic curve isogeny class representatives that admit low degree isogenies:"""
     for n in range(len(coeffss)):
         # Use labels when possible:
         lmfdb_label = lmfdb_labels[n]
         if lmfdb_label:
-            statement += """<br>Elliptic curve with label <a href=%s>%s</a>"""\
+            statement += """<br>&nbsp;&nbsp;Elliptic curve <a href=%s>%s</a>"""\
                 % (url_for_ec(lmfdb_label), lmfdb_label)
         # Otherwise give defining equation:
         else:
-            statement += """<br>\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
+            statement += """<br>&nbsp;&nbsp;\(y^2 = x^3 - g_4 / 48 x - g_6 / 864\) with<br>\
             \(g_4 = %s\)<br>\
             \(g_6 = %s\)<br>\
             Conductor norm: %s"""\
@@ -577,6 +573,7 @@ class WebG2C(object):
         # to deal with disc_key, uncomment line above and comment line below
         #disc = ZZ(self.disc_sign) * ZZ(self.abs_disc)
         data['disc'] = disc
+        data['abs_disc'] = ZZ(self.disc_key[3:])
         data['cond'] = ZZ(self.cond)
         data['min_eqn'] = self.min_eqn
         data['min_eqn_display'] = list_to_min_eqn(self.min_eqn)
@@ -595,10 +592,8 @@ class WebG2C(object):
         #    10])
         #data['igusa_norm'] = normalize_invariants(data['igusa'], [2, 4, 6, 8,
         #    10])
-        data['ic_norm_factor_latex'] = [web_latex(zfactor(i)) for i in
-            data['ic_norm']]
-        data['igusa_norm_factor_latex'] = [ web_latex(zfactor(j)) for j in
-            data['igusa_norm'] ]
+        data['ic_norm_factor_latex'] = [web_latex(zfactor(i)) for i in data['ic_norm']]
+        data['igusa_norm_factor_latex'] = [ web_latex(zfactor(j)) for j in data['igusa_norm'] ]
         data['num_rat_wpts'] = ZZ(self.num_rat_wpts)
         data['two_selmer_rank'] = ZZ(self.two_selmer_rank)
         data['analytic_rank'] = ZZ(self.analytic_rank)
@@ -608,12 +603,10 @@ class WebG2C(object):
             data['tor_struct'] = '\mathrm{trivial}'
         else:
             tor_struct = [ ZZ(a) for a in self.torsion ]
-            data['tor_struct'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in
-                tor_struct ])
+            data['tor_struct'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in tor_struct ])
 
         # Data derived from Sato-Tate group:
-        isogeny_class = g2cdb().isogeny_classes.find_one({'label' :
-            isog_label(self.label)})
+        isogeny_class = g2cdb().isogeny_classes.find_one({'label' : isogeny_class_label(self.label)})
         st_data = get_st_data(isogeny_class)
         for key in st_data.keys():
             data[key] = st_data[key]
@@ -647,28 +640,28 @@ class WebG2C(object):
             endodata['gl2_statement_geom'] = \
                 gl2_statement_base(self.factorsRR_geom, r'\(\overline{\Q}\)')
             endodata['endo_statement_geom'] = \
-            """Endomorphism ring over \(\overline{\Q}\):""" + \
-            endo_statement(endodata['factorsQQ_geom'],
-                endodata['factorsRR_geom'], endodata['ring_geom'],
-                r'\overline{\Q}')
+                """Endomorphism ring over \(\overline{\Q}\):""" + \
+                endo_statement(
+                    endodata['factorsQQ_geom'],
+                    endodata['factorsRR_geom'],
+                    endodata['ring_geom'],
+                    r'\overline{\Q}')
 
         # Full endomorphism lattice minus entries already treated:
         N = len(self.lattice)
         endodata['lattice'] = (self.lattice)[1:N - 1]
         if endodata['lattice']:
-            endodata['lattice_statement_preamble'] = \
-                lattice_statement_preamble()
-            endodata['lattice_statement'] = \
-                lattice_statement(endodata['lattice'])
+            endodata['lattice_statement_preamble'] = lattice_statement_preamble()
+            endodata['lattice_statement'] = lattice_statement(endodata['lattice'])
 
         # Splitting field description:
         #endodata['is_simple_base'] = self.is_simple_base
         endodata['is_simple_geom'] = self.is_simple_geom
         endodata['spl_fod_label'] = self.spl_fod_label
         endodata['spl_fod_poly'] = intlist_to_poly(self.spl_fod_coeffs)
-        endodata['spl_fod_statement'] = \
-            spl_fod_statement(endodata['is_simple_geom'],
-                endodata['spl_fod_label'], endodata['spl_fod_poly'])
+        endodata['spl_fod_statement'] = spl_fod_statement(
+            endodata['is_simple_geom'],
+            endodata['spl_fod_label'], endodata['spl_fod_poly'])
 
         # Isogeny factors:
         if not endodata['is_simple_geom']:
@@ -680,41 +673,36 @@ class WebG2C(object):
                 endodata['spl_facs_labels'] = ['' for coeffs in
                     self.spl_facs_coeffs]
             endodata['spl_facs_condnorms'] = self.spl_facs_condnorms
-            endodata['spl_statement'] = \
-                spl_statement(endodata['spl_facs_coeffs'],
-                    endodata['spl_facs_labels'],
-                    endodata['spl_facs_condnorms'])
+            endodata['spl_statement'] = spl_statement(
+                endodata['spl_facs_coeffs'],
+                endodata['spl_facs_labels'],
+                endodata['spl_facs_condnorms'])
 
         # Title
         self.title = "Genus 2 Curve %s" % (self.label)
 
+        alpha = self.label.split('.')[1]
+        num = self.label.split('.')[3]
+
         # Lady Gaga box
         self.plot = encode_plot(eqn_list_to_curve_plot(self.min_eqn))
         self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
-        self.properties = [
-                ('Label', self.label),
-               (None, self.plot_link),
-               ('Conductor','%s' % self.cond),
-               ('Discriminant', '%s' % data['disc']),
-               ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['ic_norm'])),
-               ('Sato-Tate group', data['st_group_href']),
-               ('\(%s\)' % data['real_geom_end_alg_disp'][0],
-                '\(%s\)' % data['real_geom_end_alg_disp'][1]),
-               ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])]
-        x = self.label.split('.')[1]
+        self.properties = (
+            ('Label', self.label),
+            (None, self.plot_link),
+            ('Conductor','%s' % self.cond),
+            ('Discriminant', '%s' % data['disc']),
+            ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['ic_norm'])),
+            ('Sato-Tate group', data['st_group_href']),
+            ('\(%s\)' % data['real_geom_end_alg_disp'][0],
+             '\(%s\)' % data['real_geom_end_alg_disp'][1]),
+            ('\(\mathrm{GL}_2\)-type','%s' % data['is_gl2_type_name'])
+            )
         self.friends = [
-            ('Isogeny class %s' % isog_label(self.label),
-                url_for(".by_double_iso_label",
-                    conductor = self.cond,
-                    iso_label = x)),
-            ('L-function',
-                url_for("l_functions.l_function_genus2_page",
-                    cond=self.cond,x=x)),
-            ('Twists',
-                url_for(".index_Q",
-                    g20 = self.g2inv[0],
-                    g21 = self.g2inv[1],
-                    g22 = self.g2inv[2]))
+            ('Isogeny class %s' % isogeny_class_label(self.label),
+             url_for(".by_url_isogeny_class_label", cond = self.cond,alpha =alpha)),
+            ('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=alpha)),
+            ('Twists', url_for(".index_Q", g20 = self.g2inv[0], g21 = self.g2inv[1], g22 = self.g2inv[2]))
             #('Siegel modular form someday', '.')
             ]
 
@@ -723,17 +711,14 @@ class WebG2C(object):
         #self.downloads = [('Download all stored data', '.')]
 
         # Breadcrumbs
-        iso = self.label.split('.')[1]
-        num = '.'.join(self.label.split('.')[2:4])
-        self.bread = [
+        self.bread = (
              ('Genus 2 Curves', url_for(".index")),
              ('$\Q$', url_for(".index_Q")),
-             ('%s' % self.cond, url_for(".by_conductor", conductor=self.cond)),
-             ('%s' % iso, url_for(".by_double_iso_label", conductor=self.cond,
-                 iso_label=iso)),
-             ('Genus 2 curve %s' % num, url_for(".by_g2c_label",
-                 label=self.label))
-             ]
+             ('%s' % self.cond, url_for(".by_conductor", cond=self.cond)),
+             ('%s' % alpha, url_for(".by_url_isogeny_class_label", cond=self.cond, alpha=alpha)),
+             ('%s' % self.abs_disc, url_for(".by_url_isogeny_class_discriminant", cond=self.cond, alpha=alpha, disc=self.abs_disc)),
+             ('%s' % num, url_for(".by_url_curve_label", cond=self.cond, alpha=alpha, disc=self.abs_disc, num=num))
+             )
 
         # Make code that is used on the page:
         self.code = {}
