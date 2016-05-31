@@ -882,7 +882,10 @@ class WebNewForm(WebObject, CachedRepresentation):
         ### but at least min_prec coefficients and we desire to have want_prec
         if min_prec>=self.prec:
             raise ValueError("Need higher precision, self.prec = {}".format(self.prec))
+        if not hasattr(self, '_file_record_length'):
+            self.update_from_db()
         l = self._file_record_length
+            
         if l > max_length or self.prec > want_prec:
             nl = float(l)/float(self.prec)*float(want_prec)
             if nl > max_length:
