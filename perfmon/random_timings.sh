@@ -7,7 +7,7 @@ do
 url=http://${1}/${object};
 for i in `seq 1 $2`;
 do
-echo -e $url : $(curl -silent -o /dev/null -w "Connect: %{time_connect} TTFB: %{time_starttransfer} Total time: %{time_total} \n" ${url});
+echo -e $url : $(curl -L -silent -o /dev/null -w "Connect: %{time_connect} TTFB: %{time_starttransfer} Total time: %{time_total} \n" ${url});
 done;
 sleep 30
 done;
