@@ -736,7 +736,7 @@ class WebObject(object):
                         except NotImplementedError:
                             continue
                 succ_db = True
-            except Error as e:
+            except Exception as e:
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
                 elf_logger.critical("Error occured while updating from db: {}".format(e))
