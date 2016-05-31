@@ -648,16 +648,17 @@ class WebNewForm(WebObject, CachedRepresentation):
     def complexity_of_first_nonvanishing_coefficients(self, number_of_coefficients=4):
         return self._coefficients.coefficient_complexity(number_of_coefficients)
 
-    def coefficient_embeddings(self, prec):
+    def coefficient_embeddings(self, n):
+        r"""
+          Return all emneddings of the coefficient a(n) of self.
+        """
         if not 'values' in self._embeddings:
-            return {}
+            raise ValueError('We do not have any embeddings. for coefficient a({})'.format(n))
         else:
-            if prec < self.prec:
-                emb = {'values': {n: c for n, c in self._embeddings['values'][n].items() if n<prec},
-                           'bitprec': self._embeddings['bitprec'],
-                           'prec': prec}
+            if n < self.prec:
+                return self._embeddings['values'][n]
             else:
-                return self._embeddings
+                raise ValueError('We do not have coefficient a({})'.format(n))
 
     def coefficient_embedding(self,n,i):
         r"""
