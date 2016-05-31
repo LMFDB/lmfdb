@@ -736,9 +736,10 @@ class WebObject(object):
                         except NotImplementedError:
                             continue
                 succ_db = True
-            except:
+            except Error as e:
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
+                elf_logger.critical("Error occured while updating from db: {}".format(e))
                 succ_db = False
         if self._use_gridfs and update_from_fs:
             try:
