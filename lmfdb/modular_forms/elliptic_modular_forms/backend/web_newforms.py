@@ -344,7 +344,7 @@ class WebCoeffs(WebProperty):
 
     def convert(self):
         if len(self._value) == 0:
-            pass
+            return 
         convert_to = self._convert_to
         #more types to come?
         if not convert_to in ['auto', 'poly', None]:
@@ -357,14 +357,18 @@ class WebCoeffs(WebProperty):
             if self._elt_type == 'nfrel':
                 convert_to = 'poly'
         if convert_to == 'poly':
+            elt = self._value.values()[0]
             if self._elt_type == 'nfabs':
                 emf_logger.debug("Converting from nfabs to poly!")
-                R = PolynomialRing(QQ,names=str(self._value.values()[0].parent().gen()))
+                R = PolynomialRing(QQ,names=str(elt.parent().gen()))
                 self._value  = {k: R(str(v)) for k,v in self._value.iteritems()}
             elif self._elt_type == 'nfrel':
                 emf_logger.debug("Converting from nfrel to poly!")
-                R = PolynomialRing(QQ,names=str(self._value.values()[0].parent().base_ring().gen()))
-                T = PolynomialRing(R,names=str(self._value.values()[0].parent().gen()))
+                if elt.parent().base_ring() == QQ:
+                    R = QQ
+                else:
+                    R = PolynomialRing(QQ,names=str(elt.parent().base_ring().gen()))
+                T = PolynomialRing(R,names=str(elt.parent().gen()))
                 #R = PolynomialRing(QQ, names=[str(self._value.values()[0].parent().base_ring().gen()),\
                 #                                  str(self._value.values()[0].parent().gen())])
                 self._elt_type = 'poly'
