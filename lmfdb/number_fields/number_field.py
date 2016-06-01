@@ -359,7 +359,7 @@ def render_field_webpage(args):
     else:
         primes = 'primes'
 
-    properties2 = [('Label', label),
+    properties2 = [('Label:', label),
                    ('Degree:', '%s' % data['degree']),
                    ('Signature:', '$%s$' % data['signature']),
                    ('Discriminant:', '$%s$' % data['disc_factor']),
