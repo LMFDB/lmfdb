@@ -62,7 +62,8 @@ def get_bread(breads=[]):
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Labels for integral lattices', url_for(".labels_page"))]
+            ('Labels for integral lattices', url_for(".labels_page")),
+            ('History of lattices', url_for(".history_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -386,6 +387,15 @@ def labels_page():
     credit = lattice_credit
     return render_template("single.html", kid='lattice.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+
+@lattice_page.route("/History")
+def history_page():
+    t = 'A brief history of lattices'
+    bread = [('Lattice', url_for(".lattice_render_webpage")),
+             ('Histoy', '')]
+    credit = lattice_credit
+    return render_template("single.html", kid='lattice.history',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('History'))
 
 #download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
