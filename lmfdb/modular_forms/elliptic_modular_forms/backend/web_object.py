@@ -559,7 +559,8 @@ class WebObject(object):
         else:
             return self.get_file(add_to_fs_query, get_all=True, meta_only=True)
 
-    def authorize(self):
+    @classmethod
+    def authorize(class):
         r"""
         Need to be authorized to insert data
         """
@@ -568,19 +569,18 @@ class WebObject(object):
         pw_filename = join(dirname(dirname(__file__)), "password")
         user = 'editor'
         password = open(pw_filename, "r").readlines()[0].strip()
-        C = getDBConnection()
         emf_logger.debug("Authenticating user={0} password={1}".format(user,password))
-        C["modularforms2"].authenticate(user,password)
+        class.connect_to_db().authenticate(user,password)
         emf_logger.debug("Authenticated with user:{0} and pwd:{1}".format(user,password))
-                            
-    def logout(self):
+
+    @classmethod
+    def logout(class):
         r"""
         Logout authorized user.
         """
         import lmfdb.base
-        from lmfdb.base import getDBConnection        
-        C = getDBConnection()
-        C["modularforms2"].logout()
+        C = class.connect_to_db()
+        C.logout()
         # log back in with usual read-only access
         lmfdb.base._init(lmfdb.base.dbport)
         
