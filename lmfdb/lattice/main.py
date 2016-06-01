@@ -107,8 +107,13 @@ def split_lattice_label(lab):
     return lattice_label_regex.match(lab).groups()
 
 def lattice_by_label_or_name(lab, C):
-    if C.Lattices.lat.find({'$or':[{'label': lab}, {'name': lab}]}).limit(1).count() > 0:
-        return render_lattice_webpage(label=lab)
+    clean_lab=str(lab).replace(" ","")
+    clean_and_cap=str(clean_lab).capitalize()
+    for l in [lab, clean_lab, clean_and_cap]:
+        result= C.Lattices.lat.find({'$or':[{'label': l}, {'name': l}]})
+        if result.count()>0:
+            lab=result[0]['label']
+            return redirect(url_for(".render_lattice_webpage", label=lab))
     if lattice_label_regex.match(lab):
         flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
     else:
@@ -124,6 +129,7 @@ def lattice_search(**args):
 
     if 'label' in info and info.get('label'):
         return lattice_by_label_or_name(info.get('label'), C)
+
     query = {}
     try:
         for field, name in (('dim','Dimension'),('det','Determinant'),('level',None),
