@@ -10,7 +10,7 @@ from lmfdb.base import app
 from flask import flash, render_template, url_for, request, redirect, make_response, send_file
 from markupsafe import Markup
 
-from lmfdb.utils import to_dict, comma, random_object_from_collection
+from lmfdb.utils import to_dict, comma, random_value_from_collection
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_signed_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
@@ -118,7 +118,7 @@ def index_Q():
 
 @g2c_page.route("/Q/random")
 def random_curve():
-    label = random_object_from_collection(g2cdb().curves)['label']
+    label = random_value_from_collection(g2cdb().curves, 'label')
     return redirect(url_for_curve_label(label), 301)
 
 @g2c_page.route("/Q/stats")
@@ -189,7 +189,8 @@ def render_curve_webpage(label):
         return data
     return render_template("curve_g2.html",
                            properties2=data.properties,
-                           credit=credit,
+                           credit=credit_string,
+                           info={'aut_grp_dict':aut_grp_dict,'geom_aut_grp_dict':geom_aut_grp_dict},
                            data=data,
                            code=data.code,
                            bread=data.bread,
@@ -245,7 +246,7 @@ def genus2_curve_search(**args):
                 # Handle direct Lhash input
                 class_label_regex = re.compile(r'#\d+$')
                 if class_label_regex.match(jump) and ZZ(jump[1:]) < 2**61:
-                    c = g2cdb().isogeny_classes.find_one({'hash':int(jump[1:])})
+                    c = g2cdb().isogeny_classes.find_one({'Lhash': jump[1:].strip()})
                     if c:
                         return redirect(url_for_isogeny_class_label(c["label"]), 301)
                     else:
@@ -274,6 +275,7 @@ def genus2_curve_search(**args):
         parse_bool(info,query,'is_gl2_type')
         parse_bool(info,query,'has_square_sha')
         parse_bool(info,query,'locally_solvable')
+        parse_bool(info,query,'is_simple_geom')
         parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
         parse_ints(info,query,'cond')
         parse_ints(info,query,'num_rat_wpts','Weierstrass points')

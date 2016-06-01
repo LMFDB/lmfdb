@@ -4,7 +4,6 @@ from pymongo import ASCENDING, DESCENDING
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
-from lmfdb.genus2_curves.data import group_dict
 from lmfdb.number_fields.number_field import field_pretty
 from sage.all import latex, ZZ, QQ, CC, PolynomialRing, factor, implicit_plot, real, sqrt, var
 from sage.plot.text import text
@@ -48,12 +47,6 @@ def list_to_min_eqn(L):
     poly_tup = [ xpoly_rng(tup) for tup in L ]
     lhs = ypoly_rng([0, poly_tup[1], 1])
     return str(lhs).replace("*","") + " = " + str(poly_tup[0]).replace("*","")
-
-def groupid_to_meaningful(groupid):
-    if groupid[0] < 120:
-        return group_dict[str(groupid).replace(" ", "")]
-    else:
-        return groupid
 
 def url_for_ec(label):
     if not '-' in label:
@@ -482,27 +475,23 @@ def lattice_statement(lattice):
 
 def spl_fod_statement(is_simple_geom, spl_fod_label, spl_fod_poly):
     if is_simple_geom:
-        return """simple over \(\overline{\Q}\)"""
+        return """Simple over \(\overline{\Q}\)"""
     elif spl_fod_label == '1.1.1.1':
-        return """splits over \(\Q\)"""
+        return """Splits over \(\Q\)"""
     elif spl_fod_label != '':
         spl_fod_pretty =  field_pretty(spl_fod_label)
         spl_fod_url = url_for("number_fields.by_label", label=spl_fod_label)
-        return """Field of minimal degree over which decomposition occurs:<br>\
-        number field \(\Q (b) \cong \) <a href=%s>%s</a> with defining polynomial \(%s\)"""\
+        return """Splits over the number field \(\Q (b) \cong \) <a href=%s>%s</a> with defining polynomial:<br>&nbsp;&nbsp;\(%s\)"""\
             % (spl_fod_url, spl_fod_pretty, spl_fod_poly)
     else:
-        return """Field of minimal degree over which decomposition occurs:<br>\
-        number field \(\Q (b)\) with defining polynomial %s"""\
+        return """Splits over the number field \(\Q (b)\) with defining polynomialL<br>&nbsp;&nbsp%s"""\
             % spl_fod_poly
 
 def spl_statement(coeffss, lmfdb_labels, condnorms):
     if len(coeffss) == 1:
-        statement = """Decomposes up to isogeny as the square of an elliptic curve</p>\
-        <p>Elliptic curve isogeny class representative that admits a low degree isogeny:"""
+        statement = """Decomposes up to isogeny as the square of the elliptic curve:"""
     else:
-        statement = """Decomposes up to isogeny into two non-isogenous elliptic curves</p>\
-        <p>Elliptic curve isogeny class representatives that admit low degree isogenies:"""
+        statement = """Decomposes up to isogeny as the product of the non-isogenous elliptic curves:"""
     for n in range(len(coeffss)):
         # Use labels when possible:
         lmfdb_label = lmfdb_labels[n]
@@ -579,8 +568,8 @@ class WebG2C(object):
         data['min_eqn_display'] = list_to_min_eqn(self.min_eqn)
         data['disc_factor_latex'] = web_latex(factor(data['disc']))
         data['cond_factor_latex'] = web_latex(factor(int(self.cond)))
-        data['aut_grp'] = groupid_to_meaningful(self.aut_grp)
-        data['geom_aut_grp'] = groupid_to_meaningful(self.geom_aut_grp)
+        data['aut_grp_id'] = self.aut_grp_id
+        data['geom_aut_grp_id'] = self.geom_aut_grp_id
         data['igusa_clebsch'] = [ZZ(a) for a in self.igusa_clebsch]
         data['igusa'] = [ZZ(a) for a in self.igusa]
         data['g2'] = self.g2inv
