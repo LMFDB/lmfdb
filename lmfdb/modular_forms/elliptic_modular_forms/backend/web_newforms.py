@@ -768,7 +768,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                     apr1 = self.coefficient_n_recursive(pr//p)
                     #ap = self.coefficient_n_recursive(p)
                     apr2 = self.coefficient_n_recursive(pr//(p*p))
-                    val = self.parent.character_used_in_computation.value(p)
+                    val = self.character.value(p)
                     if val == 0:
                         c = cp*apr1
                     else:
