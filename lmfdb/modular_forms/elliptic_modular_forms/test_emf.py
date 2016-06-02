@@ -160,3 +160,25 @@ class EmfTest(LmfdbTest):
                              content_type='multipart/form-data',
                                 data={'level': 25, 'weight': 36, 'character': 1, 'label': 'f', 'number': 800, 'format': 'embeddings', 'download': 'coefficients'}, follow_redirects=True)
         assert "799	-5.0969" in response.data
+
+    def test_galois_conjugate(self):
+        r"""
+        Testing that we link to Galois conjugate spaces
+        And don't say anything stupid about the space
+        """
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/32/2/29/')
+        assert "This space is a Galois conjugate of" in page.data
+        assert "/ModularForm/GL2/Q/holomorphic/32/2/5/" in page.data
+        assert "There are no newforms" not in page.data
+        assert "empty" not in page.data
+        assert "Decomposition" not in page.data
+
+
+    def test_nontriv_zero_space(self):
+        r"""
+        Test that a space that is nontrivially zero is clickable and the page tells us that the space has no newforms.
+        """
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/5/4/')
+        assert "ModularForm/GL2/Q/holomorphic/5/4/4" in page.data
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/5/4/4/')
+        assert "There are no newforms" in page.data

@@ -247,12 +247,25 @@ def parse_primes(inp, query, qfield, mode=None, to_string=False):
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(',')]
+        primes = sorted(primes)
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if format_ok:
         if to_string:
             primes = [str(p) for p in primes]
         if mode == 'complement':
             query[qfield] = {"$nin": primes}
+        elif mode == 'liststring':
+            primes = [str(p) for p in primes]
+            query[qfield] = ",".join(primes)
+        elif mode == 'subsets':
+            # need all subsets of the list of primes 
+            powerset = [[]]
+            for p in primes:
+                powerset.extend([a+[p] for a in powerset])
+            # now set up a big $or clause
+            powerset = [','.join([str(p) for p in a]) for a in powerset]
+            powerset = [{qfield: a} for a in powerset]
+            collapse_ors(['$or', powerset], query)
         elif mode == 'exact':
             query[qfield] = sorted(primes)
         elif mode == "append":

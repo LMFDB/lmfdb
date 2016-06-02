@@ -56,6 +56,16 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'sha': (int) analytic order of sha (rounded value of sha_an)
    - 'sha_primes': (list of ints) primes dividing sha
    - 'torsion_primes': (list of ints) primes dividing torsion
+
+Extra data fields added May 2016 to avoid computation on the fly:
+   - 'xainvs': (string) '[a1,a2,a3,a4,a6]' (will replace 'ainvs' in due course)
+   - 'equation': (string)
+   - 'local_data': (list of dicts, one per prime)
+   - 'signD': (sign of discriminant) int (+1 or -1)
+   - 'min_quad_twist': (dict) {label:string, disc: int} #NB Cremona label
+   - 'heights': (list of floats) heights of generators
+   - 'aplist': (list of ints) a_p for p<100
+   - 'anlist': (list of ints) a_p for p<20
 """
 
 import os.path
@@ -69,35 +79,19 @@ import glob
 import pymongo
 from lmfdb import base
 from sage.rings.all import ZZ
-
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
+from lmfdb.utils import web_latex
+from lmfdb.base import getDBConnection
 print "getting connection"
-C= MongoClient(port=dbport)
+C= getDBConnection()
 print "authenticating on the elliptic_curves database"
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
-print "setting curves"
+print "setting curves and curves2"
 curves = C.elliptic_curves.curves
-
-# The following create_index command checks if there is an index on
-# label, conductor, rank and torsion. If there is no index it creates
-# one.  Need: once torsion structure is computed, we should have an
-# index on that too.
-
-curves.create_index('label')
-curves.create_index('conductor')
-curves.create_index('rank')
-curves.create_index('torsion')
-curves.create_index('degree')
-curves.create_index('jinv')
-curves.create_index('sha')
-curves.create_index('cm')
-
-print "finished indices"
+curves2 = C.elliptic_curves.curves2
 
 
 def parse_tgens(s):
@@ -243,7 +237,7 @@ def allgens(line):
     else:
         cm = int(0)
 
-    return label, {
+    content = {
         'conductor': int(data[0]),
         'iso': data[0] + data[1],
         'number': int(data[2]),
@@ -256,6 +250,10 @@ def allgens(line):
         'torsion_structure': ["%s" % tor for tor in t],
         'torsion_generators': ["%s" % parse_tgens(tgens[1:-1]) for tgens in data[6 + rank:]],
     }
+    extra_data = make_extra_data(label,data['number'],ainvs,data['gens'])
+    content.update(extra_data)
+
+    return label, content
 
 def twoadic(line):
     r""" Parses one line from a 2adic file.  Returns the label and a dict
@@ -562,3 +560,104 @@ def add_numerical_iso_codes(N1,N2):
         data = {}
         data['iso_nlabel'] = numerical_iso_label(C['lmfdb_iso'])
         curves.update_one({'_id': C['_id']}, {"$set": data}, upsert=True)
+
+# one-off script to add extra data for curves already in the database
+
+def make_extra_data(label,number,ainvs,gens):
+    """
+    C is a database elliptic curve entry.  Returns a dict with which to update the entry.
+
+    Data fields needed in C already: 'ainvs', 'lmfdb_label', 'gens', 'number'
+    """
+    E = EllipticCurve([int(a) for a in ainvs])
+    data = {}
+    # convert from a list of strings to a single string, e.g. from ['0','0','0','1','1'] to '[0,0,0,1,1]'
+    data['xainvs'] = ''.join(['[',','.join(ainvs),']'])
+    data['equation'] = web_latex(E)
+    data['signD'] = int(E.discriminant().sign())
+    data['local_data'] = [{'p': int(ld.prime().gen()),
+                           'ord_cond':int(ld.conductor_valuation()),
+                           'ord_disc':int(ld.discriminant_valuation()),
+                           'ord_den_j':int(max(0,-(E.j_invariant().valuation(ld.prime().gen())))),
+                           'red':int(ld.bad_reduction_type()),
+                           'kod':web_latex(ld.kodaira_symbol()).replace('$',''),
+                           'cp':int(ld.tamagawa_number())}
+                          for ld in E.local_data()]
+    Etw, Dtw = E.minimal_quadratic_twist()
+    if Etw.conductor()==E.conductor():
+        data['min_quad_twist'] = {'label':label, 'disc':int(1)}
+    else:
+        # Later this should be changed to look for xainvs but now all curves have ainvs
+        minq_ainvs = [str(c) for c in Etw.ainvs()]
+        r = curves.find_one({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs})
+        minq_label = "" if r is None else r['label']
+        data['min_quad_twist'] = {'label':minq_label, 'disc':int(Dtw)}
+    from lmfdb.elliptic_curves.web_ec import parse_points
+    gens = [E(g) for g in parse_points(gens)]
+    data['heights'] = [float(P.height()) for P in gens]
+    if number==1:
+        data['aplist'] = E.aplist(100,python_ints=True)
+        data['anlist'] = E.anlist(20,python_ints=True)
+    return data
+
+def add_extra_data(N1,N2,store=False):
+    """
+    Add these fields to curves in the db with conductors from N1 to N2:
+
+   - 'xainvs': (string) '[a1,a2,a3,a4,a6]' (will replace 'ainvs' in due course)
+   - 'equation': (string)
+   - 'local_data': (list of dicts, one per prime)
+   - 'signD': (sign of discriminant) int (+1 or -1)
+   - 'min_quad_twist': (dict) {label:string, disc: int} #NB Cremona label
+   - 'heights': (list of floats) heights of generators
+   - 'aplist': (list of ints) a_p for p<100
+   - 'anlist': (list of ints) a_p for p<20
+
+    """
+    query = {}
+    query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
+    res = curves.find(query)
+    res = res.sort([('conductor', pymongo.ASCENDING)])
+    n = 0
+    res = list(res) # since the cursor times out after a few thousand curves
+    newcurves = []
+    for C in res:
+        n += 1
+        if n%100==0:
+            print C['lmfdb_label']
+        if n%1000==0:
+            if store and len(newcurves):
+                curves2.insert_many(newcurves)
+                newcurves = []
+        else:
+            sys.stdout.write(".")
+            sys.stdout.flush()
+        data = make_extra_data(C['label'],C['number'],C['ainvs'],C['gens'])
+        C.update(data)
+        if store:
+            newcurves.append(C)
+        else:
+            pass
+            #print("Not writing updated %s to database.\n" % C['label'])
+    # insert the final left-overs since the last full batch
+    if store and len(newcurves):
+        curves2.insert_many(newcurves)
+
+    print("\nfinished updating conductors from %s to %s" % (N1,N2))
+
+def add_extra_data1(C):
+    """Add these fields to a single curve record in the db (for use with
+    the rewrite script in data_mgt/utilities/rewrite.py):
+
+   - 'xainvs': (string) '[a1,a2,a3,a4,a6]' (will replace 'ainvs' in due course)
+   - 'equation': (string)
+   - 'local_data': (list of dicts, one per prime)
+   - 'signD': (sign of discriminant) int (+1 or -1)
+   - 'min_quad_twist': (dict) {label:string, disc: int} #NB Cremona label
+   - 'heights': (list of floats) heights of generators
+   - 'aplist': (list of ints) a_p for p<100
+   - 'anlist': (list of ints) a_p for p<20
+
+    """
+    C.update(make_extra_data(C['label'],C['number'],C['ainvs'],C['gens']))
+    return C

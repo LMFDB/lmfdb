@@ -67,8 +67,8 @@ class HomePageTest(LmfdbTest):
         assert '2.1.2.1.1' in L #gram matrix search through isometries
 
     def test_latticeZ2(self):
-        L = self.tc.get("/Lattice/?label=Z2").data
-        assert '0.785398163397448309615660845820' in L #Z2 lattice
+        L = self.tc.get("/Lattice/2.1.2.1.1").data
+        assert '0.785398163397448309615660845820\dots' in L #Z2 lattice  
 
     def test_lattice_thetadisplay(self):
         L = self.tc.get("/Lattice/theta_display/7.576.18.1.1/40").data

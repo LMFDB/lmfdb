@@ -124,11 +124,27 @@
 {% endif %}
 </select></td>
 </tr>
+
 <tr>
-<td>&nbsp;</td>
+<td></td>
+<td>{{ KNOWL('ag.geom_simple', title='$\\overline{\\mathbb Q}$-simple') }}</td>
 </tr>
+
 <tr>
-<td><button type='submit' value='refine'  style="width: 110px">Search again</button></td>
+<td><button type='submit' value='refine' style="width: 110px">Search again</button></td>
+<td><select name='is_simple_geom' width="110" style="width: 110px">
+  <option ></option>
+{% if info.is_simple_geom=='True' %}
+  <option value="True" selected>True</option>
+{% else %}
+  <option value="True">True</option>
+{% endif %}
+{% if info.is_simple_geom == 'False' %}
+  <option value="False" selected>False</option>
+{% else %}
+  <option value="False">False</option>
+{% endif %}
+</select></td>
 </tr>
 
 </table>
@@ -136,7 +152,7 @@
 
 {% if info.err is not defined %}
 
-<h2> Results ({{info.report}})
+<h2> Results ({{info.report}})&nbsp;
 {% if info.start > 0 %}
 <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
 {% endif %}
@@ -156,8 +172,8 @@
 </tr>
 {% for curve in info.curves: %}
 <tr>
-    <td> <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a> </td>
-    <td> <a href = "{{info.isog_url(curve)}}"> {{curve.isog_label}} </a> </td>
+    <td> <a href = "{{info.curve_url(curve.label)}}"> {{curve.label}} </a> </td>
+    <td> <a href = "{{info.class_url(curve.class)}}"> {{curve.class}} </a> </td>
     <td> \({{curve.equation_formatted}}\) </td>
     <td align=center> {{curve.st_group_href|safe}} </td>
     <td align=center> {{curve.is_gl2_type_display | safe}} </td>
@@ -166,7 +182,6 @@
 {% endfor %}
 </table>
 
-<hr>
 {% if info.start > 0 %}
 <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
 {% endif %}
@@ -175,10 +190,10 @@
 {% endif %}
 
 <form>
-Download all search results for
-<input type="submit" name="submit" value="gp">
-<input type="submit" name="submit" value="sage">
-<input type="submit" name="submit" value="magma">
+Download all search results for&nbsp;
+<button type="submit" name="submit" value="gp">Pari/GP</button>&nbsp;
+<button type="submit" name="submit" value="sage">SageMath</button>&nbsp;
+<button type="submit" name="submit" value="magma">Magma</button>&nbsp;
 <input type="hidden" name="download" value="1"/>
 <input type="hidden" name="query" value="{{info.query}}"/>
 </form>

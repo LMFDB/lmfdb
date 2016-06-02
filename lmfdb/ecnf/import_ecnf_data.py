@@ -72,9 +72,9 @@ from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
-C= MongoClient(port=dbport)
+from lmfdb.base import getDBConnection
+print "getting connection"
+C= getDBConnection()
 
 print "authenticating on the elliptic_curves database"
 import yaml
@@ -87,24 +87,6 @@ nfcurves = C.elliptic_curves.nfcurves
 qcurves = C.elliptic_curves.curves
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
-
-# The following ensure_index command checks if there is an index on
-# label, conductor, rank and torsion. If there is no index it creates
-# one.  Need: once torsion structure is computed, we should have an
-# index on that too.
-
-# The following have not yet been thoroughly thought about!
-nfcurves.ensure_index('label')
-nfcurves.ensure_index('short_label')
-nfcurves.ensure_index('conductor_norm')
-nfcurves.ensure_index('rank')
-nfcurves.ensure_index('torsion')
-nfcurves.ensure_index('jinv')
-nfcurves.ensure_index('number')
-nfcurves.ensure_index('degree')
-nfcurves.ensure_index('field_label')
-
-print "finished indices"
 
 # We have to look up number fields in the database from their labels,
 # but only want to do this once for each label, so we will maintain a
@@ -153,11 +135,11 @@ def ideal_HNF(I):
 def ideal_label(I):
     r"""
     Returns the HNF-based label of an ideal I in a quadratic field
-    with integral basis [1,w].  This is the string '[N,c,d]' where
+    with integral basis [1,w].  This is the string 'N.c.d' where
     [a,c,d] is the HNF form of I and N=a*d=Norm(I).
     """
     a, c, d = ideal_HNF(I)
-    return "[%s,%s,%s]" % (a * d, c, d)
+    return "%s.%s.%s" % (a * d, c, d)
 
 # Reconstruct an ideal in a quadratic field from its label.
 
@@ -165,7 +147,7 @@ def ideal_label(I):
 def ideal_from_label(K, lab):
     r"""Returns the ideal with label lab in the quadratic field K.
     """
-    N, c, d = [ZZ(c) for c in lab[1:-1].split(",")]
+    N, c, d = [ZZ(c) for c in lab.split(".")]
     a = N // d
     return K.ideal(a, K([c, d]))
 
@@ -277,7 +259,7 @@ def curves(line):
 
     Sample input line:
 
-    2.0.4.1 [65,18,1] a 1 [65,18,1] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
+    2.0.4.1 65.18.1 a 1 [65,18,1] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
     """
     # Parse the line and form the full label:
     data = split(line)
@@ -384,7 +366,7 @@ def curve_data(line):
 
     Sample input line:
 
-    2.0.4.1 [65,18,1] a 1 0 ? 0 0 ?
+    2.0.4.1 65.18.1 a 1 0 ? 0 0 ?
     """
     # Parse the line and form the full label:
     data = split(line)
@@ -430,7 +412,7 @@ def isoclass(line):
 
     Sample input line:
 
-    2.0.4.1 [65,18,1] a 1 [[1,6,3,18,9,2],[6,1,2,3,6,3],[3,2,1,6,3,6],[18,3,6,1,2,9],[9,6,3,2,1,18],[2,3,6,9,18,1]]
+    2.0.4.1 65.18.1 a 1 [[1,6,3,18,9,2],[6,1,2,3,6,3],[3,2,1,6,3,6],[18,3,6,1,2,9],[9,6,3,2,1,18],[2,3,6,9,18,1]]
     """
     # Parse the line and form the full label:
     data = split(line)
@@ -523,7 +505,7 @@ def make_curves_line(ec):
 
     Sample output line:
 
-    2.0.4.1 [65,18,1] a 1 [65,18,1] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
+    2.0.4.1 65.18.1 a 1 [65,18,1] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
     """
     output_fields = [ec['field_label'],
                      ec['conductor_label'],
@@ -548,7 +530,7 @@ def make_curve_data_line(ec):
 
     Sample output line:
 
-    2.0.4.1 [65,18,1] a 1 0 ? 0 0 ?
+    2.0.4.1 65.18.1 a 1 0 ? 0 0 ?
     """
     rk = '?'
     if 'rank' in ec:
@@ -587,7 +569,7 @@ def make_isoclass_line(ec):
 
     Sample output line:
 
-    2.0.4.1 [65,18,1] a 1 [[1,6,3,18,9,2],[6,1,2,3,6,3],[3,2,1,6,3,6],[18,3,6,1,2,9],[9,6,3,2,1,18],[2,3,6,9,18,1]]
+    2.0.4.1 65.18.1 a 1 [[1,6,3,18,9,2],[6,1,2,3,6,3],[3,2,1,6,3,6],[18,3,6,1,2,9],[9,6,3,2,1,18],[2,3,6,9,18,1]]
     """
     mat = ''
     if 'isogeny_matrix' in ec:

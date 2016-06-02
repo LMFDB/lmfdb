@@ -1,6 +1,6 @@
 prompt:
-  sage:   'sage:'
-  magma:  'magma:'
+  sage:   'sage'
+  magma:  'magma'
 
 logo:
   sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
@@ -26,7 +26,7 @@ newforms-nontriv-char:
 newforms-triv-char:
   sage: N = Newforms({N},{k},names="a")
   magma: |
-    S:=CuspForms({N},{k});
+    S := CuspForms({N},{k});
     N := Newforms(S);
 
 f:

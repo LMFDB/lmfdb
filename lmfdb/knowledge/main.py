@@ -145,7 +145,7 @@ def ref_to_link(txt):
     refs = thecite.split(",")
     ans = ""
 
-    print "refs",refs
+    # print "refs",refs
 
     for ref in refs:
         ref = ref.strip()    # because \cite{A, B, C,D} can have spaces

@@ -2,39 +2,24 @@
 info in this page is set by set_info_for_web_newform in emf_render_web_newform.py
 #}
 
-{% macro code(codes, item) %}
-{% for L in codes[item] %}
-{# N.B. whitespace is preserved in the following div since the CSS has
-white-space: pre in order to keep line breaks! #}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
+{# copy place_code macro from homepage.html #}
+{% macro place_code(item) %}
+{% if code and code[item] %}
+{% for L in code[item] %}
+{% if code[item][L] %}
+{% set lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]] %}
+{% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
+{# keep the line below as is to avoid annoying line breaks #}
+<div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<br>{% endfor %}</div>
+{% endif %}
 {% endfor %}
+{% endif %}
 {% endmacro %}
 
-<script>
-var cur_system = null;
-function show_code(system) {
-    $('.sage').hide();
-    $('.magma').hide();
-    if (cur_system == system) {
-      $('.'+system).hide();
-      cur_system = null;
-    } else {
-      $('.'+system).show();
-      $('.'+system).css('display','inline-block');
-      cur_system = system;
-    }
-}
-</script>
-
-<div align ="right">
-  Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sagemath</a>,
-  <a onclick="show_code('magma'); return false" href='#'>magma</a>
-</div>
-
 {% if space.character.order == 1 %}
-{{ code(space.code,'newforms-triv-char') }}
+{{ place_code('newforms-triv-char') }}
 {% else %}
-{{ code(space.code,'newforms-nontriv-char') }}
+{{ place_code('newforms-nontriv-char') }}
 {% endif %}
 
 {% if not q_expansion_prec is defined %}
@@ -71,15 +56,15 @@ function show_code(system) {
              {% if vars.update({'cyclotomicorder': f.coefficient_field.variable_name()[4:]}) %} {% endif %}
          {% endif %}
        <tr>
-	 {% if not f.has_updated_from_db() %}
-	   <td valign="top">{{ f.hecke_orbit_label }}</td>
-	   <td colspan="3"> This Hecke orbit is unfortunately not available. </td>
-	   {% else %}
+     {% if not f.has_updated_from_db() %}
+       <td valign="top">{{ f.hecke_orbit_label }}</td>
+       <td colspan="3"> This Hecke orbit is unfortunately not available. </td>
+       {% else %}
       <td valign="top"><a href="{{f.url() }}">{{ f.hecke_orbit_label }}</a></td>
       <td align="center" valign="top">
-	{{ f.dimension }}
+    {{ f.dimension }}
         </td>
-	<td align="center" valign="top">
+    <td align="center" valign="top">
         {% if f.is_rational == 1 %}
 <a title = "{{ f.coefficient_field.lmfdb_pretty }}[nf.field.data]" knowl= "nf.field.data" kwargs="label={{ f.coefficient_field.lmfdb_label }}">{{ f.coefficient_field.lmfdb_pretty }}</a></td>
         {% else %}
@@ -87,18 +72,17 @@ function show_code(system) {
               $\Q(\zeta_{ {{vars.cyclotomicorder}} })$
             {% else %}
               $\Q(\alpha_{ {{loop.index}} })$</td>
-	      {% endif %}
-	      {% set varname = '\\alpha_{%s}' % loop.index %}
-	     {%endif%}
-	      {% if f.complexity_of_first_nonvanishing_coefficients() > max_height %}
-	        {% if qexp.update({'hidden': true}) %} {% endif %}
+          {% endif %}
+          {% set varname = '\\alpha_{%s}' % loop.index %}
+         {%endif%}
+          {% if f.complexity_of_first_nonvanishing_coefficients() > max_height %}
+            {% if qexp.update({'hidden': true}) %} {% endif %}
                  <td>$q + \ldots^\ast$</td>
-		{% else %}
-		 {% if qexp.update({'visible': true}) %} {% endif %}
-	        <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
-	  {% endif %}
-		{% endif %}
-	<tr><td colspan="4">{{ code(f.code, 'f')}}{{ code(f.code, 'qexp')}}</td></tr>
+        {% else %}
+         {% if qexp.update({'visible': true}) %} {% endif %}
+            <td>{{ f.q_expansion_latex(q_expansion_prec, varname) }}</td>
+      {% endif %}
+        {% endif %}
       </tr>
     {% endfor %}
   </tbody>
@@ -153,9 +137,9 @@ Click on the label in the table above for more information about each newform.</
 </td>
         {% else %}
         <td align="left"  valign="top">$\Q(\alpha_{ {{loop.index}} })$</td>
-	<td align="left"  valign="top">
-	  {{ f.coefficient_field.relative_polynomial_latex('x') }}
-	</td>
+    <td align="left"  valign="top">
+      {{ f.coefficient_field.relative_polynomial_latex('x') }}
+    </td>
         {% endif %}
       </tr>
         {% endif %}

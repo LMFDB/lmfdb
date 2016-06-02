@@ -1,28 +1,10 @@
 # -*- coding: utf-8 -*-
-import re
-import os
-import pymongo
 from pymongo import ASCENDING, DESCENDING
-from flask import url_for, make_response
-import lmfdb.base
-from lmfdb.base import getDBConnection
-from lmfdb.utils import comma, web_latex, encode_plot
-from lmfdb.genus2_curves.web_g2c import g2c_page, g2c_logger, list_to_min_eqn, end_alg_name, st0_group_name, st_group_name, st_group_href
+from flask import url_for
+from lmfdb.genus2_curves.web_g2c import g2cdb, list_to_min_eqn, end_alg_name, st0_group_name, st_group_name, st_group_href
 from lmfdb.genus2_curves.web_g2c import gl2_statement_base, factorsRR_raw_to_pretty, fod_statement, intlist_to_poly
 from sage.all import QQ, PolynomialRing, factor,ZZ, NumberField, expand, var
 from lmfdb.WebNumberField import field_pretty
-
-###############################################################################
-# Database connection
-###############################################################################
-
-the_g2cdb = None
-
-def g2cdb():
-    global the_g2cdb
-    if the_g2cdb is None:
-        the_g2cdb = lmfdb.base.getDBConnection().genus2_curves
-    return the_g2cdb
 
 ###############################################################################
 # Pretty print functions
@@ -99,18 +81,6 @@ def list_to_factored_poly_otherorder(s, galois=False):
         return [outstr, gal_list]
     return outstr
 
-def url_for_label(label):
-    # returns the url for label
-    L = label.split(".")
-    return url_for(".by_full_label", conductor=L[0], iso_label=L[1], disc=L[2],
-            number=L[3])
-
-def isog_url_for_label(label):
-    # returns the isogeny class url for curve label
-    # TODO FIX: replace by full label line by appropriate
-    L = label.split(".")
-    return url_for(".by_double_iso_label", conductor=L[0], iso_label=L[1])
-
 ###############################################################################
 # Statement functions for endomorphism functionality
 ###############################################################################
@@ -176,7 +146,7 @@ def endo_statement_isog(factorsQQ, factorsRR, fieldstring):
 # The actual class definition
 ###############################################################################
 
-class G2Cisog_class(object):
+class G2Cisogeny_class(object):
     """
     Class for an isogeny class of genus 2 curves over Q
     """
@@ -198,23 +168,24 @@ class G2Cisog_class(object):
         try:
             data = g2cdb().isogeny_classes.find_one({"label" : label})
         except AttributeError:
-            return "Invalid label" # caller must catch this and raise an error
+            return "Invalid isogeny class label" # caller must catch this and raise an error
         if data:
-            return G2Cisog_class(data)
-        return "No genus 2 isogeny class data found for label" # caller must catch this and raise an error
+            return G2Cisogeny_class(data)
+        return "No isogeny class with this label currently in the database" # caller must catch this and raise an error
 
     ###########################################################################
     # Main data creation for individual isogeny classes
     ###########################################################################
 
+
     def make_class(self):
+        from lmfdb.genus2_curves.genus2_curve import url_for_curve_label
+
         # Data
-        curves_data = g2cdb().curves.find({"class" :
-            self.label}).sort([("disc_key", pymongo.ASCENDING),
-                               ("label", pymongo.ASCENDING)])
-        self.curves = [ {"label" : c['label'], "equation_formatted" :
-            list_to_min_eqn(c['min_eqn']), "url": url_for_label(c['label'])}
-            for c in curves_data ]
+        curves_data = g2cdb().curves.find({"class" : self.label},{'_id':int(0),'label':int(1),'min_eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
+        assert curves_data
+        self.curves = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']),
+            "url": url_for_curve_label(c['label'])} for c in curves_data ]
         self.ncurves = curves_data.count()
         self.bad_lfactors = [ [c[0], list_to_factored_poly_otherorder(c[1])]
             for c in self.bad_lfactors]
@@ -232,9 +203,8 @@ class G2Cisog_class(object):
             self.is_gl2_type_name = 'no'
 
         # Endomorphism data
-        curve = g2cdb().curves.find_one({"class" : self.label})
         endodata = g2cdb().endomorphisms.find_one({"label" :
-            curve['label']})
+            self.curves[0]['label']})
         self.gl2_statement_base = \
             gl2_statement_base(endodata['factorsRR_base'], r'\(\Q\)')
         self.endo_statement_base = \
@@ -256,7 +226,7 @@ class G2Cisog_class(object):
         self.title = "Genus 2 Isogeny Class %s" % (self.label)
 
         # Lady Gaga box
-        self.properties = [
+        self.properties = (
                 ('Label', self.label),
                 ('Number of curves', str(self.ncurves)),
                 ('Conductor','%s' % self.cond),
@@ -264,10 +234,9 @@ class G2Cisog_class(object):
                 ('\(%s\)' % self.real_geom_end_alg_disp[0],
                  '\(%s\)' % self.real_geom_end_alg_disp[1]),
                 ('\(\mathrm{GL}_2\)-type','%s' % self.is_gl2_type_name)
-                ]
+                )
         x = self.label.split('.')[1]
-        self.friends = [('L-function',
-            url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x))]
+        self.friends = [('L-function', url_for("l_functions.l_function_genus2_page", cond=self.cond,x=x))]
         #self.downloads = [('Download Euler factors', ".")]
         #self.downloads = [
         #        ('Download Euler factors', "."),
@@ -277,12 +246,12 @@ class G2Cisog_class(object):
         #        ]
 
         # Breadcrumbs
-        self.bread = [
+        self.bread = (
                        ('Genus 2 Curves', url_for(".index")),
                        ('$\Q$', url_for(".index_Q")),
-                       ('%s' % self.cond, url_for(".by_conductor", conductor=self.cond)),
+                       ('%s' % self.cond, url_for(".by_conductor", cond=self.cond)),
                        ('%s' % self.label, ' ')
-                     ]
+                     )
 
         # More friends (NOTE: to be improved)
         self.ecproduct_wurl = []

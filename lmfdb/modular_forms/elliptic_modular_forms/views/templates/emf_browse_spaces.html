@@ -121,7 +121,7 @@ function set_value(id,val) {
 {%endif%}
 
 <h1>Browse holomorphic {{KNOWL('mf.elliptic.newform',title='newforms')}} for {{group}}</h1>
-
+{#    <p>Go to a <a href={{url_for('.random_form')}}>random modular form</a> from the database.</p> #}
 {% set table = info.table %}
 <!-- check of the table is empty -->
 {% set vars = {'emptytable': true} %}
@@ -224,7 +224,7 @@ The table below gives the dimensions of the space of holomorphic
           <input type="text" name="jump_to" value="" placeholder="1.12.1.a"> 
 	  <button type="submit" value="Find">Find</button>
         </form>
-        <span class="formexample"> e.g. 1.12.1.a or 11.6 </span>
+        <span class="formexample"> e.g. 1.12.1.a or 55.11.54 </span>
       </div>
 
 
