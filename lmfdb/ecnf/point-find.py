@@ -16,7 +16,7 @@ from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.hmf_check_find import (is_fundamental_discriminant, rqf_iterator)
-from lmfdb.ecnf.WebEllipticCurve import ECNF
+from lmfdb.WebNumberField import WebNumberField
 
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from pymongo.mongo_client import MongoClient
@@ -227,6 +227,12 @@ def encode_points(Plist):
     """
     return [encode_point(P) for P in Plist]
 
+def make_curve(dbCurve):
+    nf = WebNumberField(dbCurve['field_label'])
+    coeffs = dbCurve['ainvs']  # list of 5 lists of d strings
+    ainvs = [nf.K()([QQ(str(c)) for c in s]) for s in coeffs]
+    from sage.schemes.elliptic_curves.all import EllipticCurve
+    return EllipticCurve(ainvs)
 
 def get_generators(field, iso_class, test_saturation=False, verbose=False, store=False):
     r""" Retrieves the curves in the isogeny class from the database, finds
@@ -235,7 +241,7 @@ def get_generators(field, iso_class, test_saturation=False, verbose=False, store
     res = nfcurves.find({'field_label': field, 'short_class_label': iso_class})
     if not res:
         raise ValueError("No curves in the database ovver field %s in class %s" % (field, iso_class))
-    Es = [ECNF(e).E for e in res]
+    Es = [make_curve(e) for e in res]
     if verbose:
         print("Curves in class %s: %s" % (iso_class, [E.ainvs() for E in Es]))
     mwi = MWInfo_curves(Es, HeightBound=2, test_saturation=test_saturation, verbose=verbose)
@@ -257,7 +263,7 @@ def get_generators(field, iso_class, test_saturation=False, verbose=False, store
         if verbose:
             print("About to update %s using data %s" % (e['label'], data))
         if store:
-            nfcurves.update(e, {'$set': data}, upsert=True)
+            nfcurves.update_one(e, {'$set': data}, upsert=True)
         else:
             if verbose:
                 print("(not done, dummy run)")
