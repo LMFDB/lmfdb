@@ -166,6 +166,7 @@ def render_field_webpage(args):
         gn = GG[0]
         gt = GG[1]
         prop2 = [
+            ('Label', label),
             ('Base', '\(\Q_{%s}\)' % p),
             ('Degree', '\(%s\)' % data['n']),
             ('e', '\(%s\)' % e),

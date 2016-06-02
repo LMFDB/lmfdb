@@ -258,14 +258,14 @@ def render_group_webpage(args):
         one = C.numberfields.fields.find_one(query)
         if one:
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) )) 
-        prop2 = [
-            ('Order:', '\(%s\)' % order),
-            ('n:', '\(%s\)' % data['n']),
-            ('Cyclic:', yesno(data['cyc'])),
-            ('Abelian:', yesno(data['ab'])),
-            ('Solvable:', yesno(data['solv'])),
-            ('Primitive:', yesno(data['prim'])),
-            ('$p$-group:', yesno(pgroup)),
+        prop2 = [('Label', label),
+            ('Order', '\(%s\)' % order),
+            ('n', '\(%s\)' % data['n']),
+            ('Cyclic', yesno(data['cyc'])),
+            ('Abelian', yesno(data['ab'])),
+            ('Solvable', yesno(data['solv'])),
+            ('Primitive', yesno(data['prim'])),
+            ('$p$-group', yesno(pgroup)),
         ]
         pretty = group_display_pretty(n,t,C)
         if len(pretty)>0:
