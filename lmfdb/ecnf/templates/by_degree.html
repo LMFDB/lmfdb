@@ -26,8 +26,10 @@
  </h3>
 <table>
 <tr><th> Field <th> Number of curves <th> Number of isogeny classes <th> Maximum conductor norm </tr>
-{% for F, Fdat in sdat.iteritems() %}
-<tr><td> <a href="{{url_for('ecnf.show_ecnf1',nf=F)}}">{{F}}</a> <td> {{Fdat.ncurves}} <td> {{Fdat.nclasses}} <td> {{Fdat.maxnorm}} </tr>
+{% for F in info.counts.fields_by_degree[info.degree] %}
+{% if F in sdat %}
+<tr><td> <a href="{{url_for('ecnf.show_ecnf1',nf=F)}}">{{F}}</a> <td> {{sdat[F].ncurves}} <td> {{sdat[F].nclasses}} <td> {{sdat[F].maxnorm}} </tr>
+{% endif %}
 {% endfor %}
 </table>
 
