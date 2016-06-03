@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 from pymongo import ASCENDING, DESCENDING
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, encode_plot
@@ -263,15 +262,6 @@ def st0_group_name(name):
         return st0_dict[name]
     else:
         return name
-
-def aut_group_name(name):
-    return group_dict[name]
-
-def boolean_name(value):
-    return '\\mathrm{True}' if value else '\\mathrm{False}'
-    
-def globally_solvable_name(value):
-    return boolean_name(value) if value in [0,1] else '\\mathrm{unknown}'
 
 
 ###############################################################################

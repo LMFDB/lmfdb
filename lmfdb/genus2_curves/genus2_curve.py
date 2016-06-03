@@ -15,7 +15,7 @@ from lmfdb.search_parsing import parse_bool, parse_ints, parse_signed_ints, pars
 from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
 from lmfdb.genus2_curves.isogeny_class import G2Cisogeny_class, st_group_name, st_group_href
-from lmfdb.genus2_curves.web_g2c import WebG2C, g2cdb, list_to_min_eqn, isogeny_class_label, st0_group_name, aut_group_name, boolean_name, globally_solvable_name
+from lmfdb.genus2_curves.web_g2c import WebG2C, g2cdb, list_to_min_eqn, isogeny_class_label, st0_group_name
 
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
@@ -347,10 +347,19 @@ def genus2_curve_search(**args):
 # Statistics
 ################################################################################
 
+def boolean_name(value):
+    return '\\mathrm{True}' if value else '\\mathrm{False}'
+
+def aut_grp_name(id):
+    return aut_grp_dict[id]
+
+def geom_aut_grp_name(id):
+    return geom_aut_grp_dict[id]
+
 stats_attribute_list = [
     {'name':'num_rat_wpts','top_title':'rational Weierstrass points','row_title':'Weierstrass points','knowl':'g2c.num_rat_wpts','avg':True},
-    {'name':'aut_grp_id','top_title':'$\mathrm{Aut}(X)$','row_title':'automorphism group','knowl':'g2c.aut_grp','format':aut_group_name},
-    {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\mathbb{Q}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':aut_group_name},
+    {'name':'aut_grp_id','top_title':'$\mathrm{Aut}(X)$','row_title':'automorphism group','knowl':'g2c.aut_grp','format':aut_grp_name},
+    {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\mathbb{Q}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':geom_aut_grp_name},
     {'name':'analytic_rank','top_title':'analytic ranks','row_title':'analytic rank','knowl':'g2c.analytic_rank','avg':True},
     {'name':'two_selmer_rank','top_title':'2-Selmer ranks','row_title':'2-Selmer rank','knowl':'g2c.two_selmer_rank','avg':True},
     {'name':'has_square_sha','top_title':'squareness of &#1064;','row_title':'has square Sha','knowl':'g2c.has_square_sha', 'format':boolean_name},
