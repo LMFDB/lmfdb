@@ -112,7 +112,7 @@ class WebHeckeOrbits(WebDict):
         res = {}
         for lbl in l:
             F = WebNewForm(self.level, self.weight, self.character, lbl, prec = self.prec, parent=self.parent)
-            if F.coefficient_field.absolute_degree() > 1:
+            if not F.is_rational:
                 self._only_rational = False
             #F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
             emf_logger.debug("Got F for label {0} : {1}".format(lbl,F))
@@ -196,7 +196,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebList('_character_galois_orbit', default_value=[character]),
             WebDict('_character_galois_orbit_embeddings', default_value={}),
             WebCharProperty('character_orbit_rep', modulus=level, save_to_fs=True),
-            WebCharProperty('character_used_in_computation', modulus=level, save_to_fs=True),
+            #WebCharProperty('character_used_in_computation', modulus=level, save_to_fs=True),
             WebStr('space_label', default_value=space_label(level=level, weight=weight, character=character), save_to_fs=True),
             WebStr('space_orbit_label', value='', save_to_db=True),            
             #WebStr('galois_orbit_name', value='', save_to_fs=True),
