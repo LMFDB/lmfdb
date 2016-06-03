@@ -509,7 +509,8 @@ def download_EC_all(label):
     for data in data_list:
         data.pop('_id')
 
-    response = make_response('\n\n'.join(str(d) for d in data_list))
+    import json
+    response = make_response('\n\n'.join(json.dumps(d) for d in data_list))
     response.headers['Content-type'] = 'text/plain'
     return response
 
