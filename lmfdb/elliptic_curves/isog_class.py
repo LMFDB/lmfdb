@@ -132,7 +132,7 @@ class ECisog_class(object):
         self.newform = web_latex(self.E.q_eigenform(10))
         self.newform_label = newform_label(N,2,1,iso)
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
-        newform_exists_in_db = is_newform_in_db(self.newform_label)
+        self.newform_exists_in_db = is_newform_in_db(self.newform_label)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
 
@@ -151,7 +151,7 @@ class ECisog_class(object):
                 self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso))]
             if int(N)<=50:
                 self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', label=self.lmfdb_iso))]
-        if newform_exists_in_db:
+        if self.newform_exists_in_db:
             self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
 
         self.properties = [('Label', self.lmfdb_iso),
