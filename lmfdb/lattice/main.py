@@ -62,7 +62,8 @@ def get_bread(breads=[]):
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Labels for integral lattices', url_for(".labels_page"))]
+            ('Labels for integral lattices', url_for(".labels_page")),
+            ('History of lattices', url_for(".history_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -106,8 +107,13 @@ def split_lattice_label(lab):
     return lattice_label_regex.match(lab).groups()
 
 def lattice_by_label_or_name(lab, C):
-    if C.Lattices.lat.find({'$or':[{'label': lab}, {'name': lab}]}).limit(1).count() > 0:
-        return render_lattice_webpage(label=lab)
+    clean_lab=str(lab).replace(" ","")
+    clean_and_cap=str(clean_lab).capitalize()
+    for l in [lab, clean_lab, clean_and_cap]:
+        result= C.Lattices.lat.find({'$or':[{'label': l}, {'name': l}]})
+        if result.count()>0:
+            lab=result[0]['label']
+            return redirect(url_for(".render_lattice_webpage", label=lab))
     if lattice_label_regex.match(lab):
         flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
     else:
@@ -123,6 +129,7 @@ def lattice_search(**args):
 
     if 'label' in info and info.get('label'):
         return lattice_by_label_or_name(info.get('label'), C)
+
     query = {}
     try:
         for field, name in (('dim','Dimension'),('det','Determinant'),('level',None),
@@ -386,6 +393,15 @@ def labels_page():
     credit = lattice_credit
     return render_template("single.html", kid='lattice.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+
+@lattice_page.route("/History")
+def history_page():
+    t = 'A brief history of lattices'
+    bread = [('Lattice', url_for(".lattice_render_webpage")),
+             ('Histoy', '')]
+    credit = lattice_credit
+    return render_template("single.html", kid='lattice.history',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('History'))
 
 #download
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}

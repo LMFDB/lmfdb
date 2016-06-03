@@ -185,7 +185,7 @@ function show_invs(invstyle) {
         </td>
     </tr>
     <tr>
-        <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td> <td>\({{ data.data.aut_grp}} \)</td> <td>(GAP id : {{data.aut_grp}})</td>
+        <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td> <td>\({{ info.aut_grp_dict[data.aut_grp_id]}} \)</td> <td>(GAP id : {{data.aut_grp_id}})</td>
     </tr>
     <tr>
         <td colspan="6">
@@ -193,7 +193,7 @@ function show_invs(invstyle) {
         </td>
     </tr>
     <tr>
-        <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td> <td>\({{ data.data.geom_aut_grp}} \) </td> <td>(GAP id : {{data.geom_aut_grp}})</td>
+        <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td> <td>\({{ info.geom_aut_grp_dict[data.geom_aut_grp_id]}} \) </td> <td>(GAP id : {{data.geom_aut_grp_id}})</td>
     </tr>
 </table>
 
@@ -207,7 +207,7 @@ function show_invs(invstyle) {
 <h3 class="inline"> {{ KNOWL('g2c.locally_solvable', title='Locally solvable') }}: </h3>{{data.data.locally_solvable}}
 
 <br>
-<h2 class='subhead'> Properties related to the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
+<h2 class='subhead'> Invariants of the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
 
 <h3 class="inline"> {{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}: </h3>\({{data.data.analytic_rank}}\)
 
@@ -240,7 +240,7 @@ function show_invs(invstyle) {
 
 <br>
 
-<h3 style="display: inline"> Decomposition </h3>
+<h3 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition') }} </h3>
 
 <!-- Description of a splitting field of minimal degree: -->
 <p>{{data.endodata.spl_fod_statement|safe}}</p>
