@@ -652,6 +652,5 @@ def ec_code(**args):
     for k in sorted_code_names:
         if lang in Ecode[k]:
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            for line in Ecode[k][lang]:
-                code += line + "\n"
+            code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
     return code
