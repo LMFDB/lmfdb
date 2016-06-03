@@ -272,8 +272,13 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
     <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
     <h3> {{KNOWL('ec.q.modular_form', title='Modular form')}}
-          {{data.newform_label}} </h3>
-          {{ place_code('qexp') }}
+{% if data.newform_exists_in_db %}
+<a href="{{data.newform_link}}">{{ data.newform_label }}</a>
+{% else %}
+{{ data.newform_label }}
+{% endif %}
+</h3>
+    {{ place_code('qexp') }}
     <p>
 {#
     <form>
