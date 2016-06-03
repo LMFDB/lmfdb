@@ -98,7 +98,9 @@ from sage.all import (
      loads,
      dumps,
      PolynomialRing,
-     NumberField
+     NumberField,
+     exp,
+     CC
      )
 
 from sage.matrix.matrix_integer_dense import Matrix_integer_dense
@@ -617,6 +619,14 @@ class WebNewForm(WebObject, CachedRepresentation):
         
     def q_expansion_latex(self, prec=None, name=None):
         return self._properties['q_expansion'].latex(prec, name, keepzeta=True)
+
+    def value(self, z, embedding=0):
+        if self.prec == 0:
+            return 0
+        else:
+            q = exp(2*CC.pi()*CC(0,1)*z)
+            return sum(self.coefficient_embedding(n,embedding)*q**n for n in range(self.prec))
+            
     
     def coefficient(self, n):
         r"""
