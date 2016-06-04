@@ -118,7 +118,7 @@ def search():
 
 def galois_group_search(**args):
     info = to_dict(args)
-    bread = get_bread([("Search results", url_for('.search'))])
+    bread = get_bread([("Search results", ' ')])
     C = base.getDBConnection()
     query = {}
     if 'jump_to' in info:
@@ -195,7 +195,7 @@ def render_group_webpage(args):
         C = base.getDBConnection()
         data = C.transitivegroups.groups.find_one({'label': label})
         if data is None:
-            bread = get_bread([("Search error", url_for('.search'))])
+            bread = get_bread([("Search error", ' ')])
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
