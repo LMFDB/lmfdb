@@ -251,8 +251,8 @@ def render_group_webpage(args):
                 data['decompunique'] = dcq[0]
                 data['isoms'] = [[mult2mult(z[0]), mult2mult(z[1])] for z in dcq[1]]
                 data['isoms'] = [[modules2string(n,t,z[0]), modules2string(n,t,z[1])] for z in data['isoms']]
-                print dcq[1]
-                print data['isoms']
+                #print dcq[1]
+                #print data['isoms']
 
         friends = []
         one = C.numberfields.fields.find_one(query)
