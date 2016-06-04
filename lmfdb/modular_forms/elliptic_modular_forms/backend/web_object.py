@@ -559,28 +559,27 @@ class WebObject(object):
         else:
             return self.get_file(add_to_fs_query, get_all=True, meta_only=True)
 
-    def authorize(self):
+    @classmethod
+    def authorize(cls):
         r"""
         Need to be authorized to insert data
         """
-        from lmfdb.base import getDBConnection
         from os.path import dirname, join
         pw_filename = join(dirname(dirname(__file__)), "password")
         user = 'editor'
         password = open(pw_filename, "r").readlines()[0].strip()
-        C = getDBConnection()
         emf_logger.debug("Authenticating user={0} password={1}".format(user,password))
-        C["modularforms2"].authenticate(user,password)
+        cls.connect_to_db().authenticate(user,password)
         emf_logger.debug("Authenticated with user:{0} and pwd:{1}".format(user,password))
-                            
-    def logout(self):
+
+    @classmethod
+    def logout(cls):
         r"""
         Logout authorized user.
         """
         import lmfdb.base
-        from lmfdb.base import getDBConnection        
-        C = getDBConnection()
-        C["modularforms2"].logout()
+        C = cls.connect_to_db()
+        C.logout()
         # log back in with usual read-only access
         lmfdb.base._init(lmfdb.base.dbport)
         
@@ -736,9 +735,10 @@ class WebObject(object):
                         except NotImplementedError:
                             continue
                 succ_db = True
-            except:
+            except Exception as e:
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
+                emf_logger.critical("Error occured while updating from db: {}".format(e))
                 succ_db = False
         if self._use_gridfs and update_from_fs:
             try:

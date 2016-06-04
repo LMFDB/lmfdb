@@ -54,8 +54,13 @@ text-align: center;
 rank \({{ info.rank}}\).
 </p>
 
-<h2><a href="{{info.newform_link}}">
-            Modular form {{ info.newform_label }}</a>
+<h2>
+{{KNOWL('ec.q.modular_form', title='Modular form')}}
+{% if info.newform_exists_in_db %}
+<a href="{{info.newform_link}}">{{ info.newform_label }}</a>
+{% else %}
+{{ info.newform_label }}
+{% endif %}
 </h2>
 {{ place_code('q_eigenform') }}
 <div>

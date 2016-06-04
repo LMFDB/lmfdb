@@ -18,9 +18,9 @@ class Genus2Test(LmfdbTest):
 
     def test_by_curve_label(self):
         L = self.tc.get('/Genus2Curve/Q/169.a.169.1',follow_redirects=True)
-        assert 'square of an elliptic curve' in L.data and 'E_6' in L.data
+        assert 'square of' in L.data and 'E_6' in L.data
         L = self.tc.get('/Genus2Curve/Q/1152.a.147456.1',follow_redirects=True)
-        assert 'two non-isogenous elliptic curves' in L.data and '24.a5' in L.data and '48.a5' in L.data
+        assert 'non-isogenous elliptic curves' in L.data and '24.a5' in L.data and '48.a5' in L.data
         L = self.tc.get('/Genus2Curve/Q/15360.f.983040.2',follow_redirects=True)
         assert 'N(G_{1,3})' in L.data and '480.b3' in L.data and '32.a3' in L.data
 
@@ -54,14 +54,14 @@ class Genus2Test(LmfdbTest):
         assert '32.a1' in L.data and '34.a3' in L.data
         # RM curve:
         L = self.tc.get('/Genus2Curve/Q/17689/e/866761/1')
-        assert 'simple over' in L.data and 'G_{3,3}' in L.data
+        assert ('simple' in L.data or 'Simple' in L.data) and 'G_{3,3}' in L.data
         # QM curve:
         L = self.tc.get('Genus2Curve/Q/262144/d/524288/1')
         assert 'quaternion algebra' in L.data and 'J(E_2)' in L.data
         L = self.tc.get('Genus2Curve/Q/4096/b/65536/1')
         # Square over a quadratic extension that is CM over one extension and
         # multiplication by a quaternion algebra ramifying at infinity over another
-        assert 'square of an elliptic curve' in L.data and '2.2.8.1-64.1-a3'\
+        assert 'square of' in L.data and '2.2.8.1-64.1-a3'\
             in L.data and r'\mathbf{H}' in L.data and '(CM)' in L.data
 
     def test_by_url_isogeny_class_discriminant(self):
