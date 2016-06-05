@@ -95,7 +95,7 @@ class HMFstats(object):
     def init_hmf_count(self):
         if self._counts:
             return
-        print("Computing HMF counts...")
+        #print("Computing HMF counts...")
         forms = self.forms
         fields = self.fields
         counts = {}
@@ -118,14 +118,14 @@ class HMFstats(object):
         counts['max_disc_by_degree'] = dict([(d,max(counts['discs_by_degree'][d])) for d in degrees])
         counts['nfields_by_degree'] = dict([(d,len(counts['fields_by_degree'][d])) for d in degrees])
         self._counts  = counts
-        print("Finished computing HMF counts")
+        #print("Finished computing HMF counts")
 
     def init_hmf_stats(self, use_yaml_file=True): # it works with False but is much slower
         if self._stats:
             return
         if not self._counts:
             self.init_hmf_count()
-        print("Computing HMF stats...")
+        #print("Computing HMF stats...")
         if use_yaml_file:
             import yaml
             import os.path
