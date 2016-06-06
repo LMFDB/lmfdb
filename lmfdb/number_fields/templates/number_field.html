@@ -25,10 +25,10 @@
         <p><h2> {{ KNOWL('nf.invariants', title='Invariants') }}</h2>
         <p>
           <table>
-            <tr><td>Degree:<td>&nbsp;&nbsp;<td>${{info.degree}}$<td>{{ place_code('degree') }}
-            <tr><td>Signature:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ place_code('signature') }}
-             <tr><td>Discriminant:<td>&nbsp;&nbsp;<td>{{info.discriminant}}<td>{{ place_code('discriminant') }}
-            <tr><td>Ramified primes:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
+            <tr><td>{{ KNOWL('nf.degree', title="Degree") }}:<td>&nbsp;&nbsp;<td>${{info.degree}}$<td>{{ place_code('degree') }}
+            <tr><td>{{ KNOWL('nf.signature', title="Signature") }}:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ place_code('signature') }}
+             <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant}}<td>{{ place_code('discriminant') }}
+            <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
   {% if info.is_abelian %}
             <tr><td colspan="3">&nbsp;</tr>
             <tr><td colspan="3">Extension is Galois and abelian</tr>
