@@ -11,11 +11,11 @@
                 $f={{ object.number_field_galois_group().polynomial().latex()}}$ over $\Q$</tr>
         <tr><td> Size of {{ KNOWL('artin.galois_orbit', title='Galois orbit') }}: <td> {{object.galois_conjugacy_size()}}
         <tr><td> Smallest {{ KNOWL('artin.permutation_container', title='containing permutation representation') }}: <td> {{object.smallest_gal_t_format()|safe}}
-        <tr><td> {{ KNOWL('artin.parity', title='Parity') }} <td> {{ object.parity()}} </tr>
+        <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:<td> {{ object.parity()}} </tr>
         {% if object.dimension() == 1 %}
-            <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }} <td> {{ object.det_display()|safe}} </tr>
+            <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }}: <td> {{ object.det_display()|safe}} </tr>
         {% else %}
-            <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }} <td> {{ object.det_display()|safe}} </tr>
+            <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }}: <td> {{ object.det_display()|safe}} </tr>
         {% endif %}
     </table>
 
