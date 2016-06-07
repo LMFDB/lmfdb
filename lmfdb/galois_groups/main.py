@@ -118,7 +118,7 @@ def search():
 
 def galois_group_search(**args):
     info = to_dict(args)
-    bread = get_bread([("Search results", url_for('.search'))])
+    bread = get_bread([("Search results", ' ')])
     C = base.getDBConnection()
     query = {}
     if 'jump_to' in info:
@@ -195,7 +195,7 @@ def render_group_webpage(args):
         C = base.getDBConnection()
         data = C.transitivegroups.groups.find_one({'label': label})
         if data is None:
-            bread = get_bread([("Search error", url_for('.search'))])
+            bread = get_bread([("Search error", ' ')])
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
@@ -251,21 +251,21 @@ def render_group_webpage(args):
                 data['decompunique'] = dcq[0]
                 data['isoms'] = [[mult2mult(z[0]), mult2mult(z[1])] for z in dcq[1]]
                 data['isoms'] = [[modules2string(n,t,z[0]), modules2string(n,t,z[1])] for z in data['isoms']]
-                print dcq[1]
-                print data['isoms']
+                #print dcq[1]
+                #print data['isoms']
 
         friends = []
         one = C.numberfields.fields.find_one(query)
         if one:
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) )) 
-        prop2 = [
-            ('Order:', '\(%s\)' % order),
-            ('n:', '\(%s\)' % data['n']),
-            ('Cyclic:', yesno(data['cyc'])),
-            ('Abelian:', yesno(data['ab'])),
-            ('Solvable:', yesno(data['solv'])),
-            ('Primitive:', yesno(data['prim'])),
-            ('$p$-group:', yesno(pgroup)),
+        prop2 = [('Label', label),
+            ('Order', '\(%s\)' % order),
+            ('n', '\(%s\)' % data['n']),
+            ('Cyclic', yesno(data['cyc'])),
+            ('Abelian', yesno(data['ab'])),
+            ('Solvable', yesno(data['solv'])),
+            ('Primitive', yesno(data['prim'])),
+            ('$p$-group', yesno(pgroup)),
         ]
         pretty = group_display_pretty(n,t,C)
         if len(pretty)>0:
