@@ -624,11 +624,12 @@ def initLfunction(L, args, request):
             # info['friends'].append(('L-function ' + label.replace('.', '.2'),
             #                         url_for('.l_function_emf_page', level=L.modform['level'],
             #                             weight=2, character=1, label=L.modform['iso'], number=0)))
-        info['friends'].append(
-            ('Symmetric square L-function', url_for(".l_function_ec_sym_page",
-                                                    power='2', label=label)))
-        info['friends'].append(
-            ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
+        if not L.E.has_cm: # only show symmetric powers for non-CM curves
+            info['friends'].append(
+                ('Symmetric square L-function', url_for(".l_function_ec_sym_page",
+                                                        power='2', label=label)))
+            info['friends'].append(
+                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
         info['bread'] = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
                                       (label, url_for('.l_function_ec_page', label=label))])
     elif L.Ltype() == 'genus2curveQ':
