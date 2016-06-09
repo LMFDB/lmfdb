@@ -7,6 +7,7 @@ import flask
 from sage.all import *
 import tempfile
 import os
+import re
 import sqlite3
 import numpy
 import pymongo
@@ -79,7 +80,10 @@ def l_function_degree4_browse_page():
 # Degree browsing page #########################################################
 @l_function_page.route("/<degree>/")
 def l_function_degree_page(degree):
-    degree = int(degree[6:])
+    res = re.match('degree[0-9]+',degree)
+    if not res:
+        return flask.abort(404)
+    degree = res.group(0).atoi()
     info = {"degree": degree}
     info["key"] = 777
     info["bread"] = get_bread(degree, [])
