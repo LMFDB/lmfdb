@@ -146,8 +146,8 @@ def getOneGraphHtml(gls):
                + str(gls[2]) + "</h4>\n")
     else:
         ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + "</h4>\n")
-    ans += "<div>The dots in the plot correspond to \\((\\mu_1,\\mu_2)\\) "
-    ans += "in the \\(\\Gamma\\)-factors. These have been found by a computer "
+    ans += "<div>The dots in the plot correspond to L-functions with \\((\\mu_1,\\mu_2)\\) "
+    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). These have been found by a computer "
     ans += "search. Click on any of the dots to get detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)

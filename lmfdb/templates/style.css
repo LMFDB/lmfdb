@@ -1639,6 +1639,7 @@ div.codebox {
 div.maassformplot {
     position: absolute;
             width: 720px;
+         position: relative;
     /*    height: 800px;
         overflow: hidden;
         position: relative; */
