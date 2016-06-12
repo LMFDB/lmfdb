@@ -26,7 +26,7 @@ By genus:
 
 <p>Hyperelliptic curves by genus:
 {% for gen in info.genus_list %}
-<a href="?genus={{gen}}&hyperelliptic=True">{{gen}}</a>
+<a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>
 {% endfor %} 
 </p>
 
@@ -90,7 +90,7 @@ By genus:
 	 </td> </tr>
               <tr>  <td align=right>
 	       Hyperelliptic Curve(s):
-            </td>  <td> <select name='hyperelliptic'>
+            </td>  <td> <select name='inc_hyper'>
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>
                     <option value='only'>only</option>

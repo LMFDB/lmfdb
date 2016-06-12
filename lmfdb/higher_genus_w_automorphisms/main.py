@@ -19,7 +19,19 @@ from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.genus2_curves.data import group_dict
 
 
-HGCwA_credit = 'J. Paulhus'
+
+
+# Determining what kind of label
+family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+)\.(\d+-)')
+passport_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
+cc_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
+
+def label_is_one_family(lab):
+    return family_label_regex.match(lab)
+
+def label_is_one_passport(lab):
+    return passport_label_regex.match(lab)
+
 
 
 def get_bread(breads=[]):
@@ -29,7 +41,7 @@ def get_bread(breads=[]):
     return bc
 
 
-
+#pretty printing functions 
 def groupid_to_meaningful(groupid):
     if groupid[0] < 120:
         return group_dict[str(groupid).replace(" ", "")]
@@ -51,7 +63,24 @@ def group_display_shortC(C):
         return group_display_short(nt[0], nt[1], C)
     return gds
 
-    
+        
+def sign_display(L):
+    sizeL = len(L)                
+    signL = "[ " + str(L[0]) + "; "
+    for i in range(1,sizeL-1):
+        signL= signL + str(L[i]) + ", "                    
+     
+    signL=signL + str(L[sizeL-1]) + " ]"                  
+    return signL                
+
+def cc_display(L):
+    sizeL = len(L)
+    stg = str(L[0])+ ", "
+    for i in range(1,sizeL-1):
+        stg =stg + str(L[i])+", "
+    stg=stg+ str(L[sizeL-1])
+    return stg
+
     
 @higher_genus_w_automorphisms_page.route("/")
 def index():
@@ -66,15 +95,29 @@ def index():
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
     
-    return render_template("hgcwa-index.html", title="Higher Genus Curves with Automorphisms", bread=bread, credit=HGCwA_credit, info=info, learnmore=learnmore)
+    return render_template("hgcwa-index.html", title="Higher Genus Curves with Automorphisms", bread=bread, info=info, learnmore=learnmore)
 
 
 
 
 @higher_genus_w_automorphisms_page.route("/<label>")
 def by_label(label):
-    return render_hgcwa_webpage({'label': label})
 
+    if label_is_one_passport(label):
+        return render_passport({'passport_label': label})
+    elif label_is_one_family(label):
+        return render_family({'label': label})    
+    else:
+        info = {}
+        bread = get_bread([("Search error", url_for('.search'))])
+        info['err'] = "Higher Genus Curve with Automorphism " + label + " was not found in the database."
+        info['label'] = label
+        return search_input_error(info, bread)
+    
+
+@higher_genus_w_automorphisms_page.route("/<passport_label>")
+def by_passport_label(label):
+    return render_passport({'passport_label': label})
 
 
 @higher_genus_w_automorphisms_page.route("/search", methods=["GET", "POST"])
@@ -95,7 +138,7 @@ def higher_genus_w_automorphisms_search(**args):
     C = base.getDBConnection()
     query = {}
     if 'jump_to' in info:
-        return render_hgcwa_webpage({'label': info['jump_to']})
+        return render_family({'label': info['jump_to']})
 
     try:
         parse_list(info,query,'group', name='Group')
@@ -112,7 +155,7 @@ def higher_genus_w_automorphisms_search(**args):
     count = parse_count(info)
     start = parse_start(info)
     
-    res = C.curve_automorphisms.families.find(query).sort([(
+    res = C.curve_automorphisms.passports.find(query).sort([(
          'g', pymongo.ASCENDING), ('dim', pymongo.ASCENDING)])
     nres = res.count()
     res = res.skip(start).limit(count)
@@ -136,24 +179,24 @@ def higher_genus_w_automorphisms_search(**args):
         else:
             info['report'] = 'displaying all %s matches' % nres
 
-    return render_template("hgcwa-search.html", info=info, title="Higher Genus Curves with Automorphisms Search Result", bread=bread, credit=HGCwA_credit)
+    return render_template("hgcwa-search.html", info=info, title="Higher Genus Curves with Automorphisms Search Result", bread=bread)
 
 
 
 
 
-def render_hgcwa_webpage(args):
-    data = None
+def render_family(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
         C = base.getDBConnection()
-        data = C.curve_automorphisms.families.find_one({'label': label})
-        if data is None:
+        dataz = C.curve_automorphisms.passports.find({'label': label})
+        if dataz.count() is 0:
             bread = get_bread([("Search error", url_for('.search'))])
             info['err'] = "Higher Genus Curve with Automorphism " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
+        data=dataz[0]
         g = data['genus']
         GG = data['group']
         gn = GG[0]
@@ -174,39 +217,33 @@ def render_hgcwa_webpage(args):
             ('Signature', '\(%s\)' % sign_display(data['signature']))
         ]
         info.update({'genus': data['genus'],
-                    'genvecs': data['gen_vectors'],
                     'sign': sign_display(data['signature']),   
                     'group': groupid_to_meaningful(data['group']),
                     'g0':data['g0'],
                     'dim':data['dim'],
-                     'r':data['r'],
-                     'gpid': smallgroup
+                    'r':data['r'],
+                    'gpid': smallgroup
                    })
 
         if spname:
             info.update({'specialname': True})
-        		   
-        if 'eqn' in data:
-            info.update({'eqn': data['eqn']})
 
-        if 'hyperelliptic' in data:
-            info.update({'ishyp':  tfTOyn(data['hyperelliptic'])})
+        Lcc=[]
+        Lall=[]
+        i=1
+        for dat in dataz:
+            if dat['con'] not in Lcc:
+                urlstrng=dat['passport_label']
+                Lcc.append(dat['con'])
+                Lall.append([cc_display(dat['con']),dat['passport_label'],
+                             urlstrng])
+                i=i+1
             
-        if 'hyp_involution' in data:
-            info.update({'hypinv': data['hyp_involution']})
+        info.update({'passport': Lall})
+
             
-        gg = "/GaloisGroup/" + str(gn) + "T" + str(gt)
-            
-        if 'full_auto' in data:
-            info.update({'fullauto': groupid_to_meaningful(data['full_auto']),
-                         'signH':sign_display(data['signH']),
-                         'higgenlabel' : data['full_label'] })
-            higgenstrg = "/HigherGenus/C/aut/" + data['full_label']
-            friends = [('Family of full automorphisms',  higgenstrg  )]
-        else:
-            friends = [ ]
+        friends = [ ]
         
-
         
         bread = get_bread([(label, ' ')])
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
@@ -215,25 +252,125 @@ def render_hgcwa_webpage(args):
 
         downloads = [('Download this example', '.')]
             
-        return render_template("hgcwa-show-curve.html", credit=HGCwA_credit,
+        return render_template("hgcwa-show-family.html", 
                                title=title, bread=bread, info=info,
                                properties2=prop2, friends=friends,
                                learnmore=learnmore, downloads=downloads)
 
 
-def perm_display(L):
-    return [Permutation(ell).cycle_string()  for ell in L]
+
+def render_passport(args):
+    info = {}
+    if 'passport_label' in args:
+        label =clean_input(args['passport_label'])
+        
+        C = base.getDBConnection()
+        
+        dataz = C.curve_automorphisms.passports.find({'passport_label': label})
+        if dataz.count() is 0:
+            bread = get_bread([("Search error", url_for('.search'))])
+            info['err'] = "Higher Genus Curve with Automorphism " + label + " was not found in the database."
+            info['label'] = label
+            return search_input_error(info, bread)
+        data=dataz[0]
+        g = data['genus']
+        GG = data['group']
+        gn = GG[0]
+        gt = GG[1]
+        numb = dataz.count()
+
+
+        group = groupid_to_meaningful(data['group'])
+        if group == str(GG) or group == "[" + str(gn)+","+str(gt)+"]":
+            spname=False
+        else:
+            spname=True
+        title = 'One passport of genus ' + str(g) + ' curves with automorphism group $' + group +'$'
+        smallgroup="(" + str(gn) + "," +str(gt) +")"   
+
+        prop2 = [
+            ('Genus', '\(%d\)' % g),
+            ('Small Group', '\(%s\)' %  smallgroup),
+            ('Signature', '\(%s\)' % sign_display(data['signature'])),
+            ('Generating Vectors','\(%d\)' % numb)
+        ]
+        info.update({'genus': data['genus'],
+                    'cc': cc_display(data['con']), 
+                    'sign': sign_display(data['signature']),   
+                    'group': groupid_to_meaningful(data['group']),
+                     'gpid': smallgroup
+                   })
+
+        if spname:
+            info.update({'specialname': True})
+
+        Ldata=[]
+        HypColumn = False
+        Lfriends=[]
+        for dat in dataz:
+            x1=dat['total_label']
+            if 'full_auto' in dat:
+                x2='No'
+                if dat['full_label'] not in Lfriends:
+                    Lfriends.append(dat['full_label'])
+            else:
+                x2='Yes'
+                
+            if 'hyperelliptic' in dat:
+                x3=tfTOyn(dat['hyperelliptic'])
+                HypColumn= True
+            else:
+                x3=' '
+
+            x4=[]    
+            for perm in dat['gen_vectors']:
+                cycperm=Permutation(perm).cycle_string()
+
+                x4.append(cycperm)
+                    
+            Ldata.append([x1,x2,x3,x4])
+
+            
+                
+        info.update({'genvects': Ldata, 'HypColumn' : HypColumn})
+
+
+        if 'hyperelliptic' in data:
+            info.update({'ishyp':  tfTOyn(data['hyperelliptic'])})
+            
+        if 'hyp_involution' in data:
+            info.update({'hypinv': data['hyp_involution']})
+            
+
+        if 'full_auto' in data:
+            info.update({'fullauto': groupid_to_meaningful(data['full_auto']),
+                         'signH':sign_display(data['signH']),
+                         'higgenlabel' : data['full_label'] })
+
+
+        if Lfriends:
+           for Lf in Lfriends:
+              friends = [("Full Automorphism " + Lf, Lf) ]
+  
+        else:    
+            friends = [ ]
+        
 
         
-def sign_display(L):
-    sizeL = len(L)                
-    signL = "[ " + str(L[0]) + "; "
-    for i in range(1,sizeL-1):
-        signL= signL + str(L[i]) + ", "                    
-     
-    signL=signL + str(L[sizeL-1]) + " ]"                  
-    return signL                
+        bread = get_bread([(data['label'], ' '),(data['cc'][0], ' ')])
+        learnmore =[('Completeness of the data', url_for(".completeness_page")),
+                ('Source of the data', url_for(".how_computed_page")),
+                ('Labeling convention', url_for(".labels_page"))]
 
+        downloads = [('Download this example', '.')]
+            
+        return render_template("hgcwa-show-passport.html", 
+                               title=title, bread=bread, info=info,
+                               properties2=prop2, friends=friends,
+                               learnmore=learnmore, downloads=downloads)
+
+
+    
 
 
 def search_input_error(info, bread):
@@ -248,8 +385,7 @@ def completeness_page():
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html", kid='dq.curve.highergenus.aut.extent',
-                           credit=HGCwA_credit, title=t, bread=bread,
-                           learnmore=learnmore)
+                            title=t, bread=bread,learnmore=learnmore)
 
 
 @higher_genus_w_automorphisms_page.route("/Labels")
@@ -259,8 +395,7 @@ def labels_page():
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page"))]
     return render_template("single.html", kid='dq.curve.highergenus.aut.label',
-                           learnmore=learnmore, credit=HGCwA_credit, title=t,
-                           bread=bread)
+                           learnmore=learnmore, title=t, bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/Source")
 def how_computed_page():
@@ -269,5 +404,4 @@ def how_computed_page():
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html", kid='dq.curve.highergenus.aut.source',
-                           credit=HGCwA_credit, title=t, bread=bread, 
-                           learnmore=learnmore)
+                           title=t, bread=bread, learnmore=learnmore)
