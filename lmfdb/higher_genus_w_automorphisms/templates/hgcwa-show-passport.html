@@ -1,0 +1,65 @@
+{% extends "homepage.html" %}
+
+<!-- in templates -->
+
+{% block content %}
+
+<style>
+table,td {
+  border-right:solid 30px transparent;
+} 
+</style>
+
+
+
+
+<p><h2> Family Information</h2>
+
+  <table>
+      <tr><td> Genus:  </td><td> {{ info.genus }} </td></tr>    
+   {% if info.specialname %}
+   <tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr>
+   {% endif %}
+<tr>
+  <td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td>
+  <td>SmallGroup{{info.gpid}}</td></tr>
+  <tr><td> {{ KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
+
+  </table></p>
+
+
+<p>  {% if info.fullauto  %}
+The full automorphism group for this family is ${{info.fullauto}}$ with signature ${{info.signH}}$.
+    {% endif %} 
+</p>
+
+{% if info.ishyp %}     
+
+  <p><h2>Other Data</h2>
+    <table>
+     <tr><td>Hyperelliptic curve(s):</td><td>{{info.ishyp}}</td></tr>
+   {% if info.hypinv  %}
+       <tr><td>Hyperelliptic involution:</td> <td>{{info.hypinv}}</td></tr>
+   {% endif %}  
+    </table>
+  </p>
+  
+
+ {% endif %}
+
+
+<p><h2>{{KNOWL('curve.highergenus.aut.groupnotation',title='Generating Vector(s)')}}</h2>
+
+ 
+    {% for cdata in info.genvects %}
+   {{cdata[0]}}
+     <table>{% for perm in cdata[3] %}
+	  <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+	  {% endfor %} </table> <br>
+    {% endfor %}
+</table>    
+
+</p>
+
+  
+{% endblock %}
