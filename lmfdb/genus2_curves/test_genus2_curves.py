@@ -135,3 +135,10 @@ class Genus2Test(LmfdbTest):
         assert '\Z/{29}\Z' in L.data
         L = self.tc.get('/Genus2Curve/Q/118606/a/118606/1')
         assert 'trivial' in L.data
+        
+    def test_mfhilbert(self):
+        L = self.tc.get('/Genus2Curve/Q/12500/a/12500/1')
+        assert '2.2.5.1-500.1-a' in L.data
+        L = self.tc.get('/Genus2Curve/Q/12500/a/')
+        assert '2.2.5.1-500.1-a' in L.data
+        
