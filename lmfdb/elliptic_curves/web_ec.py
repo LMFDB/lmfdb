@@ -61,12 +61,7 @@ def db_ec():
     global ecdb
     if ecdb is None:
         ec = lmfdb.base.getDBConnection().elliptic_curves
-        if 'curves2' in ec.collection_names():
-            #print("Using new collection curves2")
-            ecdb = ec.curves2
-        else:
-            #print("Using old collection curves")
-            ecbd = ec.curves
+        ecdb = ec.curves
     return ecdb
 
 def padic_db():
