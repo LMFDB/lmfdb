@@ -89,10 +89,8 @@ pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.exts
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
-print "setting curves and curves2"
+print "setting curves"
 curves = C.elliptic_curves.curves
-curves2 = C.elliptic_curves.curves2
-
 
 def parse_tgens(s):
     r"""
@@ -601,8 +599,10 @@ def make_extra_data(label,number,ainvs,gens):
     return data
 
 def add_extra_data(N1,N2,store=False):
-    """
-    Add these fields to curves in the db with conductors from N1 to N2:
+    """Add these fields to curves in the db with conductors from N1 to
+    N2: NB This referes to a new collection 'curves2' which was
+    created temporarily when upgrading the data stored, and no longer
+    exists.
 
    - 'xainvs': (string) '[a1,a2,a3,a4,a6]' (will replace 'ainvs' in due course)
    - 'equation': (string)
