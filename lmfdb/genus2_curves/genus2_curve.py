@@ -269,12 +269,15 @@ def genus2_curve_search(**args):
         parse_bool(info,query,'has_square_sha')
         parse_bool(info,query,'locally_solvable')
         parse_bool(info,query,'is_simple_geom')
-        parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
         parse_ints(info,query,'cond')
         parse_ints(info,query,'num_rat_wpts','Weierstrass points')
+        parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
         parse_ints(info,query,'torsion_order')
         if 'torsion' in query and not 'torsion_order' in query:
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion']],1)
+        if 'torsion' in query:
+            query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
+            query.pop('torsion') # search using string key, not array of ints
         parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
         parse_ints(info,query,'analytic_rank','analytic rank')
         # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
@@ -287,7 +290,6 @@ def genus2_curve_search(**args):
     except ValueError as err:
         info['err'] = str(err)
         return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
-
     # Database query happens here
     cursor = g2c_db_curves().find(query,{'_id':int(0),'label':int(1),'min_eqn':int(1),'st_group':int(1),'is_gl2_type':int(1),'analytic_rank':int(1)})
 
