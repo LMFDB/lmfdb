@@ -3,7 +3,8 @@ from pymongo import ASCENDING, DESCENDING
 from ast import literal_eval
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, encode_plot
-from lmfdb.ecnf.main import split_full_label, split_class_label
+from lmfdb.ecnf.main import split_full_label
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, real, sqrt, var, expand
 from sage.plot.text import text
@@ -59,8 +60,12 @@ def url_for_ec(label):
         return url
 
 def url_for_ec_class(ec_label):
-    url = url_for_ec(ec_label)
-    return '/'.join(url.split("/"))+"/"
+    if not '-' in ec_label:
+        (cond, iso, num) = split_lmfdb_label(ec_label)
+        return url_for('ec.by_double_iso_label', conductor=cond, iso_label=iso)
+    else:
+        (nf, cond, iso, num) = split_full_label(ec_label)
+        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=iso)
 
 def ec_label_class(ec_label):
     x = ec_label

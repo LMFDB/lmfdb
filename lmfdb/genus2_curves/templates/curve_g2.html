@@ -266,11 +266,12 @@ Same for all other occasions of it.-->
 <p></p>
 
 <!-- Remainder of the lattice: -->
+{% if data.end_lattice_statement %}
 <h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', title='endomorphism lattice') }} by field</h3>
-
 <p></p>
 {{data.end_lattice_statement|safe}}
 <p></p>
+{% endif %}
 
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 

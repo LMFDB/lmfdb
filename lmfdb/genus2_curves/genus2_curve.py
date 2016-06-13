@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
+# -*- coding: utf8 -*-
 import StringIO
 from ast import literal_eval
 import re
@@ -100,7 +98,7 @@ def index_Q():
     info = {'counts' : g2cstats().counts()}
     info["stats_url"] = url_for(".statistics")
     info["curve_url"] =  lambda label: url_for_curve_label(label)
-    curve_labels = ('169.a.169.1', '1116.a.214272.1', '1152.a.147456.1', '1369.a.50653.1', '15360.f.983040.2')
+    curve_labels = ('169.a.169.1', '1116.a.214272.1', '11664.a.11664.1', '1369.a.50653.1', '15360.f.983040.2')
     info["curve_list"] = [ {'label':label,'url':url_for_curve_label(label)} for label in curve_labels ]
     info["conductor_list"] = ('1-499', '500-999', '1000-99999','100000-1000000')
     info["discriminant_list"] = ('1-499', '500-999', '1000-99999','100000-1000000')
@@ -182,7 +180,8 @@ def by_label(label):
 
 def render_curve_webpage(label):
     g2c = WebG2C.by_label(label)
-    assert g2c
+    if not g2c:
+        return "Error constructing genus 2 curve with label " + label
     if isinstance(g2c,str):
         return g2c
     return render_template("curve_g2.html",
@@ -199,6 +198,8 @@ def render_curve_webpage(label):
 
 def render_isogeny_class_webpage(label):
     g2c = WebG2C.by_label(label)
+    if not g2c:
+        return "Error constructing genus 2 isogeny class with label " + label
     if isinstance(g2c,str):
         return g2c
     return render_template("isogeny_class_g2.html",
