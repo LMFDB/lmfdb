@@ -29,7 +29,7 @@ class DataBase():
         # so siegel_modular_forms_experimental.samples is now siegel_modular_forms.experimental_samples
         # self.__db = self.__client.siegel_modular_forms_experimental
         self.__db = self.__client.siegel_modular_forms
-        self.__db_prefix = "experimental"
+        self.__db_prefix = "experimental_"
         
     def find_one( self, *dct, **kwargs):
         collection = kwargs.get( 'collection', 'samples')
