@@ -70,7 +70,7 @@ class EllCurveTest(LmfdbTest):
         """
         # Conductor 1
         L = self.tc.get('/EllipticCurve/?start=0&count=50&conductor_norm=1&include_isogenous=on&include_base_change=on')
-        assert '12759060195364007287981130788490976' in L.data
+        assert 'a, 0, a + 1, -41 a + 158813, 2115 a - 13286543' in L.data
         # 4*4 torsion
         L = self.tc.get('/EllipticCurve/?start=0&count=50&include_isogenous=on&include_base_change=on&torsion=&torsion_structure=[4%2C4]')
         assert '/EllipticCurve/2.0.4.1/%5B5525%2C870%2C5%5D/b/9' in L.data
