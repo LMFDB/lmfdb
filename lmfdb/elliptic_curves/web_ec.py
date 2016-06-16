@@ -266,12 +266,30 @@ class WebEC(object):
                 local_data_p['cp'] = ld.tamagawa_number()
                 local_data_p['kod'] = web_latex(ld.kodaira_symbol()).replace('$', '')
                 local_data_p['red'] = ld.bad_reduction_type()
+                rootno = -ld.bad_reduction_type()
+                if rootno==0:
+                    rootno = self.E.root_number(p)
+                local_data_p['rootno'] = rootno
                 local_data_p['ord_cond'] = ld.conductor_valuation()
                 local_data_p['ord_disc'] = ld.discriminant_valuation()
                 local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
                 local_data.append(local_data_p)
 
         jfac = Factorization([(ZZ(ld['p']),ld['ord_den_j']) for ld in local_data])
+
+        # If we got the data from the database, the root numbers may
+        # not have been stored there, so we have to compute them.  If
+        # there are additive primes this means constructing the curve.
+        for ld in self.local_data:
+            if not 'rootno' in ld:
+                rootno = -ld['red']
+                if rootno==0:
+                    try:
+                        E = self.E
+                    except AttributeError:
+                        self.E = E = EllipticCurve(data['ainvs'])
+                    rootno = E.root_number(ld['p'])
+                ld['rootno'] = rootno
 
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
 
