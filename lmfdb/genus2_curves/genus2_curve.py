@@ -13,7 +13,8 @@ from lmfdb.utils import to_dict, comma, random_value_from_collection
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_signed_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
-from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name, st_group_name, st_group_href
+from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
+from lmfdb.sato_tate_groups.main import st_link_by_name
 
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
@@ -321,8 +322,7 @@ def genus2_curve_search(**args):
         v_clean["is_gl2_type"] = v["is_gl2_type"] 
         v_clean["is_gl2_type_display"] = '&#10004;' if v["is_gl2_type"] else '' # display checkmark if true, blank otherwise
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
-        v_clean["st_group_name"] = st_group_name(v['st_group'])
-        v_clean["st_group_href"] = st_group_href(v['st_group'])
+        v_clean["st_group_link"] = st_link_by_name(1,4,v['st_group'])
         v_clean["analytic_rank"] = v["analytic_rank"]
         res_clean.append(v_clean)
 
@@ -350,6 +350,9 @@ def aut_grp_name(id):
 
 def geom_aut_grp_name(id):
     return geom_aut_grp_dict[id]
+
+def st_group_name(name):
+    return st_group_link(1,4,name)
 
 stats_attribute_list = [
     {'name':'num_rat_wpts','top_title':'rational Weierstrass points','row_title':'Weierstrass points','knowl':'g2c.num_rat_wpts','avg':True},

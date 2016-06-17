@@ -91,7 +91,21 @@ def sg_pretty(sg_label):
     if data and 'pretty' in data:
         return data['pretty']
     return sg_label
+    
+# dictionary for quick and dirty prettification that does not access the database
+st_pretty_dict = {
+    'USp(4)':'\\mathrm{USp}(4)',
+    'SU(2)':'\\mathrm{SU}(2)',
+    'U(1)':'\\mathrm{U}(1)',
+    'N(U(1))':'N(\\mathrm{U}(1))'
+}
 
+def st_pretty(st_name):
+    return st_pretty_dict.get(st_name,st_name)
+
+def st_link_by_name(weight,degree,name):
+    return '<a href="%s">\(%s\)</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
+    
 ###############################################################################
 # Learnmore display functions
 ###############################################################################

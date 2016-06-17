@@ -490,6 +490,7 @@ def initLfunction(L, args, request):
         info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
 
         info['st_group'] = L.st_group
+        info['st_link'] = L.st_link
         info['rank'] = L.order_of_vanishing
         info['motivic_weight'] = L.motivic_weight
 
