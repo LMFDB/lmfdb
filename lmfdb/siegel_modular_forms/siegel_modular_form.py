@@ -48,13 +48,13 @@ def rescan_collection():
     global COLNS
     COLNS = colns
 
-@app.route('/ModularForm/GSp/Q/Sp4Z_j/<j>/<k>')
-@app.route('/ModularForm/GSp/Q/Sp4Z_j/<j>/<k>/')
+@app.route('/ModularForm/GSp/Q/Sp4Z_j/<k>/<j>')
+@app.route('/ModularForm/GSp/Q/Sp4Z_j/<k>/<j>/')
 def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
              ('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', '/ModularForm/GSp/Q/Sp4Z_j'),
-             ('$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '/ModularForm/GSp/Q/Sp4Z_j/%s/%s'%(k,j))]
+             ('$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '/ModularForm/GSp/Q/Sp4Z_j/%s/%s'%(k,j))]
     # How to handle space decomposition: dict with keys and entries.
     #Then special case code here.
     j=int(j)
@@ -242,7 +242,7 @@ def prepare_collection_page( col, args, bread):
                           })
         except Exception as e:
             info.update( {'error': str(e)})            
-    bread.append( ('$'+col.latex_name()+'$', col.name()))
+    bread.append( ('$'+col.latex_name()+'$', ''))#col.name()))
     return render_template("ModularForm_GSp4_Q_collection.html",
                            title='Siegel modular forms $'+col.latex_name()+'$',
                            bread=bread, **info)
@@ -350,7 +350,8 @@ def prepare_sample_page( sam, args, bread):
                          ('Hecke Eigenform', "%s"%sam.is_eigenform()),
                          ('Degree of Field', "%s"%sam.field().degree())]
     
-    bread.append( (sam.collection()[0] + '.' + sam.name(), '/' + sam.collection()[0] + '.' + sam.name()))
+    bread.append( (sam.collection()[0] + '.' + sam.name(), ''))
+    #'/' + sam.collection()[0] + '.' + sam.name()))
     return render_template( "ModularForm_GSp4_Q_sample.html",
                             title='Siegel modular forms sample ' + sam.collection()[0] + '.'+ sam.name(),
                             bread=bread, **info)
