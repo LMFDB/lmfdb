@@ -44,16 +44,16 @@ class SatoTateGroupTest(LmfdbTest):
         assert '33' in L.data
 
     def test_completeness(self):
-        print ""
+        stdb = getDBConnection().sato_tate_groups.st_groups
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
         assert '3 matches' in L.data
         data = stdb.find({'weight':int(1),'degree':int(2)})
         assert data.count() == 3
+        print ""
         for r in data:
             print 'Checking Sato-Tate group ' + r['label']
             L = self.tc.get('/SatoTateGroup/?label='+r['label'])
             assert r['label'] in L.data and 'Moment Statistics' in L.data
-        stdb = getDBConnection().sato_tate_groups.st_groups
         data = stdb.find({'weight':int(1),'degree':int(2)})
         assert data.count() == 3
         for r in data:
