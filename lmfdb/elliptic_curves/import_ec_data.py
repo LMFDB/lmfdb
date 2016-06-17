@@ -559,6 +559,42 @@ def add_numerical_iso_codes(N1,N2):
         data['iso_nlabel'] = numerical_iso_label(C['lmfdb_iso'])
         curves.update_one({'_id': C['_id']}, {"$set": data}, upsert=True)
 
+def xainvs(E):
+    return ''.join(['[',','.join([str(a) for a in E2.ainvs()]),']'])
+
+def min_quad_twist(E):
+    r""" Refined version of Sage function (as of version 7.2).  Sage picks
+at random if several twists have the same conductor, but we want to
+sort by (conductor, abs(discriminant), label).
+    """
+    E1, D1 = E.minimal_quadratic_twist()
+    # E1 is minimised at primes >3 but we want to choose
+    # systematically from the 8 twists by <-1,2,3>:
+    tw = [-1,2,-2,3,-3,6,-6]
+    Elist = [E1] + [E1.quadratic_twist(t).minimal_model() for t in tw]
+    Elist=list(Set(Elist))
+    # We sort these first by conductor, then by abs(disc), then by
+    # LMFDB label.  For the latter we need to look them all up in the
+    # database.
+    ainvs = [xainvs(E2) for E2 in Elist]
+    labels = [curves.find_one({'xainvs':ai},fields={'lmfdb_label':True})['lmfdb_label'] for ai in ainvs]
+    for Ei,lab in zip(Elist,labels):
+        Ei.lab = lab
+    sort_key = lambda e: (e.conductor(), e.discriminant().abs(), e.lab)
+    Elist.sort(key=sort_key)
+    # we report when the tie-break on label is used
+    keys = [sort_key(E2) for E2 in Elist]
+    if keys[0][:2]==keys[1][:2]:
+        print(labels)
+        D = Elist[0].is_quadratic_twist(Elist[1])
+        N = E.conductor()
+        print("N={}. D={}.  {} ~ {}".format(N,D,Elist[0].ainvs(),Elist[1].ainvs()))
+    Et = Elist[0]
+    D = E.is_quadratic_twist(Et) # 1 or square-free
+    if D % 4 != 1:
+        D *= 4
+    return Et, D
+
 # one-off script to add extra data for curves already in the database
 
 def make_extra_data(label,number,ainvs,gens):
@@ -578,18 +614,16 @@ def make_extra_data(label,number,ainvs,gens):
                            'ord_disc':int(ld.discriminant_valuation()),
                            'ord_den_j':int(max(0,-(E.j_invariant().valuation(ld.prime().gen())))),
                            'red':int(ld.bad_reduction_type()),
+                           'rootno':int(E.root_number(ld.prime().gen())),
                            'kod':web_latex(ld.kodaira_symbol()).replace('$',''),
                            'cp':int(ld.tamagawa_number())}
                           for ld in E.local_data()]
-    Etw, Dtw = E.minimal_quadratic_twist()
-    if Etw.conductor()==E.conductor():
-        data['min_quad_twist'] = {'label':label, 'disc':int(1)}
-    else:
-        # Later this should be changed to look for xainvs but now all curves have ainvs
-        minq_ainvs = [str(c) for c in Etw.ainvs()]
-        r = curves.find_one({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs})
-        minq_label = "" if r is None else r['label']
-        data['min_quad_twist'] = {'label':minq_label, 'disc':int(Dtw)}
+    Etw, Dtw = min_quad_twist(E)
+    minq_ainvs = xainvs(Etw)
+    r = curves.find_one({'jinv':str(E.j_invariant()), 'xainvs':minq_ainvs})
+    minq_label = "" if r is None else r['label']
+    data['min_quad_twist'] = {'label':minq_label, 'disc':int(Dtw)}
+
     from lmfdb.elliptic_curves.web_ec import parse_points
     gens = [E(g) for g in parse_points(gens)]
     data['heights'] = [float(P.height()) for P in gens]
@@ -660,4 +694,44 @@ def add_extra_data1(C):
 
     """
     C.update(make_extra_data(C['label'],C['number'],C['ainvs'],C['gens']))
+    return C
+
+def make_root_numbers(C):
+    """C is a database elliptic curve entry.  Returns a dict with which to
+    update the entry.  Adds root numbers and updates minimal quadratic
+    twist.
+
+    Data fields needed in C already: 'ainvs', 'local_data'
+
+    """
+    data = {}
+    try:
+        data['local_data'] = C['local_data']
+    except AttributeError:
+        return data # do nothing
+    E = EllipticCurve([ZZ(a) for a in C['ainvs']])
+    for ld in data['local_data']:
+        if not 'rootno' in ld:
+            rootno = -ld['red']
+            if rootno==0:
+                if E == None:
+                    print("creating E from {}".format(C['ainvs']))
+                rootno = E.root_number(ld['p'])
+            ld['rootno'] = rootno
+
+    Etw, Dtw = min_quad_twist(E)
+    minq_ainvs = xainvs(Etw)
+    r = curves.find_one({'jinv':str(E.j_invariant()), 'xainvs':minq_ainvs}, fields={'label':True})
+    minq_label = "" if r is None else r['label']
+    data['min_quad_twist'] = {'label':minq_label, 'disc':int(Dtw)}
+
+    return data
+
+def add_root_number(C):
+    """Add these fields to a single curve record in the db (for use with
+    the rewrite script in data_mgt/utilities/rewrite.py):
+   - 'rootno': (int) local root number
+
+    """
+    C.update(make_root_numbers(C))
     return C
