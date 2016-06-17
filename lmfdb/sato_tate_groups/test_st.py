@@ -47,6 +47,8 @@ class SatoTateGroupTest(LmfdbTest):
         print ""
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
         assert '3 matches' in L.data
+        data = stdb.find({'weight':int(1),'degree':int(2)})
+        assert data.count() == 3
         for r in data:
             print 'Checking Sato-Tate group ' + r['label']
             L = self.tc.get('/SatoTateGroup/?label='+r['label'])
