@@ -14,7 +14,7 @@ with {{ KNOWL('g2c.abs_discriminant',title = "absolute discriminant")}} at most 
 <tr>
 <th>{{d.attribute['row_title']}}</th>
 {% for c in r %}
-<td>\({{c.value}}\)</td>
+<td>{{c.value|safe}}</td>
 {% endfor %}
 </tr>
 <tr>
