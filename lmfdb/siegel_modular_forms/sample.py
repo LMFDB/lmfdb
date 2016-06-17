@@ -5,45 +5,12 @@
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
 import pymongo
-from sage.rings.integer import Integer
-from sage.misc.sage_eval import sage_eval
 import sage.structure.sage_object
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.integer_ring import IntegerRing
+from sage.all import ZZ, NumberField, Rationals, PolynomialRing
+from lmfdb.base import getDBConnection
 
-DB = None
-# DB_URL = 'mongodb://localhost:40000/'
-    
-class DataBase():
-    """
-    DB_URL = 'mongodb://localhost:40000/'
-    """
-    def __init__( self, DB_URL = None):
-        if DB_URL:
-            self.__client = pymongo.MongoClient( DB_URL)
-            self.__db_prefix=""
-        else:
-            import lmfdb.base
-            self.__client = lmfdb.base.getDBConnection()
-        # just use one database, prefix collection name to distinguish experimental data
-        # so siegel_modular_forms_experimental.samples is now siegel_modular_forms.experimental_samples
-        # self.__db = self.__client.siegel_modular_forms_experimental
-        self.__db = self.__client.siegel_modular_forms
-        self.__db_prefix = "experimental_"
-        
-    def find_one( self, *dct, **kwargs):
-        collection = kwargs.get( 'collection', 'samples')
-        col = self.__db[self.__db_prefix+collection]
-        return col.find_one( *dct)
-
-    def find( self, *dct, **kwargs):
-        collection = kwargs.get( 'collection', 'samples')
-        col = self.__db[self.__db_prefix+collection]
-        return col.find( *dct)
-
-    def __del__( self):
-        pass
-
+def smf_db_samples():
+    return getDBConnection().siegel_modular_forms.experimental_samples
 
 class Sample_class (sage.structure.sage_object.SageObject):
     """
@@ -56,11 +23,14 @@ class Sample_class (sage.structure.sage_object.SageObject):
         self.__name = doc.get( 'name')
 
         weight = doc.get( 'weight')
-        self.__weight = sage_eval( weight) if weight else weight
+        self.__weight = ZZ( weight) if weight else weight
        
-        field = doc.get( 'field')
-        R = PolynomialRing( IntegerRing(), name = 'x')
-        self.__field = sage_eval( field, locals = R.gens_dict()) if field else field
+        field_poly = doc.get( 'field_poly')
+        if field_poly:
+            f = PolynomialRing(ZZ,name='x')(str(field_poly))
+            self.__field = Rationals() if f.degree() == 1 else NumberField(f,'a')
+        else:
+            self.__field = None
 
         self.__explicit_formula = doc.get( 'explicit_formula')
         self.__type = doc.get( 'type')
@@ -68,22 +38,6 @@ class Sample_class (sage.structure.sage_object.SageObject):
         self.__is_integral = doc.get( 'is_integral')
         self.__representation = doc.get( 'representation')
         self.__id = doc.get( '_id')
-
-        # eigenvalues
-        # evs = doc.get( 'eigenvalues')
-        # loc_f = self.__field.gens_dict()
-        # self.__evs = dict( (eval(l), sage_eval( evs[l], locals = loc_f)) for l in evs)\
-        #     if evs else evs
-
-        # Fourier coefficients
-        # fcs = doc.get( 'Fourier_coefficients')
-        # P = PolynomialRing( self.__field, names = 'x,y')
-        # loc = P.gens_dict()
-        # loc.update ( loc_f)
-        # self.__fcs = dict( (tuple( eval(f)),
-        #                     sage_eval( fcs[f], locals = loc))
-        #                    for f in fcs) if fcs else fcs
-
  
     def collection( self):
         return self.__collection
@@ -113,48 +67,36 @@ class Sample_class (sage.structure.sage_object.SageObject):
         return self.__representation
         
     def available_eigenvalues( self):
-        evs = DB.find( { 'owner_id': self.__id,
-                             'data_type': 'ev',
-                         },
-                       { 'data': 0})
-        ls  = [ Integer( ev['index']) for ev in evs]
+        evs = smf_db_samples().find({ 'owner_id': self.__id, 'data_type': 'ev' }, { 'data': False})
+        ls  = [ ZZ( ev['index']) for ev in evs]
         ls.sort()
         return  ls
-
 
     def eigenvalues( self, index_list):
-        evs = DB.find( { 'owner_id': self.__id,
-                         'data_type': 'ev',
-                         'index': { '$in': [ str(l) for l in index_list]}
-                         })
-        loc_f = self.__field.gens_dict() 
-        return dict( (eval(ev['index']),sage_eval( ev['data'], locals = loc_f)) for  ev in evs)
-
+        evs = smf_db_samples().find(
+            { 'owner_id': self.__id,
+              'data_type': 'ev',
+              'index': { '$in': [ str(l) for l in index_list]}
+            })
+        return dict( (ZZ(ev['index']),self.__field(str(ev['data']))) for  ev in evs)
 
     def available_Fourier_coefficients( self):
-        fcs = DB.find( { 'owner_id': self.__id,
-                         'data_type': 'fc',
-                         },
-                       { 'data': 0})
-        ls  = [ Integer( fcd['det']) for fcd in fcs]
+        fcs = smf_db_samples().find( { 'owner_id': self.__id, 'data_type': 'fc' }, { 'data': False})
+        ls  = [ ZZ( fcd['det']) for fcd in fcs]
         ls.sort()
         return  ls
 
-
     def Fourier_coefficients( self, det_list):
-        fcs = DB.find( { 'owner_id': self.__id,
-                         'data_type': 'fc',
-                         'det': { '$in': [ str(d) for d in det_list]}
-                         })
+        fcs = smf_db_samples().find(
+            { 'owner_id': self.__id,
+              'data_type': 'fc',
+              'det': { '$in': [ str(d) for d in det_list]}
+            })
         P = PolynomialRing( self.__field, names = 'x,y')
-        loc = P.gens_dict()
-        loc.update ( self.__field.gens_dict())
-        return dict( (Integer(fcd['det']),
-                      dict( (tuple( eval(f)), sage_eval( fcd['data'][f], locals = loc))
+        return dict( (ZZ(fcd['det']),
+                      dict( (tuple( eval(f)), P(str(fcd['data'][f])))
                             for f in fcd['data'] ))
                      for fcd in fcs)
-
-
 
 
 def Sample( collection, name):
@@ -162,14 +104,9 @@ def Sample( collection, name):
     Return a light instance of Sample_class, where 'light' means
     'without eigenvalues and Fourier coefficients'.
     """
-    global DB
-    if not DB:
-        DB = DataBase() 
-    
     dct = { 'collection': collection, 'name': name}
-    doc = DB.find_one( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
+    doc = smf_db_samples().find_one( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
     return Sample_class( doc) if doc else None
-
 
 
 def Samples( dct):
@@ -177,12 +114,8 @@ def Samples( dct):
     Return a result of a database query as list of light instances
     of Sample_class.
     """
-    global DB
-    if not DB:
-        DB = DataBase() 
-    
     dct.update( { 'field': { '$exists': True}})
-    docs = DB.find( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
+    docs = smf_db_samples().find( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
     return [ Sample_class( doc) for doc in docs]
 
 
@@ -190,21 +123,16 @@ def export( collection, name):
     """
     Return
     """
-    global DB
-    if not DB:
-        DB = DataBase()
-    
     dct = { 'collection': collection, 'name': name}
-    doc = DB.find_one( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
+    doc = smf_db_samples().find_one( dct, { 'Fourier_coefficients': 0, 'eigenvalues': 0})
     id = doc.get('_id')
     assert id != None, 'Error: the item "%s" was not accessible in the database.' % dct 
 
     # Fourier coefficients and eigenvalues
-    fcs = DB.find( { 'owner_id': id, 'data_type': 'fc' })
+    fcs = smf_db_samples().find( { 'owner_id': id, 'data_type': 'fc' })
     doc['Fourier_coefficients'] = dict(( ( fc['det'], fc['data']) for fc in fcs))
 
-    evs = DB.find( { 'owner_id': id, 'data_type': 'ev'})
-#    print evs
+    evs = smf_db_samples().find( { 'owner_id': id, 'data_type': 'ev'})
     doc['eigenvalues'] = dict( ( (ev['index'], ev['data']) for ev in evs))
 
     doc.pop( '_id')
@@ -215,4 +143,3 @@ def export( collection, name):
     from bson import BSON
     from bson import json_util
     return json.dumps( doc, sort_keys=True, indent=4, default = json_util.default)        
-

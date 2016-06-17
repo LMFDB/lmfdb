@@ -12,7 +12,6 @@ import urllib
 from sage.all_cmdline import *
 import os
 import sample
-import lmfdb.base
 from lmfdb.base import app
 from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms import smf_logger
@@ -22,14 +21,9 @@ import StringIO
 from flask import flash, redirect
 
 
-DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-COLNS = None
-DB = None
-
-
-def rescan_collection():
+def scan_static_collections():
     """
-    Create and cache the instances of Collection.
+    scan filesystem for static instances of Collection.
     """
     from collection import Collection
     colns = dict()
@@ -40,13 +34,13 @@ def rescan_collection():
             try:
                 if f.endswith('.json'):
                     c = f[:-5]
-#                    print c
                 colns[c] = Collection( c, location = static)
             except Exception as e:
                 print str(e)
                 pass
-    global COLNS
-    COLNS = colns
+    # Note that there is no point in caching this data
+    # Each worker thread will typically recreate it anyway
+    return colns
 
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/<k>/<j>')
 @app.route('/ModularForm/GSp/Q/Sp4Z_j/<k>/<j>/')
@@ -57,8 +51,8 @@ def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
              ('$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '/ModularForm/GSp/Q/Sp4Z_j/%s/%s'%(k,j))]
     # How to handle space decomposition: dict with keys and entries.
     #Then special case code here.
-    j=int(j)
     k=int(k)
+    j=int(j)
     samples =[]
     #TODO: cleanup
     if j==0:
@@ -69,7 +63,7 @@ def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
         samples = find_samples('Sp4Z_2', k)
     else:
         t = dimensions._dimension_Gamma_2([k], j, group="Sp4(Z)")
-        #Right now no samples
+        #Right now no samples for j > 2
     subdecomp=t[1][k]
     headers=t[0]
     #Same for samples. Really should have a big structure driving template: TODO
@@ -83,10 +77,9 @@ def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
                            bread=bread);
 
 def find_samples(coll, weight):
-    conn = lmfdb.base.getDBConnection()
-    db = conn.siegel_modular_forms.samples
-    slist = db.find({'collection':coll,
-                         'weight':str(weight)})
+    from sample import smf_db_samples
+    
+    slist = smf_db_samples().find({'collection':coll, 'weight':str(weight)})
     ret = []
     for res in slist:
         name = res['name']
@@ -151,37 +144,30 @@ def ModularForm_GSp4_Q_Sp4Z_j():
 @app.route('/ModularForm/GSp/Q/<page>')
 @app.route('/ModularForm/GSp/Q/<page>/')
 def ModularForm_GSp4_Q_top_level( page = None):
-
-    if request.args.get('empty_cache') or not COLNS:
-        # we trigger a (re)scan for available collections
-        rescan_collection()
-
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
              ('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level'))]
 
-    # info = dict(args); info['args'] =  request.args
-    #info['learnmore'] = []
-    
+    if 'search_results' == page:
+        return prepare_search_results_page( request.args, bread)
+
+    COLNS = scan_static_collections()
     # parse the request
     if not page:
         name = request.args.get( 'download')
         if name:
             a,b = name.split('.')
             f = StringIO.StringIO( sample.export( a, b))
-#            print f.getvalue()
             f.seek(0)
             return send_file( f,
                               attachment_filename = name + '.json',
                               as_attachment = True)
         
         else:
-            return prepare_main_page( bread)
+            return prepare_main_page( COLNS, bread)
     if page in COLNS:
         return prepare_collection_page( COLNS[page], request.args, bread)
     if 'dimensions' == page:
-        return prepare_dimension_page( request.args, bread)
-    if 'search_results' == page:
-        return prepare_search_results_page( request.args, bread)
+        return prepare_dimension_page( COLNS, request.args, bread)
     # check whether there is a sample called page
     try:
         a,b=page.split('.')
@@ -200,7 +186,7 @@ def ModularForm_GSp4_Q_top_level( page = None):
 ##########################################################
 ## HOME PAGE OF SIEGEL MODULAR FORMS
 ##########################################################
-def prepare_main_page( bread):
+def prepare_main_page( COLNS, bread):
     info = { 'number_of_collections': len(COLNS),
              'number_of_samples': len(sample.Samples( {})),
              'cols': COLNS.values(),
@@ -252,7 +238,7 @@ def prepare_collection_page( col, args, bread):
 ##########################################################
 ## DIMENSIONS REQUEST
 ##########################################################
-def prepare_dimension_page( args, bread):
+def prepare_dimension_page( COLNS, args, bread):
 
     info = { 'cols_comp_dims': [COLNS[c] for c in COLNS if COLNS[c].computes_dimensions()]}
     col_name = args.get( 'col_name')
@@ -322,29 +308,34 @@ def prepare_sample_page( sam, args, bread):
             info['fcs_to_show'] = []
     if info['fcs_to_show']==[]:
         info['fcs_to_show']=sam.available_Fourier_coefficients()[:5]
-    null_ideal = sam.field().ring_of_integers().ideal(0)
-    info['ideal_l'] = args.get( 'modulus', null_ideal)
-    if info['ideal_l'] != 0:
-        try:
-            O = sam.field().ring_of_integers()
-            id_gens = [O(str(b)) for b in info['ideal_l'].split()]
-            info['ideal_l'] = O.ideal(id_gens)
-        except Exception as e:
-            info['error'] = 'list of generators: %s' % str(e)
-            info['ideal_l'] = null_ideal
-
-    # Hack to reduce polynomials and to handle non integral stuff
-    if sam.representation() == '2':
-        fun = info['ideal_l'].reduce
-        def apple(x):
+    # Do not attempt to do anything with the ring of integers of the coefficient field unless
+    # the defining poly has a reasonably small discriminant
+    if sam.field().degree() == 1 or abs(sam.field().defining_polynomial().disc()) < 10**100:
+        info['is_small_field'] = True
+        null_ideal = sam.field().ring_of_integers().ideal(0)
+        info['ideal_l'] = args.get( 'modulus', null_ideal)
+        if info['ideal_l'] != 0:
             try:
-                return fun(x)
-            except:
+                O = sam.field().ring_of_integers()
+                id_gens = [O(str(b)) for b in info['ideal_l'].split()]
+                info['ideal_l'] = O.ideal(id_gens)
+            except Exception as e:
+                info['error'] = 'list of generators: %s' % str(e)
+                info['ideal_l'] = null_ideal
+
+        # Hack to reduce polynomials and to handle non integral stuff
+        if sam.representation() == '2':
+            fun = info['ideal_l'].reduce
+            def apple(x):
                 try:
-                    return x.parent()(dict( (i, fun( x[i])) for i in x.dict()))
+                    return fun(x)
                 except:
-                    return 'Reduction undefined'
-        info['ideal_l'].reduce = apple
+                    try:
+                        return x.parent()(dict( (i, fun( x[i])) for i in x.dict()))
+                    except:
+                        return 'Reduction undefined'
+            info['ideal_l'].reduce = apple
+        
     info['properties2']=[('Type', "%s"%sam.type()),
                          ('Weight', "%s"%sam.weight()),
                          ('Hecke Eigenform', "%s"%sam.is_eigenform()),

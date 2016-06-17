@@ -4,32 +4,28 @@
 {% if not error %}
 <script>
     $(document).ready( function() {
-	$("#toggle").click( function() {
-	    var toggle = document.getElementById( "toggle");
-	    if ( toggle.innerHTML == "Hide") {
-		$("#def_polynomial").hide("Slow");
-		toggle.innerHTML = "Show";
-		console.log( "Hide on");
-	    }
-	    else {
-		$("#def_polynomial").show("Slow");
-		toggle.innerHTML = "Hide";
-		console.log( "Show on");
-	    }
-	});
+    $("#toggle").click( function() {
+        var toggle = document.getElementById( "toggle");
+        if ( toggle.innerHTML == "Hide") {
+        $("#def_polynomial").hide();
+        toggle.innerHTML = "Show";
+        }
+        else {
+        $("#def_polynomial").show();
+        toggle.innerHTML = "Hide";
+        }
+    });
         $("#toggle1").click( function() {
-	    var toggle1 = document.getElementById( "toggle1") 
-	    if ( toggle1.innerHTML == "Hide") {
-		$("#explicit_formula").hide("Slow");
-		toggle1.innerHTML = "Show";
-		console.log( "Hide on");
-	    }
-	    else {
-		$("#explicit_formula").show("Slow");
-		toggle1.innerHTML = "Hide";
-		console.log( "Show on");
-	    }
-	});
+        var toggle1 = document.getElementById( "toggle1") 
+        if ( toggle1.innerHTML == "Hide") {
+        $("#explicit_formula").hide();
+        toggle1.innerHTML = "Show";
+        }
+        else {
+        $("#explicit_formula").show();
+        toggle1.innerHTML = "Hide";
+        }
+    });
     });
 </script>
 
@@ -60,14 +56,11 @@
 {% set K='\mathbb{Q}(a)' %} 
 <table>
   <tr> <td>Field</td> <td>$\mathbb{Q}(a)$</td> </tr>
-  {% if sam.field().degree() <= 5 %}
+  <tr> <td>Degree</td> <td>{{sam.field().degree()}}</td> </tr>
+  {% if is_small_field %}
   <tr> <td>Discriminant</td> <td>${{ latex(sam.field().discriminant().factor()) }}$</td> </tr>
   <tr> <td>Signature</td> <td>${{ sam.field().signature() }}$</td> </tr>
-  <tr> <td>Is Galois</td> <td>${{ sam.field().is_galois() }}$</td> </tr>
-  {% else %}
-  <tr> <td>Discriminant</td> <td>{# ${{ latex(sam.field().discriminant().factor()) }}$ #}</td> </tr>
-  <tr> <td>Signature</td> <td>{# {{ sam.field().signature() }} #}</td> </tr>
-  <tr> <td>Is Galois</td> <td>{# {{ sam.field().is_galois() }} #}</td> </tr>
+  <tr> <td>Is Galois</td> <td>{{ sam.field().is_galois() }}</td> </tr>
   {% endif %}
   <tr>
     <td>Field equation</td>
@@ -76,8 +69,8 @@
     {% if latex_pol|count > 100 %}
     <td>
       <button id ="toggle">Show</button>&nbsp;
-      <span id="def_polynomial" style="display: none;">	
-	<div class="small">{{ pol }}</span>
+      <span id="def_polynomial" style="display: none;"> 
+    <div class="small">{{ pol }}</span>
       </span>
     </td>
     {% else %}
@@ -103,7 +96,7 @@
 {% endif %}
 {% endif %}
 
-
+{% if is_small_field %}
 {% set red = ideal_l.reduce %}
 {% set mod_l = '' if 0 == ideal_l else ' \\bmod \\mathfrak{L}' %}
 {% set evs = sam.available_eigenvalues() %}
@@ -116,7 +109,7 @@
     </thead>
     {% for l in ev_dict|sort %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
-      <td valign="top">${{ l }}$</td><td>${{ red(ev_dict[l]) }}$</td>
+      <td valign="top">${{ l }}$</td><td overflow=="visible">${{ latex(red(ev_dict[l])) }}$</td>
     </tr>
     {% endfor %}
   </table>
@@ -134,15 +127,16 @@
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       {% set dk = fc_dict[d].keys()|sort %}
       <td rowspan="{{ dk|count }}" valign="top">{{ d }}</td>
-      <td>{{ dk[0] }}</td><td>{{ red(fc_dict[d][dk[0]]) }}</td>
+      <td>{{ dk[0] }}</td><td>${{ latex(red(fc_dict[d][dk[0]])) }}$</td>
     </tr>
     {% for F in dk[1:]%}
     <tr>
-      <td>{{ F }}</td><td overflow="visible">{{ red(fc_dict[d][F]) }}</td>
+      <td>{{ F }}</td><td overflow="visible">${{ latex(red(fc_dict[d][F])) }}$</td>
     </tr>
     {% endfor %}
     {% endfor %}
   </table>
+{% endif %}
 {% endif %}
 
 {% if evs|count > 0 or fcs|count > 0 %}
@@ -179,21 +173,21 @@
 
 <script type="text/javascript">
     function validate_modulus() {
-	var m = document.getElementById( "modulus_field").value
-	
-	try {
-	    gens = m.trim().split( /\s+/);
-	    a = 1;
-	    for ( n=0; n< gens.length; n++) {
-		b = eval( gens[n]);
-	    }
-	    return true;
-	}
-	catch(err) {
-	    txt ="Check the field for the reducing ideal $\mathfrak{L}$.\n\nThe generators must be expressions which define rational polynomials in $a$ and which must not contain spaces.";
-	    alert(txt);
-	    return false;
-	}
+    var m = document.getElementById( "modulus_field").value
+    
+    try {
+        gens = m.trim().split( /\s+/);
+        a = 1;
+        for ( n=0; n< gens.length; n++) {
+        b = eval( gens[n]);
+        }
+        return true;
+    }
+    catch(err) {
+        txt ="Check the field for the reducing ideal $\mathfrak{L}$.\n\nThe generators must be expressions which define rational polynomials in $a$ and which must not contain spaces.";
+        alert(txt);
+        return false;
+    }
 
     }
 </script> 
@@ -202,38 +196,40 @@
     {% if evs|count > 0 %}
     <tr>
       <td>
-	<input name="indices" value="{{ evs_to_show|join(' ') }}" size="30" example="2 3 5" pattern="^(\s*\d+)+\s*$">list of $l$</input>
+    <input name="indices" value="{{ evs_to_show|join(' ') }}" size="30" example="2 3 5" pattern="^(\s*\d+)+\s*$">list of $l$</input>
         <br />
-	<span class="formexample">e.g. 2 or 2 3 5</span>
+    <span class="formexample">e.g. 2 or 2 3 5</span>
       </td><td></td>
     </tr>
     {% endif %}
     {% if fcs|count > 0 %}
     <tr>
       <td>
-	<input name="dets" value="{{ fcs_to_show|join(' ') }}" size="30" example="4 7 21" pattern="^(\s*\d+)+\s*$">list of $\det(F)$</input>
+    <input name="dets" value="{{ fcs_to_show|join(' ') }}" size="30" example="4 7 21" pattern="^(\s*\d+)+\s*$">list of $\det(F)$</input>
         <br />
-	<span class="formexample">e.g. 3 or 3 7 41</span>
+    <span class="formexample">e.g. 3 or 3 7 41</span>
       </td><td></td>
     </tr>
     {% endif %}
     <tr>
       <td>
-	<input id="modulus_field" name="modulus" value="{{ ideal_l.gens()|join('#')|replace(' ','')|replace('#',' ') }}" size="30" example="3 a+5">generators of $\mathfrak{L}$</input>
-	<br />
-	<span class="formexample">e.g. 17 or 3 a^2+1</span>
+    <input id="modulus_field" name="modulus" value="{{ ideal_l.gens()|join('#')|replace(' ','')|replace('#',' ') }}" size="30" example="3 a+5">generators of $\mathfrak{L}$</input>
+    <br />
+    <span class="formexample">e.g. 17 or 3 a^2+1</span>
       </td>
       <td>
-	<button type="submit" name="submit" value="submit">Find</button>
+    <button type="submit" name="submit" value="submit">Find</button>
       </td>
     </tr>
   </table>
 </form>
 {% endif %}
 
+{% if ideal_l %}
 <p>
   Here $\mathfrak{L}$ equals {{ ideal_l }}.
 </p>
+{% endif %}
 <p>
   <button value="Download" onclick="window.location.href = '{{ url_for( 'ModularForm_GSp4_Q_top_level', download=sam.collection()[0]+'.'+sam.name()) }}'">Download</button>
   this sample in JavaScript object notation (json).

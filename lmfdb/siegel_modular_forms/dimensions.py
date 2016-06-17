@@ -9,26 +9,17 @@ from sage.misc.functional import is_odd, is_even
 from sage.rings.integer import Integer
 from sage.rings.power_series_ring import PowerSeriesRing
 from sage.rings.integer_ring import IntegerRing
-
+from lmfdb.base import getDBConnection
 
 ####################################################################
 ## For general dimension related data from the data base
 ####################################################################
 
-# DB_URL = 'mongodb://localhost:40000/'
-
 def fetch( dct):
 
-    import pymongo
-
-    # client = pymongo.MongoClient( DB_URL)
-    import lmfdb.base
-    client = lmfdb.base.getDBConnection()
-
-    db = client.siegel_modular_forms
+    db = getDBConnection().siegel_modular_forms
     hps = db.dimensions
     item = hps.find_one( dct)
-#    client.close()
     return item
 
 

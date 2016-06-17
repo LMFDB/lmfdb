@@ -10,34 +10,10 @@ import sage.structure.sage_object
 import urllib
 import json
 import inspect
+from lmfdb.base import getDBConnection
 
-
-def find_one( dct, collection = 'collections'):
-
-    # DB_URL = 'mongodb://localhost:40000/'
-    # client = pymongo.MongoClient( DB_URL)
-    import lmfdb.base
-    client = lmfdb.base.getDBConnection()
-
-    db = client.siegel_modular_forms
-    col = db[collection]
-    doc = col.find_one( dct)
-    #client.close()
-    return doc
-
-def find_all( dct, collection = 'samples'):
-
-    # DB_URL = 'mongodb://localhost:40000/'
-    # client = pymongo.MongoClient( DB_URL)
-    import lmfdb.base
-    client = lmfdb.base.getDBConnection()
-
-    db = client.siegel_modular_forms
-    col = db[collection]
-    docs = col.find( dct)
-    #client.close()
-    return docs
-
+def smf_db_collections():
+    return getDBConnection().siegel_modular_forms.collections
 
 class Collection (sage.structure.sage_object.SageObject):
     """
@@ -54,7 +30,7 @@ class Collection (sage.structure.sage_object.SageObject):
             #fip.close()
         else:
             # otherwise we retrieve the data from the db  
-            doc = find_one( { 'name': name})
+            doc = smf_db_collections().find_one( { 'name': name})
             
             assert doc, '%s at %s: could not be found' % (name, location)
         self.__name = name
@@ -114,7 +90,4 @@ class Collection (sage.structure.sage_object.SageObject):
         if not self.__members:
             import sample
             self.__members = sample.Samples( { 'collection': self.__name})
-            # # retrieve the members from db and set them
-            # docs = find_all( { 'collection': self.__name})
-            # self.__members = [s['name'] for s in docs]
         return self.__members
