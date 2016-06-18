@@ -560,39 +560,75 @@ def add_numerical_iso_codes(N1,N2):
         curves.update_one({'_id': C['_id']}, {"$set": data}, upsert=True)
 
 def xainvs(E):
-    return ''.join(['[',','.join([str(a) for a in E2.ainvs()]),']'])
+    return ''.join(['[',','.join([str(a) for a in E.ainvs()]),']'])
+
+minq_dict = {} # holds j --> min-curve
 
 def min_quad_twist(E):
     r""" Refined version of Sage function (as of version 7.2).  Sage picks
 at random if several twists have the same conductor, but we want to
 sort by (conductor, abs(discriminant), label).
     """
+    global minq_dict
+    j = E.j_invariant()
+    if j in minq_dict:
+        Et = minq_dict[j]
+        D = E.is_quadratic_twist(Et) # 1 or square-free
+        if D % 4 != 1:
+            D *= 4
+        return Et, D
+
     E1, D1 = E.minimal_quadratic_twist()
+
     # E1 is minimised at primes >3 but we want to choose
     # systematically from the 8 twists by <-1,2,3>:
     tw = [-1,2,-2,3,-3,6,-6]
     Elist = [E1] + [E1.quadratic_twist(t).minimal_model() for t in tw]
+
+    # Eliminate repeats
     Elist=list(Set(Elist))
-    # We sort these first by conductor, then by abs(disc), then by
-    # LMFDB label.  For the latter we need to look them all up in the
-    # database.
+
+    # Keep only those of minimal conductor:
+    N = min([E2.conductor() for E2 in Elist])
+    Elist = [E2 for E2 in Elist if E2.conductor()==N]
+    if len(Elist)==1:
+        Et = Elist[0]
+        D = E.is_quadratic_twist(Et) # 1 or square-free
+        if D % 4 != 1:
+            D *= 4
+        minq_dict[j]=Et
+        return Et, D
+
+    # Keep only those of minimal discriminant:
+    D = min([E2.discriminant().abs() for E2 in Elist])
+    Elist = [E2 for E2 in Elist if E2.discriminant().abs()==D]
+    if len(Elist)==1:
+        Et = Elist[0]
+        D = E.is_quadratic_twist(Et) # 1 or square-free
+        if D % 4 != 1:
+            D *= 4
+        minq_dict[j]=Et
+        return Et, D
+
+    # Finally, when we have more than one with the same minimal
+    # conductor and discriminant, we sort by LMFDB label.  We need to
+    # look these up in the database.  We are sure that these curves
+    # are all in the db when adding this data to pre-existing
+    # collection, but not when we first install curves.
     ainvs = [xainvs(E2) for E2 in Elist]
-    labels = [curves.find_one({'xainvs':ai},fields={'lmfdb_label':True})['lmfdb_label'] for ai in ainvs]
+    dbcurves = [curves.find_one({'xainvs':ai}) for ai in ainvs]
+    labels = [c.get('lmfdb_label','') for c in dbcurves]
     for Ei,lab in zip(Elist,labels):
         Ei.lab = lab
-    sort_key = lambda e: (e.conductor(), e.discriminant().abs(), e.lab)
-    Elist.sort(key=sort_key)
+    Elist.sort(key=lambda e: e.lab)
+
     # we report when the tie-break on label is used
-    keys = [sort_key(E2) for E2 in Elist]
-    if keys[0][:2]==keys[1][:2]:
-        print(labels)
-        D = Elist[0].is_quadratic_twist(Elist[1])
-        N = E.conductor()
-        print("N={}. D={}.  {} ~ {}".format(N,D,Elist[0].ainvs(),Elist[1].ainvs()))
+    print("N={}. D={}.  {} ~ {}".format(Elist[0].conductor(),Elist[0].discriminant(),Elist[0].ainvs(),Elist[1].ainvs()))
     Et = Elist[0]
     D = E.is_quadratic_twist(Et) # 1 or square-free
     if D % 4 != 1:
         D *= 4
+    minq_dict[j]=Et
     return Et, D
 
 # one-off script to add extra data for curves already in the database
@@ -716,12 +752,12 @@ def make_root_numbers(C):
             if rootno==0:
                 if E == None:
                     print("creating E from {}".format(C['ainvs']))
-                rootno = E.root_number(ld['p'])
+                rootno = int(E.root_number(ld['p']))
             ld['rootno'] = rootno
 
     Etw, Dtw = min_quad_twist(E)
     minq_ainvs = xainvs(Etw)
-    r = curves.find_one({'jinv':str(E.j_invariant()), 'xainvs':minq_ainvs}, fields={'label':True})
+    r = curves.find_one({'jinv':str(E.j_invariant()), 'xainvs':minq_ainvs})
     minq_label = "" if r is None else r['label']
     data['min_quad_twist'] = {'label':minq_label, 'disc':int(Dtw)}
 
