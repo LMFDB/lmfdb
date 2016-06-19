@@ -622,13 +622,20 @@ sort by (conductor, abs(discriminant), label).
         Ei.lab = lab
     Elist.sort(key=lambda e: e.lab)
 
-    # we report when the tie-break on label is used
-    print("N={}. D={}.  {} ~ {}".format(Elist[0].conductor(),Elist[0].discriminant(),Elist[0].ainvs(),Elist[1].ainvs()))
     Et = Elist[0]
     D = E.is_quadratic_twist(Et) # 1 or square-free
     if D % 4 != 1:
         D *= 4
     minq_dict[j]=Et
+    e0 = Elist[0].ainvs()
+    e1 = Elist[1].ainvs()
+    D1 = Elist[0].is_quadratic_twist(Elist[1])
+    D1 = D1.squarefree_part()
+    if D1==-1 and e1[0]==e0[0]==0 and e1[2]==e0[2]==0 and e1[1]==-e0[1] and e1[3]==e0[3] and e1[4]==-e0[4]:
+        pass
+    else:
+        # we report when the tie-break on label is used except in the known cases
+        print("N={}. D={}.  {} ~ {}".format(Elist[0].conductor(),D1,e0,e1))
     return Et, D
 
 # one-off script to add extra data for curves already in the database
@@ -771,3 +778,45 @@ def add_root_number(C):
     """
     C.update(make_root_numbers(C))
     return C
+
+def make_min_quad_twist_file(filename, N1=11, N2=380000):
+    out = file(filename,'a')
+    c = 0
+    for E in cremona_curves(range(N1,N2+1)):
+        c += 1
+        Et, D = min_quad_twist(E)
+        out.write("{} {} {}\n".format(E.label(),D,Et.label()))
+        if c%1000==0:
+            print("done {}, last was {}".format(c,E.label()))
+    out.close()
+
+def read_min_quad_twist_file(filename):
+    c = 0
+    minqlabdict = {}
+    for L in file(filename).readlines():
+        c += 1
+        lab1, D, lab2 = L.split()
+        minqlabdict[lab1] = dict([('min_quad_twist',dict([('label',lab2), ('disc',int(D))]))])
+        #print(" {} {} {}".format(lab1,D,lab2))
+        if c%1000==0:
+            print("done {}, last was {}".format(c,lab1))
+    return minqlabdict
+
+def make_min_quad_twist(C, data_dict):
+    """C is a database elliptic curve entry.  Returns a dict with which to
+    update the entry.  Adds minimal quadratic twist.
+
+    Data fields needed in C already: 'label'
+
+    """
+    return data_dict[C['label']]
+
+def add_min_quad_twist(C):
+    """Add these fields to a single curve record in the db (for use with
+    the rewrite script in data_mgt/utilities/rewrite.py):
+   - 'rootno': (int) local root number
+
+    """
+    C.update(make_min_quad_twist(C,data_dict))
+    return C
+
