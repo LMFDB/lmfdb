@@ -13,23 +13,6 @@ white-space: pre in order to keep line breaks! #}
 {% endfor %}
 {% endmacro %}
 
-<script>
-var cur_system = null;
-function show_code(system) {
-    $('.sage').hide();
-    $('.pari').hide();
-    $('.magma').hide();
-    if (cur_system == system) {
-      $('.'+system).hide();
-      cur_system = null;
-      } else {
-      $('.'+system).show();
-      $('.'+system).css('display','inline-block');
-      cur_system = system;
-    }
-  }
-</script>
-
 <script type="text/javascript"
         src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 <script type="text/javascript"
@@ -69,12 +52,6 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
   </script>
 #}
 
-    <div align ="center">
-      Show commands using:  <a onclick="show_code('sage'); return false" href='#'>sagemath</a>,
-        <a onclick="show_code('pari'); return false" href='#'>pari/gp</a>,
-        <a onclick="show_code('magma'); return false" href='#'>Magma</a>
-    </div>
-
 {#
     <div align = "center">
       {{ KNOWL('sage.test', title='Start a Sage cell', kwargs='n=2')
@@ -86,7 +63,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
     <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
 
-    {{ code(data.code,'curve') }}
+    {{ place_code('curve') }}
 
     <p> {{ data.data.equation }} </p>
 
@@ -108,7 +85,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
     {% else %}
     <p><h3> Infinite order Mordell-Weil generators and heights</h3>
     {% endif %}
-      {{ code(data.code,'gens') }}
+      {{ place_code('gens') }}
       <div style='overflow:auto'><p>
       <table>
         <tr><td>\(P\)</td><td>&nbsp;=&nbsp;</td>
@@ -124,13 +101,13 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
     {% if data.mw.tor_order!=1 %}
     <h2> {{ KNOWL('ec.q.torsion_generators', title='Torsion generators') }}</h2>
-      {{ code(data.code,'tors') }}
+      {{ place_code('tors') }}
     <p> {{ data.mw.tor_gens }} </p>
     {%endif %}
 
 
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
-      {{ code(data.code,'intpts') }}
+      {{ place_code('intpts') }}
     {% if data.xintcoords %}
     <div class="ip">
       <p>
@@ -147,7 +124,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="6">
-          {{ code(data.code,'cond') }}
+          {{ place_code('cond') }}
         </td>
         </tr>
         <tr>
@@ -160,7 +137,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="6">
-          {{ code(data.code,'disc') }}
+          {{ place_code('disc') }}
         </td>
         </tr>
         <tr>
@@ -173,7 +150,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="6">
-          {{ code(data.code,'jinv') }}
+          {{ place_code('jinv') }}
         </td>
         </tr>
         <tr>
@@ -209,7 +186,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,'rank') }}
+          {{ place_code('rank') }}
         </td>
         </tr>
         <tr>
@@ -222,7 +199,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,'reg') }}
+          {{ place_code('reg') }}
         </td>
         </tr>
         <tr>
@@ -236,7 +213,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,'real_period') }}
+          {{ place_code('real_period') }}
         </td>
         </tr>
         <tr>
@@ -246,7 +223,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,'cp') }}
+          {{ place_code('cp') }}
         </td>
         </tr>
         <tr>
@@ -261,7 +238,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,'ntors') }}
+          {{ place_code('ntors') }}
         </td>
         </tr>
         <tr>
@@ -271,7 +248,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <tr>
         <td colspan="4">
-          {{ code(data.code,'sha') }}
+          {{ place_code('sha') }}
         </td>
         </tr>
         <tr>
@@ -294,19 +271,30 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 {# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 
     <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
-    <h3> {{KNOWL('ec.q.modular_form', title='Modular form')}} </h3>
-          {{ code(data.code,'qexp') }}
+    <h3> {{KNOWL('ec.q.modular_form', title='Modular form')}}
+{% if data.newform_exists_in_db %}
+<a href="{{data.newform_link}}">{{ data.newform_label }}</a>
+{% else %}
+{{ data.newform_label }}
+{% endif %}
+</h3>
+    {{ place_code('qexp') }}
     <p>
+{#
     <form>
+#}
         <div class="output"><span id="modform_output">{{ data.data.newform | safe }}</span></div>
         <div class="emptyspace"><br></div>
+{#
         <button id="morebutton">More coefficients</button>
     </form>
+#}
+      For more coefficients, see the Downloads section to the right.
     </p>
 
     <h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
       and {{ KNOWL('ec.q.optimal', title='optimality') }}</h3>
-    {{ code(data.code,'moddeg') }}
+    {{ place_code('moddeg') }}
       {% if data.data.degree==0 %}
       Not available
       {% else %}
@@ -321,7 +309,7 @@ src="http://code.jquery.com/jquery-latest.min.js"></script>
 
     <p>
       <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} attached to the curve </h3>
-    {{ code(data.code,'L1') }}
+    {{ place_code('L1') }}
     <p>
         \( {{ data.bsd.lder_name }} \) &approx; \( {{ data.bsd.lder }} \)
     </p>
@@ -335,7 +323,7 @@ text-align: center;
 }
 </style>
 
-    {{ code(data.code,'localdata') }}
+    {{ place_code('localdata') }}
 
 <table id = "local_data">
 <tr>
@@ -343,6 +331,7 @@ text-align: center;
 <th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
 <th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+<th>{{KNOWL('ec.local_root_number', title='Root number')}}</th>
 <th>{{KNOWL('ec.conductor_valuation', title='ord(\(N\))')}}</th>
 <th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\Delta\))')}}</th>
 <th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
@@ -350,17 +339,18 @@ text-align: center;
 {% for pr in data.local_data %}
 <tr>
 <td> \({{pr.p}}\)</td>
-<td>\({{pr.tamagawa_number}}\)</td>
-<td>{{pr.kodaira_symbol}}</td>
+<td>\({{pr.cp}}\)</td>
+<td>{{pr.kod}}</td>
 <td>
-{% if pr.reduction_type==0 %}
+{% if pr.red==0 %}
  Additive
- {% elif pr.reduction_type==1 %}
+ {% elif pr.red==1 %}
   Split multiplicative
-  {% elif pr.reduction_type==-1 %}
+  {% elif pr.red==-1 %}
    Non-split multiplicative
 {% endif %}
 </td>
+<td>{{pr.rootno}}</td>
 <td>{{pr.ord_cond}}</td>
 <td>{{pr.ord_disc}}</td>
 <td>{{pr.ord_den_j}}</td>
@@ -393,7 +383,7 @@ data.twoadic_index }}.
 {% endif %}
 
 
-    {{ code(data.code,'galrep') }}
+    {{ place_code('galrep') }}
 
 {% if data.data.galois_data %}
 <p>
@@ -432,7 +422,7 @@ representation')}} is surjective for all primes \( p \).
 
     <h2> p-adic data </h2>
 
-    {{ code(data.code,'padicreg') }}
+    {{ place_code('padicreg') }}
 
     <p>
 {% if data.bsd.rank==0 %}

@@ -23,26 +23,35 @@ AUTHORS:
 """
 from flask import render_template, url_for, request, redirect, make_response, send_file, send_from_directory,flash
 import os
-from lmfdb.base import app, db
+from lmfdb.base import app, db, getDBConnection
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
     render_fd_plot,
     extract_data_from_jump_to,
-    newform_label)
+    newform_label,
+    parse_newform_label)
 from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
 from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
 
 from emf_render_navigation import render_elliptic_modular_form_navigation_wp
 
-emf_logger.setLevel(int(10))
+emf_logger.setLevel(int(100))
 
 @emf.context_processor
 def body_class():
     return {'body_class': EMF}
+
+emfdb = None
+
+def db_emf():
+    global emfdb
+    if emfdb is None:
+        emfdb = getDBConnection().modularforms2.webnewforms
+    return emfdb
 
 #################
 # Top level
@@ -167,6 +176,17 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
                 return send_from_directory(dirname, filename, as_attachment=True, attachment_filename=filename)
             except IOError:
                 info['error'] = "Could not find file! "
+
+@emf.route("/random")
+def random_form():
+    label = random_object_from_collection( db_emf() )['hecke_orbit_label']
+    level, weight, character, label = parse_newform_label(label)
+    args={}
+    args['level'] = level
+    args['weight'] = weight
+    args['character'] = character
+    args['label'] = label
+    return redirect(url_for(".render_elliptic_modular_forms", **args), 301)
 
 @emf.route("/Plots/<int:grouptype>/<int:level>/")
 def render_plot(grouptype=0, level=1):

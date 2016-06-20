@@ -7,6 +7,7 @@ import flask
 from sage.all import *
 import tempfile
 import os
+import re
 import sqlite3
 import numpy
 import pymongo
@@ -19,7 +20,7 @@ from Lfunctionutilities import (p2sage, lfuncDShtml, lfuncEPtex, lfuncFEtex,
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curves.web_ec import cremona_label_regex, lmfdb_label_regex
-from LfunctionComp import isogenyclasstable
+from LfunctionComp import isogeny_class_table, isogeny_class_cm
 import LfunctionDatabase
 from lmfdb import base
 from pymongo import ASCENDING
@@ -79,7 +80,10 @@ def l_function_degree4_browse_page():
 # Degree browsing page #########################################################
 @l_function_page.route("/<degree>/")
 def l_function_degree_page(degree):
-    degree = int(degree[6:])
+    res = re.match('degree[0-9]+',degree)
+    if not res:
+        return flask.abort(404)
+    degree = res.group(0).atoi()
     info = {"degree": degree}
     info["key"] = 777
     info["bread"] = get_bread(degree, [])
@@ -624,11 +628,12 @@ def initLfunction(L, args, request):
             # info['friends'].append(('L-function ' + label.replace('.', '.2'),
             #                         url_for('.l_function_emf_page', level=L.modform['level'],
             #                             weight=2, character=1, label=L.modform['iso'], number=0)))
-        info['friends'].append(
-            ('Symmetric square L-function', url_for(".l_function_ec_sym_page",
-                                                    power='2', label=label)))
-        info['friends'].append(
-            ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
+        if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
+            info['friends'].append(
+                ('Symmetric square L-function', url_for(".l_function_ec_sym_page",
+                                                        power='2', label=label)))
+            info['friends'].append(
+                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
         info['bread'] = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
                                       (label, url_for('.l_function_ec_page', label=label))])
     elif L.Ltype() == 'genus2curveQ':
@@ -654,14 +659,15 @@ def initLfunction(L, args, request):
             for i in range(1, L.nr_of_curves_in_class + 1):
                 info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i),
                                         url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
-            info['friends'].append(
-                ('Symmetric square L-function',
-                 url_for(".l_function_ec_sym_page", power='2',
-                         label=L.ellipticcurve)))
-            info['friends'].append(
-                ('Symmetric cube L-function',
-                 url_for(".l_function_ec_sym_page", power='3',
-                         label=L.ellipticcurve)))
+            if not isogeny_class_cm(L.ellipticcurve):
+                info['friends'].append(
+                    ('Symmetric square L-function',
+                     url_for(".l_function_ec_sym_page", power='2',
+                             label=L.ellipticcurve)))
+                info['friends'].append(
+                    ('Symmetric cube L-function',
+                     url_for(".l_function_ec_sym_page", power='3',
+                             label=L.ellipticcurve)))
 
     elif L.Ltype() == 'hilbertmodularform':
         friendlink = '/'.join(friendlink.split('/')[:-1])
@@ -1157,7 +1163,7 @@ def processEllipticCurveNavigation(startCond, endCond):
     except:
         end = 100
 
-    iso_list = isogenyclasstable(N, end)
+    iso_list = isogeny_class_table(N, end)
     s = '<h5>Examples of L-functions attached to isogeny classes of elliptic curves</h5>'
     s += '<table>'
 
@@ -1253,7 +1259,7 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
     except:
         end = 100
 
-    iso_list = isogenyclasstable(N, end)
+    iso_list = isogeny_class_table(N, end)
     if power == 2:
         powerName = 'square'
     elif power == 3:

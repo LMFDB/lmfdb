@@ -11,20 +11,20 @@ Here are some <a href={{info["stats_url"]}}>further statistics</a>.
 <p>
 By {{ KNOWL('ag.conductor', title='conductor')}}:
 {% for rnge in info.conductor_list %}
-<a href="?cond={{rnge}}">{{rnge}}</a>
+<a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;
 {% endfor %}
 </p>
 
 <p>
 By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
 {% for rnge in info.discriminant_list %}
-<a href="?abs_disc={{rnge}}">{{rnge}}</a>
+<a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;
 {% endfor %}
 </p>
 <p>
 Some of our favorite curves:
-{% for curve in info.browse_curves: %}
- <a href = "{{info.curve_url(curve)}}"> {{curve.label}} </a>
+{% for curve in info.curve_list: %}
+<a href = "{{curve.url}}"> {{curve.label}} </a>&nbsp;
 {% endfor %}
 </p>
 <p>
@@ -127,6 +127,12 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 <td>Maximum number of curves to display</td>
 <td><input type='text' name='count' value=50 size=10></td>
 <td><span class="formexample"> &nbsp;</td>
+<td>{{ KNOWL('ag.geom_simple', title='geometrically simple') }}</td>
+<td><select name='is_simple_geom' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+</select></td>
 </tr>
 <tr>
 <td><button type='submit' value='Search'>Search</button></td>

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 #*****************************************************************************
 #  Copyright (C) 2014
 #  Stephan Ehlen <stephan.j.ehlen@gmail.com>
@@ -530,7 +530,7 @@ class WebObject(object):
                         d = loads(fs.get(fid).read())
                         results.append((d,m))
                     except ValueError as e:
-                        raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,r))
+                        raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,m))
                 else:
                     results.append(m)
         else:
@@ -559,28 +559,27 @@ class WebObject(object):
         else:
             return self.get_file(add_to_fs_query, get_all=True, meta_only=True)
 
-    def authorize(self):
+    @classmethod
+    def authorize(cls):
         r"""
         Need to be authorized to insert data
         """
-        from lmfdb.base import getDBConnection
         from os.path import dirname, join
         pw_filename = join(dirname(dirname(__file__)), "password")
         user = 'editor'
         password = open(pw_filename, "r").readlines()[0].strip()
-        C = getDBConnection()
         emf_logger.debug("Authenticating user={0} password={1}".format(user,password))
-        C["modularforms2"].authenticate(user,password)
+        cls.connect_to_db().authenticate(user,password)
         emf_logger.debug("Authenticated with user:{0} and pwd:{1}".format(user,password))
-                            
-    def logout(self):
+
+    @classmethod
+    def logout(cls):
         r"""
         Logout authorized user.
         """
         import lmfdb.base
-        from lmfdb.base import getDBConnection        
-        C = getDBConnection()
-        C["modularforms2"].logout()
+        C = cls.connect_to_db()
+        C.logout()
         # log back in with usual read-only access
         lmfdb.base._init(lmfdb.base.dbport)
         
@@ -607,31 +606,32 @@ class WebObject(object):
         except OperationFailure:
             emf_logger.critical("Authentication failed. You are not authorized to save data to the database!")
             return False
-        file_key = self.file_key_dict()
-        coll = self._file_collection
-        if fs.exists(file_key):
-            emf_logger.debug("File exists with key={0}".format(file_key))
-            if not update:
+        if self._use_gridfs:
+            file_key = self.file_key_dict()
+            coll = self._file_collection
+            if fs.exists(file_key):
+                emf_logger.debug("File exists with key={0}".format(file_key))
+                if not update:
+                    return True
+                else:
+                    fid = coll.find_one(file_key, projection=['_id'])['_id']
+                    fs.delete(fid)
+                    emf_logger.debug("Deleted file with fid={0}".format(fid))
+            # insert
+            s = dumps(self.fs_dict())
+            if not self._use_separate_db:
+                file_key.update(self.db_dict())
+            try:
+                t = fs.put(s, **file_key)
+                emf_logger.debug("Inserted file with filekey={1}".format(t,file_key))
+            except Exception, e:
+                emf_logger.debug("Could not insert file with filekey={1}".format(s,file_key))
+                emf_logger.warn("Error inserting record: {0}".format(e))
+            #fid = coll.find_one(key)['_id']
+            # insert extended record
+            if not self._use_separate_db:
+                self.logout()
                 return True
-            else:
-                fid = coll.find_one(file_key, projection=['_id'])['_id']
-                fs.delete(fid)
-                emf_logger.debug("Deleted file with fid={0}".format(fid))
-        # insert
-        s = dumps(self.fs_dict())
-        if not self._use_separate_db:
-            file_key.update(self.db_dict())
-        try:
-            t = fs.put(s, **file_key)
-            emf_logger.debug("Inserted file with filekey={1}".format(t,file_key))
-        except Exception, e:
-            emf_logger.debug("Could not insert file with filekey={1}".format(s,file_key))
-            emf_logger.warn("Error inserting record: {0}".format(e))
-        #fid = coll.find_one(key)['_id']
-        # insert extended record
-        if not self._use_separate_db:
-            self.logout()
-            return True
         coll = self._collection
         key = self.key_dict()
         #key.update(file_key)
@@ -663,13 +663,14 @@ class WebObject(object):
         """
         coll = self._collection
         key = self.key_dict()
-        if delete_all:
-            r = coll.delete_many(key) # delete meta records
-        else:
-            r = coll.delete_one(key) # delete meta record
-        if r.deleted_count == 0:
-            emf_logger.debug("There was no meta record present matching {0}".format(key))
-        files = self.get_file_list() if delete_all else [self.get_file()]
+        if self._use_separate_db or not self._use_gridfs:
+            if delete_all:
+                r = coll.delete_many(key) # delete meta records
+            else:
+                r = coll.delete_one(key) # delete meta record
+                if r.deleted_count == 0:
+                    emf_logger.debug("There was no meta record present matching {0}".format(key))
+        files = self.get_file_list() if delete_all else [self.get_file(meta_only=True)]
         for f in files:
             try:
                 self._files.delete(f['_id'])
@@ -734,9 +735,10 @@ class WebObject(object):
                         except NotImplementedError:
                             continue
                 succ_db = True
-            except:
+            except Exception as e:
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
+                emf_logger.critical("Error occured while updating from db: {}".format(e))
                 succ_db = False
         if self._use_gridfs and update_from_fs:
             try:
@@ -770,17 +772,20 @@ class WebObject(object):
         return self._properties.as_dict()
 
     @classmethod
-    def find(cls, query={}, projection = None, sort=[]):
+    def find(cls, query={}, projection = None, sort=[], gridfs_only=False):
         r'''
           Search the database using ```query``` and return
           an iterator over the set of matching objects of this WebObject
         '''
-        coll = cls.connect_to_db(cls._collection_name)
+        if gridfs_only: # stupid hack, should be a property of the class or standard that way
+            coll = cls.connect_to_db(cls._collection_name).files
+        else:
+            coll = cls.connect_to_db(cls._collection_name)
         for s in coll.find(query, sort=sort, projection=projection):
             s.pop('_id')
             try:
                 k = {key:s[key] for key in cls._key}
-                o = cls(update_from_db=False, **k)
+                o = cls(update_from_db=False, init_dynamic_properties=False, **k)
                 o.update_db_properties_from_dict(s)
                 yield o
             except KeyError as e:
@@ -941,12 +946,13 @@ class WebNumberField(WebDict):
         r"""
         We store the LMFDB label of the absolute field in the db.
         """
-        if self._db_value_has_been_set and not self._db_value is None:
-            return self._db_value
-        
+
         K = self._value
         if hasattr(K, "lmfdb_label"):
             return K.lmfdb_label
+        
+        if self._db_value_has_been_set and not self._db_value is None:
+            return self._db_value
         else:
             return ''
 
@@ -959,7 +965,7 @@ class WebNumberField(WebDict):
             label = self._db_value
             setattr(self._value, "lmfdb_pretty", field_pretty(label))
         else:
-            if self._value.absolute_degree()==1:
+            if self._value == QQ:
                 label = '1.1.1.1'
                 setattr(self._value, "lmfdb_pretty", field_pretty(label))
                 setattr(self._value, "lmfdb_label", label)

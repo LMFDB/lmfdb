@@ -4,6 +4,8 @@
 
 
 {# Underlying group #}
+
+<p>{{ place_code('init') }}</p>
 <h2>
   Underlying
   {% if type=='Dirichlet' %}
@@ -13,8 +15,6 @@
   {% endif %}
   modulo {{modulus}}
 </h2>
-
-{{ addcode(codeinit,'div') }}
 
 {% if type=='Hecke' %}
 \( Cl_f(K) \)
@@ -26,12 +26,12 @@
 
 
 <table class="props">
-  <tr> <td colspan="3"> {{ addcode(codeorder,'div') }} </td> </tr>
+  <tr> <td colspan="3"> {{ place_code('order') }} </td> </tr>
   <tr> <td>Order</td> <td>=</td> <td>{{ order }}</td> </tr>
 
-  <tr> <td colspan="3"> {{ addcode(codestruct,'div') }} </td> </tr>
+  <tr> <td colspan="3"> {{ place_code('struct') }} </td> </tr>
   <tr> <td>Structure</td> <td>=</td> <td>{{ structure }}</td> </tr>
-  <tr> <td colspan="3"> {{ addcode(codegen,'div') }} </td> </tr>
+  <tr> <td colspan="3"> {{ place_code('gen') }} </td> </tr>
   <tr> <td> Generators </td> <td>=</td> <td>{{ generators }}</td> </tr>
 
 </table>

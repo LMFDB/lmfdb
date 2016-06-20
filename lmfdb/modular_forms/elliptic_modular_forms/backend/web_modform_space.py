@@ -112,7 +112,7 @@ class WebHeckeOrbits(WebDict):
         res = {}
         for lbl in l:
             F = WebNewForm(self.level, self.weight, self.character, lbl, prec = self.prec, parent=self.parent)
-            if F.coefficient_field.absolute_degree() > 1:
+            if not F.is_rational:
                 self._only_rational = False
             #F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
             emf_logger.debug("Got F for label {0} : {1}".format(lbl,F))
@@ -175,7 +175,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         _collection_name = 'webmodformspace'
         _dimension_table_name = 'dimension_table'
 
-    def __init__(self, level=1, weight=12, character=1,cuspidal=True, new=True, prec=10, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
+    def __init__(self, level=1, weight=12, character=1,cuspidal=True, new=True, prec=0, bitprec=53, update_from_db=True, update_hecke_orbits=True, **kwargs):
 
         # I added this reduction since otherwise there is a problem with
         # caching the hecke orbits (since they have self as  parent)
@@ -196,7 +196,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebList('_character_galois_orbit', default_value=[character]),
             WebDict('_character_galois_orbit_embeddings', default_value={}),
             WebCharProperty('character_orbit_rep', modulus=level, save_to_fs=True),
-            WebCharProperty('character_used_in_computation', modulus=level, save_to_fs=True),
+            #WebCharProperty('character_used_in_computation', modulus=level, save_to_fs=True),
             WebStr('space_label', default_value=space_label(level=level, weight=weight, character=character), save_to_fs=True),
             WebStr('space_orbit_label', value='', save_to_db=True),            
             #WebStr('galois_orbit_name', value='', save_to_fs=True),
@@ -206,7 +206,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebInt('dimension_new_cusp_forms'),
             WebBool('cuspidal', value=cuspidal),
             WebBool('new', value=new),
-            WebInt('prec', value=int(prec)), #precision of q-expansions
+            #WebInt('prec', value=int(prec)), #precision of q-expansions -- removed, does not make much sense for the space here
             WebSageObject('group'),
             WebInt('sturm_bound'),
             WebHeckeOrbits('hecke_orbits', level, weight,
@@ -245,7 +245,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
          # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "../code.yaml")))
-        
+        self.code['show'] = {'sage':'','magma':''}
         # Fill in placeholders for this specific space:
         for lang in ['sage', 'magma']:
             if self.character.order == 1:
@@ -254,14 +254,6 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             else:
                 self.code['newforms-nontriv-char'][lang] = self.code['newforms-nontriv-char'][lang].format(
                     N=self.level, k=self.weight, elt=list(self.character.sage_character.element()))
-
-        for k in self.code:
-            if k != 'prompt' and k != 'f':
-                for lang in self.code[k]:
-                    self.code[k][lang] = self.code[k][lang].split("\n")
-                    # remove final empty line
-                    if len(self.code[k][lang][-1])==0:
-                        self.code[k][lang] = self.code[k][lang][:-1]
 
     def __repr__(self):
         if self.character.is_trivial():

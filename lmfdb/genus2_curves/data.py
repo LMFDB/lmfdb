@@ -1,3 +1,6 @@
+# group_dict is no longer used by any of the genus 2 code, but it is imported in higher_genus_w_automorphisms/main.py
+# it should probably be moved into a separate small_groups module and/or stored in the database
+
 group_dict = {
     '[1,1]' : 'C_{1}',
     '[2,1]' : 'C_{2}',

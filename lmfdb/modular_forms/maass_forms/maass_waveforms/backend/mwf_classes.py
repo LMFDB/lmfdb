@@ -317,7 +317,7 @@ class WebMaassForm(object):
                             row.append(pretty_coeff(c))
                     else:
                         for j in range(self.dim):
-                            c = ((self.coeffs.get(j, {})).get(0, None)).get(n, None)
+                            c = ((self.coeffs.get(j, {})).get(0, {})).get(n, None)
                             if c is not None:
                                 row.append(pretty_coeff(c))
                                 realnumc += 1

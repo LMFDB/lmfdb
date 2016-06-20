@@ -21,24 +21,27 @@ class DataBase():
     def __init__( self, DB_URL = None):
         if DB_URL:
             self.__client = pymongo.MongoClient( DB_URL)
+            self.__db_prefix=""
         else:
             import lmfdb.base
             self.__client = lmfdb.base.getDBConnection()
-        self.__db = self.__client.siegel_modular_forms_experimental
-        # self.__db = self.__client.siegel_modular_forms
+        # just use one database, prefix collection name to distinguish experimental data
+        # so siegel_modular_forms_experimental.samples is now siegel_modular_forms.experimental_samples
+        # self.__db = self.__client.siegel_modular_forms_experimental
+        self.__db = self.__client.siegel_modular_forms
+        self.__db_prefix = "experimental_"
         
     def find_one( self, *dct, **kwargs):
         collection = kwargs.get( 'collection', 'samples')
-        col = self.__db[collection]
+        col = self.__db[self.__db_prefix+collection]
         return col.find_one( *dct)
 
     def find( self, *dct, **kwargs):
         collection = kwargs.get( 'collection', 'samples')
-        col = self.__db[collection]
+        col = self.__db[self.__db_prefix+collection]
         return col.find( *dct)
 
     def __del__( self):
-#        self.__client.close()
         pass
 
 

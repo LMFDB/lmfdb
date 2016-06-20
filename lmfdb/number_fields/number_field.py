@@ -362,13 +362,14 @@ def render_field_webpage(args):
     else:
         primes = 'primes'
 
-    properties2 = [('Degree:', '%s' % data['degree']),
-                   ('Signature:', '$%s$' % data['signature']),
-                   ('Discriminant:', '$%s$' % data['disc_factor']),
-                   ('Ramified ' + primes + ':', '$%s$' % ram_primes),
-                   ('Class number:', '%s %s' % (data['class_number'], grh_lab)),
-                   ('Class group:', '%s %s' % (data['class_group_invs'], grh_lab)),
-                   ('Galois Group:', group_display_short(data['degree'], t, C))
+    properties2 = [('Label', label),
+                   ('Degree', '%s' % data['degree']),
+                   ('Signature', '$%s$' % data['signature']),
+                   ('Discriminant', '$%s$' % data['disc_factor']),
+                   ('Ramified ' + primes + '', '$%s$' % ram_primes),
+                   ('Class number', '%s %s' % (data['class_number'], grh_lab)),
+                   ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
+                   ('Galois Group', group_display_short(data['degree'], t, C))
                    ]
     from lmfdb.math_classes import NumberFieldGaloisGroup
     try:
@@ -383,7 +384,7 @@ def render_field_webpage(args):
     except AttributeError:
         pass
 #    del info['_id']
-    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info)
+    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info)
 
 
 def format_coeffs2(coeffs):
@@ -453,11 +454,16 @@ def number_field_search(**args):
         parse_ints(info,query,'class_number')
         parse_bracketed_posints(info,query,'class_group',split=False,check_divisibility='increasing')
         parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',mode='complement',to_string=True)
-        if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'some':
+        # modes are now contained (in), exactly, include
+        if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
             mode = 'append'
+            parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
+        elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
+            parse_primes(info,query,'ram_primes','ramified primes','ramps_all','subsets',to_string=False)
+            pass # build list
         else:
-            mode = 'exact'
-        parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
+            mode = 'liststring'
+            parse_primes(info,query,'ram_primes','ramified primes','ramps_all',mode)
     except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)
@@ -483,11 +489,11 @@ def number_field_search(**args):
     fields = C.numberfields.fields
 
     res = fields.find(query)
+    res = res.sort([('degree', ASC), ('disc_abs_key', ASC),('disc_sign', ASC)])
 
     if 'download' in info and info['download'] != '0':
         return download_search(info, res)
 
-    res = res.sort([('degree', ASC), ('disc_abs_key', ASC),('disc_sign', ASC)])
     nres = res.count()
     res = res.skip(start).limit(count)
 

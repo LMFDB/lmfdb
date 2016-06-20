@@ -68,12 +68,13 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     emf_logger.debug("PREC: {0}".format(prec))
     emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
-        WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label, prec=prec)
+        WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label)
+        if not WNF.has_updated():
+            raise IndexError("Unfortunately, we do not have this newform in the database.")
         info['character_order'] = WNF.character.order
-        info['code_snippets'] = WNF.code
+        info['code'] = WNF.code
         emf_logger.debug("defined webnewform for rendering!")
     except IndexError as e:
-        WNF = None
         info['error'] = e.message
     url1 = url_for("emf.render_elliptic_modular_forms")
     url2 = url_for("emf.render_elliptic_modular_forms", level=level)
@@ -97,7 +98,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     friends = uniq(friends)
     friends.append(("Dirichlet character \(" + WNF.character.latex_name + "\)", WNF.character.url()))
     
-    if WNF.dimension==0:
+    if WNF.dimension==0 and not info.has_key('error'):
         info['error'] = "This space is empty!"
     info['title'] = 'Newform ' + WNF.hecke_orbit_label
     info['learnmore'] = [('History of Modular forms', url_for('holomorphic_mf_history'))]    
@@ -130,10 +131,14 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         info['qexp_display'] = ''
         info['hide_qexp'] = True
         n,c = WNF.first_nonvanishing_coefficient()
-        info['trace_nv'] = latex(c.trace())
-        info['norm_nv'] = '\\approx ' + latex(c.norm().n())
+        info['trace_nv'] = latex(WNF.first_nonvanishing_coefficient_trace())
+        info['norm_nv'] = '\\approx ' + latex(WNF.first_nonvanishing_coefficient_norm().n())
         info['index_nv'] = n
     else:
+        if WNF.prec < prec:
+            #get WNF record at larger prec
+            WNF.prec = prec
+            WNF.update_from_db()
         info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
         info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
         info["hide_qexp"] = False

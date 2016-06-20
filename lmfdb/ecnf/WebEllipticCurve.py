@@ -372,7 +372,7 @@ class ECNF(object):
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
-        self.friends += [('Twists', url_for('ecnf.index', field_label=self.field_label, jinv=self.jinv))]
+        self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=str(j)))]
         if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
             self.friends += [('L-function', self.urls['Lfunction'])]
@@ -437,11 +437,3 @@ class ECNF(object):
 
         for lang in ['sage', 'magma', 'pari']:
             self._code['curve'][lang] = self._code['curve'][lang] % self.ainvs
-
-        for k in self._code:
-            if k != 'prompt':
-                for lang in self._code[k]:
-                    self._code[k][lang] = self._code[k][lang].split("\n")
-                    # remove final empty line
-                    if len(self._code[k][lang][-1])==0:
-                        self._code[k][lang] = self._code[k][lang][:-1]

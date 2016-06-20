@@ -5,9 +5,10 @@ import re
 from lmfdb.base import app, r
 import flask
 from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
-from sage.all import gcd
+from sage.all import gcd, randint
 import tempfile
 import os
+from lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict, make_logger
 from lmfdb.search_parsing import parse_range
 from lmfdb.WebCharacter import *
@@ -59,7 +60,7 @@ def render_characterNavigation():
         modulus_start = int(arg[0])
         modulus_end = int(arg[1])
         info['title'] = 'Dirichlet Characters of Moduli ' + str(modulus_start) + '-' + str(modulus_end)
-        info['credit'] = 'Sage'
+        info['credit'] = 'SageMath'
         h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
         info['contents'] = c
         info['headers'] = h
@@ -76,7 +77,7 @@ def render_characterNavigation():
         info['conductor_end'] = conductor_end
         info['title'] = 'Dirichlet Characters of Conductors ' + str(conductor_start) + \
             '-' + str(conductor_end)
-        info['credit'] = "Sage"
+        info['credit'] = "SageMath"
         info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
         # info['contents'] = c
         # info['header'] = h
@@ -92,7 +93,7 @@ def render_characterNavigation():
         info['order_start'] = order_start
         info['order_end'] = order_end
         info['title'] = 'Dirichlet Characters of Orders ' + str(order_start) + '-' + str(order_end)
-        info['credit'] = 'Sage'
+        info['credit'] = 'SageMath'
         info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
         return render_template("OrderList.html", **info)
 
@@ -163,13 +164,16 @@ def render_Dirichletwebpage(modulus=None, number=None):
                              ('Dirichlet', url_for(".render_Dirichletwebpage")),
                              ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m))]
             info['learnmore'] = learn()
+            info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
+            info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
             return render_template('CharGroup.html', **info)
         else:
             number = int(number)
             if gcd(modulus, number) != 1:
                 return flask.abort(404)
             if modulus < 100000:
-                info = WebDirichletCharacter(**args).to_dict()
+                webchar = WebDirichletCharacter(**args)
+                info = webchar.to_dict()
             else:
                 info = WebSmallDirichletCharacter(**args).to_dict()
             m,n = info['modlabel'], info['numlabel']
@@ -178,7 +182,17 @@ def render_Dirichletwebpage(modulus=None, number=None):
                              ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m)),
                              ('%s'%n, url_for(".render_Dirichletwebpage", modulus=m, number=n)) ]
             info['learnmore'] = learn()
+            info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
+            info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
             return render_template('Character.html', **info)
+
+@characters_page.route('/Dirichlet/random')
+def random_Dirichletwebpage():
+    modulus = randint(1,99999)
+    number = randint(1,modulus-1)
+    while gcd(modulus,number) > 1:
+        number = randint(1,modulus-1)
+    return redirect(url_for('.render_Dirichletwebpage', modulus=str(modulus), number=str(number)))
 
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
@@ -230,6 +244,8 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
                          ('Hecke', url_for(".render_Heckewebpage")),
                          ('Number Field %s'%number_field, url_for(".render_Heckewebpage", number_field=number_field)),
                          ('Mod %s'%m,  url_for(".render_Heckewebpage", number_field=number_field, modulus=m))]
+        info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
+        info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
         #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
@@ -241,6 +257,8 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
                          ('Number Field %s'%number_field,url_for(".render_Heckewebpage", number_field=number_field)),
                          ('Mod %s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=m)),
                          ('#%s'%X.number, url_for(".render_Heckewebpage", number_field=number_field, modulus=m, number=n))]
+        info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
+        info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
         #logger.info(info)
         return render_template('Character.html', **info)
 
@@ -282,7 +300,7 @@ def character_search(**args):
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
                          ('search results', ' ') ]
-        info['credit'] = 'Sage'
+        info['credit'] = 'SageMath'
         if (len(query) != 0):
             from sage.modular.dirichlet import DirichletGroup
             info['contents'] = charactertable(query)
@@ -320,10 +338,10 @@ def render_character_table(modulus=None, conductor=None, order=None):
             add &= not conductor or chi.conductor() == conductor
             add &= not order or chi.multiplicative_order() == order
             if add:
-		 if chi.multiplicative_order() == 2 and c.symbol is not None:
-                     ret.append([(j, c.symbol, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
-                 else:
-                     ret.append([(j, chi, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
+                if chi.multiplicative_order() == 2 and c.symbol is not None:
+                    ret.append([(j, c.symbol, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
+                else:
+                    ret.append([(j, chi, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
         return ret
     return [row(_) for _ in range(start, end, stepsize)]
 
@@ -339,7 +357,7 @@ def dirichlet_table():
 #    info = to_dict(args)
 #    info['modulus'] = modulus
 #    info["bread"] = [('Dirichlet Character Table', url_for("dirichlet_table")), ('result', ' ')]
-#    info['credit'] = 'Sage'
+#    info['credit'] = 'SageMath'
 #    h, c, = get_entries(modulus)
 #    info['headers'] = h
 #    info['contents'] = c
@@ -370,7 +388,7 @@ def dirichlet_group_table(**args):
     if "modulus" not in info:
         info["modulus"] = modulus
     info['bread'] = [('Characters', url_for(".render_characterNavigation")), ('Dirichlet table', ' ') ]
-    info['credit'] = 'Sage'
+    info['credit'] = 'SageMath'
     char_number_list = request.args.get("char_number_list",None)
     if char_number_list is not None:
         info['char_number_list'] = char_number_list

@@ -1,78 +1,52 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-{% macro code(codes, item) %}
-{% for L in codes[item] %}
-{# N.B. whitespace is preserved in the following div since the CSS has
-white-space: pre in order to keep line breaks! #}
-<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for code in codes[item][L] %}{{codes.prompt[L]}}&nbsp;{{code}}<br>{% endfor %}</div>
-{% endfor %}
-{% endmacro %}
-
-<script>
-var cur_system = null;
-function show_code(system) {
-    $('.sage').hide();
-    if (cur_system == system) {
-      $('.'+system).hide();
-      cur_system = null;
-    } else {
-      $('.'+system).show();
-      $('.'+system).css('display','inline-block');
-      cur_system = system;
-    }
-}
-</script>
-
-<div align ="right">
-  Show commands for:  <a onclick="show_code('sage'); return false" href='#'>sagemath</a>
-</div>
 
 {% set KNOWL_ID = "mf.%s.%s.%s.%s"|format(level,weight,character,label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
 
 {% if error is defined %}
-   {{ error | safe }}
+   <h3>{{ error | safe }}</h3>
 {% else %}
 
 {% if character == 1 %}
-{{ code(code_snippets,'newforms-triv-char') }}
+{{ place_code('newforms-triv-char') }}
 {% else %}
-{{ code(code_snippets,'newforms-nontriv-char') }}
+{{ place_code('newforms-nontriv-char') }}
 {% endif %}
-{{ code(code_snippets, 'f')}}
+{{ place_code('f')}}
 
 <div id="qexp">
 <!-- from emf_web_newform.html -->
   <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
 <div>
-  {{ code(code_snippets, 'qexp')}}
+  {{ place_code('qexp')}}
   {% if not hide_qexp %}
     <form>
         <div class="output">
           <span id="qexp_display">{{ qexp | safe }}</span>
         </div>
-	<div class="output">{{ polynomial_st | safe }}
-	</div>
-	<div class="emptyspace"><br>
+    <div class="output">{{ polynomial_st | safe }}
+    </div>
+    <div class="emptyspace"><br>
         </div>
         <button id="morebutton">Show more coefficients</button>
         <small>(To download coefficients, see below.)</small>
-	</form>
-	{% else %}
-	<p>The Fourier coefficients of this newform are large.
-	They are available for download below.<br>
-	The first non-zero Fourier coefficient $a(n)$ with $n>1$ is $a({{ index_nv }})$ and has trace ${{ trace_nv }}$ and norm ${{ norm_nv }}$.
-	</p>
-	{% endif %}
+    </form>
+    {% else %}
+    <p>The Fourier coefficients of this newform are large.
+    They are available for download below.<br>
+    The first non-zero Fourier coefficient $a(n)$ with $n>1$ is $a({{ index_nv }})$ and has trace ${{ trace_nv }}$ and norm ${{ norm_nv }}$.
+    </p>
+    {% endif %}
 </div>
 </div>
 <br>
 
 <h3>Coefficient field</h3>
 <div>
-  <div>{{ code(code_snippets, 'coefficient_field') }}</div>
+  <div>{{ place_code('coefficient_field') }}</div>
 <!-- from emf_web_newform.html -->
 The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is 
 {% if is_rational ==1 %}
@@ -86,10 +60,10 @@ The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is
     {% endif %}
 where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}}
 <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$.
-    {{code(code_snippets, 'absolute_polynomial')}}
+    {{place_code('absolute_polynomial')}}
     {% if coeff_field|length >2 and coeff_field[2]>2 %}
-<br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}} </div>.
-     {{ code(code_snippets, 'relative_polynomial') }}
+<br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}}.</div>
+     {{ place_code('relative_polynomial') }}
     {% endif %}
 {% endif %}
 </div>
@@ -260,10 +234,10 @@ are shown in the table below. Note that these include embeddings that do not pre
   {% endif %}
 <h2>Download this Newform </h2>
 
-The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn }} \).
+The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1 }} \).
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
 <input type="hidden" name="download" value="coefficients"/>
-<input type="hidden" name="max_num" value="{{max_cn}}"/>
+<input type="hidden" name="max_num" value="{{max_cn - 1}}"/>
 
 <table>
   <tr><td rowspan=5>Choose format to download:</td>
@@ -307,9 +281,9 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn }} 
 <td>
   {% set examplemax = 100 %}
   {% if max_cn  < 100 %}
-    {% set examplemax = max_cn %}
+    {% set examplemax = max_cn-1 %}
   {% endif %}
-  <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn }})
+  <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn - 1 }})
   <br><span class=" " id="num_error"></span>
 </td>
 </tr>
@@ -323,11 +297,11 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn }} 
 </div>
 {% endif %}
 </div>
-{% endif %}
 
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% include 'emf_web_newform_post_load_scripts.html' %}
+{% endif %}
 
 
 {% endblock %}

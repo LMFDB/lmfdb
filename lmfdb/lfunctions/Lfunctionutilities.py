@@ -3,7 +3,7 @@
 import re
 from lmfdb.lfunctions import logger
 from sage.all import *
-from lmfdb.genus2_curves.isog_class import list_to_factored_poly_otherorder
+from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.number_fields import group_display_knowl
 from lmfdb.base import getDBConnection
 

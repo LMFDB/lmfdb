@@ -1,7 +1,6 @@
 # Code for creating plots for browsing L-functions
 
 import math
-import cmath
 import datetime
 from flask import url_for, make_response
 import lmfdb.base as base
@@ -146,8 +145,8 @@ def getOneGraphHtml(gls):
                + str(gls[2]) + "</h4>\n")
     else:
         ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + "</h4>\n")
-    ans += "<div>The dots in the plot correspond to \\((\\mu_1,\\mu_2)\\) "
-    ans += "in the \\(\\Gamma\\)-factors. These have been found by a computer "
+    ans += "<div>The dots in the plot correspond to L-functions with \\((\\mu_1,\\mu_2)\\) "
+    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). These have been found by a computer "
     ans += "search. Click on any of the dots to get detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)
@@ -228,8 +227,6 @@ def getWidthAndHeight(gls):
 
 
 def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
-    from sage.misc.sage_eval import sage_eval
-    
     xfactor = 20
     yfactor = 20
     extraSpace = 20
@@ -283,7 +280,7 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
             ans += "<circle cx='" + str(float(x) * xfactor)[0:7]
             ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
             ans += "' r='" + str(radius)
-            ans += "' style='fill:" + signtocolour(sage_eval(sign)) + "'>"
+            ans += "' style='fill:" + signtocolour(sign) + "'>"
             ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
             ans += "</circle></a>\n"
 
@@ -291,7 +288,6 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
     return(ans)
 
 def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
-    from sage.misc.sage_eval import sage_eval
     index1 = 2
     index2 = 3
 
@@ -341,7 +337,7 @@ def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
         ans += "<circle cx='" + str(float(x) * xfactor)[0:7]
         ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
         ans += "' r='" + str(radius)
-        ans += "' style='fill:" + signtocolour(sage_eval(sign)) + "'>"
+        ans += "' style='fill:" + signtocolour(sign) + "'>"
         ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
         ans += "</circle></a>\n"
 
@@ -815,7 +811,8 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 
 
 def signtocolour(sign):
-    argument = cmath.phase(sign)
+    import cmath
+    argument = cmath.phase(float(sign))
     r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     b = int(255.0 * (math.cos(argument / 2.0)) ** 2)

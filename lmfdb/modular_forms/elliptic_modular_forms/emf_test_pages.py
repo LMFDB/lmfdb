@@ -3,6 +3,7 @@ from lmfdb.base import LmfdbTest, getDBConnection
 
 from flask import request
 import unittest2
+import sys
 
 from views.emf_main import *
 from . import emf_logger
@@ -25,21 +26,36 @@ class EmfTest(LmfdbTest):
         errors = []
         forms = getDBConnection().modularforms2.webnewforms
         for s in data:
+            if not 'space_label' in s:
+                print "Record has no space_label attribute"
+                print s
+                errors.append("Missing label")
+                continue
+            if not 'level' in s or not 'weight' in s or not 'character' in s:
+                print "Invalid space record in DB, missing on of the required attributes level, weight, character"
+                print s
+                errors.append(s['space_label'])
+                continue
             if s['space_label'] != "%d.%d.%d"%(s['level'],s['weight'],s['character']):
                  print "Label %s does not match level=%d, weight=%d, character=%d"%(s['space_label'],s['level'],s['weight'],s['character'])
                  errors.append(s['space_label'])
+                 continue
+            if not 'hecke_orbits' in s:
+                print "Space %s has no hecke_orbits attribute" % s['space_label']
+                errors.append(s['space_label'])
             if not check_orbit_list(s['hecke_orbits']):
                 print "Space %s has a bad list of Hecke orbits: %s" % (s['space_label'], s['hecke_orbits'])
                 errors.append(s['space_label'])
             orbits = forms.find({'version':float(version),'parent':s['space_label']})
-            olabels = [r['label'] for r in orbits]
+            olabels = [r.get('label','?') for r in orbits]
             if len(olabels) != len(s['hecke_orbits']) or set(olabels) != set(s['hecke_orbits']):
-                print "Hecke orbit data in webnewforms for space %s is incomplete or inconsistent" % label
-                print "    %s versus %s" % (olabels,stab[label][0])
+                print "Hecke orbit data in webnewforms for space %s is incomplete or inconsistent" % s['space_label']
+                print "    %s versus %s" % (olabels,s['hecke_orbits'])
                 errors.append(s['space_label'])
+                continue
             orbits = orbits.rewind()
-            odims = [r['dimension'] for r in orbits] 
-            if sum(odims) != s['dimension_new_cusp_forms']:
+            odims = [r.get('dimension') for r in orbits] 
+            if sum(odims) != s.get('dimension_new_cusp_forms',-1):
                 print "Hecke orbit dimensions %s do not sum to %d for space %s" % (odims, s['dimension_new_cusp_forms'], s['space_label'])
                 errors.append(s['space_label'])
             l = s['space_label'].split('.')
@@ -61,6 +77,11 @@ class EmfTest(LmfdbTest):
                     errors.append(s['space_label'])
                 orbits.rewind()
                 for r in orbits:
+                    if not 'hecke_orbit_label' in r:
+                        print "No hecke_orbit_label attribute in record"
+                        print r
+                        errors.append('no hecke orbit label')
+                        continue
                     if not r['hecke_orbit_label'] in page.data:
                         print "Hecke orbit label %s does not appear on page %s"%(r['hecke_orbit_label'],url)
                         errors.append(r['hecke_orbit_label'])
@@ -101,4 +122,19 @@ class EmfTest(LmfdbTest):
         errors = self.check_spaces(data)
         if errors:
             print "Errors occurred for the following labels: ", errors
-        assert not errors
+
+    def test_gamma1_pages(self):
+        errors = []
+        spaces = getDBConnection().modularforms2.webmodformspace
+        wmax = 10; Nmax = 50
+        data = spaces.find({'weight':{'$ge':int(2)},'weight':{'$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'version':float(version)})
+        print "Checking %d spaces of weight w <= %d and level N <= %d"%(data.count(),wmax,Nmax)
+        errors = self.check_spaces(data)
+        if errors:
+            print "Errors occurred for the following labels: ", errors
+        wmax = 20; Nmax = 16
+        data = spaces.find({'weight':{'$ge':int(2)},'weight':{'$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'version':float(version)})
+        print "Checking %d spaces of weight w <= %d and level N <= %d"%(data.count(),wmax,Nmax)
+        errors = self.check_spaces(data)
+        if errors:
+            print "Errors occurred for the following labels: ", errors
