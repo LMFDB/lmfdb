@@ -403,7 +403,8 @@ def group_display_inertia(code, C):
     if str(code[1]) == "t":
         return group_display_knowl(code[2][0], code[2][1], C)
     ans = "Intransitive group isomorphic to "
-    if len(code[2]) > 1:
+    if code[2] and len(code[2]) > 1:
+    #if len(code[2]) > 1:
         ans += group_display_short(code[2][0], code[2][1], C)
         return ans
     ans += code[3]

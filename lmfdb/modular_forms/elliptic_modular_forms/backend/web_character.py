@@ -57,12 +57,12 @@ class WebChar(WebObject, CachedRepresentation):
     _file_key = ['modulus', 'number','version']
     _collection_name = 'webchar'
     
-    def __init__(self, modulus=1, number=1, update_from_db=True, compute=False):
+    def __init__(self, modulus=1, number=1, update_from_db=True, compute_values=False, init_dynamic_properties=True):
         r"""
         Init self.
 
         """
-        emf_logger.debug("In WebChar {0}".format((modulus,number,update_from_db,compute)))
+        emf_logger.debug("In WebChar {0}".format((modulus,number,update_from_db,compute_values)))
         if isinstance(modulus,basestring):
             try:
                 m,n=modulus.split('.')
@@ -89,52 +89,53 @@ class WebChar(WebObject, CachedRepresentation):
             )
         emf_logger.debug('Set properties in WebChar!')
         super(WebChar, self).__init__(
-            update_from_db=update_from_db
+            update_from_db=update_from_db,
+            init_dynamic_properties=init_dynamic_properties
             )
-        if self._has_updated_from_db is False:
-            self.init_dynamic_properties() # this was not done if we exited early
-            compute = True
-        if compute:
-            self.compute(save=True)            
+        #if not self.has_updated_from_db():
+        #    self.init_dynamic_properties() # this was not done if we exited early
+        #    compute = True
+        if compute_values:
+            self.compute_values()
             
         #emf_logger.debug('In WebChar, self.__dict__ = {0}'.format(self.__dict__))
         emf_logger.debug('In WebChar, self.number = {0}'.format(self.number))
 
-    def compute(self, save=True):
-        emf_logger.debug('in compute for WebChar number {0} of modulus {1}'.format(self.number, self.modulus))
+    def compute_values(self, save=False):
+        emf_logger.debug('in compute_values for WebChar number {0} of modulus {1}'.format(self.number, self.modulus))
         c = self.character
-        changed = False
-        if self.conductor == 0:            
-            self.conductor = c.conductor()
-            changed = True
-        if self.order == 0:
-            self.order = c.multiplicative_order()
-            changed = True
-        if self.latex_name == '':
-            self.latex_name = "\chi_{" + str(self.modulus) + "}(" + str(self.number) + ", \cdot)"
-            changed = True
         if self._values_algebraic == {} or self._values_float == {}:
             changed = True
             for i in range(self.modulus):
                 self.value(i,value_format='float')
                 self.value(i,value_format='algebraic')
-        if self.modulus_euler_phi == 0:
-            changed = True
-            self.modulus_euler_phi = euler_phi(self.modulus)
-        if changed and save and False:  # temporary hack to prevent fatal error when save_to_db fails
+        if changed and save:
             self.save_to_db()
         else:            
             emf_logger.debug('Not saving.')
 
-    def init_dynamic_properties(self):
-        from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import dirichlet_character_conrey_galois_orbit_embeddings
+    def init_dynamic_properties(self, embeddings=False):
         if self.number is not None:            
             emf_logger.debug('number: {0}'.format(self.number))
             self.character = DirichletCharacter_conrey(DirichletGroup_conrey(self.modulus),self.number)
-            self.sage_character = self.character.sage_character()
+            if not self.number == 1:
+                self.sage_character = self.character.sage_character()
+            else:
+                self.sage_character = trivial_character(self.modulus)
             self.name = "Character nr. {0} of modulus {1}".format(self.number,self.modulus)
-            emb = dirichlet_character_conrey_galois_orbit_embeddings(self.modulus,self.number)
-            self.set_embeddings(emb)
+            if embeddings:
+                from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import dirichlet_character_conrey_galois_orbit_embeddings
+                emb = dirichlet_character_conrey_galois_orbit_embeddings(self.modulus,self.number)
+                self.set_embeddings(emb)
+            c = self.character
+            if self.conductor == 0:            
+                self.conductor = c.conductor()
+            if self.order == 0:
+                self.order = c.multiplicative_order()
+            if self.modulus_euler_phi == 0:
+                self.modulus_euler_phi = euler_phi(self.modulus)
+            if self.latex_name == '':
+                self.latex_name = "\chi_{" + str(self.modulus) + "}(" + str(self.number) + ", \cdot)"
             
     def is_trivial(self):
         r"""
@@ -226,11 +227,11 @@ class WebCharProperty(WebInt):
         self.number = number
         c = None
         if not kwargs.has_key('value'):
-            c = WebChar_cached(modulus, number, update_from_db=True, compute=True)
+            c = WebChar_cached(modulus, number, update_from_db=True, compute_values=False)
         elif kwargs['value'] is not None:
             c = kwargs.pop('value')
         else:
-            self._default_value = WebChar_cached(modulus, number, update_from_db=True, compute=True)
+            self._default_value = WebChar_cached(modulus, number, update_from_db=True, compute_values=False)
         if c is None:
             super(WebCharProperty, self).__init__(name, **kwargs)
         else:
@@ -248,7 +249,7 @@ class WebCharProperty(WebInt):
 
     def from_db(self, n):
         emf_logger.debug('converting {0} from store in WebCharProperty {1}'.format(n, self.name))
-        return WebChar(self.modulus, n, compute=True)
+        return WebChar(self.modulus, n, compute_values=False)
 
     def from_fs(self, n):
         return self.from_db(n)

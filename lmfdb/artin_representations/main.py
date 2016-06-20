@@ -184,7 +184,8 @@ def render_artin_representation_webpage(label):
         processed_root_number = "not computed"
     else:
         processed_root_number = str(the_rep.sign())
-    properties = [("Dimension", str(the_rep.dimension())),
+    properties = [("Label", label),
+                  ("Dimension", str(the_rep.dimension())),
                   ("Group", the_rep.group()),
                   #("Conductor", str(the_rep.conductor())),
                   ("Conductor", "$" + the_rep.factored_conductor_latex() + "$"),
@@ -231,8 +232,9 @@ def render_artin_representation_webpage(label):
     #info['pol5']=str(the_rep.central_char(5))
     #info['pol7']=str(the_rep.central_char(7))
     #info['pol11']=str(the_rep.central_char(11))
+    learnmore=[('Artin representations labels', url_for(".labels_page"))]
 
-    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info)
+    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info, learnmore=learnmore)
 
 @artin_representations_page.route("/random")
 def random_representation():

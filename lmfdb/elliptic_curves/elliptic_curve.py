@@ -491,7 +491,7 @@ def download_EC_qexp(label, limit):
 
 @ec_page.route("/download_all/<label>")
 def download_EC_all(label):
-    CDB = lmfdb.base.getDBConnection().elliptic_curves.curves
+    CDB = db_ec()
     N, iso, number = split_lmfdb_label(label)
     if number:
         data = CDB.find_one({'lmfdb_label': label})
@@ -503,30 +503,14 @@ def download_EC_all(label):
         if len(data_list) == 0:
             return elliptic_curve_jump_error(label, {})
 
-    # titles of all entries of curves
-    dump_data = []
-    titles = [str(c) for c in data_list[0]]
-    titles = [t for t in titles if t[0] != '_']
-    titles.sort()
-    dump_data.append(titles)
+    # For each curve we will output all data fields except the '_id':
+    # (This should also be possible by adding projection={'_id':False}
+    # to the find() call but on testing that timed out.)
     for data in data_list:
-        data1 = []
-        for t in titles:
-            d = data[t]
-            if t == 'ainvs':
-                data1.append(format_ainvs(d))
-            elif t in ['torsion_generators', 'torsion_structure']:
-                data1.append([eval(g) for g in d])
-            elif t == 'x-coordinates_of_integral_points':
-                data1.append(split_list(d))
-            elif t == 'gens':
-                data1.append(parse_points(d))
-            elif t in ['iso', 'label', 'lmfdb_iso', 'lmfdb_label']:
-                data1.append(str(d))
-            else:
-                data1.append(d)
-        dump_data.append(data1)
-    response = make_response('\n'.join(str(an) for an in dump_data))
+        data.pop('_id')
+
+    import json
+    response = make_response('\n\n'.join(json.dumps(d) for d in data_list))
     response.headers['Content-type'] = 'text/plain'
     return response
 
@@ -669,6 +653,5 @@ def ec_code(**args):
     for k in sorted_code_names:
         if lang in Ecode[k]:
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            for line in Ecode[k][lang]:
-                code += line + "\n"
+            code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
     return code
