@@ -164,9 +164,9 @@
 <table class="ntdata">
 <tr>
     <th>{{ KNOWL('g2c.label', title='Label') }}</th>
-    <th>{{ KNOWL('g2c.isogeny_class', title='Isogeny class') }}</th>
+    <th>{{ KNOWL('g2c.isogeny_class', title='Class') }}</th>
     <th>{{ KNOWL('g2c.equation', title='Equation') }}</th>
-    <th>{{ KNOWL('g2c.st_group', title='Sato Tate group') }}</th>
+    <th>{{ KNOWL('g2c.st_group', title='Sato Tate') }}</th>
     <th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</th>
     <th>{{ KNOWL('g2c.analytic_rank', title='rank*') }}</th>
 </tr>
@@ -175,8 +175,8 @@
     <td> <a href = "{{info.curve_url(curve.label)}}"> {{curve.label}} </a> </td>
     <td> <a href = "{{info.class_url(curve.class)}}"> {{curve.class}} </a> </td>
     <td> \({{curve.equation_formatted}}\) </td>
-    <td align=center> {{curve.st_group_href|safe}} </td>
-    <td align=center> {{curve.is_gl2_type_display | safe}} </td>
+    <td align=center> {{curve.st_group_link|safe}} </td>
+    <td align=center> {{curve.is_gl2_type_display|safe}} </td>
     <td align=center> {{curve.analytic_rank}} </td>
 </tr>
 {% endfor %}

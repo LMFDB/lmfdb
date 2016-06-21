@@ -14,8 +14,10 @@ class SatoTateGroupTest(LmfdbTest):
     def test_by_label(self):
         L = self.tc.get('/SatoTateGroup/1.4.10.1.1a')
         assert 'USp(4)' in L.data
-        L = self.tc.get('/SatoTateGroup/?label=USp%284%29')
-        assert 'USp(4)' in L.data
+        L = self.tc.get('/SatoTateGroup/?label=1.4.USp(4)')
+        assert '1.4.10.1.1a' in L.data
+        L = self.tc.get('/SatoTateGroup/?label=1.2.N(U(1))')
+        assert '1.2.1.2.1a' in L.data
         
     def test_direct_access(self):
         L = self.tc.get('/SatoTateGroup/1.4.G_{3,3}')
@@ -42,16 +44,16 @@ class SatoTateGroupTest(LmfdbTest):
         assert '33' in L.data
 
     def test_completeness(self):
-        print ""
+        stdb = getDBConnection().sato_tate_groups.st_groups
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
         assert '3 matches' in L.data
-        L = self.tc.get('/SatoTateGroup/U(1)')
-        assert '1.2.1.1.1a' in L.data
-        L = self.tc.get('/SatoTateGroup/N(U(1))')
-        assert '1.2.1.2.1a' in L.data
-        L = self.tc.get('/SatoTateGroup/SU(2)')
-        assert '1.2.3.1.1a' in L.data
-        stdb = getDBConnection().sato_tate_groups.st_groups
+        data = stdb.find({'weight':int(1),'degree':int(2)})
+        assert data.count() == 3
+        print ""
+        for r in data:
+            print 'Checking Sato-Tate group ' + r['label']
+            L = self.tc.get('/SatoTateGroup/?label='+r['label'])
+            assert r['label'] in L.data and 'Moment Statistics' in L.data
         data = stdb.find({'weight':int(1),'degree':int(2)})
         assert data.count() == 3
         for r in data:

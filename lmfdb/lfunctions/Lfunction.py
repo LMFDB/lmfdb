@@ -33,6 +33,7 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
      import WebMaassForm
+from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.base import url_for
 
 def constructor_logger(object, args):
@@ -79,6 +80,7 @@ def makeLfromdata(L, fromdb=False):
         L.motivic_weight = data['motivic_weight']
     else:
         L.motivic_weight = ''
+    L.st_link = st_link_by_name(L.motivic_weight,L.degree,L.st_group)
 
     L.selfdual = data['self_dual']
     if 'credit' in data.keys():
