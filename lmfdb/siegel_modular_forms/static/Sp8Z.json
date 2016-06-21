@@ -1,7 +1,7 @@
 {
     "description": "includes/Sp8Z_basic.html", 
-    "dim_args_default": "[range(17)]",
     "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Sp8Z", 
+    "dim_args_default": { "k": "0..16" },
     "latex_name": "M_k\\left(\\textrm{Sp}(8,\\mathbb{Z})\\right)", 
     "name": "Sp8Z",
     "order": 140

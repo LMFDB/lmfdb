@@ -37,7 +37,7 @@ The contents of this file should look like this:
 {
     "description": "includes/Dummy_0_basic.html", 
     "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Dummy_0", 
-    "dim_args_default": "[range(21)]",
+    "dim_args_default": "[[0,20]]",
     "latex_name": "{\\textrm{Dummy}}_0", 
     "name": "Dummy_0",
     "order": 10

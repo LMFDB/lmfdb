@@ -6,13 +6,13 @@
     <thead>
       <tr><th>Weight</th><th>Galois orbits (number of forms)</th></tr>
     </thead>
-    {% for wt,forms1 in forms|sort %}
+    {% for wt,forms1 in info.forms|sort %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       <td>{{ wt }}</td>
       <td>
-	{% for form,dim in forms1|sort %}
-	<a style="display: inline;" href="{{ ['/ModularForm/GSp/Q/Sp6Z.',form]|join }}">{{ form }} ({{ dim }})</a>
-	{% endfor %}
+    {% for form,dim in forms1|sort %}
+    <a style="display: inline;" href="{{ url_for('.by_label',label='Sp6Z.'+form) }}">{{ form }} ({{ dim }})</a>&nbsp;&nbsp;
+    {% endfor %}
       </td>
     </tr>
     {% endfor %}
