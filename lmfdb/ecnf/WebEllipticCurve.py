@@ -6,6 +6,7 @@ from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RR, rainbow, implicit_plo
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
+from lmfdb.sato_tate_groups.main import st_link_by_name
 from kraus import (non_minimal_primes, is_global_minimal_model, has_global_minimal_model, minimal_discriminant_ideal)
 
 ecnf = None
@@ -260,11 +261,11 @@ class ECNF(object):
             # The line below will need to change once we have curves over non-quadratic fields
             # that contain the Hilbert class field of an imaginary quadratic field
             if self.signature == [0,1] and ZZ(-self.abs_disc*self.cm).is_square():
-                self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.U(1)'),'\\mathrm{U}(1)')
+                self.ST = st_link_by_name(1,2,'U(1)')
             else:
-                self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.N(U(1))'),'N(\\mathrm{U}(1))')
+                self.ST = st_link_by_name(1,2,'N(U(1))')
         else:
-            self.ST = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.SU(2)'),'\\mathrm{SU}(2)')
+            self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
         self.qc = "no"

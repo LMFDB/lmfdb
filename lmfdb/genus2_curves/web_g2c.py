@@ -6,6 +6,7 @@ from lmfdb.utils import web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.sato_tate_groups.main import st_link_by_name
 from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, real, sqrt, var, expand
 from sage.plot.text import text
 from flask import url_for
@@ -113,15 +114,6 @@ def ring_pretty(L, f):
     if f % 2 == 0:
         return r'\Z [' + (str(f//2) if f != 2 else "") + r'\sqrt{' + str(D) + r'}]'
     return r'\Z [\frac{1 +' + str(f) + r'\sqrt{' + str(D) + r'}}{2}]'
-
-def st_group_name(st_group):
-    return '\\mathrm{USp}(4)' if st_group == 'USp(4)' else st_group
-
-def url_for_st_group(st_group):
-    return url_for('st.by_label', label='1.4.'+st_group)
-    
-def st_group_href(st_group):
-    return '<a href="%s">$%s$</a>' % (url_for_st_group(st_group),st_group_name(st_group))
 
 # currently galois functionality is not used here, but it is used in lfunctions so don't delete it
 def list_to_factored_poly_otherorder(s, galois=False):
@@ -408,7 +400,7 @@ def end_field_statement(field_label, poly):
         Galois number field \(K = \Q (a)\) with defining polynomial \(%s\)""" % poly
 
 def st_group_statement(group):
-    return """Sato-Tate group: \(%s\)""" % group
+    return """Sato-Tate group: <a href=%s> \(%s\) </a>""" % (group, url_for_st_group(group))
 
 def end_lattice_statement(lattice):
     statement = ''
@@ -424,7 +416,7 @@ def end_lattice_statement(lattice):
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1]))
         statement += """:<br>"""
         statement += end_statement(ED[1], ED[2], field=r'F', ring=ED[3])
-        statement += st_group_statement(ED[4])
+        statement += """Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
         statement += """<br>"""
         statement += gl2_simple_statement(ED[1], ED[2])
         statement += """<p></p>"""
@@ -549,8 +541,8 @@ class WebG2C(object):
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
-        data['st_group_name'] = st_group_name(curve['st_group'])
-        data['st_group_href'] = st_group_href(curve['st_group'])
+        data['st_group'] = curve['st_group']
+        data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
         data['is_gl2_type'] = curve['is_gl2_type']
         data['is_gl2_type_name'] = 'yes' if data['is_gl2_type'] else 'no'
@@ -645,7 +637,7 @@ class WebG2C(object):
                 ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['igusa_clebsch']))
                 ]
         properties += [
-            ('Sato-Tate group', data['st_group_href']),
+            ('Sato-Tate group', data['st_group_link']),
             ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\)', '\(%s\)' % data['real_geom_end_alg_name']),
             ('\(\mathrm{GL}_2\)-type', data['is_gl2_type_name'])
             ]
