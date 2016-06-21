@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest, getDBConnection
 
 class SMFPageTest(LmfdbTest):
@@ -17,27 +18,12 @@ class SMFPageTest(LmfdbTest):
             print "Checking home page for SMF sample " + full_label
             try:
                 n = n+1
-                page = self.tc.get(url, follow_redirects=True)
-                data = page.data.decode('utf-8')
+                data  = self.tc.get(url, follow_redirects=True).data
+                #print "Got %d bytes" % len(data)
                 assert full_label in data and "Hecke eigenform" in data
             except:
                 print "Error on page " + url
                 errors.append(url)
-                continue
-            print "Got %d bytes" % len(page.data)
-            label = s['collection'][0]
-            url = "/ModularForm/GSp/Q/"+label+"/"
-            print "Checking home page for SMF sample family " + label
-            try:
-                n = n+1
-                page = self.tc.get(url, follow_redirects=True)
-                data = page.data.decode('utf-8')
-                assert full_label in data and "Available samples" in data
-            except:
-                print "Error on page " + url
-                print page.data
-                errors.append(url)
-            print "Got %d bytes" % len(page.data)
         if not errors:
             print "Tested %s pages with no errors" % n
         else:
