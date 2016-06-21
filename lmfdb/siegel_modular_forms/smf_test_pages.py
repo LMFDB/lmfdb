@@ -18,7 +18,8 @@ class SMFPageTest(LmfdbTest):
             try:
                 n = n+1
                 page = self.tc.get(url, follow_redirects=True)
-                assert full_label in page.data and "Hecke eigenform" in page.data
+                data = page.data.decode('utf-8')
+                assert full_label in data and "Hecke eigenform" in data
             except:
                 print "Error on page " + url
                 errors.append(url)
@@ -30,11 +31,12 @@ class SMFPageTest(LmfdbTest):
             try:
                 n = n+1
                 page = self.tc.get(url, follow_redirects=True)
-                assert full_label in page.data and "Available samples" in page.data
+                data = page.data.decode('utf-8')
+                assert full_label in data and "Available samples" in data
             except:
                 print "Error on page " + url
+                print page.data
                 errors.append(url)
-                continue
             print "Got %d bytes" % len(page.data)
         if not errors:
             print "Tested %s pages with no errors" % n
