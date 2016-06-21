@@ -562,81 +562,99 @@ def add_numerical_iso_codes(N1,N2):
 def xainvs(E):
     return ''.join(['[',','.join([str(a) for a in E.ainvs()]),']'])
 
-minq_dict = {} # holds j --> min-curve
+minq_dict = {} # holds j --> min-curve, for j!=0,1728.
 
-def min_quad_twist(E):
+def min_quad_twist(E, debug=False):
     r""" Refined version of Sage function (as of version 7.2).  Sage picks
-at random if several twists have the same conductor, but we want to
-sort by (conductor, abs(discriminant), label).
-    """
+    at random if several twists have the same conductor, but we want
+    to sort by (conductor, abs(discriminant), tie-break).  The tie
+    break is needed in just when situation, where two curves are
+    -1-twists and have the same conductor and minimal discriminant;
+    this cannot happen when c6=0 and we select the curve which has
+    c6>0.  """
     global minq_dict
-    j = E.j_invariant()
-    if j in minq_dict:
-        Et = minq_dict[j]
+
+    def return_data(j,Et):
+        # when we have the minimal twist, get the twisting discriminant
         D = E.is_quadratic_twist(Et) # 1 or square-free
         if D % 4 != 1:
             D *= 4
+        #NB The minimal quadratic twist does not only depend on j when
+        #j=0 or 1728!
+        if not j in [0,1728]:
+            minq_dict[j]=Et
         return Et, D
 
-    E1, D1 = E.minimal_quadratic_twist()
+    j = E.j_invariant()
+    if j in minq_dict:
+        if debug:
+            print("j={} known already".format(j))
+        return return_data(j,minq_dict[j])
 
-    # E1 is minimised at primes >3 but we want to choose
-    # systematically from the 8 twists by <-1,2,3>:
-    tw = [-1,2,-2,3,-3,6,-6]
+    # instead of using Sage's function E.minimal_quadratic_twist() we
+    # use our own which sorts by conductor, then abs(discriminant),
+    # then uses a tie-break when those are equal.
+
+    c4, c6 = E.c_invariants()
+    a4 = -27*c4
+    a6 = -54*c6
+    # Now [0,0,0,a4,a6] is a model for E
+
+    for p in gcd(a4,a6).support():
+        if a4==0:
+            e = a6.valuation(p)//3
+        elif a6==0:
+            e = a4.valuation(p)//2
+        else:
+            e = min(a4.valuation(p)//2,a6.valuation(p)//3)
+        if e>0:
+            p  = p**e
+            a4 /= p**2
+            a6 /= p**3
+
+    E1 = EllipticCurve([0,0,0,a4,a6])
+    # Now E1 is a twist of E minimal at all p>3
+
+    # We choose systematically from the 8 twists by <-1,2,3> or just
+    # by <2,3> when j==1728:
+    if a6:
+        tw = [-1,2,-2,3,-3,6,-6]
+    else:
+        tw = [2,3,6]
     Elist = [E1] + [E1.quadratic_twist(t).minimal_model() for t in tw]
 
     # Eliminate repeats
     Elist=list(Set(Elist))
+    if debug:
+        print("j={}: comparing {} twists".format(j,len(Elist)))
 
     # Keep only those of minimal conductor:
     N = min([E2.conductor() for E2 in Elist])
     Elist = [E2 for E2 in Elist if E2.conductor()==N]
     if len(Elist)==1:
         Et = Elist[0]
-        D = E.is_quadratic_twist(Et) # 1 or square-free
-        if D % 4 != 1:
-            D *= 4
-        minq_dict[j]=Et
-        return Et, D
+        if debug:
+            print("j={}: unique twist with minimal N={}".format(j,Et.conductor()))
+        return return_data(j,Et)
 
     # Keep only those of minimal discriminant:
     D = min([E2.discriminant().abs() for E2 in Elist])
     Elist = [E2 for E2 in Elist if E2.discriminant().abs()==D]
     if len(Elist)==1:
         Et = Elist[0]
-        D = E.is_quadratic_twist(Et) # 1 or square-free
-        if D % 4 != 1:
-            D *= 4
-        minq_dict[j]=Et
-        return Et, D
+        if debug:
+            print("j={}: unique twist with minimal (N,|D|)=({},{})".format(j,Et.conductor(),Et.discriminant().abs()))
+        return return_data(j,Et)
 
     # Finally, when we have more than one with the same minimal
-    # conductor and discriminant, we sort by LMFDB label.  We need to
-    # look these up in the database.  We are sure that these curves
-    # are all in the db when adding this data to pre-existing
-    # collection, but not when we first install curves.
-    ainvs = [xainvs(E2) for E2 in Elist]
-    dbcurves = [curves.find_one({'xainvs':ai}) for ai in ainvs]
-    labels = [c.get('lmfdb_label','') for c in dbcurves]
-    for Ei,lab in zip(Elist,labels):
-        Ei.lab = lab
-    Elist.sort(key=lambda e: e.lab)
-
+    # conductor and discriminant, we know that they are -1-twists of
+    # each other and use the one with c6>0
     Et = Elist[0]
-    D = E.is_quadratic_twist(Et) # 1 or square-free
-    if D % 4 != 1:
-        D *= 4
-    minq_dict[j]=Et
-    e0 = Elist[0].ainvs()
-    e1 = Elist[1].ainvs()
-    D1 = Elist[0].is_quadratic_twist(Elist[1])
-    D1 = D1.squarefree_part()
-    if D1==-1 and e1[0]==e0[0]==0 and e1[2]==e0[2]==0 and e1[1]==-e0[1] and e1[3]==e0[3] and e1[4]==-e0[4]:
-        pass
-    else:
-        # we report when the tie-break on label is used except in the known cases
-        print("N={}. D={}.  {} ~ {}".format(Elist[0].conductor(),D1,e0,e1))
-    return Et, D
+    if Et.c6()<0:
+        Et = Elist[1]
+    assert Et.c6()>0
+    print("j={}: tie-break needed, min={}".format(j,Et.ainvs()))
+    return return_data(j,Et)
 
 # one-off script to add extra data for curves already in the database
 
@@ -741,8 +759,7 @@ def add_extra_data1(C):
 
 def make_root_numbers(C):
     """C is a database elliptic curve entry.  Returns a dict with which to
-    update the entry.  Adds root numbers and updates minimal quadratic
-    twist.
+    update the entry, adding root numbers.
 
     Data fields needed in C already: 'ainvs', 'local_data'
 
@@ -761,13 +778,6 @@ def make_root_numbers(C):
                     print("creating E from {}".format(C['ainvs']))
                 rootno = int(E.root_number(ld['p']))
             ld['rootno'] = rootno
-
-    Etw, Dtw = min_quad_twist(E)
-    minq_ainvs = xainvs(Etw)
-    r = curves.find_one({'jinv':str(E.j_invariant()), 'xainvs':minq_ainvs})
-    minq_label = "" if r is None else r['label']
-    data['min_quad_twist'] = {'label':minq_label, 'disc':int(Dtw)}
-
     return data
 
 def add_root_number(C):
@@ -784,8 +794,9 @@ def make_min_quad_twist_file(filename, N1=11, N2=380000):
     c = 0
     for E in cremona_curves(range(N1,N2+1)):
         c += 1
-        Et, D = min_quad_twist(E)
-        out.write("{} {} {}\n".format(E.label(),D,Et.label()))
+        Et, D = min_quad_twist(E,False)
+        if D!=1:
+            out.write("{} {} {}\n".format(E.label(),D,Et.label()))
         if c%1000==0:
             print("done {}, last was {}".format(c,E.label()))
     out.close()
@@ -802,6 +813,10 @@ def read_min_quad_twist_file(filename):
             print("done {}, last was {}".format(c,lab1))
     return minqlabdict
 
+# The output of the preceding function is a dict which is passed to
+# the next one.  It will contain minimal quadratic twist data for all
+# curves which are not their own m.q.t.
+
 def make_min_quad_twist(C, data_dict):
     """C is a database elliptic curve entry.  Returns a dict with which to
     update the entry.  Adds minimal quadratic twist.
@@ -809,14 +824,36 @@ def make_min_quad_twist(C, data_dict):
     Data fields needed in C already: 'label'
 
     """
-    return data_dict[C['label']]
+    lab = C['label']
+    if lab in data_dict:
+        return data_dict[lab]
+    #else it is its own minimal quadratic twist
+    return dict([('min_quad_twist',dict([('label',lab), ('disc',int(1))]))])
 
 def add_min_quad_twist(C):
     """Add these fields to a single curve record in the db (for use with
-    the rewrite script in data_mgt/utilities/rewrite.py):
-   - 'rootno': (int) local root number
-
+    the rewrite script in data_mgt/utilities/rewrite.py).  The global
+    variable data_dict must contain data for all curves which are not
+    their own minimal quadratic twist.
     """
     C.update(make_min_quad_twist(C,data_dict))
     return C
 
+def add_min_quad_twist_and_root_numbers(C):
+    """Add these fields to a single curve record in the db (for use with
+    the rewrite script in data_mgt/utilities/rewrite.py).  The global
+    variable data_dict must contain data for all curves which are not
+    their own minimal quadratic twist.
+    """
+    C.update(make_min_quad_twist(C,data_dict))
+    C.update(make_root_numbers(C))
+    return C
+
+# Usage:
+#
+# sage: make_min_quad_twist_file("mqt_data",11,380000)
+# sage: dd = read_min_quad_twist_file("mqt_data")
+# sage: ec = C['elliptic_curves']
+# sage: ec.drop_collection("new_curves")
+# sage: %runfile data_mgt/utilities/rewrite.py
+# sage: rewrite_collection(ec, "curves", "new_curves", add_min_quad_twist_and_root_numbers)
