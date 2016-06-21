@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-from lmfdb.base import LmfdbTest
+from lmfdb.base import LmfdbTest, getDBconnection
 import math
 import unittest2
 
@@ -16,8 +16,8 @@ class HomePageTest(LmfdbTest):
                 
     # All tests should pass: these are all the links in the browse page 
     def test_browse_page(self):
-        r"""
-        Check that the links work.
+        """
+        Check that the top level browse pages work
         """
         self.check("/ModularForm/GSp/Q/Sp4Z_j/10/0/", 'M_{10,0}')
         self.check("/ModularForm/GSp/Q/Sp4Z_j/",  'Upsilon')
@@ -34,6 +34,9 @@ class HomePageTest(LmfdbTest):
         self.check("/ModularForm/GSp/Q/Gamma0_4_half/",  'k-1/2')
 
     def test_sample_pages(self):
+        """
+        Check all the sample pages (should take 10s on atkin)
+        """
         errors = []
         samples = getDBConnection().siegel_modular_forms.experimental_samples
         data = samples.find({'collection':{'$exists':True},'name':{'$exists':True}},{'_id':False,'collection':True,'name':True})
