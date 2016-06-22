@@ -103,7 +103,7 @@ class HomePageTest(LmfdbTest):
         print ""
         for s in data:
             full_label = s['collection'][0] + "." + s['name']
-            print "Checking home page for SMF sample " + full_label
+            print "Checking SMF " + full_label
             try:
                 n = n+1
                 self.check(full_label,[full_label,'Hecke eigenform'])
@@ -111,7 +111,7 @@ class HomePageTest(LmfdbTest):
                 print "Error on page " + url
                 errors.append(url)
         if not errors:
-            print "Tested %s pages with no errors" % n
+            print "Tested %s SMF pages with no errors" % n
         else:
             print "Tested %d pages with %d errors occuring on the following pages:" %(n,len(errors))
             for url in errors:
