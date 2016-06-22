@@ -97,7 +97,7 @@ def by_label(label):
 
 @smf_page.route('/Sp4Z_j/<int:k>/<int:j>')
 @smf_page.route('/Sp4Z_j/<int:k>/<int:j>/')
-def Sp4Z_j_space(j=4, k=4):
+def Sp4Z_j_space(k,j):
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
              ('Siegel modular forms', url_for('.index')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
@@ -121,6 +121,17 @@ def Sp4Z_j_space(j=4, k=4):
                            title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
                            bread=bread,
                            info=info);
+
+@smf_page.route('/Sp4Z/<int:k>')
+@smf_page.route('/Sp4Z/<int:k>/')
+def Sp4Z_space(k):
+    return redirect(url_for(".Sp4Z_j_space", k=k, j=0), 301)
+
+@smf_page.route('/Sp4Z_2/<int:k>')
+@smf_page.route('/Sp4Z_2/<int:k>/')
+def Sp4Z_2_space(k):
+    return redirect(url_for(".Sp4Z_j_space", k=k, j=2), 301)
+
 
 @smf_page.route('/Sp4Z_j')
 @smf_page.route('/Sp4Z_j/')
@@ -152,7 +163,8 @@ def Sp4Z_j():
 
 def render_main_page(bread):
     cols = scan_collections()
-    col_list = [cols[c] for c in cols if cols[c].computes_dimensions()]
+    col_list = [cols[c] for c in cols if cols[c].computes_dimensions() and not c in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
+    print col_list
     col_list.sort(key=lambda x: x.order)
     info = { 'col_list': col_list, 'args': {}, 'number_of_samples': sample.count_samples()}
     return render_template('ModularForm_GSp4_Q_index.html',
@@ -233,7 +245,7 @@ def render_search_results_page(args, bread):
 
 def render_dimension_table_page(args, bread):
     cols = scan_collections()
-    col_list = [cols[c] for c in cols if cols[c].computes_dimensions()]
+    col_list = [cols[c] for c in cols if cols[c].computes_dimensions() and not c in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
     col_list.sort(key=lambda x: x.order)
     info = { 'col_list': col_list, 'args': to_dict(args) }
     col = cols.get(args.get('col'))
