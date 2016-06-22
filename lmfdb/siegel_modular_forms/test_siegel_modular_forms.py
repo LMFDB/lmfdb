@@ -58,7 +58,7 @@ class HomePageTest(LmfdbTest):
         self.check("?col=Gamma0_3_psi_3&k=&j&table=1", ["Total", "68"])
         self.check("?col=Gamma0_3_psi_3&k=&j=2&table=1", "should not be specified")
         self.check("?col=Gamma0_4&k=&j=&table=1", ["Total", "240"])
-        self.check("?col=Gamma0_4&k=&j=2&table=1", "should not be specified"])
+        self.check("?col=Gamma0_4&k=&j=2&table=1", "should not be specified")
         self.check("?col=Gamma0_4_psi_4&k=&j&table=1", ["Total", "495"])
         self.check("?col=Gamma0_4_psi_4&k=&j=2&table=1", "should not be specified")
         self.check("?col=Gamma0_4_half&k=&j&table=1", ["Cusp", "129"])
