@@ -294,7 +294,7 @@ def genus2_curve_search(**args):
         return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
     # Database query happens here
     info["query"] = query # save query for reuse in download_search
-    cursor = g2c_db_curves().find(query,{'_id':int(0),'label':int(1),'min_eqn':int(1),'st_group':int(1),'is_gl2_type':int(1),'analytic_rank':int(1)})
+    cursor = g2c_db_curves().find(query,{'_id':int(0),'label':int(1),'eqn':int(1),'st_group':int(1),'is_gl2_type':int(1),'analytic_rank':int(1)})
 
     count = parse_count(info, 50)
     start = parse_start(info)
@@ -322,7 +322,7 @@ def genus2_curve_search(**args):
         v_clean["class"] = class_from_curve_label(v["label"])
         v_clean["is_gl2_type"] = v["is_gl2_type"] 
         v_clean["is_gl2_type_display"] = '&#10004;' if v["is_gl2_type"] else '' # display checkmark if true, blank otherwise
-        v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
+        v_clean["equation_formatted"] = list_to_min_eqn(literal_eval(v["eqn"]))
         v_clean["st_group_link"] = st_link_by_name(1,4,v['st_group'])
         v_clean["analytic_rank"] = v["analytic_rank"]
         res_clean.append(v_clean)
@@ -458,7 +458,7 @@ def download_search(info):
     filename = 'genus2_curves' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
     # reissue saved query here
-    res = g2c_db_curves().find(literal_eval(info["query"]),{'_id':int(0),'min_eqn':int(1)})
+    res = g2c_db_curves().find(literal_eval(info["query"]),{'_id':int(0),'eqn':int(1)})
     c = download_comment_prefix[lang]
     s =  '\n'
     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, res.count())
@@ -471,9 +471,10 @@ def download_search(info):
     s += download_assignment_start[lang] + '\\\n'
     # loop through all search results and grab the curve equations
     for r in res:
-        entry = str(r['min_eqn'])
+        entry = str(r['eqn'])
         entry = entry.replace('u','')
         entry = entry.replace('\'','')
+        entry = entry.replace('\"','')
         s += entry + ',\\\n'
     s = s[:-3]
     s += download_assignment_end[lang]
