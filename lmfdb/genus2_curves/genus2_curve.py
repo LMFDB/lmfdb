@@ -267,14 +267,14 @@ def genus2_curve_search(**args):
     query = {}
     try:
         parse_ints(info,query,'abs_disc','absolute discriminant')
-        parse_bool(info,query,'is_gl2_type')
-        parse_bool(info,query,'has_square_sha')
-        parse_bool(info,query,'locally_solvable')
-        parse_bool(info,query,'is_simple_geom')
-        parse_ints(info,query,'cond')
-        parse_ints(info,query,'num_rat_wpts','Weierstrass points')
+        parse_bool(info,query,'is_gl2_type','is of GL2-type')
+        parse_bool(info,query,'has_square_sha','has square Sha')
+        parse_bool(info,query,'locally_solvable','is locally solvable')
+        parse_bool(info,query,'is_simple_geom','is geometrically simple')
+        parse_ints(info,query,'cond','conductor')
+        parse_ints(info,query,'num_rat_wpts','rational Weierstrass points')
         parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
-        parse_ints(info,query,'torsion_order')
+        parse_ints(info,query,'torsion_order','torsion order')
         if 'torsion' in query and not 'torsion_order' in query:
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion']],1)
         if 'torsion' in query:
@@ -293,6 +293,7 @@ def genus2_curve_search(**args):
         info['err'] = str(err)
         return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
     # Database query happens here
+    info["query"] = query # save query for reuse in download_search
     cursor = g2c_db_curves().find(query,{'_id':int(0),'label':int(1),'min_eqn':int(1),'st_group':int(1),'is_gl2_type':int(1),'analytic_rank':int(1)})
 
     count = parse_count(info, 50)
@@ -418,8 +419,7 @@ class G2C_stats(object):
         dists = []
         # TODO use aggregate $group to speed this up and/or just store these counts in the database
         for attr in stats_attribute_list:
-            values = curves.distinct(attr['name'])
-            values.sort()
+            values = sorted(curves.distinct(attr['name']))
             vcounts = []
             rows = []
             colcount = 0
