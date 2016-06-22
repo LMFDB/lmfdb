@@ -103,7 +103,7 @@ class HomePageTest(LmfdbTest):
         print ""
         for s in data:
             full_label = s['collection'][0] + "." + s['name']
-            print "Checking SMF " + full_label
+            print "Checking " + full_label
             try:
                 n = n+1
                 self.check(full_label,[full_label,'Hecke eigenform'])
