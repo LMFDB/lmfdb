@@ -11,7 +11,6 @@ from datetime import datetime
 from flask import render_template, request, make_response, url_for
 from lmfdb.api import api_page, api_logger
 from bson.objectid import ObjectId
-from collections import OrderedDict
 
 # caches the database information
 _databases = None
