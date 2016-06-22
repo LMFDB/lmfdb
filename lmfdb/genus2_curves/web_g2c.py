@@ -580,9 +580,9 @@ class WebG2C(object):
             data['end_ring_geom'] = endo['ring_geom']
         else:
             # invariants specific to isogeny class
-            curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'min_eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
+            curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
             assert curves_data
-            data['curves'] = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_curve_label(c['label'])} for c in curves_data ]
+            data['curves'] = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
 
         # Endomorphism data over QQ:
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
