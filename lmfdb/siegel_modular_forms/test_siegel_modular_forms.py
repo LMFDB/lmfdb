@@ -15,8 +15,10 @@ class HomePageTest(LmfdbTest):
                 
     def test_random_page(self):
         """
-        Test random sample page
+        Test 3 random sample pages
         """
+        self.check("random", "Hecke eigenform")
+        self.check("random", "Hecke eigenform")
         self.check("random", "Hecke eigenform")
 
     def test_browse_page(self):
@@ -43,7 +45,7 @@ class HomePageTest(LmfdbTest):
         
     def test_dimension_tables(self):
         """
-        Check dimension table pages
+        Test dimension table pages
         """
         self.check("?col=Sp4Z_j&k=&j=&table=1", ["Cusp", "Non cusp"])
         self.check("?col=Sp4Z_j&k=&j=2&table=1", ["Cusp", "Non cusp"])
@@ -51,8 +53,8 @@ class HomePageTest(LmfdbTest):
         self.check("?col=Gamma0_2&k=&j=2&table=1", ["Cusp", "Non cusp"])
         self.check("?col=Gamma1_2&k=&j=&table=1", ["111", "21"])
         self.check("?col=Gamma1_2&k=&j=2&table=1", ["111", "21"])
-        self.check("?col=Gamma2_2&k=&j=&table=1", ["111111", "3111"])
-        self.check("?col=Gamma2_2&k=&j=2&table=1", ["111111", "3111"])
+        self.check("?col=Gamma_2&k=&j=&table=1", ["111111", "3111"])
+        self.check("?col=Gamma_2&k=&j=2&table=1", ["111111", "3111"])
         self.check("?col=Gamma0_3&k=&j=&table=1", ["Total", "74"])
         self.check("?col=Gamma0_3&k=&j=2&table=1", "should not be specified")
         self.check("?col=Gamma0_3_psi_3&k=&j&table=1", ["Total", "68"])
@@ -65,12 +67,34 @@ class HomePageTest(LmfdbTest):
         self.check("?col=Gamma0_4_half&k=&j=2&table=1", "should not be specified")
         self.check("?col=Sp6Z&k=&j&table=1", ["Miyawaki lifts", "conjectured"])
         self.check("?col=Sp6Z&k=&j=2&table=1", "should not be specified")
-        self.check("?col=Sp6Z&k=&j&table=1", ["Ikeda lifts", "Miyawaki lifts"])
-        self.check("?col=Sp6Z&k=&j=2&table=1", "should not be specified")
+        self.check("?col=Sp8Z&k=&j&table=1", ["Ikeda lifts", "Miyawaki lifts"])
+        self.check("?col=Sp8Z&k=&j=2&table=1", "should not be specified")
 
-    def test_sample_pages(self):
+    def test_sample_page_Q(self):
         """
-        Test every sample form home page (should take 10-20s on atkin)
+        Test eigenvalue, Fourier coefficient, and modulus selction on a sample page with coefficent field Q
+        """
+        self.check("Sp4Z.24_E",["35184384671745", "19664276334286895123835070363311360", "..."])
+        self.check("Sp4Z.24_E?ev_index=19&fc_det=0&modulus=&update=1", ["3498743002442937227729601361394364486949008189359690164120", "3398215376663749994606261280", "(0, 0, 25)"])
+        self.check("Sp4Z.24_E/?ev_index=&fc_det=&modulus=1000000007&update=1", ["384425457", "(1, 1, 1)", "384425457"])
+
+    def test_sample_page_nf(self):
+        """
+        Test eigenvalue, Fourier coefficient, and modulus selction on a sample page with quadratic coefficent field
+        """
+        self.check("Sp4Z.18_Maass/",["Maass spezialschaar", "x^{2} - x - 589050", "$-144 a + 135840$", "$10 a - 8340$"])
+        self.check("Sp4Z.18_Maass/?ev_index=&fc_det=&modulus=17%2Ca%2B1&update=1", "is the unit ideal, please specify")
+        self.check("Sp4Z.18_Maass/?ev_index=&fc_det=&modulus=65537&update=1", ["$5$", "$-1378 a - 22820$", "(2, 2, 2)", "$32016 a + 5274$"])
+        
+    def test_huge_sample(self):
+        """
+        Test sample page with defining equation and explicit formula too large to display
+        """
+        self.check("Sp4Z.56_Ups", ["interesting cusp form", "6085 bytes", "7912968 bytes"])
+
+    def test_all_sample_pages(self):
+        """
+        Verify that every sample form home page loads OK (should take under 10s on atkin)
         """
         errors = []
         samples = getDBConnection().siegel_modular_forms.experimental_samples
