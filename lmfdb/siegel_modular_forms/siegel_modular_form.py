@@ -164,7 +164,6 @@ def Sp4Z_j():
 def render_main_page(bread):
     cols = scan_collections()
     col_list = [cols[c] for c in cols if cols[c].computes_dimensions() and not c in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
-    print col_list
     col_list.sort(key=lambda x: x.order)
     info = { 'col_list': col_list, 'args': {}, 'number_of_samples': sample.count_samples()}
     return render_template('ModularForm_GSp4_Q_index.html',
@@ -249,9 +248,16 @@ def render_dimension_table_page(args, bread):
     col_list.sort(key=lambda x: x.order)
     info = { 'col_list': col_list, 'args': to_dict(args) }
     col = cols.get(args.get('col'))
-    if col and col.computes_dimensions():
+    if col and col in col_list:
         info['col'] = col
-        build_dimension_table (info, col, args)
+        if 'j' in col.latex_name():
+            # if j is not specified (but could be) set it to zero for consistency (overrides defaults in json files)
+            if not 'j' in info['args'] or not info['args']['j']:
+                info['args']['j'] = '0'
+        if not 'j' in col.latex_name() and 'j' in info['args'] and  info['args']['j'] != '0':
+            flash(Markup("Error: <span style='color:black'>$j=%s$</span> should not be specified for the selected space <span style='color:black'>$%s$</span>"%(info['args']['j'],col.latex_name())), "error")
+        else:
+            build_dimension_table (info, col, info['args'])
     bread.append(('dimensions', 'dimensions'))
     return render_template("ModularForm_GSp4_Q_dimensions.html",
                             title='Siegel modular forms dimension tables',

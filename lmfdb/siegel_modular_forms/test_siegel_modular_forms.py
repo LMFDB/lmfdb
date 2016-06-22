@@ -9,7 +9,7 @@ class HomePageTest(LmfdbTest):
         data = self.tc.get("/ModularForm/GSp/Q/"+url, follow_redirects=True).data
         if isinstance(text,list):
             for t in text:
-                assert t in data
+                assert t in data, "expected string '%s' not found in page /ModularForm/GSp/Q/%s"%(t,url)
         else:
             assert text in data
                 
@@ -21,11 +21,11 @@ class HomePageTest(LmfdbTest):
 
     def test_browse_page(self):
         """
-        Check that the top level browse pages work
+        Test the top level browse pages
         """
         self.check("Sp4Z_j/",  'Upsilon')
         self.check("Sp4Z/",  ['Galois orbits', 'Klingen', 'Eisenstein', 'Maass', 'Saito-Kurokawa'])
-        self.check("Sp4Z_2/",  ['Galois orbits', 'Cusp', 'Non cusp', 'Satoh Bracket'])
+        self.check("Sp4Z_2/",  ['Galois orbits', 'Cusp', 'Non cusp', 'Satoh bracket'])
         self.check("Kp/",  'in level 277, the')
         self.check("Sp6Z/",  'Miyawaki (1)')
         self.check("Sp8Z/",  'Other_II (2)')
@@ -40,10 +40,37 @@ class HomePageTest(LmfdbTest):
         self.check("Sp4Z_j/10/10/", 'M_{10,10}')
         self.check("Sp4Z/10/", 'M_{10,0}')
         self.check("Sp4Z_2/10/", 'M_{10,2}')
+        
+    def test_dimension_tables(self):
+        """
+        Check dimension table pages
+        """
+        self.check("?col=Sp4Z_j&k=&j=&table=1", ["Cusp", "Non cusp"])
+        self.check("?col=Sp4Z_j&k=&j=2&table=1", ["Cusp", "Non cusp"])
+        self.check("?col=Gamma0_2&k=&j=&table=1", ["Cusp", "Non cusp"])
+        self.check("?col=Gamma0_2&k=&j=2&table=1", ["Cusp", "Non cusp"])
+        self.check("?col=Gamma1_2&k=&j=&table=1", ["111", "21"])
+        self.check("?col=Gamma1_2&k=&j=2&table=1", ["111", "21"])
+        self.check("?col=Gamma2_2&k=&j=&table=1", ["111111", "3111"])
+        self.check("?col=Gamma2_2&k=&j=2&table=1", ["111111", "3111"])
+        self.check("?col=Gamma0_3&k=&j=&table=1", ["Total", "74"])
+        self.check("?col=Gamma0_3&k=&j=2&table=1", "should not be specified")
+        self.check("?col=Gamma0_3_psi_3&k=&j&table=1", ["Total", "68"])
+        self.check("?col=Gamma0_3_psi_3&k=&j=2&table=1", "should not be specified")
+        self.check("?col=Gamma0_4&k=&j=&table=1", ["Total", "240"])
+        self.check("?col=Gamma0_4&k=&j=2&table=1", "should not be specified"])
+        self.check("?col=Gamma0_4_psi_4&k=&j&table=1", ["Total", "495"])
+        self.check("?col=Gamma0_4_psi_4&k=&j=2&table=1", "should not be specified")
+        self.check("?col=Gamma0_4_half&k=&j&table=1", ["Cusp", "129"])
+        self.check("?col=Gamma0_4_half&k=&j=2&table=1", "should not be specified")
+        self.check("?col=Sp6Z&k=&j&table=1", ["Miyawaki lifts", "conjectured"])
+        self.check("?col=Sp6Z&k=&j=2&table=1", "should not be specified")
+        self.check("?col=Sp6Z&k=&j&table=1", ["Ikeda lifts", "Miyawaki lifts"])
+        self.check("?col=Sp6Z&k=&j=2&table=1", "should not be specified")
 
     def test_sample_pages(self):
         """
-        Check all the sample pages (should take 10s on atkin)
+        Test every sample form home page (should take 10-20s on atkin)
         """
         errors = []
         samples = getDBConnection().siegel_modular_forms.experimental_samples
