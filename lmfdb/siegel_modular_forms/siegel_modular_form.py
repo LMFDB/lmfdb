@@ -234,7 +234,6 @@ def render_search_results_page(args, bread):
     except ValueError:
         info['error'] = True
     if not info.get('error'):
-        print query
         info['results'] = sample.Samples(query)
     bread.append( ('search results', ''))
     return render_template( "ModularForm_GSp4_Q_search_results.html",

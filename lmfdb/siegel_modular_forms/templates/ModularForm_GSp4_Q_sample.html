@@ -93,7 +93,7 @@
     {% for l in ev_dict|sort %}
     {% set ev = info.reduce(ev_dict[l]) %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
-      <td valign="top">${{ l }}$</td><td overflow=="visible">{% if ev|count > 20000 %}  {% else %} ${{ev}}$ {% endif %}</td>
+      <td valign="top">${{ l }}$</td><td overflow=="visible">{% if ev|count > 200 %}  {% else %} ${{ev}}$ {% endif %}</td>
     </tr>
     {% endfor %}
   </table>
