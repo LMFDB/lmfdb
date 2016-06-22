@@ -59,7 +59,7 @@
     {% set pol = info.field_poly %}
     {% set latex_pol = info.latex(pol) %}
     <td>
-    {% if latex_pol|count > 500 %} <button id ="toggle">Show</button>&nbsp;<span id="def_polynomial" style="display: none;"><div class="small">{{pol}}</div></span>({{latex_pol|count}} bytes) {% else %} ${{latex_pol}}$ {% endif %}
+    {% if latex_pol|count > 200 %} <button id ="toggle">Show</button>&nbsp;<span id="def_polynomial" style="display: none;"><div class="small">{{pol}}</div></span>({{latex_pol|count}} bytes) {% else %} ${{latex_pol}}$ {% endif %}
     </td>
     {% endif %}
   </tr>
@@ -71,7 +71,7 @@
 <button id ="toggle1">Show</button>&nbsp;<span id="explicit_formula" style="display: none;"><span style="color:red"><i>&nbsp;&nbsp;Too large to display, please use download button to view</i></span><br></span>({{info.explicit_formula_bytes}} bytes)
 {% else %}
 {% set ex_fo = info.explicit_formula %}
-{% if ex_fo|count > 500 %} <button id ="toggle1">Show</button>&nbsp;<span id="explicit_formula" style="display: none;"><div class="small">{{ex_fo}}</div></span>({{ex_fo|count}} bytes) {% else %} ${{ex_fo}}$ {% endif %}
+{% if ex_fo|count > 200 %} <button id ="toggle1">Show</button>&nbsp;<span id="explicit_formula" style="display: none;"><div class="small">{{ex_fo}}</div></span>({{ex_fo|count}} bytes) {% else %} ${{ex_fo}}$ {% endif %}
 {% endif %}
 {% endif %}
 
