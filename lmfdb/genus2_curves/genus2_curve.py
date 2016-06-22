@@ -13,7 +13,8 @@ from lmfdb.utils import to_dict, comma, random_value_from_collection
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_signed_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.genus2_curves import g2c_page, g2c_logger
-from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name, st_group_name, st_group_href
+from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
+from lmfdb.sato_tate_groups.main import st_link_by_name
 
 import sage.all
 from sage.all import ZZ, QQ, latex, matrix, srange
@@ -266,14 +267,14 @@ def genus2_curve_search(**args):
     query = {}
     try:
         parse_ints(info,query,'abs_disc','absolute discriminant')
-        parse_bool(info,query,'is_gl2_type')
-        parse_bool(info,query,'has_square_sha')
-        parse_bool(info,query,'locally_solvable')
-        parse_bool(info,query,'is_simple_geom')
-        parse_ints(info,query,'cond')
-        parse_ints(info,query,'num_rat_wpts','Weierstrass points')
+        parse_bool(info,query,'is_gl2_type','is of GL2-type')
+        parse_bool(info,query,'has_square_sha','has square Sha')
+        parse_bool(info,query,'locally_solvable','is locally solvable')
+        parse_bool(info,query,'is_simple_geom','is geometrically simple')
+        parse_ints(info,query,'cond','conductor')
+        parse_ints(info,query,'num_rat_wpts','rational Weierstrass points')
         parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
-        parse_ints(info,query,'torsion_order')
+        parse_ints(info,query,'torsion_order','torsion order')
         if 'torsion' in query and not 'torsion_order' in query:
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion']],1)
         if 'torsion' in query:
@@ -292,6 +293,7 @@ def genus2_curve_search(**args):
         info['err'] = str(err)
         return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
     # Database query happens here
+    info["query"] = query # save query for reuse in download_search
     cursor = g2c_db_curves().find(query,{'_id':int(0),'label':int(1),'min_eqn':int(1),'st_group':int(1),'is_gl2_type':int(1),'analytic_rank':int(1)})
 
     count = parse_count(info, 50)
@@ -321,8 +323,7 @@ def genus2_curve_search(**args):
         v_clean["is_gl2_type"] = v["is_gl2_type"] 
         v_clean["is_gl2_type_display"] = '&#10004;' if v["is_gl2_type"] else '' # display checkmark if true, blank otherwise
         v_clean["equation_formatted"] = list_to_min_eqn(v["min_eqn"])
-        v_clean["st_group_name"] = st_group_name(v['st_group'])
-        v_clean["st_group_href"] = st_group_href(v['st_group'])
+        v_clean["st_group_link"] = st_link_by_name(1,4,v['st_group'])
         v_clean["analytic_rank"] = v["analytic_rank"]
         res_clean.append(v_clean)
 
@@ -342,26 +343,32 @@ def genus2_curve_search(**args):
 # Statistics
 ################################################################################
 
-def boolean_name(value):
-    return '\\mathrm{True}' if value else '\\mathrm{False}'
+def boolean_format(value):
+    return 'True' if value else 'False'
 
-def aut_grp_name(id):
-    return aut_grp_dict[id]
+def aut_grp_format(id):
+    return "\("+aut_grp_dict[id]+"\)"
 
-def geom_aut_grp_name(id):
-    return geom_aut_grp_dict[id]
+def geom_aut_grp_format(id):
+    return "\("+geom_aut_grp_dict[id]+"\)"
+
+def st0_group_format(name):
+    return "\("+st0_group_name(name)+"\)"
+
+def st_group_format(name):
+    return st_link_by_name(1,4,name)
 
 stats_attribute_list = [
     {'name':'num_rat_wpts','top_title':'rational Weierstrass points','row_title':'Weierstrass points','knowl':'g2c.num_rat_wpts','avg':True},
-    {'name':'aut_grp_id','top_title':'$\mathrm{Aut}(X)$','row_title':'automorphism group','knowl':'g2c.aut_grp','format':aut_grp_name},
-    {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\mathbb{Q}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':geom_aut_grp_name},
+    {'name':'aut_grp_id','top_title':'$\mathrm{Aut}(X)$','row_title':'automorphism group','knowl':'g2c.aut_grp','format':aut_grp_format},
+    {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\mathbb{Q}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':geom_aut_grp_format},
     {'name':'analytic_rank','top_title':'analytic ranks','row_title':'analytic rank','knowl':'g2c.analytic_rank','avg':True},
     {'name':'two_selmer_rank','top_title':'2-Selmer ranks','row_title':'2-Selmer rank','knowl':'g2c.two_selmer_rank','avg':True},
-    {'name':'has_square_sha','top_title':'squareness of &#1064;','row_title':'has square Sha','knowl':'g2c.has_square_sha', 'format':boolean_name},
-    {'name':'locally_solvable','top_title':'local solvability','row_title':'locally solvable','knowl':'g2c.locally_solvable', 'format':boolean_name},
-    {'name':'is_gl2_type','top_title':'$\mathrm{GL}_2$-type','row_title':'is of GL2-type','knowl':'g2c.gl2type', 'format':boolean_name},
-    {'name':'real_geom_end_alg','top_title':'Sato-Tate group identity components','row_title':'identity component','knowl':'g2c.st_group_identity_component', 'format':st0_group_name},
-    {'name':'st_group','top_title':'Sato-Tate groups','row_title':'Sato-Tate groups','knowl':'g2c.st_group', 'format':st_group_name},
+    {'name':'has_square_sha','top_title':'squareness of &#1064;','row_title':'has square Sha','knowl':'g2c.has_square_sha', 'format':boolean_format},
+    {'name':'locally_solvable','top_title':'local solvability','row_title':'locally solvable','knowl':'g2c.locally_solvable', 'format':boolean_format},
+    {'name':'is_gl2_type','top_title':'$\mathrm{GL}_2$-type','row_title':'is of GL2-type','knowl':'g2c.gl2type', 'format':boolean_format},
+    {'name':'real_geom_end_alg','top_title':'Sato-Tate group identity components','row_title':'identity component','knowl':'g2c.st_group_identity_component', 'format':st0_group_format},
+    {'name':'st_group','top_title':'Sato-Tate groups','row_title':'Sato-Tate groups','knowl':'g2c.st_group', 'format':st_group_format},
     {'name':'torsion_order','top_title':'torsion subgroup orders','row_title':'torsion order','knowl':'g2c.torsion_order','avg':True},
 ]
 
@@ -412,8 +419,7 @@ class G2C_stats(object):
         dists = []
         # TODO use aggregate $group to speed this up and/or just store these counts in the database
         for attr in stats_attribute_list:
-            values = curves.distinct(attr['name'])
-            values.sort()
+            values = sorted(curves.distinct(attr['name']))
             vcounts = []
             rows = []
             colcount = 0
@@ -431,7 +437,7 @@ class G2C_stats(object):
             if len(vcounts):
                 rows.append(vcounts)
             if 'avg' in attr and attr['avg']:
-                vcounts.append({'value':'\\mathrm{avg}\\ %.2f'%(float(avg)/total), 'curves':total, 'query':url_for(".index_Q") +'?'+attr['name'],'proportion':format_percentage(1,1)})
+                vcounts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%(float(avg)/total), 'curves':total, 'query':url_for(".index_Q") +'?'+attr['name'],'proportion':format_percentage(1,1)})
             dists.append({'attribute':attr,'rows':rows})
         stats["distributions"] = dists
         self._stats = stats

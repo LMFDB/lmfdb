@@ -91,7 +91,21 @@ def sg_pretty(sg_label):
     if data and 'pretty' in data:
         return data['pretty']
     return sg_label
+    
+# dictionary for quick and dirty prettification that does not access the database
+st_pretty_dict = {
+    'USp(4)':'\\mathrm{USp}(4)',
+    'SU(2)':'\\mathrm{SU}(2)',
+    'U(1)':'\\mathrm{U}(1)',
+    'N(U(1))':'N(\\mathrm{U}(1))'
+}
 
+def st_pretty(st_name):
+    return st_pretty_dict.get(st_name,st_name)
+
+def st_link_by_name(weight,degree,name):
+    return '<a href="%s">\(%s\)</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
+    
 ###############################################################################
 # Learnmore display functions
 ###############################################################################
@@ -135,26 +149,25 @@ def by_label(label):
 # Searching
 ###############################################################################
 
-ec_groups = { 'U(1)':'1.2.1.1.1a', 'N(U(1))':'1.2.1.2.1a', 'SU(2)':'1.2.3.1.1a' }
-
 def search_by_label(label):
-    label_regex = re.compile(r'\d+.\d+.\d+.\d+.\d+[a-z]+$')
-    if label_regex.match(label.strip()):
-        return render_by_label(label.strip())
-    label_regex = re.compile(r'\d+.\d+.\d+.\d+.\d+$')
-    if label_regex.match(label.strip()):
-        return render_by_label(label.strip()+'a')
-    # backward compatibility for old labels coming from ec or g2c
-    name = label.strip().split('.')[-1]
-    if name in ec_groups:
-        return render_by_label(ec_groups[name])
+    label = label.strip()
+    if re.match(r'\d+.\d+.\d+.\d+.\d+[a-z]+$', label):
+        return render_by_label(label)
+    if re.match(r'\d+.\d+.\d+.\d+.\d+$', label):
+        return render_by_label(label+'a')
+    # check for labels of the form w.d.name
+    data = {}
+    if re.match(r'\d+.\d+.[a-zA-z0-9\{\}\(\)\[\]\_\,]+',label):
+        slabel = label.split('.')
+        try:
+            data = st_groups().find_one({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]},{'_id':False,'label':True})
+        except ValueError:
+            data = {}
+    if not data:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not the label or name of a Sato-Tate group currently in the database" % label),"error")
+        return redirect(url_for(".index"))
     else:
-        data = st_groups().find_one({'weight':int(1),'degree':int(4),'name':name})
-        if not data:
-            flash(Markup("Error: <span style='color:black'>%s</span> is not the label or name of a Sato-Tate group currently in the database" % label),"error")
-            return redirect(url_for(".index"))
-        else:
-            return render_by_label(data['label'])
+        return redirect(url_for('.by_label', label=data['label']))
 
 def search(**args):
     info = to_dict(args)

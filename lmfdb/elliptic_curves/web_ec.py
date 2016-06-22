@@ -10,6 +10,7 @@ from lmfdb.utils import comma, make_logger, web_latex, encode_plot
 from lmfdb.search_parsing import split_list
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
+from lmfdb.sato_tate_groups.main import st_link_by_name
 import sage.all
 from sage.all import EllipticCurve, latex, matrix, ZZ, QQ, prod, Factorization, PowerSeriesRing
 
@@ -308,9 +309,9 @@ class WebEC(object):
                 data['EndE'] = "\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = "\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
-            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.N(U(1))'),'N(\\mathrm{U}(1))')
+            data['ST'] = st_link_by_name(1,2,'N(U(1))')
         else:
-            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.SU(2)'),'\\mathrm{SU}(2)')
+            data['ST'] = st_link_by_name(1,2,'SU(2)')
 
         data['p_adic_primes'] = [p for i,p in enumerate(sage.all.prime_range(5, 100))
                                  if (N*data['ap'][i]) %p !=0]
