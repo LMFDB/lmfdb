@@ -160,7 +160,7 @@ def api_query(db, collection, id = None):
             document["_id"] = "ObjectId('%s')" % oid
         elif isinstance(oid, basestring):
             document["_id"] = str(oid)
-        
+
     # preparing the datastructure
     start = offset
     next_req = dict(request.args)
