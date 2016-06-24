@@ -294,7 +294,7 @@ def genus2_curve_search(**args):
         return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
     # Database query happens here
     info["query"] = query # save query for reuse in download_search
-    cursor = g2c_db_curves().find(query,{'_id':int(0),'label':int(1),'eqn':int(1),'st_group':int(1),'is_gl2_type':int(1),'analytic_rank':int(1)})
+    cursor = g2c_db_curves().find(query, {'_id':False, 'label':True, 'eqn':True, 'st_group':True, 'is_gl2_type':True, 'is_simple_geom':True, 'analytic_rank':True})
 
     count = parse_count(info, 50)
     start = parse_start(info)
@@ -321,7 +321,7 @@ def genus2_curve_search(**args):
         v_clean["label"] = v["label"]
         v_clean["class"] = class_from_curve_label(v["label"])
         v_clean["is_gl2_type"] = v["is_gl2_type"] 
-        v_clean["is_gl2_type_display"] = '&#10004;' if v["is_gl2_type"] else '' # display checkmark if true, blank otherwise
+        v_clean["is_simple_geom"] = v["is_simple_geom"] 
         v_clean["equation_formatted"] = list_to_min_eqn(literal_eval(v["eqn"]))
         v_clean["st_group_link"] = st_link_by_name(1,4,v['st_group'])
         v_clean["analytic_rank"] = v["analytic_rank"]
