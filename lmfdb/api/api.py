@@ -18,6 +18,18 @@ _databases = None
 def pluck(n, list):
     return [_[n] for _ in list]
 
+def quote_string(value):
+    if isinstance(value,unicode) or isinstance(value,str):
+        return repr(value)
+    elif isinstance(value,ObjectId):
+        return "\"ObjectId('%s')\""%value
+    return value
+
+def pretty_document(rec,sep=", ",id=True):
+    # sort keys and remove _id for html display
+    attrs = sorted([(key,quote_string(rec[key])) for key in rec.keys() if (id or key != '_id')])
+    return "{"+sep.join(["'%s': %s"%attr for attr in attrs])+"}"
+
 
 def censor(entries):
     """
@@ -38,8 +50,7 @@ def init_database_info():
         _databases = {}
         for db in censor(C.database_names()):
             colls = list(censor(C[db].collection_names()))
-            _databases[db] = [(c, C[db][c].count()) for c in colls]
-
+            _databases[db] = sorted([(c, C[db][c].count()) for c in colls])
 
 @api_page.route("/")
 def index():
@@ -182,6 +193,8 @@ def api_query(db, collection, id = None):
                       allow_unicode=True)
         return flask.Response(y, mimetype='text/plain')
     else:
+        # sort displayed records by key (as json and yaml do)
+        data["pretty"] = pretty_document
         location = "%s/%s" % (db, collection)
         title = "API - " + location
         bc = [("API", url_for(".index")), (location, query)]
