@@ -1,43 +1,7 @@
-{% block javascript %}
-<script src = "/static/validate.js"></script>
-{% endblock %}
-
-<form action="/ModularForm/GSp/Q/search_results" method="get" onsubmit="return prepare_query()">
-<input type="hidden" id="query" name="query">
-  <table>
-  
-    <tr>
-      <td><label>weight</label></td>
-      <td><input type="text" id="weight" placeholder="2+10" pattern="^\s*([1-9][0-9]{0,2}\s*){1,}|([1-9][0-9]{0,2}\s*+[1-9][0-9]{0,1}\s*)\s*$" />
-	<span class="formexample">e.g. '4 6 8' or '4+2'</span>
-      </td>
-      
-      <td>
-	<label>
-	  <a class="knowl-title" knowl="mf.siegel.GL_representation">
-	    $\mathrm{GL}(n,\mathbb{C})$ representation
-	  </a>
-	</label>
-      </td>
-      <td><input type="text" id="representation" placeholder="0" pattern="^\s*([1-9][0-9]{0,1}\s*){1,}|([1-9][0-9]{0,1}\s*+[1-9][0-9]{0,1}\s*)\s*$"/>
-	<span class="formexample">e.g. '0' or '0+4'</span>
-      </td>
-
-      <td></td>
-    </tr>
-    <tr>
-
-      <td><label>degree</label></td>
-      <td><input type="text" id="degree" placeholder="2" pattern="^\s*([2-9]\s*){1,}|([1-9]\s*+[1-9]{0,1}\s*)\s*$"/>
-	<span class="formexample">e.g. '2 3' or '2+10'</span>
-      </td>
-
-      <td><label>degree of field</label></td>
-      <td><input type="text" id="degree_of_field" placeholder="1" pattern="^\s*([1-9][0-9]{0,1}\s*){1,}|([1-9][0-9]{0,1}\s*+[1-9][0-9]{0,1}\s*)\s*$"/>
-	<span class="formexample">e.g. '1 3 5' or '1+3'</span>
-      </td>
-
-      <td><button type="submit" value="submit">Find</button></td>
-    </tr>
-  </table>
+<h4>Enter search criteria for examples:</h4>
+<form>
+<span>Degree: <input name="deg" size=9.5 placeholder="2" value="{{info.args.deg}}"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span>$k$: <input name="wt" size=10 placeholder="4..16" value="{{info.args.wt}}"></span>&nbsp;&nbsp;&nbsp;&nbsp;
+<span>Field degree: <input name="fdeg" size=3 placeholder="1" value="{{info.args.fdeg}}">&nbsp;&nbsp;&nbsp;&nbsp;
+<button type="submit" style="width: 110px"name="search" value="1">Find examples</button>
 </form>

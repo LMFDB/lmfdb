@@ -26,36 +26,29 @@
       <tr><th>Weight</th><th colspan=5>Galois orbits (number of eigenforms)</th></tr>
     </thead>
     <tbody>
-      {% for wt,forms in  forms %}
+      {% for wt,forms in  info.forms %}
       <tr class = "{{ loop.cycle( 'odd', 'even') }}">
-	<td>{{ wt }}</td>
+    <td>{{ wt }}</td>
         {% for form,dim in forms|sort %}
-	<td>
+    <td>
 
-     {# the coefficients in the database are stored in a way that requires
-        a lot of Sage computation.  so we avoid those when the degree is more than 4 #}
-        {% if dim<5 %}
-	  <a style="display: inline;" href="{{ ['/ModularForm/GSp/Q/Sp4Z.',form]|join }}">
-        {% endif %}
-	    {% if form=="Ups" %}
-	    \(\Upsilon\)
-	    {% elif form=="Ups_I" %}
-	    \(\Upsilon_1\)
-	    {% elif form=="Ups_II" %}
-	    \(\Upsilon_2\)
-	    {% else %}
-	    {{ form }}
-	      {% endif %}
-	    ({{ dim }})
-        {% if dim<5 %}
-	  </a>
-        {% endif %}
-	  {% if wt <= 8 %}</td><td></td><td></td><td></td><td>{% endif %}
+      <a style="display: inline;" href="{{ url_for('.by_label',label='Sp4Z.'+form) }}">
+        {% if form=="Ups" %}
+        \(\Upsilon\)
+        {% elif form=="Ups_I" %}
+        \(\Upsilon_1\)
+        {% elif form=="Ups_II" %}
+        \(\Upsilon_2\)
+        {% else %}
+        {{ form }}
+          {% endif %}
+        ({{ dim }})
+      {% if wt <= 8 %}</td><td></td><td></td><td></td><td>{% endif %}
           {% if (wt == 10 or wt == 14) and "_E" in form %}</td><td>{% endif %}
           {% if (wt == 58 or wt <= 18) and "_Maass" in form  %}</td><td></td><td>{% endif %}
-	  {% if (wt != 24 and wt != 26) and "_Ups" in form  %}</td><td>{% endif %}
-	</td>  
-	{% endfor %}
+      {% if (wt != 24 and wt != 26) and "_Ups" in form  %}</td><td>{% endif %}
+    </td>  
+    {% endfor %}
       </tr>
       {% endfor %}
     </tbody>

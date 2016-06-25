@@ -101,7 +101,7 @@
        style: rotate
        part2:
          - title: Siegel
-           url_for: "ModularForm_GSp4_Q_top_level"
+           url_for: "smf.index"
          - title: U(2,1)
            status: future
          - title: Other
