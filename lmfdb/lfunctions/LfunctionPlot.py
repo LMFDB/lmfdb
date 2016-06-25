@@ -8,7 +8,7 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebN
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
-from sage.all import prod
+from sage.all import prod, CC
 
 ###############################################################################
 # Maass form for GL(n) n>2
@@ -814,7 +814,7 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 
 def signtocolour(sign):
     import cmath
-    argument = cmath.phase(float(sign))
+    argument = cmath.phase(CC(str(sign)))
     r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
