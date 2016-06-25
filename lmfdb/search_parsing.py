@@ -84,6 +84,39 @@ def split_list(s):
         return [int(a) for a in s.split(",")]
     return []
 
+# This function can be used by modules to get a list of ints
+# or an iterator (xrange) that matches the results of parse_ints below
+# useful when a module wants to iterator over key values being
+# passed into a mongo query.  Input should be a string
+def parse_ints_to_list(arg):
+    if arg == None:
+        return []
+    s = str(arg)
+    s = s.replace(' ','')
+    if not s:
+        return []
+    if s[0] == '[' and s[-1] == ']':
+        s = s[1:-1]
+    if ',' in s:
+        return [int(n) for n in s.split(',')]
+    if '-' in s[1:]:
+        i = s.index('-',1)
+        min, max = s[:i], s[i+1:]
+        return xrange(int(min),int(max)+1)
+    if '..' in s:
+        i = s.index('..',1)
+        min, max = s[:i], s[i+2:]
+        return xrange(int(min),int(max)+1)
+    return [int(s)]
+
+def parse_ints_to_list_flash(arg,name):
+    try:
+        return parse_ints_to_list(arg)
+    except ValueError:
+        errmsg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>." % (arg,name)
+        flash(Markup(errmsg+"  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)."), "error")
+        raise
+
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_list(inp, query, qfield, process=None):
     """
@@ -119,10 +152,8 @@ def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     else:
         return parse_singleton(arg)
 
-
 # version above does not produce legal results when there is a comma
 # to deal with $or, we return [key, value]
-
 def parse_range2(arg, key, parse_singleton=int):
     if type(arg) == str:
         arg = arg.replace(' ', '')

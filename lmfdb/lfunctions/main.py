@@ -25,6 +25,11 @@ import LfunctionDatabase
 from lmfdb import base
 from pymongo import ASCENDING
 
+def get_degree(degree_string):
+    if not re.match('degree[0-9]+',degree_string):
+        return -1
+    return int(degree_string[6:])
+
 ################################################################################
 #   Route functions, navigation pages
 ################################################################################
@@ -43,9 +48,6 @@ def l_function_history():
     bc = [('L-functions', url_for('.l_function_top_page')),
           (t, url_for('.l_function_history'))]
     return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc)
-
-
-
 
 # Degree 1 L-functions browsing page ##############################################
 @l_function_page.route("/degree1/")
@@ -80,10 +82,9 @@ def l_function_degree4_browse_page():
 # Degree browsing page #########################################################
 @l_function_page.route("/<degree>/")
 def l_function_degree_page(degree):
-    res = re.match('degree[0-9]+',degree)
-    if not res:
+    degree = get_degree(degree)
+    if degree < 0:
         return flask.abort(404)
-    degree = res.group(0).atoi()
     info = {"degree": degree}
     info["key"] = 777
     info["bread"] = get_bread(degree, [])
@@ -118,10 +119,15 @@ def l_function_ec_browse_page():
 # L-function of GL(n) Maass forms browsing page ##############################################
 @l_function_page.route("/<degree>/MaassForm/")
 def l_function_maass_gln_browse_page(degree):
-    degree = int(degree[6:])
+    degree = get_degree(degree)
+    if degree < 0:
+        return flask.abort(404)
+    contents = LfunctionPlot.getAllMaassGraphHtml(degree)
+    if not contents:
+        return flask.abort(404)
     info = {"bread": get_bread(degree, [("MaassForm", url_for('.l_function_maass_gln_browse_page',
                                                               degree='degree' + str(degree)))])}
-    info["contents"] = LfunctionPlot.getAllMaassGraphHtml(degree)
+    info["contents"] = contents
     return render_template("MaassformGLn.html",
                            title='L-functions of GL(%s) Maass Forms' % degree, **info)
 
@@ -962,7 +968,6 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     ''' Renders the first few zeroes of the L-function with the given arguments.
     '''
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
-
     if hasattr(L,"lfunc_data"):
         if L.lfunc_data is None:
             return "<span>" + L.zeros + "</span>"
