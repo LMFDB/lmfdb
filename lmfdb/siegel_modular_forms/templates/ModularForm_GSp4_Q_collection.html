@@ -1,66 +1,35 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-
-
-{% if (col.name() not in ["Gamma0_2", "Gamma1_2", "Gamma_2", "Gamma0_3", "Gamma0_3_psi_3", "Gamma0_4", "Gamma0_4_psi_4", "Gamma0_4_half"]) %}
+{% if (info.col.name() not in ["Gamma0_2", "Gamma1_2", "Gamma_2", "Gamma0_3", "Gamma0_3_psi_3", "Gamma0_4", "Gamma0_4_psi_4", "Gamma0_4_half"]) %}
 <h2>Available samples</h2>
-{% include [['includes/avail/', col.name(), '_avail_forms.html']|join] %}
-<!--{% include [ [ 'includes/avail/', col.name(), '_avail_forms.html']|join, 'Not_available.html'] %}-->
+{% include [['includes/avail/', info.col.name(), '_avail_forms.html']|join] %}
 {% endif %}
 
-{% if not error %}
+{% if info.col.computes_dimensions() %}
 
-
-{% if col.computes_dimensions() %}
-{% if dimensions %}
-<h2>Dimensions</h2>
+<!-- Display dimension table here -->
 {% include 'includes/dimension_table.html' %}
 
-<h3>New search</h3>
+<h4> Enter a new range of weights for dimension table:</h4>
+
+<form action="." method="get">
+
+<span>$k$: <input name="k" size=10 value="{{info.args.k}}" placeholder="{{info.col.dim_args_default['k']}}"/> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+
+{% if 'j' in info.col.dimension_desc()['args'] %}
+<span>$j$: <input name="j" size=10 value="{{info.args.j}}" placeholder="{{info.col.dim_args_default['j']}}"/> </span>&nbsp;&nbsp;&nbsp;&nbsp;
 {% endif %}
-{% block javascript %}
-<script src = "/static/validate.js"></script>
-{% endblock %}
-<form id="dimensionForm" action="/ModularForm/GSp/Q/{{ col.name() }}" method="get" onSubmit="return validate()">
-  <input type = "hidden" id = "dim_args" name = "dim_args" />
-  <input type = "hidden" id = "col_name" />
-  <input type = "hidden" id = "col_select" value = '{{ col.dimension_desc()|tojson|safe }}' />
-  <table> 
-    <tr>
-      <td> 
-	<label>arguments
-	  (
-	  {% for x in col.dimension_desc()['args'] %}
-	  {{ x }}
-	  {% endfor %}
-	  )
-	</label>
-	{% if col.dimension_desc()['args']|length == 1 %}
-	<input type="text" id="args_field" placeholder="6+20" />
-	<span class="formexample">e.g. 2 or 6+20</span>
-	{%else %}
-	<input type="text" id="args_field" placeholder="6+20 4" />
-	<span class="formexample">e.g. 2 4 or 6+10 6</span>
-	{% endif %}
-      </td>
-      <td> 
-	<button type="submit" value="submit">Find</button>
-      </td>
-    </tr>
-  </table> 
+
+<button type="submit" value="submit">Recompute table</button>
+
 </form>
 
-
 {% endif %}
 
-{% if (col.name() not in ["Gamma1_2", "Gamma0_4_half"]) %}
+{% if (info.col.name() not in ["Gamma1_2", "Gamma0_4_half"]) %}
 <h2>Miscellaneous</h2>
-{% include [ ['',col.description()]|join, 'Not_available.html'] %}
-{% endif %}
-
-{% else %}
-{% include 'None.html' %}
+{% include [ ['',info.col.description()]|join, 'Not_available.html'] %}
 {% endif %}
 
 {% endblock %}

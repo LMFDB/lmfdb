@@ -34,6 +34,9 @@ def g2c_db_isogeny_classes_count():
 # Pretty print functions
 ###############################################################################
 
+def bool_pretty(v):
+    return 'yes' if v else 'no'
+
 def intlist_to_poly(s):
     return latex(PolynomialRing(QQ, 'x')(s))
 
@@ -545,8 +548,6 @@ class WebG2C(object):
         data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
         data['is_gl2_type'] = curve['is_gl2_type']
-        data['is_gl2_type_name'] = 'yes' if data['is_gl2_type'] else 'no'
-        data['is_gl2_type_display'] = '&#x2713;' if data['is_gl2_type'] else ''
         data['root_number'] = ZZ(curve['root_number'])
         data['bad_lfactors'] = literal_eval(curve['bad_lfactors'])
         data['bad_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
@@ -634,12 +635,12 @@ class WebG2C(object):
                 (None, plot_link),
                 ('Conductor',str(data['cond'])),
                 ('Discriminant', str(data['disc'])),
-                ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['igusa_clebsch']))
                 ]
         properties += [
             ('Sato-Tate group', data['st_group_link']),
             ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\)', '\(%s\)' % data['real_geom_end_alg_name']),
-            ('\(\mathrm{GL}_2\)-type', data['is_gl2_type_name'])
+            ('\(\\overline{\\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
+            ('\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]
 
         # Friends

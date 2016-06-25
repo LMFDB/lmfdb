@@ -1,20 +1,10 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% if error %}
-<div class="announce error">Error: {{  error }}</div>
-
-{% elif not dimensions %}
-<h2>Dimensions of subspaces of ${{ col.latex_name() }}$</h2>
-<p>- dimension formulas not implemented -</p>
-
-{% else %}
-<h2>Dimensions of subspaces of ${{ col.latex_name() }}$</h2>
+{% if info.table %}
 {% include 'includes/dimension_table.html' %}
-
 {% endif %}
 
-<h2>New search for dimensions</h2>
-{% include 'includes/form_for_dimension_search.html' %}
+{% include 'includes/form_for_dimension_table_search.html' %}
 
 {% endblock %}
