@@ -49,13 +49,12 @@ def getEllipticCurveLData(label):
     
 def getGenus2Ldata(label,label_type="url"):
     connection = base.getDBConnection()
-#    g2 = connection.genus2_curves
     db = connection.Lfunctions
     try:
-    #    Ldata = g2.Lfunctions.find_one({'hash': hash})
-   #     Lpointer = db.instances.find_one({'url': label})
         if label_type == "url":
             Lpointer = db.instances.find_one({'url': label})
+            if not Lpointer:
+                return None
             Lhash = Lpointer['Lhash']
             Ldata = db.Lfunctions.find_one({'Lhash': Lhash})
         elif label_type == "Lhash":
@@ -112,7 +111,7 @@ def getGenus2Ldata(label,label_type="url"):
         Ldata['plot'] = neg_plot[:] + pos_plot[:]
         #print "Ldata['plot']",Ldata['plot']
 
-    except ValueError:
+    except ValueError as e:
         Ldata = None
     return Ldata
     

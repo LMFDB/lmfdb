@@ -57,6 +57,8 @@ def getAllMaassGraphHtml(degree):
         groups = [ ["GL3", [1 , 4] ] ] 
     elif degree == 4:
         groups = [ ["GSp4", [1]], ["GL4", [1]] ] 
+    else:
+        return ""
 
     ans = ""
     for i in range(0, len(groups)):
