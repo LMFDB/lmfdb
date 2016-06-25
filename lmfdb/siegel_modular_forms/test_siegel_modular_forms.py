@@ -101,18 +101,20 @@ class HomePageTest(LmfdbTest):
         data = samples.find({'collection':{'$exists':True},'name':{'$exists':True}},{'_id':False,'collection':True,'name':True})
         n = 0
         print ""
+        import sys
         for s in data:
             full_label = s['collection'][0] + "." + s['name']
-            print "Checking " + full_label
+            sys.stdout.write("Checking {}...".format(full_label))
+            sys.stdout.flush()
             try:
                 n = n+1
                 self.check(full_label,[full_label,'Hecke eigenform'])
             except:
-                print "Error on page " + url
+                print "\nError on page " + url
                 errors.append(url)
         if not errors:
-            print "Tested %s SMF pages with no errors" % n
+            print "\nTested %s SMF pages with no errors" % n
         else:
-            print "Tested %d pages with %d errors occuring on the following pages:" %(n,len(errors))
+            print "\nTested %d pages with %d errors occuring on the following pages:" %(n,len(errors))
             for url in errors:
                 print url
