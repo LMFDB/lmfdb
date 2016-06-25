@@ -968,7 +968,6 @@ def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar
     ''' Renders the first few zeroes of the L-function with the given arguments.
     '''
     L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
-    print L
     if hasattr(L,"lfunc_data"):
         if L.lfunc_data is None:
             return "<span>" + L.zeros + "</span>"
