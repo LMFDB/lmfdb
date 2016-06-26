@@ -15,7 +15,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_url_naturallabel(self):
 	L = self.tc.get('/HigherGenus/C/aut/junk')
-	assert 'No family with label junk was found in the database in L.data'
+	assert 'No family with label junk was found in the database' in L.data
     
 
 
