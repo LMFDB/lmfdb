@@ -9,7 +9,7 @@
 
 <tr>
 <td align=left> 
-Genus:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
+{{KNOWL('ag.curve.genus',title='Genus')}}:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
 </td>
 <td align=left> 
 Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
@@ -75,7 +75,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 <td><button type='submit' value='Find'>Find</button></td>
 </tr>
 <tr>
-<td colspan="3" rowspan="2"><span class="formexample"> a higher genus curve with automorphisms label, e.g. 3.4-2.0.2-2-2-2-2-2</span></td>
+<td colspan="3" rowspan="2"><span class="formexample"> a higher genus curve with family label or passport label, e.g. 3.4-2.0.2-2-2-2-2-2 or 4.120-34.0.2-4-5.1"</span></td>
 </tr>
 </table>
 </form>
@@ -99,12 +99,11 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 <thead>
 <tr>
 
-  <th>Passport Label</th>
-  <th>Genus</th>
+  <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Passport Label')}}</th>
+  <th>{{KNOWL('ag.curve.genus',title='Genus')}}</th>
   <th>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension')}}</th>
   <th>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma group')}}</th>
-  <th>Signature</th>
-<!--<th>{{KNOWL('lf.slope_content',title='label')}}</th>-->
+  <th>{{KNOWL('curve.highergenus.aut.signature',title='Signature')}}</th>
 </tr>
 </thead>
 <tbody>

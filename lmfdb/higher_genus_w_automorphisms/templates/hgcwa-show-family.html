@@ -16,14 +16,14 @@ table,td {
 <p><h2> Family Information</h2>
 
   <table>
-      <tr><td> Genus:  </td><td> {{ info.genus }} </td></tr>
+      <tr><td> {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
       <tr><td>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family:')}}</td><td> {{info.dim}} </td></tr>
     </table>
 </p>
 
 
 <h2>Cover</h2><table>
-      <tr><td> {{KNOWL('curve.highergenus.aut.quotient genus',title='Quotient genus')}}: </td> <td>{{info.g0}}</td></tr>
+      <tr><td> {{KNOWL('curve.highergenus.aut.quotientgenus',title='Quotient genus')}}: </td> <td>{{info.g0}}</td></tr>
       <tr><td> Number of {{ KNOWL('curve.highergenus.aut.branchpoints', title='branch points') }}: </td> <td>{{info.r}}</td></tr>
       <tr><td> {{ KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
       </table> 
@@ -34,17 +34,17 @@ table,td {
    {% if info.specialname %}
    <tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr>
    {% endif %}
-     <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td><td>SmallGroup{{info.gpid}}</td></tr>
+     <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td><td>{{info.gpid}}</td></tr>
     </table>
 
 </p>
 
 
-<p> <h2> Conjugacy class(es) of passports </h2>
+<p> <h2> Conjugacy class(es) of {{KNOWL('curve.highergenus.aut.passport',title='Passports')}} </h2>
 
 <table>
   <tr>
-     <th>{{KNOWL('curve.highergenus.aut.passportlabel',title='Passport Label')}} </th>
+     <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Passport Label')}} </th>
   <th>Lists of Conjugacy Classes</th>
  
 </tr>
