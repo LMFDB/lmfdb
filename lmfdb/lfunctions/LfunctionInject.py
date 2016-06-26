@@ -9,7 +9,7 @@
     # def inject_database(self, relevant_info, time_limit = None):
     #    #   relevant_methods are text strings
     #    #    desired_database_fields = [Lfunction.original_mathematical_object, Lfunction.level]
-    #    #    also zeroes, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
+    #    #    also zeros, degree, conductor, type, real_coeff, rational_coeff, algebraic_coeff, critical_value, value_at_1, sign
     #    #    ok_methods = [Lfunction.math_id, Lfunction.level]
     #    #
     #    # Is used to inject the data in relevant_fields
