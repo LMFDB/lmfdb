@@ -11,11 +11,12 @@ from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
 from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
-from lmfdb.search_parsing import *
+from lmfdb.search_parsing import search_parser, parse_ints, parse_count, parse_start, clean_input
+BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 
 from sage.all import Permutation
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page, logger
-from lmfdb.sato_tate_groups.main import *
+from lmfdb.sato_tate_groups.main import sg_pretty
 
 
 # Determining what kind of label
