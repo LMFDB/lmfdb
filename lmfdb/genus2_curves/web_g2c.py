@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING
 from ast import literal_eval
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, encode_plot
@@ -401,9 +401,6 @@ def end_field_statement(field_label, poly):
     else:
         return """Smallest field over which all endomorphisms are defined:<br>
         Galois number field \(K = \Q (a)\) with defining polynomial \(%s\)""" % poly
-
-def st_group_statement(group):
-    return """Sato-Tate group: <a href=%s> \(%s\) </a>""" % (group, url_for_st_group(group))
 
 def end_lattice_statement(lattice):
     statement = ''
