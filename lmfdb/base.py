@@ -33,8 +33,9 @@ def get_logfocus():
 # getDBConnection() and should always be obtained from that)
 _C = None
 
+#FIXME perhaps the globals dbport and DEFAULT_DB_PORT should be removed?
+#we could had it a default argument to makeDBConnection
 DEFAULT_DB_PORT = 37010
-#FIXME perhaps the global dbport removed
 dbport = DEFAULT_DB_PORT
 
 
@@ -200,7 +201,7 @@ def ctx_proc_userdata():
 
     # meta_description appears in the meta tag "description"
     import knowledge
-    vars['meta_description'] = knowledge.knowl.Knowl("intro.description").content
+    vars['meta_description'] = r'Welcome to the LMFDB, the database of L-functions, modular forms, and related objects. These pages are intended to be a modern handbook including tables, formulas, links, and references for L-functions and their underlying objects.'
     vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the US National Science Foundation and the UK Engineering and Physical Sciences Research Council.' % (url_for('acknowledgment') + "#sponsors")
 #    vars['feedbackpage'] = url_for('contact')
     vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
