@@ -15,10 +15,11 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_url_naturallabel(self):
 	L = self.tc.get('/HigherGenus/C/aut/junk')
-	assert 'was not found in the database' in L.data # error mesage
+	assert 'No family with label junk was found in the database' in L.data
+    
 
 
 
     def test_search_genus_group(self):
-        L = self.tc.get('/HigherGenus/C/aut/?genus=2&group=%5B6%2C2%5D&signature=&count=20&Submit=Search')
+        L = self.tc.get('/HigherGenus/C/aut/?genus=2&group=%5B48%2C29%5D&signature=&dim=&hyperelliptic=include&count=20&Submit=Search')
         assert '2 matches' in L.data
