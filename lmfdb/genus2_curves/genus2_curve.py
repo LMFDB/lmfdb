@@ -5,19 +5,17 @@ import re
 import time
 from pymongo import ASCENDING, DESCENDING
 from operator import mul
-from lmfdb.base import app
-from flask import flash, render_template, url_for, request, redirect, make_response, send_file
+from flask import flash, render_template, url_for, request, redirect, send_file
 from markupsafe import Markup
+from sage.all import ZZ
 
 from lmfdb.utils import to_dict, comma, random_value_from_collection
-from lmfdb.search_parsing import parse_bool, parse_ints, parse_signed_ints, parse_bracketed_posints, parse_count, parse_start
-from lmfdb.number_fields.number_field import make_disc_key
-from lmfdb.genus2_curves import g2c_page, g2c_logger
+from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
+from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
-import sage.all
-from sage.all import ZZ, QQ, latex, matrix, srange
+
 credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight, and Dan Yasaki"
 
 ###############################################################################
@@ -422,7 +420,6 @@ class G2C_stats(object):
             values = sorted(curves.distinct(attr['name']))
             vcounts = []
             rows = []
-            colcount = 0
             avg = 0
             for value in values:
                 n = curves.find({attr['name']:value}).count()
