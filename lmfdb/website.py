@@ -65,11 +65,7 @@ def not_found_404(error):
 def not_found_500(error):
     return render_template("500.html"), 500
 
-
-#@app.route("/")
-#def index():
-#    return render_template('index.html', titletag="The L-functions and modular forms database", title="", bread=None)
-
+#@app.route("/") is now handled in pages.py
 
 def root_static_file(name):
     from flask import redirect
