@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest, getDBConnection
-import math
-import unittest2
 
 class SatoTateGroupTest(LmfdbTest):
 
