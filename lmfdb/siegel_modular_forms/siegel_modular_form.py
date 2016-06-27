@@ -3,14 +3,12 @@
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
 from flask import render_template, url_for, request, send_file, flash, redirect
-from lmfdb.search_parsing import parse_range
 from markupsafe import Markup
-import urllib, os, json, StringIO
+import os, StringIO
 import dimensions, sample, collection
-from sage.all import latex, ZZ, Set
+from sage.all import latex, Set
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.siegel_modular_forms import smf_page
-from lmfdb.siegel_modular_forms import smf_logger
 from lmfdb.search_parsing import parse_ints, parse_ints_to_list_flash
 from lmfdb.utils import to_dict
 
@@ -185,7 +183,7 @@ def build_dimension_table(info, col, args):
                     kwargs[arg] = dim_args['k_range']
                 elif (arg == 'wt' or arg == 'k') and 'k_range' in dim_args:
                     if len(dim_args['k_range']) != 1:
-                        raise NotImpelmentedError("Please specify a single value of <span style='color:black'>$k$</span> rather than a range of values.")
+                        raise NotImplementedError("Please specify a single value of <span style='color:black'>$k$</span> rather than a range of values.")
                     kwargs[arg] = dim_args['k_range'][0]
                 elif arg == 'j_range' and 'j_range' in dim_args:
                     kwargs[arg] = dim_args['j_range']
@@ -313,7 +311,7 @@ def render_sample_page(col, sam, args, bread):
             try:
                 O = sam.field().ring_of_integers()
                 m = O.ideal([O(str(b)) for b in modulus.split(',')])
-            except Exception as e:
+            except Exception:
                 info['error'] = True
                 flash(Markup("Error: unable to construct modulus ideal from specified generators <span style='color:black'>%s</span>." % modulus), "error")
             if m == 1:

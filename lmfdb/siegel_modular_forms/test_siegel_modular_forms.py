@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest, getDBConnection
-import math
-import unittest2
 
 class HomePageTest(LmfdbTest):
 
@@ -110,11 +108,11 @@ class HomePageTest(LmfdbTest):
                 n = n+1
                 self.check(full_label,[full_label,'Hecke eigenform'])
             except:
-                print "\nError on page " + url
-                errors.append(url)
+                print "\nError on page " + full_label
+                errors.append(full_label)
         if not errors:
             print "\nTested %s SMF pages with no errors" % n
         else:
             print "\nTested %d pages with %d errors occuring on the following pages:" %(n,len(errors))
-            for url in errors:
-                print url
+            for label in errors:
+                print label

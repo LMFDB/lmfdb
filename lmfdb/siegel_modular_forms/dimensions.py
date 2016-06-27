@@ -526,7 +526,6 @@ def dimension_Gamma0_4_psi_4(wt_range):
     """
     headers = ['Total']
     dct = dict()
-    s = t = 0 # Here starts a 'hack'
     for k in wt_range:
         if is_odd(k): continue
         dims =  _dimension_Gamma0_4_psi_4(k)
