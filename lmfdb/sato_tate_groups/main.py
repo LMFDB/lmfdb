@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import re
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING
 from flask import flash, render_template, url_for, redirect, request
 from markupsafe import Markup
 from lmfdb.sato_tate_groups import st_page
 from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.base import getDBConnection
-from lmfdb.search_parsing import parse_bool, parse_ints, parse_rational, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start
 
 ###############################################################################
 # Globals
@@ -239,7 +239,6 @@ def search(**args):
 ###############################################################################
 
 def render_by_label(label):
-    credit = credit_string
     data = st_groups().find_one({'label': label})
     info = {}
     if data is None:
