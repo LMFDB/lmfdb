@@ -137,13 +137,14 @@ def set_menu_cookie(response):
 
 @app.route('/_menutoggle/<show>')
 def menutoggle(show):
-    from flask import g, redirect
+    from flask import g, redirect, url_for
     g.show_menu = show != "False"
     url = request.referrer or url_for('index')
     return redirect(url)
 
 @app.route('/a/<int:a>')
 def a(a):
+    from sage.all import Integer
     a = Integer(a)
     return r'\(' + str(a / (1 + a)) + r'\)'
 
@@ -158,7 +159,7 @@ def example(blah=None):
 @app.route("/ModularForm/")
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
-    from flask import redirect
+    from flask import redirect, url_for
     return redirect(url_for("mf.render_modular_form_main_page"))
     # return render_template("modular_form_space.html", info = { })
 
@@ -219,7 +220,7 @@ def get_configuration():
     # default options to pass to the app.run()
     flask_options = {"port": 37777, "host": "127.0.0.1", "debug": False}
     # Default option to pass to _init
-    threading_opt = False 
+    threading_opt = False
     # the logfocus can be set to the string-name of a logger you want
     # follow on the debug level and all others will be set to warning
     logfocus = None
@@ -357,7 +358,6 @@ def main():
 if True:
     # this bit is so that we can import website.py to use
     # with gunicorn.
-    import logging
     logfile = "flasklog"
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
