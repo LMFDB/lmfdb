@@ -50,7 +50,7 @@
       #}
       \[ \begin{aligned}
         {% for root in object.number_field_galois_group().computation_roots()%}
-          r_{{loop.index}} &= {{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right) \\
+          r_{ {{loop.index}} } &= {{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right) \\
         {% endfor %}
         \end{aligned}\]
     </div>
