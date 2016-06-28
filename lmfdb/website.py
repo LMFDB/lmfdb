@@ -220,7 +220,7 @@ def get_configuration():
     # default options to pass to the app.run()
     flask_options = {"port": 37777, "host": "127.0.0.1", "debug": False}
     # Default option to pass to _init
-    threading_opt = False
+    threading_opt = False 
     # the logfocus can be set to the string-name of a logger you want
     # follow on the debug level and all others will be set to warning
     logfocus = None
