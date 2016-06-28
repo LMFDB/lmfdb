@@ -73,7 +73,7 @@ class HomePageTest(LmfdbTest):
         #self.check(homepage, "/knowledge/", 'Recently modified Knowls')
 
     # Box 6
-    def test_abox6(self):
+    def test_box6(self):
         r"""
         Check that the links in Box 6 work.
         """
