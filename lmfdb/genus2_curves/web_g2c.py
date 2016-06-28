@@ -433,7 +433,7 @@ def split_field_statement(is_simple_geom, field_label, poly):
         return """Splits over the number field \(\Q (b) \simeq \) <a href=%s>%s</a> with defining polynomial:<br>&nbsp;&nbsp;\(%s\)"""\
             % (url, pretty, poly)
     else:
-        return """Splits over the number field \(\Q (b)\) with defining polynomialL<br>&nbsp;&nbsp%s""" % poly
+        return """Splits over the number field \(\Q (b)\) with defining polynomial:<br>&nbsp;&nbsp;\(%s\)""" % poly
 
 def split_statement(coeffs, labels, condnorms):
     if len(coeffs) == 1:

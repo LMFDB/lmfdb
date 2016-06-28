@@ -50,12 +50,12 @@
       #}
       \[ \begin{aligned}
         {% for root in object.number_field_galois_group().computation_roots()%}
-          r_{{loop.index}} &= {{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right) \\
+          r_{ {{loop.index}} } &= {{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right) \\
         {% endfor %}
         \end{aligned}\]
     </div>
     
-    <h3>Generators of the action on the roots $r_1, \ldots, r_{{object.number_field_galois_group().degree()}}$</h3>
+    <h3>Generators of the action on the roots $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$</h3>
     <div>
     <center>
     <table class="ntdata">
