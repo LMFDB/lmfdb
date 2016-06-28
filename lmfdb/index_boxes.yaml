@@ -46,7 +46,7 @@ links:
 ---
 title: Code and Open Software
 image: compute
-content: <p>Download the data, download the code, or see how the data were generated.</p><p><a href="https://github.com/LMFDB/lmfdb">GitHub</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://sagemath.org/">SageMath</a> &nbsp;&nbsp;&nbsp;<a href="http://pari.math.u-bordeaux.fr/">Pari/GP</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://magma.maths.usyd.edu.au/magma/">Magma</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.python.org/">Python</a></p>
+content: <p>Download the data, download the code, or see how the data were generated.</p><p><a href="https://github.com/LMFDB/lmfdb">GitHub</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.sagemath.org/">SageMath</a> &nbsp;&nbsp;&nbsp;<a href="http://pari.math.u-bordeaux.fr/">Pari/GP</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://magma.maths.usyd.edu.au/magma/">Magma</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.python.org/">Python</a></p>
 control: 0
 links:
   - [ 0,0 ]
