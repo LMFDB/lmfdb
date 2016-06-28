@@ -29,7 +29,7 @@ import genus2_curves
 import sato_tate_groups
 import users
 import knowledge
-import upload
+#import upload
 import characters
 import local_fields
 import galois_groups
