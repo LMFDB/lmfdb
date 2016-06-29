@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import re
 import pymongo
@@ -90,7 +91,7 @@ def split_full_label(lab):
 def hilbert_modular_form_by_label(lab):
     if isinstance(lab, basestring):
         C = getDBConnection()
-        res = C.hmfs.forms.find_one({'label': lab})
+        res = C.hmfs.forms.search.find_one({'label': lab},{'_id':False,'label':True)
     else:
         res = lab
         lab = res['label']
@@ -128,8 +129,7 @@ def hilbert_modular_form_search(**args):
 
     info['query'] = dict(query)
     C = getDBConnection()
-    dbcoll = C.hmfs.forms.search if C.hmfs.forms.search.count() else C.hmfs.forms
-    res = dbcoll.find(
+    C.hmfs.forms.search.find(
         query).sort([('deg', pymongo.ASCENDING), ('disc', pymongo.ASCENDING), ('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
     if(start >= nres):
@@ -342,8 +342,8 @@ def render_hmf_webpage(**args):
 
     t = "Hilbert Cusp Form %s" % info['label']
 
-    forms_space = C.hmfs.forms.find(
-        {'field_label': data['field_label'], 'level_ideal': data['level_ideal']})
+    forms_space = C.hmfs.forms.search.find(
+        {'field_label': data['field_label'], 'level_ideal': data['level_ideal']},{'_id':False,'dimension':True})
     dim_space = 0
     for v in forms_space:
         dim_space += v['dimension']
