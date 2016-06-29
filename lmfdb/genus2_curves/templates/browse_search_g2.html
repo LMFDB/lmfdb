@@ -1,6 +1,6 @@
 {% extends 'homepage.html' %}
-{% block content %}
 
+{% block content %}
 <p>
 The database currently contains {{info["counts"]["ncurves_c"]}} <a title="Genus 2 curves [g2c.g2curve]" knowl="g2c.g2curve" kwargs="">genus 2 curves</a> over $\Q$
 of <a title="Genus 2 curves [g2c.abs_discriminant]" knowl="g2c.abs_discriminant" kwargs="">absolute discriminant</a> up to {{info["counts"]["max_D_c"]}}.
@@ -40,7 +40,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 
 
 <h2> Search </h2>
-<form>
+<form id='search' onsubmit="cleanSubmit(this.id)">
 <table>
 <tr>
 <td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
