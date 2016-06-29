@@ -1,31 +1,25 @@
 # -*- coding: utf-8 -*-
 # -*- coding: utf-8 -*-
 
-import re
 import pymongo
 
-import lmfdb.base
-from lmfdb.base import app, getDBConnection
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
+from lmfdb.base import getDBConnection
+from flask import render_template, url_for, request, redirect, make_response, flash
+
+from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
-from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_summary, hmf_degree_summary
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
 
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 
-import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
-
-import flask
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
+from lmfdb.WebNumberField import WebNumberField
 
 from markupsafe import Markup
-
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, web_latex_split_on_pm, random_object_from_collection
+from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
-from lmfdb.WebNumberField import *
+#from lmfdb.WebNumberField import *
 
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
@@ -189,7 +183,6 @@ def render_hmf_webpage_download(**args):
 
 def download_hmf_magma(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     f = C.hmfs.forms.find_one({'label': label})
     if f is None:
@@ -246,7 +239,6 @@ def download_hmf_magma(**args):
 
 def download_hmf_sage(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     f = C.hmfs.forms.find_one({'label': label})
     if f is None:
@@ -350,8 +342,6 @@ def render_hmf_webpage(**args):
 
     info['newspace_dimension'] = dim_space
 
-    w = polygen(QQ, 'w')
-    e = polygen(QQ, 'e')
     eigs = data['hecke_eigenvalues']
     eigs = eigs[:min(len(eigs), numeigs)]
 
