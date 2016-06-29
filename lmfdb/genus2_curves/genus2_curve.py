@@ -136,14 +136,16 @@ def by_url_curve_label(cond, alpha, disc, num):
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/")
 def by_url_isogeny_class_discriminant(cond, alpha, disc):
-    data = {}
+    clabel = str(cond)+"."+alpha
     if len(request.args) > 0:
         # if conductor or discriminant changed, fall back to a general search
         if ('cond' in request.args and request.args['cond'] != str(cond)) or \
            ('abs_disc' in request.args and request.args['abs_disc'] != str(disc)):
             return redirect (url_for(".index", **request.args), 301)
         data = to_dict(request.args)
-    clabel = str(cond)+"."+alpha
+        data['title'] = 'Genus 2 curves search results for isogeny class %s and discriminant %s' % (clabel,disc)
+    else:
+        data['title'] = 'Genus 2 curves in isogeny class %s of discriminant %s' % (clabel,disc)
     data['cond'] = cond
     data['class'] = clabel
     data['abs_disc'] = disc
@@ -152,7 +154,6 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
         ('%s' % cond, url_for(".by_conductor", cond=cond)),
         ('%s' % alpha, url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha)),
         ('%s' % disc, '.'))
-    data['title'] = 'Genus 2 Curve search results for isogeny class %s and discriminant %s' % (clabel,disc)
     return genus2_curve_search(data)
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/")
@@ -161,15 +162,17 @@ def by_url_isogeny_class_label(cond, alpha):
 
 @g2c_page.route("/Q/<int:cond>/")
 def by_conductor(cond):
-    data = {}
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'cond' in request.args and request.args['cond'] != str(cond):
             return redirect (url_for(".index", **request.args), 301)
         data = to_dict(request.args)
+        data['title'] = 'Genus 2 curves search results for conductor %s' % cond
+    else:
+        data = {'title':'Genus 2 curves of conductor %s' % cond }
     data['cond'] = cond
     data['bread'] = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('%s' % cond, '.'))
-    data['title'] = 'Genus 2 Curve search results for conductor %s' % cond
+    data['title'] = 'Genus 2 curve search results for conductor %s' % cond
     print "by_conductor",cond,data
     return genus2_curve_search(data)
 

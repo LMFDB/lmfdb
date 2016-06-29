@@ -128,15 +128,16 @@ def statistics():
 
 @ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
-    info = {}
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 301)
         info = to_dict(request.args)
+        info['title'] = 'Elliptic Curves over $\Q$ search results for conductor %s' % conductor
+    else:
+        info = {'title':'Elliptic Curves over $\Q$ of conductor %s' % conductor }
     info['conductor'] = conductor
     info['bread'] = (('Elliptic curves', url_for("ecnf.index")), ('$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, '.'))
-    info['title'] = 'Elliptic Curves search results for conductor %s' % conductor
     return elliptic_curve_search(info)
 
 

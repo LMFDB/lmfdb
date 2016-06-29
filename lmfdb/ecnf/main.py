@@ -90,6 +90,17 @@ def split_short_class_label(lab):
     conductor_label = data[0]
     isoclass_label = data[1]
     return (conductor_label, isoclass_label)
+    
+def conductor_label_norm(lab):
+    r""" extract norm from conductor label (as a string)"""
+    s = lab.replace(' ','')
+    if re.match(r'\d+.\d+',s):
+        return s.split('.')[0]
+    elif re.match(r'\[\d+,\d+,\d+\]',s):
+        return s[1:-1].split(',')[0]
+    else:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid conductor label. It must be of the form N.m or [N,c,d]" % lab), "error")
+        raise ValueError
 
 
 ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, John Voight, Dan Yasaki"
@@ -143,7 +154,7 @@ def index():
 #    if 'jump' in request.args:
 #        return show_ecnf1(request.args['label'])
     if len(request.args) > 0:
-        return elliptic_curve_search(data=request.args)
+        return elliptic_curve_search(to_dict(request.args))
     bread = get_bread()
 
 # the dict data will hold additional information to be displayed on
@@ -223,7 +234,7 @@ def show_ecnf1(nf):
     if nf == "1.1.1.1":
         return redirect(url_for("ec.rational_elliptic_curves", **request.args))
     if request.args:
-        return elliptic_curve_search(data=request.args)
+        return elliptic_curve_search(to_dict(request.args))
     start = 0
     count = 50
     try:
@@ -274,9 +285,25 @@ def show_ecnf1(nf):
 def show_ecnf_conductor(nf, conductor_label):
     try:
         nf_label = nf_string_to_label(nf)
+        nf_pretty = field_pretty(nf_label)
+        conductor_norm = conductor_label_norm(conductor_label)
     except ValueError:
         return search_input_error()
-    return elliptic_curve_search(data={'nf_label': nf_label, 'conductor_label': quote(conductor_label)}, **request.args)
+    info = {}
+    if len(request.args) > 0:
+        # if requested field or conductor norm differs from nf or conductor_lable, just fall back to a general search
+        if ('field' in request.args and request.args['field'] != nf_label) or \
+           ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
+            return redirect (url_for(".index", **request.args), 301)
+        info = to_dict(request.args)
+        info['title'] = 'Elliptic Curves over %s search results for conductor %s' % (nf_pretty, conductor_label)
+    else:
+        info['title'] = 'Elliptic Curves over %s of conductor %s' % (nf_pretty, conductor_label)
+    info['field'] = nf_label
+    info['conductor_label'] = conductor_label
+    info['conductor_norm'] = conductor_norm
+    info['bread'] = (('Elliptic curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, ''))
+    return elliptic_curve_search(info)
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
@@ -293,7 +320,6 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     bread.append((cl.field, url_for(".show_ecnf1", nf=nf_label)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
     bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=quote(conductor_label), class_label=class_label)))
-    info = {}
     return render_template("show-ecnf-isoclass.html",
                            credit=ecnf_credit,
                            title=title,
@@ -340,8 +366,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            learnmore=learnmore_list())
 
 
-def elliptic_curve_search(**args):
-    info = to_dict(args['data'])
+def elliptic_curve_search(info):
     
     if 'download' in info and info['download'] != 0:
         return download_search(info)
@@ -349,8 +374,7 @@ def elliptic_curve_search(**args):
     if not 'query' in info:
         info['query'] = {}
     
-    bread = [('Elliptic Curves', url_for(".index")),
-             ('Search Results', '.')]
+    bread = info.get('bread',[('Elliptic Curves', url_for(".index")), ('Search Results', '.')])
     if 'jump' in info:
         label = info.get('label', '').replace(" ", "")
         # This label should be a full isogeny class label or a full
@@ -432,7 +456,7 @@ def elliptic_curve_search(**args):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-    t = 'Elliptic Curve search results'
+    t = info.get('title','Elliptic Curve search results')
     return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
 
 
