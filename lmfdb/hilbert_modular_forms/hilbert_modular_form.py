@@ -91,7 +91,7 @@ def split_full_label(lab):
 def hilbert_modular_form_by_label(lab):
     if isinstance(lab, basestring):
         C = getDBConnection()
-        res = C.hmfs.forms.search.find_one({'label': lab},{'_id':False,'label':True)
+        res = C.hmfs.forms.search.find_one({'label': lab},{'label':True})
     else:
         res = lab
         lab = res['label']
@@ -343,7 +343,7 @@ def render_hmf_webpage(**args):
     t = "Hilbert Cusp Form %s" % info['label']
 
     forms_space = C.hmfs.forms.search.find(
-        {'field_label': data['field_label'], 'level_ideal': data['level_ideal']},{'_id':False,'dimension':True})
+        {'field_label': data['field_label'], 'level_ideal': data['level_ideal']},{'dimension':True})
     dim_space = 0
     for v in forms_space:
         dim_space += v['dimension']
