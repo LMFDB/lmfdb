@@ -309,6 +309,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
         nf_label = nf_string_to_label(nf)
     except ValueError:
         return search_input_error()
+    conductor_label = unquote(conductor_label)
     label = "".join(["-".join([nf_label, conductor_label, class_label]), number])
     ec = ECNF.by_label(label)
     bread = [("Elliptic Curves", url_for(".index"))]
@@ -323,6 +324,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
     bread.append((ec.conductor_label, ec.urls['conductor']))
     bread.append((ec.iso_label, ec.urls['class']))
     bread.append((ec.number, ec.urls['curve']))
+    print ec.urls
     code = ec.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     info = {}
