@@ -115,9 +115,10 @@
 <div id="sidebar">
 {%- include "sidebar.html" -%}
 
-{% if user_is_authenticated -%}
-    {{ entry("Data", getUploadedFor(request.path, true) ) }}
-{% endif %}
+{# remove upload from sidebar #}
+{#% if user_is_authenticated -%#}
+    {#{ entry("Data", getUploadedFor(request.path, true) ) }#}
+{#% endif %#}
 
 </div>
 
@@ -184,11 +185,11 @@
    {% if navi %}
        {{ neighbors("Nearby objects", navi) }}
    {% endif %}
+
    {% if downloads %}
-     {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
-   {% else %}
-     {{ rightnavig("Data", getUploadedFor(request.path, false) ) }}
+     {{ rightnavig("Downloads", downloads) }}
    {% endif %}
+
    {{ rightnavig("Learn more about", learnmore) }}
     </div>
     {%- endif %}
