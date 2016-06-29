@@ -29,7 +29,7 @@ import genus2_curves
 import sato_tate_groups
 import users
 import knowledge
-import upload
+#import upload
 import characters
 import local_fields
 import galois_groups
@@ -137,13 +137,14 @@ def set_menu_cookie(response):
 
 @app.route('/_menutoggle/<show>')
 def menutoggle(show):
-    from flask import g, redirect
+    from flask import g, redirect, url_for
     g.show_menu = show != "False"
     url = request.referrer or url_for('index')
     return redirect(url)
 
 @app.route('/a/<int:a>')
 def a(a):
+    from sage.all import Integer
     a = Integer(a)
     return r'\(' + str(a / (1 + a)) + r'\)'
 
@@ -158,7 +159,7 @@ def example(blah=None):
 @app.route("/ModularForm/")
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
-    from flask import redirect
+    from flask import redirect, url_for
     return redirect(url_for("mf.render_modular_form_main_page"))
     # return render_template("modular_form_space.html", info = { })
 
@@ -357,7 +358,6 @@ def main():
 if True:
     # this bit is so that we can import website.py to use
     # with gunicorn.
-    import logging
     logfile = "flasklog"
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.WARNING)
