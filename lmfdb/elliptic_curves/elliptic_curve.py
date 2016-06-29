@@ -72,7 +72,7 @@ def learnmore_list_remove(matchstring):
 def rational_elliptic_curves(err_args=None):
     if err_args is None:
         if len(request.args) != 0:
-            return elliptic_curve_search(**request.args)
+            return elliptic_curve_search(to_dict(request.args))
         else:
             err_args = {}
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
@@ -128,7 +128,16 @@ def statistics():
 
 @ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
-    return elliptic_curve_search(conductor=conductor, **request.args)
+    info = {}
+    if len(request.args) > 0:
+        # if conductor changed, fall back to a general search
+        if 'conductor' in request.args and request.args['conductor'] != str(conductor):
+            return redirect (url_for(".rational_elliptic_curves", **request.args), 301)
+        info = to_dict(request.args)
+    info['conductor'] = conductor
+    info['bread'] = (('Elliptic curves', url_for("ecnf.index")), ('$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, '.'))
+    info['title'] = 'Elliptic Curves search results for conductor %s' % conductor
+    return elliptic_curve_search(info)
 
 
 def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label=False, missing_curve=False):
@@ -147,20 +156,18 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     return rational_elliptic_curves(err_args)
 
 
-def elliptic_curve_search(**args):
-    info = to_dict(args)
+def elliptic_curve_search(info):
 
     if 'download' in info and info['download'] != '0':
         return download_search(info)
 
-    query = {}
-    bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for(".rational_elliptic_curves")),
-             ('Search Results', '.')]
-    if 'SearchAgain' in args:
+    if 'SearchAgain' in info:
         return rational_elliptic_curves()
 
-    if 'jump' in args:
+    query = {}
+    bread = info.get('bread',[('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', url_for(".rational_elliptic_curves")), ('Search Results', '.')])
+
+    if 'jump' in info:
         label = info.get('label', '').replace(" ", "")
         m = match_lmfdb_label(label)
         if m:
@@ -270,7 +277,7 @@ def elliptic_curve_search(**args):
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
-    t = 'Elliptic Curves search results'
+    t = info.get('title','Elliptic Curves search results')
     return render_template("search_results.html", info=info, credit=credit, bread=bread, title=t)
 
 
