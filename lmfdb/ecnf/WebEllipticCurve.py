@@ -30,6 +30,12 @@ special_names = {'2.0.4.1': 'i',
                  '4.0.125.1': 'zeta5',
                  }
 
+def rename_j(j):
+    sj = str(j)
+    for name in ['zeta5', 'phi', 'i']:
+        sj = sj.replace(name,'a')
+    return sj
+
 field_list = {}  # cached collection of enhanced WebNumberFields, keyed by label
 
 def FIELD(label):
@@ -361,7 +367,7 @@ class ECNF(object):
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
-        self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=str(j)))]
+        self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=rename_j(j)))]
         if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
             self.friends += [('L-function', self.urls['Lfunction'])]
