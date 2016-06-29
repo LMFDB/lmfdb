@@ -10,13 +10,12 @@ import pymongo
 ASC = pymongo.ASCENDING
 from operator import mul
 from urllib import quote, unquote
-from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, flash, send_file
-from lmfdb.utils import image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, random_object_from_collection
+from lmfdb.base import  getDBConnection
+from flask import render_template, request, url_for, redirect, flash, send_file
+from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD
-from lmfdb.ecnf import ecnf_page, logger
-from lmfdb.ecnf.ecnf_stats import get_stats, get_signature_stats, ecnf_field_summary, ecnf_degree_summary, ecnf_signature_summary
+from lmfdb.ecnf import ecnf_page
+from lmfdb.ecnf.ecnf_stats import get_stats, get_signature_stats, ecnf_degree_summary, ecnf_signature_summary
 from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import field_pretty
@@ -26,7 +25,6 @@ from markupsafe import Markup
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
-from lmfdb.number_fields.number_field import FIELD_LABEL_RE
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
@@ -241,55 +239,21 @@ def random_curve():
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
-    if request.args:
-        return elliptic_curve_search(to_dict(request.args))
-    start = 0
-    count = 50
     try:
-        nf_label,nf_pretty = get_nf_info(nf)
+        nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
         return search_input_error()
-    if nf_label == "1.1.1.1":
-        return redirect(url_for("ec.rational_elliptic_curves", **request.args))
-    query = {'field_label': nf_label}
-    cursor = db_ecnf().find(query)
-    nres = cursor.count()
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
-
-    bread = [('Elliptic Curves', url_for(".index")),
-             (nf_pretty, url_for('.show_ecnf1', nf=nf_label))]
-
-    res = list(res)
-    for e in res:
-        e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), field_pretty(e['field_label']))
-    info = {}
+    info = to_dict(request.args)
+    info['title'] = 'Elliptic Curves over %s' % nf_pretty
+    info['bread'] = [('Elliptic Curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf))]
+    if len(request.args) > 0:
+        # if requested field differs from nf, redirect to general search
+        if 'field' in request.args and request.args['field'] != nf_label:
+            return redirect (url_for(".index", **request.args), 301)
+        info['title'] += ' search results'
+        info['bread'].append(('search results',''))
     info['field'] = nf_label
-    info['query'] = query
-    info['curves'] = res  # [ECNF(e) for e in res]
-    info['number'] = nres
-    info['start'] = start
-    info['count'] = count
-    info['more'] = int(start + count < nres)
-    info['field_pretty'] = field_pretty
-    info['web_ainvs'] = web_ainvs
-    #don't risk recomputing all the ecnf stats just to show curves for a single number field
-    #if nf_label:
-        #info['stats'] = ecnf_field_summary(nf_label)
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
-    t = 'Elliptic Curves over %s' % nf_pretty
-    return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t, learnmore=learnmore_list())
-
+    return elliptic_curve_search(info)
 
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
@@ -302,7 +266,7 @@ def show_ecnf_conductor(nf, conductor_label):
     info['title'] = 'Elliptic Curves over %s of conductor %s' % (nf_pretty, conductor_label)
     info['bread'] = [('Elliptic Curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
     if len(request.args) > 0:
-        # if requested field or conductor norm differs from nf or conductor_lable, just fall back to a general search
+        # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
             return redirect (url_for(".index", **request.args), 301)
