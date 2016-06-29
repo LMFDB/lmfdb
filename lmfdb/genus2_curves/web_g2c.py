@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING
 from ast import literal_eval
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, encode_plot
@@ -402,9 +402,6 @@ def end_field_statement(field_label, poly):
         return """Smallest field over which all endomorphisms are defined:<br>
         Galois number field \(K = \Q (a)\) with defining polynomial \(%s\)""" % poly
 
-def st_group_statement(group):
-    return """Sato-Tate group: <a href=%s> \(%s\) </a>""" % (group, url_for_st_group(group))
-
 def end_lattice_statement(lattice):
     statement = ''
     for ED in lattice:
@@ -436,7 +433,7 @@ def split_field_statement(is_simple_geom, field_label, poly):
         return """Splits over the number field \(\Q (b) \simeq \) <a href=%s>%s</a> with defining polynomial:<br>&nbsp;&nbsp;\(%s\)"""\
             % (url, pretty, poly)
     else:
-        return """Splits over the number field \(\Q (b)\) with defining polynomialL<br>&nbsp;&nbsp%s""" % poly
+        return """Splits over the number field \(\Q (b)\) with defining polynomial:<br>&nbsp;&nbsp;\(%s\)""" % poly
 
 def split_statement(coeffs, labels, condnorms):
     if len(coeffs) == 1:

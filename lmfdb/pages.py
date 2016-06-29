@@ -5,7 +5,7 @@ from flask import Flask, session, g, render_template, url_for, request, redirect
 
 @app.route("/about")
 def about():
-    return render_template("about.html", title="About")
+    return render_template("about.html", title="About the LMFDB")
 
 # acknowledgement page, reads info from CONTRIBUTORS.yaml
 try:
@@ -18,8 +18,6 @@ except:
 _curdir = os.path.dirname(os.path.abspath(__file__))
 contribs = yaml.load_all(open(os.path.join(_curdir, "..", "CONTRIBUTORS.yaml")))
 contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
-
-
 
 
 @app.route("/acknowledgment")

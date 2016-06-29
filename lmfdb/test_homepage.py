@@ -79,7 +79,8 @@ class HomePageTest(LmfdbTest):
         """
         homepage = self.tc.get("/").data
         self.check_external(homepage, "https://github.com/LMFDB/lmfdb", 'Modular Forms Database')
-        self.check_external(homepage, "http://sagemath.org/", 'mathematics software system')
+        # I could not get this one to work - AVS
+        #self.check_external(homepage, "http://www.sagemath.org/", 'mathematics software system')
         self.check_external(homepage, "http://pari.math.u-bordeaux.fr/", 'PARI/GP is a widely used computer algebra system')
         # I could not get this one to work -- JEC
         #self.check_external(homepage, "http://magma.maths.usyd.edu.au/magma/", 'Magma is a large, well-supported software package')

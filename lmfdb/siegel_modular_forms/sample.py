@@ -143,7 +143,7 @@ def export(collection, name):
     query = { 'data_type': 'sample', 'collection': collection, 'name': name}
     doc = smf_db_samples().find_one(query, { 'Fourier_coefficients': False, 'eigenvalues': False })
     id = doc.get('_id')
-    assert id != None, 'Error: the item "%s" was not accessible in the database.' % dct 
+    assert id != None, 'Error: the item "%s.%s" was not found in the database.' % (collection, name)
 
     # Fourier coefficients and eigenvalues
     fcs = smf_db_samples().find({ 'owner_id': id, 'data_type': 'fc' })
@@ -157,6 +157,5 @@ def export(collection, name):
     doc['label']= label
     
     import json
-    from bson import BSON
     from bson import json_util
     return json.dumps(doc, sort_keys=True, indent=4, default = json_util.default)        

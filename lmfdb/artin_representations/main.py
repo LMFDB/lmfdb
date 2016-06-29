@@ -44,7 +44,7 @@ def make_cond_key(D):
 
 def parse_artin_label(label):
     label = clean_input(label)
-    if re.compile(r'^\d+\.\d+e\d+(_\d+e\d+)*\.\d+t\d\.\d+c\d+$').match(label):
+    if re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$').match(label):
         return label
     else:
         raise ValueError("Error parsing input %s.  It is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1"% label)
