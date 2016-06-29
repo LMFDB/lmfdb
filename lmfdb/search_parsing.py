@@ -382,8 +382,7 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
     if F[0] == 'Q':
         if '(' in F and ')' in F:
-            F.replace('(','')
-            F.replace(')','')
+            F=F.replace('(','').replace(')','')
         if F[1:5] in ['sqrt', 'root']:
             try:
                 d = ZZ(str(F[5:])).squarefree_part()
@@ -401,6 +400,8 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             s = 0 if D < 0 else 2
             return '2.%s.%s.1' % (s, str(absD))
         if F[1:5] == 'zeta':
+            if '_' in F:
+                F = F.replace('_','')
             try:
                 d = ZZ(str(F[5:]))
             except ValueError:
