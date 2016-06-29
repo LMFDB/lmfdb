@@ -243,6 +243,8 @@ def show_ecnf1(nf):
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
         return search_input_error()
+    if nf_label == '1.1.1.1':
+        return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args)
     info['title'] = 'Elliptic Curves over %s' % nf_pretty
     info['bread'] = [('Elliptic Curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf))]
@@ -375,6 +377,9 @@ def elliptic_curve_search(info):
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
     except ValueError:
         return search_input_error(info, bread)
+        
+    if query.get('field_label') == '1.1.1.1':
+        return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
         
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         info['number'] = 1
