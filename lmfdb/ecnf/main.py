@@ -102,6 +102,16 @@ def conductor_label_norm(lab):
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid conductor label. It must be of the form N.m or [N,c,d]" % lab), "error")
         raise ValueError
 
+def get_nf_info(lab):
+    r""" extract number field label from string and pretty"""
+    try:
+        label = nf_string_to_label(lab)
+        pretty = field_pretty (label)
+    except ValueError as err:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (lab,err)), "error")
+        raise ValueError
+    return label, pretty
+
 
 ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, John Voight, Dan Yasaki"
 
@@ -231,16 +241,16 @@ def random_curve():
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
-    if nf == "1.1.1.1":
-        return redirect(url_for("ec.rational_elliptic_curves", **request.args))
     if request.args:
         return elliptic_curve_search(to_dict(request.args))
     start = 0
     count = 50
     try:
-        nf_label = nf_string_to_label(nf)
+        nf_label,nf_pretty = get_nf_info(nf)
     except ValueError:
         return search_input_error()
+    if nf_label == "1.1.1.1":
+        return redirect(url_for("ec.rational_elliptic_curves", **request.args))
     query = {'field_label': nf_label}
     cursor = db_ecnf().find(query)
     nres = cursor.count()
@@ -252,7 +262,7 @@ def show_ecnf1(nf):
     res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
 
     bread = [('Elliptic Curves', url_for(".index")),
-             (nf_label, url_for('.show_ecnf1', nf=nf_label))]
+             (nf_pretty, url_for('.show_ecnf1', nf=nf_label))]
 
     res = list(res)
     for e in res:
@@ -277,32 +287,30 @@ def show_ecnf1(nf):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-    t = 'Elliptic Curves over %s' % field_pretty(nf_label)
+    t = 'Elliptic Curves over %s' % nf_pretty
     return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t, learnmore=learnmore_list())
 
 
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
     try:
-        nf_label = nf_string_to_label(nf)
-        nf_pretty = field_pretty(nf_label)
+        nf_label, nf_pretty = get_nf_info(nf)
         conductor_norm = conductor_label_norm(conductor_label)
     except ValueError:
         return search_input_error()
-    info = {}
+    info = to_dict(request.args)
+    info['title'] = 'Elliptic Curves over %s of conductor %s' % (nf_pretty, conductor_label)
+    info['bread'] = [('Elliptic Curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
     if len(request.args) > 0:
         # if requested field or conductor norm differs from nf or conductor_lable, just fall back to a general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
             return redirect (url_for(".index", **request.args), 301)
-        info = to_dict(request.args)
-        info['title'] = 'Elliptic Curves over %s search results for conductor %s' % (nf_pretty, conductor_label)
-    else:
-        info['title'] = 'Elliptic Curves over %s of conductor %s' % (nf_pretty, conductor_label)
+        info['title'] += ' search results'
+        info['bread'].append(('search results',''))
     info['field'] = nf_label
     info['conductor_label'] = conductor_label
     info['conductor_norm'] = conductor_norm
-    info['bread'] = (('Elliptic curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, ''))
     return elliptic_curve_search(info)
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
@@ -400,7 +408,7 @@ def elliptic_curve_search(info):
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
     except ValueError:
         return search_input_error(info, bread)
-
+        
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         info['number'] = 1
         query['number'] = 1

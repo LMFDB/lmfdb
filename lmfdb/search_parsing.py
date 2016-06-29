@@ -372,23 +372,27 @@ def parse_galgrp(inp, query, qfield, use_bson=True):
 def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if F == 'Q':
         return '1.1.1.1'
-    if F == 'Qi':
+    if F == 'Qi' or F == 'Q(i)':
         return '2.0.4.1'
     # Change unicode dash with minus sign
     F = F.replace(u'\u2212', '-')
     # remove non-ascii characters from F
     F = F.decode('utf8').encode('ascii', 'ignore')
-    fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
     if len(F) == 0:
         raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
     if F[0] == 'Q':
+        if '(' in F and ')' in F:
+            F.replace('(','')
+            F.replace(')','')
         if F[1:5] in ['sqrt', 'root']:
             try:
                 d = ZZ(str(F[5:])).squarefree_part()
-            except ValueError:
+            except (TypeError, ValueError):
                 d = 0
             if d == 0:
                 raise ValueError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(F[:5]))
+            if d == 1:
+                return '1.1.1.1'
             if d % 4 in [2, 3]:
                 D = 4 * d
             else:
@@ -412,7 +416,7 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
                 raise ValueError('%s is not in the database.' % F)
             adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
             return '%s.0.%s.1' % (deg, adisc)
-        return fail_string
+        raise ValueError('It is not a valid field name or label, or a defining polynomial.')
     # check if a polynomial was entered
     F = F.replace('X', 'x')
     if 'x' in F:
@@ -422,11 +426,11 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         F1 = poly_to_field_label(F1)
         if F1:
             return F1
-        raise ValueError('%s is not in the database.'%F)
+        raise ValueError('%s does not define a number field in the database.'%F)
     # Expand out factored labels, like 11.11.11e20.1
+    if not re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',F):
+        raise ValueError("It must be of the form d.r.D.n, such as 2.2.5.1.")
     parts = F.split(".")
-    if len(parts) != 4:
-        raise ValueError("It must be of the form <deg>.<real_emb>.<absdisc>.<number>, such as 2.2.5.1.")
     def raise_power(ab):
         if ab.count("e") == 0:
             return ZZ(ab)
