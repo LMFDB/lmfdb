@@ -1,14 +1,13 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% if (info.col.name() not in ["Gamma0_2", "Gamma1_2", "Gamma_2", "Gamma0_3", "Gamma0_3_psi_3", "Gamma0_4", "Gamma0_4_psi_4", "Gamma0_4_half"]) %}
+{% if info.forms|count > 0 %}
 <h2>Available samples</h2>
 {% include [['includes/avail/', info.col.name(), '_avail_forms.html']|join] %}
 {% endif %}
 
 {% if info.col.computes_dimensions() %}
-
-<!-- Display dimension table here -->
+<h2>Dimension table of spaces of {{KNOWL('mf.siegel.degree',title='degree '+info.col.degree()|string)}} {{KNOWL('mf.siegel',title='Siegel modular forms')}}</h2>
 {% include 'includes/dimension_table.html' %}
 
 <h4> Enter a new range of weights for dimension table:</h4>
@@ -28,7 +27,6 @@
 {% endif %}
 
 {% if (info.col.name() not in ["Gamma1_2", "Gamma0_4_half"]) %}
-<h2>Miscellaneous</h2>
 {% include [ ['',info.col.description()]|join, 'Not_available.html'] %}
 {% endif %}
 

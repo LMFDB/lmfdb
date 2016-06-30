@@ -1,5 +1,6 @@
 {
     "description": "includes/Gamma0_2_basic.html",
+    "degree": 2,
     "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Gamma0_2", 
     "dim_args_default": {"k": "4..24", "j": "2"},
     "latex_name": "M_{k,j}\\left(\\Gamma_0(2)\\right)", 
