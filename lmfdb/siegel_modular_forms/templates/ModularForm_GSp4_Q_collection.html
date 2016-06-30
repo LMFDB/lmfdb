@@ -26,9 +26,9 @@
 
 {% endif %}
 
-{% if (info.col.name() not in ["Gamma1_2", "Gamma0_4_half"]) %}
-{% include [ ['',info.col.description()]|join, 'Not_available.html'] %}
-{% endif %}
+<br>
+{% set KNOWL_ID = "mf.siegel.family.%s"|format(info.col.name())|lower %}
+{{ KNOWL_INC(KNOWL_ID, title=knowl_title(KNOWL_ID)) }}
 
 {% endblock %}
 

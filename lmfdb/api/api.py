@@ -55,10 +55,12 @@ def init_database_info():
 @api_page.route("/")
 def index():
     init_database_info()
-    databases = _databases
-    title = "API"
-    return render_template("api.html", **locals())
+    return render_template("api.html", databases=_databases)
 
+@api_page.route("/refresh")
+def refresh():
+    _databases = None
+    return flask.redirect(url_for(".index"), 301)
 
 @api_page.route("/<db>/<collection>/<id>")
 def api_query_id(db, collection, id):
