@@ -40,7 +40,7 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 
 
 <h2> Search </h2>
-<form>
+<form id='search' onsubmit="cleanSubmit(this.id)">
 <table>
 <tr>
 <td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
