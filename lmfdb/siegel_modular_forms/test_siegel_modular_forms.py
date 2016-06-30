@@ -33,7 +33,7 @@ class HomePageTest(LmfdbTest):
         self.check("Gamma1_2/",  'Gamma_1(2)')
         self.check("Gamma_2/",  'Gamma(2)')
         self.check("Gamma0_3/",  'Gamma_0(3)')
-        self.check("Gamma0_3_psi_3/",  'Gamma_0(4)')
+        self.check("Gamma0_3_psi_3/",  'Gamma_0(3)')
         self.check("Gamma0_4/",  'Gamma_0(4)')
         self.check("Gamma0_4_psi_4/", 'Gamma_0(4)')
         self.check("Gamma0_4_half/",  'k-1/2')
