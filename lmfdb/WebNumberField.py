@@ -52,16 +52,27 @@ def string2list(s):
         return []
     return [int(a) for a in s.split(',')]
 
+def is_fundamental_discriminant(d):
+    if d in [0, 1]:
+        return False
+    if d.is_squarefree():
+        return d % 4 == 1
+    else:
+        return d % 16 in [8, 12] and (d // 4).is_squarefree()
+
 @cached_function
 def field_pretty(label):
     d, r, D, i = label.split('.')
     if d == '1':  # Q
         return '\(\Q\)'
     if d == '2':  # quadratic field
-        D = ZZ(int(D)).squarefree_part()
+        D = ZZ(int(D))
         if r == '0':
             D = -D
-        return '\(\Q(\sqrt{' + str(D) + '}) \)'
+        # Don't prettify invalid quadratic field labels
+        if not is_fundamental_discriminant(D):
+            return label
+        return '\(\Q(\sqrt{' + str(D if D%4 else D/4) + '}) \)'
     if label in cycloinfo:
         return '\(\Q(\zeta_{%d})\)' % cycloinfo[label]
     if d == '4':

@@ -6,10 +6,12 @@ import time
 import flask
 import lmfdb.base as base
 from lmfdb.base import app, getDBConnection, url_for
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask, send_file
+from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask, send_file, flash
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.WebNumberField import *
+
+from markupsafe import Markup
 
 import re
 
@@ -255,7 +257,7 @@ def render_field_webpage(args):
     data = {}
     if nf.is_null():
         bread.append(('Search results', ' '))
-        info['err'] = 'There is no field with label %s in the database' % label2
+        info['err'] = 'There is no field with label %s in the database' % label
         info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
         return search_input_error(info, bread)
 
@@ -407,7 +409,8 @@ def format_coeffs(coeffs):
 def by_label(label):
     try:
         return render_field_webpage({'label': nf_string_to_label(label)})
-    except ValueError:
+    except ValueError as err:
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (label,err)), "error")
         bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search results', ' ')]
         return search_input_error({'err':''}, bread)
 

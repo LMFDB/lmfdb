@@ -93,7 +93,7 @@ def index():
 @g2c_page.route("/Q/")
 def index_Q():
     if len(request.args) > 0:
-        return genus2_curve_search(data=request.args)
+        return genus2_curve_search(to_dict(request.args))
     info = {'counts' : g2cstats().counts()}
     info["stats_url"] = url_for(".statistics")
     info["curve_url"] =  lambda label: url_for_curve_label(label)
@@ -136,24 +136,25 @@ def by_url_curve_label(cond, alpha, disc, num):
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/")
 def by_url_isogeny_class_discriminant(cond, alpha, disc):
-    data = {}
-    if len(request.args) > 0:
-        # if changed conductor or discriminat, fall back to a general search
-        if ('cond' in request.args and request.args['cond'] != str(cond)) or \
-           ('abs_disc' in request.args and request.args['abs_disc'] != str(disc)):
-            return redirect (url_for(".index", **request.args), 301)
-        data = to_dict(request.args)
+    data = to_dict(request.args)
     clabel = str(cond)+"."+alpha
-    data['cond'] = cond
-    data['class'] = clabel
-    data['abs_disc'] = disc
-    data['bread'] = (('Genus 2 Curves', url_for(".index")),
+    data['title'] = 'Genus 2 curves in isogeny class %s of discriminant %s' % (clabel,disc)
+    data['bread'] = [('Genus 2 Curves', url_for(".index")),
         ('$\Q$', url_for(".index_Q")),
         ('%s' % cond, url_for(".by_conductor", cond=cond)),
         ('%s' % alpha, url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha)),
-        ('%s' % disc, '.'))
-    data['title'] = 'Genus 2 Curve search results for isogeny class %s and discriminant %s' % (clabel,disc)
-    return genus2_curve_search(data=data, **request.args)
+        ('%s' % disc, url_for(".by_url_isogeny_class_discriminant", cond=cond, alpha=alpha, disc=disc))]
+    if len(request.args) > 0:
+        # if conductor or discriminant changed, fall back to a general search
+        if ('cond' in request.args and request.args['cond'] != str(cond)) or \
+           ('abs_disc' in request.args and request.args['abs_disc'] != str(disc)):
+            return redirect (url_for(".index", **request.args), 301)
+        data['title'] += ' search results'
+        data['bread'].append(('search results',''))
+    data['cond'] = cond
+    data['class'] = clabel
+    data['abs_disc'] = disc
+    return genus2_curve_search(data)
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/")
 def by_url_isogeny_class_label(cond, alpha):
@@ -161,21 +162,22 @@ def by_url_isogeny_class_label(cond, alpha):
 
 @g2c_page.route("/Q/<int:cond>/")
 def by_conductor(cond):
-    data = {}
+    data = to_dict(request.args)
+    data['title'] = 'Genus 2 curves of conductor %s' % cond
+    data['bread'] = [('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('%s' % cond, url_for(".by_conductor", cond=cond))]
     if len(request.args) > 0:
-        # if changed conductor or discriminat, fall back to a general search
+        # if conductor changed, fall back to a general search
         if 'cond' in request.args and request.args['cond'] != str(cond):
             return redirect (url_for(".index", **request.args), 301)
-        data = to_dict(request.args)
+        data['title'] += ' search results'
+        data['bread'].append(('search results',''))
     data['cond'] = cond
-    data['bread'] = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('%s' % cond, '.'))
-    data['title'] = 'Genus 2 Curve search results for conductor %s' % cond
-    return genus2_curve_search(data=data, **request.args)
+    return genus2_curve_search(data)
 
 @g2c_page.route("/Q/<label>")
 def by_label(label):
     # handles curve, isogeny class, and Lhash labels
-    return genus2_curve_search(data={'jump':label}, **request.args)
+    return genus2_curve_search({'jump':label})
 
 def render_curve_webpage(label):
     g2c = WebG2C.by_label(label)
@@ -227,11 +229,10 @@ def class_from_curve_label(label):
 # Searching
 ################################################################################
 
-def genus2_curve_search(**args):
-    info = to_dict(args['data'])
+def genus2_curve_search(info):
     if 'jump' in info:
         jump = info["jump"].strip()
-        if re.match(r'\d+\.[a-z]+.\d+.\d+$',jump):
+        if re.match(r'\d+\.[a-z]+\.\d+\.\d+$',jump):
             return redirect(url_for_curve_label(jump), 301)
         else:
             if re.match(r'\d+\.[a-z]+$', jump):

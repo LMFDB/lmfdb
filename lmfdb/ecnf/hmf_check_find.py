@@ -11,6 +11,7 @@ import os
 import random
 import glob
 import pymongo
+from lmfdb.WebNumberField import is_fundamental_discriminant
 from lmfdb.base import _init as init
 from lmfdb.base import getDBConnection
 from sage.rings.all import ZZ, QQ
@@ -777,15 +778,6 @@ def export_magma_output(infilename, outfilename=None, verbose=False):
         ec['cm'] = '?'
         ec['base_change'] = []
         output(make_curves_line(ec) + "\n")
-
-
-def is_fundamental_discriminant(d):
-    if d in [0, 1]:
-        return False
-    if d.is_squarefree():
-        return d % 4 == 1
-    else:
-        return d % 16 in [8, 12] and (d // 4).is_squarefree()
 
 
 def rqf_iterator(d1, d2):
