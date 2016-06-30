@@ -59,6 +59,7 @@ def index():
     title = "API"
     return render_template("api.html", **locals())
 
+
 @api_page.route("/<db>/<collection>/<id>")
 def api_query_id(db, collection, id):
     return api_query(db, collection, id = id)
