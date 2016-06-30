@@ -2,24 +2,24 @@
 import re
 import time
 import ast
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING
 from operator import mul
 import lmfdb.base
 from lmfdb.base import app
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response, send_file
+from flask import render_template, url_for, request, redirect, make_response, send_file
 import tempfile
 import os
 import StringIO
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_split_on_pm, comma, random_object_from_collection
+from lmfdb.utils import web_latex, to_dict, web_latex_split_on_pm, random_object_from_collection
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, parse_points, match_lmfdb_label, match_lmfdb_iso_label, match_cremona_label, split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, class_cremona_label, curve_lmfdb_label, curve_cremona_label, ecdb, db_ec
-from lmfdb.search_parsing import split_list, parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, db_ec
+from lmfdb.search_parsing import parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start
 
 import sage.all
-from sage.all import ZZ, QQ, EllipticCurve, latex, matrix, srange
+from sage.all import ZZ, QQ, EllipticCurve
 q = ZZ['x'].gen()
 
 #########################
@@ -72,7 +72,7 @@ def learnmore_list_remove(matchstring):
 def rational_elliptic_curves(err_args=None):
     if err_args is None:
         if len(request.args) != 0:
-            return elliptic_curve_search(**request.args)
+            return elliptic_curve_search(to_dict(request.args))
         else:
             err_args = {}
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
@@ -128,7 +128,17 @@ def statistics():
 
 @ec_page.route("/<int:conductor>/")
 def by_conductor(conductor):
-    return elliptic_curve_search(conductor=conductor, **request.args)
+    info = to_dict(request.args)
+    info['bread'] = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
+    info['title'] = 'Elliptic Curves over $\Q$ of conductor %s' % conductor
+    if len(request.args) > 0:
+        # if conductor changed, fall back to a general search
+        if 'conductor' in request.args and request.args['conductor'] != str(conductor):
+            return redirect (url_for(".rational_elliptic_curves", **request.args), 301)
+        info['title'] += ' search results'
+        info['bread'].append(('search results',''))
+    info['conductor'] = conductor
+    return elliptic_curve_search(info)
 
 
 def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label=False, missing_curve=False):
@@ -147,20 +157,18 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     return rational_elliptic_curves(err_args)
 
 
-def elliptic_curve_search(**args):
-    info = to_dict(args)
+def elliptic_curve_search(info):
 
     if 'download' in info and info['download'] != '0':
         return download_search(info)
 
-    query = {}
-    bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('$\Q$', url_for(".rational_elliptic_curves")),
-             ('Search Results', '.')]
-    if 'SearchAgain' in args:
+    if 'SearchAgain' in info:
         return rational_elliptic_curves()
 
-    if 'jump' in args:
+    query = {}
+    bread = info.get('bread',[('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', url_for(".rational_elliptic_curves")), ('Search Results', '.')])
+
+    if 'jump' in info:
         label = info.get('label', '').replace(" ", "")
         m = match_lmfdb_label(label)
         if m:
@@ -270,7 +278,7 @@ def elliptic_curve_search(**args):
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
-    t = 'Elliptic Curves search results'
+    t = info.get('title','Elliptic Curves search results')
     return render_template("search_results.html", info=info, credit=credit, bread=bread, title=t)
 
 
