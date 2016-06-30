@@ -38,6 +38,7 @@ class Collection (SageObject):
         if not self.__latex_name:
             self.__latex_name =  Latex(self.name())
         self.__description = doc.get('description')
+        self.__degree = doc.get('degree')
         self.__dimension = doc.get('dimension')
         if self.__dimension:
             a,b,c = self.__dimension.rpartition('.')
@@ -64,6 +65,9 @@ class Collection (SageObject):
 
     def description(self):
         return self.__description
+        
+    def degree(self):
+        return self.__degree
 
     def computes_dimensions(self):
         return True if self.__dimension else False

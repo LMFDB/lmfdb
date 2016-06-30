@@ -1,5 +1,3 @@
-<h2>Dimension Table</h2>
-
 {% if not info.error %}
 <p>
   The table below lists, for each bold value of $k$ in the header,  the dimensions of the following subspaces of ${{ info.col.latex_name() }}${% if 'j' in info.kwargs %} for $j={{ info.kwargs.j }}$: {% else %}:{% endif %}
