@@ -37,9 +37,9 @@ class DirichletSearchTest(LmfdbTest):
         W = self.tc.get('/Character/?condbrowse=24-41')
         assert '(\\frac{40}{\\bullet}\\right)' in W.data
 
-    def test_ordbrowse(self): 
-        W = self.tc.get('/Character/?ordbrowse=17-23')
-        assert '\chi_{ 191 }( 32' in W.data
+    def test_order(self): 
+        W = self.tc.get('/Character/?order=19-23')
+        assert '\chi_{25}(2' in W.data
 
     def test_modbrowse(self): 
         W = self.tc.get('/Character/?modbrowse=51-81')
@@ -52,7 +52,7 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_search(self):
         W = self.tc.get('/Character/?conductor=15&order=4')
-        assert '\displaystyle \chi_{ 45}(17' in W.data
+        assert '\chi_{45}(17' in W.data
 
     def test_condsearch(self): 
         W = self.tc.get('/Character/?conductor=111')
