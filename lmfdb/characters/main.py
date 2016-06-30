@@ -94,14 +94,14 @@ def render_characterNavigation():
         except ValueError as err:
             info['err'] = str(err)
             return render_template("character_search_results.html", **info)
-  
+
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                              ('Dirichlet', url_for(".render_Dirichletwebpage")),
                              ('search results', '') ]
 
         info['credit'] = 'Sage'
         info['info'] = search.results()
-        
+
         return render_template("character_search_results.html", **info)
     else:
        info['title'] = 'Dirichlet Characters'

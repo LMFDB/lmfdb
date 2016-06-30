@@ -122,7 +122,7 @@ class CharacterSearch:
         if self.primitive == 'All':
             self.primitive = None
         self.startm = int(query.get('startm', 0))
-        """    
+        """
         self.startn = query.get('startn', None)
         print 'start at %s'%(self.startm, self.startn)
         """
