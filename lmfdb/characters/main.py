@@ -87,13 +87,13 @@ def render_characterNavigation():
 
     if args != {}:
         try:
-            search = ListCharacters.CharacterSearch(query)
+            search = ListCharacters.CharacterSearch(args)
         except Exception, err:
             info['err'] = str(err)
-            return search_input_error(info, bread)
+            return render_template("character_search_results.html", **info)
         except ValueError as err:
             info['err'] = str(err)
-            return search_input_error(info, bread)
+            return render_template("character_search_results.html", **info)
   
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                              ('Dirichlet', url_for(".render_Dirichletwebpage")),

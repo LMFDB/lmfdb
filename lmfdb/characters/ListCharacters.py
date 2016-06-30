@@ -81,6 +81,7 @@ def get_character_conductor(a, b, limit=7):
 
 class CharacterSearch:
     from dirichlet_conrey import DirichletGroup_conrey
+
     def __init__(self, query):
         self.mmin = 1
         self.mmax = 100000
@@ -106,7 +107,7 @@ class CharacterSearch:
             self.omin, self.omax = self.parse_range(self.order)
             if self.omin > self.omax:
                 raise Exception('Empty search')
-        self.limit = query.get('limit', 25)
+        self.limit = int(query.get('limit', 25))
         self.parity = query.get('parity', None)
         if self.parity == 'All':
             self.parity = None
@@ -120,7 +121,7 @@ class CharacterSearch:
         self.primitive = query.get('primitive', None)
         if self.primitive == 'All':
             self.primitive = None
-        self.startm = query.get('startm', None)
+        self.startm = int(query.get('startm', 0))
         """    
         self.startn = query.get('startn', None)
         print 'start at %s'%(self.startm, self.startn)
@@ -132,7 +133,7 @@ class CharacterSearch:
             s = int(s[0])
             return (s, s)
         else:
-            return s[:2]
+            return map(int, s[:2])
 
     def charinfo(self, chi):
         return (chi.modulus(), chi.number(), chi.conductor(),
@@ -156,6 +157,14 @@ class CharacterSearch:
         info['number'] = len(L)
         info['chars'] = L
         info['title'] = 'Dirichlet Characters'
+        if self.modulus:
+            info['modulus'] = self.modulus
+        if self.conductor:
+            info['conductor'] = self.conductor
+        if self.order:
+            info['order'] = self.order
+        if self.limit:
+            info['limit'] = self.limit
         return info
 
     def list_valid(self):
@@ -250,7 +259,6 @@ class CharacterSearch:
 
     def by_modulus(self, mmin, mmax):
         if self.startm:
-            print 'got startm=%s'%self.startm
             mmin = self.startm
         for N in xrange(mmin, mmax + 1):
             """

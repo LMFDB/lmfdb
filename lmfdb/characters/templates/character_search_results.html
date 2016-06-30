@@ -48,11 +48,11 @@
 <input type="hidden" name="startn" value="0"/>
 </form>
 
-{% if info.err is defined %}
+{% if err is defined %}
 
 <h2>Error</h2>
 <div>
-  {{ info.err|safe }}
+  {{ err|safe }}
   <p>
   Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
 </div>
@@ -73,12 +73,12 @@ table td.params {
 {% if info.number > 0 %}
 
 <h2> Results ({{info.report}})
-{% if info.start > 0 %}
+{% if false and info.start > 0 %}
 <a href="#" class="navlink"
    onclick="decrease_start_by_count_and_submit_form('re-search');return
             false">Previous</A>
 {% endif %}
-{% if info.more > 0 %}
+{% if false and info.more > 0 %}
 <script>
 function submit_next_chars() {
   $('input[name=startm]') = $('input[name=lastm]').value();
@@ -123,12 +123,12 @@ function submit_next_chars() {
 </table>
 
 <hr>
-{% if info.start > 0 %}
+{% if false and info.start > 0 %}
 <a href="#" class="navlink"
    onclick="submit_previous('re-search');return
             false">Previous</A>
 {% endif %}
-{% if info.more > 0 %}
+{% if false and info.more > 0 %}
 <a href="#" class="navlink" onclick="submit_next_chars();return false">Next</A>
 {% endif %}
 
