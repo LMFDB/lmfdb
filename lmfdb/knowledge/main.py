@@ -93,7 +93,7 @@ def first_bracketed_string(text, depth=0, lbrack="{", rbrack="}"):
     thetext = text.strip()
 
     if not thetext:
-        logging.error("empty string sent to first_bracketed_string()")
+        logger.error("empty string sent to first_bracketed_string()")
         return ""
 
     previouschar = ""
@@ -127,7 +127,7 @@ def first_bracketed_string(text, depth=0, lbrack="{", rbrack="}"):
     if depth == 0:
         return firstpart, thetext
     else:
-        logging.error("no matching bracket %s in %s XX", lbrack, thetext)
+        logger.error("no matching bracket %s in %s XX", lbrack, thetext)
         return "",firstpart[1:]   # firstpart should be everything
                                   # but take away the bracket that doesn't match
 
