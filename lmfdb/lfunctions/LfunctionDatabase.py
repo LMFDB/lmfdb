@@ -49,15 +49,17 @@ def getEllipticCurveLData(label):
     
 def getGenus2Ldata(label,label_type="url"):
     connection = base.getDBConnection()
-#    g2 = connection.genus2_curves
     db = connection.Lfunctions
     try:
-    #    Ldata = g2.Lfunctions.find_one({'hash': hash})
-   #     Lpointer = db.instances.find_one({'url': label})
         if label_type == "url":
             Lpointer = db.instances.find_one({'url': label})
+            if not Lpointer:
+                return None
             Lhash = Lpointer['Lhash']
             Ldata = db.Lfunctions.find_one({'Lhash': Lhash})
+            # do not ignore this error, if the instances record exists the Lhash should be there and we want to know if it is not
+            if not Ldata:
+                raise KeyError("Lhash %s in instances record for URL %s not found in Lfunctions collection" % (label, Lhash))
         elif label_type == "Lhash":
             Ldata = db.Lfunctions.find_one({'Lhash': label})
             # just return what we have, because

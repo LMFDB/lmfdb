@@ -270,7 +270,6 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
     height = yfactor * yMax + extraSpace
 
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
-
     for (x, y, lid, group, level, char, R, ap_id, sign) in paralist:
         if float(x)>0 and float(y)>0:  #Only one of dual pair
             try:

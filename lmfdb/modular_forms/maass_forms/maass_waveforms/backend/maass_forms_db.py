@@ -344,7 +344,11 @@ class MaassDB(object):
         r"""
         Find a Maass form matching the information in the dictionary data
         """
-        find_data = arg_to_search_parameters(data, **kwds)
+        from bson.errors import InvalidId
+        try:
+            find_data = arg_to_search_parameters(data, **kwds)
+        except InvalidId:
+            return []
         # print "find_data",find_data
         res = []
         for collection in self._show_collection:

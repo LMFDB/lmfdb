@@ -926,10 +926,9 @@ class Lfunction_Maass(Lfunction):
         if self.fromDB:
             self.dbid = "ModularForm/%s/Q/Maass/%s/%s/%s/%s/" % (
                 self.group, self.level, self.char, self.R, self.ap_id)
-
             self.lfunc_data = LfunctionDatabase.getGenus2Ldata(self.dbid)
             if self.lfunc_data is None:
-                raise KeyError("No Maass L-function with that data in the database.")
+                raise KeyError("No L-function data for %s was found in the database." % self.dbid)
             
             makeLfromdata(self, fromdb=True)
             if not self.selfdual:
@@ -978,7 +977,7 @@ class Lfunction_Maass(Lfunction):
 
                 # Extract the L-function information from the Maass form object
                 self.symmetry = self.mf.symmetry
-                self.eigenvalue = float(self.mf.R)
+                self.eigenvalue = float(self.mf.R if self.mf.R else 0)
                 self.level = int(self.mf.level)
                 self.charactermodulus = self.level
                 self.weight = int(self.mf.weight)
@@ -996,7 +995,7 @@ class Lfunction_Maass(Lfunction):
 
                 # Todo: If self has dimension >1, link to specific L-functions
                 self.dirichlet_coefficients = self.mf.coeffs
-                if self.dirichlet_coefficients[0] == 0:
+                if 0 in self.dirichlet_coefficients and self.dirichlet_coefficients[0] == 0:
                     self.dirichlet_coefficients.pop(0)
 
                 # Set properties of the L-function
@@ -1038,7 +1037,7 @@ class Lfunction_Maass(Lfunction):
                               + "level %s and $R= %s$" % (
                               self.level, self.eigenvalue))
                 self.citation = ''
-                self.credit = self.mf.contributor_name
+                self.credit = self.mf.contributor_name if 'contributor_name' in dir(self.mf) else ''
 
             generateSageLfunction(self)
 
