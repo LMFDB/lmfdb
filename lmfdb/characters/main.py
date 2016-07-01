@@ -47,6 +47,7 @@ def render_characterNavigation():
     """
     FIXME: replace query by ?browse=<key>&start=<int>&end=<int>
     """
+    return flask.redirect(url_for(".render_Dirichletwebpage"), 301)
     args = to_dict(request.args)
     info = {}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
