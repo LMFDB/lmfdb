@@ -2,7 +2,7 @@
 # ListCharacters.py
 
 from sage.all import primes, valuation, xmrange, lcm, prod, factor
-from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter, order
+from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter
 from dirichlet_conrey import DirichletGroup_conrey
 
 """
@@ -352,4 +352,4 @@ class CharacterSearch:
                             yield chi
             m += 1
             if self.modulus and m * omin > self.mmax:
-        break
+                break
