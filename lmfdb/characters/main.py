@@ -95,7 +95,6 @@ def render_DirichletNavigation():
         flash(Markup( "Error: <span style='color:black'>%s</span> is not a valid label for a Dirichlet character.  It should be of the form m.n, where m and n are relatively prime positive integers with n < m."%(label)),"error")
         return redirect(url_for(".render_Dirichletwebpage"), 301)
 
-    print args
     if args != {}:
         try:
             search = ListCharacters.CharacterSearch(args)
