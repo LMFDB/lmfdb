@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb.base import app
+import re
 import flask
-from flask import render_template, url_for, request, redirect
+from flask import flash, render_template, url_for, request, redirect
+from markupsafe import Markup
 from sage.all import gcd, randint
 from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import url_character
@@ -43,7 +45,7 @@ def render_characterNavigation():
     """
     FIXME: replace query by ?browse=<key>&start=<int>&end=<int>
     """
-    return flask.redirect(url_for(".render_Dirichletwebpage"), 301)
+    return redirect(url_for(".render_Dirichletwebpage"), 301)
 
 def render_DirichletNavigation():
     args = to_dict(request.args)
@@ -82,6 +84,16 @@ def render_DirichletNavigation():
         # info['rows'] = rows
         # info['cols'] = cols
         return render_template("ConductorList.html", **info)
+
+    elif 'label' in args:
+        label = args['label'].replace(' ','')
+        if re.match(r'[1-9][0-9]*.[1-9][0-9]*', label):
+            slabel = label.split('.')
+            m,n = int(slabel[0]), int(slabel[1])
+            if n < m and gcd(m,n) == 1:
+                return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
+        flash(Markup( "Error: <span style='color:black'>%s</span> is not a valid label for a Dirichlet character.  It should be of the form m.n, where m and n are relatively prime positive integers with n < m."%(label)),"error")
+        return redirect(url_for(".render_Dirichletwebpage"), 301)
 
     print args
     if args != {}:
@@ -134,8 +146,8 @@ def extent_page():
 
 @characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
-@characters_page.route("/Dirichlet/<modulus>")
-@characters_page.route("/Dirichlet/<modulus>/<number>")
+@characters_page.route("/Dirichlet/<int:modulus>")
+@characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
 def render_Dirichletwebpage(modulus=None, number=None):
     #args = request.args
     #temp_args = to_dict(args)
