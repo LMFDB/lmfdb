@@ -47,10 +47,9 @@ def render_characterNavigation():
     """
     FIXME: replace query by ?browse=<key>&start=<int>&end=<int>
     """
-    return flask.redirect(url_for(".render_dirichletNavigation"), 301)
+    return flask.redirect(url_for(".render_Dirichletwebpage"), 301)
 
-@characters_page.route("/Dirichlet/")
-def render_dirichletNavigation():
+def render_DirichletNavigation():
     args = to_dict(request.args)
     info = {}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
@@ -141,6 +140,8 @@ def extent_page():
     return render_template("single.html", kid='dq.character.dirichlet.extent',
                            **info)
 
+@characters_page.route("/Dirichlet")
+@characters_page.route("/Dirichlet/")
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
 def render_Dirichletwebpage(modulus=None, number=None):
@@ -152,38 +153,45 @@ def render_Dirichletwebpage(modulus=None, number=None):
     args['modulus'] = modulus
     args['number'] = number
 
-    modulus = int(modulus)
-    if number == None:
-        if modulus < 100000:
-            info = WebDirichletGroup(**args).to_dict()
-        else:
-            info = WebSmallDirichletGroup(**args).to_dict()
-        m = info['modlabel']
-        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m))]
+    if modulus == None:
+        return render_DirichletNavigation() # waiting for new landing page
+        info = WebDirichletFamily(**args).to_dict()
         info['learnmore'] = learn()
-        info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
-        info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
-        return render_template('CharGroup.html', **info)
+
+        return render_template('CharFamily.html', **info)
     else:
-        number = int(number)
-        if gcd(modulus, number) != 1:
-            return flask.abort(404)
-        if modulus < 100000:
-            webchar = WebDirichletCharacter(**args)
-            info = webchar.to_dict()
+        modulus = int(modulus)
+        if number == None:
+            if modulus < 100000:
+                info = WebDirichletGroup(**args).to_dict()
+            else:
+                info = WebSmallDirichletGroup(**args).to_dict()
+            m = info['modlabel']
+            info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                             ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                             ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m))]
+            info['learnmore'] = learn()
+            info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
+            info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
+            return render_template('CharGroup.html', **info)
         else:
-            info = WebSmallDirichletCharacter(**args).to_dict()
-        m,n = info['modlabel'], info['numlabel']
-        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m)),
-                         ('%s'%n, url_for(".render_Dirichletwebpage", modulus=m, number=n)) ]
-        info['learnmore'] = learn()
-        info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
-        info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
-        return render_template('Character.html', **info)
+            number = int(number)
+            if gcd(modulus, number) != 1:
+                return flask.abort(404)
+            if modulus < 100000:
+                webchar = WebDirichletCharacter(**args)
+                info = webchar.to_dict()
+            else:
+                info = WebSmallDirichletCharacter(**args).to_dict()
+            m,n = info['modlabel'], info['numlabel']
+            info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                             ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                             ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m)),
+                             ('%s'%n, url_for(".render_Dirichletwebpage", modulus=m, number=n)) ]
+            info['learnmore'] = learn()
+            info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
+            info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
+            return render_template('Character.html', **info)
 
 @characters_page.route('/Dirichlet/random')
 def random_Dirichletwebpage():
