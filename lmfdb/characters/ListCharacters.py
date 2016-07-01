@@ -172,10 +172,10 @@ class CharacterSearch:
         OK, always search by modulus for the moment
         """
         if self.modulus:
-            print 'BY MODULUS %s <= m <= %s'%self.modulus
+            #print 'BY MODULUS %s <= m <= %s'%self.modulus
             return self.return_valid( self.by_modulus(self.mmin, self.mmax) )
         else:
-            print 'BY ALL MODULUS'
+            #print 'BY ALL MODULUS'
             return self.return_valid( self.by_modulus(1, 10000) )
         """
         if self.modulus and self.mmin == self.mmax:

@@ -91,10 +91,8 @@ def render_DirichletNavigation():
     if args != {}:
         try:
             search = ListCharacters.CharacterSearch(args)
-        except Exception, err:
-            info['err'] = str(err)
-            return render_template("character_search_results.html", **info)
         except ValueError as err:
+            print err
             info['err'] = str(err)
             return render_template("character_search_results.html", **info)
 

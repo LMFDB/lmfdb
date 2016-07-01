@@ -8,16 +8,16 @@
 <h2> Browse {{ KNOWL('character.dirichlet', title="Dirichlet characters") }}</h2>
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
-{% set step = 25 %}
-{% for c in range(1,150,step) %}
+{% set step = 20 %}
+{% for c in range(1,101,step) %}
 &nbsp;&nbsp;<a href="?modbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
 {% endfor %}
 </p>
 
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
-{% set step = 10 %}
-{% for c in range(1,51,step) %}
+{% set step = 20 %}
+{% for c in range(1,101,step) %}
 &nbsp;&nbsp;<a href="?condbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
 {% endfor %}
 </p>
