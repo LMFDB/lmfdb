@@ -47,6 +47,9 @@ def render_characterNavigation():
     """
     FIXME: replace query by ?browse=<key>&start=<int>&end=<int>
     """
+    return flask.redirect(url_for(".render_Dirichletwebpage"), 301)
+
+def render_DirichletNavigation():
     args = to_dict(request.args)
     info = {}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
@@ -137,6 +140,7 @@ def extent_page():
     return render_template("single.html", kid='dq.character.dirichlet.extent',
                            **info)
 
+@characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
 @characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
@@ -150,7 +154,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     args['number'] = number
 
     if modulus == None:
-        return render_characterNavigation() # waiting for new landing page
+        return render_DirichletNavigation() # waiting for new landing page
         info = WebDirichletFamily(**args).to_dict()
         info['learnmore'] = learn()
 
