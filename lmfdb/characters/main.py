@@ -1,24 +1,20 @@
 # -*- coding: utf-8 -*-
 
-import re
-
-from lmfdb.base import app, r
+from lmfdb.base import app
 import flask
-from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
+from flask import render_template, url_for, request, redirect
 from sage.all import gcd, randint
-import tempfile
-import os
-from lmfdb.base import getDBConnection
-from lmfdb.utils import to_dict, make_logger
-from lmfdb.search_parsing import parse_range
-from lmfdb.WebCharacter import *
-from lmfdb.characters import characters_page, logger
+from lmfdb.utils import to_dict
+from lmfdb.WebCharacter import url_character
+from lmfdb.WebCharacter import WebDirichletFamily, WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter
+from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
+from lmfdb.characters import characters_page
 import ListCharacters
 
-try:
-    from dirichlet_conrey import *
-except:
-    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+#try:
+#    from dirichlet_conrey import *
+#except:
+#    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
 #### make url_character available from templates
 @app.context_processor
@@ -78,8 +74,7 @@ def render_DirichletNavigation():
         conductor_end = int(arg[1])
         info['conductor_start'] = conductor_start
         info['conductor_end'] = conductor_end
-        info['title'] = 'Dirichlet Characters of Conductors ' + str(conductor_start) + \
-            '-' + str(conductor_end)
+        info['title'] = 'Dirichlet Characters of Conductors ' + str(conductor_start) + '-' + str(conductor_end)
         info['credit'] = "Sage"
         info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
         # info['contents'] = c
@@ -88,6 +83,7 @@ def render_DirichletNavigation():
         # info['cols'] = cols
         return render_template("ConductorList.html", **info)
 
+    print args
     if args != {}:
         try:
             search = ListCharacters.CharacterSearch(args)
@@ -97,8 +93,8 @@ def render_DirichletNavigation():
             return render_template("character_search_results.html", **info)
 
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                             ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                             ('search results', '') ]
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('search results', '') ]
 
         info['credit'] = 'Sage'
         info['info'] = search.results()
@@ -115,8 +111,7 @@ def labels_page():
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Labels', '') ]
     info['learnmore'] = learn('labels')
-    return render_template("single.html", kid='character.dirichlet.conrey',
-                           **info)
+    return render_template("single.html", kid='character.dirichlet.conrey', **info)
 
 @characters_page.route("/Source")
 def how_computed_page():
@@ -125,8 +120,7 @@ def how_computed_page():
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Source', '') ]
     info['learnmore'] = learn('source')
-    return render_template("single.html", kid='dq.character.dirichlet.source',
-                           **info)
+    return render_template("single.html", kid='dq.character.dirichlet.source', **info)
 
 @characters_page.route("/Extent")
 def extent_page():
@@ -315,15 +309,12 @@ def dirichlet_group_table(**args):
     return render_template("CharacterGroupTable.html", **info)
 
 
-def get_group_table(modulus, char_number_list):
+def get_group_table(modulus, char_list):
     # Move 1 to the front of the list
-    j = 0
-    while char_number_list[j] != 1:
-        j += 1
-    char_number_list.insert(0, char_number_list.pop(j))
-    headers = [j for j in char_number_list]  # Just a copy
+    char_list.insert(0, char_list.pop(next(j for j in range(len(char_list)) if char_list[j]==1)))
+    headers = [j for j in char_list]  # Just a copy
     if modulus == 1:
         rows = [[1]]
     else:
-        rows = [[(j * k) % modulus for k in char_number_list] for j in char_number_list]
+        rows = [[(j * k) % modulus for k in char_list] for j in char_list]
     return headers, rows
