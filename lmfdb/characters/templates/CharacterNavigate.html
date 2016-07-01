@@ -8,26 +8,25 @@
 <h2> Browse {{ KNOWL('character.dirichlet', title="Dirichlet characters") }}</h2>
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
-&nbsp;&nbsp;<a href="?modbrowse=1-25">1&mdash;25</a>
-&nbsp;&nbsp;<a href="?modbrowse=26-50">26&mdash;50</a>
-&nbsp;&nbsp;<a href="?modbrowse=51-75">51&mdash;75</a>
-&nbsp;&nbsp;<a href="?modbrowse=76-100">76&mdash;100</a>
+{% set step = 25 %}
+{% for c in range(1,150,step) %}
+&nbsp;&nbsp;<a href="?modbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
+{% endfor %}
 </p>
 
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
-&nbsp;&nbsp;<a href="?condbrowse=1-10">1&mdash;10</a>
-&nbsp;&nbsp;<a href="?condbrowse=11-20">11&mdash;20</a>
-&nbsp;&nbsp;<a href="?condbrowse=21-30">21&mdash;30</a>
-&nbsp;&nbsp;<a href="?condbrowse=31-40">31&mdash;40</a>
+{% set step = 10 %}
+{% for c in range(1,51,step) %}
+&nbsp;&nbsp;<a href="?condbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
+{% endfor %}
 </p>
 
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
-&nbsp;&nbsp;<a href="?ordbrowse=1-10">1&mdash;10</a>
-&nbsp;&nbsp;<a href="?ordbrowse=11-20">11&mdash;20</a>
-&nbsp;&nbsp;<a href="?ordbrowse=21-30">21&mdash;30</a>
-&nbsp;&nbsp;<a href="?ordbrowse=31-40">31&mdash;40</a>
+{% for o in range(1,11) %}
+&nbsp;&nbsp;<a href="?order={{o}}">{{o}}</a>
+{% endfor %}
 </p>
 
 <p>
@@ -48,7 +47,7 @@ Enter criteria into one or more boxes to restrict the search.
 
 <form>
     <table>
-        <tr>    
+        <tr>
             <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</td>
             <td> <input type='text' name='modulus' size = '10' placeholder="13"></td>
             <td><span class="formexample"> e.g. 13 </span></td>
@@ -70,6 +69,7 @@ Enter criteria into one or more boxes to restrict the search.
     <td>
         <button type='submit' value='Search' > Search </button>
     </td>
+    <input type='hidden' name='limit' value='25'/>
 </form>
 
 <h2> Create a character table </h2>
@@ -88,5 +88,3 @@ Enter criteria into one or more boxes to restrict the search.
     </td>
 </form>
 {% endblock %}
-
-

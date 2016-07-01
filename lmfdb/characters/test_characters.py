@@ -10,7 +10,7 @@ class WebCharacterTest(LmfdbTest):
       assert WebDirichlet.ideal2label(mod) == modlabel
       num = WebDirichlet.label2number(numlabel)
       assert WebDirichlet.number2label(num) == numlabel
-    
+
   def test_Heckemethods(self):
       from sage.all import NumberField, var
       x = var('x')
@@ -22,7 +22,7 @@ class WebCharacterTest(LmfdbTest):
       assert WebHecke.number2label(num) == numlabel
 
 class UrlCharacterTest(LmfdbTest):
-  
+
     pass
     # FIXME: this test does not work, why ???
     #def test_url_character(self):
@@ -36,10 +36,10 @@ class DirichletSearchTest(LmfdbTest):
     def test_condbrowse(self): 
         W = self.tc.get('/Character/?condbrowse=24-41')
         assert '(\\frac{40}{\\bullet}\\right)' in W.data
-        
-    def test_ordbrowse(self): 
-        W = self.tc.get('/Character/?ordbrowse=17-23')
-        assert '\chi_{ 191 }( 32' in W.data
+
+    def test_order(self): 
+        W = self.tc.get('/Character/?order=19-23')
+        assert '\chi_{25}(2' in W.data
 
     def test_modbrowse(self): 
         W = self.tc.get('/Character/?modbrowse=51-81')
@@ -52,7 +52,7 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_search(self):
         W = self.tc.get('/Character/?conductor=15&order=4')
-        assert '\displaystyle \chi_{ 45}(17' in W.data
+        assert '\chi_{45}(17' in W.data
 
     def test_condsearch(self): 
         W = self.tc.get('/Character/?conductor=111')
@@ -94,7 +94,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert  '/NumberField/1.1.1.1' in W.data
-     
+
     #@unittest2.skip("wait for new DirichletConrey")
     def test_dirichletcharbig(self):
         """ nice example to check the Conrey naming scheme
@@ -115,7 +115,7 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/calc-gauss/Dirichlet/4/3?val=3')
         assert '-2.0i' in W.data, "calc gauss"
         assert '\Z/4\Z' in W.data
-        
+
         W = self.tc.get('/Character/calc-kloosterman/Dirichlet/91/3?val=52,34')
         assert '3.774980868' in W.data, "kloosterman"
 

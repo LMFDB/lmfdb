@@ -60,7 +60,7 @@ def render_characterNavigation():
         modulus_start = int(arg[0])
         modulus_end = int(arg[1])
         info['title'] = 'Dirichlet Characters of Moduli ' + str(modulus_start) + '-' + str(modulus_end)
-        info['credit'] = 'SageMath'
+        info['credit'] = 'Sage'
         h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
         info['contents'] = c
         info['headers'] = h
@@ -77,7 +77,7 @@ def render_characterNavigation():
         info['conductor_end'] = conductor_end
         info['title'] = 'Dirichlet Characters of Conductors ' + str(conductor_start) + \
             '-' + str(conductor_end)
-        info['credit'] = "SageMath"
+        info['credit'] = "Sage"
         info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
         # info['contents'] = c
         # info['header'] = h
@@ -85,21 +85,24 @@ def render_characterNavigation():
         # info['cols'] = cols
         return render_template("ConductorList.html", **info)
 
-    elif 'ordbrowse' in args:
-        arg = args['ordbrowse']
-        arg = arg.split('-')
-        order_start = int(arg[0])
-        order_end = int(arg[1])
-        info['order_start'] = order_start
-        info['order_end'] = order_end
-        info['title'] = 'Dirichlet Characters of Orders ' + str(order_start) + '-' + str(order_end)
-        info['credit'] = 'SageMath'
-        info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
-        return render_template("OrderList.html", **info)
+    if args != {}:
+        try:
+            search = ListCharacters.CharacterSearch(args)
+        except Exception, err:
+            info['err'] = str(err)
+            return render_template("character_search_results.html", **info)
+        except ValueError as err:
+            info['err'] = str(err)
+            return render_template("character_search_results.html", **info)
 
-    elif args != {}:
-        return character_search(**args)
+        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
+                             ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                             ('search results', '') ]
 
+        info['credit'] = 'Sage'
+        info['info'] = search.results()
+
+        return render_template("character_search_results.html", **info)
     else:
        info['title'] = 'Dirichlet Characters'
        return render_template('CharacterNavigate.html', **info)
@@ -280,104 +283,11 @@ def hc_calc(calc, number_field, modulus, number):
 ##  TODO: refactor the following
 ###############################################################################
 
-def character_search(**args):
-    info = to_dict(args)
-    for field in ['modulus', 'conductor', 'order']:
-        info[field] = info.get(field, '')
-    query = {}
-    if 'natural' in args:
-        label = info.get('natural', '')
-        try:
-            modulus = int(str(label).partition('.')[0])
-            number = int(str(label).partition('.')[2])
-        except ValueError:
-            return "<span style='color:red;'>ERROR: bad query</span>"
-        return redirect(url_for('characters.render_Dirichletwebpage',modulus=modulus, number=number))
-    else:
-        for field in ['modulus', 'conductor', 'order']:
-            if info.get(field):
-                query[field] = parse_range(info[field])
-        info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('search results', ' ') ]
-        info['credit'] = 'SageMath'
-        if (len(query) != 0):
-            from sage.modular.dirichlet import DirichletGroup
-            info['contents'] = charactertable(query)
-            info['title'] = 'Dirichlet Characters'
-            return render_template("character_search.html", **info)
-        else:
-            return "<span style='color:red;'>ERROR: bad query</span>"
-
-
-def charactertable(query):
-    return render_character_table(
-        modulus=query.get('modulus', None),
-        conductor=query.get('conductor', None),
-        order=query.get('order', None))
-
-def render_character_table(modulus=None, conductor=None, order=None):
-    from dirichlet_conrey import DirichletGroup_conrey 
-    start = 1
-    end = 201
-    stepsize = 1
-    if modulus:
-        start = modulus
-        end = modulus + 1
-    elif conductor:
-        start = conductor
-        stepsize = conductor
-
-    def row(N):
-        ret = []
-        G = DirichletGroup_conrey(N)
-        for chi in G:
-            j = chi.number()
-            c = WebDirichletCharacter(modulus = chi.modulus(), number = chi.number())
-            add = True
-            add &= not conductor or chi.conductor() == conductor
-            add &= not order or chi.multiplicative_order() == order
-            if add:
-                if chi.multiplicative_order() == 2 and c.symbol is not None:
-                    ret.append([(j, c.symbol, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
-                else:
-                    ret.append([(j, chi, chi.modulus(), chi.conductor(), chi.multiplicative_order(), chi.is_primitive(), chi.is_even())])
-        return ret
-    return [row(_) for _ in range(start, end, stepsize)]
-
-
-
-
 @characters_page.route("/Dirichlet/table")
 def dirichlet_table():
     args = to_dict(request.args)
     mod = args.get('modulus',1)
     return redirect(url_for('characters.render_Dirichletwebpage',modulus=mod))
-
-#    info = to_dict(args)
-#    info['modulus'] = modulus
-#    info["bread"] = [('Dirichlet Character Table', url_for("dirichlet_table")), ('result', ' ')]
-#    info['credit'] = 'SageMath'
-#    h, c, = get_entries(modulus)
-#    info['headers'] = h
-#    info['contents'] = c
-#    info['title'] = 'Dirichlet Characters'
-#    return render_template("CharacterTable.html", **info)
-#
-#
-#def get_entries(modulus):
-#    from dirichlet_conrey import DirichletGroup_conrey
-#    from sage.all import Integer
-#    G = DirichletGroup_conrey(modulus)
-#    headers = range(1, modulus + 1)
-#    e = euler_phi(modulus)
-#    rows = []
-#    for chi in G:
-#        is_prim = chi.is_primitive()
-#        number = chi.number()
-#        rows.append((number, is_prim, log_value(modulus, number)))
-#    return headers, rows
-
 
 # fixme: these group tables are needed by number fields pages.
 # should refactor this into WebDirichlet.py
