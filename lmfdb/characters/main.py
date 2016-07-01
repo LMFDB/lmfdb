@@ -1,24 +1,22 @@
 # -*- coding: utf-8 -*-
 
+from lmfdb.base import app
 import re
-
-from lmfdb.base import app, r
 import flask
-from flask import Flask, session, g, render_template, url_for, make_response, request, redirect
+from flask import flash, render_template, url_for, request, redirect
+from markupsafe import Markup
 from sage.all import gcd, randint
-import tempfile
-import os
-from lmfdb.base import getDBConnection
-from lmfdb.utils import to_dict, make_logger
-from lmfdb.search_parsing import parse_range
-from lmfdb.WebCharacter import *
-from lmfdb.characters import characters_page, logger
+from lmfdb.utils import to_dict
+from lmfdb.WebCharacter import url_character
+from lmfdb.WebCharacter import WebDirichletFamily, WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter
+from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
+from lmfdb.characters import characters_page
 import ListCharacters
 
-try:
-    from dirichlet_conrey import *
-except:
-    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
+#try:
+#    from dirichlet_conrey import *
+#except:
+#    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
 #### make url_character available from templates
 @app.context_processor
@@ -47,7 +45,7 @@ def render_characterNavigation():
     """
     FIXME: replace query by ?browse=<key>&start=<int>&end=<int>
     """
-    return flask.redirect(url_for(".render_Dirichletwebpage"), 301)
+    return redirect(url_for(".render_Dirichletwebpage"), 301)
 
 def render_DirichletNavigation():
     args = to_dict(request.args)
@@ -78,8 +76,7 @@ def render_DirichletNavigation():
         conductor_end = int(arg[1])
         info['conductor_start'] = conductor_start
         info['conductor_end'] = conductor_end
-        info['title'] = 'Dirichlet Characters of Conductors ' + str(conductor_start) + \
-            '-' + str(conductor_end)
+        info['title'] = 'Dirichlet Characters of Conductors ' + str(conductor_start) + '-' + str(conductor_end)
         info['credit'] = "Sage"
         info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
         # info['contents'] = c
@@ -88,19 +85,27 @@ def render_DirichletNavigation():
         # info['cols'] = cols
         return render_template("ConductorList.html", **info)
 
+    elif 'label' in args:
+        label = args['label'].replace(' ','')
+        if re.match(r'[1-9][0-9]*.[1-9][0-9]*', label):
+            slabel = label.split('.')
+            m,n = int(slabel[0]), int(slabel[1])
+            if n < m and gcd(m,n) == 1:
+                return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
+        flash(Markup( "Error: <span style='color:black'>%s</span> is not a valid label for a Dirichlet character.  It should be of the form m.n, where m and n are relatively prime positive integers with n < m."%(label)),"error")
+        return redirect(url_for(".render_Dirichletwebpage"), 301)
+
     if args != {}:
         try:
             search = ListCharacters.CharacterSearch(args)
-        except Exception, err:
-            info['err'] = str(err)
-            return render_template("character_search_results.html", **info)
         except ValueError as err:
+            print err
             info['err'] = str(err)
             return render_template("character_search_results.html", **info)
 
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-                             ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                             ('search results', '') ]
+                         ('Dirichlet', url_for(".render_Dirichletwebpage")),
+                         ('search results', '') ]
 
         info['credit'] = 'Sage'
         info['info'] = search.results()
@@ -117,8 +122,7 @@ def labels_page():
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Labels', '') ]
     info['learnmore'] = learn('labels')
-    return render_template("single.html", kid='character.dirichlet.conrey',
-                           **info)
+    return render_template("single.html", kid='character.dirichlet.conrey', **info)
 
 @characters_page.route("/Source")
 def how_computed_page():
@@ -127,8 +131,7 @@ def how_computed_page():
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Source', '') ]
     info['learnmore'] = learn('source')
-    return render_template("single.html", kid='dq.character.dirichlet.source',
-                           **info)
+    return render_template("single.html", kid='dq.character.dirichlet.source', **info)
 
 @characters_page.route("/Extent")
 def extent_page():
@@ -142,8 +145,8 @@ def extent_page():
 
 @characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
-@characters_page.route("/Dirichlet/<modulus>")
-@characters_page.route("/Dirichlet/<modulus>/<number>")
+@characters_page.route("/Dirichlet/<int:modulus>")
+@characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
 def render_Dirichletwebpage(modulus=None, number=None):
     #args = request.args
     #temp_args = to_dict(args)
@@ -317,15 +320,12 @@ def dirichlet_group_table(**args):
     return render_template("CharacterGroupTable.html", **info)
 
 
-def get_group_table(modulus, char_number_list):
+def get_group_table(modulus, char_list):
     # Move 1 to the front of the list
-    j = 0
-    while char_number_list[j] != 1:
-        j += 1
-    char_number_list.insert(0, char_number_list.pop(j))
-    headers = [j for j in char_number_list]  # Just a copy
+    char_list.insert(0, char_list.pop(next(j for j in range(len(char_list)) if char_list[j]==1)))
+    headers = [j for j in char_list]  # Just a copy
     if modulus == 1:
         rows = [[1]]
     else:
-        rows = [[(j * k) % modulus for k in char_number_list] for j in char_number_list]
+        rows = [[(j * k) % modulus for k in char_list] for j in char_list]
     return headers, rows

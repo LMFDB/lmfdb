@@ -1,6 +1,6 @@
 from lmfdb.base import LmfdbTest
-from lmfdb.WebCharacter import *
-import unittest2
+from flask import url_for
+from lmfdb.WebCharacter import WebDirichlet, WebHecke, url_character
 
 class WebCharacterTest(LmfdbTest):
 
@@ -21,28 +21,18 @@ class WebCharacterTest(LmfdbTest):
       num = WebHecke.label2number(numlabel)
       assert WebHecke.number2label(num) == numlabel
 
-class UrlCharacterTest(LmfdbTest):
-
-    pass
-    # FIXME: this test does not work, why ???
-    #def test_url_character(self):
-    #    assert url_for('characters.render_characterNavigation') == '/Character/'
-    #    assert url_character(type='Hecke') == '/Character/Hecke'
-    #    assert url_character(type='Dirichlet') == '/Character/Dirichlet'
-    #    assert url_for('characters.render_Dirichletwebpage', modulus='132') == '/Character/Dirichlet/132'
-
 class DirichletSearchTest(LmfdbTest):
 
     def test_condbrowse(self): 
-        W = self.tc.get('/Character/?condbrowse=24-41')
+        W = self.tc.get('/Character/Dirichlet/?condbrowse=24-41')
         assert '(\\frac{40}{\\bullet}\\right)' in W.data
 
     def test_order(self): 
-        W = self.tc.get('/Character/?order=19-23')
+        W = self.tc.get('/Character/Dirichlet/?order=19-23')
         assert '\chi_{25}(2' in W.data
 
     def test_modbrowse(self): 
-        W = self.tc.get('/Character/?modbrowse=51-81')
+        W = self.tc.get('/Character/Dirichlet/?modbrowse=51-81')
         """
         curl -s '/Character/?modbrowse=51-81' | grep 'Dirichlet/[0-9][0-9]/27' | wc -l
         There are 20 characters of conductor 27 in this modulus range
@@ -51,11 +41,11 @@ class DirichletSearchTest(LmfdbTest):
         assert len(re.findall('Dirichlet/[0-9][0-9]/27',W.data)) == 20
 
     def test_search(self):
-        W = self.tc.get('/Character/?conductor=15&order=4')
+        W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4')
         assert '\chi_{45}(17' in W.data
 
     def test_condsearch(self): 
-        W = self.tc.get('/Character/?conductor=111')
+        W = self.tc.get('/Character/Dirichlet/?conductor=111')
         assert '111/17' in W.data
 
 class DirichletTableTest(LmfdbTest):
@@ -68,7 +58,7 @@ class DirichletTableTest(LmfdbTest):
 class DirichletCharactersTest(LmfdbTest):
 
     def test_navig(self):
-        W = self.tc.get('/Character/')
+        W = self.tc.get('/Character/', follow_redirects=True)
         assert 'Browse' in W.data and 'search' in W.data
 
     def test_dirichletfamily(self):

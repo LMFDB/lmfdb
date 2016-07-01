@@ -1,13 +1,9 @@
 # -*- coding: utf8 -*-
 # ListCharacters.py
 
-import re
-
-from flask import render_template, url_for, make_response
-from sage.all import Integers, primes, valuation, xmrange, lcm, prod, factor
-import tempfile
-import os
-from lmfdb.WebCharacter import *
+from sage.all import primes, valuation, xmrange, lcm, prod, factor
+from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter
+from dirichlet_conrey import DirichletGroup_conrey
 
 """
 do everything on conrey labels only?
@@ -80,7 +76,6 @@ def get_character_conductor(a, b, limit=7):
 
 
 class CharacterSearch:
-    from dirichlet_conrey import DirichletGroup_conrey
 
     def __init__(self, query):
         self.mmin = 1
@@ -172,10 +167,10 @@ class CharacterSearch:
         OK, always search by modulus for the moment
         """
         if self.modulus:
-            print 'BY MODULUS %s <= m <= %s'%self.modulus
+            #print 'BY MODULUS %s <= m <= %s'%self.modulus
             return self.return_valid( self.by_modulus(self.mmin, self.mmax) )
         else:
-            print 'BY ALL MODULUS'
+            #print 'BY ALL MODULUS'
             return self.return_valid( self.by_modulus(1, 10000) )
         """
         if self.modulus and self.mmin == self.mmax:
@@ -357,4 +352,4 @@ class CharacterSearch:
                             yield chi
             m += 1
             if self.modulus and m * omin > self.mmax:
-		break
+                break
