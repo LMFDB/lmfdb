@@ -83,6 +83,8 @@ def get_character_modulus(a, b, limit=7):
 def get_character_conductor(a, b, limit=7):
     def line(N):
         l = []
+        if N%4 == 2:
+            return l
         count = 0
         modulus = N
         while count < limit:
