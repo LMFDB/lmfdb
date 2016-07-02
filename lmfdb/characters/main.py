@@ -60,7 +60,7 @@ def render_DirichletNavigation():
         arg = arg.split('-')
         modulus_start = int(arg[0])
         modulus_end = int(arg[1])
-        info['title'] = 'Dirichlet Characters of Moduli ' + str(modulus_start) + '-' + str(modulus_end)
+        info['title'] = 'Dirichlet Characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
         info['credit'] = 'Sage'
         h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
         info['contents'] = c
@@ -76,7 +76,7 @@ def render_DirichletNavigation():
         conductor_end = int(arg[1])
         info['conductor_start'] = conductor_start
         info['conductor_end'] = conductor_end
-        info['title'] = 'Dirichlet Characters of Conductors ' + str(conductor_start) + '-' + str(conductor_end)
+        info['title'] = 'Dirichlet Characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
         info['credit'] = "Sage"
         info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
         # info['contents'] = c
@@ -84,6 +84,22 @@ def render_DirichletNavigation():
         # info['rows'] = rows
         # info['cols'] = cols
         return render_template("ConductorList.html", **info)
+
+    elif 'ordbrowse' in args:
+        arg = args['ordbrowse']
+        arg = arg.split('-')
+        order_start = int(arg[0])
+        order_end = int(arg[1])
+        info['order_start'] = order_start
+        info['order_end'] = order_end
+        info['title'] = 'Dirichlet Characters of order ' + str(order_start) + '-' + str(order_end)
+        info['credit'] = "Sage"
+        info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
+        # info['contents'] = c
+        # info['header'] = h
+        # info['rows'] = rows
+        # info['cols'] = cols
+        return render_template("OrderList.html", **info)
 
     elif 'label' in args:
         label = args['label'].replace(' ','')

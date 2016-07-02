@@ -24,8 +24,9 @@
 
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
-{% for o in range(1,11) %}
-&nbsp;&nbsp;<a href="?order={{o}}">{{o}}</a>
+{% set step = 20 %}
+{% for c in range(1,101,step) %}
+&nbsp;&nbsp;<a href="?ordbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
 {% endfor %}
 </p>
 
@@ -33,7 +34,7 @@
 &nbsp;&nbsp;A <a href="random">random Dirichlet character</a> from the database</td>
 </p>
 
-<h2> Find a specific {{ KNOWL('character.dirichlet', title="Dirichlet character") }} </h2>
+<h2> Find a specific Dirichlet character by {{KNOWL('character.dirichlet.conrey', title="label") }} </h2>
 
 <form>
     <input type='text' name='label' size=10 placeholder="13.2" required>
