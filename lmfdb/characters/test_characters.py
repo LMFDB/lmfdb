@@ -1,6 +1,5 @@
 from lmfdb.base import LmfdbTest
-from flask import url_for
-from lmfdb.WebCharacter import WebDirichlet, WebHecke, url_character
+from lmfdb.WebCharacter import WebDirichlet, WebHecke
 
 class WebCharacterTest(LmfdbTest):
 

@@ -1,9 +1,12 @@
 # -*- coding: utf8 -*-
 # ListCharacters.py
 
+import re
 from sage.all import primes, valuation, xmrange, lcm, prod, factor
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter
 from dirichlet_conrey import DirichletGroup_conrey
+from flask import flash
+from markupsafe import Markup
 
 """
 do everything on conrey labels only?
@@ -80,56 +83,51 @@ class CharacterSearch:
     def __init__(self, query):
         self.mmin = 1
         self.mmax = 100000
-        self.modulus = query.get('modulus', None)
+        self.modulus = query.get('modulus')
         if self.modulus:
-            self.mmin, self.mmax = self.parse_range(self.modulus)
-            if self.mmin > self.mmax:
-                raise Exception('Empty search')
+            self.mmin, self.mmax = self.parse_range(self.modulus,'modulus')
             if self.mmax > 100000:
-                # should give a comment
-                self.mmax = 100000
-        self.conductor = query.get('conductor', None)
+                flash(Markup("Modulus is currently limited to 100000","error"))
+                raise ValueError('modulus')
+        self.conductor = query.get('conductor')
         if self.conductor:
-            self.cmin, self.cmax = self.parse_range(self.conductor)
+            self.cmin, self.cmax = self.parse_range(self.conductor, 'conductor')
             if self.cmin % 4 == 2:
                 self.cmin += 1
             if self.cmax % 4 == 2:
                 self.cmax -= 1
-            if self.cmin > self.cmax:
-                raise Exception('Empty search')
-        self.order = query.get('order', None)
+                raise ValueError('conductor')
+        self.order = query.get('order')
         if self.order:
-            self.omin, self.omax = self.parse_range(self.order)
-            if self.omin > self.omax:
-                raise Exception('Empty search')
-        self.limit = int(query.get('limit', 25))
-        self.parity = query.get('parity', None)
-        if self.parity == 'All':
-            self.parity = None
+            self.omin, self.omax = self.parse_range(self.order, 'order')
+        self.parity = None if query.get('parity', 'All') == 'All' else query.get('parity')
+        self.primitive = None if query.get('primitive', 'All') == 'All' else query.get('primitive')
         if self.parity == 'Odd' and self.order:
             if self.omin % 2:
                 self.omin += 1
             if self.omax % 2:
                 self.omax -= 1
-            if self.omin > self.omax:
-                raise Exception('Empty search')
-        self.primitive = query.get('primitive', None)
-        if self.primitive == 'All':
-            self.primitive = None
         self.startm = int(query.get('startm', 0))
+        self.limit = int(query.get('limit', 25))
         """
         self.startn = query.get('startn', None)
         print 'start at %s'%(self.startm, self.startn)
         """
 
-    def parse_range(self, arg):
-        s = arg.split('-')
-        if len(s) == 1:
-            s = int(s[0])
-            return (s, s)
+    def parse_range(self, arg, name):
+        arg = arg.replace (' ','')
+        if re.match('^[0-9]+$', arg):
+            return (int(arg),int(arg))
+        elif re.match('^[0-9]+-[0-9]+$', arg):
+            s = arg.split('-')
+            return (int(s[0]), int(s[1]))
+        elif re.match('^[0-9]+..[0-9]+$', arg):
+            s = arg.split('..')
+            return (int(s[0]), int(s[1]))
         else:
-            return map(int, s[:2])
-
+            flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for %s. It should be a positive integer (e.g. 7) or a range of positive integers (e.g. 1-10)"%(arg,name)), "error")
+            raise ValueError("invalid "+name)
+        
     def charinfo(self, chi):
         return (chi.modulus(), chi.number(), chi.conductor(),
                 chi.multiplicative_order(), chi.is_odd(), chi.is_primitive(),
@@ -289,7 +287,7 @@ class CharacterSearch:
                 N = m * n
                 if self.modulus and ( N < self.mmin or N > self.mmax):
                     continue
-                if order and not self.valid_expo(N):
+                if self.order and not self.valid_expo(N):
                     continue
                 lastN = N
                 G = DirichletGroup_conrey(N)
