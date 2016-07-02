@@ -17,20 +17,20 @@
 </tr>
 
 <tr>
-<td align=left><input type='text' name='modulus' size=6 value="{{info.modulus}}"></td>
-<td align=left><input type='text' name='conductor'size=6 value="{{info.conductor}}"></td>
-<td align=left><input type='text' name='order'size=6 value="{{info.order}}"></td>
+<td align=left><input type='text' name='modulus' size=6 value="{{args.modulus}}"></td>
+<td align=left><input type='text' name='conductor'size=6 value="{{args.conductor}}"></td>
+<td align=left><input type='text' name='order'size=6 value="{{args.order}}"></td>
 <td align=left>
 <select name='parity'>
     {% for x in ('All', 'Odd', 'Even') %}
-    <option {{ 'selected ' if info.parity == 'x' }} value="{{x}}">{{x}}</option>
+    <option {{ 'selected' if args.parity == x }} value="{{x}}">{{x}}</option>
     {% endfor %}
 </select>
 </td>
 <td align=left>
 <select name='primitive'>
     {% for x in ('All', 'Yes', 'No') %}
-    <option {{ 'selected ' if info.primitive == 'x' }} value="{{x}}">{{x}}</option>
+    <option {{ 'selected' if args.primitive == x }} value="{{x}}">{{x}}</option>
     {% endfor %}
 </select>
 </td>
@@ -47,16 +47,7 @@
 <input type="hidden" name="startn" value="0"/>
 </form>
 
-{% if err is defined %}
-
-<h2>Error</h2>
-<div>
-  {{ err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-
-{% else %}
+{% if not err %}
 
 <style type="text/css">
 table td.center {

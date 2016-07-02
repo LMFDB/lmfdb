@@ -8,7 +8,7 @@ from markupsafe import Markup
 from sage.all import gcd, randint
 from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import url_character
-from lmfdb.WebCharacter import WebDirichletFamily, WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter
+from lmfdb.WebCharacter import WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter
 from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
 from lmfdb.characters import characters_page
 import ListCharacters
@@ -49,9 +49,9 @@ def render_characterNavigation():
 
 def render_DirichletNavigation():
     args = to_dict(request.args)
-    info = {}
+    info = {'args':args}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
-    ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
+                      ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
 
     info['learnmore'] = learn()
 
@@ -60,7 +60,7 @@ def render_DirichletNavigation():
         arg = arg.split('-')
         modulus_start = int(arg[0])
         modulus_end = int(arg[1])
-        info['title'] = 'Dirichlet Characters of Moduli ' + str(modulus_start) + '-' + str(modulus_end)
+        info['title'] = 'Dirichlet Characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
         info['credit'] = 'Sage'
         h, c, rows, cols = ListCharacters.get_character_modulus(modulus_start, modulus_end)
         info['contents'] = c
@@ -76,7 +76,7 @@ def render_DirichletNavigation():
         conductor_end = int(arg[1])
         info['conductor_start'] = conductor_start
         info['conductor_end'] = conductor_end
-        info['title'] = 'Dirichlet Characters of Conductors ' + str(conductor_start) + '-' + str(conductor_end)
+        info['title'] = 'Dirichlet Characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
         info['credit'] = "Sage"
         info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
         # info['contents'] = c
@@ -85,9 +85,25 @@ def render_DirichletNavigation():
         # info['cols'] = cols
         return render_template("ConductorList.html", **info)
 
+    elif 'ordbrowse' in args:
+        arg = args['ordbrowse']
+        arg = arg.split('-')
+        order_start = int(arg[0])
+        order_end = int(arg[1])
+        info['order_start'] = order_start
+        info['order_end'] = order_end
+        info['title'] = 'Dirichlet Characters of order ' + str(order_start) + '-' + str(order_end)
+        info['credit'] = "Sage"
+        info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
+        # info['contents'] = c
+        # info['header'] = h
+        # info['rows'] = rows
+        # info['cols'] = cols
+        return render_template("OrderList.html", **info)
+
     elif 'label' in args:
         label = args['label'].replace(' ','')
-        if re.match(r'[1-9][0-9]*.[1-9][0-9]*', label):
+        if re.match(r'^[1-9][0-9]*.[1-9][0-9]*$', label):
             slabel = label.split('.')
             m,n = int(slabel[0]), int(slabel[1])
             if n < m and gcd(m,n) == 1:
@@ -95,21 +111,17 @@ def render_DirichletNavigation():
         flash(Markup( "Error: <span style='color:black'>%s</span> is not a valid label for a Dirichlet character.  It should be of the form m.n, where m and n are relatively prime positive integers with n < m."%(label)),"error")
         return redirect(url_for(".render_Dirichletwebpage"), 301)
 
-    if args != {}:
+    if args:
         try:
             search = ListCharacters.CharacterSearch(args)
         except ValueError as err:
-            print err
             info['err'] = str(err)
             return render_template("character_search_results.html", **info)
-
+        info['info'] = search.results()
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
                          ('search results', '') ]
-
         info['credit'] = 'Sage'
-        info['info'] = search.results()
-
         return render_template("character_search_results.html", **info)
     else:
        info['title'] = 'Dirichlet Characters'
@@ -145,8 +157,9 @@ def extent_page():
 
 @characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
-@characters_page.route("/Dirichlet/<int:modulus>")
-@characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
+@characters_page.route("/Dirichlet/<modulus>")
+@characters_page.route("/Dirichlet/<modulus>/")
+@characters_page.route("/Dirichlet/<modulus>/<number>")
 def render_Dirichletwebpage(modulus=None, number=None):
     #args = request.args
     #temp_args = to_dict(args)
@@ -157,13 +170,17 @@ def render_Dirichletwebpage(modulus=None, number=None):
     args['number'] = number
 
     if modulus == None:
-        return render_DirichletNavigation() # waiting for new landing page
-        info = WebDirichletFamily(**args).to_dict()
-        info['learnmore'] = learn()
+        return render_DirichletNavigation()
 
-        return render_template('CharFamily.html', **info)
     else:
-        modulus = int(modulus)
+        try:
+            modulus = int(modulus)
+        except ValueError:
+            modulus = 0
+        if modulus <= 0:
+            flash(Markup( "Error: <span style='color:black'>%s</span> is not a valid modulus for a Dirichlet character.  It should be a positive integer." % args['modulus']),"error")
+            return redirect(url_for(".render_Dirichletwebpage"))
+            
         if number == None:
             if modulus < 100000:
                 info = WebDirichletGroup(**args).to_dict()
@@ -178,7 +195,15 @@ def render_Dirichletwebpage(modulus=None, number=None):
             info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
             return render_template('CharGroup.html', **info)
         else:
-            number = int(number)
+            try:
+                number = int(number)
+            except ValueError:
+                number = 0;
+            if number <= 0 or gcd(modulus,number) != 1 or number > modulus:
+                flash(Markup( "Error: the value <span style='color:black'>%s</span> is invalid.  It should be a positive integer relatively prime to and no greater than the modulus %s." %
+                              (args['number'],args['modulus'])),"error")
+                return redirect(url_for(".render_Dirichletwebpage"))
+                
             if gcd(modulus, number) != 1:
                 return flask.abort(404)
             if modulus < 100000:
