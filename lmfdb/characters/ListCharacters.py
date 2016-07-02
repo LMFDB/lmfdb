@@ -2,15 +2,11 @@
 # ListCharacters.py
 
 import re
-from sage.all import lcm, factor, divisors
+from sage.all import gcd, lcm, factor, divisors
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter
 from dirichlet_conrey import DirichletGroup_conrey
 from flask import flash
 from markupsafe import Markup
-
-"""
-do everything on conrey labels only?
-"""
 
 # utility functions #
 
@@ -41,6 +37,18 @@ def parse_interval(arg, name):
         flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for %s. It should be a positive integer (e.g. 7) or a nonempty range of positive integers (e.g. 1-10 or 1..10)"%(arg,name)), "error")
         raise ValueError("invalid "+name)
     return a,b
+
+def parse_limit (arg):
+    if not arg:
+        return 25
+    limit = -1
+    arg = arg.replace  (' ','')
+    if re.match('^[0-9]+$', arg):
+        limit = int(arg)
+    if limit > 100:
+        flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid limit on the number of results to display.  It should be a positive integer no greater than 100."%arg), "error")
+        raise ValueError("limit")
+    return limit
 
 def get_character_modulus(a, b, limit=7):
     """ this function which is also used by lfunctions/LfunctionPlot.py """
@@ -86,19 +94,19 @@ def get_character_conductor(a, b, limit=7):
         if N%4 == 2:
             return l
         count = 0
-        modulus = N
+        q = N
         while count < limit:
-            if modulus % N == 0:
-                G = DirichletGroup_conrey(modulus)
+            if q % N == 0:
+                G = DirichletGroup_conrey(q)
                 for chi in G:
                     j = chi.number()
-                    c = WebDirichletCharacter(modulus = chi.modulus(),number = chi.number())
-                    if chi.conductor() == N:
-                        l.append((modulus, j, chi.is_primitive(), chi.multiplicative_order(), c.symbol))
+                    c = WebDirichletCharacter(modulus = q, number = j)
+                    if chi.conductor() == q:
+                        l.append((q, j, chi.is_primitive(), chi.multiplicative_order(), c.symbol))
                         count += 1
                         if count == limit:
                             break
-            modulus += N
+            q += N
         return l
     return [(_, line(_)) for _ in range(a, b)]
 
@@ -106,19 +114,19 @@ def get_character_order(a, b, limit=7):
     def line(n):
         l = []
         count = 0
-        modulus = n+1 if n > 1 else n
+        q = n
         while count < limit:
-            if modn_exponent(modulus) % n == 0:
-                G = DirichletGroup_conrey(modulus)
+            if modn_exponent(q) % n == 0:
+                G = DirichletGroup_conrey(q)
                 for chi in G:
                     j = chi.number()
-                    c = WebDirichletCharacter(modulus = chi.modulus(),number = chi.number())
+                    c = WebDirichletCharacter(modulus = q, number = j)
                     if chi.multiplicative_order() == n:
-                        l.append((modulus, j, chi.is_primitive(), chi.multiplicative_order(), c.symbol))
+                        l.append((q, j, chi.is_primitive(), chi.multiplicative_order(), c.symbol))
                         count += 1
                         if count == limit:
                             break
-            modulus += 1
+            q += 1
         return l
     return [(_, line(_)) for _ in range(a, b)]
 
@@ -134,7 +142,7 @@ class CharacterSearch:
         self.order = query.get('order')
         self.parity = None if query.get('parity', 'All') == 'All' else query.get('parity')
         self.primitive = None if query.get('primitive', 'All') == 'All' else query.get('primitive')
-        self.limit = int(query.get('limit', 25))
+        self.limit = parse_limit(query.get('limit'))
         if self.parity and not self.parity in ['Odd','Even']:
             flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for parity.  It must be 'Odd', 'Even', or 'All'"),"error")
             raise ValueError('parity')
@@ -145,15 +153,19 @@ class CharacterSearch:
         if self.mmax > 99999:
             flash(Markup("Error: Searching is limited to charactors of modulus less than $10^5$"),"error")
             raise ValueError('modulus')
+        if self.order and self.mmin > 999:
+            flash(Markup("Error: For order searching the minimum modulus needs to be less than $10^3$"),"error")
+            raise ValueError('modulus')
+        
         self.cmin, self.cmax = parse_interval(self.conductor, 'conductor') if self.conductor else (1, self.mmax)
         self.omin, self.omax = parse_interval(self.order, 'order') if self.order else (1, self.cmax)
         self.cmax = min(self.cmax,self.mmax)
         self.omax = min(self.omax,self.cmax)
-        if self.primitive:
+        if self.primitive == 'Yes':
             self.cmin = max([self.cmin,self.mmin])
         self.cmin += 1 if self.cmin%4 == 2 else 0
         self.cmax -= 1 if self.cmax%4 == 2 else 0
-        if self.primitive:
+        if self.primitive == 'Yes':
             self.mmin = max([self.cmin,self.mmin])
             self.mmax = min([self.cmax,self.mmax])
             self.cmin,self.cmax = self.mmin,self.mmax
@@ -161,13 +173,23 @@ class CharacterSearch:
             self.omin += 1 if self.omin%2 else 0
             self.omax -= 1 if self.omax%2 else 0
         self.mmin = max(self.mmin,self.cmin,self.omin)
+
+        if self.parity:
+            self.is_odd = True if self.parity == 'Odd' else False
+        if self.primitive:
+            self.is_primitive = True if self.primitive == 'Yes' else False
+
+        self.start = int(query.get('start', '0'))
+        self.lastm = int(query.get('lastm', '0'))
+        self.lastn = int(query.get('lastn', '0'))
+
         
     def results(self):
         info = {}
-        L = self.list_valid()
+        L, complete = self.results_by_modulus(self.mmin, self.mmax, self.limit)
         if len(L):
             info['lastm'], info['lastn'] = L[-1][:2]
-            if len(L) == self.limit:
+            if not complete:
                 info['report'] = 'first %i results'%(len(L))
                 info['more'] = True
             else:
@@ -175,7 +197,6 @@ class CharacterSearch:
                 info['more'] = False
             # always false, just navigate previous page...
             info['start'] = 0
-        info['number'] = len(L)
         info['chars'] = L
         info['title'] = 'Dirichlet Characters'
         if self.modulus:
@@ -189,45 +210,45 @@ class CharacterSearch:
         return info
 
     def list_valid(self):
-        return self.return_valid( self.by_modulus(self.mmin, self.mmax) )
+        return 
 
-    def return_valid(self, gen):
-        l, count = [], 0
-        for c in self.yield_valid( gen ):
-            l.append(c)
-            count += 1
-            if count == self.limit:
-                return l
-        return l
-
-    def yield_valid(self, gen):
-        for chi in gen:
-            wc = charinfo(chi)
-            (m,n,c,o,p) = wc[:5]
-            if self.modulus and ( self.mmin > m or m > self.mmax ):
-                continue
-            if self.order and ( self.omin > o or o > self.omax ):
-                continue
-            if self.conductor and ( self.cmin > c or c > self.cmax ):
-                continue
-            if self.primitive:
-                if (self.primitive == 'Yes' and m != c) or (self.primitive == 'No' and m == c):
-                    continue
-            if self.parity:
-                if (self.parity == 'Even' and p) or (self.parity == 'Odd' and not p):
-                    continue
-            yield wc
-
-    def by_modulus(self, mmin, mmax):
+    def results_by_modulus(self, mmin, mmax, limit):
+        res = []
+        ticks = 0
         if mmin > mmax or self.cmin > self.cmax or self.omin > self.omax:
-            return
-        step = self.cmin if self.conductor and self.cmin == self.cmax else 1
-        for N in xrange(mmin, mmax + 1, step):
-            if self.conductor and not divisors_in_interval(N, self.cmin, self.cmax):
+            return res, True
+        if self.omax == 1 and self.cmin > 1:
+            return res, True
+        step = 1
+        if self.conductor and self.cmin == self.cmax:
+            step = self.cmin
+            if mmin % step:
+                mmin = mmin + step - (mmin%step)
+        for q in xrange(mmin, mmax + 1, step):
+            # if we have not found any results of modululs q <= cmax we are never going to find any (unless only imprimitive results are sought)
+            if q > self.cmax and not res and self.start == 0 and (not self.primitive or self.is_primitive):
+                return res, True
+            if self.conductor and not divisors_in_interval(q, self.cmin, self.cmax):
                 continue
-            if self.order and not divisors_in_interval(modn_exponent(N), self.omin, self.omax):
+            if self.order and not divisors_in_interval(modn_exponent(q), self.omin, self.omax):
                 continue
-            G = DirichletGroup_conrey(N)
+            G = DirichletGroup_conrey(q)
             for chi in G:
-                yield chi
+                ticks += 1
+                c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
+                if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
+                    continue
+                if self.primitive and self.is_primitive != (True if q == c else False):
+                    continue
+                if self.parity and self.is_odd != p:
+                    continue
+                if len(res) == limit:
+                    return res, False
+                res.append(charinfo(chi))
+            if ticks > 100000:
+                flash(Markup("Error: Unable to complete query within timeout (showing results up to modulus %d).  Try narrowing your search."%q),"error")
+                return res, False
+        return res, True
+                
+                
 
