@@ -105,7 +105,7 @@ def render_DirichletNavigation():
         return render_template('CharacterNavigate.html', **info)
         return redirect(url_for(".render_Dirichletwebpage"), 301)
 
-    if 'search' in args or 'research' in args:
+    if args:
         try:
             search = ListCharacters.CharacterSearch(args)
         except ValueError as err:
