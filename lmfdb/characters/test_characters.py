@@ -66,7 +66,8 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\)' in W.data
 
     def test_dirichletgroup(self):
-        W = self.tc.get('/Character/Dirichlet/23')
+        W = self.tc.get('/Character/Dirichlet/23/')
+        print W.data
         assert 'Yes' in W.data
         assert 'DirichletGroup_conrey(23)' in W.data
         assert 'e\\left(\\frac{7}{11}\\right)' in W.data

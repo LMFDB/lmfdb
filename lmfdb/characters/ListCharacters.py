@@ -229,6 +229,5 @@ class CharacterSearch:
                 continue
             G = DirichletGroup_conrey(N)
             for chi in G:
-                print "%d.%d"%(chi.modulus(),chi.number())
                 yield chi
 
