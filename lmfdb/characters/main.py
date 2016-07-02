@@ -49,6 +49,7 @@ def render_characterNavigation():
 
 def render_DirichletNavigation():
     args = to_dict(request.args)
+    
     info = {'args':args}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
                       ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
@@ -79,10 +80,6 @@ def render_DirichletNavigation():
         info['title'] = 'Dirichlet Characters of conductor ' + str(conductor_start) + '-' + str(conductor_end)
         info['credit'] = "Sage"
         info['contents'] = ListCharacters.get_character_conductor(conductor_start, conductor_end + 1)
-        # info['contents'] = c
-        # info['header'] = h
-        # info['rows'] = rows
-        # info['cols'] = cols
         return render_template("ConductorList.html", **info)
 
     elif 'ordbrowse' in args:
@@ -92,13 +89,9 @@ def render_DirichletNavigation():
         order_end = int(arg[1])
         info['order_start'] = order_start
         info['order_end'] = order_end
-        info['title'] = 'Dirichlet Characters of order ' + str(order_start) + '-' + str(order_end)
-        info['credit'] = "Sage"
+        info['title'] = 'Dirichlet Characters of Orders ' + str(order_start) + '-' + str(order_end)
+        info['credit'] = 'SageMath'
         info['contents'] = ListCharacters.get_character_order(order_start, order_end + 1)
-        # info['contents'] = c
-        # info['header'] = h
-        # info['rows'] = rows
-        # info['cols'] = cols
         return render_template("OrderList.html", **info)
 
     elif 'label' in args:
@@ -109,14 +102,15 @@ def render_DirichletNavigation():
             if n < m and gcd(m,n) == 1:
                 return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
         flash(Markup( "Error: <span style='color:black'>%s</span> is not a valid label for a Dirichlet character.  It should be of the form m.n, where m and n are relatively prime positive integers with n < m."%(label)),"error")
+        return render_template('CharacterNavigate.html', **info)
         return redirect(url_for(".render_Dirichletwebpage"), 301)
 
-    if args:
+    if 'search' in args or 'research' in args:
         try:
             search = ListCharacters.CharacterSearch(args)
         except ValueError as err:
             info['err'] = str(err)
-            return render_template("character_search_results.html", **info)
+            return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
         info['info'] = search.results()
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
@@ -179,7 +173,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
             modulus = 0
         if modulus <= 0:
             flash(Markup( "Error: <span style='color:black'>%s</span> is not a valid modulus for a Dirichlet character.  It should be a positive integer." % args['modulus']),"error")
-            return redirect(url_for(".render_Dirichletwebpage"))
+            return redirect(url_for(".render_Dirichletwebpage", table_modulus=args['modulus']))
             
         if number == None:
             if modulus < 100000:

@@ -35,10 +35,9 @@
 </p>
 
 <h2> Find a specific Dirichlet character by {{KNOWL('character.dirichlet.conrey', title="label") }} </h2>
-
 <form>
-    <input type='text' name='label' size=10 placeholder="13.2" required>
-    <button type='submit' name='search' value='Go'> Find  </button>
+    <input type='text' name='label' size=10 value="{{args.label}}" placeholder="13.2" required>
+    <button type='submit' name='lookup' value='1'> Find  </button>
     <span class="formexample"> e.g. 13.2 -- represents the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\).</span>
 </form>
 
@@ -50,25 +49,25 @@ Enter criteria into one or more boxes to restrict the search.
     <table>
         <tr>
             <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</td>
-            <td> <input type='text' name='modulus' size = '10' placeholder="13"></td>
+            <td> <input type='text' name='modulus' value="{{args.modulus}}" size = '10' placeholder="13"></td>
             <td><span class="formexample"> e.g. 13 </span></td>
         </tr>
 
         <tr>
             <td> {{ KNOWL('character.dirichlet.conductor', title="conductor") }} </td>
-            <td> <input type='text' name='conductor' size = '10' placeholder="5"></td>
+            <td> <input type='text' name='conductor' value="{{args.conductor}}" size = '10' placeholder="5"></td>
             <td><span class="formexample"> e.g. 5 </span></td>
         </tr>
 
         <tr>
             <td> {{ KNOWL('character.dirichlet.order', title="order") }} </td>
-            <td> <input type='text' name='order' size = '10' placeholder="2"></td>
+            <td> <input type='text' name='order' value="{{args.order}}" size = '10' placeholder="2"></td>
             <td><span class="formexample"> e.g. 2 </span></td>
         </tr>
     </table>
     <p></p>
     <td>
-        <button type='submit' value='Search' > Search </button>
+        <button type='submit' name='search' value='1' > Search </button>
     </td>
     <input type='hidden' name='limit' value='25'/>
 </form>
@@ -78,14 +77,13 @@ Enter criteria into one or more boxes to restrict the search.
     <table>
         <tr>
             <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }} </td>
-            <td> <input type='text' name='modulus' size='10'
-              placeholder="13" required></td>
+            <td> <input type='text' name='modulus' value="{{args.table_modulus}}" size='10' placeholder="13" required></td>
             <td><span class="formexample"> e.g. 13 </span></td>
         </tr>
     </table>
     <p></p>
     <td>
-        <button type='submit' value='Create' > Create </button>
+        <button type='submit' name='create' value='1' > Create </button>
     </td>
 </form>
 {% endblock %}

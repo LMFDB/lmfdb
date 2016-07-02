@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h2> Further refine search </h2>
+<h2> Refine search </h2>
 
 <form id='re-search'>
 <input type="hidden" name="start" value="{{info.start}}"/>
@@ -37,14 +37,12 @@
 </tr>
 <tr>
 <td colspan=2 align=left>maximum results to display</td>
-<td align=left> <input type='text' name='limit'size=6 value="{{info.limit}}"> </td>
-<td colspan=2><button type='submit' width="170" style="width: 170px" value='refine'>Refine or change search</button>
+<td align=left> <input type='text' name='limit'size=6 value="{{args.limit}}"> </td>
+<td colspan=2><button type='submit' width="170" style="width: 170px" name='research' value='1'>Refine or change search</button>
 </td> </tr>
 </table>
 <input type="hidden" name="lastm" value="{{info.lastm}}"/>
 <input type="hidden" name="lastn" value="{{info.lastn}}"/>
-<input type="hidden" name="startm" value="0"/>
-<input type="hidden" name="startn" value="0"/>
 </form>
 
 {% if not err %}
@@ -60,7 +58,7 @@ table td.params {
 
 </style>
 
-{% if info.number > 0 %}
+{% if info.chars|count > 0 %}
 
 <h2> Results ({{info.report}})
 {% if false and info.start > 0 %}
@@ -88,18 +86,7 @@ function submit_next_chars() {
   <th align="center">{{ KNOWL('character.dirichlet.parity', title='Parity') }}</th>
   <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
 </tr>
-{#
-{% for chi in info.chars: %}
-<tr>
-<td class="center"><a href="{{mod/num}}">{{}}</a></td>
-<td class="center">{{chi.modulus}}</td>
-<td class="center">{{chi.conductor}}</td>
-<td class="center">{{chi.order}}</td>
-<td class="center">{{chi.order}}</td>
-<td class="center">{{chi.primitive}}</td>
-</tr>
-{% endfor %}
-#}
+
 {% for (mod,num,cond,order,par,prim,name) in info.chars: %}
 <tr>
 <td class="center"><a href="{{mod}}/{{num}}">{{name}}</a></td>
@@ -129,22 +116,11 @@ Download all search results for
 <input type="submit" name="Submit" value="sage">
 <input type="submit" name="Submit" value="magma">
 <input type="hidden" name="download" value="1"/>
-<input type="hidden" name="conductor" value="{{info.conductor}}"/>
-<input type="hidden" name="modulus" value="{{info.modulus}}"/>
-<select name="optimal" style="visibility:hidden;">
-{% if info.optimal=='on' %}
-  <option value="">No</option>
-  <option selected="yes" value="on">Yes</option>
-{% else %}
-  <option value="">No</option>
-  <option value="on">Yes</option>
-{% endif %}
-</select>
 </form>
 #}
 
 {% else %}
-<h2> No matches</h2>
+<h2> No matches found</h2>
 {% endif %}
 
 {% endif %}

@@ -38,7 +38,7 @@
 
 {% if contents %}
 {# Characters #}
-<h2> {%if rowtruncate%}First characters{% else %}Characters{%endif%}</h2>
+<h2> {%if rowtruncate%}First {{contents|count}} of {{order}} characters{% else %}Characters{%endif%}</h2>
 <table class="ntdata" id="chitable">
   <thead class="space">
     <tr> 
