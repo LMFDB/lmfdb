@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
 from lmfdb.WebCharacter import WebDirichlet, WebHecke
 
@@ -66,14 +67,13 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\)' in W.data
 
     def test_dirichletgroup(self):
-        W = self.tc.get('/Character/Dirichlet/23/')
-        print W.data
+        W = self.tc.get('/Character/Dirichlet/23', follow_redirects=True)
         assert 'Yes' in W.data
         assert 'DirichletGroup_conrey(23)' in W.data
         assert 'e\\left(\\frac{7}{11}\\right)' in W.data
         assert '/Character/Dirichlet/23/10' in W.data
 
-        W = self.tc.get('/Character/Dirichlet/91')
+        W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
         assert 'Yes' in W.data
         assert 'Properties' in W.data, "properties box"
         assert 'DirichletGroup_conrey(91)' in W.data, "sage code example"
