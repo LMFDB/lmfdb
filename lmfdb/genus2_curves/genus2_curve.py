@@ -232,14 +232,14 @@ def class_from_curve_label(label):
 def genus2_curve_search(info):
     if 'jump' in info:
         jump = info["jump"].strip()
-        if re.match(r'\d+\.[a-z]+\.\d+\.\d+$',jump):
+        if re.match(r'^\d+\.[a-z]+\.\d+\.\d+$',jump):
             return redirect(url_for_curve_label(jump), 301)
         else:
-            if re.match(r'\d+\.[a-z]+$', jump):
+            if re.match(r'^\d+\.[a-z]+$', jump):
                 return redirect(url_for_isogeny_class_label(jump), 301)
             else:
                 # Handle direct Lhash input
-                if re.match(r'#\d+$',jump) and ZZ(jump[1:]) < 2**61:
+                if re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
                     c = g2c_db_curves().find_one({'Lhash': jump[1:].strip()})
                     if c:
                         return redirect(url_for_isogeny_class_label(c["class"]), 301)
