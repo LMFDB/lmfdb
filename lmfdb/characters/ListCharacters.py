@@ -2,7 +2,7 @@
 # ListCharacters.py
 
 import re
-from sage.all import gcd, lcm, factor, divisors
+from sage.all import lcm, factor, divisors
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter
 from dirichlet_conrey import DirichletGroup_conrey
 from flask import flash

@@ -106,6 +106,9 @@ def render_DirichletNavigation():
         return redirect(url_for(".render_Dirichletwebpage"), 301)
 
     if args:
+        # if user clicked refine search, reset start to 0
+        if args.get('refine'):
+            args['start'] = '0'
         try:
             search = ListCharacters.CharacterSearch(args)
         except ValueError as err:
