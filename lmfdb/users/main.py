@@ -8,7 +8,7 @@ ASC = pymongo.ASCENDING
 import flask
 from functools import wraps
 from lmfdb.base import app, getDBConnection
-from flask import render_template, request, abort, Blueprint, url_for, make_response
+from flask import render_template, request, Blueprint, url_for, make_response
 from flask.ext.login import login_required, login_user, current_user, logout_user
 
 login_page = Blueprint("users", __name__, template_folder='templates')
@@ -130,7 +130,6 @@ def profile(userid):
 
 @login_page.route("/login", methods=["POST"])
 def login(**kwargs):
-    bread = base_bread() + [('Login', url_for('.login'))]
     # login and validate the user …
     # remember = True sets a cookie to remmeber the user
     name = request.form["name"]
@@ -284,7 +283,6 @@ def change_password():
 @login_page.route("/logout")
 @login_required
 def logout():
-    bread = base_bread() + [('Login', url_for('.logout'))]
     logout_user()
     flask.flash("You are logged out now. Have a nice day!")
     return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'))
