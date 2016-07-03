@@ -81,12 +81,16 @@ def base_bread():
 @login_required
 def list():
     import pwdmanager
+    COLS = 5
     users = pwdmanager.get_user_list()
     # trying to be smart and sorting by last name
-    users = sorted(users, key=lambda x: x[1].split(" ")[-1].lower())
+    users = sorted(users, key=lambda x: x[1].strip().split(" ")[-1].lower())
+    n = len(users)//COLS + 1 if len(users)%COLS else 0
+    user_rows = zip(*[users[i*n:(i+1)*n] for i in range(COLS)])
+    print user_rows
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
-                           users=users, bread=bread)
+                           user_rows=user_rows, bread=bread)
 
 
 @login_page.route("/myself")
