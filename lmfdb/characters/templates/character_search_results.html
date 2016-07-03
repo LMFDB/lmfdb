@@ -1,13 +1,13 @@
 {% extends 'homepage.html' %}
-
 {% block content %}
 
-<h2> Refine search </h2>
+<h2>Refine search</h2>
 
-<form id='re-search'>
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
-<table border="0">
+<input type="hidden" name="count" value="{{info.count}}"/>
 
+<table border="0">
 <tr>
 <td align=left>{{ KNOWL('character.dirichlet.modulus', title='Modulus') }}</td>
 <td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
@@ -38,11 +38,10 @@
 <tr>
 <td colspan=2 align=left>maximum results to display</td>
 <td align=left> <input type='text' name='limit'size=6 value="{{args.limit}}"> </td>
-<td colspan=2><button type='submit' width="170" style="width: 170px" name='research' value='1'>Refine or change search</button>
+<td colspan=2><button type='submit' width="170" style="width: 170px" name='refine' value='1'>Refine or change search</button>
 </td> </tr>
 </table>
-<input type="hidden" name="lastm" value="{{info.lastm}}"/>
-<input type="hidden" name="lastn" value="{{info.lastn}}"/>
+
 </form>
 
 {% if not err %}
@@ -60,23 +59,15 @@ table td.params {
 
 {% if info.chars|count > 0 %}
 
-<h2> Results ({{info.report}})
-{% if false and info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</A>
+<h2> Results ({{info.report}})&nbsp;
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
 {% endif %}
-{% if false and info.more > 0 %}
-<script>
-function submit_next_chars() {
-  $('input[name=startm]') = $('input[name=lastm]').value();
-  $('input[name=startn]') = $('input[name=lastn]').value();
-  $('form[id=re-search]').submit()
-}
-</script>
-<a href="#" class="navlink" onclick="submit_next_chars();return false">Next</A>
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
 {% endif %}
 </h2>
+
 <table>
 <tr>
   <th class="center">{{ KNOWL('character.dirichlet.conrey', title='Conrey label')}}</th>
@@ -99,15 +90,15 @@ function submit_next_chars() {
 {% endfor %}
 </table>
 
-<hr>
-{% if false and info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="submit_previous('re-search');return
-            false">Previous</A>
+<br>
+
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
 {% endif %}
-{% if false and info.more > 0 %}
-<a href="#" class="navlink" onclick="submit_next_chars();return false">Next</A>
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
 {% endif %}
+
 
 {#
 <form>

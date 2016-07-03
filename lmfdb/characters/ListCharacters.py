@@ -180,39 +180,28 @@ class CharacterSearch:
             self.is_primitive = True if self.primitive == 'Yes' else False
 
         self.start = int(query.get('start', '0'))
-        self.lastm = int(query.get('lastm', '0'))
-        self.lastn = int(query.get('lastn', '0'))
 
         
     def results(self):
         info = {}
-        L, complete = self.results_by_modulus(self.mmin, self.mmax, self.limit)
+        L, complete = self.results_by_modulus(self.mmin, self.mmax, self.start, self.limit)
+        info['more'] = not complete
         if len(L):
-            info['lastm'], info['lastn'] = L[-1][:2]
-            if not complete:
-                info['report'] = 'first %i results'%(len(L))
-                info['more'] = True
+            if self.start == 0:
+                info['report'] = 'all %i matches'%(len(L)) if complete else 'first %i matches'%(len(L))
             else:
-                info['report'] = 'all %i results'%(len(L))
-                info['more'] = False
+                info['report'] = 'matches %i to %i'%(self.start+1, self.start+len(L))
             # always false, just navigate previous page...
-            info['start'] = 0
+        info['start'] = self.start
+        info['count'] = len(L)
         info['chars'] = L
         info['title'] = 'Dirichlet Characters'
-        if self.modulus:
-            info['modulus'] = self.modulus
-        if self.conductor:
-            info['conductor'] = self.conductor
-        if self.order:
-            info['order'] = self.order
-        if self.limit:
-            info['limit'] = self.limit
         return info
 
     def list_valid(self):
         return 
 
-    def results_by_modulus(self, mmin, mmax, limit):
+    def results_by_modulus(self, mmin, mmax, start, limit):
         res = []
         ticks = 0
         if mmin > mmax or self.cmin > self.cmax or self.omin > self.omax:
@@ -224,6 +213,7 @@ class CharacterSearch:
             step = self.cmin
             if mmin % step:
                 mmin = mmin + step - (mmin%step)
+        count = 0
         for q in xrange(mmin, mmax + 1, step):
             # if we have not found any results of modululs q <= cmax we are never going to find any (unless only imprimitive results are sought)
             if q > self.cmax and not res and self.start == 0 and (not self.primitive or self.is_primitive):
@@ -242,9 +232,11 @@ class CharacterSearch:
                     continue
                 if self.parity and self.is_odd != p:
                     continue
-                if len(res) == limit:
-                    return res, False
-                res.append(charinfo(chi))
+                if count >= start:
+                    if len(res) == limit:
+                        return res, False
+                    res.append(charinfo(chi))
+                count += 1
             if ticks > 100000:
                 flash(Markup("Error: Unable to complete query within timeout (showing results up to modulus %d).  Try narrowing your search."%q),"error")
                 return res, False
