@@ -41,8 +41,18 @@ class DirichletSearchTest(LmfdbTest):
         assert len(re.findall('Dirichlet/[0-9][0-9]/27',W.data)) == 20
 
     def test_search(self):
-        W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4')
-        assert '\chi_{45}(17' in W.data
+        W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4&limit=25')
+        assert '\chi_{45}(17,' in W.data
+        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&limit=25')
+        assert '\chi_{25}(6,' in W.data and '\chi_{36}(7,' in W.data
+        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&limit=25')
+        assert '\chi_{25}(6,' in W.data and '\chi_{36}(7,' in W.data
+        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&limit=25')
+        assert '\chi_{50}(11,' in W.data and '\chi_{72}(7,' in W.data
+        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Odd&limit=25')
+        assert '\chi_{56}(23,' in W.data and '\chi_{112}(79,' in W.data
+        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Even&limit=25')
+        assert '\chi_{50}(11,' in W.data and '\chi_{75}(46,' in W.data
 
     def test_condsearch(self): 
         W = self.tc.get('/Character/Dirichlet/?conductor=111')
