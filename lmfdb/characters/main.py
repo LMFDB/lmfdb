@@ -183,13 +183,14 @@ def render_Dirichletwebpage(modulus=None, number=None):
             info = WebDirichletGroup(**args).to_dict()
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
-        m = info['modlabel']
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m))]
+                         ('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))]
         info['learnmore'] = learn()
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
+        if 'gens' in info:
+            info['generators'] = ', '.join([r'<a href="%s">$\chi_{%s}(%s,\cdot)$'%(url_for(".render_Dirichletwebpage",modulus=modulus,number=g),modulus,g) for g in info['gens']])
         return render_template('CharGroup.html', **info)
 
     try:
@@ -208,11 +209,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
         info = webchar.to_dict()
     else:
         info = WebSmallDirichletCharacter(**args).to_dict()
-    m,n = info['modlabel'], info['numlabel']
     info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                      ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                     ('Mod %s'%m, url_for(".render_Dirichletwebpage", modulus=m)),
-                     ('%s'%n, url_for(".render_Dirichletwebpage", modulus=m, number=n)) ]
+                     ('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
+                     ('%s'%number, url_for(".render_Dirichletwebpage", modulus=modulus, number=number)) ]
     info['learnmore'] = learn()
     info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
@@ -275,7 +275,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Hecke', url_for(".render_Heckewebpage")),
                          ('Number Field %s'%number_field, url_for(".render_Heckewebpage", number_field=number_field)),
-                         ('Mod %s'%m,  url_for(".render_Heckewebpage", number_field=number_field, modulus=m))]
+                         ('%s'%m,  url_for(".render_Heckewebpage", number_field=number_field, modulus=m))]
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
         #logger.info(info)
@@ -287,7 +287,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         info['bread'] = [('Characters',url_for(".render_characterNavigation")),
                          ('Hecke',  url_for(".render_Heckewebpage")),
                          ('Number Field %s'%number_field,url_for(".render_Heckewebpage", number_field=number_field)),
-                         ('Mod %s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=m)),
+                         ('%s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=m)),
                          ('#%s'%X.number, url_for(".render_Heckewebpage", number_field=number_field, modulus=m, number=n))]
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
@@ -318,7 +318,7 @@ def dirichlet_table():
     mod = args.get('modulus',1)
     return redirect(url_for('characters.render_Dirichletwebpage',modulus=mod))
 
-# fixme: these group tables are needed by number fields pages.
+# FIXME: these group table pages are used by number fields pages.
 # should refactor this into WebDirichlet.py
 @characters_page.route("/Dirichlet/grouptable")
 def dirichlet_group_table(**args):

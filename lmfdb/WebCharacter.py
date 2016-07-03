@@ -323,6 +323,12 @@ class WebDirichlet(WebCharObject):
         return H[num].is_primitive()
 
     @property
+    def gens(self):
+        #import pdb; pdb.set_trace()
+        #assert self.H.gens() is not None
+        return self.H.gens()
+
+    @property
     def generators(self):
         #import pdb; pdb.set_trace()
         #assert self.H.gens() is not None
@@ -650,7 +656,7 @@ class WebCharGroup(WebCharObject):
     _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
-            'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
+            'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties2', 'friends', 'rowtruncate', 'coltruncate'] 
 
@@ -707,7 +713,8 @@ class WebCharGroup(WebCharObject):
 
     @property
     def properties2(self):
-        return [("Structure", [self.structure]),
+        return [("Modulus", [self.modulus]),
+                ("Structure", [self.structure]),
                 ("Order", [self.order]),
                 ]
 
@@ -834,7 +841,7 @@ class WebChar(WebCharObject):
     def friends(self):
         f = []
         cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
-        f.append( ("character group", cglink) )
+        f.append( ("Character Group", cglink) )
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
@@ -892,7 +899,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @property
     def title(self):
-      return r"Dirichlet Group modulo %s" % (self.modulus)
+      return r"Group of Dirichlet Characters of modulus %s" % (self.modulus)
 
     @property
     def codegen(self):
