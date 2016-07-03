@@ -42,10 +42,10 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_search(self):
         W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4&limit=25')
-        assert '\chi_{45}(17,' in W.data
+        assert '\chi_{15}(2,' in W.data and '\chi_{195}(53,' in W.data
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&limit=25')
         assert '\chi_{25}(6,' in W.data and '\chi_{36}(7,' in W.data
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&limit=25')
+        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=Yes&limit=25')
         assert '\chi_{25}(6,' in W.data and '\chi_{36}(7,' in W.data
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&limit=25')
         assert '\chi_{50}(11,' in W.data and '\chi_{72}(7,' in W.data
@@ -57,6 +57,12 @@ class DirichletSearchTest(LmfdbTest):
     def test_condsearch(self): 
         W = self.tc.get('/Character/Dirichlet/?conductor=111')
         assert '111/17' in W.data
+
+    def test_nextprev(self):
+        W = self.tc.get('/Character/Dirichlet/?start=200&count=25&order=3')
+        assert '\chi_{169}(22,' in W.data and '\chi_{182}(113,' in W.data
+        W = self.tc.get('/Character/Dirichlet/?start=100&count=25&order=3')
+        assert '\chi_{97}(35,' in W.data and '\chi_{117}(40,' in W.data
 
 class DirichletTableTest(LmfdbTest):
 
@@ -87,9 +93,15 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Yes' in W.data
         assert 'Properties' in W.data, "properties box"
         assert 'DirichletGroup_conrey(91)' in W.data, "sage code example"
-        assert '15,66' in W.data, "generators"
+        assert '\chi_{91}(15,' in W.data and '\chi_{91}(66' in W.data, "generators"
         assert 'e\\left(\\frac{7}{12}\\right)' in W.data, "contents table"
         assert '/Character/Dirichlet/91/6' in W.data, "link in contents table"
+
+        W = self.tc.get('/Character/Dirichlet/999999999', follow_redirects=True)
+        assert 'Properties' in W.data, "properties box"
+        assert '648646704' in W.data, "order"
+        assert 'C_{333666}' in W.data, "structure"
+        assert '\chi_{999999999}(234567902,' in W.data and '\chi_{999999999}(432432433,' in W.data and '\chi_{999999999}(332999668,' in W.data
 
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
@@ -105,9 +117,15 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/40487/5')
         assert '40486' in W.data
         assert '12409' in W.data, "log on generator"
+        W = self.tc.get('/Character/Dirichlet/40487.5', follow_redirects=True)
+        assert '40486' in W.data
+        assert '12409' in W.data, "log on generator"
 
     def test_dirichletchar43(self):
         W = self.tc.get('/Character/Dirichlet/4/3')
+        assert 'Kronecker symbol' in W.data
+        assert '\\left(\\frac{-4}{\\bullet}\\right)' in W.data
+        W = self.tc.get('/Character/Dirichlet/4.3', follow_redirects=True)
         assert 'Kronecker symbol' in W.data
         assert '\\left(\\frac{-4}{\\bullet}\\right)' in W.data
 
