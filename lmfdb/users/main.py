@@ -123,14 +123,9 @@ def profile(userid):
     #    pass
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
-    userknowls = getDBConnection(
-    ).knowledge.knowls.find({'authors': userid}, ['title']).sort([('title', ASC)])
-    userfiles = getDBConnection(
-    ).upload.fs.files.find({'metadata.uploader_id': userid, 'metadata.status': 'approved'})
-    userfilesmod = getDBConnection(
-    ).upload.fs.files.find({'metadata.uploader_id': userid, 'metadata.status': 'unmoderated'})
+    userknowls = getDBConnection().knowledge.knowls.find({'authors': userid}, ['title']).sort([('title', ASC)])
     return render_template("user-detail.html", user=user,
-                           title="%s" % user.name, bread=bread, userknowls=userknowls, userfiles=userfiles, userfilesmod=userfilesmod)
+                           title="%s" % user.name, bread=bread, userknowls=userknowls)
 
 
 @login_page.route("/login", methods=["POST"])
