@@ -93,9 +93,15 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Yes' in W.data
         assert 'Properties' in W.data, "properties box"
         assert 'DirichletGroup_conrey(91)' in W.data, "sage code example"
-        assert '15,66' in W.data, "generators"
+        assert '\chi_{91}(15,' in W.data and '\chi_{91}(66' in W.data, "generators"
         assert 'e\\left(\\frac{7}{12}\\right)' in W.data, "contents table"
         assert '/Character/Dirichlet/91/6' in W.data, "link in contents table"
+
+        W = self.tc.get('/Character/Dirichlet/999999999', follow_redirects=True)
+        assert 'Properties' in W.data, "properties box"
+        assert '648646704' in W.data, "order"
+        assert 'C_{333666}' in W.data, "structure"
+        assert '\chi_{999999999}(234567902,' in W.data and '\chi_{999999999}(432432433,' in W.data and '\chi_{999999999}(332999668,' in W.data
 
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
