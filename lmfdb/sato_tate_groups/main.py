@@ -151,13 +151,13 @@ def by_label(label):
 
 def search_by_label(label):
     label = label.strip()
-    if re.match(r'\d+.\d+.\d+.\d+.\d+[a-z]+$', label):
+    if re.match(r'^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$', label):
         return render_by_label(label)
-    if re.match(r'\d+.\d+.\d+.\d+.\d+$', label):
-        return render_by_label(label+'a')
+    if re.match(r'^\d+\.\d+\.\d+\.\d+\.\d+$', label):
+        return redirect(url_for('.by_label',label=label+'a'),301)
     # check for labels of the form w.d.name
     data = {}
-    if re.match(r'\d+.\d+.[a-zA-z0-9\{\}\(\)\[\]\_\,]+',label):
+    if re.match(r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+',label):
         slabel = label.split('.')
         try:
             data = st_groups().find_one({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]},{'_id':False,'label':True})
