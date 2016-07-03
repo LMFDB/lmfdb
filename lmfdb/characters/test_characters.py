@@ -58,6 +58,12 @@ class DirichletSearchTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/?conductor=111')
         assert '111/17' in W.data
 
+    def test_nextprev(self):
+        W = self.tc.get('/Character/Dirichlet/?start=200&count=25')
+        assert '\chi_{169}(22,' in W.data and '\chi_{182}(113,' in W.data
+        W = self.tc.get('/Character/Dirichlet/?start=100&count=25')
+        assert '\chi_{97}(35,' in W.data and '\chi_{117}(40,' in W.data
+
 class DirichletTableTest(LmfdbTest):
 
     def test_table(self):
@@ -105,9 +111,15 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/40487/5')
         assert '40486' in W.data
         assert '12409' in W.data, "log on generator"
+        W = self.tc.get('/Character/Dirichlet/40487.5', follow_redirects=True)
+        assert '40486' in W.data
+        assert '12409' in W.data, "log on generator"
 
     def test_dirichletchar43(self):
         W = self.tc.get('/Character/Dirichlet/4/3')
+        assert 'Kronecker symbol' in W.data
+        assert '\\left(\\frac{-4}{\\bullet}\\right)' in W.data
+        W = self.tc.get('/Character/Dirichlet/4.3', follow_redirects=True)
         assert 'Kronecker symbol' in W.data
         assert '\\left(\\frac{-4}{\\bullet}\\right)' in W.data
 
