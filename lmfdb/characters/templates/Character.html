@@ -111,11 +111,17 @@
             {{ KNOWL('character.dirichlet.related_fields', 'Related number fields') }}
         </h2>
         <table>
+            {% if valuefield %}
             <tr>
                 <td> {{KNOWL('character.dirichlet.value_field',title='Field of values')}} </td>
-                <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a></td>
+                {% if vflabel %}
+                <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a> </td>
+                {% else %}
+                <td> {{ valuefield }} </td>
+                {% endif %}
             </tr>
-            {% if kflabel %}
+            {% endif %}
+            {% if kerfield %}
             <tr>
                 <td>{{ kerfield }}</td>
                 <td> Field <a href="/NumberField/{{kflabel}}">{{ kflabel }}</a>

@@ -324,9 +324,7 @@ class WebDirichlet(WebCharObject):
 
     @property
     def gens(self):
-        #import pdb; pdb.set_trace()
-        #assert self.H.gens() is not None
-        return self.H.gens()
+        return map(int, self.H.gens())
 
     @property
     def generators(self):
@@ -927,6 +925,10 @@ class WebSmallDirichletGroup(WebDirichletGroup):
     @property
     def contents(self):
         return None
+
+    @property
+    def gens(self):
+        return self.H.gens_values()
 
     @property
     def generators(self):

@@ -96,7 +96,7 @@ def render_DirichletNavigation():
 
     elif 'label' in args:
         label = args['label'].replace(' ','')
-        if re.match(r'^[1-9][0-9]*.[1-9][0-9]*$', label):
+        if re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', label):
             slabel = label.split('.')
             m,n = int(slabel[0]), int(slabel[1])
             if n < m and gcd(m,n) == 1:
@@ -161,15 +161,13 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if modulus == None:
         return render_DirichletNavigation()
     modulus = modulus.replace(' ','')
-
-    if number == None and re.match('^[0-9]+.[0-9]+$', modulus):
+    if number == None and re.match('^[1-9][0-9]+\.[1-9][0-9]+$', modulus):
         return redirect(url_for(".render_Dirichletwebpage", label=modulus), 301)
 
     args={}
     args['type'] = 'Dirichlet'
     args['modulus'] = modulus
     args['number'] = number
-
     try:
         modulus = int(modulus)
     except ValueError:
@@ -177,7 +175,6 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if modulus <= 0:
         flash(Markup( "Error: <span style='color:black'>%s</span> is not a valid modulus for a Dirichlet character.  It should be a positive integer." % args['modulus']),"error")
         return redirect(url_for(".render_Dirichletwebpage"))
-        
     if number == None:
         if modulus < 100000:
             info = WebDirichletGroup(**args).to_dict()
