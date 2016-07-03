@@ -161,7 +161,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if modulus == None:
         return render_DirichletNavigation()
     modulus = modulus.replace(' ','')
-    if number == None and re.match('^[1-9][0-9]+\.[1-9][0-9]+$', modulus):
+    if number == None and re.match('^[1-9][0-9]*\.[1-9][0-9]*$', modulus):
         return redirect(url_for(".render_Dirichletwebpage", label=modulus), 301)
 
     args={}
