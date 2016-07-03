@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from base import app
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+from flask import render_template, url_for
 
 @app.route("/about")
 def about():
@@ -172,7 +172,6 @@ def varieties_history():
 
 @app.route("/ModularForm/GL2/Q/holomorphic/history")
 def holomorphic_mf_history():
-    t = 'History'
     b = [("Modular forms", url_for('modular_form_toplevel'))]
     b.append(('Holomorphic', url_for("emf.render_elliptic_modular_forms")))
     b.append(('History', url_for("holomorphic_mf_history")))
@@ -226,13 +225,13 @@ def groups_history():
     b.append(('History', url_for("groups_history")))
     return render_template(_single_knowl, title="A brief history of groups", kid='g.history', body_class=_bc, bread=b)
 
-
-
 @app.route("/editorial-board")
-def edit_board():
-    t = "Editorial and Management Boards"
-    b = [(t, url_for("edit_board"))]
-    return render_template(_single_knowl, title=t, kid='content.edit-board', body_class='', bread=b)
+@app.route("/management-board")
+@app.route("/management")
+def management_board():
+    t = "Management Board"
+    b = [(t, url_for("management_board"))]
+    return render_template('management.html', title=t, bread=b)
 
 @app.route("/citation")
 def citation():
