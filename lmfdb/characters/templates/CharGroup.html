@@ -38,7 +38,7 @@
 
 {% if contents %}
 {# Characters #}
-<h2> {%if rowtruncate%}First characters{% else %}Characters{%endif%}</h2>
+<h2> {%if rowtruncate%}First {{contents|count}} of {{order}} characters{% else %}Characters{%endif%}</h2>
 <table class="ntdata" id="chitable">
   <thead class="space">
     <tr> 
@@ -63,7 +63,7 @@
       {% for value in values %} <td style="font-family: serif;" >{{value}}</td> {% endfor %} 
     </tr>
     {% endfor %} 
-  </tbody>    
+  </tbody>
 </table>
 {% endif %}
 

@@ -46,7 +46,7 @@
         {% endif %}
 
         {# Values #}
-        
+
         {% if values %}
         <h2>
            {% if coltruncate %}
@@ -73,8 +73,7 @@
         </form>
         <div class="output"><span id="calc-value-output"></span></div>
         {% endif %}
-        
-                
+
         {# Basic properties #}
 
         <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
@@ -127,7 +126,7 @@
         </table>
 
         {# sums #}
-        
+
         {% if type=='Dirichlet' and values %}
 
         {# Gauss sum #}
@@ -159,7 +158,7 @@
             <div class="slider" id="slider-jacobi-b"></div>
         </form>
         <div class="output"><span id="calc-jacobi-output"></span></div>
-        
+
         {# Kloosterman sum #}
 
         <h2>
@@ -294,6 +293,6 @@ $(function() {
 });
 </script>
 
-       
+
 {% endblock %}
 
