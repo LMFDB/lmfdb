@@ -180,7 +180,7 @@ def search():
 
 def hgm_search(**args):
     info = to_dict(args)
-    bread = get_bread([("Search results", url_for('.search'))])
+    bread = get_bread([("Search results", '')])
     C = base.getDBConnection()
     query = {}
     if 'jump_to' in info:
