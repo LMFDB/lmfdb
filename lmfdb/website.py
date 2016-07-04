@@ -68,7 +68,7 @@ def not_found_500(error):
 #@app.route("/") is now handled in pages.py
 
 def root_static_file(name):
-    from flask import redirect
+    from flask import abort
 
     def static_fn():
         import os
@@ -77,7 +77,7 @@ def root_static_file(name):
             return open(fn).read()
         import logging
         logging.critical("root_static_file: file %s not found!" % fn)
-        return redirect(404)
+        return abort(404)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
 map(root_static_file, ['favicon.ico'])
 
