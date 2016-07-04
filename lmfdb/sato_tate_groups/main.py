@@ -4,9 +4,11 @@ from pymongo import ASCENDING
 from flask import flash, render_template, url_for, redirect, request
 from markupsafe import Markup
 from lmfdb.sato_tate_groups import st_page
-from lmfdb.utils import to_dict, random_object_from_collection
+from lmfdb.utils import to_dict, random_object_from_collection, encode_plot
 from lmfdb.base import getDBConnection
 from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start
+
+from sage.all import ZZ, cos, sin, pi, list_plot, circle
 
 ###############################################################################
 # Globals
@@ -66,6 +68,8 @@ def string_matrix(m):
     return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(m[i]) for i in range(len(m))]) + '\\end{bmatrix}'
 
 def st_link(label):
+    if re.match(r'^0\.1\.[1-9][0-9]*', label):
+        return '''<a href=%s>\(%s\)</a>'''% (url_for('.by_label', label=label), r'\mu(%s)'%label.split('.')[2])
     data = st_groups().find_one({'label':label})
     if not data:
         return label
@@ -101,6 +105,8 @@ st_pretty_dict = {
 }
 
 def st_pretty(st_name):
+    if re.match('mu\([1-9][0-9]*\)', st_name):
+        return '\\' + st_name
     return st_pretty_dict.get(st_name,st_name)
 
 def st_link_by_name(weight,degree,name):
@@ -150,12 +156,18 @@ def by_label(label):
 ###############################################################################
 
 def search_by_label(label):
+    """ search for Sato-Tate group by label and render if found """
     label = label.strip()
     if re.match(r'^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$', label):
         return render_by_label(label)
     if re.match(r'^\d+\.\d+\.\d+\.\d+\.\d+$', label):
         return redirect(url_for('.by_label',label=label+'a'),301)
-    # check for labels of the form w.d.name
+    # check for labels of the form 0.1.n, corresponding to mu(n)
+    if re.match(r'^0\.1\.[1-9][0-9]*$', label):
+        return render_mu_group(label.split('.')[2])
+    if re.match(r'^0\.1\.mu\([1-9][0-9]*\)$', label):
+        return redirect(url_for('.by_label',label='0.1.'+label.split('(')[1].split(')')[0]), 301)
+    # check for general labels of the form w.d.name
     data = {}
     if re.match(r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+',label):
         slabel = label.split('.')
@@ -170,6 +182,7 @@ def search_by_label(label):
         return redirect(url_for('.by_label', label=data['label']))
 
 def search(**args):
+    """ query processing for Sato-Tate groups -- returns rendered results page """
     info = to_dict(args)
     query = {}
     if 'label' in info:
@@ -238,13 +251,47 @@ def search(**args):
 # Rendering
 ###############################################################################
 
+def render_mu_group(n):
+    """ render html page for Sato-Tate group 0.1.n (there are infinitely many, none are stored in the database)"""
+    n = ZZ(n)
+    info = {}
+    info['label'] = "0.1.%d"%n
+    info['weight'] = 0
+    info['degree'] = 1
+    info['name'] = 'mu(%d)'%n
+    info['pretty'] = '\mu(%d)'%n
+    info['real_dimension'] = 0
+    info['components'] = n
+    info['ambient'] = 'O(1)'
+    info['connected'] = boolean_name(info['components'] == 1)
+    info['st0_name'] = 'SO(1)'
+    info['st0_description'] = '\\mathrm{trivial}'
+    info['component_group'] = 'C_{%d}'%n
+    info['abelian'] = boolean_name(True)
+    info['cyclic'] = boolean_name(True)
+    info['solvable'] = boolean_name(True)
+    info['gens'] = r'\left[\zeta_{%d}\right]'%n
+    info['numgens'] = 1
+    info['subgroups'] = comma_separated_list([st_link("0.1.%d"%(n/p)) for p in n.prime_factors()])
+    info['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + ["$\ldots$"])
+    info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    info['moments'] += [['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]
+    if n <= 120:
+        plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n, axes=False)
+    else:
+        plot = circle((0,0),1,thickness=3)
+    plot.xmin(-1); plot.xmax(1); plot.ymin(-1); plot.ymax(1)
+    plot.set_aspect_ratio(4.0/3.0)
+    return render_st_group (info, portrait=encode_plot(plot))
+
 def render_by_label(label):
+    """ render html page for Sato-Tate group sepecified by label """
     data = st_groups().find_one({'label': label})
     info = {}
     if data is None:
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate group currently in the database." % (label)),'error')
         return redirect(url_for(".index"))
-    for attr in ['label','weight','degree','pretty','real_dimension','components']:
+    for attr in ['label','weight','degree','name','pretty','real_dimension','components']:
         info[attr] = data[attr]
     info['ambient'] = st_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
@@ -259,26 +306,26 @@ def render_by_label(label):
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate component group currently in the database." % (data['component_group'])),'error')
         return redirect(url_for(".index"))
     info['component_group']=G['pretty']
-    info['abelian']=boolean_name(G['abelian'])
     info['cyclic']=boolean_name(G['cyclic'])
+    info['abelian']=boolean_name(G['abelian'])
+    info['solvable']=boolean_name(G['solvable'])
     info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
     info['numgens']=len(info['gens'])
     info['subgroups'] = comma_separated_list([st_link(sub) for sub in data['subgroups']])
     info['supgroups'] = comma_separated_list([st_link(sup) for sup in data['supgroups']])
-    info['subsups'] = len(info['subgroups'])+len(info['supgroups'])
     if data['moments']:
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%n for n in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
-    else:
-        info['moments'] = []
     if data['counts']:
         c=data['counts']
         info['probabilities'] = [['\\mathrm{P}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
-    else:
-        info['probabilities'] = []
+    return render_st_group(info, portrait=data.get('trace_histogram'))
+
+def render_st_group(info, portrait=None):
+    """ render html page for Sato-Tate group described by info """
     prop2 = [('Label', '%s'%info['label'])]
-    if 'trace_histogram' in data:
-        prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % data['trace_histogram'])]
+    if portrait:
+        prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]
     prop2 += [
         ('Name', '\(%s\)'%info['pretty']),
         ('Weight', '%d'%info['weight']),
@@ -293,7 +340,7 @@ def render_by_label(label):
         ('Sato-Tate groups', url_for('.index')),
         ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
-        (data['name'], '')
+        (info['name'], '')
     ]
     title = 'Sato-Tate group \(' + info['pretty'] + '\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
     return render_template('display.html',

@@ -34,7 +34,7 @@
 </table>
 {% endif %}
 
-{% if info['subsups'] > 1 %}
+{% if info['subgroups']|count or info['supgroups']|count %}
 <h2> {{ KNOWL('st_group.subsupgroups', title='Subgoups and Supergroups') }} </h2>
 <table>
     <tr><td>{{ KNOWL('st_group.subgroups', title='Maximal Subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
@@ -42,7 +42,7 @@
 </table>
 {% endif %}
 
-{% if info['moments'] != [] %}
+{% if info['moments'] %}
 <h2> {{ KNOWL('st_group.moments', title='Moment Statistics') }} </h2>
 <table border=1>
     {% for m in info['moments'] %}
@@ -59,7 +59,7 @@
 </table>
 {% endif %}
 
-{% if info['probabilities'] != [] %}
+{% if info['probabilities'] %}
 <h2> {{ KNOWL('st_group.probabilities', title='Event Probabilities') }} </h2>
 <table border=1>
     {% for m in info['probabilities'] %}
