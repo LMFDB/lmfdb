@@ -446,18 +446,6 @@ def search_input_error(info=None, bread=None):
     return render_template("ecnf-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
 
 
-# Harald wrote the following and it is not used -- JEC
-@ecnf_page.route("/search", methods=["GET", "POST"])
-def search():
-    if request.method == "GET":
-        val = request.args.get("val", "no value")
-        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-        return render_template("ecnf-index.html", title="Elliptic Curve Search", bread=bread, val=val)
-    elif request.method == "POST":
-        return "ERROR: we always do http get to explicitly display the search parameters"
-    else:
-        return redirect(404)
-
 @ecnf_page.route("/browse/")
 def browse():
     info = {

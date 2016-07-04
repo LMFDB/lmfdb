@@ -84,18 +84,18 @@ def index():
 def by_label(label):
     return render_field_webpage({'label': label})
 
-
-@local_fields_page.route("/search", methods=["GET", "POST"])
-def search():
-    if request.method == "GET":
-        val = request.args.get("val", "no value")
-        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-        return render_template("lf-search.html", title="Local Number Field Search", bread=bread, val=val)
-    elif request.method == "POST":
-        return "ERROR: we always do http get to explicitly display the search parameters"
-    else:
-        return flask.redirect(404)
-
+# FIXME: delete or fix this code
+# Apparently obsolete code that causes a server error if executed
+#@local_fields_page.route("/search", methods=["GET", "POST"])
+#def search():
+#    if request.method == "GET":
+#        val = request.args.get("val", "no value")
+#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
+#        return render_template("lf-search.html", title="Local Number Field Search", bread=bread, val=val)
+#    elif request.method == "POST":
+#        return "ERROR: we always do http get to explicitly display the search parameters"
+#    else:
+#        return flask.abort(404)
 
 def local_field_search(**args):
     info = to_dict(args)

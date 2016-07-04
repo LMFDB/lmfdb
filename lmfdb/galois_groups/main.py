@@ -6,15 +6,13 @@ import pymongo
 ASC = pymongo.ASCENDING
 import flask
 from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, redirect
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, make_logger, list_to_latex_matrix, random_object_from_collection
-from lmfdb.search_parsing import LIST_RE, clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start
-import os
+from lmfdb.base import app
+from flask import render_template, request, url_for, redirect
+from lmfdb.utils import to_dict, list_to_latex_matrix, random_object_from_collection
+from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start
 import re
 import bson
 from lmfdb.galois_groups import galois_groups_page, logger
-import sage.all
 from sage.all import ZZ, latex, gap
 
 # Test to see if this gap installation knows about transitive groups
@@ -103,17 +101,18 @@ def index():
                 ('Galois group labels', url_for(".labels_page"))]
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore)
 
-
-@galois_groups_page.route("/search", methods=["GET", "POST"])
-def search():
-    if request.method == "GET":
-        val = request.args.get("val", "no value")
-        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-        return render_template("gg-search.html", title="Galois Group Search", bread=bread, val=val)
-    elif request.method == "POST":
-        return "ERROR: we always do http get to explicitly display the search parameters"
-    else:
-        return flask.redirect(404)
+# FIXME: delete or fix this code
+# Apparently obsolete code that causes a server error if executed
+# @galois_groups_page.route("/search", methods=["GET", "POST"])
+# def search():
+#    if request.method == "GET":
+#        val = request.args.get("val", "no value")
+#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
+#        return render_template("gg-search.html", title="Galois Group Search", bread=bread, val=val)
+#    elif request.method == "POST":
+#        return "ERROR: we always do http get to explicitly display the search parameters"
+#    else:
+#        return flask.abort(404)
 
 
 def galois_group_search(**args):
