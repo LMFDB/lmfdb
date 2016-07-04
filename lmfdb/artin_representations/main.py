@@ -13,7 +13,7 @@ from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_count, parse_start, clean_input
 
 from lmfdb.math_classes import ArtinRepresentation
-from transitive_group import group_display_knowl
+from lmfdb.transitive_group import group_display_knowl
 
 from sage.all import ZZ
 
