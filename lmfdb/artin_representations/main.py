@@ -123,23 +123,6 @@ def artin_representation_search(**args):
     return render_template("artin-representation-search.html", req=info, data=data, title=title, bread=bread, query=query, start=start, report=report, nres=nres, initfunc=initfunc, sign_code=sign_code)
 
 
-# Obsolete
-#@artin_representations_page.route("/search", methods = ["GET", "POST"])
-# def search():
-#  if request.method == "GET":
-#    val = request.args.get("val", "no value")
-#    bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-#    return render_template("artin-representations-search.html", title="Artin Representations Search", bread = bread, val = val)
-#  elif request.method == "POST":
-#    return "ERROR: we always do http get to explicitly display the search parameters"
-#  else:
-#    return flask.redirect(404)
-#
-#@artin_representations_page.route("/<label>/")
-#def by_label_with_slash(label):
-#    print "here"
-#    return flask.redirect(url_for(".render_artin_representation_webpage", label=label), code=301)
-
 def search_input_error(info, bread):
     return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
 

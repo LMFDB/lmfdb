@@ -8,14 +8,13 @@ import ast
 ASC = pymongo.ASCENDING
 import flask
 from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
+from flask import render_template, request, url_for
+from lmfdb.utils import to_dict
 from lmfdb.search_parsing import search_parser, parse_ints, parse_count, parse_start, clean_input
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 
 from sage.all import Permutation
-from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page, logger
+from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.sato_tate_groups.main import sg_pretty
 
 
@@ -126,9 +125,6 @@ def parse_bracketed_posints2(inp, query, qfield, maxlength=None, exactlength=Non
 #            query[qfield] = inp[1:-1]
             query[qfield] = inp
 
-
-
-
     
 @higher_genus_w_automorphisms_page.route("/")
 def index():
@@ -144,8 +140,6 @@ def index():
                 ('Labeling convention', url_for(".labels_page"))]
     
     return render_template("hgcwa-index.html", title="Families of Higher Genus Curves with Automorphisms", bread=bread, info=info, learnmore=learnmore)
-
-
 
 
 @higher_genus_w_automorphisms_page.route("/<label>")
@@ -167,17 +161,18 @@ def by_label(label):
 def by_passport_label(label):
     return render_passport({'passport_label': label})
 
-
-@higher_genus_w_automorphisms_page.route("/search", methods=["GET", "POST"])
-def search():
-    if request.method == "GET":
-        val = request.args.get("val", "no value")
-        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-        return render_template("hgcwa-search.html", title="Automorphisms of Higher Genus Curves Search", bread=bread, val=val)
-    elif request.method == "POST":
-        return "ERROR: we always do http get to explicitly display the search parameters"
-    else:
-        return flask.redirect(404)
+# FIXME: delete or fix this code
+# Apparently obsolete code that causes a server error if executed
+#@higher_genus_w_automorphisms_page.route("/search", methods=["GET", "POST"])
+#def search():
+#    if request.method == "GET":
+#        val = request.args.get("val", "no value")
+#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
+#        return render_template("hgcwa-search.html", title="Automorphisms of Higher Genus Curves Search", bread=bread, val=val)
+#    elif request.method == "POST":
+#        return "ERROR: we always do http get to explicitly display the search parameters"
+#    else:
+#        return flask.abort(404)
 
 
 def higher_genus_w_automorphisms_search(**args):
@@ -328,7 +323,6 @@ def render_family(args):
                                title=title, bread=bread, info=info,
                                properties2=prop2, friends=friends,
                                learnmore=learnmore, downloads=downloads)
-
 
 
 def render_passport(args):
