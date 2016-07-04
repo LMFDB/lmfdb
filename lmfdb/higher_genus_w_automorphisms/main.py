@@ -151,7 +151,7 @@ def by_label(label):
         return render_family({'label': label})    
     else:
         info = {}
-        bread = get_bread([("Search error", url_for('.search'))])
+        bread = get_bread([("Search error", '')])
         info['err'] = "No family with label " + label + " was found in the database."
         info['label'] = label
         return search_input_error(info, bread)
@@ -177,7 +177,7 @@ def by_passport_label(label):
 
 def higher_genus_w_automorphisms_search(**args):
     info = to_dict(args)
-    bread = get_bread([("Search results", url_for('.search'))])
+    bread = get_bread([("Search results",'')])
     C = base.getDBConnection()
     query = {}
     if 'jump_to' in info:
