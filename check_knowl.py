@@ -5,15 +5,7 @@ Initial version (Bristol March 2016)
 
 """
 import os.path
-import gzip
-import re
-import sys
-import time
 import os
-import random
-import glob
-import pymongo
-from lmfdb import base
 
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from pymongo.mongo_client import MongoClient

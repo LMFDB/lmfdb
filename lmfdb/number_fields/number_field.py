@@ -487,7 +487,7 @@ def number_field_search(**args):
         one = C.numberfields.fields.find_one(query)
         if one:
             label = one['label']
-            return redirect(url_for(".by_label", clean_input(label)))
+            return redirect(url_for(".by_label", label=clean_input(label)))
 
     fields = C.numberfields.fields
 

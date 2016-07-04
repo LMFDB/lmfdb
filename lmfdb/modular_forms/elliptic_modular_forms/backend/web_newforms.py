@@ -734,7 +734,7 @@ class WebNewForm(WebObject, CachedRepresentation):
           Reimplement the recursive algorithm in sage modular/hecke/module.py
           We do this because of a bug in sage with .eigenvalue()
         """
-        from sage.arith.all import factor
+        from sage.all import factor
         ev = self.eigenvalues
 
         c2 = self._coefficients.get(2)

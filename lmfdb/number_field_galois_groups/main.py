@@ -44,7 +44,7 @@ def search():
     elif request.method == "POST":
         return "ERROR: we always do http get to explicitly display the search parameters"
     else:
-        return flask.redirect(404)
+        return flask.abort(404)
 
 
 @nfgg_page.route("/<degree>/<size>/<index>")

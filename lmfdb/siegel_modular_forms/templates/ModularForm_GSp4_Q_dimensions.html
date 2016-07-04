@@ -2,6 +2,7 @@
 {% block content %}
 
 {% if info.table %}
+<h2>Dimension table of spaces of {{KNOWL('mf.siegel.degree',title='degree '+info.col.degree()|string)}} {{KNOWL('mf.siegel',title='Siegel modular forms')}}</h2>
 {% include 'includes/dimension_table.html' %}
 {% endif %}
 

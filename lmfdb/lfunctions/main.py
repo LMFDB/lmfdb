@@ -24,6 +24,7 @@ from LfunctionComp import isogeny_class_table, isogeny_class_cm
 import LfunctionDatabase
 from lmfdb import base
 from pymongo import ASCENDING
+from flask import current_app
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -384,25 +385,31 @@ def l_function_lcalc_page():
 ################################################################################
 #   Helper functions, individual L-function homepages
 ################################################################################
+
+def render_lfunction_exception(err):
+    if current_app.debug:
+        raise err
+    if err.args:
+        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+"<li>"+y+"</li>",err.args) + "</ul>"
+    else:
+        errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
+    info = {'content': errmsg, 'title': 'Error displaying L-function data'}
+    return render_template('LfunctionSimple.html', info=info, **info), 500
+
 def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
     logger.debug(args)
     logger.debug(temp_args)
 
-    L = Lclass(**args)
     try:
-        pass
-    except Exception as ex:
-        from flask import current_app
-        if not current_app.debug:
-            info = {'content': 'Sorry, there has been a problem: %s.'%str(ex.args), 'title': 'Error'}
-            return render_template('LfunctionSimple.html', info=info, **info), 500
-        else:
-            raise ex
+        # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
+        L = Lclass(**args)
+    except Exception as err:
+        return render_lfunction_exception(err)
     try:
         if temp_args['download'] == 'lcalcfile':
             return render_lcalcfile(L, request.url)
-    except KeyError as ex:
+    except KeyError as err:
         pass # Do nothing
 
     info = initLfunction(L, temp_args, request)
@@ -529,9 +536,9 @@ def initLfunction(L, args, request):
 
     info['degree'] = int(L.degree)
 
-    info['zeroeslink'] = (request.url.replace('/L/', '/L/Zeros/').
+    info['zeroslink'] = (request.url.replace('/L/', '/L/Zeros/').
                           replace('/Lfunction/', '/L/Zeros/').
-                          replace('/L-function/', '/L/Zeros/'))  # url_for('zeroesLfunction',  **args)
+                          replace('/L-function/', '/L/Zeros/'))  # url_for('zerosLfunction',  **args)
 
     info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
                         replace('/Lfunction/', '/L/Plot/').
@@ -540,7 +547,7 @@ def initLfunction(L, args, request):
     if L.Ltype() == 'ellipticmodularform':
         if ( (L.number == 1 and (1 + L.level) * L.weight > 50) or 
                (L.number > 1 and L.level * L.weight > 50)):
-            info['zeroeslink'] = ""
+            info['zeroslink'] = ""
             info['plotlink'] = ""
 
 
@@ -558,7 +565,7 @@ def initLfunction(L, args, request):
             minNumberOfCoefficients = 100     # TODO: Fix this to take level into account
 
             if len(L.dirichlet_coefficients) < minNumberOfCoefficients:
-                info['zeroeslink'] = ''
+                info['zeroslink'] = ''
                 info['plotlink'] = ''
             info['bread'] = get_bread(2, [('Maass Form',
                                            url_for('.l_function_maass_browse_page')),
@@ -737,7 +744,7 @@ def initLfunction(L, args, request):
     elif L.Ltype() == "artin":
         info['friends'] = [('Artin representation', L.artin.url_for())]
         if L.sign == 0:           # The root number is now unknown
-            info['zeroeslink'] = ''
+            info['zeroslink'] = ''
             info['plotlink'] = ''
 
     elif L.Ltype() == "hgmQ":
@@ -816,7 +823,7 @@ def set_gaga_properties(L):
 
 
 ################################################################################
-#   Route functions, plotting L-function and displaying zeroes
+#   Route functions, plotting L-function and displaying zeros
 ################################################################################
 
 # L-function of Elliptic curve #################################################
@@ -851,12 +858,12 @@ def plotLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=No
 @l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
 @l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
 @l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
-def zeroesLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None, arg8=None, arg9=None):
-    return render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+def zerosLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None, arg8=None, arg9=None):
+    return render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 
 
 ################################################################################
-#   Render functions, plotting L-function and displaying zeroes
+#   Render functions, plotting L-function and displaying zeros
 ################################################################################
 def render_plotLfunction_from_db(db, dbTable, condition):
     data_location = os.path.expanduser(
@@ -908,10 +915,13 @@ def render_plotLfunction_from_db(db, dbTable, condition):
 
 
 def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
-    data = getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    try:
+        data = getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    except Exception as err: # depending on the arguments, we may get an exception or we may get a null return, we need to handle both cases
+        return render_lfunction_exception(err)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
-        return flask.redirect(404)
+        return flask.abort(404)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
@@ -920,7 +930,8 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
 def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     pythonL = generateLfunctionFromUrl(
         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
-
+    if not pythonL:
+        return ""
     plotrange = 30
     if hasattr(pythonL,"lfunc_data"):
         if pythonL.lfunc_data is None:
@@ -962,12 +973,16 @@ def styleLfunctionPlot(p, fontsize):
     p.axes_width(0.2)
 
 
-
-
-def render_zeroesLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
-    ''' Renders the first few zeroes of the L-function with the given arguments.
+def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
+    ''' Renders the first few zeros of the L-function with the given arguments.
     '''
-    L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
+    try:
+        L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
+    except Exception as err:
+        return render_lfunction_exception(err)
+        
+    if not L:
+        return flask.abort(404)
     if hasattr(L,"lfunc_data"):
         if L.lfunc_data is None:
             return "<span>" + L.zeros + "</span>"
@@ -1050,7 +1065,6 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
             return Lfunction_Maass(fromDB = True, group = arg2, level = arg5,
                 char = arg6, R = arg7, ap_id = arg8)
 
-
     elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z' and arg5 == 'specimen':  # this should be changed when we fix the SMF urls
         return Lfunction_SMF2_scalar_valued(weight=arg6, orbit=arg7, number=arg8)
 
@@ -1076,7 +1090,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
 
     else:
-        return flask.redirect(403)
+        return None
 
 
 ################################################################################

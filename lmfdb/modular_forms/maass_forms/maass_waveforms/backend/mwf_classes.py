@@ -101,7 +101,7 @@ class WebMaassForm(object):
         if not isinstance(maassid, (bson.objectid.ObjectId, str)):
             ids = db.find_Maass_form_id(id=maassid)
             if len(ids) == 0:
-                return
+                raise KeyError("maassid %s not found in database"%maassid)
             mwf_logger.debug("maassid is not an objectid! {0}".format(maassid))
             maassid = ids[0]
         self._maassid = bson.objectid.ObjectId(maassid)

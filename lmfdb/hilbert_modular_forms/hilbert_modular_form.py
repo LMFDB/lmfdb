@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 import pymongo
 
@@ -18,8 +17,6 @@ from lmfdb.WebNumberField import WebNumberField
 from markupsafe import Markup
 from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
-
-#from lmfdb.WebNumberField import *
 
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
