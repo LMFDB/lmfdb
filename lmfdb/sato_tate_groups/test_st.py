@@ -11,23 +11,38 @@ class SatoTateGroupTest(LmfdbTest):
         
     def test_by_label(self):
         L = self.tc.get('/SatoTateGroup/1.4.10.1.1a')
-        assert 'USp(4)' in L.data
+        assert 'USp(4)' in L.data and 'Moments' in L.data
         L = self.tc.get('/SatoTateGroup/?label=1.4.USp(4)')
-        assert '1.4.10.1.1a' in L.data
+        assert '1.4.10.1.1a' in L.data and 'Moments' in L.data
         L = self.tc.get('/SatoTateGroup/?label=1.2.N(U(1))')
-        assert '1.2.1.2.1a' in L.data
+        assert '1.2.1.2.1a' in L.data and 'Moments' in L.data
+        L = self.tc.get('/SatoTateGroup/?label=0.1.37')
+        assert '0.1.37' in L.data and 'Moments' in L.data
+        L = self.tc.get('/SatoTateGroup/?label=0.1.mu(37)')
+        assert '0.1.37' in L.data and 'Moments' in L.data
+        
         
     def test_direct_access(self):
-        L = self.tc.get('/SatoTateGroup/1.4.G_{3,3}')
+        L = self.tc.get('/SatoTateGroup/1.4.G_{3,3}', follow_redirects=True)
         assert '1.4.6.1.1a' in L.data
         L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
         assert 'G_{3,3}' in L.data
+        L = self.tc.get('/SatoTateGroup/0.1.mu(37)', follow_redirects=True)
+        assert '0.1.37' in L.data
+        L = self.tc.get('/SatoTateGroup/0.1.37')
+        assert 'mu(37)' in L.data
         
     def test_browse(self):
         L = self.tc.get('/SatoTateGroup/?identity_component=U(1)')
         assert 'all 2 matches' in L.data
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4&&components=48')
         assert 'unique match' in L.data
+        L = self.tc.get('SatoTateGroup/?components=48')
+        assert 'all 2 matches' in L.data
+        L = self.tc.get('SatoTateGroup/?degree=1&start=1000&count=25')
+        assert 'matches 1001-1025' in L.data
+        L = self.tc.get('SatoTateGroup/?degree=1&rational_only=yes')
+        assert 'all 2 matches' in L.data
 
     def test_moments(self):
         L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
@@ -66,6 +81,8 @@ class SatoTateGroupTest(LmfdbTest):
             print 'Checking Sato-Tate group ' + r['label']
             L = self.tc.get('/SatoTateGroup/?label='+r['label'])
             assert r['label'] in L.data and 'Moment Statistics' in L.data
+        L = self.tc.get('/SatoTateGroup/?components=999999999')
+        assert 'unique match'  in L.data and 'mu(999999999)' in L.data
         
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
