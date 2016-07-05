@@ -10,16 +10,16 @@ class SatoTateGroupTest(LmfdbTest):
         assert 'Browse' in L.data and 'SO(1)' in L.data and 'U(1)_2' in L.data  and 'SU(2)' in L.data and 'Rational' in L.data
         
     def test_by_label(self):
-        L = self.tc.get('/SatoTateGroup/1.4.10.1.1a')
-        assert 'USp(4)' in L.data and 'Moment Statistics' in L.data
-        L = self.tc.get('/SatoTateGroup/?label=1.4.USp(4)')
-        assert '1.4.10.1.1a' in L.data and 'Moment Statistics' in L.data
-        L = self.tc.get('/SatoTateGroup/?label=1.2.N(U(1))')
-        assert '1.2.1.2.1a' in L.data and 'Moment Statistics' in L.data
-        L = self.tc.get('/SatoTateGroup/?label=0.1.37')
-        assert '0.1.37' in L.data and 'Moment Statistics' in L.data
-        L = self.tc.get('/SatoTateGroup/?label=0.1.mu(37)')
-        assert '0.1.37' in L.data and 'Moment Statistics' in L.data
+        L = self.tc.get('/SatoTateGroup/?label=1.4.10.1.1a', follow_redirects=True)
+        assert 'USp(4)' in L.data and '223412' in L.data
+        L = self.tc.get('/SatoTateGroup/?label=1.4.USp(4)', follow_redirects=True)
+        assert '1.4.10.1.1a' in L.data and '223412' in L.data
+        L = self.tc.get('/SatoTateGroup/?label=1.2.N(U(1))', follow_redirects=True)
+        assert '1.2.1.2.1a' in L.data and '462' in L.data
+        L = self.tc.get('/SatoTateGroup/?label=0.1.37', follow_redirects=True)
+        assert '0.1.37' in L.data and 'mu(185)' in L.data
+        L = self.tc.get('/SatoTateGroup/?label=0.1.mu(37)', follow_redirects=True)
+        assert '0.1.37' in L.data and 'mu(185)' in L.data
         
         
     def test_direct_access(self):
@@ -82,7 +82,7 @@ class SatoTateGroupTest(LmfdbTest):
             L = self.tc.get('/SatoTateGroup/?label='+r['label'])
             assert r['label'] in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?components=999999999')
-        assert 'unique match'  in L.data and 'mu(999999999)' in L.data
+        assert 'unique match'  in L.data and 'mu(999999999)' in L.data and 'mu(333333333)' in L.data
         
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
