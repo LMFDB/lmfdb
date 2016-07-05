@@ -221,7 +221,6 @@ def search(**args):
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
-    print info
     if (not 'weight' in query or 0 in weight_list) and \
        (not 'degree' in query or 1 in degree_list) and \
        (not 'identity_component' in query or query['identity_component'] == 'SO(1)') and \
