@@ -7,7 +7,7 @@ from lmfdb.utils import to_dict, random_object_from_collection, encode_plot, fla
 from lmfdb.base import getDBConnection
 from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash
 
-from sage.all import ZZ, QQ, cos, sin, pi, list_plot, circle
+from sage.all import ZZ, cos, sin, pi, list_plot, circle
 
 ###############################################################################
 # Globals
