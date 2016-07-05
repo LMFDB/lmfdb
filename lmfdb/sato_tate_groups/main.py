@@ -244,7 +244,7 @@ def search(**args):
             return render_template('results.html', info=info, title='Sato-Tate groups search input error', bread=bread, credit=credit_string)
         if (query['weight'] and not 0 in query['weight']) or \
            (query['degree'] and not 1 in query['degree']) or \
-           (query['trace_zero_density'] and query['trace_zero_density'] != 0):
+           (query.get('trace_zero_density') and query['trace_zero_density'] != 0):
             res = []
         else:
             nres = len(query['components']) if query.get('components') else -1
@@ -256,9 +256,7 @@ def search(**args):
                 if n >= 2:
                     i += 1
                     if i >= start:
-                        res = res.append({'label':'0.1.%d'%n, 'weight':0, 'degree':1, 'real_dimension':0, 'identity_component':'SO(1)',
-                                          'name':'mu(%d)'%n, 'pretty':'\\mu(%d)'%n, 'components':n, 'component_group':'C_%d'%n, 'trace_zero_density':'0',
-                                          'moments': [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)], ['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]})
+                        results.append(mu_info(n))
                         if len(results) == count:
                             break
     if nres == 0:
@@ -267,7 +265,7 @@ def search(**args):
         info['report'] = 'unique match'
     else:
         if nres < 0 or nres > count or start > 0:
-            info['report'] = 'displaying matches %s-%s %s' % (start + 1, min(nres, start + count), "of %d"%nres if nres > 0 else "")
+            info['report'] = 'displaying matches %d-%d %s' % (start + 1, start + len(results), "of %d"%nres if nres > 0 else "")
         else:
             info['report'] = 'displaying all %s matches' % nres
 
@@ -300,6 +298,7 @@ def mu_info(n):
     rec['ambient'] = 'O(1)'
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SO(1)'
+    rec['identity_component'] = st0_pretty(rec['st0_name'])
     rec['st0_description'] = '\\mathrm{trivial}'
     rec['component_group'] = 'C_{%d}'%n
     rec['trace_zero_density']='0'
@@ -312,10 +311,11 @@ def mu_info(n):
     rec['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + ["$\ldots$"])
     rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     rec['moments'] += [['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]
-    rec['trace_moments'] = trace_moments(rec)
+    rec['trace_moments'] = trace_moments(rec['moments'])
     return rec
 
 def mu_portrait(n):
+    """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n <= 120:
         plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n, axes=False)
     else:
@@ -326,8 +326,10 @@ def mu_portrait(n):
 
 def render_by_label(label):
     """ render html page for Sato-Tate group sepecified by label """
+    print "render by label", label
     if re.match(MU_LABEL_RE, label):
-        n = ZZ(label.split()[2])
+        n = ZZ(label.split('.')[2])
+        print "n", n
         render_st_group(mu_info(n), portrait=mu_portrait(n))
     data = st_groups().find_one({'label': label})
     info = {}
@@ -366,6 +368,7 @@ def render_by_label(label):
 
 def render_st_group(info, portrait=None):
     """ render html page for Sato-Tate group described by info """
+    print "render_st_group", info
     prop2 = [('Label', '%s'%info['label'])]
     if portrait:
         prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]

@@ -28,7 +28,7 @@ from sage.all import latex
 
 def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
-    flash(Markup("Error: %s"%tuple(map(lambda x: "<span style='color:black'>%s</span>"%x, args))),"error")
+    flash(Markup("Error: %s"%(errmsg%tuple(map(lambda x: "<span style='color:black'>%s</span>"%x, args)))),"error")
 
 def random_object_from_collection(collection):
     """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
