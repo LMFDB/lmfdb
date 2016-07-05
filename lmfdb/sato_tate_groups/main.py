@@ -151,7 +151,7 @@ def index():
 @st_page.route('/random')
 def random():
     data = random_object_from_collection(st_groups())
-    return redirect(url_for('.by_label', label=data['label']))
+    return redirect(url_for('.by_label', label=data['label']), 301)
 
 @st_page.route('/<label>')
 def by_label(label):
@@ -186,14 +186,16 @@ def search_by_label(label):
         flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
         return redirect(url_for(".index"))
     else:
-        return redirect(url_for('.by_label', label=data['label']))
+        return redirect(url_for('.by_label', label=data['label']), 301)
 
 def search(**args):
     """ query processing for Sato-Tate groups -- returns rendered results page """
 
     info = to_dict(args)
+    if 'jump' in info:
+        return redirect(url_for('.by_label', label=info['jump']), 301)
     if 'label' in info:
-        return search_by_label(info['label'])
+        return redirect(url_for('.by_label', label=info['label']), 301)
     bread = [('Sato-Tate groups', url_for('.index')),('Search Results', '.')]
     count = parse_count(info, 25)
     start = parse_start(info)
