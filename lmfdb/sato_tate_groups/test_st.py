@@ -82,7 +82,7 @@ class SatoTateGroupTest(LmfdbTest):
             L = self.tc.get('/SatoTateGroup/?label='+r['label'])
             assert r['label'] in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?components=999999999')
-        assert 'unique match'  in L.data and 'mu(999999999)' in L.data and 'mu(333333333)' in L.data
+        assert 'unique match'  in L.data and 'mu(999999999)' in L.data
         
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
