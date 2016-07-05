@@ -7,7 +7,7 @@ class SatoTateGroupTest(LmfdbTest):
     #
     def test_main(self):
         L = self.tc.get('/SatoTateGroup/')
-        assert 'Browse' in L.data and 'SO(1)' in L.data 'U(1)_2' in L.data  and 'SU(2)' in L.data and 'Rational' in L.data
+        assert 'Browse' in L.data and 'SO(1)' in L.data and 'U(1)_2' in L.data  and 'SU(2)' in L.data and 'Rational' in L.data
         
     def test_by_label(self):
         L = self.tc.get('/SatoTateGroup/1.4.10.1.1a')
