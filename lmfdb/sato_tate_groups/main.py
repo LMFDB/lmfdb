@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
 import re
 from pymongo import ASCENDING
-from flask import flash, render_template, url_for, redirect, request
-from markupsafe import Markup
+from flask import render_template, url_for, redirect, request
 from lmfdb.sato_tate_groups import st_page
-from lmfdb.utils import to_dict, random_object_from_collection, encode_plot
+from lmfdb.utils import to_dict, random_object_from_collection, encode_plot, flash_error
 from lmfdb.base import getDBConnection
-from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash
 
 from sage.all import ZZ, cos, sin, pi, list_plot, circle
 
 ###############################################################################
 # Globals
 ###############################################################################
+
+MU_LABEL_RE = '^0\.1\.[1-9][0-9]*'
+MU_LABEL_NAME_RE = r'^0\.1\.mu\([1-9][0-9]*\)$'
+ST_LABEL_RE = '^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
+ST_LABEL_SHORT_RE = '^\d+\.\d+\.\d+\.\d+\.\d+$'
+ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+'
 
 credit_string = 'Andrew Sutherland'
 
@@ -68,12 +73,12 @@ def string_matrix(m):
     return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(m[i]) for i in range(len(m))]) + '\\end{bmatrix}'
 
 def st_link(label):
-    if re.match(r'^0\.1\.[1-9][0-9]*', label):
-        return '''<a href=%s>\(%s\)</a>'''% (url_for('.by_label', label=label), r'\mu(%s)'%label.split('.')[2])
+    if re.match(MU_LABEL_RE, label):
+        return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mu(%s)'%label.split('.')[2])
     data = st_groups().find_one({'label':label})
     if not data:
         return label
-    return '''<a href=%s>\(%s\)</a>'''% (url_for('.by_label', label=label), data['pretty'])
+    return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), data['pretty'])
 
 def st_ambient(weight, degree):
     return '\\mathrm{USp}(%d)'%degree if weight%2 == 1 else '\\mathrm{O}(%d)'%degree
@@ -110,8 +115,8 @@ def st_pretty(st_name):
     return st_pretty_dict.get(st_name,st_name)
 
 def st_link_by_name(weight,degree,name):
-    return '<a href="%s">\(%s\)</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
-    
+    return '<a href="%s">$%s$</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
+
 ###############################################################################
 # Learnmore display functions
 ###############################################################################
@@ -158,138 +163,176 @@ def by_label(label):
 def search_by_label(label):
     """ search for Sato-Tate group by label and render if found """
     label = label.strip()
-    if re.match(r'^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$', label):
+    if re.match(ST_LABEL_RE, label):
         return render_by_label(label)
-    if re.match(r'^\d+\.\d+\.\d+\.\d+\.\d+$', label):
+    if re.match(ST_LABEL_SHORT_RE, label):
         return redirect(url_for('.by_label',label=label+'a'),301)
-    # check for labels of the form 0.1.n, corresponding to mu(n)
-    if re.match(r'^0\.1\.[1-9][0-9]*$', label):
-        return render_mu_group(label.split('.')[2])
-    if re.match(r'^0\.1\.mu\([1-9][0-9]*\)$', label):
+    # check for labels of the form 0.1.n corresponding to mu(n)
+    if re.match(MU_LABEL_RE, label):
+        return render_by_label(label)
+    # check for labels of the form 0.1.mu(n) (redirecto to 0.1.n)
+    if re.match(MU_LABEL_NAME_RE, label):
         return redirect(url_for('.by_label',label='0.1.'+label.split('(')[1].split(')')[0]), 301)
     # check for general labels of the form w.d.name
     data = {}
-    if re.match(r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+',label):
+    if re.match(ST_LABEL_NAME_RE,label):
         slabel = label.split('.')
         try:
             data = st_groups().find_one({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]},{'_id':False,'label':True})
         except ValueError:
             data = {}
     if not data:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not the label or name of a Sato-Tate group currently in the database" % label),"error")
+        flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
         return redirect(url_for(".index"))
     else:
         return redirect(url_for('.by_label', label=data['label']))
 
 def search(**args):
     """ query processing for Sato-Tate groups -- returns rendered results page """
+
     info = to_dict(args)
-    query = {}
     if 'label' in info:
         return search_by_label(info['label'])
-    info['st0_list'] = st0_list
-    info['st0_dict'] = st0_dict
     bread = [('Sato-Tate groups', url_for('.index')),('Search Results', '.')]
-    if not query:
+    count = parse_count(info, 25)
+    start = parse_start(info)
+    query = {}
+    if info.get('rational','1') == '1':
+        # Lookup rational ST groups in database
         try:
-            parse_ints(info,query,'weight')
-            parse_ints(info,query,'degree')
+            parse_ints(info,query,'weight','weight')
+            parse_ints(info,query,'degree','degree')
             if info.get('identity_component'):
                 query['identity_component'] = info['identity_component']
-            parse_ints(info,query,'components')
-            parse_rational(info,query,'trace_zero_density')
+            parse_ints(info,query,'components','components')
+            parse_rational(info,query,'trace_zero_density','trace zero density')
         except ValueError as err:
             info['err'] = str(err)
-            return render_template('results.html', info=info, title='Sato-Tate groups search input rror', bread=bread, credit=credit_string)
+            return render_template('results.html', info=info, title='Sato-Tate groups search input error', bread=bread, credit=credit_string)
         cursor = st_groups().find(query)
-    info['query'] = dict(query)
-    count = parse_count(info, 50)
-    start = parse_start(info)
-    nres = cursor.count()
-    if (start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if (start < 0):
-        start = 0
-    res = cursor.sort([('degree', ASCENDING), ('real_dimension', ASCENDING), ('identity_component', ASCENDING), ('name', ASCENDING)]).skip(start).limit(count)
-    nres = res.count()
-
-    if nres == 1:
+        nres = cursor.count()
+        if (start >= nres):
+            start -= (1 + (start - nres) / count) * count
+        if (start < 0):
+            start = 0
+        res = cursor.sort([('degree', ASCENDING), ('real_dimension', ASCENDING), ('identity_component', ASCENDING), ('name', ASCENDING)]).skip(start).limit(count)
+        nres = res.count()
+        results = []
+        for v in res:
+            v_clean = {}
+            v_clean['label'] = v['label']
+            v_clean['weight'] = v['weight']
+            v_clean['degree'] = v['degree']
+            v_clean['real_dimension'] = v['real_dimension']
+            v_clean['identity_component'] = st0_pretty(v['identity_component'])
+            v_clean['name'] = v['name']
+            v_clean['pretty'] = v['pretty']
+            v_clean['components'] = v['components']
+            v_clean['component_group'] = sg_pretty(v['component_group'])
+            v_clean['trace_zero_density'] = v['trace_zero_density']
+            v_clean['trace_moments'] = trace_moments(v['moments'])
+            results.append(v_clean)
+    else:
+        # Irrational ST groups are currently limited to weight 0 degree 1 (mu(n) for n > 2)
+        try:
+            query['weight'] = parse_ints_to_list_flash(info.get('weight'),'weight')
+            query['degree'] = parse_ints_to_list_flash(info.get('degree'),'degree')
+            query['components'] = parse_ints_to_list_flash(info.get('components'),'components')
+            parse_rational(info,query,'trace_zero_density', 'trace zero density')
+        except ValueError as err:
+            info['err'] = str(err)
+            return render_template('results.html', info=info, title='Sato-Tate groups search input error', bread=bread, credit=credit_string)
+        if (query['weight'] and not 0 in query['weight']) or \
+           (query['degree'] and not 1 in query['degree']) or \
+           (query['trace_zero_density'] and query['trace_zero_density'] != 0):
+            res = []
+        else:
+            nres = len(query['components']) if query.get('components') else -1
+            if not query.get('components'):
+                query['components'] = xrange(3,3+start+count)
+            results = []
+            i = 0
+            for n in query['components']:
+                if n >= 2:
+                    i += 1
+                    if i >= start:
+                        res = res.append({'label':'0.1.%d'%n, 'weight':0, 'degree':1, 'real_dimension':0, 'identity_component':'SO(1)',
+                                          'name':'mu(%d)'%n, 'pretty':'\\mu(%d)'%n, 'components':n, 'component_group':'C_%d'%n, 'trace_zero_density':'0',
+                                          'moments': [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)], ['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]})
+                        if len(results) == count:
+                            break
+    if nres == 0:
+        info['report'] = 'no matches'
+    elif nres == 1:
         info['report'] = 'unique match'
     else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
+        if nres < 0 or nres > count or start > 0:
+            info['report'] = 'displaying matches %s-%s %s' % (start + 1, min(nres, start + count), "of %d"%nres if nres > 0 else "")
         else:
             info['report'] = 'displaying all %s matches' % nres
-    res_clean = []
 
-    for v in res:
-        v_clean = {}
-        v_clean['label'] = v['label']
-        v_clean['weight'] = v['weight']
-        v_clean['degree'] = v['degree']
-        v_clean['real_dimension'] = v['real_dimension']
-        v_clean['identity_component'] = st0_pretty(v['identity_component'])
-        v_clean['name'] = v['name']
-        v_clean['pretty'] = v['pretty']
-        v_clean['components'] = v['components']
-        v_clean['component_group'] = sg_pretty(v['component_group'])
-        v_clean['trace_zero_density'] = v['trace_zero_density']
-        v_clean['trace_moments'] = trace_moments(v['moments'])
-        res_clean.append(v_clean)
-
-    info['stgroups'] = res_clean
+    info['st0_list'] = st0_list
+    info['st0_dict'] = st0_dict
+    info['stgroups'] = results
     info['stgroup_url'] = lambda dbc: url_for('.by_label', label=dbc['label'])
     info['start'] = start
     info['count'] = count
-    info['more'] = int(start+count<nres)
-    
-    credit = credit_string
+    info['more'] = 1 if nres < 0 or nres > start+count else 0
     title = 'Sato-Tate group search results'
-    return render_template('results.html', info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
+    return render_template('results.html', info=info, credit=credit_string,learnmore=learnmore_list(), bread=bread, title=title)
 
 ###############################################################################
 # Rendering
 ###############################################################################
 
-def render_mu_group(n):
-    """ render html page for Sato-Tate group 0.1.n (there are infinitely many, none are stored in the database)"""
+def mu_info(n):
+    """ return data for ST group mu(n); for n > 2 these groups are irrational and not stored in the database """
     n = ZZ(n)
-    info = {}
-    info['label'] = "0.1.%d"%n
-    info['weight'] = 0
-    info['degree'] = 1
-    info['name'] = 'mu(%d)'%n
-    info['pretty'] = '\mu(%d)'%n
-    info['real_dimension'] = 0
-    info['components'] = n
-    info['ambient'] = 'O(1)'
-    info['connected'] = boolean_name(info['components'] == 1)
-    info['st0_name'] = 'SO(1)'
-    info['st0_description'] = '\\mathrm{trivial}'
-    info['component_group'] = 'C_{%d}'%n
-    info['abelian'] = boolean_name(True)
-    info['cyclic'] = boolean_name(True)
-    info['solvable'] = boolean_name(True)
-    info['gens'] = r'\left[\zeta_{%d}\right]'%n
-    info['numgens'] = 1
-    info['subgroups'] = comma_separated_list([st_link("0.1.%d"%(n/p)) for p in n.prime_factors()])
-    info['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + ["$\ldots$"])
-    info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
-    info['moments'] += [['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]
+    rec = {}
+    rec['label'] = "0.1.%d"%n
+    rec['weight'] = 0
+    rec['degree'] = 1
+    rec['rational'] = boolean_name(True if n < 3 else False)
+    rec['name'] = 'mu(%d)'%n
+    rec['pretty'] = '\mu(%d)'%n
+    rec['real_dimension'] = 0
+    rec['components'] = int(n)
+    rec['ambient'] = 'O(1)'
+    rec['connected'] = boolean_name(rec['components'] == 1)
+    rec['st0_name'] = 'SO(1)'
+    rec['st0_description'] = '\\mathrm{trivial}'
+    rec['component_group'] = 'C_{%d}'%n
+    rec['trace_zero_density']='0'
+    rec['abelian'] = boolean_name(True)
+    rec['cyclic'] = boolean_name(True)
+    rec['solvable'] = boolean_name(True)
+    rec['gens'] = r'\left[\zeta_{%d}\right]'%n
+    rec['numgens'] = 1
+    rec['subgroups'] = comma_separated_list([st_link("0.1.%d"%(n/p)) for p in n.prime_factors()])
+    rec['supgroups'] = comma_separated_list([st_link("0.1.%d"%(p*n)) for p in [2,3,5]] + ["$\ldots$"])
+    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    rec['moments'] += [['a_1'] + ['1' if m % n == 0  else '0' for m in range(13)]]
+    rec['trace_moments'] = trace_moments(rec)
+    return rec
+
+def mu_portrait(n):
     if n <= 120:
         plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n, axes=False)
     else:
         plot = circle((0,0),1,thickness=3)
     plot.xmin(-1); plot.xmax(1); plot.ymin(-1); plot.ymax(1)
     plot.set_aspect_ratio(4.0/3.0)
-    return render_st_group (info, portrait=encode_plot(plot))
+    return encode_plot(plot)
 
 def render_by_label(label):
     """ render html page for Sato-Tate group sepecified by label """
+    if re.match(MU_LABEL_RE, label):
+        n = ZZ(label.split()[2])
+        render_st_group(mu_info(n), portrait=mu_portrait(n))
     data = st_groups().find_one({'label': label})
     info = {}
     if data is None:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate group currently in the database." % (label)),'error')
+        flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
         return redirect(url_for(".index"))
     for attr in ['label','weight','degree','name','pretty','real_dimension','components']:
         info[attr] = data[attr]
@@ -297,13 +340,13 @@ def render_by_label(label):
     info['connected']=boolean_name(info['components'] == 1)
     st0 = st0_groups().find_one({'name':data['identity_component']})
     if not st0:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate identity component currently in the database." % (data['identity_component'])),'error')
+        flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
     info['st0_name']=st0['pretty']
     info['st0_description']=st0['description']
     G = small_groups().find_one({'label':data['component_group']})
     if not G:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not the label of a Sato-Tate component group currently in the database." % (data['component_group'])),'error')
+        flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
         return redirect(url_for(".index"))
     info['component_group']=G['pretty']
     info['cyclic']=boolean_name(G['cyclic'])
@@ -314,7 +357,7 @@ def render_by_label(label):
     info['subgroups'] = comma_separated_list([st_link(sub) for sub in data['subgroups']])
     info['supgroups'] = comma_separated_list([st_link(sup) for sup in data['supgroups']])
     if data['moments']:
-        info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%n for n in range(len(data['moments'][0])-1)]]
+        info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
     if data['counts']:
         c=data['counts']

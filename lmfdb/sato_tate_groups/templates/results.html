@@ -3,21 +3,31 @@
 
 <h2>Refine search </h2>
 
-<form id='re-search'>
+<form id='re-search' onsubmit='cleanSubmit(this.id)'>
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 
 <table>
 <td>{{ KNOWL('st_group.weight', title='weight') }}</td>
 <td>{{ KNOWL('st_group.degree', title='degree')}}</td>
-<td>{{ KNOWL('st_group.identity_component', title='\(\mathrm{ST}^0\)') }}</td>
+<td>{{ KNOWL('st_group.rational', title='rational') }}</td>
+<td>{{ KNOWL('st_group.identity_component', title='$\mathrm{ST}^0$') }}</td>
 <td>{{ KNOWL('st_group.components', title='components')}}</td>
-<td>{{ KNOWL('st_group.trace_zero_density', title='\(\mathrm{P}[a_1=0]\)')}}</td>
+<td>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{P}[a_1=0]$')}}</td>
 </tr>
 
 <tr>
 <td><input type='text' name='weight' placeholder='1' style="width: 100px" value="{{info.weight}}"></td>
 <td><input type='text' name='degree' placeholder='4' style="width: 100px" value="{{info.degree}}"></td>
+<td><select name='rational' style="width: 110px" >
+    {% if info.rational == '0' %}
+        <option value='1'>yes</option>
+        <option value='0' selected>no</option>
+    {% else %}
+        <option value='1' selected>yes</option>
+        <option value='0'>no</option>
+    {% endif %}
+</select></td>
 <td><select name='identity_component' style="width: 110px" >
     <option ></option>
     {% for G in info.st0_list %}
@@ -35,7 +45,7 @@
 <td>&nbsp;</td>
 </tr>
 <tr>
-<td><button type='submit' value='refine'  style="width: 110px">Search again</button></td>
+<td><button type='submit' name='refine' value='1' style="width: 110px">Search again</button></td>
 </tr>
 
 </table>
@@ -57,13 +67,13 @@
     <th>{{ KNOWL('st_group.label', title='label') }}</th>
     <th>{{ KNOWL('st_group.weight', title='wt') }}</th>
     <th>{{ KNOWL('st_group.degree', title='deg') }}</th>
-    <th>{{ KNOWL('st_group.real_dimension', title='\(\mathrm{dim}_{\mathbb{R}}\)') }}</th>
-    <th>{{ KNOWL('st_group.identity_component', title='\(\mathrm{G}^0\)') }}</th>
+    <th>{{ KNOWL('st_group.real_dimension', title='$\mathrm{dim}_{\mathbb{R}}$') }}</th>
+    <th>{{ KNOWL('st_group.identity_component', title='$\mathrm{G}^0$') }}</th>
     <th>{{ KNOWL('st_group.name', title='name') }}</th>
-    <th>{{ KNOWL('st_group.component_group', title='\(\mathrm{G}/\mathrm{G}^0\)') }}</th>
-    <th>{{ KNOWL('st_group.components', title='\(\#\mathrm{G}/\mathrm{G^0}\)') }}</th>
-    <th>{{ KNOWL('st_group.trace_zero_density', title='\(\mathrm{P}[t\!=\!0]\)') }}</th>
-    <th colspan="11">{{ KNOWL('st_group.trace_moments', title='trace moments') }} \(M_0\ \ldots\ M_8\)</th>
+    <th>{{ KNOWL('st_group.component_group', title='$\mathrm{G}/\mathrm{G}^0$') }}</th>
+    <th>{{ KNOWL('st_group.components', title='$\#\mathrm{G}/\mathrm{G^0}$') }}</th>
+    <th>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{P}[t\!=\!0]$') }}</th>
+    <th colspan="11">{{ KNOWL('st_group.trace_moments', title='trace moments') }}</th>
 </tr>
 {% for group in info.stgroups: %}
 <tr>

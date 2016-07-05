@@ -15,8 +15,14 @@ from werkzeug.contrib.cache import SimpleCache
 from copy import copy
 from werkzeug import cached_property
 from flask import url_for
+from markupsafe import Markup
+
+def flash_error(errmsg, *args):
+    """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
+    flash(Markup("Error: %s"%tuple(map(lambda x: "<span style='color:black'>%s</span>"%x, args)),"error")
 
 def random_object_from_collection(collection):
+    """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
     import pymongo
     n = collection.rand.count()
     if n:
@@ -28,6 +34,7 @@ def random_object_from_collection(collection):
         return collection.aggregate([{ '$sample': { 'size': int(1) } } ]).next()
 
 def random_value_from_collection(collection,attribute):
+    """ retrieves the value of attribute (e.g. label) from a random object in mongo db collection; uses collection.rand to improve performance if present """
     import pymongo
     n = collection.rand.count()
     if n:
