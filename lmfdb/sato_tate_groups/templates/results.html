@@ -10,7 +10,7 @@
 <table>
 <td>{{ KNOWL('st_group.weight', title='weight') }}</td>
 <td>{{ KNOWL('st_group.degree', title='degree')}}</td>
-<td>{{ KNOWL('st_group.rational', title='rational') }}</td>
+<td>{{ KNOWL('st_group.rational', title='rational only') }}</td>
 <td>{{ KNOWL('st_group.identity_component', title='$\mathrm{ST}^0$') }}</td>
 <td>{{ KNOWL('st_group.components', title='components')}}</td>
 <td>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{P}[a_1=0]$')}}</td>
@@ -19,13 +19,13 @@
 <tr>
 <td><input type='text' name='weight' placeholder='1' style="width: 100px" value="{{info.weight}}"></td>
 <td><input type='text' name='degree' placeholder='4' style="width: 100px" value="{{info.degree}}"></td>
-<td><select name='rational' style="width: 110px" >
-    {% if info.rational == '0' %}
-        <option value='1'>yes</option>
-        <option value='0' selected>no</option>
+<td><select name='rational_only' style="width: 110px" >
+    {% if info.rational_only == 'yes' %}
+        <option value='yes' selected>yes</option>
+        <option value='no'>no</option>
     {% else %}
-        <option value='1' selected>yes</option>
-        <option value='0'>no</option>
+        <option value='yes'>yes</option>
+        <option value='no' selected>no</option>
     {% endif %}
 </select></td>
 <td><select name='identity_component' style="width: 110px" >

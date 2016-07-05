@@ -8,19 +8,19 @@
 <h2> Browse {{ KNOWL('st_group.definition', title='Sato-Tate groups') }}</h2>
 
 <p>
-By {{ KNOWL('st_group.weight', title='Weight') }}: 
+By {{ KNOWL('st_group.weight', title='weight') }}: 
 {% for r in info.weight_list %}
     <a href="?weight={{r}}">{{r}}</a>
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('st_group.degree', title='Degree') }}:
+By {{ KNOWL('st_group.degree', title='degree') }}:
 {% for r in info.degree_list %}
     <a href="?degree={{r}}">{{r}}</a>
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('st_group.identity_component', title='Identity component') }}: 
+By {{ KNOWL('st_group.identity_component', title='identity component') }}: 
 {% for r in info.st0_list %}
     &nbsp;<a href="?identity_component={{r}}">${{info.st0_dict[r]}}$</a>
 {% endfor %}
@@ -59,10 +59,10 @@ Some of our favourite {{ KNOWL('st_group.definition', title='Sato-Tate groups') 
 <td><span class="formexample"> e.g. 4 or 1-6</td>
 </tr>
 <tr>
-<td>{{KNOWL('st_group.rational',title='Rational')}}</td>
-<td><select name='rational' width="122" style="width: 122px">
-        <option value='1'>yes</option>
-        <option value='0'>no</option>
+<td>{{KNOWL('st_group.rational',title='Rational only')}}</td>
+<td><select name='rational_only' width="122" style="width: 122px">
+        <option value='yes' selected>yes</option>
+        <option value='no'>no</option>
 </select></td>
 <td><span class="formexample"> e.g. yes or no</td>
 </tr>
