@@ -11,15 +11,15 @@ class SatoTateGroupTest(LmfdbTest):
         
     def test_by_label(self):
         L = self.tc.get('/SatoTateGroup/1.4.10.1.1a')
-        assert 'USp(4)' in L.data and 'Moments' in L.data
+        assert 'USp(4)' in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?label=1.4.USp(4)')
-        assert '1.4.10.1.1a' in L.data and 'Moments' in L.data
+        assert '1.4.10.1.1a' in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?label=1.2.N(U(1))')
-        assert '1.2.1.2.1a' in L.data and 'Moments' in L.data
+        assert '1.2.1.2.1a' in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?label=0.1.37')
-        assert '0.1.37' in L.data and 'Moments' in L.data
+        assert '0.1.37' in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?label=0.1.mu(37)')
-        assert '0.1.37' in L.data and 'Moments' in L.data
+        assert '0.1.37' in L.data and 'Moment Statistics' in L.data
         
         
     def test_direct_access(self):
