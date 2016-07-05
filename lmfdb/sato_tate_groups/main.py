@@ -90,10 +90,9 @@ def trace_moments(moments):
     return ''
 
 def st0_pretty(st0_name):
-    data = st0_groups().find_one({'name':st0_name})
-    if data and 'pretty' in data:
-        return data['pretty']
-    return st0_name
+    if re.match('SO\(1\)\_\d+', st0_name):
+        return '\\mathrm{SO}(1)_{%s}' % st0_name.splilt('_')[1]
+    return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
     data = small_groups().find_one({'label':sg_label})
@@ -295,9 +294,9 @@ def mu_info(n):
     rec['pretty'] = '\mu(%d)'%n
     rec['real_dimension'] = 0
     rec['components'] = int(n)
-    rec['ambient'] = 'O(1)'
+    rec['ambient'] = '\mathrm{O}(1)'
     rec['connected'] = boolean_name(rec['components'] == 1)
-    rec['st0_name'] = 'SO(1)'
+    rec['st0_name'] = '\mathrm{SO}(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
     rec['st0_description'] = '\\mathrm{trivial}'
     rec['component_group'] = 'C_{%d}'%n
@@ -326,11 +325,9 @@ def mu_portrait(n):
 
 def render_by_label(label):
     """ render html page for Sato-Tate group sepecified by label """
-    print "render by label", label
     if re.match(MU_LABEL_RE, label):
         n = ZZ(label.split('.')[2])
-        print "n", n
-        render_st_group(mu_info(n), portrait=mu_portrait(n))
+        return render_st_group(mu_info(n), portrait=mu_portrait(n))
     data = st_groups().find_one({'label': label})
     info = {}
     if data is None:
@@ -340,6 +337,7 @@ def render_by_label(label):
         info[attr] = data[attr]
     info['ambient'] = st_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
+    info['rational']=boolean_name(info.get('rational',True))
     st0 = st0_groups().find_one({'name':data['identity_component']})
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
@@ -368,7 +366,6 @@ def render_by_label(label):
 
 def render_st_group(info, portrait=None):
     """ render html page for Sato-Tate group described by info """
-    print "render_st_group", info
     prop2 = [('Label', '%s'%info['label'])]
     if portrait:
         prop2 += [(None, '&nbsp;&nbsp;<img src="%s" width="220" height="124"/>' % portrait)]
@@ -382,10 +379,11 @@ def render_st_group(info, portrait=None):
         ('Identity Component', '\(%s\)'%info['st0_name']),
         ('Component group', '\(%s\)'%info['component_group']),
     ]
+    rational_filter = '&rational=0' if info.get('rational') == boolean_name(False) else ''
     bread = [
         ('Sato-Tate groups', url_for('.index')),
-        ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
-        ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
+        ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight']) + rational_filter),
+        ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree']) + rational_filter),
         (info['name'], '')
     ]
     title = 'Sato-Tate group \(' + info['pretty'] + '\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
