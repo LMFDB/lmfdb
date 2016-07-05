@@ -7,6 +7,8 @@ import pymongo
 import ast
 ASC = pymongo.ASCENDING
 import flask
+import yaml
+import os
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
@@ -20,7 +22,8 @@ from lmfdb.sato_tate_groups.main import sg_pretty
 
 
 # Determining what kind of label
-family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+)\.(\d+-)')
+#family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+)\.(\d+-)')
+family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+)\.(\d+-)[^\.]*$')
 passport_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
 cc_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
 
@@ -139,8 +142,7 @@ def index():
     info = {'count': 20,'genus_list': genus_list}
     
 
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                ('Source of the data', url_for(".how_computed_page")),
+    learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
     
     return render_template("hgcwa-index.html", title="Families of Higher Genus Curves with Automorphisms", bread=bread, info=info, learnmore=learnmore)
@@ -219,7 +221,7 @@ def higher_genus_w_automorphisms_search(**args):
     start = parse_start(info)
     
     res = C.curve_automorphisms.passports.find(query).sort([(
-         'g', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
+         'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
         ('cc'[0],pymongo.ASCENDING)])
     nres = res.count()
     res = res.skip(start).limit(count)
@@ -321,9 +323,10 @@ def render_family(args):
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
-
-        downloads = [('Download this example', '.')]
-            
+        
+        downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                     ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+        
         return render_template("hgcwa-show-family.html", 
                                title=title, bread=bread, info=info,
                                properties2=prop2, friends=friends,
@@ -341,7 +344,7 @@ def render_passport(args):
         dataz = C.curve_automorphisms.passports.find({'passport_label': label})
         if dataz.count() is 0:
             bread = get_bread([("Search error", url_for('.search'))])
-            info['err'] = "No passport with label " + label + " was found in the database."
+            info['err'] = "No refined passport with label " + label + " was found in the database."
             info['label'] = label
             return search_input_error(info, bread)
         data=dataz[0]
@@ -357,13 +360,10 @@ def render_passport(args):
             spname=False
         else:
             spname=True
-        title = 'Family of genus ' + str(g) + ' curves with automorphism group $' + pretty_group +'$'
-        smallgroup="[" + str(gn) + "," +str(gt) +"]"   
 
         numb = dataz.count()
 
-
-        title = 'One passport of genus ' + str(g) + ' curves with automorphism group $' + pretty_group +'$'
+        title = 'One refined passport of genus ' + str(g) + ' with automorphism group $' + pretty_group +'$'
         smallgroup="[" + str(gn) + "," +str(gt) +"]"   
 
         prop2 = [
@@ -438,10 +438,10 @@ def render_passport(args):
             
         if Lfriends:
            for Lf in Lfriends:
-              friends = [("Full automorphism " + Lf, Lf),("Family containing this passport ",  urlstrng) ]
+              friends = [("Full automorphism " + Lf, Lf),("Family containing this refined passport ",  urlstrng) ]
   
         else:    
-            friends = [("Family containing this passport",  urlstrng) ]    
+            friends = [("Family containing this refined passport",  urlstrng) ]    
          
         
         bread = get_bread([(data['label'], urlstrng),(data['cc'][0], ' ')])
@@ -449,7 +449,8 @@ def render_passport(args):
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
 
-        downloads = [('Download this example', '.')]
+        downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                     ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
             
         return render_template("hgcwa-show-passport.html", 
                                title=title, bread=bread, info=info,
@@ -490,3 +491,93 @@ def how_computed_page():
                 ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html", kid='dq.curve.highergenus.aut.source',
                            title=t, bread=bread, learnmore=learnmore)
+
+
+
+
+_curdir = os.path.dirname(os.path.abspath(__file__))
+code_list =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
+
+@higher_genus_w_automorphisms_page.route("/<label>/download/<download_type>")
+def hgcwa_code_download(**args):
+    response = make_response(hgcwa_code(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+
+same_for_all =  ['signature', 'genus']
+other_same_for_all = [ 'r', 'g0', 'dim','sym']
+depends_on_action = ['gen_vectors']
+
+
+Fullname = {'magma': 'Magma', 'gap': 'GAP'}
+Comment = {'magma': '//', 'gap': '#'}
+
+def hgcwa_code(**args):
+    label = args['label']
+    C = base.getDBConnection()
+    lang = args['download_type']
+    code = "%s %s code for the lmfdb family of higher genus curves %s\n" % (Comment[lang],Fullname[lang],label)
+    code +="%s The results are stored in a list of records called 'result_record'\n\n" % (Comment[lang]) 
+    code +=code_list['top_matter'][lang] + '\n' +'\n'
+    code +="result_record:=[];" + '\n' +'\n'
+
+
+    if label_is_one_passport(label):
+        data = C.curve_automorphisms.passports.find({"passport_label" : label})
+
+    elif label_is_one_family(label):
+        data = C.curve_automorphisms.passports.find({"label" : label})
+
+
+
+    code += Comment[lang] + code_list['gp_comment'][lang] +'\n'
+    code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
+
+    if lang == 'magma':
+        code += code_list['group_construct'][lang] + '\n'
+
+    for k in same_for_all:
+        code += code_list[k][lang] + str(data[0][k])+ ';\n'
+        
+    for k in other_same_for_all:
+        code += code_list[k][lang] + '\n'
+
+    code += '\n'
+    
+    num_entries = data.count()
+
+    for dataz in data:
+        code += Comment[lang] + " Here we add an action to result_record." + '\n'
+        for k in depends_on_action:
+            code += code_list[k][lang] + str(dataz[k])+ ';\n'
+
+        if lang == 'magma':
+            code += code_list['con'][lang] + str(dataz['con'])+ ';\n' 
+             
+        code += code_list['gen_gp'][lang]+ '\n'
+        code += code_list['passport_label'][lang] + str(dataz['cc'][0]) + ';\n'
+        code += code_list['gen_vect_label'][lang] + str(dataz['cc'][1]) + ';\n'
+        
+#cannot have full auto + hyperelliptic in data
+        if 'signH' in dataz:
+            code += code_list['full_auto'][lang]+str(dataz['full_auto']) + ';\n'
+            code += code_list['full_sign'][lang]+str(dataz['signH']) + ';\n'        
+            code+=code_list['add_to_total_full'][lang]+'\n'
+
+        if 'hyperelliptic' in dataz:            
+                                               
+            if dataz['hyperelliptic']:
+                code +=code_list['hyp'][lang]+ code_list['tr'][lang] + ';\n'
+                code += code_list['hyp_inv'][lang]+str(dataz['hyp_involution']) + code_list['hyp_inv_last'][lang]
+                code +=code_list['add_to_total_hyp'][lang]+'\n'
+
+            else:
+                code +=code_list['hyp'][lang]+ code_list['fal'][lang] + ';\n'
+                code +=code_list['add_to_total_basic'][lang]+'\n'
+
+        code += '\n'
+
+    return code
+
+
