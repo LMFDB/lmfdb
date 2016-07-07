@@ -352,7 +352,7 @@ class Lfunction_EC_Q(Lfunction):
 
         label_slash = self.label.replace(".","/")
         db_label = "EllipticCurve/Q/" + label_slash
-        self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
+        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
         if not self.lfunc_data:
                 raise KeyError('No L-function instance data for "%s" was found in the database.' % db_label)
 
@@ -812,7 +812,7 @@ class Lfunction_Dirichlet(Lfunction):
             self.label = str(self.charactermodulus) + "." + str(self.characternumber)
             label_slash = self.label.replace(".","/")
             db_label = "Character/Dirichlet/" + label_slash
-            self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
+            self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
             if not self.lfunc_data:
                 raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ was found in the database.'%(self.charactermodulus,self.characternumber))
             makeLfromdata(self, fromdb=True)
@@ -910,7 +910,7 @@ class Lfunction_Maass(Lfunction):
         if self.fromDB:
             self.dbid = "ModularForm/%s/Q/Maass/%s/%s/%s/%s/" % (
                 self.group, self.level, self.char, self.R, self.ap_id)
-            self.lfunc_data = LfunctionDatabase.getGenus2Ldata(self.dbid)
+            self.lfunc_data = LfunctionDatabase.getInstanceLdata(self.dbid)
             if self.lfunc_data is None:
                 raise KeyError('No L-function instance data for "%s" was found in the database.' % self.dbid)
             
@@ -1638,7 +1638,7 @@ class Lfunction_genus2_Q(Lfunction):
 
         label_slash = self.label.replace(".","/")
         db_label = "Genus2Curve/Q/" + label_slash
-        self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
+        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
         if not self.lfunc_data:
             raise KeyError('No L-function instance data for "%s" was found in the database.'%db_label)
             
@@ -1656,7 +1656,7 @@ class Lfunction_genus2_Q(Lfunction):
             neg_zeros = ["-" + str(pos_zero) for pos_zero in self.lfunc_data['positive_zeros']]
         else:   # can't happen for genus 2 curves
             dual_L_label = self.lfunc_data['conjugate']
-            dual_L_data = LfunctionDatabase.getGenus2Ldata(dual_L_label)
+            dual_L_data = LfunctionDatabase.getInstanceLdata(dual_L_label)
             neg_zeros = ["-" + str(pos_zero) for pos_zero in dual_L_data['positive_zeros']]
 
         pos_plot = [
