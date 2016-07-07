@@ -284,7 +284,7 @@ class Lfunction_EC_Q(Lfunction):
     #     field is Q
     def __init__(self, **args):
         constructor_logger(self, args)
-        validate_required_args('Unable to construct elliptic curve L-function', args, 'label')
+        validate_required_args('Unable to construct elliptic curve L-function.', args, 'label')
 
         self._Ltype = "ellipticcurveQ"
 
@@ -355,7 +355,7 @@ class Lfunction_EC_Q(Lfunction):
         db_label = "EllipticCurve/Q/" + label_slash
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
         if not self.lfunc_data:
-                raise KeyError("No L-function instance data for %s was found in the database." % db_label)
+                raise KeyError('No L-function instance data for "%s" was found in the database.' % db_label)
 
         try:
             makeLfromdata(self)
@@ -546,7 +546,7 @@ class Lfunction_HMF(Lfunction):
         # Load form from database
         (f, F_hmf) = LfunctionDatabase.getHmfData(self.label)
         if f is None:
-            raise KeyError("No Hilbert modular form with label %s found in database."%self.label)
+            raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.label)
 
         F = WebNumberField(f['field_label'])
         if not F or F.is_null():
@@ -554,7 +554,7 @@ class Lfunction_HMF(Lfunction):
 
         self.character = args['character']
         if self.character > 0:
-            raise KeyError("L-functions of Hilbert modular form with non-trivial character are not currently implemented.")
+            raise KeyError("L-functions of Hilbert modular forms with non-trivial character are not yet implemented.")
         self.number = int(args['number'])
 
         # It is a Sage int
@@ -815,7 +815,7 @@ class Lfunction_Dirichlet(Lfunction):
             db_label = "Character/Dirichlet/" + label_slash
             self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
             if not self.lfunc_data:
-                raise KeyError('Unable to construct Dirichlet L-function.', 'No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ was found in the database.'%(self.charactermodulus,self.characternumber))
+                raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ was found in the database.'%(self.charactermodulus,self.characternumber))
             makeLfromdata(self, fromdb=True)
             self.fromDB = True
             if not self.selfdual:  #TODO: This should be done on a general level
@@ -1058,7 +1058,7 @@ class DedekindZeta(Lfunction):   # added by DK
         # Fetch the polynomial of the field from the database
         wnf = WebNumberField(self.label)
         if not wnf or wnf.is_null():
-            raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field %s was found in the database'%self.label)
+            raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database'%self.label)
         # poly_coeffs = wnf.coeffs()
 
         # Extract the L-function information from the polynomial
@@ -1174,7 +1174,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.label = args["label"]
         self.motive = LfunctionDatabase.getHgmData(self.label)
         if not self.motive:
-            raise KeyError('No data for the hypergeometric motive %s was found in the database.'%self.label)
+            raise KeyError('No data for the hypergeometric motive "%s" was found in the database.'%self.label)
 
         self.conductor = self.motive["cond"]
 
@@ -1252,7 +1252,7 @@ class ArtinLfunction(Lfunction):
     """
     def __init__(self, **args):
         constructor_logger(self, args)
-        validate_required_args('Unable to construct Artin L-function', 'label')
+        validate_required_args('Unable to construct Artin L-function', args, 'label')
 
         self._Ltype = "artin"
         
