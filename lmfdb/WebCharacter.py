@@ -4,6 +4,7 @@ from sage.misc.cachefunc import cached_method
 from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp
 import re
 from flask import url_for
+import lmfdb
 from lmfdb.utils import make_logger
 logger = make_logger("DC")
 from WebNumberField import WebNumberField
@@ -843,10 +844,9 @@ class WebChar(WebCharObject):
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
-            f.append( ('L-function', '/L'+ url_character(type=self.type,
-                                    number_field=self.nflabel,
-                                    modulus=self.modlabel,
-                                    number=self.numlabel) ) )
+            url = url_character(type=self.type, umber_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
+            if lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata(url[1:]):
+                f.append( ('L-function', '/L'+ url) )
         if len(self.vflabel)>0:
             f.append( ("Value Field", '/NumberField/' + self.vflabel) )
         return f
