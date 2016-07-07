@@ -103,7 +103,7 @@ def createLcalcfile_ver2(L, url):
     thefile += "\n\n"
 
     thefile += "name = \"" + url.partition('/L/')[2].partition('?download')[0].strip('/') + "\"\n"
-    kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0]
+    # kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0] -- not used
     kind_of_L = url.partition('/L/')[2].partition('?download')[0].split('/')
     # thefile += str(kind_of_L) + "\n\n\n\n"
     if len(kind_of_L) > 2:

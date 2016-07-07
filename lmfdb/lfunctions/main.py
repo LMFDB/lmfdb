@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import *
-from flask import (Flask, session, g, render_template, url_for, request,
-                   make_response, abort)
+from lmfdb.base import getDBConnection
 import flask
+from flask import render_template, url_for, request, make_response
 
-from sage.all import *
+from sage.all import ZZ, is_prime, latex, factor, plot, srange, spline, line
 import tempfile
 import os
 import re
 import sqlite3
 import numpy
-import pymongo
-from Lfunction import *
+from Lfunction import Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_EMF, Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued
+from Lfunction import RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction, HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc
 import LfunctionPlot as LfunctionPlot
 from lmfdb.utils import to_dict
 import bson
-from Lfunctionutilities import (p2sage, lfuncDShtml, lfuncEPtex, lfuncFEtex,
-                                truncatenumber, styleTheSign, specialValueString, specialValueTriple)
+from Lfunctionutilities import p2sage, lfuncDShtml, lfuncEPtex, lfuncFEtex, styleTheSign, specialValueString, specialValueTriple
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.elliptic_curves.web_ec import cremona_label_regex, lmfdb_label_regex
@@ -234,10 +232,11 @@ def l_function_dirichlet_page(modulus, number):
 
 
 # L-function of tensor product #################################################
-@l_function_page.route("/TensorProduct/")
-def l_function_tensor_product_page(galoisrep):
-    args = {}
-    return render_single_Lfunction(GaloisRepresentationLfunction, args, request)
+# Not yet implemented
+# @l_function_page.route("/TensorProduct/")
+# def l_function_tensor_product_page(galoisrep):
+#    args = {}
+#    return render_single_Lfunction(GaloisRepresentationLfunction, args, request)
 
 # L-function of Elliptic curve #################################################
 @l_function_page.route("/EllipticCurve/Q/<label>/")
@@ -319,7 +318,7 @@ def l_function_hmf_redirect_2(field, label):
 def l_function_maass_page(dbid):
     try:
         args = {'dbid': bson.objectid.ObjectId(dbid), 'fromDB': False}
-    except Exception as ex:
+    except Exception:
         args = {'dbid': dbid, 'fromDB': False}
     return render_single_Lfunction(Lfunction_Maass, args, request)
 
@@ -390,7 +389,7 @@ def render_lfunction_exception(err):
     if current_app.debug:
         raise err
     if err.args:
-        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+"<li>"+y+"</li>",err.args) + "</ul>"
+        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
     else:
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
     info = {'content': errmsg, 'title': 'Error displaying L-function data'}
@@ -402,9 +401,9 @@ def render_single_Lfunction(Lclass, args, request):
     logger.debug(temp_args)
 
     try:
-        # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
         L = Lclass(**args)
-    except Exception as err:
+        # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
+    except (ValueError,KeyError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
         return render_lfunction_exception(err)
     try:
         if temp_args['download'] == 'lcalcfile':
@@ -738,7 +737,6 @@ def initLfunction(L, args, request):
     elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
         friendlink = friendlink.rpartition('/')[0] #strip off embedding number for L-function
         weight = str(L.weight)
-        number = str(L.number)
         info['friends'] = [('Siegel Modular Form ' + weight + '_' + L.orbit, friendlink)]
 
     elif L.Ltype() == "artin":
@@ -803,21 +801,16 @@ def set_gaga_properties(L):
     ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
 
     if L.selfdual:
- #       sd = 'Self-dual'
         ans.append(('Self-dual', "yes"))
     else:
- #       sd = 'Not self-dual'
         ans.append(('Self-dual', "no"))
- #   ans.append((None, sd))
 
     if L.algebraic:
         ans.append(('Motivic weight', str(L.motivic_weight)))
 
-    if L.primitive:
-        prim = 'Primitive'
-    else:
-        prim = 'Not primitive'
-#    ans.append((None,        prim))    Disabled until fixed
+    # Disable until fixed
+    # prim = 'Primitive' if L.primitive else 'Not primitive'
+    # ans.append((None,        prim))
 
     return ans
 
@@ -1053,7 +1046,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         # logger.debug(db)
         try:
             dbid = bson.objectid.ObjectId(arg5)
-        except Exception as ex:
+        except Exception:
             dbid = arg5
         return Lfunction_Maass(dbid=dbid)
 

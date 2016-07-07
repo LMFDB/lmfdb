@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import lmfdb
 from lmfdb.base import LmfdbTest
 from lmfdb.WebCharacter import WebDirichlet, WebHecke
 
@@ -143,12 +144,25 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('Character/calc-value/Dirichlet/107/7?val=32')
         assert 'frac{3}{106}' in W.data
 
-    def test_dirichletchar(self):
+    def test_dirichletchar531(self):
         W = self.tc.get('/Character/Dirichlet/531/40')
         assert '/Character/Dirichlet/531/391' in W.data
         assert '(356,235)' in W.data, "generators"
         assert 'Kloosterman sum' in W.data
         assert  '(\\zeta_{87})' in W.data, "field of values"
+
+    def test_dirichletchar6000lfunc(self):
+        """ Check that L-function link for 6000/11 is correct """
+        W = self.tc.get('/Character/Dirichlet/6000/11')
+        assert 'L/Character/Dirichlet/6000/11' in W.data
+        W = self.tc.get('/L/Character/Dirichlet/6000/11', follow_redirects=True)
+        assert '1.0766030216' in W.data
+
+    def test_dirichletchar9999lfunc(self):
+        """ Check that the L-function link for 9999/2 is displayed if and only if the L-function data is present"""
+        W = self.tc.get('/Character/Dirichlet/9999/2')
+        b = lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata('Character/Dirichlet/9999/2')
+        assert bool(b) == ('L/Character/Dirichlet/9999/2' in W.data)
 
 class HeckeCharactersTest(LmfdbTest):
 
