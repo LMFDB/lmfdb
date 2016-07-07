@@ -1,7 +1,6 @@
 # Functions for getting info about elliptic curves and related modular forms
 
 from pymongo import ASCENDING
-import lmfdb.utils
 from lmfdb.elliptic_curves.web_ec import lmfdb_label_regex, db_ec
 
 
