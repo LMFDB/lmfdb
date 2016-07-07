@@ -11,12 +11,11 @@ import re
 
 from flask import url_for
 
-from Lfunctionutilities import (p2sage, string2number, seriescoeff,
+from Lfunctionutilities import (p2sage, string2number,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
-                                number_of_coefficients_needed,
                                 signOfEmfLfunction)
-from LfunctionComp import (nr_of_EC_in_isogeny_class, modform_from_EC,
+from LfunctionComp import (nr_of_EC_in_isogeny_class, modform_from_EC, 
                            EC_from_modform)
 import LfunctionDatabase
 import LfunctionLcalc
@@ -24,17 +23,27 @@ from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex
 
-from sage.all import *
+import sage
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, load
 import sage.libs.lcalc.lcalc_Lfunction as lc
-from sage.rings.rational import Rational
 
 from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
-     import WebMaassForm
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.base import url_for
+
+def validate_required_args(errmsg, args, *keys):
+    missing_keys = [key for key in keys if not key in args]
+    if len(missing_keys):
+        print errmsg
+        raise KeyError(errmsg, "Missing required parameters: %s." % ','.join(missing_keys))
+
+def validate_integer_args(errmsg, args, *keys):
+    for key in keys:
+        if key in args:
+            if not isinstance(args[key],int) and not re.match('^\d+$',args[key].strip()):
+                raise ValueError(errmsg, "Unable to convert parameter '%s' with value '%s' to a nonnegative integer." % (key, args[key]))
 
 def constructor_logger(object, args):
     ''' Executed when a object is constructed for debugging reasons
@@ -275,15 +284,11 @@ class Lfunction_EC_Q(Lfunction):
     #     field is Q
     def __init__(self, **args):
         constructor_logger(self, args)
-        # Check for compulsory arguments
-        if not 'label' in args.keys():
-            raise Exception("You have to supply a label for an elliptic " +
-                            "curve L-function")
+        validate_required_args('Unable to construct elliptic curve L-function.', args, 'label')
 
         self._Ltype = "ellipticcurveQ"
 
         # Initialize default values
-        max_height = 30
         modform_translation_limit = 101
 
         # Put the arguments into the object dictionary
@@ -348,12 +353,9 @@ class Lfunction_EC_Q(Lfunction):
 
         label_slash = self.label.replace(".","/")
         db_label = "EllipticCurve/Q/" + label_slash
-  #      self.lfunc_data = LfunctionDatabase.getEllipticCurveLData(db_label)
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
-#        try:
-#            self.lfunc_data['values'] = self.lfunc_data['special_values']
-#        except:
-#            pass  # this is just here for backward compatibility
+        if not self.lfunc_data:
+                raise KeyError('No L-function instance data for "%s" was found in the database.' % db_label)
 
         try:
             makeLfromdata(self)
@@ -406,30 +408,21 @@ class Lfunction_EMF(Lfunction):
 
     Compulsory parameters: weight
                            level
-
-    Possible parameters: character
-                         label
-                         number
-    
-    Actually, some of the possible parameters are required depending
-    on the value of the possible parameters
-
+                           character
+                           label
+                           number
     """
 
     def __init__(self, **args):
         constructor_logger(self, args)
 
         # Check for compulsory arguments
-        if not ('weight' in args.keys() and 'level' in args.keys()
-                and 'character' in args.keys() and 'label' in args.keys()
-                and 'number' in args.keys()):
-            raise KeyError("You have to supply weight, level, character, " +
-                           "label and number for an " +
-                           "elliptic modular form L-function")
+        validate_required_args ('Unable to construct elliptic modular form L-function.', args, 'weight','level','character','label','number')
+        validate_integer_args ('Unable to construct elliptic modular form L-function.', args, 'weight','level','character','number')
 
         self._Ltype = "ellipticmodularform"
 
-        modform_translation_limit = 101
+        # modform_translation_limit = 101
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
@@ -452,8 +445,7 @@ class Lfunction_EMF(Lfunction):
                                  character = self.character, label = self.label, 
                                  prec = self.numcoeff)
         except:
-            raise KeyError("No data available yet for this modular form, so" +
-                           " not able to compute its L-function")
+            raise KeyError("The specified modular form does not appear to be in the database.")
         
         # Extract the L-function information from the elliptic modular form
         self.automorphyexp = (self.weight - 1) / 2.
@@ -536,9 +528,7 @@ class Lfunction_HMF(Lfunction):
 
     def __init__(self, **args):
         # Check for compulsory arguments
-        if not ('label' in args.keys()):
-            raise KeyError("You have to supply label for a Hilbert modular " +
-                           "form L-function")
+        validate_required_args ('Unable to construct Hilbert modular form L-function.', args, 'label')
 
         self._Ltype = "hilbertmodularform"
 
@@ -556,15 +546,15 @@ class Lfunction_HMF(Lfunction):
         # Load form from database
         (f, F_hmf) = LfunctionDatabase.getHmfData(self.label)
         if f is None:
-            raise KeyError("There is no Hilbert modular form with that label")
+            raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.label)
 
         F = WebNumberField(f['field_label'])
+        if not F or F.is_null():
+            raise KeyError('Error constructing number field %s'%f['field_label'])
 
         self.character = args['character']
         if self.character > 0:
-            raise KeyError("The L-function of a Hilbert modular form with "
-                           + "non-trivial character has not been "
-                           + "implemented yet.")
+            raise KeyError("L-functions of Hilbert modular forms with non-trivial character are not yet implemented.")
         self.number = int(args['number'])
 
         # It is a Sage int
@@ -595,7 +585,7 @@ class Lfunction_HMF(Lfunction):
         R = QQ['x']
         (x,) = R._first_ngens(1)
         K = NumberField(R(str(f['hecke_polynomial']).replace('^', '**')), 'e')
-        e = K.gens()[0]
+        # e = K.gens()[0]
         iota = K.complex_embeddings()[self.number]
 
         if self.level == 1:  # For level 1, the sign is always plus
@@ -657,7 +647,7 @@ class Lfunction_HMF(Lfunction):
                 # prime power
                 p = nfact[0][0]
                 k = nfact[0][1]
-                S = [1] + [dcoeffs[p ** i] for i in range(1, k)]
+                # S = [1] + [dcoeffs[p ** i] for i in range(1, k)]
                 heckepol = heckepolsinv[ratl_primes.index(p)]
                 dcoeffs.append(heckepol[k])
             else:
@@ -775,11 +765,8 @@ class Lfunction_Dirichlet(Lfunction):
     def __init__(self, **args):
 
         # Check for compulsory arguments
-        if not ('charactermodulus' in args.keys()
-                and 'characternumber' in args.keys()):
-            raise KeyError("You have to supply charactermodulus and "
-                           + "characternumber for the L-function of "
-                           + "a Dirichlet character")
+        validate_required_args ('Unable to construct Dirichlet L-function.', args, 'charactermodulus', 'characternumber')
+        validate_integer_args ('Unable to construct Dirichlet L-function.', args, 'charactermodulus', 'characternumber')
 
         self._Ltype = "dirichlet"
 
@@ -792,10 +779,11 @@ class Lfunction_Dirichlet(Lfunction):
         self.charactermodulus = int(self.charactermodulus)
         self.characternumber = int(self.characternumber)
         self.numcoeff = int(self.numcoeff)
+        if gcd(self.charactermodulus,self.characternumber) != 1:
+            raise ValueError('Unable to construct Dirichlet L-function.', 'The specified Conrey index %d is not coprime to the modulus %d.'%(self.characternumber,self.charactermodulus))
 
         # Create the Dirichlet character
-        self.web_chi = WebDirichletCharacter( modulus=self.charactermodulus,
-                                number = self.characternumber)
+        self.web_chi = WebDirichletCharacter( modulus=self.charactermodulus, number = self.characternumber)
         chi = self.web_chi.chi
         self.motivic_weight = 0
 
@@ -826,6 +814,8 @@ class Lfunction_Dirichlet(Lfunction):
             label_slash = self.label.replace(".","/")
             db_label = "Character/Dirichlet/" + label_slash
             self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
+            if not self.lfunc_data:
+                raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ was found in the database.'%(self.charactermodulus,self.characternumber))
             makeLfromdata(self, fromdb=True)
             self.fromDB = True
             if not self.selfdual:  #TODO: This should be done on a general level
@@ -882,9 +872,7 @@ class Lfunction_Dirichlet(Lfunction):
      ###       self.sageLfunction = lc.Lfunction_from_character(chi.sage_character())
 
         else:  # Character not primitive
-            raise Exception("The dirichlet character you choose is " +
-                            "not primitive so it's Dirichlet series " +
-                            "is not an L-function.", "UserError")
+            raise ValueError('Unable to construct Dirichlet L-function.', 'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive.' % (self.charactermodulus, self.characternumber))
 
         constructor_logger(self, args)
 
@@ -912,11 +900,8 @@ class Lfunction_Maass(Lfunction):
 
         if not 'fromDB' in args.keys():
             self.fromDB = False
-            
-        # Check for compulsory arguments
-        if not 'dbid' in args.keys() and not self.fromDB:
-            raise KeyError("You have to supply dbid for the L-function of a "
-                           + "Maass form")
+        if not self.fromDB:
+            validate_required_args ('Unable to construct L-function of Maass form.', args, 'dbid')
 
         self._Ltype = "maass"
 
@@ -928,7 +913,7 @@ class Lfunction_Maass(Lfunction):
                 self.group, self.level, self.char, self.R, self.ap_id)
             self.lfunc_data = LfunctionDatabase.getGenus2Ldata(self.dbid)
             if self.lfunc_data is None:
-                raise KeyError("No L-function data for %s was found in the database." % self.dbid)
+                raise KeyError('No L-function instance data for "%s" was found in the database.' % self.dbid)
             
             makeLfromdata(self, fromdb=True)
             if not self.selfdual:
@@ -1055,9 +1040,7 @@ class DedekindZeta(Lfunction):   # added by DK
     """
 
     def __init__(self, **args):
-        if not 'label' in args.keys():
-            raise Exception("You have to supply a label for a " +
-                            "Dedekind zeta function")
+        validate_required_args ('Unable to construct Dedekind zeta function.', args, 'label')
         
         constructor_logger(self, args)
 
@@ -1074,14 +1057,16 @@ class DedekindZeta(Lfunction):   # added by DK
 
         # Fetch the polynomial of the field from the database
         wnf = WebNumberField(self.label)
+        if not wnf or wnf.is_null():
+            raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database'%self.label)
         # poly_coeffs = wnf.coeffs()
 
         # Extract the L-function information from the polynomial
-        R = QQ['x']
-        (x,) = R._first_ngens(1)
+        #R = QQ['x']
+        #(x,) = R._first_ngens(1)
         # self.polynomial = (sum([poly_coeffs[i]*x**i
         # for i in range(len(poly_coeffs))]))
-        self.NF = wnf.K()  # NumberField(self.polynomial, 'a')
+        self.NF = wnf.K()
         self.signature = wnf.signature()  # self.NF.signature()
         self.sign = 1
         self.quasidegree = sum(self.signature)
@@ -1105,7 +1090,7 @@ class DedekindZeta(Lfunction):   # added by DK
         self.grh = wnf.used_grh()
         if self.degree > 1:
             if wnf.is_abelian() and len(wnf.dirichlet_group())>0:
-                cond = wnf.conductor()
+                # cond = wnf.conductor()
                 dir_group = wnf.dirichlet_group()
                 # Remove 1 from the list
                 j = 0
@@ -1183,21 +1168,20 @@ class HypergeometricMotiveLfunction(Lfunction):
         constructor_logger(self, args)
         if "t" in args and "family" in args:
             args["label"] = args["family"] + "_" + args["t"]
-        if not ('label' in args.keys()):
-            raise KeyError("You have to supply a label for a hypergeometric motive L-function")            
+        validate_required_args ('Unable to construct hypergeometric motive L-function.', args, 'label')
         self._Ltype = "hgmQ"
 
         self.label = args["label"]
         self.motive = LfunctionDatabase.getHgmData(self.label)
-        
+        if not self.motive:
+            raise KeyError('No data for the hypergeometric motive "%s" was found in the database.'%self.label)
+
         self.conductor = self.motive["cond"]
 
         self.level = self.conductor
         self.title = ("L-function for the hypergeometric motive with label  "+self.label)
 
         self.credit = 'Dave Roberts, using Magma'
-        
-        
         
         self.motivic_weight = 0
         self.algebraic = True
@@ -1222,7 +1206,7 @@ class HypergeometricMotiveLfunction(Lfunction):
             
         hodge = self.motive["hodge"]
         signature = self.motive["sig"]
-        hodge_index = lambda p: hodge[p]
+        # hodge_index = lambda p: hodge[p]
             # The hodge number p,q
         
         from lmfdb.hypergm.hodge import mu_nu
@@ -1268,14 +1252,18 @@ class ArtinLfunction(Lfunction):
     """
     def __init__(self, **args):
         constructor_logger(self, args)
-        if not ('label' in args.keys()):
-            raise KeyError("You have to supply a label for an Artin L-function")    
+        validate_required_args('Unable to construct Artin L-function', args, 'label')
 
         self._Ltype = "artin"
         
         from lmfdb.math_classes import ArtinRepresentation
         self.label = args["label"]
-        self.artin = ArtinRepresentation(self.label)
+        try:
+            self.artin = ArtinRepresentation(self.label)
+        except Exception as err:
+            raise KeyError('Error constructing Artin representation %s.'%self.label, *err.args)
+        if not self.artin:
+            raise KeyError('No data for the Artin representation %s was found in the database.'%self.label)
 
         self.title = ("L-function for Artin representation " + str(self.label))
 
@@ -1345,11 +1333,7 @@ class SymmetricPowerLfunction(Lfunction):
 
     def __init__(self, **args):
         constructor_logger(self, args)
-        if not ('power' in args.keys() and 'underlying_type' in args.keys() and
-                'field' in args.keys()):
-                    raise KeyError("You have to supply power, underlying " +
-                                   "type and field for a symmetric power " +
-                                   "L-function")
+        validate_required_args('Unable to construct symmetric power L-function.', args, 'power', 'underlying_type', 'field')
 
         self._Ltype = "SymmetricPower"
 
@@ -1429,8 +1413,8 @@ class SymmetricPowerLfunction(Lfunction):
         self.level = self.S.conductor
 
     def Lkey(self):
-        return {"power": power, "underlying_type": underlying_type,
-                "field": field}
+        return {"power": self.power, "underlying_type": self.underlying_type,
+                "field": self.field}
 
 #############################################################################
 
@@ -1450,9 +1434,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
     def __init__(self, **args):
 
         # Check for compulsory arguments
-        if not ('weight' in args.keys() and 'orbit' in args.keys()):
-            raise KeyError("You have to supply weight and orbit for a Siegel " +
-                           "modular form L-function")
+        validate_required_args('Unable to construct Siegel modular form L-function.', args, 'weight', 'orbit')
         # logger.debug(str(args))
 
         if self.orbit[0] == 'U':
@@ -1544,93 +1526,86 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         generateSageLfunction(self)
 
-    def Lkey():
+    def Lkey(self):
         return {"weight": self.weight, "orbit": self.orbit}
 
 #############################################################################
 
+# this class it not used anywhere and does not yet appear to be functional (in particular, the function TensorProduct is not defined anywhere in the LMFDB)
+#~ class TensorProductLfunction(Lfunction):
+    #~ """
+    #~ Class representing the L-function of a tensor product
+    #~ (currently only of a elliptic curve with a Dirichlet character)
 
-class TensorProductLfunction(Lfunction):
-    """
-    Class representing the L-function of a tensor product
-    (currently only of a elliptic curve with a Dirichlet character)
+    #~ arguments are
 
-    arguments are
+    #~ - charactermodulus
+    #~ - characternumber
+    #~ - ellipticcurvelabel
 
-    - charactermodulus
-    - characternumber
-    - ellipticcurvelabel
+    #~ """
 
-    """
+    #~ def __init__(self, **args):
 
-    def __init__(self, **args):
+        #~ # Check for compulsory arguments
+        #~ validate_required_args('Unable to construct tensor product L-function.', args, 'charactermodulus', 'characternumber', 'ellipticcurvelabel')
 
-        # Check for compulsory arguments
-        if not ('charactermodulus' in args.keys()
-                and 'characternumber' in args.keys()
-                and 'ellipticcurvelabel' in args.keys() ):
-            raise KeyError("You have to supply charactermodulus, "
-                           + "characternumber and a curve label "
-                           + "for the L-function of "
-                           + "a tensor product")
+        #~ self._Ltype = "tensorproduct"
 
-        self._Ltype = "tensorproduct"
+        #~ # Put the arguments into the object dictionary
+        #~ self.__dict__.update(args)
+        #~ self.charactermodulus = int(self.charactermodulus)
+        #~ self.characternumber = int(self.characternumber)
+        #~ self.Elabel = self.ellipticcurvelabel
 
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.charactermodulus = int(self.charactermodulus)
-        self.characternumber = int(self.characternumber)
-        self.Elabel = self.ellipticcurvelabel
+        #~ # Create the tensor product
+        #~ # try catch later
+        #~ self.tp = TensorProduct(self. Elabel, self.charactermodulus, self.characternumber)
+        #~ # chi = self.tp.chi
+        #~ # E = self.tp.E
 
-        # Create the tensor product
-        # try catch later
-        self.tp = TensorProduct(self. Elabel, self.charactermodulus,
-                                self.characternumber)
-        chi = self.tp.chi
-        E = self.tp.E
-
-        self.motivic_weight = 1
-        self.weight = 2
-        self.algebraic = True
-        self.poles = []
-        self.residues = []
-        self.langlands = True
-        self.primitive = True
-        self.degree = 2
-        self.quasidegree = 1
-        self.level = int(self.tp.conductor())
-        self.sign = self.tp.root_number()
-        self.coefficient_type = 3
-        self.coefficient_period = 0
+        #~ self.motivic_weight = 1
+        #~ self.weight = 2
+        #~ self.algebraic = True
+        #~ self.poles = []
+        #~ self.residues = []
+        #~ self.langlands = True
+        #~ self.primitive = True
+        #~ self.degree = 2
+        #~ self.quasidegree = 1
+        #~ self.level = int(self.tp.conductor())
+        #~ self.sign = self.tp.root_number()
+        #~ self.coefficient_type = 3
+        #~ self.coefficient_period = 0
 
 
-        # We may want to change this later to a better estimate.
-        self.numcoeff = 20 + ceil(sqrt(self.tp.conductor()))
+        #~ # We may want to change this later to a better estimate.
+        #~ self.numcoeff = 20 + ceil(sqrt(self.tp.conductor()))
 
-        self.mu_fe = []
-        self.nu_fe = [Rational('1/2')]
-        self.compute_kappa_lambda_Q_from_mu_nu()
+        #~ self.mu_fe = []
+        #~ self.nu_fe = [Rational('1/2')]
+        #~ self.compute_kappa_lambda_Q_from_mu_nu()
 
-        li = self.tp.an_list(upper_bound=self.numcoeff)
-        for n in range(1,len(li)):
-            # now renormalise it for s <-> 1-s as the functional equation
-            li[n] /= sqrt(float(n))
-        self.dirichlet_coefficients = li
+        #~ li = self.tp.an_list(upper_bound=self.numcoeff)
+        #~ for n in range(1,len(li)):
+            #~ # now renormalise it for s <-> 1-s as the functional equation
+            #~ li[n] /= sqrt(float(n))
+        #~ self.dirichlet_coefficients = li
 
-        self.texname = "L(s,E,\\chi)"
-        self.texnamecompleteds = "\\Lambda(s,E,\\chi)"
-        self.title = "$L(s,E,\\chi)$, where $E$ is the elliptic curve %s and $\\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
+        #~ self.texname = "L(s,E,\\chi)"
+        #~ self.texnamecompleteds = "\\Lambda(s,E,\\chi)"
+        #~ self.title = "$L(s,E,\\chi)$, where $E$ is the elliptic curve %s and $\\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
 
-        self.credit = 'Workshop in Besancon, 2014'
+        #~ self.credit = 'Workshop in Besancon, 2014'
 
-        generateSageLfunction(self)
+        #~ generateSageLfunction(self)
 
-        constructor_logger(self, args)
+        #~ constructor_logger(self, args)
 
-    def Lkey(self):
-        return {"ellipticcurvelabel": self.Elabel,
-                "charactermodulus": self.charactermodulus,
-                "characternumber": self.characternumber}
+    #~ def Lkey(self):
+        #~ return {"ellipticcurvelabel": self.Elabel,
+                #~ "charactermodulus": self.charactermodulus,
+                #~ "characternumber": self.characternumber}
 
 #############################################################################
 
@@ -1643,9 +1618,7 @@ class Lfunction_genus2_Q(Lfunction):
 
     def __init__(self, **args):
         # Check for compulsory arguments
-        if not ('label' in args.keys()):
-            raise KeyError("You have to supply label for a genus 2 curve " +
-                           "L-function")
+        validate_required_args('Unabel to construct L-function of genus 2 curve.', args, 'label')
         logger.debug(str(args))
 
         self._Ltype = "genus2curveQ"
@@ -1666,8 +1639,10 @@ class Lfunction_genus2_Q(Lfunction):
 
         label_slash = self.label.replace(".","/")
         db_label = "Genus2Curve/Q/" + label_slash
-    #    self.lfunc_data = LfunctionDatabase.getGenus2Ldata(isoclass['hash'])
         self.lfunc_data = LfunctionDatabase.getGenus2Ldata(db_label)
+        if not self.lfunc_data:
+            raise KeyError('No L-function instance data for "%s" was found in the database.'%db_label)
+            
         # need to change this so it shows the nonvanishing derivative
         if self.lfunc_data['order_of_vanishing']:
             central_value = [0.5 + 0.5*self.lfunc_data['motivic_weight'], 0]
