@@ -2,7 +2,8 @@
 
 import re
 from lmfdb.lfunctions import logger
-from sage.all import *
+import math
+from sage.all import ZZ, QQ, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, log, exp, pi, prod, floor
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.number_fields import group_display_knowl
 from lmfdb.base import getDBConnection
@@ -12,11 +13,12 @@ from lmfdb.base import getDBConnection
 ###############################################################
 
 def p2sage(s):
-    # convert numbers which have be stored as strings into a sage type
-
+    """ THIS FUNCTION IS DEPRECATED AND SHOULD NOT BE USED"""
+    from sage.all import sage_eval
     # I really don't like the use of sage_eval here. It may be ok as long
     # as we are only calling this function on trusted input from the database,
     # but someone is going to forget that someday... --JWB
+    # This function should be removed and all calls to it replaced with something appropriate (e.g. PolynomialRing(QQ)(s) or something similar) -- AWS
 
     x = PolynomialRing(RationalField(),"x").gen()
     a = PolynomialRing(RationalField(),"a").gen()
@@ -25,7 +27,7 @@ def p2sage(s):
     except:
         z = s
     if type(z) in [list, tuple]:
-        return [p2sage(x) for x in z]
+        return [p2sage(t) for t in z]
     else:
         return z
 
@@ -529,7 +531,6 @@ def lfuncEPhtml(L,fmt):
     ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most "
     ans += str(L.degree - 1) + ". "
 #    ans += "with $F_p(0) = 1$."
-    factN = list(factor(L.level))
     bad_primes = []
     for lf in L.bad_lfactors:
         bad_primes.append(lf[0])
@@ -546,7 +547,6 @@ def lfuncEPhtml(L,fmt):
         eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
     eptable += "</tr>\n"
     eptable += "</thead>"
-    numfactors = len(L.localfactors)
     goodorbad = "bad"
     C = getDBConnection()
     for lf in L.bad_lfactors:
@@ -878,7 +878,7 @@ def compute_dirichlet_series(p_list, PREC):
     LL = [0] * PREC
     # create an empty list of the right size and now populate it with the powers of p
     for (p, y) in p_list:
-        p_prec = log(PREC) / log(p) + 1
+        p_prec = log(PREC) / log(p) + 1 # this is not currently used but perhaps it should be?  AVS
         ep = euler_p_factor(y, PREC)
         for n in range(ep.prec()):
             if p ** n < PREC:
