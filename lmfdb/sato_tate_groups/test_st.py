@@ -65,21 +65,16 @@ class SatoTateGroupTest(LmfdbTest):
         print ""
         for r in data:
             print 'Checking Sato-Tate group ' + r['label']
-            L = self.tc.get('/SatoTateGroup/?label='+r['label'])
+            L = self.tc.get('/SatoTateGroup/' + r['label'])
             assert r['label'] in L.data and 'Moment Statistics' in L.data
         data = stdb.find({'weight':int(1),'degree':int(2)})
-        assert data.count() == 3
-        for r in data:
-            print 'Checking Sato-Tate group ' + r['label']
-            L = self.tc.get('/SatoTateGroup/?label='+r['label'])
-            assert r['label'] in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4')
         assert 'of 52' in L.data
         data = stdb.find({'weight':int(1),'degree':int(4)})
         assert data.count() == 52
         for r in data:
             print 'Checking Sato-Tate group ' + r['label']
-            L = self.tc.get('/SatoTateGroup/?label='+r['label'])
+            L = self.tc.get('/SatoTateGroup/' + r['label'])
             assert r['label'] in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?components=999999999')
         assert 'unique match'  in L.data and 'mu(999999999)' in L.data
