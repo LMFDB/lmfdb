@@ -390,7 +390,7 @@ def render_lfunction_exception(err):
     if current_app.debug:
         raise err
     if err.args:
-        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+"<li>"+y+"</li>",err.args) + "</ul>"
+        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
     else:
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
     info = {'content': errmsg, 'title': 'Error displaying L-function data'}
@@ -402,9 +402,9 @@ def render_single_Lfunction(Lclass, args, request):
     logger.debug(temp_args)
 
     try:
-        # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
         L = Lclass(**args)
-    except Exception as err:
+        # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
+    except (ValueError,KeyError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
         return render_lfunction_exception(err)
     try:
         if temp_args['download'] == 'lcalcfile':
