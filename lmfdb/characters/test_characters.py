@@ -155,14 +155,14 @@ class DirichletCharactersTest(LmfdbTest):
         """ Check that L-function link for 6000/11 is correct """
         W = self.tc.get('/Character/Dirichlet/6000/11')
         assert 'L/Character/Dirichlet/6000/11' in W.data
-        W = self.tc.get('/Character/Dirichlet/6000/11')
+        W = self.tc.get('/L/Character/Dirichlet/6000/11', follow_redirects=True)
         assert '1.0766030216' in W.data
 
     def test_dirichletchar9999lfunc(self):
         """ Check that the L-function link for 9999/2 is displayed if and only if the L-function data is present"""
         W = self.tc.get('/Character/Dirichlet/9999/2')
         b = lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata('Character/Dirichlet/9999/2')
-        assert b == ('L/Character/Dirichlet/9999/2' in W.data)
+        assert bool(b) == ('L/Character/Dirichlet/9999/2' in W.data)
 
 class HeckeCharactersTest(LmfdbTest):
 
