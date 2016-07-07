@@ -10,7 +10,7 @@ import flask
 import yaml
 import os
 from lmfdb import base
-from flask import render_template, request, url_for
+from flask import render_template, request, url_for, make_response
 from lmfdb.utils import to_dict
 from lmfdb.search_parsing import search_parser, parse_ints, parse_count, parse_start, clean_input
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
