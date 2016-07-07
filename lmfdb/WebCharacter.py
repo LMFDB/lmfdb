@@ -67,7 +67,6 @@ def evalpolelt(label,gen,genlabel='a'):
         ( '*' and '**' are removed )                                            
     """                                                                         
     res = 0                                                                     
-    import re                                                                   
     regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?'%genlabel                         
     for m in re.finditer(regexp,label):                                         
         s,c,e = m.groups()                                                      
@@ -298,7 +297,7 @@ class WebDirichlet(WebCharObject):
     def _compute(self):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
-            self.H = H = DirichletGroup_conrey(m)
+            self.H = DirichletGroup_conrey(m)
         self.credit = 'SageMath'
         self.codelangs = ('pari', 'sage')
 
@@ -454,8 +453,8 @@ class WebHecke(WebCharObject):
     def _compute(self):
         self.k = self.label2nf(self.nflabel)
         self._modulus = self.label2ideal(self.k, self.modlabel)
-        self.G = G = RayClassGroup(self.k, self._modulus)
-        self.H = H = self.G.dual_group()
+        self.G = RayClassGroup(self.k, self._modulus)
+        self.H = self.G.dual_group()
         #self.number = lmfdb_label2hecke(self.numlabel)
         # make this canonical
         self.modlabel = self.ideal2label(self._modulus)
@@ -551,8 +550,8 @@ class WebHecke(WebCharObject):
         return s
 
     @staticmethod
-    def group2label(x):
-        return number2label(x.exponents())
+    def group2label(self,x):
+        return self.number2label(x.exponents())
 
     def label2group(self,x):
         """ x is either an element of k or a tuple of ints or an ideal """
@@ -1065,7 +1064,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         m = self.modulus
         self.number = n = int(self.numlabel)
         assert gcd(m, n) == 1
-        self.chi = chi = self.H[n]
+        self.chi = self.H[n]
 
     @property
     def previous(self):
@@ -1226,7 +1225,7 @@ class WebHeckeExamples(WebHecke):
         nf = WebNumberField(nflabel)
         #nflink = (nflabel, url_for('number_fields.by_label',label=nflabel))
         nflink = (nflabel, url_for('characters.render_Heckewebpage',number_field=nflabel))
-        F = WebHeckeFamily(number_field=nflabel)
+        #F = WebHeckeFamily(number_field=nflabel)
         self._contents.append( (nflink, nf.signature(), nf.web_poly() ) )
 
 
@@ -1293,7 +1292,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
         WebHecke._compute(self) 
         self.number = self.label2number(self.numlabel)
         assert len(self.number) == self.G.ngens()
-        self.chi = chi = HeckeChar(self.H, self.number)
+        self.chi = HeckeChar(self.H, self.number)
 
         self.zetaorder = 0 # FIXME H.zeta_order()
 
