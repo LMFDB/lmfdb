@@ -11,12 +11,11 @@ import re
 
 from flask import url_for
 
-from Lfunctionutilities import (p2sage, string2number, seriescoeff,
+from Lfunctionutilities import (p2sage, string2number,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
-                                number_of_coefficients_needed,
                                 signOfEmfLfunction)
-from LfunctionComp import (nr_of_EC_in_isogeny_class, modform_from_EC,
+from LfunctionComp import (nr_of_EC_in_isogeny_class, modform_from_EC, 
                            EC_from_modform)
 import LfunctionDatabase
 import LfunctionLcalc
@@ -24,17 +23,15 @@ from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex
 
-from sage.all import *
+import sage
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, load
 import sage.libs.lcalc.lcalc_Lfunction as lc
-from sage.rings.rational import Rational
 
 from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes \
-     import WebMaassForm
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.base import url_for
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
@@ -292,7 +289,6 @@ class Lfunction_EC_Q(Lfunction):
         self._Ltype = "ellipticcurveQ"
 
         # Initialize default values
-        max_height = 30
         modform_translation_limit = 101
 
         # Put the arguments into the object dictionary
@@ -426,7 +422,7 @@ class Lfunction_EMF(Lfunction):
 
         self._Ltype = "ellipticmodularform"
 
-        modform_translation_limit = 101
+        # modform_translation_limit = 101
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
@@ -589,7 +585,7 @@ class Lfunction_HMF(Lfunction):
         R = QQ['x']
         (x,) = R._first_ngens(1)
         K = NumberField(R(str(f['hecke_polynomial']).replace('^', '**')), 'e')
-        e = K.gens()[0]
+        # e = K.gens()[0]
         iota = K.complex_embeddings()[self.number]
 
         if self.level == 1:  # For level 1, the sign is always plus
@@ -651,7 +647,7 @@ class Lfunction_HMF(Lfunction):
                 # prime power
                 p = nfact[0][0]
                 k = nfact[0][1]
-                S = [1] + [dcoeffs[p ** i] for i in range(1, k)]
+                # S = [1] + [dcoeffs[p ** i] for i in range(1, k)]
                 heckepol = heckepolsinv[ratl_primes.index(p)]
                 dcoeffs.append(heckepol[k])
             else:
@@ -1094,7 +1090,7 @@ class DedekindZeta(Lfunction):   # added by DK
         self.grh = wnf.used_grh()
         if self.degree > 1:
             if wnf.is_abelian() and len(wnf.dirichlet_group())>0:
-                cond = wnf.conductor()
+                # cond = wnf.conductor()
                 dir_group = wnf.dirichlet_group()
                 # Remove 1 from the list
                 j = 0
@@ -1210,7 +1206,7 @@ class HypergeometricMotiveLfunction(Lfunction):
             
         hodge = self.motive["hodge"]
         signature = self.motive["sig"]
-        hodge_index = lambda p: hodge[p]
+        # hodge_index = lambda p: hodge[p]
             # The hodge number p,q
         
         from lmfdb.hypergm.hodge import mu_nu
@@ -1417,8 +1413,8 @@ class SymmetricPowerLfunction(Lfunction):
         self.level = self.S.conductor
 
     def Lkey(self):
-        return {"power": power, "underlying_type": underlying_type,
-                "field": field}
+        return {"power": self.power, "underlying_type": self.underlying_type,
+                "field": self.field}
 
 #############################################################################
 
@@ -1530,87 +1526,86 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         generateSageLfunction(self)
 
-    def Lkey():
+    def Lkey(self):
         return {"weight": self.weight, "orbit": self.orbit}
 
 #############################################################################
 
+# this class it not used anywhere and does not yet appear to be functional (in particular, the function TensorProduct is not defined anywhere in the LMFDB)
+#~ class TensorProductLfunction(Lfunction):
+    #~ """
+    #~ Class representing the L-function of a tensor product
+    #~ (currently only of a elliptic curve with a Dirichlet character)
 
-class TensorProductLfunction(Lfunction):
-    """
-    Class representing the L-function of a tensor product
-    (currently only of a elliptic curve with a Dirichlet character)
+    #~ arguments are
 
-    arguments are
+    #~ - charactermodulus
+    #~ - characternumber
+    #~ - ellipticcurvelabel
 
-    - charactermodulus
-    - characternumber
-    - ellipticcurvelabel
+    #~ """
 
-    """
+    #~ def __init__(self, **args):
 
-    def __init__(self, **args):
+        #~ # Check for compulsory arguments
+        #~ validate_required_args('Unable to construct tensor product L-function.', args, 'charactermodulus', 'characternumber', 'ellipticcurvelabel')
 
-        # Check for compulsory arguments
-        validate_required_args('Unable to construct tensor product L-function.', args, 'charactermodulus', 'characternumber', 'ellipticcurvelabel')
+        #~ self._Ltype = "tensorproduct"
 
-        self._Ltype = "tensorproduct"
+        #~ # Put the arguments into the object dictionary
+        #~ self.__dict__.update(args)
+        #~ self.charactermodulus = int(self.charactermodulus)
+        #~ self.characternumber = int(self.characternumber)
+        #~ self.Elabel = self.ellipticcurvelabel
 
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.charactermodulus = int(self.charactermodulus)
-        self.characternumber = int(self.characternumber)
-        self.Elabel = self.ellipticcurvelabel
+        #~ # Create the tensor product
+        #~ # try catch later
+        #~ self.tp = TensorProduct(self. Elabel, self.charactermodulus, self.characternumber)
+        #~ # chi = self.tp.chi
+        #~ # E = self.tp.E
 
-        # Create the tensor product
-        # try catch later
-        self.tp = TensorProduct(self. Elabel, self.charactermodulus,
-                                self.characternumber)
-        chi = self.tp.chi
-        E = self.tp.E
-
-        self.motivic_weight = 1
-        self.weight = 2
-        self.algebraic = True
-        self.poles = []
-        self.residues = []
-        self.langlands = True
-        self.primitive = True
-        self.degree = 2
-        self.quasidegree = 1
-        self.level = int(self.tp.conductor())
-        self.sign = self.tp.root_number()
-        self.coefficient_type = 3
-        self.coefficient_period = 0
+        #~ self.motivic_weight = 1
+        #~ self.weight = 2
+        #~ self.algebraic = True
+        #~ self.poles = []
+        #~ self.residues = []
+        #~ self.langlands = True
+        #~ self.primitive = True
+        #~ self.degree = 2
+        #~ self.quasidegree = 1
+        #~ self.level = int(self.tp.conductor())
+        #~ self.sign = self.tp.root_number()
+        #~ self.coefficient_type = 3
+        #~ self.coefficient_period = 0
 
 
-        # We may want to change this later to a better estimate.
-        self.numcoeff = 20 + ceil(sqrt(self.tp.conductor()))
+        #~ # We may want to change this later to a better estimate.
+        #~ self.numcoeff = 20 + ceil(sqrt(self.tp.conductor()))
 
-        self.mu_fe = []
-        self.nu_fe = [Rational('1/2')]
-        self.compute_kappa_lambda_Q_from_mu_nu()
+        #~ self.mu_fe = []
+        #~ self.nu_fe = [Rational('1/2')]
+        #~ self.compute_kappa_lambda_Q_from_mu_nu()
 
-        li = self.tp.an_list(upper_bound=self.numcoeff)
-        for n in range(1,len(li)):
-            # now renormalise it for s <-> 1-s as the functional equation
-            li[n] /= sqrt(float(n))
-        self.dirichlet_coefficients = li
+        #~ li = self.tp.an_list(upper_bound=self.numcoeff)
+        #~ for n in range(1,len(li)):
+            #~ # now renormalise it for s <-> 1-s as the functional equation
+            #~ li[n] /= sqrt(float(n))
+        #~ self.dirichlet_coefficients = li
 
-        self.texname = "L(s,E,\\chi)"
-        self.texnamecompleteds = "\\Lambda(s,E,\\chi)"
-        self.title = "$L(s,E,\\chi)$, where $E$ is the elliptic curve %s and $\\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
+        #~ self.texname = "L(s,E,\\chi)"
+        #~ self.texnamecompleteds = "\\Lambda(s,E,\\chi)"
+        #~ self.title = "$L(s,E,\\chi)$, where $E$ is the elliptic curve %s and $\\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
 
-        self.credit = 'Workshop in Besancon, 2014'
+        #~ self.credit = 'Workshop in Besancon, 2014'
 
-        generateSageLfunction(self)
+        #~ generateSageLfunction(self)
 
-        constructor_logger(self, args)
+        #~ constructor_logger(self, args)
 
-    def Lkey(self):
-        return {"ellipticcurvelabel": self.Elabel,
-                "charactermodulus": self.charactermodulus,
-                "characternumber": self.characternumber}
+    #~ def Lkey(self):
+        #~ return {"ellipticcurvelabel": self.Elabel,
+                #~ "charactermodulus": self.charactermodulus,
+                #~ "characternumber": self.characternumber}
 
 #############################################################################
 
