@@ -100,7 +100,6 @@ def makeLfromdata(L, fromdb=False):
     L.motivic_weight = ZZ(data['motivic_weight'])
     if 'root_number' in data:
         L.sign = string2number(data['root_number'])
-           # p2sage converts from the python string format in the database.
     else:
         L.sign = exp(2*pi*I*float(data['sign_arg'])).n()
 
@@ -131,7 +130,7 @@ def makeLfromdata(L, fromdb=False):
         L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
 
     L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
-    L.normalize_by = p2sage(data['analytic_normalization'])
+    L.normalize_by = string2number(data['analytic_normalization'])
     for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
         an = L.dirichlet_coefficients_arithmetic[n]
         if L.normalize_by > 0:
