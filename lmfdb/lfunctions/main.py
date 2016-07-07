@@ -231,13 +231,6 @@ def l_function_dirichlet_page(modulus, number):
     return render_single_Lfunction(Lfunction_Dirichlet, args, request)
 
 
-# L-function of tensor product #################################################
-# Not yet implemented
-# @l_function_page.route("/TensorProduct/")
-# def l_function_tensor_product_page(galoisrep):
-#    args = {}
-#    return render_single_Lfunction(GaloisRepresentationLfunction, args, request)
-
 # L-function of Elliptic curve #################################################
 @l_function_page.route("/EllipticCurve/Q/<label>/")
 def l_function_ec_page(label):
