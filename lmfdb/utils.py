@@ -3,20 +3,35 @@
 # @app.route(....)
 # @cached()
 # def func(): ...
-import logging
 
+import logging
 import re
+import tempfile
+import random
+import os
+import time
+import sage
 
 from random import randint
-from flask import request, make_response
+from flask import request, make_response, flash, url_for, current_app
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
 
 from copy import copy
 from werkzeug import cached_property
-from flask import url_for
+from markupsafe import Markup
+
+from lmfdb.base import app
+
+from sage.all import latex
+
+
+def flash_error(errmsg, *args):
+    """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
+    flash(Markup("Error: %s"%(errmsg%tuple(map(lambda x: "<span style='color:black'>%s</span>"%x, args)))),"error")
 
 def random_object_from_collection(collection):
+    """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
     import pymongo
     n = collection.rand.count()
     if n:
@@ -28,6 +43,7 @@ def random_object_from_collection(collection):
         return collection.aggregate([{ '$sample': { 'size': int(1) } } ]).next()
 
 def random_value_from_collection(collection,attribute):
+    """ retrieves the value of attribute (e.g. label) from a random object in mongo db collection; uses collection.rand to improve performance if present """
     import pymongo
     n = collection.rand.count()
     if n:
@@ -190,16 +206,6 @@ def orddict_to_strlist(v):
 
 
 ### this was formerly in utilities.py
-import tempfile
-import random
-import os
-import re
-import time
-
-from lmfdb.base import app
-from flask import url_for, make_response
-import sage.all
-
 def to_dict(args):
     d = {}
     for key in args:
@@ -235,7 +241,6 @@ def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field=sage.rings
     from math import ceil, log
     PP = PowerSeriesRing(base_field, 'x', 1 + ceil(log(upperbound) / log(2.)))
 
-    x = PP('x')
     prime_l = prime_range(upperbound + 1)
     result = [1 for i in range(upperbound)]
     for p in prime_l:
@@ -283,7 +288,7 @@ def web_latex(x):
     if isinstance(x, (str, unicode)):
         return x
     else:
-        return "\( %s \)" % sage.all.latex(x)
+        return "\( %s \)" % latex(x)
 
 # if you just use web_latex(x) where x is a factored ideal then the
 # parentheses are doubled which does not look good!
@@ -297,7 +302,7 @@ def web_latex_split_on(x, on=['+', '-']):
     if isinstance(x, (str, unicode)):
         return x
     else:
-        A = "\( %s \)" % sage.all.latex(x)
+        A = "\( %s \)" % latex(x)
         for s in on:
             A = A.replace(s, '\) ' + s + ' \( ')
     return A
@@ -305,11 +310,11 @@ def web_latex_split_on(x, on=['+', '-']):
 # web_latex_split_on was not splitting polynomials, so we make an expanded version
 def web_latex_split_on_pm(x):
     on = ['+', '-']
- #   A = "\( %s \)" % sage.all.latex(x)
+ #   A = "\( %s \)" % latex(x)
     try:
         A = "\(" + x + "\)"  # assume we are given LaTeX to split on
     except:
-        A = "\( %s \)" % sage.all.latex(x)
+        A = "\( %s \)" % latex(x)
 
        # need a more clever split_on_pm that inserts left and right properly
     A = A.replace("\\left","")
@@ -341,7 +346,7 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     if isinstance(x, (str, unicode)):
         return x
     else:
-        A = "\( %s \)" % sage.all.latex(x)
+        A = "\( %s \)" % latex(x)
         c = re.compile(r)
         A = A.replace('+', '\) \( {}+ ')
         A = A.replace('-', '\) \( {}- ')
@@ -548,9 +553,6 @@ def comma(x):
 def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ
     return PolynomialRing(QQ, 'x')(c)
-
-from flask import current_app
-
 
 def debug():
     """
