@@ -95,8 +95,9 @@ class HomePageTest(LmfdbTest):
         Verify that every sample form home page loads OK (should take under 10s on atkin)
         """
         errors = []
-        samples = getDBConnection().siegel_modular_forms.experimental_samples
+        samples = getDBConnection().siegel_modular_forms.samples
         data = samples.find({'collection':{'$exists':True},'name':{'$exists':True}},{'_id':False,'collection':True,'name':True})
+        assert data.count() ge 129
         n = 0
         print ""
         import sys
