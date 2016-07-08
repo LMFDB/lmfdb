@@ -14,6 +14,7 @@ from lmfdb.artin_representations.main import ArtinRepresentation
 from lmfdb.WebCharacter import WebDirichletCharacter
 from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
 from lmfdb.lfunctions.Lfunctionutilities import lfuncDShtml, lfuncEPtex, lfuncFEtex, specialValueString
+from lmfdb.lfunctions.main import render_lfunction_exception
 
 # The method "show" shows the page for the Lfunction of a tensor product object.  This is registered on to the tensor_products_page blueprint rather than going via the l_function blueprint, hence the idiosyncrasies.  Sorry about that.  The reason is due to a difference in implementation; the tensor products are not (currently) in the database and the current L functions framewo  
 
@@ -102,9 +103,8 @@ def show():
             info['eulerproduct'] = 'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
             info['bread'] = get_bread()
             return render_template('Lfunction.html', **info)
-        except Exception as ex:
-            info = {'content': 'Sorry, there was a problem: ' + str(ex.args), 'title':'Error'}
-            return render_template('LfunctionSimple.html', **info) 
+        except (KeyError,ValueError,NotImplementedError) as err:
+            return render_lfunction_exception(err)
     else:
         return render_template("not_yet_implemented.html")
 
@@ -135,7 +135,6 @@ def zeros(L):
 
 def galois_rep_from_path(p):
     C = getDBConnection()
-    print p
     if p[0]=='EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
         data = C.elliptic_curves.curves.find_one({'lmfdb_label':p[2]+"."+p[3]+p[4]})
