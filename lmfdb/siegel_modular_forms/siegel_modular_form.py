@@ -22,7 +22,7 @@ def find_samples(family, weight):
     ret = []
     for res in slist:
         name = res['name']
-        url = url_for(".by_label", label=coll+"."+res['name'])
+        url = url_for(".by_label", label=family+"."+res['name'])
         ret.append({'url':url, 'name':name})
     return ret
 
@@ -205,11 +205,16 @@ def render_search_results_page(args, bread):
     return render_template( "ModularForm_GSp4_Q_search_results.html", title='Siegel modular forms search results', bread=bread, info=info)
 
 def render_dimension_table_page(args, bread):
+    print args
     fams = get_smf_families()
     fam_list = [c for c in fams if c.computes_dimensions() and not c.name in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
     info = { 'family_list': fam_list, 'args': to_dict(args) }
     family = get_smf_family(args.get('family'))
-    if family.computes_dimensions():
+    if not family:
+        flash_error("Space %s not found in databsae", args.get('family'))
+    elif not family.computes_dimensions():
+        flash_error("Dimension table not available for family %s.", args.get('family'))
+    else:
         info['family'] = family
         if 'j' in family.latex_name:
             # if j is not specified (but could be) set it to zero for consistency (overrides defaults in json files)
