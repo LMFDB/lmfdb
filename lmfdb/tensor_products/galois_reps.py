@@ -369,11 +369,8 @@ class GaloisRepresentation( Lfunction):
                 #if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
                     #(p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
                     #(p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
-                raise NotImplementedError("Currently tensor products of " +
-                                          "Galois representations are only" +
-                                          "implemented under some conditions.\n" +
-                                          "Here the behaviour at %s is too wild as" +
-                                          "the rep is not semistable for both factors."%p)
+                raise NotImplementedError("Currently tensor products of Galois representations are only implemented under some conditions.",
+                                          "The behaviour at %d is too wild (both factors must be semistable)." % p)
 
         # check for the possibily of getting poles
         if V.weight == W.weight and V.conductor == W.conductor :
