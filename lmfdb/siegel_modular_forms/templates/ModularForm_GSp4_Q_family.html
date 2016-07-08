@@ -3,7 +3,27 @@
 
 {% if info.forms|count > 0 %}
 <h2>Available samples</h2>
-{% include [['includes/avail/', info.family.name, '_avail_forms.html']|join] %}
+{% set KNOWL_ID = "mf.siegel.extent.%s"|format(info.family.name)|lower %}
+{{ KNOWL_INC(KNOWL_ID, title='') }}
+
+<div class="box1">
+  <table>
+    <thead>
+      <tr><th>Weight</th><th>Galois orbits (number of forms)</th></tr>
+    </thead>
+    {% for wt,forms1 in info.forms|sort %}
+    <tr class = "{{ loop.cycle( 'odd', 'even') }}">
+      <td>{{ wt }}</td>
+      <td>
+    {% for form,dim in forms1|sort %}
+    <a style="display: inline;" href="{{ url_for('.by_label',label=info.family.name+'.'+form) }}">{{ form }} ({{ dim }})</a>&nbsp;&nbsp;
+    {% endfor %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
 {% endif %}
 
 {% if info.family.computes_dimensions() %}
