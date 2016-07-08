@@ -103,7 +103,7 @@ def show():
             info['eulerproduct'] = 'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
             info['bread'] = get_bread()
             return render_template('Lfunction.html', **info)
-        except (KeyError,ValueError,NotImplementedError) as err:
+        except (KeyError,ValueError,RuntimError,NotImplementedError) as err:
             return render_lfunction_exception(err)
     else:
         return render_template("not_yet_implemented.html")
