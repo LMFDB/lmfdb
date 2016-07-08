@@ -118,12 +118,14 @@ def Sp4Z_j():
     try:
         dim_args = dimensions.parse_dim_args(request.args, {'k':'10-20','j':'0-30'})
     except ValueError:
+        # error message is flashed in parse_dim_args
         info['error'] = True
     if not info.get('error'):
         info['dim_args'] = dim_args
         try:
             info['table'] = dimensions.dimension_table_Sp4Z_j(dim_args['k_range'], dim_args['j_range'])
-        except NotImplementedError as errmsg:
+        except NotImplementedError as err:
+            flash(Markup(err), "error")
             info['error'] = True
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
                            title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
@@ -144,7 +146,8 @@ def render_main_page(bread):
 def build_dimension_table(info, fam, args):
     try:
         dim_args = dimensions.parse_dim_args(args, fam.dim_args_default)
-    except ValueError as err:
+    except ValueError:
+        # error message is flashed in parse_dim_args
         info['error'] = True
     if not info.get('error'):
         info['dim_args'] = dim_args
@@ -172,8 +175,8 @@ def build_dimension_table(info, fam, args):
                 headers, table = fam.dimension(**kwargs)
                 info['headers'] = headers
                 info['table'] = table
-            except (ValueError,NotImplementedError) as errmsg:
-                flash(Markup(errmsg), "error")
+            except (ValueError,NotImplementedError) as err:
+                flash(Markup(err), "error")
                 info['error'] = True
     return
 
