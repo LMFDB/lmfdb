@@ -14,5 +14,6 @@ def body_class():
     return {'body_class': 'higher_genus_w_automorphisms'}
 
 import main
-
 app.register_blueprint(higher_genus_w_automorphisms_page, url_prefix="/HigherGenus/C/Aut")
+app.register_blueprint(higher_genus_w_automorphisms_page, url_prefix="/HigherGenus/C/aut")
+

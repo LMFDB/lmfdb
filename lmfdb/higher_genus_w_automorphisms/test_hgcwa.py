@@ -28,7 +28,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
 
     def test_random(self):
-        L = self.tc.get('/HigherGenus/C/Aut/random')
+        L = self.tc.get('/HigherGenus/C/Aut/random',follow_redirects=True)
         assert 'Conjugacy classes for this   refined passport:' in L.data
 
     def test_magma_download(self):

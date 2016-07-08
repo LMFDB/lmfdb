@@ -174,7 +174,7 @@ def index():
 def random_passport():
     C = base.getDBConnection()
     label = random_value_from_collection(C.curve_automorphisms.passports,'passport_label')
-    return render_passport({'passport_label': label})
+    return redirect(url_for(".by_passport_label", passport_label=label))
 
 
 
@@ -335,7 +335,7 @@ def render_family(args):
         bread_sign = label_to_breadcrumbs(br_sign)
         bread_gp = label_to_breadcrumbs(br_gp)
        
-        bread = get_bread([(br_g, './?genus='+br_g),(pretty_group,'./?genus='+br_g + '&group='+bread_gp), (bread_sign,' ')])
+        bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp), (bread_sign,' ')])
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
@@ -359,9 +359,9 @@ def render_passport(args):
         dataz = C.curve_automorphisms.passports.find({'passport_label': label})
         if dataz.count() is 0:
             bread = get_bread([("Search error", url_for('.search'))])
-            info['err'] = "No refined passport with label " + label + " was found in the database."
-            info['label'] = label
-            flash_error( "No family with label %s was found in the database.", label)
+#            info['err'] = "No refined passport with label " + label + " was found in the database."
+#            info['label'] = label
+            flash_error( "No refined passport with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         data=dataz[0]
         g = data['genus']
@@ -465,7 +465,7 @@ def render_passport(args):
         bread_sign = label_to_breadcrumbs(br_sign)
         bread_gp = label_to_breadcrumbs(br_gp)
        
-        bread = get_bread([(br_g, './?genus='+br_g),(pretty_group,'./?genus='+br_g + '&group='+bread_gp), (bread_sign, urlstrng),(data['cc'][0],' ')])
+        bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp), (bread_sign, urlstrng),(data['cc'][0],' ')])
 
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),

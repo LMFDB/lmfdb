@@ -64,7 +64,8 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </table>
 </form>
 
-{% if info.err is defined %}
+
+<!--{% if info.err is defined %}
 
 {% if info.label is defined %}
 <form>
@@ -84,11 +85,13 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 
 <h2>Error</h2>
 <div>
-  {{ info.err|safe }}
+  {{ info.err|safe }} -->
+{% if info.err is defined %}
   <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
+    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)"> </p>
+ {% endif %}
+<!--</div>
+{% else %} -->
 
 
 <h2> Results: ({{info.report}})
