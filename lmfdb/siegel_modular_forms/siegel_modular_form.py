@@ -4,44 +4,21 @@
 
 from flask import render_template, url_for, request, send_file, flash, redirect
 from markupsafe import Markup
-import os, StringIO
-import dimensions, sample, collection
+import StringIO
+import dimensions, sample
+from family import get_smf_family, get_smf_families
 from sage.all import latex, Set
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.search_parsing import parse_ints, parse_ints_to_list_flash
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict, flash_error
 
 ###############################################################################
 # Utitlity functions
 ###############################################################################
 
-def scan_collections():
-    """
-    scan filesystem for static instances of Collection.
-    """
-    colns = dict()
-    root = os.path.dirname(os.path.abspath(__file__))
-    static = os.path.join(root, 'static')
-    for a,b,files in os.walk(static):
-        for f in files:
-            if f.endswith('.json'):
-                c = f[:-5]
-            colns[c] = collection.Collection(c, location = static)
-    # Note that there is no point in caching this data
-    # Each worker thread will need to recreate it anyway (and its fast in any case)
-    return colns
-
-def find_collection(coll):
-    root = os.path.dirname(os.path.abspath(__file__))
-    static = os.path.join(root, 'static')
-    try:
-        return collection.Collection(coll, location = static)
-    except (ValueError,IOError):
-        return None
-
-def find_samples(coll, weight):
-    slist = sample.smf_db_samples().find({'collection':coll, 'weight':str(weight)})
+def find_samples(family, weight):
+    slist = sample.smf_db_samples().find({'data_type':'sample','collection':family, 'wt':int(weight)},{'name':True})
     ret = []
     for res in slist:
         name = res['name']
@@ -70,7 +47,7 @@ def index():
         else:
             return render_search_results_page(request.args, bread)
     return render_main_page(bread)
-    
+
 @smf_page.route("/random")
 def random_sample():
     return redirect(url_for('.by_label', label='.'.join(sample.random_sample_name())), 301)
@@ -81,16 +58,16 @@ def by_label(label):
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
              ('Siegel modular forms', url_for('.index'))]
     slabel = label.split('.')
-    col = find_collection (slabel[0])
-    if col:
+    family = get_smf_family (slabel[0])
+    if family:
         if len(slabel) == 1:
-            return render_collection_page(col, request.args, bread)
+            return render_family_page(family, request.args, bread)
         if len(slabel) == 2:
             sam = sample.Samples({ 'collection': slabel[0], 'name': slabel[1]})
             if len(sam) > 0:
-                bread.append(('$'+col.latex_name()+'$', url_for('.by_label',label=slabel[0])))
-                return render_sample_page(col, sam[0], request.args, bread)
-    flash(Markup("No siegel modular form data for <span style='color:black'>%s</span> was found in  the database"%label),"error")
+                bread.append(('$'+family.latex_name+'$', url_for('.by_label',label=slabel[0])))
+                return render_sample_page(family, sam[0], request.args, bread)
+    flash_error ("No siegel modular form data for %s was found in the database.", label)
     return redirect(url_for(".index"))
 
 @smf_page.route('/Sp4Z_j/<int:k>/<int:j>')
@@ -147,7 +124,6 @@ def Sp4Z_j():
         try:
             info['table'] = dimensions.dimension_table_Sp4Z_j(dim_args['k_range'], dim_args['j_range'])
         except NotImplementedError as errmsg:
-            flash(Markup(errmsg), "error")
             info['error'] = True
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
                            title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
@@ -160,25 +136,21 @@ def Sp4Z_j():
 ##########################################################
 
 def render_main_page(bread):
-    cols = scan_collections()
-    col_list = [cols[c] for c in cols if cols[c].computes_dimensions() and not c in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
-    col_list.sort(key=lambda x: x.order)
-    info = { 'col_list': col_list, 'args': {}, 'number_of_samples': sample.count_samples()}
-    return render_template('ModularForm_GSp4_Q_index.html',
-                            title='Siegel Modular Forms',
-                            bread=bread,
-                            info=info)
+    fams = get_smf_families()
+    fam_list = [c for c in fams if c.computes_dimensions() and not c.name in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
+    info = { 'family_list': fam_list, 'args': {}, 'number_of_samples': sample.count_samples()}
+    return render_template('ModularForm_GSp4_Q_index.html', title='Siegel Modular Forms', bread=bread, info=info)
 
-def build_dimension_table(info, col, args):
+def build_dimension_table(info, fam, args):
     try:
-        dim_args = dimensions.parse_dim_args(args, col.dim_args_default)
-    except ValueError:
+        dim_args = dimensions.parse_dim_args(args, fam.dim_args_default)
+    except ValueError as err:
         info['error'] = True
     if not info.get('error'):
         info['dim_args'] = dim_args
         kwargs={}
         try:
-            for arg in col.dimension_desc()['args']:
+            for arg in fam.dimension_desc()['args']:
                 if (arg == 'wt_range' or arg == 'k_range') and 'k_range' in dim_args:
                     kwargs[arg] = dim_args['k_range']
                 elif (arg == 'wt' or arg == 'k') and 'k_range' in dim_args:
@@ -191,13 +163,13 @@ def build_dimension_table(info, col, args):
                     if len(dim_args['j_range']) != 1:
                         raise NotImplementedError("Please specify a single value of <span style='color:black'>$j$</span> rather than a range of values.")
                     kwargs[arg] = dim_args['j_range'][0]
-        except NotImplementedError as errmsg:
-            flash(Markup(errmsg), "error")
+        except NotImplementedError as err:
+            flash(Markup(err), "error")
             info['error'] = True
         if not info.get('error'):
             info['kwargs'] = kwargs
             try:
-                headers, table = col.dimension(**kwargs)
+                headers, table = fam.dimension(**kwargs)
                 info['headers'] = headers
                 info['table'] = table
             except (ValueError,NotImplementedError) as errmsg:
@@ -205,18 +177,14 @@ def build_dimension_table(info, col, args):
                 info['error'] = True
     return
 
-def render_collection_page(col, args, bread):
-    mbs = col.members()
-    forms = [ (k, [(f.name(), f.degree_of_field()) for f in mbs if k == f.weight()]) for k in Set(f.weight() for f in mbs)]
-    info = { 'col': col, 'forms': forms, 'args': to_dict(args) }
-    #info['learnmore'] += [ ('The spaces $'+col.latex_name()+'$', col.name()+'/basic')]
-    if col.computes_dimensions():
-        build_dimension_table (info, col, args)
-    bread.append(('$'+col.latex_name()+'$', ''))
-    return render_template("ModularForm_GSp4_Q_collection.html",
-                           title='Siegel modular forms $'+col.latex_name()+'$',
-                           bread=bread,
-                           info=info)
+def render_family_page(family, args, bread):
+    sams = family.samples()
+    forms = [ (k, [(f.name(), f.degree_of_field()) for f in sams if k == f.weight()]) for k in Set(f.weight() for f in sams)]
+    info = { 'family': family, 'forms': forms, 'args': to_dict(args) }
+    if family.computes_dimensions():
+        build_dimension_table (info, family, args)
+    bread.append(('$'+family.latex_name+'$', ''))
+    return render_template("ModularForm_GSp4_Q_family.html", title='Siegel modular forms $'+family.latex_name+'$', bread=bread, info=info)
 
 def render_search_results_page(args, bread):
     if args.get("table"):
@@ -234,34 +202,27 @@ def render_search_results_page(args, bread):
     if not info.get('error'):
         info['results'] = sample.Samples(query)
     bread.append( ('search results', ''))
-    return render_template( "ModularForm_GSp4_Q_search_results.html",
-                           title='Siegel modular forms search results',
-                           bread=bread,
-                           info=info)
+    return render_template( "ModularForm_GSp4_Q_search_results.html", title='Siegel modular forms search results', bread=bread, info=info)
 
 def render_dimension_table_page(args, bread):
-    cols = scan_collections()
-    col_list = [cols[c] for c in cols if cols[c].computes_dimensions() and not c in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
-    col_list.sort(key=lambda x: x.order)
-    info = { 'col_list': col_list, 'args': to_dict(args) }
-    col = cols.get(args.get('col'))
-    if col and col in col_list:
-        info['col'] = col
-        if 'j' in col.latex_name():
+    fams = get_smf_families()
+    fam_list = [c for c in fams if c.computes_dimensions() and not c.name in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
+    info = { 'family_list': fam_list, 'args': to_dict(args) }
+    family = get_smf_family(args.get('family'))
+    if family.computes_dimensions():
+        info['family'] = family
+        if 'j' in family.latex_name:
             # if j is not specified (but could be) set it to zero for consistency (overrides defaults in json files)
             if not 'j' in info['args'] or not info['args']['j']:
                 info['args']['j'] = '0'
-        if not 'j' in col.latex_name() and 'j' in info['args'] and  info['args']['j'] != '0':
-            flash(Markup("Error: <span style='color:black'>$j=%s$</span> should not be specified for the selected space <span style='color:black'>$%s$</span>"%(info['args']['j'],col.latex_name())), "error")
+        if not 'j' in family.latex_name and 'j' in info['args'] and  info['args']['j'] != '0':
+            flash_error("$j$ = %s should not be specified for the selected space %s", info['args']['j'], '$'+family.latex_name+'$')
         else:
-            build_dimension_table (info, col, info['args'])
+            build_dimension_table (info, family, info['args'])
     bread.append(('dimensions', 'dimensions'))
-    return render_template("ModularForm_GSp4_Q_dimensions.html",
-                            title='Siegel modular forms dimension tables',
-                            bread=bread,
-                            info=info)
+    return render_template("ModularForm_GSp4_Q_dimensions.html", title='Siegel modular forms dimension tables', bread=bread, info=info)
 
-def render_sample_page(col, sam, args, bread):
+def render_sample_page(family, sam, args, bread):
     info = { 'args': to_dict(args), 'sam': sam, 'latex': latex, 'type':sam.type(), 'name':sam.name(), 'full_name': sam.full_name(), 'weight':sam.weight(), 'fdeg':sam.degree_of_field(), 'is_eigenform':sam.is_eigenform(), 'field_poly': sam.field_poly()}
     if sam.is_integral() != None:
         info['is_integral'] = sam.is_integral()
@@ -269,7 +230,7 @@ def render_sample_page(col, sam, args, bread):
         info['space_url'] = url_for('.Sp4Z_j_space', k=info['weight'], j=0)
     if 'Sp4Z_2' in sam.collection():
         info['space_url'] = url_for('.Sp4Z_j_space', k=info['weight'], j=2)
-    info['space'] = '$'+col.latex_name().replace('k', '{' + str(sam.weight()) + '}')+'$'
+    info['space'] = '$'+family.latex_name.replace('k', '{' + str(sam.weight()) + '}')+'$'
     if 'space_url' in info:
         bread.append((info['space'], info['space_url']))
     info['space_href'] = '<a href="%s">%s</d>'%(info['space_url'],info['space']) if 'space_url' in info else info['space']
@@ -305,7 +266,7 @@ def render_sample_page(col, sam, args, bread):
     if info['field_poly'].disc() < 10**80:
         null_ideal = sam.field().ring_of_integers().ideal(0)
         info['modulus'] = null_ideal
-        modulus = args.get('modulus','').replace(' ','')
+        modulus = args.get('modulus','').strip()
         m = 0
         if modulus:
             try:
@@ -313,10 +274,10 @@ def render_sample_page(col, sam, args, bread):
                 m = O.ideal([O(str(b)) for b in modulus.split(',')])
             except Exception:
                 info['error'] = True
-                flash(Markup("Error: unable to construct modulus ideal from specified generators <span style='color:black'>%s</span>." % modulus), "error")
+                flash_error("Unable to construct modulus ideal from specified generators %s.", modulus)
             if m == 1:
                 info['error'] = True
-                flash(Markup("Error: the ideal <span style='color:black'>(%s)</span> is the unit ideal, please specify a different modulus." % modulus), "error")
+                flash_error("The ideal %s is the unit ideal, please specify a different modulus.", '('+modulus+')')
                 m = 0
         info['modulus'] = m
         # Hack to reduce polynomials and to handle non integral stuff
@@ -345,9 +306,4 @@ def render_sample_page(col, sam, args, bread):
         if len(sam.explicit_formula()) < 100000:
             info['explicit_formula'] = sam.explicit_formula()
         
-    return render_template("ModularForm_GSp4_Q_sample.html",
-                            title=title,
-                            bread=bread,
-                            properties2=properties,
-                            info=info)
-
+    return render_template("ModularForm_GSp4_Q_sample.html", title=title, bread=bread, properties2=properties, info=info)

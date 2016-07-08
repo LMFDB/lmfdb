@@ -1,7 +1,7 @@
 {% if not info.error %}
 <p>
-  The table below lists, for each bold value of $k$ in the header,  the dimensions of the following subspaces of ${{ info.col.latex_name() }}${% if 'j' in info.kwargs %} for $j={{ info.kwargs.j }}$: {% else %}:{% endif %}
-  {{ info.col.dimension_glossary()|safe }}
+  The table below lists, for each bold value of $k$ in the header, the dimensions of the following subspaces of ${{ info.family.latex_name }}${% if 'j' in info.kwargs %} for $j={{ info.kwargs.j }}$: {% else %}:{% endif %}
+  {{ info.family.dimension_glossary()|safe }}
   <table class="ntdata">
     <thead>
     <tr>

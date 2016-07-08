@@ -132,7 +132,7 @@ def Samples(query):
     Return a result of a database query as list of light instances of Sample_class.
     """
     query.update({ 'data_type': 'sample'})
-    docs = smf_db_samples().find(query, { 'Fourier_coefficients': False, 'eigenvalues': False, 'explicit_formula': False })
+    docs = smf_db_samples().find(query, { 'Fourier_coefficients': False, 'eigenvalues': False, 'explicit_formula': False }).sort('name')
     return [ Sample_class(doc) for doc in docs]
 
 

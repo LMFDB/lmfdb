@@ -97,7 +97,7 @@ class HomePageTest(LmfdbTest):
         errors = []
         samples = getDBConnection().siegel_modular_forms.samples
         data = samples.find({'collection':{'$exists':True},'name':{'$exists':True}},{'_id':False,'collection':True,'name':True})
-        assert data.count() ge 129
+        assert data.count() >= 129
         n = 0
         print ""
         import sys

@@ -1,12 +1,12 @@
 <h4> Enter a space and range of weights:</h4>
 <form>
 <span>Space:
-<select name="col">
-{% for c in info.col_list %}
-    {% if  c == info.col %}
-        <option value='{{ c.name() }}' selected>${{ c.latex_name() }}$</option>
+<select name="family">
+{% for c in info.family_list %}
+    {% if info.family and c.name == info.family.name %}
+        <option value='{{ c.name }}' selected>${{ c.latex_name }}$</option>
     {% else %}
-        <option value='{{ c.name() }}'>${{ c.latex_name() }}$</option>
+        <option value='{{ c.name }}'>${{ c.latex_name }}$</option>
     {% endif %}
 {% endfor %}
 </select>
