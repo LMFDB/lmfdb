@@ -10,8 +10,8 @@ import flask
 import yaml
 import os
 from lmfdb import base
-from flask import render_template, request, url_for, make_response
-from lmfdb.utils import to_dict
+from flask import render_template, request, url_for, make_response, redirect
+from lmfdb.utils import to_dict, random_value_from_collection, flash_error
 from lmfdb.search_parsing import search_parser, parse_ints, parse_count, parse_start, clean_input
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 
@@ -21,9 +21,8 @@ from lmfdb.sato_tate_groups.main import sg_pretty
 
 
 # Determining what kind of label
-#family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+)\.(\d+-)')
-family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+)\.(\d+-)[^\.]*$')
-passport_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
+family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+\.\d+-[^\.]*$)')
+passport_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+\.\d+.*))\.(\d+)')
 cc_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
 
 def label_is_one_family(lab):
@@ -33,8 +32,17 @@ def label_is_one_passport(lab):
     return passport_label_regex.match(lab)
 
 
+def split_family_label(lab):
+    return family_label_regex.match(lab).groups()
+
+
+def split_passport_label(lab):
+    return passport_label_regex.match(lab).groups()
+
+
+
 def get_bread(breads=[]):
-    bc = [("Higher Genus/C/aut", url_for(".index"))]
+    bc = [("Higher Genus", url_for(".index")),("C", url_for(".index")),("Aut", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -80,6 +88,22 @@ def signature_to_list(L):
             newsig = L[:i] + "," + L[i+1:]
             return newsig
     return L
+
+
+def label_to_breadcrumbs(L):
+    newsig = '['
+    for i in range(0,len(L)):
+        if (L[i] == '-'):
+            newsig += ","
+        elif (L[i] == '.'):
+            newsig += ';'
+        else:    
+            newsig += L[i]
+            
+    newsig += ']'    
+    return newsig
+
+
 
 #copied from parse_bracketed_posints,  but keeps outside brackets in string
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
@@ -144,6 +168,16 @@ def index():
     return render_template("hgcwa-index.html", title="Families of Higher Genus Curves with Automorphisms", bread=bread, info=info, learnmore=learnmore)
 
 
+
+
+@higher_genus_w_automorphisms_page.route("/random")
+def random_passport():
+    C = base.getDBConnection()
+    label = random_value_from_collection(C.curve_automorphisms.passports,'passport_label')
+    return render_passport({'passport_label': label})
+
+
+
 @higher_genus_w_automorphisms_page.route("/<label>")
 def by_label(label):
 
@@ -154,27 +188,13 @@ def by_label(label):
     else:
         info = {}
         bread = get_bread([("Search error", '')])
-        info['err'] = "No family with label " + label + " was found in the database."
-        info['label'] = label
-        return search_input_error(info, bread)
+        flash_error( "No family with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
     
 
 @higher_genus_w_automorphisms_page.route("/<passport_label>")
 def by_passport_label(label):
     return render_passport({'passport_label': label})
-
-# FIXME: delete or fix this code
-# Apparently obsolete code that causes a server error if executed
-#@higher_genus_w_automorphisms_page.route("/search", methods=["GET", "POST"])
-#def search():
-#    if request.method == "GET":
-#        val = request.args.get("val", "no value")
-#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-#        return render_template("hgcwa-search.html", title="Automorphisms of Higher Genus Curves Search", bread=bread, val=val)
-#    elif request.method == "POST":
-#        return "ERROR: we always do http get to explicitly display the search parameters"
-#    else:
-#        return flask.abort(404)
 
 
 def higher_genus_w_automorphisms_search(**args):
@@ -189,10 +209,9 @@ def higher_genus_w_automorphisms_search(**args):
         elif label_is_one_family(labs):
             return render_family({'label': labs})
         else:
-            info['number'] = 0
-            info['label']=labs
-            info['err'] = "The label " + labs + " is not a legitimate label for this data."
-            return search_input_error(info, bread)
+            flash_error ("The label %s is not a legitimate label for this data.",labs)
+            return redirect(url_for(".index"))
+
 
 #allows for ; in signature
     if 'signature' in info:   
@@ -251,8 +270,6 @@ def higher_genus_w_automorphisms_search(**args):
 
 
 
-
-
 def render_family(args):
     info = {}
     if 'label' in args:
@@ -260,10 +277,9 @@ def render_family(args):
         C = base.getDBConnection()
         dataz = C.curve_automorphisms.passports.find({'label': label})
         if dataz.count() is 0:
-            bread = get_bread([("Search error", url_for('.search'))])
-            info['err'] = "No family with label " + label + " was found in the database."
-            info['label'] = label
-            return search_input_error(info, bread)
+#            bread = get_bread([("Search error", url_for('.search'))])
+            flash_error( "No family with label %s was found in the database.", label)
+            return redirect(url_for(".index"))
         data=dataz[0]
         g = data['genus']
         GG = ast.literal_eval(data['group'])
@@ -313,8 +329,13 @@ def render_family(args):
             
         friends = [ ]
         
+
+        br_g, br_gp, br_sign = split_family_label(label)
         
-        bread = get_bread([(label, ' ')])
+        bread_sign = label_to_breadcrumbs(br_sign)
+        bread_gp = label_to_breadcrumbs(br_gp)
+       
+        bread = get_bread([(br_g, './?genus='+br_g),(pretty_group,'./?genus='+br_g + '&group='+bread_gp), (bread_sign,' ')])
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
@@ -340,7 +361,8 @@ def render_passport(args):
             bread = get_bread([("Search error", url_for('.search'))])
             info['err'] = "No refined passport with label " + label + " was found in the database."
             info['label'] = label
-            return search_input_error(info, bread)
+            flash_error( "No family with label %s was found in the database.", label)
+            return redirect(url_for(".index"))
         data=dataz[0]
         g = data['genus']
         GG = ast.literal_eval(data['group'])
@@ -428,8 +450,10 @@ def render_passport(args):
                          'signH':sign_display(ast.literal_eval(data['signH'])),
                          'higgenlabel' : data['full_label'] })
 
-        urlstrng =data['label'] 
-            
+
+        urlstrng,br_g, br_gp, br_sign, refined_p = split_passport_label(label)
+       
+      
         if Lfriends:
            for Lf in Lfriends:
               friends = [("Full automorphism " + Lf, Lf),("Family containing this refined passport ",  urlstrng) ]
@@ -438,7 +462,11 @@ def render_passport(args):
             friends = [("Family containing this refined passport",  urlstrng) ]    
          
         
-        bread = get_bread([(data['label'], urlstrng),(data['cc'][0], ' ')])
+        bread_sign = label_to_breadcrumbs(br_sign)
+        bread_gp = label_to_breadcrumbs(br_gp)
+       
+        bread = get_bread([(br_g, './?genus='+br_g),(pretty_group,'./?genus='+br_g + '&group='+bread_gp), (bread_sign, urlstrng),(data['cc'][0],' ')])
+
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
@@ -538,8 +566,6 @@ def hgcwa_code(**args):
         code += code_list[k][lang] + '\n'
 
     code += '\n'
-    
-    num_entries = data.count()
 
     for dataz in data:
         code += Comment[lang] + " Here we add an action to result_record." + '\n'
