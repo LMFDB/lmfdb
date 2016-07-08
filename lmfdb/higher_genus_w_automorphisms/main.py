@@ -277,7 +277,6 @@ def render_family(args):
         C = base.getDBConnection()
         dataz = C.curve_automorphisms.passports.find({'label': label})
         if dataz.count() is 0:
-#            bread = get_bread([("Search error", url_for('.search'))])
             flash_error( "No family with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         data=dataz[0]
@@ -359,8 +358,6 @@ def render_passport(args):
         dataz = C.curve_automorphisms.passports.find({'passport_label': label})
         if dataz.count() is 0:
             bread = get_bread([("Search error", url_for('.search'))])
-#            info['err'] = "No refined passport with label " + label + " was found in the database."
-#            info['label'] = label
             flash_error( "No refined passport with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         data=dataz[0]

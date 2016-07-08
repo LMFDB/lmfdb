@@ -65,33 +65,11 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </form>
 
 
-<!--{% if info.err is defined %}
 
-{% if info.label is defined %}
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>There is no curve with this label:&nbsp;&nbsp;</td>
-<td ><input type='text' name='jump_to' size=60 value="{{info.label}}"> </td>
-<td><button type='submit' value='Find'>Find</button></td>
-</tr>
-<tr>
-<td colspan="3" rowspan="2"><span class="formexample"> a higher genus curve with family label or passport label, e.g. 3.4-2.0.2-2-2-2-2-2 or 4.120-34.0.2-4-5.1"</span></td>
-</tr>
-</table>
-</form>
-
-{% endif %}
-
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }} -->
 {% if info.err is defined %}
   <p>
     Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)"> </p>
  {% endif %}
-<!--</div>
-{% else %} -->
 
 
 <h2> Results: ({{info.report}})
