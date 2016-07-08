@@ -69,7 +69,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 {% if info.err is defined %}
   <p>
     Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)"> </p>
- {% endif %}
+{% else  %}
 
 
 <h2> Results: ({{info.report}})
@@ -123,8 +123,8 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 
 
 {% endif %}
-{% endif %}
 
+{% endif %}
 
 
 {% endblock %}
