@@ -9,7 +9,7 @@ import yaml
 import lmfdb.base as base
 from lmfdb.utils import flash_error
 from datetime import datetime
-from flask import render_template, request, make_response, url_for
+from flask import render_template, request, url_for
 from lmfdb.api import api_page, api_logger
 from bson.objectid import ObjectId
 
@@ -60,6 +60,22 @@ def index():
     title = "API"
     return render_template("api.html", **locals())
 
+@api_page.route("/stats")
+def stats():
+    init_database_info()
+    C = base.getDBConnection()
+    dbstats = {db:C[db].command("dbstats") for db in _databases}
+    stats = {}
+    for db in dbstats:
+        for c in pluck(0,_databases[db]):
+            print db,c
+            cstats = C[db].command("collstats",c)
+            stats[cstats['ns']] = {'db':db, 'coll':'.'.join(cstats['ns'].split('.')[1:]),'dbSize': dbstats[db]['dataSize']+dbstats[db]['indexSize'], 'size':cstats['size']+cstats['totalIndexSize'],
+                                  'dataSize':cstats['size'], 'indexSize':cstats['totalIndexSize'], 'avgObjSize':cstats['avgObjSize'], 'objects':cstats['objects']}
+        stats[db] = {'ns':db, 'db':db, 'col':'', 'dbSize': dbstats[db]['dataSize']+dbstats[db]['indexSize'], 'size':dbstats[db]['dataSize']+dbstats[db]['indexSize'],
+                     'dataSize':dbstats[db]['dataSize'],  'indexSize':dbstats[db]['indexSize'], 'avgObjSize':dbstats[db]['avgObjSize'], 'objects':dbstats[db]['objects']}
+    statslist = sorted([stats[db] for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['col']))
+    return render_template('stats.html', stats=statslist)
 
 @api_page.route("/<db>/<collection>/<id>")
 def api_query_id(db, collection, id):
