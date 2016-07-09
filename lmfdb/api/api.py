@@ -9,7 +9,7 @@ import yaml
 import lmfdb.base as base
 from lmfdb.utils import flash_error
 from datetime import datetime
-from flask import render_template, request, make_response, url_for
+from flask import render_template, request, url_for
 from lmfdb.api import api_page, api_logger
 from bson.objectid import ObjectId
 
@@ -60,6 +60,36 @@ def index():
     title = "API"
     return render_template("api.html", **locals())
 
+@api_page.route("/stats")
+def stats():
+    def mb(x):
+        return int(round(x/1000000.0))
+    init_database_info()
+    C = base.getDBConnection()
+    dbstats = {db:C[db].command("dbstats") for db in _databases}
+    dbs = len(dbstats.keys())
+    collections = objects = 0
+    size = dataSize = indexSize = 0
+    stats = {}
+    for db in dbstats:
+        dbsize = dbstats[db]['dataSize']+dbstats[db]['indexSize']
+        size += dbsize
+        dataSize += dbstats[db]['dataSize']
+        indexSize += dbstats[db]['indexSize']
+        dbsize = mb(dbsize)
+        for c in pluck(0,_databases[db]):
+            if C[db][c].count():
+                collections += 1
+                coll = '<a href = "' + url_for (".api_query", db=db, collection = c) + '">'+c+'</a>'
+                cstats = C[db].command("collstats",c)
+                objects += cstats['count']
+                csize = mb(cstats['size']+cstats['totalIndexSize'])
+                if csize:
+                    stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':csize,
+                                          'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
+    sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['coll']))
+    statslist = [stats[key] for key in sortedkeys]
+    return render_template('stats.html', info={'dbs':dbs,'collections':collections,'objects':objects,'size':mb(size),'dataSize':mb(dataSize),'indexSize':mb(indexSize),'stats':statslist})
 
 @api_page.route("/<db>/<collection>/<id>")
 def api_query_id(db, collection, id):

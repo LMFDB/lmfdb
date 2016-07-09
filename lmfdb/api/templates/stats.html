@@ -1,0 +1,33 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+The LMFDB consists of {{info.dbs}} mongo databases containing {{info.collections}} collections and a total of {{info.objects}} objects.
+The total size is {{info.size}} MB, of which {{info.dataSize}} MB is data and {{info.indexSize}} MB is indexes.  The table below lists all collections that are larger than one megabyte (MB = 1,000,000 bytes), form largest to smallest.
+
+<div>
+<table class="ntdata">
+<tr>
+  <th>Database</th>
+  <th>Collection</th>
+  <th>Size (MB)</th>
+  <th>Data (MB)</th>
+  <th>Index (MB)</th>
+  <th>Objects</th>
+  <th>Average Object Size (bytes)</th>
+</tr>
+{% for x in info.stats: %}
+<tr>
+    <td><b>{{x.db}}</b></td>
+    <td>{{x.coll|safe}}</td>
+    <td>{{x.size}}</td>
+    <td>{{x.dataSize}}</td>
+    <td>{{x.indexSize}}</td>
+    <td>{{x.objects}}</td>
+    <td>{{x.avgObjSize}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+{% endblock %}
