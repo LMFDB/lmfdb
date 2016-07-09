@@ -1,8 +1,0 @@
-{
-    "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Gamma0_4_half",
-    "degree": 2,
-    "dim_args_default": { "k": "1..20" },
-    "latex_name": "M_{k-1/2}\\left(\\Gamma_0(4)\\right)",
-    "name": "Gamma0_4_half",
-    "order": 108
-}
