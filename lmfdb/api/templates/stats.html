@@ -1,0 +1,16 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<table>
+<tr>
+<th>Database</th><th>Collection</th><th>Size (GB)</th><th>Objects</th><th>ObjSize</th>
+</tr>
+{% for x in info.stats: %}
+<tr>
+<td>{{x.db}}</td><td>{{x.c}}</td><td>{{x.size}}</td><td>{{x.objects}}</td><td>{{x.avgObjSize}}</td>
+<tr>
+{% endfor %}
+</table>
+
+{% endblock %}
