@@ -7,10 +7,6 @@ The LMFDB consists of {{info.dbs}} mongo databases containing {{info.collections
 The total size is {{info.size}} MB, of which {{info.dataSize}} MB is data and {{info.indexSize}} MB is indexes.
 </p>
 
-<p>
-The table below lists all collections that are larger than {{info.minsize}} MB, sorted by {{info.sortby}}.
-</p>
-
 <form>
 <table>
 <tr>
@@ -44,6 +40,10 @@ Sort by:&nbsp;
 </td>
 </table>
 </form>
+
+<p>
+The table below lists all collections that are larger than {{info.minsize}} MB, sorted by {{info.sortby}}.
+</p>
 
 <table id="stats" class="ntdata" cellspacing="0" width="100%">
 <thead>
