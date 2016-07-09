@@ -8,7 +8,7 @@
 </tr>
 {% for x in info.stats: %}
 <tr>
-<td>{{x.db}}</td><td>{{x.c}}</td><td>{{x.size}}</td><td>{{x.objects}}</td><td>{{x.avgObjSize}}</td>
+<td>{%if x.db == x.coll %}{{x.db}}{% endif %}</td><td>{{x.coll}}</td><td>{{x.size/1000.0|int}}</td><td>{{x.objects}}</td><td>{{x.avgObjSize}}</td>
 <tr>
 {% endfor %}
 </table>
