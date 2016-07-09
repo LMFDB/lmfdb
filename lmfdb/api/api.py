@@ -73,7 +73,7 @@ def stats():
     size = 0
     stats = {}
     for db in dbstats:
-        dbsize = dbstats['dataSize']+dbstats[db]['indexSize']
+        dbsize = dbstats[db]['dataSize']+dbstats[db]['indexSize']
         size += dbsize
         dbsize = mb(dbsize)
         if dbsize:
