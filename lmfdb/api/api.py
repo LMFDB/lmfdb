@@ -77,7 +77,6 @@ def stats():
                      'dataSize':dbstats[db]['dataSize'],  'indexSize':dbstats[db]['indexSize'], 'avgObjSize':dbstats[db]['avgObjSize'], 'objects':dbstats[db]['objects']}
     sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['coll']))
     statslist = [stats[key] for key in sortedkeys]
-    print statslist
     return render_template('stats.html', info={'stats':statslist})
 
 @api_page.route("/<db>/<collection>/<id>")
