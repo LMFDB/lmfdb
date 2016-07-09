@@ -7,8 +7,9 @@ DESC = pymongo.DESCENDING
 import flask
 import yaml
 import lmfdb.base as base
+from lmfdb.utils import flash_error
 from datetime import datetime
-from flask import render_template, request, make_response, url_for
+from flask import render_template, request, url_for
 from lmfdb.api import api_page, api_logger
 from bson.objectid import ObjectId
 
@@ -59,6 +60,36 @@ def index():
     title = "API"
     return render_template("api.html", **locals())
 
+@api_page.route("/stats")
+def stats():
+    def mb(x):
+        return int(round(x/1000000.0))
+    init_database_info()
+    C = base.getDBConnection()
+    dbstats = {db:C[db].command("dbstats") for db in _databases}
+    dbs = len(dbstats.keys())
+    collections = objects = 0
+    size = dataSize = indexSize = 0
+    stats = {}
+    for db in dbstats:
+        dbsize = dbstats[db]['dataSize']+dbstats[db]['indexSize']
+        size += dbsize
+        dataSize += dbstats[db]['dataSize']
+        indexSize += dbstats[db]['indexSize']
+        dbsize = mb(dbsize)
+        for c in pluck(0,_databases[db]):
+            if C[db][c].count():
+                collections += 1
+                coll = '<a href = "' + url_for (".api_query", db=db, collection = c) + '">'+c+'</a>'
+                cstats = C[db].command("collstats",c)
+                objects += cstats['count']
+                csize = mb(cstats['size']+cstats['totalIndexSize'])
+                if csize:
+                    stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':csize,
+                                          'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
+    sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['coll']))
+    statslist = [stats[key] for key in sortedkeys]
+    return render_template('stats.html', info={'dbs':dbs,'collections':collections,'objects':objects,'size':mb(size),'dataSize':mb(dataSize),'indexSize':mb(indexSize),'stats':statslist})
 
 @api_page.route("/<db>/<collection>/<id>")
 def api_query_id(db, collection, id):
@@ -90,7 +121,7 @@ def api_query(db, collection, id = None):
         if format != "html":
             flask.abort(404)
         else:
-            flask.flash("offset too large, please refine your query.", "error")
+            flash_error("offset %s too large, please refine your query.", offset)
             return flask.redirect(url_for(".api_query", db=db, collection=collection))
 
     # sort = [('fieldname1', ASC/DESC), ...]
@@ -117,43 +148,51 @@ def api_query(db, collection, id = None):
     else:
         single_object = False
 
-    for qkey, qval in request.args.iteritems():
-        from ast import literal_eval
-        try:
-            if qkey.startswith("_"):
-                continue
-            if qval.startswith("s"):
-                qval = qval[1:]
-            if qval.startswith("i"):
-                qval = int(qval[1:])
-            elif qval.startswith("f"):
-                qval = float(qval[1:])
-            elif qval.startswith("ls"):      # indicator, that it might be a list of strings
-                qval = qval[2:].split(DELIM)
-            elif qval.startswith("li"):
-                qval = [int(_) for _ in qval[2:].split(DELIM)]
-            elif qval.startswith("lf"):
-                qval = [float(_) for _ in qval[2:].split(DELIM)]
-            elif qval.startswith("py"):     # literal evaluation
-                qval = literal_eval(qval[2:])
-            elif qval.startswith("cs"):     # containing string in list
-                qval = { "$in" : [qval[2:]] }
-            elif qval.startswith("ci"):
-                qval = { "$in" : [int(qval[2:])] }
-            elif qval.startswith("cf"):
-                qval = { "$in" : [float(qval[2:])] }
-            elif qval.startswith("cpy"):
-                qval = { "$in" : [literal_eval(qval[3:])] }
-        except:
-            # no suitable conversion for the value, keep it as string
-            pass
+        for qkey, qval in request.args.iteritems():
+            from ast import literal_eval
+            try:
+                if qkey.startswith("_"):
+                    continue
+                if qval.startswith("s"):
+                    qval = qval[1:]
+                if qval.startswith("i"):
+                    qval = int(qval[1:])
+                elif qval.startswith("f"):
+                    qval = float(qval[1:])
+                elif qval.startswith("ls"):      # indicator, that it might be a list of strings
+                    qval = qval[2:].split(DELIM)
+                elif qval.startswith("li"):
+                    qval = [int(_) for _ in qval[2:].split(DELIM)]
+                elif qval.startswith("lf"):
+                    qval = [float(_) for _ in qval[2:].split(DELIM)]
+                elif qval.startswith("py"):     # literal evaluation
+                    qval = literal_eval(qval[2:])
+                elif qval.startswith("cs"):     # containing string in list
+                    qval = { "$in" : [qval[2:]] }
+                elif qval.startswith("ci"):
+                    qval = { "$in" : [int(qval[2:])] }
+                elif qval.startswith("cf"):
+                    qval = { "$in" : [float(qval[2:])] }
+                elif qval.startswith("cpy"):
+                    qval = { "$in" : [literal_eval(qval[3:])] }
+            except:
+                # no suitable conversion for the value, keep it as string
+                pass
 
-        # update the query
-        q[qkey] = qval
+            # update the query
+            q[qkey] = qval
 
     # executing the query "q" and replacing the _id in the result list
     api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
     data = list(C[db][collection].find(q, projection = fields, sort=sort).skip(offset).limit(100))
+    
+    if single_object and not data:
+        if format != 'html':
+            flask.abort(404)
+        else:
+            flash_error("no document with id %s found in collection %s.%s.", id, db, collection)
+            return flask.redirect(url_for(".api_query", db=db, collection=collection))
+    
     for document in data:
         oid = document["_id"]
         if type(oid) == ObjectId:
