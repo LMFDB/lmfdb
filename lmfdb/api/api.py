@@ -64,10 +64,19 @@ def index():
 def stats():
     def mb(x):
         return int(round(x/1000000.0))
+    info={}
+    info['minsizes'] = ['0','1','10','100','1000','10000','100000']
+    info['minsize'] = request.args.get('minsize','1').strip()
+    if not info['minsize'] in info['minsizes']:
+        info['minsizes'] = '1'
+    info['groupby'] = 'db' if request.args.get('groupby','').strip().lower() == 'db' else ''
+    info['sortby'] = request.args.get('sortby','size').strip().lower()
+    if not info['sortby'] in ['size', 'objects']:
+        info['sortby'] = 'size'
     init_database_info()
     C = base.getDBConnection()
     dbstats = {db:C[db].command("dbstats") for db in _databases}
-    dbs = len(dbstats.keys())
+    info['dbs'] = len(dbstats.keys())
     collections = objects = 0
     size = dataSize = indexSize = 0
     stats = {}
@@ -77,6 +86,7 @@ def stats():
         dataSize += dbstats[db]['dataSize']
         indexSize += dbstats[db]['indexSize']
         dbsize = mb(dbsize)
+        dbobjects = dbstats[db]['objects']
         for c in pluck(0,_databases[db]):
             if C[db][c].count():
                 collections += 1
@@ -84,12 +94,24 @@ def stats():
                 cstats = C[db].command("collstats",c)
                 objects += cstats['count']
                 csize = mb(cstats['size']+cstats['totalIndexSize'])
-                if csize:
-                    stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':csize,
+                if csize >= int(info['minsize']):
+                    stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':csize, 'dbObjects':dbobjects,
                                           'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
-    sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['coll']))
-    statslist = [stats[key] for key in sortedkeys]
-    return render_template('stats.html', info={'dbs':dbs,'collections':collections,'objects':objects,'size':mb(size),'dataSize':mb(dataSize),'indexSize':mb(indexSize),'stats':statslist})
+    info['collections'] = collections
+    info['objects'] = objects
+    info['size'] = mb(size)
+    info['dataSize'] = mb(dataSize)
+    info['indexSize'] = mb(indexSize)
+    if info['sortby'] == 'objects' and info['groupby'] == 'db':
+        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['objects'],stats[x]['coll']))
+    elif info['sortby'] == 'objects':
+        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['objects'],stats[x]['db'],stats[x]['coll']))
+    elif info['sortby'] == 'size' and info['groupby'] == 'db':
+        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['coll']))
+    else:
+        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['coll']))
+    info['stats'] = [stats[key] for key in sortedkeys]
+    return render_template('stats.html', info=info)
 
 @api_page.route("/<db>/<collection>/<id>")
 def api_query_id(db, collection, id):
