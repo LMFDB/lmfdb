@@ -980,6 +980,10 @@ def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg
         # Allow 10 seconds
         website_zeros = L.compute_web_zeros(time_allowed = 10)
 
+    # Handle cases where zeros are not available
+    if isinstance(website_zeros, str):
+        return website_zeros
+    
     positiveZeros = []
     negativeZeros = []
 
