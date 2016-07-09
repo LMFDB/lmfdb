@@ -63,7 +63,7 @@ def index():
 @api_page.route("/stats")
 def stats():
     def mb(x):
-        return round(x/1000000.0)
+        return int(round(x/1000000.0))
     init_database_info()
     C = base.getDBConnection()
     dbstats = {db:C[db].command("dbstats") for db in _databases}
@@ -88,7 +88,7 @@ def stats():
                 csize = mb(cstats['size']+cstats['totalIndexSize'])
                 if csize:
                     stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':size,
-                                          'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':round(cstats['avgObjSize']), 'objects':cstats['count']}
+                                          'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count']}
     sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['coll']))
     statslist = [stats[key] for key in sortedkeys]
     return render_template('stats.html', info={'dbs':dbs,'collections':collections,'objects':objects,'size':mb(size),'stats':statslist})

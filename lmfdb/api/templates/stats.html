@@ -6,7 +6,7 @@ The LMFDB contains {{info.dbs}} mongo databases containing a total of {{info.obj
 
 <table class="ntdata">
 <tr>
-  <th class = "left" style="text-align:left">Database</th>
+  <th>Database</th>
   <th>Collection</th>
   <th>Size (MB)</th>
   <th>Objects</th>
@@ -14,12 +14,12 @@ The LMFDB contains {{info.dbs}} mongo databases containing a total of {{info.obj
 </tr>
 {% for x in info.stats: %}
   <tr>
-    <th class = "left" style="text-align:left"></th>{%if not x.coll %}{{x.db}}{% endif %}</th>
+    <th"></th>{%if not x.coll %}{{x.db}}{% endif %}</th>
     <td>{{x.coll|safe}}</td>
     <td>{{x.size}}</td>
     <td>{{x.objects}}</td>
     <td>{{x.avgObjSize}}</td>
-  <tr>
+  </tr>
 {% endfor %}
 </table>
 
