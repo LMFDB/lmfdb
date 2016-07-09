@@ -86,7 +86,7 @@ def stats():
                 csize = mb(cstats['size']+cstats['totalIndexSize'])
                 if csize:
                     stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':csize,
-                                          'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count']}
+                                          'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
     sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['coll']))
     statslist = [stats[key] for key in sortedkeys]
     return render_template('stats.html', info={'dbs':dbs,'collections':collections,'objects':objects,'size':mb(size),'dataSize':mb(dataSize),'indexSize':mb(indexSize),'stats':statslist})
