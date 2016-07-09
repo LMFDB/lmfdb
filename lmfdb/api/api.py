@@ -68,17 +68,18 @@ def stats():
     C = base.getDBConnection()
     dbstats = {db:C[db].command("dbstats") for db in _databases}
     dbs = len(dbstats.keys())
-    collections = 0
-    objects = 0
-    size = 0
+    collections = objects = 0
+    size = dataSize = indexSize = 0
     stats = {}
     for db in dbstats:
         dbsize = dbstats[db]['dataSize']+dbstats[db]['indexSize']
         size += dbsize
+        dataSize += dbstats[db]['dataSize']
+        indexSize += dbstats[db]['indexSize']
         dbsize = mb(dbsize)
         if dbsize:
             stats[db] = {'db':db, 'coll':'', 'dbSize':dbsize, 'size':dbsize, 'dataSize':mb(dbstats[db]['dataSize']), 'indexSize':mb(dbstats[db]['indexSize']),
-                         'avgObjSize':round(dbstats[db]['avgObjSize']), 'objects':dbstats[db]['objects']}
+                         'avgObjSize':int(round(dbstats[db]['avgObjSize'])), 'objects':dbstats[db]['objects']}
         for c in pluck(0,_databases[db]):
             if C[db][c].count():
                 collections += 1
@@ -87,7 +88,7 @@ def stats():
                 objects += cstats['count']
                 csize = mb(cstats['size']+cstats['totalIndexSize'])
                 if csize:
-                    stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':size,
+                    stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':csize,
                                           'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count']}
     sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['coll']))
     statslist = [stats[key] for key in sortedkeys]
