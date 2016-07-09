@@ -14,7 +14,7 @@ The LMFDB contains {{info.dbs}} mongo databases containing a total of {{info.obj
 </tr>
 {% for x in info.stats: %}
   <tr>
-    <th"></th>{%if not x.coll %}{{x.db}}{% endif %}</th>
+    <th>{%if not x.coll %}{{x.db}}{% endif %}</th>
     <td>{{x.coll|safe}}</td>
     <td>{{x.size}}</td>
     <td>{{x.objects}}</td>
