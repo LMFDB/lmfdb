@@ -2,11 +2,51 @@
 
 {% block content %}
 
+<p>
 The LMFDB consists of {{info.dbs}} mongo databases containing {{info.collections}} collections and a total of {{info.objects}} objects.
-The total size is {{info.size}} MB, of which {{info.dataSize}} MB is data and {{info.indexSize}} MB is indexes.  The table below lists all collections that are larger than one megabyte (MB = 1,000,000 bytes), form largest to smallest.
+The total size is {{info.size}} MB, of which {{info.dataSize}} MB is data and {{info.indexSize}} MB is indexes.
+</p>
 
-<div>
-<table class="ntdata">
+<p>
+The table below lists all collections that are larger than {{info.minsize}} MB, sorted by {{info.sortby}}.
+</p>
+
+<form>
+<table>
+<tr>
+<td>
+Minimum size:&nbsp;
+<select name='minsize'>
+{% for s in info.minsizes %}
+  {% if s == info.minsize %} <option value="{{s}}" selected >{{s}} MB</option> {% else %} <option value="{{s}}">{{s}} MB</option>{% endif %}
+{% endfor %}
+</select>
+</td>
+<td>
+Group by:&nbsp;
+<select name='groupby'>
+<option></option>
+{% if info.groupby == 'db' %}<option value="db" selected>database</option> {% else %} <option value="db">database</option>{% endif %}
+</select>
+</td>
+<td>
+Sort by:&nbsp;
+<select name='sortby'>
+{% if info.sortyby == 'objects' %}
+<option value="size">size</option><option value="objects" selected>objects</option>
+{% else %}
+<option value="size" selected>size</option><option value="objects">objects</option>
+{% endif %}
+</select>
+</td>
+<td>
+<td><button type='submit' value='update'>Update</button></td>
+</td>
+</table>
+</form>
+
+<table id="stats" class="ntdata" cellspacing="0" width="100%">
+<thead>
 <tr>
   <th>Database</th>
   <th>Collection</th>
@@ -14,8 +54,11 @@ The total size is {{info.size}} MB, of which {{info.dataSize}} MB is data and {{
   <th>Data (MB)</th>
   <th>Index (MB)</th>
   <th>Objects</th>
-  <th>Average Object Size (bytes)</th>
+  <th>Average Size (B)</th>
 </tr>
+</thead>
+
+<tbody>
 {% for x in info.stats: %}
 <tr>
     <td><b>{{x.db}}</b></td>
@@ -27,7 +70,7 @@ The total size is {{info.size}} MB, of which {{info.dataSize}} MB is data and {{
     <td>{{x.avgObjSize}}</td>
 </tr>
 {% endfor %}
+</tbody>
 </table>
-</div>
 
 {% endblock %}
