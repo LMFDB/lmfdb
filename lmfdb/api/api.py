@@ -75,8 +75,8 @@ def stats():
                                       'dataSize':cstats['size'], 'indexSize':cstats['totalIndexSize'], 'avgObjSize':cstats['avgObjSize'], 'objects':cstats['count']}
         stats[db] = {'ns':db, 'db':db, 'col':'', 'dbSize': dbstats[db]['dataSize']+dbstats[db]['indexSize'], 'size':dbstats[db]['dataSize']+dbstats[db]['indexSize'],
                      'dataSize':dbstats[db]['dataSize'],  'indexSize':dbstats[db]['indexSize'], 'avgObjSize':dbstats[db]['avgObjSize'], 'objects':dbstats[db]['objects']}
-    statslist = sorted([stats[db] for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['col']))
-    return render_template('stats.html', stats=statslist)
+    sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['col']))
+    return render_template('stats.html', stats=[stats[key] for key in sortedkeys])
 
 @api_page.route("/<db>/<collection>/<id>")
 def api_query_id(db, collection, id):
