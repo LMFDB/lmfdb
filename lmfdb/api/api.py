@@ -86,6 +86,7 @@ def stats():
         dataSize += dbstats[db]['dataSize']
         indexSize += dbstats[db]['indexSize']
         dbsize = mb(dbsize)
+        dbobjects = dbstats[db]['objects']
         for c in pluck(0,_databases[db]):
             if C[db][c].count():
                 collections += 1
@@ -94,7 +95,7 @@ def stats():
                 objects += cstats['count']
                 csize = mb(cstats['size']+cstats['totalIndexSize'])
                 if csize >= int(info['minsize']):
-                    stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':csize,
+                    stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':csize, 'dbObjects':dbobjects,
                                           'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
     info['collections'] = collections
     info['objects'] = objects
@@ -102,7 +103,7 @@ def stats():
     info['dataSize'] = mb(dataSize)
     info['indexSize'] = mb(indexSize)
     if info['sortby'] == 'objects' and info['groupby'] == 'db':
-        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['objects'],stats[x]['coll']))
+        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['objects'],stats[x]['coll']))
     elif info['sortby'] == 'objects':
         sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['objects'],stats[x]['db'],stats[x]['coll']))
     elif info['sortby'] == 'size' and info['groupby'] == 'db':
