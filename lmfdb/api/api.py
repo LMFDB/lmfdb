@@ -82,7 +82,7 @@ def stats():
         for c in pluck(0,_databases[db]):
             if C[db][c].count():
                 collections += 1
-                coll = '<a href = "' + url_for (".api_query", db=db, collection = c) + '>c</a>'
+                coll = '<a href = "' + url_for (".api_query", db=db, collection = c) + '>'coll+'</a>'
                 cstats = C[db].command("collstats",c)
                 objects += cstats['count']
                 csize = mb(cstats['size']+cstats['totalIndexSize'])
