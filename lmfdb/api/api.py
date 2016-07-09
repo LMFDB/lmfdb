@@ -71,7 +71,7 @@ def stats():
             print db,c
             cstats = C[db].command("collstats",c)
             stats[cstats['ns']] = {'db':db, 'coll':'.'.join(cstats['ns'].split('.')[1:]),'dbSize': dbstats[db]['dataSize']+dbstats[db]['indexSize'], 'size':cstats['size']+cstats['totalIndexSize'],
-                                  'dataSize':cstats['size'], 'indexSize':cstats['totalIndexSize'], 'avgObjSize':cstats['avgObjSize'], 'objects':cstats['objects']}
+                                  'dataSize':cstats['size'], 'indexSize':cstats['totalIndexSize'], 'avgObjSize':cstats['avgObjSize'], 'objects':cstats['count']}
         stats[db] = {'ns':db, 'db':db, 'col':'', 'dbSize': dbstats[db]['dataSize']+dbstats[db]['indexSize'], 'size':dbstats[db]['dataSize']+dbstats[db]['indexSize'],
                      'dataSize':dbstats[db]['dataSize'],  'indexSize':dbstats[db]['indexSize'], 'avgObjSize':dbstats[db]['avgObjSize'], 'objects':dbstats[db]['objects']}
     statslist = sorted([stats[db] for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['col']))
