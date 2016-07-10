@@ -4,11 +4,11 @@ import math
 import time  # for printing the date on an lcalc file
 import socket  # for printing the machine used to generate the lcalc file
 from sage.all import Infinity, imag_part, real_part
-from Lfunctionutilities import splitcoeff, pair2complex, p2sage
+from Lfunctionutilities import splitcoeff, pair2complex, string2number
 
 
 def parse_complex_number(z):
-    zs = p2sage(z)
+    zs = string2number(z)
     z_parsed = "(" + str(real_part(zs)) + "," + str(imag_part(zs)) + ")"
     return z_parsed
 

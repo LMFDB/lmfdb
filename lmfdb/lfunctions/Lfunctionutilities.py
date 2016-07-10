@@ -34,8 +34,16 @@ def p2sage(s):
 def string2number(s):
     # a start to replace p2sage (used for the paramters in the FE)
 
-    strs = str(s)
+    strs = str(s).replace(' ','')
     try:
+        if 'e' in strs:
+            # check for e(m/n) := exp(2*pi*i*m/n), used by Dirichlet characters, for example
+            r = re.match('^\$?e\\\\left\(\\\\frac\{(?P<num>\d+)\}\{(?P<den>\d+)\}\\\\right\)\$?$',strs)
+            if not r:
+                r = re.match('^e\((?P<num>\d+)/(?P<den>\d+)\)$',strs)
+            if r:
+                q = Rational(r.groupdict()['num'])/Rational(r.groupdict()['den'])
+                return CDF(exp(2*pi*I*q))
         if 'I' in strs:
             return CDF(strs)
         elif '/' in strs:
