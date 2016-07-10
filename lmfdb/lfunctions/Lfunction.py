@@ -833,8 +833,7 @@ class Lfunction_Dirichlet(Lfunction):
             if self.selfdual:
                 self.coefficient_type = 2
                 for n in range(0, self.numcoeff - 1):
-                    self.dirichlet_coefficients[n] = int(
-                        round(real(self.dirichlet_coefficients[n])))
+                    self.dirichlet_coefficients[n] = int(round(real(self.dirichlet_coefficients[n])))
             else:
                 self.coefficient_type = 3
 
@@ -1151,7 +1150,8 @@ class DedekindZeta(Lfunction):   # added by DK
         self.citation = ''
         
         # If we know the residue create a Sage L-function we can call to compute values
-        if self.res:
+        # But only when the degree is at most 4, due to bugs in the Sage lcalc library (see issues #1687 and #1691)
+        if self.res and self.degree <= 4:
             generateSageLfunction(self)
         else:
             self.sageLfunction = None
