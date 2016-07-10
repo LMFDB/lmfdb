@@ -27,7 +27,7 @@ import sage
 from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, load
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
-from lmfdb.WebCharacter import WebDirichletCharacter
+from lmfdb.WebCharacter import ConreyCharacter
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
@@ -774,103 +774,63 @@ class Lfunction_Dirichlet(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.numcoeff = int(self.numcoeff)
+
         self.algebraic = True
         self.charactermodulus = int(self.charactermodulus)
         self.characternumber = int(self.characternumber)
-        self.numcoeff = int(self.numcoeff)
+        if self.charactermodulus > 10**20: # avoid trying to factor anything really big
+            raise ValueError('Unable to construct Dirichlet L-function.', 'The specified modulus %d is too large.'%self.charactermodulus)
+        if self.characternumber > self.charactermodulus:
+            raise ValueError('Unable to construct Dirichlet L-function.', 'The Conrey index %d should not exceed the modulus %d.'%(self.characternumber,self.charactermodulus))
         if gcd(self.charactermodulus,self.characternumber) != 1:
             raise ValueError('Unable to construct Dirichlet L-function.', 'The specified Conrey index %d is not coprime to the modulus %d.'%(self.characternumber,self.charactermodulus))
+        # Use ConreyCharacter to check primitivity (it can handle a huge modulus
+        if not ConreyCharacter(self.charactermodulus,self.characternumber).is_primitive():
+            raise ValueError('Unable to construct Dirichlet L-function,', 'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive; only primitive characters have L-functions).'%(self.charactermodulus,self.characternumber))
 
-        # Create the Dirichlet character
-        self.web_chi = WebDirichletCharacter( modulus=self.charactermodulus, number = self.characternumber)
-        chi = self.web_chi.chi
-        self.motivic_weight = 0
+        self.label = str(self.charactermodulus) + "." + str(self.characternumber)
+        label_slash = self.label.replace(".","/")
+        db_label = "Character/Dirichlet/" + label_slash
+        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
+        if not self.lfunc_data:
+            raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
+        makeLfromdata(self, fromdb=True)
+        self.fromDB = True
+        self.quasidegree = self.degree
+        self.coefficient_period = self.charactermodulus
+        self.level = self.charactermodulus
+        if not self.selfdual:  #TODO: This should be done on a general level
+            modnumDual = self.lfunc_data['conjugate'].split('_')[2]
+            numDual = modnumDual.split('.')[1]
+            self.dual_link = "/L/Character/Dirichlet/%s/%s" % (self.level, numDual)
 
-        if chi.is_primitive():
+        if self.selfdual:
+            self.coefficient_type = 2
+            for n in range(0, self.numcoeff - 1):
+                self.dirichlet_coefficients[n] = int(round(real(self.dirichlet_coefficients[n])))
+        else:
+            self.coefficient_type = 3
 
-            # Extract the L-function information from the Dirichlet character
-            # Warning: will give nonsense if character is not primitive
-            aa = 1 - chi.is_even()   # usually denoted \frak a
-            self.quasidegree = 1
-            self.mu_fe = [aa]
-            self.nu_fe = []
-            
-            
-            self.kappa_fe = [0.5]
-            self.lambda_fe = [0.5 * aa]
-            self.Q_fe = float(sqrt(self.charactermodulus) / sqrt(math.pi))
-            # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
-            
-            self.sign = 1 / (I ** aa * float(sqrt(self.charactermodulus)) /
-                             (chi.gauss_sum_numerical()))
-            self.langlands = True
-            self.primitive = True
-            self.degree = 1
-            self.coefficient_period = self.charactermodulus
-            self.level = self.charactermodulus
-
-            self.label = str(self.charactermodulus) + "." + str(self.characternumber)
-            label_slash = self.label.replace(".","/")
-            db_label = "Character/Dirichlet/" + label_slash
-            self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
-            if not self.lfunc_data:
-                raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ was found in the database.'%(self.charactermodulus,self.characternumber))
-            makeLfromdata(self, fromdb=True)
-            self.fromDB = True
-            if not self.selfdual:  #TODO: This should be done on a general level
-                modnumDual = self.lfunc_data['conjugate'].split('_')[2]
-                numDual = modnumDual.split('.')[1]
-                self.dual_link = "/L/Character/Dirichlet/%s/%s" % (self.level, numDual)
-
-            self.poles = []
-            self.residues = []
-
-            # Determine if the character is real
-            # (i.e., if the L-function is selfdual)
-
-            self.selfdual = chi.multiplicative_order() <= 2
-
-            if self.selfdual:
-                self.coefficient_type = 2
-                for n in range(0, self.numcoeff - 1):
-                    self.dirichlet_coefficients[n] = int(round(real(self.dirichlet_coefficients[n])))
-            else:
-                self.coefficient_type = 3
-
-            self.texname = "L(s,\\chi)"
-            self.texnamecompleteds = "\\Lambda(s,\\chi)"
-
-            if self.selfdual:
-                self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
-            else:
-                self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
-
-            self.htmlname = "<em>L</em>(<em>s,&chi;</em>)"
-            self.texname_arithmetic = "L(\\chi,s)"
-            self.htmlname_arithmetic = "<em>L</em>(<em>&chi;,s</em>)"
-            self.texnamecompleteds = "\\Lambda(s,\\chi)"
+        self.htmlname = "<em>L</em>(<em>s,&chi;</em>)"
+        self.texname = "L(s,\\chi)"
+        self.texname_arithmetic = "L(\\chi,s)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>&chi;,s</em>)"
+        self.texnamecompleteds = "\\Lambda(s,\\chi)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(\\chi,s)"
+        if self.selfdual:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
-            self.texnamecompleteds_arithmetic = "\\Lambda(\\chi,s)"
-            self.texnamecompleted1ms_arithmetic = "\\Lambda(\\chi, " + str(self.motivic_weight + 1) + "-s)"
-            self.title_end = ("where $\\chi$ is the Dirichlet character "
-                      + "with label " + self.label)
-            self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
-            self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
-            self.title = "$" + self.texname + "$" + ", " + self.title_end
+            self.texnamecompleted1ms_arithmetic = "\\Lambda(\\chi,1-s)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
+            self.texnamecompleted1ms_arithmetic = "\\Lambda(\overline{\\chi},1-s)"
+        self.title_end = ("where $\\chi$ is the Dirichlet character with label " + self.label)
+        self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
+        self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
+        self.title = "$" + self.texname + "$" + ", " + self.title_end
 
-
-            self.credit = 'Sage'
-            self.citation = ''
-    #        self.title = "Dirichlet L-function: $L(s,\\chi)$"
-    #        self.title = (self.title + ", where $\\chi$ is the " +
-    #                      "character modulo " +
-    #                      str(self.charactermodulus) + ", number " +
-    #                      str(self.characternumber))
-
-     ###       self.sageLfunction = lc.Lfunction_from_character(chi.sage_character())
-
-        else:  # Character not primitive
-            raise ValueError('Unable to construct Dirichlet L-function.', 'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive.' % (self.charactermodulus, self.characternumber))
+        self.credit = 'Sage'
+        self.citation = ''
 
         constructor_logger(self, args)
 
