@@ -360,14 +360,14 @@ class WebDirichlet(WebCharObject):
     @cached_method
     def Gelts(self):
         res = []
-        m,n = self.modulus, 1
-        for k in xrange(1,m):
+        m,n,k = self.modulus, 1, 1
+        while k < m and n <= self.maxcols:
             if gcd(k,m) == 1:
                 res.append(k)
                 n += 1
-                if n > self.maxcols:
-                  self.coltruncate = True
-                  break
+            k += 1
+        if n > self.maxcols:
+          self.coltruncate = True
 
         return res
 

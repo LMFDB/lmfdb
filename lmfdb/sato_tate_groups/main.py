@@ -336,7 +336,7 @@ def render_by_label(label):
     if re.match(MU_LABEL_RE, label):
         n = ZZ(label.split('.')[2])
         if n > 10**20:
-            flash_error("number of components %d too large (current limit is $10^{20}$)."%n)
+            flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
     data = st_groups().find_one({'label': label})
