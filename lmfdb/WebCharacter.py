@@ -1040,11 +1040,6 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
                      ]
                  }
 
-    @property
-    def friends(self):
-        f = []
-        f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
-        return f
 
 
 class WebDirichletCharacter(WebSmallDirichletCharacter):

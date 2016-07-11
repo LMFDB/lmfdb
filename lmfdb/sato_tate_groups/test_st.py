@@ -20,8 +20,9 @@ class SatoTateGroupTest(LmfdbTest):
         assert '0.1.37' in L.data and 'mu(185)' in L.data
         L = self.tc.get('/SatoTateGroup/?label=0.1.mu(37)', follow_redirects=True)
         assert '0.1.37' in L.data and 'mu(185)' in L.data
-        
-        
+        L = self.tc.get('/SatoTateGroup/?label=0.1.mu(100000000000000000001)', follow_redirects=True)
+        assert 'too large' in L.data
+
     def test_direct_access(self):
         L = self.tc.get('/SatoTateGroup/1.4.G_{3,3}', follow_redirects=True)
         assert '1.4.6.1.1a' in L.data
@@ -31,7 +32,7 @@ class SatoTateGroupTest(LmfdbTest):
         assert '0.1.37' in L.data
         L = self.tc.get('/SatoTateGroup/0.1.37')
         assert 'mu(37)' in L.data
-        
+
     def test_browse(self):
         L = self.tc.get('/SatoTateGroup/?identity_component=U(1)')
         assert 'all 2 matches' in L.data
