@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
 from sage.misc.cachefunc import cached_method
-from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp
+from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp, xsrange
 import re
 from flask import url_for
 import lmfdb
@@ -124,15 +124,6 @@ def kronecker_symbol(m):
         return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
     else:
         return None
-
-def Xrange(start=0,stop=None,step=1):
-    """ alternative to xrange that can handle limits > 2^64 """
-    if stop is None:
-        start,stop = 0,start
-    i = start
-    while i < stop:
-        yield i
-        i+=step
 
 ###############################################################################
 ## Conrey character with no call to Jonathan's code
@@ -1022,7 +1013,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in Xrange(1, order) if gcd(k, order) == 1) # use Xrange to handle order > 2^64
+        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
         return ( self._char_desc(num, prim=prim) for num in orbit )
 
     def symbol_numerator(self): 
