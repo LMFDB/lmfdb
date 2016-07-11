@@ -846,6 +846,8 @@ class WebChar(WebCharObject):
             url = url_character(type=self.type, umber_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
             if lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata(url[1:]):
                 f.append( ('L-function', '/L'+ url) )
+        if self.type == 'Dirichlet':
+            f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
         if len(self.vflabel)>0:
             f.append( ("Value Field", '/NumberField/' + self.vflabel) )
         return f
@@ -1038,6 +1040,11 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
                      ]
                  }
 
+    @property
+    def friends(self):
+        f = []
+        f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
+        return f
 
 
 class WebDirichletCharacter(WebSmallDirichletCharacter):
