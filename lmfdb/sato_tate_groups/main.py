@@ -147,7 +147,7 @@ def index():
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
     title = 'Sato-Tate groups'
     bread = [('Sato-Tate groups', '.')]
-    return render_template('browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
+    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
 
 @st_page.route('/random')
 def random():
@@ -220,7 +220,7 @@ def search(**args):
         parse_rational(info,query,'trace_zero_density','trace zero density')
     except ValueError as err:
         info['err'] = str(err)
-        return render_template('results.html', info=info, title='Sato-Tate groups search input error', bread=bread, credit=credit_string)
+        return render_template('st_results.html', info=info, title='Sato-Tate groups search input error', bread=bread, credit=credit_string)
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
@@ -277,7 +277,7 @@ def search(**args):
     info['count'] = count
     info['more'] = 1 if nres < 0 or nres > start+count else 0
     title = 'Sato-Tate group search results'
-    return render_template('results.html', info=info, credit=credit_string,learnmore=learnmore_list(), bread=bread, title=title)
+    return render_template('st_results.html', info=info, credit=credit_string,learnmore=learnmore_list(), bread=bread, title=title)
 
 ###############################################################################
 # Rendering
@@ -397,7 +397,7 @@ def render_st_group(info, portrait=None):
         (info['name'], '')
     ]
     title = 'Sato-Tate group \(' + info['pretty'] + '\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
-    return render_template('display.html',
+    return render_template('st_display.html',
                            properties2=prop2,
                            credit=credit_string,
                            info=info,
