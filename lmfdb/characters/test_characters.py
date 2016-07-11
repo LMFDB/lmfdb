@@ -166,7 +166,7 @@ class DirichletCharactersTest(LmfdbTest):
         b = lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata('Character/Dirichlet/9999/2')
         assert bool(b) == ('L/Character/Dirichlet/9999/2' in W.data)
         
-    def text_dirichletchar99999999999999999lfunc(self):
+    def test_dirichletchar99999999999999999lfunc(self):
         """ Check Dirichlet character with very large modulus"""
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
         assert 'Odd' in W.data and '536870912' in W.data
