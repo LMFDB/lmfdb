@@ -1,10 +1,7 @@
 from Lfunction import RiemannZeta
-from lfunctions.LfunctionLcalc import createLcalcfile_ver1
-from lfuncitons.LfunctionPlot import paintSvgHolo, paintSvgChar, paintSvgFileAll
-from base import LmfdbTest
-from modular_forms.elliptic_modular_forms import emf_logger
-emf_logger.setLevel(100)
-
+from LfunctionLcalc import createLcalcfile_ver1
+from LfunctionPlot import paintSvgHolo, paintSvgChar, paintSvgFileAll
+from lmfdb.base import LmfdbTest
 
 class LfunctionTest(LmfdbTest):
 
