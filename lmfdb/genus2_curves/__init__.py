@@ -12,6 +12,6 @@ g2c_logger.info("Initializing genus 2 curves blueprint")
 def body_class():
     return {'body_class': 'g2c'}
 
-import genus2_curve
+import main
 
 app.register_blueprint(g2c_page, url_prefix="/Genus2Curve")
