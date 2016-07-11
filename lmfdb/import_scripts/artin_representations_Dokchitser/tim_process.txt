@@ -23,7 +23,6 @@ python inject_conductor_len.py
 # From a sage -sh, in the main lmfdb folder, run the following to create indices:
 >>> import lmfdb
 >>> lmfdb.artin_representations.main.initialize_indices()
->>> lmfdb.number_field_galois_groups.main.initialize_indices()
 
 # Update the knowl artin.database_comment (accessible at http://www.lmfdb.org/ArtinRepresentation/ )
 # to reflect the new reality.
