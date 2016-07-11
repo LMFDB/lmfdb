@@ -35,7 +35,7 @@ The data should be represented ( in the object oriented) mongodb as
 instances of the following objects.
 
 ```
-                           Collection
+                        Family/Collection
                                 /\
                                 |      
                                 |
@@ -61,7 +61,7 @@ According to the *BROWSE and SEARCH* paradigm of the lmfdb project
 the entrance page of the SMF will provide
 
  * fields for browsing (i.e. providing views of the available forms ordered)
-   * by collections
+   * by family/collection
    * by weight
    * by group
    * by degree of fields

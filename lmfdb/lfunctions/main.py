@@ -528,14 +528,23 @@ def initLfunction(L, args, request):
 
     info['degree'] = int(L.degree)
 
-    info['zeroslink'] = (request.url.replace('/L/', '/L/Zeros/').
-                          replace('/Lfunction/', '/L/Zeros/').
-                          replace('/L-function/', '/L/Zeros/'))  # url_for('zerosLfunction',  **args)
-
-    info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
-                        replace('/Lfunction/', '/L/Plot/').
-                        replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
-#    # an inelegant way to remove the plot in certain cases
+    # AVS 07/10/2016
+    # only set zeroslink and plot if we actually have the ability to determine zeros and plot the Z function
+    # this could either be because we already know them (in which case lfunc_data is set), or we can compute them via sageLfunction)
+    # in the former case there is really no reason to use zeroslink at all, we could just fill them in now
+    # but keep it as is for the moment for backward compatibility
+    if hasattr(L,'lfunc_data') or (hasattr(L,'sageLfunction') and L.sageLfunction):
+        info['zeroslink'] = (request.url.replace('/L/', '/L/Zeros/').
+                              replace('/Lfunction/', '/L/Zeros/').
+                              replace('/L-function/', '/L/Zeros/'))  # url_for('zerosLfunction',  **args)
+        info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
+                            replace('/Lfunction/', '/L/Plot/').
+                            replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
+    else:
+        info['zeroslink'] = ""
+        info['plotlink'] = ""
+                            
+#    # an inelegant way to remove zeros/plot in certain cases -- TODO: it would be better to do this by setting sageLFunction = None when L is created
     if L.Ltype() == 'ellipticmodularform':
         if ( (L.number == 1 and (1 + L.level) * L.weight > 50) or 
                (L.number > 1 and L.level * L.weight > 50)):
@@ -980,6 +989,10 @@ def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg
         # Allow 10 seconds
         website_zeros = L.compute_web_zeros(time_allowed = 10)
 
+    # Handle cases where zeros are not available
+    if isinstance(website_zeros, str):
+        return website_zeros
+    
     positiveZeros = []
     negativeZeros = []
 

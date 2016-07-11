@@ -111,7 +111,7 @@ def stats():
     else:
         sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['coll']))
     info['stats'] = [stats[key] for key in sortedkeys]
-    return render_template('stats.html', info=info)
+    return render_template('api-stats.html', info=info)
 
 @api_page.route("/<db>/<collection>/<id>")
 def api_query_id(db, collection, id):

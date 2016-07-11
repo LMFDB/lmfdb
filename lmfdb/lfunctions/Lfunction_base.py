@@ -99,7 +99,8 @@ class Lfunction:
             allZeros = self.compute_checked_zeros(**kwargs)
 
         # Sort the zeros and divide them into negative and positive ones
-        allZeros.sort()
+        if not isinstance(allZeros,str):
+            allZeros.sort()
         return allZeros
 
     def compute_checked_zeros(self, count = None, do_negative = False, **kwargs):
@@ -129,12 +130,16 @@ class Lfunction:
             do_negative = kwargs["do_negative"]
             if self.fromDB:
                 return "not available"
+            if not self.sageLfunction:
+                return "not available"
             return self.sageLfunction.find_zeros_via_N(count, do_negative)
         else:
             T1 = kwargs["lower_bound"]
             T2 = kwargs["upper_bound"]
             stepsize = kwargs["step_size"]
             if self.fromDB:
+                return "not available"
+            if not self.sageLfunction:
                 return "not available"
             return self.sageLfunction.find_zeros(T1, T2, stepsize)
     

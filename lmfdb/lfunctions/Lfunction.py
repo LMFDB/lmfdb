@@ -833,8 +833,7 @@ class Lfunction_Dirichlet(Lfunction):
             if self.selfdual:
                 self.coefficient_type = 2
                 for n in range(0, self.numcoeff - 1):
-                    self.dirichlet_coefficients[n] = int(
-                        round(real(self.dirichlet_coefficients[n])))
+                    self.dirichlet_coefficients[n] = int(round(real(self.dirichlet_coefficients[n])))
             else:
                 self.coefficient_type = 3
 
@@ -1077,15 +1076,19 @@ class DedekindZeta(Lfunction):   # added by DK
         self.compute_kappa_lambda_Q_from_mu_nu()
         
         self.langlands = True
-        # self.degree = self.signature[0] + 2 * self.signature[1] # N = r1 +2r2
         self.degree = self.degreeofN
         self.dirichlet_coefficients = [Integer(x) for x in
                                        self.NF.zeta_coefficients(5000)]
         self.h = wnf.class_number()  # self.NF.class_number()
         self.R = wnf.regulator()  # self.NF.regulator()
         self.w = len(self.NF.roots_of_unity())
-        # r1 = self.signature[0]
-        self.res = RR(2 ** self.signature[0] * self.h * self.R) / self.w
+        # We can only compute the reside if we know the class number and regulator (not always the case)
+        if self.h == "Not computed" or self.R == "Not computed":
+            self.res = self.residues = 0
+        else:
+            self.res = RR(2 ** self.signature[0] * self.h * self.R) / self.w
+            self.residues = [self.res, -self.res]
+        
         self.grh = wnf.used_grh()
         if self.degree > 1:
             if wnf.is_abelian() and len(wnf.dirichlet_group())>0:
@@ -1126,7 +1129,6 @@ class DedekindZeta(Lfunction):   # added by DK
                             self.factorization += right
 
         self.poles = [1, 0]  # poles of the Lambda(s) function
-        self.residues = [self.res, -self.res] #residues of Lambda(s) function
 
         self.poles_L = [1]  # poles of L(s) used by createLcalcfile_ver2
         self.residues_L = [1234]
@@ -1146,8 +1148,14 @@ class DedekindZeta(Lfunction):   # added by DK
         self.title = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
         self.credit = 'Sage'
         self.citation = ''
-
-        generateSageLfunction(self)
+        
+        # If we know the residue create a Sage L-function we can call to compute values
+        # But only when the degree is at most 4, due to bugs in the Sage lcalc library (see issues #1687 and #1691)
+        if self.res and self.degree <= 4:
+            generateSageLfunction(self)
+        else:
+            self.sageLfunction = None
+            
 
     def Lkey(self):
         return {"label": self.label}
