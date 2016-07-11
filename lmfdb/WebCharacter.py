@@ -125,6 +125,15 @@ def kronecker_symbol(m):
     else:
         return None
 
+def Xrange(start=0,stop=None,step=1):
+    """ alternative to xrange that can handle limits > 2^64 """
+    if stop is None:
+        start,stop = 0,start
+    i = start
+    while i < stop:
+        yield i
+        i+=step
+
 ###############################################################################
 ## Conrey character with no call to Jonathan's code
 ## in order to handle big moduli
@@ -384,9 +393,11 @@ class WebDirichlet(WebCharObject):
             return 2, 1
         if n == m - 1:
             return m + 1, 1
-        for k in xrange(n + 1, m):
+        k = n+1
+        while k < m:
             if gcd(m, k) == 1:
                 return m, k
+            k += 1
         raise Exception("nextchar")
 
     @staticmethod
@@ -398,9 +409,11 @@ class WebDirichlet(WebCharObject):
             m, n = m - 1, m
         if m <= 2:
             return m, 1  # important : 2,2 is not a character
-        for k in xrange(n - 1, 0, -1):
+        k = n-1
+        while k > 0:
             if gcd(m, k) == 1:
                 return m, k
+            k -= 1
         raise Exception("prevchar")
 
     @staticmethod
@@ -1009,7 +1022,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in xrange(1, order) if gcd(k, order) == 1)
+        orbit = ( power_mod(num, k, mod) for k in Xrange(1, order) if gcd(k, order) == 1) # use Xrange to handle order > 2^64
         return ( self._char_desc(num, prim=prim) for num in orbit )
 
     def symbol_numerator(self): 
