@@ -20,8 +20,9 @@ class SatoTateGroupTest(LmfdbTest):
         assert '0.1.37' in L.data and 'mu(185)' in L.data
         L = self.tc.get('/SatoTateGroup/?label=0.1.mu(37)', follow_redirects=True)
         assert '0.1.37' in L.data and 'mu(185)' in L.data
-        
-        
+        L = self.tc.get('/SatoTateGroup/?label=0.1.mu(100000000000000000001)', follow_redirects=True)
+        assert 'too large' in L.data
+
     def test_direct_access(self):
         L = self.tc.get('/SatoTateGroup/1.4.G_{3,3}', follow_redirects=True)
         assert '1.4.6.1.1a' in L.data
@@ -31,7 +32,7 @@ class SatoTateGroupTest(LmfdbTest):
         assert '0.1.37' in L.data
         L = self.tc.get('/SatoTateGroup/0.1.37')
         assert 'mu(37)' in L.data
-        
+
     def test_browse(self):
         L = self.tc.get('/SatoTateGroup/?identity_component=U(1)')
         assert 'all 2 matches' in L.data
@@ -57,6 +58,7 @@ class SatoTateGroupTest(LmfdbTest):
         assert '33' in L.data
 
     def test_completeness(self):
+        import sys
         stdb = getDBConnection().sato_tate_groups.st_groups
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
         assert '3 matches' in L.data
@@ -64,7 +66,8 @@ class SatoTateGroupTest(LmfdbTest):
         assert data.count() == 3
         print ""
         for r in data:
-            print 'Checking Sato-Tate group ' + r['label']
+            sys.stdout.write("{}...".format(r['label']))
+            sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + r['label'])
             assert r['label'] in L.data and 'Moment Statistics' in L.data
         data = stdb.find({'weight':int(1),'degree':int(2)})
@@ -72,8 +75,10 @@ class SatoTateGroupTest(LmfdbTest):
         assert 'of 52' in L.data
         data = stdb.find({'weight':int(1),'degree':int(4)})
         assert data.count() == 52
+        
         for r in data:
-            print 'Checking Sato-Tate group ' + r['label']
+            sys.stdout.write("{}...".format(r['label']))
+            sys.stdout.flush()
             L = self.tc.get('/SatoTateGroup/' + r['label'])
             assert r['label'] in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?components=999999999')
