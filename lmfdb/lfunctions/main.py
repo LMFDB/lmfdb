@@ -756,7 +756,7 @@ def initLfunction(L, args, request):
 
     # the code below should be in Lfunction.py
     info['conductor'] = L.level
-    if not is_prime(L.level):
+    if not is_prime(int(L.level)):
         info['conductor_factored'] = latex(factor(int(L.level)))
 
     info['degree'] = L.degree
