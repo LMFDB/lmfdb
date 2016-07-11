@@ -1,7 +1,7 @@
 from base import LmfdbTest
 import os, itertools, collections
 
-class LfunctionTest(LmfdbTest):
+class TemplateCollisionTest(LmfdbTest):
 
     def test_template_collisions(self):
         """check lmfdb code directories for duplicate template names"""
