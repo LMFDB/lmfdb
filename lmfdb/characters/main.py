@@ -3,10 +3,9 @@
 from lmfdb.base import app
 import re
 import flask
-from flask import flash, render_template, url_for, request, redirect
-from markupsafe import Markup
+from flask import render_template, url_for, request, redirect
 from sage.all import gcd, randint
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict, flash_error
 from lmfdb.WebCharacter import url_character
 from lmfdb.WebCharacter import WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter
 from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
@@ -101,7 +100,7 @@ def render_DirichletNavigation():
             m,n = int(slabel[0]), int(slabel[1])
             if n < m and gcd(m,n) == 1:
                 return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
-        flash(Markup( r"Error: <span style='color:black'>%s</span> is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q."%(label)),"error")
+        flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q.", label)
         return render_template('CharacterNavigate.html', **info)
         return redirect(url_for(".render_Dirichletwebpage"), 301)
 
@@ -173,8 +172,13 @@ def render_Dirichletwebpage(modulus=None, number=None):
     except ValueError:
         modulus = 0
     if modulus <= 0:
-        flash(Markup( "Error: <span style='color:black'>%s</span> is not a valid modulus for a Dirichlet character.  It should be a positive integer." % args['modulus']),"error")
+        flash_error ("%s is not a valid modulus for a Dirichlet character.  It should be a positive integer.", args['modulus'])
         return redirect(url_for(".render_Dirichletwebpage"))
+    if modulus > 10**20:
+        flash_error ("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
+        return redirect(url_for(".render_Dirichletwebpage"))
+        
+    
     if number == None:
         if modulus < 100000:
             info = WebDirichletGroup(**args).to_dict()
@@ -195,8 +199,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     except ValueError:
         number = 0;
     if number <= 0 or gcd(modulus,number) != 1 or number > modulus:
-        flash(Markup( "Error: the value <span style='color:black'>%s</span> is invalid.  It should be a positive integer coprime to and no greater than the modulus <span style='color:black'>%s</span>." %
-                      (args['number'],args['modulus'])),"error")
+        flash_error("the value %s is invalid.  It should be a positive integer coprime to and no greater than the modulus %s.", args['number'],args['modulus'])
         return redirect(url_for(".render_Dirichletwebpage"))
         
     if gcd(modulus, number) != 1:
