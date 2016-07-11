@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
 from sage.misc.cachefunc import cached_method
-from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp
+from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp, xsrange
 import re
 from flask import url_for
 import lmfdb
@@ -360,14 +360,14 @@ class WebDirichlet(WebCharObject):
     @cached_method
     def Gelts(self):
         res = []
-        m,n = self.modulus, 1
-        for k in xrange(1,m):
+        m,n,k = self.modulus, 1, 1
+        while k < m and n <= self.maxcols:
             if gcd(k,m) == 1:
                 res.append(k)
                 n += 1
-                if n > self.maxcols:
-                  self.coltruncate = True
-                  break
+            k += 1
+        if n > self.maxcols:
+          self.coltruncate = True
 
         return res
 
@@ -384,9 +384,11 @@ class WebDirichlet(WebCharObject):
             return 2, 1
         if n == m - 1:
             return m + 1, 1
-        for k in xrange(n + 1, m):
+        k = n+1
+        while k < m:
             if gcd(m, k) == 1:
                 return m, k
+            k += 1
         raise Exception("nextchar")
 
     @staticmethod
@@ -398,9 +400,11 @@ class WebDirichlet(WebCharObject):
             m, n = m - 1, m
         if m <= 2:
             return m, 1  # important : 2,2 is not a character
-        for k in xrange(n - 1, 0, -1):
+        k = n-1
+        while k > 0:
             if gcd(m, k) == 1:
                 return m, k
+            k -= 1
         raise Exception("prevchar")
 
     @staticmethod
@@ -846,6 +850,8 @@ class WebChar(WebCharObject):
             url = url_character(type=self.type, umber_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
             if lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata(url[1:]):
                 f.append( ('L-function', '/L'+ url) )
+        if self.type == 'Dirichlet':
+            f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
         if len(self.vflabel)>0:
             f.append( ("Value Field", '/NumberField/' + self.vflabel) )
         return f
@@ -1007,7 +1013,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in xrange(1, order) if gcd(k, order) == 1)
+        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
         return ( self._char_desc(num, prim=prim) for num in orbit )
 
     def symbol_numerator(self): 

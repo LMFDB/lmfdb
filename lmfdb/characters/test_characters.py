@@ -152,8 +152,9 @@ class DirichletCharactersTest(LmfdbTest):
         assert  '(\\zeta_{87})' in W.data, "field of values"
 
     def test_dirichletchar6000lfunc(self):
-        """ Check that L-function link for 6000/11 is correct """
+        """ Check Sato-Tate group and L-function link for 6000/11  """
         W = self.tc.get('/Character/Dirichlet/6000/11')
+        assert '/SatoTateGroup/0.1.100' in W.data
         assert 'L/Character/Dirichlet/6000/11' in W.data
         W = self.tc.get('/L/Character/Dirichlet/6000/11', follow_redirects=True)
         assert '1.0766030216' in W.data
@@ -161,8 +162,15 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar9999lfunc(self):
         """ Check that the L-function link for 9999/2 is displayed if and only if the L-function data is present"""
         W = self.tc.get('/Character/Dirichlet/9999/2')
+        assert '/SatoTateGroup/0.1.300' in W.data
         b = lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata('Character/Dirichlet/9999/2')
         assert bool(b) == ('L/Character/Dirichlet/9999/2' in W.data)
+        
+    def test_dirichletchar99999999999999999lfunc(self):
+        """ Check Dirichlet character with very large modulus"""
+        W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
+        assert 'Odd' in W.data and '536870912' in W.data
+        assert '/SatoTateGroup/0.1.3748806900' in W.data
 
 class HeckeCharactersTest(LmfdbTest):
 
