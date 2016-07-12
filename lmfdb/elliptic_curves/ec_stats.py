@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import re
-from pymongo import ASCENDING, DESCENDING
-import lmfdb.base
+from pymongo import DESCENDING
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
 from lmfdb.elliptic_curves.web_ec import db_ec

@@ -69,16 +69,11 @@ Extra data fields added May 2016 to avoid computation on the fly:
 """
 
 import os.path
-import gzip
 import re
 import sys
-import time
 import os
-import random
-import glob
 import pymongo
-from lmfdb import base
-from sage.rings.all import ZZ
+from sage.all import ZZ, RR, EllipticCurve, prod
 from lmfdb.utils import web_latex
 from lmfdb.base import getDBConnection
 print "getting connection"
@@ -91,6 +86,7 @@ password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
 print "setting curves"
 curves = C.elliptic_curves.curves
+curves2 = C.elliptic_curves.curves2
 
 def parse_tgens(s):
     r"""
@@ -448,7 +444,6 @@ def upload_to_db(base_path, min_N, max_N):
         print "opened %s" % os.path.join(base_path, f)
 
         parse=parsing_dict[f]
-        t = time.time()
         count = 0
         for line in h.readlines():
             label, data = parse(line)
@@ -498,8 +493,6 @@ def add_isogeny_matrices(N1,N2):
     res = res.sort([('conductor', pymongo.ASCENDING),
                     ('lmfdb_iso', pymongo.ASCENDING)])
     for C in res:
-        label = C['label']
-        lmfdb_label = C['lmfdb_label']
         lmfdb_iso = C['lmfdb_iso']
         E = EllipticCurve([int(a) for a in C['ainvs']])
         M = E.isogeny_class(order="lmfdb").matrix()
@@ -600,7 +593,7 @@ def make_extra_data(label,number,ainvs,gens):
 
 def add_extra_data(N1,N2,store=False):
     """Add these fields to curves in the db with conductors from N1 to
-    N2: NB This referes to a new collection 'curves2' which was
+    N2: NB This refers to a new collection 'curves2' which was
     created temporarily when upgrading the data stored, and no longer
     exists.
 

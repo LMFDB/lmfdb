@@ -56,17 +56,8 @@ In general "number" means an int or double or string representing a number (e.g.
    - 'plot_values' (list of numbers): list of y-coordinates of points on the plot
 
 """
-import os.path
-import gzip
-import re
-import sys
-import time
 import os
-import random
-import glob
-import pymongo
-from lmfdb import base
-from sage.rings.all import ZZ
+from sage.all import ZZ, primes, sqrt, EllipticCurve
 
 from lmfdb.base import getDBConnection
 print "getting connection"
@@ -155,7 +146,7 @@ def read_line(line):
 
     cond = data['conductor'] = int(E['conductor'])
     iso = E['lmfdb_iso'].split('.')[1]
-    instances['url'] = ec_url = 'EllipticCurve/Q/%s/%s' % (cond,iso)
+    instances['url'] = 'EllipticCurve/Q/%s/%s' % (cond,iso)
     instances['Lhash'] = Lhash = fields[0]
     instances['type'] = 'ECQ'
 
@@ -163,7 +154,7 @@ def read_line(line):
 
     data['Lhash'] = Lhash
     data['root_number'] = int(fields[2])
-    data['order_of_vanishing'] = r = int(E['rank'])
+    data['order_of_vanishing'] = int(E['rank'])
     data['central_character'] = '%s.1' % cond
     data['st_group'] = 'N(U(1))' if E['cm'] else 'SU(2)'
     data['leading_term'] = float(E['special_value'])
@@ -202,9 +193,6 @@ def read_line(line):
     return Lhash, data, instances
 
 
-def comp_dict_by_label(d1, d2):
-    return cmp_label(d1['label'], d2['label'])
-
 # To run this go into the top-level lmfdb directory, run sage and give
 # the command
 # %runfile lmfdb/elliptic_curves/import_ec_lfunction_data.py
@@ -219,7 +207,6 @@ def upload_to_db(base_path, f, test=True):
 
     data_to_insert = {}  # will hold all the data to be inserted
     instances_to_insert = {}  # will hold all the data to be inserted
-    t = time.time()
     count = 0
 
     for line in h.readlines():
