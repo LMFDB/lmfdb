@@ -24,10 +24,9 @@ contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 @app.route("/alive")
 def alive():
     try:
-        conn = getDBConnection()
-        assert conn.userdb.users.count()
+        getDBConnection().userdb.users.count()
     except:
-        abort(501)
+        abort(503)
     return render_template("alive.html")
 
 @app.route("/acknowledgment")
