@@ -205,5 +205,5 @@ def symmetricPowerLfunction(E, n):
 
     bad_primes, conductor, root_number = sympowlmfdb.local_data(E, n)
 
-
+#What is the point of this last line?
 sympowlmfdb
