@@ -15,5 +15,6 @@ def body_class():
     return {'body_class': 'tensor_products'}
 
 import main
+assert main #silence pyflakes
 
 app.register_blueprint(tensor_products_page, url_prefix="/TensorProducts")

@@ -8,7 +8,7 @@ from lmfdb.base import getDBConnection
 from flask import render_template, request, url_for, flash, redirect
 from markupsafe import Markup
 
-from lmfdb.artin_representations import artin_representations_page, artin_logger
+from lmfdb.artin_representations import artin_representations_page
 from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_count, parse_start, clean_input
 

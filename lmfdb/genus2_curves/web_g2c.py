@@ -527,7 +527,7 @@ class WebG2C(object):
         return WebG2C(curve, endo, is_curve=(len(slabel)==4))
 
     def make_object(self, curve, endo, is_curve):
-        from lmfdb.genus2_curves.genus2_curve import url_for_curve_label
+        from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary

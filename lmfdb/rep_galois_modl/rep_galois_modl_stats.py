@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
-from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import make_logger, comma

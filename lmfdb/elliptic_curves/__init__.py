@@ -12,7 +12,7 @@ ec_logger.info("Initializing elliptic curves blueprint")
 def body_class():
     return {'body_class': 'ec'}
 
-#from elliptic_curves import *
 import elliptic_curve
+assert elliptic_curve # for pyflakes
 
 app.register_blueprint(ec_page, url_prefix="/EllipticCurve/Q")

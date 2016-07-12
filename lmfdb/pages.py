@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-from base import app
-from flask import render_template, url_for
+from base import app, getDBConnection
+from flask import render_template, url_for, abort
 
 @app.route("/about")
 def about():
@@ -19,6 +19,16 @@ _curdir = os.path.dirname(os.path.abspath(__file__))
 contribs = yaml.load_all(open(os.path.join(_curdir, "..", "CONTRIBUTORS.yaml")))
 contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 
+# basic health check
+@app.route("/health")
+@app.route("/alive")
+def alive():
+    try:
+        conn = getDBConnection()
+        assert conn.userdb.users.count()
+    except:
+        abort(501)
+    return "LMFDB!"
 
 @app.route("/acknowledgment")
 def acknowledgment():

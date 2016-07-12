@@ -48,7 +48,6 @@ ACKNOWLEDGEMENT (from sympow readme):
 ########################################################################
 
 import os
-import weakref
 
 from sage.structure.sage_object import SageObject
 from sage.misc.all import pager, verbose

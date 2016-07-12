@@ -886,7 +886,8 @@ def compute_dirichlet_series(p_list, PREC):
     LL = [0] * PREC
     # create an empty list of the right size and now populate it with the powers of p
     for (p, y) in p_list:
-        p_prec = log(PREC) / log(p) + 1 # this is not currently used but perhaps it should be?  AVS
+        # FIXME p_prec is never used, but perhaps it should be?
+        p_prec = log(PREC) / log(p) + 1
         ep = euler_p_factor(y, PREC)
         for n in range(ep.prec()):
             if p ** n < PREC:

@@ -3,11 +3,11 @@ import yaml
 from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RR, rainbow, implicit_plot, plot, text, Infinity, sqrt
-from lmfdb.base import app, getDBConnection
-from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
+from lmfdb.base import getDBConnection
+from lmfdb.utils import web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from kraus import (non_minimal_primes, is_global_minimal_model, has_global_minimal_model, minimal_discriminant_ideal)
+from kraus import (non_minimal_primes, has_global_minimal_model, minimal_discriminant_ideal)
 
 ecnf = None
 nfdb = None
@@ -353,7 +353,6 @@ class ECNF(object):
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
 
         sig = self.signature
-        real_quadratic = sig == [2,0]
         totally_real = sig[1] == 0
         imag_quadratic = sig == [0,1]
 
