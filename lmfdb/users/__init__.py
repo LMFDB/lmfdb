@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from main import login_page, login_manager
+from main import login_page, login_manager, admin_required, housekeeping
+assert admin_required # silence pyflakes
+assert housekeeping # silence pyflakes
 
 from lmfdb.base import app
 

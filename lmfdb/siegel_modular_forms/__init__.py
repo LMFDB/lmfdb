@@ -12,5 +12,7 @@ smf_logger = make_logger(smf_page)
 def body_class():
     return {'body_class': 'smf'}
 
+import siegel_modular_form
+assert siegel_modular_form #silence pyflakes
 
 app.register_blueprint(smf_page, url_prefix='/ModularForm/GSp/Q')
