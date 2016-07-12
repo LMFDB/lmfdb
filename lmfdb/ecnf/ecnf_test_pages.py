@@ -1,8 +1,5 @@
 from lmfdb.base import LmfdbTest, getDBConnection
 
-from flask import request
-import unittest2
-
 class ECNFTest(LmfdbTest):
 
     def runTest():

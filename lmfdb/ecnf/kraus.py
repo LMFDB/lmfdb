@@ -351,7 +351,6 @@ def check_Kraus_local_3(c4, c6, P, assume_nonsingular=False):
     # check for a solution x to x^3-3*x*c4-26=0 (27), such an x must
     # also satisfy x*c4+c6=0 (3) and x^2=c4 (3) and x^3=-c6 (9), and
     # if x is a solution then so is any x'=x (3).
-    P27 = P3 ** 3
     for x in P3.residues():
         if (x * c4 + c6).valuation(P) >= e:
             if (x * (x * x - 3 * c4) - 2 * c6).valuation(P) >= 3 * e:
@@ -378,7 +377,6 @@ def sqrt_mod_4(x, P):
     ramification index, this means that \(r^2-x\) has valuation at
     least \(2e\); it only depends on \(r\mod P^e\).
     """
-    K = x.parent()
     e = P.ramification_index()
     P2 = P ** e
     for r in P2.residues():
@@ -732,16 +730,4 @@ def semi_global_minimal_model(E, debug=False):
         return Emin, P
     else:
         raise RuntimeError("failed to compute global minimal model")
-        return E, K.ideal(0)
-
-
-def test_run(fld):
-    for E in read_curves("/home/jec/ecnf-data/RQF/curves.%s" % fld):
-        label = E[0] + "-" + E[2] + E[3]
-        E = E[4]
-        print("%s: %s --> " % (label, E.ainvs()))
-        Emin, I = semi_global_minimal_model(E)
-        if I.is_one():
-            print("          %s (global minimal model)" % (Emin.ainvs(),))
-        else:
-            print("          %s (minimal model away from %s)" % (Emin.ainvs(), I))
+        return E, 0
