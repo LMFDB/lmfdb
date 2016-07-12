@@ -6,7 +6,6 @@ import re
 import pymongo
 import ast
 ASC = pymongo.ASCENDING
-import flask
 import yaml
 import os
 from lmfdb import base
@@ -186,8 +185,6 @@ def by_label(label):
     elif label_is_one_family(label):
         return render_family({'label': label})    
     else:
-        info = {}
-        bread = get_bread([("Search error", '')])
         flash_error( "No family with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     
