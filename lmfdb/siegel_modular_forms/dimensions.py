@@ -273,7 +273,7 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
                             sum(cusp[q][k] for q in ps[p]),
                             ]) for p in ps)) for k in wt_range) 
         for k in dct:
-            dct[k]['All'] = [sum(dct[k][p][j] for p in dct[k]) for j in range(3)]       
+            dct[k]['All'] = [sum(dct[k][p][i] for p in dct[k]) for i in range(3)]       
 
         headers = ps.keys()
         headers.sort(reverse = True)
