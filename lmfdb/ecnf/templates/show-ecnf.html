@@ -53,7 +53,7 @@ cellpadding="5";
 
 <h2>{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass equation') }}</h2>
 <div style='overflow-x:auto; overflow-y:hidden'>
-{{ ec.equn }}
+{{ ec.equation }}
 </div>
     {{ place_code('curve') }}
 <p>
@@ -269,22 +269,22 @@ Generators:
 {{pr.norm}}
 </td>
 <td align=center>
-\({{pr.tamagawa_number}}\)
+\({{pr.cp}}\)
 </td>
 <td align=center>
-{{pr.kodaira_symbol}}
+{{pr.kod}}
 </td>
 <td align=center>
-{% if pr.reduction_type==0 %}
+{% if pr.red==0 %}
  Additive
- {% elif pr.reduction_type==1 %}
+ {% elif pr.red==1 %}
   Split multiplicative
-  {% elif pr.reduction_type==-1 %}
+  {% elif pr.red==-1 %}
    Non-split multiplicative
 {% endif %}
 </td>
 <td align=center>{{pr.ord_cond}}</td>
-<td align=center>{{pr.ord_mindisc }}</td>
+<td align=center>{{pr.ord_disc }}</td>
 <td align=center>{{pr.ord_den_j}}</td>
 </tr>
 {% endfor %}

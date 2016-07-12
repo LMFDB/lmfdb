@@ -28,7 +28,7 @@ field) and value types (with examples):
    - conductor_ideal    *     string
    - conductor_norm     *     int
    - number             *     int    (number of curve in isogeny class, from 1)
-   - ainvs              *     list of 5 list of d lists of 2 ints
+   - ainvs              *     list of 5 lists of d strings
    - jinv               *     list of d strings
    - cm                 *     either int (a negative discriminant, or 0) or '?'
    - q_curve            *     boolean (True, False)
@@ -43,6 +43,11 @@ field) and value types (with examples):
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
 
+   - equation                 string
+   - local_data               list of dicts (one per bad prime)
+   - non_min_p                list of strings (one per nonminimal prime)
+   - minD                     string (minimal discriminant ideal)
+   - heights                  list of floats (one per gen)
 
    Each NFelt is a string concatenating rational coefficients with
    respect to a power basis for the number field, using the defining
@@ -52,7 +57,8 @@ field) and value types (with examples):
    label = “%s-%s” % (field_label, short_label)
    short_label = “%s.%s%s” % (conductor_label, iso_label, str(number))
 
-To run the functions in this file, cd to the top-level lmfdb directory, start sage and use the command
+To run the functions in this file, cd to the top-level lmfdb
+directory, start sage and use the command
 
    sage: %runfile lmfdb/ecnf/import_ecnf_data.py
 """
@@ -66,13 +72,13 @@ import os
 import random
 import glob
 import pymongo
-from lmfdb.base import _init as init
 from lmfdb.base import getDBConnection
+from lmfdb.utils import web_latex
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
+from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF
 
-from lmfdb.base import getDBConnection
 print "getting connection"
 C= getDBConnection()
 
@@ -82,8 +88,9 @@ pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.exts
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
-print "setting nfcurves"
-nfcurves = C.elliptic_curves.nfcurves
+print "setting nfcurves to nfcurves2"
+oldnfcurves = C.elliptic_curves.nfcurves
+nfcurves = C.elliptic_curves.nfcurves2
 qcurves = C.elliptic_curves.curves
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
@@ -92,41 +99,31 @@ C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 # but only want to do this once for each label, so we will maintain a
 # dict of label:field pairs:
 nf_lookup_table = {}
+special_names = {'2.0.4.1': 'i',
+                 '2.2.5.1': 'phi',
+                 '4.0.125.1': 'zeta5',
+                 }
 
 def nf_lookup(label):
     r"""
     Returns a NumberField from its label, caching the result.
     """
-    # print "Looking up number field with label %s" % label
+    global nf_lookup_table, special_names
+    #print "Looking up number field with label %s" % label
     if label in nf_lookup_table:
-        # print "We already have it: %s" % nf_lookup_table[label]
+        #print "We already have it: %s" % nf_lookup_table[label]
         return nf_lookup_table[label]
-    # print "We do not have it yet, finding in database..."
+    #print "We do not have it yet, finding in database..."
     field = C.numberfields.fields.find_one({'label': label})
     if not field:
         raise ValueError("Invalid field label: %s" % label)
-    # print "Found it!"
+    #print "Found it!"
     coeffs = [ZZ(c) for c in field['coeffs'].split(",")]
-    K = NumberField(PolynomialRing(QQ, 'x')(coeffs), 'a')
-    # print "The field with label %s is %s" % (label, K)
+    gen_name = special_names.get(label,'a')
+    K = NumberField(PolynomialRing(QQ, 'x')(coeffs), gen_name)
+    #print "The field with label %s is %s" % (label, K)
     nf_lookup_table[label] = K
     return K
-
-# HNF of an ideal I in a quadratic field
-
-
-def ideal_HNF(I):
-    r"""
-    Returns an HNF triple defining the ideal I in a quadratic field
-    with integral basis [1,w].
-
-    This is a list [a,b,d] such that [a,c+d*w] is a Z-basis of I, with
-    a,d>0; c>=0; N = a*d = Norm(I); d|a and d|c; 0 <=c < a.
-    """
-    N = I.norm()
-    a, c, b, d = I.pari_hnf().python().list()
-    assert a > 0 and d > 0 and N == a * d and d.divides(a) and d.divides(b) and 0 <= c < a
-    return [a, c, d]
 
 # Label of an ideal I in a quadratic field: string formed from the
 # Norm and HNF of the ideal
@@ -150,7 +147,6 @@ def ideal_from_label(K, lab):
     N, c, d = [ZZ(c) for c in lab.split(".")]
     a = N // d
     return K.ideal(a, K([c, d]))
-
 
 def parse_NFelt(K, s):
     r"""
@@ -249,9 +245,10 @@ def curves(line):
     r""" Parses one line from a curves file.  Returns the label and a dict
     containing fields with keys 'field_label', 'degree', 'signature',
     'abs_disc', 'label', 'short_label', conductor_label',
-    'conductor_ideal', 'conductor_norm', 'iso_label', 'iso_nlabel', 'number',
-    'ainvs', 'jinv', 'cm', 'q_curve', 'base_change',
-    'torsion_order', 'torsion_structure', 'torsion_gens'.
+    'conductor_ideal', 'conductor_norm', 'iso_label', 'iso_nlabel',
+    'number', 'ainvs', 'jinv', 'cm', 'q_curve', 'base_change',
+    'torsion_order', 'torsion_structure', 'torsion_gens'; and (added
+    May 2016): 'equation', 'local_data', 'non_min_p', 'minD'
 
     Input line fields (13):
 
@@ -286,6 +283,7 @@ def curves(line):
     # Create the field and curve to compute the j-invariant:
     dummy, deg, sig, abs_disc = field_data(field_label)
     K = nf_lookup(field_label)
+    #print("Field %s created, gen_name = %s" % (field_label,str(K.gen())))
     ainvsK = [parse_NFelt(K, ai) for ai in ainvs]  # list of K-elements
     ainvs = [[str(c) for c in ai] for ai in ainvsK]
     E = EllipticCurve(ainvsK)
@@ -297,8 +295,8 @@ def curves(line):
             print "cm=%s for j=%s" % (cm, j)
 
     # Here we should check that the conductor of the constructed curve
-    # agrees with the input conductor.  We just check the norm.
-    if E.conductor().norm() == conductor_norm:
+    # agrees with the input conductor.
+    if E.conductor() == ideal_from_string(K,conductor_ideal):
         pass
         # print "Conductor norms agree: %s" % conductor_norm
     else:
@@ -327,7 +325,20 @@ def curves(line):
     else:
         base_change = []
 
-    return label, {
+    local_data = [{'p': ideal_to_string(ld.prime()),
+                   'normp': str(ld.prime().norm()),
+                   'ord_cond':int(ld.conductor_valuation()),
+                   'ord_disc':int(ld.discriminant_valuation()),
+                   'ord_den_j':int(max(0,-(E.j_invariant().valuation(ld.prime())))),
+                   'red':int(ld.bad_reduction_type()),
+                   'kod':web_latex(ld.kodaira_symbol()).replace('$',''),
+                   'cp':int(ld.tamagawa_number())}
+                  for ld in E.local_data()]
+
+    non_minimal_primes = [ideal_to_string(P) for P in E.non_minimal_primes()]
+    minD = ideal_to_string(E.minimal_discriminant_ideal())
+
+    edata = {
         'field_label': field_label,
         'degree': deg,
         'signature': sig,
@@ -350,13 +361,19 @@ def curves(line):
         'torsion_order': ntors,
         'torsion_structure': torstruct,
         'torsion_gens': torgens,
+        'equation': web_latex(E),
+        'local_data': local_data,
+        'minD': minD,
+        'non_min_p': non_minimal_primes,
     }
+
+    return label, edata
 
 
 def curve_data(line):
     r""" Parses one line from a curve_data file.  Returns the label and a dict
     containing fields with keys 'label', 'rank', 'rank_bounds',
-    'analytic_rank', 'gens', 'sha_an'.
+    'analytic_rank', 'gens', 'heights', 'sha_an'.
 
     Input line fields (9+n where n is the 8th); all but the first 4
     are optional and if not known should contain"?" except that the 8th
@@ -394,12 +411,36 @@ def curve_data(line):
     if ra != "?":
         edata['analytic_rank'] = int(ra)
     ngens = int(data[7])
-    edata['gens'] = [point_string_to_list(g) for g in data[8:8 + ngens]]
+    gens = data[8:8 + ngens]
+    edata['gens'] = [point_string_to_list(g) for g in gens]
+
     sha = data[8 + ngens]
     if sha != "?":
         edata['sha_an'] = int(sha)
     return label, edata
 
+def add_heights(data):
+    r""" If data holds the data fields for a curve this returns the same
+    with the heights of the points included as a new field with key
+    'heights'.  It is more convenient to do this separately than while
+    parsing the input files since curves() knows tha a-invariants but
+    not the gens and curve_data() vice versa.
+    """
+    if 'heights' in data:
+        return data
+    ngens = data.get('ngens', 0)
+    if ngens == 0:
+        data['heights'] = []
+        return data
+    # Now there is work to do
+    K = nf_lookup(data['field_label'])
+    ainvsK = [parse_NFelt(K, ai) for ai in data['ainvs']]  # list of K-elements
+    ainvs = [[str(c) for c in ai] for ai in ainvsK]
+    E = EllipticCurve(ainvsK)
+    gens = [parse_point(E,x) for x in data['gens']]
+    data['heights'] = [P.height() for P in gens]
+    print("added heights %s to %s" % (data['heights'],data['label']))
+    return data
 
 def isoclass(line):
     r""" Parses one line from an isovlass file.  Returns the label and a dict
@@ -436,8 +477,11 @@ filename_base_list = ['curves', 'curve_data']
 
 #
 
-
-def upload_to_db(base_path, filename_suffix):
+def upload_to_db(base_path, filename_suffix, insert=True):
+    r""" Uses insert_one() if insert=True, which is faster but will fail if
+    the label isalready in the database; otherwise uses update_one()
+    with upsert=True
+    """
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
@@ -479,13 +523,20 @@ def upload_to_db(base_path, filename_suffix):
         print "finished reading %s lines from file %s" % (count, f)
 
     vals = data_to_insert.values()
-    count = 0
+    print("adding heights of gens")
     for val in vals:
-        # print val
-        nfcurves.update({'label': val['label']}, {"$set": val}, upsert=True)
-        count += 1
-        if count % 100 == 0:
-            print "inserted %s" % (val['label'])
+        val = add_heights(val)
+    if insert:
+        print("inserting all data")
+        nfcurves.insert_many(vals)
+    else:
+        count = 0
+        print("inserting data one curve at a time...")
+        for val in vals:
+            nfcurves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
+            count += 1
+            if count % 100 == 0:
+                print "inserted %s" % (val['label'])
 
 #
 #
@@ -507,8 +558,11 @@ def make_curves_line(ec):
 
     2.0.4.1 65.18.1 a 1 [65,18,1] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
     """
+    cond_lab = ec['conductor_label']
+    if '[' in cond_lab: # convert old-style IQF labels
+        cond_lab = cond_lab[1:-1].replace(",",".")
     output_fields = [ec['field_label'],
-                     ec['conductor_label'],
+                     cond_lab,
                      ec['iso_label'],
                      str(ec['number']),
                      ec['conductor_ideal'],
@@ -544,14 +598,18 @@ def make_curve_data_line(ec):
     ngens = '0'
     gens_str = []
     if 'gens' in ec:
-        gens_str = ["[" + ":".join([c for c in P]) + "]" for P in ec['gens']]
+        gens_str = ["[" + ",".join(["["+",".join(c)+"]" for c in P]) + "]"
+                    for P in ec['gens']]
         ngens = str(len(gens_str))
     sha = '?'
     if 'sha_an' in ec:
         sha = str(int(ec['sha_an']))
 
+    cond_lab = ec['conductor_label']
+    if '[' in cond_lab: # convert old-style IQF labels
+        cond_lab = cond_lab[1:-1].replace(",",".")
     output_fields = [ec['field_label'],
-                     ec['conductor_label'],
+                     cond_lab,
                      ec['iso_label'],
                      str(ec['number']),
                      rk, rk_bds, an_rk,
@@ -589,8 +647,12 @@ def make_isoclass_line(ec):
         n = len(Elist)
         mat = str([list(ri) for ri in mat.rows()]).replace(" ", "")
 
+    cond_lab = ec['conductor_label']
+    if '[' in cond_lab: # convert old-style IQF labels
+        cond_lab = cond_lab[1:-1].replace(",",".")
+
     output_fields = [ec['field_label'],
-                     ec['conductor_label'],
+                     cond_lab,
                      ec['iso_label'],
                      str(ec['number']),
                      mat]
@@ -609,7 +671,7 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
         query['conductor_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = nfcurves.find(query)
+    cursor = C.elliptic_curves.nfcurves.find(query)
     ASC = pymongo.ASCENDING
     res = cursor.sort([('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
 

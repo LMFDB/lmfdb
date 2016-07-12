@@ -2,12 +2,11 @@ import os
 import yaml
 from flask import url_for
 from urllib import quote
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RR, rainbow, implicit_plot, plot, text, Infinity, sqrt
+from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from kraus import (non_minimal_primes, is_global_minimal_model, has_global_minimal_model, minimal_discriminant_ideal)
 
 ecnf = None
 nfdb = None
@@ -15,9 +14,8 @@ nfdb = None
 def db_ecnf():
     global ecnf
     if ecnf is None:
-        ecnf = getDBConnection().elliptic_curves.nfcurves
+        ecnf = getDBConnection().elliptic_curves.nfcurves2
     return ecnf
-
 
 def db_nfdb():
     global nfdb
@@ -53,6 +51,66 @@ def make_field(label):
 
 def web_ainvs(field_label, ainvs):
     return web_latex([make_field(field_label).parse_NFelt(x) for x in ainvs])
+
+from sage.misc.all import latex
+def web_point(P):
+    return '$\\left(%s\\right)$'%(" : ".join([str(latex(x)) for x in P]))
+
+def ideal_from_string(K,s):
+    r"""Returns the ideal of K defined by the string s.  For imaginary
+    quadratic fields this is "[N,c,d]" with N,c,d as in a label, while
+    for other fields it is of the form "[N,a,alpha]" where N is the
+    norm, a the least positive integer in the ideal and alpha a second
+    generator so that the ideal is (a,alpha).  alpha is a polynomial
+    in the variable w which represents the generator of K.
+    """
+    N, a, alpha = s[1:-1].split(",")
+    N = ZZ(N)
+    a = ZZ(a)
+    if 'w' in alpha:
+        alpha = K(alpha.encode())
+        #alpha = alpha.replace('w',str(K.gen()))
+        I = K.ideal(a,alpha)
+        assert I.norm()==N
+        return I
+    d = ZZ(alpha)
+    return K.ideal(N//d, K([a, d]))
+
+# HNF of an ideal I in a quadratic field
+
+def ideal_HNF(I):
+    r"""
+    Returns an HNF triple defining the ideal I in a quadratic field
+    with integral basis [1,w].
+
+    This is a list [a,b,d] such that [a,c+d*w] is a Z-basis of I, with
+    a,d>0; c>=0; N = a*d = Norm(I); d|a and d|c; 0 <=c < a.
+    """
+    N = I.norm()
+    a, c, b, d = I.pari_hnf().python().list()
+    assert a > 0 and d > 0 and N == a * d and d.divides(a) and d.divides(b) and 0 <= c < a
+    return [a, c, d]
+
+def ideal_to_string(I):
+    K = I.number_field()
+    if K.signature() == (0,1):
+        a, c, d = ideal_HNF(I)
+        return "[%s,%s,%s]" % (a * d, c, d)
+    N = I.norm()
+    a = I.smallest_integer()
+    gens = I.gens_reduced()
+    alpha = gens[-1]
+    assert I == K.ideal(a,alpha)
+    alpha = str(alpha).replace(str(K.gen()),'w')
+    return "[%s,%s,%s]" % (N,a,alpha)
+
+def parse_points(K,s):
+    r""" The database stores two lists of points (gens and torsion_gens),
+    each a list of r lists of d strings.  This converts such a list
+    into a list of r lists of 3 elements of K.
+    """
+    return [[K([QQ(str(a)) for a in c]) for c in P] for P in s]
+
 
 def inflate_interval(a,b,r): 
     c=(a+b)/2
@@ -104,18 +162,17 @@ def EC_R_plot(ainvs, xmin, xmax, ymin, ymax, colour, legend):
     d = (xmax - xmin)
     return implicit_plot(y ** 2 + ainvs[0] * x * y + ainvs[2] * y - x ** 3 - ainvs[1] * x ** 2 - ainvs[3] * x - ainvs[4], (x, xmin, xmax), (y, ymin, ymax), plot_points=500, aspect_ratio="automatic", color=colour) + plot(0, xmin=c - 1e-5 * d, xmax=c + 1e-5 * d, ymin=ymin, ymax=ymax, aspect_ratio="automatic", color=colour, legend_label=legend)  # Add an extra plot outside the visible frame because implicit plots are buggy: their legend does not show (http://trac.sagemath.org/ticket/15903)
 
-Rx=PolynomialRing(RR,'x')
+Rx=PolynomialRing(RDF,'x')
 
-def EC_nf_plot(E, base_field_gen_name):
+def EC_nf_plot(K, ainvs, base_field_gen_name):
     try:
-        K = E.base_field()
         n1 = K.signature()[0]
         if n1 == 0:
             return plot([])
         R=[]
-        S=K.embeddings(RR)
+        S=K.embeddings(RDF)
         for s in S:
-            A=[s(c) for c in E.ainvs()]
+            A=[s(c) for c in ainvs]
             R.append(EC_R_plot_zone(Rx([A[4],A[3],A[1],1]),Rx([A[2],A[0]]))) 
         xmin = min([r[0] for r in R])
         xmax = max([r[1] for r in R])
@@ -137,7 +194,7 @@ def EC_nf_plot(E, base_field_gen_name):
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"]
         elif n1==7:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
-        return sum([EC_R_plot([S[i](c) for c in E.ainvs()], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(S[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)]) 
+        return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(S[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)]) 
     except:
         return text("Unable to plot", (1, 1), fontsize=36)
 
@@ -173,86 +230,105 @@ class ECNF(object):
         self.ainvs = [self.field.parse_NFelt(x) for x in coeffs]
         self.latex_ainvs = web_latex(self.ainvs)
         from sage.schemes.elliptic_curves.all import EllipticCurve
-        self.E = E = EllipticCurve(self.ainvs)
-        self.equn = web_latex(E)
+        #self.E = E = EllipticCurve(self.ainvs)
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
-        N = E.conductor()
+        K = self.field.K()
+        N = ideal_from_string(K,self.conductor_ideal)
         self.cond = web_latex(N)
-        self.cond_norm = web_latex(N.norm())
-        if N.norm() == 1:  # since the factorization of (1) displays as "1"
-            self.fact_cond = self.cond
-        else:
-            self.fact_cond = web_latex_ideal_fact(N.factor())
-        self.fact_cond_norm = web_latex(N.norm().factor())
+        self.cond_norm = web_latex(self.conductor_norm)
+        local_data = self.local_data
+        print("local data:")
+        print(local_data)
+        # NB badprimes is a list of primes which divide the
+        # discriminant of this model.  At most one of these might
+        # actually be a prime of good reduction, if the curve has no
+        # global minimal model.
+        badprimes = [ideal_from_string(K,ld['p']) for ld in local_data]
+        badnorms = [ZZ(ld['normp']) for ld in local_data]
+        mindisc_ords = [ld['ord_disc'] for ld in local_data]
 
-        D = self.field.K().ideal(E.discriminant())
-        self.disc = web_latex(D)
-        self.disc_norm = web_latex(D.norm())
-        if D.norm() == 1:  # since the factorization of (1) displays as "1"
-            self.fact_disc = self.disc
-        else:
-            self.fact_disc = web_latex_ideal_fact(D.factor())
-        self.fact_disc_norm = web_latex(D.norm().factor())
+        # Assumption: the curve models stored in the database are
+        # either global minimal models or minimal at all but one
+        # prime, so the list here has length 0 or 1:
 
-        # Minimal model?
-        #
-        # All curves in the database should be given
-        # by models which are globally minimal if possible, else
-        # minimal at all but one prime.  But we do not rely on this
-        # here, and the display should be correct if either (1) there
-        # exists a global minimal model but this model is not; or (2)
-        # this model is non-minimal at more than one prime.
-        #
-        self.non_min_primes = non_minimal_primes(E)
+        self.non_min_primes = [ideal_from_string(K,P) for P in self.non_min_p]
         self.is_minimal = (len(self.non_min_primes) == 0)
-        self.has_minimal_model = True
+        self.has_minimal_model = self.is_minimal
+        disc_ords = [ld['ord_disc'] for ld in local_data]
         if not self.is_minimal:
-            self.non_min_prime = ','.join([web_latex(P) for P in self.non_min_primes])
-            self.has_minimal_model = has_global_minimal_model(E)
+            P = self.non_min_primes[0]
+            P_index = bad_primes.index(P)
+            self.non_min_prime = web_latex(P)
+            disc_ords[P_index] += 12
+
+        if self.conductor_norm == 1:  # since the factorization of (1) displays as "1"
+            self.fact_cond = self.cond
+            self.fact_cond_norm = self.cond
+        else:
+            Nfac = Factorization([(P,ld['ord_cond']) for P,ld in zip(badprimes,local_data)])
+            self.fact_cond = web_latex_ideal_fact(Nfac)
+            Nnormfac = Factorization([(q,ld['ord_cond']) for q,ld in zip(badnorms,local_data)])
+            self.fact_cond_norm = web_latex(Nnormfac)
+
+        # D is the discriminant ideal of the model
+        D = prod([P**e for P,e in zip(badprimes,disc_ords)])
+        self.disc = web_latex(D)
+        Dnorm = D.norm()
+        self.disc_norm = web_latex(Dnorm)
+        if Dnorm == 1:  # since the factorization of (1) displays as "1"
+            self.fact_disc = self.disc
+            self.fact_disc_norm = self.disc
+        else:
+            Dfac = Factorization([(P,e) for P,e in zip(badprimes,disc_ords)])
+            self.fact_disc = web_latex_ideal_fact(Dfac)
+            Dnormfac = Factorization([(q,e) for q,e in zip(badnorms,disc_ords)])
+            self.fact_disc_norm = web_latex(Dnormfac)
+
 
         if not self.is_minimal:
-            Dmin = minimal_discriminant_ideal(E)
+            Dmin = ideal_from_string(K,self.minD)
             self.mindisc = web_latex(Dmin)
-            self.mindisc_norm = web_latex(Dmin.norm())
-            if Dmin.norm() == 1:  # since the factorization of (1) displays as "1"
+            Dmin_norm = Dmin.norm()
+            self.mindisc_norm = web_latex(Dmin_norm)
+            if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
                 self.fact_mindisc = self.mindisc
+                self.fact_mindisc_norm = self.mindisc
             else:
-                self.fact_mindisc = web_latex_ideal_fact(Dmin.factor())
-            self.fact_mindisc_norm = web_latex(Dmin.norm().factor())
+                Dminfac = Factorization([(P,e) for P,edd in zip(badprimes,min_disc_ords)])
+                self.fact_mindisc = web_latex_ideal_fact(Dminfac)
+                Dminnormfac = Factorization([(q,e) for q,e in zip(badnorms,min_disc_ords)])
+                self.fact_mindisc_norm = web_latex(Dminnormfac)
 
-        j = E.j_invariant()
-        if j:
-            d = j.denominator()
-            n = d * j  # numerator exists for quadratic fields only!
-            g = GCD(list(n))
-            n1 = n / g
-            self.j = web_latex(n1)
-            if d != 1:
-                if n1 > 1:
-                # self.j = "("+self.j+")\(/\)"+web_latex(d)
-                    self.j = web_latex(r"\frac{%s}{%s}" % (self.j, d))
-                else:
-                    self.j = web_latex(d)
-                if g > 1:
-                    if n1 > 1:
-                        self.j = web_latex(g) + self.j
-                    else:
-                        self.j = web_latex(g)
+        j = self.field.parse_NFelt(self.jinv)
+        # if j:
+        #     d = j.denominator()
+        #     n = d * j  # numerator exists for quadratic fields only!
+        #     g = GCD(list(n))
+        #     n1 = n / g
+        #     self.j = web_latex(n1)
+        #     if d != 1:
+        #         if n1 > 1:
+        #         # self.j = "("+self.j+")\(/\)"+web_latex(d)
+        #             self.j = web_latex(r"\frac{%s}{%s}" % (self.j, d))
+        #         else:
+        #             self.j = web_latex(d)
+        #         if g > 1:
+        #             if n1 > 1:
+        #                 self.j = web_latex(g) + self.j
+        #             else:
+        #                 self.j = web_latex(g)
         self.j = web_latex(j)
 
         self.fact_j = None
-        # See issue 1258: some j factorizations work bu take too long (e.g. EllipticCurve/6.6.371293.1/1.1/a/1)
-        # If these are really wanted, they could be precomputed and stored in the db
-        if j.is_zero():
-            self.fact_j = web_latex(j)
-        else:
-            if self.field.K().degree() < 3: #j.numerator_ideal().norm()<1000000000000:
-                try:
-                    self.fact_j = web_latex(j.factor())
-                except (ArithmeticError, ValueError):  # if not all prime ideal factors principal
-                    pass
+        # See issue 1258: some j factorizations work but take too long
+        # (e.g. EllipticCurve/6.6.371293.1/1.1/a/1)
+
+        # We now have, and display, the valuations of the denominator
+        # of j (at bad primes) so do not need to factor it anyway
+        # (no-one needs the factorization of the numerator even if it
+        # is possible).
 
         # CM and End(E)
         self.cm_bool = "no"
@@ -290,9 +366,9 @@ class ECNF(object):
             self.tor_struct_pretty = "\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr == 2:
             self.tor_struct_pretty = r"\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
-        torsion_gens = [E([self.field.parse_NFelt(x) for x in P])
-                        for P in self.torsion_gens]
-        self.torsion_gens = ",".join([web_latex(P) for P in torsion_gens])
+
+        torsion_gens = parse_points(K,self.torsion_gens)
+        self.torsion_gens = ",".join([web_point(P) for P in torsion_gens])
 
         # Rank or bounds
         try:
@@ -307,9 +383,8 @@ class ECNF(object):
 
         # Generators
         try:
-            gens = [E([self.field.parse_NFelt(x) for x in P])
-                    for P in self.gens]
-            self.gens = ", ".join([web_latex(P) for P in gens])
+            gens = parse_points(K,self.gens)
+            self.gens = ", ".join([web_point(P) for P in gens])
             if self.rk == "?":
                 self.reg = "not available"
             else:
@@ -328,18 +403,10 @@ class ECNF(object):
                 pass
 
         # Local data
-        self.local_data = []
-        for p in N.prime_factors():
-            self.local_info = E.local_data(p, algorithm="generic")
-            self.local_data.append({'p': web_latex(p),
-                                    'norm': web_latex(p.norm().factor()),
-                                    'tamagawa_number': self.local_info.tamagawa_number(),
-                                    'kodaira_symbol': web_latex(self.local_info.kodaira_symbol()).replace('$', ''),
-                                    'reduction_type': self.local_info.bad_reduction_type(),
-                                    'ord_den_j': max(0, -E.j_invariant().valuation(p)),
-                                    'ord_mindisc': self.local_info.discriminant_valuation(),
-                                    'ord_cond': self.local_info.conductor_valuation()
-                                    })
+        for P,ld in zip(badprimes,local_data):
+            ld['p'] = web_latex(P)
+            ld['norm'] = P.norm()
+            ld['kod'] = web_latex(ld['kod']).replace('$', '')
 
         # URLs of self and related objects:
         self.urls = {}
@@ -379,8 +446,8 @@ class ECNF(object):
             ('Label', self.label)]
 
         # Plot
-        if E.base_field().signature()[0]:
-            self.plot = encode_plot(EC_nf_plot(E, self.field.generator_name()))
+        if K.signature()[0]:
+            self.plot = encode_plot(EC_nf_plot(K,self.ainvs, self.field.generator_name()))
             self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
             self.properties += [(None, self.plot_link)]
 

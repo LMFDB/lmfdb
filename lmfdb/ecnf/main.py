@@ -188,17 +188,20 @@ def index():
     data['fields'].append(['%s imaginary quadratic fields' % niqfs, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in iqfs)])
     # Cubics
     cubics = ['3.1.23.1'] + ['3.3.%s.1' % str(d) for d in [49,148,1957]]
-    ncubics = counts['nfields_by_degree'][3]
-    data['fields'].append(['%s cubic fields, including' % ncubics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in cubics)])
+    if 3 in counts['nfields_by_degree']:
+        ncubics = counts['nfields_by_degree'][3]
+        data['fields'].append(['%s cubic fields, including' % ncubics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in cubics)])
     # Quartics
     quartics = ['4.4.%s.1' % str(d) for d in [725,2777,9909,19821]]
-    nquartics = counts['nfields_by_degree'][4]
-    data['fields'].append(['%s totally real quartic fields, including' % nquartics,
+    if 4 in counts['nfields_by_degree']:
+        nquartics = counts['nfields_by_degree'][4]
+        data['fields'].append(['%s totally real quartic fields, including' % nquartics,
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quartics)])
     # Quintics
     quintics = ['5.5.%s.1' % str(d) for d in [14641]]
-    nquintics = counts['nfields_by_degree'][5]
-    data['fields'].append(['%s totally real quintic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
+    if 5 in counts['nfields_by_degree']:
+        nquintics = counts['nfields_by_degree'][5]
+        data['fields'].append(['%s totally real quintic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
 
     data['degrees'] = counts['degrees']
 
