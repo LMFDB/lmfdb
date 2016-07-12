@@ -3,21 +3,9 @@ r""" Functions to add ranks and generators to elliptic curves in the
 database by outputting a Magma script and parsing its output """
 
 import os.path
-import gzip
-import re
-import sys
-import time
 import os
-import random
-import glob
 import pymongo
-from lmfdb.base import _init as init
-from lmfdb.base import getDBConnection
-from sage.rings.all import ZZ, QQ
-from sage.databases.cremona import cremona_to_lmfdb
-from lmfdb.ecnf.hmf_check_find import (is_fundamental_discriminant, rqf_iterator)
 from lmfdb.ecnf.WebEllipticCurve import ECNF
-
 from lmfdb.website import DEFAULT_DB_PORT as dbport
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=dbport)
@@ -64,6 +52,7 @@ def MWShaInfo(E, HeightBound=None, test_saturation=False, verbose=False):
         return E([K(c.sage()) for c in P.Eltseq()])
     if verbose:
         print("calling magma...")
+    from sage.all import magma
     if HeightBound is None:
         MWSI = magma(E).MordellWeilShaInformation(nvals=3)
     else:
@@ -168,6 +157,7 @@ def find_source(maps):
     vertex, and we return such an i.  For example if
     maps=[[0,0],[1,0]] then vertex 1 is good but vertex 0 is not!
     """
+    from sage.all import union
     n = len(maps)
     mat = [[int((maps[i][j] != 0) or (i == j)) for j in range(n)] for i in range(n)]
     # print("mat = %s" % mat)
@@ -290,104 +280,3 @@ def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, test_satur
             print("Getting generators for isogeny class %s" % isoclass)
             get_generators(field, isoclass, test_saturation=test_saturation, verbose=verbose, store=store)
 
-#
-#
-# Code to go through nfcurves database (for one field) to find curves
-# (grouped into isogeny classes) and output Magma code to process
-# these.
-#
-# This is redundant now we use the Magma interface from Sage dircectly
-#
-#
-
-
-def output_magma_field(field_label, outfilename=None, verbose=False):
-    r"""
-    Writes Magma code to a file to define a number field.
-
-    INPUT:
-
-    - ``field_label`` (str) -- a number field label
-
-    - ``outfilename`` (string, default ``None``) -- name of file for output.
-
-    - ``verbose`` (boolean, default ``False``) -- verbosity flag.  If
-      True, all output written to stdout.
-
-    OUTPUT:
-
-    Output goes to file and/or screen, nothing is returned.  Outputs
-    Magma commands to define the field `K` with given label.
-    """
-    def output(L):
-        if outfilename:
-            outfile.write(L)
-        if verbose:
-            sys.stdout.write(L)
-
-    if outfilename:
-        outfile = file(outfilename, mode="w")
-
-    F = fields.find_one({'label': field_label})
-    if not F:
-        raise ValueError("%s is not a field in the database!" % field_label)
-
-    output("COEFFS := [%s];\n" % F['coeffs'])
-    output("K<a> := NumberField(PolynomialRing(Rationals())!COEFFS);\n")
-
-    if outfilename:
-        output("\n")
-        outfile.close()
-
-
-def output_magma_point_search(curves, outfilename=None, verbose=False):
-    r""" Outputs Magma script to search for an curve to match the newform
-    with given label.
-
-    INPUT:
-
-    - ``curves`` -- a list or iterator of database elliptic curve
-      objects (one complete isogeny class: the label will be taken
-      from the furst one)
-
-    - ``outfilename`` (string, default ``None``) -- name of output file
-
-    - ``verbose`` (boolean, default ``False``) -- verbosity flag.
-
-    OUTPUT:
-
-    Output goes to file and/or screen, nothing is returned. Outputs
-    Magma commands to compute the rank and generators of the curves in
-    the class.  The output will be appended to the file whose name is
-    provided, so that the field definition can be output there first
-    using the output_magma_field() function.
-    """
-    def output(L):
-        if outfilename:
-            outfile.write(L)
-        if verbose:
-            sys.stdout.write(L)
-    if outfilename:
-        outfile = file(outfilename, mode="a")
-
-    try:
-        curve1 = curves.next()
-        curves.rewind()
-    except AttributeError:  # it was a list, not an iterator
-        curve1 = curves[0]
-
-    all_ai = [[[int(c) for c in ai] for ai in e['ainvs']] for e in curves]
-    all_ai_str = str(all_ai).replace(" ", "")
-    R = PolynomialRing(QQ, 'a')
-    all_ai_pols = [[R(ai) for ai in c] for c in all_ai]
-
-    output('LABEL := ["%s","%s","%s"];\n' %
-           (curve1['field_label'],
-            curve1['conductor_label'],
-            curve1['iso_label']))
-    output("CURVES := %s;\n" % all_ai_str)
-    output("CURVES := %s;\n" % all_ai_pols)
-    output("PointSearch(LABEL,CURVES);\n")
-
-    if outfilename:
-        outfile.close()
