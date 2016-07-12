@@ -64,6 +64,7 @@ def learnmore_list_remove(matchstring):
 def rep_galois_modl_render_webpage():
     args = request.args
     if len(args) == 0:
+        # FIXME THIS VARIABLE IS NEVER USED
         #counts = get_stats().counts()
         dim_list= range(1, 11, 1)
         max_class_number=20
@@ -337,6 +338,8 @@ def render_rep_galois_modl_webpage_download(**args):
 
 def download_rep_galois_modl_full_lists_v(**args):
     C = getDBConnection()
+    # FIXME THIS VARIABLE IS NEVER USED
+    # data = None
     label = str(args['label'])
     res = C.mod_l_galois.reps.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
@@ -357,6 +360,8 @@ def download_rep_galois_modl_full_lists_v(**args):
 
 def download_rep_galois_modl_full_lists_g(**args):
     C = getDBConnection()
+    # FIXME THIS VARIABLE IS NEVER USED
+    # data = None
     label = str(args['label'])
     res = C.mod_l_galois.reps.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
