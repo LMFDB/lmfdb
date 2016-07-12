@@ -257,7 +257,7 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         dct = dict((k, dict((p, [total[p][k], total[p][k]-cusp[p][k], cusp[p][k]])
                               for p in partitions)) for k in wt_range)
         for k in dct:
-            dct[k]['All'] = [sum(dct[k][p][j] for p in dct[k]) for j in range(3)]
+            dct[k]['All'] = [sum(dct[k][p][i] for p in dct[k]) for i in range(3)]
             
         partitions.insert(0,'All')
         headers = partitions
