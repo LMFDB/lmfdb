@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-import re
-import tempfile
-import os
-from pymongo import ASCENDING, DESCENDING
-from flask import url_for, make_response
+from flask import url_for
 import lmfdb.base
-from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.elliptic_curves import ec_page, ec_logger
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_lmfdb_iso_label, split_cremona_label
+from lmfdb.utils import make_logger, web_latex, encode_plot
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 
-import sage.all
 from sage.all import EllipticCurve, latex, matrix
 
 logger = make_logger("ec")

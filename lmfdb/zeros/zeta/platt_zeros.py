@@ -9,7 +9,7 @@ import sqlite3
 import os
 import struct
 import sys
-from math import log, floor
+from math import log
 
 import mpmath
 mpmath.mp.prec = 300
@@ -91,7 +91,8 @@ def list_zeros(filename,
     count = 0   # the number of zeros we have found so far
     N = Nt0     # the index of the next zero
 
-    L = []      # the zeros we have found so far
+    # FIXME THIS VARIABLE IS NEVER USED
+    #L = []      # the zeros we have found so far
 
     # now we start finding zeros
     while count < number_of_zeros:

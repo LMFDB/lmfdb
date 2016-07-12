@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
-import re
-import tempfile
-import os
-from pymongo import ASCENDING, DESCENDING
-from flask import url_for, make_response
-from urllib import quote
+from flask import url_for
 import lmfdb.base
-from lmfdb.utils import comma, make_logger, web_latex, encode_plot
-from lmfdb.elliptic_curves import ec_page, ec_logger
-from lmfdb.elliptic_curves.isog_class import make_graph
-from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs
+from lmfdb.utils import make_logger, web_latex, encode_plot
+from lmfdb.ecnf.WebEllipticCurve import web_ainvs
 from lmfdb.number_fields.number_field import field_pretty, nf_display_knowl
 
 import sage.all
-from sage.all import EllipticCurve, latex, matrix
+from sage.all import latex, matrix
 
 logger = make_logger("ecnf")
 
@@ -71,7 +64,6 @@ class ECNF_isoclass(object):
         self.db_curves = [c for c in db_ec().find(
             {'field_label': self.field_label, 'conductor_label':
              self.conductor_label, 'iso_label': self.iso_label}).sort('number')]
-        size = len(self.db_curves)
 
         # Rank or bounds
         try:
@@ -115,7 +107,6 @@ class ECNF_isoclass(object):
         self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=self.conductor_label)
         self.urls['field'] = url_for('.show_ecnf1', nf=self.field_label)
         sig = self.signature
-        real_quadratic = sig == [2,0]
         totally_real = sig[1] == 0
         imag_quadratic = sig == [0,1]
         if totally_real:

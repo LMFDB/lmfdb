@@ -129,7 +129,7 @@ def parse_list(inp, query, qfield, process=None):
     if process is not None:
         query[qfield] = process(out)
     else:
-        query[qfield]=out
+        query[qfield] = out
 
 def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     # TODO: graceful errors

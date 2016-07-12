@@ -295,7 +295,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     bread.append((cl.field, url_for(".show_ecnf1", nf=nf_label)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
     bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=quote(conductor_label), class_label=class_label)))
-    return render_template("show-ecnf-isoclass.html",
+    return render_template("ecnf-isoclass.html",
                            credit=ecnf_credit,
                            title=title,
                            bread=bread,
@@ -330,7 +330,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
     code = ec.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     info = {}
-    return render_template("show-ecnf.html",
+    return render_template("ecnf-curve.html",
                            credit=ecnf_credit,
                            title=title,
                            bread=bread,
@@ -456,7 +456,7 @@ def browse():
     t = 'Elliptic curves over number fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('browse', ' ')]
-    return render_template("stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+    return render_template("ecnf-stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
@@ -493,7 +493,7 @@ def statistics_by_degree(d):
 
     bread = [('Elliptic Curves', url_for("ecnf.index")),
               ('degree %s' % d,' ')]
-    return render_template("by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+    return render_template("ecnf-by-degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/browse/<int:d>/<r>/")
 def statistics_by_signature(d,r):
@@ -540,7 +540,7 @@ def statistics_by_signature(d,r):
     bread = [('Elliptic Curves', url_for("ecnf.index")),
               ('degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
               ('signature %s' % info['sig'],' ')]
-    return render_template("by_signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+    return render_template("ecnf-by-signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 
 def download_search(info):

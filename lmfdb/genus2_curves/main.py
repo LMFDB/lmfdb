@@ -5,11 +5,10 @@ import re
 import time
 from pymongo import ASCENDING, DESCENDING
 from operator import mul
-from flask import flash, render_template, url_for, request, redirect, send_file
-from markupsafe import Markup
+from flask import render_template, url_for, request, redirect, send_file
 from sage.all import ZZ
 
-from lmfdb.utils import to_dict, comma, random_value_from_collection
+from lmfdb.utils import to_dict, comma, random_value_from_collection, flash_error
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
@@ -111,7 +110,7 @@ def index_Q():
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
     title = 'Genus 2 curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '))
-    return render_template("browse_search_g2.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
+    return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
 @g2c_page.route("/Q/random")
 def random_curve():
@@ -123,7 +122,7 @@ def statistics():
     info = { 'counts': g2cstats().counts(), 'stats': g2cstats().stats() }
     title = 'Genus 2 curves over $\Q$: statistics'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('statistics', ' '))
-    return render_template("statistics_g2.html", info=info, credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("g2c_stats.html", info=info, credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 ###############################################################################
 # Curve and isogeny class pages
@@ -185,7 +184,7 @@ def render_curve_webpage(label):
         return "Error constructing genus 2 curve with label " + label
     if isinstance(g2c,str):
         return g2c
-    return render_template("curve_g2.html",
+    return render_template("g2c_curve.html",
                            properties2=g2c.properties,
                            credit=credit_string,
                            info={'aut_grp_dict':aut_grp_dict,'geom_aut_grp_dict':geom_aut_grp_dict},
@@ -203,7 +202,7 @@ def render_isogeny_class_webpage(label):
         return "Error constructing genus 2 isogeny class with label " + label
     if isinstance(g2c,str):
         return g2c
-    return render_template("isogeny_class_g2.html",
+    return render_template("g2c_isogeny_class.html",
                            properties2=g2c.properties,
                            credit=credit_string,
                            data=g2c.data,
@@ -244,10 +243,10 @@ def genus2_curve_search(info):
                     if c:
                         return redirect(url_for_isogeny_class_label(c["class"]), 301)
                     else:
-                        errmsg = "Hash not found"
+                        errmsg = "hash %s not found"
                 else:
-                    errmsg = "Invalid label"
-        flash(Markup(errmsg + " <span style='color:black'>%s</span>"%(jump)),"error")
+                    errmsg = "%s is not a valid genus 2 curve or isogeny class label"
+        flash_error (errmsg, jump)
         return redirect(url_for(".index"))
 
     if 'download' in info and info['download'] == '1':
@@ -290,7 +289,7 @@ def genus2_curve_search(info):
             if info.get(fld): query[fld] = info[fld]
     except ValueError as err:
         info['err'] = str(err)
-        return render_template("search_results_g2.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
+        return render_template("g2c_search_results.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
     # Database query happens here
     info["query"] = query # save query for reuse in download_search
     cursor = g2c_db_curves().find(query, {'_id':False, 'label':True, 'eqn':True, 'st_group':True, 'is_gl2_type':True, 'is_simple_geom':True, 'analytic_rank':True})
@@ -336,7 +335,7 @@ def genus2_curve_search(info):
     title = info.get('title','Genus 2 Curve search results')
     credit = credit_string
     
-    return render_template("search_results_g2.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
+    return render_template("g2c_search_results.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
 
 ################################################################################
 # Statistics

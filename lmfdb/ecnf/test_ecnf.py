@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
 
 class EllCurveTest(LmfdbTest):
 
@@ -35,7 +33,7 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/2.2.5.1/64.1/a/1')
         assert 'Additive' in L.data
 
-    def test_weirstrass(self):
+    def test_weierstrass(self):
         r"""
         Check that the elliptic curve/#field tells about its Weirstrass eqn
         """
@@ -43,7 +41,7 @@ class EllCurveTest(LmfdbTest):
         assert '396' in L.data
         assert '2982' in L.data
 
-    def test_weirstrass(self):
+    def test_conductor(self):
         r"""
         Check that the elliptic curve/#field tells about its conductor and disciminant
         """
