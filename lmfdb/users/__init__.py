@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from main import login_page, login_manager, admin_required, housekeeping
+from main import login_page, login_manager
 
 from lmfdb.base import app
 
