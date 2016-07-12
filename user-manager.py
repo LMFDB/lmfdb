@@ -17,7 +17,7 @@ def changepassword(username, newpassword):
     from lmfdb.users import pwdmanager
     pwdmanager.change_password(username, newpassword)
 
-if len(sys.argv) < 2:
+if len(sys.argv) != 4:
     usage()
     sys.exit(0)
 
