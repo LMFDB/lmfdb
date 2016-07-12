@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import os.path
-import sys
-from sage.all import SQLDatabase
 from lmfdb import base
 
 padic_db = base.getDBConnection().ellcurves.padic_db
