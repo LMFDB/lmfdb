@@ -3,25 +3,22 @@ import pymongo
 ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-import flask
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
+#from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
+from flask import flash, make_response, send_file, request, render_template, redirect, url_for
 
-from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma, random_object_from_collection
+from lmfdb.base import getDBConnection
+from lmfdb.utils import to_dict, random_object_from_collection
 
-import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
+from sage.all import ZZ, conway_polynomial
 
-from lmfdb.rep_galois_modl import rep_galois_modl_page, rep_galois_modl_logger
+from lmfdb.rep_galois_modl import rep_galois_modl_page #, rep_galois_modl_logger
 from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
-
+from lmfdb.lattices.main import vect_to_sym, vect_to_matrix
 
 from markupsafe import Markup
 
 import time
-import os
 import ast
 import StringIO
 
@@ -65,7 +62,7 @@ def learnmore_list_remove(matchstring):
 def rep_galois_modl_render_webpage():
     args = request.args
     if len(args) == 0:
-        counts = get_stats().counts()
+        #counts = get_stats().counts()
         dim_list= range(1, 11, 1)
         max_class_number=20
         class_number_list=range(1, max_class_number+1, 1)
@@ -122,7 +119,7 @@ def rep_galois_modl_search(**args):
         gram = info.get('gram')
         if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
             flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
-            raise ValueError
+            raise ValueError 
         parse_list(info, query, 'gram', process=vect_to_sym)
     except ValueError as err:
         info['err'] = str(err)
@@ -338,7 +335,6 @@ def render_rep_galois_modl_webpage_download(**args):
 
 def download_rep_galois_modl_full_lists_v(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     res = C.mod_l_galois.reps.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
@@ -359,7 +355,6 @@ def download_rep_galois_modl_full_lists_v(**args):
 
 def download_rep_galois_modl_full_lists_g(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     res = C.mod_l_galois.reps.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")

@@ -12,5 +12,6 @@ def body_class():
     return {'body_class': 'rep_galois_modl'}
 
 import main
+assert main #silence pyflakes
 
 app.register_blueprint(rep_galois_modl_page, url_prefix="/Representation/Galois/ModL")
