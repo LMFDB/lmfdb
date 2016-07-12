@@ -14,7 +14,9 @@ from sage.all import ZZ, conway_polynomial
 from lmfdb.rep_galois_modl import rep_galois_modl_page #, rep_galois_modl_logger
 from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
-from lmfdb.lattices.main import vect_to_sym, vect_to_matrix
+
+#should these functions be defined in lattices or somewhere else?
+from lmfdb.lattices import vect_to_sym, vect_to_matrix
 
 from markupsafe import Markup
 
