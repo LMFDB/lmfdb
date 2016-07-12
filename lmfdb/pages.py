@@ -24,10 +24,11 @@ contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 @app.route("/alive")
 def alive():
     try:
-        getDBConnection().userdb.users.count()
+        conn = getDBConnection()
+        assert conn.userdb.users.count()
     except:
-        abort(503)
-    return render_template("alive.html")
+        abort(501)
+    return "LMFDB!"
 
 @app.route("/acknowledgment")
 def acknowledgment():
