@@ -1,6 +1,9 @@
 from lmfdb.utils import make_logger
 databases_logger = make_logger("databases_logger", hl=True)
 
-from type_generation import *
-from standard_types import *
-from Dokchitser_databases import *
+import type_generation
+assert type_generation
+import standard_types
+assert standard_types
+import Dokchitser_databases
+assert Dokchitser_databases

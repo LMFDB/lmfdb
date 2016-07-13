@@ -1,11 +1,11 @@
 artin_location = ("artin", "representations")
 galois_group_location = ("artin", "field_data")
 
-from type_generation import String, Array, Dict, Int, Anything, Float
+from type_generation import String, Array, Dict, Int, Anything
 
 from standard_types import PolynomialAsString, PermutationAsList,\
-    TooLargeInt, LabelString, FiniteSequence, FiniteSet, PrimeIndexedSequence, AlgebraicNumberPolynomialString, \
-    PolynomialAsString, AlgebraicNumberString_Root, PolynomialAsSequenceInt, PolynomialAsSequenceTooLargeInt
+    TooLargeInt, LabelString, FiniteSequence, FiniteSet, PrimeIndexedSequence, \
+    AlgebraicNumberString_Root, PolynomialAsSequenceInt, PolynomialAsSequenceTooLargeInt
 
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.rational_field import QQ
