@@ -424,7 +424,8 @@ def render(ID, footer=None, kwargs=None, raw=False):
         k = Knowl(ID)
     except:
         logger.critical("Failed to render knowl %s"%ID)
-        return make_response("Sorry, the knowledge database is currently unavailable.")
+        errmsg = "Sorry, the knowledge database is currently unavailable."
+        return errmsg if raw else make_response(errmsg)
 
     # logger.debug("kwargs: %s", request.args)
     kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))

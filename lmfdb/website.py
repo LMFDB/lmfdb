@@ -165,7 +165,6 @@ def example(blah=None):
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
     from flask import redirect, url_for
-    print "hi there"
     return redirect(url_for("mf.render_modular_form_main_page"))
     # return render_template("modular_form_space.html", info = { })
 
