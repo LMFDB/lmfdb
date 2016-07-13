@@ -54,16 +54,21 @@ from modular_forms.maass_forms.picard import mwfp
 
 import sys
 #import base
-from base import app, render_template, request, DEFAULT_DB_PORT, set_logfocus, _init
+from base import app, render_template, request, set_logfocus, _init
+
+DEFAULT_DB_PORT = 37010
 
 @app.errorhandler(404)
 def not_found_404(error):
     return render_template("404.html"), 404
 
-
 @app.errorhandler(500)
 def not_found_500(error):
     return render_template("500.html"), 500
+
+@app.errorhandler(503)
+def not_found_503(error):
+    return render_template("503.html"), 500
 
 #@app.route("/") is now handled in pages.py
 
@@ -160,6 +165,7 @@ def example(blah=None):
 @app.route("/AutomorphicForm/")
 def modular_form_toplevel():
     from flask import redirect, url_for
+    print "hi there"
     return redirect(url_for("mf.render_modular_form_main_page"))
     # return render_template("modular_form_space.html", info = { })
 

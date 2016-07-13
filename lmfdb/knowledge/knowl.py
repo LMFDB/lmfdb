@@ -99,6 +99,7 @@ def set_locked(knowl, who):
 
 
 def get_knowl(ID, fields={"history": 0, "_keywords": 0}):
+    print "get_knowl", ID
     return get_knowls().find_one({'_id': ID}, fields)
 
 
