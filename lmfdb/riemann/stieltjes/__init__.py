@@ -1,2 +1,2 @@
 from stieltjes import StieltjesConstants
-assert StieljtjesConstants
+assert StieltjesConstants
