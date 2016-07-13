@@ -83,10 +83,13 @@ assert rep_galois_modl
 
 
 import logging
-
+import utils
+import os
 import sys
+import getopt
+from pymongo import ReadPreference
 from base import app, set_logfocus, _init
-from flask import render_template, request
+from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
 
 DEFAULT_DB_PORT = 37010
 
@@ -105,14 +108,10 @@ def not_found_503(error):
 #@app.route("/") is now handled in pages.py
 
 def root_static_file(name):
-    from flask import abort
-
     def static_fn():
-        import os
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", name)
         if os.path.exists(fn):
             return open(fn).read()
-        import logging
         logging.critical("root_static_file: file %s not found!" % fn)
         return abort(404)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
@@ -122,20 +121,16 @@ map(root_static_file, ['favicon.ico'])
 @app.route("/robots.txt")
 def robots_txt():
     if "www.lmfdb.org".lower() in request.url_root.lower():
-        import os
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
     return "User-agent: *\nDisallow: / \n"
 
-
 @app.route("/style.css")
 def css():
-    from flask import make_response
     response = make_response(render_template("style.css"))
     response.headers['Content-type'] = 'text/css'
     # don't cache css file, if in debug mode.
-    from flask import current_app
     if current_app.debug:
         response.headers['Cache-Control'] = 'no-cache, no-store'
     else:
@@ -144,23 +139,20 @@ def css():
 
 @app.before_request
 def get_menu_cookie():
-    from flask import g
     g.show_menu = request.cookies.get('showmenu') != "False"
 
 @app.after_request
 def set_menu_cookie(response):
-    from flask import g
     response.set_cookie("showmenu", str(g.show_menu))
     return response
 
-
 @app.route('/_menutoggle/<show>')
 def menutoggle(show):
-    from flask import g, redirect, url_for
     g.show_menu = show != "False"
     url = request.referrer or url_for('index')
     return redirect(url)
 
+# FIXME: Is there a reason for this to exist?
 @app.route('/example_plot')
 def render_example_plot():
     return plot_example.render_plot(request.args)
@@ -199,16 +191,14 @@ Usage: %s [OPTION]...
 def get_configuration():
 
     # default flask options
-    flask_options = {"port": 37777, "host": "127.0.0.1", "debug": False, "logfile": "flasklog" }
+    flask_options = {"port": 37777, "host": "127.0.0.1", "debug": False}
+    logging_options = {"logfile": "flasklog"}
 
     # default options to pass to the MongoClient
-    from pymongo import ReadPreference
-
     mongo_client_options = {"port": DEFAULT_DB_PORT, "host": "localhost", "replicaset": None, "read_preference": ReadPreference.NEAREST};
     read_preference_classes = {"PRIMARY": ReadPreference.PRIMARY, "PRIMARY_PREFERRED": ReadPreference.PRIMARY_PREFERRED , "SECONDARY": ReadPreference.SECONDARY, "SECONDARY_PREFERRED": ReadPreference.SECONDARY_PREFERRED, "NEAREST": ReadPreference.NEAREST };
     
     #setups the default mongo_client_config_filename
-    import os
     mongo_client_config_filename = "mongoclient.config"
     config_dir = '/'.join( os.path.dirname(os.path.abspath(__file__)).split('/')[0:-1])
     mongo_client_config_filename = '{0}/{1}'.format(config_dir,mongo_client_config_filename)
@@ -216,7 +206,6 @@ def get_configuration():
         
     # deals with argv's
     if not sys.argv[0].endswith('nosetests'):
-        import getopt
         try:
             opts, args = getopt.getopt(
                                         sys.argv[1:],
@@ -252,13 +241,13 @@ def get_configuration():
                 flask_options["host"] = arg
             #FIXME logfile isn't used
             elif opt in ("-l", "--log"):
-                flask_options["logfile"] = arg
+                logging_options["logfile"] = arg
             elif opt in ("--dbport"):
                 mongo_client_options["port"] = int(arg)
             elif opt == "--debug":
                 flask_options["debug"] = True
             elif opt == "--logfocus":
-                flask_options["logfocus"] = arg
+                logging_options["logfocus"] = arg
             elif opt in ("-m", "--mongo-client"):
                 if os.path.exists(arg):
                     mongo_client_config_filename = arg
@@ -280,7 +269,6 @@ def get_configuration():
                 flask_options["use_debugger"] = False
             elif opt =="--enable-profiler":
                 flask_options["PROFILE"] = True
-    
 
     #reads the kwargs from  mongo_client_config_filename  
     if os.path.exists(mongo_client_config_filename):
@@ -314,22 +302,14 @@ def get_configuration():
                     except ValueError:
                         pass;
                 mongo_client_options[key] = value;       
-    return { 'flask_options' : flask_options, 'mongo_client_options' : mongo_client_options}
+    return { 'flask_options' : flask_options, 'mongo_client_options' : mongo_client_options, 'logging_options' : logging_options }
 
 configuration = None
 
 
 def main():
-    set_logfocus(logfocus)
     logging.info("... done.")
 
-    # just for debugging
-    # if options["debug"]:
-    #  logging.info(str(app.url_map))
-
-    global configuration
-    if not configuration:
-        configuration = get_configuration()
     if "PROFILE" in configuration['flask_options'] and configuration['flask_options']["PROFILE"]:
         print "Profiling!"
         from werkzeug.contrib.profiler import ProfilerMiddleware
@@ -339,29 +319,24 @@ def main():
     app.run(**configuration['flask_options'])
 
 if True:
-    # this bit is so that we can import website.py to use
-    # with gunicorn.
-    file_handler = logging.FileHandler(configuration['flask_options']['logfile'])
+    # this bit is so that we can import website.py to use with gunicorn
+    if not configuration:
+        configuration = get_configuration()
+
+    file_handler = logging.FileHandler(configuration['logging_options']['logfile'])
     file_handler.setLevel(logging.WARNING)
-    logfocus = configuration['flask_options'].get('logfocus')
-    if logfocus:
-        logging.getLogger(logfocus).setLevel(logging.DEBUG)
+    if 'logfocus' in configuration['logging_options']:
+        set_logfocus(configuration['logging_options']['logfocus'])
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
     root_logger.name = "LMFDB"
 
-    import utils
     formatter = logging.Formatter(utils.LmfdbFormatter.fmtString.split(r'[')[0])
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
     root_logger.addHandler(ch)
 
-    if not configuration:
-        configuration = get_configuration()
     logging.info("configuration: %s" % configuration)
     _init(**configuration['mongo_client_options'])
     app.logger.addHandler(file_handler)
-
-def getDownloadsFor(path):
-    return "bar"
