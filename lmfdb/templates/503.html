@@ -1,0 +1,18 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h3>The LMFDB is currently unavailable.</h3>
+<p>
+{% if 'warwick' in request.url_root  or 'beta' in request.url_root %}
+You can visit our main site at
+<a href="http://www.lmfdb.org">www.lmfdb.org</a>.
+{% else %}
+You can visit our alternate site at
+<a href="http://lmfdb.warwick.ac.uk">lmfdb.warwick.ac.uk</a>.
+{% endif %}
+</p>
+<p>
+You can contact us <a href="/contact">here</a>.
+</p>
+
+{% endblock %}
