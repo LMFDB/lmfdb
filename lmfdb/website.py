@@ -97,24 +97,6 @@ def robots_txt():
     return "User-agent: *\nDisallow: / \n"
 
 
-# TODO what is that? we have git now btw ...
-@app.route("/hg/<arg>")
-def hg(arg):
-    if arg == "":
-        return "Use /hg/parent, /hg/log or /hg/identify"
-    import os
-    if arg == "parent":
-        f = os.popen("hg parent")
-    elif arg == "tip":
-        f = os.popen("hg tip")
-    elif arg == "identify":
-        f = os.popen("hg identify")
-    else:
-        return "Unrecognized command. Allowed are parent, tip and identify."
-    text = f.read()
-    return str(text)
-
-
 @app.route("/style.css")
 def css():
     from flask import make_response
@@ -147,51 +129,15 @@ def menutoggle(show):
     url = request.referrer or url_for('index')
     return redirect(url)
 
-@app.route('/a/<int:a>')
-def a(a):
-    from sage.all import Integer
-    a = Integer(a)
-    return r'\(' + str(a / (1 + a)) + r'\)'
-
-
-@app.route("/example/")
-@app.route("/example/<blah>")
-def example(blah=None):
-    return render_template("example.html", blah=blah)
-
-
-@app.route("/modular/")
-@app.route("/ModularForm/")
-@app.route("/AutomorphicForm/")
-def modular_form_toplevel():
-    from flask import redirect, url_for
-    return redirect(url_for("mf.render_modular_form_main_page"))
-    # return render_template("modular_form_space.html", info = { })
-
-
-@app.route("/calc")
-def calc():
-    return request.args['ep']
-
-
-@app.route("/form")
-def form_example():
-    sidebar = [('topic1', [("abc", "#"), ("def", "#")]), ("topic2", [("ghi", "#"), ("jkl", "#")])]
-    info = {'sidebar': sidebar}
-    return render_template("form.html", info=info)
-
-
 @app.route('/example_plot')
 def render_example_plot():
     return plot_example.render_plot(request.args)
-
 
 @app.route("/not_yet_implemented")
 def not_yet_implemented():
     return render_template("not_yet_implemented.html", title="Not Yet Implemented")
 
-# the checklist is for testing on a high-level
-
+# the checklist is used for human testing on a high-level, supplements test.sh
 
 @app.route("/checklist-list")
 def checklist_list():
