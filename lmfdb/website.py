@@ -68,7 +68,7 @@ def not_found_500(error):
 
 @app.errorhandler(503)
 def not_found_503(error):
-    return render_template("503.html"), 500
+    return render_template("503.html"), 503
 
 #@app.route("/") is now handled in pages.py
 
