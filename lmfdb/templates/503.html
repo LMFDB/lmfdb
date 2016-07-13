@@ -3,7 +3,7 @@
 
 <h3>The LMFDB is currently unavailable.</h3>
 <p>
-{% if 'warwick' in request.url_root %}
+{% if 'warwick' in request.url_root  or 'beta' in request.url_root %}
 You can visit our main site at
 <a href="http://www.lmfdb.org">www.lmfdb.org</a>.
 {% else %}
