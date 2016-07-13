@@ -10,9 +10,9 @@
 import os
 import logging
 from time import sleep
-from flask import Flask, g, url_for, abort, render_template, request
+from flask import Flask, g, url_for, abort
 import pymongo
-from pymongo import MongoClient, MongoReplicaSetClient, Connection
+from pymongo import MongoClient, MongoReplicaSetClient
 from pymongo.cursor import Cursor
 from pymongo.errors import AutoReconnect
 from os.path import dirname, join
@@ -141,8 +141,6 @@ def _db_reconnect(func):
 
 # disabling this reconnect thing, doesn't really help anyways
 Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
-Connection._send_message = _db_reconnect(Connection._send_message)
-Connection._send_message_with_response = _db_reconnect(Connection._send_message_with_response)
 
 def _init(port, **kwargs):
     configureDBConnection(port, **kwargs)

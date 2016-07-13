@@ -420,7 +420,11 @@ def render(ID, footer=None, kwargs=None, raw=False):
     the keyword 'raw' is used in knowledge.show and knowl_inc to
     include *just* the string and not the response object.
     """
-    k = Knowl(ID)
+    try:
+        k = Knowl(ID)
+    except:
+        logger.critical("Failed to render knowl %s"%ID)
+        return make_response("Sorry, the knowledge database is currently unavailable.")
 
     # logger.debug("kwargs: %s", request.args)
     kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))

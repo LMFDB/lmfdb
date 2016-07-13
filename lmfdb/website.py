@@ -53,8 +53,8 @@ import raw
 from modular_forms.maass_forms.picard import mwfp
 
 import sys
-#import base
-from base import app, render_template, request, set_logfocus, _init
+from base import app, set_logfocus, _init
+from flask import render_template, request
 
 DEFAULT_DB_PORT = 37010
 
