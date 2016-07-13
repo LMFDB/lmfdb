@@ -8,7 +8,7 @@ logger = lmfdb.utils.make_logger(FirstZeros)
 
 import sqlite3
 data_location = os.path.expanduser("~/data/zeros/")
-print data_location
+#print data_location
 
 
 @FirstZeros.route("/")
@@ -93,7 +93,7 @@ def list_zeros(start=None,
     else:
         query = 'SELECT * FROM zeros {} ORDER BY zero DESC LIMIT {}'.format(where_clause, limit)
 
-    print query
+    #print query
     c = sqlite3.connect(data_location + 'first_zeros.db').cursor()
     c.execute(query)
 
