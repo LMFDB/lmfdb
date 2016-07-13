@@ -12,6 +12,7 @@ def body_class():
     return {'body_class': 'hiwf'}
 
 import half_integral_form
+assert half_integral_form
 
 app.register_blueprint(hiwf_page, url_prefix="/ModularForm/GL2/Q/holomorphic/half")
 

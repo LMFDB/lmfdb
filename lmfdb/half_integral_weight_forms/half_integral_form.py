@@ -3,25 +3,15 @@
 import re
 import pymongo
 
-import lmfdb.base
-from lmfdb.base import app, getDBConnection
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from lmfdb.half_integral_weight_forms import hiwf_page, hiwf_logger
+from lmfdb.base import getDBConnection
+from flask import render_template, url_for, request
+from lmfdb.half_integral_weight_forms import hiwf_page
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, web_latex_split_on_pm, comma
-#clean_input
-#parse_range2, 
-#from lmfdb.number_fields.number_field import parse_list
+from sage.all import QQ, PolynomialRing, PowerSeriesRing
 
-import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing
+from lmfdb.utils import to_dict
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
-#, parse_range
-
-#from lmfdb.number_fields.number_field import parse_list, parse_field_string
-
-from lmfdb.WebNumberField import *
+from lmfdb.WebNumberField import nf_display_knowl, parse_field_string
 
 
 @hiwf_page.route("/")
@@ -62,7 +52,7 @@ def half_integral_weight_form_search(**args):
     res = C.halfintegralmf.forms.find(query).sort([('level', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
     nres = res.count()
     count = 100
-	
+    
     if nres == 1:
         info['report'] = 'unique match'
     else:
@@ -79,7 +69,7 @@ def half_integral_weight_form_search(**args):
         v_clean['weight'] = v['weight']
         v_clean['ch_lab']= v['character'].replace('.','/')
         v_clean['char']= "\chi_{"+v['character'].split(".")[0]+"}("+v['character'].split(".")[1]+",\cdot)"
-	v_clean['dimension'] = v['dim']
+        v_clean['dimension'] = v['dim']
         res_clean.append(v_clean)
 
     info['forms'] = res_clean
@@ -94,7 +84,6 @@ def half_integral_weight_form_search(**args):
 def print_q_expansion(list):
      list=[str(c) for c in list]
      Qa=PolynomialRing(QQ,'a')
-     a = QQ['a'].gen()
      Qq=PowerSeriesRing(Qa,'q')
      return str(Qq([c for c in list]).add_bigoh(len(list)+1))
 
@@ -133,41 +122,41 @@ def render_hiwf_webpage(**args):
  
     dim = f['dim']
     dimtheta = f['dimtheta']
-    dimnew=dim-dimtheta	
+    dimnew=dim-dimtheta 
     info['dimension'] = dim
     info['dimtheta']= dimtheta
     info['dimnew'] = dimnew
     chi = f['character']
     info['ch_lab']= chi.replace('.','/')
-    chi1=chi.split(".")	
-    chi2="\chi_{"+chi1[0]+"}("+chi1[1]+",\cdot)"	
+    chi1=chi.split(".") 
+    chi2="\chi_{"+chi1[0]+"}("+chi1[1]+",\cdot)"    
     info['char']= chi2
     info['newpart']=f['newpart']
     new=[]
     for n in f['newpart']:
-	v={}	
+        v={}    
         v['dim'] = n['dim_image']
-	s=[]
-	for h in n['half_forms']:
-		s.append(my_latex_from_qexp(print_q_expansion(h)))		
+        s=[]
+        for h in n['half_forms']:
+            s.append(my_latex_from_qexp(print_q_expansion(h)))      
         v['hiwf'] = s
         v['mf'] = n['mf_label']
-	v['nf'] = n['nf_label']
-	v['field_knowl'] = nf_display_knowl(n['nf_label'], getDBConnection(), n['nf_label'])
-	new.append(v)
+        v['nf'] = n['nf_label']
+        v['field_knowl'] = nf_display_knowl(n['nf_label'], getDBConnection(), n['nf_label'])
+        new.append(v)
     info['new']= new
     if dimtheta !=0:
-	theta=[]
-	for m in f['thetas']:
-		for n in m:
-			n_lab= n.replace('.','/')
-			n_l=n.split(".")	
-		    	n_lat="\chi_{"+n_l[0]+"}("+n_l[1]+",\cdot)"	
-			v=[n_lab, n_lat]
-			theta.append(v)
-	info['theta']= theta
+        theta=[]
+        for m in f['thetas']:
+            for n in m:
+                n_lab= n.replace('.','/')
+                n_l=n.split(".")
+                n_lat="\chi_{"+n_l[0]+"}("+n_l[1]+",\cdot)" 
+                v=[n_lab, n_lat]
+                theta.append(v)
+        info['theta']= theta
     else:
-	info['theta']= f['thetas']
+        info['theta']= f['thetas']
     return render_template("half_integral_weight_form.html", info=info, credit=credit, title=t, bread=bread)
 
 
