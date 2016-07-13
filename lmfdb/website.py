@@ -10,47 +10,79 @@
 start this via $ sage -python website.py --port <portnumber>
 add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
+
+# Import top-level modules that makeup the site
+# Note that this necessarily includes everything, even clode in still in an alpha state
 import pages
+assert pages
 import api
+assert api
 import hilbert_modular_forms
+assert hilbert_modular_forms
 import half_integral_weight_forms
+assert half_integral_weight_forms
 import siegel_modular_forms
+assert siegel_modular_forms
 import modular_forms
+assert modular_forms
 import elliptic_curves
+assert elliptic_curves
 import ecnf
+assert ecnf
 import quadratic_twists
+assert quadratic_twists
 import plot_example
+assert plot_example
 import number_fields
+assert number_fields
 import lfunction_db
+assert lfunction_db
 import lfunctions
-# import maass_form_picard
-# import maass_waveforms
+assert lfunctions
 import genus2_curves
+assert genus2_curves
 import sato_tate_groups
+assert sato_tate_groups
 import users
+assert users
 import knowledge
-#import upload
+assert knowledge
 import characters
+assert characters
 import local_fields
+assert local_fields
 import galois_groups
-# import number_field_galois_groups
+assert galois_groups
 import artin_representations
+assert artin_representations
 import tensor_products
+assert tensor_products
 import zeros
+assert zeros
 import crystals
+assert crystals
 import permutations
+assert permutations
 import hypergm
+assert hypergm
 import motives
+assert motives
 import riemann
-import logging
+assert riemann
 import lattice
+assert lattice
 import higher_genus_w_automorphisms
+assert higher_genus_w_automorphisms
 import modlmf
+assert modlmf
 import rep_galois_modl
+assert rep_galois_modl
+
+# Currently uploading is not supported
+# import upload
 
 
-import raw
-from modular_forms.maass_forms.picard import mwfp
+import logging
 
 import sys
 from base import app, set_logfocus, _init
@@ -165,20 +197,9 @@ Usage: %s [OPTION]...
 """ % sys.argv[0]
 
 def get_configuration():
-    global logfocus
-    # FIXME
-    # I don't think that this global variable does anything at all,
-    # but let's keep track of it anyway.
 
-    # default options to pass to the app.run()
-    flask_options = {"port": 37777, "host": "127.0.0.1", "debug": False}
-    # Default option to pass to _init
-    threading_opt = False 
-    # the logfocus can be set to the string-name of a logger you want
-    # follow on the debug level and all others will be set to warning
-    logfocus = None
-    #FIXME logfile isn't used
-    logfile = "flasklog"
+    # default flask options
+    flask_options = {"port": 37777, "host": "127.0.0.1", "debug": False, "logfile": "flasklog" }
 
     # default options to pass to the MongoClient
     from pymongo import ReadPreference
@@ -231,14 +252,13 @@ def get_configuration():
                 flask_options["host"] = arg
             #FIXME logfile isn't used
             elif opt in ("-l", "--log"):
-                logfile = arg
+                flask_options["logfile"] = arg
             elif opt in ("--dbport"):
                 mongo_client_options["port"] = int(arg)
             elif opt == "--debug":
                 flask_options["debug"] = True
             elif opt == "--logfocus":
-                logfocus = arg
-                logging.getLogger(arg).setLevel(logging.DEBUG)
+                flask_options["logfocus"] = arg
             elif opt in ("-m", "--mongo-client"):
                 if os.path.exists(arg):
                     mongo_client_config_filename = arg
@@ -321,9 +341,11 @@ def main():
 if True:
     # this bit is so that we can import website.py to use
     # with gunicorn.
-    logfile = "flasklog"
-    file_handler = logging.FileHandler(logfile)
+    file_handler = logging.FileHandler(configuration['flask_options']['logfile'])
     file_handler.setLevel(logging.WARNING)
+    logfocus = configuration['flask_options'].get('logfocus')
+    if logfocus:
+        logging.getLogger(logfocus).setLevel(logging.DEBUG)
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
