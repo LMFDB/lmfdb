@@ -263,7 +263,6 @@ def render_field_webpage(args):
         return search_input_error(info, bread)
 
     info['wnf'] = nf
-    #from lmfdb.WebNumberField import nf_display_knowl
     data['degree'] = nf.degree()
     data['class_number'] = nf.class_number()
     t = nf.galois_t()
