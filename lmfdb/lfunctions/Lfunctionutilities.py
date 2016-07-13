@@ -5,7 +5,7 @@ from lmfdb.lfunctions import logger
 import math
 from sage.all import ZZ, QQ, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, log, exp, pi, prod, floor
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
-from lmfdb.number_fields import group_display_knowl
+from lmfdb.transitive_group import group_display_knowl
 from lmfdb.base import getDBConnection
 
 ###############################################################
