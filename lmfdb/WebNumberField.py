@@ -343,10 +343,21 @@ class WebNumberField:
         t = self.galois_t()
         return modules2string(n, t, ugm)
 
+    # Sage version of K -- should be avoided since it can be slow
+    # in extreme cases
     def K(self):
         if not self.haskey('K'):
             self._data['K'] = NumberField(self.poly(), self.gen_name)
         return self._data['K']
+
+    # pari version of K
+    def gpK(self):
+        if not self.haskey('gpK'):
+            Qx = PolynomialRing(QQ,'x')
+            basis = [Qx(el.replace('a','x')) for el in self.zk()]
+            k1 = gp( "nfinit([%s,%s])" % (str(self.poly()),str(basis)) )
+            self._data['gpK'] = k1
+        return self._data['gpK']
 
     def generator_name(self):
         #Add special case code for the generator if desired:
