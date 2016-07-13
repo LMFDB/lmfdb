@@ -327,7 +327,7 @@ def render_field_webpage(args):
         'integral_basis': zk,
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
-        'root_of_unity': web_latex(rootofunity), #web_latex(nf.K().primitive_root_of_unity()),
+        'root_of_unity': web_latex(rootofunity),
         'fund_units': nf.units(),
         'grh_label': grh_label
     })
