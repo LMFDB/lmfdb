@@ -351,10 +351,12 @@ def lfuncDShtml(L, fmt):
             ans += "1<sup></sup>" + "&nbsp;"
             ans += "</span>"
         else:
-            ans += '$' 
-            ans += L.texname
-            ans += " = "
-            ans += "1^{\mathstrut}" + "$"  + "&nbsp;"
+            ans += "<span class='term'>"
+            ans += '$'+L.texname+'$'
+            ans += "&thinsp;"
+            ans += "&nbsp;=&nbsp;"
+            ans += "1<sup></sup>" + "&nbsp;"
+            ans += "</span>"
         ans += "</td><td valign='top'>"
 
         if fmt == "arithmetic":
