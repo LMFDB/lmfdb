@@ -202,20 +202,22 @@ def usage():
     print """
 Usage: %s [OPTION]...
 
-  -p, --port=NUM      bind to port NUM (default 37777)
-  -h, --host=HOST     bind to host HOST (default "127.0.0.1")
-  -l, --log=FILE      log to FILE (default "flasklog")
-  -t, --threading     multithread the database authentications
-      --dbport=NUM    bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
-      --debug         enable debug mode
-      --logfocus=NAME enter name of logger to focus on
-      --help          show this help
+  -p, --port=NUM            bind to port NUM (default 37777)
+  -h, --host=HOST           bind to host HOST (default "127.0.0.1")
+  -l, --log=FILE            log to FILE (default "flasklog")
+  -t, --threading           multithread the database authentications
+      --dbport=NUM          bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
+      --debug               enable debug mode
+      --logfocus=NAME       enter name of logger to focus on
+      --help                show this help
+  -m,  --mongo-client=FILE   config file for connecting to MongoDB (default is "mongoclient.config")
 """ % sys.argv[0]
 
 def get_configuration():
     global logfocus
-        # I don't think that this global variable does anything at all,
-        # but let's keep track of it anyway.
+    # FIXME
+    # I don't think that this global variable does anything at all,
+    # but let's keep track of it anyway.
 
     # default options to pass to the app.run()
     flask_options = {"port": 37777, "host": "127.0.0.1", "debug": False}
@@ -229,67 +231,12 @@ def get_configuration():
 
     # default options to pass to the MongoClient
     from pymongo import ReadPreference
+
     mongo_client_options = {"port": DEFAULT_DB_PORT, "host": "localhost", "replicaset": None, "read_preference": ReadPreference.NEAREST};
     read_preference_classes = {"PRIMARY": ReadPreference.PRIMARY, "PRIMARY_PREFERRED": ReadPreference.PRIMARY_PREFERRED , "SECONDARY": ReadPreference.SECONDARY, "SECONDARY_PREFERRED": ReadPreference.SECONDARY_PREFERRED, "NEAREST": ReadPreference.NEAREST };
-
-
-        
-    # deals with argv's
-    if not sys.argv[0].endswith('nosetests'):
-      try:
-        import getopt
-        try:
-            opts, args = getopt.getopt(sys.argv[1:],
-                                       "p:h:l:t",
-                                       ["port=", "host=", "dbport=", "log=", "logfocus=", "debug", "help", "threading", 
-                                        # undocumented, see below
-                                        "enable-reloader", "disable-reloader",
-                                        "enable-debugger", "disable-debugger",
-                                        "enable-profiler"
-                                        ])
-        except getopt.GetoptError, err:
-            sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
-            sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
-            #sys.exit(2)
-
-        for opt, arg in opts:
-            if opt == "--help":
-                usage()
-                sys.exit()
-            elif opt in ("-p", "--port"):
-                flask_options["port"] = int(arg)
-            elif opt in ("-h", "--host"):
-                flask_options["host"] = arg
-            #FIXME logfile isn't used
-            elif opt in ("-l", "--log"):
-                logfile = arg
-            elif opt in ("--dbport"):
-                mongo_client_options["port"] = int(arg)
-            elif opt == "--debug":
-                flask_options["debug"] = True
-            elif opt == "--logfocus":
-                logfocus = arg
-                logging.getLogger(arg).setLevel(logging.DEBUG)
-            # undocumented: the following allow changing the defaults for
-            # these options to werkzeug (they both default to False unless
-            # --debug is set, in which case they default to True but can
-            # be turned off)
-            elif opt == "--enable-reloader":
-                flask_options["use_reloader"] = True
-            elif opt == "--disable-reloader":
-                flask_options["use_reloader"] = False
-            elif opt == "--enable-debugger":
-                flask_options["use_debugger"] = True
-            elif opt == "--disable-debugger":
-                flask_options["use_debugger"] = False
-            elif opt =="--enable-profiler":
-                flask_options["PROFILE"] = True
-      except:
-          pass # something happens on the server -> TODO: FIXME
     
-    #deals with kwargs for mongoclient 
+    #setups the default mongo_client_config_filename
     import os
-    #perhaps the filename could be an argv
     mongo_client_config_filename = "mongoclient.config"
     """
     Example mongoclient.config equivalent to default
@@ -301,36 +248,110 @@ def get_configuration():
     """
     config_dir = '/'.join( os.path.dirname(os.path.abspath(__file__)).split('/')[0:-1])
     mongo_client_config_filename = '{0}/{1}'.format(config_dir,mongo_client_config_filename)
+    
+        
+    # deals with argv's
+    if not sys.argv[0].endswith('nosetests'):
+        try:
+            import getopt
+            try:
+                opts, args = getopt.getopt(
+                                            sys.argv[1:],
+                                            "p:h:l:t:m",
+                                           [
+                                               "port=",
+                                               "host=", 
+                                               "dbport=", 
+                                               "log=", 
+                                               "logfocus=", 
+                                               "debug",
+                                               "help", 
+                                               "threading", 
+                                               "mongo-client=",
+                                                # undocumented, see below
+                                                "enable-reloader", "disable-reloader",
+                                                "enable-debugger", "disable-debugger",
+                                                "enable-profiler"
+                                            ]
+                                           )
+            except getopt.GetoptError, err:
+                sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
+                sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
+                sys.exit(2)
+
+            for opt, arg in opts:
+                if opt == "--help":
+                    usage()
+                    sys.exit()
+                elif opt in ("-p", "--port"):
+                    flask_options["port"] = int(arg)
+                elif opt in ("-h", "--host"):
+                    flask_options["host"] = arg
+                #FIXME logfile isn't used
+                elif opt in ("-l", "--log"):
+                    logfile = arg
+                elif opt in ("--dbport"):
+                    mongo_client_options["port"] = int(arg)
+                elif opt == "--debug":
+                    flask_options["debug"] = True
+                elif opt == "--logfocus":
+                    logfocus = arg
+                    logging.getLogger(arg).setLevel(logging.DEBUG)
+                elif opt in ("-m", "--mongo-client"):
+                    mongo_client_config_filename = arg
+
+                # undocumented: the following allow changing the defaults for
+                # these options to werkzeug (they both default to False unless
+                # --debug is set, in which case they default to True but can
+                # be turned off)
+                elif opt == "--enable-reloader":
+                    flask_options["use_reloader"] = True
+                elif opt == "--disable-reloader":
+                    flask_options["use_reloader"] = False
+                elif opt == "--enable-debugger":
+                    flask_options["use_debugger"] = True
+                elif opt == "--disable-debugger":
+                    flask_options["use_debugger"] = False
+                elif opt =="--enable-profiler":
+                    flask_options["PROFILE"] = True
+        except:
+            sys.stderr.write("Unexpected error:", sys.exc_info()[0])
+            sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
+            sys.exit(1)
+    
+
+    #reads the kwargs from  mongo_client_config_filename  
     if os.path.exists(mongo_client_config_filename):
         from ConfigParser import ConfigParser;
         parser = ConfigParser()
         parser.read(mongo_client_config_filename);
         for key, value in parser.items("db"):
-            if key in mongo_client_options.keys():
-                if key == "port":
-                    mongo_client_options["port"] = int(value);
-                elif key == "read_preference":
-                    if value in read_preference_classes:
-                        mongo_client_options["read_preference"] = read_preference_classes[value];
-                    else:
-                        try:
-                            mongo_client_options["read_preference"] = int(value);
-                        except ValueError:
-                            #it wasn't a number...
-                            pass;
-                elif key == "replicaset":
-                    #if the string is empty
-                    if not value:
-                        #enforcing None to be the default if
-                        mongo_client_options["replicaset"] = None
-                    else: 
-                        mongo_client_options["replicaset"] = value
+            if key == "read_preference":
+                if value in read_preference_classes:
+                    mongo_client_options["read_preference"] = read_preference_classes[value];
                 else:
-                    mongo_client_options[key] = value        
-
-
-
-
+                    try:
+                        mongo_client_options["read_preference"] = int(value);
+                    except ValueError:
+                        #it wasn't a number...
+                        pass;
+            elif key == "replicaset":
+                #if the string is empty
+                if not value:
+                    #enforcing None to be the default if
+                    mongo_client_options["replicaset"] = None
+                else: 
+                    mongo_client_options["replicaset"] = value
+            else:
+                #deals with integer valued keyword arguments
+                if value == "":
+                    value = None
+                else:
+                    try: 
+                        value = int(value);
+                    except ValueError:
+                        pass;
+                mongo_client_options[key] = value;        
     return { 'flask_options' : flask_options, 'mongo_client_options' : mongo_client_options}
 
 configuration = None
