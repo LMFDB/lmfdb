@@ -79,7 +79,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lgl3maass(self):
         L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/')
-        assert '0.07427197998156' in L.data
+        assert '0.0742' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/')
         assert '0.9615558824' in L.data
 
@@ -87,7 +87,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/ModularForm/GL4/Q/Maass/GL4Maass_1_17.6101_7.81101_-6.0675/')
         assert 'Graph' in L.data
         L = self.tc.get('/L/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/')
-        assert '0.55659019311' in L.data
+        assert '0.556' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/')        
         assert '16.18901597' in L.data
 
