@@ -88,7 +88,7 @@ import os
 import sys
 import getopt
 from pymongo import ReadPreference
-from base import app, set_logfocus, _init
+from base import app, set_logfocus, get_logfocus, _init
 from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
 
 DEFAULT_DB_PORT = 37010
@@ -103,7 +103,7 @@ def not_found_500(error):
 
 @app.errorhandler(503)
 def not_found_503(error):
-    return render_template("503.html"), 500
+    return render_template("503.html"), 503
 
 #@app.route("/") is now handled in pages.py
 
@@ -327,6 +327,7 @@ if True:
     file_handler.setLevel(logging.WARNING)
     if 'logfocus' in configuration['logging_options']:
         set_logfocus(configuration['logging_options']['logfocus'])
+        logging.getLogger(get_logfocus()).setLevel(logging.DEBUG)
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
