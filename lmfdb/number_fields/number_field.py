@@ -17,7 +17,7 @@ import re
 assert nf_logger
 
 #import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
 
 from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, group_knowl_guts, group_cclasses_knowl_guts, group_character_table_knowl_guts, aliastable
 
@@ -317,7 +317,10 @@ def render_field_webpage(args):
         pretty_label = "%s: %s" % (label, pretty_label)
 
     info.update(data)
-    rootofunity = Ra(str(nf.gpK().nfrootsof1()[2]).replace('x','a'))
+    gpK = nf.gpK()
+    rootof1coeff = gpK.nfrootsof1()[2]
+    rootofunity = Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))
+
     info.update({
         'label': pretty_label,
         'label_raw': label,
