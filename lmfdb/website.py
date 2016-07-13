@@ -238,14 +238,6 @@ def get_configuration():
     #setups the default mongo_client_config_filename
     import os
     mongo_client_config_filename = "mongoclient.config"
-    """
-    Example mongoclient.config equivalent to default
-    [db]
-    port = 37010
-    host = localhost
-    replicaset =
-    read_preference = NEAREST
-    """
     config_dir = '/'.join( os.path.dirname(os.path.abspath(__file__)).split('/')[0:-1])
     mongo_client_config_filename = '{0}/{1}'.format(config_dir,mongo_client_config_filename)
     
