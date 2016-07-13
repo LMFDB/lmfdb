@@ -605,18 +605,24 @@ class NumberFieldGaloisGroup(object):
 	PP = PolynomialRing(QQ, 'x')
     	return PP(self.polynomial())._latex_()
 
+    # WebNumberField of the object
+    def wnf(self):
+        return WebNumberField.from_polredabs(self.polredabs())
+
     def polredabs(self):
-        if "polredabs" in self._data.keys():
-            return self._data["polredabs"]
-        else:
-            pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
-            # Need to map because the coefficients are given as unicode, which does not convert to QQ
-            pol *= pol.denominator()
-            R = pol.parent()
-            from sage.all import pari
-            pol = R(pari(pol).polredabs())
-            self._data["polredabs"] = pol
-            return pol
+        # polynomials are all polredabs'ed now
+        return PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
+        #if "polredabs" in self._data.keys():
+        #    return self._data["polredabs"]
+        #else:
+        #    pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
+        #    # Need to map because the coefficients are given as unicode, which does not convert to QQ
+        #    pol *= pol.denominator()
+        #    R = pol.parent()
+        #    from sage.all import pari
+        #    pol = R(pari(pol).polredabs())
+        #    self._data["polredabs"] = pol
+        #    return pol
 
     def polredabslatex(self):
         return self.polredabs()._latex_()
@@ -631,7 +637,7 @@ class NumberFieldGaloisGroup(object):
             #from number_fields.number_field import poly_to_field_label
             #pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
             #label = poly_to_field_label(pol)
-	    label = WebNumberField.from_coeffs(self._data["Polynomial"]).get_label()
+            label = WebNumberField.from_coeffs(self._data["Polynomial"]).get_label()
             if label:
                 self._data["label"] = label
             return label
@@ -655,7 +661,6 @@ class NumberFieldGaloisGroup(object):
         """
         More-or-less standardized name of the abstract group
         """
-        from WebNumberField import WebNumberField
         import re
         wnf = WebNumberField.from_polredabs(self.polredabs())
         if not wnf.is_null():
@@ -766,7 +771,7 @@ class NumberFieldGaloisGroup(object):
             return self._residue_field_degrees(p)
         except AttributeError:
             from number_fields.number_field import residue_field_degrees_function
-            fn_with_pari_output = residue_field_degrees_function(self.sage_object())
+            fn_with_pari_output = residue_field_degrees_function(self.wnf())
             self._residue_field_degrees = lambda p: map(Integer, fn_with_pari_output(p))
             # This function is better, becuase its output has entries in Integer
             return self._residue_field_degrees(p)
