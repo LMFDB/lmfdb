@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys
-import time
-import re
 import json
-import sage.all
-#from sage.all import *
+import os
+import gzip
+from sage.all import QQ
 
 from pymongo.connection import Connection
 hgm = Connection(port=37010).hgm.motives
@@ -17,7 +16,7 @@ def fix_t(t):
 
 count = 0
 
-def do_import(F)
+def do_import(F):
     #print "%d of %d: " % (count, tot)
     degree, weight, A, B, tnd, hodge, sign, sig, locinfo, req, a2, b2, a3, b3, a5, b5, a7, b7, ae2, be2, ae3, be3, ae5, be5, ae7, be7, coeffs, cond, centralval = F
     tnd = fix_t(tnd)
