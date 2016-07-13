@@ -21,9 +21,10 @@ AUTHORS:
  - Stephan Ehlen
 
 """
-from flask import render_template, url_for, request, redirect, make_response, send_file, send_from_directory,flash
-import os
-from lmfdb.base import app, db, getDBConnection
+from flask import url_for, request, redirect, make_response, send_from_directory,flash
+import os, tempfile
+import sage
+from lmfdb.base import getDBConnection
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf

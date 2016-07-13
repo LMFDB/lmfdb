@@ -53,17 +53,22 @@ import raw
 from modular_forms.maass_forms.picard import mwfp
 
 import sys
-#import base
-from base import app, render_template, request, DEFAULT_DB_PORT, set_logfocus, _init
+from base import app, set_logfocus, _init
+from flask import render_template, request
+
+DEFAULT_DB_PORT = 37010
 
 @app.errorhandler(404)
 def not_found_404(error):
     return render_template("404.html"), 404
 
-
 @app.errorhandler(500)
 def not_found_500(error):
     return render_template("500.html"), 500
+
+@app.errorhandler(503)
+def not_found_503(error):
+    return render_template("503.html"), 500
 
 #@app.route("/") is now handled in pages.py
 

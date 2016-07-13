@@ -27,8 +27,8 @@ def alive():
         conn = getDBConnection()
         assert conn.userdb.users.count()
     except:
-        abort(501)
-    return render_template("alive.html")
+        abort(503)
+    return "LMFDB!"
 
 @app.route("/acknowledgment")
 def acknowledgment():
