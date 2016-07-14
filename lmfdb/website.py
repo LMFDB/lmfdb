@@ -93,6 +93,16 @@ from flask import g, render_template, request, make_response, redirect, url_for,
 
 DEFAULT_DB_PORT = 37010
 
+@app.before_request
+def redirect_nonwww():
+    """Redirect lmfdb.org requests to www.lmfdb.org"""
+    from urlparse import urlparse, urlunparse
+    urlparts = urlparse(request.url)
+    if urlparts.netloc == 'lmfdb.org':
+        urlparts._replace(netloc='www.lmfdb.org')
+        from flask import redirect
+        return redirect(urlunparse(urlparts), code=301)
+
 @app.errorhandler(404)
 def not_found_404(error):
     return render_template("404.html"), 404
