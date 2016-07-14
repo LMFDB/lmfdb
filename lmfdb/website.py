@@ -31,8 +31,6 @@ import ecnf
 assert ecnf
 import quadratic_twists
 assert quadratic_twists
-import plot_example
-assert plot_example
 import number_fields
 assert number_fields
 import lfunction_db
@@ -161,11 +159,6 @@ def menutoggle(show):
     g.show_menu = show != "False"
     url = request.referrer or url_for('index')
     return redirect(url)
-
-# FIXME: Is there a reason for this to exist?
-@app.route('/example_plot')
-def render_example_plot():
-    return plot_example.render_plot(request.args)
 
 @app.route("/not_yet_implemented")
 def not_yet_implemented():
