@@ -31,8 +31,6 @@ import ecnf
 assert ecnf
 import quadratic_twists
 assert quadratic_twists
-import plot_example
-assert plot_example
 import number_fields
 assert number_fields
 import lfunction_db
