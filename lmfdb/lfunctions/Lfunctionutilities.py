@@ -3,7 +3,7 @@
 import re
 from lmfdb.lfunctions import logger
 import math
-from sage.all import ZZ, QQ, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, log, exp, pi, prod, floor
+from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, log, exp, pi, prod, floor
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.base import getDBConnection
@@ -18,7 +18,6 @@ def p2sage(s):
     terms of 'i' or 'I'), polynomials in 'a' with integer
     coefficients, or lists of the above.
     """
-    from sage.all import ZZ, RR, CC
     z = s
     if type(z) in [list, tuple]:
         return [p2sage(t) for t in z]
@@ -35,7 +34,7 @@ def p2sage(s):
                 except (ValueError, TypeError, NameError, SyntaxError):
                     pass
         if z!='??':
-            print("Called p2sage on {}".format(z))
+            logger.error('Error converting "{}" in p2sage'.format(z))
         return z
 
 def string2number(s):
