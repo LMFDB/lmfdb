@@ -13,22 +13,29 @@ from lmfdb.base import getDBConnection
 ###############################################################
 
 def p2sage(s):
-    """ THIS FUNCTION IS DEPRECATED AND SHOULD NOT BE USED"""
-    from sage.all import sage_eval
-    # I really don't like the use of sage_eval here. It may be ok as long
-    # as we are only calling this function on trusted input from the database,
-    # but someone is going to forget that someday... --JWB
-    # This function should be removed and all calls to it replaced with something appropriate (e.g. PolynomialRing(QQ)(s) or something similar) -- AWS
-
-    x = PolynomialRing(RationalField(),"x").gen()
-    a = PolynomialRing(RationalField(),"a").gen()
-    try:
-        z = sage_eval(str(s), locals={'x' : x, 'a' : a})
-    except:
-        z = s
+    """Convert s to something sensible in Sage.  Can handle objects
+    (including strings) representing integers, reals, complexes (in
+    terms of 'i' or 'I'), polynomials in 'a' with integer
+    coefficients, or lists of the above.
+    """
+    from sage.all import ZZ, RR, CC
+    z = s
     if type(z) in [list, tuple]:
         return [p2sage(t) for t in z]
     else:
+        Qa = PolynomialRing(RationalField(),"a"); a=Qa.gen()
+        for f in [ZZ, RR, CC, Qa]:
+            try:
+                return f(z)
+            # SyntaxError is raised by CC('??')
+            # NameError is raised by CC('a')
+            except (ValueError, TypeError, NameError, SyntaxError):
+                try:
+                    return f(str(z))
+                except (ValueError, TypeError, NameError, SyntaxError):
+                    pass
+        if z!='??':
+            print("Called p2sage on {}".format(z))
         return z
 
 def string2number(s):
