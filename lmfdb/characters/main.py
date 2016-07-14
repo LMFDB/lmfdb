@@ -286,7 +286,7 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
         info['bread'] = [('Characters',url_for(".render_characterNavigation")),
                          ('Hecke',  url_for(".render_Heckewebpage")),
                          ('Number Field %s'%number_field,url_for(".render_Heckewebpage", number_field=number_field)),
-                         ('%s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=X.modulus)),
+                         ('%s'%X.modulus, url_for(".render_Heckewebpage", number_field=number_field, modulus=X.modlabel)),
                          ('%s'%X.number2label(X.number), '')]
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
