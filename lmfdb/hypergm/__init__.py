@@ -12,5 +12,6 @@ def body_class():
     return {'body_class': 'hypergm'}
 
 import main
+assert main # silence pyflakes
 
 app.register_blueprint(hypergm_page, url_prefix="/Motive/Hypergeometric/Q")

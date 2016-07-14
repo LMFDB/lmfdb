@@ -1,4 +1,3 @@
-from lmfdb.base import getDBConnection
 from pymongo.collection import Collection
 from lmfdb.databases import databases_logger
 

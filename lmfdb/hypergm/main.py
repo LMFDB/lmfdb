@@ -5,13 +5,12 @@
 import re
 import pymongo
 ASC = pymongo.ASCENDING
-import flask
 from lmfdb import base
 from flask import render_template, request, url_for
 from lmfdb.utils import to_dict, image_callback
 from lmfdb.search_parsing import parse_range2, clean_input, split_list
 from sage.all import ZZ, QQ, latex, gp
-from lmfdb.hypergm import hypergm_page, hgm_logger
+from lmfdb.hypergm import hypergm_page
 
 HGM_credit = 'D. Roberts'
 

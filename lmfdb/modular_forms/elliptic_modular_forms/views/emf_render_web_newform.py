@@ -28,7 +28,9 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 from lmfdb.utils import to_dict,ajax_more
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec, EMF_TOP, default_max_height
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty, nf_display_knowl
+from lmfdb.number_fields.number_field import poly_to_field_label
+#from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty, nf_display_knowl
+from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label
 from lmfdb.base import getDBConnection
