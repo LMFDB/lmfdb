@@ -137,6 +137,8 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
     truncation = float(10 ** truncationexp)
     try:
+        if isinstance(coeff,str) or isinstance(coeff,unicode):
+            coeff = string2number(coeff)
         if type(coeff) == complex:
             rp = coeff.real
             ip = coeff.imag
@@ -351,10 +353,12 @@ def lfuncDShtml(L, fmt):
             ans += "1<sup></sup>" + "&nbsp;"
             ans += "</span>"
         else:
-            ans += '$' 
-            ans += L.texname
-            ans += " = "
-            ans += "1^{\mathstrut}" + "$"  + "&nbsp;"
+            ans += "<span class='term'>"
+            ans += '$'+L.texname+'$'
+            ans += "&thinsp;"
+            ans += "&nbsp;=&nbsp;"
+            ans += "1<sup></sup>" + "&nbsp;"
+            ans += "</span>"
         ans += "</td><td valign='top'>"
 
         if fmt == "arithmetic":
@@ -369,7 +373,6 @@ def lfuncDShtml(L, fmt):
             else:
                 tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1,
                     "serieshtml", "dirichlethtml", -6, 5)
-
             if tmp != "":
                 nonzeroterms += 1
             ans = ans + " <span class='term'>" + tmp + "</span> "  
