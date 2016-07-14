@@ -97,13 +97,15 @@ class LmfdbFormatter(logging.Formatter):
 
         # some colors for severity level
         if record.levelno >= logging.CRITICAL:
-            self._fmt = '\033[91m' + self._fmt
+            self._fmt = '\033[31m' + self._fmt
+        elif record.levelno >= logging.ERROR:
+            self._fmt = '\033[35m' + self._fmt
         elif record.levelno >= logging.WARNING:
-            self._fmt = '\033[93m' + self._fmt
+            self._fmt = '\033[33m' + self._fmt
         elif record.levelno <= logging.DEBUG:
-            self._fmt = '\033[94m' + self._fmt
+            self._fmt = '\033[34m' + self._fmt
         elif record.levelno <= logging.INFO:
-            self._fmt = '\033[92m' + self._fmt
+            self._fmt = '\033[32m' + self._fmt
 
         # bold, if module name matches
         if record.name == self._hl:
