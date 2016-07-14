@@ -169,7 +169,7 @@ def news():
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
-    lm = [('History of varieties', '/Variety/history')]
+    # lm = [('History of varieties', '/Variety/history')]
     return render_template('single.html', title=t, kid='varieties.about', bread=b) #, learnmore=lm)
 
 
@@ -192,7 +192,7 @@ def holomorphic_mf_history():
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
-    lm = [('History of fields', '/Field/history')]
+    # lm = [('History of fields', '/Field/history')]
     return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 @app.route("/Field/history")
@@ -207,7 +207,7 @@ def fields_history():
 def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
-    lm = [('History of representations', '/Representation/history')]
+    # lm = [('History of representations', '/Representation/history')]
     return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 
@@ -224,7 +224,7 @@ def representations_history():
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
-    lm = [('History of groups', '/Group/history')]
+    # lm = [('History of groups', '/Group/history')]
     return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 
