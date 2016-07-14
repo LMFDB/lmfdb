@@ -3,7 +3,8 @@ from flask import url_for
 import lmfdb.base
 from lmfdb.utils import make_logger, web_latex, encode_plot
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs
-from lmfdb.number_fields.number_field import field_pretty, nf_display_knowl
+#from lmfdb.number_fields.number_field import field_pretty, nf_display_knowl
+from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 
 import sage.all
 from sage.all import latex, matrix
