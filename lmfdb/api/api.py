@@ -4,13 +4,15 @@ import pymongo
 import urllib2
 ASC = pymongo.ASCENDING
 DESC = pymongo.DESCENDING
-import flask
 import yaml
+import json
+import flask
 import lmfdb.base as base
 from lmfdb.utils import flash_error
 from datetime import datetime
-from flask import render_template, request, url_for
+from flask import render_template, request, url_for, app, current_app
 from lmfdb.api import api_page, api_logger
+from bson import json_util
 from bson.objectid import ObjectId
 
 # caches the database information
@@ -25,6 +27,14 @@ def quote_string(value):
     elif isinstance(value,ObjectId):
         return "\"ObjectId('%s')\""%value
     return value
+
+def oids_to_strings(doc):
+    """ recursively replace all ObjectId values in dictionary doc with strings encoding the ObjectId values"""
+    for k,v in doc.items():
+        if isinstance(v,ObjectId):
+            doc[k] = "ObjectId('%s')" % v
+        elif isinstance(v,dict):
+            oids_to_strings(doc[k])
 
 def pretty_document(rec,sep=", ",id=True):
     # sort keys and remove _id for html display
@@ -215,12 +225,9 @@ def api_query(db, collection, id = None):
             flash_error("no document with id %s found in collection %s.%s.", id, db, collection)
             return flask.redirect(url_for(".api_query", db=db, collection=collection))
     
+    # fixup object ids for display and json/yaml encoding
     for document in data:
-        oid = document["_id"]
-        if type(oid) == ObjectId:
-            document["_id"] = "ObjectId('%s')" % oid
-        elif isinstance(oid, basestring):
-            document["_id"] = str(oid)
+        oids_to_strings(document)
 
     # preparing the datastructure
     start = offset
@@ -244,9 +251,9 @@ def api_query(db, collection, id = None):
         "next": next
     }
 
-    # display of the result (default html)
     if format.lower() == "json":
-        return flask.jsonify(**data)
+        #return flask.jsonify(**data) # can't handle binary data
+        return current_app.response_class(json.dumps(data, encoding='ISO-8859-1', indent=2, default=json_util.default), mimetype='application/json')
     elif format.lower() == "yaml":
         y = yaml.dump(data,
                       default_flow_style=False,
@@ -254,7 +261,7 @@ def api_query(db, collection, id = None):
                       allow_unicode=True)
         return flask.Response(y, mimetype='text/plain')
     else:
-        # sort displayed records by key (as json and yaml do)
+        # sort displayed records by key (as jsonify and yaml_dump do)
         data["pretty"] = pretty_document
         location = "%s/%s" % (db, collection)
         title = "API - " + location
