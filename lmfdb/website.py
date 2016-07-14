@@ -251,7 +251,7 @@ def get_configuration():
         try:
             opts, args = getopt.getopt(
                                         sys.argv[1:],
-                                        "p:h:l:tm",
+                                        "p:h:l:tm:",
                                        [
                                            "port=",
                                            "host=", 
