@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from base import getDBConnection, app
+from base import getDBConnection
 from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from databases.standard_types import PolynomialAsSequenceInt
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod
+from databases.standard_types import PolynomialAsSequenceInt, PolynomialAsSequenceTooLargeInt
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, ZZ
 from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
 from WebNumberField import WebNumberField
 from lmfdb.WebCharacter import WebSmallDirichletCharacter
@@ -95,7 +95,7 @@ class ArtinRepresentation(object):
                 label = "%sc%s"%(str(x[0]),str(x[1]))
             self._data = self.__class__.collection().find_and_convert_one({'Baselabel':str(base)})
             conjs = self._data["GaloisConjugates"]
-            conj = [x for x in conjs if x['GalOrbIndex'] == conjindex]
+            conj = [xx for xx in conjs if xx['GalOrbIndex'] == conjindex]
             self._data['label']=label
             self._data.update(conj[0])
 
@@ -559,7 +559,7 @@ class ConjugacyClass(object):
 
     def __str__(self):
         try:
-            return "A conjugacy class in the group %s, of order %s and with representative %s" % (G, self.order(), self.representative())
+            return "A conjugacy class in the group %s, of order %s and with representative %s" % (self._G, self.order(), self.representative())
         except:
             return "A conjugacy class"
 
@@ -598,7 +598,7 @@ class NumberFieldGaloisGroup(object):
 
     def polynomial(self):
         polstring = self._data["Polynomial"]
-        return PolynomialAsSequenceInt([int(a) for a in polstring.split(",")])
+        return PolynomialAsSequenceTooLargeInt([int(a) for a in polstring.split(",")])
 
     def polynomial_latex(self):
 	from sage.rings.all import PolynomialRing, QQ
