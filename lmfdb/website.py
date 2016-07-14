@@ -29,8 +29,6 @@ import elliptic_curves
 assert elliptic_curves
 import ecnf
 assert ecnf
-import quadratic_twists
-assert quadratic_twists
 import number_fields
 assert number_fields
 import lfunction_db
