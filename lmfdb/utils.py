@@ -103,7 +103,7 @@ class LmfdbFormatter(logging.Formatter):
         elif record.levelno >= logging.WARNING:
             self._fmt = '\033[33m' + self._fmt
         elif record.levelno <= logging.DEBUG:
-            self._fmt = '\033[34m' + self._fmt
+            self._fmt = '\033[32m' + self._fmt
         elif record.levelno <= logging.INFO:
             self._fmt = '\033[34m' + self._fmt
 
