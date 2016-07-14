@@ -245,15 +245,13 @@ def get_configuration():
     mongo_client_config_filename = "mongoclient.config"
     config_dir = '/'.join( os.path.dirname(os.path.abspath(__file__)).split('/')[0:-1])
     mongo_client_config_filename = '{0}/{1}'.format(config_dir,mongo_client_config_filename)
-    
-        
-    # deals with argv's
-    if not sys.argv[0].endswith('nosetests'):
+
+    if not 'sage' in sys.argv[0] and not sys.argv[0].endswith('nosetests'):
         import getopt
         try:
             opts, args = getopt.getopt(
                                         sys.argv[1:],
-                                        "p:h:l:t:m:",
+                                        "p:h:l:tm:",
                                        [
                                            "port=",
                                            "host=", 
