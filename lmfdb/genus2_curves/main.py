@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+
 import StringIO
 from ast import literal_eval
 import re
@@ -13,7 +14,6 @@ from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
 from lmfdb.sato_tate_groups.main import st_link_by_name
-
 
 credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight, and Dan Yasaki"
 
@@ -58,18 +58,18 @@ aut_grp_dict = {
         '[4,1]':'C_4',
         '[4,2]':'V_4',
         '[6,2]':'C_6',
-        '[8,3]':'D_8',
-        '[12,4]':'D_{12}'
+        '[8,3]':'D_4',
+        '[12,4]':'D_6'
         }
 
 geom_aut_grp_list = ['[2,1]', '[4,2]', '[8,3]', '[10,2]', '[12,4]', '[24,8]', '[48,29]']
 geom_aut_grp_dict = {
         '[2,1]':'C_2',
         '[4,2]':'V_4',
-        '[8,3]':'D_8',
+        '[8,3]':'D_4',
         '[10,2]':'C_{10}',
-        '[12,4]':'D_{12}',
-        '[24,8]':'2D_{12}',
+        '[12,4]':'D_6',
+        '[24,8]':'2D_6',
         '[48,29]':'\\tilde{S}_4'}
 
 ###############################################################################
