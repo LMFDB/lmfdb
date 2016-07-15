@@ -4,7 +4,6 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
-import flask
 from lmfdb import base
 from lmfdb.base import app
 from flask import render_template, request, url_for, redirect
@@ -23,7 +22,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_pretty, group_display_long, group_display_inertia, group_knowl_guts, galois_module_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, galois_module_knowl
+from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
 
 from lmfdb.WebNumberField import modules2string
 
