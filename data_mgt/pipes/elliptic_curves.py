@@ -1,4 +1,4 @@
-from pipes import iterator, C
+from pipes import C
 from operator import itemgetter
 
 

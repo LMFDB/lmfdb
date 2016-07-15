@@ -1,5 +1,4 @@
-from lmfdb.lfunctions.Lfunction import *
-from pipes import populator
+from lmfdb.lfunctions.Lfunction import Lfunction_EC_Q, ArtinLfunction, Lfunction_Dirichlet, HypergeometricMotiveLfunction
 
 def lf_data(L):
     first_zeroes = L.compute_quick_zeros(upper_bound = 20)
