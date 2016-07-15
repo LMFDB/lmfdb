@@ -249,9 +249,9 @@ def genus2_curve_search(info):
         flash_error (errmsg, jump)
         return redirect(url_for(".index"))
 
-    if 'download' in info and info['download'] == '1':
+    if 'download' in info and info['download'] == '1' and 'query' in info:
         return download_search(info)
-    
+
     info["st_group_list"] = st_group_list
     info["st_group_dict"] = st_group_dict
     info["real_geom_end_alg_list"] = real_geom_end_alg_list
@@ -439,6 +439,7 @@ class G2C_stats(object):
         stats["distributions"] = dists
         self._stats = stats
 
+download_languages = ['magma', 'sage', 'gp']
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
 download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =['}
 download_assignment_end = {'magma':'];','sage':']','gp':']'}
@@ -451,11 +452,16 @@ download_make_data = {
 download_make_data_comment = {'magma': 'To create a list of curves, type "curves:= make_data();"','sage':'To create a list of curves, type "curves = make_data()"', 'gp':''}
 
 def download_search(info):
-    lang = info["submit"]
+    lang = info.get('language','').strip()
+    if not lang in download_languages:
+        return "Please specify a language in %s"%download_languages
     filename = 'genus2_curves' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
-    # reissue saved query here
-    res = g2c_db_curves().find(literal_eval(info["query"]),{'_id':int(0),'eqn':int(1)})
+    # reissue query here
+    try:
+        res = g2c_db_curves().find(literal_eval(info.get('query','{}')),{'_id':int(0),'eqn':int(1)})
+    except Exception as err:
+        return "Unable to parse query: %s"%err
     c = download_comment_prefix[lang]
     s =  '\n'
     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, res.count())
