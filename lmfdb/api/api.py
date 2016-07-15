@@ -4,6 +4,7 @@ import pymongo
 import urllib2
 ASC = pymongo.ASCENDING
 DESC = pymongo.DESCENDING
+import re
 import yaml
 import json
 import flask
@@ -21,18 +22,25 @@ _databases = None
 def pluck(n, list):
     return [_[n] for _ in list]
 
+def oid_strip(s):
+    t = str(s).replace(' ','')
+    return t[10:-2] if t.startswith("ObjectId(") else t
+
+def oid_format(oid):
+    return "ObjectId('%s')"%oid
+
 def quote_string(value):
     if isinstance(value,unicode) or isinstance(value,str):
         return repr(value)
     elif isinstance(value,ObjectId):
-        return "\"ObjectId('%s')\""%value
+        return '"' + oid_format(value) + '"'
     return value
 
 def oids_to_strings(doc):
     """ recursively replace all ObjectId values in dictionary doc with strings encoding the ObjectId values"""
     for k,v in doc.items():
         if isinstance(v,ObjectId):
-            doc[k] = "ObjectId('%s')" % v
+            doc[k] = oid_format(v)
         elif isinstance(v,dict):
             oids_to_strings(doc[k])
 
@@ -42,26 +50,26 @@ def pretty_document(rec,sep=", ",id=True):
     return "{"+sep.join(["'%s': %s"%attr for attr in attrs])+"}"
 
 
-def censor(entries):
+def censored_db(db):
     """
-    hide some of the databases and collection from the public
+    hide some databases from the public
     """
-    dontstart = ["system.", "test", "upload", "admin", "contrib"]
-    censor = ["local", "userdb"]
-    for entry in entries:
-        if any(entry == x for x in censor) or \
-           any(entry.startswith(x) for x in dontstart):
-            continue
-        yield entry
+    return db in ["local", "userdb", "admin", "contrib", "upload","test"]
+
+def censored_collection(c):
+    """
+    hide some databases from the public
+    """
+    return c.startswith("system.") or c.endswith(".rand")
 
 def init_database_info():
     global _databases
     if _databases is None:
         C = base.getDBConnection()
         _databases = {}
-        for db in censor(C.database_names()):
-            colls = list(censor(C[db].collection_names()))
-            _databases[db] = sorted([(c, C[db][c].count()) for c in colls])
+        for db in C.database_names():
+            if not censored_db(db):
+                _databases[db] = sorted([(c, C[db][c].count()) for c in C[db].collection_names() if not censored_collection(c)])
 
 @api_page.route("/")
 def index():
@@ -127,13 +135,10 @@ def stats():
 def api_query_id(db, collection, id):
     return api_query(db, collection, id = id)
 
-
 @api_page.route("/<db>/<collection>")
+@api_page.route("/<db>/<collection>/")
 def api_query(db, collection, id = None):
-    init_database_info()
-
-    # check what is queried for
-    if db not in _databases or collection not in pluck(0, _databases[db]):
+    if censored_db(db) or censored_collection(collection):
         return flask.abort(404)
 
     # parsing the meta parameters _format and _offset
@@ -172,10 +177,9 @@ def api_query(db, collection, id = None):
     q = {}
 
     if id is not None:
-        if id.startswith('ObjectId('):
-            q["_id"] = ObjectId(id[10:-2])
-        else:
-            q["_id"] = id
+        # We assume that any long hexadecimal looking string is an object id
+        # In the LMFDB the only values of _id that are not ObjectId's are knowl ids, so this should be safe
+        q["_id"] = ObjectId(id) if len(id) > 8 and re.match('[0-9a-f]+$', id.strip()) else id
         single_object = True
     else:
         single_object = False
@@ -185,12 +189,14 @@ def api_query(db, collection, id = None):
             try:
                 if qkey.startswith("_"):
                     continue
-                if qval.startswith("s"):
+                elif qval.startswith("s"):
                     qval = qval[1:]
-                if qval.startswith("i"):
+                elif qval.startswith("i"):
                     qval = int(qval[1:])
                 elif qval.startswith("f"):
                     qval = float(qval[1:])
+                elif qval.startswith("o"):
+                    qval = ObjectId(qval[1:])
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
                     qval = qval[2:].split(DELIM)
                 elif qval.startswith("li"):
@@ -271,7 +277,7 @@ def api_query(db, collection, id = None):
                                title=title,
                                single_object=single_object,
                                query_unquote = query_unquote,
-                               url_args = url_args,
+                               url_args = url_args, oid_strip = oid_strip,
                                bread=bc,
                                **data)
 
