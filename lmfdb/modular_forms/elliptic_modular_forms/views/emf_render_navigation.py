@@ -123,4 +123,5 @@ def render_elliptic_modular_form_navigation_wp(**args):
             info['table'][N][k]['in_db'] = indb
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
-    return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)
+    lm = [('History of holomorphic modular forms', url_for(".holomorphic_mf_history"))]
+    return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread, learnmore=lm)

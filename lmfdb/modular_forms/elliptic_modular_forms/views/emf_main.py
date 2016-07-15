@@ -21,7 +21,7 @@ AUTHORS:
  - Stephan Ehlen
 
 """
-from flask import url_for, request, redirect, make_response, send_from_directory,flash
+from flask import url_for, request, redirect, make_response, send_from_directory,flash, render_template
 import os, tempfile
 import sage
 from lmfdb.base import getDBConnection
@@ -77,6 +77,12 @@ def browse_web_modform_spaces_in_ranges(**kwds):
     group=request.args.getlist('group')
     return render_elliptic_modular_form_navigation_wp(level=level,weight=weight,group=group)
 
+@emf.route("/history")
+def holomorphic_mf_history():
+    b = [("Modular forms", url_for('mf.modular_form_main_page'))]
+    b.append(('Holomorphic', url_for(".render_elliptic_modular_forms")))
+    b.append(('History', url_for(".holomorphic_mf_history")))
+    return render_template("single.html", title="A brief history of holomorphic GL(2) modular forms", kid='mf.gl2.history', bread=b)
 
 @emf.route("/", methods=met)
 @emf.route("/<level>/", methods=met)
