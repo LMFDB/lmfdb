@@ -103,7 +103,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if WNF.dimension==0 and not info.has_key('error'):
         info['error'] = "This space is empty!"
     info['title'] = 'Newform ' + WNF.hecke_orbit_label
-    info['learnmore'] = [('History of Modular forms', url_for('holomorphic_mf_history'))]    
+    info['learnmore'] = [('History of modular forms', url_for('.holomorphic_mf_history'))]    
     if 'error' in info:
         return info
     ## Until we have figured out how to do the embeddings correctly we don't display the Satake

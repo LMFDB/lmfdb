@@ -25,9 +25,10 @@ from flask import url_for, request, redirect, make_response, send_from_directory
 import os, tempfile
 import sage
 from lmfdb.base import getDBConnection
+from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.utils import to_dict, random_object_from_collection
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, EMF_TOP, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
     render_fd_plot,
@@ -79,8 +80,8 @@ def browse_web_modform_spaces_in_ranges(**kwds):
 
 @emf.route("/history")
 def holomorphic_mf_history():
-    b = [("Modular forms", url_for('mf.modular_form_main_page'))]
-    b.append(('Holomorphic', url_for(".render_elliptic_modular_forms")))
+    b = [(MF_TOP, url_for('mf.modular_form_main_page'))]
+    b.append((EMF_TOP, url_for(".render_elliptic_modular_forms")))
     b.append(('History', url_for(".holomorphic_mf_history")))
     return render_template("single.html", title="A brief history of holomorphic GL(2) modular forms", kid='mf.gl2.history', bread=b)
 

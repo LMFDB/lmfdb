@@ -8,7 +8,7 @@ from lmfdb.search_parsing import parse_range
 from lmfdb.base import getDBConnection
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP,emf_version
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP, emf_version
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple
 
 def render_elliptic_modular_form_navigation_wp(**args):
@@ -123,5 +123,5 @@ def render_elliptic_modular_form_navigation_wp(**args):
             info['table'][N][k]['in_db'] = indb
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
-    lm = [('History of holomorphic modular forms', url_for(".holomorphic_mf_history"))]
+    lm = [('History of modular forms', url_for(".holomorphic_mf_history"))]
     return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread, learnmore=lm)
