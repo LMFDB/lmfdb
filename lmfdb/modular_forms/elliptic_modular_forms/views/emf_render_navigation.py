@@ -1,15 +1,14 @@
+# -*- coding: utf-8 -*-
 r"""
 Routines for rendering the navigation.
 """
-import json
 from flask import url_for,render_template,request,redirect
 from lmfdb.utils import to_dict
-from lmfdb.search_parsing import parse_range
 from lmfdb.base import getDBConnection
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP, emf_version
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, EMF_TOP
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple, render_fd_plot
 
 def render_elliptic_modular_form_navigation_wp(**args):
     r"""
@@ -27,9 +26,9 @@ def render_elliptic_modular_form_navigation_wp(**args):
     emf_logger.debug("render_c_m_f_n_wp info={0}".format(info))
     level = my_get(info, 'level', None, int)
     weight = my_get(info, 'weight', None, int)
-    character = my_get(info, 'character', 1, int)
-    label = info.get('label', '')
-    if('plot' in info and level is not None):
+    # character = my_get(info, 'character', 1, int) # not used
+    # label = info.get('label', '') # not used
+    if('plot' in info and isinstance(level,int) and level > 0):
         return render_fd_plot(level, info)
     is_set = dict()
     is_set['weight'] = False
@@ -90,8 +89,6 @@ def render_elliptic_modular_form_navigation_wp(**args):
         s['cchi']=int(1)
     else:
         s['gamma1_label']={"$exists":True}
-    # g = db_dim.find(s).sort([('level',int(1)),('weight',int(1))]) never used
-    table = {}
     info['table'] = {}
     level_range = range(limits_level[0],limits_level[1]+1)
     weight_range = range(limits_weight[0],limits_weight[1]+1)

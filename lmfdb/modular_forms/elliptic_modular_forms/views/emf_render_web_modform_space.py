@@ -19,16 +19,14 @@ Routines for rendering webpages for holomorphic modular forms on GL(2,Q)
 AUTHOR: Fredrik Strömberg  <fredrik314@gmail.com>
 
 """
-from flask import render_template, url_for, send_file,flash
+from flask import render_template, url_for, send_file,flash, redirect
 from lmfdb.utils import to_dict
 from lmfdb.base import getDBConnection
 from sage.all import uniq
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached, WebModFormSpace
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP, default_max_height
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
-###
-###
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, EMF_TOP, default_max_height
+
 
 def render_web_modform_space(level=None, weight=None, character=None, label=None, **kwds):
     r"""
@@ -43,7 +41,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     info['character'] = character
     try:
         info = set_info_for_modular_form_space(**info)
-    except RuntimeError as e:
+    except RuntimeError:
         errst = "The space {0}.{1}.{2} is not in the database!".format(level,weight,character)
         flash(errst,'error')
         info = {'error': ''}
@@ -104,10 +102,11 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
             if not rep is None and not rep['cchi'] == character: # don't link back to myself!
                 info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=rep['cchi'])
                 info['wmfs_rep_number'] =  rep['cchi']
-        if 'download' in info and 'tempfile' in info:
-            save(WNF,info['tempfile'])
-            info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
-            return info
+        # FIXME WNF is never defined above
+        # if 'download' in info and 'tempfile' in info:
+        #     save(WNF,info['tempfile'])
+        #     info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
+        #     return info
     except ValueError as e:
         emf_logger.debug(e)
         emf_logger.debug(e.message)

@@ -22,14 +22,12 @@ AUTHORS:
 
 """
 from flask import render_template, url_for,  send_file
-from sage.all import version,uniq,ZZ,Cusp,Infinity,latex,QQ
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached, WebNewForm
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
-from lmfdb.utils import to_dict,ajax_more
+from sage.all import uniq,ZZ,latex,QQ
+from lmfdb.utils import to_dict
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec, EMF_TOP, default_max_height
-from lmfdb.number_fields.number_field import poly_to_field_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, default_prec, default_display_bprec, EMF_TOP, default_max_height
 #from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty, nf_display_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
@@ -41,10 +39,9 @@ def render_web_newform(level, weight, character, label, **kwds):
     Renders the webpage for one elliptic modular form.
 
     """
-    citation = ['Sage:' + version()]
+    # citation = ['Sage:' + version()] # never used
     info = set_info_for_web_newform(level, weight, character, label, **kwds)
     emf_logger.debug("info={0}".format(info.keys()))
-    err = info.get('error', '')
     ## Check if we want to download either file of the function or Fourier coefficients
     if 'download' in info and 'error' not in info:
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
@@ -298,8 +295,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
                     s+="E_4^{{ {0} }}E_6^{{ {1} }}".format(a,b)
                 info['explicit_formulas'] += s
             info['explicit_formulas'] += " \)"            
-    cur_url = '?&level=' + str(level) + '&weight=' + str(weight) + '&character=' + str(character) + \
-        '&label=' + str(label)
+    # cur_url = '?&level=' + str(level) + '&weight=' + str(weight) + '&character=' + str(character) + '&label=' + str(label) # never used
     if len(WNF.parent.hecke_orbits) > 1:
         for label_other in WNF.parent.hecke_orbits.keys():
             if(label_other != label):
@@ -340,5 +336,3 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     info['friends'] = friends
     info['max_cn'] = WNF.max_available_prec()
     return info
-
-import flask
