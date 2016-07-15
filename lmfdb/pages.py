@@ -182,7 +182,7 @@ def varieties_history():
 
 @app.route("/ModularForm/GL2/Q/holomorphic/history")
 def holomorphic_mf_history():
-    b = [("Modular forms", url_for('modular_form_toplevel'))]
+    b = [("Modular forms", url_for('mf.modular_form_main_page'))]
     b.append(('Holomorphic', url_for("emf.render_elliptic_modular_forms")))
     b.append(('History', url_for("holomorphic_mf_history")))
     return render_template(_single_knowl, title="A brief history of holomorphic GL(2) modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
