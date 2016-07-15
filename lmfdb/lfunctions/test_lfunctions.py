@@ -33,6 +33,12 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('L/Character/Dirichlet/1000000000000000000000/3/')
         assert 'too large' in L.data
 
+    def test_LcalcDirichlet(self):
+        L = self.tc.get('L/Character/Dirichlet/19/9/?download=lcalcfile')
+        assert 'lcalc file' in L.data
+        L = self.tc.get('L/Character/Dirichlet/6400/3/?download=lcalcfile')
+        assert 'lcalc file' in L.data
+
     def test_Lec(self):
         L = self.tc.get('/L/EllipticCurve/Q/11.a/')
         assert '0.2538418609' in L.data and 'Isogeny class 11.a' in L.data and 'Modular form 11.2a' in L.data and '/SatoTateGroup/1.2.' in L.data
