@@ -1,5 +1,4 @@
-from pipes import iterator, C
-from operator import itemgetter
+from pipes import C
 
 def artin_label_iterator(min_conductor = None, max_conductor = None):
     collection = C["limbo"]["artrep20130914"]
