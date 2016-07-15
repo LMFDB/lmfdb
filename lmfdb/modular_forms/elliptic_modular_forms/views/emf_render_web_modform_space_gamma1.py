@@ -22,12 +22,11 @@ AUTHOR: Fredrik Strömberg <fredrik314@gmail.com>
 from flask import render_template, url_for, send_file,flash
 from lmfdb.utils import to_dict 
 from sage.all import uniq
+from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
-#from lmfdb.modular_forms.elliptic_modular_forms.backend.cached_interfaces import WebModFormSpace_cached
 from lmfdb.WebCharacter import ConreyCharacter
-###
-###
+
 
 def render_web_modform_space_gamma1(level=None, weight=None, character=None, label=None, **kwds):
     r"""
@@ -41,7 +40,7 @@ def render_web_modform_space_gamma1(level=None, weight=None, character=None, lab
     info['weight'] = weight
     info['character'] = character
     title = "Newforms of weight {0} for \(\Gamma_1({1})\)".format(weight, level)
-    bread = [(EMF_TOP, url_for('emf.render_elliptic_modular_forms'))]
+    bread = [(MF_TOP, url_for('mf.modular_form_main_page')), (EMF_TOP, url_for('emf.render_elliptic_modular_forms'))]
     bread.append(("Level %s" % level, url_for("emf.render_elliptic_modular_forms", level=level)))
     bread.append(
         ("Weight %s" % weight, url_for("emf.render_elliptic_modular_forms", level=level, weight=weight)))
@@ -53,6 +52,7 @@ def render_web_modform_space_gamma1(level=None, weight=None, character=None, lab
     else:
         info['table'] = table 
     info['bread'] = bread
+    info['learnmore'] = [('History of modular forms', url_for('.holomorphic_mf_history'))]
     info['title'] = title
     info['showGaloisOrbits']=1
     emf_logger.debug("info={0}".format(info))

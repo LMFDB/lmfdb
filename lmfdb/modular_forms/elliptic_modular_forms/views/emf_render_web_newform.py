@@ -26,6 +26,7 @@ from sage.all import version,uniq,ZZ,Cusp,Infinity,latex,QQ
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached, WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.utils import to_dict,ajax_more
+from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, default_prec, default_bprec, default_display_bprec, EMF_TOP, default_max_height
 from lmfdb.number_fields.number_field import poly_to_field_label
@@ -78,11 +79,12 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         emf_logger.debug("defined webnewform for rendering!")
     except IndexError as e:
         info['error'] = e.message
+    url0 = url_for("mf.modular_form_main_page")
     url1 = url_for("emf.render_elliptic_modular_forms")
     url2 = url_for("emf.render_elliptic_modular_forms", level=level)
     url3 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight)
     url4 = url_for("emf.render_elliptic_modular_forms", level=level, weight=weight, character=character)
-    bread = [(EMF_TOP, url1)]
+    bread = [(MF_TOP, url0), (EMF_TOP, url1)]
     bread.append(("Level %s" % level, url2))
     bread.append(("Weight %s" % weight, url3))
     bread.append(("Character \( %s \)" % (WNF.character.latex_name), url4))

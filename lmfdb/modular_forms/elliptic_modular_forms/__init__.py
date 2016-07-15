@@ -39,4 +39,5 @@ use_cache = False
 import views
 assert views
 import backend
+assert backend
 from backend import WebNewForm, WebModFormSpace

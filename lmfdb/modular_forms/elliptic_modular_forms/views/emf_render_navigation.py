@@ -14,7 +14,6 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract
 def render_elliptic_modular_form_navigation_wp(**args):
     r"""
     Renders the webpage for the navigational page.
-
     """
     from sage.all import is_even
     from lmfdb.modular_forms.elliptic_modular_forms import WebModFormSpace
@@ -37,22 +36,25 @@ def render_elliptic_modular_form_navigation_wp(**args):
     is_set['level'] = False
     limits_weight = extract_limits_as_tuple(info, 'weight')
     limits_level = extract_limits_as_tuple(info, 'level')
-    if isinstance(weight,int) and weight > 0:
-        is_set['weight'] = True
-        weight = int(weight)
-    else:
-       weight = None
-       info.pop('weight',None)
+    title = "Holomorphic Cusp Forms"
+    bread = [(MF_TOP, url_for('mf.modular_form_main_page')), (EMF_TOP, url_for('.render_elliptic_modular_forms'))]
     if isinstance(level,int) and level > 0:
         is_set['level'] = True
         level = int(level)
+        bread.append(('Level %d'%level, url_for('emf.render_elliptic_modular_forms', level=level)))
+        title += " of level %d"%level 
     else:
         level = None
         info.pop('level',None)
+    if isinstance(weight,int) and weight > 0:
+        is_set['weight'] = True
+        weight = int(weight)
+        bread.append(('Weight %d'%weight, url_for('emf.render_elliptic_modular_forms', level=level, weight=weight)))
+        title += " of weight %d"%weight
+    else:
+       weight = None
+       info.pop('weight',None)
     ## This is the list of weights we initially put on the form
-    title = "Holomorphic Cusp Forms"
-    bread = [(MF_TOP, url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP, url_for('.render_elliptic_modular_forms')))
     if is_set['weight']:
         limits_weight = (weight, weight)
     elif limits_weight is None:

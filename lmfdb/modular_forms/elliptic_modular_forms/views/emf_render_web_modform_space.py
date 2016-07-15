@@ -23,6 +23,7 @@ from flask import render_template, url_for, send_file,flash
 from lmfdb.utils import to_dict
 from lmfdb.base import getDBConnection
 from sage.all import uniq
+from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached, WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP, default_max_height
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
@@ -60,7 +61,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
         info['title'] = "Newforms of weight %s for \(\Gamma_{0}(%s)\) with character \(\chi_{%s}(%s, \cdot)\)" % (weight, level, level, character)
     else:
         info['title'] = "Newforms of weight %s for \(\Gamma_{0}(%s)\)" % (weight, level)
-    bread = [(EMF_TOP, url_for('emf.render_elliptic_modular_forms'))]
+    bread = [(MF_TOP, url_for('mf.modular_form_main_page')), (EMF_TOP, url_for('emf.render_elliptic_modular_forms'))]
     bread.append(("Level %s" % level, url_for('emf.render_elliptic_modular_forms', level=level)))
     bread.append(
         ("Weight %s" % weight, url_for('emf.render_elliptic_modular_forms', level=level, weight=weight)))
