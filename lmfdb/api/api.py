@@ -11,7 +11,7 @@ import flask
 import lmfdb.base as base
 from lmfdb.utils import flash_error
 from datetime import datetime
-from flask import render_template, request, url_for, app, current_app
+from flask import render_template, request, url_for, current_app
 from lmfdb.api import api_page, api_logger
 from bson import json_util
 from bson.objectid import ObjectId
@@ -58,7 +58,7 @@ def censored_db(db):
 
 def censored_collection(c):
     """
-    hide some databases from the public
+    hide some collections from the public
     """
     return c.startswith("system.") or c.endswith(".rand")
 
