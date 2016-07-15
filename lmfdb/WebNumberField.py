@@ -354,7 +354,8 @@ class WebNumberField:
     def gpK(self):
         if not self.haskey('gpK'):
             Qx = PolynomialRing(QQ,'x')
-            basis = [Qx(el.replace('a','x')) for el in self.zk()]
+            # while [1] is a perfectly good basis for Z, gp seems to want []
+            basis = [Qx(el.replace('a','x')) for el in self.zk()] if self.degree() > 1 else []
             k1 = gp( "nfinit([%s,%s])" % (str(self.poly()),str(basis)) )
             self._data['gpK'] = k1
         return self._data['gpK']
