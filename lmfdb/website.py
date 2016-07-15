@@ -95,9 +95,8 @@ def redirect_nonwww():
     from urlparse import urlparse, urlunparse
     urlparts = urlparse(request.url)
     if urlparts.netloc == 'lmfdb.org':
-        urlparts._replace(netloc='www.lmfdb.org')
-        from flask import redirect
-        return redirect(urlunparse(urlparts), code=301)
+        replaced = urlparts._replace(netloc='www.lmfdb.org')
+        return redirect(urlunparse(replaced), code=301)
 
 @app.errorhandler(404)
 def not_found_404(error):
@@ -149,7 +148,8 @@ def get_menu_cookie():
 
 @app.after_request
 def set_menu_cookie(response):
-    response.set_cookie("showmenu", str(g.show_menu))
+    if hasattr(g, 'show_menu'):
+        response.set_cookie("showmenu", str(g.show_menu))
     return response
 
 @app.route('/_menutoggle/<show>')
