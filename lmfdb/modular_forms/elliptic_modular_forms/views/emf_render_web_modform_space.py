@@ -102,7 +102,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
             if not rep is None and not rep['cchi'] == character: # don't link back to myself!
                 info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=rep['cchi'])
                 info['wmfs_rep_number'] =  rep['cchi']
-        # FIXME WNF is never defined above
+        # FIXME: the variable WNF is not defined above, so the code below cannot work (I don't think it is ever used)
         # if 'download' in info and 'tempfile' in info:
         #     save(WNF,info['tempfile'])
         #     info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
