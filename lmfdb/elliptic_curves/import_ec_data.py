@@ -166,44 +166,6 @@ def allbsd(line):
 
     return label, data
 
-# Next function redundant as all data in allcurves is also in allgens
-
-
-def allcurves(line):
-    r""" Parses one line from an allcurves file.  Returns the label and a
-    dict containing fields with keys 'conductor', 'iso', 'number',
-    'ainvs', 'jinv', 'cm', 'rank', 'torsion', all values being strings or ints.
-
-    Input line fields:
-
-    conductor iso number ainvs rank torsion
-
-    Sample input line:
-
-    11 a 1 [0,-1,1,-10,-20] 0 5
-    """
-    data = split(line)
-    label = data[0] + data[1] + data[2]
-    ainvs = parse_ainvs(data[3])
-    E = EllipticCurve([ZZ(eval(a)) for a in ainvs])
-    jinv = unicode(str(E.j_invariant()))
-    if E.has_cm():
-        cm = int(E.cm_discriminant())
-    else:
-        cm = int(0)
-
-    return label, {
-        'conductor': int(data[0]),
-        'iso': data[0] + data[1],
-        'number': int(data[2]),
-        'ainvs': ainvs,
-        'jinv': jinv,
-        'cm': cm,
-        'rank': int(data[4]),
-        'torsion': int(data[5]),
-    }
-
-
 def allgens(line):
     r""" Parses one line from an allgens file.  Returns the label and
     a dict containing fields with keys 'conductor', 'iso', 'number',
@@ -221,10 +183,14 @@ def allgens(line):
     data = split(line)
     label = data[0] + data[1] + data[2]
     rank = int(data[4])
-    t = eval(data[5])
+    t = data[5]
+    if t=='[]':
+        t = []
+    else:
+        t = [int(c) for c in t[1:-1].split(",")]
     torsion = int(prod([ti for ti in t], 1))
     ainvs = parse_ainvs(data[3])
-    E = EllipticCurve([ZZ(eval(a)) for a in ainvs])
+    E = EllipticCurve([ZZ(a) for a in ainvs])
     jinv = unicode(str(E.j_invariant()))
     if E.has_cm():
         cm = int(E.cm_discriminant())
@@ -244,7 +210,7 @@ def allgens(line):
         'torsion_structure': ["%s" % tor for tor in t],
         'torsion_generators': ["%s" % parse_tgens(tgens[1:-1]) for tgens in data[6 + rank:]],
     }
-    extra_data = make_extra_data(label,data['number'],ainvs,data['gens'])
+    extra_data = make_extra_data(label,content['number'],ainvs,content['gens'])
     content.update(extra_data)
 
     return label, content
@@ -396,7 +362,7 @@ def galrep(line):
     }
 
 
-filename_base_list = ['allcurves', 'allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
+filename_base_list = ['allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
 
 
 def cmp_label(lab1, lab2):
@@ -427,6 +393,7 @@ def upload_to_db(base_path, min_N, max_N):
     twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
     file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename,twoadic_filename]
 #    file_list = [twoadic_filename]
+#    file_list = [allgens_filename]
 
     parsing_dict = {}
     for f in file_list:

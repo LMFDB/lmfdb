@@ -317,9 +317,12 @@ def render_field_webpage(args):
         pretty_label = "%s: %s" % (label, pretty_label)
 
     info.update(data)
-    gpK = nf.gpK()
-    rootof1coeff = gpK.nfrootsof1()[2]
-    rootofunity = Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))
+    if nf.degree() > 1:
+        gpK = nf.gpK()
+        rootof1coeff = gpK.nfrootsof1()[2]
+        rootofunity = Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))
+    else:
+        rootofunity = Ra('-1')
 
     info.update({
         'label': pretty_label,

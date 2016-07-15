@@ -10,6 +10,7 @@ nf_logger = make_logger(nf_page)
 def body_class():
     return {'body_class': 'nf'}
 
-from number_field import *
+import number_field
+assert number_field
 
 app.register_blueprint(nf_page, url_prefix="/NumberField")
