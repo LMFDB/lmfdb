@@ -12,5 +12,6 @@ def body_class():
     return {'body_class': 'galois_groups'}
 
 import main
+assert main
 
 app.register_blueprint(galois_groups_page, url_prefix="/GaloisGroup")

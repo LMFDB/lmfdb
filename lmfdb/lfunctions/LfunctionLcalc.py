@@ -8,16 +8,14 @@ from Lfunctionutilities import splitcoeff, pair2complex, string2number
 
 
 def parse_complex_number(z):
-    """convert a string representing a complex number to another string
-    looking like "(x,y)"
-
+    """convert a string representing a complex number to another string looking like "(x,y)"
     """
     from sage.all import CC
     try:
         # need to convert from unicode to orginary string type
-        x,y = CC(str(z))
+        x,y = CC(string2number(str(z)))
         return "({},{})".format(x,y)
-    except TypeError:
+    except TypeError, SyntaxError:
         print("Unable to parse {} as complex number".format(z))
         return "(0,0)"
 
