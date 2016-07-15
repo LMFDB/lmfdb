@@ -89,6 +89,11 @@ def signature_to_list(L):
     return L
 
 
+def sort_sign(L):
+    L1 = L[1:]
+    L1.sort()
+    return [L[0]] +L1
+
 def label_to_breadcrumbs(L):
     newsig = '['
     for i in range(0,len(L)):
@@ -214,13 +219,15 @@ def higher_genus_w_automorphisms_search(**args):
 
 
 #allows for ; in signature
-    if 'signature' in info:   
-        info.update({'signature': signature_to_list(info['signature'])})
-        
+    if 'signature' in info and info['signature'] != '':
+        sig_list = ast.literal_eval(signature_to_list(info['signature']))
+        sig =  sort_sign(sig_list)
+        info.update({'signature': str(sig)})
+            
     try:
         parse_bracketed_posints2(info,query,'group', split=False, exactlength=2, name='Group')
         parse_ints(info,query,'genus',name='Genus')
-        parse_bracketed_posints2(info,query,signature_to_list('signature'),split=False,name='Signature')
+        parse_bracketed_posints2(info,query,'signature',split=False,name='Signature')
         parse_ints(info,query,'dim',name='Dimension of the family')
         if 'inc_hyper' in info:
             if info['inc_hyper'] == 'exclude':
