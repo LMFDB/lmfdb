@@ -4,14 +4,15 @@ import re
 import pymongo
 
 from lmfdb.base import getDBConnection
-from flask import render_template, url_for, request
+from flask import render_template, url_for, request, redirect
 from lmfdb.half_integral_weight_forms import hiwf_page
 
 from sage.all import QQ, PolynomialRing, PowerSeriesRing
 
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict, flash_error
+from lmfdb.search_parsing import parse_ints
 
-from lmfdb.WebNumberField import nf_display_knowl, parse_field_string
+from lmfdb.WebNumberField import nf_display_knowl
 
 
 @hiwf_page.route("/")
@@ -37,17 +38,17 @@ def half_integral_weight_form_search(**args):
         args = {'label': info['label']}
         return render_hiwf_webpage(**args)
     query = {}
-    for field in ['character', 'weight', 'level']:
-        if info.get(field):
-            if field == 'weight':
-                query[field] = int(info[field])      
-            elif field == 'character':
-                query[field] = parse_field_string(info[field])
-            elif field == 'label':
-                query[field] = info[field]
-            elif field == 'level':
-                query[field] = int(info[field])
-    
+    try:
+        parse_ints(info, query, 'weight')
+        parse_ints(info, query, 'level')
+        if info.get('character','').strip():
+            if re.match('^\d+.\d+$', info['character'].strip()):
+                query['character'] = info['character'].strip()
+            else:
+                flash_error("%s is not a valid Dirichlet character label, it should be of the form q.n", info['character'])
+    except:
+        return redirect(url_for(".half_integral_weight_form_render_webpage"))
+
     info['query'] = dict(query)
     res = C.halfintegralmf.forms.find(query).sort([('level', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
     nres = res.count()
