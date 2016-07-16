@@ -104,6 +104,7 @@ def not_found_404(error):
 
 @app.errorhandler(500)
 def not_found_500(error):
+    app.logger.error("Failed URL: %s"%request.url)
     return render_template("500.html"), 500
 
 @app.errorhandler(503)
