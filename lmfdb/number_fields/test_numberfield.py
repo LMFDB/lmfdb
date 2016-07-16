@@ -26,7 +26,7 @@ class NumberFieldTest(LmfdbTest):
         assert '5.1.27000000000.8' in L.data
 
     def test_search_poly_mean2parser(self):
-        L = self.tc.get('/NumberField/?natural=X**3-4x%2B2&search=Go')
+        L = self.tc.get('/NumberField/?natural=X**3-4x%2B2&search=Go', follow_redirects=True)
         assert '148' in L.data # discriminant
 
     def test_search_zeta(self):
