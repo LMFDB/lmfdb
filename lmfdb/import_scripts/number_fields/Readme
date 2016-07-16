@@ -14,3 +14,10 @@ Then myoutputfile can be imported as above.  The gp script will only
 work for polynomials of degree <12 because pari can only compute Galois
 groups in this range.
 
+...
+
+After renaming database to fields, 
+
+  create_random_object_index(nf, "fields")
+
+after loading jj.py
