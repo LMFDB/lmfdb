@@ -77,11 +77,11 @@ assert rep_galois_modl
 # Currently uploading is not supported
 # import upload
 
-
 import logging
 import utils
 import os
 import sys
+import time
 import getopt
 from pymongo import ReadPreference
 from base import app, set_logfocus, get_logfocus, _init
@@ -104,7 +104,7 @@ def not_found_404(error):
 
 @app.errorhandler(500)
 def not_found_500(error):
-    app.logger.error("Failed URL: %s"%request.url)
+    app.logger.error("[%s UTC] 500 error on URL %s"%(time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime()),request.url))
     return render_template("500.html"), 500
 
 @app.errorhandler(503)
