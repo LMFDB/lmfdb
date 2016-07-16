@@ -192,6 +192,7 @@ def md_latex_accents(text):
     knowl_content = re.sub(r"\\'{([a-zA-Z])}",r"&\1acute;",knowl_content)
     knowl_content = re.sub(r"\\`([a-zA-Z])",r"&\1grave;",knowl_content)
     knowl_content = re.sub(r"\\`{([a-zA-Z])}",r"&\1grave;",knowl_content)
+    knowl_content = re.sub(r"``(?P<a>[^\"]*)''", r"&ldquo;\1&rdquo;", knowl_content)
 
     return knowl_content
 
