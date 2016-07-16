@@ -86,8 +86,10 @@ import getopt
 from pymongo import ReadPreference
 from base import app, set_logfocus, get_logfocus, _init
 from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
+import sage
 
 DEFAULT_DB_PORT = 37010
+LMFDB_SAGE_VERSION = '7.1'
 
 @app.before_request
 def redirect_nonwww():
@@ -342,3 +344,5 @@ if True:
     logging.info("configuration: %s" % configuration)
     _init(**configuration['mongo_client_options'])
     app.logger.addHandler(file_handler)
+    if [int(c) for c in sage.version.version.split(".")[:2]] < [int(c) for c in LMFDB_SAGE_VERSION.split(".")[:2]]:
+        logging.warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***"%(sage.version.version,LMFDB_SAGE_VERSION))
