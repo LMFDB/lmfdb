@@ -234,7 +234,8 @@ def higher_genus_w_automorphisms_search(**args):
                 query['hyperelliptic'] = False
             elif info['inc_hyper'] == 'only':
                 query['hyperelliptic'] = True
-            
+
+        query['cc.1'] = 1       
 
     except ValueError:
         return search_input_error(info, bread)
@@ -336,7 +337,7 @@ def render_family(args):
         g2List = ['[2,1]','[4,2]','[8,3]','[10,2]','[12,4]','[24,8]','[48,29]']
         if g  == 2 and data['group'] in g2List:
             g2url = "/Genus2Curve/Q/?geom_aut_grp_id=" + data['group']
-            friends = [("Family Over $\Q$", g2url ) ]
+            friends = [("Genus 2 curves over $\Q$", g2url ) ]
         else:    
             friends = [ ]
         
