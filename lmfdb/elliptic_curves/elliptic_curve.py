@@ -159,7 +159,7 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
 
 def elliptic_curve_search(info):
 
-    if 'download' in info and info['download'] != '0':
+    if info.get('download') == '1' and info.get('Submit') and info.get('query'):
         return download_search(info)
 
     if 'SearchAgain' in info:
