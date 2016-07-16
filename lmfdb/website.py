@@ -344,6 +344,5 @@ if True:
     logging.info("configuration: %s" % configuration)
     _init(**configuration['mongo_client_options'])
     app.logger.addHandler(file_handler)
-    [int(c) for c in sage.version.version.split(".")[:2]]
     if [int(c) for c in sage.version.version.split(".")[:2]] < [int(c) for c in LMFDB_SAGE_VERSION.split(".")[:2]]:
         logging.warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***"%(sage.version.version,LMFDB_SAGE_VERSION))
