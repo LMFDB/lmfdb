@@ -161,26 +161,22 @@ def api_query(db, collection, id = None):
             flash_error("offset %s too large, please refine your query.", offset)
             return flask.redirect(url_for(".api_query", db=db, collection=collection))
 
-    # sort = [('fieldname1', ASC/DESC), ...]
-    if sortby is not None:
-        sort = []
-        for key in sortby:
-            if key.startswith("-"):
-                sort.append((key[1:], DESC))
-            else:
-                sort.append((key, ASC))
-    else:
-        sort = None
-
     # preparing the actual database query q
     C = base.getDBConnection()
     q = {}
 
+    # if id is set, just go and get it, ignore query parameeters
     if id is not None:
-        # We assume that any long hexadecimal looking string is an object id
-        # In the LMFDB the only values of _id that are not ObjectId's are knowl ids, so this should be safe
-        q["_id"] = ObjectId(id) if len(id) > 8 and re.match('[0-9a-f]+$', id.strip()) else id
+        if offset:
+            return flask.abort(404)
         single_object = True
+        data = []
+        api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
+        # if id looks like an ObjectId, assume it is and try to find it
+        if len(id) == 24 and re.match('[0-9a-f]+$', id.strip()):
+            data = [C[db][collection].find_one({'_id':ObjectId(id)},projection=fields)]
+        if not data:
+            data = [C[db][collection].find_one({'_id':id},projection=fields)]
     else:
         single_object = False
 
@@ -220,9 +216,20 @@ def api_query(db, collection, id = None):
             # update the query
             q[qkey] = qval
 
-    # executing the query "q" and replacing the _id in the result list
-    api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
-    data = list(C[db][collection].find(q, projection = fields, sort=sort).skip(offset).limit(100))
+        # sort = [('fieldname1', ASC/DESC), ...]
+        if sortby is not None:
+            sort = []
+            for key in sortby:
+                if key.startswith("-"):
+                    sort.append((key[1:], DESC))
+                else:
+                    sort.append((key, ASC))
+        else:
+            sort = None
+
+        # executing the query "q" and replacing the _id in the result list
+        api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
+        data = list(C[db][collection].find(q, projection = fields, sort=sort).skip(offset).limit(100))
     
     if single_object and not data:
         if format != 'html':
