@@ -171,9 +171,9 @@ def api_query(db, collection, id = None):
             return flask.abort(404)
         single_object = True
         data = []
-        api_logger.info("API query: id = '%s', fields = '%s', sort = '%s', offset = %s" % (id, fields))
+        api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         # if id looks like an ObjectId, assume it is and try to find it
-        if re.match('[0-9a-f]+$', id.strip()):
+        if len(id) == 24 and re.match('[0-9a-f]+$', id.strip()):
             data = [C[db][collection].find_one({'_id':ObjectId(id)},projection=fields)]
         if not data:
             data = [C[db][collection].find_one({'_id':id},projection=fields)]
