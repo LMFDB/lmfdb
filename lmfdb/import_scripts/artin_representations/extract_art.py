@@ -16,7 +16,8 @@
 # of polynomials so that if the j-th of these lines is k, then
 # the local factor of the j-th prime is the k-th polynomial
 
-import sys, time
+import sys, time, os
+assert time
 
 # check arguments first
 
@@ -38,10 +39,9 @@ except:
     print "Bound is not valid"
     sys.exit()
 
-import bson, pymongo
-import sage.all
 import re
-from sage.all import *
+assert re
+from sage.all import next_prime, ZZ, QQ, lcm, NumberField
 
 # find lmfdb and the top of the tree
 mypath = os.path.realpath(__file__)
@@ -59,16 +59,15 @@ password = pw_dict['data']['password']
 
 # fire it up
 from lmfdb import base
+assert base
 #from lmfdb import math_classes
-#from math_classes import ArtinRepresentation, NumberFieldGaloisGroup
-from lmfdb.math_classes import *
-from lmfdb.WebNumberField import *
+from lmfdb.math_classes import ArtinRepresentation
+#from lmfdb.math_classes import *
+#from lmfdb.WebNumberField import *
 
 
-#C= base.getDBConnection()
 from pymongo.mongo_client import MongoClient
-C= MongoClient(port=37010)
-
+C= MongoClient(host='lmfdb-ib:37010')
 C['artin'].authenticate(username, password)
 
 art=C.artin

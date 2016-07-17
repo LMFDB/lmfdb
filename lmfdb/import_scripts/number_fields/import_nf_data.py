@@ -45,13 +45,15 @@ where
    - zk: list of strings of integral basis elements in the variable a
 """
 
-import sys, time
+import sys, time, os
+assert time
 import bson
-import sage.all
 import re
 import hashlib
 import json
-from sage.all import *
+import sage
+from sage.all import ZZ, QQ, PolynomialRing, prime_factors
+from zlib import gzip
 
 pw_filename = "../../../xyzzy"
 password = open(pw_filename, "r").readlines()[0].strip()
@@ -132,8 +134,7 @@ def do_import(ll):
     count += 1
     coeffs, T, D, r1, h, clgp, extras, reg, fu, nogrh, subs, reduc, zk = F
     print "%d: %s"%(count, F)
-    mylen = len(F)
-    pol = coeff_to_poly(coeffs)
+    #pol = coeff_to_poly(coeffs)
     d = int(len(coeffs))-1
     D = ZZ(D)
     absD = abs(D)
@@ -153,13 +154,11 @@ def do_import(ll):
     # See if we have it and build a label
     index=1
     is_new = True
-    holdfield = ''
     for field in fields.find({'degree': d,
                  'signature': data['signature'],
                  'disc_abs_key': dstr}):
       index +=1
       if field['coeffs'] == data['coeffs']:
-        holdfield = field # for variations where we modify data
         is_new = False
         break
 
