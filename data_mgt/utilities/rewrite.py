@@ -100,7 +100,7 @@ def update_attribute_stats(db, coll, attributes):
     for attr in attributes:
         db[statscoll].delete_one({'_id':attr})
     total = db[coll].count()
-    counts = [[value,db[coll].find({attr:value}).count()] for value in sorted(db[coll].distinct(attr))]
-    min, max = counts[0][0], counts[-1][0]
-    db[statscoll].insert_one({'_id':attr, 'total':total, 'counts':counts, 'min':min, 'max':max})
-
+    for attr in attributes:
+        counts = [[value,db[coll].find({attr:value}).count()] for value in sorted(db[coll].distinct(attr))]
+        min, max = counts[0][0], counts[-1][0]
+        db[statscoll].insert_one({'_id':attr, 'total':total, 'counts':counts, 'min':min, 'max':max})

@@ -64,11 +64,11 @@ def attribute_value_counts(collection,attribute):
     """ returns a sorted array of pairs (value,count) with count=collection.find({attribute:value}); uses collection.stats to improve peroformance if present """
     if collection.stats.count():
         m = collection.count()
-        stats = collection.stats.find_one({'attribute':attribute},{'total':True,'counts':True})
+        stats = collection.stats.find_one({'_id':attribute},{'total':True,'counts':True})
         if stats and 'counts' in stats:
             # Don't use statistics that we know are out of date.
             if stats['total'] != m:
-                current_app.logger.error("Statistics in {0}.stats are out of date ({1} != {2}), they will not be used until they are updated.".format(collection,stats['total'],m))
+                current_app.logger.warning("Statistics in {0}.stats are out of date ({1} != {2}), they will not be used until they are updated.".format(collection,stats['total'],m))
             else:
                 return stats['counts']
     # note that pymongo will raise an error if the return value from .distinct is large than 16MB (this is a good thing)
