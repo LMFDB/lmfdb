@@ -22,7 +22,7 @@ def p2sage(s):
     if type(z) in [list, tuple]:
         return [p2sage(t) for t in z]
     else:
-        Qa = PolynomialRing(RationalField(),"a"); a=Qa.gen()
+        Qa = PolynomialRing(RationalField(),"a");
         for f in [ZZ, RR, CC, Qa]:
             try:
                 return f(z)
@@ -896,7 +896,7 @@ def compute_dirichlet_series(p_list, PREC):
     # create an empty list of the right size and now populate it with the powers of p
     for (p, y) in p_list:
         # FIXME p_prec is never used, but perhaps it should be?
-        p_prec = log(PREC) / log(p) + 1
+        # p_prec = log(PREC) / log(p) + 1
         ep = euler_p_factor(y, PREC)
         for n in range(ep.prec()):
             if p ** n < PREC:
