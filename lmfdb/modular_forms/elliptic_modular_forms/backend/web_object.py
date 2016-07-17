@@ -413,7 +413,6 @@ class WebObject(object):
         for p in self._properties:
             if p.required:
                 assert hasattr(self, p.name), "Missing property {0}".format(p)
-            v = getattr(self, p.name)
             got = type(self._properties[p.name].to_fs())
             expected = p.fs_data_type
             assert p.has_been_set(), "Did we compute {0}? It has not been set yet.".format(p.name)
@@ -798,9 +797,6 @@ class WebObject(object):
         coll = cls.connect_to_db(cls._collection_name)
         return coll.find(query).count()
     
-    def __repr__(self):
-        return "WebObject"
-        
     def __repr__(self):
         return "WebObject"
 
