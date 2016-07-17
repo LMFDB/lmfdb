@@ -1529,8 +1529,11 @@ class TensorProductLfunction(Lfunction):
         self.Elabel = self.ellipticcurvelabel
 
         # Create the tensor product
-        # try catch later
-        self.tp = TensorProduct(self. Elabel, self.charactermodulus, self.characternumber)
+        
+        # No TensorProduct class exists in the LMFDB at present, there is code in lmfdb/tensor_products for computing tensor product L-functions,
+        # but it does not implement the TensorProduct class (see issue #500)
+        raise NotImplementedError 
+        # self.tp = TensorProduct(self. Elabel, self.charactermodulus, self.characternumber)
         # chi = self.tp.chi
         # E = self.tp.E
 
