@@ -35,6 +35,9 @@ def random_object_from_collection(collection):
     import pymongo
     n = collection.rand.count()
     if n:
+        m = collection.count()
+        if m != m:
+            current_app.logger.warning("Random object index {0}.rand is out of date ({1} != {2}), proceeding anyway.".format(collection,n,m))
         return collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
     if pymongo.version_tuple[0] < 3:
         return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next()
@@ -47,12 +50,29 @@ def random_value_from_collection(collection,attribute):
     import pymongo
     n = collection.rand.count()
     if n:
+        m = collection.count()
+        if m != m:
+            current_app.logger.warning("Random object index {0}.rand is out of date ({1} < {2})".format(collection,n,m))
         return collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True}).get(attribute)
     if pymongo.version_tuple[0] < 3:
         return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't both optimizing this
     else:
         # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
         return collection.aggregate([{ '$sample': { 'size': int(1) } }, { '$project' : {'_id':False,attribute:True}} ]).next().get(attribute)
+
+def attribute_value_counts(collection,attribute):
+    """ returns a sorted array of pairs (value,count) with count=collection.find({attribute:value}); uses collection.stats to improve peroformance if present """
+    if collection.stats.count():
+        m = collection.count()
+        stats = collection.stats.find_one({'attribute':attribute},{'total':True,'counts':True})
+        if stats and 'counts' in stats:
+            # Don't use statistics that we know are out of date.
+            if stats['total'] != m:
+                current_app.logger.error("Statistics in {0}.stats are out of date ({1} != {2}), they will not be used until they are updated.".format(collection,stats['total'],m))
+            else:
+                return stats['counts']
+    # note that pymongo will raise an error if the return value from .distinct is large than 16MB (this is a good thing)
+    return [[value,collection.find({attribute:value}).count()] for value in sorted(collection.distinct(attribute))]
 
 cache = SimpleCache()
 

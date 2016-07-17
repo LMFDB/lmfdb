@@ -9,7 +9,7 @@ from operator import mul
 from flask import render_template, url_for, request, redirect, send_file
 from sage.all import ZZ
 
-from lmfdb.utils import to_dict, comma, random_value_from_collection, flash_error
+from lmfdb.utils import to_dict, comma, random_value_from_collection, attribute_value_counts, flash_error
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
@@ -417,12 +417,11 @@ class G2C_stats(object):
         dists = []
         # TODO use aggregate $group to speed this up and/or just store these counts in the database
         for attr in stats_attribute_list:
-            values = sorted(curves.distinct(attr['name']))
+            counts = attribute_value_counts(curves, attr['name'])
             vcounts = []
             rows = []
             avg = 0
-            for value in values:
-                n = curves.find({attr['name']:value}).count()
+            for value,n in counts:
                 prop = format_percentage(n,total)
                 if 'avg' in attr and attr['avg']:
                     avg += n*value
