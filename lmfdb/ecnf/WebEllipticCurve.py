@@ -2,9 +2,9 @@ import os
 import yaml
 from flask import url_for
 from urllib import quote
-from sage.all import ZZ, var, PolynomialRing, QQ, GCD, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
-from lmfdb.base import app, getDBConnection
-from lmfdb.utils import image_src, web_latex, web_latex_ideal_fact, encode_plot
+from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
+from lmfdb.base import getDBConnection
+from lmfdb.utils import web_latex, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
@@ -229,7 +229,7 @@ class ECNF(object):
         coeffs = self.ainvs  # list of 5 lists of d strings
         self.ainvs = [self.field.parse_NFelt(x) for x in coeffs]
         self.latex_ainvs = web_latex(self.ainvs)
-        from sage.schemes.elliptic_curves.all import EllipticCurve
+        #from sage.schemes.elliptic_curves.all import EllipticCurve
         #self.E = E = EllipticCurve(self.ainvs)
         self.numb = str(self.number)
 

@@ -69,8 +69,6 @@ import os
 import pymongo
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex
-from sage.rings.all import ZZ, QQ
-from sage.databases.cremona import cremona_to_lmfdb
 from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ, cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF
@@ -430,7 +428,6 @@ def add_heights(data):
     # Now there is work to do
     K = nf_lookup(data['field_label'])
     ainvsK = [parse_NFelt(K, ai) for ai in data['ainvs']]  # list of K-elements
-    ainvs = [[str(c) for c in ai] for ai in ainvsK]
     E = EllipticCurve(ainvsK)
     gens = [parse_point(E,x) for x in data['gens']]
     data['heights'] = [P.height() for P in gens]
