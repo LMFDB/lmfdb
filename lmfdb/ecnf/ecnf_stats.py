@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
-from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
@@ -212,7 +210,7 @@ class ECNFstats(object):
                 }
                 for F in counts['fields_by_degree'][d]:
                     if F[:3]==sig_code:
-                        fsds[F] = fs = {'ncurves' : ecdb.find({'field_label':F}).count(),
+                        fsds[F] = {'ncurves' : ecdb.find({'field_label':F}).count(),
                                         'nclasses': ecdb.find({'field_label':F, 'number':1}).count(),
                                         'maxnorm': max(ecdb.find({'field_label':F}).distinct('conductor_norm'))
                                     }

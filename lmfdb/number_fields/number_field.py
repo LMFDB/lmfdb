@@ -2,25 +2,26 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
-import time
-import flask
+import time, os
 import lmfdb.base as base
-from lmfdb.base import app, getDBConnection, url_for
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, redirect, g, session, Flask, send_file, flash
+from lmfdb.base import app, getDBConnection
+from flask import render_template, request, url_for, redirect, send_file, flash
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
-from lmfdb.WebNumberField import *
+from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc
 
 from markupsafe import Markup
 
 import re
 
-import sage.all
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, euler_phi, pari, prod, primes
+assert nf_logger
 
-from lmfdb.transitive_group import *
+#import sage.all
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, comma, random_object_from_collection
+from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, group_knowl_guts, group_cclasses_knowl_guts, group_character_table_knowl_guts, aliastable
+
+from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, random_object_from_collection, web_latex_split_on_pm
 from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
@@ -262,7 +263,6 @@ def render_field_webpage(args):
         return search_input_error(info, bread)
 
     info['wnf'] = nf
-    from lmfdb.WebNumberField import nf_display_knowl
     data['degree'] = nf.degree()
     data['class_number'] = nf.class_number()
     t = nf.galois_t()
@@ -299,7 +299,7 @@ def render_field_webpage(args):
     ram_primes = str(ram_primes)[1:-1]
     if ram_primes == '':
         ram_primes = r'\textrm{None}'
-    data['frob_data'], data['seeram'] = frobs(nf.K())
+    data['frob_data'], data['seeram'] = frobs(nf)
     data['phrase'] = group_phrase(n, t, C)
     zk = nf.zk()
     Ra = PolynomialRing(QQ, 'a')
@@ -317,15 +317,22 @@ def render_field_webpage(args):
         pretty_label = "%s: %s" % (label, pretty_label)
 
     info.update(data)
+    if nf.degree() > 1:
+        gpK = nf.gpK()
+        rootof1coeff = gpK.nfrootsof1()[2]
+        rootofunity = Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))
+    else:
+        rootofunity = Ra('-1')
+
     info.update({
         'label': pretty_label,
         'label_raw': label,
-        'polynomial': web_latex_split_on_pm(nf.K().defining_polynomial()),
+        'polynomial': web_latex_split_on_pm(nf.poly()),
         'ram_primes': ram_primes,
         'integral_basis': zk,
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
-        'root_of_unity': web_latex(nf.K().primitive_root_of_unity()),
+        'root_of_unity': web_latex(rootofunity),
         'fund_units': nf.units(),
         'grh_label': grh_label
     })
@@ -443,7 +450,7 @@ def number_field_search(**args):
         query = {'label_orig': info['natural']}
         try:
             parse_nf_string(info,query,'natural',name="Label",qfield='label')
-            return redirect(url_for(".by_label", label= clean_input(query['label'])))
+            return redirect(url_for(".by_label", label= clean_input(query['label_orig'])))
         except ValueError:
             query['err'] = info['err']
             return search_input_error(query, bread)
@@ -524,18 +531,30 @@ def search_input_error(info, bread):
     return render_template("number_field_search.html", info=info, title='Global Number Field Search Error', bread=bread)
 
 
-def residue_field_degrees_function(K):
-    """ Given a sage field, returns a function that has
+def residue_field_degrees_function(nf):
+    """ Given a WebNumberField, returns a function that has
             input: a prime p
             output: the residue field degrees at the prime p
     """
-    k1 = pari(K)
-    D = K.disc()
+    k1 = nf.gpK()
+    D = nf.disc()
+    return main_work(k1,D,'pari')
 
+def sage_residue_field_degrees_function(nf):
+    """ Version of above which takes a sage number field
+        Used by Artin representation code when the Artin field is not
+        in the database.
+    """
+    D = nf.disc()
+    return main_work(pari(nf),D,'sage')
+
+def main_work(k1, D, typ):
+    # Difference for sage vs pari array indexing
+    ind = 3 if typ is 'sage' else 4
     def decomposition(p):
         if not ZZ(p).divides(D):
             dec = k1.idealprimedec(p)
-            dec = [z[3] for z in dec]
+            dec = [z[ind] for z in dec]
             return dec
         else:
             raise ValueError("Expecting a prime not dividing D")
@@ -544,9 +563,9 @@ def residue_field_degrees_function(K):
 # Compute Frobenius cycle types, returns string nicely presenting this
 
 
-def frobs(K):
-    frob_at_p = residue_field_degrees_function(K)
-    D = K.disc()
+def frobs(nf):
+    frob_at_p = residue_field_degrees_function(nf)
+    D = nf.disc()
     ans = []
     seeram = False
     for p in primes(2, 60):
@@ -556,7 +575,7 @@ def frobs(K):
             vals = list(set(dec))
             vals = sorted(vals, reverse=True)
             dec = [[x, dec.count(x)] for x in vals]
-            dec2 = ["$" + str(x[0]) + ('^{' + str(x[1]) + '}$' if x[1] > 1 else '$') for x in dec]
+            #dec2 = ["$" + str(x[0]) + ('^{' + str(x[1]) + '}$' if x[1] > 1 else '$') for x in dec]
             s = '$'
             firstone = 1
             for j in dec:

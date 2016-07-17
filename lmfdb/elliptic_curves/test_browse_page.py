@@ -1,7 +1,4 @@
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
-
 
 class HomePageTest(LmfdbTest):
 

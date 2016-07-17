@@ -12,5 +12,6 @@ def body_class():
     return {'body_class': 'ecnf'}
 
 import main
+assert main # to keep pyflakes quiet
 
 app.register_blueprint(ecnf_page, url_prefix="/EllipticCurve")

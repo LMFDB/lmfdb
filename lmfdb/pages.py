@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-from base import app
-from flask import render_template, url_for
+from base import app, getDBConnection
+from flask import render_template, url_for, abort
 
 @app.route("/about")
 def about():
@@ -19,6 +19,16 @@ _curdir = os.path.dirname(os.path.abspath(__file__))
 contribs = yaml.load_all(open(os.path.join(_curdir, "..", "CONTRIBUTORS.yaml")))
 contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 
+# basic health check
+@app.route("/health")
+@app.route("/alive")
+def alive():
+    try:
+        conn = getDBConnection()
+        assert conn.userdb.users.count()
+    except:
+        abort(503)
+    return "LMFDB!"
 
 @app.route("/acknowledgment")
 def acknowledgment():
@@ -159,7 +169,7 @@ def news():
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
-    lm = [('History of varieties', '/Variety/history')]
+    # lm = [('History of varieties', '/Variety/history')]
     return render_template('single.html', title=t, kid='varieties.about', bread=b) #, learnmore=lm)
 
 
@@ -170,19 +180,12 @@ def varieties_history():
     b.append(('History', url_for("varieties_history")))
     return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
 
-@app.route("/ModularForm/GL2/Q/holomorphic/history")
-def holomorphic_mf_history():
-    b = [("Modular forms", url_for('modular_form_toplevel'))]
-    b.append(('Holomorphic', url_for("emf.render_elliptic_modular_forms")))
-    b.append(('History', url_for("holomorphic_mf_history")))
-    return render_template(_single_knowl, title="A brief history of holomorphic GL(2) modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
-
 
 @app.route('/Field')
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
-    lm = [('History of fields', '/Field/history')]
+    # lm = [('History of fields', '/Field/history')]
     return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 @app.route("/Field/history")
@@ -197,7 +200,7 @@ def fields_history():
 def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
-    lm = [('History of representations', '/Representation/history')]
+    # lm = [('History of representations', '/Representation/history')]
     return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 
@@ -214,7 +217,7 @@ def representations_history():
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
-    lm = [('History of groups', '/Group/history')]
+    # lm = [('History of groups', '/Group/history')]
     return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 

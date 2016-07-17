@@ -420,7 +420,6 @@ class ECNF(object):
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
 
         sig = self.signature
-        real_quadratic = sig == [2,0]
         totally_real = sig[1] == 0
         imag_quadratic = sig == [0,1]
 

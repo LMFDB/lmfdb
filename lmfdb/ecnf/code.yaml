@@ -25,7 +25,7 @@ curve:
   sage: |
     E = EllipticCurve(%s)
   pari: |
-    E = ellinit(%s)
+    E = ellinit(%s,K)
   magma: |
     E := EllipticCurve(%s);
 

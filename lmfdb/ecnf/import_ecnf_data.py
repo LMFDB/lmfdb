@@ -64,18 +64,14 @@ directory, start sage and use the command
 """
 
 import os.path
-import gzip
 import re
-import sys
-import time
 import os
-import random
-import glob
 import pymongo
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex
 from sage.rings.all import ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
+from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ, cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF
 
@@ -190,7 +186,7 @@ def parse_point(E, s):
     """
     K = E.base_field()
     cc = s[1:-1].split(":")
-    return E([parse_NFelt(c) for c in cc])
+    return E([parse_NFelt(K,c) for c in cc])
 
 
 def point_string(P):
@@ -395,7 +391,6 @@ def curve_data(line):
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string
-    iso_nlabel = numerify_iso_label(iso_label)         # int
     number = int(data[3])       # int
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
     label = "%s-%s" % (field_label, short_label)
@@ -462,7 +457,6 @@ def isoclass(line):
     field_label = data[0]       # string
     conductor_label = data[1]   # string
     iso_label = data[2]         # string
-    iso_nlabel = numerify_iso_label(iso_label)         # int
     number = int(data[3])       # int
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
     label = "%s-%s" % (field_label, short_label)
@@ -502,7 +496,6 @@ def upload_to_db(base_path, filename_suffix, insert=True):
 
         parse = globals()[f[:f.find('.')]]
 
-        t = time.time()
         count = 0
         print "Starting to read lines from file %s" % f
         for line in h.readlines():
@@ -644,7 +637,6 @@ def make_isoclass_line(ec):
         cl = Elist[0].isogeny_class()
         perm = dict([(i, cl.index(E)) for i, E in enumerate(Elist)])
         mat = permute_mat(cl.matrix(), perm, True)
-        n = len(Elist)
         mat = str([list(ri) for ri in mat.rows()]).replace(" ", "")
 
     cond_lab = ec['conductor_label']

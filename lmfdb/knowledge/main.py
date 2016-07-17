@@ -192,6 +192,7 @@ def md_latex_accents(text):
     knowl_content = re.sub(r"\\'{([a-zA-Z])}",r"&\1acute;",knowl_content)
     knowl_content = re.sub(r"\\`([a-zA-Z])",r"&\1grave;",knowl_content)
     knowl_content = re.sub(r"\\`{([a-zA-Z])}",r"&\1grave;",knowl_content)
+    knowl_content = re.sub(r"``(?P<a>[\S\s]*?)''", r"&ldquo;\1&rdquo;", knowl_content)
 
     return knowl_content
 
@@ -420,7 +421,12 @@ def render(ID, footer=None, kwargs=None, raw=False):
     the keyword 'raw' is used in knowledge.show and knowl_inc to
     include *just* the string and not the response object.
     """
-    k = Knowl(ID)
+    try:
+        k = Knowl(ID)
+    except:
+        logger.critical("Failed to render knowl %s"%ID)
+        errmsg = "Sorry, the knowledge database is currently unavailable."
+        return errmsg if raw else make_response(errmsg)
 
     # logger.debug("kwargs: %s", request.args)
     kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))

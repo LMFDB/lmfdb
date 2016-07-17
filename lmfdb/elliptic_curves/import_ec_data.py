@@ -69,16 +69,11 @@ Extra data fields added May 2016 to avoid computation on the fly:
 """
 
 import os.path
-import gzip
 import re
 import sys
-import time
 import os
-import random
-import glob
 import pymongo
-from lmfdb import base
-from sage.rings.all import ZZ
+from sage.all import ZZ, RR, EllipticCurve, prod
 from lmfdb.utils import web_latex
 from lmfdb.base import getDBConnection
 print "getting connection"
@@ -91,6 +86,7 @@ password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
 print "setting curves"
 curves = C.elliptic_curves.curves
+curves2 = C.elliptic_curves.curves2
 
 def parse_tgens(s):
     r"""
@@ -170,44 +166,6 @@ def allbsd(line):
 
     return label, data
 
-# Next function redundant as all data in allcurves is also in allgens
-
-
-def allcurves(line):
-    r""" Parses one line from an allcurves file.  Returns the label and a
-    dict containing fields with keys 'conductor', 'iso', 'number',
-    'ainvs', 'jinv', 'cm', 'rank', 'torsion', all values being strings or ints.
-
-    Input line fields:
-
-    conductor iso number ainvs rank torsion
-
-    Sample input line:
-
-    11 a 1 [0,-1,1,-10,-20] 0 5
-    """
-    data = split(line)
-    label = data[0] + data[1] + data[2]
-    ainvs = parse_ainvs(data[3])
-    E = EllipticCurve([ZZ(eval(a)) for a in ainvs])
-    jinv = unicode(str(E.j_invariant()))
-    if E.has_cm():
-        cm = int(E.cm_discriminant())
-    else:
-        cm = int(0)
-
-    return label, {
-        'conductor': int(data[0]),
-        'iso': data[0] + data[1],
-        'number': int(data[2]),
-        'ainvs': ainvs,
-        'jinv': jinv,
-        'cm': cm,
-        'rank': int(data[4]),
-        'torsion': int(data[5]),
-    }
-
-
 def allgens(line):
     r""" Parses one line from an allgens file.  Returns the label and
     a dict containing fields with keys 'conductor', 'iso', 'number',
@@ -225,10 +183,14 @@ def allgens(line):
     data = split(line)
     label = data[0] + data[1] + data[2]
     rank = int(data[4])
-    t = eval(data[5])
+    t = data[5]
+    if t=='[]':
+        t = []
+    else:
+        t = [int(c) for c in t[1:-1].split(",")]
     torsion = int(prod([ti for ti in t], 1))
     ainvs = parse_ainvs(data[3])
-    E = EllipticCurve([ZZ(eval(a)) for a in ainvs])
+    E = EllipticCurve([ZZ(a) for a in ainvs])
     jinv = unicode(str(E.j_invariant()))
     if E.has_cm():
         cm = int(E.cm_discriminant())
@@ -248,7 +210,7 @@ def allgens(line):
         'torsion_structure': ["%s" % tor for tor in t],
         'torsion_generators': ["%s" % parse_tgens(tgens[1:-1]) for tgens in data[6 + rank:]],
     }
-    extra_data = make_extra_data(label,data['number'],ainvs,data['gens'])
+    extra_data = make_extra_data(label,content['number'],ainvs,content['gens'])
     content.update(extra_data)
 
     return label, content
@@ -400,7 +362,7 @@ def galrep(line):
     }
 
 
-filename_base_list = ['allcurves', 'allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
+filename_base_list = ['allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
 
 
 def cmp_label(lab1, lab2):
@@ -431,6 +393,7 @@ def upload_to_db(base_path, min_N, max_N):
     twoadic_filename = '2adic/2adic.%s-%s' % (min_N, max_N)
     file_list = [allbsd_filename, allgens_filename, intpts_filename, alldegphi_filename, alllabels_filename, galreps_filename,twoadic_filename]
 #    file_list = [twoadic_filename]
+#    file_list = [allgens_filename]
 
     parsing_dict = {}
     for f in file_list:
@@ -448,7 +411,6 @@ def upload_to_db(base_path, min_N, max_N):
         print "opened %s" % os.path.join(base_path, f)
 
         parse=parsing_dict[f]
-        t = time.time()
         count = 0
         for line in h.readlines():
             label, data = parse(line)
@@ -498,8 +460,6 @@ def add_isogeny_matrices(N1,N2):
     res = res.sort([('conductor', pymongo.ASCENDING),
                     ('lmfdb_iso', pymongo.ASCENDING)])
     for C in res:
-        label = C['label']
-        lmfdb_label = C['lmfdb_label']
         lmfdb_iso = C['lmfdb_iso']
         E = EllipticCurve([int(a) for a in C['ainvs']])
         M = E.isogeny_class(order="lmfdb").matrix()
@@ -600,7 +560,7 @@ def make_extra_data(label,number,ainvs,gens):
 
 def add_extra_data(N1,N2,store=False):
     """Add these fields to curves in the db with conductors from N1 to
-    N2: NB This referes to a new collection 'curves2' which was
+    N2: NB This refers to a new collection 'curves2' which was
     created temporarily when upgrading the data stored, and no longer
     exists.
 

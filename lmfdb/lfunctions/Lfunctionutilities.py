@@ -3,9 +3,9 @@
 import re
 from lmfdb.lfunctions import logger
 import math
-from sage.all import ZZ, QQ, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, log, exp, pi, prod, floor
+from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, log, exp, pi, prod, floor
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
-from lmfdb.number_fields import group_display_knowl
+from lmfdb.transitive_group import group_display_knowl
 from lmfdb.base import getDBConnection
 
 ###############################################################
@@ -13,22 +13,28 @@ from lmfdb.base import getDBConnection
 ###############################################################
 
 def p2sage(s):
-    """ THIS FUNCTION IS DEPRECATED AND SHOULD NOT BE USED"""
-    from sage.all import sage_eval
-    # I really don't like the use of sage_eval here. It may be ok as long
-    # as we are only calling this function on trusted input from the database,
-    # but someone is going to forget that someday... --JWB
-    # This function should be removed and all calls to it replaced with something appropriate (e.g. PolynomialRing(QQ)(s) or something similar) -- AWS
-
-    x = PolynomialRing(RationalField(),"x").gen()
-    a = PolynomialRing(RationalField(),"a").gen()
-    try:
-        z = sage_eval(str(s), locals={'x' : x, 'a' : a})
-    except:
-        z = s
+    """Convert s to something sensible in Sage.  Can handle objects
+    (including strings) representing integers, reals, complexes (in
+    terms of 'i' or 'I'), polynomials in 'a' with integer
+    coefficients, or lists of the above.
+    """
+    z = s
     if type(z) in [list, tuple]:
         return [p2sage(t) for t in z]
     else:
+        Qa = PolynomialRing(RationalField(),"a"); a=Qa.gen()
+        for f in [ZZ, RR, CC, Qa]:
+            try:
+                return f(z)
+            # SyntaxError is raised by CC('??')
+            # NameError is raised by CC('a')
+            except (ValueError, TypeError, NameError, SyntaxError):
+                try:
+                    return f(str(z))
+                except (ValueError, TypeError, NameError, SyntaxError):
+                    pass
+        if z!='??':
+            logger.error('Error converting "{}" in p2sage'.format(z))
         return z
 
 def string2number(s):
@@ -137,6 +143,8 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
     truncation = float(10 ** truncationexp)
     try:
+        if isinstance(coeff,str) or isinstance(coeff,unicode):
+            coeff = string2number(coeff)
         if type(coeff) == complex:
             rp = coeff.real
             ip = coeff.imag
@@ -351,10 +359,12 @@ def lfuncDShtml(L, fmt):
             ans += "1<sup></sup>" + "&nbsp;"
             ans += "</span>"
         else:
-            ans += '$' 
-            ans += L.texname
-            ans += " = "
-            ans += "1^{\mathstrut}" + "$"  + "&nbsp;"
+            ans += "<span class='term'>"
+            ans += '$'+L.texname+'$'
+            ans += "&thinsp;"
+            ans += "&nbsp;=&nbsp;"
+            ans += "1<sup></sup>" + "&nbsp;"
+            ans += "</span>"
         ans += "</td><td valign='top'>"
 
         if fmt == "arithmetic":
@@ -369,7 +379,6 @@ def lfuncDShtml(L, fmt):
             else:
                 tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1,
                     "serieshtml", "dirichlethtml", -6, 5)
-
             if tmp != "":
                 nonzeroterms += 1
             ans = ans + " <span class='term'>" + tmp + "</span> "  
@@ -886,7 +895,8 @@ def compute_dirichlet_series(p_list, PREC):
     LL = [0] * PREC
     # create an empty list of the right size and now populate it with the powers of p
     for (p, y) in p_list:
-        p_prec = log(PREC) / log(p) + 1 # this is not currently used but perhaps it should be?  AVS
+        # FIXME p_prec is never used, but perhaps it should be?
+        p_prec = log(PREC) / log(p) + 1
         ep = euler_p_factor(y, PREC)
         for n in range(ep.prec()):
             if p ** n < PREC:

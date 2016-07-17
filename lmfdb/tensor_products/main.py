@@ -12,7 +12,7 @@ from galois_reps import GaloisRepresentation
 from sage.all import ZZ, EllipticCurve
 from lmfdb.artin_representations.main import ArtinRepresentation
 from lmfdb.WebCharacter import WebDirichletCharacter
-from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
+from lmfdb.modular_forms.elliptic_modular_forms.backend import WebNewForm
 from lmfdb.lfunctions.Lfunctionutilities import lfuncDShtml, lfuncEPtex, lfuncFEtex, specialValueString
 from lmfdb.lfunctions.main import render_lfunction_exception
 

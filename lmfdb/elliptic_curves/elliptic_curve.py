@@ -95,7 +95,7 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("browse_search.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), **err_args)
+    return render_template("ec-index.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -123,7 +123,7 @@ def statistics():
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
              ('statistics', ' ')]
-    return render_template("statistics.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+    return render_template("ec-stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")
@@ -159,7 +159,7 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
 
 def elliptic_curve_search(info):
 
-    if 'download' in info and info['download'] != '0':
+    if info.get('download') == '1' and info.get('Submit') and info.get('query'):
         return download_search(info)
 
     if 'SearchAgain' in info:
@@ -279,11 +279,11 @@ def elliptic_curve_search(info):
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
     t = info.get('title','Elliptic Curves search results')
-    return render_template("search_results.html", info=info, credit=credit, bread=bread, title=t)
+    return render_template("ec-search-results.html", info=info, credit=credit, bread=bread, title=t)
 
 
 def search_input_error(info, bread):
-    return render_template("search_results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread, learnmore=learnmore_list())
+    return render_template("ec-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread, learnmore=learnmore_list())
 
 ##########################
 #  Specific curve pages
@@ -374,7 +374,7 @@ def render_isogeny_class(iso_class):
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True)
     class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
 
-    return render_template("iso_class.html",
+    return render_template("ec-isoclass.html",
                            properties2=class_data.properties,
                            info=class_data,
                            code=class_data.code,
@@ -443,7 +443,7 @@ def render_curve_webpage_by_label(label):
 
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
-    return render_template("curve.html",
+    return render_template("ec-curve.html",
                            properties2=data.properties,
                            credit=credit,
                            data=data,
@@ -477,7 +477,7 @@ def padic_data():
             info['reg'] = web_latex(reg)
     else:
         info['reg'] = "no data"
-    return render_template("padic_data.html", info=info)
+    return render_template("ec-padic-data.html", info=info)
 
 
 @ec_page.route("/download_qexp/<label>/<limit>")

@@ -1,8 +1,5 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
-
 
 class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
@@ -29,7 +26,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_random(self):
         L = self.tc.get('/HigherGenus/C/Aut/random',follow_redirects=True)
-        assert 'Conjugacy classes for this   refined passport:' in L.data
+        assert 'Conjugacy classes for this' in L.data
 
     def test_magma_download(self):
         L = self.tc.get('/HigherGenus/C/Aut/5.32-27.0.2-2-2-4.1/download/magma')

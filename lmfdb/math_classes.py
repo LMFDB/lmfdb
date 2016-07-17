@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from base import getDBConnection, app
+from base import getDBConnection
 from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from databases.standard_types import PolynomialAsSequenceInt
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod
+from databases.standard_types import PolynomialAsSequenceInt, PolynomialAsSequenceTooLargeInt
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, ZZ
 from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
 from WebNumberField import WebNumberField
 from lmfdb.WebCharacter import WebSmallDirichletCharacter
@@ -95,7 +95,7 @@ class ArtinRepresentation(object):
                 label = "%sc%s"%(str(x[0]),str(x[1]))
             self._data = self.__class__.collection().find_and_convert_one({'Baselabel':str(base)})
             conjs = self._data["GaloisConjugates"]
-            conj = [x for x in conjs if x['GalOrbIndex'] == conjindex]
+            conj = [xx for xx in conjs if xx['GalOrbIndex'] == conjindex]
             self._data['label']=label
             self._data.update(conj[0])
 
@@ -559,7 +559,7 @@ class ConjugacyClass(object):
 
     def __str__(self):
         try:
-            return "A conjugacy class in the group %s, of order %s and with representative %s" % (G, self.order(), self.representative())
+            return "A conjugacy class in the group %s, of order %s and with representative %s" % (self._G, self.order(), self.representative())
         except:
             return "A conjugacy class"
 
@@ -598,25 +598,31 @@ class NumberFieldGaloisGroup(object):
 
     def polynomial(self):
         polstring = self._data["Polynomial"]
-        return PolynomialAsSequenceInt([int(a) for a in polstring.split(",")])
+        return PolynomialAsSequenceTooLargeInt([int(a) for a in polstring.split(",")])
 
     def polynomial_latex(self):
 	from sage.rings.all import PolynomialRing, QQ
 	PP = PolynomialRing(QQ, 'x')
     	return PP(self.polynomial())._latex_()
 
+    # WebNumberField of the object
+    def wnf(self):
+        return WebNumberField.from_polredabs(self.polredabs())
+
     def polredabs(self):
-        if "polredabs" in self._data.keys():
-            return self._data["polredabs"]
-        else:
-            pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
-            # Need to map because the coefficients are given as unicode, which does not convert to QQ
-            pol *= pol.denominator()
-            R = pol.parent()
-            from sage.all import pari
-            pol = R(pari(pol).polredabs())
-            self._data["polredabs"] = pol
-            return pol
+        # polynomials are all polredabs'ed now
+        return PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
+        #if "polredabs" in self._data.keys():
+        #    return self._data["polredabs"]
+        #else:
+        #    pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
+        #    # Need to map because the coefficients are given as unicode, which does not convert to QQ
+        #    pol *= pol.denominator()
+        #    R = pol.parent()
+        #    from sage.all import pari
+        #    pol = R(pari(pol).polredabs())
+        #    self._data["polredabs"] = pol
+        #    return pol
 
     def polredabslatex(self):
         return self.polredabs()._latex_()
@@ -631,7 +637,7 @@ class NumberFieldGaloisGroup(object):
             #from number_fields.number_field import poly_to_field_label
             #pol = PolynomialRing(QQ, 'x')(map(str,self.polynomial()))
             #label = poly_to_field_label(pol)
-	    label = WebNumberField.from_coeffs(self._data["Polynomial"]).get_label()
+            label = WebNumberField.from_coeffs(self._data["Polynomial"]).get_label()
             if label:
                 self._data["label"] = label
             return label
@@ -655,7 +661,6 @@ class NumberFieldGaloisGroup(object):
         """
         More-or-less standardized name of the abstract group
         """
-        from WebNumberField import WebNumberField
         import re
         wnf = WebNumberField.from_polredabs(self.polredabs())
         if not wnf.is_null():
@@ -765,8 +770,14 @@ class NumberFieldGaloisGroup(object):
         try:
             return self._residue_field_degrees(p)
         except AttributeError:
-            from number_fields.number_field import residue_field_degrees_function
-            fn_with_pari_output = residue_field_degrees_function(self.sage_object())
+            # Try to make WebNumberField, but only helps if the field is in our database
+            wnf = self.wnf()
+            if wnf._data is None:
+                from number_fields.number_field import sage_residue_field_degrees_function
+                fn_with_pari_output = sage_residue_field_degrees_function(self.sage_object())
+            else:
+                from number_fields.number_field import residue_field_degrees_function
+                fn_with_pari_output = residue_field_degrees_function(wnf)
             self._residue_field_degrees = lambda p: map(Integer, fn_with_pari_output(p))
             # This function is better, becuase its output has entries in Integer
             return self._residue_field_degrees(p)

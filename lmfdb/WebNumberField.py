@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import lmfdb.base as base
-from sage.all import *
-import re
-import pymongo
-import bson
-import yaml
+import sage
+from sage.all import gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari
+import yaml, os
 import hashlib
 from sage.misc.cachefunc import cached_function
-from lmfdb.utils import *
+from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html
+from flask import url_for
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
 
@@ -337,16 +336,26 @@ class WebNumberField:
         ugm = self.unit_galois_action()
         if ugm == []:
             return ''
-        C = base.getDBConnection()
-        gmods = C.transitivegroups.Gmodules
         n = self.degree()
         t = self.galois_t()
         return modules2string(n, t, ugm)
 
+    # Sage version of K -- should be avoided since it can be slow
+    # in extreme cases
     def K(self):
         if not self.haskey('K'):
             self._data['K'] = NumberField(self.poly(), self.gen_name)
         return self._data['K']
+
+    # pari version of K
+    def gpK(self):
+        if not self.haskey('gpK'):
+            Qx = PolynomialRing(QQ,'x')
+            # while [1] is a perfectly good basis for Z, gp seems to want []
+            basis = [Qx(el.replace('a','x')) for el in self.zk()] if self.degree() > 1 else []
+            k1 = gp( "nfinit([%s,%s])" % (str(self.poly()),str(basis)) )
+            self._data['gpK'] = k1
+        return self._data['gpK']
 
     def generator_name(self):
         #Add special case code for the generator if desired:
@@ -358,7 +367,7 @@ class WebNumberField:
     def unit_rank(self):
         if not self.haskey('unit_rank'):
             sig = self.signature()
-            self._data['unit_rank'] = unit_rank = sig[0] + sig[1] - 1
+            self._data['unit_rank'] = sig[0] + sig[1] - 1
         return self._data['unit_rank']
 
     def regulator(self):

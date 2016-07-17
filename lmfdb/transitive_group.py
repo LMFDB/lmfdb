@@ -1,15 +1,12 @@
 import re
-import pymongo
 import string
 import bson
 
-from lmfdb.base import app, getDBConnection
-from flask import Flask, session, g, render_template, url_for, request, redirect
+from lmfdb.base import getDBConnection
 
-import sage.all
-from sage.all import ZZ, latex, AbelianGroup, pari, gap
+from sage.all import ZZ, gap
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, list_to_latex_matrix
+from lmfdb.utils import list_to_latex_matrix
 
 MAX_GROUP_DEGREE = 23
 
@@ -410,11 +407,11 @@ def group_display_inertia(code, C):
     ans += code[3]
     return ans
 
-    label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
-    if group['pretty']:
-        return group['pretty']
-    return group['name']
+    #label = base_label(n, t)
+    #group = C.transitivegroups.groups.find_one({'label': label})
+    #if group['pretty']:
+    #    return group['pretty']
+    #return group['name']
 
 
 def conjclasses(g, n):

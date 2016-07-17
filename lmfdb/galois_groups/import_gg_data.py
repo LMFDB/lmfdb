@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
 import sys
-import time
 import bson
-import sage.all
-from sage.all import *
+assert bson
 import os
+assert os
 import json
 
 sys.path.append("../")
 from lmfdb import base
 from lmfdb.website import dbport
-from pymongo.connection import Connection
 base._init(dbport, "")
 C = base.getDBConnection()
-import pymongo
 
 gr = C.transitivegroups.groups
 

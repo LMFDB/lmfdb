@@ -1,11 +1,7 @@
+# -*- coding: utf-8 -*-
 
 from lmfdb.base import LmfdbTest, getDBConnection
 
-from flask import request
-import unittest2
-import sys
-
-from views.emf_main import *
 from . import emf_logger
 emf_logger.setLevel(100)
 
