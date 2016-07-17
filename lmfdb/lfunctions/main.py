@@ -610,13 +610,13 @@ def initLfunction(L, args, request):
         Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
         if mod > 1:
             pmod,pnum = WebDirichlet.prevprimchar(mod, num)
-            Lprev = ("previous",Lpattern%(pmod,pnum),
+            Lprev = ("previous",Lpattern%(pmod,pnum) if pmod > 1 else r"\(\zeta(s)\)",
                      url_for('.l_function_dirichlet_page',
                              modulus=pmod,number=pnum))
         else:
             Lprev = ('','','')
         nmod,nnum = WebDirichlet.nextprimchar(mod, num)
-        Lnext = ("next",Lpattern%(nmod,nnum),
+        Lnext = ("next",Lpattern%(nmod,nnum) if nmod > 1 else r"\(\zeta(s)\)",
                  url_for('.l_function_dirichlet_page',
                          modulus=nmod,number=nnum))
         info['navi'] = (Lprev,Lnext)
