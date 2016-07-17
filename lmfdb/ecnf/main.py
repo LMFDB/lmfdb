@@ -344,8 +344,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
 
 
 def elliptic_curve_search(info):
-    
-    if 'download' in info and info['download'] != 0:
+
+    if info.get('download') == '1' and info.get('Submit') and info.get('query'):
         return download_search(info)
 
     if not 'query' in info:
