@@ -1,9 +1,11 @@
-import sys, time
+import sys, time, os
+assert time
 import bson, pymongo
-import sage.all
+assert bson
 import re
 import json
-from sage.all import *
+from sage.all import ZZ
+from zlib import gzip
 
 # find lmfdb and the top of the tree
 mypath = os.path.realpath(__file__)
