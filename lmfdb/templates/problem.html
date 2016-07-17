@@ -1,0 +1,12 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+<div class="announce red">
+{{ explain | safe }}
+You may report this problem <a href="{{ feedbackpage }}" target=_blank>here</a>.
+</div>
+<div>
+<input type=button value="Return to previous page" onClick="history.go(-1)">
+</div>
+{% endblock %}
+
