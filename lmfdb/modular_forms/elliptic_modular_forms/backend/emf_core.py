@@ -25,7 +25,7 @@ AUTHOR: Fredrik Stroemberg
 
 """
 
-from sage.all import ZZ, Newform, is_squarefree, squarefree_part, factor, is_square, divisors, DirichletGroup, QQ, xgcd, prime_factors, Gamma0, html, I, ceil, ComplexField, RealField, dimension_cusp_forms, sturm_bound, latex, Gamma1
+# from sage.all import ZZ, Newform, is_squarefree, squarefree_part, factor, is_square, divisors, DirichletGroup, QQ, xgcd, prime_factors, Gamma0, html, I, ceil, ComplexField, sturm_bound, latex, Gamma1
 import re
 
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger as logger
