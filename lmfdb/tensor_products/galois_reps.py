@@ -6,12 +6,12 @@ AUTHORS: Alberto Camara, Mark Watkins, Chris Wuthrich, 2014
 Example:
 
 sage: import lmfdb
-sage: from lmfdb.tensor_products.galois_reps import *
+sage: from lmfdb.tensor_products.galois_reps import GaloisRepresentation
 sage: V1 = GaloisRepresentation(EllipticCurve("37a1"))
 sage: V1.motivic_weight
 sage: V1.local_euler_factor(37)
 
-sage: from lmfdb.WebCharacter import *
+sage: from lmfdb.WebCharacter import WebDirichletCharacter
 sage: chi = WebDirichletCharacter(modulus=37,number=4)
 sage: V2 = GaloisRepresentation(chi)
 sage: V2.langlands
@@ -929,7 +929,7 @@ def test_tensprod_11a_17a():
 ### comparison with previous implementation.
 
 #sage: E = EllipticCurve("11a1")
-#sage: from lmfdb.tensor_products.galois_reps import *
+#sage: from lmfdb.tensor_products.galois_reps import GaloisRepresentation
 #sage: V = GaloisRepresentation(E)
 #sage: V.lfunction()
 #sage: V.dirichlet_coefficients[:10]

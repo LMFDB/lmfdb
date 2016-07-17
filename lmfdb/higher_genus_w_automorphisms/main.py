@@ -89,6 +89,11 @@ def signature_to_list(L):
     return L
 
 
+def sort_sign(L):
+    L1 = L[1:]
+    L1.sort()
+    return [L[0]] +L1
+
 def label_to_breadcrumbs(L):
     newsig = '['
     for i in range(0,len(L)):
@@ -157,7 +162,10 @@ def index():
     bread = get_bread()
     if request.args:
         return higher_genus_w_automorphisms_search(**request.args)
-    genus_list = range(2,6)
+
+    C = base.getDBConnection()
+    genus_max = C.curve_automorphisms.passports.find().sort('genus', pymongo.DESCENDING).limit(1)[0]['genus']  + 1
+    genus_list = range(2,genus_max)
     info = {'count': 20,'genus_list': genus_list}
     
 
@@ -211,20 +219,23 @@ def higher_genus_w_automorphisms_search(**args):
 
 
 #allows for ; in signature
-    if 'signature' in info:   
-        info.update({'signature': signature_to_list(info['signature'])})
-        
+    if 'signature' in info and info['signature'] != '':
+        sig_list = ast.literal_eval(signature_to_list(info['signature']))
+        sig =  sort_sign(sig_list)
+        info.update({'signature': str(sig)})
+            
     try:
         parse_bracketed_posints2(info,query,'group', split=False, exactlength=2, name='Group')
         parse_ints(info,query,'genus',name='Genus')
-        parse_bracketed_posints2(info,query,signature_to_list('signature'),split=False,name='Signature')
+        parse_bracketed_posints2(info,query,'signature',split=False,name='Signature')
         parse_ints(info,query,'dim',name='Dimension of the family')
         if 'inc_hyper' in info:
             if info['inc_hyper'] == 'exclude':
                 query['hyperelliptic'] = False
             elif info['inc_hyper'] == 'only':
                 query['hyperelliptic'] = True
-            
+
+        query['cc.1'] = 1       
 
     except ValueError:
         return search_input_error(info, bread)
@@ -322,8 +333,13 @@ def render_family(args):
             
         info.update({'passport': Lall})
 
-            
-        friends = [ ]
+
+        g2List = ['[2,1]','[4,2]','[8,3]','[10,2]','[12,4]','[24,8]','[48,29]']
+        if g  == 2 and data['group'] in g2List:
+            g2url = "/Genus2Curve/Q/?geom_aut_grp_id=" + data['group']
+            friends = [("Genus 2 curves over $\Q$", g2url ) ]
+        else:    
+            friends = [ ]
         
 
         br_g, br_gp, br_sign = split_family_label(label)

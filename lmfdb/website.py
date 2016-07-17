@@ -77,17 +77,19 @@ assert rep_galois_modl
 # Currently uploading is not supported
 # import upload
 
-
 import logging
 import utils
 import os
 import sys
+import time
 import getopt
 from pymongo import ReadPreference
 from base import app, set_logfocus, get_logfocus, _init
 from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
+import sage
 
 DEFAULT_DB_PORT = 37010
+LMFDB_SAGE_VERSION = '7.1'
 
 @app.before_request
 def redirect_nonwww():
@@ -104,7 +106,7 @@ def not_found_404(error):
 
 @app.errorhandler(500)
 def not_found_500(error):
-    app.logger.error("Failed URL: %s"%request.url)
+    app.logger.error("[%s UTC] 500 error on URL %s"%(time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime()),request.url))
     return render_template("500.html"), 500
 
 @app.errorhandler(503)
@@ -342,3 +344,5 @@ if True:
     logging.info("configuration: %s" % configuration)
     _init(**configuration['mongo_client_options'])
     app.logger.addHandler(file_handler)
+    if [int(c) for c in sage.version.version.split(".")[:2]] < [int(c) for c in LMFDB_SAGE_VERSION.split(".")[:2]]:
+        logging.warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***"%(sage.version.version,LMFDB_SAGE_VERSION))
