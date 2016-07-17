@@ -48,7 +48,11 @@ def len_as_printed(s, format='latex'):
     ss = re.sub(" ", "", ss)    # remove white-space
     ss = re.sub("\*", "", ss)    # remove *
     num_exp = s.count("^")    # count number of exponents
+    # exps = re.findall("\^{?(\d*)", s)  # a list of all exponents
+    # sexps = "".join(exps)
     num_subs = s.count("_")    # count number of exponents
+    # subs = re.findall("_{?(\d*)", s)  # a list of all  subscripts
+    # ssubs = "".join(subs)
     ss = re.sub("\^{?(\d*)}?", "", ss)  # remove exponenents
     # logger.debug("".join([ss,ssubs,sexps]))
     tot_len = (ss.count(")") + ss.count("(")) * lenpar
