@@ -538,11 +538,23 @@ def residue_field_degrees_function(nf):
     """
     k1 = nf.gpK()
     D = nf.disc()
+    return main_work(k1,D,'pari')
 
+def sage_residue_field_degrees_function(nf):
+    """ Version of above which takes a sage number field
+        Used by Artin representation code when the Artin field is not
+        in the database.
+    """
+    D = nf.disc()
+    return main_work(pari(nf),D,'sage')
+
+def main_work(k1, D, typ):
+    # Difference for sage vs pari array indexing
+    ind = 3 if typ is 'sage' else 4
     def decomposition(p):
         if not ZZ(p).divides(D):
             dec = k1.idealprimedec(p)
-            dec = [z[4] for z in dec]
+            dec = [z[ind] for z in dec]
             return dec
         else:
             raise ValueError("Expecting a prime not dividing D")
