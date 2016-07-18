@@ -20,24 +20,22 @@ AUTHORS:
 
 
 """
-import lmfdb.base
-from lmfdb.base import app
-from flask import render_template, url_for, request, redirect, make_response, send_file
+
+import flask
+from flask import render_template, url_for, request, make_response, send_file
 import bson
 import StringIO
-import pymongo
-from sage.all import is_odd, is_even, dumps, loads
-# mwf = flask.Blueprint('mwf', __name__, template_folder="templates",static_folder="static")
+from sage.all import loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassFormTable, WebMaassForm
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
-from mwf_upload_data import *
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters, connect_db, get_collections_info
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
+# from mwf_upload_data import *
 from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
 try:
-    from dirichlet_conrey import *
+    # from dirichlet_conrey import *
+    pass
 except:
     mwf_logger.critical("Could not import dirichlet_conrey!")
 
@@ -79,7 +77,9 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
 
     DB = connect_db()
     if not info['collection'] or info['collection'] == 'all':
-        md = get_collections_info()
+        # FIXME: metadata returned by get_collections_info is never used, only side effect appears to be logging messages
+        # md = get_collections_info()
+        get_collections_info()
     info['cur_character'] = character
     if level > 0:
         info['maass_weight'] = DB.weights(int(level))
@@ -217,7 +217,7 @@ def render_one_maass_waveform_wp(info):
 
     level = info['MF'].level
     dim = info['MF'].dim
-    numc = info['MF'].num_coeff
+    # numc = info['MF'].num_coeff # never used
     if info['MF'].has_plot(): # and level == 1: # Bara level = 1 har rätt format för tillfället //Lemurell
         info['plotlink'] = url_for('mwf.plot_maassform', maass_id=maass_id)
     # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
@@ -247,21 +247,21 @@ def render_one_maass_waveform_wp(info):
                           ('All coefficients of the form',
                            url_for('mwf.render_one_maass_waveform', maass_id=maass_id,
                                    download='coefficients')) ]
-    lenc = 20
     mwf_logger.debug("count={0}".format(DB.count()))
     ch = info['MF'].character
     s = "\( \chi_{" + str(level) + "}(" + str(ch) + ",\cdot) \)"
-    # is it possible to get the knowls into the properties?
-    knowls = knowls = {'level': 'mf.maass.mwf.level',
-                       'weight': 'mf.maass.mwf.weight',
-                       'char': 'mf.maass.mwf.character',
-                       'R': 'mf.maass.mwf.eigenvalue',
-                       'sym': 'mf.maass.mwf.symmetry',
-                       'prec': 'mf.maass.mwf.precision',
-                       'mult': 'mf.maass.mwf.dimension',
-                       'ncoeff': 'mf.maass.mwf.ncoefficients',
-                       'fricke': 'mf.maass.mwf.fricke',
-                       'atkinlehner': 'mf.maass.mwf.atkinlehner'}
+    # Q: Is it possible to get the knowls into the properties?
+    # A: Not in a nice way and this is not done elsewhere in the LMFDB; the knowls should appear on labels in the template
+    # knowls = {'level': 'mf.maass.mwf.level',
+    #                   'weight': 'mf.maass.mwf.weight',
+    #                   'char': 'mf.maass.mwf.character',
+    #                   'R': 'mf.maass.mwf.eigenvalue',
+    #                   'sym': 'mf.maass.mwf.symmetry',
+    #                   'prec': 'mf.maass.mwf.precision',
+    #                   'mult': 'mf.maass.mwf.dimension',
+    #                   'ncoeff': 'mf.maass.mwf.ncoefficients',
+    #                   'fricke': 'mf.maass.mwf.fricke',
+    #                   'atkinlehner': 'mf.maass.mwf.atkinlehner'}
     properties = [('Level', [info['MF'].level]),
                   ('Symmetry', [info['MF'].even_odd()]),
                   ('Weight', [info['MF'].the_weight()]),
@@ -303,7 +303,6 @@ def render_search_results_wp(info, search):
     """
     mwf_logger.debug("in render_search_results. info1={0}".format(info))
     mwf_logger.debug("Search:{0}".format(search))
-    evs = {'table': {}}
     if not isinstance(search, dict):
         search = {}
     if 'limit' not in search:
@@ -598,7 +597,4 @@ def evs_table(search, twodarray=False):
 
 
 def conrey_character_name(N, chi):
-    return "\chi_{" + str(self._N) + "}(" + strIO(chi.number()) + ",\cdot)"
-
-
-
+    return "\chi_{" + str(N) + "}(" + str(chi.number()) + ",\cdot)"
