@@ -9,12 +9,12 @@ and returns that.
 
 """
 
-import sys, time
+import sys
 import re
 import json
-import sage.all
-from sage.all import os
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt
+import os
+import gzip
+
 from lmfdb.base import getDBConnection
 
 C= getDBConnection()
@@ -67,11 +67,11 @@ label_dict={}
 
 def label_lookup(base_label):
     if base_label in label_dict:
-	n=label_dict[base_label]+1
-	label_dict[base_label]=n
-    	return n
+        n=label_dict[base_label]+1
+        label_dict[base_label]=n
+        return n
     label_dict[base_label]=1
-    return 1	
+    return 1
 
 def do_import(ll):
     characteristic,deg,level,conductor,min_weight,dirchar,atkinlehner,n_coeffs,coeffs = ll
