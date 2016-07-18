@@ -142,7 +142,10 @@ def render_one_maass_waveform(maass_id, **kwds):
     in a format that is readable by python.
     """
     info = get_args_mwf(**kwds)
-    info['maass_id'] = bson.objectid.ObjectId(maass_id)
+    try:
+        info['maass_id'] = bson.objectid.ObjectId(maass_id)
+    except bson.errors.InvalidId:
+        return flask.abort(404)
     mwf_logger.debug("in_render_one_maass_form: info={0}".format(info))
     if (info.get('download', '') == 'coefficients'  or
         info.get('download', '') == 'all'):
@@ -174,6 +177,10 @@ def plot_maassform(maass_id):
     Render the plot of the Maass waveform as a pg-file.
     Loads it from the database.
     """
+    try:
+        maass_id = bson.objectid.ObjectId(maass_id)
+    except bson.errors.InvalidId:
+        return flask.abort(404)
     DB = connect_db()
     data = DB.get_maassform_plot_by_id(maass_id)
     data = data['plot']

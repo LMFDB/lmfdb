@@ -22,7 +22,7 @@ def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, 
         print "Collection %s already exists in database %s, please drop it first" % (outcoll, db.name)
         return
     if not incoll in db.collection_names():
-        print "Collection %s not found in database %s" % (coll, db.name)
+        print "Collection %s not found in database %s" % (incoll, db.name)
         return
     start = time.time()
     inrecs = db[incoll].find(filter, projection)
@@ -53,7 +53,7 @@ def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, 
 #
 # Take indexes from incoll and create them in outcoll (in lex order).
 #
-def reindex_collection(db,incoll,outcoll):
+def reindex_collection(db, incoll, outcoll):
     indexes = db[incoll].index_information()
     keys = [(k,indexes[k]['key']) for k in indexes if k != '_id_']
     keys.sort() # sort indexes by keyname so (attr1) < (attr1,attr2) < (attr1,attr2,attr3) < ...
@@ -79,7 +79,7 @@ add_counter.num = 0
 # The new collection consists of records with "_id" taken from coll and a sequentially assigned "num" (starting at 1)
 # An index is created on num which can be used to efficiently generate random object ids in coll
 #
-def create_random_object_index(db,incoll,filter=None):
+def create_random_object_index(db, incoll, filter=None):
     outcoll = incoll+".rand"
     if outcoll in db.collection_names():
         print "Dropping existing collection %s in db %s" % (outcoll,db.name)
@@ -87,3 +87,20 @@ def create_random_object_index(db,incoll,filter=None):
     add_counter() # reset counter
     rewrite_collection (db, incoll, outcoll, add_counter, reindex=False, filter=filter, projection={'_id':True})
     db[outcoll].create_index('num')
+
+# update_attribute_value_counts(db, coll, attributes)
+#
+# updates statistic record in coll.stats for the specified attribute or list of attributes (creates coll.stats if need be)
+# statistic record contains a list of counts of each distinct value of the specified attribute
+# pymongo will raise an error if the size of this exceeds 16MB
+def update_attribute_stats(db, coll, attributes):
+    statscoll = coll + ".stats"
+    if isinstance(attributes,basestring):
+        attributes = [attributes]
+    for attr in attributes:
+        db[statscoll].delete_one({'_id':attr})
+    total = db[coll].count()
+    for attr in attributes:
+        counts = [[value,db[coll].find({attr:value}).count()] for value in sorted(db[coll].distinct(attr))]
+        min, max = counts[0][0], counts[-1][0]
+        db[statscoll].insert_one({'_id':attr, 'total':total, 'counts':counts, 'min':min, 'max':max})

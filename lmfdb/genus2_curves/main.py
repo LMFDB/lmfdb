@@ -9,7 +9,7 @@ from operator import mul
 from flask import render_template, url_for, request, redirect, send_file
 from sage.all import ZZ
 
-from lmfdb.utils import to_dict, comma, random_value_from_collection, flash_error
+from lmfdb.utils import to_dict, comma, random_value_from_collection, attribute_value_counts, flash_error
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
@@ -359,7 +359,7 @@ def st_group_format(name):
 stats_attribute_list = [
     {'name':'num_rat_wpts','top_title':'rational Weierstrass points','row_title':'Weierstrass points','knowl':'g2c.num_rat_wpts','avg':True},
     {'name':'aut_grp_id','top_title':'$\mathrm{Aut}(X)$','row_title':'automorphism group','knowl':'g2c.aut_grp','format':aut_grp_format},
-    {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\mathbb{Q}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':geom_aut_grp_format},
+    {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':geom_aut_grp_format},
     {'name':'analytic_rank','top_title':'analytic ranks','row_title':'analytic rank','knowl':'g2c.analytic_rank','avg':True},
     {'name':'two_selmer_rank','top_title':'2-Selmer ranks','row_title':'2-Selmer rank','knowl':'g2c.two_selmer_rank','avg':True},
     {'name':'has_square_sha','top_title':'squareness of &#1064;','row_title':'has square Sha','knowl':'g2c.has_square_sha', 'format':boolean_format},
@@ -417,12 +417,11 @@ class G2C_stats(object):
         dists = []
         # TODO use aggregate $group to speed this up and/or just store these counts in the database
         for attr in stats_attribute_list:
-            values = sorted(curves.distinct(attr['name']))
+            counts = attribute_value_counts(curves, attr['name'])
             vcounts = []
             rows = []
             avg = 0
-            for value in values:
-                n = curves.find({attr['name']:value}).count()
+            for value,n in counts:
                 prop = format_percentage(n,total)
                 if 'avg' in attr and attr['avg']:
                     avg += n*value
