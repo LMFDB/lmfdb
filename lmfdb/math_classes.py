@@ -3,8 +3,8 @@
 from base import getDBConnection
 from utils import url_for, pol_to_html
 from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from databases.standard_types import PolynomialAsSequenceInt, PolynomialAsSequenceTooLargeInt
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, ZZ
+from databases.standard_types import PolynomialAsSequenceTooLargeInt
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod
 from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
 from WebNumberField import WebNumberField
 from lmfdb.WebCharacter import WebSmallDirichletCharacter
@@ -283,7 +283,6 @@ class ArtinRepresentation(object):
         return self.local_factor(p)
 
     def coefficients_list(self, upperbound=100):
-        from sage.rings.all import RationalField
         from utils import an_list
         return an_list(lambda p: self.euler_polynomial(p), upperbound=upperbound, base_field=ComplexField())
 
@@ -424,15 +423,6 @@ class ArtinRepresentation(object):
             return [-1, 1]
         return []
 
-    def poles(self):
-        try:
-            assert self.primitive()
-        except AssertionError:
-            raise NotImplementedError
-        if int(self.conductor()) == 1 and int(self.dimension()) == 1:
-            return [1]
-        return []
-
     def residues(self):
         try:
             assert self.primitive()
@@ -455,7 +445,6 @@ class ArtinRepresentation(object):
             return self._from_conjugacy_class_index_to_polynomial_fn(index)
         except AttributeError:
             local_factors = self.local_factors_table()
-            from sage.rings.all import RealField, ComplexField
             field = ComplexField()
             root_of_unity = exp((field.gen()) * 2 * field.pi() / int(self.character_field()))
             local_factor_processed_pols = [0]   # dummy to account for the shift in indices

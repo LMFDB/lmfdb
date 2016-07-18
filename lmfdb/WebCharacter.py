@@ -812,13 +812,11 @@ class WebChar(WebCharObject):
             vf = r'\(\Q(i)\)'
         else:
             vf = r'\(\Q(\zeta_{%d})\)' % order2
-        self._order2 = order2
         return vf
 
     @property
     def vflabel(self):
-      _ = self.valuefield # make sure valuefield was computed
-      order2 = self._order2
+      order2 = self.order if self.order % 4 != 2 else self.order / 2
       if order2 == 1:
           return '1.1.1.1'
       elif order2 == 4:

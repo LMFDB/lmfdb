@@ -16,14 +16,13 @@ via optional command-line arguments.
 
 
 class Configuration(object):
-    default_config_fn = 'config.ini'
 
     def __init__(self):
         # 1: parsing command-line arguments
         from optparse import OptionParser
         _parser = OptionParser()
         _parser.add_option('-c', '--config-file', dest="config_file",
-                           help='configuration file [default: %default]', default=default_config_fn)
+                           help='configuration file [default: %default]', default="config.ini")
         _parser.add_option(
             '-d', '--debug', action="store_true", dest='debug', help='debug mode [default: %default]', default=False)
         _parser.add_option(
