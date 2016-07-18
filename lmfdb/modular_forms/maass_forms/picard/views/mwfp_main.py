@@ -3,7 +3,7 @@
 from flask import render_template, url_for, request
 from lmfdb.modular_forms.maass_forms.picard import mwfp, mwfp_logger, mwfp_dbname
 from lmfdb.modular_forms.maass_forms.picard.backend.mwfp_classes import PicardFormTable, PicardDataTable
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend import connect_db
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import connect_db
 
 # see main mwfp blueprint for details
 
