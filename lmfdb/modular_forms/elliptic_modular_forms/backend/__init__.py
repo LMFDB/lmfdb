@@ -40,7 +40,7 @@ def get_files_from_gridfs(collection='',create=True):
     try:
         return gridfs.GridFS(C,collection)
     except Exception as e:
-        error_st = "Collection {0} is not in database {1}.  Error: {3}".format(collection,C,e)
+        error_st = "Collection {0} is not in database {1}.  Error: {2}".format(collection,C,e)
         emf_logger.critical(error_st)
         raise ValueError,error_st 
 
