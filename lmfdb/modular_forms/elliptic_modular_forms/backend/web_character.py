@@ -38,7 +38,6 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import WebObj
 
 try:
     from dirichlet_conrey import DirichletCharacter_conrey, DirichletGroup_conrey
-    # from dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
