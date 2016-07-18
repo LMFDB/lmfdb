@@ -22,9 +22,9 @@ fields = getDBConnection().localfields.fields
 # aut: number of automorphisms
 # galT: galois T number
 
-
-def coeffs(s):
-    return [a for a in s[1:-1].split(',')]
+# unused and collides with coeffs defined in loop below
+# def coeffs(s):
+#    return [a for a in s[1:-1].split(',')]
 
 
 def base_label(p, n, c, ind):
