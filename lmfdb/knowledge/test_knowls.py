@@ -1,7 +1,6 @@
 # -*- coding: utf8 -*-
 # testing users blueprint
 from lmfdb.base import LmfdbTest
-from flask import url_for
 
 
 class KnowlTestCase(LmfdbTest):

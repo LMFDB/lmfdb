@@ -1,6 +1,7 @@
 import math
 import logging
-
+import re
+from lmfdb.utils import pair2complex, splitcoeff
 
 class WebHMF:
     """Class for presenting a Hilbert modular form on a web page

@@ -3,7 +3,7 @@
 # A safeguard is currently inserted, making sure database_name == "limbo"
 # because there is a risk of overwriting an already existing collection
 
-import sys, getopt
+import sys
 
 def main(argv):
     file_name = argv[0]

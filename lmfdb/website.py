@@ -208,7 +208,6 @@ def get_configuration():
     mongo_client_config_filename = '{0}/{1}'.format(config_dir,mongo_client_config_filename)
 
     if not 'sage' in sys.argv[0] and not sys.argv[0].endswith('nosetests'):
-        import getopt
         try:
             opts, args = getopt.getopt(
                                         sys.argv[1:],

@@ -142,7 +142,10 @@ def render_one_maass_waveform(maass_id, **kwds):
     in a format that is readable by python.
     """
     info = get_args_mwf(**kwds)
-    info['maass_id'] = bson.objectid.ObjectId(maass_id)
+    try:
+        info['maass_id'] = bson.objectid.ObjectId(maass_id)
+    except bson.errors.InvalidId:
+        return flask.abort(404)
     mwf_logger.debug("in_render_one_maass_form: info={0}".format(info))
     if (info.get('download', '') == 'coefficients'  or
         info.get('download', '') == 'all'):
@@ -174,6 +177,10 @@ def plot_maassform(maass_id):
     Render the plot of the Maass waveform as a pg-file.
     Loads it from the database.
     """
+    try:
+        maass_id = bson.objectid.ObjectId(maass_id)
+    except bson.errors.InvalidId:
+        return flask.abort(404)
     DB = connect_db()
     data = DB.get_maassform_plot_by_id(maass_id)
     data = data['plot']
@@ -190,7 +197,24 @@ def render_one_maass_waveform_wp(info):
     DB = connect_db()
     maass_id = info['maass_id']
     mwf_logger.debug("id1={0}".format(maass_id))
-    info['MF'] = WebMaassForm(DB, maass_id)
+    info['MF'] = MF = WebMaassForm(DB, maass_id)
+    info['title'] = "Maass form"
+    info['bread'] = [('Modular forms', url_for('mf.modular_form_main_page')),
+                     ('Maass waveforms', url_for('.render_maass_waveforms'))]
+    if hasattr(MF,'level'):
+        info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
+        info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
+        if hasattr(MF, 'R') and MF.R:
+            info['title'] += " with \(R=%s\)" % info['MF'].R
+
+    # make sure all the expected attributes of a WebMaassForm are actually present
+    missing = [attr for attr in ['level', 'dim', 'num_coeff', 'R', 'character'] if not hasattr(MF, attr)]
+    if missing:
+        mwf_logger.critical("Unable to render Maass form {0}; required attributes {1} missing from database record.".format(maass_id,missing))
+        info['explain'] = "Unable to render Maass form {0} because the following required attributes were missing from the database record:".format(maass_id) \
+                      + "<ul>" + "".join(["<li>"+attr+"</li>" for attr in missing]) + "</ul>"
+        return render_template("problem.html", **info)
+
     level = info['MF'].level
     dim = info['MF'].dim
     numc = info['MF'].num_coeff
@@ -200,10 +224,6 @@ def render_one_maass_waveform_wp(info):
     Llink = "/L" + url_for('mwf.render_one_maass_waveform', maass_id=maass_id)  # + '/?db=' + info['db']
     if dim == 1:
         info["friends"] = [("L-function", Llink)]
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),
-             ('Maass waveforms', url_for('.render_maass_waveforms')),
-             ('Level {0}'.format(level),
-             url_for('.render_maass_waveforms', level=level))]
 
     # Navigation to previous and next form
     next_form_id = info['MF'].next_maassform_id()
@@ -253,8 +273,6 @@ def render_one_maass_waveform_wp(info):
                   ]
     if dim > 1 and info['MF'].the_character() == "trivial":
         properties.append(("Possibly oldform", []))
-    info['title'] = "Maass form on \(\Gamma_{0}( %s )\) with $R=%s$" % (info['MF'].level, info['MF'].R)
-    info['bread'] = bread
     info['properties2'] = properties
 
     info['MF'].set_table()
