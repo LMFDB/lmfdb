@@ -2,7 +2,7 @@
 import json
 
 from lmfdb.base import app
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+from flask import render_template, url_for, request,  make_response
 from lmfdb.utils import to_dict
 from lmfdb.search_parsing import parse_range
 import lmfdb.base as base
@@ -35,7 +35,7 @@ def database_query(db_name, coll_name):
     
     try:
         collection = getattr(db, coll_name)
-    except Expecptio as e:
+    except Exception as e:
         return "No such collection. Error: %s" % e
 # see issue #1170
 #    if coll_name not in db.collection_names():

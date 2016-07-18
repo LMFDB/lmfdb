@@ -13,7 +13,7 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
 FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
 
-from flask import flash, redirect, url_for, request
+from flask import flash
 from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
 from sage.misc.decorators import decorator_keywords
 
@@ -357,16 +357,16 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield, use_bson=True):
-    from lmfdb.transitive_group import complete_group_codes, make_galois_pair
-    if not use_bson:
-        make_galois_pair = lambda x,y: [x,y]
+    from lmfdb.transitive_group import complete_group_codes
+    from lmfdb.transitive_group import make_galois_pair as _make_galois_pair
+    make_galois_pair = _make_galois_pair if use_bson else lambda x,y: [x,y]
     try:
         gcs = complete_group_codes(inp)
         if len(gcs) == 1:
             query[qfield] = make_galois_pair(gcs[0][0], gcs[0][1])
         elif len(gcs) > 1:
             query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
-    except NameError as code:
+    except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
 
 def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
