@@ -29,22 +29,20 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 
 """
 from flask import url_for
-from sage.all import dumps,loads, euler_phi,gcd,trivial_character
+from sage.all import euler_phi,gcd,trivial_character
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version,use_cache
-from sage.rings.number_field.number_field_base import NumberField as NumberField_class
-from sage.all import copy
 
 from sage.structure.unique_representation import CachedRepresentation
 #from lmfdb.WebCharacter import url_character
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import WebObject, WebProperty, WebInt, WebProperties, WebStr, WebNoStoreObject, WebDict, WebFloat
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import WebObject, WebInt, WebProperties, WebStr, WebNoStoreObject, WebDict, WebFloat
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db,get_files_from_gridfs
 try:
-    from dirichlet_conrey import *
+    from dirichlet_conrey import DirichletCharacter_conrey, DirichletGroup_conrey
+    # from dirichlet_conrey import *
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
-import logging
+# import logging
 #emf_logger.setLevel(logging.DEBUG)
     
 class WebChar(WebObject, CachedRepresentation):
@@ -103,7 +101,6 @@ class WebChar(WebObject, CachedRepresentation):
 
     def compute_values(self, save=False):
         emf_logger.debug('in compute_values for WebChar number {0} of modulus {1}'.format(self.number, self.modulus))
-        c = self.character
         if self._values_algebraic == {} or self._values_float == {}:
             changed = True
             for i in range(self.modulus):

@@ -33,6 +33,8 @@ from copy import deepcopy
 from flask import url_for
 import pymongo
 
+from lmfdb.utils import web_latex_split_on_re
+
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebObject,
      WebDate,
@@ -43,7 +45,6 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebDict,
      WebList,
      WebSageObject,
-     WebNoStoreObject,
      WebPoly,
      WebProperty,
      WebProperties,
@@ -62,12 +63,9 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
         newform_label, 
-        space_label, 
         parse_newform_label,
         orbit_index_from_label
     )
-
-from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
 
 from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
@@ -75,19 +73,10 @@ from lmfdb.modular_forms.elliptic_modular_forms import (
      default_max_height
      )
 
-from sage.rings.power_series_poly import PowerSeries_poly
-
 from sage.all import (
-     ZZ,
      Gamma0,
-     Gamma1,
-     RealField,
      ComplexField,
-     prime_range,
-     ceil,
-     RR,
      Integer,
-     matrix,
      PowerSeriesRing,
      QQ,
      Matrix,
@@ -95,16 +84,12 @@ from sage.all import (
      latex,
      primes_first_n,
      floor,
-     loads,
      dumps,
      PolynomialRing,
      NumberField,
      exp,
      CC
      )
-
-from sage.matrix.matrix_integer_dense import Matrix_integer_dense
-from sage.modules.vector_integer_dense import Vector_integer_dense
 
 from sage.structure.unique_representation import CachedRepresentation
 
@@ -940,7 +925,6 @@ class WebNewForm(WebObject, CachedRepresentation):
         s = s + "D = DirichletGroup({N})\n".format(
             N = self.level
             )
-        C = self.character.sage_character.parent()
         s = s + "f = {{'coefficients': {coeffs}, 'level' : {level}, 'weight': {weight}, 'character': D.Element(D,vector({elt})), 'label': '{label}','dimension': {dim}, 'is_cm': {cm} , 'cm_discriminant': {cm_disc}, 'atkin_lehner': {al}, 'explicit_formulas': {ep}}}".format(coeffs = self.coefficients(range(prec)),
             level=self.level, weight=self.weight, elt = list(self.character.sage_character.element()), label=self.hecke_orbit_label, dim=self.dimension, cm=self.is_cm, cm_disc=None if not self.is_cm else self.cm_disc , al=self.atkin_lehner_eigenvalues(),
             ep = self.explicit_formulas
@@ -971,7 +955,6 @@ class WebNewForm(WebObject, CachedRepresentation):
             prec = self.prec
         return dumps(self.coefficients(range(prec)))
 
-from lmfdb.utils import cache
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import multiply_mat_vec
 from lmfdb.modular_forms.elliptic_modular_forms import use_cache
 

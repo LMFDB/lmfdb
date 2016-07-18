@@ -22,19 +22,16 @@ AUTHORS:
  - Stephan Ehlen
  - Fredrik Stromberg 
 """
-from lmfdb.base import app
 from flask import url_for
 from copy import copy
-from lmfdb.modular_forms.elliptic_modular_forms import emf_version, emf_logger
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db
-from lmfdb.number_fields.number_field import poly_to_field_label
 from lmfdb.WebNumberField import field_pretty
 from lmfdb.utils import web_latex_split_on_pm
 
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.all import SageObject,dumps,loads, QQ, NumberField, latex
 
-import pymongo
 import gridfs
 import re
 from datetime import datetime
@@ -416,7 +413,6 @@ class WebObject(object):
         for p in self._properties:
             if p.required:
                 assert hasattr(self, p.name), "Missing property {0}".format(p)
-            v = getattr(self, p.name)
             got = type(self._properties[p.name].to_fs())
             expected = p.fs_data_type
             assert p.has_been_set(), "Did we compute {0}? It has not been set yet.".format(p.name)
@@ -801,9 +797,6 @@ class WebObject(object):
         coll = cls.connect_to_db(cls._collection_name)
         return coll.find(query).count()
     
-    def __repr__(self):
-        return "WebObject"
-        
     def __repr__(self):
         return "WebObject"
 

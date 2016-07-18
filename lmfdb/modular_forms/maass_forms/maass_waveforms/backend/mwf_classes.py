@@ -1,5 +1,6 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from mwf_utils import *
+from mwf_utils import mwf_logger
+from sage.all import Gamma0, CC
 import bson
 
 
@@ -308,7 +309,7 @@ class WebMaassForm(object):
                         c = None
                         try:
                             c = self.coeffs[k][cusp].get(n, None)
-                        except KeyError, IndexError:
+                        except (KeyError, IndexError):
                             mwf_logger.critical(
                                 "Got coefficient in wrong format for id={0}".format(self._maassid))
                         # mwf_logger.debug("{0},{1}".format(k,c))
