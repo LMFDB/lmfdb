@@ -1,10 +1,7 @@
-import os.path
-import gzip
-import re
-import sys
-import time
-import sage.misc.preparser
-import subprocess
+# -*- coding: utf-8 -*-
+from sage.misc.preparser import preparse
+from sage.interfaces.magma import magma
+from sage.all import PolynomialRing, Rationals
 from lmfdb import base
 from lmfdb.website import dbport
 base._init(dbport, '')
@@ -28,8 +25,8 @@ def qexpansion(field_label=None):
     field_label = None
 
     v = S.next()
-    while true:
-        NN_label = v["level_label"]
+    while True:
+        # NN_label = v["level_label"] # never used
         v_label = v["label"]
 
         print v_label

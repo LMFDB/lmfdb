@@ -1,10 +1,7 @@
-import os.path
-import gzip
-import re
-import sys
-import time
-import sage.misc.preparser
-import subprocess
+# -*- coding: utf-8 -*-
+from sage.misc.preparser import preparse
+from sage.interfaces.magma import magma
+from sage.all import PolynomialRing, Rationals
 from lmfdb import base
 from lmfdb.website import dbport
 base._init(dbport, '')
@@ -30,7 +27,7 @@ def recompute_AL(field_label=None, skip_odd=False):
     magma.eval('SetVerbose("ModFrmHil", 1);')
 
     v = S.next()
-    while true:
+    while True:
         NN_label = v["level_label"]
         v_label = v["label"]
 

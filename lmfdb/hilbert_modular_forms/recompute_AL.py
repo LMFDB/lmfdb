@@ -1,10 +1,8 @@
-import os.path
-import gzip
-import re
-import sys
-import time
-import sage.misc.preparser
-import subprocess
+# -*- coding: utf-8 -*-
+from sage.misc.preparser import preparse
+from sage.interfaces.magma import magma
+from sage.all import PolynomialRing, Rationals
+
 from lmfdb import base
 from lmfdb.website import dbport
 base._init(dbport, '')
@@ -23,7 +21,7 @@ def recompute_AL():
     S = hmf_forms.find({})
     S = S.sort("label")
 
-    while true:
+    while True:
         v = S.next()
         NN_label = v["level_label"]
         v_label = v["label"]
