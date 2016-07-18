@@ -181,7 +181,7 @@ def parse_range3(arg, name, split0 = False):
     if type(arg) == str:
         arg = arg.replace(' ', '')
     if ',' in arg:
-        return sum([parse_discs(a) for a in arg.split(',')],[])
+        return sum([parse_range3(a, name, split0) for a in arg.split(',')],[])
     elif '-' in arg[1:]:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
