@@ -29,15 +29,9 @@ from sage.all import loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters, connect_db, get_collections_info
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
-# from mwf_upload_data import *
 from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
-try:
-    # from dirichlet_conrey import *
-    pass
-except:
-    mwf_logger.critical("Could not import dirichlet_conrey!")
 
 
 # this is a blueprint specific default for the tempate system.
