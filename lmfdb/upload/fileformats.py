@@ -157,7 +157,7 @@ if len(sys.argv) == 2:
     print guessParsing(file1)[1]
     quit()
 
-from lmfdb.website import dbport
+from lmfdb.website import DEFAULT_DB_PORT as dbport
 db = Connection(port=dbport)
 fs = GridFS(db.upload)
 for entry in db.upload.fs.files.find({"$or": [{"metadata.status": "approved"}, {"metadata.status": "approvedchild"}]}, sort=[("uploadDate", -1)]):
