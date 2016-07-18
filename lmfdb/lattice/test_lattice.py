@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
+
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
 
 class HomePageTest(LmfdbTest):
 
@@ -34,7 +34,7 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/3.1942.3884.56.13").data
         assert '648' in L #test display genus representatives
 
-    def test_lattice_classnumber_large(self):
+    def test_lattice_classnumber_large_download(self):
         L = self.tc.get("/Lattice/3.1942.3884.56.13/download/sage/genus_reps").data
         assert 'Matrix([[2, 0, 0], [0, 14, -3], [0, -3, 70]]),' in L #test download genus representatives
 

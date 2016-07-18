@@ -1,5 +1,6 @@
-import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
+# -*- coding: utf-8 -*-
+
+from sage.all import matrix, ZZ, QuadraticForm
 
 # function for checking isometries
 def isom(A,B):
