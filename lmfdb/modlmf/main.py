@@ -1,27 +1,23 @@
+# -*- coding: utf-8 -*-
 import re
 import pymongo
 ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-import flask
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
+from flask import render_template, request, url_for, make_response, redirect, flash, send_file
 
-from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma, random_object_from_collection
+from lmfdb.base import getDBConnection
+from lmfdb.utils import to_dict, random_object_from_collection, web_latex_split_on_pm
 
-import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, conway_polynomial, prime_range
+from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range
 
-from lmfdb.modlmf import modlmf_page, modlmf_logger
+from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
-
+from lmfdb.search_parsing import parse_ints, parse_count, parse_start
 
 from markupsafe import Markup
 
 import time
-import os
 import ast
 import StringIO
 
@@ -33,7 +29,6 @@ modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Robert
 def print_q_expansion(list):
      list=[str(c) for c in list]
      Qb=PolynomialRing(QQ,'b')
-     b = QQ['b'].gen()
      Qq=PowerSeriesRing(Qb['a'],'q')
      return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
 
@@ -70,7 +65,7 @@ def learnmore_list_remove(matchstring):
 def modlmf_render_webpage():
     args = request.args
     if len(args) == 0:
-        counts = get_stats().counts()
+        # counts = get_stats().counts() # never used
         characteristic_list= [2,3,5,7,11]
         level_list_endpoints = [1, 10, 20, 30, 40, 50]
         level_list = ["%s-%s" % (start, end - 1) for start, end in zip(level_list_endpoints[:-1], level_list_endpoints[1:])]
@@ -326,7 +321,6 @@ def render_modlmf_webpage_download(**args):
 
 def download_modlmf_full_lists(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     res = C.mod_l_eigenvalues.modlmf.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
