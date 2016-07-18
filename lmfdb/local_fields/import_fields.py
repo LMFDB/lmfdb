@@ -1,9 +1,6 @@
-import sys
-import time
 
-from pymongo.connection import Connection
-fields = Connection(port=dbport).localfields.fields
-fields = Connection(port=dbport).localfields.fields
+from lmfdb.base import getDBConnection
+fields = getDBConnection().localfields.fields
 
 # The database entries have the following fields
 # p: the prime
