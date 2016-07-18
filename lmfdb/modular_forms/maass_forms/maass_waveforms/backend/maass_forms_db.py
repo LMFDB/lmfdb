@@ -284,7 +284,7 @@ class MaassDB(object):
             date_begun = ff['date']
             now = bson.datetime.datetime.utcnow()
             elapsed = now - date_begun
-            # FIXME: date_begnus is never used
+            # FIXME: date_beguns is never used
             # date_beguns = ff['date'].strftime("%d:%m:%y %H:%M:%s")
             if self._verbose > 0:
                 print "Removing N,weight,ch,R1,R2".format(ff.get('Level'), ff.get('Weight'), ff.get('Character'), ff.get('R1'), ff.get('R2'))
