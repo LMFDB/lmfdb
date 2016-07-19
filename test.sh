@@ -35,6 +35,10 @@ else
   WHAT="$@"
 fi
 
+echo "Running pyflakes..."
+find $WHAT | grep "\.py$" | xargs pyflakes
+echo "pyflakes check complete"
+
 ARGS='-v -s --testmatch="(?:^|\/)[Tt]est_"'
 
 SAGE_COMMAND=$SAGE

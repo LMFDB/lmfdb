@@ -4,6 +4,7 @@ flask-login==0.2.11
 flask-markdown
 pymongo
 pyyaml
+pyflakes
 unittest2
 coverage
 nose
