@@ -249,7 +249,7 @@ def genus2_curve_search(info):
         flash_error (errmsg, jump)
         return redirect(url_for(".index"))
 
-    if 'download' in info and info['download'] == '1' and 'query' in info:
+    if info.get('download','').strip() == '1':
         return download_search(info)
 
     info["st_group_list"] = st_group_list
@@ -463,7 +463,7 @@ def download_search(info):
     c = download_comment_prefix[lang]
     s =  '\n'
     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
-    s += c + ' Query "%s" returned %d curves.\n' %(info.get('query'), res.count())
+    s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), res.count())
     s += c + ' Below is a list called data. Each entry has the form:\n'
     s += c + '   [[f coeffs],[h coeffs]]\n'
     s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
