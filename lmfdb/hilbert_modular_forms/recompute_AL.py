@@ -3,10 +3,8 @@ from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals
 
-from lmfdb import base
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-base._init(dbport, '')
-C = base.getDBConnection()
+from lmfdb.base import getDBConnection
+C = getDBConnection()
 
 hmf_forms = C.hmfs.forms
 hmf_fields = C.hmfs.fields
