@@ -593,7 +593,6 @@ class Lfunction_HMF(Lfunction):
             # the above fixed a bug at
             # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
             # but now the sign is wrong (i.e., not of absolute value 1 *)
-       #     AL_signs = [iota(eval(al[1])) for al in f['AL_eigenvalues']]
             AL_signs = [iota(K(str(al))) for al in ALeigs]
             self.sign = prod(AL_signs) * (-1) ** (float(self.weight *
                                                         self.field_degree / 2))
