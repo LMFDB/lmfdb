@@ -36,6 +36,18 @@ _mongo_kwargs = None
 _mongo_user = None
 _mongo_pass = None
 
+# simple event logger that logs all interaction with mongo db
+# to activate set the mongo_kwargs to include event_listeners=[MongoEventLogger()]
+# see website.py --dblistener option where this is set
+from pymongo import monitoring
+class MongoEventLogger(monitoring.CommandListener):
+    def started(self, event):
+        logging.info("mongo db command %s(%x) on db %s with args %s sent"%(event.command_name,event.request_id,event.database_name,event.command))
+    def succeeded(self, event):
+        logging.info("mongo db command %s(%x) took %.3fs"%(event.command_name,event.request_id,event.duration_micros/1000000.0))
+    def failed(self, event):
+        logging.info("mongo db command %s(%x) failed after %.3fs, details: %s"%(event.command_name,event.request_id,event.duration_micros/1000000.0,event.failure))
+
 def getDBConnection():
     if not _mongo_C:
         makeDBConnection()
