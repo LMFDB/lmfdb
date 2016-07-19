@@ -1,5 +1,4 @@
 from type_generation import String, Array, Int
-from sage.all import exp, pi, I
 
 def PolynomialAsString(convention):
     class ParametrizedPolynomialAsString(String):
