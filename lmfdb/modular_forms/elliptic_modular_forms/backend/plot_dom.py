@@ -18,7 +18,7 @@ r""" Excerpt from my MySubgroup class. Contains routines to draw fundamental dom
 AUTHOR: Fredrik Stroemberg
 r"""
 import logging
-from sage.all import I,SL2Z, ZZ, RR, ceil, sqrt, CC, line, text, latex, exp, pi, infinity
+from sage.all import I,SL2Z, ZZ, RR, ceil, sqrt, CC, line, text, latex, exp, pi, infinity, Gamma0, Gamma1, Gamma
 
 
 def draw_fundamental_domain(N, group='Gamma0', model="H", axes=None, filename=None, **kwds):
@@ -38,7 +38,14 @@ def draw_fundamental_domain(N, group='Gamma0', model="H", axes=None, filename=No
     sage: G.draw_fundamental_domain()
 
     """
-    G = eval(group + '(' + str(N) + ')')
+    if group.strip() == 'Gamma0':
+        G = Gamma0(N)
+    elif group.strip() == 'Gamma1':
+        G = Gamma1(N)
+    elif group.strip() == 'Gamma':
+        G = Gamma(N)
+    else:
+        raise ValueError('group must be one of: "Gamma0", "Gamma1", "Gamma"')
     s = "$" + latex(G) + "$"
     s = s.replace("mbox", "mathrm")
     s = s.replace("Bold", "mathbb")
