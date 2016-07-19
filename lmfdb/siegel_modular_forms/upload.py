@@ -8,6 +8,8 @@
 
 import pymongo
 import json
+import sys
+from sage.all import Set
 
 # Before running this script,
 # run the script warwick.py in the top level of lmfdb.
@@ -118,10 +120,6 @@ def upload_to_mongodb( filename):
     print '%s: Done' % filename    
     return
 
-
-
 if __name__ == '__main__':
-
-    import sys
     filename = sys.argv[1]
-    return upload_to_mongodb(filename)
+    upload_to_mongodb(filename)
