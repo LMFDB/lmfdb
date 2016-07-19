@@ -1,16 +1,11 @@
+# -*- coding: utf-8 -*-
 r"""
 Upload data and insert into database for Maass waveforms.
 
 
 """
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
-
-import flask
-from flask import render_template, url_for, request, redirect, make_response, send_file
-import bson
-from sets import Set
-import pymongo
-from sage.all import is_odd, is_even
+from lmfdb.utils import to_dict
+from flask import request
 
 # Make a list of the entries which we allow to be put in the database
 # Hardcoded for simplicity
@@ -43,11 +38,8 @@ def check_data(info):
         s += "<td>%s </td>" % name
     for l in f:
         print l
-        data = l.split(' ')
-
-
+        # data = l.split(' ')
         ## Try to parse the file with info['format'] as keys
-
     # datafiles.save(f)
 
 def get_format_for_file_to_db(info):

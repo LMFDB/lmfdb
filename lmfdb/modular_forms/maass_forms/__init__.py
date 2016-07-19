@@ -1,4 +1,4 @@
-# /modular_forms/maass_forms/__init__.py
+# -*- coding: utf-8 -*-
 
 from lmfdb.utils import make_logger
 from flask import Blueprint
@@ -8,5 +8,6 @@ maassf = Blueprint(MAASSF, __name__, template_folder="views/templates")
 maassf_logger = make_logger(maassf)
 
 import maass_waveforms
-from maass_waveforms import *
+assert maass_waveforms
 import picard
+assert picard
