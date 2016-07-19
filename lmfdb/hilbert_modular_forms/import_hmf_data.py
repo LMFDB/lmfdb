@@ -163,9 +163,7 @@ def import_data(hmf_filename):
     # Collect levels
     v = hmff.readline()
     if v[:9] == 'LEVELS :=':
-        # FIXME: levels_array is never used
-        # levels_str = v[10:][:-2]
-        # levels_array = [str(t) for t in eval(preparse(levels_str))]
+        # skip this line, we do not use the list of levels
         v = hmff.readline()
     for i in range(3):
         if v[:11] != 'NEWFORMS :=':
@@ -278,6 +276,9 @@ def repair_fields(D):
     F = hmf_fields.find_one({"label": '2.2.' + str(D) + '.1'})
 
     P = PolynomialRing(Rationals(), 'w')
+    # P is used implicitly in the eval() calls below.  When these are
+    # removed, this will not longer be neceesary, but until then the
+    # assert statement is for pyflakes.
     assert P
 
     primes = F['primes']
@@ -319,6 +320,9 @@ def attach_new_label(f):
     F = hmf_fields.find_one({"label": f['field_label']})
 
     P = PolynomialRing(Rationals(), 'w')
+    # P is used implicitly in the eval() calls below.  When these are
+    # removed, this will not longer be neceesary, but until then the
+    # assert statement is for pyflakes.
     assert P
 
     if type(f['level_ideal']) == str or type(f['level_ideal']) == unicode:
@@ -327,7 +331,7 @@ def attach_new_label(f):
         N = f['level_ideal']
     if type(N) != list or len(N) != 3:
         print f, N, type(N)
-        assert False
+        raise ValueError("{} does not define a valid level ideal".format(N))
 
     f['level_ideal'] = [N[0], N[1], str(N[2])]
 
