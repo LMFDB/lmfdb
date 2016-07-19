@@ -5,17 +5,13 @@
 import sys
 LMFDB_FOLDER = "../../../"
 sys.path.append(LMFDB_FOLDER)
-import lmfdb.base as base
-base._init(dbport, "")
 from lmfdb.math_classes import ArtinRepresentation
-from lmfdb.website import dbport
 the_collection = ArtinRepresentation.collection()
 print "Got", the_collection
 
 field = "Conductor"
 
 from lmfdb.utils import len_val_fn
-from lmfdb.website import dbport
 
 new_field = field + "_plus"
 

@@ -5,18 +5,13 @@ Initial version (University of Warwick 2015) Aurel Page
 
 """
 
+import os
 import sys
 sys.path.append("../../../..")
-import pymongo
 import yaml
-import lmfdb
-from lmfdb import *
-from lmfdb.website import DEFAULT_DB_PORT as dbport
 from lmfdb.base import getDBConnection
-from pymongo.mongo_client import MongoClient
-from lmfdb.modular_forms.elliptic_modular_forms.views.emf_render_web_modform_space import set_info_for_modular_form_space
 from web_modform_space import WebModFormSpace_cached
-
+from sage.all import Infinity
 
 C = getDBConnection()
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml"))) #FIXME
@@ -72,4 +67,3 @@ def correct_all_inwdb(maxlevel=Infinity, maxweight=Infinity, fix=False):
     for dimdata in dims:
         print dimdata
         correct_inwdb(dimdata, fix=fix)
-

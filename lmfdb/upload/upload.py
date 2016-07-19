@@ -5,15 +5,13 @@
 #
 # author:
 
-import pymongo
 import flask
 import copy
 import datetime
-import json
 import re
 import tarfile
-from lmfdb.base import app, getDBConnection, fmtdatetime
-from flask import render_template, request, abort, Blueprint, url_for
+from lmfdb.base import app, getDBConnection
+from flask import render_template, request, Blueprint, url_for
 from flask.ext.login import login_required, current_user
 from gridfs import GridFS
 from os import path
@@ -118,7 +116,7 @@ def upload():
 def admin_update():
 
     db = getDBConnection().upload
-    fs = GridFS(db)
+    # fs = GridFS(db) # never used
     id = request.form['id']
 
     if 'approve' in request.form:
@@ -143,8 +141,8 @@ def admin():
     fs = GridFS(db)
 
     unmoderated = [fs.get(x['_id']) for x in db.fs.files.find({"metadata.status": "unmoderated"})]
-    approved = [fs.get(x['_id']) for x in db.fs.files.find({"metadata.status": "approved"})]
-    disapproved = [fs.get(x['_id']) for x in db.fs.files.find({"metadata.status": "disapproved"})]
+    # approved = [fs.get(x['_id']) for x in db.fs.files.find({"metadata.status": "approved"})]
+    # disapproved = [fs.get(x['_id']) for x in db.fs.files.find({"metadata.status": "disapproved"})]
 
     return render_template("upload-view.html", title="Moderate uploaded data", bread=get_bread(), unmoderated=unmoderated)  # , approved=approved, disapproved=disapproved)
 
@@ -227,9 +225,6 @@ def displayParsed(id):
             ret += displayParsed(str(i[0])) + "<br/>"
         return ret
     table = getDBConnection().contrib[entry['metadata']['uploader_id'] + str(entry['_id'])]
-    skip = 0
-    limit = 10
-    count = table.count()
 
     pagination = MongoDBPagination(query=table.find(), per_page=10, page=request.args.get(
         'page', 1), endpoint=".displayParsed", endpoint_params={'id': id})

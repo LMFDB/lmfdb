@@ -9,12 +9,11 @@ and returns that.
 
 """
 
-import sys, time
 import re
 import json
-import sage.all
-from sage.all import os
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt
+import os
+import sys
+import gzip
 from lmfdb.base import getDBConnection
 
 C= getDBConnection()

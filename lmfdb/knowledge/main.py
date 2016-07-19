@@ -15,9 +15,9 @@ import string
 import re
 import pymongo
 import flask
-from lmfdb.base import app, getDBConnection
+from lmfdb.base import app
 from datetime import datetime
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
+from flask import render_template, render_template_string, request, url_for, make_response
 from flask.ext.login import login_required, current_user
 from knowl import Knowl, knowl_title, get_history, knowl_exists
 from lmfdb.users import admin_required, housekeeping
@@ -347,7 +347,6 @@ def show(ID):
 
 @knowledge_page.route("/raw/<ID>")
 def raw(ID):
-    k = Knowl(ID)
     data = render(ID, footer="0", raw=True)
     resp = make_response(data)
     # cache 2 minutes and allow CORS

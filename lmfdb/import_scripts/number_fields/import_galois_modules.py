@@ -23,10 +23,10 @@ list)
 
 """
 
-import sys, time
-import sage.all
+import sys
 import re
 import json
+import gzip
 from sage.all import os
 
 from pymongo.mongo_client import MongoClient

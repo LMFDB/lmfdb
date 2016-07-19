@@ -6,9 +6,8 @@ Routines for helping with the download of modular forms data.
 import StringIO
 import flask
 from flask import send_file,redirect,url_for
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from sage.all import latex,dumps
 
@@ -67,7 +66,6 @@ def print_list_of_coefficients(info):
     """
     level = my_get(info, 'level', -1, int)
     weight = my_get(info, 'weight', -1, int)
-    prec = my_get(info, 'prec', 12, int)  # number of digits
     bitprec = my_get(info, 'bitprec', 12, int)  # number of digits                
     character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
     fmt = info.get("format","q_expansion")

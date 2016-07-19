@@ -25,12 +25,8 @@ AUTHOR: Fredrik Stroemberg
 
 """
 
-from sage.all import ZZ, Newform, is_squarefree, squarefree_part, factor, is_square, divisors, DirichletGroup, QQ, xgcd, prime_factors, Gamma0, html, I, ceil, ComplexField, RealField, dimension_cusp_forms, sturm_bound, latex, Gamma1
+from sage.all import Gamma0, Gamma1, latex
 import re
-
-from lmfdb.modular_forms.elliptic_modular_forms import emf_logger as logger
-import pymongo
-import bson.binary
 
 ####
 #### Core functions for spaces of cuspforms
@@ -52,11 +48,11 @@ def len_as_printed(s, format='latex'):
     ss = re.sub(" ", "", ss)    # remove white-space
     ss = re.sub("\*", "", ss)    # remove *
     num_exp = s.count("^")    # count number of exponents
-    exps = re.findall("\^{?(\d*)", s)  # a list of all exponents
-    sexps = "".join(exps)
+    # exps = re.findall("\^{?(\d*)", s)  # a list of all exponents
+    # sexps = "".join(exps)
     num_subs = s.count("_")    # count number of exponents
-    subs = re.findall("_{?(\d*)", s)  # a list of all  subscripts
-    ssubs = "".join(subs)
+    # subs = re.findall("_{?(\d*)", s)  # a list of all  subscripts
+    # ssubs = "".join(subs)
     ss = re.sub("\^{?(\d*)}?", "", ss)  # remove exponenents
     # logger.debug("".join([ss,ssubs,sexps]))
     tot_len = (ss.count(")") + ss.count("(")) * lenpar

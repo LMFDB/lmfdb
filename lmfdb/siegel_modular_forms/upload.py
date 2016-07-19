@@ -124,4 +124,4 @@ if __name__ == '__main__':
 
     import sys
     filename = sys.argv[1]
-    return upload_to_mongodb( filename):
+    return upload_to_mongodb(filename)
