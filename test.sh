@@ -37,8 +37,12 @@ else
 fi
 
 echo "Running pyflakes..."
-find $WHAT | grep "\.py$" | xargs pyflakes
-echo "pyflakes check complete"
+read PYFLAKES_ERRCNT < <(find . | grep "\.py$" | xargs pyflakes | tee /dev/stderr | wc -l)
+if [[ $PYFLAKES_ERRCNT > 0 ]]; then
+  echo "WARNING: pyflakes reported $PYFLAKES_ERRCNT error(s)"
+else
+  echo "pyflakes is happy"
+fi
 
 ARGS='-v -s --testmatch="(?:^|\/)[Tt]est_"'
 
@@ -55,3 +59,6 @@ else
    eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $COVER'"
 fi
 
+if [[ $PYFLAKES_ERRCNT > 0 ]]; then
+    printf "\nWARNING: pyflakes reported $PYFLAKES_ERRCNT error(s)\n"
+fi
