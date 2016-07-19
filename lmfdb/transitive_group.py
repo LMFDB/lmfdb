@@ -459,8 +459,7 @@ def chartable(n, t):
         G = gap.SmallGroup(n, t)
     else:
         G = gap.TransitiveGroup(n, t)
-    CT = G.CharacterTable()
-    ctable = gap.eval("Display(%s)" % CT.name())
+    ctable = str(G.CharacterTable().Display())
     ctable = re.sub("^.*\n", '', ctable)
     ctable = re.sub("^.*\n", '', ctable)
     return ctable
