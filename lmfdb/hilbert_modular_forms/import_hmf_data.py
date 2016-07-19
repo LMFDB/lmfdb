@@ -1,11 +1,9 @@
-import os.path
-import gzip
-import re
-import sys
-import time
-import sage.misc.preparser
-import subprocess
+# -*- coding: utf-8 -*-
+import os
+import sage
+from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma
+from sage.all import PolynomialRing, Rationals
 
 from lmfdb.base import getDBConnection
 print "getting connection"
@@ -62,7 +60,7 @@ def import_all_data(n):
     files = [f[:-1] for f in files]
 #    subprocess.call("rm dir.tmp", shell=True)
 
-    files = [ff for ff in files if ff.find('_old') == -1]
+    files = [f for f in files if f.find('_old') == -1]
     for file_name in files:
         print file_name
         import_data(file_name)
@@ -136,10 +134,10 @@ def import_data(hmf_filename):
     magma.eval('primes_indices := [Index(ideals, pp) : pp in primes];')
     try:
         assert magma('&and[primes_indices[j] gt primes_indices[j-1] : j in [2..#primes_indices]]')
-        resort = false
+        resort = False
     except AssertionError:
         print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Primes reordered!"
-        resort = true
+        resort = True
         magma.eval('_, sigma := Sort(primes_indices, func<x,y | x-y>);')
         magma.eval('perm := [[xx : xx in x] : x in CycleDecomposition(sigma) | #x gt 1]')
         # Check at least they have the same norm
@@ -165,8 +163,7 @@ def import_data(hmf_filename):
     # Collect levels
     v = hmff.readline()
     if v[:9] == 'LEVELS :=':
-        levels_str = v[10:][:-2]
-        levels_array = [str(t) for t in eval(preparse(levels_str))]
+        # skip this line, we do not use the list of levels
         v = hmff.readline()
     for i in range(3):
         if v[:11] != 'NEWFORMS :=':
@@ -279,7 +276,10 @@ def repair_fields(D):
     F = hmf_fields.find_one({"label": '2.2.' + str(D) + '.1'})
 
     P = PolynomialRing(Rationals(), 'w')
-    w = P.gens()[0]
+    # P is used implicitly in the eval() calls below.  When these are
+    # removed, this will not longer be neceesary, but until then the
+    # assert statement is for pyflakes.
+    assert P
 
     primes = F['primes']
     primes = [[int(eval(p)[0]), int(eval(p)[1]), str(eval(p)[2])] for p in primes]
@@ -320,7 +320,10 @@ def attach_new_label(f):
     F = hmf_fields.find_one({"label": f['field_label']})
 
     P = PolynomialRing(Rationals(), 'w')
-    w = P.gens()[0]
+    # P is used implicitly in the eval() calls below.  When these are
+    # removed, this will not longer be neceesary, but until then the
+    # assert statement is for pyflakes.
+    assert P
 
     if type(f['level_ideal']) == str or type(f['level_ideal']) == unicode:
         N = eval(f['level_ideal'])
@@ -328,7 +331,7 @@ def attach_new_label(f):
         N = f['level_ideal']
     if type(N) != list or len(N) != 3:
         print f, N, type(N)
-        assert false
+        raise ValueError("{} does not define a valid level ideal".format(N))
 
     f['level_ideal'] = [N[0], N[1], str(N[2])]
 
