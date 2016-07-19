@@ -84,7 +84,7 @@ import sys
 import time
 import getopt
 from pymongo import ReadPreference
-from base import app, set_logfocus, get_logfocus, _init, MongoEventLogger
+from base import app, set_logfocus, get_logfocus, _init
 from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
 import sage
 
@@ -184,12 +184,12 @@ Usage: %s [OPTION]...
   -p, --port=NUM            bind to port NUM (default 37777)
   -h, --host=HOST           bind to host HOST (default "127.0.0.1")
   -l, --log=FILE            log to FILE (default "flasklog")
-      --dbport=NUM          bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
-      --debug               enable debug mode
-      --dbmon               if specified all MongoDB calls will be logged (with timings)
-      --logfocus=NAME       name of logger to focus on
-      --help                show this help
   -m, --mongo-client=FILE   config file for connecting to MongoDB (default is "mongoclient.config")
+      --logfocus=NAME       name of a logger to focus on
+      --debug               enable debug mode
+      --dbport=NUM          bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
+      --dbmon=NAME          monitor MongoDB commands to the specified database (specify empty NAME to monitor everything)
+      --help                show this help
 """ % sys.argv[0]
 
 def get_configuration():
@@ -218,7 +218,7 @@ def get_configuration():
                                            "dbport=", 
                                            "log=", 
                                            "logfocus=", 
-                                           "dbmon",
+                                           "dbmon=",
                                            "debug",
                                            "help", 
                                            "mongo-client=",
@@ -226,7 +226,7 @@ def get_configuration():
                                             "enable-reloader", "disable-reloader",
                                             "enable-debugger", "disable-debugger",
                                             "enable-profiler"
-                                            # no currently used
+                                            # not currently used
                                             "threading"
                                         ]
                                        )
@@ -249,7 +249,7 @@ def get_configuration():
             elif opt in ("--dbport"):
                 mongo_client_options["port"] = int(arg)
             elif opt in ("--dbmon"):
-                mongo_client_options["event_listeners"] = [MongoEventLogger()]
+                mongo_client_options["dbmon"] = arg
             elif opt == "--debug":
                 flask_options["debug"] = True
             elif opt == "--logfocus":

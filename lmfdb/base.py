@@ -35,16 +35,22 @@ _mongo_port = None
 _mongo_kwargs = None
 _mongo_user = None
 _mongo_pass = None
+_mongo_dbmon = None
 
 # simple event logger that logs all interaction with mongo db
 # to activate set the mongo_kwargs to include event_listeners=[MongoEventLogger()]
 # see website.py --dblistener option where this is set
 from pymongo import monitoring
 class MongoEventLogger(monitoring.CommandListener):
+    def __init__(self):
+        self._last_request = 0
     def started(self, event):
-        logging.info("mongo db command %s(%x) on db %s with args %s sent"%(event.command_name,event.request_id,event.database_name,event.command))
+        if not _mongo_dbmon or event.database_name == _mongo_dbmon:
+            logging.info("mongo db command %s(%x) on db %s with args %s sent"%(event.command_name,event.request_id,event.database_name,event.command))
+            self._last_request = event.request_id
     def succeeded(self, event):
-        logging.info("mongo db command %s(%x) took %.3fs"%(event.command_name,event.request_id,event.duration_micros/1000000.0))
+        if not _mongo_dbmon or event.request_id == self._last_request:
+            logging.info("mongo db command %s(%x) took %.3fs"%(event.command_name,event.request_id,event.duration_micros/1000000.0))
     def failed(self, event):
         logging.info("mongo db command %s(%x) failed after %.3fs, details: %s"%(event.command_name,event.request_id,event.duration_micros/1000000.0,event.failure))
 
@@ -56,7 +62,11 @@ def getDBConnection():
     return _mongo_C
 
 def configureDBConnection(port, **kwargs):
-    global _mongo_port, _mongo_kwargs, _mongo_user, _mongo_pass
+    global _mongo_port, _mongo_kwargs, _mongo_user, _mongo_pass, _mongo_dbmon
+
+    if "dbmon" in kwargs:
+        _mongo_dbmon = kwargs.pop("dbmon")
+        kwargs["event_listeners"] = [MongoEventLogger()]
 
     _mongo_port = port
     _mongo_kwargs = kwargs
