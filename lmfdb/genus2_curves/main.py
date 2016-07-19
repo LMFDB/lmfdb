@@ -438,22 +438,21 @@ class G2C_stats(object):
         stats["distributions"] = dists
         self._stats = stats
 
-download_languages = ['magma', 'sage', 'gp']
-download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
-download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =['}
-download_assignment_end = {'magma':'];','sage':']','gp':']'}
-download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
+download_languages = ['magma', 'sage', 'gp', 'text']
+download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
+download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =[','text':'data - ['}
+download_assignment_end = {'magma':'];','sage':']','gp':']','text':']'}
+download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
 download_make_data = {
 'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
 'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
-'gp':''
+'gp':'',
+'text':''
 }
-download_make_data_comment = {'magma': 'To create a list of curves, type "curves:= make_data();"','sage':'To create a list of curves, type "curves = make_data()"', 'gp':''}
+download_make_data_comment = {'magma': 'To create a list of curves, type "curves:= make_data();"','sage':'To create a list of curves, type "curves = make_data()"', 'gp':'', 'text':''}
 
 def download_search(info):
-    lang = info.get('language','').strip()
-    if not lang in download_languages:
-        return "Please specify a language in %s"%download_languages
+    lang = info.get('language','text').strip()
     filename = 'genus2_curves' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
     # reissue query here
@@ -463,7 +462,8 @@ def download_search(info):
         return "Unable to parse query: %s"%err
     c = download_comment_prefix[lang]
     s =  '\n'
-    s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, res.count())
+    s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate)
+    s += c + ' Query "%s" returned %d curves.\n' %(info.get('query'), res.count())
     s += c + ' Below is a list called data. Each entry has the form:\n'
     s += c + '   [[f coeffs],[h coeffs]]\n'
     s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
