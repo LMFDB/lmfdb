@@ -188,7 +188,7 @@ Usage: %s [OPTION]...
       --logfocus=NAME       name of a logger to focus on
       --debug               enable debug mode
       --dbport=NUM          bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
-      --dbmon=NAME          monitor MongoDB commands to the specified database (specify empty NAME to monitor everything)
+      --dbmon=NAME          monitor MongoDB commands to the specified database (use NAME=* to monitor everything, NAME=~DB to monitor all but DB)
       --help                show this help
 """ % sys.argv[0]
 

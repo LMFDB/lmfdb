@@ -37,22 +37,23 @@ _mongo_user = None
 _mongo_pass = None
 _mongo_dbmon = None
 
-# simple event logger that logs all interaction with mongo db
-# to activate set the mongo_kwargs to include event_listeners=[MongoEventLogger()]
-# see website.py --dblistener option where this is set
+# simple event logger that logs commands sent to mongo db
+# it will be used only if --dbmon is specified when the LMFDB server is started
+# this implementation assumes pymongo is begin used synchronously (currently true in the LMFDB, even on the webserver we fork rather than thread)
+# it would need to be modified to support multi-threading (although it would still work when _mongo_dbmon=None)
 from pymongo import monitoring
 class MongoEventLogger(monitoring.CommandListener):
     def __init__(self):
         self._last_request = 0
     def started(self, event):
-        if not _mongo_dbmon or event.database_name == _mongo_dbmon:
-            logging.info("mongo db command %s(%x) on db %s with args %s sent"%(event.command_name,event.request_id,event.database_name,event.command))
+        if not _mongo_dbmon or event.database_name == _mongo_dbmon or _mongo_dbmon[0] == '~' and event.database_name != _mongo_dbmon[1:]:
+            logging.info("mongo db command %s(%x) on db %s with args %s"%(event.command_name,event.request_id,event.database_name,event.command))
             self._last_request = event.request_id
     def succeeded(self, event):
         if not _mongo_dbmon or event.request_id == self._last_request:
             logging.info("mongo db command %s(%x) took %.3fs"%(event.command_name,event.request_id,event.duration_micros/1000000.0))
     def failed(self, event):
-        logging.info("mongo db command %s(%x) failed after %.3fs, details: %s"%(event.command_name,event.request_id,event.duration_micros/1000000.0,event.failure))
+        logging.info("mongo db command %s(%x) failed after %.3fs with error %s"%(event.command_name,event.request_id,event.duration_micros/1000000.0,event.failure))
 
 def getDBConnection():
     if not _mongo_C:
@@ -66,6 +67,8 @@ def configureDBConnection(port, **kwargs):
 
     if "dbmon" in kwargs:
         _mongo_dbmon = kwargs.pop("dbmon")
+        if _mongo_dbmon == '*':
+            _mongo_dbmon = ''
         kwargs["event_listeners"] = [MongoEventLogger()]
 
     _mongo_port = port
