@@ -5,11 +5,8 @@ Initial version: Samuele Anni
 
 """
 
-import sys, time
-import re
-import json
-import sage.all
-from sage.all import os, gp, matrix
+import os
+from sage.all import gp, matrix
 
 
 from pymongo.mongo_client import MongoClient
@@ -23,7 +20,6 @@ lat = C.Lattices.lat
 
 
 def check_add_qexp(dim, min_det=1, max_det=None, fix=False):
-    count = 0
     query = {}
     query['dim'] = int(dim)
     query['det'] = {'$gte' : int(min_det)}

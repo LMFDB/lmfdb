@@ -594,7 +594,7 @@ def frobs(nf):
 
 
 def download_search(info, res):
-    dltype = info['Submit']
+    dltype = info.get('Submit')
     delim = 'bracket'
     com = r'\\'  # single line comment start
     com1 = ''  # multiline comment start

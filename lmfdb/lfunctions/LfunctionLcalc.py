@@ -15,7 +15,7 @@ def parse_complex_number(z):
         # need to convert from unicode to orginary string type
         x,y = CC(string2number(str(z)))
         return "({},{})".format(x,y)
-    except TypeError, SyntaxError:
+    except (TypeError, SyntaxError):
         print("Unable to parse {} as complex number".format(z))
         return "(0,0)"
 

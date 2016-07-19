@@ -385,8 +385,9 @@ def render_lfunction_exception(err):
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
     else:
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
-    info = {'content': errmsg, 'title': 'Error displaying L-function data'}
-    return render_template('LfunctionSimple.html', info=info, **info), 500
+    bread =  [('L-functions', url_for('.l_function_top_page')), ('Error', '')]
+    info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
+    return render_template('problem.html', **info),
 
 def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
@@ -609,13 +610,13 @@ def initLfunction(L, args, request):
         Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
         if mod > 1:
             pmod,pnum = WebDirichlet.prevprimchar(mod, num)
-            Lprev = ("previous",Lpattern%(pmod,pnum),
+            Lprev = ("previous",Lpattern%(pmod,pnum) if pmod > 1 else r"\(\zeta(s)\)",
                      url_for('.l_function_dirichlet_page',
                              modulus=pmod,number=pnum))
         else:
             Lprev = ('','','')
         nmod,nnum = WebDirichlet.nextprimchar(mod, num)
-        Lnext = ("next",Lpattern%(nmod,nnum),
+        Lnext = ("next",Lpattern%(nmod,nnum) if nmod > 1 else r"\(\zeta(s)\)",
                  url_for('.l_function_dirichlet_page',
                          modulus=nmod,number=nnum))
         info['navi'] = (Lprev,Lnext)

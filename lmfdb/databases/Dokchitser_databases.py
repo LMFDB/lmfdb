@@ -5,7 +5,7 @@ from type_generation import String, Array, Dict, Int, Anything
 
 from standard_types import PolynomialAsString, PermutationAsList,\
     TooLargeInt, LabelString, FiniteSequence, FiniteSet, PrimeIndexedSequence, \
-    AlgebraicNumberString_Root, PolynomialAsSequenceInt, PolynomialAsSequenceTooLargeInt
+    PolynomialAsSequenceInt, PolynomialAsSequenceTooLargeInt
 
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.rational_field import QQ
@@ -20,7 +20,6 @@ from bind_collection import bind_collection
 
 Dokchitser_AlgebraicNumber_MinPol = PolynomialAsString(
     PolynomialRing(PolynomialRing(ZZ, "x", sparse=False), "a", sparse=False))
-Dokchitser_AlgebraicNumber_Root = AlgebraicNumberString_Root
 
 
 class Dokchitser_AlgorithmLabel(LabelString):

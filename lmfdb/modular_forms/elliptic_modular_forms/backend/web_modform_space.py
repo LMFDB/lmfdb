@@ -28,7 +28,6 @@ AUTHORS:
  """
 
 import os, yaml
-from flask import url_for
 
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebObject,
@@ -40,7 +39,6 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import (
      WebList,
      WebBool,
      WebSageObject,
-     WebNoStoreObject,
      WebProperty,
      WebProperties
      )
@@ -50,34 +48,18 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_character import (
      WebCharProperty
      )
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, space_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import space_label
 
 from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
      emf_logger
      )
 
-from sage.rings.number_field.number_field_base import (
-     NumberField
-     )
-
 from sage.all import (
-     ZZ,
      Gamma0,
      Gamma1,
-     RealField,
-     ComplexField,
-     prime_range,
-     ceil,
-     RR,
-     Integer,
-     matrix,
-     PowerSeriesRing,
-     Matrix,
-     latex
      )
      
-from sage.rings.power_series_poly import PowerSeries_poly
 
 from sage.structure.unique_representation import CachedRepresentation
 
@@ -108,17 +90,14 @@ class WebHeckeOrbits(WebDict):
     def from_db(self, l):
         emf_logger.debug("Get Hecke orbits for labels : {0}!".format(l))
         self._only_rational = True
-        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached,WebNewForm
+        from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
         res = {}
         for lbl in l:
             F = WebNewForm(self.level, self.weight, self.character, lbl, prec = self.prec, parent=self.parent)
             if not F.is_rational:
                 self._only_rational = False
-            #F = WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
             emf_logger.debug("Got F for label {0} : {1}".format(lbl,F))
             res[lbl]=F
-#            return {lbl : WebNewForm_cached(self.level, self.weight, self.character, lbl, parent=self.parent)
-#                for lbl in l}
         emf_logger.debug("Got Hecke orbits!")
 
         return res

@@ -1,19 +1,18 @@
+# -*- coding: utf-8 -*-
+
 import re
 import pymongo
 ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-import flask
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
+from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
 
-from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma, random_object_from_collection
+from lmfdb.base import getDBConnection
+from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_collection
 
-import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, QuadraticForm
+from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
-from lmfdb.lattice import lattice_page, lattice_logger
+from lmfdb.lattice import lattice_page
 from lmfdb.lattice.lattice_stats import get_stats
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
 from lmfdb.lattice.isom import isom
@@ -21,7 +20,6 @@ from lmfdb.lattice.isom import isom
 from markupsafe import Markup
 
 import time
-import os
 import ast
 import StringIO
 
@@ -37,7 +35,6 @@ def vect_to_matrix(v):
 def print_q_expansion(list):
      list=[str(c) for c in list]
      Qa=PolynomialRing(QQ,'a')
-     a = QQ['a'].gen()
      Qq=PowerSeriesRing(Qa,'q')
      return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
 
@@ -76,7 +73,7 @@ def learnmore_list_remove(matchstring):
 def lattice_render_webpage():
     args = request.args
     if len(args) == 0:
-        counts = get_stats().counts()
+#        counts = get_stats().counts()
         dim_list= range(1, 11, 1)
         max_class_number=20
         class_number_list=range(1, max_class_number+1, 1)
@@ -453,7 +450,6 @@ def render_lattice_webpage_download(**args):
 
 def download_lattice_full_lists_v(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     res = C.Lattices.lat.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
@@ -474,7 +470,6 @@ def download_lattice_full_lists_v(**args):
 
 def download_lattice_full_lists_g(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     res = C.Lattices.lat.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")

@@ -77,7 +77,7 @@ class SymmetricPowerLFunction(SageObject):
         from sage.rings.fast_arith import prime_range
         PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', 30)
         # FIXME THIS VARIABLE IS NEVER USED
-        x = PP('x')
+        # x = PP('x')
         prime_l = prime_range(upperbound)
         result = upperbound * [1]
 

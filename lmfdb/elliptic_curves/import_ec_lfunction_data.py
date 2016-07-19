@@ -179,7 +179,7 @@ def read_line(line):
     # Euler factors: we need the ap which are currently not in the
     # database so we call Sage.  It might be a good idea to store in
     # the ec database (1) all ap for p<100; (2) all ap for bad p.
-    Esage = EllipticCurve([ZZ(eval(a)) for a in E['ainvs']])
+    Esage = EllipticCurve([ZZ(a) for a in E['ainvs']])
     data['bad_lfactors'] = make_bad_lfactors(Esage)
     data['euler_factors'] = make_euler_factors(Esage)
 

@@ -239,7 +239,7 @@ def from_cycle_type_to_conjugacy_class_index_dict(defining_polynomial, frobenius
         elif technique["Algorithm"] == "ALT":
             tmp = ALT_from_cycle_type_to_conjugacy_class_index_fn(technique, defining_polynomial)
         else:
-            raise Error("Only three cases are possible: 'CYC', 'RES' and 'ALT'")
+            raise ValueError("Only three cases are possible: 'CYC', 'RES' and 'ALT'")
         cycle_type = tuple(map(Integer, technique["CycleType"]))
         output_dict[cycle_type] = tmp
     return output_dict

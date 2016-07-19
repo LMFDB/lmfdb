@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
 
 class HMFTest(LmfdbTest):
     def test_home(self):
