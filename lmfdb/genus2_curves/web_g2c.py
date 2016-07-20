@@ -8,6 +8,7 @@ from lmfdb.ecnf.main import split_full_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, real, sqrt, var, expand
 from sage.plot.text import text
 from flask import url_for
@@ -504,8 +505,7 @@ class WebG2C(object):
         """
         Searches for a specific genus 2 curve or isogeny class in the curves collection by its label.
         It label is an isogeny class label, constructs an object for an arbitrarily chosen curve in the isogeny class
-        Constructs the WebG2C object if the curve is found, returns an error message string otherwise
-        The caller must check the type of the return value and display the error message if appropriate
+        Constructs the WebG2C object if the curve is found, raises an error otherwise
         """
         try:
             slabel = label.split(".")
@@ -514,17 +514,18 @@ class WebG2C(object):
             elif len(slabel) == 4:
                 curve = g2c_db_curves().find_one({"label" : label})
             else:
-                return "Invalid genus 2 isogeny class label"
+                raise ValueError("Invalid genus 2 label %s" % label)
         except AttributeError:
-            return "Invalid genus 2 isogeny class label"
+            raise ValueError("Invalid genus 2 label %s" % label)
         if not curve:
             if len(slabel) == 2:
-                return "Genus 2 isogeny class %s not found in database" % label
+                raise KeyError("Genus 2 isogeny class %s not found in database" % label)
             else:
-                return "Genus 2 curve %s not found in database" % label
+                raise KeyError("Genus 2 curve %s not found in database" % label)
         endo = g2c_db_endomorphisms().find_one({"label" : curve['label']})
         if not endo:
-            return "Genus 2 endomorphism data for curve %s not found in database" % label
+            gc2_logger.error("Genus 2 endomorphism data for curve %s not found in database" % label)
+            raise KeyError("Genus 2 endomorphism data for curve %s not found in database" % label)
         return WebG2C(curve, endo, is_curve=(len(slabel)==4))
 
     def make_object(self, curve, endo, is_curve):
