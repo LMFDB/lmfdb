@@ -22,7 +22,6 @@ from LfunctionComp import isogeny_class_table, isogeny_class_cm
 import LfunctionDatabase
 from lmfdb import base
 from pymongo import ASCENDING
-from flask import current_app
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
