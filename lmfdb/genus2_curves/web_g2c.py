@@ -524,7 +524,7 @@ class WebG2C(object):
                 raise KeyError("Genus 2 curve %s not found in database" % label)
         endo = g2c_db_endomorphisms().find_one({"label" : curve['label']})
         if not endo:
-            gc2_logger.error("Genus 2 endomorphism data for curve %s not found in database" % label)
+            g2c_logger.error("Genus 2 endomorphism data for curve %s not found in database" % label)
             raise KeyError("Genus 2 endomorphism data for curve %s not found in database" % label)
         return WebG2C(curve, endo, is_curve=(len(slabel)==4))
 
