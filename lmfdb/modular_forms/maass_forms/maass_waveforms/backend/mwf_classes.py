@@ -110,7 +110,7 @@ class WebMaassForm(object):
         ff = db.get_Maass_forms(id=self._maassid)
         # print "ff=",ff
         if len(ff) == 0:
-            return
+            raise KeyError("massid %s not found in database"%maassid)
         f = ff[0]
 
         # print "f here=",f
