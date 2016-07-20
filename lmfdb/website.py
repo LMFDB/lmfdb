@@ -184,12 +184,12 @@ Usage: %s [OPTION]...
   -p, --port=NUM            bind to port NUM (default 37777)
   -h, --host=HOST           bind to host HOST (default "127.0.0.1")
   -l, --log=FILE            log to FILE (default "flasklog")
-  -t, --threading           multithread the database authentications
-      --dbport=NUM          bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
-      --debug               enable debug mode
-      --logfocus=NAME       enter name of logger to focus on
-      --help                show this help
   -m, --mongo-client=FILE   config file for connecting to MongoDB (default is "mongoclient.config")
+      --logfocus=NAME       name of a logger to focus on
+      --debug               enable debug mode
+      --dbport=NUM          bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
+      --dbmon=NAME          monitor MongoDB commands to the specified database (use NAME=* to monitor everything, NAME=~DB to monitor all but DB)
+      --help                show this help
 """ % sys.argv[0]
 
 def get_configuration():
@@ -218,14 +218,16 @@ def get_configuration():
                                            "dbport=", 
                                            "log=", 
                                            "logfocus=", 
+                                           "dbmon=",
                                            "debug",
                                            "help", 
-                                           "threading", 
                                            "mongo-client=",
                                             # undocumented, see below
                                             "enable-reloader", "disable-reloader",
                                             "enable-debugger", "disable-debugger",
                                             "enable-profiler"
+                                            # not currently used
+                                            "threading"
                                         ]
                                        )
         except getopt.GetoptError, err:
@@ -246,6 +248,8 @@ def get_configuration():
                 logging_options["logfile"] = arg
             elif opt in ("--dbport"):
                 mongo_client_options["port"] = int(arg)
+            elif opt in ("--dbmon"):
+                mongo_client_options["dbmon"] = arg
             elif opt == "--debug":
                 flask_options["debug"] = True
             elif opt == "--logfocus":
