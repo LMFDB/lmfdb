@@ -180,6 +180,8 @@ def plot_maassform(maass_id):
         return flask.abort(404)
     DB = connect_db()
     data = DB.get_maassform_plot_by_id(maass_id)
+    if not data:
+        return flask.abort(404)
     data = data['plot']
     response = make_response(loads(data))
     response.headers['Content-type'] = 'image/png'
