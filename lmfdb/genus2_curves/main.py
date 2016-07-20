@@ -6,7 +6,7 @@ import re
 import time
 from pymongo import ASCENDING, DESCENDING
 from operator import mul
-from flask import render_template, url_for, request, redirect, send_file
+from flask import render_template, url_for, request, redirect, send_file, abort
 from sage.all import ZZ
 
 from lmfdb.utils import to_dict, comma, random_value_from_collection, attribute_value_counts, flash_error
@@ -179,11 +179,10 @@ def by_label(label):
     return genus2_curve_search({'jump':label})
 
 def render_curve_webpage(label):
-    g2c = WebG2C.by_label(label)
-    if not g2c:
-        return "Error constructing genus 2 curve with label " + label
-    if isinstance(g2c,str):
-        return g2c
+    try:
+        g2c = WebG2C.by_label(label)
+    except (KeyError,ValueError):
+        return abort(404)
     return render_template("g2c_curve.html",
                            properties2=g2c.properties,
                            credit=credit_string,
@@ -197,11 +196,10 @@ def render_curve_webpage(label):
                            #downloads=g2c.downloads)
 
 def render_isogeny_class_webpage(label):
-    g2c = WebG2C.by_label(label)
-    if not g2c:
-        return "Error constructing genus 2 isogeny class with label " + label
-    if isinstance(g2c,str):
-        return g2c
+    try:
+        g2c = WebG2C.by_label(label)
+    except (KeyError,ValueError):
+        return abort(404)
     return render_template("g2c_isogeny_class.html",
                            properties2=g2c.properties,
                            credit=credit_string,
@@ -211,7 +209,6 @@ def render_isogeny_class_webpage(label):
                            title=g2c.title,
                            friends=g2c.friends)
                            #downloads=class_data.downloads)
-                           
 
 def url_for_curve_label(label):
     slabel = label.split(".")
