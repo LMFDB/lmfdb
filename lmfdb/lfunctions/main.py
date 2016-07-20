@@ -379,8 +379,8 @@ def l_function_lcalc_page():
 ################################################################################
 
 def render_lfunction_exception(err):
-    if current_app.debug:
-        raise err
+    #if current_app.debug:
+    #    raise err
     if err.args:
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
     else:

@@ -145,7 +145,10 @@ def render_one_maass_waveform(maass_id, **kwds):
         info.get('download', '') == 'all'):
         DB = connect_db()
         maass_id = info['maass_id']
-        f = WebMaassForm(DB, maass_id)
+        try:
+            f = WebMaassForm(DB, maass_id)
+        except KeyError:
+            flask.abort(404)
         filename = str(f._maassid) + '.txt'
         if info.get('download', '') == 'coefficients':
             res = f.coeffs
@@ -177,6 +180,8 @@ def plot_maassform(maass_id):
         return flask.abort(404)
     DB = connect_db()
     data = DB.get_maassform_plot_by_id(maass_id)
+    if not data:
+        return flask.abort(404)
     data = data['plot']
     response = make_response(loads(data))
     response.headers['Content-type'] = 'image/png'
@@ -191,7 +196,11 @@ def render_one_maass_waveform_wp(info):
     DB = connect_db()
     maass_id = info['maass_id']
     mwf_logger.debug("id1={0}".format(maass_id))
-    info['MF'] = MF = WebMaassForm(DB, maass_id)
+    try:
+        MF = WebMaassForm(DB, maass_id)
+    except KeyError:
+        return flask.abort(404)
+    info['MF'] = MF
     info['title'] = "Maass form"
     info['bread'] = [('Modular forms', url_for('mf.modular_form_main_page')),
                      ('Maass waveforms', url_for('.render_maass_waveforms'))]
