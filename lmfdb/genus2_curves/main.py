@@ -137,6 +137,9 @@ def by_url_curve_label(cond, alpha, disc, num):
 def by_url_isogeny_class_discriminant(cond, alpha, disc):
     data = to_dict(request.args)
     clabel = str(cond)+"."+alpha
+    # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
+    if not g2c_db_curves().find_one({'class':clabel},{'_id':True}):
+        return abort(404)
     data['title'] = 'Genus 2 curves in isogeny class %s of discriminant %s' % (clabel,disc)
     data['bread'] = [('Genus 2 Curves', url_for(".index")),
         ('$\Q$', url_for(".index_Q")),
