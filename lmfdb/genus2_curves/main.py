@@ -185,7 +185,7 @@ def render_curve_webpage(label):
     try:
         g2c = WebG2C.by_label(label)
     except (KeyError,ValueError) as err:
-        return abort(404,err.args[0])
+        return abort(404,err.args)
     return render_template("g2c_curve.html",
                            properties2=g2c.properties,
                            credit=credit_string,
@@ -202,7 +202,7 @@ def render_isogeny_class_webpage(label):
     try:
         g2c = WebG2C.by_label(label)
     except (KeyError,ValueError) as err:
-        return abort(404,err.args[0])
+        return abort(404,err.args)
     return render_template("g2c_isogeny_class.html",
                            properties2=g2c.properties,
                            credit=credit_string,
