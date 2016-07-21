@@ -71,6 +71,7 @@ def get_database_info(show_hidden=False):
     for db in C.database_names():
         if not censored_db(db):
             info[db] = sorted([(c, C[db][c].count()) for c in C[db].collection_names() if not censored_collection(c) and (show_hidden or not hidden_collection(c))])
+            print db, info[db]
     return info
 
 @api_page.route("/")
