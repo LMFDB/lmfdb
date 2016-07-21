@@ -106,12 +106,13 @@ def redirect_nonwww():
 @app.errorhandler(404)
 def not_found_404(error):
     app.logger.info('%s 404 error for URL %s %s'%(timestamp(),request.url,error.description))
-    return render_template("404.html", title='LMFDB page not found', message=error.description), 404
+    messages = error.description if isinstance(error.description,(list,tuple)) else (error.description,)
+    return render_template("404.html", title='LMFDB page not found', messages=messages), 404
 
 @app.errorhandler(500)
 def not_found_500(error):
-    app.logger.error("%s 500 error on URL %s"%(timestamp(),request.url))
-    return render_template("500.html", title='LMFDB error', message=error.description), 500
+    app.logger.error("%s 500 error on URL %s %s"%(timestamp(),request.url, error.args))
+    return render_template("500.html", title='LMFDB error'), 500
 
 @app.errorhandler(503)
 def not_found_503(error):
@@ -125,7 +126,7 @@ def root_static_file(name):
         if os.path.exists(fn):
             return open(fn).read()
         logging.critical("root_static_file: file %s not found!" % fn)
-        return abort(404)
+        return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
 map(root_static_file, ['favicon.ico'])
 
