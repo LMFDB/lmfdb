@@ -125,7 +125,7 @@ def root_static_file(name):
         if os.path.exists(fn):
             return open(fn).read()
         logging.critical("root_static_file: file %s not found!" % fn)
-        return abort(404. 'static file %s not found.' % fn)
+        return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
 map(root_static_file, ['favicon.ico'])
 
