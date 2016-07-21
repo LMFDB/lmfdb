@@ -16,9 +16,6 @@ from lmfdb.api import api_page, api_logger
 from bson import json_util
 from bson.objectid import ObjectId
 
-# caches the database information
-_databases = None
-
 def pluck(n, list):
     return [_[n] for _ in list]
 
@@ -52,31 +49,39 @@ def pretty_document(rec,sep=", ",id=True):
 
 def censored_db(db):
     """
-    hide some databases from the public
+    completely hide some databases
     """
     return db in ["local", "userdb", "admin", "contrib", "upload","test"]
 
 def censored_collection(c):
     """
-    hide some collections from the public
+    completely hide some collections
     """
-    return c.startswith("system.") or c.endswith(".rand")
+    return c.startswith("system.")
 
-def init_database_info():
-    global _databases
-    if _databases is None:
-        C = base.getDBConnection()
-        _databases = {}
-        for db in C.database_names():
-            if not censored_db(db):
-                _databases[db] = sorted([(c, C[db][c].count()) for c in C[db].collection_names() if not censored_collection(c)])
+def hidden_collection(c):
+    """
+    hide some collections from the main page (still available via direct requests)
+    """
+    return c.startswith("test") or c.endswith(".rand") or c.endswith(".stats") or c.endswith(".chunks") or c.endswith(".new") or c.endswith(".old")
+
+def get_database_info(show_hidden=False):
+    C = base.getDBConnection()
+    info = {}
+    for db in C.database_names():
+        if not censored_db(db):
+            info[db] = sorted([(c, C[db][c].count()) for c in C[db].collection_names() if not censored_collection(c) and (show_hidden or not hidden_collection(c))])
+    return info
 
 @api_page.route("/")
-def index():
-    init_database_info()
-    databases = _databases
+def index(show_hidden=False):
+    databases = get_database_info(show_hidden)
     title = "API"
     return render_template("api.html", **locals())
+
+@api_page.route("/all")
+def full_index():
+    return index(show_hidden=True)
 
 @api_page.route("/stats")
 def stats():
@@ -91,9 +96,9 @@ def stats():
     info['sortby'] = request.args.get('sortby','size').strip().lower()
     if not info['sortby'] in ['size', 'objects']:
         info['sortby'] = 'size'
-    init_database_info()
+    dbs = get_database_info(True)
     C = base.getDBConnection()
-    dbstats = {db:C[db].command("dbstats") for db in _databases}
+    dbstats = {db:C[db].command("dbstats") for db in dbs}
     info['dbs'] = len(dbstats.keys())
     collections = objects = 0
     size = dataSize = indexSize = 0
@@ -105,7 +110,7 @@ def stats():
         indexSize += dbstats[db]['indexSize']
         dbsize = mb(dbsize)
         dbobjects = dbstats[db]['objects']
-        for c in pluck(0,_databases[db]):
+        for c in pluck(0,dbs[db]):
             if C[db][c].count():
                 collections += 1
                 coll = '<a href = "' + url_for (".api_query", db=db, collection = c) + '">'+c+'</a>'
