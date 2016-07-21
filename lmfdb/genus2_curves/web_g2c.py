@@ -514,18 +514,18 @@ class WebG2C(object):
             elif len(slabel) == 4:
                 curve = g2c_db_curves().find_one({"label" : label})
             else:
-                raise ValueError("Invalid genus 2 label %s" % label)
+                raise ValueError("Invalid genus 2 label %s." % label)
         except AttributeError:
-            raise ValueError("Invalid genus 2 label %s" % label)
+            raise ValueError("Invalid genus 2 label %s." % label)
         if not curve:
             if len(slabel) == 2:
-                raise KeyError("Genus 2 isogeny class %s not found in database" % label)
+                raise KeyError("Genus 2 isogeny class %s not found in the database." % label)
             else:
-                raise KeyError("Genus 2 curve %s not found in database" % label)
+                raise KeyError("Genus 2 curve %s not found in database." % label)
         endo = g2c_db_endomorphisms().find_one({"label" : curve['label']})
         if not endo:
-            g2c_logger.error("Genus 2 endomorphism data for curve %s not found in database" % label)
-            raise KeyError("Genus 2 endomorphism data for curve %s not found in database" % label)
+            g2c_logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
+            raise KeyError("Endomorphism data for genus 2 curve %s not found in database." % label)
         return WebG2C(curve, endo, is_curve=(len(slabel)==4))
 
     def make_object(self, curve, endo, is_curve):
