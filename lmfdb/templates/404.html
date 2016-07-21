@@ -3,13 +3,17 @@
 
 <div class="announce red">
 <div>Unable to locate the page you requested.</div>
+{% if messages %}
+<ul>
+{% for msg in messages %}
+<li>{{msg}}</li>
+{% endfor %}
+</ul>
+{% elif message %}
 <br>
-{% if message %}
-<div>
 {{ message }}
-</div>
-<br>
 {% elif request.referrer %}
+<br>
 <div>
 If you think accessing "{{ request.referrer }}" is an error, please <a href="http://code.google.com/p/lmfdb/issues/list">report that URL</a>!
 </div>
