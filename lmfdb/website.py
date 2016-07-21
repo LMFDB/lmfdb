@@ -110,8 +110,8 @@ def not_found_404(error):
 
 @app.errorhandler(500)
 def not_found_500(error):
-    app.logger.error("%s 500 error on URL %s"%(timestamp(),request.url))
-    return render_template("500.html", title='LMFDB error', message=error.description), 500
+    app.logger.error("%s 500 error on URL %s %s"%(timestamp(),request.url, error.args))
+    return render_template("500.html", title='LMFDB error'), 500
 
 @app.errorhandler(503)
 def not_found_503(error):
