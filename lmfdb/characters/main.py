@@ -9,6 +9,7 @@ from lmfdb.utils import to_dict, flash_error
 from lmfdb.WebCharacter import url_character
 from lmfdb.WebCharacter import WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter
 from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
+from lmfdb.WebNumberField import WebNumberField
 from lmfdb.characters import characters_page
 import ListCharacters
 
@@ -196,9 +197,6 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if number <= 0 or gcd(modulus,number) != 1 or number > modulus:
         flash_error("the value %s is invalid.  It should be a positive integer coprime to and no greater than the modulus %s.", args['number'],args['modulus'])
         return redirect(url_for(".render_Dirichletwebpage"))
-        
-    if gcd(modulus, number) != 1:
-        return flask.abort(404)
     if modulus < 100000:
         webchar = WebDirichletCharacter(**args)
         info = webchar.to_dict()
@@ -260,12 +258,23 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
     if number_field == None:
         info = WebHeckeExamples(**args).to_dict()
         return render_template('Hecke.html', **info)
-    elif modulus == None:
-        info = WebHeckeFamily(**args).to_dict()
-        #logger.info(info)
+    else:
+        WNF = WebNumberField(number_field)
+        if WNF.is_null():
+            return flask.abort(404, "Number field %s not found."%number_field)
+
+    if modulus == None:
+        try:
+            info = WebHeckeFamily(**args).to_dict()
+        except (ValueError,KeyError,TypeError) as err:
+            return flask.abort(404,err.args)
         return render_template('CharFamily.html', **info)
     elif number == None:
-        info = WebHeckeGroup(**args).to_dict()
+        try:
+            info = WebHeckeGroup(**args).to_dict()
+        except (ValueError,KeyError,TypeError) as err:
+            # Typical failure case is a GP error inside bnrinit which we don't really want to display
+            return flask.abort(404,'Unable to construct modulus %s for number field %s'%(modulus,number_field))
         m = info['modlabel']
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Hecke', url_for(".render_Heckewebpage")),
@@ -273,10 +282,12 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
                          ('%s'%m,  url_for(".render_Heckewebpage", number_field=number_field, modulus=m))]
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
-        #logger.info(info)
         return render_template('CharGroup.html', **info)
     else:
-        X = WebHeckeCharacter(**args)
+        try:
+            X = WebHeckeCharacter(**args)
+        except (ValueError,KeyError,TypeError) as err:
+            return flask.abort(404, 'Unable to construct Hecke character %s modulo %s in number field %s.'%(number,modulus,number_field))
         info = X.to_dict()
         info['bread'] = [('Characters',url_for(".render_characterNavigation")),
                          ('Hecke',  url_for(".render_Heckewebpage")),
@@ -285,7 +296,6 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
                          ('%s'%X.number2label(X.number), '')]
         info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
         info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
-        #logger.info(info)
         return render_template('Character.html', **info)
 
 @characters_page.route("/calc-<calc>/Hecke/<number_field>/<modulus>/<number>")
