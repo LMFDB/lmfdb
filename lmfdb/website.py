@@ -91,6 +91,9 @@ import sage
 DEFAULT_DB_PORT = 37010
 LMFDB_SAGE_VERSION = '7.1'
 
+def timestamp():
+    return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+
 @app.before_request
 def redirect_nonwww():
     """Redirect lmfdb.org requests to www.lmfdb.org"""
@@ -102,12 +105,13 @@ def redirect_nonwww():
 
 @app.errorhandler(404)
 def not_found_404(error):
-    return render_template("404.html"), 404
+    app.logger.info('%s 404 error for URL %s %s'%(timestamp(),request.url,error.description))
+    return render_template("404.html", title='LMFDB page not found', message=error.description), 404
 
 @app.errorhandler(500)
 def not_found_500(error):
-    app.logger.error("[%s UTC] 500 error on URL %s"%(time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime()),request.url))
-    return render_template("500.html"), 500
+    app.logger.error("%s 500 error on URL %s"%(timestamp(),request.url))
+    return render_template("500.html", title='LMFDB error', message=error.description), 500
 
 @app.errorhandler(503)
 def not_found_503(error):

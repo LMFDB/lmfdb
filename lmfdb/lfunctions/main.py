@@ -22,7 +22,6 @@ from LfunctionComp import isogeny_class_table, isogeny_class_cm
 import LfunctionDatabase
 from lmfdb import base
 from pymongo import ASCENDING
-from flask import current_app
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -397,7 +396,7 @@ def render_single_Lfunction(Lclass, args, request):
     try:
         L = Lclass(**args)
         # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
-    except (ValueError,KeyError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
+    except (ValueError,KeyError,TypeError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
         return render_lfunction_exception(err)
     try:
         if temp_args['download'] == 'lcalcfile':

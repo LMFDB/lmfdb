@@ -6,7 +6,7 @@ import re
 import time
 from pymongo import ASCENDING, DESCENDING
 from operator import mul
-from flask import render_template, url_for, request, redirect, send_file
+from flask import render_template, url_for, request, redirect, send_file, abort
 from sage.all import ZZ
 
 from lmfdb.utils import to_dict, comma, random_value_from_collection, attribute_value_counts, flash_error
@@ -137,6 +137,9 @@ def by_url_curve_label(cond, alpha, disc, num):
 def by_url_isogeny_class_discriminant(cond, alpha, disc):
     data = to_dict(request.args)
     clabel = str(cond)+"."+alpha
+    # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
+    if not g2c_db_curves().find_one({'class':clabel},{'_id':True}):
+        return abort(404, 'Genus 2 isogeny class %s not found in database.'%clabel)
     data['title'] = 'Genus 2 curves in isogeny class %s of discriminant %s' % (clabel,disc)
     data['bread'] = [('Genus 2 Curves', url_for(".index")),
         ('$\Q$', url_for(".index_Q")),
@@ -179,11 +182,10 @@ def by_label(label):
     return genus2_curve_search({'jump':label})
 
 def render_curve_webpage(label):
-    g2c = WebG2C.by_label(label)
-    if not g2c:
-        return "Error constructing genus 2 curve with label " + label
-    if isinstance(g2c,str):
-        return g2c
+    try:
+        g2c = WebG2C.by_label(label)
+    except (KeyError,ValueError) as err:
+        return abort(404,err.args[0])
     return render_template("g2c_curve.html",
                            properties2=g2c.properties,
                            credit=credit_string,
@@ -197,11 +199,10 @@ def render_curve_webpage(label):
                            #downloads=g2c.downloads)
 
 def render_isogeny_class_webpage(label):
-    g2c = WebG2C.by_label(label)
-    if not g2c:
-        return "Error constructing genus 2 isogeny class with label " + label
-    if isinstance(g2c,str):
-        return g2c
+    try:
+        g2c = WebG2C.by_label(label)
+    except (KeyError,ValueError) as err:
+        return abort(404,err.args[0])
     return render_template("g2c_isogeny_class.html",
                            properties2=g2c.properties,
                            credit=credit_string,
@@ -211,7 +212,6 @@ def render_isogeny_class_webpage(label):
                            title=g2c.title,
                            friends=g2c.friends)
                            #downloads=class_data.downloads)
-                           
 
 def url_for_curve_label(label):
     slabel = label.split(".")
