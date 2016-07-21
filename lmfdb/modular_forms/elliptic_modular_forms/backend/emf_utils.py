@@ -129,29 +129,6 @@ def orbit_index_from_label(label):
         i+=1
     return res
 
-@cached_function
-def dimension_from_db(level,weight,chi=None,group='gamma0'):
-    import json
-    db = lmfdb.base.getDBConnection()['modularforms2']['webmodformspace_dimension']
-    q = db.find_one({'group':group})
-    dim_table = {}
-    if q:
-        dim_table = q.get('data',{})
-        dim_table = json.loads(dim_table)
-    if group=='gamma0' and chi!=None:
-        d,t = dim_table.get(str(level),{}).get(str(weight),{}).get(str(chi),[-1,0])
-        return  d,t
-    elif chi is None:
-        d,t = dim_table.get(str(level),{}).get(str(weight),[-1,0])
-        return  d,t
-    elif chi == 'all':
-        res = {level: {weight:{}}}
-        dtable = dim_table.get(str(level),{}).get(str(weight),{})
-        for i in dtable.keys():
-            res[level][weight][int(i)] = dtable[i]
-        return res
-
-
 @cached_method
 def is_newform_in_db(newform_label):
     from .web_newforms import WebNewForm
