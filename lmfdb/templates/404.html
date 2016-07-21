@@ -2,11 +2,11 @@
 {% block content %}
 
 <div class="announce red">
-<div>The page you are looking for does not exist. </div>
+<div>Unable to locate the page you requested.</div>
 <br>
 {% if message %}
 <div>
-  {{ message }}
+{{ message }}
 </div>
 <br>
 {% elif request.referrer %}
@@ -19,17 +19,13 @@ If you believe this page should be here, please <a href = "http://code.google.co
 </div>
 {% endif %}
 
-<br>
-<div>Thank you for your understanding!</div>
-
 {% if request.referrer %}
 <div>
 <br>
-You now have the option of <a href="{{ request.referrer }}">jumping back to your referring URL</a>.
+<a href="{{ request.referrer }}">Click here</a> to return to the referring URL.
 </div>
 {% endif %}
 
 </div>
-
 
 {% endblock %}
