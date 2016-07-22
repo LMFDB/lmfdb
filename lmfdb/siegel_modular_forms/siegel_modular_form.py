@@ -102,6 +102,12 @@ def Sp4Z_j_space(k,j):
 def Sp4Z_space(k):
     return redirect(url_for(".Sp4Z_j_space", k=k, j=0), 301)
 
+# handle URLs in scalar valued SMF L-function format
+@smf_page.route('/Sp4Z/<int:k>/<orbit>')
+def Sp4Z_form(k,orbit):
+    label = 'Sp4Z.%d_%s' % (k,orbit)
+    return redirect(url_for('.by_label',label=label))
+
 @smf_page.route('/Sp4Z_2/<int:k>')
 @smf_page.route('/Sp4Z_2/<int:k>/')
 def Sp4Z_2_space(k):
