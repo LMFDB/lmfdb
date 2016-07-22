@@ -11,7 +11,23 @@ Revised continuously 2014-2015 by John Cremona: now uncludes download functions 
 
 The documents in the collection 'nfcurves' in the database
 'elliptic_curves' have the following keys (* denotes a mandatory
-field) and value types (with examples):
+field) and value types (with examples).  Here the base field is
+K=Q(w) of degree d.
+
+ An NFelt-string is a string representing an element of K as a
+ comma-separated list of rational coefficients with respect to the
+ power basis.
+
+ An ideal-string is a string representing [N,a,alpha] defining an
+ ideal of norm N, minimal positive integer a and second generator
+ alpha, expressed as a polynomial in w.
+
+ A point-string is a string of the form [X,Y,Z] where each of X, Y, Z
+ is an NFelt surrounded by "[","]".  For example (degree 2):
+ '[[1/2,2],[3/4,5/6],[1,0]]'.
+
+ label = “%s-%s” % (field_label, short_label)
+ short_label = “%s.%s%s” % (conductor_label, iso_label, str(number))
 
    - '_id': internal mogodb identifier
 
@@ -25,11 +41,11 @@ field) and value types (with examples):
    - conductor_label    *     string
    - iso_label          *     string (letter code of isogeny class)
    - iso_nlabel         *     int (numerical code of isogeny class)
-   - conductor_ideal    *     string
+   - conductor_ideal    *     ideal-string
    - conductor_norm     *     int
    - number             *     int    (number of curve in isogeny class, from 1)
-   - ainvs              *     list of 5 lists of d strings
-   - jinv               *     list of d strings
+   - ainvs              *     string joining 5 NFelt-strings by ";"
+   - jinv               *     NFelt-string
    - cm                 *     either int (a negative discriminant, or 0) or '?'
    - q_curve            *     boolean (True, False)
    - base_change        *     list of labels of elliptic curve over Q
@@ -39,28 +55,17 @@ field) and value types (with examples):
    - torsion_order            int
    - torsion_structure        list of 0, 1 or 2 ints
    - gens                     list of point-strings (see below)
-   - torsion_gens             list of point-strings (see below)
+   - torsion_gens       *     list of point-strings (see below)
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
 
-   - equation                 string
-   - local_data               list of dicts (one per bad prime)
-   - non_min_p                list of strings (one per nonminimal prime)
-   - minD                     string (minimal discriminant ideal)
+   - equation           *     string
+   - local_data         *     list of dicts (one per bad prime)
+   - non_min_p          *     list of strings (one per nonminimal prime)
+   - minD               *     ideal-string (minimal discriminant ideal)
    - heights                  list of floats (one per gen)
    - reg                      float
 
-   Each NFelt is a string concatenating rational coefficients with
-   respect to a power basis for the number field, using the defining
-   polynomial for the number field in the number_field database,
-   separated by commas with no whitespace.
-
-   A point-string is a string of the form [X,Y,Z] where each of X, Y,
-   Z is an NFelt surrounded by "[","]".  For example (degree 2):
-   '[[1/2,2],[3/4,5/6],[1,0]]'.
-
-   label = “%s-%s” % (field_label, short_label)
-   short_label = “%s.%s%s” % (conductor_label, iso_label, str(number))
 
 To run the functions in this file, cd to the top-level lmfdb
 directory, start sage and use the command
@@ -77,7 +82,7 @@ from lmfdb.utils import web_latex
 from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
-from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF, parse_point
+from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF, parse_NFelt, parse_ainvs, parse_point
 
 print "getting connection"
 C= getDBConnection()
@@ -147,12 +152,6 @@ def ideal_from_label(K, lab):
     N, c, d = [ZZ(c) for c in lab.split(".")]
     a = N // d
     return K.ideal(a, K([c, d]))
-
-def parse_NFelt(K, s):
-    r"""
-    Returns an element of K defined by the string s.
-    """
-    return K([QQ(c) for c in s.split(",")])
 
 
 def NFelt(a):
@@ -269,8 +268,8 @@ def curves(line):
     label = "%s-%s" % (field_label, short_label)
 
     conductor_ideal = data[4]     # string
-    conductor_norm = int(data[5])  # int
-    ainvs = data[6:11]            # list of 5 NFelt strings
+    conductor_norm = int(data[5]) # int
+    ainvs = ";".join(data[6:11])  # one string joining 5 NFelt strings
     cm = data[11]                 # int or '?'
     if cm != '?':
         cm = int(cm)
@@ -280,12 +279,11 @@ def curves(line):
     dummy, deg, sig, abs_disc = field_data(field_label)
     K = nf_lookup(field_label)
     #print("Field %s created, gen_name = %s" % (field_label,str(K.gen())))
-    ainvsK = [parse_NFelt(K, ai) for ai in ainvs]  # list of K-elements
-    ainvs = [[str(c) for c in ai] for ai in ainvsK]
+    ainvsK = parse_ainvs(K,ainvs)  # list of K-elements
     E = EllipticCurve(ainvsK)
     #print("{} created with disc = {}, N(disc)={}".format(E,K.ideal(E.discriminant()).factor(),E.discriminant().norm().factor()))
     j = E.j_invariant()
-    jinv = K_list(j)
+    jinv = NFelt(j)
     if cm == '?':
         cm = get_cm(j)
         if cm:
@@ -301,9 +299,7 @@ def curves(line):
         N = NE
 
     # get torsion order, structure and generators:
-    # print("E = %s over %s" % (ainvsK,K))
     torgroup = E.torsion_subgroup()
-    # print("torsion = %s" % torgroup)
     ntors = int(torgroup.order())
     torstruct = [int(n) for n in list(torgroup.invariants())]
     torgens = [point_string(P.element()) for P in torgroup.gens()]
@@ -441,7 +437,7 @@ def add_heights(data):
         ainvs = data['ainvs']
     else:
         ainvs = nfcurves.find_one({'label':data['label']})['ainvs']
-    ainvsK = [K([ZZ(aic) for aic in ai]) for ai in ainvs]  # list of K-elements
+    ainvsK = parse_ainvs(K, ainvs)  # list of K-elements
     E = EllipticCurve(ainvsK)
     gens = [E(parse_point(K,x)) for x in data['gens']]
     data['heights'] = [float(P.height()) for P in gens]

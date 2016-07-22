@@ -38,7 +38,7 @@ field_list = {}  # cached collection of enhanced WebNumberFields, keyed by label
 
 def FIELD(label):
     nf = WebNumberField(label, gen_name=special_names.get(label, 'a'))
-    nf.parse_NFelt = lambda s: nf.K()([QQ(str(c)) for c in s])
+    nf.parse_NFelt = lambda s: nf.K()([QQ(c.encode()) for c in s.split(",")])
     nf.latex_poly = web_latex(nf.poly())
     return nf
 
@@ -48,26 +48,36 @@ def make_field(label):
         field_list[label] = FIELD(label)
     return field_list[label]
 
+def parse_NFelt(K, s):
+    r"""
+    Returns an element of K defined by the string s.
+    """
+    return K([QQ(c.encode()) for c in s.split(",")])
+
+def parse_ainvs(K,ainvs):
+    return [parse_NFelt(K,ai) for ai in ainvs.split(";")]
+
 def web_ainvs(field_label, ainvs):
-    return web_latex([make_field(field_label).parse_NFelt(x) for x in ainvs])
+    K = make_field(field_label).K()
+    return web_latex(parse_ainvs(K,ainvs))
 
 from sage.misc.all import latex
 def web_point(P):
     return '$\\left(%s\\right)$'%(" : ".join([str(latex(x)) for x in P]))
 
-def ideal_from_string(K,s):
-    r"""Returns the ideal of K defined by the string s.  For imaginary
-    quadratic fields this is "[N,c,d]" with N,c,d as in a label, while
-    for other fields it is of the form "[N,a,alpha]" where N is the
-    norm, a the least positive integer in the ideal and alpha a second
-    generator so that the ideal is (a,alpha).  alpha is a polynomial
-    in the variable w which represents the generator of K (but may
-    actially be an integer).  """
+def ideal_from_string(K,s, IQF_format=False):
+    r"""Returns the ideal of K defined by the string s.  If IQF_format is
+    True, this is "[N,c,d]" with N,c,d as in a label, while otherwise
+    it is of the form "[N,a,alpha]" where N is the norm, a the least
+    positive integer in the ideal and alpha a second generator so that
+    the ideal is (a,alpha).  alpha is a polynomial in the variable w
+    which represents the generator of K (but may actially be an
+    integer).  """
     #print("ideal_from_string({}) over {}".format(s,K))
     N, a, alpha = s[1:-1].split(",")
     N = ZZ(N)
     a = ZZ(a)
-    if K.signature()==(0,1): # imaginary quadratic
+    if IQF_format:
         d = ZZ(alpha)
         I = K.ideal(N//d, K([a, d]))
     else:
@@ -95,9 +105,9 @@ def ideal_HNF(I):
     assert a > 0 and d > 0 and N == a * d and d.divides(a) and d.divides(b) and 0 <= c < a
     return [a, c, d]
 
-def ideal_to_string(I):
+def ideal_to_string(I,IQF_format=False):
     K = I.number_field()
-    if K.signature() == (0,1):
+    if IQF_format:
         a, c, d = ideal_HNF(I)
         return "[%s,%s,%s]" % (a * d, c, d)
     N = I.norm()
@@ -106,7 +116,7 @@ def ideal_to_string(I):
     alpha = gens[-1]
     assert I == K.ideal(a,alpha)
     alpha = str(alpha).replace(str(K.gen()),'w')
-    return "[%s,%s,%s]" % (N,a,alpha)
+    return ("[%s,%s,%s]" % (N,a,alpha)).replace(" ","")
 
 def parse_point(K, s):
     r""" Returns a point in P^2(K) defined by the string s.  s has the form
@@ -231,13 +241,14 @@ class ECNF(object):
         print "No such curve in the database: %s" % label
 
     def make_E(self):
-        coeffs = self.ainvs  # list of 5 lists of d strings
-        self.ainvs = [self.field.parse_NFelt(x) for x in coeffs]
+        K = self.field.K()
+
+        # a-invariants
+        self.ainvs = parse_ainvs(K,self.ainvs)
         self.latex_ainvs = web_latex(self.ainvs)
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
-        K = self.field.K()
         N = ideal_from_string(K,self.conductor_ideal)
         self.cond = web_latex(N)
         self.cond_norm = web_latex(self.conductor_norm)
