@@ -37,10 +37,11 @@ def split_full_label(lab):
     field_label = data[0]
     conductor_label = data[1]
     try:
-        isoclass_label = re.search("(CM)?[a-z]+", data[2]).group()
+        # field 3.1.23.1 uses upper case letters
+        isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
         curve_number = re.search("\d+", data[2]).group()  # (a string)
     except AttributeError:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of lower case letters), followed by a curve id (an integer), such as a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % lab), "error")
         raise ValueError
     return (field_label, conductor_label, isoclass_label, curve_number)
 
@@ -55,10 +56,11 @@ def split_short_label(lab):
         raise ValueError
     conductor_label = data[0]
     try:
-        isoclass_label = re.search("[a-z]+", data[1]).group()
+        # field 3.1.23.1 uses upper case letters
+        isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
         curve_number = re.search("\d+", data[1]).group()  # (a string)
     except AttributeError:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of lower case letters), followed by a curve id (an integer), such as a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % lab), "error")
         raise ValueError
     return (conductor_label, isoclass_label, curve_number)
 
@@ -179,7 +181,7 @@ def index():
     data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)])
     # Real quadratics (only a sample)
     rqfs = ['2.2.%s.1' % str(d) for d in [5, 89, 229, 497]]
-    nquadratics = counts['nfields_by_degree'][2]
+    nquadratics = counts['nfields_by_degree'].get(2,0)
     niqfs = 5
     nrqfs = nquadratics - niqfs
     data['fields'].append(['%s real quadratic fields, including' % nrqfs, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in rqfs)])
@@ -293,6 +295,8 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     label = "-".join([nf_label, conductor_label, class_label])
     full_class_label = "-".join([conductor_label, class_label])
     cl = ECNF_isoclass.by_label(label)
+    if cl=="Class not found":
+        return search_input_error()
     title = "Elliptic Curve isogeny class %s over Number Field %s" % (full_class_label, cl.field)
     bread = [("Elliptic Curves", url_for(".index"))]
     bread.append((cl.field, url_for(".show_ecnf1", nf=nf_label)))
@@ -329,7 +333,6 @@ def show_ecnf(nf, conductor_label, class_label, number):
     bread.append((ec.conductor_label, ec.urls['conductor']))
     bread.append((ec.iso_label, ec.urls['class']))
     bread.append((ec.number, ec.urls['curve']))
-    print ec.urls
     code = ec.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     info = {}

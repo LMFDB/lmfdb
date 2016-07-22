@@ -63,8 +63,9 @@ class ECNF_isoclass(object):
 
         # Create a list of the curves in the class from the database
         self.db_curves = [c for c in db_ec().find(
-            {'field_label': self.field_label, 'conductor_label':
-             self.conductor_label, 'iso_label': self.iso_label}).sort('number')]
+            {'field_label': self.field_label, 'conductor_norm':
+             self.conductor_norm, 'conductor_label':
+             self.conductor_label, 'iso_nlabel': self.iso_nlabel}).sort('number')]
 
         # Rank or bounds
         try:

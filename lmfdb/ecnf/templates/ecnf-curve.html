@@ -213,7 +213,14 @@ Generators:
 {% endif %}</b>
 {{ ec.gens }}
 </p>
-
+<p><b>
+{% if ec.rank_bounds[0] == 1 %}
+Height:
+{% else %}
+Heights:
+{% endif %}</b>
+{% for h in ec.heights %}{%-if loop.index0-%}, {% endif %}{{h}}{% endfor %}
+</p>
 {% endif %}
 {% endif %}
  {{ place_code('gens') }}
@@ -248,6 +255,11 @@ Generators:
     <h2>{{KNOWL('ec.local_data', title='Local data')}} at primes of {{KNOWL('ec.bad_reduction', title='bad reduction')}} </h2>
  {{ place_code('localdata') }}
 
+  {% if not ec.is_minimal %}
+    Primes of good reduction for the curve but which divide the
+    discriminant of the model above (if any) are included.
+  {% endif %}
+
 {% if ec.local_data %}
 <table cellpadding="5">
 <tr>
@@ -281,6 +293,8 @@ Generators:
   Split multiplicative
   {% elif pr.red==-1 %}
    Non-split multiplicative
+  {% else %}
+    Good
 {% endif %}
 </td>
 <td align=center>{{pr.ord_cond}}</td>

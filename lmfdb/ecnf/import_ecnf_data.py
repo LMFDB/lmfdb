@@ -38,8 +38,8 @@ field) and value types (with examples):
    - analytic_rank            int
    - torsion_order            int
    - torsion_structure        list of 0, 1 or 2 ints
-   - gens                     list of lists of 3 lists of d strings
-   - torsion_gens             list of lists of 3 lists of d strings
+   - gens                     list of point-strings (see below)
+   - torsion_gens             list of point-strings (see below)
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
 
@@ -48,11 +48,16 @@ field) and value types (with examples):
    - non_min_p                list of strings (one per nonminimal prime)
    - minD                     string (minimal discriminant ideal)
    - heights                  list of floats (one per gen)
+   - reg                      float
 
    Each NFelt is a string concatenating rational coefficients with
    respect to a power basis for the number field, using the defining
    polynomial for the number field in the number_field database,
    separated by commas with no whitespace.
+
+   A point-string is a string of the form [X,Y,Z] where each of X, Y,
+   Z is an NFelt surrounded by "[","]".  For example (degree 2):
+   '[[1/2,2],[3/4,5/6],[1,0]]'.
 
    label = “%s-%s” % (field_label, short_label)
    short_label = “%s.%s%s” % (conductor_label, iso_label, str(number))
@@ -69,9 +74,10 @@ import os
 import pymongo
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ, cremona_to_lmfdb
+from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ
+from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
-from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF
+from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF, parse_point
 
 print "getting connection"
 C= getDBConnection()
@@ -82,9 +88,9 @@ pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.exts
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
-print "setting nfcurves to nfcurves2"
+print "setting nfcurves to nfcurves.new"
 oldnfcurves = C.elliptic_curves.nfcurves
-nfcurves = C.elliptic_curves.nfcurves2
+nfcurves = C.elliptic_curves.nfcurves.new
 qcurves = C.elliptic_curves.curves
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
@@ -150,11 +156,14 @@ def parse_NFelt(K, s):
 
 
 def NFelt(a):
-    r"""
-    Returns an NFelt string encoding the element a (in a number field K).
+    r""" Returns an NFelt string encoding the element a (in a number field
+    K).  This consists of d strings representing the rational
+    coefficients of a (with respect to the power basis), separated by
+    commas, with no spaces.
+
+    For example the element (3+4*w)/2 in Q(w) gives '3/2,2'.
     """
     return ",".join([str(c) for c in list(a)])
-
 
 def QorZ_list(a):
     r"""
@@ -177,21 +186,17 @@ def NFelt_list(a):
     """
     return [QorZ_list(QQ(c)) for c in a.split(",")]
 
-
-def parse_point(E, s):
-    r"""
-    Returns a point on E defined by the string s.
-    """
-    K = E.base_field()
-    cc = s[1:-1].split(":")
-    return E([parse_NFelt(K,c) for c in cc])
-
-
 def point_string(P):
-    r"""Return a string representation of a point on an elliptic curve
-    """
-    return "[" + ":".join([NFelt(c) for c in list(P)]) + "]"
+    r"""Return a string representation of a point on an elliptic
+    curve. This is a single string representing a list of 3 lists,
+    each representing one coordinate as an NFelt string, with no
+    spaces.
 
+    For example, over a field of degree 2, [0:0:1] gives
+    '[0,0],[0,0],[1,0]'.
+    """
+    s = "[" + ",".join(["".join(["[",NFelt(c),"]"]) for c in list(P)]) + "]"
+    return s
 
 def point_string_to_list(s):
     r"""Return a list representation of a point string
@@ -204,12 +209,9 @@ def point_list(P):
     """
     return [K_list(c) for c in list(P)]
 
-
-
 #@cached_function
 def get_cm_list(K):
     return cm_j_invariants_and_orders(K)
-
 
 def get_cm(j):
     r"""
@@ -281,6 +283,7 @@ def curves(line):
     ainvsK = [parse_NFelt(K, ai) for ai in ainvs]  # list of K-elements
     ainvs = [[str(c) for c in ai] for ai in ainvsK]
     E = EllipticCurve(ainvsK)
+    #print("{} created with disc = {}, N(disc)={}".format(E,K.ideal(E.discriminant()).factor(),E.discriminant().norm().factor()))
     j = E.j_invariant()
     jinv = K_list(j)
     if cm == '?':
@@ -290,11 +293,12 @@ def curves(line):
 
     # Here we should check that the conductor of the constructed curve
     # agrees with the input conductor.
-    if E.conductor() == ideal_from_string(K,conductor_ideal):
-        pass
-        # print "Conductor norms agree: %s" % conductor_norm
-    else:
-        raise RuntimeError("Wrong conductor for input line %s" % line)
+    N = ideal_from_string(K,conductor_ideal)
+    NE = E.conductor()
+    if N=="wrong" or N!=NE:
+        print("Wrong conductor ideal {} for label {}, using actual conductor {} instead".format(conductor_ideal,label,NE))
+        conductor_ideal = ideal_to_string(NE)
+        N = NE
 
     # get torsion order, structure and generators:
     # print("E = %s over %s" % (ainvsK,K))
@@ -302,7 +306,7 @@ def curves(line):
     # print("torsion = %s" % torgroup)
     ntors = int(torgroup.order())
     torstruct = [int(n) for n in list(torgroup.invariants())]
-    torgens = [point_list(P.element()) for P in torgroup.gens()]
+    torgens = [point_string(P.element()) for P in torgroup.gens()]
 
     # get label of elliptic curve over Q for base_change cases (a
     # subset of Q-curves)
@@ -315,16 +319,21 @@ def curves(line):
             print "%s is base change of %s" % (label, base_change)
         else:
             base_change = []
-            print "%s is a Q-curve, but not base-change..." % label
+            # print "%s is a Q-curve, but not base-change..." % label
     else:
         base_change = []
 
+    # NB if this is not a global minimal model then local_data may
+    # include a prime at which we have good reduction.  This causes no
+    # problems except that the bad_reduction_type is then None which
+    # cannot be converted to an integer.  The bad reduction types are
+    # coded as (Sage) integers in {-1,0,1}.
     local_data = [{'p': ideal_to_string(ld.prime()),
                    'normp': str(ld.prime().norm()),
                    'ord_cond':int(ld.conductor_valuation()),
                    'ord_disc':int(ld.discriminant_valuation()),
                    'ord_den_j':int(max(0,-(E.j_invariant().valuation(ld.prime())))),
-                   'red':int(ld.bad_reduction_type()),
+                   'red':None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
                    'kod':web_latex(ld.kodaira_symbol()).replace('$',''),
                    'cp':int(ld.tamagawa_number())}
                   for ld in E.local_data()]
@@ -367,7 +376,7 @@ def curves(line):
 def curve_data(line):
     r""" Parses one line from a curve_data file.  Returns the label and a dict
     containing fields with keys 'label', 'rank', 'rank_bounds',
-    'analytic_rank', 'gens', 'heights', 'sha_an'.
+    'analytic_rank', 'gens', 'heights', 'reg', 'sha_an'.
 
     Input line fields (9+n where n is the 8th); all but the first 4
     are optional and if not known should contain"?" except that the 8th
@@ -393,7 +402,7 @@ def curve_data(line):
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
     label = "%s-%s" % (field_label, short_label)
 
-    edata = {'label': label}
+    edata = {'label': label, 'field_label': field_label}
     r = data[4]
     if r != "?":
         edata['rank'] = int(r)
@@ -404,8 +413,8 @@ def curve_data(line):
     if ra != "?":
         edata['analytic_rank'] = int(ra)
     ngens = int(data[7])
-    gens = data[8:8 + ngens]
-    edata['gens'] = [point_string_to_list(g) for g in gens]
+    edata['ngens'] = ngens
+    edata['gens'] = data[8:8 + ngens]
 
     sha = data[8 + ngens]
     if sha != "?":
@@ -419,19 +428,25 @@ def add_heights(data):
     parsing the input files since curves() knows tha a-invariants but
     not the gens and curve_data() vice versa.
     """
-    if 'heights' in data:
+    if 'heights' in data and 'reg' in data:
         return data
     ngens = data.get('ngens', 0)
     if ngens == 0:
         data['heights'] = []
+        data['reg'] = 1
         return data
     # Now there is work to do
     K = nf_lookup(data['field_label'])
-    ainvsK = [parse_NFelt(K, ai) for ai in data['ainvs']]  # list of K-elements
+    if 'ainvs' in data:
+        ainvs = data['ainvs']
+    else:
+        ainvs = nfcurves.find_one({'label':data['label']})['ainvs']
+    ainvsK = [K([ZZ(aic) for aic in ai]) for ai in ainvs]  # list of K-elements
     E = EllipticCurve(ainvsK)
-    gens = [parse_point(E,x) for x in data['gens']]
-    data['heights'] = [P.height() for P in gens]
-    print("added heights %s to %s" % (data['heights'],data['label']))
+    gens = [E(parse_point(K,x)) for x in data['gens']]
+    data['heights'] = [float(P.height()) for P in gens]
+    data['reg'] = float(E.regulator_of_points(gens))
+    print("added heights %s and regulator %s to %s" % (data['heights'],data['reg'], data['label']))
     return data
 
 def isoclass(line):
@@ -470,7 +485,7 @@ filename_base_list = ['curves', 'curve_data']
 
 def upload_to_db(base_path, filename_suffix, insert=True):
     r""" Uses insert_one() if insert=True, which is faster but will fail if
-    the label isalready in the database; otherwise uses update_one()
+    the label is already in the database; otherwise uses update_one()
     with upsert=True
     """
     curves_filename = 'curves.%s' % (filename_suffix)
@@ -499,7 +514,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
             # if count==10: break # for testing
             label, data = parse(line)
             if count % 100 == 0:
-                print "read %s from %s" % (label, f)
+                print "read %s from %s (%s so far)" % (label, f, count)
             count += 1
             if label not in data_to_insert:
                 data_to_insert[label] = {'label': label}
@@ -516,6 +531,8 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     print("adding heights of gens")
     for val in vals:
         val = add_heights(val)
+        # if val['reg']!=1:
+        #     print("reg = {}".format(val['reg']))
     if insert:
         print("inserting all data")
         nfcurves.insert_many(vals)
@@ -585,12 +602,8 @@ def make_curve_data_line(ec):
     an_rk = '?'
     if 'analytic_rank' in ec:
         an_rk = str(ec['analytic_rank'])
-    ngens = '0'
-    gens_str = []
-    if 'gens' in ec:
-        gens_str = ["[" + ",".join(["["+",".join(c)+"]" for c in P]) + "]"
-                    for P in ec['gens']]
-        ngens = str(len(gens_str))
+    gens = ec.get('gens',[])
+    ngens = str(len(gens))
     sha = '?'
     if 'sha_an' in ec:
         sha = str(int(ec['sha_an']))
@@ -603,9 +616,8 @@ def make_curve_data_line(ec):
                      ec['iso_label'],
                      str(ec['number']),
                      rk, rk_bds, an_rk,
-                     ngens] + gens_str + [sha]
+                     ngens] + gens + [sha]
     return " ".join(output_fields)
-
 
 def make_isoclass_line(ec):
     r""" for ec a curve object from the database, create a line of text to
@@ -666,16 +678,37 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
 
     file = {}
     prefixes = ['curves', 'curve_data', 'isoclass']
+    prefixes = ['curve_data']
     suffix = ''.join([".", field_label, ".", str(min_norm), "-", str(max_norm)])
     for prefix in prefixes:
         filename = os.path.join(base_path, ''.join([prefix, suffix]))
         file[prefix] = open(filename, 'w')
 
     for ec in res:
-        file['curves'].write(make_curves_line(ec) + "\n")
-        file['curve_data'].write(make_curve_data_line(ec) + "\n")
-        if ec['number'] == 1:
-            file['isoclass'].write(make_isoclass_line(ec) + "\n")
+        if 'curves' in prefixes:
+            file['curves'].write(make_curves_line(ec) + "\n")
+        if 'curve_data' in prefixes:
+            file['curve_data'].write(make_curve_data_line(ec) + "\n")
+        if 'isoclass' in prefixes:
+            if ec['number'] == 1:
+                file['isoclass'].write(make_isoclass_line(ec) + "\n")
 
     for prefix in prefixes:
         file[prefix].close()
+
+##############
+#
+#  Indices needed for the nfcurves collection:
+#
+#  1. 'field_label'
+#  2. 'degree'
+#  3. 'number'
+#  4. 'label'
+#  5. ('field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number')
+#
+##############
+
+def make_indices():
+    for x in ['field_label', 'degree', 'number', 'label']:
+        nfcurves.create_index(x)
+    nfcurves.create_index([(x,pymongo.ASCENDING) for x in ['field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']])

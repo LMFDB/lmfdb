@@ -14,7 +14,7 @@ nfdb = None
 def db_ecnf():
     global ecnf
     if ecnf is None:
-        ecnf = getDBConnection().elliptic_curves.nfcurves2
+        ecnf = getDBConnection().elliptic_curves.nfcurves.new
     return ecnf
 
 def db_nfdb():
@@ -45,7 +45,6 @@ def FIELD(label):
 def make_field(label):
     global field_list
     if not label in field_list:
-        #print("Constructing field %s" % label)
         field_list[label] = FIELD(label)
     return field_list[label]
 
@@ -62,19 +61,24 @@ def ideal_from_string(K,s):
     for other fields it is of the form "[N,a,alpha]" where N is the
     norm, a the least positive integer in the ideal and alpha a second
     generator so that the ideal is (a,alpha).  alpha is a polynomial
-    in the variable w which represents the generator of K.
-    """
+    in the variable w which represents the generator of K (but may
+    actially be an integer).  """
+    #print("ideal_from_string({}) over {}".format(s,K))
     N, a, alpha = s[1:-1].split(",")
     N = ZZ(N)
     a = ZZ(a)
-    if 'w' in alpha:
-        alpha = K(alpha.encode())
-        #alpha = alpha.replace('w',str(K.gen()))
-        I = K.ideal(a,alpha)
-        assert I.norm()==N
+    if K.signature()==(0,1): # imaginary quadratic
+        d = ZZ(alpha)
+        I = K.ideal(N//d, K([a, d]))
+    else:
+        # 'w' is used for the generator name for all fields for
+        # numbers stored in the database
+        alpha = alpha.encode().replace('w',str(K.gen()))
+        I = K.ideal(a,K(alpha.encode()))
+    if I.norm()==N:
         return I
-    d = ZZ(alpha)
-    return K.ideal(N//d, K([a, d]))
+    else:
+        return "wrong" ## caller must check
 
 # HNF of an ideal I in a quadratic field
 
@@ -104,15 +108,16 @@ def ideal_to_string(I):
     alpha = str(alpha).replace(str(K.gen()),'w')
     return "[%s,%s,%s]" % (N,a,alpha)
 
-def parse_points(K,s):
-    r""" The database stores two lists of points (gens and torsion_gens),
-    each a list of r lists of d strings.  This converts such a list
-    into a list of r lists of 3 elements of K.
+def parse_point(K, s):
+    r""" Returns a point in P^2(K) defined by the string s.  s has the form
+    '[x,y,z]' where x, y, z have the form '[c0,c1,..]' with each ci
+    representing a rational number.
     """
-    return [[K([QQ(str(a)) for a in c]) for c in P] for P in s]
+    #print("parse_point({})".format(s))
+    cc = s[2:-2].replace("],[",":").split(":")
+    return [K([QQ(ci.encode()) for ci in c.split(",")]) for c in cc]
 
-
-def inflate_interval(a,b,r): 
+def inflate_interval(a,b,r):
     c=(a+b)/2
     d=(b-a)/2
     d*=r
@@ -229,8 +234,6 @@ class ECNF(object):
         coeffs = self.ainvs  # list of 5 lists of d strings
         self.ainvs = [self.field.parse_NFelt(x) for x in coeffs]
         self.latex_ainvs = web_latex(self.ainvs)
-        #from sage.schemes.elliptic_curves.all import EllipticCurve
-        #self.E = E = EllipticCurve(self.ainvs)
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
@@ -239,8 +242,7 @@ class ECNF(object):
         self.cond = web_latex(N)
         self.cond_norm = web_latex(self.conductor_norm)
         local_data = self.local_data
-        print("local data:")
-        print(local_data)
+
         # NB badprimes is a list of primes which divide the
         # discriminant of this model.  At most one of these might
         # actually be a prime of good reduction, if the curve has no
@@ -258,9 +260,9 @@ class ECNF(object):
         self.has_minimal_model = self.is_minimal
         disc_ords = [ld['ord_disc'] for ld in local_data]
         if not self.is_minimal:
-            P = self.non_min_primes[0]
-            P_index = bad_primes.index(P)
-            self.non_min_prime = web_latex(P)
+            Pmin = self.non_min_primes[0]
+            P_index = badprimes.index(Pmin)
+            self.non_min_prime = web_latex(Pmin)
             disc_ords[P_index] += 12
 
         if self.conductor_norm == 1:  # since the factorization of (1) displays as "1"
@@ -273,7 +275,7 @@ class ECNF(object):
             self.fact_cond_norm = web_latex(Nnormfac)
 
         # D is the discriminant ideal of the model
-        D = prod([P**e for P,e in zip(badprimes,disc_ords)])
+        D = prod([P**e for P,e in zip(badprimes,disc_ords)], K.ideal(1))
         self.disc = web_latex(D)
         Dnorm = D.norm()
         self.disc_norm = web_latex(Dnorm)
@@ -296,9 +298,9 @@ class ECNF(object):
                 self.fact_mindisc = self.mindisc
                 self.fact_mindisc_norm = self.mindisc
             else:
-                Dminfac = Factorization([(P,e) for P,edd in zip(badprimes,min_disc_ords)])
+                Dminfac = Factorization([(P,e) for P,edd in zip(badprimes,mindisc_ords)])
                 self.fact_mindisc = web_latex_ideal_fact(Dminfac)
-                Dminnormfac = Factorization([(q,e) for q,e in zip(badnorms,min_disc_ords)])
+                Dminnormfac = Factorization([(q,e) for q,e in zip(badnorms,mindisc_ords)])
                 self.fact_mindisc_norm = web_latex(Dminnormfac)
 
         j = self.field.parse_NFelt(self.jinv)
@@ -323,12 +325,9 @@ class ECNF(object):
 
         self.fact_j = None
         # See issue 1258: some j factorizations work but take too long
-        # (e.g. EllipticCurve/6.6.371293.1/1.1/a/1)
-
-        # We now have, and display, the valuations of the denominator
-        # of j (at bad primes) so do not need to factor it anyway
-        # (no-one needs the factorization of the numerator even if it
-        # is possible).
+        # (e.g. EllipticCurve/6.6.371293.1/1.1/a/1).  Note that we do
+        # store the factorization of the denominator of j and display
+        # that, which is the most interesting part.
 
         # CM and End(E)
         self.cm_bool = "no"
@@ -367,7 +366,7 @@ class ECNF(object):
         if self.tr == 2:
             self.tor_struct_pretty = r"\(\Z/%s\Z\times\Z/%s\Z\)" % tuple(self.torsion_structure)
 
-        torsion_gens = parse_points(K,self.torsion_gens)
+        torsion_gens = [parse_point(K,P) for P in self.torsion_gens]
         self.torsion_gens = ",".join([web_point(P) for P in torsion_gens])
 
         # Rank or bounds
@@ -383,13 +382,17 @@ class ECNF(object):
 
         # Generators
         try:
-            gens = parse_points(K,self.gens)
+            gens = [parse_point(K,P) for P in self.gens]
             self.gens = ", ".join([web_point(P) for P in gens])
             if self.rk == "?":
                 self.reg = "not available"
             else:
                 if gens:
-                    self.reg = E.regulator_of_points(gens)
+                    try:
+                        self.reg = self.reg
+                    except AttributeError:
+                        self.reg = "not available"
+                    pass # self.reg already set
                 else:
                     self.reg = 1  # otherwise we only get 1.00000...
 
@@ -453,7 +456,7 @@ class ECNF(object):
         self.properties += [
             ('Conductor', self.cond),
             ('Conductor norm', self.cond_norm),
-            # See issue #796 for why this is hidden
+            # See issue #796 for why this is hidden (can be very large)
             # ('j-invariant', self.j),
             ('CM', self.cm_bool)]
 
