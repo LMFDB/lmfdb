@@ -1069,8 +1069,8 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
             return Lfunction_Maass(fromDB = True, group = arg2, level = arg5,
                 char = arg6, R = arg7, ap_id = arg8)
 
-    elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z' and arg5 == 'specimen':  # this should be changed when we fix the SMF urls
-        return Lfunction_SMF2_scalar_valued(weight=arg6, orbit=arg7, number=arg8)
+    elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z':
+        return Lfunction_SMF2_scalar_valued(weight=arg5, orbit=arg6, number=arg7)
 
     elif arg1 == 'NumberField':
         return DedekindZeta(label=str(arg2))
