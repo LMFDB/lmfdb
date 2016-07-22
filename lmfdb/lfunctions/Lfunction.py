@@ -1221,7 +1221,7 @@ class ArtinLfunction(Lfunction):
 
         self._Ltype = "artin"
         
-        from lmfdb.math_classes import ArtinRepresentation
+        from lmfdb.artin_representations.math_classes import ArtinRepresentation
         self.label = args["label"]
         try:
             self.artin = ArtinRepresentation(self.label)

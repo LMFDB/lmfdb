@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from base import getDBConnection
-from utils import url_for, pol_to_html
-from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from databases.standard_types import PolynomialAsSequenceTooLargeInt
+from lmfdb.base import getDBConnection
+from lmfdb.utils import url_for, pol_to_html
+from lmfdb.databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
+from lmfdb.databases.standard_types import PolynomialAsSequenceTooLargeInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod
 from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
-from WebNumberField import WebNumberField
+from lmfdb.WebNumberField import WebNumberField
 from lmfdb.WebCharacter import WebSmallDirichletCharacter
 
 
