@@ -49,7 +49,7 @@ class EllCurveTest(LmfdbTest):
         assert '10000' in L.data
         assert '15625000000000000' in L.data
         assert '87890625' in L.data
-        assert '18' in L.data
+        assert '25^{9}' in L.data
         assert '12' in L.data
 
     def test_j(self):
@@ -60,7 +60,7 @@ class EllCurveTest(LmfdbTest):
         assert '226834389543384' in L.data
         assert '1490902050625' in L.data
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1') # Test factorisation
-        assert '447001' in L.data
+        assert '8798344145175011328000' in L.data
 
     def test_search(self):
         r"""
