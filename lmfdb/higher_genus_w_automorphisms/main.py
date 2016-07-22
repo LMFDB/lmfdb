@@ -11,8 +11,7 @@ import os
 from lmfdb import base
 from flask import render_template, request, url_for, make_response, redirect
 from lmfdb.utils import to_dict, random_value_from_collection, flash_error
-from lmfdb.search_parsing import search_parser, parse_ints, parse_count, parse_start, clean_input
-BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
+from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_input, parse_bracketed_posints, parse_gap_id
 
 from sage.all import Permutation
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
@@ -107,56 +106,6 @@ def label_to_breadcrumbs(L):
     newsig += ']'    
     return newsig
 
-
-
-#copied from parse_bracketed_posints,  but keeps outside brackets in string
-@search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints2(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None):
-    if process is None: process = lambda x: x
-    if (not BRACKETED_POSINT_RE.match(inp) or
-        (maxlength is not None and inp.count(',') > maxlength - 1) or
-        (exactlength is not None and inp.count(',') != exactlength - 1) or
-        (exactlength is not None and inp == '[]' and exactlength > 0)):
-        if exactlength == 2:
-            lstr = "pair of integers"
-            example = "[2,3] or [3,3]"
-        elif exactlength == 1:
-            lstr = "list of 1 integer"
-            example = "[2]"
-        elif exactlength is not None:
-            lstr = "list of %s integers" % exactlength
-            example = str(range(2,exactlength+2)).replace(" ","") + " or " + str([3]*exactlength).replace(" ","")
-        elif maxlength is not None:
-            lstr = "list of at most %s integers" % maxlength
-            example = str(range(2,maxlength+2)).replace(" ","") + " or " + str([2]*max(1, maxlength-2)).replace(" ","")
-        else:
-            lstr = "list of integers"
-            example = "[1,2,3] or [5,6]"
-        raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
-    else:
-        if inp == '[]': # fixes bug in the code below (split never returns an empty list)
-            query[qfield] = []
-            return
-        if check_divisibility == 'decreasing':
-            # Check that each entry divides the previous
-            L = [int(a) for a in inp[1:-1].split(',')]
-            for i in range(len(L)-1):
-                if L[i] % L[i+1] != 0:
-                    raise ValueError("Each entry must divide the previous, such as [4,2].")
-        elif check_divisibility == 'increasing':
-            # Check that each entry divides the previous
-            L = [int(a) for a in inp[1:-1].split(',')]
-            for i in range(len(L)-1):
-                if L[i+1] % L[i] != 0:
-                    raise ValueError("Each entry must divide the next, such as [2,4].")
-        if split:
-#            query[qfield] = [process(int(a)) for a in inp[1:-1].split(',')]
-            query[qfield] = [process(int(a)) for a in inp.split(',')]
-        else:
-#            query[qfield] = inp[1:-1]
-            query[qfield] = inp
-
-    
 @higher_genus_w_automorphisms_page.route("/")
 def index():
     bread = get_bread()
@@ -173,8 +122,6 @@ def index():
                 ('Labeling convention', url_for(".labels_page"))]
     
     return render_template("hgcwa-index.html", title="Families of Higher Genus Curves with Automorphisms", bread=bread, info=info, learnmore=learnmore)
-
-
 
 
 @higher_genus_w_automorphisms_page.route("/random")
@@ -225,9 +172,9 @@ def higher_genus_w_automorphisms_search(**args):
         info.update({'signature': str(sig)})
             
     try:
-        parse_bracketed_posints2(info,query,'group', split=False, exactlength=2, name='Group')
+        parse_gap_id(info,query,'group','Group')
         parse_ints(info,query,'genus',name='Genus')
-        parse_bracketed_posints2(info,query,'signature',split=False,name='Signature')
+        parse_bracketed_posints(info,query,'signature',split=False,name='Signature',keepbrackets=True)
         parse_ints(info,query,'dim',name='Dimension of the family')
         if 'inc_hyper' in info:
             if info['inc_hyper'] == 'exclude':
@@ -235,7 +182,7 @@ def higher_genus_w_automorphisms_search(**args):
             elif info['inc_hyper'] == 'only':
                 query['hyperelliptic'] = True
 
-        query['cc.1'] = 1       
+        query['cc.1'] = 1
 
     except ValueError:
         return search_input_error(info, bread)
