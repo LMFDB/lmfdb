@@ -546,6 +546,7 @@ Fullname = {'magma': 'Magma', 'gap': 'GAP'}
 Comment = {'magma': '//', 'gap': '#'}
 
 def hgcwa_code(**args):
+    import time
     label = args['label']
     C = base.getDBConnection()
     lang = args['download_type']
@@ -561,8 +562,6 @@ def hgcwa_code(**args):
     elif label_is_one_family(label):
         data = C.curve_automorphisms.passports.find({"label" : label})
 
-
-
     code += Comment[lang] + code_list['gp_comment'][lang] +'\n'
     code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
 
@@ -577,37 +576,36 @@ def hgcwa_code(**args):
 
     code += '\n'
 
-    for dataz in data:
-        code += Comment[lang] + " Here we add an action to result_record." + '\n'
-        for k in depends_on_action:
-            code += code_list[k][lang] + str(dataz[k])+ ';\n'
+    # create formatting templates to be filled in with each record in data
+    startstr = Comment[lang] + ' Here we add an action to result_record.\n'
+    stdfmt = ''
+    for k in depends_on_action:
+        stdfmt += code_list[k][lang] + '{' + k + '}'+ ';\n'
 
-        if lang == 'magma':
-            code += code_list['con'][lang] + str(dataz['con'])+ ';\n' 
-             
-        code += code_list['gen_gp'][lang]+ '\n'
-        code += code_list['passport_label'][lang] + str(dataz['cc'][0]) + ';\n'
-        code += code_list['gen_vect_label'][lang] + str(dataz['cc'][1]) + ';\n'
-        
-#cannot have full auto + hyperelliptic in data
-        if 'signH' in dataz:
-            code += code_list['full_auto'][lang]+str(dataz['full_auto']) + ';\n'
-            code += code_list['full_sign'][lang]+str(dataz['signH']) + ';\n'        
-            code+=code_list['add_to_total_full'][lang]+'\n'
+    if lang == 'magma':
+        stdfmt += code_list['con'][lang] + '{con}' + ';\n' 
+         
+    stdfmt += code_list['gen_gp'][lang]+ '\n'
+    stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
+    stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
+    
+    # extended formatting template for when signH is present
+    signHfmt = stdfmt
+    signHfmt = code_list['full_auto'][lang] + '{full_auto}' + ';\n'
+    signHfmt += code_list['full_sign'][lang] + '{signH}' + ';\n'        
+    signHfmt += code_list['add_to_total_full'][lang] + '\n'
 
-        if 'hyperelliptic' in dataz:            
-                                               
-            if dataz['hyperelliptic']:
-                code +=code_list['hyp'][lang]+ code_list['tr'][lang] + ';\n'
-                code += code_list['hyp_inv'][lang]+str(dataz['hyp_involution']) + code_list['hyp_inv_last'][lang]
-                code +=code_list['add_to_total_hyp'][lang]+'\n'
+    # additional info for hyperelliptic cases
+    hypfmt = code_list['hyp'][lang] + code_list['tr'][lang] + ';\n'
+    hypfmt += code_list['hyp_inv'][lang] + '{hyp_involution}' + code_list['hyp_inv_last'][lang]
+    hypfmt += code_list['add_to_total_hyp'][lang] + '\n'
+    nhypstr = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
+    nhypstr += code_list['add_to_total_basic'][lang] + '\n'
 
-            else:
-                code +=code_list['hyp'][lang]+ code_list['fal'][lang] + ';\n'
-                code +=code_list['add_to_total_basic'][lang]+'\n'
-
-        code += '\n'
-
+    start = time.time()
+    lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else nhypstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
+    code += '\n'.join(lines)
+    print "%s seconds for %d bytes" %(time.time() - start,len(code))
     return code
 
 
