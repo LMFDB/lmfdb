@@ -1420,6 +1420,9 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         if not S:
             raise KeyError("Siegel modular form Sp4Z.%s not found in database." % name)
         self.field = S.field()
+        evlist = S.available_eigenvalues()
+        if len(evlist) < 3: # FIXME -- we should sanity check that we have enough eigenvalues for it make sense to display an L-function page (presumably 3 is not enough)
+            raise ValueError("Eigenvalue data for Siegel modular form Sp4Z.%s not available of insufficient." % name)
         self.evs = S.eigenvalues(S.available_eigenvalues())
         for ev in self.evs:
             self.evs[ev] = self.field(self.evs[ev])
@@ -1433,8 +1436,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
         self.degree = 4
         roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
-
-        self.numcoeff = max([a[0] for a in roots])  # include a_0 = 0
+        self.numcoeff = max([a[0] for a in roots])+1  # include a_0 = 0
         self.dirichlet_coefficients = compute_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
         self.selfdual = True
         if self.orbit[0] == 'U':  # if the form isn't a lift but is a cusp form
@@ -1444,17 +1446,17 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
             self.primitive = True  # and primitive
         elif self.orbit[0] == 'E':  # if the function is an Eisenstein series
             self.poles = [float(3) / float(2)]
-            self.residues = [math.pi ** 2 / 6]  # fix this
+            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
             self.langlands = True
             self.primitive = False
         elif self.orbit[0] == 'M':  # if the function is a lift and a cusp form
             self.poles = [float(3) / float(2)]
-            self.residues = [math.pi ** 2 / 6]  # fix this
+            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
             self.langlands = True
             self.primitive = False
         elif self.orbit[0] == 'K':
             self.poles = [float(3) / float(2)]
-            self.residues = [math.pi ** 2 / 6]  # fix this
+            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
             self.langlands = True
             self.primitive = False
 
