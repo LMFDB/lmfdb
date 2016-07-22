@@ -204,6 +204,11 @@ def index():
     if 5 in counts['nfields_by_degree']:
         nquintics = counts['nfields_by_degree'][5]
         data['fields'].append(['%s totally real quintic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
+    # Sextics
+    sextics = ['6.6.%s.1' % str(d) for d in [371293]]
+    if 6 in counts['nfields_by_degree']:
+        nquintics = counts['nfields_by_degree'][6]
+        data['fields'].append(['%s totally real sextic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in sextics)])
 
     data['degrees'] = counts['degrees']
 
