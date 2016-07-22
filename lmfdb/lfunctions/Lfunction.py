@@ -15,8 +15,7 @@ from Lfunctionutilities import (p2sage, string2number,
                                 compute_local_roots_SMF2_scalar_valued,
                                 compute_dirichlet_series,
                                 signOfEmfLfunction)
-from LfunctionComp import (nr_of_EC_in_isogeny_class, modform_from_EC, 
-                           EC_from_modform)
+from LfunctionComp import nr_of_EC_in_isogeny_class, modform_from_EC, EC_from_modform
 import LfunctionDatabase
 import LfunctionLcalc
 from Lfunction_base import Lfunction
@@ -24,7 +23,7 @@ from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex
 
 import sage
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, load
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.WebCharacter import ConreyCharacter
@@ -32,6 +31,7 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.siegel_modular_forms.sample import Sample
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
@@ -1384,32 +1384,18 @@ class SymmetricPowerLfunction(Lfunction):
 #############################################################################
 
 class Lfunction_SMF2_scalar_valued(Lfunction):
-    """Class representing an L-function for a scalar valued
-    Siegel modular form of degree 2
+    """Class representing an L-function for a scalar valued Siegel modular form of degree 2
 
     Compulsory parameters: weight
-                           orbit
+                           orbit (SMF sample name is weight_orbt (e.g. 16_Klingen))
 
-    Optional parameters: number
-
-
-
+    Optional parameters: number (indicates choice of embedding)
     """
 
     def __init__(self, **args):
 
         # Check for compulsory arguments
         validate_required_args('Unable to construct Siegel modular form L-function.', args, 'weight', 'orbit')
-        # logger.debug(str(args))
-
-        if self.orbit[0] == 'U':
-            self._Ltype = "siegelnonlift"
-        elif self.orbit[0] == 'E':
-            self._Ltype = "siegeleisenstein"
-        elif self.orbit[0] == 'K':
-            self._Ltype = "siegelklingeneisenstein"
-        elif self.orbit[0] == 'M':
-            self._Ltype = "siegelmaasslift"
 
         if not args['number']:
             args['number'] = 0     # Default embedding of the coefficients
@@ -1420,35 +1406,36 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.motivic_weight = 2*self.weight - 3 # taken from A. Panchiskin's talk @ Oberwolfach, Oct. 2007 
         self.number = int(self.number)
 
-        # Load the eigenvalues
-        if (self.weight == 20 or self.weight == 22 or self.weight == 24 or
-                self.weight == 26) and self.orbit[0] == 'U':
-            loc = ("http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/xeigenvalues/"
-                    + str(self.weight) + "_" + self.orbit + "-ev.sobj")
+        if self.orbit[0] == 'U':
+            self._Ltype = "siegelnonlift"
+        elif self.orbit[0] == 'E':
+            self._Ltype = "siegeleisenstein"
+        elif self.orbit[0] == 'K':
+            self._Ltype = "siegelklingeneisenstein"
+        elif self.orbit[0] == 'M':
+            self._Ltype = "siegelmaasslift"
 
-        else:
-            loc = ("http://data.countnumber.de/Siegel-Modular-Forms/Sp4Z/eigenvalues/"
-                   + str(self.weight) + "_" + self.orbit + "-ev.sobj")
-
-        self.ev_data = load(loc)
+        name = '%d_%s'%(self.weight,self.orbit)
+        S = Sample('Sp4Z',name)
+        if not S:
+            raise KeyError("Siegel modular form Sp4Z.%s not found in database." % name)
+        self.field = S.field()
+        self.evs = S.eigenvalues(S.available_eigenvalues())
+        for ev in self.evs:
+            self.evs[ev] = self.field(self.evs[ev])
         self.mu_fe = []  # the shifts of the Gamma_R to print
         self.automorphyexp = float(self.weight) - float(1.5)
-        self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of
-                                                                # the Gamma_C to print
+        self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of the Gamma_C to print
         self.level = 1
         self.compute_kappa_lambda_Q_from_mu_nu()
 
         self.sign = (-1) ** float(self.weight)
 
         self.degree = 4
-        roots = compute_local_roots_SMF2_scalar_valued(
-            self.ev_data, self.weight,
-            self.number)  # compute the roots of the Euler factors
+        roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
 
         self.numcoeff = max([a[0] for a in roots])  # include a_0 = 0
-        self.dirichlet_coefficients = compute_dirichlet_series(
-            roots, self.numcoeff)  # these are in the analytic normalization
-                                   # the coefficients from Gamma(ks+lambda)
+        self.dirichlet_coefficients = compute_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
         self.selfdual = True
         if self.orbit[0] == 'U':  # if the form isn't a lift but is a cusp form
             self.poles = []  # the L-function is entire

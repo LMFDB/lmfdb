@@ -920,13 +920,10 @@ def euler_p_factor(root_list, PREC):
     return ep + O(x ** (PREC + 1))
 
 
-def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
+def compute_local_roots_SMF2_scalar_valued(K, ev, k, embedding):
     ''' computes the dirichlet series for a Lfunction_SMF2_scalar_valued
     '''
 
-    logger.debug("Start SMF2")
-    K = ev_data[0].parent().fraction_field()  # field of definition for the eigenvalues
-    ev = ev_data[1]  # dict of eigenvalues
     L = ev.keys()
     m = ZZ(max(L)).isqrt() + 1
     ev2 = {}
