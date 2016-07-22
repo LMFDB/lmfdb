@@ -312,7 +312,7 @@ def parse_primes(inp, query, qfield, mode=None, to_string=False):
         raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None):
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False):
     if process is None: process = lambda x: x
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
@@ -353,7 +353,10 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         if split:
             query[qfield] = [process(int(a)) for a in inp[1:-1].split(',')]
         else:
-            query[qfield] = inp[1:-1]
+            query[qfield] = inp if keepbrackets else inp[1:-1]
+
+def parse_gap_id(info, query, field='group', name='group', qfield='group'):
+    parse_bracketed_posints(info,query,'group', split=False, exactlength=2, keepbrackets=True, name='Group')
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield, use_bson=True):
