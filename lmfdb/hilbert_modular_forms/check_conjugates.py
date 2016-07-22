@@ -12,13 +12,14 @@ Initial version (University of Warwick 2015) Aurel Page
 
 """
 
+import os
 import sys
 sys.path.append("../..");
-import pymongo
-from lmfdb.website import DEFAULT_DB_PORT as dbport
+from copy import copy
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.hilbert_modular_forms.hilbert_field import (findvar, niceideals,
  conjideals, str2ideal, HilbertNumberField)
+from sage.all import oo
 
 from lmfdb.base import getDBConnection
 print "getting connection"
@@ -60,7 +61,7 @@ def checkprimes(label):
     gen_name = findvar(Fdata['ideals'])
     WebF = get_WNF(label, gen_name)
     F = WebF.K()
-    ideals = niceideals(F, Fdata['ideals'])
+    # ideals = niceideals(F, Fdata['ideals']) # never used
     primes = niceideals(F, Fdata['primes'])
     F = HilbertNumberField(label)
     L = []
@@ -302,7 +303,6 @@ def fix_labels(field_label, min_level_norm=0, max_level_norm=None, fix_forms=Fal
 
         # find associated elliptic curve and fix that too (where appropriate)
         if f['deg']==2 and f['dimension']==1:
-            label = f['label']
             for e in nfcurves.find({'class_label':f['label']}):
                 fix_data = {}
                 fix_data['iso_label'] = lab
@@ -320,7 +320,6 @@ def fix_labels(field_label, min_level_norm=0, max_level_norm=None, fix_forms=Fal
 def fix_curve_labels(field_label, min_cond_norm=0, max_cond_norm=None, fix_curves=False, reverse=False):
     r""" One-off utility to correct labels 'aa'->'ba'->'ca', ..., 'az'->'bz'->'cz'
     """
-    from sage.databases.cremona import class_to_int
     count = 0
     query = {}
     query['field_label'] = field_label
@@ -359,8 +358,6 @@ def fix_curve_labels(field_label, min_cond_norm=0, max_cond_norm=None, fix_curve
 def fix_one_curve_label(field_label, cond_label, old_iso_label, new_iso_label, fix_curves=False):
     r""" One-off utility to correct class label
     """
-    from sage.databases.cremona import class_to_int
-    count = 0
     query = {}
     query['field_label'] = field_label
     query['conductor_label'] = cond_label
@@ -386,8 +383,6 @@ def fix_one_curve_label(field_label, cond_label, old_iso_label, new_iso_label, f
 def set_one_curve_label(id, new_iso_label, fix_curves=False):
     r""" One-off utility to correct class label
     """
-    from sage.databases.cremona import class_to_int
-    count = 0
     query = {}
     query['_id'] = id
     curves_to_fix = nfcurves.find(query)

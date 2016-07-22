@@ -91,6 +91,9 @@ import sage
 DEFAULT_DB_PORT = 37010
 LMFDB_SAGE_VERSION = '7.1'
 
+def timestamp():
+    return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+
 @app.before_request
 def redirect_nonwww():
     """Redirect lmfdb.org requests to www.lmfdb.org"""
@@ -102,12 +105,14 @@ def redirect_nonwww():
 
 @app.errorhandler(404)
 def not_found_404(error):
-    return render_template("404.html"), 404
+    app.logger.info('%s 404 error for URL %s %s'%(timestamp(),request.url,error.description))
+    messages = error.description if isinstance(error.description,(list,tuple)) else (error.description,)
+    return render_template("404.html", title='LMFDB page not found', messages=messages), 404
 
 @app.errorhandler(500)
 def not_found_500(error):
-    app.logger.error("[%s UTC] 500 error on URL %s"%(time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime()),request.url))
-    return render_template("500.html"), 500
+    app.logger.error("%s 500 error on URL %s %s"%(timestamp(),request.url, error.args))
+    return render_template("500.html", title='LMFDB error'), 500
 
 @app.errorhandler(503)
 def not_found_503(error):
@@ -121,7 +126,7 @@ def root_static_file(name):
         if os.path.exists(fn):
             return open(fn).read()
         logging.critical("root_static_file: file %s not found!" % fn)
-        return abort(404)
+        return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
 map(root_static_file, ['favicon.ico'])
 
@@ -184,12 +189,12 @@ Usage: %s [OPTION]...
   -p, --port=NUM            bind to port NUM (default 37777)
   -h, --host=HOST           bind to host HOST (default "127.0.0.1")
   -l, --log=FILE            log to FILE (default "flasklog")
-  -t, --threading           multithread the database authentications
-      --dbport=NUM          bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
-      --debug               enable debug mode
-      --logfocus=NAME       enter name of logger to focus on
-      --help                show this help
   -m, --mongo-client=FILE   config file for connecting to MongoDB (default is "mongoclient.config")
+      --logfocus=NAME       name of a logger to focus on
+      --debug               enable debug mode
+      --dbport=NUM          bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
+      --dbmon=NAME          monitor MongoDB commands to the specified database (use NAME=* to monitor everything, NAME=~DB to monitor all but DB)
+      --help                show this help
 """ % sys.argv[0]
 
 def get_configuration():
@@ -218,14 +223,16 @@ def get_configuration():
                                            "dbport=", 
                                            "log=", 
                                            "logfocus=", 
+                                           "dbmon=",
                                            "debug",
                                            "help", 
-                                           "threading", 
                                            "mongo-client=",
                                             # undocumented, see below
                                             "enable-reloader", "disable-reloader",
                                             "enable-debugger", "disable-debugger",
                                             "enable-profiler"
+                                            # not currently used
+                                            "threading"
                                         ]
                                        )
         except getopt.GetoptError, err:
@@ -246,6 +253,8 @@ def get_configuration():
                 logging_options["logfile"] = arg
             elif opt in ("--dbport"):
                 mongo_client_options["port"] = int(arg)
+            elif opt in ("--dbmon"):
+                mongo_client_options["dbmon"] = arg
             elif opt == "--debug":
                 flask_options["debug"] = True
             elif opt == "--logfocus":

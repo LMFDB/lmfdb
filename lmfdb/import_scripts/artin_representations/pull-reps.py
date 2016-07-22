@@ -1,11 +1,3 @@
-import sys, time
-import bson
-import sage.all
-import re
-import json
-import pprint
-from pprint import pprint as pp
-
 
 pw_filename = "../../../xyzzy"
 password = open(pw_filename, "r").readlines()[0].strip()

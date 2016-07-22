@@ -9,17 +9,9 @@ the command
 
 """
 
-import os.path
-import os
-import sys
-import pymongo
 import yaml
-import glob
-from lmfdb import base
-from lmfdb.website import dbport
-from sage.rings.all import ZZ
-
 from lmfdb.website import DEFAULT_DB_PORT as dbport
+
 from pymongo.mongo_client import MongoClient
 print "getting connection"
 C= MongoClient(port=dbport)

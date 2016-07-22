@@ -1,9 +1,6 @@
-import sys
-import time
 
-from pymongo.connection import Connection
-fields = Connection(port=dbport).localfields.fields
-fields = Connection(port=dbport).localfields.fields
+from lmfdb.base import getDBConnection
+fields = getDBConnection().localfields.fields
 
 # The database entries have the following fields
 # p: the prime
@@ -25,9 +22,9 @@ fields = Connection(port=dbport).localfields.fields
 # aut: number of automorphisms
 # galT: galois T number
 
-
-def coeffs(s):
-    return [a for a in s[1:-1].split(',')]
+# unused and collides with coeffs defined in loop below
+# def coeffs(s):
+#    return [a for a in s[1:-1].split(',')]
 
 
 def base_label(p, n, c, ind):

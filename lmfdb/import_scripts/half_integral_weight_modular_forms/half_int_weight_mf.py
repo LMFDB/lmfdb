@@ -26,12 +26,11 @@ where
    - clgp: (list of ints) the class group structure [a_1,a_2,...] where
 """
 
-import sys, time
+import sys
 import re
 import json
-import sage.all
-from sage.all import os
-
+import os
+import gzip
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=37010)

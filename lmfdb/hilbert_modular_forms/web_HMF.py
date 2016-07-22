@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-import re
-import tempfile
-import os
-from pymongo import ASCENDING, DESCENDING
-from flask import url_for, make_response
 import lmfdb.base
-from lmfdb.utils import comma, make_logger, web_latex, encode_plot
+from lmfdb.utils import make_logger
 
-import sage.all
-from sage.all import latex, matrix, ZZ, QQ
+from sage.all import QQ, polygen
 
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
 
@@ -147,7 +141,7 @@ class WebHMF(object):
             # non-rational
             i = L.find("x")
             j = L.find(i+1,",")
-            data['hecke_polynomial'] = L[i:j]
+            data['hecke_polynomial'] = pol = L[i:j]
             data['dimension'] = int(1)
             x = polygen(QQ)
             hpol = x.parent()(str(pol))
@@ -170,14 +164,14 @@ class WebHMF(object):
         print("BP_indices = %s" % BP_indices)
         BP_exponents = [level.valuation(P) for P in BP]
         #print("BP_exponents = %s" % BP_exponents)
-        AL_eigs = [int(data['hecke_eigenvalues'][i]) for i in BP_indices]
+        AL_eigs = [int(data['hecke_eigenvalues'][k]) for k in BP_indices]
         #print("AL_eigs      = %s" % AL_eigs)
         if not all([(e==1 and eig in [-1,1]) or (eig==0)
                     for e,eig in zip(BP_exponents,AL_eigs)]):
             print("Some bad AL-eigenvalues found")
         # NB the following will put 0 for the eigenvalue for primes
         # whose quare divides the level; this will need fixing later.
-        data['AL_eigenvalues'] = [[F.primes[i],data['hecke_eigenvalues'][i]] for i in BP_indices]
+        data['AL_eigenvalues'] = [[F.primes[k],data['hecke_eigenvalues'][k]] for k in BP_indices]
 
         data['is_CM'] = '?'
         data['is_base_change'] = '?'

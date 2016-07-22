@@ -60,8 +60,6 @@ def render_web_modform_space_gamma1(level=None, weight=None, character=None, lab
 
 
 def set_info_for_gamma1(level,weight,weight2=None):
-    # from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import dimension_from_db
-    # dim_table = dimension_from_db(level,weight,chi='all',group='gamma1') # never used
     dimension_table_name = WebModFormSpace._dimension_table_name
     if weight != None and weight2>weight:
         w1 = weight; w2 = weight2

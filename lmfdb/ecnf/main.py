@@ -300,10 +300,11 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     label = "-".join([nf_label, conductor_label, class_label])
     full_class_label = "-".join([conductor_label, class_label])
     cl = ECNF_isoclass.by_label(label)
-    if cl=="Class not found":
-        return search_input_error()
-    title = "Elliptic Curve isogeny class %s over Number Field %s" % (full_class_label, cl.field)
     bread = [("Elliptic Curves", url_for(".index"))]
+    if not isinstance(cl, ECNF_isoclass):
+        info = {'query':{}, 'err':'No elliptic curve isogeny class in the database has label %s.' % label}
+        return search_input_error(info, bread)
+    title = "Elliptic Curve isogeny class %s over Number Field %s" % (full_class_label, cl.field)
     bread.append((cl.field, url_for(".show_ecnf1", nf=nf_label)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
     bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=quote(conductor_label), class_label=class_label)))

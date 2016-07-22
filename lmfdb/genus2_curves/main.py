@@ -6,7 +6,7 @@ import re
 import time
 from pymongo import ASCENDING, DESCENDING
 from operator import mul
-from flask import render_template, url_for, request, redirect, send_file
+from flask import render_template, url_for, request, redirect, send_file, abort
 from sage.all import ZZ
 
 from lmfdb.utils import to_dict, comma, random_value_from_collection, attribute_value_counts, flash_error
@@ -137,6 +137,9 @@ def by_url_curve_label(cond, alpha, disc, num):
 def by_url_isogeny_class_discriminant(cond, alpha, disc):
     data = to_dict(request.args)
     clabel = str(cond)+"."+alpha
+    # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
+    if not g2c_db_curves().find_one({'class':clabel},{'_id':True}):
+        return abort(404, 'Genus 2 isogeny class %s not found in database.'%clabel)
     data['title'] = 'Genus 2 curves in isogeny class %s of discriminant %s' % (clabel,disc)
     data['bread'] = [('Genus 2 Curves', url_for(".index")),
         ('$\Q$', url_for(".index_Q")),
@@ -179,11 +182,10 @@ def by_label(label):
     return genus2_curve_search({'jump':label})
 
 def render_curve_webpage(label):
-    g2c = WebG2C.by_label(label)
-    if not g2c:
-        return "Error constructing genus 2 curve with label " + label
-    if isinstance(g2c,str):
-        return g2c
+    try:
+        g2c = WebG2C.by_label(label)
+    except (KeyError,ValueError) as err:
+        return abort(404,err.args)
     return render_template("g2c_curve.html",
                            properties2=g2c.properties,
                            credit=credit_string,
@@ -197,11 +199,10 @@ def render_curve_webpage(label):
                            #downloads=g2c.downloads)
 
 def render_isogeny_class_webpage(label):
-    g2c = WebG2C.by_label(label)
-    if not g2c:
-        return "Error constructing genus 2 isogeny class with label " + label
-    if isinstance(g2c,str):
-        return g2c
+    try:
+        g2c = WebG2C.by_label(label)
+    except (KeyError,ValueError) as err:
+        return abort(404,err.args)
     return render_template("g2c_isogeny_class.html",
                            properties2=g2c.properties,
                            credit=credit_string,
@@ -211,7 +212,6 @@ def render_isogeny_class_webpage(label):
                            title=g2c.title,
                            friends=g2c.friends)
                            #downloads=class_data.downloads)
-                           
 
 def url_for_curve_label(label):
     slabel = label.split(".")
@@ -249,7 +249,7 @@ def genus2_curve_search(info):
         flash_error (errmsg, jump)
         return redirect(url_for(".index"))
 
-    if 'download' in info and info['download'] == '1' and 'query' in info:
+    if info.get('download','').strip() == '1':
         return download_search(info)
 
     info["st_group_list"] = st_group_list
@@ -438,22 +438,21 @@ class G2C_stats(object):
         stats["distributions"] = dists
         self._stats = stats
 
-download_languages = ['magma', 'sage', 'gp']
-download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
-download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =['}
-download_assignment_end = {'magma':'];','sage':']','gp':']'}
-download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
+download_languages = ['magma', 'sage', 'gp', 'text']
+download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
+download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =[','text':'data - ['}
+download_assignment_end = {'magma':'];','sage':']','gp':']','text':']'}
+download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
 download_make_data = {
 'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
 'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
-'gp':''
+'gp':'',
+'text':''
 }
-download_make_data_comment = {'magma': 'To create a list of curves, type "curves:= make_data();"','sage':'To create a list of curves, type "curves = make_data()"', 'gp':''}
+download_make_data_comment = {'magma': 'To create a list of curves, type "curves:= make_data();"','sage':'To create a list of curves, type "curves = make_data()"', 'gp':'', 'text':''}
 
 def download_search(info):
-    lang = info.get('language','').strip()
-    if not lang in download_languages:
-        return "Please specify a language in %s"%download_languages
+    lang = info.get('language','text').strip()
     filename = 'genus2_curves' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
     # reissue query here
@@ -463,7 +462,8 @@ def download_search(info):
         return "Unable to parse query: %s"%err
     c = download_comment_prefix[lang]
     s =  '\n'
-    s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s. Found %s curves.\n'%(mydate, res.count())
+    s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
+    s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), res.count())
     s += c + ' Below is a list called data. Each entry has the form:\n'
     s += c + '   [[f coeffs],[h coeffs]]\n'
     s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
