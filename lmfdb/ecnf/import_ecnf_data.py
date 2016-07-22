@@ -559,11 +559,9 @@ def make_curves_line(ec):
 
     Sample output line:
 
-    2.0.4.1 65.18.1 a 1 [65,18,1] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
+    2.0.4.1 65.18.1 a 1 [65,65,-4*w-7] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
     """
     cond_lab = ec['conductor_label']
-    if '[' in cond_lab: # convert old-style IQF labels
-        cond_lab = cond_lab[1:-1].replace(",",".")
     output_fields = [ec['field_label'],
                      cond_lab,
                      ec['iso_label'],
@@ -587,7 +585,7 @@ def make_curve_data_line(ec):
 
     Sample output line:
 
-    2.0.4.1 65.18.1 a 1 0 ? 0 0 ?
+    2.0.4.1 2053.1809.1 a 1 2 [2,2] ? 2 [[0,0],[-1,0],[1,0]] [[2,0],[2,0],[1,0]] ?
     """
     rk = '?'
     if 'rank' in ec:
@@ -605,8 +603,6 @@ def make_curve_data_line(ec):
         sha = str(int(ec['sha_an']))
 
     cond_lab = ec['conductor_label']
-    if '[' in cond_lab: # convert old-style IQF labels
-        cond_lab = cond_lab[1:-1].replace(",",".")
     output_fields = [ec['field_label'],
                      cond_lab,
                      ec['iso_label'],
@@ -645,8 +641,6 @@ def make_isoclass_line(ec):
         mat = str([list(ri) for ri in mat.rows()]).replace(" ", "")
 
     cond_lab = ec['conductor_label']
-    if '[' in cond_lab: # convert old-style IQF labels
-        cond_lab = cond_lab[1:-1].replace(",",".")
 
     output_fields = [ec['field_label'],
                      cond_lab,

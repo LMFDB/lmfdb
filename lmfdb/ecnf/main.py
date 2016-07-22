@@ -210,7 +210,7 @@ def index():
         nquintics = counts['nfields_by_degree'][6]
         data['fields'].append(['%s totally real sextic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in sextics)])
 
-    data['degrees'] = counts['degrees']
+    data['degrees'] = sorted(counts['degrees'])
 
 # data['highlights'] holds data (URL and descriptive text) for a
 # sample of elliptic curves with interesting features:
