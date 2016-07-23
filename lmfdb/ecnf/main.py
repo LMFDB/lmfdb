@@ -369,6 +369,11 @@ def elliptic_curve_search(info):
 
     query = {}
 
+    if 'jinv' in info:
+        if info.get('field','').strip() == '2.2.5.1':
+            info['jinv'] = info['jinv'].replace('phi','a')
+        if info.get('field','').strip() == '2.0.4.1':
+            info['jinv'] = info['jinv'].replace('i','a')
     try:
         parse_ints(info,query,'conductor_norm')
         parse_noop(info,query,'conductor_label')
@@ -378,7 +383,7 @@ def elliptic_curve_search(info):
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
         if 'torsion_structure' in query and not 'torsion_order' in query:
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
-    except ValueError:
+    except (TypeError,ValueError):
         return search_input_error(info, bread)
         
     if query.get('field_label') == '1.1.1.1':
