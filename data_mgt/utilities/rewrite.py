@@ -69,7 +69,7 @@ def add_counter(rec=None):
         add_counter.num = 0
         return old_num
     add_counter.num += 1
-    rec['num'] = add_counter.num
+    rec['num'] = int(add_counter.num)
     return rec
 add_counter.num = 0
 
