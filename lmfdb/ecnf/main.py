@@ -218,11 +218,11 @@ def index():
     data['highlights'] = []
     data['highlights'].append(
         ['A curve with $C_3\\times C_3$ torsion',
-         url_for('.show_ecnf', nf='2.0.3.1', class_label='a', conductor_label='[2268,36,18]', number=int(1))]
+         url_for('.show_ecnf', nf='2.0.3.1', class_label='a', conductor_label='2268.36.18', number=int(1))]
     )
     data['highlights'].append(
         ['A curve with $C_4\\times C_4$ torsion',
-         url_for('.show_ecnf', nf='2.0.4.1', class_label='b', conductor_label='[5525,870,5]', number=int(9))]
+         url_for('.show_ecnf', nf='2.0.4.1', class_label='b', conductor_label='5525.870.5', number=int(9))]
     )
     data['highlights'].append(
         ['A curve with CM by $\\sqrt{-267}$',
