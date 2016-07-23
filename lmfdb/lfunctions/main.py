@@ -331,6 +331,10 @@ def l_function_maass_gln_page_noDb(group, dbid):
 
 # L-function of Siegel modular form    #########################################
 @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/specimen/<weight>/<orbit>/<number>/")
+def l_function_siegel_specimen_page(weight, orbit, number):
+    return flask.redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
+
+@l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
 def l_function_siegel_page(weight, orbit, number):
     args = {'weight': weight, 'orbit': orbit, 'number': number}
     return render_single_Lfunction(Lfunction_SMF2_scalar_valued, args, request)
@@ -378,7 +382,8 @@ def l_function_lcalc_page():
 ################################################################################
 
 def render_lfunction_exception(err):
-    #if current_app.debug:
+    # from flask import current_app
+    # if current_app.debug:
     #    raise err
     if err.args:
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
@@ -737,9 +742,9 @@ def initLfunction(L, args, request):
                 info['friends'].append(('Symmetric %s' % ordinal(j), friendlink3))
 
     elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
-        friendlink = friendlink.rpartition('/')[0] #strip off embedding number for L-function
         weight = str(L.weight)
-        info['friends'] = [('Siegel Modular Form ' + weight + '_' + L.orbit, friendlink)]
+        friendlink = '/'.join(friendlink.split('/')[:-3]) + '.' + weight + '_' + L.orbit
+        info['friends'] = [('Siegel Modular Form Sp4Z.' + weight + '_' + L.orbit, friendlink)]
 
     elif L.Ltype() == "artin":
         info['friends'] = [('Artin representation', L.artin.url_for())]
@@ -1064,8 +1069,8 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
             return Lfunction_Maass(fromDB = True, group = arg2, level = arg5,
                 char = arg6, R = arg7, ap_id = arg8)
 
-    elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z' and arg5 == 'specimen':  # this should be changed when we fix the SMF urls
-        return Lfunction_SMF2_scalar_valued(weight=arg6, orbit=arg7, number=arg8)
+    elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z':
+        return Lfunction_SMF2_scalar_valued(weight=arg5, orbit=arg6, number=arg7)
 
     elif arg1 == 'NumberField':
         return DedekindZeta(label=str(arg2))
