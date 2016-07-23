@@ -394,7 +394,10 @@ def elliptic_curve_search(info):
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
     except (TypeError,ValueError):
         return search_input_error(info, bread)
-        
+
+    if query.get('jinv'):
+        query['jinv'] =','.join(query['jinv'])
+
     if query.get('field_label') == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
         
