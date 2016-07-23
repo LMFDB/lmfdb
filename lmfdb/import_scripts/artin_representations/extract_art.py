@@ -60,11 +60,7 @@ password = pw_dict['data']['password']
 # fire it up
 from lmfdb import base
 assert base
-#from lmfdb import math_classes
-from lmfdb.math_classes import ArtinRepresentation
-#from lmfdb.math_classes import *
-#from lmfdb.WebNumberField import *
-
+from lmfdb.artin_representations.math_classes import ArtinRepresentation
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(host='lmfdb-ib:37010')
