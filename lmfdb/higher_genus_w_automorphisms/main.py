@@ -80,14 +80,6 @@ def split_perm(strg):
             yield strg[startpoint:i+1]
             startpoint = i+1
 
-def signature_to_list(L):
-    for i in range(0,len(L)):
-        if L[i] == ';':
-            newsig = L[:i] + "," + L[i+1:]
-            return newsig
-    return L
-
-
 def sort_sign(L):
     L1 = L[1:]
     L1.sort()
@@ -164,17 +156,16 @@ def higher_genus_w_automorphisms_search(**args):
             flash_error ("The label %s is not a legitimate label for this data.",labs)
             return redirect(url_for(".index"))
 
+    #allow for ; in signature
+    if info.get('signature'):
+        info['signature'] = info['signature'].replace(';',',')
 
-#allows for ; in signature
-    if 'signature' in info and info['signature'] != '':
-        sig_list = ast.literal_eval(signature_to_list(info['signature']))
-        sig =  sort_sign(sig_list)
-        info.update({'signature': str(sig)})
-            
     try:
         parse_gap_id(info,query,'group','Group')
         parse_ints(info,query,'genus',name='Genus')
         parse_bracketed_posints(info,query,'signature',split=False,name='Signature',keepbrackets=True)
+        if query.get('signature'):
+            query['signature'] = info['signature'] = str(sort_sign(ast.literal_eval(query['signature']))).replace(' ','')
         parse_ints(info,query,'dim',name='Dimension of the family')
         if 'inc_hyper' in info:
             if info['inc_hyper'] == 'exclude':
@@ -188,7 +179,7 @@ def higher_genus_w_automorphisms_search(**args):
         return search_input_error(info, bread)
     count = parse_count(info)
     start = parse_start(info)
-    
+
     res = C.curve_automorphisms.passports.find(query).sort([(
          'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
         ('cc'[0],pymongo.ASCENDING)])
