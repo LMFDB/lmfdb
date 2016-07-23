@@ -122,7 +122,7 @@ class GaloisRepresentation( Lfunction):
         elif isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
             self.init_dir_char(thingy)
 
-        elif isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
+        elif isinstance(thingy, lmfdb.artin_representations.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
         elif (isinstance(thingy, list) and
