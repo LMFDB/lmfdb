@@ -193,7 +193,7 @@ class WebMaassForm(object):
                         n2 = len(self.coeffs.get(j, {}).keys())
                         mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j, n2))
                         if n2 != nc:
-                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())=".format(nc, n2))
+                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())={1}".format(nc, n2))
 
         self.nc = 1  # len(self.coeffs.keys())
         if not self._get_dirichlet_c_only:
