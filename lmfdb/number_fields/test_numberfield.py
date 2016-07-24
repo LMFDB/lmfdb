@@ -45,8 +45,8 @@ class NumberFieldTest(LmfdbTest):
         L = self.tc.get('/NumberField/2.2.5.1')
         assert '0.481211825059603' in L.data # regulator
 
-    def test_url_naturallabel(self, follow_redirects=True):
-        L = self.tc.get('/NumberField/Qsqrt5')
+    def test_url_naturallabel(self):
+        L = self.tc.get('/NumberField/Qsqrt5', follow_redirects=True)
         assert '0.481211825059603' in L.data # regulator
 
     def test_url_bad(self):
