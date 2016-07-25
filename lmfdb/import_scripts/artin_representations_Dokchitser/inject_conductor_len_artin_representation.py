@@ -5,7 +5,7 @@
 import sys
 LMFDB_FOLDER = "../../../"
 sys.path.append(LMFDB_FOLDER)
-from lmfdb.math_classes import ArtinRepresentation
+from lmfdb.artin_representations.math_classes import ArtinRepresentation
 the_collection = ArtinRepresentation.collection()
 print "Got", the_collection
 

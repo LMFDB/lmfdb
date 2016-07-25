@@ -101,8 +101,9 @@ def poly_to_field_label(pol):
     #return None
 
 @app.route("/NF")
+@app.route("/NF/")
 def NF_redirect():
-    return redirect(url_for(".number_field_render_webpage", **request.args))
+    return redirect(url_for("number_fields.number_field_render_webpage", **request.args), 301)
 
 @nf_page.route("/HowComputed")
 def how_computed_page():
@@ -380,7 +381,7 @@ def render_field_webpage(args):
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
                    ('Galois Group', group_display_short(data['degree'], t, C))
                    ]
-    from lmfdb.math_classes import NumberFieldGaloisGroup
+    from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
         v = nf.factor_perm_repn(info["tim_number_field"])
@@ -415,6 +416,9 @@ def format_coeffs(coeffs):
 @nf_page.route("/<label>")
 def by_label(label):
     try:
+        nflabel = nf_string_to_label(label)
+        if label != nflabel:
+            return redirect(url_for(".by_label", label=nflabel), 301)
         return render_field_webpage({'label': nf_string_to_label(label)})
     except ValueError as err:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (label,err)), "error")

@@ -17,7 +17,7 @@ sage: V2 = GaloisRepresentation(chi)
 sage: V2.langlands
 sage: V2.local_euler_factor(101)
 
-sage: from lmfdb.math_classes import ArtinRepresentation
+sage: from lmfdb.artin_representations.math_classes import ArtinRepresentation
 sage: rho = ArtinRepresentation(2,23,1)
 sage: V3 = GaloisRepresentation(rho)
 sage: V3.dim
@@ -122,7 +122,7 @@ class GaloisRepresentation( Lfunction):
         elif isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
             self.init_dir_char(thingy)
 
-        elif isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
+        elif isinstance(thingy, lmfdb.artin_representations.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
         elif (isinstance(thingy, list) and

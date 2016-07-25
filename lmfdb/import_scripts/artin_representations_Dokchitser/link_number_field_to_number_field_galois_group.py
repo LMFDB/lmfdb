@@ -13,7 +13,7 @@ sys.path.append(LMFDB_FOLDER)
 
 print "Importing sage in base"
 import lmfdb.base as base
-from lmfdb.math_classes import NumberFieldGaloisGroup as NF
+from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup as NF
 print "Sage loaded"
 
 print "getting connection"

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from base import getDBConnection
-from utils import url_for, pol_to_html
-from databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from databases.standard_types import PolynomialAsSequenceTooLargeInt
+from lmfdb.base import getDBConnection
+from lmfdb.utils import url_for, pol_to_html
+from lmfdb.artin_representations.databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
+from lmfdb.artin_representations.databases.standard_types import PolynomialAsSequenceTooLargeInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod
 from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
-from WebNumberField import WebNumberField
+from lmfdb.WebNumberField import WebNumberField
 from lmfdb.WebCharacter import WebSmallDirichletCharacter
 
 
@@ -283,7 +283,7 @@ class ArtinRepresentation(object):
         return self.local_factor(p)
 
     def coefficients_list(self, upperbound=100):
-        from utils import an_list
+        from lmfdb.utils import an_list
         return an_list(lambda p: self.euler_polynomial(p), upperbound=upperbound, base_field=ComplexField())
 
     def character(self):
@@ -303,7 +303,7 @@ class ArtinRepresentation(object):
         #return (-1)**par
 
     def field_knowl(self):
-        from WebNumberField import nf_display_knowl
+        from lmfdb.WebNumberField import nf_display_knowl
         nfgg = self.number_field_galois_group()
         if nfgg.url_for():
             return nf_display_knowl(nfgg.label(), getDBConnection(), nfgg.polredabshtml())
@@ -762,10 +762,10 @@ class NumberFieldGaloisGroup(object):
             # Try to make WebNumberField, but only helps if the field is in our database
             wnf = self.wnf()
             if wnf._data is None:
-                from number_fields.number_field import sage_residue_field_degrees_function
+                from lmfdb.number_fields.number_field import sage_residue_field_degrees_function
                 fn_with_pari_output = sage_residue_field_degrees_function(self.sage_object())
             else:
-                from number_fields.number_field import residue_field_degrees_function
+                from lmfdb.number_fields.number_field import residue_field_degrees_function
                 fn_with_pari_output = residue_field_degrees_function(wnf)
             self._residue_field_degrees = lambda p: map(Integer, fn_with_pari_output(p))
             # This function is better, becuase its output has entries in Integer

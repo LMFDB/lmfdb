@@ -476,7 +476,7 @@ class WebNumberField:
                 self._data["nfgg"] = nfgg
         else:
             if "nfgg" not in self._data:
-                from math_classes import NumberFieldGaloisGroup
+                from artin_representations.math_classes import NumberFieldGaloisGroup
                 nfgg = NumberFieldGaloisGroup.find_one({"label": self.label})
                 self._data["nfgg"] = nfgg
             else:
@@ -491,7 +491,7 @@ class WebNumberField:
                     self._data["nfgg"] = nfgg
             else:
                 if "nfgg" not in self._data:
-                    from math_classes import NumberFieldGaloisGroup
+                    from artin_representations.math_classes import NumberFieldGaloisGroup
                     nfgg = NumberFieldGaloisGroup(self._data['coeffs'])
                     self._data["nfgg"] = nfgg
                 else:
