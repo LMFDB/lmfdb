@@ -85,7 +85,7 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 @galois_groups_page.route("/<label>")
 def by_label(label):
-    clean_label = label.replace(' ','')
+    clean_label = clean_input(label)
     if clean_label != label:
         return redirect(url_for('.by_label', label=clean_label), 301)
     return render_group_webpage({'label': label})

@@ -79,10 +79,10 @@ def index():
 
 @local_fields_page.route("/<label>")
 def by_label(label):
-    clean_label = label.replace(' ','')
+    clean_label = clean_input(label)
     if label != clean_label:
         return redirect(url_for('.by_label',label=clean_label), 301)
-    return render_field_webpage({'label': clean_label})
+    return render_field_webpage({'label': label})
 
 def local_field_search(**args):
     info = to_dict(args)

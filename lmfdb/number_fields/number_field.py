@@ -416,7 +416,7 @@ def format_coeffs(coeffs):
 @nf_page.route("/<label>")
 def by_label(label):
     try:
-        nflabel = nf_string_to_label(label.replace(' ',''))
+        nflabel = nf_string_to_label(clean_input(label))
         if label != nflabel:
             return redirect(url_for(".by_label", label=nflabel), 301)
         return render_field_webpage({'label': nf_string_to_label(label)})
