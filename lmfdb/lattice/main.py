@@ -14,7 +14,7 @@ from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqr
 
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.lattice_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
 from lmfdb.lattice.isom import isom
 
 from markupsafe import Markup
@@ -234,7 +234,9 @@ def render_lattice_webpage(**args):
     C = getDBConnection()
     data = None
     if 'label' in args:
-        lab = args.get('label')
+        lab = clean_input(args.get('label'))
+        if lab != args.get('label'):
+            return redirect(url_for('.render_lattice_webpage', label=lab), 301)
         data = C.Lattices.lat.find_one({'$or':[{'label': lab }, {'name': lab }]})
     if data is None:
         t = "Integral Lattices Search Error"
