@@ -143,7 +143,7 @@ def render_field_webpage(args):
             info['err'] = "Field " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Local Number Field:' + label
+        title = 'Local Number Field ' + label
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
         e = data['e']
