@@ -299,7 +299,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     conductor_label = unquote(conductor_label)
     if re.match(OLD_COND_RE, conductor_label):
         conductor_label = '.'.join(conductor_label[1:-1].split(','))
-        return redirect(url_for('.show_ecnf_isoclass',nf=nf,conductor_label=conductor_label,class_labe=class_label),301)
+        return redirect(url_for('.show_ecnf_isoclass',nf=nf,conductor_label=conductor_label,class_label=class_label),301)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
