@@ -156,7 +156,10 @@ def random():
 
 @st_page.route('/<label>')
 def by_label(label):
-    return search_by_label(label)
+    clean_label = label.replace(' ','')
+    if clean_label != label:
+        return redirect(url_for('.by_label', label=clean_label), 301)
+    return search_by_label(clean_label)
 
 ###############################################################################
 # Searching
@@ -164,7 +167,7 @@ def by_label(label):
 
 def search_by_label(label):
     """ search for Sato-Tate group by label and render if found """
-    label = label.strip()
+
     if re.match(ST_LABEL_RE, label):
         return render_by_label(label)
     if re.match(ST_LABEL_SHORT_RE, label):
