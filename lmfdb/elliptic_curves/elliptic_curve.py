@@ -499,8 +499,11 @@ def download_EC_qexp(label, limit):
 
 @ec_page.route("/download_all/<label>")
 def download_EC_all(label):
+    try:
+        N, iso, number = split_lmfdb_label(label)
+    except (ValueError,AttributeError):
+        return elliptic_curve_jump_error(label, {})
     CDB = db_ec()
-    N, iso, number = split_lmfdb_label(label)
     if number:
         data = CDB.find_one({'lmfdb_label': label})
         if data is None:
