@@ -384,7 +384,7 @@ def elliptic_curve_search(info):
             info['err'] = ''
             return search_input_error(info, bread)
 
-        return show_ecnf(nf, cond_label, iso_label, number)
+        return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
 
     query = {}
 
