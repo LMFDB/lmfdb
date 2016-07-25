@@ -20,15 +20,6 @@ from sage.all import ZZ
 import re, random
 
 
-def initialize_indices():
-    try:
-#        ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC),("galorbit", ASC)])
-#        ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor", ASC)])
-#        ArtinRepresentation.collection().ensure_index([("Conductor", ASC), ("Dim", ASC)])
-	pass
-    except pymongo.errors.OperationFailure:
-        pass
-
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
     for b in breads:
@@ -72,7 +63,7 @@ def artin_representation_search(**args):
             flash(Markup("Error: %s" % (err)), "error")
             bread = get_bread([('Search results','')])
             return search_input_error({'err':''}, bread)
-        return render_artin_representation_webpage(label)
+        return redirect(url_for(".render_artin_representation_webpage", label=label), 301)
 
     title = 'Artin representation search results'
     bread = [('Artin representation', url_for(".index")), ('Search results', ' ')]
@@ -177,7 +168,7 @@ def render_artin_representation_webpage(label):
     friends = []
     nf_url = the_nf.url_for()
     if nf_url:
-    	friends.append(("Artin Field", nf_url))
+        friends.append(("Artin Field", nf_url))
     cc = the_rep.central_character()
     if cc is not None:
         if cc.modulus <= 100000: 
