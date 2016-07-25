@@ -135,7 +135,9 @@ def render_artin_representation_webpage(label):
 
     # label=dim.cond.nTt.indexcj, c is literal, j is index in conj class
     # Should we have a big try around this to catch bad labels?
-    label = clean_input(label)
+    clean_label = clean_input(label)
+    if clean_label != label:
+        return redirect(url_for('.render_artin_representation_webpage', label=clean_label), 301)
     try:
         the_rep = ArtinRepresentation(label)
     except:
