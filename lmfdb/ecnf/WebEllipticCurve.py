@@ -14,7 +14,7 @@ nfdb = None
 def db_ecnf():
     global ecnf
     if ecnf is None:
-        ecnf = getDBConnection().elliptic_curves.nfcurves.new
+        ecnf = getDBConnection().elliptic_curves.nfcurves
     return ecnf
 
 def db_nfdb():
