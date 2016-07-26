@@ -85,6 +85,9 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 @galois_groups_page.route("/<label>")
 def by_label(label):
+    clean_label = clean_input(label)
+    if clean_label != label:
+        return redirect(url_for('.by_label', label=clean_label), 301)
     return render_group_webpage({'label': label})
 
 
@@ -116,11 +119,11 @@ def index():
 
 def galois_group_search(**args):
     info = to_dict(args)
+    if info.get('jump_to'):
+        return redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)
     bread = get_bread([("Search results", ' ')])
     C = base.getDBConnection()
     query = {}
-    if 'jump_to' in info:
-        return render_group_webpage({'label': info['jump_to']})
 
     def includes_composite(s):
         s = s.replace(' ','').replace('..','-')

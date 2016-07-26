@@ -6,7 +6,7 @@ class NumberFieldTest(LmfdbTest):
     # All tests should pass
     
     def test_Q(self):
-        L = self.tc.get('/NumberField/Q')
+        L = self.tc.get('/NumberField/Q', follow_redirects=True)
         assert '\chi_{1}' in L.data
         L = self.tc.get('/NumberField/1.1.1.1')
         assert '\chi_{1}' in L.data
@@ -46,7 +46,7 @@ class NumberFieldTest(LmfdbTest):
         assert '0.481211825059603' in L.data # regulator
 
     def test_url_naturallabel(self):
-        L = self.tc.get('/NumberField/Qsqrt5')
+        L = self.tc.get('/NumberField/Qsqrt5', follow_redirects=True)
         assert '0.481211825059603' in L.data # regulator
 
     def test_url_bad(self):

@@ -2,23 +2,12 @@
 from flask import url_for
 import lmfdb.base
 from lmfdb.utils import make_logger, web_latex, encode_plot
-from lmfdb.ecnf.WebEllipticCurve import web_ainvs
-#from lmfdb.number_fields.number_field import field_pretty, nf_display_knowl
+from lmfdb.ecnf.WebEllipticCurve import web_ainvs, db_ecnf
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
-
 import sage.all
 from sage.all import latex, matrix
 
 logger = make_logger("ecnf")
-
-ecdb = None
-
-
-def db_ec():
-    global ecdb
-    if ecdb is None:
-        ecdb = lmfdb.base.getDBConnection().elliptic_curves.nfcurves
-    return ecdb
 
 
 class ECNF_isoclass(object):
@@ -49,9 +38,9 @@ class ECNF_isoclass(object):
         #print "label = %s" % label
         try:
             if label[-1].isdigit():
-                data = db_ec().find_one({"label": label})
+                data = db_ecnf().find_one({"label": label})
             else:
-                data = db_ec().find_one({"label": label + "1"})
+                data = db_ecnf().find_one({"label": label + "1"})
         except AttributeError:
             return "Invalid label"  # caller must catch this and raise an error
 
@@ -62,9 +51,10 @@ class ECNF_isoclass(object):
     def make_class(self):
 
         # Create a list of the curves in the class from the database
-        self.db_curves = [c for c in db_ec().find(
-            {'field_label': self.field_label, 'conductor_label':
-             self.conductor_label, 'iso_label': self.iso_label}).sort('number')]
+        self.db_curves = [c for c in db_ecnf().find(
+            {'field_label': self.field_label, 'conductor_norm':
+             self.conductor_norm, 'conductor_label':
+             self.conductor_label, 'iso_nlabel': self.iso_nlabel}).sort('number')]
 
         # Rank or bounds
         try:

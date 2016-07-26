@@ -1,4 +1,4 @@
-from lmfdb.math_classes import ArtinRepresentation
+from lmfdb.artin_representations.math_classes import ArtinRepresentation
 from lmfdb.website import dbport
 
 import base

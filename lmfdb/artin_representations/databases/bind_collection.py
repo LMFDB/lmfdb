@@ -1,5 +1,5 @@
 from pymongo.collection import Collection
-from lmfdb.databases import databases_logger
+from lmfdb.artin_representations.databases import databases_logger
 
 
 def bind_collection(name, type_conversion):

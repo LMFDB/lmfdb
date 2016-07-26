@@ -6,7 +6,7 @@ from flask import render_template, url_for, redirect, request
 from lmfdb.sato_tate_groups import st_page
 from lmfdb.utils import to_dict, random_object_from_collection, encode_plot, flash_error
 from lmfdb.base import getDBConnection
-from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash
+from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash, clean_input
 
 from sage.all import ZZ, cos, sin, pi, list_plot, circle
 
@@ -156,6 +156,9 @@ def random():
 
 @st_page.route('/<label>')
 def by_label(label):
+    clean_label = clean_input(label)
+    if clean_label != label:
+        return redirect(url_for('.by_label', label=clean_label), 301)
     return search_by_label(label)
 
 ###############################################################################
@@ -164,7 +167,7 @@ def by_label(label):
 
 def search_by_label(label):
     """ search for Sato-Tate group by label and render if found """
-    label = label.strip()
+
     if re.match(ST_LABEL_RE, label):
         return render_by_label(label)
     if re.match(ST_LABEL_SHORT_RE, label):

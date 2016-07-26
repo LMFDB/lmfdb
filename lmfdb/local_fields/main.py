@@ -79,28 +79,18 @@ def index():
 
 @local_fields_page.route("/<label>")
 def by_label(label):
+    clean_label = clean_input(label)
+    if label != clean_label:
+        return redirect(url_for('.by_label',label=clean_label), 301)
     return render_field_webpage({'label': label})
-
-# FIXME: delete or fix this code
-# Apparently obsolete code that causes a server error if executed
-#@local_fields_page.route("/search", methods=["GET", "POST"])
-#def search():
-#    if request.method == "GET":
-#        val = request.args.get("val", "no value")
-#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-#        return render_template("lf-search.html", title="Local Number Field Search", bread=bread, val=val)
-#    elif request.method == "POST":
-#        return "ERROR: we always do http get to explicitly display the search parameters"
-#    else:
-#        return flask.abort(404)
 
 def local_field_search(**args):
     info = to_dict(args)
     bread = get_bread([("Search results", ' ')])
     C = base.getDBConnection()
     query = {}
-    if 'jump_to' in info:
-        return render_field_webpage({'label': info['jump_to']})
+    if info.get('jump_to'):
+        return redirect(url_for(".by_label",label=info['jump_to']), 301)
 
     try:
         parse_galgrp(info,query,'gal', use_bson=False)
@@ -153,7 +143,7 @@ def render_field_webpage(args):
             info['err'] = "Field " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Local Number Field:' + label
+        title = 'Local Number Field ' + label
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
         e = data['e']

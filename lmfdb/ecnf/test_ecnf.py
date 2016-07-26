@@ -37,7 +37,7 @@ class EllCurveTest(LmfdbTest):
         r"""
         Check that the elliptic curve/#field tells about its Weirstrass eqn
         """
-        L = self.tc.get('/EllipticCurve/2.0.4.1/[225%2C0%2C15]/a/2')
+        L = self.tc.get('/EllipticCurve/2.0.4.1/225.0.15/a/2')
         assert '396' in L.data
         assert '2982' in L.data
 
@@ -45,22 +45,22 @@ class EllCurveTest(LmfdbTest):
         r"""
         Check that the elliptic curve/#field tells about its conductor and disciminant
         """
-        L = self.tc.get('/EllipticCurve/2.0.7.1/[10000%2C125%2C25]/a/1')
+        L = self.tc.get('/EllipticCurve/2.0.7.1/10000.125.25/a/1')
         assert '10000' in L.data
         assert '15625000000000000' in L.data
         assert '87890625' in L.data
-        assert '18' in L.data
+        assert '25^{9}' in L.data
         assert '12' in L.data
 
     def test_j(self):
         r"""
         Check that the elliptic curve/#field tells about its j invariant
         """
-        L = self.tc.get('/EllipticCurve/2.0.4.1/[5525%2C870%2C5]/b/9')
+        L = self.tc.get('/EllipticCurve/2.0.4.1/5525.870.5/b/9')
         assert '226834389543384' in L.data
         assert '1490902050625' in L.data
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1') # Test factorisation
-        assert '447001' in L.data
+        assert '8798344145175011328000' in L.data
 
     def test_search(self):
         r"""
@@ -71,7 +71,7 @@ class EllCurveTest(LmfdbTest):
         assert 'a, 0, a + 1, -41 a + 158813, 2115 a - 13286543' in L.data
         # 4*4 torsion
         L = self.tc.get('/EllipticCurve/?start=0&count=50&include_isogenous=on&include_base_change=on&torsion=&torsion_structure=[4%2C4]')
-        assert '/EllipticCurve/2.0.4.1/%5B5525%2C870%2C5%5D/b/9' in L.data
+        assert '/EllipticCurve/2.0.4.1/5525.870.5/b/9' in L.data
         # 13 torsion
         L = self.tc.get('/EllipticCurve/?torsion=13')
         assert '2745' in L.data
