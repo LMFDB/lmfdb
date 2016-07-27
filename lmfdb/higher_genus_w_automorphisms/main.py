@@ -529,7 +529,7 @@ def hgcwa_code(**args):
     
     # extended formatting template for when signH is present
     signHfmt = stdfmt
-    signHfmt = code_list['full_auto'][lang] + '{full_auto}' + ';\n'
+    signHfmt += code_list['full_auto'][lang] + '{full_auto}' + ';\n'
     signHfmt += code_list['full_sign'][lang] + '{signH}' + ';\n'        
     signHfmt += code_list['add_to_total_full'][lang] + '\n'
 
