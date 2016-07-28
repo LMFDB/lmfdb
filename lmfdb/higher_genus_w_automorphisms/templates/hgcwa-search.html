@@ -49,7 +49,29 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 {% endif %}
 </td> 
 
+<td align=right>
+	      Cyclic Trigonal Curve(s):
+</td>
 
+  <td> <select name='inc_cyc_trig'>
+{% if info.inc_cyc_trig == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_cyc_trig == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
+
+  
 </tr>
 
 <tr>

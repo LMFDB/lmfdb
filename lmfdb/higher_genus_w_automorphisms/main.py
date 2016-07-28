@@ -172,7 +172,12 @@ def higher_genus_w_automorphisms_search(**args):
                 query['hyperelliptic'] = False
             elif info['inc_hyper'] == 'only':
                 query['hyperelliptic'] = True
-
+        if 'inc_cyc_trig' in info:
+            if info['inc_cyc_trig'] == 'exclude':
+                query['cyclic_trigonal'] = False
+            elif info['inc_cyc_trig'] == 'only':
+                query['cyclic_trigonal'] = True
+                                
         query['cc.1'] = 1
 
     except ValueError:
@@ -377,14 +382,29 @@ def render_passport(args):
         info.update({'genvects': Ldata, 'HypColumn' : HypColumn})
 
         info.update({'passport_cc': cc_display(ast.literal_eval(dat['con']))})
-        
+
+
+        other_data = False
 
         if 'hyperelliptic' in data:
             info.update({'ishyp':  tfTOyn(data['hyperelliptic'])})
+            other_data = True
             
         if 'hyp_involution' in data:
             inv=Permutation(data['hyp_involution']).cycle_string()
             info.update({'hypinv': sep.join(split_perm(inv))})
+
+
+        if 'cyclic_trigonal' in data:
+            info.update({'iscyctrig':  tfTOyn(data['cyclic_trigonal'])})
+            other_data = True
+
+            
+        if 'cinv' in data:
+            cinv=Permutation(data['cinv']).cycle_string()
+            info.update({'cinv': sep.join(split_perm(cinv))})     
+
+        info.update({'other_data': other_data})    
             
 
         if 'full_auto' in data:
@@ -398,6 +418,7 @@ def render_passport(args):
                          'signH':sign_display(ast.literal_eval(data['signH'])),
                          'higgenlabel' : data['full_label'] })
 
+            
 
         urlstrng,br_g, br_gp, br_sign, refined_p = split_passport_label(label)
        
@@ -536,12 +557,18 @@ def hgcwa_code(**args):
     # additional info for hyperelliptic cases
     hypfmt = code_list['hyp'][lang] + code_list['tr'][lang] + ';\n'
     hypfmt += code_list['hyp_inv'][lang] + '{hyp_involution}' + code_list['hyp_inv_last'][lang]
+    hypfmt += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
     hypfmt += code_list['add_to_total_hyp'][lang] + '\n'
-    nhypstr = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
-    nhypstr += code_list['add_to_total_basic'][lang] + '\n'
-
+    cyctrigfmt = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
+    cyctrigfmt += code_list['cyc'][lang] + code_list['tr'][lang] + ';\n'
+    cyctrigfmt += code_list['cyc_auto'][lang] + '{cinv}' + code_list['hyp_inv_last'][lang]
+    cyctrigfmt += code_list['add_to_total_cyc_trig'][lang] + '\n'
+    nhypcycstr = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
+    nhypcycstr += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
+    nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
+    
     start = time.time()
-    lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else nhypstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
+    lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
     code += '\n'.join(lines)
     print "%s seconds for %d bytes" %(time.time() - start,len(code))
     return code

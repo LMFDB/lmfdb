@@ -33,15 +33,21 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
     {% endif %} 
 </p>
 
-{% if info.ishyp %}     
+{% if info.other_data %}     
 
   <p><h2>Other Data</h2>
     <table>
-     <tr><td>Hyperelliptic curve(s):</td><td>{{info.ishyp}}</td></tr>
-   {% if info.hypinv  %}
+      {% if info.ishyp %}     
+      <tr><td>Hyperelliptic curve(s):</td><td>{{info.ishyp}}</td></tr>
+      {% if info.hypinv  %}
        <tr><td>Hyperelliptic involution:</td> <td>{{info.hypinv}}</td></tr>
-   {% endif %}  
-    </table>
+       {% endif %}  {% endif %}
+      {% if info.iscyctrig %}     
+      <tr><td>Cyclic trigonal curve(s):</td><td>{{info.iscyctrig}}</td></tr>
+      {% if info.cinv  %}
+       <tr><td>Trigonal automorphism:</td> <td>{{info.cinv}}</td></tr>
+       {% endif %}  {% endif %}
+     </table>
   </p>
   
 
