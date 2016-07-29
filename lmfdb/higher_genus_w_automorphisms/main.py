@@ -321,7 +321,7 @@ def render_passport(args):
         GG = ast.literal_eval(data['group'])
         gn = GG[0]
         gt = GG[1]
-
+        
         gp_string=str(gn) + '.' + str(gt)
         pretty_group=sg_pretty(gp_string)
 
@@ -381,9 +381,11 @@ def render_passport(args):
                 
         info.update({'genvects': Ldata, 'HypColumn' : HypColumn})
 
-        info.update({'passport_cc': cc_display(ast.literal_eval(dat['con']))})
+        info.update({'passport_cc': cc_display(ast.literal_eval(data['con']))})
 
-
+        if 'eqn' in data:
+           info.update({'eqns': data['eqn']})
+        
         other_data = False
 
         if 'hyperelliptic' in data:
