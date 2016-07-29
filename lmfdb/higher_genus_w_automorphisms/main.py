@@ -177,6 +177,11 @@ def higher_genus_w_automorphisms_search(**args):
                 query['cyclic_trigonal'] = False
             elif info['inc_cyc_trig'] == 'only':
                 query['cyclic_trigonal'] = True
+        if 'inc_full' in info:
+            if info['inc_full'] == 'exclude':
+                query['full_auto'] = {'$exists': True} 
+            elif info['inc_full'] == 'only':
+                query['full_auto'] = {'$exists': False}
                                 
         query['cc.1'] = 1
 
