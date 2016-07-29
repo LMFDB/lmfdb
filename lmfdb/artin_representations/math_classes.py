@@ -662,7 +662,7 @@ class NumberFieldGaloisGroup(object):
             # Let pari compute it for us now
             from sage.all import pari
             galt = int(list(pari('polgalois(' + str(self.polredabs()) + ')'))[2])
-            from transitive_group import WebGaloisGroup
+            from lmfdb.transitive_group import WebGaloisGroup
             tg = WebGaloisGroup.from_nt(self.polredabs().degree(), galt)
             return tg.display_short()
         return self._data["G-Name"]
