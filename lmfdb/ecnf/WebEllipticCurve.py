@@ -505,10 +505,10 @@ class ECNF(object):
 
         gen = self.field.generator_name().replace("\\","") # phi not \phi
         for lang in ['sage', 'magma', 'pari']:
-            self._code['field'][lang] = self._code['field'][lang] % self.field.poly()
-            if gen != 'a':
-                self._code['field'][lang] = self._code['field'][lang].replace("<a>","<%s>" % gen)
-                self._code['field'][lang] = self._code['field'][lang].replace("a=","%s=" % gen)
+            pol = str(self.field.poly())
+            if lang=='pari':
+                pol = pol.replace('x',gen)
+            self._code['field'][lang] = (self._code['field'][lang] % pol).replace("<a>", "<%s>" % gen)
 
         for lang in ['sage', 'magma', 'pari']:
             self._code['curve'][lang] = self._code['curve'][lang] % self.ainvs
