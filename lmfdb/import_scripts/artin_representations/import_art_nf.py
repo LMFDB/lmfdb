@@ -1,6 +1,6 @@
 import sys, time, os
 assert time
-import bson, pymongo
+import bson
 assert bson
 import re
 import json
@@ -15,7 +15,7 @@ mypath = os.path.dirname(mypath)
 sys.path.append(mypath)
 sys.path.append(mypath+'/data_mgt/utilities')
 
-from rewrite import *
+from rewrite import reindex_collection
 
 
 # load the password file
