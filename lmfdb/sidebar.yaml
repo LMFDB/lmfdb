@@ -1,4 +1,3 @@
----
 1intro:
    type: simple
    heading:
@@ -143,8 +142,10 @@
            status: future
          - title: Belyi
            status: future
-         - title: Higher genus
-           status: future
+         - title: "Higher genus:"
+           part3:
+             - title: w/ automorphisms
+               url_for:  "higher_genus_w_automorphisms.index"
            colspan: onecolumn
      - title: 2-d
        style: rotate
