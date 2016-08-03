@@ -93,9 +93,9 @@ pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.exts
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
-print "setting nfcurves to nfcurves.new"
-oldnfcurves = C.elliptic_curves.nfcurves
-nfcurves = C.elliptic_curves.nfcurves.new
+print "setting nfcurves"
+oldnfcurves = C.elliptic_curves.nfcurves.old
+nfcurves = C.elliptic_curves.nfcurves
 qcurves = C.elliptic_curves.curves
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
