@@ -20,15 +20,8 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 
 </tr>
 
-<tr>
-  
-  <td align=left> 
-{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
-<td align=left> <input type="text" name="dim" size="5" value="{{info.dim}}" > 
-
-
-<td align=right>
-	       Hyperelliptic Curve(s):
+<tr><td>
+	       Hyperelliptic curve(s):
 </td>
 
   <td> <select name='inc_hyper'>
@@ -49,10 +42,61 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 {% endif %}
 </td> 
 
+<td >
+	      Cyclic trigonal curve(s):
+</td>
 
+  <td> <select name='inc_cyc_trig'>
+{% if info.inc_cyc_trig == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_cyc_trig == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
+
+
+<td>
+	      Full automorphism group:
+</td>
+
+  <td> <select name='inc_full'>
+{% if info.inc_full == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_full == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
+  
+  
 </tr>
 
 <tr>
+
+ <td align=left> 
+{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
+<td align=left> <input type="text" name="dim" size="5" value="{{info.dim}}" > </td>
+
+  
 <td align='left' colspan='4'>Maximum number of families to display: <input type='text' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
