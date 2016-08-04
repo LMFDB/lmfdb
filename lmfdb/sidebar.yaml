@@ -144,7 +144,7 @@
            status: future
          - title: "Higher genus:"
            part3:
-             - title: Group Actions
+             - title: Families
                url_for:  "higher_genus_w_automorphisms.index"
                status: beta
                colspan: onecolumn
