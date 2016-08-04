@@ -143,6 +143,7 @@
          - title: Belyi
            status: future
          - title: "Higher genus:"
+           status: future
            part3:
              - title: Families
                url_for:  "higher_genus_w_automorphisms.index"
