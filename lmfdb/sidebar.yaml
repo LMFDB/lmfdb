@@ -144,9 +144,10 @@
            status: future
          - title: "Higher genus:"
            part3:
-             - title: w/ automorphisms
+             - title: Families
                url_for:  "higher_genus_w_automorphisms.index"
-           colspan: onecolumn
+               status: beta
+               colspan: onecolumn
      - title: 2-d
        style: rotate
        status: future_rotated
