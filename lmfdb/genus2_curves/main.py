@@ -457,7 +457,7 @@ def download_search(info):
     mydate = time.strftime("%d %B %Y")
     # reissue query here
     try:
-        res = g2c_db_curves().find(literal_eval(info.get('query','{}')),{'_id':int(0),'eqn':int(1)})
+        res = g2c_db_curves().find(literal_eval(info.get('query','{}')),{'_id':False,'eqn':True})
     except Exception as err:
         return "Unable to parse query: %s"%err
     c = download_comment_prefix[lang]
@@ -471,14 +471,7 @@ def download_search(info):
     s += c + ' ' + download_make_data_comment[lang] + '\n'
     s += '\n'
     s += download_assignment_start[lang] + '\\\n'
-    # loop through all search results and grab the curve equations
-    for r in res:
-        entry = str(r['eqn'])
-        entry = entry.replace('u','')
-        entry = entry.replace('\'','')
-        entry = entry.replace('\"','')
-        s += entry + ',\\\n'
-    s = s[:-3]
+    s += str(',\n'.join([str(r['eqn']) for r in res])) # list of curve equations
     s += download_assignment_end[lang]
     s += '\n\n'
     s += download_make_data[lang]
