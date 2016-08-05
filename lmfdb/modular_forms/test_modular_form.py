@@ -12,7 +12,7 @@ class ModularFormTest(LmfdbTest):
         assert "Maass" in res.data
 
     def test_Siegel(self):
-        self.url = "ModularForm/GSp4/Q"
+        self.url = "ModularForm/GSp/Q"
         tc = self.app.test_client()
         res = tc.get(self.url)
         assert "Siegel" in res.data
