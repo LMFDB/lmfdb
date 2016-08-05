@@ -49,7 +49,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     if info.has_key('error'):
         emf_logger.critical("error={0}".format(info['error']))
     if 'download' in kwds and 'error' not in kwds:
-        return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+        return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'], add_etags=False)
     if 'dimension_newspace' in kwds and kwds['dimension_newspace'] == 1:
         # if there is only one orbit we list it
         emf_logger.debug("Dimension of newforms is one!")
