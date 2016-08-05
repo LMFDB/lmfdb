@@ -47,6 +47,11 @@ class WebGaloisGroup:
             return True
         return False
 
+    def arith_equivalent(self):
+        if 'arith_equiv' in self._data:
+          return self._data['arith_equiv']
+        return 0
+
     def order(self):
         return int(self._data['order'])
 
