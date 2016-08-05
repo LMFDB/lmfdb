@@ -161,7 +161,8 @@ def render_one_maass_waveform(maass_id, **kwds):
         try:
             return send_file(strIO,
                              attachment_filename=filename,
-                             as_attachment=True)
+                             as_attachment=True,
+                             add_etags=False)
         except IOError:
             info['error'] = "Could not send file!"
 
