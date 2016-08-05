@@ -308,7 +308,7 @@ def download_search(info):
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 
 @modlmf_page.route('/<label>/download/<lang>/')
