@@ -58,7 +58,8 @@ def get_coefficients(info):
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=info["filename"],
-                     as_attachment=True)
+                     as_attachment=True,
+                     add_etags=False)
 
 def print_list_of_coefficients(info):
     r"""
