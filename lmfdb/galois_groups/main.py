@@ -235,11 +235,11 @@ def render_group_webpage(args):
         ae = wgg.arith_equivalent()
         if ae>0:
             if ae>1:
-                data['arith_equiv'] = r'A number field with this Galois group has %d arithmetically equivalent fields'% ae
+                data['arith_equiv'] = r'A number field with this Galois group has %d arithmetically equivalent fields.'% ae
             else:
-                data['arith_equiv'] = r'A number field with this Galois group has exactly one arithmetically equivalent field'
+                data['arith_equiv'] = r'A number field with this Galois group has exactly one arithmetically equivalent field.'
         else:
-            data['arith_equiv'] = r'A number field with this Galois group has no arithmetically equivalent fields'
+            data['arith_equiv'] = r'A number field with this Galois group has no arithmetically equivalent fields.'
         if len(data['otherreps']) == 0:
             data['otherreps']="There is no other low degree representation."
         query={'galois': bson.SON([('n', n), ('t', t)])}
