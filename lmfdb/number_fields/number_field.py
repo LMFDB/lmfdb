@@ -173,7 +173,7 @@ def render_class_group_data():
         if info['filenamebase'] in ['cl3mod8', 'cl7mod8', 'cl4mod16', 'cl8mod16']:
             filepath = "%s/%s/%s.%d.gz" % (class_group_data_directory,info['filenamebase'],info['filenamebase'],k)
             if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-                return send_file(filepath, as_attachment=True)
+                return send_file(filepath, as_attachment=True, add_etags=False)
             else:
                 info['message'] = 'File not found'
                 return class_group_request_error(info, bread)
