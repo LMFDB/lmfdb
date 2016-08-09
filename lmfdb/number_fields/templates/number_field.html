@@ -139,8 +139,12 @@
         {% for r in info.resinfo %}
             {% if r[0] == 'ae' %}
               <tr><td>
-                {{ KNOWL('nf.arithmetically_equivalent', title='Arithmetically equvalently siblings') }}:
-                <td> {{ r[1][0] |safe }}
+                {% if r[2]==1 %}
+                  {{ KNOWL('nf.arithmetically_equivalent', title='Arithmetically equvalently sibling') }}:
+                {% else %}
+                  {{ KNOWL('nf.arithmetically_equivalent', title='Arithmetically equvalently siblings') }}:
+                {% endif %}
+                <td> {{ r[1] |safe }}
             {% endif %}
             {% if r[0] == 'gc' %}
               <tr><td>
@@ -154,9 +158,13 @@
             {% endif %}
             {% if r[0] == 'sib' %}
                 {% for sib in r[1] %}
-                  <tr><td> {{sib[0]|safe}} 
+                  <tr><td> Degree {{sib[0]}} 
+                  {% if sib[1] == 1 %}
                      {{ KNOWL('nf.sibling', title='sibling') }}:
-                  <td> {{ sib[1] |safe }}
+                  {% else %}
+                     {{ KNOWL('nf.sibling', title='siblings') }}:
+                  {% endif %}
+                  <td> {{ sib[2] |safe }}
                 {% endfor %}
             {% endif %}
         {% endfor %}

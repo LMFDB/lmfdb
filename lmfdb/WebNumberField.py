@@ -7,10 +7,12 @@ import hashlib
 from sage.misc.cachefunc import cached_function
 from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html
 from flask import url_for
+from collections import Counter
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
+dnc = 'data not computed'
 
 # Dictionary of field label: n for abs(disc(Q(zeta_n)))
 # Does all cyclotomic fields of degree n s.t. 2<n<24
@@ -188,7 +190,7 @@ class WebNumberField:
         coefstr = string2list(coeffs)
         n = len(coefstr)-1
         data = {'coeffs': coeffs, 'degree': n}
-        return cls('Degree %d field'%d, data)
+        return cls('Degree %d field'%n, data)
 
     @classmethod
     def from_polredabs(cls, pol):
@@ -324,6 +326,24 @@ class WebNumberField:
             self._data['res'] = {}
         return self._data['res']
 
+    # Get data from group database
+    def galois_sib_data(self):
+        if 'repdata' not in self._data:
+            repdegs = [z[0] for z in self.gg()._data['repns']]
+            numae = self.gg().arith_equivalent()
+            galord = int(self.gg().order())
+            repcounts = Counter(repdegs)
+            gc = 0
+            if galord<24:
+                del repcounts[galord]
+                if self.degree() < galord:
+                    gc = 1 
+            repcounts[self.degree()] -= numae
+            if repcounts[self.degree()] == 0:
+                del repcounts[self.degree()]
+            self._data['repdata'] = [repcounts, numae, gc]
+        return self._data['repdata']
+
     def sibling_labels(self):
         resall = self.resolvents()
         if 'sib' in resall:
@@ -331,57 +351,53 @@ class WebNumberField:
             return ['' if a._data is None else a.label for a in sibs]
         return []
 
-    def sibling_knowls(self):
+    def siblings(self):
+        cnts = self.galois_sib_data()[0]
         resall = self.resolvents()
         if 'sib' in resall:
-            helpout = [self.myhelper([a,1]) for a in resall['sib']]
-            degrees = [len(string2list(a))-1 for a in resall['sib']]
-            helpout2 = [['Degree %d'%degrees[j], helpout[j][0]] for j in range(len(helpout))]
-            return helpout2
-        return []
+            # list of [degree, knowl
+            helpout = [[len(string2list(a))-1,self.myhelper([a,1])] for a in resall['sib']]
+        else:
+            helpout = []
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts.keys())]
+        return [degsiblist, self.sibling_labels()]
 
-    def sextic_twin_labels(self):
+    def sextic_twin(self):
+        if self.degree() != 6:
+            return [0,[],[]]
         resall = self.resolvents()
         if 'sex' in resall:
             sex = [self.from_coeffs(str(a)) for a in resall['sex']]
-            return ['' if a._data is None else a.label for a in sex]
-        return []
-
-    # Maybe this should only return true siblings
-    def sextic_twin_knowls(self):
-        resall = self.resolvents()
-        if 'sex' in resall:
+            sex = [a.label for a in sex if a._data is not None]
+            # Don't include Q in labels
+            sex = [z for z in sex if z != '1.1.1.1']
+            labels = sorted(Set(sex))
             helpout = [self.myhelper([a,1]) for a in resall['sex']]
-            return [a[0] for a in helpout]
-        return []
+            knowls = [a[0] for a in helpout]
+            return [1, knowls, labels]
+        return [1,[],[]]
 
-    def galois_closure_labels(self):
+    def galois_closure(self):
         resall = self.resolvents()
-        if 'gal' in resall:
-            gal = [self.from_coeffs(str(a)) for a in resall['gal']]
-            return ['' if a._data is None else a.label for a in gal]
-        return []
-
-    def galois_closure_knowls(self):
-        resall = self.resolvents()
+        cnt = self.galois_sib_data()[2]
         if 'gal' in resall:
             helpout = [self.myhelper([a,1]) for a in resall['gal']]
-            return [a[0] for a in helpout]
-        return []
+            knowls= [a[0] for a in helpout]
+            gal = [self.from_coeffs(str(a)) for a in resall['gal']]
+            labs = [a.label for a in gal if a._data is not None]
+            return [cnt, knowls, labs]
+        return [cnt, [], []]
 
-    def arith_equiv_labels(self):
+    def arith_equiv(self):
         resall = self.resolvents()
-        if 'ae' in resall:
-            ae = [self.from_coeffs(str(a)) for a in resall['ae']]
-            return ['' if a._data is None else a.label for a in ae]
-        return []
-
-    def arith_equiv_knowls(self):
-        resall = self.resolvents()
+        cnt = self.galois_sib_data()[1]
         if 'ae' in resall:
             helpout = [self.myhelper([a,1]) for a in resall['ae']]
-            return [a[0] for a in helpout]
-        return []
+            knowls = [a[0] for a in helpout]
+            ae = [self.from_coeffs(str(a)) for a in resall['ae']]
+            labs = [a.label for a in ae if a._data is not None]
+            return [cnt, knowls, labs]
+        return [cnt, [], []]
 
     def subfields(self):
         if not self.haskey('subs'):

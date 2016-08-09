@@ -26,6 +26,7 @@ from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, 
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of this data'
+dnc = 'data not computed'
 
 FIELD_LABEL_RE = re.compile(r'^\d+\.\d+\.(\d+(e\d+)?(t\d+(e\d+)?)*)\.\d+$')
 
@@ -355,37 +356,49 @@ def render_field_webpage(args):
                                                                [str(a) for a in dirichlet_chars]),
                                                            poly=info['polynomial'])))
     resinfo=[]
-    if len(nf.galois_closure_knowls())>0:
-        gc = nf.galois_closure_knowls()
-        resinfo.append(('gc', gc))
-        gc = nf.galois_closure_labels()[0] # Maybe change latter if there is >1
-        if gc != '':
-            info['friends'].append(('Galois closure',url_for(".by_label", label=gc)))
+    galois_closure = nf.galois_closure()
+    if galois_closure[0]>0:
+        if len(galois_closure[1])>0:
+            resinfo.append(('gc', galois_closure[1]))
+            if len(galois_closure[2]) > 0:
+                info['friends'].append(('Galois closure',url_for(".by_label", label=galois_closure[2][0])))
+        else:
+            resinfo.append(('gc', [dnc]))
 
-    if len(nf.sextic_twin_knowls())>0:
-        alg = nf.sextic_twin_knowls()
-        resinfo.append(('sex', r' $\times$ '.join(alg)))
-        #siblabels = nf.sibling_labels()
-        #for jj in range(len(siblabels)):
-        #    mysib = siblabels[jj]
-        #    if mysib != '':
-        #        info['friends'].append(("Degree %s sibling"%siblabels[jj][0] ,url_for(".by_label", label=mysib)))
+    sextic_twins = nf.sextic_twin()
+    if sextic_twins[0]>0:
+        if len(sextic_twins[1])>0:
+            resinfo.append(('sex', r' $\times$ '.join(sextic_twins[1])))
+        else:
+            resinfo.append(('sex', dnc))
 
-    if len(nf.sibling_knowls())>0:
-        sibs = nf.sibling_knowls()
-        resinfo.append(('sib', sibs))
-        siblabels = nf.sibling_labels()
-        for jj in range(len(siblabels)):
-            mysib = siblabels[jj]
-            if mysib != '':
-                info['friends'].append(("Degree %s sibling"%siblabels[jj][0] ,url_for(".by_label", label=mysib)))
+    siblings = nf.siblings()
+    # [degsib list, label list]
+    # first is list of [deg, num expected, list of knowls]
+    if len(siblings[0])>0:
+        for sibdeg in siblings[0]:
+            if len(sibdeg[2]) ==0:
+                sibdeg[2] = dnc
+            else:
+                sibdeg[2] = [z[0] for z in sibdeg[2]]
+                sibdeg[2] = ', '.join(sibdeg[2])
+                if len(sibdeg[2])<sibdeg[1]:
+                    sibdeg[2] += ', some '+dnc
+                
+        resinfo.append(('sib', siblings[0]))
+        for lab in siblings[1]:
+            if lab != '':
+                labparts = lab.split('.')
+                info['friends'].append(("Degree %s sibling"%labparts[0] ,url_for(".by_label", label=lab)))
 
-    if len(nf.arith_equiv_knowls())>0:
-        ae = nf.arith_equiv_knowls()
-        resinfo.append(('ae', ae))
-        ae = nf.arith_equiv_labels()[0] # Maybe change latter if there is >1
-        if ae != '':
-            info['friends'].append(('Arithmetically equivalent sibling',url_for(".by_label", label=ae)))
+    arith_equiv = nf.arith_equiv()
+    if arith_equiv[0]>0:
+        if len(arith_equiv[1])>0:
+            resinfo.append(('ae', ', '.join(arith_equiv[1]), len(arith_equiv[1])))
+            for aelab in arith_equiv[2]:
+                info['friends'].append(('Arithmetically equivalent sibling',url_for(".by_label", label=aelab)))
+        else:
+            resinfo.append(('ae', dnc, len(arith_equiv[1])))
 
     info['resinfo'] = resinfo
     info['learnmore'] = [('Global number field labels', url_for(
