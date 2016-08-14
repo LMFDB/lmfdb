@@ -51,14 +51,15 @@ def get_coefficients(info):
     else:
         fmt=''
     info['filename'] = "{0}-{1}-{2}-{3}-coefficients-0-to-{4}{5}.{6}".format(level,weight,character,label,number,fmt,ending)
-    # return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    # return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'], add_etags=False)
 
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=info["filename"],
-                     as_attachment=True)
+                     as_attachment=True,
+                     add_etags=False)
 
 def print_list_of_coefficients(info):
     r"""

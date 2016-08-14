@@ -30,7 +30,7 @@ def download_sample(name):
     a,b = name.split('.')
     f = StringIO.StringIO(sample.export(a, b))
     f.seek(0)
-    return send_file(f, attachment_filename = name + '.json', as_attachment = True)
+    return send_file(f, attachment_filename = name + '.json', as_attachment = True, add_etags=False)
 
 
 ###############################################################################

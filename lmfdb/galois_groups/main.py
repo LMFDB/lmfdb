@@ -232,6 +232,14 @@ def render_group_webpage(args):
         data['subinfo'] = subfield_display(C, n, data['subs'])
         data['resolve'] = resolve_display(C, data['resolve'])
         data['otherreps'] = wgg.otherrep_list()
+        ae = wgg.arith_equivalent()
+        if ae>0:
+            if ae>1:
+                data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'% ae
+            else:
+                data['arith_equiv'] = r'A number field with this Galois group has exactly one <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> field.'
+        else:
+            data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
         if len(data['otherreps']) == 0:
             data['otherreps']="There is no other low degree representation."
         query={'galois': bson.SON([('n', n), ('t', t)])}

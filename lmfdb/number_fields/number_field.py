@@ -26,6 +26,7 @@ from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, 
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of this data'
+dnc = 'data not computed'
 
 FIELD_LABEL_RE = re.compile(r'^\d+\.\d+\.(\d+(e\d+)?(t\d+(e\d+)?)*)\.\d+$')
 
@@ -173,7 +174,7 @@ def render_class_group_data():
         if info['filenamebase'] in ['cl3mod8', 'cl7mod8', 'cl4mod16', 'cl8mod16']:
             filepath = "%s/%s/%s.%d.gz" % (class_group_data_directory,info['filenamebase'],info['filenamebase'],k)
             if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-                return send_file(filepath, as_attachment=True)
+                return send_file(filepath, as_attachment=True, add_etags=False)
             else:
                 info['message'] = 'File not found'
                 return class_group_request_error(info, bread)
@@ -354,6 +355,52 @@ def render_field_webpage(args):
                                                            char_number_list=','.join(
                                                                [str(a) for a in dirichlet_chars]),
                                                            poly=info['polynomial'])))
+    resinfo=[]
+    galois_closure = nf.galois_closure()
+    if galois_closure[0]>0:
+        if len(galois_closure[1])>0:
+            resinfo.append(('gc', galois_closure[1]))
+            if len(galois_closure[2]) > 0:
+                info['friends'].append(('Galois closure',url_for(".by_label", label=galois_closure[2][0])))
+        else:
+            resinfo.append(('gc', [dnc]))
+
+    sextic_twins = nf.sextic_twin()
+    if sextic_twins[0]>0:
+        if len(sextic_twins[1])>0:
+            resinfo.append(('sex', r' $\times$ '.join(sextic_twins[1])))
+        else:
+            resinfo.append(('sex', dnc))
+
+    siblings = nf.siblings()
+    # [degsib list, label list]
+    # first is list of [deg, num expected, list of knowls]
+    if len(siblings[0])>0:
+        for sibdeg in siblings[0]:
+            if len(sibdeg[2]) ==0:
+                sibdeg[2] = dnc
+            else:
+                sibdeg[2] = [z[0] for z in sibdeg[2]]
+                sibdeg[2] = ', '.join(sibdeg[2])
+                if len(sibdeg[2])<sibdeg[1]:
+                    sibdeg[2] += ', some '+dnc
+                
+        resinfo.append(('sib', siblings[0]))
+        for lab in siblings[1]:
+            if lab != '':
+                labparts = lab.split('.')
+                info['friends'].append(("Degree %s sibling"%labparts[0] ,url_for(".by_label", label=lab)))
+
+    arith_equiv = nf.arith_equiv()
+    if arith_equiv[0]>0:
+        if len(arith_equiv[1])>0:
+            resinfo.append(('ae', ', '.join(arith_equiv[1]), len(arith_equiv[1])))
+            for aelab in arith_equiv[2]:
+                info['friends'].append(('Arithmetically equivalent sibling',url_for(".by_label", label=aelab)))
+        else:
+            resinfo.append(('ae', dnc, len(arith_equiv[1])))
+
+    info['resinfo'] = resinfo
     info['learnmore'] = [('Global number field labels', url_for(
         ".render_labels_page")), 
         (Completename, url_for(".render_discriminants_page")),
@@ -458,6 +505,19 @@ def number_field_search(**args):
         except ValueError:
             query['err'] = info['err']
             return search_input_error(query, bread)
+
+    if 'algebra' in info:
+        fields=info['algebra'].split('_')
+        fields2=[WebNumberField.from_coeffs(a) for a in fields]
+        for j in range(len(fields)):
+            if fields2[j] is None:
+                fields2[j] = WebNumberField.fakenf(fields[j])
+        t = 'Number field algebra'
+        info = {}
+        info = {'fields': fields2}
+        return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
+
+
 
     query = {}
     try:
@@ -667,5 +727,6 @@ def download_search(info, res):
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,
-                     as_attachment=True)
+                     as_attachment=True,
+                     add_etags=False)
 

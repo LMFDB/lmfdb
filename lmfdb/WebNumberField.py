@@ -7,10 +7,12 @@ import hashlib
 from sage.misc.cachefunc import cached_function
 from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html
 from flask import url_for
+from collections import Counter
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
+dnc = 'data not computed'
 
 # Dictionary of field label: n for abs(disc(Q(zeta_n)))
 # Does all cyclotomic fields of degree n s.t. 2<n<24
@@ -179,6 +181,17 @@ class WebNumberField:
         else:
             raise Exception('wrong type')
 
+    # Just a shell which should be used in a limited way since we don't
+    # initialize much
+    @classmethod
+    def fakenf(cls, coeffs):
+        if isinstance(coeffs, list):
+            coeffs = list2string(coeffs)
+        coefstr = string2list(coeffs)
+        n = len(coefstr)-1
+        data = {'coeffs': coeffs, 'degree': n}
+        return cls('Degree %d field'%n, data)
+
     @classmethod
     def from_polredabs(cls, pol):
         return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])
@@ -235,6 +248,8 @@ class WebNumberField:
 
     # Return a nice string for the Galois group
     def galois_string(self):
+        if not self.haskey('galois'):
+            return 'Not computed'
         n = self._data['degree']
         t = self._data['galois']['t']
         C = base.getDBConnection()
@@ -286,6 +301,104 @@ class WebNumberField:
             return [str(u) for u in zkstrings]
         return list(pari(self.poly()).nfbasis())
 
+    # Used by subfields and resolvent functions to
+    # take coefficients for fields and either return
+    # information about the item, or a usable knowl
+
+    # We need to return information in 2 ways: (1) list of knowls
+    # and (2) list of label/polynomials
+    def myhelper(self, coefmult):
+        coef = string2list(coefmult[0])
+        subfield = self.from_coeffs(coef)
+        C = base.getDBConnection()
+        if subfield._data is None:
+            deg = len(coef) - 1
+            mypol = sage.all.latex(coeff_to_poly(coef))
+            mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+            return [mypol, coefmult[1]]
+        return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
+
+    # returns resolvent dictionary
+    # ae means arithmetically equivalent fields
+    def resolvents(self):
+        if not self.haskey('res'):
+            self._data['res'] = {}
+        return self._data['res']
+
+    # Get data from group database
+    def galois_sib_data(self):
+        if 'repdata' not in self._data:
+            repdegs = [z[0] for z in self.gg()._data['repns']]
+            numae = self.gg().arith_equivalent()
+            galord = int(self.gg().order())
+            repcounts = Counter(repdegs)
+            gc = 0
+            if galord<24:
+                del repcounts[galord]
+                if self.degree() < galord:
+                    gc = 1 
+            repcounts[self.degree()] -= numae
+            if repcounts[self.degree()] == 0:
+                del repcounts[self.degree()]
+            self._data['repdata'] = [repcounts, numae, gc]
+        return self._data['repdata']
+
+    def sibling_labels(self):
+        resall = self.resolvents()
+        if 'sib' in resall:
+            sibs = [self.from_coeffs(str(a)) for a in resall['sib']]
+            return ['' if a._data is None else a.label for a in sibs]
+        return []
+
+    def siblings(self):
+        cnts = self.galois_sib_data()[0]
+        resall = self.resolvents()
+        if 'sib' in resall:
+            # list of [degree, knowl
+            helpout = [[len(string2list(a))-1,self.myhelper([a,1])] for a in resall['sib']]
+        else:
+            helpout = []
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts.keys())]
+        return [degsiblist, self.sibling_labels()]
+
+    def sextic_twin(self):
+        if self.degree() != 6:
+            return [0,[],[]]
+        resall = self.resolvents()
+        if 'sex' in resall:
+            sex = [self.from_coeffs(str(a)) for a in resall['sex']]
+            sex = [a.label for a in sex if a._data is not None]
+            # Don't include Q in labels
+            sex = [z for z in sex if z != '1.1.1.1']
+            labels = sorted(Set(sex))
+            helpout = [self.myhelper([a,1]) for a in resall['sex']]
+            knowls = [a[0] for a in helpout]
+            return [1, knowls, labels]
+        return [1,[],[]]
+
+    def galois_closure(self):
+        resall = self.resolvents()
+        cnt = self.galois_sib_data()[2]
+        if 'gal' in resall:
+            helpout = [self.myhelper([a,1]) for a in resall['gal']]
+            knowls= [a[0] for a in helpout]
+            gal = [self.from_coeffs(str(a)) for a in resall['gal']]
+            labs = [a.label for a in gal if a._data is not None]
+            return [cnt, knowls, labs]
+        return [cnt, [], []]
+
+    def arith_equiv(self):
+        resall = self.resolvents()
+        cnt = self.galois_sib_data()[1]
+        if 'ae' in resall:
+            helpout = [self.myhelper([a,1]) for a in resall['ae']]
+            knowls = [a[0] for a in helpout]
+            ae = [self.from_coeffs(str(a)) for a in resall['ae']]
+            labs = [a.label for a in ae if a._data is not None]
+            return [cnt, knowls, labs]
+        return [cnt, [], []]
+
     def subfields(self):
         if not self.haskey('subs'):
             return []
@@ -295,18 +408,7 @@ class WebNumberField:
         subs = self.subfields()
         if subs == []:
             return []
-        C = base.getDBConnection()
-        def myhelper(coefmult):
-            coef = string2list(coefmult[0])
-            subfield = self.from_coeffs(coef)
-            if subfield._data is None:
-                deg = len(coef) - 1
-                mypol = sage.all.latex(coeff_to_poly(coef))
-                mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
-                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
-                return [mypol, coefmult[1]]
-            return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
-        subs = [myhelper(a) for a in subs]
+        subs = [self.myhelper(a) for a in subs]
         subs = [do_mult(a) for a in subs]
         return ', '.join(subs)
 
