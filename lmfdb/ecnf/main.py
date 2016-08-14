@@ -634,4 +634,5 @@ def download_search(info):
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=filename,
-                     as_attachment=True)
+                     as_attachment=True,
+                     add_etags=False)

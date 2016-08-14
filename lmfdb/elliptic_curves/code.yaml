@@ -46,7 +46,7 @@ cond:
   magma: Conductor(E);
 
 disc:
-  sage:  E.dicriminant().factor()
+  sage:  E.discriminant().factor()
   pari:  E.disc
   magma: Discriminant(E);
 
