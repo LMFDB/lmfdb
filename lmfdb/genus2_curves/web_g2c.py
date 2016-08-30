@@ -552,7 +552,9 @@ class WebG2C(object):
         data['is_gl2_type'] = curve['is_gl2_type']
         data['root_number'] = ZZ(curve['root_number'])
         data['lfunc_url'] = url_for("l_functions.l_function_genus2_page", cond=data['slabel'][0], x=data['slabel'][1])
-        
+        data['bad_lfactors'] = literal_eval(curve['bad_lfactors'])
+        data['bad_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
+
         if is_curve:
             # invariants specific to curve
             data['class'] = curve['class']
@@ -589,8 +591,6 @@ class WebG2C(object):
             lfunc_data = g2c_db_lfunction_by_hash(curve['Lhash'])
             if not lfunc_data:
                 raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." %curve['label'])
-            data['bad_lfactors'] = literal_eval(curve['bad_lfactors'])
-            data['bad_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
             if lfunc_data and lfunc_data.get('euler_factors'):
                 data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
                 data['good_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['good_lfactors']]
