@@ -41,13 +41,28 @@ text-align: center;
         <table id = "bad_lfactors_table">
         <tr>
             <th>Prime</th>
-            <th>L-Factor</th>
+            <th align="left">L-Factor</th>
         </tr>
         {% for c in data.bad_lfactors_pretty %}
-        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="center">\( {{ c[1] }}\)</td></tr>
+        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\( {{ c[1] }}\)</td></tr>
         {% endfor %}
         </table>
     </tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td valign=top> {{ KNOWL('g2c.good_lfactors', title='Good L-factors') }}:<td>
+        <table id = "good_lfactors_table">
+        <tr>
+            <th>Prime</th>
+            <th align="left">L-Factor</th>
+        </tr>
+        {% for c in data.good_lfactors_pretty %}
+        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\( {{ c[1] }}\)</td></tr>
+        {% endfor %}
+        <tr><td>$\cdots$</td><td>$\cdots$</td>
+        </table>
+    </tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td colspan="2">See <a href="{{data.lfunc_url}}">L-function page</a> for more information</td></tr>
 </table>
 
 <h2>{{ KNOWL('g2c.st_group', title='Sato-Tate group')}}</h2>
