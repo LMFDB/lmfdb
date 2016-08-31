@@ -63,7 +63,7 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
         return "{{ KNOWL('%s') }}" % kid
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
-md = markdown.Markdown(extensions=['wikilinks'],
+md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
                        extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
 md.inlinePatterns.add('mathjax$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '<escape')
