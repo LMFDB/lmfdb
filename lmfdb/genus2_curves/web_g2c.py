@@ -9,7 +9,7 @@ from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
-from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, real, sqrt, var, expand
+from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, real, sqrt, var, expand, nth_prime
 from sage.plot.text import text
 from flask import url_for
 
@@ -22,6 +22,9 @@ def g2c_db_curves():
 
 def g2c_db_endomorphisms():
     return getDBConnection().genus2_curves.endomorphisms
+
+def g2c_db_lfunction_by_hash(hash):
+    return getDBConnection().Lfunctions.Lfunctions.find_one({'Lhash':hash})
 
 # TODO: switch to Lfunctions datbase once all instance data has been moved there (wait until #433 is closed before doing this)
 def g2c_db_lfunction_instances():
@@ -548,6 +551,7 @@ class WebG2C(object):
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
         data['is_gl2_type'] = curve['is_gl2_type']
         data['root_number'] = ZZ(curve['root_number'])
+        data['lfunc_url'] = url_for("l_functions.l_function_genus2_page", cond=data['slabel'][0], x=data['slabel'][1])
         data['bad_lfactors'] = literal_eval(curve['bad_lfactors'])
         data['bad_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
 
@@ -581,9 +585,15 @@ class WebG2C(object):
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
-            assert curves_data
+            if not curves_data:
+                raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." %(curve['class'],curve['label']))
             data['curves'] = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
-
+            lfunc_data = g2c_db_lfunction_by_hash(curve['Lhash'])
+            if not lfunc_data:
+                raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." %curve['label'])
+            if lfunc_data and lfunc_data.get('euler_factors'):
+                data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
+                data['good_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['good_lfactors']]
         # Endomorphism data over QQ:
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
         data['factorsQQ_base'] = endo['factorsQQ_base']
@@ -643,7 +653,7 @@ class WebG2C(object):
             ]
 
         # Friends
-        self.friends = friends = [('L-function', url_for("l_functions.l_function_genus2_page", cond=data['slabel'][0], x=data['slabel'][1]))]
+        self.friends = friends = [('L-function', data['lfunc_url'])]
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
         for friend in g2c_db_lfunction_instances().find({'Lhash':data['Lhash']},{'_id':False,'url':True}):
