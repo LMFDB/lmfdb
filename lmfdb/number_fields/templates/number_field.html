@@ -30,7 +30,7 @@
              <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant}}<td>{{ place_code('discriminant') }}
             <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
   {% if info.is_abelian %}
-            <tr><td colspan="3">This field is Galois and abelian over $\Q$</tr>
+            <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
                 <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
             <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet group") }}:
                 <td>&nbsp;&nbsp;<td>
@@ -41,9 +41,9 @@
                 {% endif %}
                 </tr> 
   {% elif info.is_galois %}
-            <tr><td colspan="3">This field is Galois over $\Q$</tr>
+            <tr><td colspan="3">This field is Galois over $\Q$.</tr>
   {% else %}
-            <tr><td colspan="3">This field is not Galois over $\Q$</tr>
+            <tr><td colspan="3">This field is not Galois over $\Q$.</tr>
   {% endif %}
 
           </table>
