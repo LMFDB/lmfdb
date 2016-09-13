@@ -9,8 +9,7 @@
 <tr>
 <td align=left>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}</td>
 <td align=left>{{ KNOWL('modlmf.deg', title='Field degree') }}</td>
-<td align=left>{{ KNOWL('modlmf.level', title='Level') }}</td>
-<td align=left>{{ KNOWL('modlmf.conductor', title='Conductor') }}</td>
+<td align=left>{{ KNOWL('modlmf.level', title='Minimal level') }}</td>
 </tr>
 
 
@@ -18,20 +17,15 @@
 <td align=left><input type='text' name='characteristic' value="{{info.characteristic}}" size=10></td>
 <td align=left><input type='text' name='deg' value="{{info.deg}}" size=10></td>
 <td align=left><input type='text' name='level' value="{{info.level}}" size=10></td>
-<td align=left><input type='text' name='conductor' value="{{info.conductor}}" size=10></td>
 </tr>
 
 </tr>
-<td align=left>{{ KNOWL('modlmf.weight', title='Minimal weight') }}</td>
+<td align=left>{{KNOWL('modlmf.weight_grading', title='Weight grading')}}</td>
 <td align=left>{{ KNOWL('modlmf.dirchar', title='Character label') }}</td>
 <td align=left>Group: <select name='group'>
            <option value="gamma0" selected >Gamma_0</option>
            <option value="gamma1">Gamma_1</option>
          </select></td>
-<td align=left>Up to twists: <select name='twist'>
-           <option value="no" selected="no" >no</option>
-           <option value="yes">yes</option>
-         </select></td></tr>
 </tr>
 
 <tr>
