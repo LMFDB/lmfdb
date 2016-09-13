@@ -70,7 +70,7 @@ def modlmf_render_webpage():
         level_list_endpoints = [1, 10, 20, 30, 40, 50]
         level_list = ["%s-%s" % (start, end - 1) for start, end in zip(level_list_endpoints[:-1], level_list_endpoints[1:])]
         weight_list= [1, 2, 3, 4, 5]
-        label_list = ["2.1.1.0.1.1","2.1.3.0.1.1"]
+        label_list = ["3.1.0.1.1","13.1.0.1.1"]
         info = {'characteristic_list': characteristic_list, 'level_list': level_list,'weight_list': weight_list, 'label_list': label_list}
         credit = modlmf_credit
         t = 'Mod &#x2113; Modular Forms'

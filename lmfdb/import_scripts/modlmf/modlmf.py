@@ -58,8 +58,7 @@ def last_label(base_label, n):
 modlmf.create_index('characteristic')
 modlmf.create_index('deg')
 modlmf.create_index('level')
-modlmf.create_index('conductor')
-modlmf.create_index('weight')
+modlmf.create_index('weight_grading')
 modlmf.create_index('dirchar')
 
 print "finished indices"
@@ -71,9 +70,8 @@ label_dict={}
 
 def label_lookup(base_label):
     if base_label in label_dict:
-        m=label_dict[base_label]
-        n=ord('m')+1
-        label_dict[base_label]=chr(n)  #this works for up to 26 Galois orbits, this should be fine for a long time
+        n=label_dict[base_label]+1
+        label_dict[base_label]=n
         return n
     label_dict[base_label]=1
     return 1

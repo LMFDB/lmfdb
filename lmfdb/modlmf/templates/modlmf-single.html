@@ -36,7 +36,7 @@ $\F_{ {{info.characteristic}} }$
 {% else %}
     </td><td>irreducible</td></tr>
 {% endif %}
-    <tr><td align=right rowspan=4 valign=top>{{ KNOWL('modlmf.weight_cuspidal', title='Minimal cuspidal lift:') }}</td><td>weight: {{info.cuspidal_weight}}</td></tr>
+    <tr><td align=right rowspan=4 valign=top>{{ KNOWL('modlmf.cuspidal_lift', title='Minimal cuspidal lift:') }}</td><td>weight: {{info.cuspidal_weight}}</td></tr>
     <tr><td>{{ KNOWL('modlmf.cuspidal_lift', title='form') }}: {{info.cuspidal}}</td></tr>
     <tr><td>{{ KNOWL('mf.elliptic.coefficient_field', title='coefficient field') }}: {{info.cuspidal_number_field}}</td></tr>
     <tr><td>{{ KNOWL('modlmf.reduction ideal', title='ideal') }} above {{info.characteristic}}: generators {{info.cuspidal_red_ideal}}</td></tr>
@@ -59,7 +59,11 @@ $\F_{ {{info.characteristic}} }$
         {% endif %}
         </td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.minimal_theta_weight', title='Minimal theta cycle weight') }}:</td><td>{{info.min_theta_weight}}</td></tr>
-    <tr><td align=right>{{ KNOWL('modlmf.theta_cycle', title='Theta cycle') }}:</td><td>{{info.theta_cycle}}</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.theta_cycle', title='Theta cycle') }}:</td><td>
+    {% if info.ordinary == 1 %}
+        {{info.cuspidal_weight}}
+    {% endif %}
+    ({{info.theta_cycle}})</td></tr>
 </table>
 
 <br>
