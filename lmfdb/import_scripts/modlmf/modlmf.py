@@ -42,7 +42,11 @@ def string2list(s):
 
 
 def base_label(characteristic, deg, level, weight, dirchar):
-    return ".".join([str(characteristic),str(deg),str(level),str(weight), str(dirchar)])
+    field=str(characteristic)
+    dirchar_index=str(dirchar).split('.')[2]
+    if int(deg)!=1:
+        field=str(characteristic)+str(e)+str(deg)
+    return ".".join([field,str(level),str(weight),dirchar_index])
 
 def last_label(base_label, n):
     return ".".join([str(base_label),str(n)])
@@ -67,20 +71,21 @@ label_dict={}
 
 def label_lookup(base_label):
     if base_label in label_dict:
-        n=label_dict[base_label]+1
-        label_dict[base_label]=n
+        m=label_dict[base_label]
+        n=ord('m')+1
+        label_dict[base_label]=chr(n)  #this works for up to 26 Galois orbits, this should be fine for a long time
         return n
     label_dict[base_label]=1
     return 1
 
 def do_import(ll):
-    characteristic,deg,level,conductor,min_weight,dirchar,atkinlehner,n_coeffs,coeffs = ll
-    mykeys = ['characteristic','deg','level','conductor','min_weight','dirchar','atkinlehner','n_coeffs','coeffs']
+    characteristic,deg,level,weight_grading,reducible,cuspidal_lift,dirchar,atkinlehner,n_coeffs,coeffs,ordinary,min_theta_weight,theta_cycle = ll
+    mykeys =['characteristic','deg','level','weight_grading','reducible','cuspidal_lift','dirchar','atkinlehner','n_coeffs','coeffs','ordinary','min_theta_weight','theta_cycle']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
 
-    blabel = base_label(data['characteristic'],data['deg'],data['level'], data['min_weight'], data['dirchar'])
+    blabel = base_label(data['characteristic'],data['deg'],data['level'], data['weight_grading'], data['dirchar'])
     data['base_label'] = blabel
     data['index'] = label_lookup(blabel)
     label= last_label(blabel, data['index'])
