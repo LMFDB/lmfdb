@@ -6,7 +6,7 @@ import os.path
 import sys
 import os
 import pymongo
-from sage.all import ZZ, QQ, EllipticCurve, Magma, srange, oo
+from sage.all import ZZ, EllipticCurve, Magma, srange, oo
 from lmfdb.base import getDBConnection
 print "getting connection"
 C= getDBConnection()
@@ -43,7 +43,7 @@ flab6 = [fld for fld in flabels if '6.6.' in fld]
 
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
 from scripts.ecnf.import_ecnf_data import make_curves_line
-
+from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
 
 def make_conductor(ecnfdata, hfield):
     N, c, d = [ZZ(c) for c in ecnfdata['conductor_ideal'][1:-1].split(',')]
@@ -149,7 +149,7 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
             if verbose:
                 print("hmf with label %s found" % hmf_label)
             nfound += 1
-            ainvsK = [K.K()([QQ(str(c)) for c in ai]) for ai in ec['ainvs']]
+            ainvsK = parse_ainvs(K.K(), ec['ainvs'])
             E = EllipticCurve(ainvsK)
             good_flags = [E.has_good_reduction(P) for P in primes]
             good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
@@ -295,27 +295,30 @@ def output_magma_field(field_label, K, Plist, outfilename=None, verbose=False):
             Pmagma += "+(%s)*OK" % Pgens[1]
         output("Append(~Plist,%s);\n" % Pmagma)
         # output("Append(~Plist,(%s)*OK);\n" % P.gens_reduced()[0])
-    output('effort := 400;\n')
     # output definition of search function:
-    output('ECSearch := procedure(class_label, N, aplist);\n')
+    output('\n')
+    output('ECSearch := procedure(class_label, N, aplist,effort);\n')
     output('print "Isogeny class ", class_label;\n')
     output('goodP := [P: P in Plist | Valuation(N,P) eq 0];\n')
-    output('goodP := [goodP[i]: i in [1..#(aplist)]];\n')
+    output('nap :=Min(#aplist,#goodP);\n')
+    output('goodP := [goodP[i]: i in [1..nap]];\n')
+    output('aplist := [aplist[i]: i in [1..nap]];\n')
+    output('print "... searching with effort", effort, " using ", nap, " primes...";\n')
     output('curves := EllipticCurveSearch(N,effort : Primes:=goodP, Traces:=aplist);\n')
-    output('curves := [E: E in curves | &and[TraceOfFrobenius(E,goodP[i]) eq aplist[i] : i in [1..#(aplist)]]];\n')
+    output('curves := [E: E in curves | &and[TraceOfFrobenius(E,goodP[i]) eq aplist[i] : i in [1..nap]]];\n')
     output('if #curves eq 0 then print "No curve found"; end if;\n')
     output('for E in curves do;\n ')
     output('a1,a2,a3,a4,a6:=Explode(aInvariants(E));\n ')
     output('printf "Curve [%o,%o,%o,%o,%o]\\n",a1,a2,a3,a4,a6;\n ')
     output('end for;\n')
-    output('end procedure;\n')
+    output('end procedure;\n\n')
     output('SetColumns(0);\n')
     if outfilename:
         output("\n")
         outfile.close()
 
 
-def output_magma_curve_search(HMF, form, outfilename=None, verbose=False):
+def output_magma_curve_search(HMF, form, outfilename=None, verbose=False, effort=1000):
     r""" Outputs Magma script to search for an curve to match the newform
     with given label.
 
@@ -347,7 +350,8 @@ def output_magma_curve_search(HMF, form, outfilename=None, verbose=False):
         outfile = file(outfilename, mode="a")
 
     N = HMF.ideal(form['level_label'])
-    Plist = [P['ideal'] for P in HMF.primes_iter(30)]
+    neigs = len(form['hecke_eigenvalues'])
+    Plist = [P['ideal'] for P in HMF.primes_iter(neigs)]
     goodP = [(i, P) for i, P in enumerate(Plist) if not P.divides(N)]
     label = form['short_label']
     if verbose:
@@ -357,14 +361,14 @@ def output_magma_curve_search(HMF, form, outfilename=None, verbose=False):
     Nmagma = "(%s)*OK" % Ngens[0]
     if len(Ngens) > 1:
         Nmagma += "+(%s)*OK" % Ngens[1]
-    output("ECSearch(\"%s\",%s,%s);\n" % (label, Nmagma, aplist))
+    output("ECSearch(\"%s\",%s,%s,%s);\n" % (label, Nmagma, aplist,effort))
     # output("ECSearch(\"%s\",(%s)*OK,%s);\n" % (label,N.gens_reduced()[0],aplist))
 
     if outfilename:
         outfile.close()
 
 
-def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=None, verbose=False):
+def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=None, verbose=False, effort=1000):
     r""" Go through all Hilbert Modular Forms with the given field label,
     assumed totally real, for level norms in the given range, test
     whether an elliptic curve exists with the same label.
@@ -390,7 +394,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     nok = 0
     missing_curves = []
     K = HilbertNumberField(field_label)
-    primes = [P['ideal'] for P in K.primes_iter(100)]
+    primes = [P['ideal'] for P in K.primes_iter()]
     curve_ap = {}  # curve_ap[conductor_label] will be a dict iso -> ap
     form_ap = {}  # form_ap[conductor_label]  will be a dict iso -> ap
 
@@ -408,7 +412,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
             if verbose:
                 print("curve with label %s found" % curve_label)
             nfound += 1
-            ainvsK = [K.K()([QQ(str(c)) for c in ai]) for ai in ec['ainvs']]
+            ainvsK = parse_ainvs(K.K(), ec['ainvs'])
             E = EllipticCurve(ainvsK)
             good_flags = [E.has_good_reduction(P) for P in primes]
             good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
@@ -471,10 +475,10 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
         else:
             if verbose:
                 print("... found form, outputting Magma search code")
-            output_magma_curve_search(K, form, outfilename, verbose=verbose)
+            output_magma_curve_search(K, form, outfilename, verbose=verbose, effort=effort)
 
 
-def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=None, verbose=False):
+def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=None, verbose=False, effort=1000):
     r""" Go through all Hilbert Modular Forms with the given field label,
     assumed totally real, for level norms in the given range, test
     whether an elliptic curve exists with the same label; if not, find
@@ -519,7 +523,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             if verbose:
                 print("curve with label %s found in the database" % curve_label)
             nfound += 1
-            ainvsK = [K.K()([QQ(str(c)) for c in ai]) for ai in ec['ainvs']]
+            ainvsK = parse_ainvs(K.K(), ec['ainvs'])
             E = EllipticCurve(ainvsK)
             good_flags = [E.has_good_reduction(P) for P in primes]
             good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
@@ -585,15 +589,15 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             N = K.ideal(form['level_label'])
             neigs = len(form['hecke_eigenvalues'])
             if verbose:
-                print("Using %s ap from Hilbert newform" % neigs)
+                print("Using %s ap from Hilbert newform and effort %s" % (neigs,effort))
             Plist = [P['ideal'] for P in K.primes_iter(neigs)]
             goodP = [(i, P) for i, P in enumerate(Plist) if not P.divides(N)]
             aplist = [int(form['hecke_eigenvalues'][i]) for i, P in goodP]
-            curves = EllipticCurveSearch(K.K(), Plist, N, aplist)
+            curves = EllipticCurveSearch(K.K(), Plist, N, aplist, effort)
             if not curves:
                 if verbose:
-                    print("No curves found by Magma, trying again...")
-                curves = EllipticCurveSearch(K.K(), Plist, N, aplist)
+                    print("No curves found by Magma, trying again with effort %s..." % (2*effort))
+                curves = EllipticCurveSearch(K.K(), Plist, N, aplist, effort*2)
                 if verbose:
                     if curves:
                         print("Success!")
@@ -625,7 +629,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             if outfilename:
                 outfile.flush()
 
-def EllipticCurveSearch(K, Plist, N, aplist):
+def EllipticCurveSearch(K, Plist, N, aplist, effort=1000):
     r""" Call Magma's own EllipticCurveSearch() function to find and
     elliptic curve E defined over K with conductor N and ap as in the
     list.
@@ -660,7 +664,7 @@ def EllipticCurveSearch(K, Plist, N, aplist):
         mag.eval("Append(~Plist,%s);\n" % Pmagma)
 
     mag.eval('SetColumns(0);\n')
-    mag.eval('effort := 400;\n')
+    mag.eval('effort := %s;\n' % effort)
 
     Ngens = N.gens_reduced()
     Nmagma = "(%s)*OK" % Ngens[0]
