@@ -154,7 +154,7 @@ def list_to_factored_poly_otherorder(s, galois=False):
             this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
             this_number_field = NumberField(this_poly, "a")
             this_gal = this_number_field.galois_group(type='pari')
-            this_t_number = this_gal.group()._pari_()[2]._sage_()
+            this_t_number = this_gal.group()._pari_()[2].sage()
             gal_list.append([this_degree, this_t_number])
         vcf = v[0].list()
         started = False
