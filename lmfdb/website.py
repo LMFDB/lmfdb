@@ -73,6 +73,8 @@ import modlmf
 assert modlmf
 import rep_galois_modl
 assert rep_galois_modl
+import hecke_algebras
+assert hecke_algebras
 
 # Currently uploading is not supported
 # import upload
