@@ -22,30 +22,8 @@ import time
 import ast
 import StringIO
 
-hecke_algebras_credit = 'Samuele Anni, Anna Haensch, Gabriele Nebe and Neil Sloane'
+hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
 
-
-
-# utilitary functions for displays 
-
-def vect_to_matrix(v):
-    return str(latex(matrix(v)))
-
-def print_q_expansion(list):
-     list=[str(c) for c in list]
-     Qa=PolynomialRing(QQ,'a')
-     Qq=PowerSeriesRing(Qa,'q')
-     return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
-
-def my_latex(s):
-    ss = ""
-    ss += re.sub('x\d', 'x', s)
-    ss = re.sub("\^(\d+)", "^{\\1}", ss)
-    ss = re.sub('\*', '', ss)
-    ss = re.sub('zeta(\d+)', 'zeta_{\\1}', ss)
-    ss = re.sub('zeta', '\zeta', ss)
-    ss += ""
-    return ss
 
 #breadcrumbs and links for data quality entries
 
@@ -58,8 +36,8 @@ def get_bread(breads=[]):
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Labels for integral hecke_algebrass', url_for(".labels_page")),
-            ('History of hecke_algebrass', url_for(".history_page"))]
+            ('Labels for Hecke Algebras', url_for(".labels_page")),
+            ('History of Hecke Algebras', url_for(".history_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
