@@ -51,17 +51,13 @@ def hecke_algebras_render_webpage():
     args = request.args
     if len(args) == 0:
 #        counts = get_stats().counts()
-        dim_list= range(1, 11, 1)
-        max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
-        det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
-#        if counts['max_det']>3000:
-#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
-        det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
-        name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
-        info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
+        weight_list= range(1, 20, 2)
+        lvl_list_endpoints = [1, 100, 200, 300, 400, 500]
+        lvl_list = ["%s-%s" % (start, end - 1) for start, end in zip(lvl_list_endpoints[:-1], lvl_list_endpoints[1:])]
+        favourite_list = ["1.12.1","139.2.1","9.16.1"]
+        info = {'lvl_list': lvl_list,'wt_list': weight_list, 'favourite_list': favourite_list}
         credit = hecke_algebras_credit
-        t = 'Integral hecke_algebrass'
+        t = 'Hecke Algebras'
         bread = [('hecke_algebras', url_for(".hecke_algebras_render_webpage"))]
         info['counts'] = get_stats().counts()
         return render_template("hecke_algebras-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
@@ -70,28 +66,28 @@ def hecke_algebras_render_webpage():
 
 # Random hecke_algebras
 @hecke_algebras_page.route("/random")
-def random_hecke_algebras():
+def random_hecke_algebra():
     res = random_object_from_collection( getDBConnection().mod_l_eigenvalues.hecke_algebras)
     return redirect(url_for(".render_hecke_algebras_webpage", label=res['label']))
 
 
-hecke_algebras_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
+hecke_algebras_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d*)')
 
 def split_hecke_algebras_label(lab):
     return hecke_algebras_label_regex.match(lab).groups()
 
-def hecke_algebras_by_label_or_name(lab, C):
+def hecke_algebras_by_label(lab, C):
     clean_lab=str(lab).replace(" ","")
     clean_and_cap=str(clean_lab).capitalize()
     for l in [lab, clean_lab, clean_and_cap]:
-        result= C.hecke_algebrass.lat.find({'$or':[{'label': l}, {'name': l}]})
+        result= C.hecke_algebrass.lat.find({'$or':[{'label': l}]})
         if result.count()>0:
             lab=result[0]['label']
             return redirect(url_for(".render_hecke_algebras_webpage", label=lab))
     if hecke_algebras_label_regex.match(lab):
-        flash(Markup("The integral hecke_algebras <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash(Markup("The Hecke Algebra <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
     else:
-        flash(Markup("No integral hecke_algebras in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash(Markup("No Hecke Algebras in the database has label <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".hecke_algebras_render_webpage"))
 
 def hecke_algebras_search(**args):
@@ -102,7 +98,7 @@ def hecke_algebras_search(**args):
         return download_search(info)
 
     if 'label' in info and info.get('label'):
-        return hecke_algebras_by_label_or_name(info.get('label'), C)
+        return hecke_algebras_by_label(info.get('label'), C)
 
     query = {}
     try:

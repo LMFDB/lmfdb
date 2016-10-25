@@ -20,7 +20,7 @@ def get_stats():
 
 def hecke_algebras_summary():
     counts = get_stats().counts()
-    return r"<p>The database currently contains %s <a title='Hecke algebras [hecke_algebra.definition]' knowl='hecke_algebra.definition' kwargs=''>Hecke algebras</a>. <br>The largest  <a title='level [mf.elliptic.level]' knowl='mf.elliptic.level' kwargs=''>level</a> for <a title='level [group.sl2z.subgroup.gamma0n]' knowl='group.sl2z.subgroup.gamma0n' kwargs=''>$\Gamma_0</a> is %s, the largest <a title='weight [mf.elliptic.weight]' knowl='mf.elliptic.weight' kwargs=''>weight</a> is %s." % (str(counts['nhecke_algebras_c']), str(counts['max_level_c']), str(counts['max_weight_c']))
+    return r"<p>The database currently contains %s <a title='Hecke algebras [hecke_algebra.definition]' knowl='hecke_algebra.definition' kwargs=''>Hecke algebras</a>. <br>The largest  <a title='level [mf.elliptic.level]' knowl='mf.elliptic.level' kwargs=''>level</a> for <a title='level [group.sl2z.subgroup.gamma0n]' knowl='group.sl2z.subgroup.gamma0n' kwargs=''>$\Gamma_0$</a> is %s, the largest <a title='weight [mf.elliptic.weight]' knowl='mf.elliptic.weight' kwargs=''>weight</a> is %s." % (str(counts['nhecke_algebras_c']), str(counts['max_level_c']), str(counts['max_weight_c']))
 
 
 @app.context_processor
