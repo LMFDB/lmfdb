@@ -23,7 +23,7 @@
 </p>
 {% endif %}
 
-<h2> Browse {{ KNOWL('hecke_algebra.definition', title='Hecke Algebras for $\Gamma_0$') }}</h2>
+<h2> Browse {{ KNOWL('hecke_algebra.definition', title='Hecke Algebras') }} for {{ KNOWL('group.sl2z.subgroup.gamma0n', title='$\Gamma_0$') }}</h2>
 
 <p>
 By {{ KNOWL('mf.elliptic.level', title='Level') }}: 
@@ -65,18 +65,18 @@ Some of our favourite {{ KNOWL('hecke_algebra.definition', title='Hecke Algebras
 <table>
 <tr>
 <td align= right>{{ KNOWL('mf.elliptic.level', title='Level') }}:</td>
-<td><input type='text' name='dim' placeholder='3' size=10>
+<td><input type='text' name='level' placeholder='3' size=10>
 <td><span class="formexample"> e.g. 3 or 2-5</td>
 </tr>
 
 <tr>
 <td align= right>{{ KNOWL('mf.elliptic.weight', title='Weight') }}:</td>
-<td><input type='text' name='det' placeholder='1' size=10>
+<td><input type='text' name='weight' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 2 or 10-100</td>
 </tr>
 <tr>
 <td align= right>Number of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}:</td>
-<td><input type='text' name='level' placeholder='4' size=10>
+<td><input type='text' name='num_orbits' placeholder='4' size=10>
 <td><span class="formexample"> e.g. 4 or 1-3</td>
 </tr>
 

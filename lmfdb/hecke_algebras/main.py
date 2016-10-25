@@ -28,7 +28,7 @@ hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
 #breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
-    bc = [("hecke_algebras", url_for(".index"))]
+    bc = [("HeckeAlgebra", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -58,7 +58,7 @@ def hecke_algebras_render_webpage():
         info = {'lvl_list': lvl_list,'wt_list': weight_list, 'favourite_list': favourite_list}
         credit = hecke_algebras_credit
         t = 'Hecke Algebras'
-        bread = [('hecke_algebras', url_for(".hecke_algebras_render_webpage"))]
+        bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
         info['counts'] = get_stats().counts()
         return render_template("hecke_algebras-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
@@ -89,6 +89,8 @@ def hecke_algebras_by_label(lab, C):
     else:
         flash(Markup("No Hecke Algebras in the database has label <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".hecke_algebras_render_webpage"))
+
+
 
 def hecke_algebras_search(**args):
     C = getDBConnection()
@@ -192,15 +194,16 @@ def hecke_algebras_search(**args):
     info['hecke_algebrass'] = res_clean
 
     t = 'Integral hecke_algebrass Search Results'
-    bread = [('hecke_algebrass', url_for(".hecke_algebras_render_webpage")),('Search Results', ' ')]
+    bread = [('HeckeAlgebras', url_for(".hecke_algebras_render_webpage")),('Search Results', ' ')]
     properties = []
     return render_template("hecke_algebras-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info, bread=None):
     t = 'Integral hecke_algebrass Search Error'
     if bread is None:
-        bread = [('hecke_algebrass', url_for(".hecke_algebras_render_webpage")),('Search Results', ' ')]
+        bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")),('Search Results', ' ')]
     return render_template("hecke_algebras-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
+
 
 @hecke_algebras_page.route('/<label>')
 def render_hecke_algebras_webpage(**args):
@@ -210,139 +213,38 @@ def render_hecke_algebras_webpage(**args):
         lab = clean_input(args.get('label'))
         if lab != args.get('label'):
             return redirect(url_for('.render_hecke_algebras_webpage', label=lab), 301)
-        data = C.hecke_algebrass.lat.find_one({'$or':[{'label': lab }, {'name': lab }]})
+        data = C.mod_l_eigenvalues.hecke_algebras.find_one({'label': lab })
     if data is None:
-        t = "Integral hecke_algebrass Search Error"
-        bread = [('hecke_algebras', url_for(".hecke_algebras_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral hecke_algebras in the database." % (lab)),"error")
+        t = "Hecke Agebras Search Error"
+        bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a Hecke Algebras in the database." % (lab)),"error")
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
 
     info['friends'] = []
 
-    bread = [('hecke_algebras', url_for(".hecke_algebras_render_webpage")), ('%s' % data['label'], ' ')]
+    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")), ('%s' % data['label'], ' ')]
     credit = hecke_algebras_credit
-    f = C.hecke_algebrass.lat.find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
-    info['dim']= int(f['dim'])
-    info['det']= int(f['det'])
+    f = C.mod_l_eigenvalues.hecke_algebras.find_one({'level': data['level'],'weight': data['weight'],'num_orbits': data['num_orbits']})
     info['level']=int(f['level'])
-    info['gram']=vect_to_matrix(f['gram'])
-    info['density']=str(f['density'])
-    info['hermite']=str(f['hermite'])
-    info['minimum']=int(f['minimum'])
-    info['kissing']=int(f['kissing'])
-    info['aut']=int(f['aut'])
-
-    if f['shortest']=="":
-        info['shortest']==f['shortest']
-    else:
-        if f['dim']==1:
-            info['shortest']=str(f['shortest']).strip('[').strip(']')
-        else:
-            if info['dim']*info['kissing']<100:
-                info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
-            else:
-                max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
-                info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
-                info['all_shortest']="no"
-        info['download_shortest'] = [
-            (i, url_for(".render_hecke_algebras_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
-
-    if f['name']==['Leech']:
-        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
-str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
-        info['all_shortest']="no"
-        info['download_shortest'] = [
-            (i, url_for(".render_hecke_algebras_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
-
-    ncoeff=20
-    if f['theta_series'] != "":
-        coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
-        info['theta_series']=my_latex(print_q_expansion(coeff))
-        info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
-
-    info['class_number']=int(f['class_number'])
-
-    if f['dim']==1:
-        info['genus_reps']=str(f['genus_reps']).strip('[').strip(']')
-    else:
-        if info['dim']*info['class_number']<50:
-            info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
-        else:
-            max_matrix_num=min(int(round(25/(info['dim']))), info['class_number']);
-            info['all_genus_rep']="no"
-            info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
-    info['download_genus_reps'] = [
-        (i, url_for(".render_hecke_algebras_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma','sage']]
-
-    if f['name'] != "":
-        if f['name']==str(f['name']):
-            info['name']= str(f['name'])
-        else:
-            info['name']=str(", ".join(str(i) for i in f['name']))
-    else:
-        info['name'] == ""
-    info['comments']=str(f['comments'])
-    if 'Leech' in info['comments']: # no need to duplicate as it is in the name
-        info['comments'] = ''
-    if info['name'] == "":
-        t = "Integral hecke_algebras %s" % info['label']
-    else:
-        t = "Integral hecke_algebras "+info['label']+" ("+info['name']+")"
-#This part code was for the dinamic knowl with comments, since the test is displayed this is redundant
-#    if info['name'] != "" or info['comments'] !="":
-#        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
+    info['weight']= int(f['weight'])
+    info['num_orbits']= int(f['num_orbits'])
+    t = "Hecke Algebra %s" % info['label']
     info['properties'] = [
-        ('Dimension', '%s' %info['dim']),
-        ('Determinant', '%s' %info['det']),
-        ('Level', '%s' %info['level'])]
-    if info['class_number'] == 0:
-        info['properties']=[('Class number', 'not available')]+info['properties']
-    else:
-        info['properties']=[('Class number', '%s' %info['class_number'])]+info['properties']
-    info['properties']=[('Label', '%s' % info['label'])]+info['properties']
+        ('Level', '%s' %info['level']),
+        ('Weight', '%s' %info['weight']),
+        ('Label', '%s' %info['label'])]
+    info['friends'] = [('Modular form ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
 
-    if info['name'] != "" :
-        info['properties']=[('Name','%s' % info['name'] )]+info['properties']
-#    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
-#friends=friends
-
-def vect_to_sym(v):
-    n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
-    M = matrix(n)
-    k = 0
-    for i in range(n):
-        for j in range(i, n):
-            M[i,j] = v[k]
-            M[j,i] = v[k]
-            k=k+1
-    return [[int(M[i,j]) for i in range(n)] for j in range(n)]
-
-
-#auxiliary function for displaying more coefficients of the theta series
-@hecke_algebras_page.route('/theta_display/<label>/<number>')
-def theta_display(label, number):
-    try:
-        number = int(number)
-    except:
-        number = 20
-    if number < 20:
-        number = 30
-    if number > 150:
-        number = 150
-    C = getDBConnection()
-    data = C.hecke_algebrass.lat.find_one({'label': label})
-    coeff=[data['theta_series'][i] for i in range(number+1)]
-    return print_q_expansion(coeff)
 
 
 #data quality pages
 @hecke_algebras_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the integral hecke_algebras data'
-    bread = [('hecke_algebras', url_for(".hecke_algebras_render_webpage")),
+    t = 'Completeness of the Hecke Algebra data'
+    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")),
              ('Completeness', '')]
     credit = hecke_algebras_credit
     return render_template("single.html", kid='dq.hecke_algebras.extent',
@@ -350,8 +252,8 @@ def completeness_page():
 
 @hecke_algebras_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the integral hecke_algebras data'
-    bread = [('hecke_algebras', url_for(".hecke_algebras_render_webpage")),
+    t = 'Source of the Hecke Algebra data'
+    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")),
              ('Source', '')]
     credit = hecke_algebras_credit
     return render_template("single.html", kid='dq.hecke_algebras.source',
@@ -359,8 +261,8 @@ def how_computed_page():
 
 @hecke_algebras_page.route("/Labels")
 def labels_page():
-    t = 'Label of an integral hecke_algebras'
-    bread = [('hecke_algebras', url_for(".hecke_algebras_render_webpage")),
+    t = 'Label of Hecke Algebras'
+    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")),
              ('Labels', '')]
     credit = hecke_algebras_credit
     return render_template("single.html", kid='hecke_algebras.label',
@@ -368,8 +270,8 @@ def labels_page():
 
 @hecke_algebras_page.route("/History")
 def history_page():
-    t = 'A brief history of hecke_algebrass'
-    bread = [('hecke_algebras', url_for(".hecke_algebras_render_webpage")),
+    t = 'A brief history of Hecke Algebras'
+    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")),
              ('Histoy', '')]
     credit = hecke_algebras_credit
     return render_template("single.html", kid='hecke_algebras.history',
