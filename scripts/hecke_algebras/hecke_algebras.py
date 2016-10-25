@@ -67,10 +67,10 @@ def do_import(ll):
     modl_mf = hecke_algebras.find_one({'label': label})
 
     if modl_mf is None:
-        print "new mod l modular form"
+        print "new hecke algebra"
         modl_mf = data
     else:
-        print "mod l modular form already in the database"
+        print "hecke algebra already in the database"
         modl_mf.update(data)
     if saving:
         hecke_algebras.update({'label': label} , {"$set": modl_mf}, upsert=True)
