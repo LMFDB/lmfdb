@@ -71,25 +71,20 @@ def random_hecke_algebra():
     return redirect(url_for(".render_hecke_algebras_webpage", label=res['label']))
 
 
+
 hecke_algebras_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d*)')
 
 def split_hecke_algebras_label(lab):
     return hecke_algebras_label_regex.match(lab).groups()
 
 def hecke_algebras_by_label(lab, C):
-    clean_lab=str(lab).replace(" ","")
-    clean_and_cap=str(clean_lab).capitalize()
-    for l in [lab, clean_lab, clean_and_cap]:
-        result= C.hecke_algebrass.lat.find({'$or':[{'label': l}]})
-        if result.count()>0:
-            lab=result[0]['label']
-            return redirect(url_for(".render_hecke_algebras_webpage", label=lab))
+    if C.mod_l_eigenvalues.hecke_algebras.find({'label': lab}).limit(1).count() > 0:
+        return render_hecke_algebras_webpage(label=lab)
     if hecke_algebras_label_regex.match(lab):
         flash(Markup("The Hecke Algebra <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
     else:
         flash(Markup("No Hecke Algebras in the database has label <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".hecke_algebras_render_webpage"))
-
 
 
 def hecke_algebras_search(**args):
