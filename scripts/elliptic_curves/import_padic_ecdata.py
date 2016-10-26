@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from lmfdb import base
+from lmfdb.base import getDBConnection
 
-padic_db = base.getDBConnection().ellcurves.padic_db
-padic_db.ensure_index("label")
-padic_db.ensure_index("prime")
+padic_db = getDBConnection().ellcurves.padic_db
+padic_db.create_index("label")
+padic_db.create_index("prime")
 
 
 def lookup_or_create(label, p):

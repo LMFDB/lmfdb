@@ -42,7 +42,7 @@ flab6 = [fld for fld in flabels if '6.6.' in fld]
 #
 
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
-from lmfdb.ecnf.import_ecnf_data import make_curves_line
+from scripts.ecnf.import_ecnf_data import make_curves_line
 
 
 def make_conductor(ecnfdata, hfield):
