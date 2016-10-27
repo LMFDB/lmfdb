@@ -13,9 +13,17 @@
 </table>
 
 
+
 {% if info.orbits %}
-<p>{{info.orbits}}</p>
-<p>{{info.orbits_label}}</p>
+<h2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</h2>
+<table>
+    {% for j in info.orbits %}
+    <tr><td>{{j.orbit_label}}</td></tr>
+    <tr><td>{% for m in j.gen_display %}
+            $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% endif %}
+        {% endfor %}</tr></td>
+    {% endfor %}
+</table>
 {% endif %}
 
 

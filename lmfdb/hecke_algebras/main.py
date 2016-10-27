@@ -10,7 +10,7 @@ from flask import render_template, request, url_for, redirect, make_response, fl
 from lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_collection
 
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, sage_eval
+from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, sage_eval, prime_range
 
 from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import get_stats
@@ -185,12 +185,19 @@ def render_hecke_algebras_webpage(**args):
         #consistency check
         if orb.count()!= int(f['num_orbits']):
             return search_input_error(info)
-        info['orbits']=[o for o in orb]
-        info['orbits_label']=[o['orbit_label'] for o in orb]
+
+        res_clean = []
+        for v in orb:
+            v_clean = {}
+            v_clean['orbit_label']=v['orbit_label']
+            v_clean['gen']=v['gen']
+            v_clean['gen_display']=[[i, latex(matrix(sage_eval(v_clean['gen'])[i]))] for i in prime_range(20)]
+            res_clean.append(v_clean)
+
+        info['orbits']=res_clean
+
     except ValueError as err:
         info['err'] = str(err)
-        return search_input_error(info)
-
 
     info['properties'] = [
         ('Level', '%s' %info['level']),

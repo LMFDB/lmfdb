@@ -55,7 +55,7 @@ print "finished indices"
 ## Main importing function
 
 def do_import(ll):
-    level,weight,orbit,gen,num_gen,rel,parent_label,orbit_label= ll
+    level,weight,orbit,hecke_op,num_hecke_op,gen,num_gen,rel,parent_label,orbit_label= ll
     mykeys = ['level','weight','orbit','gen','num_gen','rel','parent_label','orbit_label']
     data = {}
     for j in range(len(mykeys)):
