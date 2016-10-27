@@ -80,6 +80,7 @@ class AbvarFq_isoclass(object):
                     self.is_simple = False
                 else: 
                     try:
+                        self.galois_n = factors_list[0][0].degree()
                         nf = WebNumberField.from_polynomial(factors_list[0][0])
                         if nf.label == 'a':
                             nf = None
@@ -91,6 +92,9 @@ class AbvarFq_isoclass(object):
                     else:
                         self.number_field = nf.label
                         self.galois_t = nf.galois_t()
+            #for those whose galois group was computed before, this sets galois_n to be the right thing
+            else:
+                self.galois_n = 2*self.g
         
     def p(self):
         q = Integer(self.q)
@@ -198,7 +202,7 @@ class AbvarFq_isoclass(object):
             return "The Galois group of this isogeny class is not in the database."
         else:
             C = getDBConnection()
-            return group_display_knowl(2*self.g,self.galois_t,C)  
+            return group_display_knowl(self.galois_n,self.galois_t,C)  
             
         
 
