@@ -152,7 +152,9 @@ def abelian_variety_search(**args):
     info['count'] = count
     info['more'] = int(start + count < nres)
     if nres == 1:
-        info['report'] = 'unique_match'
+        info['report'] = 'unique match'
+    elif nres == 0:
+        info['report'] = 'no matches'
     elif nres > count or start != 0:
         info['report'] = 'displaying matches %s-%s of %s' %(start + 1, min(nres, start+count), nres)
     else:
