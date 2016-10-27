@@ -350,6 +350,7 @@ def output_magma_curve_search(HMF, form, outfilename=None, verbose=False, effort
         outfile = file(outfilename, mode="a")
 
     N = HMF.ideal(form['level_label'])
+    conductor_ideal = form['level_ideal'].replace(" ","")
     neigs = len(form['hecke_eigenvalues'])
     Plist = [P['ideal'] for P in HMF.primes_iter(neigs)]
     goodP = [(i, P) for i, P in enumerate(Plist) if not P.divides(N)]
@@ -361,6 +362,7 @@ def output_magma_curve_search(HMF, form, outfilename=None, verbose=False, effort
     Nmagma = "(%s)*OK" % Ngens[0]
     if len(Ngens) > 1:
         Nmagma += "+(%s)*OK" % Ngens[1]
+    output('print "Conductor %s";\n' % conductor_ideal)
     output("ECSearch(\"%s\",%s,%s,%s);\n" % (label, Nmagma, aplist,effort))
     # output("ECSearch(\"%s\",(%s)*OK,%s);\n" % (label,N.gens_reduced()[0],aplist))
 
@@ -478,7 +480,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
             output_magma_curve_search(K, form, outfilename, verbose=verbose, effort=effort)
 
 
-def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=None, verbose=False, effort=1000):
+def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=None, verbose=False, effort=500):
     r""" Go through all Hilbert Modular Forms with the given field label,
     assumed totally real, for level norms in the given range, test
     whether an elliptic curve exists with the same label; if not, find
@@ -505,7 +507,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
     nok = 0
     missing_curves = []
     K = HilbertNumberField(field_label)
-    primes = [P['ideal'] for P in K.primes_iter(100)]
+    primes = [P['ideal'] for P in K.primes_iter(1000)]
     curve_ap = {}  # curve_ap[conductor_label] will be a dict iso -> ap
     form_ap = {}  # form_ap[conductor_label]  will be a dict iso -> ap
 
@@ -527,18 +529,22 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             E = EllipticCurve(ainvsK)
             good_flags = [E.has_good_reduction(P) for P in primes]
             good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
-            aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes[:30]]
-            f_aplist = [int(a) for a in f['hecke_eigenvalues'][:40]]
-            f_aplist = [ap for ap, flag in zip(f_aplist, good_flags) if flag][:30]
-            if aplist == f_aplist:
+            aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes]
+            f_aplist = [int(a) for a in f['hecke_eigenvalues']]
+            f_aplist = [ap for ap, flag in zip(f_aplist, good_flags) if flag]
+            nap = min(len(aplist), len(f_aplist))
+            if aplist[:nap] == f_aplist[:nap]:
                 nok += 1
                 if verbose:
-                    print("Curve %s and newform agree!" % ec['short_label'])
+                    print("Curve {} and newform agree! (checked {} ap)".format(ec['short_label'],nap))
             else:
-                print("Curve %s does NOT agree with newform" % ec['short_label'])
+                print("Curve {} does NOT agree with newform".format(ec['short_label']))
                 if verbose:
-                    print("ap from curve: %s" % aplist)
-                    print("ap from  form: %s" % f_aplist)
+                    for P,aPf,aPc in zip(good_primes[:nap], f_aplist[:nap], aplist[:nap]):
+                        if aPf!=aPc:
+                            print("P = {} with norm {}".format(P,P.norm().factor()))
+                            print("ap from curve: %s" % aPc)
+                            print("ap from  form: %s" % aPf)
                 if not ec['conductor_label'] in curve_ap:
                     curve_ap[ec['conductor_label']] = {}
                     form_ap[ec['conductor_label']] = {}
@@ -586,24 +592,34 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             if verbose:
                 print("... found form, calling Magma search")
 
+            print("Conductor = %s" % form['level_ideal'].replace(" ",""))
             N = K.ideal(form['level_label'])
             neigs = len(form['hecke_eigenvalues'])
+            neigs0 = 10
             if verbose:
-                print("Using %s ap from Hilbert newform and effort %s" % (neigs,effort))
+                print("Using %s ap from Hilbert newform and effort %s" % (neigs0,effort))
             Plist = [P['ideal'] for P in K.primes_iter(neigs)]
             goodP = [(i, P) for i, P in enumerate(Plist) if not P.divides(N)]
             aplist = [int(form['hecke_eigenvalues'][i]) for i, P in goodP]
-            curves = EllipticCurveSearch(K.K(), Plist, N, aplist, effort)
-            if not curves:
+            Plist = [P for i,P in goodP]
+            #print("Plist = {}, length {}".format(Plist,len(Plist)))
+            #print("aplist = {}, length {}".format(aplist,len(aplist)))
+            curves = EllipticCurveSearch(K.K(), Plist[:neigs0], N, aplist[:neigs0], effort)
+            rep = 0
+            while not curves:
+                if rep<5:
+                    rep += 1
+                else:
+                    rep = 1
+                    effort *=2
                 if verbose:
-                    print("No curves found by Magma, trying again with effort %s..." % (2*effort))
-                curves = EllipticCurveSearch(K.K(), Plist, N, aplist, effort*2)
+                    print("No curves found by Magma, trying again with effort %s..." % effort)
+                curves = EllipticCurveSearch(K.K(), Plist[:neigs0], N, aplist[:neigs0], effort*2)
                 if verbose:
                     if curves:
                         print("Success!")
                     else:
-                        print("Still no success, giving up")
-            #curves = EllipticCurveSearch(K.K(), [], N, [])
+                        print("Still no success")
             E = None
             if curves:
                 E = curves[0]
@@ -714,10 +730,13 @@ def magma_output_iter(infilename):
             cond_label, iso_label = class_label.split("-")
             num = 0
 
+        if 'Conductor' in L:
+            cond_ideal = L.replace("Conductor ","")
+
         if 'Curve' in L:
             ai = [KK(a.encode()) for a in L[7:-2].split(",")]
             num += 1
-            yield field_label, cond_label, iso_label, num, ai
+            yield field_label, cond_label, iso_label, num, cond_ideal, ai
 
     infile.close()
 
@@ -745,7 +764,7 @@ def export_magma_output(infilename, outfilename=None, verbose=False):
 
     K = None
 
-    for field_label, cond_label, iso_label, num, ai in magma_output_iter(infilename):
+    for field_label, cond_label, iso_label, num, cond_ideal, ai in magma_output_iter(infilename):
         ec = {}
         ec['field_label'] = field_label
         if not K:
@@ -756,6 +775,7 @@ def export_magma_output(infilename, outfilename=None, verbose=False):
         N = K.ideal(cond_label)
         norm = N.norm()
         hnf = N.pari_hnf()
+        ec['conductor_ideal'] = cond_ideal
         ec['conductor_ideal'] = "[%i,%s,%s]" % (norm, hnf[1][0], hnf[1][1])
         ec['conductor_norm'] = norm
         ec['ainvs'] = [[str(c) for c in list(a)] for a in ai]
