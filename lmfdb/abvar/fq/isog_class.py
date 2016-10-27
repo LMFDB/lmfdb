@@ -9,7 +9,7 @@ from sage.misc.cachefunc import cached_function
 from sage.rings.all import Integer
 from sage.all import PolynomialRing, QQ, factor, PariError
 
-from lmfdb.genus2_curves.isog_class import list_to_factored_poly_otherorder
+from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.WebNumberField import WebNumberField, nf_display_knowl, field_pretty
 
