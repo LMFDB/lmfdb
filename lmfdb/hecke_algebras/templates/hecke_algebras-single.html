@@ -16,14 +16,24 @@
 
 {% if info.orbits %}
 <h2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</h2>
-<table>
     {% for j in info.orbits %}
-    <tr><td>{{j.orbit_label}}</td></tr>
-    <tr><td>{% for m in j.gen_display %}
-            $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% endif %}
-        {% endfor %}</tr></td>
+        <table class="ntdata" cellpadding=3 >
+        <tr><td>Label:</td><td>{{j.orbit_label}}</td></tr>
+        <tr rowspan=2><td >Operators:</td><td>
+        {% for m in j.gen_display %}
+            $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% else %}...{% endif %}
+        {% endfor %}</td></tr>
+        <tr><td></td><td>Dowload the {{j.num_op}} avaliable operators for sage, gp, magma
+        <tr><td>Presentation:</td><td></td></tr>
+        <tr><td>Generators:</td><td></td></tr>
+        <tr><td>Relations:</td><td></td></tr>
+        </table>
+        <p>&nbsp;&nbsp;&nbsp;&#x2113;-adic data for 
+        {% for i in info.l_adic %}
+             <a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage_l_adic', label=j.orbit_label, prime=i)}}">{{i}}</a>{% if not loop.last %}, {% endif %}
+        {% endfor %}</p>
+{% if not loop.last %}</br>  {% endif %}
     {% endfor %}
-</table>
 {% endif %}
 
 

@@ -180,8 +180,61 @@ def render_hecke_algebras_webpage(**args):
     info['weight']= int(f['weight'])
     info['num_orbits']= int(f['num_orbits'])
 
-    try:
-        orb = C.mod_l_eigenvalues.hecke_algebras_orbits.find({'parent_label': f['label']})
+    orb = C.mod_l_eigenvalues.hecke_algebras_orbits.find({'parent_label': f['label']})
+    if orb.count()!=0:
+        #consistency check
+        if orb.count()!= int(f['num_orbits']):
+            return search_input_error(info)
+
+        res_clean = []
+        for v in orb:
+            v_clean = {}
+            v_clean['orbit_label']=v['orbit_label']
+            v_clean['gen']=v['gen']
+            v_clean['gen_display']=[[i, latex(matrix(sage_eval(v_clean['gen'])[i]))] for i in prime_range(20)]
+            v_clean['num_op']=v['num_gen']
+            res_clean.append(v_clean)
+
+        info['orbits']=res_clean
+
+    info['l_adic']=[ell for ell in prime_range(14)]
+    info['properties'] = [
+        ('Level', '%s' %info['level']),
+        ('Weight', '%s' %info['weight']),
+        ('Label', '%s' %info['label'])]
+    info['friends'] = [('Modular form ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+    t = "Hecke Algebra %s" % info['label']
+    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
+
+
+@hecke_algebras_page.route('/<label>/<prime>')
+def render_hecke_algebras_webpage_l_adic(**args):
+    C = getDBConnection()
+    data = None
+    if 'label' in args:
+        lab = clean_input(args.get('label'))
+        if lab != args.get('label'):
+            return redirect(url_for('.render_hecke_algebras_webpage', label=lab), 301)
+        data = C.mod_l_eigenvalues.hecke_algebras.find_one({'label': lab })
+    if data is None:
+        t = "Hecke Agebras Search Error"
+        bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a Hecke Algebras in the database." % (lab)),"error")
+        return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
+    info = {}
+    info.update(data)
+
+    info['friends'] = []
+
+    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")), ('%s' % data['label'], ' ')]
+    credit = hecke_algebras_credit
+    f = C.mod_l_eigenvalues.hecke_algebras.find_one({'level': data['level'],'weight': data['weight'],'num_orbits': data['num_orbits']})
+    info['level']=int(f['level'])
+    info['weight']= int(f['weight'])
+    info['num_orbits']= int(f['num_orbits'])
+
+    orb = C.mod_l_eigenvalues.hecke_algebras_orbits.find({'parent_label': f['label']})
+    if orb.count()!=0:
         #consistency check
         if orb.count()!= int(f['num_orbits']):
             return search_input_error(info)
@@ -196,9 +249,7 @@ def render_hecke_algebras_webpage(**args):
 
         info['orbits']=res_clean
 
-    except ValueError as err:
-        info['err'] = str(err)
-
+    info['l_adic']=[ell for ell in prime_range(14)]
     info['properties'] = [
         ('Level', '%s' %info['level']),
         ('Weight', '%s' %info['weight']),
@@ -206,6 +257,7 @@ def render_hecke_algebras_webpage(**args):
     info['friends'] = [('Modular form ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
     t = "Hecke Algebra %s" % info['label']
     return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
+
 
 
 
