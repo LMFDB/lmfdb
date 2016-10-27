@@ -10,7 +10,7 @@ from flask import render_template, request, url_for, redirect, make_response, fl
 from lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_collection
 
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
+from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, sage_eval
 
 from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import get_stats
@@ -179,12 +179,25 @@ def render_hecke_algebras_webpage(**args):
     info['level']=int(f['level'])
     info['weight']= int(f['weight'])
     info['num_orbits']= int(f['num_orbits'])
-    t = "Hecke Algebra %s" % info['label']
+
+    try:
+        orb = C.mod_l_eigenvalues.hecke_algebras_orbits.find({'parent_label': f['label']})
+        #consistency check
+        if orb.count()!= int(f['num_orbits']):
+            return search_input_error(info)
+        info['orbits']=[o for o in orb]
+        info['orbits_label']=[o['orbit_label'] for o in orb]
+    except ValueError as err:
+        info['err'] = str(err)
+        return search_input_error(info)
+
+
     info['properties'] = [
         ('Level', '%s' %info['level']),
         ('Weight', '%s' %info['weight']),
         ('Label', '%s' %info['label'])]
     info['friends'] = [('Modular form ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+    t = "Hecke Algebra %s" % info['label']
     return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
 
 

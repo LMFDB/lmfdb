@@ -12,4 +12,11 @@
     <tr><td align=right>{{KNOWL('hecke_algebras.label', title='Label')}}:</td><td>${{info.label}}$</td></tr>
 </table>
 
+
+{% if info.orbits %}
+<p>{{info.orbits}}</p>
+<p>{{info.orbits_label}}</p>
+{% endif %}
+
+
 {% endblock %}

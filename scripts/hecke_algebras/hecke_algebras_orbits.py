@@ -23,7 +23,7 @@ pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 C['mod_l_eigenvalues'].authenticate('editor', password)
-hecke_algebras = C['mod_l_eigenvalues'].hecke_algebras
+hecke_orb = C['mod_l_eigenvalues'].hecke_algebras_orbits
 
 saving = True 
 
@@ -45,11 +45,9 @@ def string2list(s):
 # The following create_index command checks if there is an index on
 # label, dimension, determinant and level. 
 
-
-hecke_algebras.create_index('level')
-hecke_algebras.create_index('weight')
-hecke_algebras.create_index('num_orbits')
-hecke_algebras.create_index('label')
+hecke_orb.create_index('level')
+hecke_orb.create_index('weight')
+hecke_orb.create_index('parent_label')
 
 print "finished indices"
 
@@ -57,22 +55,22 @@ print "finished indices"
 ## Main importing function
 
 def do_import(ll):
-    level,weight,num_orbits,label = ll
-    mykeys = ['level','weight','num_orbits','label']
+    level,weight,orbit,gen,num_gen,rel,parent_label,orbit_label= ll
+    mykeys = ['level','weight','orbit','gen','num_gen','rel','parent_label','orbit_label']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
 
-    alg = hecke_algebras.find_one({'label': label})
+    alg_orb = hecke_orb.find_one({'parent_label': parent_label, 'orbit_label': orbit_label})
 
-    if alg is None:
-        print "new hecke algebra"
-        alg = data
+    if alg_orb is None:
+        print "new orbit"
+        alg_orb = data
     else:
-        print "hecke algebra already in the database"
-        alg.update(data)
+        print "orbit already in the database"
+        alg_orb.update(data)
     if saving:
-        hecke_algebras.update({'label': label} , {"$set": alg}, upsert=True)
+        hecke_orb.update({'orbit_label': orbit_label} , {"$set": alg_orb}, upsert=True)
 
 
 
