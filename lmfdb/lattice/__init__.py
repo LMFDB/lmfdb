@@ -12,5 +12,6 @@ def body_class():
     return {'body_class': 'lattice'}
 
 import main
+assert main
 
 app.register_blueprint(lattice_page, url_prefix="/Lattice")

@@ -16,31 +16,44 @@
 r"""
 Main file for viewing elliptical modular forms.
 
-AUTHOR: Fredrik Strömberg
+AUTHORS: 
+ - Fredrik Strömberg
+ - Stephan Ehlen
 
 """
-from flask import render_template, url_for, request, redirect, make_response, send_file, send_from_directory,flash
-import os
-from lmfdb.base import app, db
+from flask import url_for, request, redirect, make_response, send_from_directory,flash, render_template
+import os, tempfile
+import sage
+from lmfdb.base import getDBConnection
+from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.utils import to_dict
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
+from lmfdb.utils import to_dict, random_object_from_collection
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, EMF_TOP, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
     render_fd_plot,
     extract_data_from_jump_to,
-    newform_label)
+    newform_label,
+    parse_newform_label)
 from emf_render_web_newform import render_web_newform
 from emf_render_web_modform_space import render_web_modform_space
 from emf_render_web_modform_space_gamma1 import render_web_modform_space_gamma1
 
-from emf_render_navigation import render_elliptic_modular_form_navigation_wp,_browse_web_modform_spaces_in_ranges
+from emf_render_navigation import render_elliptic_modular_form_navigation_wp
 
-emf_logger.setLevel(int(10))
+emf_logger.setLevel(int(100))
 
 @emf.context_processor
 def body_class():
     return {'body_class': EMF}
+
+emfdb = None
+
+def db_emf():
+    global emfdb
+    if emfdb is None:
+        emfdb = getDBConnection().modularforms2.webnewforms
+    return emfdb
 
 #################
 # Top level
@@ -52,7 +65,6 @@ def body_class():
 
 met = ['GET', 'POST']
 
-# Used to be in the experimental part
 @emf.route("/ranges", methods=["GET"])
 @emf.route("/ranges/", methods=["GET"])
 def browse_web_modform_spaces_in_ranges(**kwds):
@@ -64,8 +76,14 @@ def browse_web_modform_spaces_in_ranges(**kwds):
     level=request.args.getlist('level')
     weight=request.args.getlist('weight')
     group=request.args.getlist('group')
-    return _browse_web_modform_spaces_in_ranges(level=level,weight=weight,group=group)
+    return render_elliptic_modular_form_navigation_wp(level=level,weight=weight,group=group)
 
+@emf.route("/history")
+def holomorphic_mf_history():
+    b = [(MF_TOP, url_for('mf.modular_form_main_page'))]
+    b.append((EMF_TOP, url_for(".render_elliptic_modular_forms")))
+    b.append(('History', url_for(".holomorphic_mf_history")))
+    return render_template("single.html", title="A brief history of holomorphic GL(2) modular forms", kid='mf.gl2.history', bread=b)
 
 @emf.route("/", methods=met)
 @emf.route("/<level>/", methods=met)
@@ -143,7 +161,7 @@ def render_elliptic_modular_forms(level=None, weight=None, character=None, label
         return render_elliptic_modular_form_navigation_wp()
 
 
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils import download_web_modform,get_coefficients
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_download_utils import get_coefficients
 
 @emf.route("/Download/<int:level>/<int:weight>/<int:character>/<label>", methods=['GET', 'POST'])
 def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
@@ -153,6 +171,9 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
         emf_logger.critical("Download called without specifying what to download! info={0}".format(info))
         return ""
     emf_logger.debug("in get_downloads: info={0}".format(info))
+    if info['download'] == 'coefficients':
+        info['tempfile'] = "/tmp/tmp_web_mod_form.txt"
+        return get_coefficients(info)
     if info['download'] == 'file':
         # there are only a certain number of fixed files that we want people to download
         filename = info['download_file']
@@ -162,13 +183,18 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
                 emf_logger.debug("Dirname:{0}, Filename:{1}".format(dirname, filename))
                 return send_from_directory(dirname, filename, as_attachment=True, attachment_filename=filename)
             except IOError:
-                info['error'] = "Could not find  file! "
-    if info['download'] == 'coefficients':
-        info['tempfile'] = "/tmp/tmp_web_mod_form.txt"
-        return get_coefficients(info)
-    if info['download'] == 'object':
-        return download_web_modform(info)
-        info['error'] = "Could not find  file! "
+                info['error'] = "Could not find file! "
+
+@emf.route("/random")
+def random_form():
+    label = random_object_from_collection( db_emf() )['hecke_orbit_label']
+    level, weight, character, label = parse_newform_label(label)
+    args={}
+    args['level'] = level
+    args['weight'] = weight
+    args['character'] = character
+    args['label'] = label
+    return redirect(url_for(".render_elliptic_modular_forms", **args), 301)
 
 @emf.route("/Plots/<int:grouptype>/<int:level>/")
 def render_plot(grouptype=0, level=1):
@@ -201,7 +227,7 @@ def get_qexp(level, weight, character, label, prec, latex=False, **kwds):
         if not latex:
             c = WNF.q_expansion
         else:
-            c = WNF.q_expansion_latex(prec=prec, name = 'a')
+            c = WNF.q_expansion_latex(prec=prec, name = '\\alpha ')
         return c
     except Exception as e:
         return "<span style='color:red;'>ERROR: %s</span>" % e.message
@@ -213,31 +239,8 @@ def get_qexp_latex(level, weight, character, label, prec=10, **kwds):
 
 
 ###
-###  Routines that used to be in /experimental/ folder.
+###  Helper functions.
 ###
-@emf.route("/Dots/<min_level>/<max_level>/<min_weight>/<max_weight>/",methods=met)
-def show_dots(min_level, max_level, min_weight, max_weight):
-    info = {}
-    info['contents'] = [paintSvgHolomorphic(min_level, max_level, min_weight, max_weight,char=1)]
-    info['min_level'] = min_level
-    info['max_level'] = max_level
-    info['min_weight'] = min_weight
-    info['max_weight'] = max_weight
-    return render_template("emf_browse_graph.html", title='Browsing dimensions of modular forms in the database', **info)
-
-
-@emf.route("/DotsPlot/<min_level>/<max_level>/<min_weight>/<max_weight>/<complete>/",methods=met)
-def show_dots2(min_level, max_level, min_weight, max_weight,complete):
-    info = {}
-    char = 1
-    info['contents'] = [paintSvgHolomorphic2(min_level, max_level, min_weight, max_weight,char,complete=complete)]
-    info['min_level'] = min_level
-    info['max_level'] = max_level
-    info['min_weight'] = min_weight
-    info['max_weight'] = max_weight
-    return render_template("emf_browse_graph.html", title='Browsing dimensions of modular forms in the database', **info)
-
-
 
 def get_args(request, level=0, weight=0, character=-1, group=2, label='', keys=[]):
     r"""

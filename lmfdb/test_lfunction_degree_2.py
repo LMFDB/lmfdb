@@ -1,11 +1,6 @@
-from lfunctions.Lfunction import *
-from lfunctions.LfunctionPlot import *
-from lfunctions.Lfunctionutilities import *
-from lfunctions.LfunctionLcalc import createLcalcfile_ver1
-from base import LmfdbTest
-import math
-import unittest2
+# -*- coding: utf-8 -*-
 
+from base import LmfdbTest
 
 class LfunctionTest(LmfdbTest):
 
@@ -17,7 +12,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_table(self):
         r"""
-        Check that the links in the table work.
+        Check that the links in the /L/degree2/ table work.
         """
         homepage = self.tc.get("/L/degree2/").data
         self.check(homepage,

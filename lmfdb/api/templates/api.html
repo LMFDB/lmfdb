@@ -90,7 +90,7 @@ where the prefix "-" indicates to sort in descending order.
 
 <h3>Available Collections</h3>
 <ul class="api-entries">
-{% for db, collections in databases.iteritems() %}
+{% for db, collections in databases.iteritems()|sort %}
   <li>
     <b>{{ db }}</b>
     (<a href="https://github.com/LMFDB/lmfdb-inventory/blob/master/db-{{ db }}.md"

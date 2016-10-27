@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
+
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
 
 class HomePageTest(LmfdbTest):
 
@@ -34,7 +34,7 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/3.1942.3884.56.13").data
         assert '648' in L #test display genus representatives
 
-    def test_lattice_classnumber_large(self):
+    def test_lattice_classnumber_large_download(self):
         L = self.tc.get("/Lattice/3.1942.3884.56.13/download/sage/genus_reps").data
         assert 'Matrix([[2, 0, 0], [0, 14, -3], [0, -3, 70]]),' in L #test download genus representatives
 
@@ -67,8 +67,8 @@ class HomePageTest(LmfdbTest):
         assert '2.1.2.1.1' in L #gram matrix search through isometries
 
     def test_latticeZ2(self):
-        L = self.tc.get("/Lattice/?label=Z2").data
-        assert '0.785398163397448309615660845820' in L #Z2 lattice
+        L = self.tc.get("/Lattice/2.1.2.1.1").data
+        assert '0.785398163397448309615660845820\dots' in L #Z2 lattice  
 
     def test_lattice_thetadisplay(self):
         L = self.tc.get("/Lattice/theta_display/7.576.18.1.1/40").data

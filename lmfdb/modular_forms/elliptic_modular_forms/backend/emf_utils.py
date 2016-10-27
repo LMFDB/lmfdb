@@ -20,22 +20,19 @@ AUTHOR: Fredrik Strömberg
 
 """
 import random
-import sage.plot.plot
-from flask import jsonify,flash,Markup
-from lmfdb.utils import *
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec,emf_version
+from sage.all import AlphabeticStrings, gcd, Mod
+from flask import jsonify, flash, Markup
+from lmfdb.utils import web_latex, ajax_url
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf_version
 logger = emf_logger
-from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma,QQ,Matrix,cached_method
+from sage.all import vector, QQ, Matrix, cached_method
 from sage.misc.cachefunc import cached_function 
-from lmfdb.modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
 import lmfdb.base
-from bson.binary import *
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
-from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
+import re
 from lmfdb.search_parsing import parse_range
 try:
-    from dirichlet_conrey import *
+    from dirichlet_conrey import DirichletGroup, DirichletGroup_conrey, DirichletCharacter_conrey
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
@@ -85,7 +82,7 @@ def parse_newform_label(label):
                 emb = int(l[4])
         if orbit_label == "" or not orbit_label.isalpha():
             raise ValueError
-    except ValueError,IndexError:
+    except (ValueError,IndexError):
         raise ValueError,"{0} is not a valid newform label!".format(label)
     if not emb is None:
         return level,weight,int(character),orbit_label,emb
@@ -109,8 +106,28 @@ def parse_space_label(label):
         else:
             raise ValueError
     except ValueError:
-        raise ValueError,"{0} is not a valid space label!".format(label)   
+        raise ValueError,"{0} is not a valid space label!".format(label)
 
+@cached_function
+def orbit_index_from_label(label):
+    r"""
+    Inverse of the above
+    """
+    res = 0
+    A = AlphabeticStrings()
+    x = A.gens()
+    label = str(label)
+    l = list(label)
+    
+    su = A(l.pop().upper())
+    res = x.index(su)
+    l.reverse()
+    i = 1
+    for s in l:
+        su = A(s.upper())
+        res+=(1+x.index(su))*26**i
+        i+=1
+    return res
 
 @cached_method
 def is_newform_in_db(newform_label):
@@ -172,17 +189,17 @@ def is_range(arg):
         if arg.split(sep)>1:
             return True
     return False
+
 def extract_data_from_jump_to(s):
     r"""
     Try to get a label from the search box
     """
-    label = ''
     args = dict()
     try:
         if s == 'delta':
-            weight = 12
-            level = 1
-            label = "a"
+            args['weight'] = 12
+            args['level'] = 1
+            args['label'] = "a"
         else:
             # see if we can parse the argument as a label 
             s = s.replace(" ","") # remove white space
@@ -190,7 +207,7 @@ def extract_data_from_jump_to(s):
                 t = parse_newform_label(s)
                 if len(t) == 4:
                     args['level'],args['weight'],args['character'],args['label'] = t
-                if len(t) == 5:
+                elif len(t) == 5:
                     args['level'],args['weight'],args['character'],args['label'],args['embedding'] = t
                 else:
                     raise ValueError
@@ -288,19 +305,6 @@ def ajax_more2(callback, *arg_list, **kwds):
         return (s0 + s1 + t)
     else:
         return res
-
-
-def ajax_url(callback, *args, **kwds):
-    if '_ajax_sticky' in kwds:
-        _ajax_sticky = kwds.pop('_ajax_sticky')
-    else:
-        _ajax_sticky = False
-    if not isinstance(args, tuple):
-        args = args,
-    nonce = hex(random.randint(0, 1 << 128))
-    pending[nonce] = callback, args, kwds, _ajax_sticky
-    return url_for('ajax_result', id=nonce)
-
 
 def ajax_once(callback, *arglist, **kwds):
     r"""
@@ -445,7 +449,6 @@ def dirichlet_character_conrey_galois_orbits_reps(N):
     D = DirichletGroup_conrey(N)
     if N == 1:
         return [D[1]]
-    Ds = dirichlet_character_sage_galois_orbits_reps(N)
     Dl = list(D)
     reps=[]
     for x in D:
@@ -463,55 +466,6 @@ def dirichlet_character_conrey_galois_orbits_reps(N):
 def conrey_character_from_number(N,c):
     D = DirichletGroup_conrey(N)
     return DirichletCharacter_conrey(D,c)
-
-@cached_function
-def dimension_from_db(level,weight,chi=None,group='gamma0'):
-    import json
-    db = lmfdb.base.getDBConnection()['modularforms2']['webmodformspace_dimension']
-    q = db.find_one({'group':group})
-    dim_table = {}
-    if q:
-        dim_table = q.get('data',{})
-        dim_table = json.loads(dim_table)
-    if group=='gamma0' and chi!=None:
-        d,t = dim_table.get(str(level),{}).get(str(weight),{}).get(str(chi),[-1,0])
-        return  d,t
-    elif chi is None:
-        d,t = dim_table.get(str(level),{}).get(str(weight),[-1,0])
-        return  d,t
-    elif chi == 'all':
-        res = {level: {weight:{}}}
-        dtable = dim_table.get(str(level),{}).get(str(weight),{})
-        for i in dtable.keys():
-            res[level][weight][int(i)] = dtable[i]
-        return res
-
-def field_label(F, pretty = True, check=False):
-    r"""
-      Returns the LMFDB label of the field F.
-    """
-    if F.absolute_degree() == 1:
-        p = 'x'
-    else:
-        pp = F.absolute_polynomial()
-        x = pp.parent().gen()
-        p = str(pp).replace(str(x), 'x')
-    l = poly_to_field_label(p)
-    if l is None:
-        if check:
-            return False
-        else:
-            if pretty:
-                return web_latex_split_on_pm(pp)
-            else:
-                return pp
-    else:
-        if check:
-            return True
-    if pretty:
-        return field_pretty(l)
-    else:
-        return l
 
 @cached_function
 def dirichlet_character_conrey_galois_orbit_embeddings(N,xi):

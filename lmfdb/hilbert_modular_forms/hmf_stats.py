@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
-import re
-from pymongo import ASCENDING, DESCENDING
 from flask import url_for
 import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
-from lmfdb.ecnf.ecnf_stats import field_data, sort_field
-from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.WebNumberField import nf_display_knowl
 
 def format_percentage(num, denom):
@@ -95,7 +91,7 @@ class HMFstats(object):
     def init_hmf_count(self):
         if self._counts:
             return
-        print("Computing HMF counts...")
+        #print("Computing HMF counts...")
         forms = self.forms
         fields = self.fields
         counts = {}
@@ -118,14 +114,14 @@ class HMFstats(object):
         counts['max_disc_by_degree'] = dict([(d,max(counts['discs_by_degree'][d])) for d in degrees])
         counts['nfields_by_degree'] = dict([(d,len(counts['fields_by_degree'][d])) for d in degrees])
         self._counts  = counts
-        print("Finished computing HMF counts")
+        #print("Finished computing HMF counts")
 
     def init_hmf_stats(self, use_yaml_file=True): # it works with False but is much slower
         if self._stats:
             return
         if not self._counts:
             self.init_hmf_count()
-        print("Computing HMF stats...")
+        #print("Computing HMF stats...")
         if use_yaml_file:
             import yaml
             import os.path
@@ -165,7 +161,6 @@ class HMFstats(object):
 
     def stats_for_field(self, F):
         forms = self.forms
-        fields = self.fields
         # pipeline = [{"$match": {'field_label':F}},
         #             {"$project" : { 'level_norm' : 1 }},
         #             {"$group":{"_id":"level_norm", "nforms": {"$sum": 2}, "maxnorm" : {"$max": '$level_norm'}}}]
@@ -174,7 +169,6 @@ class HMFstats(object):
         stats = {}
         stats['nforms'] = len(res) # res['nforms']
         stats['maxnorm'] = max(res+[0]) # res['maxnorm']
-        d = F.split('.')[0]
         stats['field_knowl'] = nf_display_knowl(F, lmfdb.base.getDBConnection(), F)
         stats['forms'] = url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
         return stats

@@ -1,0 +1,17 @@
+<h4> Enter a space and range of weights:</h4>
+<form>
+<span>Space:
+<select name="family">
+{% for c in info.family_list %}
+    {% if info.family and c.name == info.family.name %}
+        <option value='{{ c.name }}' selected>${{ c.latex_name }}$</option>
+    {% else %}
+        <option value='{{ c.name }}'>${{ c.latex_name }}$</option>
+    {% endif %}
+{% endfor %}
+</select>
+</span>&nbsp;&nbsp;&nbsp;&nbsp;
+<span>$k$: <input name="k" size=10 value="{{info.args.k}}" placeholder="4..16"/> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+<span>$j$: <input name="j" size=10 value="{{info.args.j}}" placeholder="0"/> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+<button type="submit" style="width: 110px" name="table" value="1">Compute table</button>
+</form>

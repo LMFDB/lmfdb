@@ -2,356 +2,321 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from flask import render_template, url_for, request, send_file
-from lmfdb.search_parsing import parse_range
-# import siegel_core
-import input_parser
-import dimensions
-import pickle
-import urllib
-from sage.all_cmdline import *
-import os
-import sample
-import lmfdb.base
-from lmfdb.base import app
-from lmfdb.siegel_modular_forms import smf_page
-from lmfdb.siegel_modular_forms import smf_logger
-import json
+from flask import render_template, url_for, request, send_file, flash, redirect
+from markupsafe import Markup
 import StringIO
+import dimensions, sample
+from family import get_smf_family, get_smf_families
+from sage.all import latex, Set
+from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
+from lmfdb.siegel_modular_forms import smf_page
+from lmfdb.search_parsing import parse_ints, parse_ints_to_list_flash
+from lmfdb.utils import to_dict, flash_error
 
-from flask import flash, redirect
+###############################################################################
+# Utitlity functions
+###############################################################################
 
-
-DATA = 'http://data.countnumber.de/Siegel-Modular-Forms/'
-COLNS = None
-DB = None
-
-
-def rescan_collection():
-    """
-    Create and cache the instances of Collection.
-    """
-    from collection import Collection
-    colns = dict()
-    root = os.path.dirname( os.path.abspath(__file__))
-    static = os.path.join( root, 'static')
-    for a,b,files in os.walk( static):
-        for f in files:
-            try:
-                if f.endswith('.json'):
-                    c = f[:-5]
-#                    print c
-                colns[c] = Collection( c, location = static)
-            except Exception as e:
-                print str(e)
-                pass
-    global COLNS
-    COLNS = colns
-
-@app.route('/ModularForm/GSp/Q/Sp4Z_j/<j>/<k>')
-@app.route('/ModularForm/GSp/Q/Sp4Z_j/<j>/<k>/')
-def ModularForm_GSp4_Q_Sp4Z_j_space(j=4, k=4):
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
-             ('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
-             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', '/ModularForm/GSp/Q/Sp4Z_j'),
-             ('$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '/ModularForm/GSp/Q/Sp4Z_j/%s/%s'%(k,j))]
-    # How to handle space decomposition: dict with keys and entries.
-    #Then special case code here.
-    j=int(j)
-    k=int(k)
-    samples =[]
-    #TODO: cleanup
-    if j==0:
-        t= dimensions._dimension_Sp4Z([k])
-        samples = find_samples('Sp4Z', k)
-    elif j==2:
-        t= dimensions._dimension_Sp4Z([k])
-        samples = find_samples('Sp4Z_2', k)
-    else:
-        t = dimensions._dimension_Gamma_2([k], j, group="Sp4(Z)")
-        #Right now no samples
-    subdecomp=t[1][k]
-    headers=t[0]
-    #Same for samples. Really should have a big structure driving template: TODO
-    return render_template('ModularForm_GSp4_Q_full_level_space.html',
-                           title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
-                           k=k,
-                           j=j,
-                           subspace=subdecomp,
-                           headers=headers,
-                           samples = samples,
-                           bread=bread);
-
-def find_samples(coll, weight):
-    conn = lmfdb.base.getDBConnection()
-    db = conn.siegel_modular_forms.samples
-    slist = db.find({'collection':coll,
-                         'weight':str(weight)})
+def find_samples(family, weight):
+    slist = sample.smf_db_samples().find({'data_type':'sample','collection':family, 'wt':int(weight)},{'name':True})
     ret = []
     for res in slist:
         name = res['name']
-        path = "%s.%s"%(coll,res['name'])
-        url = '/ModularForm/GSp/Q/%s'%(path)
+        url = url_for(".by_label", label=family+"."+res['name'])
         ret.append({'url':url, 'name':name})
     return ret
 
-@app.route('/ModularForm/GSp/Q/Sp4Z_j')
-@app.route('/ModularForm/GSp/Q/Sp4Z_j/')
-def ModularForm_GSp4_Q_Sp4Z_j():
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
-             ('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level')),
-             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '/ModularForm/GSp/Q/Sp4Z_j')]
-    error = False
-    jrange = xrange(0, 21)
-    krange = xrange(10, 21)
-    if request.args.get('j'):
-        try:
-            jr = parse_range(request.args.get('j'))
-            if type(jr) is int:
-                jrange = xrange(jr, jr+20+1);
-            else:
-                jrange = xrange(jr['$gte'], jr['$lte'])
-        except:
-            error="Error parsing input for j.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." 
-            flash(error, "error")
-            return redirect(url_for(".ModularForm_GSp4_Q_Sp4Z_j"))
+def download_sample(name):
+    a,b = name.split('.')
+    f = StringIO.StringIO(sample.export(a, b))
+    f.seek(0)
+    return send_file(f, attachment_filename = name + '.json', as_attachment = True, add_etags=False)
 
-    if request.args.get('k'):
-        try:
-            kr = parse_range(request.args.get('k'))
-            if type(kr) is int:
-                if kr<4:
-                    kr=4
-                krange = xrange(kr, kr+10+1);
-            else:
-                if kr['$gte']<4:
-                    kr['$gte']=4
-                krange = xrange(kr['$gte'], kr['$lte'])
-        except:
-            error="Error parsing input for k.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." 
-            flash(error, "error")
-            return redirect(url_for(".ModularForm_GSp4_Q_Sp4Z_j"))
-    jrange = [x for x in jrange if x%2==0]
+
+###############################################################################
+# Page routing functions
+###############################################################################
+
+@smf_page.route('/')
+def index():
+    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+             ('Siegel modular forms', url_for('.index'))]
+    if len(request.args) > 0:
+        if 'download' in request.args:
+            return download_sample(request.args.get('download'))
+        else:
+            return render_search_results_page(request.args, bread)
+    return render_main_page(bread)
+
+@smf_page.route("/random")
+def random_sample():
+    return redirect(url_for('.by_label', label='.'.join(sample.random_sample_name())), 301)
+
+@smf_page.route('/<label>')
+@smf_page.route('/<label>/')
+def by_label(label):
+    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+             ('Siegel modular forms', url_for('.index'))]
+    slabel = label.split('.')
+    family = get_smf_family (slabel[0])
+    if family:
+        if len(slabel) == 1:
+            return render_family_page(family, request.args, bread)
+        if len(slabel) == 2:
+            sam = sample.Samples({ 'collection': slabel[0], 'name': slabel[1]})
+            if len(sam) > 0:
+                bread.append(('$'+family.latex_name+'$', url_for('.by_label',label=slabel[0])))
+                return render_sample_page(family, sam[0], request.args, bread)
+    flash_error ("No siegel modular form data for %s was found in the database.", label)
+    return redirect(url_for(".index"))
+
+@smf_page.route('/Sp4Z_j/<int:k>/<int:j>')
+@smf_page.route('/Sp4Z_j/<int:k>/<int:j>/')
+def Sp4Z_j_space(k,j):
+    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+             ('Siegel modular forms', url_for('.index')),
+             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
+             ('$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
+    if j%2:
+        # redirect to general page for Sp4Z_j which will display an error message
+        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
+    info = { 'args':{'k':str(k),'j':str(j)} }
     try:
-        dimtable = dimensions.dimension_table_Sp4Z_j(krange, jrange)
-    except:
-        error='Not all dimensions are implemented at the moment. Try again with a different range'
-        dimtable=False
+        if j in [0,2]:
+            headers, table = dimensions._dimension_Sp4Z([k])
+            info['samples'] = find_samples('Sp4Z' if j==0 else 'Sp4Z_2', k)
+        else:
+            headers, table = dimensions._dimension_Gamma_2([k], j, group='Sp4(Z)')
+        info['headers'] = headers
+        info['subspace'] = table[k]
+    except NotImplementedError:
+        # redirect to general page for Sp4Z_j which will display an error message
+        return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
+    return render_template('ModularForm_GSp4_Q_full_level_space.html',
+                           title = '$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
+                           bread=bread,
+                           info=info);
+
+@smf_page.route('/Sp4Z/<int:k>')
+@smf_page.route('/Sp4Z/<int:k>/')
+def Sp4Z_space(k):
+    return redirect(url_for(".Sp4Z_j_space", k=k, j=0), 301)
+
+# handle URLs in scalar valued SMF L-function format
+@smf_page.route('/Sp4Z/<int:k>/<orbit>')
+def Sp4Z_form(k,orbit):
+    label = 'Sp4Z.%d_%s' % (k,orbit)
+    return redirect(url_for('.by_label',label=label))
+
+@smf_page.route('/Sp4Z_2/<int:k>')
+@smf_page.route('/Sp4Z_2/<int:k>/')
+def Sp4Z_2_space(k):
+    return redirect(url_for(".Sp4Z_j_space", k=k, j=2), 301)
+
+
+@smf_page.route('/Sp4Z_j')
+@smf_page.route('/Sp4Z_j/')
+def Sp4Z_j():
+    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+             ('Siegel modular forms', url_for('.index')),
+             ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
+    info={'args':request.args}
+    try:
+        dim_args = dimensions.parse_dim_args(request.args, {'k':'10-20','j':'0-30'})
+    except ValueError:
+        # error message is flashed in parse_dim_args
+        info['error'] = True
+    if not info.get('error'):
+        info['dim_args'] = dim_args
+        try:
+            info['table'] = dimensions.dimension_table_Sp4Z_j(dim_args['k_range'], dim_args['j_range'])
+        except NotImplementedError as err:
+            flash(Markup(err), "error")
+            info['error'] = True
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
                            title='$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
                            bread = bread,
-                           dimtable = dimtable,
-                           jrange=jrange,
-                           krange=krange,
-                           error=error)
-                    
+                           info = info
+                           )
 
-@app.route('/ModularForm/GSp/Q')
-@app.route('/ModularForm/GSp/Q/')
-@app.route('/ModularForm/GSp/Q/<page>')
-@app.route('/ModularForm/GSp/Q/<page>/')
-def ModularForm_GSp4_Q_top_level( page = None):
+##########################################################
+# Page rendering functions
+##########################################################
 
-    if request.args.get('empty_cache') or not COLNS:
-        # we trigger a (re)scan for available collections
-        rescan_collection()
+def render_main_page(bread):
+    fams = get_smf_families()
+    fam_list = [c for c in fams if c.computes_dimensions() and not c.name in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
+    info = { 'family_list': fam_list, 'args': {}, 'number_of_samples': sample.count_samples()}
+    return render_template('ModularForm_GSp4_Q_index.html', title='Siegel Modular Forms', bread=bread, info=info)
 
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
-             ('Siegel modular forms', url_for('ModularForm_GSp4_Q_top_level'))]
-
-    # info = dict(args); info['args'] =  request.args
-    #info['learnmore'] = []
-    
-    # parse the request
-    if not page:
-        name = request.args.get( 'download')
-        if name:
-            a,b = name.split('.')
-            f = StringIO.StringIO( sample.export( a, b))
-#            print f.getvalue()
-            f.seek(0)
-            return send_file( f,
-                              attachment_filename = name + '.json',
-                              as_attachment = True)
-        
-        else:
-            return prepare_main_page( bread)
-    if page in COLNS:
-        return prepare_collection_page( COLNS[page], request.args, bread)
-    if 'dimensions' == page:
-        return prepare_dimension_page( request.args, bread)
-    if 'search_results' == page:
-        return prepare_search_results_page( request.args, bread)
-    # check whether there is a sample called page
+def build_dimension_table(info, fam, args):
     try:
-        a,b=page.split('.')
-    except:
-        a=b=None
-    sam = sample.Samples( { 'collection': a, 'name': b})
-    if len( sam) > 0:
-        return prepare_sample_page( sam[0], request.args, bread)
-
-    # return an error: better emit a 500    
-    info = { 'error': 'Requested page does not exist' }
-    return render_template("None.html", **info)
-
-
-
-##########################################################
-## HOME PAGE OF SIEGEL MODULAR FORMS
-##########################################################
-def prepare_main_page( bread):
-    info = { 'number_of_collections': len(COLNS),
-             'number_of_samples': len(sample.Samples( {})),
-             'cols': COLNS.values(),
-             'cols_with_forms': [COLNS[c] for c in COLNS if len(COLNS[c].members()) > 0],
-             'cols_comp_dims': [COLNS[c] for c in COLNS if COLNS[c].computes_dimensions()]
-             }
-    return render_template( 'ModularForm_GSp4_Q_index.html',
-                            title='Siegel Modular Forms',
-                            bread=bread,
-                            **info)
-
-
-
-##########################################################
-## SPECIFIC COLLECTION REQUEST
-##########################################################
-def prepare_collection_page( col, args, bread):
-    #info['learnmore'] += [ ('The spaces $'+col.latex_name()+'$', col.name()+'/basic')]
-
-    mbs = col.members()
-    info = { 'col': col,
-             'forms': [ (k,
-                         [(f.name(), f.field().degree())
-                          for f in mbs if k == f.weight()])
-                        for k in Set( f.weight() for f in mbs)],
-             }
-    dim_args = args.get( 'dim_args')
-    if not dim_args:
-        dim_args = col.dim_args_default
-#    print dim_args
-    if dim_args:
+        dim_args = dimensions.parse_dim_args(args, fam.dim_args_default)
+    except ValueError:
+        # error message is flashed in parse_dim_args
+        info['error'] = True
+    if not info.get('error'):
+        info['dim_args'] = dim_args
+        kwargs={}
         try:
-            dim_args = eval( dim_args)
-            header, table = col.dimension( *dim_args)
-            info.update({ 'col': col,
-                          'dimensions': table,
-                          'table_headers': header,
-                          'dim_args': dim_args
-                          })
-        except Exception as e:
-            info.update( {'error': str(e)})            
-    bread.append( ('$'+col.latex_name()+'$', col.name()))
-    return render_template("ModularForm_GSp4_Q_collection.html",
-                           title='Siegel modular forms $'+col.latex_name()+'$',
-                           bread=bread, **info)
-
-
-
-##########################################################
-## DIMENSIONS REQUEST
-##########################################################
-def prepare_dimension_page( args, bread):
-
-    info = { 'cols_comp_dims': [COLNS[c] for c in COLNS if COLNS[c].computes_dimensions()]}
-    col_name = args.get( 'col_name')
-    try:
-        col = COLNS[col_name]
-        dim_args = eval( args.get( 'dim_args'))
-        header, table = col.dimension( *dim_args)
-        info.update({ 'col': col,
-                      'dimensions': table,
-                      'table_headers': header,
-                      'dim_args': dim_args,
-                      })
-    except Exception as e:
-        info.update( {'error': str(e)})
-
-    bread.append( ('dimensions', 'dimensions'))
-    return render_template( "ModularForm_GSp4_Q_dimensions.html",
-                            title='Siegel modular forms dimensions',
-                            bread=bread, **info)
-
-
-
-##########################################################
-## SEARCH RESULTS
-##########################################################
-def prepare_search_results_page( args, bread):
-
-    info = {'all':args}
-    query = args.get('query')
-    try:
-        query = json.loads( query)
-        results = sample.Samples( query)
-        info.update( {'results': results})
-    except Exception as e:
-        info.update( {'error': '%s %s' % (str(e),query)})
-
-    bread.append( ('search results', 'search_results'))
-    return render_template( "ModularForm_GSp4_Q_search_results.html",
-                            title='Siegel modular forms search results',
-                            bread=bread, **info)
-
-
-
-##########################################################
-## SPECIFIC FORM REQUEST
-##########################################################
-def prepare_sample_page( sam, args, bread):
-    info = {'sam': sam, 'latex': latex}
-
-    
-    info['evs_to_show'] = args.get( 'indices', [])
-    if info['evs_to_show'] != []:
-        try:
-            info['evs_to_show'] = [ Integer(l) for l in info['evs_to_show'].split()]
-        except Exception as e:
-            info['error'] = 'list of l: %s' % str(e)
-            info['evs_to_show'] = []
-    if info['evs_to_show']==[]:
-        info['evs_to_show']=[2,3,4,5,7,9,11,13,17,19]
-
-    info['fcs_to_show'] = args.get( 'dets', [])
-    if info['fcs_to_show'] != []:
-        try:
-            info['fcs_to_show'] = [Integer(d) for d in info['fcs_to_show'].split()]
-        except Exception as e:
-            info['error'] = 'list of det(F): %s' % str(e)
-            info['fcs_to_show'] = []
-    if info['fcs_to_show']==[]:
-        info['fcs_to_show']=sam.available_Fourier_coefficients()[:5]
-    null_ideal = sam.field().ring_of_integers().ideal(0)
-    info['ideal_l'] = args.get( 'modulus', null_ideal)
-    if info['ideal_l'] != 0:
-        try:
-            O = sam.field().ring_of_integers()
-            id_gens = [O(str(b)) for b in info['ideal_l'].split()]
-            info['ideal_l'] = O.ideal(id_gens)
-        except Exception as e:
-            info['error'] = 'list of generators: %s' % str(e)
-            info['ideal_l'] = null_ideal
-
-    # Hack to reduce polynomials and to handle non integral stuff
-    if sam.representation() == '2':
-        fun = info['ideal_l'].reduce
-        def apple(x):
+            for arg in fam.dimension_desc()['args']:
+                if (arg == 'wt_range' or arg == 'k_range') and 'k_range' in dim_args:
+                    kwargs[arg] = dim_args['k_range']
+                elif (arg == 'wt' or arg == 'k') and 'k_range' in dim_args:
+                    if len(dim_args['k_range']) != 1:
+                        raise NotImplementedError("Please specify a single value of <span style='color:black'>$k$</span> rather than a range of values.")
+                    kwargs[arg] = dim_args['k_range'][0]
+                elif arg == 'j_range' and 'j_range' in dim_args:
+                    kwargs[arg] = dim_args['j_range']
+                elif arg == 'j' and 'j_range' in dim_args:
+                    if len(dim_args['j_range']) != 1:
+                        raise NotImplementedError("Please specify a single value of <span style='color:black'>$j$</span> rather than a range of values.")
+                    kwargs[arg] = dim_args['j_range'][0]
+        except NotImplementedError as err:
+            flash(Markup(err), "error")
+            info['error'] = True
+        if not info.get('error'):
+            info['kwargs'] = kwargs
             try:
-                return fun(x)
-            except:
-                try:
-                    return x.parent()(dict( (i, fun( x[i])) for i in x.dict()))
-                except:
-                    return 'Reduction undefined'
-        info['ideal_l'].reduce = apple
-    info['properties2']=[('Type', "%s"%sam.type()),
-                         ('Weight', "%s"%sam.weight()),
-                         ('Hecke Eigenform', "%s"%sam.is_eigenform()),
-                         ('Degree of Field', "%s"%sam.field().degree())]
-    
-    bread.append( (sam.collection()[0] + '.' + sam.name(), '/' + sam.collection()[0] + '.' + sam.name()))
-    return render_template( "ModularForm_GSp4_Q_sample.html",
-                            title='Siegel modular forms sample ' + sam.collection()[0] + '.'+ sam.name(),
-                            bread=bread, **info)
+                headers, table = fam.dimension(**kwargs)
+                info['headers'] = headers
+                info['table'] = table
+            except (ValueError,NotImplementedError) as err:
+                flash(Markup(err), "error")
+                info['error'] = True
+    return
 
+def render_family_page(family, args, bread):
+    sams = family.samples()
+    forms = [ (k, [(f.name(), f.degree_of_field()) for f in sams if k == f.weight()]) for k in Set(f.weight() for f in sams)]
+    info = { 'family': family, 'forms': forms, 'args': to_dict(args) }
+    if family.computes_dimensions():
+        build_dimension_table (info, family, args)
+    bread.append(('$'+family.latex_name+'$', ''))
+    return render_template("ModularForm_GSp4_Q_family.html", title='Siegel modular forms $'+family.latex_name+'$', bread=bread, info=info)
+
+def render_search_results_page(args, bread):
+    if args.get("table"):
+        return render_dimension_table_page(args, bread)
+    if args.get("lookup"):
+        return redirect(url_for('.by_label',label=args['label']))
+    info = { 'args': to_dict(args) }
+    query = {}
+    try:
+        parse_ints (info['args'], query, 'deg', 'degree')
+        parse_ints (info['args'], query, 'wt', '$k$')
+        parse_ints (info['args'], query, 'fdeg', 'field degree')
+    except ValueError:
+        info['error'] = True
+    if not info.get('error'):
+        info['results'] = sample.Samples(query)
+    bread.append( ('search results', ''))
+    return render_template( "ModularForm_GSp4_Q_search_results.html", title='Siegel modular forms search results', bread=bread, info=info)
+
+def render_dimension_table_page(args, bread):
+    fams = get_smf_families()
+    fam_list = [c for c in fams if c.computes_dimensions() and not c.name in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
+    info = { 'family_list': fam_list, 'args': to_dict(args) }
+    family = get_smf_family(args.get('family'))
+    if not family:
+        flash_error("Space %s not found in databsae", args.get('family'))
+    elif not family.computes_dimensions():
+        flash_error("Dimension table not available for family %s.", args.get('family'))
+    else:
+        info['family'] = family
+        if 'j' in family.latex_name:
+            # if j is not specified (but could be) set it to zero for consistency (overrides defaults in json files)
+            if not 'j' in info['args'] or not info['args']['j']:
+                info['args']['j'] = '0'
+        if not 'j' in family.latex_name and 'j' in info['args'] and  info['args']['j'] != '0':
+            flash_error("$j$ = %s should not be specified for the selected space %s", info['args']['j'], '$'+family.latex_name+'$')
+        else:
+            build_dimension_table (info, family, info['args'])
+    bread.append(('dimensions', 'dimensions'))
+    return render_template("ModularForm_GSp4_Q_dimensions.html", title='Siegel modular forms dimension tables', bread=bread, info=info)
+
+def render_sample_page(family, sam, args, bread):
+    info = { 'args': to_dict(args), 'sam': sam, 'latex': latex, 'type':sam.type(), 'name':sam.name(), 'full_name': sam.full_name(), 'weight':sam.weight(), 'fdeg':sam.degree_of_field(), 'is_eigenform':sam.is_eigenform(), 'field_poly': sam.field_poly()}
+    if sam.is_integral() != None:
+        info['is_integral'] = sam.is_integral()
+    if 'Sp4Z' in sam.collection():
+        info['space_url'] = url_for('.Sp4Z_j_space', k=info['weight'], j=0)
+    if 'Sp4Z_2' in sam.collection():
+        info['space_url'] = url_for('.Sp4Z_j_space', k=info['weight'], j=2)
+    info['space'] = '$'+family.latex_name.replace('k', '{' + str(sam.weight()) + '}')+'$'
+    if 'space_url' in info:
+        bread.append((info['space'], info['space_url']))
+    info['space_href'] = '<a href="%s">%s</d>'%(info['space_url'],info['space']) if 'space_url' in info else info['space']
+    if info['field_poly'].disc() < 10**10:
+        label = poly_to_field_label(info['field_poly'])
+        if label:
+            info['field_label'] = label
+            info['field_url'] = url_for('number_fields.by_label', label=label)
+            info['field_href'] = '<a href="%s">%s</a>'%(info['field_url'], field_pretty(label))
+    
+    bread.append((info['name'], ''))
+    title='Siegel modular forms sample ' + info['full_name']
+    properties = [('Space', info['space_href']),
+                  ('Name', info['name']),
+                  ('Type', '<br>'.join(info['type'].split(','))),
+                  ('Weight', str(info['weight'])),
+                  ('Hecke eigenform', str(info['is_eigenform'])),
+                  ('Field degree', str(info['fdeg']))]
+    try:
+        evs_to_show = parse_ints_to_list_flash(args.get('ev_index'), 'list of $l$')
+        fcs_to_show = parse_ints_to_list_flash(args.get('fc_det'), 'list of $\\det(F)$')
+    except ValueError:
+        evs_to_show = []
+        fcs_to_show = []
+    info['evs_to_show'] = sorted([n for n in (evs_to_show if len(evs_to_show) else sam.available_eigenvalues()[:10])])
+    info['fcs_to_show'] = sorted([n for n in (fcs_to_show if len(fcs_to_show) else sam.available_Fourier_coefficients()[1:6])])
+    info['evs_avail'] = [n for n in sam.available_eigenvalues()]
+    info['fcs_avail'] = [n for n in sam.available_Fourier_coefficients()]
+
+    # Do not attempt to constuct a modulus ideal unless the field has a reasonably small discriminant
+    # otherwise sage may not even be able to factor the discriminant
+    info['field'] = sam.field()
+    if info['field_poly'].disc() < 10**80:
+        null_ideal = sam.field().ring_of_integers().ideal(0)
+        info['modulus'] = null_ideal
+        modulus = args.get('modulus','').strip()
+        m = 0
+        if modulus:
+            try:
+                O = sam.field().ring_of_integers()
+                m = O.ideal([O(str(b)) for b in modulus.split(',')])
+            except Exception:
+                info['error'] = True
+                flash_error("Unable to construct modulus ideal from specified generators %s.", modulus)
+            if m == 1:
+                info['error'] = True
+                flash_error("The ideal %s is the unit ideal, please specify a different modulus.", '('+modulus+')')
+                m = 0
+        info['modulus'] = m
+        # Hack to reduce polynomials and to handle non integral stuff
+        def redc(c):
+            return m.reduce(c*c.denominator())/m.reduce(c.denominator())
+        def redp(f):
+            c = f.dict()
+            return f.parent()(dict((e,redc(c[e])) for e in c))
+        def safe_reduce(f):
+            if not m:
+                return latex(f)
+            try:
+                if f in sam.field():
+                    return latex(redc(f))
+                else:
+                    return latex(redp(f))
+            except ZeroDivisionError:
+                return '\\textrm{Unable to reduce} \\bmod\\mathfrak{m}'
+        info['reduce'] = safe_reduce
+    else:
+        info['reduce'] = latex
+        
+    # check that explicit formula is not ridiculously big
+    if sam.explicit_formula():
+        info['explicit_formula_bytes'] = len(sam.explicit_formula())
+        if len(sam.explicit_formula()) < 100000:
+            info['explicit_formula'] = sam.explicit_formula()
+        
+    return render_template("ModularForm_GSp4_Q_sample.html", title=title, bread=bread, properties2=properties, info=info)

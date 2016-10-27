@@ -1,15 +1,13 @@
 # Code for creating plots for browsing L-functions
 
 import math
-import cmath
-import datetime
-from flask import url_for, make_response
+from flask import url_for
 import lmfdb.base as base
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
-from sage.all import prod
+from sage.all import prod, CC
 
 ###############################################################################
 # Maass form for GL(n) n>2
@@ -58,6 +56,8 @@ def getAllMaassGraphHtml(degree):
         groups = [ ["GL3", [1 , 4] ] ] 
     elif degree == 4:
         groups = [ ["GSp4", [1]], ["GL4", [1]] ] 
+    else:
+        return ""
 
     ans = ""
     for i in range(0, len(groups)):
@@ -146,8 +146,8 @@ def getOneGraphHtml(gls):
                + str(gls[2]) + "</h4>\n")
     else:
         ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + "</h4>\n")
-    ans += "<div>The dots in the plot correspond to \\((\\mu_1,\\mu_2)\\) "
-    ans += "in the \\(\\Gamma\\)-factors. These have been found by a computer "
+    ans += "<div>The dots in the plot correspond to L-functions with \\((\\mu_1,\\mu_2)\\) "
+    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). These have been found by a computer "
     ans += "search. Click on any of the dots to get detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)
@@ -228,8 +228,6 @@ def getWidthAndHeight(gls):
 
 
 def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
-    from sage.misc.sage_eval import sage_eval
-    
     xfactor = 20
     yfactor = 20
     extraSpace = 20
@@ -271,19 +269,18 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
     height = yfactor * yMax + extraSpace
 
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
-
     for (x, y, lid, group, level, char, R, ap_id, sign) in paralist:
         if float(x)>0 and float(y)>0:  #Only one of dual pair
             try:
                 linkurl = url_for('.l_function_maass_gln_page', group=group,
                                   level=level, char=char, R=R, ap_id=ap_id)
-            except Exception as ex:  # catch when running a test
+            except Exception:  # catch when running a test
                 linkurl = lid
             ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
             ans += "<circle cx='" + str(float(x) * xfactor)[0:7]
             ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
             ans += "' r='" + str(radius)
-            ans += "' style='fill:" + signtocolour(sage_eval(sign)) + "'>"
+            ans += "' style='fill:" + signtocolour(sign) + "'>"
             ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
             ans += "</circle></a>\n"
 
@@ -291,7 +288,6 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
     return(ans)
 
 def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
-    from sage.misc.sage_eval import sage_eval
     index1 = 2
     index2 = 3
 
@@ -335,13 +331,13 @@ def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
     for (x, y, lid, group, level, sign) in paralist:
         try:
             linkurl = url_for('.l_function_maass_gln_page', group=group, dbid=lid)
-        except Exception as ex:  # catch when running a test
+        except Exception:  # catch when running a test
             linkurl = lid
         ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
         ans += "<circle cx='" + str(float(x) * xfactor)[0:7]
         ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
         ans += "' r='" + str(radius)
-        ans += "' style='fill:" + signtocolour(sage_eval(sign)) + "'>"
+        ans += "' style='fill:" + signtocolour(sign) + "'>"
         ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
         ans += "</circle></a>\n"
 
@@ -478,13 +474,13 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 # loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
-            lid = "(" + str(x) + "," + str(y) + ")"
+            # lid = "(" + str(x) + "," + str(y) + ")" # not used
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/"
             WS = WebModFormSpace(level = x, weight = y)
             numlabels = len(WS.hecke_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
-            countplus = 0   # count how many Galois orbits have sign Plus (+ 1)
-            countminus = 0   # count how many Galois orbits have sign Minus (- 1)
+            # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) # not used
+            # countminus = 0   # count how many Galois orbits have sign Minus (- 1) # not used
             ybaseplus = y  # baseline y-coord for plus cases
             ybaseminus = y  # baseline y-coord for minus cases
             numpluslabels = 0
@@ -630,8 +626,8 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
     radius = 3.3
     xdotspacing = 0.30  # horizontal spacing of dots
     ydotspacing = 0.11  # vertical spacing of dots
-    colourplus = signtocolour(1)
-    colourminus = signtocolour(-1)
+    # colourplus = signtocolour(1) # not used
+    # colourminus = signtocolour(-1) # not used
     maxdots = 5  # max number of dots to display
 
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
@@ -652,18 +648,18 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
 # loop over levels and weights, using plotsector to put the appropriate dots at each lattice point
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
-            lid = "(" + str(x) + "," + str(y) + ")"
-            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/"
+            # lid = "(" + str(x) + "," + str(y) + ")" # not used
+            # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
             WS = WebModFormSpace(level = x, weight = y)  # space of modular forms of weight y, level x
             galois_orbits = WS.hecke_orbits   # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
-            countplus = 0   # count how many Galois orbits have sign Plus (+ 1)
-            countminus = 0   # count how many Galois orbits have sign Minus (- 1)
-            ybaseplus = y  # baseline y-coord for plus cases
-            ybaseminus = y  # baseline y-coord for minus cases
-            numpluslabels = 0
-            numminuslabels = 0
+            # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) (not used)
+            # countminus = 0   # count how many Galois orbits have sign Minus (- 1) (not used)
+            # ybaseplus = y  # baseline y-coord for plus cases (not used)
+            # ybaseminus = y  # baseline y-coord for minus cases (not used)
+            # numpluslabels = 0 # not used
+            # numminuslabels = 0 # not used
 # plotsector requires three dictionaries: dimensioninfo, appearanceinfo, and urlinfo
 # create dimensioninfo
             dimensioninfo = {}
@@ -692,7 +688,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             urlinfo['space']['level'] = x
             urlinfo['space']['character'] = 0
 #
-            scale = 1
+            # scale = 1 # not used
             # Symmetry types: +1 or -1
             symmetrytype = [1, -1]
             for signtmp in symmetrytype:
@@ -815,7 +811,8 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 
 
 def signtocolour(sign):
-    argument = cmath.phase(sign)
+    import cmath
+    argument = cmath.phase(CC(str(sign)))
     r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
@@ -876,10 +873,10 @@ def paintSvgChar(min_cond, max_cond, min_order, max_order):
     ticlength = 4
     radius = 3
     xdotspacing = 0.10  # horizontal spacing of dots
-    ydotspacing = 0.16  # vertical spacing of dots
+    # ydotspacing = 0.16  # vertical spacing of dots (not used)
     colourplus = signtocolour(1)
     colourminus = signtocolour(-1)
-    maxdots = 1  # max number of dots to display
+    # maxdots = 1  # max number of dots to display (not used)
 
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
     ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
@@ -1102,7 +1099,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     offset = dimensioninfo['offset']
     maxdots = dimensioninfo['maxdots']
     dotspacing = dimensioninfo['dotspacing']
-    parallelogramsize = [1, 1]
+    # parallelogramsize = [1, 1] (not used)
     # parallelogramsize = [1 + maxdots, 1 + maxdots]
     edge = dimensioninfo['edge']
 
@@ -1112,7 +1109,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
             urlbase += arg + "=" + str(val) + "&amp;"
 
 # draw the edges of the sector (omit edge if edgelength is 0)
-    edgelength = dimensioninfo['edgelength']
+    # edgelength = dimensioninfo['edgelength'] # not used
     # ans += myline(offset, scale, vertexlocation, lincomb(1, vertexlocation, parallelogramsize[0] * edgelength[0], edge[0]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])
     # ans += "\n"
     # ans += myline(offset, scale, vertexlocation, lincomb(1, vertexlocation, parallelogramsize[1] * edgelength[1], edge[1]), appearanceinfo['edgewidth'], appearanceinfo['edgestyle'], appearanceinfo['edgecolor'])

@@ -1,0 +1,494 @@
+{% extends 'homepage.html' %}
+{% block content %}
+<style>
+<div.ip>span { white-space: nowrap; font-family: serif; }
+</style>
+
+{% macro code(codes, item) %}
+{% set code = codes() %}
+{% for L in code[item] %}
+{# N.B. whitespace is preserved in the following div since the CSS has
+white-space: pre in order to keep line breaks! #}
+<div class="{{ [L,'nodisplay', 'codebox'] | join(' ')}}">{% for c in code[item][L] %}{{code.prompt[L]}}&nbsp;{{c}}<br>{% endfor %}</div>
+{% endfor %}
+{% endmacro %}
+
+<script type="text/javascript"
+        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+<script type="text/javascript"
+src="http://code.jquery.com/jquery-latest.min.js"></script>
+{#
+<script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
+
+<style type="text/css">
+  .sagecell .CodeMirror-scroll { height: auto; overflow-y: hidden;
+    overflow-x: auto; }
+
+  .sagecell-practice .CodeMirror-scroll {
+    height: 150px;
+  }
+
+  .sagecell button.sagecell_evalButton {
+      font-size: 80%;
+  }
+
+  .sagecell_sessionContainer {
+      margin-bottom:1em;
+  }
+</style>
+
+
+<script>
+//  $(sagecell.init(
+//      function() {
+//          singlecell.makeSagecell({
+//              inputLocation: '#myin',
+//              replaceOutput: true,
+//              hide: ['messages', 'computationID', 'files', 'sageMode',
+//                     'editorToggle', 'sessionTitle', 'done'],
+//              evalButtonText: 'Evaluate'})
+//      }
+//   ))
+  </script>
+#}
+
+{#
+    <div align = "center">
+      {{ KNOWL('sage.test', title='Start a Sage cell', kwargs='n=2')
+      }}
+    </div>
+#}
+
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+    <h2> {{ KNOWL('ec.q.minimal_weierstrass_equation', title='Minimal Weierstrass equation') }} </h2>
+
+    {{ place_code('curve') }}
+
+    <p> {{ data.data.equation }} </p>
+
+
+    <h2> {{ KNOWL('ec.q.mordell-weil', title='Mordell-Weil group') }} structure</h2>
+   <div>{% if data.mw.rank==1 %}{% if data.mw.tor_order!=1 %} \(\Z\times {{data.mw.tor_struct}}\)
+    {%endif%}  {%endif%}     </div>
+
+    <div>{% if data.mw.rank==1 %}{% if data.mw.tor_order==1 %}\(\Z\) {%endif%}  {%endif%} </div>
+    <div> {% if data.mw.rank !=0 and data.mw.rank!=1 %} {% if data.mw.tor_order!=1 %}\(\Z^{{data.mw.rank}} \times {{data.mw.tor_struct}}\) {%endif%}  {%endif%} </div>
+    <div> {% if data.mw.rank !=0 and data.mw.rank!=1%} {% if data.mw.tor_order==1 %} \(\Z^{{data.mw.rank}}\){%endif%}  {%endif%} </div>
+    <div> {% if data.mw.rank ==0 %} {% if data.mw.tor_order!=1 %} \({{data.mw.tor_struct}}\){%endif%}  {%endif%} </div>
+    <div> {% if data.mw.rank ==0 %} {% if data.mw.tor_order==1 %}
+    Trivial {%endif%}  {%endif%} </div>
+
+    {% if data.mw.rank!=0 %}
+    {% if data.mw.rank==1 %}
+    <p><h3> Infinite order Mordell-Weil generator and height</h3>
+    {% else %}
+    <p><h3> Infinite order Mordell-Weil generators and heights</h3>
+    {% endif %}
+      {{ place_code('gens') }}
+      <div style='overflow:auto'><p>
+      <table>
+        <tr><td>\(P\)</td><td>&nbsp;=&nbsp;</td>
+          {% for pt in data.mw.generators %}<td>{{pt}}</td>{% endfor %}
+          </tr>
+        <tr><td>\(\hat{h}(P)\)</td><td>&nbsp;&approx;&nbsp;</td>
+          {% for ht in data.mw.heights %}<td>{{ht}}</td>{% endfor %}
+          </tr>
+        </table>
+      </p></div>
+    </p>
+    {%endif %}
+
+    {% if data.mw.tor_order!=1 %}
+    <h2> {{ KNOWL('ec.q.torsion_generators', title='Torsion generators') }}</h2>
+      {{ place_code('tors') }}
+    <p> {{ data.mw.tor_gens }} </p>
+    {%endif %}
+
+
+    <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
+      {{ place_code('intpts') }}
+    {% if data.xintcoords %}
+    <div class="ip">
+      <p>
+      {{data.mw.int_points}}
+      </p>
+    </div>
+    <div> Note: only one of each pair $\pm P$ is listed. </div>
+    {%else %}
+    <div> None </div>
+    {%endif %}
+
+    <h2> {{ KNOWL('ec.q.invariants', title='Invariants') }}  </h2>
+        <table>
+
+        <tr>
+        <td colspan="6">
+          {{ place_code('cond') }}
+        </td>
+        </tr>
+        <tr>
+        <td>\( N \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.data.cond_latex }}</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.data.cond_factor }}\)</td>
+        </tr>
+
+        <tr>
+        <td colspan="6">
+          {{ place_code('disc') }}
+        </td>
+        </tr>
+        <tr>
+        <td> \(\Delta\) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.data.disc }} \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.data.disc_factor }} \)</td>
+        </tr>
+
+        <tr>
+        <td colspan="6">
+          {{ place_code('jinv') }}
+        </td>
+        </tr>
+        <tr>
+        <td> \(j \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.data.j_inv_latex }}</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.data.j_inv_factor }}\)</td>
+        </tr>
+
+        <tr>
+        <td> \( \text{End} (E) \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.data.EndE }}</td>
+        <td>&nbsp;</td>
+        <td>({%if not data.data.CMD %}no {%endif %}
+{{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
+        </td>
+        </tr>
+
+        <tr>
+        <td> \( \text{ST} (E) \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.data.ST|safe }}</td>
+        </tr>
+
+       </table>
+
+    <h2> {{ KNOWL('ec.q.bsd_invariants', title='BSD invariants') }} </h2>
+    <div></div>
+    <p>
+        <table>
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('rank') }}
+        </td>
+        </tr>
+        <tr>
+        <td> \( r \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td> \({{ data.rank }}\)
+        </td>
+        </tr>
+
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('reg') }}
+        </td>
+        </tr>
+        <tr>
+        <td>\( \text{Reg} \) </td>
+        {% if data.rank==0 %}
+        <td>&nbsp;=&nbsp;</td><td> \(1\)</td>
+        {% else %}
+        <td>&nbsp;&approx;&nbsp;</td><td> \({{ data.bsd.reg }}\)</td>
+        {% endif %}
+        </tr>
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('real_period') }}
+        </td>
+        </tr>
+        <tr>
+        <td>\( \Omega \) </td><td>&nbsp;&approx;&nbsp;</td>
+        <td> \({{ data.bsd.omega }}\)</td>
+        </tr>
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('cp') }}
+        </td>
+        </tr>
+        <tr>
+        <td>\( \prod_p c_p \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\( {{ data.bsd.tamagawa_product }} \)
+          {% if data.bsd.tamagawa_factors %}
+          &nbsp;=&nbsp;\( {{ data.bsd.tamagawa_factors }} \)
+          {% endif %}
+        </td>
+        </tr>
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('ntors') }}
+        </td>
+        </tr>
+        <tr>
+        <td> \( \#E_{\text{tor}} \)</td>
+        <td>&nbsp;=&nbsp;</td><td>\({{ data.mw.tor_order }}\)</td>
+        </tr>
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('sha') }}
+        </td>
+        </tr>
+        <tr>
+        <td> &#1064;\(_{\text{an}} \) </td>
+        <td>&nbsp;
+          {%- if data.rank > 1 -%}&approx;{% else %}={% endif %}
+        &nbsp;</td>
+        <td>\({{data.bsd.sha }}\)
+          {% if data.rank > 1 %}
+          ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
+          {% else %}
+          ({{ KNOWL('ec.q.analytic_sha_value',title="exact") }})
+          {% endif %}
+        </td>
+        </tr>
+
+        </table>
+    </p>
+
+{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
+
+    <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
+    <h3> {{KNOWL('ec.q.modular_form', title='Modular form')}}
+{% if data.newform_exists_in_db %}
+<a href="{{data.newform_link}}">{{ data.newform_label }}</a>
+{% else %}
+{{ data.newform_label }}
+{% endif %}
+</h3>
+    {{ place_code('qexp') }}
+    <p>
+{#
+    <form>
+#}
+        <div class="output"><span id="modform_output">{{ data.data.newform | safe }}</span></div>
+        <div class="emptyspace"><br></div>
+{#
+        <button id="morebutton">More coefficients</button>
+    </form>
+#}
+      For more coefficients, see the Downloads section to the right.
+    </p>
+
+    <h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
+      and {{ KNOWL('ec.q.optimal', title='optimality') }}</h3>
+    {{ place_code('moddeg') }}
+      {% if data.data.degree==0 %}
+      Not available
+      {% else %}
+      {{ data.data.degree }}
+      {% endif %}
+      : curve is
+      {% if not data.data.Gamma0optimal %}
+      not
+      {% endif %}
+      \( \Gamma_0(N) \)-optimal
+    </p>
+
+    <p>
+      <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} attached to the curve </h3>
+    {{ place_code('L1') }}
+    <p>
+        \( {{ data.bsd.lder_name }} \) &approx; \( {{ data.bsd.lder }} \)
+    </p>
+
+    <h2> Local data </h2>
+
+<style type="text/css">
+#local_data th, #local_data td {
+padding : 4px;
+text-align: center;
+}
+</style>
+
+    {{ place_code('localdata') }}
+
+<table id = "local_data">
+<tr>
+<th>prime</th>
+<th>{{KNOWL('ec.q.tamagawa_numbers', title='Tamagawa number')}}</th>
+<th>{{KNOWL('ec.q.kodaira_symbol', title='Kodaira symbol')}}</th>
+<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+<th>{{KNOWL('ec.local_root_number', title='Root number')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='ord(\(N\))')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\Delta\))')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
+</tr>
+{% for pr in data.local_data %}
+<tr>
+<td> \({{pr.p}}\)</td>
+<td>\({{pr.cp}}\)</td>
+<td>{{pr.kod}}</td>
+<td>
+{% if pr.red==0 %}
+ Additive
+ {% elif pr.red==1 %}
+  Split multiplicative
+  {% elif pr.red==-1 %}
+   Non-split multiplicative
+{% endif %}
+</td>
+<td>{{pr.rootno}}</td>
+<td>{{pr.ord_cond}}</td>
+<td>{{pr.ord_disc}}</td>
+<td>{{pr.ord_den_j}}</td>
+</tr>
+{% endfor %}
+</table>
+
+
+    <h2> {{KNOWL('ec.galois_rep', title='Galois representations')}} </h2>
+
+{% if data.data.CMD %} {% else %}
+{% if data.twoadic_index == 1 %}
+<p>
+The {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached
+to this elliptic curve is surjective.
+</p>
+{% else %}
+<p>
+The image of the {{KNOWL('ec.galois_rep',title='2-adic representation')}} attached to this elliptic curve
+is the subgroup of $\GL(2,\Z_2)$ with {{KNOWL('ec.rouse_label', title='Rouse label')}}
+ <a href="{{data.data.twoadic_rouse_url}}" target="_blank">{{data.twoadic_label}}</a>.
+</p>
+<p>
+This subgroup is the pull-back of the subgroup of
+$\GL(2,\Z_2/2^{{data.twoadic_log_level}}\Z_2)$ generated by
+${{data.data.twoadic_gen_matrices}}$ and has index {{
+data.twoadic_index }}.
+</p>
+{% endif %}
+{% endif %}
+
+
+    {{ place_code('galrep') }}
+
+{% if data.data.galois_data %}
+<p>
+{% if data.data.CMD %}
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
+representations')}} of an elliptic curve with {{
+KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
+are non-surjective for all odd primes \( p \).  We only show the image for
+primes \( p\le 37 \).
+{% else %}
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
+representation')}} is surjective for all primes \( p \) except those
+    listed.
+{% endif %}
+</p>
+<table>
+<tr>
+<th>prime</th>
+<th>{{KNOWL('ec.q.galois_rep_image', title='Image of Galois representation')}}</th>
+</tr>
+{% for pr in data.data.galois_data %}
+<tr>
+<td align=center> \({{pr.p}}\)</td>
+<td align=center>{{pr.image}}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+<p>
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
+representation')}} is surjective for all primes \( p \).
+</p>
+{% endif %}
+
+
+
+    <h2> p-adic data </h2>
+
+    {{ place_code('padicreg') }}
+
+    <p>
+{% if data.bsd.rank==0 %}
+All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
+{% else %}
+{% if data.data.p_adic_data_exists %}
+<p>
+Note: \(p\)-adic data only exists for primes \(p\ge5\) of good ordinary
+reduction.
+</p>
+        <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p='xxx', rank=data.mw.rank).replace('xxx', "'+this.value+'")}}', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'padic']);}); ">
+        <option value=''>Choose a prime...</option>
+        {% for p in data.data.p_adic_primes %}
+        <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+        </select>
+        <div id='padic'>
+        </div>
+{% elif data.data.Gamma0optimal %}
+No \(p\)-adic data exists for this curve.
+{% else %}
+\(p\)-adic regulators are not yet computed for curves that are not \(\Gamma_0\)-optimal.
+{% endif %}
+{% endif %}
+    </p>
+
+{#
+    <h2> Plot of real points</h2>
+    <div class='sage nodisplay code'><img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">&nbsp;E.plot()</div>
+    <div class='pari nodisplay code'> </div>
+    <div class='magma nodisplay code'> </div>
+    <center>
+    <img src="{{data.plot}}" />
+    </center>
+#}
+
+<script type="text/javascript">
+var number_of_coefficients = 10;
+function more_handler(evt) {
+    number_of_coefficients += number_of_coefficients;
+    evt.preventDefault();
+    $("#modform_output").load("{{data.modform_display}}"+number_of_coefficients,
+        function() {
+            {# tell mathjx to render the output #}
+            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "modform_output"]);
+        });
+}
+$(function() {
+    $("#morebutton").click(function(e) {more_handler(e)});
+});
+</script>
+
+    {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+
+{% if DEBUG %}
+<hr>
+<div>
+Raw elliptic curve data:<br>
+{% for k in data.__dict__ %}
+{% if not k=='plot' and not k=='plot_link' and not k=='properties' %}
+{{k}}: {{data[k]}} <br>
+{% endif %}
+{% endfor %}
+</div>
+{% endif %}
+
+
+{% endblock %}

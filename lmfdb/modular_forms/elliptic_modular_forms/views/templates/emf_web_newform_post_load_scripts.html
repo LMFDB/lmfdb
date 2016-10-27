@@ -9,8 +9,8 @@ function(event){
         event.preventDefault();
         $('#num_error').html("");
         document.getElementById('num_error').className += ' errmsg';
-        $('<span>').text( "Error: we only have coefficients for n up to {{max_cn-1}} in the database!").appendTo( "#num_error" );
-        document.get_coefficients.number.value={{max_cn}};
+        $('<span>').text( "Error: we only have coefficients for n up to {{max_cn - 1}} in the database!").appendTo( "#num_error" );
+        document.get_coefficients.number.value={{max_cn - 1}};
      return false;
        } else if(number < 0) {
          $('#num_error').html("");

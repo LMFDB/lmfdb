@@ -3,16 +3,9 @@
 # Author: John Jones
 
 import re
-import pymongo
-ASC = pymongo.ASCENDING
-import flask
-from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger
-from sage.all import ZZ, var, PolynomialRing, QQ, latex
+from flask import render_template, url_for
 
-from lmfdb.motives import motive_page, motive_logger
+from lmfdb.motives import motive_page
 
 HGM_credit = 'D. Roberts and J. Jones'
 
@@ -24,7 +17,6 @@ def get_bread(breads=[]):
     return bc
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
-
 
 @motive_page.route("/")
 def index():

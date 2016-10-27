@@ -6,9 +6,8 @@ Routines for helping with the download of modular forms data.
 import StringIO
 import flask
 from flask import send_file,redirect,url_for
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from sage.all import latex,dumps
 
@@ -19,82 +18,48 @@ def get_coefficients(info):
     emf_logger.debug("IN GET_COEFFICIENTS!!!")
     level = my_get(info, 'level', -1, int)
     weight = my_get(info, 'weight', -1, int)
-    character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
-    number=my_get(info,'number',0,int) + 1
+    character = my_get(info, 'character', '', int)  # int(info.get('weight',0))
+    number=my_get(info,'number',100,int)
     label=my_get(info,'label','',str)
     emf_logger.debug("info={0}".format(info))
     if character == '':
-        character = 0
+        character = 1
     label = info.get('label', '')
-    # we only want one form or one embedding
-    try:
-        s = print_list_of_coefficients(info)
-    except IndexError as e:
-        info['error']=str(e)
-        flask.flash(str(e))
-        return redirect(url_for("emf.render_elliptic_modular_forms", level=level,weight=weight,character=character,label=label), code=301)
     if info['format']=="sage":
+        ending = "sage"
+        f = WebNewForm(level, weight, character, label, prec=number)
+        s = f.download_to_sage(number)
+    elif info['format']=="sobj":
         ending = "sobj"
+        f = WebNewForm(level, weight, character, label, prec=number)
+        s = f.dump_coefficients(number)
     else:
+        # we only want one form or one embedding
+        try:
+            s = print_list_of_coefficients(info)
+        except IndexError as e:
+            info['error']=str(e)
+            flask.flash(str(e))
+            return redirect(url_for("emf.render_elliptic_modular_forms", level=level,weight=weight,character=character,label=label), code=301)
         ending = "txt"
     if info['format'] == 'q_expansion':
         fmt = '-qexp'
-    elif info['format'] == "coefficients":
+    elif info['format'] == "coefficients" or info['format'] == "sobj":
         fmt = '-coef'
     elif info['format'] == "embeddings":
         fmt = '-emb'
     else:
         fmt=''
     info['filename'] = "{0}-{1}-{2}-{3}-coefficients-0-to-{4}{5}.{6}".format(level,weight,character,label,number,fmt,ending)
-    # return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+    # return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'], add_etags=False)
 
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
     return send_file(strIO,
                      attachment_filename=info["filename"],
-                     as_attachment=True)
-
-
-def download_web_modform(info):
-    r"""
-    Return a dump of a WebNewForm object.
-
-    """
-    emf_logger.debug("IN GET_WEB_MODFORM!!! info={0}".format(info))
-    level = my_get(info, 'level', -1, int)
-    weight = my_get(info, 'weight', -1, int)
-    character = my_get(info, 'character',0, int)  # int(info.get('weight',0))
-    emf_logger.debug("info={0}".format(info))
-    if character == '':
-        character = 0
-    label = info.get('label', '')
-    # we only want one form or one embedding
-    if label != '':
-        if format == 'sage':
-            if character != 0:
-                D = DirichletGroup(level)
-                x = D[character]
-                X = Newforms(x, weight, names='a')
-            else:
-                X = Newforms(level, weight, names='a')
-        else:  # format=='web_new':
-            X = WebNewForm(level=level, weight=weight, character=character, label=label)
-    s = dumps(X)
-    name = "{0}-{1}-{2}-{3}-web_newform.sobj".format(weight, level, character, label)
-    emf_logger.debug("name={0}".format(name))
-    info['filename'] = name
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    try:
-        return send_file(strIO,
-                         attachment_filename=info["filename"],
-                         as_attachment=True)
-    except IOError:
-        info['error'] = "Could not send file!"
-
-
+                     as_attachment=True,
+                     add_etags=False)
 
 def print_list_of_coefficients(info):
     r"""
@@ -102,7 +67,6 @@ def print_list_of_coefficients(info):
     """
     level = my_get(info, 'level', -1, int)
     weight = my_get(info, 'weight', -1, int)
-    prec = my_get(info, 'prec', 12, int)  # number of digits
     bitprec = my_get(info, 'bitprec', 12, int)  # number of digits                
     character = my_get(info, 'character', '', str)  # int(info.get('weight',0))
     fmt = info.get("format","q_expansion")
@@ -117,21 +81,15 @@ def print_list_of_coefficients(info):
     if label == '' or level == -1 or weight == -1:
         return "Need to specify a modular form completely!!"
 
-    WMFS = WebModFormSpace(level= level, weight = weight, cuspidal=True,character = character)
-    if not WMFS:
+    number = int(info['number'])+1 if 'number' in info else 20
+    emf_logger.debug("number = {}".format(number))
+    F = WebNewForm(level= level, weight = weight, character = character, label = label, prec=number)
+    if not F.has_updated():
         return ""
-    if('number' in info):
-        number = int(info['number']) + 1
-    else:
-        number = max(WMFS.sturm_bound + 1, 20)
-    FS = list()
-    f  = WMFS.hecke_orbits.get(label)
-    if f is not None:
-        FS.append(f)
-    else:
-        for label in WMFS.hecke_orbits:
-            FS.append(WMFS.f(label))
-    shead = "Cusp forms of weight " + str(weight) + "on \(" + latex(WMFS.group) + "\)"
+    if not 'number' in info:
+        F.prec = number = max(F.parent.sturm_bound + 1, 20)
+        F.update_from_db()
+    shead = "Cusp forms of weight " + str(weight) + "on \(" + latex(F.parent.group) + "\)"
     s = ""
     if((character is not None) and (character > 0)):
         shead = shead + " and character \( \chi_{" + str(character) + "}\)"
@@ -139,19 +97,13 @@ def print_list_of_coefficients(info):
     coefs = ""
     if fmt == "sage":
         res = []
-    for F in FS:
-        if number > F.max_cn():
-            raise IndexError,"The database does not contain this many ({0}) coefficients for this modular form! We only have {1}".format(number,F.max_cn())
-        if len(FS) > 1:
-            if info['format'] == 'html':
-                coefs += F.label()
-            else:
-                coefs += F.label()
-        if fmt == "sage":
-            qe = F.coefficients(range(number))
-            res.append(qe)
-        else:
-            coefs += print_coefficients_for_one_form(F, number, info['format'],bitprec=bitprec)
+    if number > F.max_available_prec():
+        raise IndexError,"The database does not contain this many ({0}) coefficients for this modular form! We only have {1}".format(number,F.max_available_prec())
+    if fmt == "sage":
+        qe = F.coefficients(range(number))
+        res.append(qe)
+    else:
+        coefs += print_coefficients_for_one_form(F, number, info['format'],bitprec=bitprec)
     if not fmt == "sage":
         return s+"\n"+coefs
     else:
@@ -195,7 +147,7 @@ def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
         for n in range(len(qe)):
             c=qe[n]
             s += "{n} \t {c} \n".format(n=n,c=c)
-        emf_logger.debug("qe={0}".format(qe))
+        #emf_logger.debug("qe={0}".format(qe))
 
     if fmt == "embeddings":
         #embeddings = F.q_expansion_embeddings(number,bitprec=bitprec,format='numeric')
@@ -206,5 +158,5 @@ def print_coefficients_for_one_form(F, number, fmt="q_expansion",bitprec=53):
             for n in range(number):
                 s += str(n) + "\t" + str(F.coefficient_embedding(n,j)) + "\n"
 
-    emf_logger.debug("s={0}".format(s))
+    #emf_logger.debug("s={0}".format(s))
     return s

@@ -39,10 +39,14 @@ By {{ KNOWL('artin.gg_quotient',title="group") }}:
 <a href="?group=A7">$A_7$</a>,
 <a href="?group=S7">$S_7$</a>
 
+<p>
+A <a href={{url_for('.random_representation')}}>random Artin representation</a> from the database.
+</p>
+
 <h2>Go to a specific Artin representation by {{KNOWL('artin.label',title='label')}}</h2>
 
 <div><form>
-Artin representation: <input type='text' name='natural' size='30' example='3.2e3_7e5.7t3.1c1'> <button type='submit' name='search' value='Go'>label</button> <span class="formexample">e.g., 3.2e3_7e5.7t3.1c1</span></form></div>
+Artin representation: <input type='text' name='natural' size='50' example='3.2e3_7e5.7t3.1c1'> <button type='submit' name='search' value='Go'>label</button> <span class="formexample">e.g., 3.2e3_7e5.7t3.1c1</span></form></div>
 
 
 <h2> Search for an Artin representation </h2>
@@ -69,13 +73,13 @@ Enter values into one or more boxes to restrict the search.
     </tr>
 
     <tr>
-        <td align="right">Ramified primes</td>
+        <td align="right">{{ KNOWL('artin.ramified_primes', title="Ramified primes") }}</td>
         <td><input type='text' name='ramified' placeholder="2" size=15></td>
         <td><span class="formexample"> e.g. 2, 3 (no range allowed)</span></td>
     </tr>
     
     <tr>
-        <td align="right">Unramified primes</td>
+        <td align="right">{{ KNOWL('artin.unramified_primes', title="Unramified primes") }}</td>
         <td><input type='text' name='unramified' placeholder="5,7" size=15></td>
         <td><span class="formexample"> e.g. 5, 7, 13  (no range allowed)</span></td>
     </tr>

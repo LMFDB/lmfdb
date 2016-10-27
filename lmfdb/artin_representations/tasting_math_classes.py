@@ -10,7 +10,9 @@ print ".....done"
 
 print "math_classes, Lfunction"
 from math_classes import ArtinRepresentation, NumberFieldGaloisGroup
+assert ArtinRepresentation and NumberFieldGaloisGroup # silence pyflakes
 from Lfunction import ArtinLfunction
+assert ArtinLfunction # silence pyflakes
 print ".....done"
 
 # a = ArtinRepresentation(1,"5",2)

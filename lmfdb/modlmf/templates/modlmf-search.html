@@ -1,0 +1,140 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Further refine search </h2>
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<table border="0">
+
+<tr>
+<td align=left>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}</td>
+<td align=left>{{ KNOWL('modlmf.deg', title='Field degree') }}</td>
+<td align=left>{{ KNOWL('modlmf.level', title='Level') }}</td>
+<td align=left>{{ KNOWL('modlmf.conductor', title='Conductor') }}</td>
+</tr>
+
+
+<tr>
+<td align=left><input type='text' name='characteristic' value="{{info.characteristic}}" size=10></td>
+<td align=left><input type='text' name='deg' value="{{info.deg}}" size=10></td>
+<td align=left><input type='text' name='level' value="{{info.level}}" size=10></td>
+<td align=left><input type='text' name='conductor' value="{{info.conductor}}" size=10></td>
+</tr>
+
+</tr>
+<td align=left>{{ KNOWL('modlmf.weight', title='Minimal weight') }}</td>
+<td align=left>{{ KNOWL('modlmf.dirchar', title='Character label') }}</td>
+<td align=left>Group: <select name='group'>
+           <option value="gamma0" selected >Gamma_0</option>
+           <option value="gamma1">Gamma_1</option>
+         </select></td>
+<td align=left>Up to twists: <select name='twist'>
+           <option value="no" selected="no" >no</option>
+           <option value="yes">yes</option>
+         </select></td></tr>
+</tr>
+
+<tr>
+<td align=left><input type='text' name='min_weight' value="{{info.min_weight}}" size=10>
+<td align=left><input type='text' name='dirchar' value="{{info.dirchar}}"" size=10>
+</table>
+
+
+<table id="a_n">
+<tr align=left><td>{{KNOWL('modlmf.q_expansion', title='Coefficient')}} of <i>q<sup>n</sup></i> for <i>n=</i><input type='text' name='index_coeff' size=5 value="{{info.index_coeff}}"> is <input type='text' name='req_coeff' size=5 value="{{info.req_coeff}}">
+</td><td><button type='button' id='more_modp_button'>more</button>
+</td></tr>
+</table>
+
+
+<button type='submit' size=10  value='refine'>Search again</button></td>
+</form>
+
+{% if info.err is defined %}
+    <h2>Error</h2>
+    <div>
+    <!--  {{ info.err|safe }}-->
+    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+    </div>
+{% else %}
+    {% if info.report == "no matches" %}
+        <h2> No matches</h2>
+    {% else %}
+        <h2> Results ({{info.report}})
+        {% if info.start > 0 %}
+            <a href="#" class="navlink"
+               onclick="decrease_start_by_count_and_submit_form('re-search');return
+                        false">Previous</A>
+        {% endif %}
+        {% if info.more > 0 %}
+            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+        {% endif %}
+        </h2>
+
+        <table>
+        <tr>
+        <th>{{ KNOWL('modlmf.label', title='Label') }}</th>
+        <th>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}</th>
+        <th>{{ KNOWL('modlmf.degree', title='Field degree') }}</th>
+        <th>{{ KNOWL('modlmf.level', title='Level')}}</th>
+<!--        <th>{{ KNOWL('modlmf.conductor', title='Conductor') }}</th>-->
+        <th>{{ KNOWL('modlmf.minimal_weight', title='Minimal weight') }}</th>
+        </tr>
+        {% for l in info.modlmfs %}
+            <tr>
+            <td align='left'><a href="{{url_for('modlmf.render_modlmf_webpage', label=l.label)}}">{{l.label}} </a></td>
+            <td>{{l.characteristic}}</td>
+            <td>{{l.deg}}</td>
+            <td>{{l.level}}</td>
+<!--            <td>${{l.conductor}}$</td>-->
+            <td>${{l.min_weight}}$</td>
+            </tr>
+        {% endfor %}
+        </table>
+        <hr>
+        {% if info.start > 0 %}
+            <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+        {% endif %}
+        {% if info.more > 0 %}
+            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+        {% endif %}
+        <br>
+
+        <form>
+        Download all search results for
+        <input type="submit" name="submit" value="gp">
+        <input type="submit" name="submit" value="sage">
+        <input type="submit" name="submit" value="magma">
+        <input type="hidden" name="download" value="1"/>
+        <input type="hidden" name="query" value="{{info.query}}"/>
+        </form>
+    {% endif %}
+{% endif %}
+
+<script>
+//Try to get tbody first with jquery children. works faster!
+var tbody = $('#a_n').children('tbody');
+
+//Then if no tbody just select your table 
+var table = tbody.length ? tbody : $('#a_n');
+
+
+$('#more_modp_button').click(function(){
+    //Add row
+    table.append("<tr><td align='right'><i>n=</i><input type='text' name='index_coeff' size=5> is <input type='text' name='req_coeff' size=5></td><td><button type='button' value='Delete Row' onclick='deleteRow(this)'>less</button></td></tr>");
+    return false;
+})
+
+function deleteRow(btn) {
+  var row = btn.parentNode.parentNode;
+  row.parentNode.removeChild(row);
+}
+</script>
+
+<!--<br>-->
+<!--{% if DEBUG %}-->
+<!--<p class="tex2jax_ignore">  Results for database query {{ info.query }}</p>-->
+
+<!--{% endif %}-->
+
+{% endblock %}

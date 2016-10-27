@@ -1,7 +1,7 @@
 prompt:
-  sage:   'sage:'
-  pari:   'gp (2.8):'
-  magma:  'magma:'
+  sage:   'sage'
+  pari:   'gp (2.8)'
+  magma:  'magma'
 
 logo:
   sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
@@ -18,16 +18,16 @@ not-implemented:
 
 field:
   sage:  K.<a> = NumberField(%s)
-  pari: K = nfinit(%s); a=x
+  pari: K = nfinit(%s);
   magma: K<a> := NumberField(%s);
 
 curve:
   sage: |
-    E = EllipticCurve(%s)
+    E = EllipticCurve(K, %s)
   pari: |
-    E = ellinit(%s)
+    E = ellinit(%s,K)
   magma: |
-    E := EllipticCurve(%s);
+    E := ChangeRing(EllipticCurve(%s),K);
 
 is_min:
   sage: |

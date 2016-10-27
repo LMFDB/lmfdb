@@ -1,0 +1,62 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2>  Half Integral Weight Cusp Forms Space  </h2>
+
+<p>
+<table>
+<tr><td> Weight:<td> ${{ info.weight }}/2$ </tr>
+<tr><td> Level:<td> ${{ info.level }}$ </tr>
+<tr><td> Character:<td> <A href="/Character/Dirichlet/{{info.ch_lab}}">${{info.char}}$</A> </tr>
+</tr>
+<tr><td> Label:<td> {{ info.label}} </tr>
+<tr><td> Dimension:<td> ${{ info.dimension }}$ </tr>
+</table>
+</p>
+
+
+<h2> {{ KNOWL('mf.half_integral_weight.shimura_decomposition', title='Shimura Decomposition')}} </h2>
+<p>
+<table>
+<tr><td> Dimension $S_0({{info.level}}, {{info.char}})$:<td> ${{info.dimtheta}}$ </tr>
+<tr><td> Dimension $S'_0({{info.level}}, {{info.char}})$:<td> ${{info.dimnew}}$ </tr>
+</table>
+</p>
+
+
+{% if info.dimtheta != 0  %}
+<table>
+<tr><td> Theta subspace:</td><td>$\langle$
+	{% for n in info.theta %}
+		$h($<A HREF="Character/Dirichlet/{{n[0]}}">${{n[1]}}$</A>$)$
+	{% endfor %}	
+$\rangle$</td></tr>
+</table>
+{% endif %}
+
+<p>
+<table border="1" padding=5px>
+<tr> <td>Classical newforms</td> <td>Hecke eigenvalue field</td><td>Half integral weight cuspforms</td></tr>
+<tr>
+{% for n in info.new %}
+	<td><A HREF="/ModularForm/GL2/Q/holomorphic/?jump_to={{n.mf}}">{{n.mf}}</A></td>
+    {% if n.nf == "1.1.1.1" %}
+        <td><A HREF="/NumberField/{{n.nf}}">$\Q$<A></td>
+    {% else %}
+        <td>$\Q(a)$: <A HREF="/NumberField/{{n.nf}}"> {{n.field_knowl|safe }}</A>, minimal polynomial of $a$ is $xxxx$</td>
+    {% endif %}
+	<td>{% for h in n.hiwf %}
+		<br><item>${{h}}$</item><br>
+	{% endfor %}<br></td></tr>
+{% endfor %}
+</tr>
+</table>
+</p>
+
+
+
+</p>
+
+
+
+{% endblock %}

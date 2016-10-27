@@ -1,15 +1,10 @@
 # Functions for getting info about elliptic curves and related modular forms
-# TODO: These should be (is already) part of the elliptic curve code?
 
-import re
-from lmfdb import base
 from pymongo import ASCENDING
-import lmfdb.utils
-from lmfdb.lfunctions import logger
-from lmfdb.elliptic_curves.web_ec import lmfdb_label_regex
+from lmfdb.elliptic_curves.web_ec import lmfdb_label_regex, db_ec
 
 
-def isogenyclasstable(Nmin, Nmax):
+def isogeny_class_table(Nmin, Nmax):
     ''' Returns a table of all isogeny classes of elliptic curves with
      conductor in the ranges NMin, NMax.
     '''
@@ -18,25 +13,22 @@ def isogenyclasstable(Nmin, Nmax):
     query = {'number': 1, 'conductor': {'$lte': Nmax, '$gte': Nmin}}
 
     # Get all the curves and sort them according to conductor
-    cursor = base.getDBConnection().elliptic_curves.curves.find(query)
+    cursor = db_ec().find(query,{'_id':False,'conductor':True,'lfmdb_label':True,'lmfdb_iso':True})
     res = cursor.sort([('conductor', ASCENDING), ('lmfdb_label', ASCENDING)])
 
     iso_list = [E['lmfdb_iso'] for E in res]
 
     return iso_list
+    
+def isogeny_class_cm(label):
+    return db_ec().find_one({'lmfdb_iso':label},{'_id':False,'cm':True})['cm']
 
 
 def nr_of_EC_in_isogeny_class(label):
     ''' Returns the number of elliptic curves in the isogeny class
      with given label.
     '''
-    i = 1
-    connection = base.getDBConnection()
-    data = connection.elliptic_curves.curves.find_one({'lmfdb_label': label + str(i)})
-    while not data is None:
-        i += 1
-        data = connection.elliptic_curves.curves.find_one({'lmfdb_label': label + str(i)})
-    return i - 1
+    return db_ec().find({'lmfdb_iso':label}).count()
 
 
 def modform_from_EC(label):

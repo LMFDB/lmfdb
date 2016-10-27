@@ -15,9 +15,9 @@ import string
 import re
 import pymongo
 import flask
-from lmfdb.base import app, getDBConnection
+from lmfdb.base import app
 from datetime import datetime
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
+from flask import render_template, render_template_string, request, url_for, make_response
 from flask.ext.login import login_required, current_user
 from knowl import Knowl, knowl_title, get_history, knowl_exists
 from lmfdb.users import admin_required, housekeeping
@@ -63,7 +63,7 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
         return "{{ KNOWL('%s') }}" % kid
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
-md = markdown.Markdown(extensions=['wikilinks'],
+md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
                        extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
 md.inlinePatterns.add('mathjax$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '<escape')
@@ -93,7 +93,7 @@ def first_bracketed_string(text, depth=0, lbrack="{", rbrack="}"):
     thetext = text.strip()
 
     if not thetext:
-        logging.error("empty string sent to first_bracketed_string()")
+        logger.error("empty string sent to first_bracketed_string()")
         return ""
 
     previouschar = ""
@@ -127,7 +127,7 @@ def first_bracketed_string(text, depth=0, lbrack="{", rbrack="}"):
     if depth == 0:
         return firstpart, thetext
     else:
-        logging.error("no matching bracket %s in %s XX", lbrack, thetext)
+        logger.error("no matching bracket %s in %s XX", lbrack, thetext)
         return "",firstpart[1:]   # firstpart should be everything
                                   # but take away the bracket that doesn't match
 
@@ -145,7 +145,7 @@ def ref_to_link(txt):
     refs = thecite.split(",")
     ans = ""
 
-    print "refs",refs
+    # print "refs",refs
 
     for ref in refs:
         ref = ref.strip()    # because \cite{A, B, C,D} can have spaces
@@ -192,6 +192,7 @@ def md_latex_accents(text):
     knowl_content = re.sub(r"\\'{([a-zA-Z])}",r"&\1acute;",knowl_content)
     knowl_content = re.sub(r"\\`([a-zA-Z])",r"&\1grave;",knowl_content)
     knowl_content = re.sub(r"\\`{([a-zA-Z])}",r"&\1grave;",knowl_content)
+    knowl_content = re.sub(r"``(?P<a>[\S\s]*?)''", r"&ldquo;\1&rdquo;", knowl_content)
 
     return knowl_content
 
@@ -346,7 +347,6 @@ def show(ID):
 
 @knowledge_page.route("/raw/<ID>")
 def raw(ID):
-    k = Knowl(ID)
     data = render(ID, footer="0", raw=True)
     resp = make_response(data)
     # cache 2 minutes and allow CORS
@@ -420,7 +420,12 @@ def render(ID, footer=None, kwargs=None, raw=False):
     the keyword 'raw' is used in knowledge.show and knowl_inc to
     include *just* the string and not the response object.
     """
-    k = Knowl(ID)
+    try:
+        k = Knowl(ID)
+    except:
+        logger.critical("Failed to render knowl %s"%ID)
+        errmsg = "Sorry, the knowledge database is currently unavailable."
+        return errmsg if raw else make_response(errmsg)
 
     # logger.debug("kwargs: %s", request.args)
     kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))

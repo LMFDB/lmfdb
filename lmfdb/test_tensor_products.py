@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 from base import LmfdbTest
-from flask import url_for
 import unittest2
 
 class TensorProductTest(LmfdbTest):
@@ -27,4 +26,3 @@ class TensorProductTest(LmfdbTest):
         assert "(1,2,3)" in L2.data
         L = self.tc.get("TensorProducts/show/?obj1=ModularForm%2FGL2%2FQ%2Fholomorphic%2F1%2F12%2F0%2Fa%2F0&obj2=ArtinRepresentation%2F2%2F31%2F1%2F")
         assert '961' in L.data
-

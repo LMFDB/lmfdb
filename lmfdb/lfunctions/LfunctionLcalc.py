@@ -4,13 +4,20 @@ import math
 import time  # for printing the date on an lcalc file
 import socket  # for printing the machine used to generate the lcalc file
 from sage.all import Infinity, imag_part, real_part
-from Lfunctionutilities import splitcoeff, pair2complex, p2sage
+from Lfunctionutilities import splitcoeff, pair2complex, string2number
 
 
 def parse_complex_number(z):
-    zs = p2sage(z)
-    z_parsed = "(" + str(real_part(zs)) + "," + str(imag_part(zs)) + ")"
-    return z_parsed
+    """convert a string representing a complex number to another string looking like "(x,y)"
+    """
+    from sage.all import CC
+    try:
+        # need to convert from unicode to orginary string type
+        x,y = CC(string2number(str(z)))
+        return "({},{})".format(x,y)
+    except (TypeError, SyntaxError):
+        print("Unable to parse {} as complex number".format(z))
+        return "(0,0)"
 
 # Lcalc Version 2 ###########################################################
 
@@ -103,7 +110,7 @@ def createLcalcfile_ver2(L, url):
     thefile += "\n\n"
 
     thefile += "name = \"" + url.partition('/L/')[2].partition('?download')[0].strip('/') + "\"\n"
-    kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0]
+    # kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0] -- not used
     kind_of_L = url.partition('/L/')[2].partition('?download')[0].split('/')
     # thefile += str(kind_of_L) + "\n\n\n\n"
     if len(kind_of_L) > 2:

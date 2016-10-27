@@ -1,0 +1,155 @@
+prompt:
+  gap:   'gap'
+  magma:  'magma'
+
+logo:
+  gap: <img src = "http://gap.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_GAP-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+
+not-implemented:
+  gap: |
+    \\\\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+
+top_matter:
+  gap:  "# WARNING: The conjugacy class numbers may not be the same as those listed in lmfdb.org, as numberings in Magma and GAP may differ. If you need to connect this data to that posted on lmfdb.org, compare the variables 'passport_label' and 'gen_vector_labels'."
+  magma:  RecFormat:=recformat<group,gp_id, signature,gen_vectors,conj_classes,genus,dimension,r,g0, passport_label,gen_vect_label, is_hyperelliptic, hyp_involution, is_cyclic_trigonal,cyc_auto,full_auto, full_sign>;
+
+
+
+
+gp_comment:
+  gap:  " Generate data which is the same for all entries."
+  magma: " Create group as a permutation group, and generate data which is the same for all entries."
+
+group:
+  gap:  gp_id:=
+  magma: gp_id:= 
+
+
+group_construct:
+   magma: "H:=SmallGroup(gp_id[1],gp_id[2]); n:=#H; LP:=[]; LG:=[g : g in H];
+   	  for i in [1..n] do 
+     	     x:=LG[i]; Tx:=[LG[j]*x : j in [1..n]]; permL:=[];
+      	     for j in [1..n] do for k in [1..n] do
+                if Tx[j] eq LG[k] then
+                   permL[j]:=k;  break;
+      	     end if; end for; end for;
+      	     Append(~LP,permL);
+ 	  end for;
+	  G:=PermutationGroup<n|LP>; "
+
+
+signature:
+  gap:   signature:=
+  magma: signature:=
+
+gen_vectors:
+  gap:   gen_vectors:=
+  magma: gen_vectors:=
+
+con:
+  magma: cc:=
+
+
+genus:
+  gap:   genus:=
+  magma: genus:=
+
+r:
+  gap:   r:=Length(signature)-1;
+  magma: r:=#signature-1;
+
+g0:
+  gap:   g0:=signature[1];
+  magma: g0:=signature[1];
+
+
+dim:
+  gap:   dim:=r-3;
+  magma: dim:=r-3;
+
+
+sym:
+  gap:   " "
+  magma: S:=Sym(gp_id[1]);
+
+
+gen_gp:
+  gap:   "perm_list:= List([1..Length(gen_vectors)], x->PermList(gen_vectors[x])); S:=SymmetricGroup(gp_id[1]); G:=Subgroup(S,perm_list);"
+  magma: "gen_vectors_as_perm:=[S!perm : perm in gen_vectors];"
+
+
+
+
+hyp:
+  gap: is_hyperelliptic:=
+  magma: is_hyperelliptic:=
+
+hyp_inv:
+   gap:  hyp_involution:=PermList(
+   magma: hyp_involution:=S!
+
+hyp_inv_last:
+   gap: ");\n"
+   magma: ";\n"
+
+
+cyc:
+  gap: is_cyclic_trigonal:=
+  magma: is_cyclic_trigonal:=
+
+cyc_auto:
+   gap:  cyc_auto:=PermList(
+   magma: cyc_auto:=S!
+
+
+
+full_auto:
+   gap:  full_auto:=
+   magma: full_auto:=
+
+full_sign:
+   gap:   full_sign:=
+   magma: full_sign:=
+
+tr:
+   gap:   "true"
+   magma: "true"
+
+fal:
+   gap:   "false"
+   magma: "false"
+
+passport_label:
+  gap:   passport_label:=
+  magma: passport_label:=
+
+gen_vect_label:
+   gap:    gen_vect_label:=
+   magma:  gen_vect_label:=
+
+
+add_to_total_basic:
+   gap:  "Add( result_record, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list, genus:=genus, dimension:=dim, r:=r, g0:=g0,  passport_label:= passport_label,gen_vect_label:=gen_vect_label, is_hyperelliptic:=is_hyperelliptic) ); "
+   magma: "Append(~result_record, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, is_hyperelliptic:=is_hyperelliptic,is_cyclic_trigonal:=is_cyclic_trigonal >);"
+
+
+add_to_total_hyp:
+   gap:  "Add( result_record, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, is_hyperelliptic:=is_hyperelliptic, hyp_involution:=hyp_involution,is_cyclic_trigonal:=is_cyclic_trigonal) ); "
+   magma: "Append(~result_record, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, is_hyperelliptic:=is_hyperelliptic, hyp_involution:=hyp_involution,is_cyclic_trigonal:=is_cyclic_trigonal >);"
+
+
+add_to_total_cyc_trig:
+   gap:  "Add( result_record, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label,is_hyperelliptic:=is_hyperelliptic, is_cyclic_trigonal:=is_cyclic_trigonal, cyc_auto:=cyc_auto) ); "
+   magma: "Append(~result_record, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, is_hyperelliptic:=is_hyperelliptic, is_cyclic_trigonal:=is_cyclic_trigonal, cyc_auto:=cyc_auto >);"
+
+
+
+
+add_to_total_full:
+   gap:  "Add( result_record, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,  genus:=genus, dimension:=dim, r:=r, g0:=g0,passport_label:= passport_label,gen_vect_label:=gen_vect_label, full_auto:=full_auto, full_sign:=full_sign) ); "
+   magma: "Append(~result_record, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label,full_auto:=full_auto, full_sign:=full_sign>);"
+

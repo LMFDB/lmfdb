@@ -2,11 +2,7 @@
 # testing users blueprint
 from lmfdb.base import LmfdbTest
 from main import login_page
-from flask import url_for
 import unittest2
-
-from pwdmanager import LmfdbUser, LmfdbAnonymousUser, new_user
-
 
 class UsersTestCase(LmfdbTest):
     def setUp(self):

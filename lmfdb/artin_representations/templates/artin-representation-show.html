@@ -11,11 +11,11 @@
                 $f={{ object.number_field_galois_group().polynomial().latex()}}$ over $\Q$</tr>
         <tr><td> Size of {{ KNOWL('artin.galois_orbit', title='Galois orbit') }}: <td> {{object.galois_conjugacy_size()}}
         <tr><td> Smallest {{ KNOWL('artin.permutation_container', title='containing permutation representation') }}: <td> {{object.smallest_gal_t_format()|safe}}
-        <tr><td> {{ KNOWL('artin.parity', title='Parity') }} <td> {{ object.parity()}} </tr>
+        <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:<td> {{ object.parity()}} </tr>
         {% if object.dimension() == 1 %}
-            <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }} <td> {{ object.det_display()|safe}} </tr>
+            <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }}: <td> {{ object.det_display()|safe}} </tr>
         {% else %}
-            <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }} <td> {{ object.det_display()|safe}} </tr>
+            <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }}: <td> {{ object.det_display()|safe}} </tr>
         {% endif %}
     </table>
 
@@ -24,12 +24,16 @@
     <h2> Galois action </h2>
      
     <h3>Roots of defining polynomial</h3>
+    {% if object.number_field_galois_group().computation_minimal_polynomial()|length > 2 %}
     <div>
     The roots of $f$ are computed in an extension of $\Q_{ {{object.number_field_galois_group().residue_characteristic()}} }$ to precision {{object.number_field_galois_group().computation_precision()}}.
     </div>
     <div>
     Minimal polynomial of a generator $a$ of $K$ over $\mathbb{Q}_{ {{object.number_field_galois_group().residue_characteristic()}} }$: ${{object.number_field_galois_group().computation_minimal_polynomial().latex()}}$
     </div>
+    {% else %}
+    The roots of $f$ are computed in $\Q_{ {{object.number_field_galois_group().residue_characteristic()}} }$ to precision {{object.number_field_galois_group().computation_precision()}}.
+    {% endif %}
    <div>
     Roots:
     {#
@@ -46,12 +50,12 @@
       #}
       \[ \begin{aligned}
         {% for root in object.number_field_galois_group().computation_roots()%}
-          r_{{loop.index}} &= {{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right) \\
+          r_{ {{loop.index}} } &= {{root.latex(letter="a")}} +O\left({{object.number_field_galois_group().residue_characteristic()}}^{ {{object.number_field_galois_group().computation_precision()}} }\right) \\
         {% endfor %}
         \end{aligned}\]
     </div>
     
-    <h3>Generators of the action on the roots $r_1, \ldots, r_{{object.number_field_galois_group().degree()}}$</h3>
+    <h3>Generators of the action on the roots $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$</h3>
     <div>
     <center>
     <table class="ntdata">

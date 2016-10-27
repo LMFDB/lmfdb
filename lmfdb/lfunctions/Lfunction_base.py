@@ -1,5 +1,4 @@
 from sage.all import imag_part
-from lmfdb.lfunctions import logger
 
 #############################################################################
 # The base Lfunction class. The goal is to make this dependent on the least possible, so it can be loaded from sage or even python
@@ -40,10 +39,10 @@ class Lfunction:
 
     def Lkey(self):
         # Lkey should be a dictionary
-        raise Error("not all L-function implement the Lkey scheme atm")
+        raise KeyError("not all L-function implement the Lkey scheme atm")
 
     def source_object(self):
-        raise Error("not all L-functions give back a source object. This might be due to limited knowledge or missing code")
+        raise KeyError("not all L-functions give back a source object. This might be due to limited knowledge or missing code")
 
     def source_information(self):
         # Together, these give in principle enough to identify the object
@@ -100,7 +99,8 @@ class Lfunction:
             allZeros = self.compute_checked_zeros(**kwargs)
 
         # Sort the zeros and divide them into negative and positive ones
-        allZeros.sort()
+        if not isinstance(allZeros,str):
+            allZeros.sort()
         return allZeros
 
     def compute_checked_zeros(self, count = None, do_negative = False, **kwargs):
@@ -130,6 +130,8 @@ class Lfunction:
             do_negative = kwargs["do_negative"]
             if self.fromDB:
                 return "not available"
+            if not self.sageLfunction:
+                return "not available"
             return self.sageLfunction.find_zeros_via_N(count, do_negative)
         else:
             T1 = kwargs["lower_bound"]
@@ -137,9 +139,11 @@ class Lfunction:
             stepsize = kwargs["step_size"]
             if self.fromDB:
                 return "not available"
+            if not self.sageLfunction:
+                return "not available"
             return self.sageLfunction.find_zeros(T1, T2, stepsize)
     
-    def compute_zeros(algorithm , **kwargs):
+    def compute_zeros(self, algorithm, **kwargs):
         if algorithm == "lcalc":
             return self.compute_lcalc_zeros(self, **kwargs)
         if algorithm == "quick":

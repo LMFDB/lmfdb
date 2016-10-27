@@ -14,7 +14,7 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 
-from flask import flash, redirect, url_for, request
+from flask import flash
 from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
 from sage.misc.decorators import decorator_keywords
 
@@ -85,6 +85,39 @@ def split_list(s):
         return [int(a) for a in s.split(",")]
     return []
 
+# This function can be used by modules to get a list of ints
+# or an iterator (xrange) that matches the results of parse_ints below
+# useful when a module wants to iterator over key values being
+# passed into a mongo query.  Input should be a string
+def parse_ints_to_list(arg):
+    if arg == None:
+        return []
+    s = str(arg)
+    s = s.replace(' ','')
+    if not s:
+        return []
+    if s[0] == '[' and s[-1] == ']':
+        s = s[1:-1]
+    if ',' in s:
+        return [int(n) for n in s.split(',')]
+    if '-' in s[1:]:
+        i = s.index('-',1)
+        min, max = s[:i], s[i+1:]
+        return xrange(int(min),int(max)+1)
+    if '..' in s:
+        i = s.index('..',1)
+        min, max = s[:i], s[i+2:]
+        return xrange(int(min),int(max)+1)
+    return [int(s)]
+
+def parse_ints_to_list_flash(arg,name):
+    try:
+        return parse_ints_to_list(arg)
+    except ValueError:
+        errmsg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>." % (arg,name)
+        flash(Markup(errmsg+"  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)."), "error")
+        raise
+
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_list(inp, query, qfield, process=None):
     """
@@ -97,7 +130,7 @@ def parse_list(inp, query, qfield, process=None):
     if process is not None:
         query[qfield] = process(out)
     else:
-        query[qfield]=out
+        query[qfield] = out
 
 def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     # TODO: graceful errors
@@ -120,10 +153,8 @@ def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     else:
         return parse_singleton(arg)
 
-
 # version above does not produce legal results when there is a comma
 # to deal with $or, we return [key, value]
-
 def parse_range2(arg, key, parse_singleton=int):
     if type(arg) == str:
         arg = arg.replace(' ', '')
@@ -151,7 +182,7 @@ def parse_range3(arg, name, split0 = False):
     if type(arg) == str:
         arg = arg.replace(' ', '')
     if ',' in arg:
-        return sum([parse_discs(a) for a in arg.split(',')],[])
+        return sum([parse_range3(a, name, split0) for a in arg.split(',')],[])
     elif '-' in arg[1:]:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
@@ -248,12 +279,25 @@ def parse_primes(inp, query, qfield, mode=None, to_string=False):
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(',')]
+        primes = sorted(primes)
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if format_ok:
         if to_string:
             primes = [str(p) for p in primes]
         if mode == 'complement':
             query[qfield] = {"$nin": primes}
+        elif mode == 'liststring':
+            primes = [str(p) for p in primes]
+            query[qfield] = ",".join(primes)
+        elif mode == 'subsets':
+            # need all subsets of the list of primes 
+            powerset = [[]]
+            for p in primes:
+                powerset.extend([a+[p] for a in powerset])
+            # now set up a big $or clause
+            powerset = [','.join([str(p) for p in a]) for a in powerset]
+            powerset = [{qfield: a} for a in powerset]
+            collapse_ors(['$or', powerset], query)
         elif mode == 'exact':
             query[qfield] = sorted(primes)
         elif mode == "append":
@@ -269,11 +313,12 @@ def parse_primes(inp, query, qfield, mode=None, to_string=False):
         raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None):
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False):
     if process is None: process = lambda x: x
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
-        (exactlength is not None and inp.count(',') != exactlength - 1)):
+        (exactlength is not None and inp.count(',') != exactlength - 1) or
+        (exactlength is not None and inp == '[]' and exactlength > 0)):
         if exactlength == 2:
             lstr = "pair of integers"
             example = "[2,3] or [3,3]"
@@ -291,6 +336,9 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             example = "[1,2,3] or [5,6]"
         raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
     else:
+        if inp == '[]': # fixes bug in the code below (split never returns an empty list)
+            query[qfield] = []
+            return
         if check_divisibility == 'decreasing':
             # Check that each entry divides the previous
             L = [int(a) for a in inp[1:-1].split(',')]
@@ -306,42 +354,48 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         if split:
             query[qfield] = [process(int(a)) for a in inp[1:-1].split(',')]
         else:
-            query[qfield] = inp[1:-1]
+            query[qfield] = inp if keepbrackets else inp[1:-1]
+
+def parse_gap_id(info, query, field='group', name='group', qfield='group'):
+    parse_bracketed_posints(info,query,'group', split=False, exactlength=2, keepbrackets=True, name='Group')
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield, use_bson=True):
-    from lmfdb.transitive_group import complete_group_codes, make_galois_pair
-    if not use_bson:
-        make_galois_pair = lambda x,y: [x,y]
+    from lmfdb.transitive_group import complete_group_codes
+    from lmfdb.transitive_group import make_galois_pair as _make_galois_pair
+    make_galois_pair = _make_galois_pair if use_bson else lambda x,y: [x,y]
     try:
         gcs = complete_group_codes(inp)
         if len(gcs) == 1:
             query[qfield] = make_galois_pair(gcs[0][0], gcs[0][1])
         elif len(gcs) > 1:
             query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
-    except NameError as code:
+    except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
 
 def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if F == 'Q':
         return '1.1.1.1'
-    if F == 'Qi':
+    if F == 'Qi' or F == 'Q(i)':
         return '2.0.4.1'
     # Change unicode dash with minus sign
     F = F.replace(u'\u2212', '-')
     # remove non-ascii characters from F
     F = F.decode('utf8').encode('ascii', 'ignore')
-    fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
     if len(F) == 0:
         raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
     if F[0] == 'Q':
+        if '(' in F and ')' in F:
+            F=F.replace('(','').replace(')','')
         if F[1:5] in ['sqrt', 'root']:
             try:
                 d = ZZ(str(F[5:])).squarefree_part()
-            except ValueError:
+            except (TypeError, ValueError):
                 d = 0
             if d == 0:
                 raise ValueError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(F[:5]))
+            if d == 1:
+                return '1.1.1.1'
             if d % 4 in [2, 3]:
                 D = 4 * d
             else:
@@ -350,6 +404,8 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             s = 0 if D < 0 else 2
             return '2.%s.%s.1' % (s, str(absD))
         if F[1:5] == 'zeta':
+            if '_' in F:
+                F = F.replace('_','')
             try:
                 d = ZZ(str(F[5:]))
             except ValueError:
@@ -365,7 +421,7 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
                 raise ValueError('%s is not in the database.' % F)
             adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
             return '%s.0.%s.1' % (deg, adisc)
-        return fail_string
+        raise ValueError('It is not a valid field name or label, or a defining polynomial.')
     # check if a polynomial was entered
     F = F.replace('X', 'x')
     if 'x' in F:
@@ -375,11 +431,11 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         F1 = poly_to_field_label(F1)
         if F1:
             return F1
-        raise ValueError('%s is not in the database.'%F)
+        raise ValueError('%s does not define a number field in the database.'%F)
     # Expand out factored labels, like 11.11.11e20.1
+    if not re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',F):
+        raise ValueError("It must be of the form d.r.D.n, such as 2.2.5.1.")
     parts = F.split(".")
-    if len(parts) != 4:
-        raise ValueError("It must be of the form <deg>.<real_emb>.<absdisc>.<number>, such as 2.2.5.1.")
     def raise_power(ab):
         if ab.count("e") == 0:
             return ZZ(ab)

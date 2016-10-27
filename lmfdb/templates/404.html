@@ -2,34 +2,34 @@
 {% block content %}
 
 <div class="announce red">
-<div>The page you are looking for does not exist. </div>
+<div>Unable to locate the page you requested.</div>
+{% if messages %}
+<ul>
+{% for msg in messages %}
+<li>{{msg}}</li>
+{% endfor %}
+</ul>
+{% elif message %}
 <br>
-{% if message %}
-<div>
-  {{ message }}
-</div>
-<br>
+{{ message }}
 {% elif request.referrer %}
+<br>
 <div>
 If you think accessing "{{ request.referrer }}" is an error, please <a href="http://code.google.com/p/lmfdb/issues/list">report that URL</a>!
 </div>
 {% else %}
 <div>
-Please <a href = "http://code.google.com/p/lmfdb/issues/list">report this problem</a> so we can improve the site.
+If you believe this page should be here, please <a href = "http://code.google.com/p/lmfdb/issues/list">report this problem</a> so we can improve the site.
 </div>
 {% endif %}
-
-<br>
-<div>Thank you for your understanding!</div>
 
 {% if request.referrer %}
 <div>
 <br>
-You now have the option of <a href="{{ request.referrer }}">jumping back to your referring URL</a>.
+<a href="{{ request.referrer }}">Click here</a> to return to the referring URL.
 </div>
 {% endif %}
 
 </div>
-
 
 {% endblock %}
