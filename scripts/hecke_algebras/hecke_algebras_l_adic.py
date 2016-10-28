@@ -45,12 +45,9 @@ def string2list(s):
 # The following create_index command checks if there is an index on
 # label, dimension, determinant and level. 
 
-hecke_algebras.create_index('characteristic')
-hecke_algebras.create_index('deg')
-hecke_algebras.create_index('level')
-hecke_algebras.create_index('conductor')
-hecke_algebras.create_index('weight')
-hecke_algebras.create_index('dirchar')
+hecke_orb_l.create_index('level')
+hecke_orb_l.create_index('weight')
+hecke_orb_l.create_index('ell')
 
 print "finished indices"
 
@@ -64,10 +61,10 @@ def do_import(ll):
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
 
-    label=".".join([data['orbit_label'],data['ell']])
+    label=".".join([str(data['orbit_label']),str(data['ell'])])
     data['label_l'] = label
 
-    alg_orb_l = hecke_orb.find_one({'label': label})
+    alg_orb_l = hecke_orb_l.find_one({'label': label})
 
     if alg_orb_l is None:
         print "new l adic information"
