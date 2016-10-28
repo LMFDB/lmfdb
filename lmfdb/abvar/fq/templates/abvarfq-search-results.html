@@ -21,7 +21,7 @@
 <td align=left>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
 <td align=left>{{ KNOWL('abvar.simple',title="simple only") }}</td>
 <!--<td align=left>{{ KNOWL('ag.primitive',title="primitive only") }}</td>-->
-<td align=left>{{ KNOWL('abvar.p_rank',title="p-rank") }}</td>
+<td align=left>{{ KNOWL('abvar.fq.p_rank',title="p-rank") }}</td>
 <td align=left>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</td>
 </tr>
 
@@ -52,8 +52,8 @@
 
 <tr>
 <td align=left>initial coefficients</td>
-<td align=left>{{ KNOWL('ag.point_count',title="point count of the abelian variety") }}</td>
-<td align=left>{{ KNOWL('abvar.curve_point_count',title="point count of the curve") }}</td>
+<td align=left>{{ KNOWL('ag.fq.point_count',title="point count of the abelian variety") }}</td>
+<td align=left>{{ KNOWL('abvar.fq.curve_point_count',title="point count of the curve") }}</td>
 <td align=left>{{ KNOWL('abvar.decomposition',title="isogeny factors decomposition") }}</td>
 </tr>
 
@@ -112,7 +112,7 @@ table td.params {
   <th class="center">{{ KNOWL('ag.dimension',title = "dimension") }}</th>
   <th class="center">{{ KNOWL('ag.field_of_definition',title = "base field") }}</th>
   <th class="center">{{ KNOWL('abvar.fq.weil_polynomial',title="Weil polynomial") }}</th>
-  <th class="center">{{ KNOWL('abvar.p_rank',title="p-rank") }}</th>
+  <th class="center">{{ KNOWL('abvar.fq.p_rank',title="p-rank") }}</th>
   <th align="left">{{ KNOWL('abvar.decomposition',title="decomposition type") }}</th>
 </tr>
 {% for abvar in info.abvars: %}
