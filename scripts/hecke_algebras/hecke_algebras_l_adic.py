@@ -55,16 +55,16 @@ print "finished indices"
 ## Main importing function
 
 def do_import(ll):
-    level,weight,orbit_label,ell,idempotent,gen_l,num_gen_l,rel_l,num_charpoly,charpoly_ql= ll
-    mykeys = ['level','weight','orbit_label','ell','idempotent','gen_l','num_gen_l','rel_l','num_charpoly_ql','charpoly_ql']
+    level,weight,orbit_label,ell,index,idempotent,gen_l,num_gen_l,rel_l,num_charpoly,charpoly_ql= ll
+    mykeys = ['level','weight','orbit_label','ell','index','idempotent','gen_l','num_gen_l','rel_l','num_charpoly_ql','charpoly_ql']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
 
-    label=".".join([str(data['orbit_label']),str(data['ell'])])
+    label=".".join([str(data['orbit_label']),str(data['ell']), str(data['index'])])
     data['label_l'] = label
 
-    alg_orb_l = hecke_orb_l.find_one({'label': label})
+    alg_orb_l = hecke_orb_l.find_one({'label_l': label})
 
     if alg_orb_l is None:
         print "new l adic information"

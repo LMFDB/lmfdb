@@ -234,30 +234,38 @@ def render_hecke_algebras_webpage_l_adic(**args):
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
+    res = C.mod_l_eigenvalues.hecke_algebras_l_adic.find({'level': data['level'],'weight': data['weight'],'orbit_label': data['orbit_label'], 'ell': data['ell']})
 
+    res_clean = []
+    for f in res:
+        f_clean = {}
+        if f['idempotent']:
+            f_clean['idempotents']=[latex(matrix(sage_eval(f['idempotent'])))]
+        else:
+            f_clean['idempotents']=[latex(matrix([[1]]))]
+        f_clean['gen_l']=str(f['gen_l'])
+        f_clean['num_gen_l']=str(f['num_gen_l'])  #is empty for now, so made into a string
+        f_clean['rel_l']=str(f['rel_l'])
+        f_clean['num_charpoly_ql']=int(f['num_charpoly_ql'])
+        f_clean['charpoly_ql']=str(f['charpoly_ql'])
+        res_clean.append(f_clean)
 
-    info['base_lab']=base_lab
+    info['l_adic_orbits']=res_clean
 
-    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")), ('%s' % data['orbit_label'], url_for('.render_hecke_algebras_webpage', label=base_lab)), ('%s' % data['ell'], ' ')]
+    info['level']=int(data['level'])
+    info['weight']= int(data['weight'])
+    info['base_lab']=".".join([split(data['orbit_label'])[i] for i in [0,1,2]])
+    info['orbit_label']= str(data['orbit_label'])
+    info['ell']=int(data['ell'])
+
+    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")), ('%s' % info['base_lab'], url_for('.render_hecke_algebras_webpage', label=info['base_lab'])), ('%s' % info['ell'], ' ')]
     credit = hecke_algebras_credit
-    f = C.mod_l_eigenvalues.hecke_algebras_l_adic.find_one({'level': data['level'],'weight': data['weight'],'orbit_label': data['orbit_label'], 'ell': data['ell']})
-
-    info['level']=int(f['level'])
-    info['weight']= int(f['weight'])
-    info['orbit_label']= str(f['orbit_label'])
-    info['ell']=int(f['ell'])
-    info['idempotent']=[latex(matrix(sage_eval(f['idempotent'])[i]))]
-    info['gen_l']=str(f['gen_l'])
-    info['num_gen_l']=int(f['num_gen_l'])
-    info['rel_l']=str(f['rel_l'])
-    info['num_charpoly_ql']=int(f['num_charpoly_ql'])
-    info['charpoly_ql']=int(f['charpoly_ql'])
-
     info['properties'] = [
         ('Level', '%s' %info['level']),
         ('Weight', '%s' %info['weight']),
-        ('Label', '%s' %info['label'])]    
-    info['friends'] = [('Modular form ' + info['base_label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+        ('Characteristic', '%s' %info['ell']),
+        ('Orbit label', '%s' %info['orbit_label'])]    
+    info['friends'] = [('Modular form ' + info['base_lab'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
 
     t = "%s-adic information for the Hecke Algebra orbit %s" % (info['ell'], info['orbit_label'])
     return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
