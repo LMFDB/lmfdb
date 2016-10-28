@@ -188,8 +188,8 @@ def render_hecke_algebras_webpage(**args):
         for v in orb:
             v_clean = {}
             v_clean['orbit_label']=v['orbit_label']
-            v_clean['gen']=v['gen']
-            v_clean['gen_display']=[[i, latex(matrix(sage_eval(v_clean['gen'])[i]))] for i in prime_range(20)]
+            v_clean['hecke_op']=v['hecke_op']
+            v_clean['hecke_op_display']=[[i, latex(matrix(sage_eval(v_clean['hecke_op'])[i]))] for i in prime_range(20)]
             v_clean['num_op']=v['num_gen']
             res_clean.append(v_clean)
 

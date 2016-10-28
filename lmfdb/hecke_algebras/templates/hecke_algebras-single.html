@@ -23,7 +23,7 @@
         <table class="ntdata" cellpadding=3 >
         <tr><td>Label:</td><td>{{j.orbit_label}}</td></tr>
         <tr rowspan=2><td >Operators:</td><td>
-        {% for m in j.gen_display %}
+        {% for m in j.hecke_op_display %}
             $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% else %}...{% endif %}
         {% endfor %}</td></tr>
         <tr><td></td><td>Dowload Hecke operators $T_n$ for $n\leq {{j.num_op}}$ avaliable operators for sage, gp, magma</td></tr>
