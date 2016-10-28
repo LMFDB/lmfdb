@@ -274,18 +274,26 @@ def download_search(info):
 @abvarfq_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the Weil polynomial data'
-    bread = _common_bread + [('Completeness', '')]
+    bread = get_bread(('Completeness', '.'))
     credit = 'Kiran Kedlaya'
-    return render_template("single.html", kid='dq.abvar.extent',
+    return render_template("single.html", kid='dq.av.fq.extent',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @abvarfq_page.route("/Source")
 def how_computed_page():
-    pass
+    t = 'Source of the Weil polynomial data'
+    bread = get_bread(('Source', '.'))
+    credit = 'Kiran Kedlaya'
+    return render_template("single.html", kid='dq.av.fq.source',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @abvarfq_page.route("/Labels")
 def labels_page():
-    pass
+    t = 'Labels for isogeny classes of abelian varieties'
+    bread = get_bread(('Labels', '.'))
+    credit = 'Kiran Kedlaya'
+    return render_template("single.html", kid='av.fq.lmfdb_label',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
 def decomposition_display(current_class, factors):
     if len(factors) == 1 and factors[0][1] == 1:

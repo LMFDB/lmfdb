@@ -575,8 +575,11 @@ def parse_newton_polygon(inp, query, qfield):
                 xy = point[1:-1].split(',')
                 if len(xy) != 2:
                     raise ValueError("Malformed break point: %s"%point)
-                x = ZZ(xy[0])
-                y = QQ(xy[1])
+                try:
+                    x = ZZ(xy[0])
+                    y = QQ(xy[1])
+                except TypeError as err:
+                    raise ValueError(str(err))
                 if x <= lastx:
                     raise ValueError("Break points must be sorted by x-coordinate: %s"%point)
                 slope = (y - lasty) / (x - lastx)
