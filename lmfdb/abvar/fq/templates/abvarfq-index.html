@@ -149,7 +149,7 @@ Please enter a value or leave blank:
         <tr>
             <td>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
             <td>
-                <input type='text' name='g' example="5" size=10 value="{{info.g}}" />
+                <input type='text' name='g' example="2" size=10 value="{{info.g}}" />
             </td>
             <td><span class="formexample"> e.g. 2 or 3-5</span></td>
             <td>
@@ -165,7 +165,7 @@ Please enter a value or leave blank:
         
         <tr>
             <td>
-                {{ KNOWL('abvar.p_rank',title="$p$-rank") }}
+                {{ KNOWL('abvar.fq.p_rank',title="$p$-rank") }}
             </td>
             <td>
                 <input type='text' name='p_rank' example="2" size=10 value="{{info.p_rank}}" />
@@ -200,7 +200,7 @@ Please enter a value or leave blank:
         
         <tr>
             <td>
-                {{ KNOWL('ag.point_count',title="point counts of the abelian variety") }}
+                {{ KNOWL('ag.fq.point_count',title="point counts of the abelian variety") }}
             </td>
             <td colspan=3>
                 <input type='text' name='abvar_point_count' example="[75,7125]" size=40 value="{{info.abvar_point_count}}" />
@@ -211,7 +211,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('abvar.curve_point_count',title="point counts of the curve") }}
+                {{ KNOWL('abvar.fq.curve_point_count',title="point counts of the curve") }}
             </td>
             <td colspan=3>
                 <input type='text' name='curve_point_count' example="[9,87]" size=40 value="{{info.curve_point_count}}"/>
