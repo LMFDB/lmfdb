@@ -58,13 +58,13 @@ print "finished indices"
 ## Main importing function
 
 def do_import(ll):
-    level,weight,orbit_label,ell,idempotent,gen_l,num_gen_l,rel_l,charpoly_ql= ll
-    mykeys = ['level','weight','orbit_label','ell','idempotent','gen_l','num_gen_l','rel','charpoly_ql']
+    level,weight,orbit_label,ell,idempotent,gen_l,num_gen_l,rel_l,num_charpoly,charpoly_ql= ll
+    mykeys = ['level','weight','orbit_label','ell','idempotent','gen_l','num_gen_l','rel_l','num_charpoly_ql','charpoly_ql']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
 
-    label= data['ell']+data['orbit_label']
+    label=".".join([data['orbit_label'],data['ell']])
     data['label_l'] = label
 
     alg_orb_l = hecke_orb.find_one({'label': label})

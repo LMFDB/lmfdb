@@ -1,0 +1,24 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+{% set KNOWL_ID = "hecke_algebra_l_adic.%s"|format(info['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+<table>
+    <tr><td align=right>{{ KNOWL('mf.elliptic.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('mf.elliptic.weight', title='Weight') }}:</td><td>${{info.weight}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}:</td><td><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage_l_adic', label=info.base_lab)}}">{{info.orbit_label}}</a></td></tr>
+    <tr rowspan=2><td >Idempotents:</td><td>${{info.idempotents}}$</td></tr>
+    <tr><td></td><td>Dowload the idempotents for sage, gp, magma</td></tr>
+    <tr><td>Presentation:</td><td></td></tr>
+    <tr><td>Generators:</td><td></td></tr>
+    <tr><td>Relations:</td><td></td></tr>
+    <tr><td>Number of $\Q_{{info.ell}}$ irreducible components:</td><td></td></tr>
+    <tr><td>Characteristic polynomials of the $\Q_{{info.ell}}$ components:</td><td></td></tr>
+    </table>
+{% endfor %}
+
+
+
+{% endblock %}

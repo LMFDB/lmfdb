@@ -23,7 +23,7 @@ import ast
 import StringIO
 
 hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
-
+l_range=[ell for ell in prime_range(14)]
 
 #breadcrumbs and links for data quality entries
 
@@ -171,8 +171,6 @@ def render_hecke_algebras_webpage(**args):
     info = {}
     info.update(data)
 
-    info['friends'] = []
-
     bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")), ('%s' % data['label'], ' ')]
     credit = hecke_algebras_credit
     f = C.mod_l_eigenvalues.hecke_algebras.find_one({'level': data['level'],'weight': data['weight'],'num_orbits': data['num_orbits']})
@@ -197,7 +195,7 @@ def render_hecke_algebras_webpage(**args):
 
         info['orbits']=res_clean
 
-    info['l_adic']=[ell for ell in prime_range(14)]
+    info['l_adic']=l_range
     info['properties'] = [
         ('Level', '%s' %info['level']),
         ('Weight', '%s' %info['weight']),
@@ -207,57 +205,62 @@ def render_hecke_algebras_webpage(**args):
     return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
 
 
-@hecke_algebras_page.route('/<label>/<prime>')
+
+
+hecke_algebras_orbit_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d*)')
+
+def split(lab):
+    return hecke_algebras_orbit_label_regex.match(lab).groups()
+
+@hecke_algebras_page.route('/<orbit_label>/<prime>')
 def render_hecke_algebras_webpage_l_adic(**args):
     C = getDBConnection()
     data = None
-    if 'label' in args:
-        lab = clean_input(args.get('label'))
-        if lab != args.get('label'):
-            return redirect(url_for('.render_hecke_algebras_webpage', label=lab), 301)
-        data = C.mod_l_eigenvalues.hecke_algebras.find_one({'label': lab })
+    if 'orbit_label' in args and 'prime' in args:
+        lab = clean_input(args.get('orbit_label'))
+        if lab != args.get('orbit_label'):
+            base_lab=".".join([split(lab)[i] for i in [0,1,2]])
+            return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
+        try:
+            ell = int(args.get('prime'))
+        except ValueError as err:
+            base_lab=".".join([split(lab)[i] for i in [0,1,2]])
+            return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
+        data = C.mod_l_eigenvalues.hecke_algebras_l_adic.find_one({'orbit_label': lab , 'ell': ell})
     if data is None:
         t = "Hecke Agebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a Hecke Algebras in the database." % (lab)),"error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for the &#x2113;-adic information for an Hecke Algebra orbit in the database." % (lab)),"error")
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
 
-    info['friends'] = []
 
-    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")), ('%s' % data['label'], ' ')]
+    info['base_lab']=base_lab
+
+    bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")), ('%s' % data['orbit_label'], url_for('.render_hecke_algebras_webpage', label=base_lab)), ('%s' % data['ell'], ' ')]
     credit = hecke_algebras_credit
-    f = C.mod_l_eigenvalues.hecke_algebras.find_one({'level': data['level'],'weight': data['weight'],'num_orbits': data['num_orbits']})
+    f = C.mod_l_eigenvalues.hecke_algebras_l_adic.find_one({'level': data['level'],'weight': data['weight'],'orbit_label': data['orbit_label'], 'ell': data['ell']})
+
     info['level']=int(f['level'])
     info['weight']= int(f['weight'])
-    info['num_orbits']= int(f['num_orbits'])
+    info['orbit_label']= str(f['orbit_label'])
+    info['ell']=int(f['ell'])
+    info['idempotent']=[latex(matrix(sage_eval(f['idempotent'])[i]))]
+    info['gen_l']=str(f['gen_l'])
+    info['num_gen_l']=int(f['num_gen_l'])
+    info['rel_l']=str(f['rel_l'])
+    info['num_charpoly_ql']=int(f['num_charpoly_ql'])
+    info['charpoly_ql']=int(f['charpoly_ql'])
 
-    orb = C.mod_l_eigenvalues.hecke_algebras_orbits.find({'parent_label': f['label']})
-    if orb.count()!=0:
-        #consistency check
-        if orb.count()!= int(f['num_orbits']):
-            return search_input_error(info)
-
-        res_clean = []
-        for v in orb:
-            v_clean = {}
-            v_clean['orbit_label']=v['orbit_label']
-            v_clean['gen']=v['gen']
-            v_clean['gen_display']=[[i, latex(matrix(sage_eval(v_clean['gen'])[i]))] for i in prime_range(20)]
-            res_clean.append(v_clean)
-
-        info['orbits']=res_clean
-
-    info['l_adic']=[ell for ell in prime_range(14)]
     info['properties'] = [
         ('Level', '%s' %info['level']),
         ('Weight', '%s' %info['weight']),
-        ('Label', '%s' %info['label'])]
-    info['friends'] = [('Modular form ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
-    t = "Hecke Algebra %s" % info['label']
-    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
+        ('Label', '%s' %info['label'])]    
+    info['friends'] = [('Modular form ' + info['base_label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
 
+    t = "%s-adic information for the Hecke Algebra orbit %s" % (info['ell'], info['orbit_label'])
+    return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
 
 
 
