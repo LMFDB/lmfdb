@@ -11,4 +11,4 @@ abvar_logger = make_logger(abvar_page)
 def body_class():
     return {'body_class': 'abvar'}
 
-app.register_blueprint(abvar_page, url_prefix="/AbelianVariety")
+app.register_blueprint(abvar_page, url_prefix="/Variety/Abelian")

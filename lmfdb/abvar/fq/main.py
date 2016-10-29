@@ -167,7 +167,7 @@ def abelian_variety_browse(**args):
     if not('table_dimension_range' in info) or (info['table_dimension_range']==''):
         info['table_dimension_range'] = "1-6"
     if not('table_field_range' in info)  or (info['table_field_range']==''):
-        info['table_field_range'] = "2-32"
+        info['table_field_range'] = "2-27"
         
     table_limits_dimension = extract_limits_as_tuple(info,'table_dimension_range')
     table_limits_field = extract_limits_as_tuple(info,'table_field_range')
@@ -294,33 +294,6 @@ def labels_page():
     credit = 'Kiran Kedlaya'
     return render_template("single.html", kid='av.fq.lmfdb_label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
-
-def decomposition_display(current_class, factors):
-    if len(factors) == 1 and factors[0][1] == 1:
-        return 'simple'
-    ans = ''
-    for factor in factors:
-        if ans != '':
-            ans += '$\times$ '
-        ans += factor_display_knowl(factor[0]) + '<sup>factor[1]</sup> '
-    return ans
-    
-def factor_display_knowl(label):
-    return '<a title = " [abvar.decomposition.data]" knowl="abvar.decomposition.data" kwargs="label=' + str(label) + '">' + label + '</a>'
-    
-def decomposition_data(label):
-    C = base.getDBConnection()
-    return decomposition_knowl_guts(label,C)
-    
-def decomposition_knowl_guts(label,C):
-    abvar = C.abvarfq.find_one({ 'label' : label })
-    inf = '<div><h4>Dimension:</h4> ' + str(abvar['g']) + '/n'
-    inf += '<h4>Number field:</h4> ' + str(abvar['number_field']) + '/n'
-    inf += '<h4>Galois group:</h4> ' + str(abvar['galois_group']) + '/n'
-    inf += '<h4>$p$-rank</h4> ' + str(abvar['p_rank']) + '</div>'
-    inf += '<div align="right">'
-    inf += '<a href="/abvar/fq/%s">%s home page</a>' % (label, label)
-    inf += '</div>'
               
 lmfdb_label_regex = re.compile(r'(\d+)\.(\d+)\.([a-z_]+)')
                                   
