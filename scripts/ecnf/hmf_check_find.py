@@ -32,7 +32,7 @@ flab3 = [fld for fld in flabels if '3.3.' in fld]
 flab4 = [fld for fld in flabels if '4.4.' in fld]
 flab5 = [fld for fld in flabels if '5.5.' in fld]
 flab6 = [fld for fld in flabels if '6.6.' in fld]
-
+fld=None # else after re-reading this file fld gets left set to 6.6.905177.1
 #
 #
 # Code to check conductor labels agree with Hilbert Modular Form level
@@ -486,6 +486,11 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
     whether an elliptic curve exists with the same label; if not, find
     the curves using Magma; output these to a file.
     """
+    print("Checking forms over {}, norms from {} to {}".format(field_label,min_norm,max_norm))
+    if outfilename:
+        print("Output of curves found to {}".format(outfilename))
+    else:
+        print("No curve search or output, just checking")
     query = {}
     query['field_label'] = field_label
     if fields.find({'label': field_label}).count() == 0:
@@ -576,11 +581,25 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
 
     if outfilename:
         outfile = file(outfilename, mode="w")
+    else:
+        return
+
     def output(L):
         if outfilename:
             outfile.write(L)
         if verbose:
             sys.stdout.write(L)
+
+    bad_p = []
+    if field_label=='4.4.1600.1': bad_p = [7**2,13**2,29**2]
+    if field_label=='4.4.2304.1': bad_p = [19**2,29**2]
+    if field_label=='4.4.4225.1': bad_p = [17**2,23**2]
+    if field_label=='4.4.7056.1': bad_p = [29**2,31**2]
+    if field_label=='4.4.7168.1': bad_p = [29**2]
+    if field_label=='4.4.9248.1': bad_p = [23**2]
+    if field_label=='4.4.11025.1': bad_p = [17**2,37**2,43**2]
+    if field_label=='4.4.13824.1': bad_p = [19**2]
+    if field_label=='4.4.12400.1': bad_p = [23**2]
 
     for nf_label in missing_curves:
         if verbose:
@@ -595,18 +614,28 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             print("Conductor = %s" % form['level_ideal'].replace(" ",""))
             N = K.ideal(form['level_label'])
             neigs = len(form['hecke_eigenvalues'])
-            neigs0 = 10
-            if verbose:
-                print("Using %s ap from Hilbert newform and effort %s" % (neigs0,effort))
             Plist = [P['ideal'] for P in K.primes_iter(neigs)]
-            goodP = [(i, P) for i, P in enumerate(Plist) if not P.divides(N)]
+            goodP = [(i, P) for i, P in enumerate(Plist)
+                     if not P.divides(N)
+                     and not P.norm() in bad_p
+                     and P.residue_class_degree()==1]
             aplist = [int(form['hecke_eigenvalues'][i]) for i, P in goodP]
             Plist = [P for i,P in goodP]
-            #print("Plist = {}, length {}".format(Plist,len(Plist)))
-            #print("aplist = {}, length {}".format(aplist,len(aplist)))
-            curves = EllipticCurveSearch(K.K(), Plist[:neigs0], N, aplist[:neigs0], effort)
+            nap = len(Plist)
+            neigs0 = min(nap,100)
+            if verbose:
+                print("Using %s ap from Hilbert newform and effort %s" % (neigs0,effort))
+                if bad_p:
+                    print("( excluding primes with norms {})".format(bad_p))
+            #inds = list(set([randint(0,nap-1) for _ in range(neigs0)]))
+            inds = range(neigs0)
+            Plist0 = [Plist[i] for i in inds]
+            aplist0 = [aplist[i] for i in inds]
+            curves = EllipticCurveSearch(K.K(), Plist0, N, aplist0, effort)
             rep = 0
-            while not curves:
+            allrep=0
+            while not curves and allrep<30:
+                allrep += 1
                 if rep<5:
                     rep += 1
                 else:
@@ -614,7 +643,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
                     effort *=2
                 if verbose:
                     print("No curves found by Magma, trying again with effort %s..." % effort)
-                curves = EllipticCurveSearch(K.K(), Plist[:neigs0], N, aplist[:neigs0], effort*2)
+                curves = EllipticCurveSearch(K.K(), Plist0, N, aplist0, effort)
                 if verbose:
                     if curves:
                         print("Success!")
