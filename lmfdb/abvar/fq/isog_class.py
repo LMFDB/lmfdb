@@ -113,16 +113,18 @@ class AbvarFq_isoclass(object):
             return '\F_{' + '{0}'.format(p) + '}'
         else:
             return '\F_{' + '{0}^{1}'.format(p,r) + '}'
-        
-    def weil_numbers(self):
-        q = self.q
-        ans = ""
-        for angle in self.angle_numbers:
-            if ans != "":
-                ans += ", "
-            ans += '\sqrt{' +str(q) + '}' + '\exp(\pm i \pi {0}\ldots)'.format(angle)
+    
+    # at some point we were going to display the weil_numbers instead of the frobenius angles
+    # this is not covered by the tests
+    #def weil_numbers(self):
+    #    q = self.q
+    #    ans = ""
+    #    for angle in self.angle_numbers:
+    #        if ans != "":
+    #            ans += ", "
+    #        ans += '\sqrt{' +str(q) + '}' + '\exp(\pm i \pi {0}\ldots)'.format(angle)
             #ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
-        return ans
+    #    return ans
         
     def frob_angles(self):
         ans = ''
