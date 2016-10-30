@@ -14,10 +14,10 @@
 
 
 <div>
-    {{ KNOWL_INC('dq.abvar.fq.extent') }}
+    {{ KNOWL_INC('dq.av.fq.extent') }}
 </div>
 
-<h2> Browse {{ KNOWL('abvar.isogeny_class',title='isogeny classes')}} of {{ KNOWL('ag.abelian_variety',title='abelian varieties')}} over finite fields</h2>
+<h2> Browse {{ KNOWL('av.isogeny_class',title='isogeny classes')}} of {{ KNOWL('ag.abelian_variety',title='abelian varieties')}} over finite fields</h2>
 
 <p>
 <h3>By {{ KNOWL('ag.field_of_definition',title = "field of definition")}} and {{ KNOWL('ag.dimension', title="dimension")}}:</h3>
@@ -107,8 +107,8 @@
 </form>
 
 
-<h2> Find a specific  {{KNOWL('abvar.isogeny_class',title="isogeny class") }} by <!--the {{ KNOWL('abvar.fq.weil_polynomial',title="coefficients of its Weil polynomial") }} or-->
-    {{ KNOWL('abvar.fq.lmfdb_label',title="LMFDB label") }} </h2>
+<h2> Find a specific  {{KNOWL('av.isogeny_class',title="isogeny class") }} by <!--the {{ KNOWL('av.fq.weil_polynomial',title="coefficients of its Weil polynomial") }} or-->
+    {{ KNOWL('av.fq.lmfdb_label',title="LMFDB label") }} </h2>
 <!--{% if err_msg %}
  <form action={{url_for('ec.rational_elliptic_curves')}}>
  {% else %}-->
@@ -133,7 +133,7 @@ Please enter a value or leave blank:
             </td>
             <td><span class="formexample"> e.g. 81 or 3-49</span></td>
             <td>
-                {{ KNOWL('abvar.simple',title="simple only") }}
+                {{ KNOWL('av.simple',title="simple only") }}
             </td>
             <td>
                 <select name='simple_only'>
@@ -165,7 +165,7 @@ Please enter a value or leave blank:
         
         <tr>
             <td>
-                {{ KNOWL('abvar.fq.p_rank',title="$p$-rank") }}
+                {{ KNOWL('av.fq.p_rank',title="$p$-rank") }}
             </td>
             <td>
                 <input type='text' name='p_rank' example="2" size=10 value="{{info.p_rank}}" />
@@ -211,7 +211,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('abvar.fq.curve_point_count',title="point counts of the curve") }}
+                {{ KNOWL('av.fq.curve_point_count',title="point counts of the curve") }}
             </td>
             <td colspan=3>
                 <input type='text' name='curve_point_count' example="[9,87]" size=40 value="{{info.curve_point_count}}"/>
@@ -223,7 +223,7 @@ Please enter a value or leave blank:
         
         <tr>
             <td>
-                {{ KNOWL('abvar.decomposition',title="isogeny factors decomposition") }}
+                {{ KNOWL('av.decomposition',title="isogeny factors decomposition") }}
             </td>
             <td colspan=3>
                 <input type='text' name='decomposition' example="[2,2.9.ag_z,4T1]" size=40 value="{{info.decomposition}}"/>

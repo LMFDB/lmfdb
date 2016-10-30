@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from flask import url_for
 
 from lmfdb.utils import comma, make_logger
 
-from lmfdb.base import getDBConnection
+from lmfdb.base import app, getDBConnection
 
 from sage.misc.cachefunc import cached_function
 from sage.rings.all import Integer
@@ -67,7 +68,6 @@ class AbvarFq_isoclass(object):
             raise ValueError("Label not found in database")
 
     def make_class(self):
-        from main import decomposition_display
         self.decompositioninfo = decomposition_display(self,self.decomposition)
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial,galois=False,vari = 'x')
         #in some cases the abelian variety can be simple but not have a field or Galois group attached because the Weil polynomial is not irreducible. This gives them then.
@@ -77,7 +77,6 @@ class AbvarFq_isoclass(object):
                 factors_list = [[v[0],v[1]] for v in factors]
                 if len(factors_list) > 1: #then the isogeny class is not really simple...
                     logger.debug("WARNING! The class thought it was simple but it wasnt")
-                    self.is_simple = False
                 else: 
                     try:
                         self.galois_n = factors_list[0][0].degree()
@@ -113,16 +112,18 @@ class AbvarFq_isoclass(object):
             return '\F_{' + '{0}'.format(p) + '}'
         else:
             return '\F_{' + '{0}^{1}'.format(p,r) + '}'
-        
-    def weil_numbers(self):
-        q = self.q
-        ans = ""
-        for angle in self.angle_numbers:
-            if ans != "":
-                ans += ", "
-            ans += '\sqrt{' +str(q) + '}' + '\exp(\pm i \pi {0}\ldots)'.format(angle)
+    
+    # at some point we were going to display the weil_numbers instead of the frobenius angles
+    # this is not covered by the tests
+    #def weil_numbers(self):
+    #    q = self.q
+    #    ans = ""
+    #    for angle in self.angle_numbers:
+    #        if ans != "":
+    #            ans += ", "
+    #        ans += '\sqrt{' +str(q) + '}' + '\exp(\pm i \pi {0}\ldots)'.format(angle)
             #ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
-        return ans
+    #    return ans
         
     def frob_angles(self):
         ans = ''
@@ -141,14 +142,11 @@ class AbvarFq_isoclass(object):
         if len(self.decomposition)== 1:
             #old simple_maker just outputed the label, with no multiplicity
             if len(self.decomposition[0]) == 1:
-                self.is_simple = True
                 return True
             #new simple_maker outputs the label and multiplicity 1
             elif self.decomposition[0][1] == 1:
-                self.is_simple = True
                 return True
         else:
-            self.is_simple = False
             return False
     
         ### This is what this will look like once all self.decomposition is fixed:
@@ -207,7 +205,59 @@ class AbvarFq_isoclass(object):
             return "The Galois group of this isogeny class is not in the database."
         else:
             C = getDBConnection()
-            return group_display_knowl(self.galois_n,self.galois_t,C)  
+            return group_display_knowl(self.galois_n,self.galois_t,C)
+            
+    def decomposition_display_search(self,factors):
+        if len(factors) == 1 and factors[0][1] == 1:
+            return 'simple'
+        ans = ''
+        for factor in factors:
+            url = url_for('abvarfq.by_label',label=factor[0])
+            if ans != '':
+                ans += '$\\times$ '
+            if factor[1] == 1:
+                ans += '<a href="{1}">{0}</a>'.format(factor[0],url)
+                ans += ' '
+            else:
+                ans += '<a href="{1}">{0}</a>'.format(factor[0],url) + '<sup> {0} </sup> '.format(factor[1])
+        return ans
+
+def decomposition_display(current_class, factors):
+    if len(factors) == 1 and factors[0][1] == 1:
+        return 'simple'
+    ans = ''
+    for factor in factors:
+        if ans != '':
+            ans += '$\\times$ '
+        if factor[1] == 1:
+            ans += factor_display_knowl(factor[0]) + ' '
+        else:
+            ans += factor_display_knowl(factor[0]) + '<sup> {0} </sup> '.format(factor[1])
+    return ans
+    
+def factor_display_knowl(label):
+    return '<a title = "[av.decomposition.data]" knowl="av.decomposition.data" kwargs="label=' + str(label) + '">' + label + '</a>'
+
+def decomposition_data(label):
+    C = getDBConnection()
+    return decomposition_knowl_guts(label,C)
+    
+def decomposition_knowl_guts(label,C):
+    abvar = C.abvar.fq_isog.find_one({ 'label' : label })
+    wnf = WebNumberField(abvar['number_field'])
+    inf = '<div>Dimension: ' + str(abvar['g']) + '<br />'
+    if not wnf.is_null():
+        inf += 'Number field: ' + nf_display_knowl(abvar['number_field'], C, name = abvar['number_field']) + '<br />'
+        inf += 'Galois group: ' + group_display_knowl(abvar['galois_n'],abvar['galois_t'],C) + '<br />'
+    inf += '$p$-rank: ' + str(abvar['p_rank']) + '</div>'
+    inf += '<div align="right">'
+    inf += '<a href="/Variety/Abelian/%s">%s home page</a>' % (label, label)
+    inf += '</div>'
+    return inf
+            
+@app.context_processor
+def ctx_decomposition():
+    return {'decomposition_data': decomposition_data}
             
         
 
