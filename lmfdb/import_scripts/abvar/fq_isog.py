@@ -24,27 +24,17 @@ from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicFie
 #mypath = os.path.dirname(mypath)
 #sys.path.append(mypath)
 
-from lmfdb.WebNumberField import WebNumberField
-
 from pymongo.mongo_client import MongoClient
 import yaml
 
 ## Main importing function
 
 def do_import(ll, db, saving, R, show_update):
-    label,g,q,polynomial,angle_numbers,angle_ranks,p_rank,slopes,A_counts,C_counts,known_jacobian,principally_polarizable,decomposition,brauer_invariants,primitive_models = ll
-    mykeys = ['label','g','q','polynomial','angle_numbers','angle_ranks','p_rank','slopes','A_counts','C_counts','known_jacobian','principally_polarizable','decomposition','brauer_invariants','primitive_models']
+    label,g,q,polynomial,angle_numbers,angle_ranks,p_rank,slopes,A_counts,C_counts,known_jacobian,principally_polarizable,decomposition,brauer_invariants,places,primitive_models,number_field,galois_n,galois_t = ll
+    mykeys = ['label','g','q','polynomial','angle_numbers','angle_ranks','p_rank','slopes','A_counts','C_counts','known_jacobian','principally_polarizable','decomposition','brauer_invariants','places','primitive_models','number_field','galois_n','galois_t']
     data = {}
     for key, val in zip(mykeys, ll):
         data[key] = val
-    f = R(polynomial)
-    try:
-        nf = WebNumberField.from_polynomial(f)
-        if nf.label == 'a': nf = None
-    except PariError:
-        nf = None
-    data['number_field'] = "" if nf is None else nf.label
-    data['galois_t'] = "" if nf is None else nf.galois_t()
     isoclass = db.find_one({'label': label})
 
     if isoclass is None:
