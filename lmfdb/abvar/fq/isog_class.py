@@ -126,10 +126,15 @@ class AbvarFq_isoclass(object):
         
     def frob_angles(self):
         ans = ''
+        eps = 0.00000001
         for angle in self.angle_numbers:
             if ans != '':
                 ans += ', '
-            ans += '\pm' + str(angle) 
+            if abs(angle) > eps and abs(angle - 1) > eps:
+                angle = r'\pm' + str(angle)
+            else:
+                angle = str(angle)
+            ans += angle
         return ans
     
     def is_simple(self):
