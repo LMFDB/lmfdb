@@ -20,28 +20,47 @@ where $a$ satisfies ${{info.field | safe}}$.
 
 <h2> {{ KNOWL('modlmf.invariants', title='Properties') }} </h2>
 
-<table class="ntdata">
+<table>
     <tr><td align=right>{{ KNOWL('finite_fields.structure', title='Coefficient field') }}:</td><td>
 {% if info.deg > 1 %}
 $\F_{ {{info.characteristic}}^{{info.deg}} }\cong \F[a]$ where $a$ satisfies ${{info.field | safe}}=0$
 {% else %}
 $\F_{ {{info.characteristic}} }$
 {% endif %}</td></tr>
-    <tr><td align=right>{{ KNOWL('modlmf.level', title='Minimal level') }}:</td><td>{{info.level}}</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.level', title='Level') }}:</td><td>{{info.level}}</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.weight_grading', title='Weight grading') }}:</td><td>{{info.weight_grading}}</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.reducible', title='Reducibility') }}:
 {% if info.reducible %}
-    </td><td>reducible, with associated representation ${{info.reducible[0][0]}}\chi_{cyc}^{{info.reducible[1]}}\oplus {{info.reducible[2][0]}}\chi_{cyc}^{{info.reducible[3]}}$</td></tr>
-    <tr><td align=right>{{ KNOWL('modlmf.weight_eisenstein', title='Minimal Eisenstein weight lift') }}:</td><td>{{info.eisenstein_weight}}</td></tr>
+    </td><td>reducible, with associated representation 
+        <a HREF="Character/Dirichlet/ModL/{{info.reducible[0]}}">$\alpha$</a>
+        {% if info.reducible[1] != 0 %}
+        $\chi_{cyc}{% if info.reducible[1]!=1 %}^{ {{info.reducible[1]}} }{% endif %}$
+        {% endif %}
+        $\oplus$
+        {% if info.reducible[0] == info.reducible[2] %}
+        <a HREF="Character/Dirichlet/ModL/{{info.reducible[0]}}">$\alpha$</a>
+        {% else %}
+        <a HREF="Character/Dirichlet/ModL/{{info.reducible[2]}}">$\beta$</a>
+        {% endif %}
+        {% if info.reducible[3] != 0 %}
+        $\chi_{cyc}{% if info.reducible[3]!=1 %}^{{info.reducible[3]}}{% endif %}$
+        {% endif %}
+    </td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.weight_eisenstein', title='Minimal Eisenstein weight lift') }}:</td><td>{{info.reducible[4]}}</td></tr>
 {% else %}
     </td><td>irreducible</td></tr>
 {% endif %}
-    <tr><td align=right rowspan=4 valign=top>{{ KNOWL('modlmf.cuspidal_lift', title='Minimal cuspidal lift:') }}</td><td>weight: {{info.cuspidal_weight}}</td></tr>
-    <tr><td>{{ KNOWL('modlmf.cuspidal_lift', title='form') }}: {{info.cuspidal}}</td></tr>
-    <tr><td>{{ KNOWL('mf.elliptic.coefficient_field', title='coefficient field') }}: {{info.cuspidal_number_field}}</td></tr>
-    <tr><td>{{ KNOWL('modlmf.reduction ideal', title='ideal') }} above {{info.characteristic}}: generators {{info.cuspidal_red_ideal}}</td></tr>
+    <tr><td align=right rowspan=4 valign=top>{{ KNOWL('modlmf.cuspidal_lift', title='Minimal cuspidal lift:') }}</td><td>weight: {{info.cuspidal_lift_weight}}</td></tr>
+    <tr><td>{{ KNOWL('modlmf.cuspidal_lift', title='form') }}: <a HREF="/ModularForm/GL2/Q/holomorphic/?jump_to={{info.cuspidal_lift_orbit}}">{{info.cuspidal_lift_orbit}}</a></td></tr>
+    <tr><td>{{ KNOWL('mf.elliptic.coefficient_field', title='coefficient field') }}: 
+        {% if info.cuspidal_hecke_field == 1 %}
+        $\Q$
+        {% else %}
+        $\Q(x_0)$ where $x_0$ satisfies ${{info.cuspidal_hecke_field}}$
+        {% endif %}</td></tr>
+    <tr><td>{{ KNOWL('modlmf.reduction ideal', title='ideal') }} above {{info.characteristic}}: generators ${{info.cuspidal_lift_gen}}$</td></tr>
 
-    <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td>{{info.dirchar}}</td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td><a HREF="Character/Dirichlet/ModL/{{info.dirchar}}">{{info.dirchar}}</a></td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.label', title='Label') }}:</td><td>{{info.label}}</td></tr>
     {% if info.level !=1 %}
         <tr><td align=right>{{ KNOWL('modlmf.atkinlehner', title='Atkin-Lehner eigenvalues')}}:</td>
@@ -61,9 +80,9 @@ $\F_{ {{info.characteristic}} }$
     <tr><td align=right>{{ KNOWL('modlmf.minimal_theta_weight', title='Minimal theta cycle weight') }}:</td><td>{{info.min_theta_weight}}</td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.theta_cycle', title='Theta cycle') }}:</td><td>
     {% if info.ordinary == 1 %}
-        {{info.cuspidal_weight}}
+        {{info.cuspidal_lift_weight}}
     {% endif %}
-    ({{info.theta_cycle}})</td></tr>
+    ({% for i in info.theta_cycle %}<a HREF="/ModularForm/GL2/Q/holomorphic/?jump_to={{i[1]}}">{{i[0]}}</a>{% if not loop.last %}, {% endif %}{% endfor %})</td></tr>
 </table>
 
 <br>

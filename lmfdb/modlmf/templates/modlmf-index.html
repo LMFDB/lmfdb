@@ -33,7 +33,7 @@ By {{ KNOWL('modlmf.characteristic', title='characteristic') }}:
 </p>
 
 <p>
-By {{ KNOWL('modlmf.level', title='Minimal level') }}:
+By {{ KNOWL('modlmf.level', title='Level') }}:
 {% for rnge in info.level_list %}
 <a href="?level={{rnge}}">{{rnge}}</a>
 {% endfor %}
@@ -79,7 +79,7 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 <td><span class="formexample"> e.g. 1 </td>
 </tr>
 <tr>
-<td align= right>{{ KNOWL('modlmf.level', title='Minimal level') }}:</td>
+<td align= right>{{ KNOWL('modlmf.level', title='Level') }}:</td>
 <td><input type='text' name='level' placeholder='3' size=10>
 <td><span class="formexample"> e.g. 3 or 40-100</td>
 </tr>
@@ -87,7 +87,7 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 </tr>
 <tr>
 <td align= right>{{ KNOWL('modlmf.weight_grading', title='Weight grading') }}:</td>
-<td><input type='text' name='min_weight' placeholder='2' size=10>
+<td><input type='text' name='weight_grading' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2</td>
 </tr>
 

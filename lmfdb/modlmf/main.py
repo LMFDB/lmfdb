@@ -9,7 +9,7 @@ from flask import render_template, request, url_for, make_response, redirect, fl
 from lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict, random_object_from_collection, web_latex_split_on_pm
 
-from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range
+from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
 
 from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
@@ -114,7 +114,7 @@ def modlmf_search(**args):
     query = {}
     try:
         for field, name in (('characteristic','Field characteristic'),('deg','Field degree'),('level', 'Level'),
-                            ('conductor','Conductor'), ('min_weight', 'Minimal weight')):
+                            ('conductor','Conductor'), ('weight_grading', 'Weight grading')):
             parse_ints(info, query, field, name)
     except ValueError as err:
         info['err'] = str(err)
@@ -126,7 +126,7 @@ def modlmf_search(**args):
     start = parse_start(info)
 
     info['query'] = dict(query)
-    res = C.mod_l_eigenvalues.modlmf.find(query).sort([('characteristic', ASC), ('deg', ASC), ('level', ASC), ('min_weight', ASC), ('conductor', ASC)]).skip(start).limit(count)
+    res = C.mod_l_eigenvalues.modlmf.find(query).sort([('characteristic', ASC), ('deg', ASC), ('level', ASC), ('weight_grading', ASC)]).skip(start).limit(count)
     nres = res.count()
 
     if(start >= nres):
@@ -151,7 +151,7 @@ def modlmf_search(**args):
     res_clean = []
     for v in res:
         v_clean = {}
-        for m in ['label','characteristic','deg','level','min_weight','conductor']:
+        for m in ['label','characteristic','deg','level','weight_grading']:
             v_clean[m]=v[m]
         res_clean.append(v_clean)
 
@@ -188,20 +188,31 @@ def render_modlmf_webpage(**args):
 
     bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('%s' % data['label'], ' ')]
     credit = modlmf_credit
-    f = C.mod_l_eigenvalues.modlmf.find_one({'characteristic':data['characteristic'], 'deg' : data['deg'], 'level' : data['level'],'conductor' : data['conductor'],'min_weight': data['min_weight'], 'dirchar' : data['dirchar'], 'atkinlehner': data['atkinlehner'],'n_coeffs': data['n_coeffs'],'coeffs': data['coeffs']})
-    for m in ['characteristic','deg','level','min_weight', 'n_coeffs']:
+
+    f = C.mod_l_eigenvalues.modlmf.find_one({'characteristic':data['characteristic'], 'deg' : data['deg'], 'level' : data['level'],'weight_grading': data['weight_grading'], 'reducible' : data['reducible'], 'cuspidal_lift': data['cuspidal_lift'], 'dirchar' : data['dirchar'], 'atkinlehner': data['atkinlehner'],'n_coeffs': data['n_coeffs'],'coeffs': data['coeffs'], 'ordinary': data['ordinary'],'min_theta_weight': data['min_theta_weight'], 'theta_cycle' : data['theta_cycle']})
+
+    for m in ['characteristic','deg','level','weight_grading', 'n_coeffs', 'min_theta_weight', 'ordinary']:
         info[m]=int(f[m])
     info['atkinlehner']=f['atkinlehner']
     info['dirchar']=str(f['dirchar'])
     info['label']=str(f['label'])
+    if f['reducible']:
+        info['reducible']=f['reducible']
+    info['cuspidal_lift']=f['cuspidal_lift']
+    info['cuspidal_lift_weight']=int(f['cuspidal_lift'][0])
+    info['cuspidal_lift_orbit']=str(f['cuspidal_lift'][1])
+
+    if f['cuspidal_lift'][2]=='x':
+        info['cuspidal_hecke_field']=1
+    else:
+        info['cuspidal_hecke_field']=latex(f['cuspidal_lift'][2])
+
+    info['cuspidal_lift_gen']=f['cuspidal_lift'][3]
+
+    if f['theta_cycle']:
+        info['theta_cycle']=f['theta_cycle']
 
     info['coeffs']=[str(s).replace('x','a').replace('*','') for s in f['coeffs']]
-
-#this fix will be removed once the conductor are all computed
-    try:
-        info['conductor']=int(f['conductor'])
-    except:
-        info['conductor']=int(0)
 
     if f['deg'] != int(1):
         try:
@@ -229,8 +240,7 @@ def render_modlmf_webpage(**args):
         ('Field characteristic', '%s' %info['characteristic']),
         ('Field degree', '%s' %info['deg']),
         ('Level', '%s' %info['level']),
-        ('Conductor', '%s' %info['conductor']),
-        ('Minimal weight', '%s' %info['min_weight'])]
+        ('Weight grading', '%s' %info['weight_grading'])]
     return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
 
 

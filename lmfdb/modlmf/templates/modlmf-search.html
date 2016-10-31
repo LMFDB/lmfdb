@@ -9,7 +9,7 @@
 <tr>
 <td align=left>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}</td>
 <td align=left>{{ KNOWL('modlmf.deg', title='Field degree') }}</td>
-<td align=left>{{ KNOWL('modlmf.level', title='Minimal level') }}</td>
+<td align=left>{{ KNOWL('modlmf.level', title='Level') }}</td>
 </tr>
 
 
@@ -29,7 +29,7 @@
 </tr>
 
 <tr>
-<td align=left><input type='text' name='min_weight' value="{{info.min_weight}}" size=10>
+<td align=left><input type='text' name='weight_grading' value="{{info.min_weight}}" size=10>
 <td align=left><input type='text' name='dirchar' value="{{info.dirchar}}"" size=10>
 </table>
 
@@ -71,8 +71,7 @@
         <th>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}</th>
         <th>{{ KNOWL('modlmf.degree', title='Field degree') }}</th>
         <th>{{ KNOWL('modlmf.level', title='Level')}}</th>
-<!--        <th>{{ KNOWL('modlmf.conductor', title='Conductor') }}</th>-->
-        <th>{{ KNOWL('modlmf.minimal_weight', title='Minimal weight') }}</th>
+        <th>{{ KNOWL('modlmf.weight_grading', title='Weight grading') }}</th>
         </tr>
         {% for l in info.modlmfs %}
             <tr>
@@ -80,8 +79,7 @@
             <td>{{l.characteristic}}</td>
             <td>{{l.deg}}</td>
             <td>{{l.level}}</td>
-<!--            <td>${{l.conductor}}$</td>-->
-            <td>${{l.min_weight}}$</td>
+            <td>{{l.weight_grading}}</td>
             </tr>
         {% endfor %}
         </table>
