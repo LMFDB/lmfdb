@@ -8,7 +8,8 @@ import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_newton_polygon, parse_list_start, parse_abvar_decomp, parse_count, parse_start, parse_range
+from lmfdb.search_parsing import parse_ints, parse_list_start, parse_count, parse_start, parse_range
+from search_parsing import parse_newton_polygon, parse_abvar_decomp
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
 from flask import flash, render_template, url_for, request, redirect, make_response, send_file
@@ -121,6 +122,7 @@ def abelian_variety_search(**args):
         parse_ints(info,query,'g')
         if 'simple_only' in info and info['simple_only'] == 'yes':
             query['decomposition'] = {'$size' : 1}
+            query['decomposition.0.1'] = 1
         if 'primitive_only' in info and info['primitive_only'] == 'yes':
             query['primitive_models'] = []
         parse_ints(info,query,'p_rank')
@@ -128,7 +130,7 @@ def abelian_variety_search(**args):
         parse_list_start(info,query,'initial_coefficients',qfield='polynomial',index_shift=1)
         parse_list_start(info,query,'abvar_point_count',qfield='A_counts')
         parse_list_start(info,query,'curve_point_count',qfield='C_counts')
-        parse_abvar_decomp(info,query,'decomposition')
+        parse_abvar_decomp(info,query,'decomposition',av_stats=AbvarFqStats())
     except ValueError:
         return search_input_error(info, bread)
 

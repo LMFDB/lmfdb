@@ -1,5 +1,7 @@
 # -*- encoding: utf-8 -*-
 
+## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
+
 import re
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
@@ -13,7 +15,6 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
 FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
-PAREN_RE = re.compile(r'(\([^\)]*\))') # won't work for iterated parentheses ((a,b),(c,d))
 
 from flask import flash
 from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
@@ -556,75 +557,6 @@ def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, pars
         collapse_ors(['$or',L], query)
 
 @search_parser
-def parse_newton_polygon(inp, query, qfield):
-    polygons = []
-    for polygon in BRACKETING_RE.finditer(inp):
-        polygon = polygon.groups()[0][1:-1]
-        if '[' in polygon or ']' in polygon:
-            raise ValueError("Mismatched brackets")
-        if '(' in polygon or ')' in polygon:
-            # user is specifying break points
-            if PAREN_RE.sub('',polygon).replace(',',''):
-                raise ValueError("Mismatched parentheses: %s"%polygon)
-            lastx = ZZ(0)
-            lasty = QQ(0)
-            lastslope = None
-            slopes = []
-            for point in PAREN_RE.finditer(polygon):
-                point = point.groups()[0]
-                xy = point[1:-1].split(',')
-                if len(xy) != 2:
-                    raise ValueError("Malformed break point: %s"%point)
-                try:
-                    x = ZZ(xy[0])
-                    y = QQ(xy[1])
-                except TypeError as err:
-                    raise ValueError(str(err))
-                if x <= lastx:
-                    raise ValueError("Break points must be sorted by x-coordinate: %s"%point)
-                slope = (y - lasty) / (x - lastx)
-                if lastslope is not None and slope <= lastslope:
-                    raise ValueError("Slopes specified by break points must be increasing: %s"%point)
-                slopes.extend([str(slope)] * (x - lastx))
-                lastx = x
-                lasty = y
-                lastslope = slope
-        else:
-            slopes = []
-            lastslope = None
-            for slope in polygon.split(','):
-                if not QQ_RE.match(slope):
-                    raise ValueError("%s is not a rational slope"%slope)
-                qslope = QQ(slope)
-                if lastslope is not None and qslope < lastslope:
-                    raise ValueError("Slopes must be increasing: %s, %s"%(lastslope, slope))
-                lastslope = qslope
-                slopes.append(slope)
-        polygons.append(slopes)
-    replaced = BRACKETING_RE.sub('#',inp)
-    if '[' in replaced or ']' in replaced:
-        raise ValueError("Mismatched brackets")
-    extra_slopes = []
-    for slope in replaced.split(','):
-        if slope == '#':
-            continue
-        if not QQ_RE.match(slope):
-            raise ValueError("%s is not a rational slope"%slope)
-        extra_slopes.append(slope)
-    if len(polygons) + len(extra_slopes) == 1:
-        if polygons:
-            for i, slope in enumerate(polygons[0]):
-                key = qfield + '.' + str(i)
-                query[key] = slope
-        else:
-            query[qfield] = extra_slopes[0]
-    else:
-        collapse_ors(['$or',([{qfield + '.' + str(i):slope for i, slope in enumerate(polygon)}
-                              for polygon in polygons] +
-                             [{qfield:slope} for slope in extra_slopes])], query)
-        print query
-
-@search_parser
 def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
     bparts = BRACKETING_RE.split(inp)
     parts = []
@@ -654,10 +586,6 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
         query.update(make_sub_query(parts[0]))
     else:
         collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
-
-@search_parser
-def parse_abvar_decomp(inp, query, qfield):
-    pass
 
 def parse_count(info, default=20):
     try:
