@@ -284,7 +284,7 @@ def completeness_page():
     t = 'Completeness of the Weil polynomial data'
     bread = get_bread(('Completeness', '.'))
     credit = 'Kiran Kedlaya'
-    return render_template("single.html", kid='dq.av.fq.extent',
+    return render_template("single.html", kid='dq.av.fq.further_extent',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @abvarfq_page.route("/Source")
@@ -302,6 +302,7 @@ def labels_page():
     credit = 'Kiran Kedlaya'
     return render_template("single.html", kid='av.fq.lmfdb_label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+                           
               
 lmfdb_label_regex = re.compile(r'(\d+)\.(\d+)\.([a-z_]+)')
                                   

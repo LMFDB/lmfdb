@@ -13,6 +13,7 @@ from sage.all import PolynomialRing, QQ, factor, PariError
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.WebNumberField import WebNumberField, nf_display_knowl, field_pretty
+from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 
 logger = make_logger("abvarfq")
 
@@ -68,9 +69,20 @@ class AbvarFq_isoclass(object):
             raise ValueError("Label not found in database")
 
     def make_class(self):
-        self.decompositioninfo = decomposition_display(self,self.decomposition)
+        try:         
+            self.rank_length = len(self.angle_ranks)
+        except AttributeError:
+            self.angle_ranks = ""
+        self.decompositioninfo = self.display_decomposition(self.decomposition)
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial,galois=False,vari = 'x')
+        self.primitiveinfo = self.display_primitive(self.primitive_models)
+        try:
+            self.brauerinfo, self.placesinfo = self.display_invs_and_places(self.brauer_invariants,self.places)
+        except AttributeError:
+            self.brauerinfo = 'The Brauer invariants of the endomorphism algebra are not known.'
+            self.placesinfo = ''
         #in some cases the abelian variety can be simple but not have a field or Galois group attached because the Weil polynomial is not irreducible. This gives them then.
+        #this should not be needed anymore
         if self.is_simple():
             if self.number_field == "":
                 factors = factor(PolynomialRing(QQ, 'x')(self.polynomial))
@@ -139,32 +151,28 @@ class AbvarFq_isoclass(object):
         return ans
     
     def is_simple(self):
-        if len(self.decomposition)== 1:
-            #old simple_maker just outputed the label, with no multiplicity
-            if len(self.decomposition[0]) == 1:
-                return True
-            #new simple_maker outputs the label and multiplicity 1
-            elif self.decomposition[0][1] == 1:
+        if len(self.decomposition) == 1:
+            if self.decomposition[0][1] == 1:
                 return True
         else:
             return False
-    
-        ### This is what this will look like once all self.decomposition is fixed:
-        #if len(self.decomposition) == 1:
-        #    if self.decomposition[0][1] == 1:
+        # this should not be needed anymore
+        #if len(self.decomposition)== 1:
+            #old simple_maker just outputed the label, with no multiplicity
+        #    if len(self.decomposition[0]) == 1:
+        #        return True
+            #new simple_maker outputs the label and multiplicity 1
+        #    elif self.decomposition[0][1] == 1:
         #        return True
         #else:
         #    return False
-            
     
-    
-    def is_primitive(self): 
-        pass
-    ### Not implemented yet
-    #    if self.primitive_models == '':
-    #        return True
-    #    else:
-    #        return False
+    def is_primitive(self):
+        if len(self.primitive_models) == 1:
+            if self.primitive_models[0] == self.label:
+                return True
+        else:
+            return False
             
     def is_ordinary(self):
         if self.p_rank == self.g:
@@ -207,14 +215,14 @@ class AbvarFq_isoclass(object):
             C = getDBConnection()
             return group_display_knowl(self.galois_n,self.galois_t,C)
             
-    def decomposition_display_search(self,factors):
+    def display_decomposition_search(self,factors):
         if len(factors) == 1 and factors[0][1] == 1:
             return 'simple'
         ans = ''
         for factor in factors:
             url = url_for('abvarfq.by_label',label=factor[0])
             if ans != '':
-                ans += '$\\times$ '
+                ans += ' $\\times$ '
             if factor[1] == 1:
                 ans += '<a href="{1}">{0}</a>'.format(factor[0],url)
                 ans += ' '
@@ -222,19 +230,62 @@ class AbvarFq_isoclass(object):
                 ans += '<a href="{1}">{0}</a>'.format(factor[0],url) + '<sup> {0} </sup> '.format(factor[1])
         return ans
 
-def decomposition_display(current_class, factors):
-    if len(factors) == 1 and factors[0][1] == 1:
-        return 'simple'
-    ans = ''
-    for factor in factors:
-        if ans != '':
-            ans += '$\\times$ '
-        if factor[1] == 1:
-            ans += factor_display_knowl(factor[0]) + ' '
+    def display_decomposition(current_class, factors):
+        if len(factors) == 1 and factors[0][1] == 1:
+            return 'simple'
+        ans = ''
+        for factor in factors:
+            if ans != '':
+                ans += ' $\\times$ '
+            if factor[1] == 1:
+                ans += factor_display_knowl(factor[0])
+            else:
+                ans += factor_display_knowl(factor[0]) + '<sup> {0} </sup> '.format(factor[1])
+        return ans
+        
+    def display_primitive(self,primitive_models):
+        if self.is_primitive():
+            return 'primitive'
         else:
-            ans += factor_display_knowl(factor[0]) + '<sup> {0} </sup> '.format(factor[1])
-    return ans
-    
+            ans = ''
+            for model in primitive_models:
+                if ans != '':
+                    ans += ', '
+                ans += factor_display_knowl(model)
+            return ans
+            
+    def display_invs_and_places(self,invs,places):
+        ans_invs = '['
+        ans_places = '$['
+        i = 0 #counts the index of the brauer invariant
+        j = 1 #counts the index of the factor
+        n = len(places)
+        for factor in places:
+            variable = 'pi_{0}'.format(j)
+            j += 1
+            if ans_invs != '[':
+                ans_invs += '] $\\times$ ['
+                ans_places += '] \\times ['
+            for place in factor:
+                if not ans_invs.endswith('['):
+                    ans_invs += ', '
+                    ans_places += ','
+                ans_invs += invs[i]
+                i += 1
+                ans_places += '[{0},'.format(self.p()) 
+                ans_places += teXify_pol(tuple_to_poly(place,variable)) + ']'
+        ans_invs += ']'
+        ans_places += ']$'
+        ans_places = ans_places.replace('pi',r'\pi')
+        print ans_places
+        return ans_invs, ans_places
+                
+          
+def tuple_to_poly(tuple,vari):
+    S = PolynomialRing(QQ,vari)
+    return str(S([QQ(str(s)) for s in tuple]))
+            
+
 def factor_display_knowl(label):
     return '<a title = "[av.decomposition.data]" knowl="av.decomposition.data" kwargs="label=' + str(label) + '">' + label + '</a>'
 
