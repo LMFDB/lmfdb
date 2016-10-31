@@ -45,7 +45,7 @@ def base_label(characteristic, deg, level, weight, dirchar):
     field=str(characteristic)
     dirchar_index=str(dirchar).split('.')[2]
     if int(deg)!=1:
-        field=str(characteristic)+str(e)+str(deg)
+        field=str(characteristic)+"e"+str(deg)
     return ".".join([field,str(level),str(weight),dirchar_index])
 
 def last_label(base_label, n):

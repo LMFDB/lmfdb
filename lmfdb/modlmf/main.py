@@ -339,6 +339,13 @@ def download_modlmf_full_lists(**args):
     lang = args['lang']
     c = download_comment_prefix[lang]
     outstr = c + ' List of q-expansion coefficients downloaded from the LMFDB on %s. \n\n'%(mydate)
+    if lang == 'magma':
+        outstr += 'F<x>:=FiniteField(%s,%s); \n' %(res['characteristic'], res['deg'])
+
+    elif lang == 'sage':
+        outstr += 'F.<x>=GF(%s^(%s), conway_polynomial(%s,%s)) \n'%(res['characteristic'], res['deg'], res['characteristic'], res['deg'])
+
+    outstr += '\\\n'
     outstr += download_assignment_start[lang] + '\\\n'
     outstr += str(res['coeffs']).replace("'", "").replace("u", "")
     outstr += download_assignment_end[lang]

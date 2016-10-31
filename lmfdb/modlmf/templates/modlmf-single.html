@@ -56,9 +56,9 @@ $\F_{ {{info.characteristic}} }$
         {% if info.cuspidal_hecke_field == 1 %}
         $\Q$
         {% else %}
-        $\Q(x_0)$ where $x_0$ satisfies ${{info.cuspidal_hecke_field}}$
+        $\Q(x_0)$ where $x_0$ satisfies {% if info.cuspidal_hecke_field%}${{info.cuspidal_hecke_field}}${% endif %}
         {% endif %}</td></tr>
-    <tr><td>{{ KNOWL('modlmf.reduction ideal', title='ideal') }} above {{info.characteristic}}: generators ${{info.cuspidal_lift_gen}}$</td></tr>
+    <tr><td>{{ KNOWL('modlmf.reduction ideal', title='ideal') }} above {{info.characteristic}}: generators {% if info.cuspidal_lift_gen %}${{info.cuspidal_lift_gen}}${%endif%}</td></tr>
 
     <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td><a HREF="Character/Dirichlet/ModL/{{info.dirchar}}">{{info.dirchar}}</a></td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.label', title='Label') }}:</td><td>{{info.label}}</td></tr>
