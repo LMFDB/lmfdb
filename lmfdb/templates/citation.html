@@ -1,0 +1,19 @@
+{% extends 'homepage.html' %}
+{% import 'color.css' as color %}
+{% block content %}
+
+<div>
+<p>
+We encourage authors of books, papers and other articles which mention
+the LMFDB to cite it, following <a href="{{url_for('citing')}}">these
+instructions</a>.
+</p>
+<p>
+A list of articles which cite the LMFDB (last updated October
+2016) is available <a href="{{url_for('citations')}}">here</a>.
+Please let us know if there any omissions using the Contact link below.
+</p>
+</div>
+
+
+{% endblock %}

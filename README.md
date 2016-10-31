@@ -13,7 +13,7 @@ Development
 -----------
 
 * [Getting Started](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md) -- cheat sheet for setting up lmfdb
-* [Development Guide](https://github.com/LMFDB/lmfdb/blob/master/DevelopmentGuide.md) -- organizing development
+* [Development Guide](https://github.com/LMFDB/lmfdb/blob/master/Development.md) -- organizing development
 
 Screenshot
 ----------
