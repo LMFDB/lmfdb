@@ -25,9 +25,18 @@ Installation
       sage -i database_gap
       sage -i pip
       sage -b
-      # in the `lmfdb/` directory:
+      # in the 'lmfdb/' directory:
       sage -pip install -r requirements.txt
    ```
+  * [SSL dependency] On some systems the final line above may fail with an
+    error message stating that the SSL module in Python was not found. If this
+    happens, then follow one of the three possible solutions in [Sage's
+    installation
+    guide](http://doc.sagemath.org/html/en/installation/source.html#building-the-notebook-with-ssl-support).
+    Depending on your chosen solution, Sage may thereafter claim upon shutdown
+    that the service_identity package is still missing; this can be installed
+    with
+    * `sage -pip install --upgrade service_identity`
   * [optional] Memcache.  *This step is not at all necessary and can
     safely be ignored!* Memcache speeds up recompilation of python
     modules during development.  Using it requires both installing the
