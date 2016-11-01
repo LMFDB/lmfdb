@@ -32,15 +32,18 @@ $\F_{ {{info.characteristic}} }$
     <tr><td align=right>{{ KNOWL('modlmf.reducible', title='Reducibility') }}:
 {% if info.reducible %}
     </td><td>reducible, with associated representation 
-        <a HREF="Character/Dirichlet/ModL/{{info.reducible[0]}}">$\alpha$</a>
+<!--        <a HREF="Character/Dirichlet/ModL/{{info.reducible[0]}}">$\alpha$</a>-->
+        ({{info.reducible[0]}})
         {% if info.reducible[1] != 0 %}
         $\chi_{cyc}{% if info.reducible[1]!=1 %}^{ {{info.reducible[1]}} }{% endif %}$
         {% endif %}
         $\oplus$
         {% if info.reducible[0] == info.reducible[2] %}
-        <a HREF="Character/Dirichlet/ModL/{{info.reducible[0]}}">$\alpha$</a>
+<!--        <a HREF="Character/Dirichlet/ModL/{{info.reducible[0]}}">$\alpha$</a>-->
+        ({{info.reducible[0]}})
         {% else %}
-        <a HREF="Character/Dirichlet/ModL/{{info.reducible[2]}}">$\beta$</a>
+<!--        <a HREF="Character/Dirichlet/ModL/{{info.reducible[2]}}">$\beta$</a>-->
+        ({{info.reducible[2]}})
         {% endif %}
         {% if info.reducible[3] != 0 %}
         $\chi_{cyc}{% if info.reducible[3]!=1 %}^{{info.reducible[3]}}{% endif %}$
@@ -60,7 +63,9 @@ $\F_{ {{info.characteristic}} }$
         {% endif %}</td></tr>
     <tr><td>{{ KNOWL('modlmf.reduction ideal', title='ideal') }} above {{info.characteristic}}: generators {% if info.cuspidal_lift_gen %}${{info.cuspidal_lift_gen}}${%endif%}</td></tr>
 
-    <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td><a HREF="Character/Dirichlet/ModL/{{info.dirchar}}">{{info.dirchar}}</a></td></tr>
+    <tr><td align=right>{{ KNOWL('modlmf.dirchar', title='Character') }}:</td><td>{{info.dirchar}}
+    <!--<a HREF="Character/Dirichlet/ModL/{{info.dirchar}}">{{info.dirchar}}</a>-->
+    </td></tr>
     <tr><td align=right>{{ KNOWL('modlmf.label', title='Label') }}:</td><td>{{info.label}}</td></tr>
     {% if info.level !=1 %}
         <tr><td align=right>{{ KNOWL('modlmf.atkinlehner', title='Atkin-Lehner eigenvalues')}}:</td>
