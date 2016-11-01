@@ -178,7 +178,7 @@ def render_hecke_algebras_webpage(**args):
     info['weight']= int(f['weight'])
     info['num_orbits']= int(f['num_orbits'])
 
-    orb = C.mod_l_eigenvalues.hecke_algebras_orbits.find({'parent_label': f['label']})
+    orb = C.mod_l_eigenvalues.hecke_algebras_orbits.find({'parent_label': f['label']}).sort([('orbit', ASC)])
     if orb.count()!=0:
         #consistency check
         if orb.count()!= int(f['num_orbits']):
