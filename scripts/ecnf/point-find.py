@@ -6,11 +6,10 @@ import os.path
 import os
 import pymongo
 from lmfdb.ecnf.WebEllipticCurve import ECNF
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
-C= MongoClient(port=dbport)
+from lmfdb.base import getDBConnection
+print "getting connection"
+C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb')
-
 print "authenticating on the elliptic_curves database"
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
