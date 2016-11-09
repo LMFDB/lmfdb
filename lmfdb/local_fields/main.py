@@ -222,9 +222,9 @@ def show_slope_content(sl,t,u):
     if sc == '[]':
         sc = r'[\ ]'
     if t>1:
-        sc += '_%d'%t
+        sc += '_{%d}'%t
     if u>1:
-        sc += '^%d'%u
+        sc += '^{%d}'%u
     return(sc)
 
 def printquad(code, p):

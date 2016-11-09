@@ -110,7 +110,7 @@ def parse_ainvs(s):
  #   return [int(a) for a in s[1:-1].split(':')]
 
 def numerical_iso_label(lmfdb_iso):
-    from lmfdb.ecnf.import_ecnf_data import numerify_iso_label
+    from scripts.ecnf.import_ecnf_data import numerify_iso_label
     return numerify_iso_label(lmfdb_iso.split('.')[1])
 
 whitespace = re.compile(r'\s+')
@@ -383,7 +383,11 @@ def comp_dict_by_label(d1, d2):
 # %runfile lmfdb/elliptic_curves/import_ec_data.py
 #
 
-def upload_to_db(base_path, min_N, max_N):
+def upload_to_db(base_path, min_N, max_N, insert=True):
+    r""" Uses insert_one() if insert=True, which is faster but will fail if
+    the label is already in the database; otherwise uses update_one()
+    with upsert=True
+    """
     allbsd_filename = 'allbsd/allbsd.%s-%s' % (min_N, max_N)
     allgens_filename = 'allgens/allgens.%s-%s' % (min_N, max_N)
     intpts_filename = 'intpts/intpts.%s-%s' % (min_N, max_N)
@@ -430,13 +434,18 @@ def upload_to_db(base_path, min_N, max_N):
 
     vals = data_to_insert.values()
     # vals.sort(cmp=comp_dict_by_label)
-    count = 0
-    for val in vals:
-        # print val
-        curves.update({'label': val['label']}, {"$set": val}, upsert=True)
-        count += 1
-        if count % 5000 == 0:
-            print "inserted %s" % (val['label'])
+
+    if insert:
+        print("inserting all data")
+        curves.insert_many(vals)
+    else:
+        count = 0
+        for val in vals:
+            # print val
+            curves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
+            count += 1
+            if count % 5000 == 0:
+                print "inserted %s" % (val['label'])
 
 
 # A one-off script to add isogeny matrices to the database

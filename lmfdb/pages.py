@@ -238,9 +238,26 @@ def management_board():
 
 @app.route("/citation")
 def citation():
-    t = "How to cite LMFDB"
+    t = "Citing the LMFDB"
     b = [(t, url_for("citation"))]
+    return render_template('citation.html', title=t, body_class='', bread=b)
+
+@app.route("/citation/citing")
+def citing():
+    t = "How to cite LMFDB"
+    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
     return render_template(_single_knowl, title=t, kid='content.how-to-cite', body_class='', bread=b)
+
+@app.route("/citation/citations")
+def citations():
+    t = "LMFDB citations"
+    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citations"))]
+    return render_template('citations.html', title=t, body_class='', bread=b)
+
+@app.route("/citation/citations_bib")
+def citations_bib():
+    t = "LMFDB citations (BiBTeX entries)"
+    return render_template('citations_content_bib.html', title=t, body_class='')
 
 @app.route("/contact")
 def contact():
