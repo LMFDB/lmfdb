@@ -11,9 +11,17 @@ Installation
 
   and follow these instructions.
 
-* Make sure you have sage (>=7.0) installed and that
-  `sage` is available from the commandline.  In particular see
+* Make sure you have Sage (>=7.0) installed and that `sage` is available from
+  the commandline.  In particular see
   [Sage installation](http://doc.sagemath.org/html/en/installation/source.html).
+  Also check that your version of Sage has ssl available by checking that
+  `import ssl` works on its command line. If not, then the `pip install`
+  commands below will fail. To remedy this, either install SSL globally on
+  your system or have Sage build its own local version, as mentioned
+  [here](http://doc.sagemath.org/html/en/installation/source.html#notebook-additional-features)
+  and
+  [here](http://doc.sagemath.org/html/en/installation/source.html#building-the-notebook-with-ssl-support),
+  respectively.
 
 * Install dependencies.  This requires you to have write access to the
   Sage installation directory, so should be no problem on a personal
@@ -28,15 +36,6 @@ Installation
       # in the 'lmfdb/' directory:
       sage -pip install -r requirements.txt
    ```
-  * [SSL dependency] On some systems the final line above may fail with an
-    error message stating that the SSL module in Python was not found. If this
-    happens, then follow one of the three possible solutions in [Sage's
-    installation
-    guide](http://doc.sagemath.org/html/en/installation/source.html#building-the-notebook-with-ssl-support).
-    Depending on your chosen solution, Sage may thereafter claim upon shutdown
-    that the service_identity package is still missing; this can be installed
-    with
-    * `sage -pip install --upgrade service_identity`
   * [optional] Memcache.  *This step is not at all necessary and can
     safely be ignored!* Memcache speeds up recompilation of python
     modules during development.  Using it requires both installing the
