@@ -173,11 +173,10 @@ def abelian_variety_browse(**args):
 
     gD = parse_range(info['table_dimension_range'])
     qD = parse_range(info['table_field_range'])
-    s = {'g':gD,'q':qD}
+    av_stats=AbvarFqStats()
+    qs = av_stats.qs
+    gs = av_stats.gs
 
-    look = db().find(s)#.sort([('g',int(1)),('q',int(1))])
-    qs = look.distinct('q')
-    gs = look.distinct('g')
     info['table'] = {}
     if isinstance(qD, int):
         qmin = qmax = qD
@@ -187,7 +186,7 @@ def abelian_variety_browse(**args):
     if isinstance(gD, int):
         gmin = gmax = gD
     else:
-        gmin = gD.get('$gte',min(gs) if gs else gD.get('$lte',0))
+        gmin = gD.get('$gte',min(gs) if gs else gD.get('$lte',1))
         gmax = gD.get('$lte',max(gs) if gs else gD.get('$gte',20))
 
     if gmin == gmax:
@@ -200,18 +199,18 @@ def abelian_variety_browse(**args):
         info['table_field_range'] = "{0}-{1}".format(qmin, qmax)
 
     for q in qs:
+        if q < qmin or q > qmax:
+            continue
         info['table'][q] = {}
-        for g in gs:
-            info['table'][q][g] = 0
-    for q in qs:
-        for g in gs:
-            try:
-                info['table'][q][g] = db().find({'g': g, 'q': q}).count()
-            except KeyError:
-                pass
+        L = av_stats._counts[q]
+        for g in xrange(gmin, gmax+1):
+            if g < len(L):
+                info['table'][q][g] = L[g]
+            else:
+                info['table'][q][g] = 0
 
-    info['col_heads'] = sorted(int(q) for q in qs)
-    info['row_heads'] = sorted(int(g) for g in gs)
+    info['col_heads'] = [q for q in qs if q >= qmin and q <= qmax]
+    info['row_heads'] = [g for g in gs if g >= gmin and g <= gmax]
 
     return render_template("abvarfq-index.html", title="Isogeny Classes of Abelian Varieties over Finite Fields", info=info, credit=abvarfq_credit, bread=get_bread(), learnmore=learnmore_list())
 

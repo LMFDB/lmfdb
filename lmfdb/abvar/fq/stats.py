@@ -1,69 +1,71 @@
 # -*- coding: utf-8 -*-
 from pymongo import ASCENDING, DESCENDING
-from lmfdb.base import app
+from lmfdb.base import app, getDBConnection
 from lmfdb.utils import comma, make_logger
 from flask import url_for
 from lmfdb.elliptic_curves.ec_stats import format_percentage
 from sage.structure.unique_representation import UniqueRepresentation
+from sage.misc.cachefunc import cached_function
 from sage.misc.lazy_attribute import lazy_attribute
 
 logger = make_logger("abvarfq")
 
-
+@cached_function
+def stats_db():
+    return getDBConnection().abvar.fq_isog_stats
 
 class AbvarFqStats(UniqueRepresentation):
     def __init__(self):
         logger.debug("Constructing AbvarFqStats")
 
     @lazy_attribute
+    def _counts(self):
+        logger.debug("Looking up abelian variety counts")
+        D = {}
+        for q, L in stats_db().find_one({'label':'counts'})['counts'].iteritems():
+            D[int(q)] = L
+        return D
+
+    @lazy_attribute
     def qs(self):
-        from main import db
-        avdb = db()
-        return sorted(avdb.distinct('q'))
+        return sorted(self._counts.keys())
 
     @lazy_attribute
     def gs(self):
-        from main import db
-        avdb = db()
-        return sorted(avdb.distinct('g'))
+        maxg = max(len(L)-1 for L in self._counts.values())
+        return range(1, maxg+1)
 
     @lazy_attribute
     def counts(self):
-        from main import db
-        logger.debug("Computing abelian variety counts")
-        avdb = db()
         counts = {}
-        counts['nclasses'] = ncurves = avdb.count()
+        counts['nclasses'] = ncurves = sum(sum(L) for L in self._counts.itervalues())
         counts['nclasses_c'] = comma(ncurves)
         counts['gs'] = gs = self.gs
         counts['qs'] = qs = self.qs
         counts['qg_count'] = {}
         for q in qs:
             counts['qg_count'][q] = {}
-            for g in gs:
-                counts['qg_count'][q][g] = avdb.find({'g': g, 'q': q}).count()
+            L = self._counts[q]
+            for g in xrange(1,self.maxg[None]+1):
+                if g < len(L):
+                    counts['qg_count'][q][g] = L[g]
+                else:
+                    counts['qg_count'][q][g] = 0
         return counts
 
     @lazy_attribute
     def maxq(self):
-        from main import db
-        avdb = db()
-        maxq = {}
-        for g in self.gs:
-            maxq[g] = max(avdb.find({'g': g}).distinct('q'))
-        return maxq
+        return max(self._counts.iterkeys())
 
     @lazy_attribute
     def maxg(self):
-        # We assume that if (g, q) is in the database,
-        # so is (g', q') whenever 1 <= g' <= g, q' <= q, q' prime power
         maxg = {}
         maxq = self.maxq
+        counts = self._counts
+        biggest = 0
         for q in self.qs:
-            for g in self.gs[1:]:
-                if maxq[g] < q:
-                    maxg[q] = g - 1
-                    break
+            maxg[q] = len(counts[q]) - 1
+            biggest = max(biggest, maxg[q])
         # maxg[None] used in decomposition search
-        maxg[None] = max(self.gs)
+        maxg[None] = biggest
         return maxg
