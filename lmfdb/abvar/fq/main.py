@@ -8,7 +8,7 @@ import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_list_start, parse_count, parse_start, parse_range
+from lmfdb.search_parsing import parse_ints, parse_list_start, parse_count, parse_start, parse_range, parse_nf_string
 from search_parsing import parse_newton_polygon, parse_abvar_decomp
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
@@ -68,7 +68,7 @@ def abelian_varieties():
         #information has been entered, requesting to change the parameters of the table
         else:
             return abelian_variety_browse(**args)
-    # no information was entered                   
+    # no information was entered
     else:
         return abelian_variety_browse(**args)
 
@@ -124,13 +124,25 @@ def abelian_variety_search(**args):
             query['decomposition'] = {'$size' : 1}
             query['decomposition.0.1'] = 1
         if 'primitive_only' in info and info['primitive_only'] == 'yes':
-            query['primitive_models'] = []
+            query['primitive_models'] = {'$size' : 0}
+        if 'jacobian' in info:
+            if info['jacobian'] == 'yes':
+                query['known_jacobian'] = 1
+            elif info['jacobian'] == 'no':
+                query['known_jacobian'] = -1
+        if 'polarizable' in info:
+            if info['polarizable'] == 'yes':
+                query['principally_polarizable'] = 1
+            elif info['polarizable'] == 'no':
+                query['principally_polarizable'] = -1
         parse_ints(info,query,'p_rank')
+        parse_ints(info,query,'angle_ranks')
         parse_newton_polygon(info,query,'newton_polygon',qfield='slopes')
         parse_list_start(info,query,'initial_coefficients',qfield='polynomial',index_shift=1)
         parse_list_start(info,query,'abvar_point_count',qfield='A_counts')
         parse_list_start(info,query,'curve_point_count',qfield='C_counts')
         parse_abvar_decomp(info,query,'decomposition',av_stats=AbvarFqStats())
+        parse_nf_string(info,query,'number_field')
     except ValueError:
         return search_input_error(info, bread)
 
@@ -303,16 +315,11 @@ def labels_page():
     credit = 'Kiran Kedlaya'
     return render_template("single.html", kid='av.fq.lmfdb_label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
-              
+
 lmfdb_label_regex = re.compile(r'(\d+)\.(\d+)\.([a-z_]+)')
-                                  
+
 def split_label(lab):
     return lmfdb_label_regex.match(lab).groups()
-    
+
 def abvar_label(g, q, iso):
     return "%s.%s.%s" % (g, q, iso)
-    
-
-                
-            
-    

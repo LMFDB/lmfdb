@@ -19,34 +19,16 @@
 <tr>
 <td align=left>{{ KNOWL('ag.field_of_definition',title = "cardinality of the base field") }}</td>
 <td align=left>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
-<td align=left>{{ KNOWL('av.simple',title="simple only") }}</td>
-<!--<td align=left>{{ KNOWL('ag.primitive',title="primitive only") }}</td>-->
 <td align=left>{{ KNOWL('av.fq.p_rank',title="p-rank") }}</td>
+<td align=left>Angle rank</td>
 <td align=left>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</td>
 </tr>
 
 <tr>
 <td><input type='text' name='q' size=10 value="{{info.q}}" /></td>
 <td><input type='text' name='g' size=10 value="{{info.g}}" /></td>
-<td><select name='simple_only'>
-    {% if info.simple_only == "yes" %}
-    <option value ="no">no</option>
-    <option value ="yes" selected = "yes">yes</option>
-    {% else %}
-    <option value ="no" selected = "no">no</option>
-    <option value ="yes">yes</option>
-    {% endif %}
-    </select></td>
-<!--<td><select name='primitive_only'>
-    {% if info.primitive_only == "yes" %}
-    <option value ="no">no</option>
-    <option value ="yes" selected = "yes">yes</option>
-    {% else %}
-    <option value ="no" selected = "no">no</option>
-    <option value ="yes">yes</option>
-    {% endif %}
-    </select></td>-->
 <td><input type='text' name='p_rank' size=10 value="{{info.p_rank}}" /></td>
+<td><input type='text' name='angle_ranks' size=10 value="{{info.angle_ranks}}" /></td>
 <td><input type='text' name='newton_polygon' size=10 value="{{info.newton_polygon}}" /></td>
 </tr>
 
@@ -55,13 +37,43 @@
 <td align=left>{{ KNOWL('ag.fq.point_count',title="point count of the abelian variety") }}</td>
 <td align=left>{{ KNOWL('av.fq.curve_point_count',title="point count of the curve") }}</td>
 <td align=left>{{ KNOWL('av.decomposition',title="isogeny factors decomposition") }}</td>
+<td align=left>Number Field</td>
 </tr>
 
 <tr>
 <td><input type='text' name='initial_coefficients' size=10 value="{{info.initial_coefficients}}" /></td>
 <td><input type='text' name='abvar_point_count' size=10 value="{{info.abvar_point_count}}" /></td>
 <td><input type='text' name='curve_point_count' size=10 value="{{info.curve_point_count}}"/></td>
-<td><input type='text' name='decomposition' size=10 value="{{decomposition}}"/></td>
+<td><input type='text' name='decomposition' size=10 value="{{info.decomposition}}"/></td>
+<td><input type='text' name='number_field' size=10 value="{{info.number_field}}"/></td>
+</tr>
+
+<tr>
+<td align=left>{{ KNOWL('av.simple',title="simple only") }}</td>
+<td align=left>{{ KNOWL('ag.primitive',title="primitive only") }}</td>
+<td align=left>Jacobian</td>
+<td align=left>Principally Polarizable</td>
+</tr>
+
+<tr>
+<td><select name='simple_only'>
+    <option value ="no" {% if info.simple_only == "no" %}selected = "yes"{% endif %}>no</option>
+    <option value ="yes" {% if info.simple_only == "yes" %}selected = "yes"{% endif %}>yes</option>
+    </select></td>
+<td><select name='primitive_only'>
+    <option value ="no" {% if info.primitive_only == "no" %}selected = "yes"{% endif %}>no</option>
+    <option value ="yes" {% if info.primitive_only == "yes" %}selected = "yes"{% endif %}>yes</option>
+    </select></td>
+<td><select name='jacobian'>
+    <option value="yes" {% if info.jacobian == "yes" %}selected = "yes"{% endif %}>yes</option>
+    <option value="any" {% if info.jacobian == "any" %}selected = "yes"{% endif %}>unrestricted</option>
+    <option value="no" {% if info.jacobian == "no" %}selected = "yes"{% endif %}>no</option>
+    </select></td>
+<td><select name='polarizable'>
+    <option value="yes" {% if info.polarizable == "yes" %}selected = "yes"{% endif %}>yes</option>
+    <option value="any" {% if info.polarizable == "any" %}selected = "yes"{% endif %}>unrestricted</option>
+    <option value="no" {% if info.polarizable == "no" %}selected = "yes"{% endif %}>no</option>
+    </select></td>
 </tr>
 
 <tr>

@@ -24,23 +24,23 @@
 
 {% set table = info.table %}
 
-<!-- check if the table is empty--> 
+<!-- check if the table is empty-->
  {% set vars = {'emptytable': true} %}
  {% for column in table %}
  {% if table[column] | length  > 0 %}
  {% if vars.update({'emptytable': false}) %} {% endif %}
  {% endif %}
  {% endfor %}
- 
+
 {% if vars.emptytable %}
 <em>  There are no results available in the requested range. </em>
 
 {% else %}
 
-<div> 
-    
+<div>
+
     The table below gives the number of isogeny classes of abelian varieties of dimension $g$ defined over the field $\F_q$.
-    
+
 </div>
 
 {% set has_na = [] %}
@@ -49,7 +49,7 @@
         <tr class="space">
             <th class="spaceleft">Dimension</th>
             <th class="level" colspan="{{info.col_heads|length}}">
-                <span style="display:block;float:left;margin-right:3px;">Cardinality of base field \(q\)</span>            
+                <span style="display:block;float:left;margin-right:3px;">Cardinality of base field \(q\)</span>
             </th>
         </tr>
         <tr class="space">
@@ -62,7 +62,7 @@
     <tbody>
         {% for g in info.row_heads  %}
         <tr>
-                <th class="left">{{g}}</th>            
+                <th class="left">{{g}}</th>
             {% for q in info.col_heads  %}
             <td>
                 {% set size = table[q][g] %}
@@ -86,7 +86,7 @@
     "n/a" means that the isogeny classes of abelian varieties of this dimension over this field are not in the database yet.
     </small>
     {% endif %}
-    
+
 {% endif %}
 
 
@@ -133,6 +133,26 @@ Please enter a value or leave blank:
             </td>
             <td><span class="formexample"> e.g. 81 or 3-49</span></td>
             <td>
+                {{ KNOWL('ag.primitive',title="primitive only") }}
+            </td>
+            <td>
+                <select name='primitive_only'>
+                    <option value="no" selected="yes">no</option>
+                    <option value="yes">yes</option>
+                </select>
+            </td>
+
+
+        </tr>
+
+
+        <tr>
+            <td>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
+            <td>
+                <input type='text' name='g' example="2" size=10 value="{{info.g}}" />
+            </td>
+            <td><span class="formexample"> e.g. 2 or 3-5</span></td>
+            <td>
                 {{ KNOWL('av.simple',title="simple only") }}
             </td>
             <td>
@@ -141,28 +161,8 @@ Please enter a value or leave blank:
                     <option value="yes">yes</option>
                 </select>
             </td>
-            
+        </tr>
 
-        </tr>
-        
-        
-        <tr>
-            <td>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
-            <td>
-                <input type='text' name='g' example="2" size=10 value="{{info.g}}" />
-            </td>
-            <td><span class="formexample"> e.g. 2 or 3-5</span></td>
-            <td>
-              <!--  {{ KNOWL('ag.primitive',title="primitive only") }}-->
-            </td>
-            <td>
-              <!--  <select name='primitive_only'>
-                    <option value="no" selected="yes">no</option>
-                    <option value="yes">yes</option>
-                </select>-->
-            </td>
-        </tr>
-        
         <tr>
             <td>
                 {{ KNOWL('av.fq.p_rank',title="$p$-rank") }}
@@ -173,7 +173,38 @@ Please enter a value or leave blank:
             <td>
                 <span class="formexample"> e.g. 2 </span>
             </td>
+	    <td>
+                Jacobian
+            </td>
+            <td>
+                <select name='jacobian'>
+                    <option value="yes">yes</option>
+		    <option value="any" selected="yes">unrestricted</option>
+                    <option value="no">no</option>
+                </select>
+            </td>
         </tr>
+	<tr>
+	    <td>
+	        {{ KNOWL('av.fq.angle_rank',title="Angle-rank") }}
+	    </td>
+	    <td>
+	        <input type='text' name='angle_ranks' example="3" size=10 value="{{info.angle_ranks}}" />
+	    </td>
+	    <td>
+	        <span class="formexample"> e.g. 3 </span>
+	    </td>
+	    <td>
+                Principally Polarizable
+            </td>
+            <td>
+                <select name='polarizable'>
+                    <option value="yes">yes</option>
+		    <option value="any" selected="yes">unrestricted</option>
+                    <option value="no">no</option>
+                </select>
+            </td>
+	</tr>
         <tr>
             <td>
                 {{ KNOWL('lf.newton_polygon',title="Newton polygon") }}
@@ -185,7 +216,7 @@ Please enter a value or leave blank:
                 <span class="formexample"> e.g. [0,1/2,1/2,1] (slopes) or [(1,0),(3,1)] (breaks) </span>
             </td>
         </tr>
-        
+
         <tr>
             <td>
                 initial coefficients
@@ -197,7 +228,7 @@ Please enter a value or leave blank:
                 <span class="formexample"> e.g. [1,-1,3,9] </span>
             </td>
         </tr>
-        
+
         <tr>
             <td>
                 {{ KNOWL('ag.fq.point_count',title="point counts of the abelian variety") }}
@@ -220,7 +251,7 @@ Please enter a value or leave blank:
                 <span class="formexample"> e.g. [9,87] </span>
             </td>
         </tr>
-        
+
         <tr>
             <td>
                 {{ KNOWL('av.decomposition',title="isogeny factors decomposition") }}
@@ -232,17 +263,29 @@ Please enter a value or leave blank:
                 <span class="formexample"> e.g. [2,2.9.ag_z,4T1] </span>
             </td>
         </tr>
-        
+
+	<tr>
+	    <td>
+	        Number Field
+	    </td>
+	    <td colspan=3>
+	        <input type='text' name='number_field' example="4.0.29584.2" size=40 value="{{info.number_field}}"/>
+	    </td>
+	    <td>
+	        <span class="formexample"> e.g. 4.0.29584.2 or Qzeta8 </span>
+	    </td>
+	</tr>
+
         <tr>
             <td colspan=2>Maximum number of isogeny classes to display</td><td> <input type='text' name='count'  size=10 value="{{info.count}}" />
             </td>
         </tr>
-        
-        
+
+
     </table>
     <p></p>
     <td><button type='submit' value='Search'>Search</button></td>
-    
+
 </form>
 
 

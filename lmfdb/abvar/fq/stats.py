@@ -55,17 +55,11 @@ class AbvarFqStats(UniqueRepresentation):
 
     @lazy_attribute
     def maxq(self):
-        return max(self._counts.iterkeys())
+        return {g: max(q for q in self.qs if len(counts[q]) > g) for g in self.gs}
 
     @lazy_attribute
     def maxg(self):
-        maxg = {}
-        maxq = self.maxq
-        counts = self._counts
-        biggest = 0
-        for q in self.qs:
-            maxg[q] = len(counts[q]) - 1
-            biggest = max(biggest, maxg[q])
+        maxg = {q: len(self._counts[q]) - 1 for q in self.qs}
         # maxg[None] used in decomposition search
-        maxg[None] = biggest
+        maxg[None] = max(self.gs)
         return maxg

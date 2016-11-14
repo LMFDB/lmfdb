@@ -105,7 +105,7 @@ class DecompList(object):
         if maxg is None:
             maxg = self.maxdim.get(self.q(), 0)
         else:
-            maxg = min(self.maxdim.get(self.q(), 0))
+            maxg = min(self.maxdim.get(self.q(), 0), maxg)
         ming = self.external_g[0]
         if ming is None:
             ming = 1
