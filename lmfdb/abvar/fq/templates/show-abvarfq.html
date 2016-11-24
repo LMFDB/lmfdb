@@ -7,48 +7,53 @@
 
 <p>
 <table>
-    <tr><td>Field:</td><td>&nbsp;&nbsp;</td><td>${{cl.field()}}$</td></tr>
-    <tr><td>Dimension:</td><td>&nbsp;&nbsp;</td><td>${{cl.g}}$</td></tr>
-    <tr><td>Weil polynomial:</td><td>&nbsp;&nbsp;</td><td>${{cl.formatted_polynomial}}$</td></tr>
-    <tr><td>Frobenius angles:</td><td>&nbsp;&nbsp;</td><td>${{cl.frob_angles()}}$</td></tr>
-    {% if cl.angle_ranks != "" %}
-    <tr><td>Angle rank:</td><td>&nbsp;&nbsp;</td><td>${{cl.angle_ranks}}$</td></tr>
-    {% endif %}
+    <tr><td>Base field:</td>&nbsp;&nbsp;<td>${{cl.field()}}$</td></tr>
+    <tr><td>Dimension:</td>&nbsp;&nbsp;<td>${{cl.g}}$</td></tr>
+    <tr><td>Weil polynomial:</td>&nbsp;&nbsp;<td>${{cl.formatted_polynomial}}$</td></tr>
+    <tr><td>Frobenius angles:</td>&nbsp;&nbsp;<td>${{cl.frob_angles()}}$</td></tr>
+    <tr><td>Angle rank:</td>&nbsp;&nbsp;<td>${{cl.angle_ranks}}$</td></tr>
     {% if cl.is_simple() %}
-    <tr><td>Number field:</td><td>&nbsp;&nbsp;</td><td>{{cl.display_number_field()|safe}}</td></tr>
-    <tr><td>Galois group:</td><td>&nbsp;&nbsp;</td><td>{{cl.display_galois_group()|safe}}</td></tr>
+    <tr><td>Number field:</td>&nbsp;&nbsp;<td>{{cl.display_number_field()|safe}}</td></tr>
+    <tr><td>Galois group:</td>&nbsp;&nbsp;<td>{{cl.display_galois_group()|safe}}</td></tr>
     {% endif %}
 </table>
 </p>
 
 <p>
 {% if cl.is_simple() %}
-This isogeny class is simple. <br />
+This isogeny class is simple.</br>
 {% endif %}
 
-{% if cl.primitive_models == "" %}
-The possible primitive models for this isogeny class have not been computed. <br />
-{% else %}
-{% if cl.is_primitive() %}
-This isogeny class is primitive. <br />
-{% else %}
-This isogeny class is not primitive. <br />
-{% endif %}
-{% endif %}
-
-
+<!--
  {% if cl.known_jacobian == "1" %}
  This isogeny class contains a Jacobian.
  {% else %}
-    {% if cl.known_jacobian == "-1" %}
-    This isogeny class does not contain a Jacobian. 
-    {% endif %}
+ {% if cl.known_jacobian == "-1" %}
+ This isogeny class does not contain a Jacobian.
+ {% if cl.principally_polarizable == "1" %}
+ This isogeny class is principally polarizable.
+ {% else %}
+ {% if cl.principally_polarizable == "-1" %}
+ This isogeny class is not principally polarizable.
+ {% else %}
+ It is unknown whether this isogeny class is principally polarizable.
  {% endif %}
- 
-
+ {% endif %}
+ {% else %}
+ It is unknown whether this isogeny class contains a Jacobian.
+ {% if cl.principally_polarizable == "1" %}
+ This isogeny class is principally polarizable.
+ {% else %}
+ {% if cl.principally_polarizable == "-1" %}
+ This isogeny class is not principally polarizable.
+ {% else %}
+ It is unknown whether this isogeny class is principally polarizable.
+ {% endif %}
+ {% endif %}
+ {% endif %}
+ {% endif %}
+ -->
 </p>
-    
-
 
 <p><h2>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</h2>
 
@@ -65,90 +70,58 @@ This isogeny class is supersingular.
 </table>
 </p>
 
-<p><h2>Endomorphism ring</h2>
-
-<table>
-    <tr><td>Brauer invariants:</td><td>&nbsp;</td><td>{{cl.brauerinfo|safe}}</td></tr>
-    {% if cl.placesinfo != '' %}
-    <tr><td>Places:</td><td>&nbsp;</td><td>{{cl.placesinfo|safe}}</td></tr>
-    {% endif %}
-</table>
 
 
+<p><h2>Point counts</h2></p>
+
+<p>
+{% if cl.principally_polarizable == 1 %}
+{% if cl.known_jacobian == 1 %}
+This isogeny class contains a Jacobian.
+{% elif cl.known_jacobian == -1 %}
+This isogeny class is principally polarizable but does not contain a Jacobian.
+{% else %}
+This isogeny class is principally polarizable, but it is unknown whether it contains a Jacobian.
+{% endif %}
+{% elif cl.principally_polarizable == -1 %}
+This isogeny class is not principally polarizable.
+{% endif %}
 </p>
 
-<p><h2>Point counts</h2>
-
-{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}:
+<p>{{ KNOWL('ag.fq.point_count',title="Point counts of the abelian variety") }}:
 
 <table class = "ntdata">
-   <tr><td>$r$</td>
-       {% for r in range(1,cl.length_A_counts()+1) %}
-       <td class="center"> {{ r }} </td>
-       {% endfor %}
-       </tr>
-   <tr><td>$A(\F_{q^r})$</td>
-       {% for count in cl.A_counts %} 
-       <td> {{ count }} </td>
-       {% endfor %}
-   </tr>
+    <tr><td>$r$</td>
+        {% for r in range(1, cl.length_A_counts()+1) %}
+        <td class="center"> {{ r }} </td>
+        {% endfor %}
+    </tr>
+    <tr><td>$A(\F_{q^r})$</td>
+        {% for count in cl.A_counts %}
+        <td> {{ count }} </td>
+        {% endfor %}
+    </tr>
 </table>
-{% if cl.known_jacobian == "1" %}
-This isogeny class contains a Jacobian.
-{% else %}
-{% if cl.known_jacobian == "-1" %}
-This isogeny class does not contain a Jacobian. 
-{% endif %}
-{% endif %}
+</p>
 
-<!--<p>
-{% if cl.known_jacobian == "1" %}
-This isogeny class contains a Jacobian.
+<p>
+{% if cl.known_jacobian == 1 %}
+{{ KNOWL('av.fq.curve_point_count',title="Point counts of the curve") }}
 {% else %}
-{% if cl.known_jacobian == "-1" %}
-This isogeny class does not contain a Jacobian.
-{% if cl.principally_polarizable == "1" %}
-This isogeny class is principally polarizable.
-{% else %}
-{% if cl.principally_polarizable == "-1" %}
-This isogeny class is not principally polarizable.
-{% else %}
-It is unknown whether this isogeny class is principally polarizable.
-{% endif %}
-{% endif %}
-{% else %}
-It is unknown whether this isogeny class contains a Jacobian.
- {% if cl.principally_polarizable == "1" %}
- This isogeny class is principally polarizable.
- {% else %}
- {% if cl.principally_polarizable == "-1" %}
- This isogeny class is not principally polarizable.
- {% else %}
- It is unknown whether this isogeny class is principally polarizable.
- {% endif %}
- {% endif %}
-{% endif %}
-{% endif %}
-</p>-->
-
-
-{% if cl.known_jacobian == "1" %}
-{{ KNOWL('av.fq.curve_point_counts',title="Point counts of the curve") }}:
-{% else %}
-{{ KNOWL('av.fq.curve_point_counts',title="Point counts of the (virtual) curve") }}:
+{{ KNOWL('av.fq.curve_point_count',title="Point counts of the (virtual) curve") }}
 {% endif %}
 
 <table class = "ntdata">
     <tr><td>$r$</td>
-        {% for r in range(1,cl.length_C_counts()+1) %}  
+        {% for r in range(1, cl.length_C_counts()+1) %}
         <td class="center"> {{ r }} </td>
-            {% endfor %}
-            </tr>
+        {% endfor %}
+    </tr>
     <tr><td>$C(\F_{q^r})$</td>
-        {% for count in cl.C_counts %} 
+        {% for count in cl.C_counts %}
         <td>{{ count }}</td>
         {% endfor %}
-        </tr>
+    </tr>
 </table>
 
 </p>
@@ -158,26 +131,19 @@ It is unknown whether this isogeny class contains a Jacobian.
 {% if cl.is_simple() %}
 This is a simple isogeny class.
 {% else %}
-{{cl.decompositioninfo|safe}}
+<blockquote>
+    {{cl.decompositioninfo|safe}}
+</blockquote>
 {% endif %}
 </p>
 
-<p><h2>Primitive models</h2>
+<p><h2>Base Change</h2>
 
-{% if cl.primitive_models == "" %}
-The possible primitive models for this isogeny class have not been computed.
+{% if cl.is_primitive() %}
+This is a primitive isogeny class.
 {% else %}
-{%if cl.is_primitive() %}
-This isogeny class is primitive.
-{% else %}
-Primitive models: {{cl.primitiveinfo|safe}}
+This isogeny class is not primitive.  It is a base change from the following isogeny classes over subfields of ${{cl.field()}}$.
+{{cl.basechangeinfo|safe}}
 {% endif %}
-{% endif %}
-</p>
-
-
-
-
-
 
 {% endblock %}

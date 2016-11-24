@@ -72,6 +72,7 @@ def do_import_all(*paths, **kwds):
     db.create_index('C_counts')
     db.create_index('known_jacobian')
     db.create_index('principally_polarizable')
+    db.create_index('decomposition')
 
     print "finished indices"
     R = PolynomialRing(QQ,'x')
