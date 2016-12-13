@@ -25,9 +25,9 @@ class AVHomeTest(LmfdbTest):
     # Many things are checked twice: Once from main index/browse page, and once from the refining search page
 
     def test_bad_label(self):
-    r"""
-    Checking the error message for a bad label url
-    """
+        r"""
+        Checking the error message for a bad label url
+        """
         self.check_args("/Variety/Abelian/Fq/2/9/ak_bl", 'is not in the database')
     
     # changing the range of the table
@@ -111,9 +111,9 @@ class AVHomeTest(LmfdbTest):
 
     # point counts of the curve
     def test_search_pointcountscurve(self):
-    r"""
-    Check that we can search by the point counts of the curve
-    """
+        r"""
+        Check that we can search by the point counts of the curve
+        """
         self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=%5B9%2C87%5D&decomposition=&count=", '3.9.ab_d_abs')
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple_only=no&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=%5B9%2C87%5D&decomposition=", '3.9.ab_d_abs')
 
