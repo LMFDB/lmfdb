@@ -361,29 +361,34 @@ class WebEC(object):
             badp = [l['p'] for l in self.local_data]
             rtypes = [l['red'] for l in self.local_data]
             data['iw_missing_flag'] = False # flags that there is at least one "?" in the table
+            data['additive_shown'] = False # flags that there is at least one additive prime in table
             for p in sorted(pp):
                 rtype = ""
                 if p in badp:
                     red = rtypes[badp.index(p)]
                     # Additive primes are excluded from the table
-                    if red==0:
-                        continue
-                    rtype = ["non-split multiplicative","additive", "split multiplicative"][1+red]
+                    # if red==0:
+                    #    continue
+                    rtype = ["nsmult","add", "smult"][1+red]
                 p = str(p)
                 pdata = self.iwdata[p]
                 if isinstance(pdata, type(u'?')):
                     if not rtype:
-                        rtype = "ordinary" if pdata=="o?" else "supersingular"
-                    data['iwdata'] += [[p,rtype,"?","?"]]
-                    data['iw_missing_flag'] = True
+                        rtype = "ord" if pdata=="o?" else "ss"
+                    if rtype == "add":
+                        data['iwdata'] += [[p,rtype,"-","-"]]
+                        data['additive_shown'] = True
+                    else:
+                        data['iwdata'] += [[p,rtype,"?","?"]]
+                        data['iw_missing_flag'] = True
                 else:
                     if len(pdata)==2:
                         if not rtype:
-                            rtype = "ordinary"
+                            rtype = "ord"
                         lambdas = str(pdata[0])
                         mus = str(pdata[1])
                     else:
-                        rtype = "supersingular"
+                        rtype = "ss"
                         lambdas = ",".join([str(pdata[0]), str(pdata[1])])
                         mus = str(pdata[2])
                         mus = ",".join([mus,mus])
