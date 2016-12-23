@@ -52,7 +52,7 @@ This isogeny class is simple.</br>
  {% endif %}
  {% endif %}
  {% endif %}
--->
+ -->
 </p>
 
 <p><h2>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</h2>
@@ -76,31 +76,31 @@ This isogeny class is supersingular.
 
 <p>
 {% if cl.principally_polarizable == 1 %}
- {% if cl.known_jacobian == 1 %}
-  This isogeny class contains a Jacobian.
- {% elif cl.known_jacobian == -1 %}
-  This isogeny class is principally polarizable but does not contain a Jacobian.
- {% else %}
-  This isogeny class is principally polarizable, but it is unknown whether it contains a Jacobian.
- {% endif %}
+{% if cl.known_jacobian == 1 %}
+This isogeny class contains a Jacobian.
+{% elif cl.known_jacobian == -1 %}
+This isogeny class is principally polarizable but does not contain a Jacobian.
+{% else %}
+This isogeny class is principally polarizable, but it is unknown whether it contains a Jacobian.
+{% endif %}
 {% elif cl.principally_polarizable == -1 %}
- This isogeny class is not principally polarizable.
+This isogeny class is not principally polarizable.
 {% endif %}
 </p>
 
 <p>{{ KNOWL('ag.fq.point_count',title="Point counts of the abelian variety") }}:
 
 <table class = "ntdata">
-   <tr><td>$r$</td>
-       {% for r in range(1, cl.length_A_counts()+1) %}
-       <td class="center"> {{ r }} </td>
-       {% endfor %}
-       </tr>
-   <tr><td>$A(\F_{q^r})$</td>
-       {% for count in cl.A_counts %}
-       <td> {{ count }} </td>
-       {% endfor %}
-   </tr>
+    <tr><td>$r$</td>
+        {% for r in range(1, cl.length_A_counts()+1) %}
+        <td class="center"> {{ r }} </td>
+        {% endfor %}
+    </tr>
+    <tr><td>$A(\F_{q^r})$</td>
+        {% for count in cl.A_counts %}
+        <td> {{ count }} </td>
+        {% endfor %}
+    </tr>
 </table>
 </p>
 
@@ -115,13 +115,13 @@ This isogeny class is supersingular.
     <tr><td>$r$</td>
         {% for r in range(1, cl.length_C_counts()+1) %}
         <td class="center"> {{ r }} </td>
-            {% endfor %}
-            </tr>
+        {% endfor %}
+    </tr>
     <tr><td>$C(\F_{q^r})$</td>
         {% for count in cl.C_counts %}
         <td>{{ count }}</td>
         {% endfor %}
-        </tr>
+    </tr>
 </table>
 
 </p>
@@ -137,7 +137,7 @@ This is a simple isogeny class.
 {% endif %}
 </p>
 
-<p><h2>Base Change</h2>
+<p><h2>Base change</h2>
 
 {% if cl.is_primitive() %}
 This is a primitive isogeny class.

@@ -11,8 +11,9 @@ from sage.rings.all import Integer
 from sage.all import PolynomialRing, QQ, factor, PariError
 
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
+from lmfdb.WebNumberField import nf_display_knowl, field_pretty
 from lmfdb.transitive_group import group_display_knowl
-from lmfdb.WebNumberField import WebNumberField, nf_display_knowl, field_pretty
+from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data#, av_knowl_guts
 
 logger = make_logger("abvarfq")
 
@@ -177,9 +178,9 @@ class AbvarFq_isoclass(object):
             if ans != '':
                 ans += '$\\times$ '
             if factor[1] == 1:
-                ans += factor_display_knowl(factor[0]) + ' '
+                ans += av_display_knowl(factor[0]) + ' '
             else:
-                ans += factor_display_knowl(factor[0]) + '<sup> {0} </sup> '.format(factor[1])
+                ans += av_display_knowl(factor[0]) + '<sup> {0} </sup> '.format(factor[1])
         return ans
 
     def basechange_display(self):
@@ -190,35 +191,12 @@ class AbvarFq_isoclass(object):
         ans += '<tr><td>Subfield</td><td>Primitive Model</td></tr>\n'
         for model in models:
             ans += '  <tr><td class="center">$%s$</td><td>'%(self.field(model.split('.')[1]))
-            ans += basechange_display_knowl(model) + ' '
+            ans += av_display_knowl(model) + ' '
             ans += '</td></tr>\n'
         ans += '</table>\n'
         return ans
 
-def basechange_display_knowl(label):
-    return '<a title = "[av.basechange.data]" knowl="av.basechange.data" kwargs="label=' + str(label) + '">' + label + '</a>'
-
-def factor_display_knowl(label):
-    return '<a title = "[av.decomposition.data]" knowl="av.decomposition.data" kwargs="label=' + str(label) + '">' + label + '</a>'
-
-def other_isoclass_data(label):
-    C = getDBConnection()
-    return other_isoclass_knowl_guts(label,C)
-
-def other_isoclass_knowl_guts(label,C):
-    abvar = C.abvar.fq_isog.find_one({ 'label' : label })
-    wnf = WebNumberField(abvar['number_field'])
-    inf = '<div>Dimension: ' + str(abvar['g']) + '<br />'
-    if not wnf.is_null():
-        inf += 'Number field: ' + nf_display_knowl(abvar['number_field'], C, name = abvar['number_field']) + '<br />'
-        inf += 'Galois group: ' + group_display_knowl(abvar['galois_n'],abvar['galois_t'],C) + '<br />'
-    inf += '$p$-rank: ' + str(abvar['p_rank']) + '</div>'
-    inf += '<div align="right">'
-    inf += '<a href="/Variety/Abelian/%s">%s home page</a>' % (label, label)
-    inf += '</div>'
-    return inf
 
 @app.context_processor
 def ctx_decomposition():
-    return {'decomposition_data': other_isoclass_data,
-            'basechange_data': other_isoclass_data}
+    return {'av_data': av_data}
