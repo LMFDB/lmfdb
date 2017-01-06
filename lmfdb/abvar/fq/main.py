@@ -130,11 +130,15 @@ def abelian_variety_search(**args):
                 query['known_jacobian'] = 1
             elif info['jacobian'] == 'no':
                 query['known_jacobian'] = -1
+        else:
+            info['jacobian'] = "any"
         if 'polarizable' in info:
             if info['polarizable'] == 'yes':
                 query['principally_polarizable'] = 1
             elif info['polarizable'] == 'no':
                 query['principally_polarizable'] = -1
+        else:
+            info['polarizable'] = "any"
         parse_ints(info,query,'p_rank')
         parse_ints(info,query,'angle_ranks')
         parse_newton_polygon(info,query,'newton_polygon',qfield='slopes')

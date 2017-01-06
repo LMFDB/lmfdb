@@ -24,6 +24,6 @@ def av_data(label):
         inf += 'Galois group: ' + group_display_knowl(abvar['galois_n'],abvar['galois_t'],C) + '<br />'
     inf += '$p$-rank: ' + str(abvar['p_rank']) + '</div>'
     inf += '<div align="right">'
-    inf += '<a href="/Variety/Abelian/%s">%s home page</a>' % (label, label)
+    inf += '<a href="/Variety/Abelian/Fq/%s">%s home page</a>' % (label, label)
     inf += '</div>'
     return inf
