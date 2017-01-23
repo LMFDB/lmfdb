@@ -42,7 +42,11 @@ def string2list(s):
 
 
 def base_label(characteristic, deg, level, weight, dirchar):
-    return ".".join([str(characteristic),str(deg),str(level),str(weight), str(dirchar)])
+    field=str(characteristic)
+    dirchar_index=str(dirchar).split('.')[2]
+    if int(deg)!=1:
+        field=str(characteristic)+"e"+str(deg)
+    return ".".join([field,str(level),str(weight),dirchar_index])
 
 def last_label(base_label, n):
     return ".".join([str(base_label),str(n)])
@@ -54,8 +58,7 @@ def last_label(base_label, n):
 modlmf.create_index('characteristic')
 modlmf.create_index('deg')
 modlmf.create_index('level')
-modlmf.create_index('conductor')
-modlmf.create_index('weight')
+modlmf.create_index('weight_grading')
 modlmf.create_index('dirchar')
 
 print "finished indices"
@@ -74,13 +77,13 @@ def label_lookup(base_label):
     return 1
 
 def do_import(ll):
-    characteristic,deg,level,conductor,min_weight,dirchar,atkinlehner,n_coeffs,coeffs = ll
-    mykeys = ['characteristic','deg','level','conductor','min_weight','dirchar','atkinlehner','n_coeffs','coeffs']
+    characteristic,deg,level,weight_grading,reducible,cuspidal_lift,dirchar,atkinlehner,n_coeffs,coeffs,ordinary,min_theta_weight,theta_cycle = ll
+    mykeys =['characteristic','deg','level','weight_grading','reducible','cuspidal_lift','dirchar','atkinlehner','n_coeffs','coeffs','ordinary','min_theta_weight','theta_cycle']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
 
-    blabel = base_label(data['characteristic'],data['deg'],data['level'], data['min_weight'], data['dirchar'])
+    blabel = base_label(data['characteristic'],data['deg'],data['level'], data['weight_grading'], data['dirchar'])
     data['base_label'] = blabel
     data['index'] = label_lookup(blabel)
     label= last_label(blabel, data['index'])
