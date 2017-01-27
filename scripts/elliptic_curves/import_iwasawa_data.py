@@ -104,7 +104,7 @@ def upload_to_db(base_path, f, test=True):
         count += 1
         if count%1000==0:
             print "read %s lines" % count
-        label, data = read_line(line,1)
+        label, data = read_line(line,0)
         data_to_insert[label] = data
 
     print "finished reading %s lines from file" % count
@@ -119,7 +119,7 @@ def upload_to_db(base_path, f, test=True):
         return
 
     for val in vals:
-        print val
+        #print val
         count += 1
         if not test:
             curves.update_one({'label': val['label']}, {"$set": val}, upsert=True)

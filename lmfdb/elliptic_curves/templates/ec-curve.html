@@ -452,7 +452,7 @@ No \(p\)-adic data exists for this curve.
     </p>
 
 {% if data.iwdata %}
-<h3>Iwasawa invariants</h3>
+<h3>{{ KNOWL('ec.iwasawa_invariants', title='Iwasawa invariants') }} </h3>
 <p>
 <table border=1>
 <tr>
@@ -468,13 +468,13 @@ No \(p\)-adic data exists for this curve.
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
 {% for pdata in data.data.iwdata %}
 <td>
-{{ pdata[1] }}
+{{ KNOWL('ec.q.reduction_type', title=pdata[1]) }}
 </td>
 {% endfor %}
 </tr>
 
 <tr>
-<th>$\lambda$-invariant(s)</th>
+<th>{{ KNOWL('ec.lambda_invariant', title='$\lambda$-invariant(s)')  }} </th>
 {% for pdata in data.data.iwdata %}
 <td>
 {{ pdata[2] }}
@@ -483,7 +483,7 @@ No \(p\)-adic data exists for this curve.
 </tr>
 
 <tr>
-<th>$\mu$-invariant</th>
+<th>{{ KNOWL('ec.mu_invariant', title='$\mu$-invariant(s)') }} </th>
 {% for pdata in data.data.iwdata %}
 <td>
 {{ pdata[3] }}
