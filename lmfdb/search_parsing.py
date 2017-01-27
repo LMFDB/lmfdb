@@ -260,12 +260,15 @@ def parse_signed_ints(inp, query, qfield, parse_one=None):
             iquery = []
             for x in parsed:
                 if type(x) == list:
-                    s0, d0 = parse_one(x[0])
-                    s1, d1 = parse_one(x[1])
-                    if s0 < 0:
-                        abs_D = {'$gte': d1, '$lte': d0}
+                    if len(x) == 1:
+                        s0, abs_D = parse_one(x[0])
                     else:
-                        abs_D = {'$lte': d1, '$gte': d0}
+                        s0, d0 = parse_one(x[0])
+                        s1, d1 = parse_one(x[1])
+                        if s0 < 0:
+                            abs_D = {'$gte': d1, '$lte': d0}
+                        else:
+                            abs_D = {'$lte': d1, '$gte': d0}
                 else:
                     s0, abs_D = parse_one(x)
                 if sign_field is None:

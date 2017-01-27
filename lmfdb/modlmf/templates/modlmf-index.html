@@ -33,15 +33,15 @@ By {{ KNOWL('modlmf.characteristic', title='characteristic') }}:
 </p>
 
 <p>
-By {{ KNOWL('modlmf.level', title='level') }}:
+By {{ KNOWL('modlmf.level', title='Level') }}:
 {% for rnge in info.level_list %}
 <a href="?level={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('modlmf.weight', title='weight') }}: 
+By {{ KNOWL('modlmf.weight_grading', title='Weight grading') }}: 
 {% for rnge in info.weight_list %}
-<a href="?weight={{rnge}}">{{rnge}}</a>
+<a href="?weight_grading={{rnge}}">{{rnge}}</a>
 {% endfor %}
 </p>
 <p>
@@ -86,15 +86,8 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 
 </tr>
 <tr>
-<td align= right>{{ KNOWL('modlmf.conductor', title='Conductor') }}:</td>
-<td><input type='text' name='conductor' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1</td>
-</tr>
-
-</tr>
-<tr>
-<td align= right>{{ KNOWL('modlmf.weight', title='Minimal weight') }}:</td>
-<td><input type='text' name='min_weight' placeholder='2' size=10>
+<td align= right>{{ KNOWL('modlmf.weight_grading', title='Weight grading') }}:</td>
+<td><input type='text' name='weight_grading' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 2</td>
 </tr>
 
@@ -123,15 +116,15 @@ Some of our favourite {{ KNOWL('modlmf.definition', title="mod &#x2113; modular 
 </tr>
 </table>
 
-<table>
-<tr>
-<td colspan=3 align= right>Up to twists: <select name='twist'>
-           <option value="no" selected="no" >no</option>
-           <option value="yes">yes</option>
-         </select></td>
-</tr>
+<!--<table>-->
+<!--<tr>-->
+<!--<td colspan=3 align= right>Up to twists: <select name='twist'>-->
+<!--           <option value="no" selected="no" >no</option>-->
+<!--           <option value="yes">yes</option>-->
+<!--         </select></td>-->
+<!--</tr>-->
 
-</table>
+<!--</table>-->
 
 <p>Maximum number of mod &#x2113; modular forms to display <input type='text' name='count' value=50 size='5'/></p>
 </form>
