@@ -35,16 +35,18 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that we can change the table range
         """
-        self.check_args("/Variety/Abelian/Fq/?table_field_range=32-100&table_dimension_range=2-4",'9442')
+        self.check_args("/Variety/Abelian/Fq/?table_field_range=32-100&table_dimension_range=2-4",'6408')
         
     # dimension, last one is url only
     def test_search_dimension(self):
         r"""
         Check that we can search by dimension
+        
+        if this test fails it could be only because the search doesn't always display in the same order
         """
-        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=2&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=", '2.11.ag_bc')
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=2&simple_only=no&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=", '2.11.ag_bc')
-        self.check_args("/Variety/Abelian/Fq/2/", '2.11.ag_bc')
+        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=2&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=", '2.11.ae_f')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=2&simple_only=no&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=", '2.11.ae_f')
+        self.check_args("/Variety/Abelian/Fq/2/", '2.11.ae_f')
         
     # base field    
     def test_search_basefield(self):
@@ -68,8 +70,8 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that we can search by p-rank
         """
-        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=&p_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=", '2.11.ag_bc')
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple_only=no&p_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=", '2.11.ag_bc')
+        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=&p_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=", '2.11.ae_i')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple_only=no&p_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=", '2.11.ae_i')
         
     # newton polygon
     def test_search_newton(self):
@@ -77,9 +79,9 @@ class AVHomeTest(LmfdbTest):
         Check that we can search by newton polygon
         """
         # [0,1] from browse page
-        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=&p_rank=&newton_polygon=%5B0%2C1%5D&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'1.103.au')
+        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=&p_rank=&newton_polygon=%5B0%2C1%5D&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'1.13.g')
         # 1/3 from browse page
-        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=&p_rank=&newton_polygon=1%2F3&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'3.5.af_k_ap')
+        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=&p_rank=&newton_polygon=1%2F3&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'3.2.ac_c_ac')
         # 1/5 from refine search
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple_only=no&p_rank=&newton_polygon=1%2F5&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=",'5.2.ae_i_ao_ba_abq')
         # slope not a rational number
@@ -87,7 +89,7 @@ class AVHomeTest(LmfdbTest):
         # slopes are not increasing
         self.check_args("/Variety/Abelian/Fq/?start=&count=&q=&g=&simple_only=no&p_rank=&newton_polygon=%5B1%2C1%2F2%2C0%5D&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=",'Slopes must be increasing')
         # [(1,0),(3,1)]
-        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=&p_rank=&newton_polygon=%5B%281%2C0%29%2C%283%2C1%29%5D&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'2.16.af_u')
+        self.check_args("/Variety/Abelian/Fq/?q=&simple_only=no&g=&p_rank=&newton_polygon=%5B%281%2C0%29%2C%283%2C1%29%5D&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'2.16.j_ca')
         # breaks don't give a convex hull
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple_only=no&p_rank=&newton_polygon=%5B%281%2C2%29%2C%283%2C1%29%5D&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=",'Slopes specified by break points must be increasing')
         # break coordinates not integers
