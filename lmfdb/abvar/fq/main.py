@@ -143,8 +143,8 @@ def abelian_variety_search(**args):
         parse_ints(info,query,'angle_ranks')
         parse_newton_polygon(info,query,'newton_polygon',qfield='slopes')
         parse_list_start(info,query,'initial_coefficients',qfield='polynomial',index_shift=1)
-        parse_list_start(info,query,'abvar_point_count',qfield='A_counts')
-        parse_list_start(info,query,'curve_point_count',qfield='C_counts')
+        parse_list_start(info,query,'abvar_point_count',qfield='A_counts',parse_singleton=str)
+        parse_list_start(info,query,'curve_point_count',qfield='C_counts',parse_singleton=str)
         parse_abvar_decomp(info,query,'decomposition',av_stats=AbvarFqStats())
         parse_nf_string(info,query,'number_field')
     except ValueError:
