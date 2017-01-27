@@ -26,7 +26,7 @@ class AVHomeTest(LmfdbTest):
 
     def test_bad_label(self):
         r"""
-        Checking the error message for a bad label url
+        Check the error message for a bad label url
         """
         self.check_args("/Variety/Abelian/Fq/2/9/ak_bl", 'is not in the database')
     
@@ -140,8 +140,7 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?q=25&simple_only=no&g=2&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=%5B373%2C391277%5D&curve_point_count=&decomposition=&count=",'2.25.an_dh')
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=25&g=2&simple_only=no&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=%5B373%2C391277%5D&curve_point_count=&decomposition=",'2.25.an_dh')
         # dimension, base field and point counts of the curve
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=4&simple_only=no&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=%5B4%2C15%5D&decomposition=",'4.3.ae_f_ad_e')
-        self.check_args("/Variety/Abelian/Fq/?start=50&count=50&q=3&g=4&simple_only=no&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=%5B4%2C15%5D&decomposition=",'4.3.ae_f_ad_e')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=4&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=%5B0%2C4%2C15%5D&decomposition=&number_field=&simple_only=no&primitive_only=no&jacobian=any&polarizable=any",'4.3.ae_f_ad_e')
         # dimension, base field and maximum number to display
         self.check_args("/Variety/Abelian/Fq/?q=25&simple_only=no&g=2&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=100", '2.25.am_cw')
         # p-rank and initial coefficients
