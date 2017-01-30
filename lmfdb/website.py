@@ -68,9 +68,11 @@ assert riemann
 import lattice
 assert lattice
 import higher_genus_w_automorphisms
-import abvar
-import abvar.fq
 assert higher_genus_w_automorphisms
+import abvar
+assert abvar
+import abvar.fq
+assert abvar.fq
 import modlmf
 assert modlmf
 import rep_galois_modl

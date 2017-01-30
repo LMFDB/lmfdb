@@ -2,13 +2,12 @@
 
 from flask import url_for
 
-from lmfdb.utils import comma, make_logger
+from lmfdb.utils import make_logger
 
 from lmfdb.base import app, getDBConnection
 
 from sage.misc.cachefunc import cached_function
 from sage.rings.all import Integer
-from sage.all import PolynomialRing, QQ, factor, PariError
 
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty

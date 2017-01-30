@@ -69,8 +69,8 @@ def parse_newton_polygon(inp, query, qfield):
         else:
             query[qfield] = extra_slopes[0]
     else:
-        collapse_ors(['$or',([{qfield + '.' + str(i):slope for i, slope in enumerate(polygon)}
-                              for polygon in polygons] +
+        collapse_ors(['$or',([{qfield + '.' + str(i):slope for i, slope in enumerate(poly)}
+                              for poly in polygons] +
                              [{qfield:slope} for slope in extra_slopes])], query)
 
 class DecompList(object):

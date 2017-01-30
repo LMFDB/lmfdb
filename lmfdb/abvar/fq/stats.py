@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-from pymongo import ASCENDING, DESCENDING
-from lmfdb.base import app, getDBConnection
+from lmfdb.base import getDBConnection
 from lmfdb.utils import comma, make_logger
-from flask import url_for
-from lmfdb.elliptic_curves.ec_stats import format_percentage
 from sage.structure.unique_representation import UniqueRepresentation
 from sage.misc.cachefunc import cached_function
 from sage.misc.lazy_attribute import lazy_attribute
@@ -40,7 +37,7 @@ class AbvarFqStats(UniqueRepresentation):
         counts = {}
         counts['nclasses'] = ncurves = sum(sum(L) for L in self._counts.itervalues())
         counts['nclasses_c'] = comma(ncurves)
-        counts['gs'] = gs = self.gs
+        counts['gs'] = self.gs
         counts['qs'] = qs = self.qs
         counts['qg_count'] = {}
         for q in qs:
@@ -55,7 +52,7 @@ class AbvarFqStats(UniqueRepresentation):
 
     @lazy_attribute
     def maxq(self):
-        return {g: max(q for q in self.qs if len(counts[q]) > g) for g in self.gs}
+        return {g: max(q for q in self.qs if len(self._counts[q]) > g) for g in self.gs}
 
     @lazy_attribute
     def maxg(self):

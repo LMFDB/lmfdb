@@ -12,5 +12,6 @@ def body_class():
     return {'body_class': 'abvarfq'}
 
 import main
+assert main
 
 app.register_blueprint(abvarfq_page, url_prefix="/Variety/Abelian/Fq")

@@ -3,7 +3,6 @@ import re
 import time
 import ast
 import StringIO
-from pymongo import ASCENDING, DESCENDING
 import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger
@@ -12,11 +11,10 @@ from lmfdb.search_parsing import parse_ints, parse_list_start, parse_count, pars
 from search_parsing import parse_newton_polygon, parse_abvar_decomp
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
-from flask import flash, render_template, url_for, request, redirect, make_response, send_file
+from flask import flash, render_template, url_for, request, redirect, send_file
 from markupsafe import Markup
 from sage.misc.cachefunc import cached_function
 from sage.rings.all import PolynomialRing, ZZ
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple
 
 logger = make_logger("abvarfq")
 
