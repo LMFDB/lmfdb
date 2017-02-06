@@ -310,7 +310,7 @@ class WebEC(object):
                                  if (N*data['ap'][i]) %p !=0]
 
         try:
-            data['galois_images'] = [trim_galois_image_code(s) for s in self.galois_images]
+            data['galois_images'] = self.galois_images
             data['non_surjective_primes'] = self.non_surjective_primes
         except AttributeError:
             #print "No Galois image data"

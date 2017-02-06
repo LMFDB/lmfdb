@@ -308,6 +308,39 @@ No primes of bad reduction.
 {% endif %}
 </div>
 
+<div>
+<h2> {{KNOWL('ec.galois_rep', title='Galois Representations')}} </h2>
+
+{% if ec.galois_data %}
+<p>
+{% if ec.cm %}
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
+Representations')}} of an elliptic curve with {{
+KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
+are non-surjective for all primes \( p \).  We only show the image for
+primes \( p\le 59 \).
+{% else %}
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
+Representation')}} has {{KNOWL('ec.galois_rep', title='full image')}}
+ for all primes \( p \) except those listed.
+{% endif %}
+</p>
+<table>
+<tr>
+<th>prime</th>
+<th>{{KNOWL('ec.q.galois_rep_image', title='Image of Galois Representation')}}</th>
+</tr>
+{% for pr in ec.galois_data %}
+<tr>
+<td align=center> \({{pr.p}}\)</td>
+<td align=center>{{pr.image}}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+No data about Galois representations is available yet.
+{% endif %}
+</div>
 
 {% if DEBUG %}
 <hr>
