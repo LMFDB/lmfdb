@@ -254,8 +254,9 @@ def render_hecke_algebras_webpage_l_adic(**args):
     for f in res:
         f_clean = {}
         if f['idempotent'] != "":
-            f['dim']=matrix(sage_eval(f['idempotent'])[0]).dimensions()[1]
-            if f['dim']>4:
+            f['dim']=len(sage_eval(f['idempotent']))
+            l_max= sage_eval(f['idempotent'])[0][0].ndigits()
+            if f['dim']>4 or l_max>5:
                 f_clean['idempotent_display']=[]
             elif f['dim']==1:
                 f_clean['idempotent_display']=sage_eval(f['idempotent'])[0][0]
@@ -344,10 +345,10 @@ def render_hecke_algebras_webpage_download(**args):
         response = make_response(download_hecke_algebras_full_lists_op(**args)) #add another one for the mod l operators
         response.headers['Content-type'] = 'text/plain'
         return response
-    elif args['obj'] == 'idempotents':
-        response = make_response(download_hecke_algebras_full_lists_id(**args))
-        response.headers['Content-type'] = 'text/plain'
-        return response
+#    elif args['obj'] == 'idempotents': #l needs to be specified, better change url
+#        response = make_response(download_hecke_algebras_full_lists_id(**args))
+#        response.headers['Content-type'] = 'text/plain'
+#        return response
 
 def download_hecke_algebras_full_lists_op(**args):
     C = getDBConnection()
@@ -365,27 +366,6 @@ def download_hecke_algebras_full_lists_op(**args):
     outstr = c + ' List of Hecke operators T_1, ..., T_%s downloaded from the LMFDB on %s. \n\n'%(res['num_hecke_op'], mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
     outstr += ",\\\n".join([entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(0,res['num_hecke_op'])]])
-    outstr += ']'
-    outstr += download_assignment_end[lang]
-    outstr += '\n'
-    return outstr
-
-def download_hecke_algebras_full_lists_id(**args):# to be fixed
-    C = getDBConnection()
-    label = str(args['label'])
-    res = C.Lattices.lat.find_one({'label': label})
-    mydate = time.strftime("%d %B %Y")
-    if res is None:
-        return "No such lattice"
-    lang = args['lang']
-    c = download_comment_prefix[lang]
-    mat_start = "Mat(" if lang == 'gp' else "Matrix("
-    mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
-
-    outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
-    outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in res['genus_reps']])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
