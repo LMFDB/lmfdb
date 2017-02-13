@@ -17,21 +17,40 @@
 <h2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</h2>
 
 <p>Number of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}: ${{info.num_orbits}}$</p>
+<p>List of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}: 
+    {% for j in info.orbits %}
+        <a href="#{{loop.index}}">{{j.orbit_label}}</a>{% if not loop.last %},   {% endif %}
+    {% endfor %}</p>
 
+</br>
     {% for j in info.orbits %}
         <hr>
-        <table class="ntdata" cellpadding=3 >
-        <tr><td>Label:</td><td>{{j.orbit_label}}</td></tr>
-        <tr rowspan=2><td >Operators:</td><td>
-        {% for m in j.hecke_op_display %}
-            $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% else %}...{% endif %}
-        {% endfor %}</td></tr>
-        <tr><td></td><td>Dowload Hecke operators $T_n$ for $n\leq {{j.num_op}}$ avaliable operators for sage, gp, magma</td></tr>
-        <tr><td>Presentation:</td><td></td></tr>
-        <tr><td>Generators:</td><td></td></tr>
-        <tr><td>Relations:</td><td></td></tr>
+        <h3><a name="{{loop.index}}">{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbit')}} {{j.orbit_label}}</a></h3>
+        <table class= ntdata>
+        <tr><td align= right>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbit')}} dimension:</td><td valign= bottom>{{j.dim}}</td></tr>
+        {% if j.hecke_op_display == [] %}
+            <tr><td align= right valign= top>Hecke operators:</td><td>Download the avaliable Hecke operators $T_n$ for $n\leq {{j.num_hecke_op}}$ for sage, gp, magma</td></tr>
+        {% else %}
+            <tr rowspan=2><td align= right valign= top>Hecke operators:</td><td>
+            {% for m in j.hecke_op_display %}
+                $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% else %}...{% endif %}
+            {% endfor %}</td></tr>
+            <tr><td></td><td>Download the avaliable Hecke operators $T_n$ for $n\leq {{j.num_hecke_op}}$ for sage, gp, magma</td></tr>
+        {% endif %}
+        <tr><td align= right>Number of {{KNOWL('hecke_algebras.generator', title='generators')}}:</td><td valign= bottom></td></tr>
+
+
+        {% if j.gen_display == [] %}
+            <tr><td align= right valign= top>Generators:</td><td>Download the generators for sage, gp, magma</td></tr>
+        {% else %}
+            <tr><td align= right valign= top>{{KNOWL('hecke_algebras.generator', title='Generators')}}:</td><td>
+            {% for n in j.gen_display %}
+                ${{n}}${% if not loop.last %},  {% else %}.{% endif %}
+            {% endfor %}</td></tr>
+            <tr><td></td><td>Download the generators for sage, gp, magma</td></tr>
+        {% endif %}
         </table>
-        <p>&nbsp;&nbsp;&nbsp;&#x2113;-adic data for 
+        <p>&nbsp;&nbsp;&nbsp;&#x2113;-adic and mod &#x2113; data for 
         {% for i in info.l_adic %}
              <a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage_l_adic', orbit_label=j.orbit_label, prime=i)}}">{{i}}</a>{% if not loop.last %}, {% endif %}
         {% endfor %}</p>

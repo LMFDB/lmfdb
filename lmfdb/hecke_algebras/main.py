@@ -51,7 +51,7 @@ def hecke_algebras_render_webpage():
     args = request.args
     if len(args) == 0:
 #        counts = get_stats().counts()
-        weight_list= range(1, 20, 2)
+        weight_list= range(2, 20, 2)
         lvl_list_endpoints = [1, 100, 200, 300, 400, 500]
         lvl_list = ["%s-%s" % (start, end - 1) for start, end in zip(lvl_list_endpoints[:-1], lvl_list_endpoints[1:])]
         favourite_list = ["1.12.1","139.2.1","9.16.1"]
@@ -189,8 +189,16 @@ def render_hecke_algebras_webpage(**args):
             v_clean = {}
             v_clean['orbit_label']=v['orbit_label']
             v_clean['hecke_op']=v['hecke_op']
-            v_clean['hecke_op_display']=[[i, latex(matrix(sage_eval(v_clean['hecke_op'])[i]))] for i in prime_range(20)]
-            v_clean['num_op']=v['num_gen']
+            v_clean['gen']=v['gen']
+            v_clean['dim']=int(matrix(sage_eval(v_clean['hecke_op'])[0]).dimensions()[0])
+            if v_clean['dim']>4:
+                v_clean['hecke_op_display']=[]
+                v_clean['gen_display']=[]
+            else:
+                v_clean['hecke_op_display']=[[i+1, latex(matrix(sage_eval(v_clean['hecke_op'])[i]))] for i in range(1,5)]
+                v_clean['gen_display']=[i for i in range(1,5)]
+                #v_clean['gen_display']=[latex(matrix(sage_eval(v_clean['gen'])[i])) for i in range(1,5)]
+            v_clean['num_hecke_op']=v['num_hecke_op']
             res_clean.append(v_clean)
 
         info['orbits']=res_clean
@@ -267,7 +275,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         ('Orbit label', '%s' %info['orbit_label'])]    
     info['friends'] = [('Modular form ' + info['base_lab'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
 
-    t = "%s-adic information for the Hecke Algebra orbit %s" % (info['ell'], info['orbit_label'])
+    t = "%s-adic and mod %s data for the Hecke Algebra orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
     return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
 
 
