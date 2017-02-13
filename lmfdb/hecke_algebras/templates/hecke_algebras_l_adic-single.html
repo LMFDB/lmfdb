@@ -13,18 +13,42 @@
 
 {% for j in info.l_adic_orbits %}
     <hr>
+
+    <h3>{{info.ell}}-adic data:</h3>
+
     <table class="ntdata" cellpadding=3 >
-    <tr rowspan=2><td >Idempotents:</td><td>
-    {% for m in j.idempotents %}
-        ${{m}}${% if not loop.last %}, {% endif %}
-    {% endfor %}</td></tr>
-    <tr><td></td><td>Dowload the idempotents for sage, gp, magma</td></tr>
-    <tr><td>Presentation:</td><td></td></tr>
-    <tr><td>Generators:</td><td></td></tr>
-    <tr><td>Relations:</td><td></td></tr>
-    <tr><td>Number of $\Q_{ {{info.ell}} }$ irreducible components:</td><td></td></tr>
-    <tr><td>Characteristic polynomials of the $\Q_{ {{info.ell}} }$ components:</td><td></td></tr>
+    {% if j.idempotent_display == [] %}
+        <tr><td align= right valign= top>Idempotents:</td><td>Download the idempotents for sage, gp, magma</td></tr>
+    {% else %}
+        <tr rowspan=2><td align= right valign= top>Idempotents:</td><td>${{j.idempotent_display}}$</td></tr>
+        <tr><td></td><td>Download the idempotents for sage, gp, magma</td></tr>
+    {% endif %}
+    <tr><td align= right>Generators:</td><td></td></tr>
+    <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein')}}:</td><td></td></tr>
     </table>
+    <p>Number of $\Q_{ {{info.ell}} }$ irreducible components:</p>
+    <p>Characteristic polynomials of the $\Q_{ {{info.ell}} }$ components:</p>
+
+
+    <h3>mod {{info.ell}} data:</h3>
+
+    <table class="ntdata" cellpadding=3 >
+    <tr><td align= right>Residue field:</td><td></td></tr>
+    {% if info.hecke_mod_op_display == [] %}
+        <tr><td align= right valign= top>Hecke operators:</td><td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{info.num_hecke_mod_op}}$ for sage, gp, magma</td></tr>
+    {% else %}
+        <tr rowspan=2><td align= right valign= top>Hecke operators:</td><td>
+        {% for m in info.hecke_mod_op_display %}
+            $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% else %}...{% endif %}
+        {% endfor %}</td></tr>
+        <tr><td></td><td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{j.num_hecke_op}}$ for sage, gp, magma</td></tr>
+    {% endif %}
+    <tr><td align= right>Presentation:</td><td></td></tr>
+    <tr><td align= right>Generators:</td><td></td></tr>
+    <tr><td align= right>Relations:</td><td></td></tr>
+    <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein defect')}}:</td><td></td></tr>
+    </table>
+
 {% endfor %}
 
 
