@@ -73,9 +73,13 @@ def random_hecke_algebra():
 
 
 hecke_algebras_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d*)')
+hecke_algebras_orbit_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d*)')
 
 def split_hecke_algebras_label(lab):
     return hecke_algebras_label_regex.match(lab).groups()
+
+def split_hecke_algebras_orbit_label(lab):
+    return hecke_algebras_orbit_label_regex.match(lab).groups()
 
 def hecke_algebras_by_label(lab, C):
     if C.mod_l_eigenvalues.hecke_algebras.find({'label': lab}).limit(1).count() > 0:
@@ -84,6 +88,17 @@ def hecke_algebras_by_label(lab, C):
         flash(Markup("The Hecke Algebra <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
     else:
         flash(Markup("No Hecke Algebras in the database has label <span style='color:black'>%s</span>" % lab), "error")
+    return redirect(url_for(".hecke_algebras_render_webpage"))
+
+def hecke_algebras_by_orbit_label(lab, C):
+    if C.mod_l_eigenvalues.hecke_algebras_orbits.find({'orbit_label': lab}).limit(1).count() > 0:
+        sp=split_hecke_algebras_orbit_label(lab)
+        ol=sp[0]+'.'+sp[1]+'.'+sp[2]
+        return render_hecke_algebras_webpage(label=ol)
+    if hecke_algebras_orbit_label_regex.match(lab):
+        flash(Markup("The Hecke Algebra orbit <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+    else:
+        flash(Markup("No Hecke Algebras orbit in the database has label <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".hecke_algebras_render_webpage"))
 
 
@@ -97,6 +112,9 @@ def hecke_algebras_search(**args):
     if 'label' in info and info.get('label'):
         return hecke_algebras_by_label(info.get('label'), C)
 
+    if 'orbit_label' in info and info.get('orbit_label'):
+        return hecke_algebras_by_orbit_label(info.get('orbit_label'), C)
+
     query = {}
     try:
         for field, name in (('level','Level'),('weight','Weight'),('num_orbits', 'Number of Hecke orbits')):
@@ -104,7 +122,7 @@ def hecke_algebras_search(**args):
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info)
-
+    # here need a check for ell as input, if the orbit is given should go to the right page otherwise list all base labels for which mod l info is available
     count = parse_count(info,50)
     start = parse_start(info)
 
@@ -250,6 +268,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
     info.update(data)
     res = C.mod_l_eigenvalues.hecke_algebras_l_adic.find({'level': data['level'],'weight': data['weight'],'orbit_label': data['orbit_label'], 'ell': data['ell']})
 
+    info['num_l_adic_orbits']=res.count()
     res_clean = []
     for f in res:
         f_clean = {}#add f['deg'], f['field_poly']
@@ -342,13 +361,22 @@ download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 @hecke_algebras_page.route('/<orbit_label>/download/<lang>/<obj>')
 def render_hecke_algebras_webpage_download(**args):
     if args['obj'] == 'operators':
-        response = make_response(download_hecke_algebras_full_lists_op(**args)) #add another one for the mod l operators
+        response = make_response(download_hecke_algebras_full_lists_op(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-#    elif args['obj'] == 'idempotents': #l needs to be specified, better change url
-#        response = make_response(download_hecke_algebras_full_lists_id(**args))
-#        response.headers['Content-type'] = 'text/plain'
-#        return response
+
+
+@hecke_algebras_page.route('/<orbit_label>/<prime>/download/<lang>/<obj>')
+def render_hecke_algebras_webpage_ell_download(**args):
+    if args['obj'] == 'operators':
+        response = make_response(download_hecke_algebras_full_lists_mod_op(**args)) 
+        response.headers['Content-type'] = 'text/plain'
+        return response
+    elif args['obj'] == 'idempotents': 
+        response = make_response(download_hecke_algebras_full_lists_id(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+
 
 def download_hecke_algebras_full_lists_op(**args):
     C = getDBConnection()
@@ -371,4 +399,45 @@ def download_hecke_algebras_full_lists_op(**args):
     outstr += '\n'
     return outstr
 
+def download_hecke_algebras_full_lists_mod_op(**args):#write this
+    C = getDBConnection()
+    label = str(args['orbit_label'])
+    res = C.mod_l_eigenvalues.hecke_algebras_orbits.find_one({'orbit_label': label})
+    mydate = time.strftime("%d %B %Y")
+    if res is None:
+        return "No such lattice"
+    lang = args['lang']
+    c = download_comment_prefix[lang]
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+
+    outstr = c + ' List of Hecke operators T_1, ..., T_%s downloaded from the LMFDB on %s. \n\n'%(res['num_hecke_op'], mydate)
+    outstr += download_assignment_start[lang] + '[\\\n'
+    outstr += ",\\\n".join([entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(0,res['num_hecke_op'])]])
+    outstr += ']'
+    outstr += download_assignment_end[lang]
+    outstr += '\n'
+    return outstr
+
+def download_hecke_algebras_full_lists_id(**args):#write this
+    C = getDBConnection()
+    label = str(args['orbit_label'])
+    res = C.mod_l_eigenvalues.hecke_algebras_orbits.find_one({'orbit_label': label})
+    mydate = time.strftime("%d %B %Y")
+    if res is None:
+        return "No such lattice"
+    lang = args['lang']
+    c = download_comment_prefix[lang]
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+
+    outstr = c + ' List of Hecke operators T_1, ..., T_%s downloaded from the LMFDB on %s. \n\n'%(res['num_hecke_op'], mydate)
+    outstr += download_assignment_start[lang] + '[\\\n'
+    outstr += ",\\\n".join([entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(0,res['num_hecke_op'])]])
+    outstr += ']'
+    outstr += download_assignment_end[lang]
+    outstr += '\n'
+    return outstr
 

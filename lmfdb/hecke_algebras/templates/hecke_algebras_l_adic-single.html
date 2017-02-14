@@ -9,7 +9,10 @@
     <tr><td align=right>{{ KNOWL('mf.elliptic.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
     <tr><td align=right>{{ KNOWL('mf.elliptic.weight', title='Weight') }}:</td><td>${{info.weight}}$</td></tr>
     <tr><td align=right>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}:</td><td><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage', label=info.base_lab)}}">{{info.orbit_label}}</a></td></tr>
+    <tr><td align=right>Number of $\Z_{ {{info.ell}} }$ orbits:</td><td>${{info.num_l_adic_orbits}}$</td></tr>
 </table>
+
+</br>
 
 {% for j in info.l_adic_orbits %}
     <hr>
@@ -23,11 +26,11 @@
         <tr rowspan=2><td align= right valign= top>Idempotent:</td><td>${{j.idempotent_display}}$</td></tr>
         <tr><td></td><td>Download the idempotent for sage, gp, magma</td></tr>
     {% endif %}
-    <tr><td align= right>Generators as $\Q_{ {{info.ell}} }$-alegbra:</td><td></td></tr>
+    <tr><td align= right>Generators as $\Q_{ {{info.ell}} }$-algebra:</td><td></td></tr>
     <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein')}}:</td><td></td></tr>
     </table>
-    <p>Number of $\Q_{ {{info.ell}} }$ irreducible components:</p>
-    <p>Characteristic polynomials of the $\Q_{ {{info.ell}} }$ components:</p>
+    <p>Number of $\Q_{ {{info.ell}} }$ orbits:</p>
+    <p>Characteristic polynomials of the $\Q_{ {{info.ell}} }$ orbits:</p>
 
 
     <h3>mod {{info.ell}} data</h3>
