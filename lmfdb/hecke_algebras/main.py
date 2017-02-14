@@ -252,7 +252,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
 
     res_clean = []
     for f in res:
-        f_clean = {}
+        f_clean = {}#add f['deg'], f['field_poly']
         if f['idempotent'] != "":
             f['dim']=len(sage_eval(f['idempotent']))
             l_max= sage_eval(f['idempotent'])[0][0].ndigits()

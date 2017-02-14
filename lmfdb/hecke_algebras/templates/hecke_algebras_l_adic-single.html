@@ -18,12 +18,12 @@
 
     <table class="ntdata" cellpadding=3 >
     {% if j.idempotent_display == [] %}
-        <tr><td align= right valign= top>Idempotents:</td><td>Download the idempotents for sage, gp, magma</td></tr>
+        <tr><td align= right valign= top>Idempotent:</td><td>Download the idempotent for sage, gp, magma</td></tr>
     {% else %}
-        <tr rowspan=2><td align= right valign= top>Idempotents:</td><td>${{j.idempotent_display}}$</td></tr>
-        <tr><td></td><td>Download the idempotents for sage, gp, magma</td></tr>
+        <tr rowspan=2><td align= right valign= top>Idempotent:</td><td>${{j.idempotent_display}}$</td></tr>
+        <tr><td></td><td>Download the idempotent for sage, gp, magma</td></tr>
     {% endif %}
-    <tr><td align= right>Generators:</td><td></td></tr>
+    <tr><td align= right>Generators as $\Q_{ {{info.ell}} }$-alegbra:</td><td></td></tr>
     <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein')}}:</td><td></td></tr>
     </table>
     <p>Number of $\Q_{ {{info.ell}} }$ irreducible components:</p>
@@ -33,7 +33,12 @@
     <h3>mod {{info.ell}} data</h3>
 
     <table class="ntdata" cellpadding=3 >
-    <tr><td align= right>Residue field:</td><td></td></tr>
+    <tr><td align= right>Residue field:</td><td>
+    {% if j.deg and j.deg > 1 %}
+    $\F\cong\F_{ {{info.ell}}^{{j.deg}} }\cong \F[a]$ where $a$ satisfies ${{j.field_poly}}=0$
+    {% else %}
+    $\F\cong\F_{ {{info.ell}} }$
+    {% endif %}</td></tr>
     {% if info.hecke_mod_op_display == [] %}
         <tr><td align= right valign= top>Hecke operators:</td><td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{info.num_hecke_mod_op}}$ for sage, gp, magma</td></tr>
     {% else %}
@@ -43,9 +48,11 @@
         {% endfor %}</td></tr>
         <tr><td></td><td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{j.num_hecke_op}}$ for sage, gp, magma</td></tr>
     {% endif %}
-    <tr><td align= right>Presentation:</td><td></td></tr>
-    <tr><td align= right>Generators:</td><td></td></tr>
-    <tr><td align= right>Relations:</td><td></td></tr>
+    <tr><td align= right rowspan=5>Presentation as $\F$-algebra:</td><td>Dimension:</td><td></td></tr>
+    <tr><td>Number of generators:</td><td></td></tr>
+    <tr><td>Generators:</td><td></td></tr>
+    <tr><td>Relations:</td><td></td></tr>
+    <tr><td>Dimension in the {{KNOWL('hecke_algebras.grading', title='grading')}}:</td><td></td></tr>
     <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein defect')}}:</td><td></td></tr>
     </table>
 
