@@ -43,9 +43,19 @@
     $\F\cong\F_{ {{info.ell}} }$
     {% endif %}</td></tr>
     {% if info.hecke_mod_op_display == [] %}
-        <tr><td align= right valign= top>Hecke operators:</td><td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{info.num_hecke_mod_op}}$ for sage, gp, magma</td></tr>
+        {% if j.deg and j.deg > 1 %}
+            <tr><td align= right valign= top>Hecke operators over $\F_{ {{info.ell}} }$:</td>
+        {% else %}
+            <tr><td align= right valign= top>Hecke operators over $\F$:</td>
+        {% endif %}
+                <td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{info.num_hecke_mod_op}}$ for sage, gp, magma</td></tr>
     {% else %}
-        <tr rowspan=2><td align= right valign= top>Hecke operators:</td><td>
+        <tr rowspan=2>
+        {% if j.deg and j.deg > 1 %}
+            <tr><td align= right valign= top>Hecke operators over $\F_{ {{info.ell}} }$:</td>
+        {% else %}
+            <tr><td align= right valign= top>Hecke operators over $\F$:</td>
+        {% endif %}
         {% for m in info.hecke_mod_op_display %}
             $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% else %}...{% endif %}
         {% endfor %}</td></tr>
