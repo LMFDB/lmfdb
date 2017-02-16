@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-r""" Check presence if the first 150 coefficients of the q expansion of the theta series attached to an integral lattice are stored, and adds them otherwise.
+""" Complete the entries for l aidc orbits of Hecke algebra adding stucture data if needed.
 
-Initial version: Samuele Anni
-
+Author: Samuele Anni
 """
 
 import os
