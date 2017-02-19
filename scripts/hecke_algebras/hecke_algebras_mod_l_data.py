@@ -38,10 +38,11 @@ def do_import(ll):
     return data
 
 
-def check_mod_l_data(orbit_label, ell, ll, fix=False):
+def check_mod_l_data(orbit_label, index, ell, ll, fix=False):
     query = {}
     query['orbit_label'] = str(orbit_label)
     query['ell'] = int(ell)
+    query['index'] = int(index)
 
     orb_set = hecke_orb_l.find(query)
     print("%s Hecke orbits to examine with orbit label %s for ell = %s" % (orb_set.count(), orbit_label, ell))

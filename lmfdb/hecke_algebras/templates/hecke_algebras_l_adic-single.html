@@ -26,7 +26,7 @@
         <tr rowspan=2><td align= right valign= top>Idempotent:</td><td>${{j.idempotent_display}}$</td></tr>
         <tr><td></td><td>Download the idempotent for sage, gp, magma</td></tr>
     {% endif %}
-    <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein')}}:</td><td></td></tr>
+    <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein')}}:</td><td>{{j.gorenstein}}</td></tr>
     </table>
     <p>Number of $\Q_{ {{info.ell}} }$ orbits:</p>
     <p>Characteristic polynomials of the $\Q_{ {{info.ell}} }$ orbits:</p>
@@ -36,36 +36,40 @@
 
     <table class="ntdata" cellpadding=3 >
     <tr><td align= right>Residue field:</td><td>
-    {% if j.deg and j.deg > 1 %}
-    $\F\cong\F_{ {{info.ell}}^{{j.deg}} }\cong \F[a]$ where $a$ satisfies ${{j.field_poly}}=0$
+    {% if j.deg > 1 %}
+    $\F\cong\F_{ {{info.ell}}^{{j.deg}} }\cong \F_{ {{info.ell}} }[a]$ where $a$ satisfies ${{j.field_poly}}=0$
     {% else %}
     $\F\cong\F_{ {{info.ell}} }$
     {% endif %}</td></tr>
-    {% if info.hecke_mod_op_display == [] %}
-        {% if j.deg and j.deg > 1 %}
-            <tr><td align= right valign= top>Hecke operators over $\F_{ {{info.ell}} }$:</td>
+    {% if j.operators_mod_l_display == [] %}
+        {% if j.deg > 1 %}
+            <tr><td align= right valign= top>Hecke operators over $\F_{ {{info.ell}} }$:</td><td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{info.num_hecke_mod_op}}$ for sage, gp, magma</td></tr>
         {% else %}
-            <tr><td align= right valign= top>Hecke operators over $\F$:</td>
+            <tr><td align= right valign= top>Hecke operators over $\F$:</td><td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{info.num_hecke_mod_op}}$ for sage, gp, magma</td></tr>
         {% endif %}
-                <td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{info.num_hecke_mod_op}}$ for sage, gp, magma</td></tr>
     {% else %}
         <tr rowspan=2>
-        {% if j.deg and j.deg > 1 %}
-            <tr><td align= right valign= top>Hecke operators over $\F_{ {{info.ell}} }$:</td>
+        {% if j.deg > 1 %}
+            <td align= right valign= top>Hecke operators over $\F_{ {{info.ell}} }$:</td><td>
         {% else %}
-            <tr><td align= right valign= top>Hecke operators over $\F$:</td>
+            <td align= right valign= top>Hecke operators over $\F$:</td><td>
         {% endif %}
-        {% for m in info.hecke_mod_op_display %}
+        {% for m in j.operators_mod_l_display %}
             $T_{ {{m[0]}}} ={{m[1]}}${% if not loop.last %},  {% else %}...{% endif %}
         {% endfor %}</td></tr>
         <tr><td></td><td>Download the avaliable Hecke operators $T_n$ mod {{info.ell}} for $n\leq {{j.num_hecke_op}}$ for sage, gp, magma</td></tr>
     {% endif %}
-    <tr><td align= right rowspan=5>Presentation as $\F$-algebra:</td><td>Dimension:</td><td></td></tr>
-    <tr><td>Number of generators:</td><td></td></tr>
-    <tr><td>Generators:</td><td></td></tr>
-    <tr><td>Relations:</td><td></td></tr>
-    <tr><td>Dimension in the {{KNOWL('hecke_algebras.grading', title='grading')}}:</td><td></td></tr>
-    <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein defect')}}:</td><td></td></tr>
+
+    {% if j.dim == 1%}
+        <tr><td align= right>Presentation as $\F$-algebra:</td><td>Dimension: {{j.dim}}</td></tr>
+    {% else %}
+        <tr><td align= right rowspan=5>Presentation as $\F$-algebra:</td><td>Dimension: {{j.dim}}</td></tr>
+        <tr><td>Number of generators: {{j.num_gen}}</td></tr>
+        <tr><td>Generators: {% for m in j.gens %} $x_{ {{m[0]}} }={{m[1]}}$ {% if not loop.last %},  {% endif %} {% endfor %}</td></tr>
+        <tr><td>Relations: {% for n in j.rel %} ${{n}}$ {% if not loop.last %},  {% endif %} {% endfor %}</td></tr>
+        <tr><td>Dimensions in the {{KNOWL('hecke_algebras.grading', title='grading')}}: {{j.grading}}</td></tr>
+    {% endif %}
+    <tr><td align= right>{{KNOWL('hecke_algebras.Gorenstein', title='Gorenstein defect')}}:</td><td>{{j.gorenstein_def}}</td></tr>
     </table>
 
 {% endfor %}

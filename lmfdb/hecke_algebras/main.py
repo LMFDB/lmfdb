@@ -10,7 +10,7 @@ from flask import render_template, request, url_for, redirect, make_response, fl
 from lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_collection
 
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, sage_eval, prime_range
+from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, sage_eval, prime_range, sqrt
 
 from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import get_stats
@@ -294,13 +294,27 @@ def render_hecke_algebras_webpage_l_adic(**args):
                 f_clean['idempotent_display']=latex(matrix(sage_eval(f['idempotent'])))
         else:
             f_clean['idempotent_display']=latex(matrix([[1]]))
-        f_clean['gen_l']=str(f['gen_l'])
-        f_clean['num_gen_l']=str(f['num_gen_l'])  #is empty for now, so made into a string
-        f_clean['rel_l']=str(f['rel_l'])
-        f_clean['num_charpoly_ql']=int(f['num_charpoly_ql'])
-        f_clean['charpoly_ql']=str(f['charpoly_ql'])
-        f_clean['hecke_mod_op_display']=[] #to be changed
-        f_clean['num_hecke_mod_op']=[] #to be added
+        f_clean['deg']=int(f['field'][1])
+        f_clean['field_poly']=str(f['field'][2])
+        f_clean['dim']=int(f['structure'][0])
+        f_clean['num_gen']=int(f['structure'][1])
+        f_clean['gens']=[[int(sage_eval(f['structure'][2]).index(i)+1), str(i)] for i in sage_eval(f['structure'][2])]
+        f_clean['rel']=sage_eval(f['structure'][3])
+        f_clean['grading']=[int(i) for i in f['properties'][0]]
+        f_clean['gorenstein_def']=int(f['properties'][1])
+        if f_clean['gorenstein_def']==0:
+            f_clean['gorenstein']="yes"
+        else:
+            f_clean['gorenstein']="no"
+        f_clean['operators_mod_l']=[[int(i) for i in j] for j in f['operators']]
+        f_clean['num_hecke_op']=len(f_clean['operators_mod_l'])
+        f_clean['size_op']=sqrt(len(f_clean['operators_mod_l'][0]))
+        if f_clean['size_op']>4:
+            f_clean['operators_mod_l_display']=[]
+        elif f_clean['size_op']==1:
+            f_clean['operators_mod_l_display']=[[i+1, f_clean['operators_mod_l'][i][0]] for i in range(0,10)]
+        else:
+            f_clean['operators_mod_l_display']=[[i+1,latex(matrix(f_clean['size_op'],f_clean['size_op'], f_clean['operators_mod_l'][i]))] for i in range(0,5)]
         res_clean.append(f_clean)
 
     info['l_adic_orbits']=res_clean
