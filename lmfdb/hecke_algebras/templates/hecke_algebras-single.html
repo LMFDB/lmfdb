@@ -29,7 +29,7 @@
         <table>
         <tr><td align= right>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbit')}} dimension:</td><td valign= bottom>{{j.dim}}</td></tr>
         {% if j.hecke_op_display == [] %}
-            <tr><td align= right valign= top>Hecke operators:</td><td>Download the avaliable Hecke operators $T_n$ for $n\leq {{j.num_hecke_op}}$ for for {% for e in j.download_op %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+            <tr><td align= right valign= top>Hecke operators:</td><td>Download the avaliable Hecke operators $T_n$ for $n\leq {{j.num_hecke_op}}$ for {% for e in j.download_op %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
         {% else %}
             <tr rowspan=2><td align= right valign= top>Hecke operators:</td><td>
             {% for m in j.hecke_op_display %}
@@ -37,24 +37,26 @@
             {% endfor %}</td></tr>
             <tr><td></td><td>Download the avaliable Hecke operators $T_n$ for $n\leq {{j.num_hecke_op}}$ for {% for e in j.download_op %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
         {% endif %}
-
-        {% if j.gen_display == [] %}
-            <tr><td align= right valign= top>{{KNOWL('hecke_algebras.generator', title='Generators')}} as $\Z$-algebra:</td><td>Download the generators for sage, gp, magma</td></tr>
-        {% else %}
-            <tr><td align= right valign= top>{{KNOWL('hecke_algebras.generator', title='Generators')}} as $\Z$-algebra:</td><td>
-            {% for n in j.gen_display %}
-                ${{n}}${% if not loop.last %},  {% else %}.{% endif %}
-            {% endfor %}</td></tr>
-            <tr><td></td><td>Download the generators for sage, gp, magma</td></tr>
+        {%if j.Zbasis %}
+            {% if j.gen_display == [] %}
+                <tr><td align= right valign= top>{{KNOWL('hecke_algebras.generator', title='Generators')}} as $\Z$-algebra:</td><td>Download the generators for {% for e in j.download_gen %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+            {% else %}
+                <tr><td align= right valign= top>{{KNOWL('hecke_algebras.generator', title='Generators')}} as $\Z$-algebra:</td><td>
+                {% for n in j.gen_display %}
+                    ${{n}}${% if not loop.last %},  {% endif %}
+                {% endfor %}</td></tr>
+                <tr><td></td><td>Download the generators for {% for e in j.download_gen %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+            {% endif %}
+                <tr><td align= right>Discriminant as $\Z$-algebra:</td><td>
+                {% if j.discriminant ==1 %}
+                    1
+                {% else %}
+                    ${{j.discriminant}}={% for k in j.disc_fac %}{{k[0]}}{% if k[1] !=1 %}^{ {{k[1]}} }{% endif %}{% if not loop.last %}\cdot  {% endif %}{% endfor %}$
+                {% endif %}</td></tr>
+                <tr><td align= right>Inner twists:</td><td>{{j.inner_twists}}</td></tr>
+                <tr><td align= right>$\Q$-basis:</td><td>${% for n in j.Qbasis %}T_{ {{n}} }{% if not loop.last %},  {% endif %}{% endfor %}$</td></tr>
+                <tr><td align= right>{{KNOWL('hecke_algebras.generator', title='Generators')}} as $\Q$-algebra:</td><td>${% for n in j.Qalg_gen %}T_{ {{n}} }{% if not loop.last %},  {% endif %}{% endfor %}$</td></tr>
         {% endif %}
-            <tr><td align= right>Discriminant as $\Z$-algebra:</td><td></td></tr>
-            <tr><td align= right>Inner twists:</td><td></td></tr>
-            <tr><td align= right>$\Q$-basis:</td><td></td></tr>
-            <tr><td align= right>{{KNOWL('hecke_algebras.generator', title='Generators')}} as $\Q$-algebra:</td><td>
-
-
-
-
         </table>
         <p>&nbsp;&nbsp;&nbsp;&#x2113;-adic and mod &#x2113; data for &#x2113;=
         {% for i in info.l_adic %}

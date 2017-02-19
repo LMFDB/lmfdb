@@ -24,7 +24,6 @@ def do_import(ll):
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
-    print data
     data['Zbasis']=[[str(i) for i in j] for j in data['Zbasis']]
     data['discriminant']=str(data['discriminant'])
     data['disc_fac']=[[str(i) for i in j] for j in data['disc_fac']]
@@ -46,11 +45,10 @@ def check_orbit_data(orbit_label, ll, fix=False):
             print "No orbit"
             return None
         print "Checking whether the data is stored..." 
-        if ['Zbasis','discriminant','disc_fac','Qbasis','Qalg_gen'] not in orb.keys():
+        if 'Zbasis' not in orb.keys():
             print("NOT stored")
             if fix:
                 d=do_import(ll);
-                print d;
                 hecke_orb.update({"_id": orb["_id"]}, {"$set":{'Zbasis':d['Zbasis'],'discriminant':d['discriminant'],'disc_fac':d['disc_fac'],'Qbasis':d['Qbasis'],'Qalg_gen':d['Qalg_gen']}}, upsert=True)
                 print("Fixed orbit label %s" % (orbit_label))
         else:

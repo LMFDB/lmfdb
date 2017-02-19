@@ -54,7 +54,7 @@ def hecke_algebras_render_webpage():
         weight_list= range(2, 20, 2)
         lvl_list_endpoints = [1, 100, 200, 300, 400, 500]
         lvl_list = ["%s-%s" % (start, end - 1) for start, end in zip(lvl_list_endpoints[:-1], lvl_list_endpoints[1:])]
-        favourite_list = ["1.12.1","139.2.1","9.16.1"]
+        favourite_list = ["1.12.1","139.2.1","239.2.1","9.16.1"]
         info = {'lvl_list': lvl_list,'wt_list': weight_list, 'favourite_list': favourite_list}
         credit = hecke_algebras_credit
         t = 'Hecke Algebras'
@@ -211,18 +211,29 @@ def render_hecke_algebras_webpage(**args):
             v_clean['dim']=int(matrix(sage_eval(v_clean['hecke_op'])[0]).dimensions()[0])
             if v_clean['dim']>4:
                 v_clean['hecke_op_display']=[]
-                v_clean['gen_display']=[]
             elif v_clean['dim']==1:
                 v_clean['hecke_op_display']=[[i+1, (sage_eval(v_clean['hecke_op'])[i])[0][0]] for i in range(0,10)]
-                v_clean['gen_display']=[i for i in range(1,10)]
-                #v_clean['gen_display']=[latex(matrix(sage_eval(v_clean['gen'])[i])) for i in range(1,5)]
             else:
                 v_clean['hecke_op_display']=[[i+1, latex(matrix(sage_eval(v_clean['hecke_op'])[i]))] for i in range(0,5)]
-                v_clean['gen_display']=[i for i in range(1,5)]
-                #v_clean['gen_display']=[latex(matrix(sage_eval(v_clean['gen'])[i])) for i in range(1,5)]
             v_clean['num_hecke_op']=v['num_hecke_op']
-            v_clean['download_op'] = [
-            (i, url_for(".render_hecke_algebras_webpage_download", orbit_label=v_clean['orbit_label'], lang=i, obj='operators')) for i in ['gp', 'magma','sage']]
+            v_clean['download_op'] = [(i, url_for(".render_hecke_algebras_webpage_download", orbit_label=v_clean['orbit_label'], lang=i, obj='operators')) for i in ['gp', 'magma','sage']]
+            if 'Zbasis' in v.keys():
+                v_clean['Zbasis']=[[int(i) for i in j] for j in v['Zbasis']]
+                if v_clean['dim']>4:
+                    v_clean['gen_display']=[]
+                elif v_clean['dim']==1:
+                    v_clean['gen_display']=[v_clean['Zbasis'][0][0]]
+                else:
+                    v_clean['gen_display']=[latex(matrix(v_clean['dim'],v_clean['dim'], v_clean['Zbasis'][i])) for i in range(0,v_clean['dim'])]
+                v_clean['discriminant']= int(v['discriminant'])
+                v_clean['disc_fac']= [[int(i) for i in j] for j in v['disc_fac']]
+                v_clean['Qbasis']=[int(i) for i in v['Qbasis']]
+                v_clean['Qalg_gen']=[int(i) for i in v['Qalg_gen']]
+                if 'inner_twists' in v.keys():
+                    v_clean['inner_twists']= [str(i) for i in v['inner_twists']]
+                else:
+                    v_clean['inner_twists']="not available"
+                v_clean['download_gen'] = [(i, url_for(".render_hecke_algebras_webpage_download", orbit_label=v_clean['orbit_label'], lang=i, obj='gen')) for i in ['gp', 'magma','sage']]
             res_clean.append(v_clean)
 
         info['orbits']=res_clean
@@ -364,19 +375,10 @@ def render_hecke_algebras_webpage_download(**args):
         response = make_response(download_hecke_algebras_full_lists_op(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-
-
-@hecke_algebras_page.route('/<orbit_label>/<prime>/download/<lang>/<obj>')
-def render_hecke_algebras_webpage_ell_download(**args):
-    if args['obj'] == 'operators':
-        response = make_response(download_hecke_algebras_full_lists_mod_op(**args)) 
+    elif args['obj'] == 'gen': 
+        response = make_response(download_hecke_algebras_full_lists_gen(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-    elif args['obj'] == 'idempotents': 
-        response = make_response(download_hecke_algebras_full_lists_id(**args))
-        response.headers['Content-type'] = 'text/plain'
-        return response
-
 
 def download_hecke_algebras_full_lists_op(**args):
     C = getDBConnection()
@@ -391,13 +393,47 @@ def download_hecke_algebras_full_lists_op(**args):
     mat_end = "~)" if lang == 'gp' else ")"
     entry = lambda r: "".join([mat_start,str(r),mat_end])
 
-    outstr = c + ' List of Hecke operators T_1, ..., T_%s downloaded from the LMFDB on %s. \n\n'%(res['num_hecke_op'], mydate)
+    outstr = c + 'Hecke algebra for Gamma0(%s) and weight %s, orbit label %s. List of Hecke operators T_1, ..., T_%s. Downloaded from the LMFDB on %s. \n\n'%(res['level'], res['weight'], res['orbit_label'],res['num_hecke_op'], mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
     outstr += ",\\\n".join([entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(0,res['num_hecke_op'])]])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
+
+def download_hecke_algebras_full_lists_gen(**args):
+    C = getDBConnection()
+    label = str(args['orbit_label'])
+    res = C.mod_l_eigenvalues.hecke_algebras_orbits.find_one({'orbit_label': label})
+    mydate = time.strftime("%d %B %Y")
+    if res is None:
+        return "No such lattice"
+    lang = args['lang']
+    c = download_comment_prefix[lang]
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+
+    outstr = c + 'Hecke algebra for Gamma0(%s) and weight %s, orbit label %s. List of generators for the algebra. Downloaded from the LMFDB on %s. \n\n'%(res['level'], res['weight'], res['orbit_label'], mydate)
+    outstr += download_assignment_start[lang] + '[\\\n'
+    outstr += ",\\\n".join([entry([list(k) for k in matrix(sqrt(len(r)), sqrt(len(r)), r).rows()]) for r in [[int(i) for i in j] for j in res['Zbasis']] ])
+    outstr += ']'
+    outstr += download_assignment_end[lang]
+    outstr += '\n'
+    return outstr
+
+
+@hecke_algebras_page.route('/<orbit_label>/<prime>/download/<lang>/<obj>')
+def render_hecke_algebras_webpage_ell_download(**args):
+    if args['obj'] == 'operators':
+        response = make_response(download_hecke_algebras_full_lists_mod_op(**args)) 
+        response.headers['Content-type'] = 'text/plain'
+        return response
+    elif args['obj'] == 'idempotents': 
+        response = make_response(download_hecke_algebras_full_lists_id(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+
 
 def download_hecke_algebras_full_lists_mod_op(**args):#write this
     C = getDBConnection()

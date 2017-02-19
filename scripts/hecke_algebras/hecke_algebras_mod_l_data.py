@@ -50,7 +50,7 @@ def check_mod_l_data(orbit_label, ell, ll, fix=False):
     print("Checking whether the mod %s data is stored..." %ell)
     for o in orb_set:
         print("Testing orbit index %s" % o['index'])
-        if ['field','structure','properties','operators'] not in o.keys():
+        if 'structure' not in o.keys():
             print("NOT stored")
             if fix:
                 d=do_import(ll);
