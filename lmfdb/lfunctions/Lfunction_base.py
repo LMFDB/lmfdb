@@ -1,7 +1,8 @@
 from sage.all import imag_part
 
 #############################################################################
-# The base Lfunction class. The goal is to make this dependent on the least possible, so it can be loaded from sage or even python
+# The base Lfunction class. The goal is to make this dependent on the least
+# possible, so it can be loaded from sage or even python
 # Please do not pollute with flask, pymongo, logger or similar
 #############################################################################
 
@@ -18,7 +19,6 @@ class Lfunction:
         self.residues = []
         self.langlands = True
         self.primitive = True
-        self.citation = ''
 
     
     def Ltype(self):
@@ -30,8 +30,6 @@ class Lfunction:
         """
 
         if not hasattr(self, 'selfdual'):
-    #    if 'selfdual' not in self:
-     #   if self.selfdual not in [True, False]:
             self.selfdual = True
             for n in range(1, min(8, len(self.dirichlet_coefficients))):
                 if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:

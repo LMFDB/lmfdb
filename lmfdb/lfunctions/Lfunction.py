@@ -221,7 +221,6 @@ class Lfunction_lcalc(Lfunction):
         self.texnamecompleteds = "\\Lambda(s)"  
         self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"  
         self.primitive = None  
-        self.citation = ''
         self.credit = ''
         self.motivic_weight = NaN
         self.algebraic = True
@@ -370,7 +369,6 @@ class Lfunction_EC_Q(Lfunction):
         self.properties = [('Degree ', '%s' % self.degree)]
         self.properties.append(('Level', '%s' % self.level))
         self.credit = ''
-        self.citation = ''
   #      self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E,
   #                                                      int(self.numcoeff))
 
@@ -681,7 +679,6 @@ class Lfunction_HMF(Lfunction):
         else:
             self.title += ", and trivial character"
 
-        self.citation = ''
         self.credit = ''
 
         generateSageLfunction(self)
@@ -736,7 +733,6 @@ class RiemannZeta(Lfunction):
         self.texnamecompleted1ms = "\\xi(1-s)"
         self.credit = 'Sage'
         self.primitive = True
-        self.citation = ''
         self.title = "Riemann Zeta-function: $\\zeta(s)$"
         self.is_zeta = True
 
@@ -828,7 +824,6 @@ class Lfunction_Dirichlet(Lfunction):
         self.title = "$" + self.texname + "$" + ", " + self.title_end
 
         self.credit = 'Sage'
-        self.citation = ''
 
         constructor_logger(self, args)
 
@@ -977,7 +972,6 @@ class Lfunction_Maass(Lfunction):
                 self.title = ("$L(s,f)$, where $f$ is a Maass cusp form with "
                               + "level %s and $R= %s$" % (
                               self.level, self.eigenvalue))
-                self.citation = ''
                 self.credit = self.mf.contributor_name if 'contributor_name' in dir(self.mf) else ''
 
             generateSageLfunction(self)
@@ -1105,7 +1099,6 @@ class DedekindZeta(Lfunction):   # added by DK
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
         self.title = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
         self.credit = 'Sage'
-        self.citation = ''
         
         # If we know the residue create a Sage L-function we can call to compute values
         # But only when the degree is at most 4, due to bugs in the Sage lcalc library (see issues #1687 and #1691)
@@ -1268,7 +1261,6 @@ class ArtinLfunction(Lfunction):
                        'Magma by Tim Dokchitser')
         
         
-        self.citation = ''
         self.support = "Support by Paul-Olivier Dehaye"
 
         self.texname = "L(s,\\rho)"  
@@ -1373,7 +1365,6 @@ class SymmetricPowerLfunction(Lfunction):
         self.texnamecompleted1ms = ("\\Lambda(1-{s}, E,\mathrm{sym}^{%d})"
                                     % self.S.m)
         self.primitive = True  
-        self.citation = ' '
         self.credit = ' '
         self.level = self.S.conductor
 
@@ -1475,7 +1466,6 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.title = ("$L(s,F)$, " + "where $F$ is a scalar-valued Siegel " +
                       "modular form of weight " + str(self.weight) + ".")
 
-        self.citation = ''
         self.credit = ''
 
         generateSageLfunction(self)
@@ -1590,7 +1580,6 @@ class Lfunction_genus2_Q(Lfunction):
         self.number = int(0)
         self.quasidegree = 2
 
-        self.citation = ''
         self.credit = ''
 
         # Extract the L-function information

@@ -381,18 +381,6 @@ def l_function_lcalc_page():
 #   Helper functions, individual L-function homepages
 ################################################################################
 
-def render_lfunction_exception(err):
-    # from flask import current_app
-    # if current_app.debug:
-    #    raise err
-    if err.args:
-        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
-    else:
-        errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
-    bread =  [('L-functions', url_for('.l_function_top_page')), ('Error', '')]
-    info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
-    return render_template('problem.html', **info),
-
 def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
     logger.debug(args)
@@ -412,6 +400,18 @@ def render_single_Lfunction(Lclass, args, request):
     info = initLfunction(L, temp_args, request)
     return render_template('Lfunction.html', **info)
 
+
+def render_lfunction_exception(err):
+    # from flask import current_app
+    # if current_app.debug:
+    #    raise err
+    if err.args:
+        errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
+    else:
+        errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
+    bread =  [('L-functions', url_for('.l_function_top_page')), ('Error', '')]
+    info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
+    return render_template('problem.html', **info),
 
 def render_lcalcfile(L, url):
     ''' Function for rendering the lcalc file of an L-function.
@@ -439,10 +439,6 @@ def initLfunction(L, args, request):
         info['title_analytic'] = L.title_analytic
     except AttributeError:
         pass
-    try:
-        info['citation'] = L.citation
-    except AttributeError:
-        info['citation'] = ""
     try:
         info['support'] = L.support
     except AttributeError:
@@ -516,10 +512,6 @@ def initLfunction(L, args, request):
     info['args'] = args
 
     info['credit'] = L.credit
-    #try:
-    #    info['citation'] = L.citation
-    #except:
-    #    pass
 
     try:
         info['factorization'] = L.factorization
@@ -538,16 +530,16 @@ def initLfunction(L, args, request):
     # this could either be because we already know them (in which case lfunc_data is set), or we can compute them via sageLfunction)
     # in the former case there is really no reason to use zeroslink at all, we could just fill them in now
     # but keep it as is for the moment for backward compatibility
-    if hasattr(L,'lfunc_data') or (hasattr(L,'sageLfunction') and L.sageLfunction):
-        info['zeroslink'] = (request.url.replace('/L/', '/L/Zeros/').
-                              replace('/Lfunction/', '/L/Zeros/').
-                              replace('/L-function/', '/L/Zeros/'))  # url_for('zerosLfunction',  **args)
-        info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
-                            replace('/Lfunction/', '/L/Plot/').
-                            replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
-    else:
-        info['zeroslink'] = ""
-        info['plotlink'] = ""
+##    if hasattr(L,'lfunc_data') or (hasattr(L,'sageLfunction') and L.sageLfunction):
+##        info['zeroslink'] = (request.url.replace('/L/', '/L/Zeros/').
+##                              replace('/Lfunction/', '/L/Zeros/').
+##                              replace('/L-function/', '/L/Zeros/'))  # url_for('zerosLfunction',  **args)
+##        info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
+##                            replace('/Lfunction/', '/L/Plot/').
+##                            replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
+##    else:
+##        info['zeroslink'] = ""
+##        info['plotlink'] = ""
                             
 #    # an inelegant way to remove zeros/plot in certain cases -- TODO: it would be better to do this by setting sageLFunction = None when L is created
     if L.Ltype() == 'ellipticmodularform':
@@ -557,207 +549,16 @@ def initLfunction(L, args, request):
             info['plotlink'] = ""
 
 
-    info['bread'] = []
     info['properties2'] = set_gaga_properties(L)
-
-    # Create friendlink by removing 'L/' and ending '/'
-    friendlink = request.url.replace('/L/', '/').replace('/L-function/', '/').replace('/Lfunction/', '/')
-    splitlink = friendlink.rpartition('/')
-    friendlink = splitlink[0] + splitlink[2]
-    logger.debug(L.Ltype())
-
-    if L.Ltype() == 'maass':
-        if L.group == 'GL2':
-            minNumberOfCoefficients = 100     # TODO: Fix this to take level into account
-
-            if len(L.dirichlet_coefficients) < minNumberOfCoefficients:
-                info['zeroslink'] = ''
-                info['plotlink'] = ''
-            info['bread'] = get_bread(2, [('Maass Form',
-                                           url_for('.l_function_maass_browse_page')),
-                                          ('\(' + L.texname + '\)', request.url)])
-            info['friends'] = [('Maass Form ', friendlink)]
-
-            # Navigation to previous and next form
-            next_form_id = L.mf.next_maassform_id()
-            if next_form_id:
-                next_data = ("next",r"$L(s,f_{\text next})$", '/L' +
-                             url_for('mwf.render_one_maass_waveform',
-                             maass_id = next_form_id) )
-            else:
-                next_data = ('','','')
-            prev_form_id = L.mf.prev_maassform_id()
-            if prev_form_id:
-                prev_data = ("previous", r"$L(s,f_{\text prev}$)", '/L' +
-                             url_for('mwf.render_one_maass_waveform',
-                             maass_id = prev_form_id) )
-            else:
-                prev_data = ('','','')
-
-            info['navi'] = ( prev_data, next_data )
-
-        else:
-            if L.fromDB and not L.selfdual:
-                info['friends'] = [('Dual L-function', L.dual_link)]
-                
-            info['bread'] = get_bread(L.degree,
-                                      [('Maass Form', url_for('.l_function_maass_gln_browse_page',
-                                                              degree='degree' + str(L.degree))),
-                                       (L.dbid, request.url)])
-
-    elif L.Ltype() == 'riemann':
-        info['bread'] = get_bread(1, [('Riemann Zeta', request.url)])
-        info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')), ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',url_for('characters.render_Dirichletwebpage', modulus=1, number=1))]
-
-    elif L.Ltype() == 'dirichlet':
-        mod, num = L.charactermodulus, L.characternumber
-        Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
-        if mod > 1:
-            pmod,pnum = WebDirichlet.prevprimchar(mod, num)
-            Lprev = ("previous",Lpattern%(pmod,pnum) if pmod > 1 else r"\(\zeta(s)\)",
-                     url_for('.l_function_dirichlet_page',
-                             modulus=pmod,number=pnum))
-        else:
-            Lprev = ('','','')
-        nmod,nnum = WebDirichlet.nextprimchar(mod, num)
-        Lnext = ("next",Lpattern%(nmod,nnum) if nmod > 1 else r"\(\zeta(s)\)",
-                 url_for('.l_function_dirichlet_page',
-                         modulus=nmod,number=nnum))
-        info['navi'] = (Lprev,Lnext)
-        #print info['navi']
-        snum = str(L.characternumber)
-        smod = str(L.charactermodulus)
-        charname = WebDirichlet.char2tex(smod, snum)
-        info['bread'] = get_bread(1, [(charname, request.url)])
-        info['friends'] = [('Dirichlet Character ' + str(charname), friendlink)]
-        if L.fromDB and not L.selfdual:
-            info['friends'].append(('Dual L-function', L.dual_link))
+    (info['bread'], info['friends'] ) = set_bread_and_friends(L, request)
+    (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
+    info['navi']= set_navi(L)
 
 
-    elif L.Ltype() == 'ellipticcurveQ':
-        label = L.label
-        while friendlink[len(friendlink) - 1].isdigit():  # Remove any number at the end to get isogeny class url
-            friendlink = friendlink[0:len(friendlink) - 1]
 
-        info['friends'] = [('Isogeny class ' + label, friendlink)]
-        for i in range(1, L.nr_of_curves_in_class + 1):
-            info['friends'].append(('Elliptic curve ' + label + str(i), friendlink + str(i)))
-        if L.modform:
-            info['friends'].append(('Modular form ' + label.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=L.modform['level'], weight=2, character=1, label=L.modform['iso'])))
-            # We don't want the modular form's L-function to be a friend of the elliptic curve L-function since they are the same!
-            # info['friends'].append(('L-function ' + label.replace('.', '.2'),
-            #                         url_for('.l_function_emf_page', level=L.modform['level'],
-            #                             weight=2, character=1, label=L.modform['iso'], number=0)))
-        if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
-            info['friends'].append(
-                ('Symmetric square L-function', url_for(".l_function_ec_sym_page",
-                                                        power='2', label=label)))
-            info['friends'].append(
-                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
-        info['bread'] = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                                      (label, url_for('.l_function_ec_page', label=label))])
-    elif L.Ltype() == 'genus2curveQ':
-        # should use url_for
-        info['friends'] = [('Isogeny class ' + L.label, "/Genus2Curve/Q/" + L.label.replace(".","/"))]
 
-    elif L.Ltype() == 'ellipticmodularform':
-        friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
-        # number for the L-function
-        if L.character:
-            info['friends'] = [('Modular form ' + str(
-                        L.level) + '.' + str(L.weight) + '.' + str(L.character) +
-                                str(L.label), friendlink)]
-        else:
-            info['friends'] = [('Modular form ' + str(L.level) + '.' +
-                                str(L.weight) + str(L.label), friendlink)]
-        if L.ellipticcurve:
-            info['friends'].append(
-                ('EC isogeny class ' + L.ellipticcurve,
-                 url_for("ec.by_ec_label", label=L.ellipticcurve)))
-            info['friends'].append(('L-function ' + str(L.level) + '.' + str(L.label),
-                                    url_for('.l_function_ec_page', label=L.ellipticcurve)))
-            for i in range(1, L.nr_of_curves_in_class + 1):
-                info['friends'].append(('Elliptic curve ' + L.ellipticcurve + str(i),
-                                        url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
-            if not isogeny_class_cm(L.ellipticcurve):
-                info['friends'].append(
-                    ('Symmetric square L-function',
-                     url_for(".l_function_ec_sym_page", power='2',
-                             label=L.ellipticcurve)))
-                info['friends'].append(
-                    ('Symmetric cube L-function',
-                     url_for(".l_function_ec_sym_page", power='3',
-                             label=L.ellipticcurve)))
 
-    elif L.Ltype() == 'hilbertmodularform':
-        friendlink = '/'.join(friendlink.split('/')[:-1])
-        info['friends'] = [('Hilbert modular form ' + L.label, friendlink.rpartition('/')[0])]
 
-    elif L.Ltype() == 'dedekindzeta':
-        info['friends'] = [('Number Field', friendlink)]
-
-    elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
-        info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
-
-    elif L.Ltype() == 'SymmetricPower':
-        def ordinal(n):
-            if n == 2:
-                return "Square"
-            elif n == 3:
-                return "Cube"
-            elif 10 <= n % 100 < 20:
-                return str(n) + "th Power"
-            else:
-                return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th") + " Power"
-
-        if L.m == 2:
-            info['bread'] = get_bread(3, [("Symmetric square of Elliptic curve",
-                                           url_for('.l_function_ec_sym2_browse_page')),
-                                          (L.label, url_for('.l_function_ec_sym_page',
-                                                            label=L.label,power=L.m))])
-        elif L.m == 3:
-            info['bread'] = get_bread(4, [("Symmetric cube of Elliptic curve",
-                                           url_for('.l_function_ec_sym3_browse_page')),
-                                          (L.label, url_for('.l_function_ec_sym_page',
-                                                            label=L.label,power=L.m))])
-        else:
-            info['bread'] = [('L-functions', url_for('.l_function_top_page')),
-                             ('Symmetric %s of Elliptic curve ' % ordinal(L.m)
-                              + str(L.label),
-                              url_for('.l_function_ec_sym_page',
-                                      label=L.label,power=L.m))]
-
-        friendlink = request.url.replace('/L/SymmetricPower/%d/' % L.m, '/')
-        splitlink = friendlink.rpartition('/')
-        friendlink = splitlink[0] + splitlink[2]
-
-        friendlink2 = request.url.replace('/L/SymmetricPower/%d/' % L.m, '/L/')
-        splitlink = friendlink2.rpartition('/')
-        friendlink2 = splitlink[0] + splitlink[2]
-
-        info['friends'] = [('Isogeny class ' + L.label, friendlink), ('Symmetric 1st Power', friendlink2)]
-        for j in range(2, L.m + 2):
-            if j != L.m:
-                friendlink3 = request.url.replace('/L/SymmetricPower/%d/' % L.m, '/L/SymmetricPower/%d/' % j)
-                info['friends'].append(('Symmetric %s' % ordinal(j), friendlink3))
-
-    elif L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift':
-        weight = str(L.weight)
-        friendlink = '/'.join(friendlink.split('/')[:-3]) + '.' + weight + '_' + L.orbit
-        info['friends'] = [('Siegel Modular Form Sp4Z.' + weight + '_' + L.orbit, friendlink)]
-
-    elif L.Ltype() == "artin":
-        info['friends'] = [('Artin representation', L.artin.url_for())]
-        if L.sign == 0:           # The root number is now unknown
-            info['zeroslink'] = ''
-            info['plotlink'] = ''
-
-    elif L.Ltype() == "hgmQ":
-        # undo the splitting above
-        newlink = friendlink.rpartition('t')
-        friendlink = newlink[0]+'/t'+newlink[2]
-        #info['friends'] = [('Hypergeometric motive ', friendlink.replace("t","/t"))]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
-        info['friends'] = [('Hypergeometric motive ', friendlink)]   # The /L/ trick breaks down for motives, because we have a scheme for the L-functions themselves
 
     # the code below should be in Lfunction.py
     info['conductor'] = L.level
@@ -820,6 +621,267 @@ def set_gaga_properties(L):
     # ans.append((None,        prim))
 
     return ans
+
+
+def set_bread_and_friends(L, request):
+    ''' Returns the list of friends to link to and the bread crumbs.
+    Depends on the type of L-function and needs to be added to for new types
+    '''
+    bread = []
+    fiends = []
+
+    # Create default friendlink by removing 'L/' and ending '/'
+    friendlink = request.url.replace('/L/', '/').replace('/L-function/', '/').replace('/Lfunction/', '/')
+    splitlink = friendlink.rpartition('/')
+    friendlink = splitlink[0] + splitlink[2]
+
+    if L.Ltype() == 'riemann':
+        friends = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),
+                           ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',url_for('characters.render_Dirichletwebpage',
+                                                                                  modulus=1, number=1))]
+        bread = get_bread(1, [('Riemann Zeta', request.url)])
+
+    elif L.Ltype() == 'dirichlet':
+        snum = str(L.characternumber)
+        smod = str(L.charactermodulus)
+        charname = WebDirichlet.char2tex(smod, snum)
+        friends = [('Dirichlet Character ' + str(charname), friendlink)]
+        if L.fromDB and not L.selfdual:
+            friends.append(('Dual L-function', L.dual_link))
+        bread = get_bread(1, [(charname, request.url)])
+
+    elif L.Ltype() == 'ellipticcurveQ':
+        label = L.label
+        while friendlink[len(friendlink) - 1].isdigit():  # Remove any number at the end to get isogeny class url
+            friendlink = friendlink[0:len(friendlink) - 1]
+
+        friends = [('Isogeny class ' + label, friendlink)]
+        for i in range(1, L.nr_of_curves_in_class + 1):
+            friends.append(('Elliptic curve ' + label + str(i), friendlink + str(i)))
+        if L.modform:
+            friends.append(('Modular form ' + label.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=L.modform['level'], weight=2, character=1, label=L.modform['iso'])))
+        if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
+            friends.append(
+                ('Symmetric square L-function', url_for(".l_function_ec_sym_page",
+                                                        power='2', label=label)))
+            friends.append(
+                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
+        bread = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                                      (label, url_for('.l_function_ec_page', label=label))])
+
+    elif L.Ltype() == 'ellipticmodularform':
+        friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
+                                                   # number for the L-function
+        if L.character:  # TODO: Probably always true now
+            full_label = ( str(L.level) + '.' + str(L.weight) + '.' + str(L.character) +
+                                str(L.label) )
+        else:
+            full_label = str(L.level) + '.' + str(L.weight) + str(L.label)
+            
+        friends = [('Modular form ' + full_label, friendlink)]
+        
+        if L.ellipticcurve:
+            friends.append(
+                ('EC isogeny class ' + L.ellipticcurve,
+                 url_for("ec.by_ec_label", label=L.ellipticcurve)))
+            for i in range(1, L.nr_of_curves_in_class + 1):
+                friends.append(('Elliptic curve ' + L.ellipticcurve + str(i),
+                                        url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
+            if not isogeny_class_cm(L.ellipticcurve):
+                friends.append(
+                    ('Symmetric square L-function',
+                     url_for(".l_function_ec_sym_page", power='2',
+                             label=L.ellipticcurve)))
+                friends.append(
+                    ('Symmetric cube L-function',
+                     url_for(".l_function_ec_sym_page", power='3',
+                             label=L.ellipticcurve)))
+        bread = get_bread(2, [('Cusp form', url_for('.l_function_cuspform_browse_page')),
+                                      (full_label, request.url)])
+
+    elif L.Ltype() == 'maass':
+        if L.group == 'GL2':
+            friends = [('Maass Form ', friendlink)]
+            bread = get_bread(2, [('Maass Form',
+                                           url_for('.l_function_maass_browse_page')),
+                                          ('\(' + L.texname + '\)', request.url)])
+
+        else:
+            if L.fromDB and not L.selfdual:
+                friends = [('Dual L-function', L.dual_link)]
+                
+            bread = get_bread(L.degree,
+                                      [('Maass Form', url_for('.l_function_maass_gln_browse_page',
+                                                              degree='degree' + str(L.degree))),
+                                       (L.dbid.partition('/')[2], request.url)])
+
+
+    elif L.Ltype() == 'hilbertmodularform':
+        friendlink = '/'.join(friendlink.split('/')[:-1])
+        friends = [('Hilbert modular form ' + L.label, friendlink.rpartition('/')[0])]
+        if L.degree == 4:
+            bread = get_bread(4, [(L.label, request.url)])
+        else:
+            bread = [('L-functions', url_for('.l_function_top_page'))]
+
+    elif (L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein' or
+          L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift'):
+        weight = str(L.weight)
+        label = 'Sp4Z.' + weight + '_' + L.orbit
+        friendlink = '/'.join(friendlink.split('/')[:-3]) + '.' + weight + '_' + L.orbit
+        friends = [('Siegel Modular Form ' + label, friendlink)]
+        if L.degree == 4:
+            bread = get_bread(4, [(label, request.url)])
+        else:
+            bread = [('L-functions', url_for('.l_function_top_page'))]
+
+    elif L.Ltype() == 'genus2curveQ':
+        (cond, dummy, alpha) = L.label.partition('.')
+        friends = [('Isogeny class ' + L.label,  url_for('g2c.by_url_isogeny_class_label',
+                                                         cond = cond, alpha = alpha))]
+        bread = get_bread(4, [(L.label, request.url)])
+
+    elif L.Ltype() == 'dedekindzeta':
+        friends = [('Number Field', friendlink)]
+        if L.degree <= 4:
+            bread = get_bread(L.degree, [(L.label, request.url)])
+        else:
+            bread = [('L-functions', url_for('.l_function_top_page'))]
+
+    elif L.Ltype() == "artin":
+        friends = [('Artin representation', L.artin.url_for())]
+        if L.degree <= 4:
+            bread = get_bread(L.degree, [(L.label, request.url)])
+        else:
+            bread = [('L-functions', url_for('.l_function_top_page'))]
+
+    elif L.Ltype() == "hgmQ":
+        # The /L/ trick breaks down for motives,
+        # because we have a scheme for the L-functions themselves
+        newlink = friendlink.rpartition('t')
+        friendlink = newlink[0]+'/t'+newlink[2]
+        friends = [('Hypergeometric motive ', friendlink)] 
+        if L.degree <= 4:
+            bread = get_bread(L.degree, [(L.label, request.url)])
+        else:
+            bread = [('L-functions', url_for('.l_function_top_page'))]
+                                                             
+
+    elif L.Ltype() == 'SymmetricPower':
+        def ordinal(n):
+            if n == 2:
+                return "Square"
+            elif n == 3:
+                return "Cube"
+            elif 10 <= n % 100 < 20:
+                return str(n) + "th Power"
+            else:
+                return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th") + " Power"
+
+        if L.m == 2:
+            bread = get_bread(3, [("Symmetric square of Elliptic curve",
+                                           url_for('.l_function_ec_sym2_browse_page')),
+                                          (L.label, url_for('.l_function_ec_sym_page',
+                                                            label=L.label,power=L.m))])
+        elif L.m == 3:
+            bread = get_bread(4, [("Symmetric cube of Elliptic curve",
+                                           url_for('.l_function_ec_sym3_browse_page')),
+                                          (L.label, url_for('.l_function_ec_sym_page',
+                                                            label=L.label,power=L.m))])
+        else:
+            bread = [('L-functions', url_for('.l_function_top_page')),
+                             ('Symmetric %s of Elliptic curve ' % ordinal(L.m)
+                              + str(L.label),
+                              url_for('.l_function_ec_sym_page',
+                                      label=L.label,power=L.m))]
+
+        friendlink = request.url.replace('/L/SymmetricPower/%d/' % L.m, '/')
+        splitlink = friendlink.rpartition('/')
+        friendlink = splitlink[0] + splitlink[2]
+
+        friendlink2 = request.url.replace('/L/SymmetricPower/%d/' % L.m, '/L/')
+        splitlink = friendlink2.rpartition('/')
+        friendlink2 = splitlink[0] + splitlink[2]
+
+        friends = [('Isogeny class ' + L.label, friendlink), ('Symmetric 1st Power', friendlink2)]
+        for j in range(2, L.m + 2):
+            if j != L.m:
+                friendlink3 = request.url.replace('/L/SymmetricPower/%d/' % L.m, '/L/SymmetricPower/%d/' % j)
+                friends.append(('Symmetric %s' % ordinal(j), friendlink3))
+
+    elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
+        if L.degree <= 4:
+            bread = get_bread(L.degree, [])
+        else:
+            bread = [('L-functions', url_for('.l_function_top_page'))]
+
+    return (bread, friends)
+
+
+def set_zeroslink_and_plotlink(L, args):
+    ''' Returns the url for the zeros and the plot.
+    Turning off either of them could be done here
+    '''
+    if hasattr(L,'lfunc_data') or (hasattr(L,'sageLfunction') and L.sageLfunction):
+        zeroslink = request.url.replace('/L/', '/L/Zeros/')
+        plotlink = request.url.replace('/L/', '/L/Plot/')
+    else:
+        zeroslink = ''
+        plotlink = ''
+
+        
+    if L.Ltype() == 'maass' and L.group == 'GL2':
+        minNumberOfCoefficients = 100     # TODO: Fix this to take level into account
+        if len(L.dirichlet_coefficients) < minNumberOfCoefficients:
+            zeroslink = ''
+            plotlink = ''
+    elif L.Ltype() == "artin" and L.sign == 0:  # The root number is now unknown
+            zeroslink = ''
+            plotlink = ''
+
+    return (zeroslink, plotlink)    
+
+
+def set_navi(L):
+    ''' Returns the data for navigation to previous/next
+    L-function when this makes sense. If not it returns None
+    '''
+    prev_data = None
+    if L.Ltype() == 'maass' and L.group == 'GL2':
+        next_form_id = L.mf.next_maassform_id()
+        if next_form_id:
+            next_data = ("next",r"$L(s,f_{\text next})$", '/L' +
+                         url_for('mwf.render_one_maass_waveform',
+                         maass_id = next_form_id) )
+        else:
+            next_data = ('','','')
+        prev_form_id = L.mf.prev_maassform_id()
+        if prev_form_id:
+            prev_data = ("previous", r"$L(s,f_{\text prev}$)", '/L' +
+                         url_for('mwf.render_one_maass_waveform',
+                         maass_id = prev_form_id) )
+        else:
+            prev_data = ('','','')
+
+    elif L.Ltype() == 'dirichlet':
+        mod, num = L.charactermodulus, L.characternumber
+        Lpattern = r"\(L(s,\chi_{%s}(%s,&middot;))\)"
+        if mod > 1:
+            pmod,pnum = WebDirichlet.prevprimchar(mod, num)
+            prev_data = ("previous",Lpattern%(pmod,pnum) if pmod > 1 else r"\(\zeta(s)\)",
+                     url_for('.l_function_dirichlet_page',
+                             modulus=pmod,number=pnum))
+        else:
+            prev_data = ('','','')
+        nmod,nnum = WebDirichlet.nextprimchar(mod, num)
+        next_data = ("next",Lpattern%(nmod,nnum) if nmod > 1 else r"\(\zeta(s)\)",
+                 url_for('.l_function_dirichlet_page',
+                         modulus=nmod,number=nnum))
+
+    if prev_data is None:
+        return None
+    else:
+        return ( prev_data, next_data )
 
 
 ################################################################################
@@ -1321,6 +1383,7 @@ def processGenus2CurveNavigation(startCond, endCond):
     """
     Produces a table of all L-functions of genus 2 curves with conductors
     from startCond to endCond
+    DOESN'T WORK  SL 2017-02-20
     """
     Nmin = startCond
     if Nmin < 169:
