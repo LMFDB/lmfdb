@@ -39,13 +39,13 @@
         {% endif %}
         {%if j.Zbasis %}
             {% if j.gen_display == [] %}
-                <tr><td align= right valign= top>{{KNOWL('hecke_algebras.generator', title='Generators')}} as $\Z$-algebra:</td><td>Download the generators for {% for e in j.download_gen %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+                <tr><td align= right valign= top>$\Z$-basis:</td><td>Download the basis for {% for e in j.download_gen %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
             {% else %}
-                <tr><td align= right valign= top>{{KNOWL('hecke_algebras.generator', title='Generators')}} as $\Z$-algebra:</td><td>
+                <tr><td align= right valign= top>$\Z$-basis:</td><td>
                 {% for n in j.gen_display %}
                     ${{n}}${% if not loop.last %},  {% endif %}
                 {% endfor %}</td></tr>
-                <tr><td></td><td>Download the generators for {% for e in j.download_gen %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
+                <tr><td></td><td>Download the basis for {% for e in j.download_gen %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
             {% endif %}
                 <tr><td align= right>Discriminant as $\Z$-algebra:</td><td>
                 {% if j.discriminant ==1 %}

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# this file is copied from lattices, need to be fixed 
 
 from lmfdb.base import LmfdbTest
 
