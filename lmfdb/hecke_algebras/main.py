@@ -282,7 +282,10 @@ def render_hecke_algebras_webpage_l_adic(**args):
     info['num_l_adic_orbits']=res.count()
     res_clean = []
     for f in res:
-        f_clean = {}#add f['deg'], f['field_poly']
+        f_clean = {}
+        f_clean['index']=int(f['index'])
+        f_clean['orbit_label']=str(f['orbit_label'])
+        f_clean['ell']=int(f['ell'])
         if f['idempotent'] != "":
             f['dim']=len(sage_eval(f['idempotent']))
             l_max= sage_eval(f['idempotent'])[0][0].ndigits()
@@ -294,6 +297,8 @@ def render_hecke_algebras_webpage_l_adic(**args):
                 f_clean['idempotent_display']=latex(matrix(sage_eval(f['idempotent'])))
         else:
             f_clean['idempotent_display']=latex(matrix([[1]]))
+        f_clean['download_id'] = [(i, url_for(".render_hecke_algebras_webpage_ell_download", orbit_label=f_clean['orbit_label'], index=f_clean['index'], prime=f_clean['ell'], lang=i, obj='idempotents')) for i in ['magma','sage']]  # for 'gp' the code does not work
+
         f_clean['deg']=int(f['field'][1])
         f_clean['field_poly']=str(f['field'][2])
         f_clean['dim']=int(f['structure'][0])
@@ -308,6 +313,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
             f_clean['gorenstein']="no"
         f_clean['operators_mod_l']=[[int(i) for i in j] for j in f['operators']]
         f_clean['num_hecke_op']=len(f_clean['operators_mod_l'])
+        f_clean['download_op'] = [(i, url_for(".render_hecke_algebras_webpage_ell_download", orbit_label=f_clean['orbit_label'], index=f_clean['index'], prime=f_clean['ell'], lang=i, obj='operators')) for i in ['magma','sage']]  # for 'gp' the code does not work
         f_clean['size_op']=sqrt(len(f_clean['operators_mod_l'][0]))
         if f_clean['size_op']>4:
             f_clean['operators_mod_l_display']=[]
@@ -400,7 +406,7 @@ def download_hecke_algebras_full_lists_op(**args):
     res = C.mod_l_eigenvalues.hecke_algebras_orbits.find_one({'orbit_label': label})
     mydate = time.strftime("%d %B %Y")
     if res is None:
-        return "No such lattice"
+        return "No operators available"
     lang = args['lang']
     c = download_comment_prefix[lang]
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
@@ -421,7 +427,7 @@ def download_hecke_algebras_full_lists_gen(**args):
     res = C.mod_l_eigenvalues.hecke_algebras_orbits.find_one({'orbit_label': label})
     mydate = time.strftime("%d %B %Y")
     if res is None:
-        return "No such lattice"
+        return "No generators available"
     lang = args['lang']
     c = download_comment_prefix[lang]
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
@@ -437,7 +443,7 @@ def download_hecke_algebras_full_lists_gen(**args):
     return outstr
 
 
-@hecke_algebras_page.route('/<orbit_label>/<prime>/download/<lang>/<obj>')
+@hecke_algebras_page.route('/<orbit_label>/<index>/<prime>/download/<lang>/<obj>')
 def render_hecke_algebras_webpage_ell_download(**args):
     if args['obj'] == 'operators':
         response = make_response(download_hecke_algebras_full_lists_mod_op(**args)) 
@@ -449,45 +455,54 @@ def render_hecke_algebras_webpage_ell_download(**args):
         return response
 
 
-def download_hecke_algebras_full_lists_mod_op(**args):#write this
+def download_hecke_algebras_full_lists_mod_op(**args):
     C = getDBConnection()
     label = str(args['orbit_label'])
-    res = C.mod_l_eigenvalues.hecke_algebras_orbits.find_one({'orbit_label': label})
+    ell=int(args['prime'])
+    index=int(args['index'])
+    res = C.mod_l_eigenvalues.hecke_algebras_l_adic.find_one({'orbit_label': label, 'index': index, 'ell': ell })
     mydate = time.strftime("%d %B %Y")
     if res is None:
-        return "No such lattice"
+        return "No mod %s operators available"%ell
     lang = args['lang']
     c = download_comment_prefix[lang]
-    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    field='GF(%s), %s, %s, '%(res['ell'], sqrt(len(res['operators'][0])), sqrt(len(res['operators'][0])))
+    mat_start = "Mat("+field if lang == 'gp' else "Matrix("+field 
     mat_end = "~)" if lang == 'gp' else ")"
     entry = lambda r: "".join([mat_start,str(r),mat_end])
 
-    outstr = c + ' List of Hecke operators T_1, ..., T_%s downloaded from the LMFDB on %s. \n\n'%(res['num_hecke_op'], mydate)
-    outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(0,res['num_hecke_op'])]])
+    outstr = c + ' List of Hecke operators T_1, ..., T_%s mod %s for orbit %s index %s downloaded from the LMFDB on %s. \n\n'%(len(res['operators']), ell, label, index, mydate)
+    outstr += download_assignment_start[lang] +'[\\\n'
+    outstr += ",\\\n".join([entry(r) for r in res['operators']])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
 
-def download_hecke_algebras_full_lists_id(**args):#write this
+
+def download_hecke_algebras_full_lists_id(**args):
     C = getDBConnection()
     label = str(args['orbit_label'])
-    res = C.mod_l_eigenvalues.hecke_algebras_orbits.find_one({'orbit_label': label})
+    ell=int(args['prime'])
+    index=int(args['index'])
+    res = C.mod_l_eigenvalues.hecke_algebras_l_adic.find_one({'orbit_label': label, 'index': index, 'ell': ell })
     mydate = time.strftime("%d %B %Y")
     if res is None:
-        return "No such lattice"
+        return "No mod %s operators available"%ell
     lang = args['lang']
     c = download_comment_prefix[lang]
-    mat_start = "Mat(" if lang == 'gp' else "Matrix("
-    mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
 
-    outstr = c + ' List of Hecke operators T_1, ..., T_%s downloaded from the LMFDB on %s. \n\n'%(res['num_hecke_op'], mydate)
-    outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in [sage_eval(res['hecke_op'])[i] for i in range(0,res['num_hecke_op'])]])
+    if lang == 'magma': #no idea for gp
+        ladic = 'pAdicRing(%s : Precision :=200),'%ell
+    elif lang== 'sage':
+        ladic = 'Qp(%s, 200),'%ell
+    mat_start = "Mat("+ladic if lang == 'gp' else "Matrix("+ladic 
+    mat_end = "~)" if lang == 'gp' else ")"
+
+    outstr = c + ' Idempotent for the Hecke orbit %s mod %s and index %s downloaded from the LMFDB on %s. \n\n'%( label, ell , index, mydate)
+    outstr += download_assignment_start[lang] +'['
+    outstr += " ".join([mat_start, res['idempotent'], mat_end])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
-
