@@ -246,7 +246,7 @@ def index():
 @ecnf_page.route("/random")
 def random_curve():
     E = random_object_from_collection(db_ecnf())
-    return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 301)
+    return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 307)
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
@@ -262,7 +262,7 @@ def show_ecnf1(nf):
     if len(request.args) > 0:
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
-            return redirect (url_for(".index", **request.args), 301)
+            return redirect (url_for(".index", **request.args), 307)
         info['title'] += ' search results'
         info['bread'].append(('search results',''))
     info['field'] = nf_label
@@ -286,7 +286,7 @@ def show_ecnf_conductor(nf, conductor_label):
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
-            return redirect (url_for(".index", **request.args), 301)
+            return redirect (url_for(".index", **request.args), 307)
         info['title'] += ' search results'
         info['bread'].append(('search results',''))
     info['field'] = nf_label

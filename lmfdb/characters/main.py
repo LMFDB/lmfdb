@@ -98,7 +98,8 @@ def render_DirichletNavigation():
                 return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
         flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q.", label)
         return render_template('CharacterNavigate.html', **info)
-        return redirect(url_for(".render_Dirichletwebpage"), 301)
+        #FIXME, delete line below?
+        #return redirect(url_for(".render_Dirichletwebpage"), 301)
 
     if args:
         # if user clicked refine search, reset start to 0

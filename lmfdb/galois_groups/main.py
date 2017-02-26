@@ -294,7 +294,7 @@ def search_input_error(info, bread):
 @galois_groups_page.route("/random")
 def random_group():
     label = random_object_from_collection(base.getDBConnection().transitivegroups.groups)['label']
-    return redirect(url_for(".by_label", label=label), 301)
+    return redirect(url_for(".by_label", label=label), 307)
 
 @galois_groups_page.route("/Completeness")
 def completeness_page():
