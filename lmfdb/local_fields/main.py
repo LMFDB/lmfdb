@@ -246,7 +246,7 @@ def search_input_error(info, bread):
 @local_fields_page.route("/random")
 def random_field():
     label = random_object_from_collection(base.getDBConnection().localfields.fields)['label']
-    return redirect(url_for(".by_label", label=label), 301)
+    return redirect(url_for(".by_label", label=label), 307)
 
 @local_fields_page.route("/Completeness")
 def completeness_page():
