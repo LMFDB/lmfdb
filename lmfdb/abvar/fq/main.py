@@ -126,11 +126,17 @@ def abelian_variety_search(**args):
     try:
         parse_ints(info,query,'q')
         parse_ints(info,query,'g')
-        if 'simple_only' in info and info['simple_only'] == 'yes':
-            query['decomposition'] = {'$size' : 1}
-            query['decomposition.0.1'] = 1
-        if 'primitive_only' in info and info['primitive_only'] == 'yes':
-            query['primitive_models'] = {'$size' : 0}
+        if 'simple' in info:
+            if info['simple'] == 'yes':
+                query['decomposition'] = {'$size' : 1}
+                query['decomposition.0.1'] = 1
+            elif info['simple'] == 'no':
+                query['$or'] = [{'decomposition': {'$not' : {'$size' : 1}}}, {'decomposition.0.1' : {'$gt': 1}}]
+        if 'primitive' in info:
+            if info['primitive'] == 'yes':
+                query['primitive_models'] = {'$size' : 0}
+            elif info['primitive'] == 'no':
+                query['primitive_models'] = {'$not' : {'$size' : 0}}
         if 'jacobian' in info:
             if info['jacobian'] == 'yes':
                 query['known_jacobian'] = 1

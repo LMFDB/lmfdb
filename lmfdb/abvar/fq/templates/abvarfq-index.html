@@ -116,12 +116,13 @@ Please enter a value or leave blank:
             </td>
             <td><span class="formexample"> e.g. 81 or 3-49</span></td>
             <td>
-                {{ KNOWL('ag.primitive',title="primitive only") }}
+                {{ KNOWL('ag.primitive',title="primitive") }}
             </td>
             <td>
-                <select name='primitive_only'>
-                    <option value="no" selected="yes">no</option>
-                    <option value="yes">yes</option>
+                <select name='primitive'>
+		    <option value="yes">yes</option>
+                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="no">no</option>
                 </select>
             </td>
         </tr>
@@ -132,12 +133,13 @@ Please enter a value or leave blank:
             </td>
             <td><span class="formexample"> e.g. 2 or 3-5</span></td>
             <td>
-                {{ KNOWL('av.simple',title="simple only") }}
+                {{ KNOWL('av.simple',title="simple") }}
             </td>
             <td>
-                <select name='simple_only'>
-                    <option value="no" selected="yes">no</option>
+                <select name='simple'>
                     <option value="yes">yes</option>
+                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="no">no</option>
                 </select>
             </td>
         </tr>

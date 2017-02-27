@@ -49,20 +49,22 @@
         </tr>
         
         <tr>
-            <td align=left>{{ KNOWL('av.simple',title="simple only") }}</td>
-            <td align=left>{{ KNOWL('ag.primitive',title="primitive only") }}</td>
+            <td align=left>{{ KNOWL('av.simple',title="simple") }}</td>
+            <td align=left>{{ KNOWL('ag.primitive',title="primitive") }}</td>
             <td align=left>Jacobian</td>
             <td align=left>principally polarizable</td>
         </tr>
         
         <tr>
-            <td><select name='simple_only'>
-                <option value ="no" {% if info.simple_only == "no" %}selected = "yes"{% endif %}>no</option>
-                <option value ="yes" {% if info.simple_only == "yes" %}selected = "yes"{% endif %}>yes</option>
+            <td><select name='simple'>
+                <option value="yes" {% if info.simple == "yes" %}selected = "any"{% endif %}>yes</option>
+                <option value="any" {% if info.simple == "any" %}selected = "any"{% endif %}>unrestricted</option>
+                <option value="no" {% if info.simple == "no" %}selected = "yes"{% endif %}>no</option>
             </select></td>
-            <td><select name='primitive_only'>
-                <option value ="no" {% if info.primitive_only == "no" %}selected = "yes"{% endif %}>no</option>
-                <option value ="yes" {% if info.primitive_only == "yes" %}selected = "yes"{% endif %}>yes</option>
+            <td><select name='primitive'>
+                <option value="yes" {% if info.primitive == "yes" %}selected = "any"{% endif %}>yes</option>
+                <option value="any" {% if info.primitive == "any" %}selected = "any"{% endif %}>unrestricted</option>
+                <option value="no" {% if info.primitive == "no" %}selected = "yes"{% endif %}>no</option>
             </select></td>
             <td><select name='jacobian'>
                 <option value="yes" {% if info.jacobian == "yes" %}selected = "any"{% endif %}>yes</option>
