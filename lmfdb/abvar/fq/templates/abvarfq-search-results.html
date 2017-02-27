@@ -155,15 +155,22 @@ table td.params {
 
 {% endif %}
 
+<br>
+<br>
 <!-- Download Data!! Whoohooo!! -->
+{% if info.number < 100001 %}
+
 <form>
-    Download all search results for
-    <input type="submit" name="Submit" value="gp">
-        <input type="submit" name="Submit" value="sage">
-            <input type="submit" name="Submit" value="magma">
-                <input type="hidden" name="download" value="1"/>
-                <input type="hidden" name="query" value="{{info.query}}"/>
+Download all search results for
+<input type="submit" name="Submit" value="gp">
+<input type="submit" name="Submit" value="sage">
+<input type="submit" name="Submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="query" value="{{info.query}}"/>
 </form>
+{% else %}
+There are too many isogeny classes in the search results for downloading.
+{% endif %} {# provide download links? #}
 
 
 
