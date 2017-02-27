@@ -87,10 +87,13 @@ class DecompList(object):
         if self.q() == -1:
             raise ValueError("Only a single value of q possible within a decomposition.")
         ed = self.extra_dim()
+        eg = self.external_g
         if ed[1] < 0:
-            raise ValueError("Total dimension is larger than any isogeny class in database.")
+            if eg[1] is None:
+                raise ValueError("Total dimension is larger than any isogeny class in database.")
+            else:
+                raise ValueError("Total dimension of decomposition is incompatible with requested g.")
         if ed[1] > 0:
-            eg = self.external_g
             if not (eg[1] is None or any(piece.is_star() for piece in self.L)):
                 raise ValueError("Total dimension of decomposition is incompatible with requested g.")
     @cached_method
@@ -150,14 +153,14 @@ class DecompList(object):
                     fixed_labels[piece.dim][piece.label] += piece.e # allow for repeated labels
         dims = sorted(list(set(piece.dim for piece in self.L)))
         iterator_list = [CollapsedLabelIterator_onedim(collapsable_labels[dim], collapsable_dims[dim],
-                                                       fixed_labels[dim], fixed_dims[dim], dim) for dim in dims]
+                                                       fixed_labels[dim], fixed_dims[dim], dim, self.q()) for dim in dims]
         for stretches in cartesian_product_iterator(iterator_list):
             subquery = {}
             self.OC.inc()
             overall = sum(stretches, [])
             for i, (base, exp) in enumerate(overall):
                 subquery['%s.%s.0'%(self.qfield, i)] = base
-                subquery['%s.%s.1'%(self.qfield, i)] = exp
+                subquery['%s.%s.1'%(self.qfield, i)] = int(exp)
             subquery[self.qfield] = {'$size': len(overall)}
             yield subquery
 
@@ -170,11 +173,12 @@ def extended_class_to_int(k):
         return class_to_int(k)
 
 class Insertions(object):
-    def __init__(self, labels, extra_exps, dim):
+    def __init__(self, labels, extra_exps, dim, q):
         self.labels = labels
         self.extra_exps = sorted(extra_exps)
         self.total_exp = len(extra_exps)
         self.dim_re = {'$regex':'^%s'%(dim)}
+        self.q = q
     def __iter__(self):
         # same subtraction trick from CollapsedLabelIterator_onedim.__iter__
         for comp in Compositions(len(self.labels) + 1 + self.total_exp, length = len(self.labels) + 1):
@@ -189,7 +193,7 @@ class Insertions(object):
                 yield stretch
 
 class CollapsedLabelIterator_onedim(object):
-    def __init__(self, collapsable_labels, extrafactors, fixed_labels, fixed_dims, dim):
+    def __init__(self, collapsable_labels, extrafactors, fixed_labels, fixed_dims, dim, q):
         self.clabels = collapsable_labels
         self.flabels = fixed_labels
         self.fdims = fixed_dims
@@ -197,6 +201,7 @@ class CollapsedLabelIterator_onedim(object):
                                    key=lambda x: tuple(extended_class_to_int(k) for k in x.split('_')))
         self.extrafactors = extrafactors
         self.dim = dim
+        self.q = q
     def __iter__(self):
         # compositions are an ordered decomposition as a sum of positive integers.
         # since we want to allow zeros and want to allow some dimension to be unallocated to clabels,
@@ -206,12 +211,12 @@ class CollapsedLabelIterator_onedim(object):
             i = 0
             for label in self.sorted_labels:
                 if label in self.clabels:
-                    labels.append((label, self.clabels[label] + self.flabels[label] + comp[i] - 1))
+                    labels.append(('%s.%s.%s'%(self.dim,self.q,label), self.clabels[label] + self.flabels[label] + comp[i] - 1))
                     i += 1
                 else:
-                    labels.append((label, self.flabels[label]))
+                    labels.append(('%s.%s.%s'%(self.dim,self.q,label), self.flabels[label]))
             for part in Partitions(comp[-1] - 1):
-                for stretch in Insertions(labels, self.fdims + list(part), self.dim):
+                for stretch in Insertions(labels, self.fdims + list(part), self.dim, self.q):
                     yield stretch
 
 abvar_label_matcher = re.compile(r"(\d+)\.(\d+)(\.([a-z_]+))?")
@@ -262,7 +267,7 @@ class OverflowCatcher(object):
     def inc(self):
         self.curr += 1
         if self.curr == self.error_on:
-            raise ValueError("Query resulted in more than %s possible decomposition types.")
+            raise ValueError("Query resulted in more than %s possible decomposition types."%self.curr)
 
 @search_parser
 def parse_abvar_decomp(inp, query, qfield, av_stats):
