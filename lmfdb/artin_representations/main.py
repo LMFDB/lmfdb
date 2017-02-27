@@ -63,7 +63,7 @@ def artin_representation_search(**args):
             flash(Markup("Error: %s" % (err)), "error")
             bread = get_bread([('Search results','')])
             return search_input_error({'err':''}, bread)
-        return redirect(url_for(".render_artin_representation_webpage", label=label), 301)
+        return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
     title = 'Artin representation search results'
     bread = [('Artin representation', url_for(".index")), ('Search results', ' ')]
@@ -214,7 +214,7 @@ def random_representation():
     rep = random_object_from_collection(ArtinRepresentation.collection())
     num = random.randrange(0, len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"c"+str(num+1)
-    return redirect(url_for(".render_artin_representation_webpage", label=label), 301)
+    return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 
 @artin_representations_page.route("/Completeness")
