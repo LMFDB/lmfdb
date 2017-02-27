@@ -81,13 +81,18 @@ class DecompList(object):
         self.external_g = external_g
         self.qfield = qfield
         self.OC = OC
+    def __repr__(self):
+        return str(self.L)
     def is_valid(self):
+        if self.q() == -1:
+            raise ValueError("Only a single value of q possible within a decomposition.")
         ed = self.extra_dim()
-        eg = self.external_g
-        return (self.q() != -1 and
-                (ed[1] == 0 or
-                 (ed[1] > 0 and
-                  (eg[1] is None or any(piece.is_star() for piece in self.L)))))
+        if ed[1] < 0:
+            raise ValueError("Total dimension is larger than any isogeny class in database.")
+        if ed[1] > 0:
+            eg = self.external_g
+            if not (eg[1] is None or any(piece.is_star() for piece in self.L)):
+                raise ValueError("Total dimension of decomposition is incompatible with requested g.")
     @cached_method
     def q(self):
         qset = [piece.q for piece in self.L if piece.q is not None]
@@ -247,6 +252,8 @@ class DecompPiece(UniqueRepresentation):
             return self.dim*self.e
     def is_star(self):
         return self.dim is None
+    def __repr__(self):
+        return self.desc
 
 class OverflowCatcher(object):
     def __init__(self, error_on=100):
@@ -267,16 +274,13 @@ def parse_abvar_decomp(inp, query, qfield, av_stats):
         external_g = (external_g.get('$gte'), external_g.get('$lte'))
     else:
         external_g = (external_g, external_g)
-    maxdim = None
+    maxdim = av_stats.maxg
     for decomp in BRACKETING_RE.finditer(inp):
-        if maxdim is None:
-            maxdim = av_stats.maxg
         decomp = decomp.groups()[0][1:-1]
         pieces = [DecompPiece(piece) for piece in decomp.split(',')]
         OC = OverflowCatcher()
         decompL = DecompList(pieces, maxdim, external_q, external_g, qfield, OC)
-        if not decompL.is_valid():
-            continue
+        decompL.is_valid() # raises a ValueError if invalid
         subqueries = []
         for dL in decompL.collapse_stars():
             subqueries += [subquery for subquery in dL.collapse_to_labels_and_exps()]
