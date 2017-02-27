@@ -5,7 +5,7 @@ import ast
 import StringIO
 import lmfdb.base
 from lmfdb.base import app
-from lmfdb.utils import to_dict, make_logger
+from lmfdb.utils import to_dict, make_logger, random_object_from_collection
 from lmfdb.abvar.fq import abvarfq_page
 from lmfdb.search_parsing import parse_ints, parse_list_start, parse_count, parse_start, parse_range, parse_nf_string
 from search_parsing import parse_newton_polygon, parse_abvar_decomp
@@ -74,6 +74,8 @@ def abelian_varieties():
 def abelian_varieties_by_g(g):
     D = to_dict(request.args)
     if 'g' not in D: D['g'] = g
+    D['bread'] = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)))
+    print "Dbread1", D['bread']
     return abelian_variety_search(**D)
 
 @abvarfq_page.route("/<int:g>/<int:q>/")
@@ -81,6 +83,9 @@ def abelian_varieties_by_gq(g, q):
     D = to_dict(request.args)
     if 'g' not in D: D['g'] = g
     if 'q' not in D: D['q'] = q
+    D['bread'] = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)),
+                           (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)))
+    print "Dbread2", D['bread']
     return abelian_variety_search(**D)
 
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
@@ -96,10 +101,13 @@ def abelian_varieties_by_gqi(g, q, iso):
     except ValueError:
         flash(Markup("Error: <span style='color:black'>%s</span> is not in the database." % (label)), "error")
         return search_input_error()
+    bread = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)),
+                      (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
+                      (iso, url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)))
     return render_template("show-abvarfq.html",
                            credit=abvarfq_credit,
                            title='Abelian Variety isogeny class %s over $%s$'%(label, cl.field()),
-                           bread=get_bread(('Search Results', '.')),
+                           bread=bread,
                            cl=cl,
                            learnmore=learnmore_list())
 
@@ -110,7 +118,7 @@ def abelian_variety_search(**args):
     if 'download' in info and info['download'] != 0:
         return download_search(info)
 
-    bread = get_bread(('Search Results', '.'))
+    bread = args.get('bread', get_bread(('Search Results', ' ')))
     if 'jump' in info:
         return by_label(info.get('label',''))
     query = {}
@@ -241,6 +249,12 @@ def by_label(label):
     except ValueError as err:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label: %s." % (label, str(err))), "error")
         return search_input_error()
+    g, q, iso = split_label(label)
+    return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
+
+@abvarfq_page.route("/random")
+def random_class():
+    label = random_object_from_collection(db())['label']
     g, q, iso = split_label(label)
     return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
 

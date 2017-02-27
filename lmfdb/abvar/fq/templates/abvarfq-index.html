@@ -16,6 +16,9 @@
 </div>
 <h2> Browse {{ KNOWL('av.isogeny_class',title='isogeny classes')}} of {{ KNOWL('ag.abelian_variety',title='abelian varieties')}} over finite fields</h2>
 <p>
+A <a href={{url_for('.random_class')}}>random isogeny class</a> from the database.
+</p>
+<p>
 <h3>By {{ KNOWL('ag.field_of_definition',title = "field of definition")}} and {{ KNOWL('ag.dimension', title="dimension")}}:</h3>
 {% set table = info.table %}
 <!-- check if the table is empty-->
