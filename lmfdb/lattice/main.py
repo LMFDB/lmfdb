@@ -95,7 +95,7 @@ def lattice_render_webpage():
 @lattice_page.route("/random")
 def random_lattice():
     res = random_object_from_collection( getDBConnection().Lattices.lat )
-    return redirect(url_for(".render_lattice_webpage", label=res['label']))
+    return redirect(url_for(".render_lattice_webpage", label=res['label']), 307)
 
 
 lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
