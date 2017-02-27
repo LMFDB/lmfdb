@@ -525,35 +525,20 @@ def initLfunction(L, args, request):
 
     info['degree'] = int(L.degree)
 
-    # AVS 07/10/2016
-    # only set zeroslink and plot if we actually have the ability to determine zeros and plot the Z function
-    # this could either be because we already know them (in which case lfunc_data is set), or we can compute them via sageLfunction)
-    # in the former case there is really no reason to use zeroslink at all, we could just fill them in now
-    # but keep it as is for the moment for backward compatibility
-##    if hasattr(L,'lfunc_data') or (hasattr(L,'sageLfunction') and L.sageLfunction):
-##        info['zeroslink'] = (request.url.replace('/L/', '/L/Zeros/').
-##                              replace('/Lfunction/', '/L/Zeros/').
-##                              replace('/L-function/', '/L/Zeros/'))  # url_for('zerosLfunction',  **args)
-##        info['plotlink'] = (request.url.replace('/L/', '/L/Plot/').
-##                            replace('/Lfunction/', '/L/Plot/').
-##                            replace('/L-function/', '/L/Plot/'))  # info['plotlink'] = url_for('plotLfunction',  **args)
-##    else:
-##        info['zeroslink'] = ""
-##        info['plotlink'] = ""
                             
-#    # an inelegant way to remove zeros/plot in certain cases -- TODO: it would be better to do this by setting sageLFunction = None when L is created
-    if L.Ltype() == 'ellipticmodularform':
-        if ( (L.number == 1 and (1 + L.level) * L.weight > 50) or 
-               (L.number > 1 and L.level * L.weight > 50)):
-            info['zeroslink'] = ""
-            info['plotlink'] = ""
-
 
     info['properties2'] = set_gaga_properties(L)
     (info['bread'], info['friends'] ) = set_bread_and_friends(L, request)
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
 
+
+#    # an inelegant way to remove zeros/plot in certain cases -- TODO: it would be better to do this by setting sageLFunction = None when L is created
+    if L.Ltype() == 'ellipticmodularform':
+        if ( (L.number == 1 and (1 + L.level) * L.weight > 50) or 
+               (L.number > 1 and L.level * L.weight > 50)):
+            info['zeroslink'] = ""
+            info['plotlink'] = ""
 
 
 
@@ -822,6 +807,11 @@ def set_zeroslink_and_plotlink(L, args):
     ''' Returns the url for the zeros and the plot.
     Turning off either of them could be done here
     '''
+    # AVS 07/10/2016
+    # only set zeroslink and plot if we actually have the ability to determine zeros and plot the Z function
+    # this could either be because we already know them (in which case lfunc_data is set), or we can compute them via sageLfunction)
+    # in the former case there is really no reason to use zeroslink at all, we could just fill them in now
+    # but keep it as is for the moment for backward compatibility
     if hasattr(L,'lfunc_data') or (hasattr(L,'sageLfunction') and L.sageLfunction):
         zeroslink = request.url.replace('/L/', '/L/Zeros/')
         plotlink = request.url.replace('/L/', '/L/Plot/')
@@ -1076,12 +1066,9 @@ def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg
     negativeZeros = negativeZeros[-1*zero_truncation:]
     positiveZeros = positiveZeros[:zero_truncation]
     # Format the html string to render
-#    positiveZeros = str(positiveZeros)
-#    negativeZeros = str(negativeZeros)
     positiveZeros = ", ".join(positiveZeros)
     negativeZeros = ", ".join(negativeZeros)
     if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
-       # negativeZeros = negativeZeros.replace("]", ", ]")
         negativeZeros = negativeZeros + ", "
 
     return "<span class='redhighlight'>{0}</span><span class='positivezero'>{1}</span>".format(
@@ -1383,7 +1370,7 @@ def processGenus2CurveNavigation(startCond, endCond):
     """
     Produces a table of all L-functions of genus 2 curves with conductors
     from startCond to endCond
-    DOESN'T WORK  SL 2017-02-20
+    DOESN'T WORK  Stefan L 2017-02-20
     """
     Nmin = startCond
     if Nmin < 169:
