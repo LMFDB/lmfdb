@@ -36,7 +36,7 @@ def read_line(line, debug=0):
     r""" Parses one line from input file.  Returns and a dict containing
     fields with keys as above.
 
-    Sample line: 11 a 1 0,-1,1,-10,-20 7 1,0 0,1,0 0,0 0,1 
+    Sample line: 11 a 1 0,-1,1,-10,-20 7 1,0 0,1,0 0,0 0,1
 
     Fields: label (3 fields)
             a-invariants
@@ -125,3 +125,43 @@ def upload_to_db(base_path, f, test=True):
             curves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
         if count % 1000 == 0:
             print("inserted %s items" % count)
+
+def add_iw_data1(C, iw_data):
+    """Add fields to a single curve record in the db.
+    """
+    C.update(iw_data[C['label']])
+    return C
+
+def read_iwasawa_data(base_path, filename):
+    f = os.path.join(base_path, filename)
+    h = open(f)
+    print "opened %s" % f
+
+    iw_data = {}
+    count = 0
+
+    for line in h.readlines():
+        count += 1
+        if count%1000==0:
+            print "read %s lines" % count
+        label, data = read_line(line,0)
+        iw_data[label] = data
+
+    print("finished reading {} lines from file".format(count))
+    return iw_data
+
+# for use with the rewrite script in data_mgt/utilities/rewrite.py we
+# need to give it the old and new collection names (e.g. curves and
+# curves2) and a function taking one mongodb record (dictionary) and
+# returning a possible changed version of it.
+
+#  The following returns such a function, only applying it to curves with conductors in a given range
+
+def iw_data_update(N1, N2, base_path, filename):
+    iw_data = read_iwasawa_data(base_path, filename)
+    def update_function(C):
+        N = int(C['conductor'])
+        if N1 <= N <= N2:
+            C.update(iw_data[C['label']])
+        return C
+    return update_function
