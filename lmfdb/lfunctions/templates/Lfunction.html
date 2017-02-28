@@ -262,7 +262,10 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
  <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
 
- {% if zeroslink %}
+ {% if positive_zeros %}
+     <span class='redhighlight'>{{negative_zeros | safe}}</span>
+     <span class='positivezero'>{{positive_zeros | safe}}</span>
+ {% elif zeroslink %}
      <div><span id="zeros"></span></div>
  {% elif tpzeroslink %}
      {{zeroswarning}}.

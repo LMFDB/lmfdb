@@ -429,7 +429,7 @@ def render_lcalcfile(L, url):
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
-    if L.degree == 1:
+    if L.degree == 1 or L.Ltype()=="genus2curveQ":
         info = L.info
     else:
         info = {'title': L.title}
@@ -454,9 +454,7 @@ def initLfunction(L, args, request):
             info['label'] = ""
 
         info['knowltype'] = ""   # will be things like g2c.q, ec.q, ...
-        if L.Ltype() == "genus2curveQ":
-            info['knowltype'] = "g2c.q"
-        elif L.Ltype() == "ellipticcurveQ":
+        if L.Ltype() == "ellipticcurveQ":
             info['knowltype'] = "ec.q"
         elif L.Ltype() == "ellipticmodularform":
             info['knowltype'] = "mf"
@@ -536,7 +534,7 @@ def initLfunction(L, args, request):
 
 
 
-    if L.degree > 1:
+    if L.degree > 1 and L.Ltype()!="genus2curveQ":
         # the code below should be in Lfunction.py
         info['conductor'] = L.level
         if not is_prime(int(L.level)):
@@ -976,11 +974,8 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
     if not pythonL:
         return ""
     plotrange = 30
-    if hasattr(pythonL,"lfunc_data"):
-        if pythonL.lfunc_data is None:
-            return ""
-        else:
-            F = p2sage(pythonL.lfunc_data['plot'])
+    if hasattr(pythonL, 'plotpoints'):
+        F = p2sage(pythonL.plotpoints)
     else:
      # obsolete, because lfunc_data comes from DB?
       #  if pythonL.fromDB:

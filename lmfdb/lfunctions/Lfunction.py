@@ -83,27 +83,15 @@ def makeLfromdata(L, fromdb=False):
     # Mandatory properties
     L.algebraic = data['algebraic']
     L.degree = data['degree']
+    L.selfdual = data['self_dual']
     L.level = data['conductor']
     L.primitive = data['primitive']
-    L.st_group = data['st_group']
-    L.order_of_vanishing = data['order_of_vanishing']
-    if 'motivic_weight' in data:
-        L.motivic_weight = data['motivic_weight']
-    else:
-        L.motivic_weight = ''
-    L.st_link = st_link_by_name(L.motivic_weight,L.degree,L.st_group)
-
-    L.selfdual = data['self_dual']
-    if 'credit' in data.keys():
-        L.credit = data['credit']
-    # Convert L.motivic_weight from python 'int' type to sage integer type.
-    # This is necessary because later we need to do L.motivic_weight/2
-    # when we write Gamma-factors in the arithmetic normalization.
-    L.motivic_weight = ZZ(data['motivic_weight'])
     if 'root_number' in data:
         L.sign = string2number(data['root_number'])
     else:
         L.sign = exp(2*pi*I*float(data['sign_arg'])).n()
+    L.st_group = data['st_group']
+    L.order_of_vanishing = data['order_of_vanishing']
 
     L.mu_fe = []
     for i in range(0,len(data['gamma_factors'][0])):
@@ -116,19 +104,25 @@ def makeLfromdata(L, fromdb=False):
                        string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
 
-    # start items specific to hyperelliptic curves
-    L.langlands = True
-    L.poles = []
-    L.residues = []
-    L.coefficient_period = 0
-    L.coefficient_type = 2
-    # end items specific to hyperelliptic curves
-    L.numcoeff = 30
-    
+    # Optional properties    
+    if 'motivic_weight' in data:
+        L.motivic_weight = data['motivic_weight']
+    else:
+        L.motivic_weight = ''
+    L.st_link = st_link_by_name(L.motivic_weight,L.degree,L.st_group)
+    # Convert L.motivic_weight from python 'int' type to sage integer type.
+    # This is necessary because later we need to do L.motivic_weight/2
+    # when we write Gamma-factors in the arithmetic normalization.
+    L.motivic_weight = ZZ(data['motivic_weight'])
+    if 'credit' in data.keys():
+        L.credit = data['credit']
+
+    # Dirichlet coeffcients
     if 'dirichlet_coefficients' in data:
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     else:
-        L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(data['euler_factors']),L.numcoeff)
+        L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(
+            data['euler_factors']), L.numcoeff)
 
     L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
     L.normalize_by = string2number(data['analytic_normalization'])
@@ -147,8 +141,48 @@ def makeLfromdata(L, fromdb=False):
     # as a string.  Those should be the same.  Once that change is made, either the
     # line above or the line below will break.  (DF and SK, Aug 4, 2015)
     L.bad_lfactors = data['bad_lfactors']
-    if not fromdb:
-        generateSageLfunction(L)  # DF: why is this needed if pulling from database?
+
+    # Configure the data for the zeros
+    zero_truncation = 25   # show at most 25 positive and negative zeros
+                           # later: implement "show more"
+    L.positive_zeros = map(str, data['positive_zeros'][:zero_truncation])
+    if L.selfdual:
+        L.negative_zeros = ["&minus;" + pos_zero for pos_zero in L.positive_zeros]
+    else:
+        dual_L_label = data['conjugate']
+        dual_L_data = LfunctionDatabase.getInstanceLdata(dual_L_label,
+                                                         label_type = "Lhash")
+        L.negative_zeros = ["&minus;" + str(pos_zero) for pos_zero in
+                            dual_L_data['positive_zeros']]
+        L.negative_zeros = L.negative_zeros[:zero_truncation]
+
+    L.negative_zeros.reverse()
+    L.negative_zeros += [0 for _ in range(data['order_of_vanishing'])]
+    print 'after zeros'
+    L.negative_zeros = ", ".join(L.negative_zeros)
+    print 'before zeros'
+    L.positive_zeros = ", ".join(L.positive_zeros)
+    print 'after zeros'
+    if len(L.positive_zeros) > 2 and len(L.negative_zeros) > 2:  # Add comma and empty space between negative and positive
+        L.negative_zeros = L.negative_zeros + ", "
+
+    # Configure the data for the plot
+    pos_plot = [[j * string2number(data['plot_delta']),
+                 string2number(data['plot_values'][j])]
+                          for j in range(len(data['plot_values']))]
+    if L.selfdual:
+        neg_plot = [ [-1*pt[0], string2number(data['root_number']) * pt[1]]
+                     for pt in pos_plot ][1:]
+    else:
+        neg_plot = [[-j * string2number(dual_L_data['plot_delta']),
+                 string2number(dual_L_data['plot_values'][j])]
+                          for j in range(1,len(dual_L_data['plot_values']))]
+    neg_plot.reverse()
+    L.plotpoints = neg_plot[:] + pos_plot[:]
+    print 'after plot'
+
+
+
 
 def convert_dirichlet_Lfunction_coefficients(L, coeff_info):
     """ Converts the dirichlet L-function coefficients from
@@ -297,6 +331,7 @@ class Lfunction_Dirichlet(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.numcoeff = 30
 
         # Check that the arguments give a primitive Dirichlet character in the database
         self.charactermodulus = int(self.charactermodulus)
@@ -317,9 +352,10 @@ class Lfunction_Dirichlet(Lfunction):
 
         # Load data from the database
         self.label = str(self.charactermodulus) + "." + str(self.characternumber)
-        label_slash = self.label.replace(".","/")
-        db_label = "Character/Dirichlet/" + label_slash
-        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
+        Lhash = "dirichlet_L_{0}.{1}".format(self.charactermodulus,
+                                                self.characternumber)
+        self.lfunc_data = LfunctionDatabase.getInstanceLdata(Lhash,
+                                                         label_type = "Lhash")
         if not self.lfunc_data:
             raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
 
@@ -327,7 +363,7 @@ class Lfunction_Dirichlet(Lfunction):
         makeLfromdata(self, fromdb=True)
         self.fromDB = True
 
-        # Mandatory properties
+       # Mandatory properties
         self.coefficient_period = self.charactermodulus
         if self.selfdual:
             self.coefficient_type = 2
@@ -349,8 +385,8 @@ class Lfunction_Dirichlet(Lfunction):
         # Text for the web page
         self.htmlname = "<em>L</em>(<em>s,&chi;</em>)"
         self.texname = "L(s,\\chi)"
-        self.texname_arithmetic = "L(\\chi,s)"
         self.htmlname_arithmetic = "<em>L</em>(<em>&chi;,s</em>)"
+        self.texname_arithmetic = "L(\\chi,s)"
         self.texnamecompleteds = "\\Lambda(s,\\chi)"
         self.texnamecompleteds_arithmetic = "\\Lambda(\\chi,s)"
         if self.selfdual:
@@ -818,11 +854,13 @@ class Lfunction_Maass(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
+        self.numcoeff = 30
 
         if not 'fromDB' in args.keys():
             self.fromDB = False
         if not self.fromDB:
-            validate_required_args ('Unable to construct L-function of Maass form.', args, 'dbid')
+            validate_required_args ('Unable to construct L-function of Maass form.',
+                                    args, 'dbid')
 
         self._Ltype = "maass"
 
@@ -1618,91 +1656,68 @@ class Lfunction_genus2_Q(Lfunction):
 
     def __init__(self, **args):
         # Check for compulsory arguments
-        validate_required_args('Unabel to construct L-function of genus 2 curve.', args, 'label')
-        logger.debug(str(args))
-
+        validate_required_args('Unabel to construct L-function of genus 2 curve.',
+                               args, 'label')
+        
         self._Ltype = "genus2curveQ"
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        self.label = args['label']
+        self.numcoeff = 30
 
-        self.number = int(0)
-        self.quasidegree = 2
-
-        self.credit = ''
-
-        # Extract the L-function information
-        # The data are stored in a database, so extract it and then convert
-        # to the format expected by the L-function homepage template.
-
+        # Load data from the database
         label_slash = self.label.replace(".","/")
         db_label = "Genus2Curve/Q/" + label_slash
         self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
         if not self.lfunc_data:
-            raise KeyError('No L-function instance data for "%s" was found in the database.'%db_label)
-            
+            raise KeyError('No L-function instance data for "%s" was found ' +
+                           'in the database.'%db_label)
+
+        # Extract the data 
+        makeLfromdata(self, fromdb=True)
+        self.fromDB = True
+
+        # Mandatory properties
+        self.coefficient_period = 0
+        self.coefficient_type = 2
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.quasidegree = 2
+              
+        # Specific properties
         # need to change this so it shows the nonvanishing derivative
         if self.lfunc_data['order_of_vanishing']:
             central_value = [0.5 + 0.5*self.lfunc_data['motivic_weight'], 0]
         else:
-            central_value = [0.5 + 0.5*self.lfunc_data['motivic_weight'],self.lfunc_data['leading_term']]
+            central_value = [0.5 + 0.5*self.lfunc_data['motivic_weight'],
+                             self.lfunc_data['leading_term']]
         if 'values' not in self.lfunc_data:
             self.lfunc_data['values'] = [ central_value ]
         else:
             self.lfunc_data['values'] += [ central_value ]
 
-        if self.lfunc_data['self_dual']:
-            neg_zeros = ["-" + str(pos_zero) for pos_zero in self.lfunc_data['positive_zeros']]
-        else:   # can't happen for genus 2 curves
-            dual_L_label = self.lfunc_data['conjugate']
-            dual_L_data = LfunctionDatabase.getInstanceLdata(dual_L_label)
-            neg_zeros = ["-" + str(pos_zero) for pos_zero in dual_L_data['positive_zeros']]
 
-        pos_plot = [
-                      [j * self.lfunc_data['plot_delta'], self.lfunc_data['plot_values'][j]]
-                              for j in range(len(self.lfunc_data['plot_values']))]
-        if self.lfunc_data['self_dual']:
-            neg_plot = [ [-1*pt[0], self.lfunc_data['root_number'] * pt[1]] for pt in pos_plot ][1:]
-            neg_plot.reverse()
-        else:
-            pass  # need to add this case
-        self.lfunc_data['plot'] = neg_plot[:] + pos_plot[:]
-            
-
-        neg_zeros.reverse()
-        self.lfunc_data['zeros'] = neg_zeros[:]
-        self.lfunc_data['zeros'] += [0 for _ in range(self.lfunc_data['order_of_vanishing'])]
-        self.lfunc_data['zeros'] += [str(pos_zero) for pos_zero in self.lfunc_data['positive_zeros']]
-
-        try:
-            makeLfromdata(self)
-            self.fromDB = True
-        except:
-            self.fromDB = False
-            self.zeros = "zeros not available"
-            self.plot = ""
-
-        # Need an option for the arithmetic normalization, leaving the
-        # analytic normalization as the default.
-        self.texname = "L(s,A)"
+        # Text for the web page
         self.htmlname = "<em>L</em>(<em>s,A</em>)"
-        self.texname_arithmetic = "L(A,s)"
+        self.texname = "L(s,A)"
         self.htmlname_arithmetic = "<em>L</em>(<em>A,s</em>)"
+        self.texname_arithmetic = "L(A,s)"
         self.texnamecompleteds = "\\Lambda(s,A)"
         self.texnamecompleted1ms = "\\Lambda(1-s,A)"
         self.texnamecompleteds_arithmetic = "\\Lambda(A,s)"
         self.texnamecompleted1ms_arithmetic = "\\Lambda(A, " + str(self.motivic_weight + 1) + "-s)"
-#        self.title = ("$L(s,A)$, " + "where $A$ is genus 2 curve "
-#                      + "of conductor " + str(isoclass['cond']))
-        self.title_end = ("where $A$ is the Jacobian of a genus 2 curve "
-#                      + "of conductor " + str(isoclass['cond']))
+        title_end = ("where $A$ is the Jacobian of a genus 2 curve "
                       + "with label " + self.label)
-        self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
-        self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
-        self.title = "$" + self.texname + "$" + ", " + self.title_end
+        self.credit = ''
 
-        constructor_logger(self, args)
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "g2c.q"
+        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
+        self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" + ", " +
+                                 title_end)
+        self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
 
     def Lkey(self):
         return {"label", self.label}

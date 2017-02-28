@@ -163,7 +163,7 @@ class Lfunction:
         info['sign'] = "$" + styleTheSign(self.sign) + "$"
         info['algebraic'] = self.algebraic
         if self.selfdual:
-            info['selfdual '] = 'yes'
+            info['selfdual'] = 'yes'
         else:
             info['selfdual'] = 'no'
         if self.primitive:
@@ -177,6 +177,13 @@ class Lfunction:
         info['eulerproduct'] = lfuncEPtex(self, "abstract")
         info['functionalequation'] = lfuncFEtex(self, "analytic")
         info['functionalequationSelberg'] = lfuncFEtex(self, "selberg")
+
+        if hasattr(self, 'positive_zeros'):
+            info['positive_zeros'] = self.positive_zeros
+            info['negative_zeros'] = self.negative_zeros
+
+        if hasattr(self, 'plot'):
+            info['plot'] = self.plot
 
         if self.fromDB and self.algebraic:
             info['dirichlet_arithmetic'] = lfuncDShtml(self, "arithmetic")
