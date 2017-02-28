@@ -79,6 +79,8 @@ def an_from_data(euler_factors,upperbound=30):
 # general data format has been specified.
 def makeLfromdata(L, fromdb=False):
     data = L.lfunc_data
+    
+    # Mandatory properties
     L.algebraic = data['algebraic']
     L.degree = data['degree']
     L.level = data['conductor']
@@ -122,7 +124,6 @@ def makeLfromdata(L, fromdb=False):
     L.coefficient_type = 2
     # end items specific to hyperelliptic curves
     L.numcoeff = 30
-    # an(analytic) = An(arithmetic)/n^(motivic_weight/2), where an/An are Dir. coeffs
     
     if 'dirichlet_coefficients' in data:
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
@@ -139,49 +140,55 @@ def makeLfromdata(L, fromdb=False):
             L.dirichlet_coefficients[n] = an
 
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
-        base_power_int = int(data['coeff_info'][0][2:-3])
-        #print 'base_power_int',base_power_int
-        L.dirichlet_coefficients_analytic = L.dirichlet_coefficients_arithmetic[:]
-        for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
-            an = L.dirichlet_coefficients_arithmetic[n]
-            if not str(an).startswith('a'):
-                L.dirichlet_coefficients_arithmetic[n] = an
-                L.dirichlet_coefficients_analytic[n] = an
-            else:
-                an_power = an[2:]
-                an_power_int = int(an_power)
-                this_gcd = gcd(an_power_int,base_power_int)
-                an_power_int /= this_gcd
-                this_base_power_int = base_power_int/this_gcd
-                if an_power_int == 0:
-                    L.dirichlet_coefficients_arithmetic[n] = 1
-                    L.dirichlet_coefficients_analytic[n] = 1
-                elif this_base_power_int == 2:
-                    L.dirichlet_coefficients_arithmetic[n] = -1
-                    L.dirichlet_coefficients_analytic[n] = -1
-                elif this_base_power_int == 4:
-                    if an_power_int == 1:
-                        L.dirichlet_coefficients_arithmetic[n] = I
-                        L.dirichlet_coefficients_analytic[n] = I
-                    else:
-                        L.dirichlet_coefficients_arithmetic[n] = -1*I
-                        L.dirichlet_coefficients_analytic[n] = -1*I
-                else:
-                    L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
-                    L.dirichlet_coefficients_analytic[n] = exp(2*pi*I*float(an_power_int)/float(this_base_power_int)).n()
+        convert_dirichlet_Lfunction_coefficients(L, data['coeff_info'])
 
-        #print "rename L.dirichlet_coefficients_analytic"
-        L.dirichlet_coefficients = L.dirichlet_coefficients_analytic[:]
-    # Note: a better name would be L.dirichlet_coefficients_analytic, but that
-    # would require more global changes.
     L.localfactors = p2sage(data['euler_factors'])
     # Currently the database stores the bad_lfactors as a list and the euler_factors
     # as a string.  Those should be the same.  Once that change is made, either the
     # line above or the line below will break.  (DF and SK, Aug 4, 2015)
     L.bad_lfactors = data['bad_lfactors']
-    L.checkselfdual()  # needs to be changed to read from database
     if not fromdb:
         generateSageLfunction(L)  # DF: why is this needed if pulling from database?
+
+def convert_dirichlet_Lfunction_coefficients(L, coeff_info):
+    """ Converts the dirichlet L-function coefficients from
+        the format in the database to algebaric and analytic form
+    """
+    base_power_int = int(coeff_info[0][2:-3])
+    L.dirichlet_coefficients_analytic = L.dirichlet_coefficients_arithmetic[:]
+    for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
+        an = L.dirichlet_coefficients_arithmetic[n]
+        if not str(an).startswith('a'):
+            L.dirichlet_coefficients_arithmetic[n] = an
+            L.dirichlet_coefficients_analytic[n] = an
+        else:
+            an_power = an[2:]
+            an_power_int = int(an_power)
+            this_gcd = gcd(an_power_int,base_power_int)
+            an_power_int /= this_gcd
+            this_base_power_int = base_power_int/this_gcd
+            if an_power_int == 0:
+                L.dirichlet_coefficients_arithmetic[n] = 1
+                L.dirichlet_coefficients_analytic[n] = 1
+            elif this_base_power_int == 2:
+                L.dirichlet_coefficients_arithmetic[n] = -1
+                L.dirichlet_coefficients_analytic[n] = -1
+            elif this_base_power_int == 4:
+                if an_power_int == 1:
+                    L.dirichlet_coefficients_arithmetic[n] = I
+                    L.dirichlet_coefficients_analytic[n] = I
+                else:
+                    L.dirichlet_coefficients_arithmetic[n] = -1*I
+                    L.dirichlet_coefficients_analytic[n] = -1*I
+            else:
+                L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
+                L.dirichlet_coefficients_analytic[n] = exp(2*pi*I*float(an_power_int)/float(this_base_power_int)).n()
+
+    L.dirichlet_coefficients = L.dirichlet_coefficients_analytic[:]
+    # Note: a better name would be L.dirichlet_coefficients_analytic, but that
+    # would require more global changes.
+
+
 
 def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
@@ -198,7 +205,9 @@ def generateSageLfunction(L):
                                         L.Q_fe, L.sign,
                                         L.kappa_fe, L.lambda_fe,
                                         L.poles, L.residues)
-    
+
+
+   
 
 #############################################################################
 # The subclasses
@@ -222,14 +231,16 @@ class RiemannZeta(Lfunction):
         self.__dict__.update(args)
         self.numcoeff = int(self.numcoeff)
 
-        # Override some of the default values set in Lfunction_base
+        # Mandatory properties
+        self.fromDB = False
         self.coefficient_type = 1
+        self.coefficient_period = 0
         self.poles = [0, 1]
         self.residues = [-1, 1]
         self.poles_L = [1]  # poles of L(s), used by createLcalcfile_ver2
         self.residues_L = [1]  # residues of L(s) createLcalcfile_ver2
-
-        # Mandatory properties
+        self.langlands = True
+        self.primitive = True
         self.degree = 1
         self.quasidegree = 1
         self.level = 1
@@ -241,6 +252,7 @@ class RiemannZeta(Lfunction):
         self.sign = 1
         self.selfdual = True
         self.dirichlet_coefficients = [1 for n in range(self.numcoeff)]
+        self.label = "zeta"
 
         # Specific properties
         self.is_zeta = True
@@ -250,13 +262,119 @@ class RiemannZeta(Lfunction):
         self.texnamecompleteds = "\\xi(s)"
         self.texnamecompleted1ms = "\\xi(1-s)"
         self.credit = 'Sage'
-        self.title = "Riemann Zeta-function: $\\zeta(s)$"
 
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "riemann"
+        self.info['title'] = "Riemann Zeta-function: $\\zeta(s)$"
+        
         # Generate a function to do computations
         self.sageLfunction = lc.Lfunction_Zeta()
 
     def Lkey(self):
         return {}
+
+#############################################################################
+
+
+class Lfunction_Dirichlet(Lfunction):
+    """Class representing the L-function of a Dirichlet character
+
+    Compulsory parameters: charactermodulus
+                           characternumber
+    """
+
+    def __init__(self, **args):
+        constructor_logger(self, args)
+
+        # Check for compulsory arguments
+        validate_required_args ('Unable to construct Dirichlet L-function.',
+                                args, 'charactermodulus', 'characternumber')
+        validate_integer_args ('Unable to construct Dirichlet L-function.',
+                               args, 'charactermodulus', 'characternumber')
+
+        self._Ltype = "dirichlet"
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+
+        # Check that the arguments give a primitive Dirichlet character in the database
+        self.charactermodulus = int(self.charactermodulus)
+        self.characternumber = int(self.characternumber)
+        if self.charactermodulus > 10**20: # avoid trying to factor anything really big
+            raise ValueError('Unable to construct Dirichlet L-function.',
+                             'The specified modulus %d is too large.'%self.charactermodulus)
+        if self.characternumber > self.charactermodulus:
+            raise ValueError('Unable to construct Dirichlet L-function.',
+                             'The Conrey index %d should not exceed the modulus %d.'%(self.characternumber,self.charactermodulus))
+        if gcd(self.charactermodulus,self.characternumber) != 1:
+            raise ValueError('Unable to construct Dirichlet L-function.',
+                             'The specified Conrey index %d is not coprime to the modulus %d.'%(self.characternumber,self.charactermodulus))
+        # Use ConreyCharacter to check primitivity (it can handle a huge modulus
+        if not ConreyCharacter(self.charactermodulus,self.characternumber).is_primitive():
+            raise ValueError('Unable to construct Dirichlet L-function,',
+                             'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive; only primitive characters have L-functions).'%(self.charactermodulus,self.characternumber))
+
+        # Load data from the database
+        self.label = str(self.charactermodulus) + "." + str(self.characternumber)
+        label_slash = self.label.replace(".","/")
+        db_label = "Character/Dirichlet/" + label_slash
+        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
+        if not self.lfunc_data:
+            raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
+
+        # Extract the data 
+        makeLfromdata(self, fromdb=True)
+        self.fromDB = True
+
+        # Mandatory properties
+        self.coefficient_period = self.charactermodulus
+        if self.selfdual:
+            self.coefficient_type = 2
+            for n in range(0, self.numcoeff - 1):
+                self.dirichlet_coefficients[n] = int(round(real(self.dirichlet_coefficients[n])))
+        else:
+            self.coefficient_type = 3
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.quasidegree = self.degree
+
+        # Specific properties
+        if not self.selfdual:  #TODO: This should be done on a general level
+            modnumDual = self.lfunc_data['conjugate'].split('_')[2]
+            numDual = modnumDual.split('.')[1]
+            self.dual_link = "/L/Character/Dirichlet/%s/%s" % (self.level, numDual)
+
+        # Text for the web page
+        self.htmlname = "<em>L</em>(<em>s,&chi;</em>)"
+        self.texname = "L(s,\\chi)"
+        self.texname_arithmetic = "L(\\chi,s)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>&chi;,s</em>)"
+        self.texnamecompleteds = "\\Lambda(s,\\chi)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(\\chi,s)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
+            self.texnamecompleted1ms_arithmetic = "\\Lambda(\\chi,1-s)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
+            self.texnamecompleted1ms_arithmetic = "\\Lambda(\overline{\\chi},1-s)"
+        title_end = ("where $\\chi$ is the Dirichlet character with label "
+                     + self.label)
+        self.credit = 'Sage'
+
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "character.dirichlet"
+        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
+        self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" +
+                                 ", " + title_end)
+        self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
+           
+    def Lkey(self):
+        return {"charactermodulus": self.charactermodulus,
+                "characternumber": self.characternumber}
+
 
 #############################################################################
 
@@ -412,7 +530,12 @@ class Lfunction_EMF(Lfunction):
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        self.initStandard()
+        self.coefficient_type = 0
+        self.coefficient_period = 0
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.primitive = True
         self.algebraic = True
         self.degree = 2
         self.quasidegree = 1
@@ -678,95 +801,6 @@ class Lfunction_HMF(Lfunction):
 
 
 
-#############################################################################
-
-
-class Lfunction_Dirichlet(Lfunction):
-    """Class representing the L-function of a Dirichlet character
-
-    Compulsory parameters: charactermodulus
-                           characternumber
-
-    Possible parameters: numcoeff  (the number of coefficients when computing)
-
-    """
-
-    def __init__(self, **args):
-
-        # Check for compulsory arguments
-        validate_required_args ('Unable to construct Dirichlet L-function.', args, 'charactermodulus', 'characternumber')
-        validate_integer_args ('Unable to construct Dirichlet L-function.', args, 'charactermodulus', 'characternumber')
-
-        self._Ltype = "dirichlet"
-
-        # Initialize default values
-        self.numcoeff = 30    # set default to 30 coefficients
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.numcoeff = int(self.numcoeff)
-
-        self.algebraic = True
-        self.charactermodulus = int(self.charactermodulus)
-        self.characternumber = int(self.characternumber)
-        if self.charactermodulus > 10**20: # avoid trying to factor anything really big
-            raise ValueError('Unable to construct Dirichlet L-function.', 'The specified modulus %d is too large.'%self.charactermodulus)
-        if self.characternumber > self.charactermodulus:
-            raise ValueError('Unable to construct Dirichlet L-function.', 'The Conrey index %d should not exceed the modulus %d.'%(self.characternumber,self.charactermodulus))
-        if gcd(self.charactermodulus,self.characternumber) != 1:
-            raise ValueError('Unable to construct Dirichlet L-function.', 'The specified Conrey index %d is not coprime to the modulus %d.'%(self.characternumber,self.charactermodulus))
-        # Use ConreyCharacter to check primitivity (it can handle a huge modulus
-        if not ConreyCharacter(self.charactermodulus,self.characternumber).is_primitive():
-            raise ValueError('Unable to construct Dirichlet L-function,', 'The Dirichlet character $\chi_{%d}(%d,\cdot)$ is imprimitive; only primitive characters have L-functions).'%(self.charactermodulus,self.characternumber))
-
-        self.label = str(self.charactermodulus) + "." + str(self.characternumber)
-        label_slash = self.label.replace(".","/")
-        db_label = "Character/Dirichlet/" + label_slash
-        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
-        if not self.lfunc_data:
-            raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
-        makeLfromdata(self, fromdb=True)
-        self.fromDB = True
-        self.quasidegree = self.degree
-        self.coefficient_period = self.charactermodulus
-        self.level = self.charactermodulus
-        if not self.selfdual:  #TODO: This should be done on a general level
-            modnumDual = self.lfunc_data['conjugate'].split('_')[2]
-            numDual = modnumDual.split('.')[1]
-            self.dual_link = "/L/Character/Dirichlet/%s/%s" % (self.level, numDual)
-
-        if self.selfdual:
-            self.coefficient_type = 2
-            for n in range(0, self.numcoeff - 1):
-                self.dirichlet_coefficients[n] = int(round(real(self.dirichlet_coefficients[n])))
-        else:
-            self.coefficient_type = 3
-
-        self.htmlname = "<em>L</em>(<em>s,&chi;</em>)"
-        self.texname = "L(s,\\chi)"
-        self.texname_arithmetic = "L(\\chi,s)"
-        self.htmlname_arithmetic = "<em>L</em>(<em>&chi;,s</em>)"
-        self.texnamecompleteds = "\\Lambda(s,\\chi)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(\\chi,s)"
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\chi)"
-            self.texnamecompleted1ms_arithmetic = "\\Lambda(\\chi,1-s)"
-        else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{\\chi})"
-            self.texnamecompleted1ms_arithmetic = "\\Lambda(\overline{\\chi},1-s)"
-        self.title_end = ("where $\\chi$ is the Dirichlet character with label " + self.label)
-        self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
-        self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
-        self.title = "$" + self.texname + "$" + ", " + self.title_end
-
-        self.credit = 'Sage'
-
-        constructor_logger(self, args)
-
-    def Lkey(self):
-        return {"charactermodulus": self.charactermodulus,
-                "characternumber": self.characternumber}
-
 
 #############################################################################
 
@@ -792,7 +826,12 @@ class Lfunction_Maass(Lfunction):
 
         self._Ltype = "maass"
 
-        self.initStandard()
+        self.coefficient_type = 0
+        self.coefficient_period = 0
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.primitive = True
         self.algebraic = False
 
         if self.fromDB:
@@ -1422,7 +1461,12 @@ class Lfunction_lcalc(Lfunction):
     def __init__(self, **args):
         constructor_logger(self, args)
         # Initialize some default values
-        self.initStandard()
+        self.coefficient_type = 0
+        self.coefficient_period = 0
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.primitive = True
         self.kappa_fe = []
         self.lambda_fe = []
         self.mu_fe = []

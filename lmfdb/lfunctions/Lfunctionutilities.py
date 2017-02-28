@@ -710,28 +710,6 @@ def lfuncFEtex(L, fmt):
         tex_name_s = L.texnamecompleteds
         tex_name_1ms = L.texnamecompleted1ms
     ans = ""
-#    if fmt == "analytic":
-#        ans = "\\begin{align}\n" + L.texnamecompleteds + "=\\mathstrut &"
-#        if L.level > 1:
-#            # ans+=latex(L.level)+"^{\\frac{s}{2}}"
-#            ans += latex(L.level) + "^{s/2}"
-#        for mu in L.mu_fe:
-#            ans += "\Gamma_{\R}(s" + seriescoeff(mu, 0, "signed", "", -6, 5) + ")"
-#        for nu in L.nu_fe:
-#            ans += "\Gamma_{\C}(s" + seriescoeff(nu, 0, "signed", "", -6, 5) + ")"
-#        ans += " \\cdot " + L.texname + "\\cr\n"
-#        ans += "=\\mathstrut & "
-#        if L.sign == 0:
-#            ans += "\epsilon \cdot "
-#        else:
-#            ans += seriescoeff(L.sign, 0, "factor", "", -6, 5)
-#        ans += L.texnamecompleted1ms
-#        if L.sign == 0 and L.degree == 1:
-#            ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
-#        if L.sign == 0 and L.degree > 1:
-#            ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
-#        ans += "\n\\end{align}\n"
-#    elif fmt == "arithmetic":
     if fmt == "arithmetic" or fmt == "analytic":
         ans = "\\begin{align}\n" + tex_name_s + "=\\mathstrut &"
         if L.level > 1:

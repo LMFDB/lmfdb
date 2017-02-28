@@ -429,104 +429,96 @@ def render_lcalcfile(L, url):
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
-    info = {'title': L.title}
-#    if 'title_arithmetic' in L:
-    if not hasattr(L, 'fromDB'):
-        L.fromDB = False
+    if L.degree == 1:
+        info = L.info
+    else:
+        info = {'title': L.title}
+        if not hasattr(L, 'fromDB'):
+            L.fromDB = False
 
-    try:
-        info['title_arithmetic'] = L.title_arithmetic
-        info['title_analytic'] = L.title_analytic
-    except AttributeError:
-        pass
-    try:
-        info['support'] = L.support
-    except AttributeError:
-        info['support'] = ""
-
-    info['Ltype'] = L.Ltype()
-
-    try:
-        info['label'] = L.label
-    except:
-        info['label'] = ""
-
-    info['knowltype'] = ""   # will be things like g2c.q, ec.q, ...
-    if L.Ltype() == "genus2curveQ":
-        info['knowltype'] = "g2c.q"
-    elif L.Ltype() == "ellipticcurveQ":
-        info['knowltype'] = "ec.q"
-    elif L.Ltype() == "dirichlet":
-        info['knowltype'] = "character.dirichlet"
-        info['label'] = str(L.charactermodulus) + "." + str(L.characternumber)
-    elif L.Ltype() == "ellipticmodularform":
-        info['knowltype'] = "mf"
-        info['label'] =  str(L.level) + '.' + str(L.weight) 
-        info['label'] += '.' + str(L.character) + '.' + str(L.label) 
-        info['label'] += '.' + request.url.split("/")[-2]  # the embedding
-    elif L.Ltype() == "riemann":
-        info['knowltype'] = "riemann"
-        info['label'] = "zeta"
-    elif L.Ltype() == "maass":
-        info['knowltype'] = "degree" + str(L.degree)
-        info['label'] = re.sub(".*/([^/]+)/$",r"\1",request.url)  # should have an id from somewhere?
-
-
-#    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
-    if L.fromDB and L.algebraic:
-        if L.motivic_weight % 2 == 0:
-           arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
-        else:
-           arith_center = str(ZZ(1)/2 + L.motivic_weight/2)
-        svt_crit = specialValueTriple(L, 0.5, '\\frac12',arith_center)
-#        info['sv_critical'] = specialValueString(L, 0.5, '1/2')
-#        info['sv_critical_arithmetic'] = specialValueString(L, 0.5, str(ZZ(1)/2 + L.motivic_weight/2),'arithmetic')
-        info['sv_critical'] = svt_crit[0] + "\\ =\\ " + svt_crit[2]
-        info['sv_critical_analytic'] = [svt_crit[0], svt_crit[2]]
-        info['sv_critical_arithmetic'] = [svt_crit[1], svt_crit[2]]
-
-        if L.motivic_weight % 2 == 1:
-           arith_edge = "\\frac{" + str(2 + L.motivic_weight) + "}{2}"
-        else:
-           arith_edge = str(ZZ(1) + L.motivic_weight/2)
-
-        svt_edge = specialValueTriple(L, 1, '1',arith_edge)
-        info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
-        info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
-        info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
-
-        info['st_group'] = L.st_group
-        info['st_link'] = L.st_link
-        info['rank'] = L.order_of_vanishing
-        info['motivic_weight'] = L.motivic_weight
-
-
-    elif L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
         try:
-            info['sv_edge'] = specialValueString(L, 1, '1')
-            info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+            info['title_arithmetic'] = L.title_arithmetic
+            info['title_analytic'] = L.title_analytic
+        except AttributeError:
+            pass
+        try:
+            info['support'] = L.support
+        except AttributeError:
+            info['support'] = ""
+
+        info['Ltype'] = L.Ltype()
+
+        try:
+            info['label'] = L.label
         except:
-            info['sv_critical'] = "L(1/2): not computed"
-            info['sv_edge'] = "L(1): not computed"
+            info['label'] = ""
 
-    info['args'] = args
+        info['knowltype'] = ""   # will be things like g2c.q, ec.q, ...
+        if L.Ltype() == "genus2curveQ":
+            info['knowltype'] = "g2c.q"
+        elif L.Ltype() == "ellipticcurveQ":
+            info['knowltype'] = "ec.q"
+        elif L.Ltype() == "ellipticmodularform":
+            info['knowltype'] = "mf"
+            info['label'] =  str(L.level) + '.' + str(L.weight) 
+            info['label'] += '.' + str(L.character) + '.' + str(L.label) 
+            info['label'] += '.' + request.url.split("/")[-2]  # the embedding
+        elif L.Ltype() == "maass":
+            info['knowltype'] = "degree" + str(L.degree)
+            info['label'] = re.sub(".*/([^/]+)/$",r"\1",request.url)  # should have an id from somewhere?
 
-    info['credit'] = L.credit
 
-    try:
-        info['factorization'] = L.factorization
-    except:
-        pass
+        if L.fromDB and L.algebraic:
+            if L.motivic_weight % 2 == 0:
+               arith_center = "\\frac{" + str(1 + L.motivic_weight) + "}{2}"
+            else:
+               arith_center = str(ZZ(1)/2 + L.motivic_weight/2)
+            svt_crit = specialValueTriple(L, 0.5, '\\frac12',arith_center)
+            info['sv_critical'] = svt_crit[0] + "\\ =\\ " + svt_crit[2]
+            info['sv_critical_analytic'] = [svt_crit[0], svt_crit[2]]
+            info['sv_critical_arithmetic'] = [svt_crit[1], svt_crit[2]]
 
-    try:
-        info['url'] = L.url
-    except:
-        info['url'] = ''
+            if L.motivic_weight % 2 == 1:
+               arith_edge = "\\frac{" + str(2 + L.motivic_weight) + "}{2}"
+            else:
+               arith_edge = str(ZZ(1) + L.motivic_weight/2)
 
-    info['degree'] = int(L.degree)
+            svt_edge = specialValueTriple(L, 1, '1',arith_edge)
+            info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
+            info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
+            info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
+
+            info['st_group'] = L.st_group
+            info['st_link'] = L.st_link
+            info['rank'] = L.order_of_vanishing
+            info['motivic_weight'] = L.motivic_weight
+
+
+        elif L.Ltype() != "artin" or (L.Ltype() == "artin" and L.sign != 0):
+            try:
+                info['sv_edge'] = specialValueString(L, 1, '1')
+                info['sv_critical'] = specialValueString(L, 0.5, '1/2')
+            except:
+                info['sv_critical'] = "L(1/2): not computed"
+                info['sv_edge'] = "L(1): not computed"
+
+
+        info['credit'] = L.credit
+
+        try:
+            info['factorization'] = L.factorization
+        except:
+            pass
+
+        try:
+            info['url'] = L.url
+        except:
+            info['url'] = ''
+
+        info['degree'] = int(L.degree)
 
                             
-
+    info['args'] = args
     info['properties2'] = set_gaga_properties(L)
     (info['bread'], info['friends'] ) = set_bread_and_friends(L, request)
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
@@ -544,43 +536,42 @@ def initLfunction(L, args, request):
 
 
 
+    if L.degree > 1:
+        # the code below should be in Lfunction.py
+        info['conductor'] = L.level
+        if not is_prime(int(L.level)):
+            info['conductor_factored'] = latex(factor(int(L.level)))
 
-    # the code below should be in Lfunction.py
-    info['conductor'] = L.level
-    if not is_prime(int(L.level)):
-        info['conductor_factored'] = latex(factor(int(L.level)))
+        info['degree'] = L.degree
+        info['sign'] = "$"+styleTheSign(L.sign)+"$"
+        info['algebraic'] = L.algebraic
+        if L.selfdual:
+            info['selfdual'] = 'yes'
+        else:
+            info['selfdual'] = 'no'
+        if L.primitive:
+            info['primitive'] = 'yes'
+        else:
+            info['primitive'] = 'no'
+        info['dirichlet'] = lfuncDShtml(L, "analytic")
+        # Hack, fix this more general?
+        info['dirichlet'] = info['dirichlet'].replace('*I','<em>i</em>')
+        
+        info['eulerproduct'] = lfuncEPtex(L, "abstract")
+        info['functionalequation'] = lfuncFEtex(L, "analytic")
+        info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
 
-    info['degree'] = L.degree
-    info['sign'] = "$"+styleTheSign(L.sign)+"$"
-    info['algebraic'] = L.algebraic
-    if L.selfdual:
-        info['selfdual'] = 'yes'
-    else:
-        info['selfdual'] = 'no'
-    if L.primitive:
-        info['primitive'] = 'yes'
-    else:
-        info['primitive'] = 'no'
-    info['dirichlet'] = lfuncDShtml(L, "analytic")
-    # Hack, fix this more general?
-    info['dirichlet'] = info['dirichlet'].replace('*I','<em>i</em>')
-    
-    info['eulerproduct'] = lfuncEPtex(L, "abstract")
-    info['functionalequation'] = lfuncFEtex(L, "analytic")
-    info['functionalequationSelberg'] = lfuncFEtex(L, "selberg")
- #   if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "dirichlet"] and L.fromDB:
-    if L.fromDB and L.algebraic:
-        info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
-        info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
-        info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")
+        if L.fromDB and L.algebraic:
+            info['dirichlet_arithmetic'] = lfuncDShtml(L, "arithmetic")
+            info['eulerproduct_arithmetic'] = lfuncEPtex(L, "arithmetic")
+            info['functionalequation_arithmetic'] = lfuncFEtex(L, "arithmetic")
 
     if len(request.args) == 0:
         lcalcUrl = request.url + '?download=lcalcfile'
     else:
         lcalcUrl = request.url + '&download=lcalcfile'
 
-    if L.Ltype() != 'dirichlet':
-        info['downloads'] = [('Lcalcfile', lcalcUrl)]
+    info['downloads'] = [('Lcalcfile', lcalcUrl)]
     return info
 
 
