@@ -158,11 +158,8 @@ def makeLfromdata(L, fromdb=False):
 
     L.negative_zeros.reverse()
     L.negative_zeros += [0 for _ in range(data['order_of_vanishing'])]
-    print 'after zeros'
     L.negative_zeros = ", ".join(L.negative_zeros)
-    print 'before zeros'
     L.positive_zeros = ", ".join(L.positive_zeros)
-    print 'after zeros'
     if len(L.positive_zeros) > 2 and len(L.negative_zeros) > 2:  # Add comma and empty space between negative and positive
         L.negative_zeros = L.negative_zeros + ", "
 
@@ -179,7 +176,6 @@ def makeLfromdata(L, fromdb=False):
                           for j in range(1,len(dual_L_data['plot_values']))]
     neg_plot.reverse()
     L.plotpoints = neg_plot[:] + pos_plot[:]
-    print 'after plot'
 
 
 
@@ -425,96 +421,49 @@ class Lfunction_EC_Q(Lfunction):
     #     field is Q
     def __init__(self, **args):
         constructor_logger(self, args)
-        validate_required_args('Unable to construct elliptic curve L-function.', args, 'label')
+        validate_required_args('Unable to construct elliptic curve L-function.',
+                               args, 'label')
 
         self._Ltype = "ellipticcurveQ"
 
-        # Initialize default values
-        modform_translation_limit = 101
-
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        self.algebraic = True
-
-        # Remove the ending number (if given) in the label to only get isogeny
-        # class
+        self.numcoeff = 30
+ 
+        # Remove the ending number (if given) in the label to get isogeny class
         while self.label[len(self.label) - 1].isdigit():
             self.label = self.label[0:len(self.label) - 1]
 
-        # Compute the # of curves in the isogeny class
-        self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.label)
-
-        # Create the elliptic curve
-        Edata = LfunctionDatabase.getEllipticCurveData(self.label + '1')
-        if Edata is None:
-            raise KeyError('No elliptic curve with label %s exists in the database' % self.label)
-        else:
-            self.E = EllipticCurve([int(a) for a in Edata['ainvs']])
-
-        # Extract the L-function information from the elliptic curve
-        self.quasidegree = 1
-        self.level = self.E.conductor()
-        self.sign = self.E.lseries().dokchitser().eps
-
-        self.mu_fe = []
-        self.nu_fe = [Rational('1/2')]
-        
-        self.compute_kappa_lambda_Q_from_mu_nu()
-        
-        self.numcoeff = round(self.Q_fe * 220 + 10)
-        # logger.debug("numcoeff: {0}".format(self.numcoeff))
-        self.langlands = True
-        self.degree = 2
-        self.motivic_weight = 1
-
-        # Get the data for the corresponding modular form if possible
-        if self.level <= modform_translation_limit:
-            self.modform = modform_from_EC(self.label)
-        else:
-            self.modform = False
-
-        #remove a0
-        self.dirichlet_coefficients = self.E.anlist(self.numcoeff)[1:]
-
-        self.dirichlet_coefficients_arithmetic = (
-            self.dirichlet_coefficients[:])
-        self.normalize_by = Rational('1/2')
-
-        # Renormalize the coefficients
-        for n in range(0, len(self.dirichlet_coefficients)):
-            an = self.dirichlet_coefficients[n]
-            self.dirichlet_coefficients[n] = float(an) / float(sqrt(n + 1))
-
-        self.poles = []
-        self.residues = []
-        self.coefficient_period = 0
-        self.selfdual = True
-        self.primitive = True
-        self.coefficient_type = 2
-
+        # Load data from the database
         label_slash = self.label.replace(".","/")
         db_label = "EllipticCurve/Q/" + label_slash
         self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
         if not self.lfunc_data:
                 raise KeyError('No L-function instance data for "%s" was found in the database.' % db_label)
 
-        try:
-            makeLfromdata(self)
-            self.fromDB = True
-        except:
-            self.fromDB = False
-            self.zeros = "zeros not available"
-            self.plot = ""
+        # Extract the data 
+        makeLfromdata(self, fromdb=True)
+        self.fromDB = True
 
-        self.texname = "L(s,E)"
-        self.texnamecompleteds = "\\Lambda(s,E)"
-        self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.properties = [('Degree ', '%s' % self.degree)]
-        self.properties.append(('Level', '%s' % self.level))
-        self.credit = ''
-  #      self.sageLfunction = lc.Lfunction_from_elliptic_curve(self.E,
-  #                                                      int(self.numcoeff))
+        # Mandatory properties
+        self.coefficient_period = 0
+        self.coefficient_type = 2
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.quasidegree = 1
+        
+        # Specific properties
+        # Get the data for the corresponding modular form if possible
+        modform_translation_limit = 101
+        if self.level <= modform_translation_limit:
+            self.modform = modform_from_EC(self.label)
+        else:
+            self.modform = False
+        # Compute the # of curves in the isogeny class
+        self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.label)
 
+        # Text for the web page
         self.texname = "L(s,E)"
         self.htmlname = "<em>L</em>(<em>s,E</em>)"
         self.texname_arithmetic = "L(E,s)"
@@ -523,13 +472,16 @@ class Lfunction_EC_Q(Lfunction):
         self.texnamecompleted1ms = "\\Lambda(1-s,E)"
         self.texnamecompleteds_arithmetic = "\\Lambda(E,s)"
         self.texnamecompleted1ms_arithmetic = "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-        self.title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
-        self.title_arithmetic = "$" + self.texname_arithmetic + "$" + ", " + self.title_end
-        self.title_analytic = "$" + self.texname + "$" + ", " + self.title_end
-        self.title = "$" + self.texname + "$" + ", " + self.title_end
+        title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
+        self.credit = ''
 
-        constructor_logger(self, args)
-
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "ec.q"
+        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
+        self.info['title_arithmetic'] = "$" + self.texname_arithmetic + "$" + ", " + title_end
+        self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
+        
     def ground_field(self):
         return "Q"
 
@@ -537,9 +489,6 @@ class Lfunction_EC_Q(Lfunction):
         # If over Q, the lmfdb label determines the curve
         return {"label": self.label}
     
-    def original_object(self):
-        return self.E
-
 
 #############################################################################
 

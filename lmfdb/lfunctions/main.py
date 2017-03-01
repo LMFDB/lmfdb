@@ -429,9 +429,10 @@ def render_lcalcfile(L, url):
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
-    if L.degree == 1 or L.Ltype()=="genus2curveQ":
+    if ( L.degree == 1 or L.Ltype()=="genus2curveQ" or
+         L.Ltype()=="ellipticcurveQ"):
         info = L.info
-    else:
+    else: 
         info = {'title': L.title}
         if not hasattr(L, 'fromDB'):
             L.fromDB = False
@@ -534,7 +535,8 @@ def initLfunction(L, args, request):
 
 
 
-    if L.degree > 1 and L.Ltype()!="genus2curveQ":
+    if (L.degree > 1 and L.Ltype()!="genus2curveQ" and
+        L.Ltype()!="ellipticcurveQ"):
         # the code below should be in Lfunction.py
         info['conductor'] = L.level
         if not is_prime(int(L.level)):
