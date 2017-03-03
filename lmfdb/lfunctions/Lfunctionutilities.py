@@ -821,7 +821,8 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
 
 def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     ''' Returns [L_arithmetic, L_analytic, L_val]
-        Currently only used for genus 2 curves.
+        Currently only used for genus 2 curves
+        and Dirichlet characters.
         Eventually want to use for all L-functions.
     '''
     number_of_decimals = 10
@@ -829,12 +830,12 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
         if 'values' in L.lfunc_data.keys():
-          for x in p2sage(L.lfunc_data['values']):
+            for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
-            if x[0] == s_alg:
-                val = x[1]
-                break
+                if x[0] == s_alg:
+                    val = x[1]
+                    break
     if val is None:
         if L.fromDB:
             val = "not computed"

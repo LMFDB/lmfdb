@@ -430,7 +430,8 @@ def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
     if ( L.degree == 1 or L.Ltype()=="genus2curveQ" or
-         L.Ltype()=="ellipticcurveQ"):
+         L.Ltype()=="ellipticcurveQ" or L.Ltype()=="ellipticmodularform" or
+         L.Ltype()=="maass"):
         info = L.info
     else: 
         info = {'title': L.title}
@@ -455,17 +456,6 @@ def initLfunction(L, args, request):
             info['label'] = ""
 
         info['knowltype'] = ""   # will be things like g2c.q, ec.q, ...
-        if L.Ltype() == "ellipticcurveQ":
-            info['knowltype'] = "ec.q"
-        elif L.Ltype() == "ellipticmodularform":
-            info['knowltype'] = "mf"
-            info['label'] =  str(L.level) + '.' + str(L.weight) 
-            info['label'] += '.' + str(L.character) + '.' + str(L.label) 
-            info['label'] += '.' + request.url.split("/")[-2]  # the embedding
-        elif L.Ltype() == "maass":
-            info['knowltype'] = "degree" + str(L.degree)
-            info['label'] = re.sub(".*/([^/]+)/$",r"\1",request.url)  # should have an id from somewhere?
-
 
         if L.fromDB and L.algebraic:
             if L.motivic_weight % 2 == 0:
@@ -536,7 +526,8 @@ def initLfunction(L, args, request):
 
 
     if (L.degree > 1 and L.Ltype()!="genus2curveQ" and
-        L.Ltype()!="ellipticcurveQ"):
+        L.Ltype()!="ellipticcurveQ" and L.Ltype()!="ellipticmodularform" and
+        L.Ltype()!="maass"):
         # the code below should be in Lfunction.py
         info['conductor'] = L.level
         if not is_prime(int(L.level)):
@@ -1096,14 +1087,10 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
             dbid = bson.objectid.ObjectId(arg5)
         except Exception:
             dbid = arg5
-        return Lfunction_Maass(dbid=dbid)
+        return Lfunction_Maass(dbid=dbid, fromDB=False)
 
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'Maass':
-        # logger.debug(db)
-        if arg6 == '':  # Not from database
-            return Lfunction_Maass(dbid=arg5, dbName='Lfunction', dbColl='LemurellMaassHighDegree')
-        else:
-            return Lfunction_Maass(fromDB = True, group = arg2, level = arg5,
+        return Lfunction_Maass(fromDB = True, group = arg2, level = arg5,
                 char = arg6, R = arg7, ap_id = arg8)
 
     elif arg1 == 'ModularForm' and arg2 == 'GSp' and arg3 == 'Q' and arg4 == 'Sp4Z':
@@ -1162,10 +1149,8 @@ def browseGraphChar():
 ###########################################################################
 def render_browseGraph(args):
     # logger.debug(args)
-    if 'sign' in args:
-        data = LfunctionPlot.paintSvgFileAll([[args['group'], int(args['level']), args['sign']]])
-    else:
-        data = LfunctionPlot.paintSvgFileAllNEW([[args['group'], int(args['level'])]])
+    data = LfunctionPlot.paintSvgFileAll([[args['group'],
+                                           int(args['level'])]])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
     return response

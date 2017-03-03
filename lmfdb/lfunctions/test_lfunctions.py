@@ -291,7 +291,7 @@ class LfunctionTest(LmfdbTest):
         assert "1" in createLcalcfile_ver1(L)
 
     def test_paintSVGall(self):
-        svg = paintSvgFileAll([["GSp4", 1]])
+        svg = paintSvgFileAll([["GSp4", [1]]])
         assert "12.4687" in svg
 
     def test_paintSVGholo(self):
