@@ -1,4 +1,4 @@
-#-*- coding: utf8 -*-
+#-*- coding: utf-8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2010-2012 by the LMFDB authors
 #
@@ -69,6 +69,10 @@ import lattice
 assert lattice
 import higher_genus_w_automorphisms
 assert higher_genus_w_automorphisms
+import abvar
+assert abvar
+import abvar.fq
+assert abvar.fq
 import modlmf
 assert modlmf
 import rep_galois_modl

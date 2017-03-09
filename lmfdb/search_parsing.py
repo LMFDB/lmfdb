@@ -1,5 +1,7 @@
 # -*- encoding: utf-8 -*-
 
+## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
+
 import re
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
@@ -12,6 +14,7 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
 FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
+BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 
 from flask import flash
 from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
@@ -555,6 +558,37 @@ def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, pars
         query.update(L[0])
     else:
         collapse_ors(['$or',L], query)
+
+@search_parser
+def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
+    bparts = BRACKETING_RE.split(inp)
+    parts = []
+    for part in bparts:
+        if not part:
+            continue
+        if part[0] == '[':
+            parts.append(part)
+        else:
+            subparts = part.split(',')
+            for subpart in subparts:
+                subpart = subpart.strip()
+                if subpart:
+                    parts.append(subpart)
+    def make_sub_query(part):
+        sub_query = {}
+        if part[0] == '[':
+            ispec = part[1:-1].split(',')
+            for i, val in enumerate(ispec):
+                key = qfield + '.' + str(i+index_shift)
+                sub_query[key] = parse_range2(val, key, parse_singleton)[1]
+        else:
+            key = qfield + '.' + str(index_shift)
+            sub_query[key] = parse_range2(part, key, parse_singleton)[1]
+        return sub_query
+    if len(parts) == 1:
+        query.update(make_sub_query(parts[0]))
+    else:
+        collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
 
 def parse_count(info, default=20):
     try:
