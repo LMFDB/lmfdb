@@ -609,6 +609,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
     if field_label=='4.4.13824.1': bad_p = [19**2]
     if field_label=='4.4.12400.1': bad_p = [23**2]
     if field_label=='4.4.180769.1': bad_p = [23**2]
+    if field_label=='6.6.905177.1': bad_p = [2**3]
 
     effort0 = effort
     for nf_label in missing_curves:
@@ -645,13 +646,14 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             curves = EllipticCurveSearch(K.K(), Plist0, N, aplist0, effort)
             rep = 0
             allrep=0
-            while not curves and allrep<25:
+            while not curves and allrep<10:
                 allrep += 1
-                if rep<3:
-                    rep += 1
-                else:
-                    rep = 1
-                    effort *=2
+                effort*=2
+                # if rep<2:
+                #     rep += 1
+                # else:
+                #     rep = 1
+                #     effort *=2
                 if verbose:
                     print("No curves found by Magma, trying again with effort %s..." % effort)
                 curves = EllipticCurveSearch(K.K(), Plist0, N, aplist0, effort)
