@@ -1,21 +1,12 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-import lmfdb.base
 from lmfdb.utils import make_logger, web_latex, encode_plot
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, db_ec
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 
-from sage.all import EllipticCurve, latex, matrix
+from sage.all import latex, matrix, PowerSeriesRing, QQ
 
 logger = make_logger("ec")
-
-ecdb = None
-
-def db_ec():
-    global ecdb
-    if ecdb is None:
-        ecdb = lmfdb.base.getDBConnection().elliptic_curves.curves
-    return ecdb
 
 class ECisog_class(object):
     """
@@ -39,20 +30,17 @@ class ECisog_class(object):
         label (e.g. "11.a1") or a class label (e.g. "11.a") in either
         LMFDB or Cremona format.
         """
-        #print "label = %s" % label
         try:
             N, iso, number = split_lmfdb_label(label)
             if number:
-                data = db_ec().find_one({"lmfdb_label" : label})
-            else:
-                data = db_ec().find_one({"lmfdb_label" : label+"1"})
+                label = ".".join([N,iso])
+            data = db_ec().find_one({"lmfdb_iso" : label, 'number':1})
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
                 if number:
-                    data = db_ec().find_one({"label" : label})
-                else:
-                    data = db_ec().find_one({"label" : label+"1"})
+                    label = "".join([N,iso])
+                data = db_ec().find_one({"iso" : label, 'number':1})
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
 
@@ -61,21 +49,34 @@ class ECisog_class(object):
         return "Class not found" # caller must catch this and raise an error
 
     def make_class(self):
-        self.ainvs_str = self.ainvs
-        self.ainvs = [int(a) for a in self.ainvs_str]
-        self.E = EllipticCurve(self.ainvs)
-        self.CM = self.E.has_cm()
+        self.CM = self.cm
+        N, iso, number = split_lmfdb_label(self.lmfdb_iso)
 
-        try:
-            # Extract the isogeny degree matrix from the database
-            size = len(self.isogeny_matrix)
-            from sage.matrix.all import Matrix
-            self.isogeny_matrix = Matrix(self.isogeny_matrix)
-        except AttributeError:
-            # Failsafe: construct it from scratch
-            self.isogeny_matrix = self.E.isogeny_class(order="lmfdb").matrix()
-            size = self.isogeny_matrix.nrows()
-        self.ncurves = size
+        # Extract the size of the isogeny class from the database
+        ncurves = self.ncurves = len(self.isogeny_matrix)
+
+        # Create a list of the curves in the class from the database
+        self.curves = [db_ec().find_one({'iso':self.iso, 'lmfdb_number':int(i+1)})
+                          for i in range(ncurves)]
+
+        # Set optimality flags.  The optimal curve is number 1 except
+        # in one case which is labeled differently in the Cremona tables
+        for c in self.curves:
+            c['optimal'] = (c['number']==(3 if self.label == '990h' else 1))
+            c['ai'] = [int(a) for a in c['ainvs']]
+            c['url'] = url_for(".by_triple_label", conductor=N, iso_label=iso, number=c['lmfdb_number'])
+
+        # Extract the isogeny degree matrix from the database; there
+        # the order of the curves is the Cremona ordering, so we will
+        # reorder to match the LMFDB ordering.
+        perm = dict([[c['number']-1,c['lmfdb_number']-1] for c in self.curves])
+        isogmat = [[self.isogeny_matrix[perm[i]][perm[j]]
+                    for i in range(ncurves)]
+                   for j in range(ncurves)]
+
+        from sage.matrix.all import Matrix
+        self.isogeny_matrix = Matrix(isogmat)
+        self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
 
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
@@ -83,64 +84,17 @@ class ECisog_class(object):
         self.graph_img = encode_plot(P)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
 
-        # Create a list of the curves in the class from the database
-        self.db_curves = [self.E]
-        self.optimal_flags = [False] * size
-        self.degrees = [0] * size
-        if self.degree:
-            self.degrees[0] = self.degree
-        else:
-            try:
-                self.degrees[0] = self.E.modular_degree()
-            except RuntimeError:
-                pass
 
-        # Fill in the curves in the class by looking each one up in the db:
-
-        self.cremona_labels = [self.label] + [0] * (size - 1)
-        if self.number == 1:
-            self.optimal_flags[0] = True
-        for i in range(2, size + 1):
-            Edata = db_ec().find_one({'lmfdb_label': self.lmfdb_iso + str(i)})
-            Ei = EllipticCurve([int(a) for a in Edata['ainvs']])
-            self.cremona_labels[i - 1] = Edata['label']
-            if Edata['number'] == 1:
-                self.optimal_flags[i - 1] = True
-            if 'degree' in Edata:
-                self.degrees[i - 1] = Edata['degree']
-            else:
-                try:
-                    self.degrees[i - 1] = Ei.modular_degree()
-                except RuntimeError:
-                    pass
-            self.db_curves.append(Ei)
-
-
-        if self.iso == '990h':  # this isogeny class is labeled wrong in Cremona's tables
-            self.optimal_flags = [False, False, True, False]
-
-        self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
-
-        N, iso, number = split_lmfdb_label(self.lmfdb_iso)
-
-        self.newform = web_latex(self.E.q_eigenform(10))
+        self.newform =  web_latex(PowerSeriesRing(QQ, 'q')(self.anlist, 20, check=True))
         self.newform_label = newform_label(N,2,1,iso)
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
         self.newform_exists_in_db = is_newform_in_db(self.newform_label)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
 
-        self.curves = [dict([('label',self.lmfdb_iso + str(i + 1)),
-                             ('url',url_for(".by_triple_label", conductor=N, iso_label=iso, number=i+1)),
-                             ('cremona_label',self.cremona_labels[i]),
-                             ('ainvs',str(list(c.ainvs()))),
-                             ('torsion',c.torsion_order()),
-                             ('degree',self.degrees[i]),
-                             ('optimal',self.optimal_flags[i])])
-                       for i, c in enumerate(self.db_curves)]
-
         self.friends =  [('L-function', self.lfunction_link)]
         if not self.CM:
+            self.CM = "no"
             if int(N)<=300:
                 self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso))]
             if int(N)<=50:
@@ -149,7 +103,7 @@ class ECisog_class(object):
             self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
 
         self.properties = [('Label', self.lmfdb_iso),
-                           ('Number of curves', str(self.ncurves)),
+                           ('Number of curves', str(ncurves)),
                            ('Conductor', '\(%s\)' % N),
                            ('CM', '%s' % self.CM),
                            ('Rank', '\(%s\)' % self.rank),

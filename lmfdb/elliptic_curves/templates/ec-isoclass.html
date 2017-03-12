@@ -29,9 +29,9 @@ text-align: center;
 {% else %}
 <tr>
 {% endif %}
-<td class="center"><a href="{{c.url}}">{{c.label}}</a></td>
-<td class="center">{{c.cremona_label}}</td>
-<td class="center">{{c.ainvs}}</td>
+<td class="center"><a href="{{c.url}}">{{c.lmfdb_label}}</a></td>
+<td class="center">{{c.label}}</td>
+<td class="center">{{c.ai}}</td>
 <td align="center">{{c.torsion}}</td>
 <td align="center">
 {% if c.degree==0 %}Not available{% else %}{{c.degree}}{% endif %}
@@ -93,7 +93,7 @@ rank \({{ info.rank}}\).
 {% endif %}
 
 <script type="text/javascript">
-var number_of_coefficients = 10;
+var number_of_coefficients = 20;
 function more_handler(evt) {
     number_of_coefficients += number_of_coefficients;
     evt.preventDefault();

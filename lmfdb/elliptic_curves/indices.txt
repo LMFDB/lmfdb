@@ -1,0 +1,36 @@
+Indices on the curves collection:
+
+[('conductor',1)]
+[('label',1)]
+[('lmfdb_label',1)]
+[('number', 1)] # to count isogeny classes
+[('xainvs', 1)] #  to search by a-invariants
+[('iso', 1)] # to search for an isogeny class
+[('lmfdb_iso', 1)] # to search for an isogeny class
+[('label',1), ('number',1)]
+[('lmfdb_label',1), ('number',1)]
+[('rank', 1)] # to compute stats
+[('rank', 1), ('number',1)] # to compute stats
+[('torsion_structure', 1)] # to compute stats
+[('torsion', 1)] # to compute stats
+[('sha', 1)] # to compute stats
+[('jinv', 1)] # searching
+[('cm', 1)] # searching
+[('non-surjective_primes', 1)] # searching
+[('conductor', 1), ('iso_nlabel', 1), ('lmfdb_number', 1)] # for sorting:
+
+
+# others which possibly should be created:
+
+[('ainvs', 1)] #  to search by a-invariants -- redundant now?
+
+# others which the original collection had but which have not been
+#  recreated:
+
+'degree_1', # we never sort by degree of modular parametrization and
+            # it is not a esrach item
+'sha_an_1', # ditto; we use the rounded sha instead.
+'conductor_1_lmfdb_iso_1_lmfdb_number_1', # replaced lmfdb_iso by iso_nlabel
+'metadata_1' # ?
+
+

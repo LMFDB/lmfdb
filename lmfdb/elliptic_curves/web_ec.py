@@ -58,7 +58,7 @@ def db_ec():
     global ecdb
     if ecdb is None:
         ec = lmfdb.base.getDBConnection().elliptic_curves
-        ecdb = ec.curves
+        ecdb = ec.newcurves
     return ecdb
 
 def padic_db():
@@ -105,7 +105,7 @@ class WebEC(object):
 
             - dbdata: the data from the database
         """
-        logger.debug("Constructing an instance of ECisog_class")
+        logger.debug("Constructing an instance of WebEC")
         self.__dict__.update(dbdata)
         # Next lines because the hyphens make trouble
         self.xintcoords = split_list(dbdata['x-coordinates_of_integral_points'])
@@ -321,6 +321,11 @@ class WebEC(object):
                                for p,im in zip(data['non_surjective_primes'],
                                                data['galois_images'])]
 
+        cond, iso, num = split_lmfdb_label(self.lmfdb_label)
+        self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+        self.ncurves = db_ec().count({'lmfdb_iso':self.lmfdb_iso})
+        data['isogeny_degrees'] = " and ".join([str(d) for d in self.isogeny_degrees if d>1])
+
         if self.twoadic_gens:
             from sage.matrix.all import Matrix
             data['twoadic_gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in self.twoadic_gens])
@@ -361,15 +366,15 @@ class WebEC(object):
         bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         bsd['tamagawa_product'] = prod(tamagawa_numbers)
 
-        cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
         data['newform_label'] = self.newform_label = newform_label(cond,2,1,iso)
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso)
         self.newform_exists_in_db = is_newform_in_db(self.newform_label)
         self._code = None
 
+        self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
         self.friends = [
-            ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
+            ('Isogeny class ' + self.lmfdb_iso, self.class_url),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label))]
