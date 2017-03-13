@@ -1,23 +1,25 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% if not error %}
-<h2>Search results</h2>
-{% if not results or results|count == 0 %}
-<p> - no samples found - </p>
+{% if not info.error %}
+<h2>Search results {% if info.results and info.results|count > 0%} ({{info.results|count}}) {% endif %}</h2>
+{% if not info.results or info.results|count == 0 %}
+<p> no samples found </p>
 {% else %}
-{% for sam in results|sort %}
-<a href="{{ '/ModularForm/GSp/Q/' + sam.collection()[0] + '.' + sam.name() }}">{{ sam.collection()[0] + '.' + sam.name() }}</a>
+{% for sam in info.results %}
+<a href="{{ url_for('.by_label', label= sam.collection()[0] + '.' + sam.name()) }}">{{ sam.collection()[0] + '.' + sam.name() }}</a>&nbsp;&nbsp;
 {% endfor %}
 {% endif %}
-
-{% else %}
-{% include 'None.html' %}
 {% endif %}
 
 <h2>New search</h2>
-{% include 'includes/form_for_sample_search.html' %}
 
-{% include 'includes/form_for_label_search.html' %}
+<h4>Enter search criteria for examples:</h4>
+<form>
+<span>Degree: <input name="deg" size=9.5 placeholder="2" value="{{info.args.deg}}"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span>$k$: <input name="wt" size=10 placeholder="4..16" value="{{info.args.wt}}"></span>&nbsp;&nbsp;&nbsp;&nbsp;
+<span>Field degree: <input name="fdeg" size=3 placeholder="1" value="{{info.args.fdeg}}">&nbsp;&nbsp;&nbsp;&nbsp;
+<button type="submit" style="width: 110px"name="search" value="1">Find examples</button>
+</form>
 
 {% endblock %}

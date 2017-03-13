@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 import lmfdb.base as base
-from sage.all import *
-import re
-import pymongo
-import bson
-import yaml
+import sage
+from sage.all import gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari
+import yaml, os
 import hashlib
 from sage.misc.cachefunc import cached_function
-from lmfdb.utils import *
+from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html
+from flask import url_for
+from collections import Counter
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
+dnc = 'data not computed'
 
 # Dictionary of field label: n for abs(disc(Q(zeta_n)))
 # Does all cyclotomic fields of degree n s.t. 2<n<24
@@ -52,16 +53,27 @@ def string2list(s):
         return []
     return [int(a) for a in s.split(',')]
 
+def is_fundamental_discriminant(d):
+    if d in [0, 1]:
+        return False
+    if d.is_squarefree():
+        return d % 4 == 1
+    else:
+        return d % 16 in [8, 12] and (d // 4).is_squarefree()
+
 @cached_function
 def field_pretty(label):
     d, r, D, i = label.split('.')
     if d == '1':  # Q
         return '\(\Q\)'
     if d == '2':  # quadratic field
-        D = ZZ(int(D)).squarefree_part()
+        D = ZZ(int(D))
         if r == '0':
             D = -D
-        return '\(\Q(\sqrt{' + str(D) + '}) \)'
+        # Don't prettify invalid quadratic field labels
+        if not is_fundamental_discriminant(D):
+            return label
+        return '\(\Q(\sqrt{' + str(D if D%4 else D/4) + '}) \)'
     if label in cycloinfo:
         return '\(\Q(\zeta_{%d})\)' % cycloinfo[label]
     if d == '4':
@@ -169,6 +181,17 @@ class WebNumberField:
         else:
             raise Exception('wrong type')
 
+    # Just a shell which should be used in a limited way since we don't
+    # initialize much
+    @classmethod
+    def fakenf(cls, coeffs):
+        if isinstance(coeffs, list):
+            coeffs = list2string(coeffs)
+        coefstr = string2list(coeffs)
+        n = len(coefstr)-1
+        data = {'coeffs': coeffs, 'degree': n}
+        return cls('Degree %d field'%n, data)
+
     @classmethod
     def from_polredabs(cls, pol):
         return cls.from_coeffs([int(c) for c in pol.coefficients(sparse=False)])
@@ -225,6 +248,8 @@ class WebNumberField:
 
     # Return a nice string for the Galois group
     def galois_string(self):
+        if not self.haskey('galois'):
+            return 'Not computed'
         n = self._data['degree']
         t = self._data['galois']['t']
         C = base.getDBConnection()
@@ -276,6 +301,104 @@ class WebNumberField:
             return [str(u) for u in zkstrings]
         return list(pari(self.poly()).nfbasis())
 
+    # Used by subfields and resolvent functions to
+    # take coefficients for fields and either return
+    # information about the item, or a usable knowl
+
+    # We need to return information in 2 ways: (1) list of knowls
+    # and (2) list of label/polynomials
+    def myhelper(self, coefmult):
+        coef = string2list(coefmult[0])
+        subfield = self.from_coeffs(coef)
+        C = base.getDBConnection()
+        if subfield._data is None:
+            deg = len(coef) - 1
+            mypol = sage.all.latex(coeff_to_poly(coef))
+            mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+            return [mypol, coefmult[1]]
+        return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
+
+    # returns resolvent dictionary
+    # ae means arithmetically equivalent fields
+    def resolvents(self):
+        if not self.haskey('res'):
+            self._data['res'] = {}
+        return self._data['res']
+
+    # Get data from group database
+    def galois_sib_data(self):
+        if 'repdata' not in self._data:
+            repdegs = [z[0] for z in self.gg()._data['repns']]
+            numae = self.gg().arith_equivalent()
+            galord = int(self.gg().order())
+            repcounts = Counter(repdegs)
+            gc = 0
+            if galord<24:
+                del repcounts[galord]
+                if self.degree() < galord:
+                    gc = 1 
+            repcounts[self.degree()] -= numae
+            if repcounts[self.degree()] == 0:
+                del repcounts[self.degree()]
+            self._data['repdata'] = [repcounts, numae, gc]
+        return self._data['repdata']
+
+    def sibling_labels(self):
+        resall = self.resolvents()
+        if 'sib' in resall:
+            sibs = [self.from_coeffs(str(a)) for a in resall['sib']]
+            return ['' if a._data is None else a.label for a in sibs]
+        return []
+
+    def siblings(self):
+        cnts = self.galois_sib_data()[0]
+        resall = self.resolvents()
+        if 'sib' in resall:
+            # list of [degree, knowl
+            helpout = [[len(string2list(a))-1,self.myhelper([a,1])] for a in resall['sib']]
+        else:
+            helpout = []
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts.keys())]
+        return [degsiblist, self.sibling_labels()]
+
+    def sextic_twin(self):
+        if self.degree() != 6:
+            return [0,[],[]]
+        resall = self.resolvents()
+        if 'sex' in resall:
+            sex = [self.from_coeffs(str(a)) for a in resall['sex']]
+            sex = [a.label for a in sex if a._data is not None]
+            # Don't include Q in labels
+            sex = [z for z in sex if z != '1.1.1.1']
+            labels = sorted(Set(sex))
+            helpout = [self.myhelper([a,1]) for a in resall['sex']]
+            knowls = [a[0] for a in helpout]
+            return [1, knowls, labels]
+        return [1,[],[]]
+
+    def galois_closure(self):
+        resall = self.resolvents()
+        cnt = self.galois_sib_data()[2]
+        if 'gal' in resall:
+            helpout = [self.myhelper([a,1]) for a in resall['gal']]
+            knowls= [a[0] for a in helpout]
+            gal = [self.from_coeffs(str(a)) for a in resall['gal']]
+            labs = [a.label for a in gal if a._data is not None]
+            return [cnt, knowls, labs]
+        return [cnt, [], []]
+
+    def arith_equiv(self):
+        resall = self.resolvents()
+        cnt = self.galois_sib_data()[1]
+        if 'ae' in resall:
+            helpout = [self.myhelper([a,1]) for a in resall['ae']]
+            knowls = [a[0] for a in helpout]
+            ae = [self.from_coeffs(str(a)) for a in resall['ae']]
+            labs = [a.label for a in ae if a._data is not None]
+            return [cnt, knowls, labs]
+        return [cnt, [], []]
+
     def subfields(self):
         if not self.haskey('subs'):
             return []
@@ -285,18 +408,7 @@ class WebNumberField:
         subs = self.subfields()
         if subs == []:
             return []
-        C = base.getDBConnection()
-        def myhelper(coefmult):
-            coef = string2list(coefmult[0])
-            subfield = self.from_coeffs(coef)
-            if subfield._data is None:
-                deg = len(coef) - 1
-                mypol = sage.all.latex(coeff_to_poly(coef))
-                mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
-                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
-                return [mypol, coefmult[1]]
-            return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
-        subs = [myhelper(a) for a in subs]
+        subs = [self.myhelper(a) for a in subs]
         subs = [do_mult(a) for a in subs]
         return ', '.join(subs)
 
@@ -326,16 +438,26 @@ class WebNumberField:
         ugm = self.unit_galois_action()
         if ugm == []:
             return ''
-        C = base.getDBConnection()
-        gmods = C.transitivegroups.Gmodules
         n = self.degree()
         t = self.galois_t()
         return modules2string(n, t, ugm)
 
+    # Sage version of K -- should be avoided since it can be slow
+    # in extreme cases
     def K(self):
         if not self.haskey('K'):
             self._data['K'] = NumberField(self.poly(), self.gen_name)
         return self._data['K']
+
+    # pari version of K
+    def gpK(self):
+        if not self.haskey('gpK'):
+            Qx = PolynomialRing(QQ,'x')
+            # while [1] is a perfectly good basis for Z, gp seems to want []
+            basis = [Qx(el.replace('a','x')) for el in self.zk()] if self.degree() > 1 else []
+            k1 = gp( "nfinit([%s,%s])" % (str(self.poly()),str(basis)) )
+            self._data['gpK'] = k1
+        return self._data['gpK']
 
     def generator_name(self):
         #Add special case code for the generator if desired:
@@ -347,7 +469,7 @@ class WebNumberField:
     def unit_rank(self):
         if not self.haskey('unit_rank'):
             sig = self.signature()
-            self._data['unit_rank'] = unit_rank = sig[0] + sig[1] - 1
+            self._data['unit_rank'] = sig[0] + sig[1] - 1
         return self._data['unit_rank']
 
     def regulator(self):
@@ -456,7 +578,7 @@ class WebNumberField:
                 self._data["nfgg"] = nfgg
         else:
             if "nfgg" not in self._data:
-                from math_classes import NumberFieldGaloisGroup
+                from artin_representations.math_classes import NumberFieldGaloisGroup
                 nfgg = NumberFieldGaloisGroup.find_one({"label": self.label})
                 self._data["nfgg"] = nfgg
             else:
@@ -471,7 +593,7 @@ class WebNumberField:
                     self._data["nfgg"] = nfgg
             else:
                 if "nfgg" not in self._data:
-                    from math_classes import NumberFieldGaloisGroup
+                    from artin_representations.math_classes import NumberFieldGaloisGroup
                     nfgg = NumberFieldGaloisGroup(self._data['coeffs'])
                     self._data["nfgg"] = nfgg
                 else:

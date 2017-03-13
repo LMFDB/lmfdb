@@ -1,4 +1,3 @@
-from plot_dom import *
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 
 import lmfdb
@@ -31,18 +30,22 @@ def get_files_from_gridfs(collection='',create=True):
     Return a handle to a modular forms database or a specific collection.
     """
     C = connect_to_modularforms_db()
-    if 'files' not in collection:
-        collection_name = collection + '.files'
-    else:
-        collection_name = collection.split('.')[0]
+
+    #FIXME collection_name is set but never used
+    #if 'files' not in collection:
+    #    collection_name = collection + '.files'
+    #else:
+    #    collection_name = collection.split('.')[0]
 
     try:
         return gridfs.GridFS(C,collection)
     except Exception as e:
-        error_st = "Collection {0} is not in database {1} at connection {2}.  Error: {3}".format(collection,db_name,C,e)
+        error_st = "Collection {0} is not in database {1}.  Error: {2}".format(collection,C,e)
         emf_logger.critical(error_st)
         raise ValueError,error_st 
 
 from web_newforms import WebNewForm # html_table
+assert WebNewForm
 from web_modform_space import WebModFormSpace
+assert WebModFormSpace
 

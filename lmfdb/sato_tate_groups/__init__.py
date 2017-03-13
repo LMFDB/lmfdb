@@ -10,4 +10,6 @@ def body_class():
 
 import main
 
+assert main # silence pyflakes
+
 app.register_blueprint(st_page, url_prefix="/SatoTateGroup")

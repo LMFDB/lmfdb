@@ -12,5 +12,6 @@ def body_class():
     return {'body_class': 'Permutations'}
 
 import main
+assert main
 
 app.register_blueprint(permutations_page, url_prefix="/Permutations")

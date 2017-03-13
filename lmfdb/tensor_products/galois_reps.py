@@ -6,18 +6,18 @@ AUTHORS: Alberto Camara, Mark Watkins, Chris Wuthrich, 2014
 Example:
 
 sage: import lmfdb
-sage: from lmfdb.tensor_products.galois_reps import *
+sage: from lmfdb.tensor_products.galois_reps import GaloisRepresentation
 sage: V1 = GaloisRepresentation(EllipticCurve("37a1"))
 sage: V1.motivic_weight
 sage: V1.local_euler_factor(37)
 
-sage: from lmfdb.WebCharacter import *
+sage: from lmfdb.WebCharacter import WebDirichletCharacter
 sage: chi = WebDirichletCharacter(modulus=37,number=4)
 sage: V2 = GaloisRepresentation(chi)
 sage: V2.langlands
 sage: V2.local_euler_factor(101)
 
-sage: from lmfdb.math_classes import ArtinRepresentation
+sage: from lmfdb.artin_representations.math_classes import ArtinRepresentation
 sage: rho = ArtinRepresentation(2,23,1)
 sage: V3 = GaloisRepresentation(rho)
 sage: V3.dim
@@ -93,16 +93,11 @@ sage: VW.algebraic_coefficients(38)[36] == -38
 #import weakref
 
 import lmfdb.base
-from lmfdb.WebCharacter import * #WebDirichletCharacter
 from lmfdb.lfunctions.Lfunction_base import Lfunction
 from lmfdb.lfunctions.HodgeTransformations import selberg_to_hodge, root_number_at_oo, hodge_to_selberg, tensor_hodge, gamma_factors
 
-from sage.structure.sage_object import SageObject
-from sage.rings.integer_ring import ZZ
-from sage.rings.complex_field import ComplexField
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.power_series_ring import PowerSeriesRing
-from sage.rings.fast_arith import prime_range
+import sage
+from sage.all import ZZ, QQ, RealField, ComplexField, PolynomialRing, PowerSeriesRing, I, sqrt, prime_range, Dokchitser, O
 
 class GaloisRepresentation( Lfunction):
 
@@ -127,12 +122,12 @@ class GaloisRepresentation( Lfunction):
         elif isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
             self.init_dir_char(thingy)
 
-        elif isinstance(thingy, lmfdb.math_classes.ArtinRepresentation):
+        elif isinstance(thingy, lmfdb.artin_representations.math_classes.ArtinRepresentation):
             self.init_artin_rep(thingy)
 
         elif (isinstance(thingy, list) and
               len(thingy) == 2 and
-              isinstance(thingy[0],lmfdb.modular_forms.elliptic_modular_forms.backend.web_modforms.WebNewForm_class) and
+              isinstance(thingy[0],lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms.WebNewForm) and
               isinstance(thingy[1],sage.rings.integer.Integer) ):
             self.init_elliptic_modular_form(thingy[0],thingy[1])
 
@@ -374,11 +369,8 @@ class GaloisRepresentation( Lfunction):
                 #if ((p not in V.bad_semistable_primes or p not in W.bad_pot_good) and
                     #(p not in W.bad_semistable_primes or p not in V.bad_pot_good) and
                     #(p not in V.bad_semistable_primes or p not in W.bad_semistable_primes)):
-                raise NotImplementedError("Currently tensor products of " +
-                                          "Galois representations are only" +
-                                          "implemented under some conditions.\n" +
-                                          "Here the behaviour at %s is too wild as" +
-                                          "the rep is not semistable for both factors."%p)
+                raise NotImplementedError("Currently tensor products of Galois representations are only implemented under some conditions.",
+                                          "The behaviour at %d is too wild (both factors must be semistable)." % p)
 
         # check for the possibily of getting poles
         if V.weight == W.weight and V.conductor == W.conductor :
@@ -690,14 +682,14 @@ def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
                 E2.append(L2[q-1])
             e1 = list_to_euler_factor(E1,f+1)
             e2 = list_to_euler_factor(E2,f+1)
-            ld1 = d1
-            ld2 = d2
+            # ld1 = d1 # not used
+            # ld2 = d2 # not used
         else: # either convolve, or have one input be the answer and other 1-t
             i = BadPrimes.index(p)
             e1 = BadPrimeInfo[i][1]
             e2 = BadPrimeInfo[i][2]
-            ld1 = e1.degree()
-            ld2 = e2.degree()
+            # ld1 = e1.degree() # not used
+            # ld2 = e2.degree() # not used
             F = e1.list()[0].parent().fraction_field()
             R = PowerSeriesRing(F, "T", default_prec=f+1)
             e1 = R(e1)
@@ -812,7 +804,7 @@ def list_to_euler_factor(L,d):
     else:
         K = L[0].parent()
     R = PowerSeriesRing(K, "T")
-    T = R.gens()[0]
+    # T = R.gens()[0]
     f =  1/ R([1]+L)
     f = f.add_bigoh(d+1)
     return f
@@ -937,7 +929,7 @@ def test_tensprod_11a_17a():
 ### comparison with previous implementation.
 
 #sage: E = EllipticCurve("11a1")
-#sage: from lmfdb.tensor_products.galois_reps import *
+#sage: from lmfdb.tensor_products.galois_reps import GaloisRepresentation
 #sage: V = GaloisRepresentation(E)
 #sage: V.lfunction()
 #sage: V.dirichlet_coefficients[:10]

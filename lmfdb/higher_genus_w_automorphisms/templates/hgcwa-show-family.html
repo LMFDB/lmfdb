@@ -1,0 +1,65 @@
+{% extends "homepage.html" %}
+
+<!-- in templates -->
+
+{% block content %}
+
+<style>
+table,td {
+  border-right:solid 30px transparent;
+} 
+</style>
+
+
+
+
+<p><h2> Family Information</h2>
+
+  <table>
+      <tr><td> {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
+      <tr><td>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family:')}}</td><td> {{info.dim}} </td></tr>
+    </table>
+</p>
+
+
+<h2>Cover</h2><table>
+      <tr><td> {{KNOWL('curve.highergenus.aut.quotientgenus',title='Quotient genus')}}: </td> <td>{{info.g0}}</td></tr>
+      <tr><td> Number of {{ KNOWL('curve.highergenus.aut.branchpoints', title='branch points') }}: </td> <td>{{info.r}}</td></tr>
+      <tr><td> {{ KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
+      </table> 
+
+
+<p> <h2>Group </h2>
+  <table>
+   {% if info.specialname %}
+   <tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr>
+   {% endif %}
+     <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td><td>{{info.gpid}}</td></tr>
+    </table>
+
+</p>
+
+
+<p> <h2> Conjugacy Class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined Passports')}} </h2>
+
+<table>
+  <tr>
+     <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+  <th>Lists of Conjugacy Classes</th>
+ 
+</tr>
+{% for itm in info.passport %}
+<tr>
+  <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
+  <td class="center">{{itm[0]}}</td>
+
+</tr>
+{% endfor %}
+</table>
+  
+
+</p>
+
+
+  
+{% endblock %}

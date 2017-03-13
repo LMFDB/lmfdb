@@ -4,17 +4,14 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
-import flask
 from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, redirect
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, make_logger, list_to_latex_matrix, random_object_from_collection
-from lmfdb.search_parsing import LIST_RE, clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start
-import os
+from lmfdb.base import app
+from flask import render_template, request, url_for, redirect
+from lmfdb.utils import to_dict, list_to_latex_matrix, random_object_from_collection
+from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start
 import re
 import bson
 from lmfdb.galois_groups import galois_groups_page, logger
-import sage.all
 from sage.all import ZZ, latex, gap
 
 # Test to see if this gap installation knows about transitive groups
@@ -25,7 +22,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_pretty, group_display_long, group_display_inertia, group_knowl_guts, galois_module_knowl_guts, subfield_display, otherrep_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, galois_module_knowl
+from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
 
 from lmfdb.WebNumberField import modules2string
 
@@ -88,6 +85,9 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 @galois_groups_page.route("/<label>")
 def by_label(label):
+    clean_label = clean_input(label)
+    if clean_label != label:
+        return redirect(url_for('.by_label', label=clean_label), 301)
     return render_group_webpage({'label': label})
 
 
@@ -103,26 +103,27 @@ def index():
                 ('Galois group labels', url_for(".labels_page"))]
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore)
 
-
-@galois_groups_page.route("/search", methods=["GET", "POST"])
-def search():
-    if request.method == "GET":
-        val = request.args.get("val", "no value")
-        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-        return render_template("gg-search.html", title="Galois Group Search", bread=bread, val=val)
-    elif request.method == "POST":
-        return "ERROR: we always do http get to explicitly display the search parameters"
-    else:
-        return flask.redirect(404)
+# FIXME: delete or fix this code
+# Apparently obsolete code that causes a server error if executed
+# @galois_groups_page.route("/search", methods=["GET", "POST"])
+# def search():
+#    if request.method == "GET":
+#        val = request.args.get("val", "no value")
+#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
+#        return render_template("gg-search.html", title="Galois Group Search", bread=bread, val=val)
+#    elif request.method == "POST":
+#        return "ERROR: we always do http get to explicitly display the search parameters"
+#    else:
+#        return flask.abort(404)
 
 
 def galois_group_search(**args):
     info = to_dict(args)
+    if info.get('jump_to'):
+        return redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)
     bread = get_bread([("Search results", ' ')])
     C = base.getDBConnection()
     query = {}
-    if 'jump_to' in info:
-        return render_group_webpage({'label': info['jump_to']})
 
     def includes_composite(s):
         s = s.replace(' ','').replace('..','-')
@@ -231,6 +232,14 @@ def render_group_webpage(args):
         data['subinfo'] = subfield_display(C, n, data['subs'])
         data['resolve'] = resolve_display(C, data['resolve'])
         data['otherreps'] = wgg.otherrep_list()
+        ae = wgg.arith_equivalent()
+        if ae>0:
+            if ae>1:
+                data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'% ae
+            else:
+                data['arith_equiv'] = r'A number field with this Galois group has exactly one <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> field.'
+        else:
+            data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
         if len(data['otherreps']) == 0:
             data['otherreps']="There is no other low degree representation."
         query={'galois': bson.SON([('n', n), ('t', t)])}
@@ -285,7 +294,7 @@ def search_input_error(info, bread):
 @galois_groups_page.route("/random")
 def random_group():
     label = random_object_from_collection(base.getDBConnection().transitivegroups.groups)['label']
-    return redirect(url_for(".by_label", label=label), 301)
+    return redirect(url_for(".by_label", label=label), 307)
 
 @galois_groups_page.route("/Completeness")
 def completeness_page():

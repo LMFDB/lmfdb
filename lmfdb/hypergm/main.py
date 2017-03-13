@@ -5,16 +5,12 @@
 import re
 import pymongo
 ASC = pymongo.ASCENDING
-import flask
 from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, image_callback
+from flask import render_template, request, url_for
+from lmfdb.utils import to_dict, image_callback
 from lmfdb.search_parsing import parse_range2, clean_input, split_list
-from sage.all import ZZ, var, PolynomialRing, QQ, latex, gp
-from lmfdb.hypergm import hypergm_page, hgm_logger
-
-from lmfdb.transitive_group import *
+from sage.all import ZZ, QQ, latex, gp
+from lmfdb.hypergm import hypergm_page
 
 HGM_credit = 'D. Roberts'
 
@@ -166,21 +162,23 @@ def by_family_label(label):
 def by_label(label, t):
     return render_hgm_webpage({'label': label+'_'+t})
 
-@hypergm_page.route("/search", methods=["GET", "POST"])
-def search():
-    if request.method == "GET":
-        val = request.args.get("val", "no value")
-        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-        return render_template("hgm-search.html", title="Hypergeometric Motive Search", bread=bread, val=val)
-    elif request.method == "POST":
-        return "ERROR: we always do http get to explicitly display the search parameters"
-    else:
-        return flask.redirect(404)
+# FIXME: delete or fix this code
+# Apparently obsolete code that causes a server error if executed
+#@hypergm_page.route("/search", methods=["GET", "POST"])
+#def search():
+#    if request.method == "GET":
+#        val = request.args.get("val", "no value")
+#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
+#        return render_template("hgm-search.html", title="Hypergeometric Motive Search", bread=bread, val=val)
+#    elif request.method == "POST":
+#        return "ERROR: we always do http get to explicitly display the search parameters"
+#    else:
+#        return flask.abort(404)
     
 
 def hgm_search(**args):
     info = to_dict(args)
-    bread = get_bread([("Search results", url_for('.search'))])
+    bread = get_bread([("Search results", '')])
     C = base.getDBConnection()
     query = {}
     if 'jump_to' in info:
@@ -199,7 +197,7 @@ def hgm_search(**args):
                 query[param].sort()
             else:
                 name = param
-                if field == 'hodge':
+                if name == 'hodge':
                     name = 'Hodge vector'
                 info['err'] = 'Error parsing input for %s.  It needs to be a list of integers in square brackets, such as [2,3] or [1,1,1]' % name
                 return search_input_error(info, bread)

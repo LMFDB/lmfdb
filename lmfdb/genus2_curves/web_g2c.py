@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-from pymongo import ASCENDING, DESCENDING
+
+from pymongo import ASCENDING
 from ast import literal_eval
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
-from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, real, sqrt, var, expand
+from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.genus2_curves import g2c_logger
+from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, real, sqrt, var, expand, nth_prime
 from sage.plot.text import text
 from flask import url_for
 
@@ -20,6 +23,9 @@ def g2c_db_curves():
 def g2c_db_endomorphisms():
     return getDBConnection().genus2_curves.endomorphisms
 
+def g2c_db_lfunction_by_hash(hash):
+    return getDBConnection().Lfunctions.Lfunctions.find_one({'Lhash':hash})
+
 # TODO: switch to Lfunctions datbase once all instance data has been moved there (wait until #433 is closed before doing this)
 def g2c_db_lfunction_instances():
     return getDBConnection().genus2_curves.Lfunctions.instances
@@ -32,6 +38,9 @@ def g2c_db_isogeny_classes_count():
 ###############################################################################
 # Pretty print functions
 ###############################################################################
+
+def bool_pretty(v):
+    return 'yes' if v else 'no'
 
 def intlist_to_poly(s):
     return latex(PolynomialRing(QQ, 'x')(s))
@@ -114,21 +123,13 @@ def ring_pretty(L, f):
         return r'\Z [' + (str(f//2) if f != 2 else "") + r'\sqrt{' + str(D) + r'}]'
     return r'\Z [\frac{1 +' + str(f) + r'\sqrt{' + str(D) + r'}}{2}]'
 
-def st_group_name(st_group):
-    return '\\mathrm{USp}(4)' if st_group == 'USp(4)' else st_group
-
-def url_for_st_group(st_group):
-    return url_for('st.by_label', label='1.4.'+st_group)
-    
-def st_group_href(st_group):
-    return '<a href="%s">$%s$</a>' % (url_for_st_group(st_group),st_group_name(st_group))
-
 # currently galois functionality is not used here, but it is used in lfunctions so don't delete it
-def list_to_factored_poly_otherorder(s, galois=False):
+def list_to_factored_poly_otherorder(s, galois=False, vari = 'T'):
     """ Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
         and the second entry a list describing the Galois groups
         of the factors.
+        vari allows to choose the variable of the polynomial to be returned.
     """
     gal_list=[]
     if len(s) == 1:
@@ -154,7 +155,7 @@ def list_to_factored_poly_otherorder(s, galois=False):
             this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
             this_number_field = NumberField(this_poly, "a")
             this_gal = this_number_field.galois_group(type='pari')
-            this_t_number = this_gal.group()._pari_()[2]._sage_()
+            this_t_number = this_gal.group()._pari_()[2].sage()
             gal_list.append([this_degree, this_t_number])
         vcf = v[0].list()
         started = False
@@ -173,9 +174,9 @@ def list_to_factored_poly_otherorder(s, galois=False):
                     elif vcf[i] == -1:
                         outstr += '-'
                     if i == 1:
-                        outstr += 'T'
+                        outstr += vari #instead of putting in T for the variable, put in a variable of your choice
                     elif i > 1:
-                        outstr += 'T^{' + str(i) + '}'
+                        outstr += vari + '^{' + str(i) + '}'
         if len(sfacts) > 1 or v[1] > 1:
             outstr += ')'
         if v[1] > 1:
@@ -407,9 +408,6 @@ def end_field_statement(field_label, poly):
         return """Smallest field over which all endomorphisms are defined:<br>
         Galois number field \(K = \Q (a)\) with defining polynomial \(%s\)""" % poly
 
-def st_group_statement(group):
-    return """Sato-Tate group: \(%s\)""" % group
-
 def end_lattice_statement(lattice):
     statement = ''
     for ED in lattice:
@@ -424,7 +422,7 @@ def end_lattice_statement(lattice):
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1]))
         statement += """:<br>"""
         statement += end_statement(ED[1], ED[2], field=r'F', ring=ED[3])
-        statement += st_group_statement(ED[4])
+        statement += """Sato Tate group: %s""" % st_link_by_name(1,4,ED[4])
         statement += """<br>"""
         statement += gl2_simple_statement(ED[1], ED[2])
         statement += """<p></p>"""
@@ -441,7 +439,7 @@ def split_field_statement(is_simple_geom, field_label, poly):
         return """Splits over the number field \(\Q (b) \simeq \) <a href=%s>%s</a> with defining polynomial:<br>&nbsp;&nbsp;\(%s\)"""\
             % (url, pretty, poly)
     else:
-        return """Splits over the number field \(\Q (b)\) with defining polynomialL<br>&nbsp;&nbsp%s""" % poly
+        return """Splits over the number field \(\Q (b)\) with defining polynomial:<br>&nbsp;&nbsp;\(%s\)""" % poly
 
 def split_statement(coeffs, labels, condnorms):
     if len(coeffs) == 1:
@@ -511,8 +509,7 @@ class WebG2C(object):
         """
         Searches for a specific genus 2 curve or isogeny class in the curves collection by its label.
         It label is an isogeny class label, constructs an object for an arbitrarily chosen curve in the isogeny class
-        Constructs the WebG2C object if the curve is found, returns an error message string otherwise
-        The caller must check the type of the return value and display the error message if appropriate
+        Constructs the WebG2C object if the curve is found, raises an error otherwise
         """
         try:
             slabel = label.split(".")
@@ -521,21 +518,22 @@ class WebG2C(object):
             elif len(slabel) == 4:
                 curve = g2c_db_curves().find_one({"label" : label})
             else:
-                return "Invalid genus 2 isogeny class label"
+                raise ValueError("Invalid genus 2 label %s." % label)
         except AttributeError:
-            return "Invalid genus 2 isogeny class label"
+            raise ValueError("Invalid genus 2 label %s." % label)
         if not curve:
             if len(slabel) == 2:
-                return "Genus 2 isogeny class %s not found in database" % label
+                raise KeyError("Genus 2 isogeny class %s not found in the database." % label)
             else:
-                return "Genus 2 curve %s not found in database" % label
+                raise KeyError("Genus 2 curve %s not found in database." % label)
         endo = g2c_db_endomorphisms().find_one({"label" : curve['label']})
         if not endo:
-            return "Genus 2 endomorphism data for curve %s not found in database" % label
+            g2c_logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
+            raise KeyError("Endomorphism data for genus 2 curve %s not found in database." % label)
         return WebG2C(curve, endo, is_curve=(len(slabel)==4))
 
     def make_object(self, curve, endo, is_curve):
-        from lmfdb.genus2_curves.genus2_curve import url_for_curve_label
+        from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
@@ -549,13 +547,12 @@ class WebG2C(object):
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
-        data['st_group_name'] = st_group_name(curve['st_group'])
-        data['st_group_href'] = st_group_href(curve['st_group'])
+        data['st_group'] = curve['st_group']
+        data['st_group_link'] = st_link_by_name(1,4,data['st_group'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
         data['is_gl2_type'] = curve['is_gl2_type']
-        data['is_gl2_type_name'] = 'yes' if data['is_gl2_type'] else 'no'
-        data['is_gl2_type_display'] = '&#x2713;' if data['is_gl2_type'] else ''
         data['root_number'] = ZZ(curve['root_number'])
+        data['lfunc_url'] = url_for("l_functions.l_function_genus2_page", cond=data['slabel'][0], x=data['slabel'][1])
         data['bad_lfactors'] = literal_eval(curve['bad_lfactors'])
         data['bad_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
 
@@ -588,10 +585,16 @@ class WebG2C(object):
             data['end_ring_geom'] = endo['ring_geom']
         else:
             # invariants specific to isogeny class
-            curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'min_eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
-            assert curves_data
-            data['curves'] = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(c['min_eqn']), "url": url_for_curve_label(c['label'])} for c in curves_data ]
-
+            curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
+            if not curves_data:
+                raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." %(curve['class'],curve['label']))
+            data['curves'] = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
+            lfunc_data = g2c_db_lfunction_by_hash(curve['Lhash'])
+            if not lfunc_data:
+                raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." %curve['label'])
+            if lfunc_data and lfunc_data.get('euler_factors'):
+                data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
+                data['good_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['good_lfactors']]
         # Endomorphism data over QQ:
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
         data['factorsQQ_base'] = endo['factorsQQ_base']
@@ -642,16 +645,16 @@ class WebG2C(object):
                 (None, plot_link),
                 ('Conductor',str(data['cond'])),
                 ('Discriminant', str(data['disc'])),
-                ('Invariants', '%s </br> %s </br> %s </br> %s' % tuple(data['igusa_clebsch']))
                 ]
         properties += [
-            ('Sato-Tate group', data['st_group_href']),
+            ('Sato-Tate group', data['st_group_link']),
             ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\)', '\(%s\)' % data['real_geom_end_alg_name']),
-            ('\(\mathrm{GL}_2\)-type', data['is_gl2_type_name'])
+            ('\(\\overline{\\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
+            ('\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]
 
         # Friends
-        self.friends = friends = [('L-function', url_for("l_functions.l_function_genus2_page", cond=data['slabel'][0], x=data['slabel'][1]))]
+        self.friends = friends = [('L-function', data['lfunc_url'])]
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
         for friend in g2c_db_lfunction_instances().find({'Lhash':data['Lhash']},{'_id':False,'url':True}):

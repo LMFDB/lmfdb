@@ -2,19 +2,16 @@
 # This Blueprint is about Local Number Fields
 # Author: John Jones
 
-import re
 import pymongo
-ASC = pymongo.ASCENDING
-import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, redirect
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, random_object_from_collection
+from flask import render_template, request, url_for, redirect
+from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, random_object_from_collection
 from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input
-from sage.all import ZZ, var, PolynomialRing, QQ
+from sage.all import PolynomialRing, QQ
 from lmfdb.local_fields import local_fields_page, logger
 
-from lmfdb.transitive_group import *
+from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia
 
 LF_credit = 'J. Jones and D. Roberts'
 
@@ -82,28 +79,18 @@ def index():
 
 @local_fields_page.route("/<label>")
 def by_label(label):
+    clean_label = clean_input(label)
+    if label != clean_label:
+        return redirect(url_for('.by_label',label=clean_label), 301)
     return render_field_webpage({'label': label})
-
-
-@local_fields_page.route("/search", methods=["GET", "POST"])
-def search():
-    if request.method == "GET":
-        val = request.args.get("val", "no value")
-        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-        return render_template("lf-search.html", title="Local Number Field Search", bread=bread, val=val)
-    elif request.method == "POST":
-        return "ERROR: we always do http get to explicitly display the search parameters"
-    else:
-        return flask.redirect(404)
-
 
 def local_field_search(**args):
     info = to_dict(args)
     bread = get_bread([("Search results", ' ')])
     C = base.getDBConnection()
     query = {}
-    if 'jump_to' in info:
-        return render_field_webpage({'label': info['jump_to']})
+    if info.get('jump_to'):
+        return redirect(url_for(".by_label",label=info['jump_to']), 301)
 
     try:
         parse_galgrp(info,query,'gal', use_bson=False)
@@ -156,7 +143,7 @@ def render_field_webpage(args):
             info['err'] = "Field " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Local Number Field:' + label
+        title = 'Local Number Field ' + label
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
         e = data['e']
@@ -235,9 +222,9 @@ def show_slope_content(sl,t,u):
     if sc == '[]':
         sc = r'[\ ]'
     if t>1:
-        sc += '_%d'%t
+        sc += '_{%d}'%t
     if u>1:
-        sc += '^%d'%u
+        sc += '^{%d}'%u
     return(sc)
 
 def printquad(code, p):
@@ -259,7 +246,7 @@ def search_input_error(info, bread):
 @local_fields_page.route("/random")
 def random_field():
     label = random_object_from_collection(base.getDBConnection().localfields.fields)['label']
-    return redirect(url_for(".by_label", label=label), 301)
+    return redirect(url_for(".by_label", label=label), 307)
 
 @local_fields_page.route("/Completeness")
 def completeness_page():

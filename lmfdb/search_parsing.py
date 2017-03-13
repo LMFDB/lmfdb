@@ -1,5 +1,7 @@
 # -*- encoding: utf-8 -*-
 
+## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
+
 import re
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
@@ -12,8 +14,9 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
 FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
+BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 
-from flask import flash, redirect, url_for, request
+from flask import flash
 from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
 from sage.misc.decorators import decorator_keywords
 
@@ -84,6 +87,39 @@ def split_list(s):
         return [int(a) for a in s.split(",")]
     return []
 
+# This function can be used by modules to get a list of ints
+# or an iterator (xrange) that matches the results of parse_ints below
+# useful when a module wants to iterator over key values being
+# passed into a mongo query.  Input should be a string
+def parse_ints_to_list(arg):
+    if arg == None:
+        return []
+    s = str(arg)
+    s = s.replace(' ','')
+    if not s:
+        return []
+    if s[0] == '[' and s[-1] == ']':
+        s = s[1:-1]
+    if ',' in s:
+        return [int(n) for n in s.split(',')]
+    if '-' in s[1:]:
+        i = s.index('-',1)
+        min, max = s[:i], s[i+1:]
+        return xrange(int(min),int(max)+1)
+    if '..' in s:
+        i = s.index('..',1)
+        min, max = s[:i], s[i+2:]
+        return xrange(int(min),int(max)+1)
+    return [int(s)]
+
+def parse_ints_to_list_flash(arg,name):
+    try:
+        return parse_ints_to_list(arg)
+    except ValueError:
+        errmsg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>." % (arg,name)
+        flash(Markup(errmsg+"  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)."), "error")
+        raise
+
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_list(inp, query, qfield, process=None):
     """
@@ -96,7 +132,7 @@ def parse_list(inp, query, qfield, process=None):
     if process is not None:
         query[qfield] = process(out)
     else:
-        query[qfield]=out
+        query[qfield] = out
 
 def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     # TODO: graceful errors
@@ -119,10 +155,8 @@ def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
     else:
         return parse_singleton(arg)
 
-
 # version above does not produce legal results when there is a comma
 # to deal with $or, we return [key, value]
-
 def parse_range2(arg, key, parse_singleton=int):
     if type(arg) == str:
         arg = arg.replace(' ', '')
@@ -150,7 +184,7 @@ def parse_range3(arg, name, split0 = False):
     if type(arg) == str:
         arg = arg.replace(' ', '')
     if ',' in arg:
-        return sum([parse_discs(a) for a in arg.split(',')],[])
+        return sum([parse_range3(a, name, split0) for a in arg.split(',')],[])
     elif '-' in arg[1:]:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
@@ -226,12 +260,15 @@ def parse_signed_ints(inp, query, qfield, parse_one=None):
             iquery = []
             for x in parsed:
                 if type(x) == list:
-                    s0, d0 = parse_one(x[0])
-                    s1, d1 = parse_one(x[1])
-                    if s0 < 0:
-                        abs_D = {'$gte': d1, '$lte': d0}
+                    if len(x) == 1:
+                        s0, abs_D = parse_one(x[0])
                     else:
-                        abs_D = {'$lte': d1, '$gte': d0}
+                        s0, d0 = parse_one(x[0])
+                        s1, d1 = parse_one(x[1])
+                        if s0 < 0:
+                            abs_D = {'$gte': d1, '$lte': d0}
+                        else:
+                            abs_D = {'$lte': d1, '$gte': d0}
                 else:
                     s0, abs_D = parse_one(x)
                 if sign_field is None:
@@ -281,7 +318,7 @@ def parse_primes(inp, query, qfield, mode=None, to_string=False):
         raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None):
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False):
     if process is None: process = lambda x: x
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
@@ -322,42 +359,48 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         if split:
             query[qfield] = [process(int(a)) for a in inp[1:-1].split(',')]
         else:
-            query[qfield] = inp[1:-1]
+            query[qfield] = inp if keepbrackets else inp[1:-1]
+
+def parse_gap_id(info, query, field='group', name='group', qfield='group'):
+    parse_bracketed_posints(info,query,'group', split=False, exactlength=2, keepbrackets=True, name='Group')
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield, use_bson=True):
-    from lmfdb.transitive_group import complete_group_codes, make_galois_pair
-    if not use_bson:
-        make_galois_pair = lambda x,y: [x,y]
+    from lmfdb.transitive_group import complete_group_codes
+    from lmfdb.transitive_group import make_galois_pair as _make_galois_pair
+    make_galois_pair = _make_galois_pair if use_bson else lambda x,y: [x,y]
     try:
         gcs = complete_group_codes(inp)
         if len(gcs) == 1:
             query[qfield] = make_galois_pair(gcs[0][0], gcs[0][1])
         elif len(gcs) > 1:
             query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
-    except NameError as code:
+    except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
 
 def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
     if F == 'Q':
         return '1.1.1.1'
-    if F == 'Qi':
+    if F == 'Qi' or F == 'Q(i)':
         return '2.0.4.1'
     # Change unicode dash with minus sign
     F = F.replace(u'\u2212', '-')
     # remove non-ascii characters from F
     F = F.decode('utf8').encode('ascii', 'ignore')
-    fail_string = str(F + ' is not a valid field label or name or polynomial, or is not ')
     if len(F) == 0:
         raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
     if F[0] == 'Q':
+        if '(' in F and ')' in F:
+            F=F.replace('(','').replace(')','')
         if F[1:5] in ['sqrt', 'root']:
             try:
                 d = ZZ(str(F[5:])).squarefree_part()
-            except ValueError:
+            except (TypeError, ValueError):
                 d = 0
             if d == 0:
                 raise ValueError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(F[:5]))
+            if d == 1:
+                return '1.1.1.1'
             if d % 4 in [2, 3]:
                 D = 4 * d
             else:
@@ -366,6 +409,8 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             s = 0 if D < 0 else 2
             return '2.%s.%s.1' % (s, str(absD))
         if F[1:5] == 'zeta':
+            if '_' in F:
+                F = F.replace('_','')
             try:
                 d = ZZ(str(F[5:]))
             except ValueError:
@@ -381,7 +426,7 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
                 raise ValueError('%s is not in the database.' % F)
             adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
             return '%s.0.%s.1' % (deg, adisc)
-        return fail_string
+        raise ValueError('It is not a valid field name or label, or a defining polynomial.')
     # check if a polynomial was entered
     F = F.replace('X', 'x')
     if 'x' in F:
@@ -391,11 +436,11 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         F1 = poly_to_field_label(F1)
         if F1:
             return F1
-        raise ValueError('%s is not in the database.'%F)
+        raise ValueError('%s does not define a number field in the database.'%F)
     # Expand out factored labels, like 11.11.11e20.1
+    if not re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',F):
+        raise ValueError("It must be of the form d.r.D.n, such as 2.2.5.1.")
     parts = F.split(".")
-    if len(parts) != 4:
-        raise ValueError("It must be of the form <deg>.<real_emb>.<absdisc>.<number>, such as 2.2.5.1.")
     def raise_power(ab):
         if ab.count("e") == 0:
             return ZZ(ab)
@@ -513,6 +558,37 @@ def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, pars
         query.update(L[0])
     else:
         collapse_ors(['$or',L], query)
+
+@search_parser
+def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
+    bparts = BRACKETING_RE.split(inp)
+    parts = []
+    for part in bparts:
+        if not part:
+            continue
+        if part[0] == '[':
+            parts.append(part)
+        else:
+            subparts = part.split(',')
+            for subpart in subparts:
+                subpart = subpart.strip()
+                if subpart:
+                    parts.append(subpart)
+    def make_sub_query(part):
+        sub_query = {}
+        if part[0] == '[':
+            ispec = part[1:-1].split(',')
+            for i, val in enumerate(ispec):
+                key = qfield + '.' + str(i+index_shift)
+                sub_query[key] = parse_range2(val, key, parse_singleton)[1]
+        else:
+            key = qfield + '.' + str(index_shift)
+            sub_query[key] = parse_range2(part, key, parse_singleton)[1]
+        return sub_query
+    if len(parts) == 1:
+        query.update(make_sub_query(parts[0]))
+    else:
+        collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
 
 def parse_count(info, default=20):
     try:

@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
 
 class EcnfIsogClassTest(LmfdbTest):
 
@@ -11,15 +9,15 @@ class EcnfIsogClassTest(LmfdbTest):
         r"""
         Check rendering of title name of ECNF isogeny class.
         """
-        L = self.tc.get('/EllipticCurve/2.0.7.1/%5B16%2C10%2C1%5D/CMa/').data
-        assert 'Elliptic curves in class [16,10,1]-CMa' in L
+        L = self.tc.get('/EllipticCurve/2.0.7.1/16.10.1/CMa/').data
+        assert 'Elliptic curves in class 16.10.1-CMa' in L
 
     def test_ecnf_label_in_isgclass(self):
         r"""
         Check curve in ECNF isogeny class by label.
         """
-        L = self.tc.get('/EllipticCurve/2.0.3.1/%5B2268%2C36%2C18%5D/a/').data
-        assert '[2268,36,18]-a5' in L
+        L = self.tc.get('/EllipticCurve/2.0.3.1/2268.36.18/a/').data
+        assert '2268.36.18-a5' in L
 
     def test_ecnf_weiercoeffs_in_isgclass(self):
         r"""

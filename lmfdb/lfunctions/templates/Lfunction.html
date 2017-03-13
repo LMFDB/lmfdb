@@ -137,7 +137,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
         <tr>
         <td> {{ KNOWL('g2c.st_group', title="Sato-Tate") }} </td>
         <td>&nbsp;:&nbsp;</td>
-        <td> {{ st_group }}
+        <td> {{ st_link | safe}}
         </td>
         </tr>
 
@@ -304,8 +304,8 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
  <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
 
- {% if zeroeslink %}
-     <div><span id="zeroes"></span></div>
+ {% if zeroslink %}
+     <div><span id="zeros"></span></div>
  {% elif tpzeroslink %}
      {{zeroswarning}}.
      <div><span id="tpzeros">{{tpzeroslink|safe}}</span></div>
@@ -328,7 +328,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
 <script type="text/javascript">
   $(function() {
-      $("#zeroes").load("{{ zeroeslink|safe }}");
+      $("#zeros").load("{{ zeroslink|safe }}");
   });
   
 </script>

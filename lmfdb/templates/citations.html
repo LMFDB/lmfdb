@@ -1,0 +1,20 @@
+{% extends 'homepage.html' %}
+{% import 'color.css' as color %}
+{% block content %}
+
+<p>
+The following items cite the LMFDB.  This list was last updated on
+25 January 2017.  Please report any omissions
+via <a href="mailto:lmfdb-support@googlegroups.com"
+target="_blank">email</a> to
+the <a href="http://groups.google.co.uk/d/forum/lmfdb-support"
+target="_blank">LMFDB mailing list</a>.
+
+</p>
+
+<div>
+{% include "citations_content.html" %}
+</div>
+
+
+{% endblock %}

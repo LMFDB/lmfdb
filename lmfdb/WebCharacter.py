@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
 from sage.misc.cachefunc import cached_method
-from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp
+from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp, xsrange
 import re
 from flask import url_for
+import lmfdb
 from lmfdb.utils import make_logger
 logger = make_logger("DC")
 from WebNumberField import WebNumberField
@@ -66,7 +67,6 @@ def evalpolelt(label,gen,genlabel='a'):
         ( '*' and '**' are removed )                                            
     """                                                                         
     res = 0                                                                     
-    import re                                                                   
     regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?'%genlabel                         
     for m in re.finditer(regexp,label):                                         
         s,c,e = m.groups()                                                      
@@ -297,7 +297,7 @@ class WebDirichlet(WebCharObject):
     def _compute(self):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
-            self.H = H = DirichletGroup_conrey(m)
+            self.H = DirichletGroup_conrey(m)
         self.credit = 'SageMath'
         self.codelangs = ('pari', 'sage')
 
@@ -321,6 +321,10 @@ class WebDirichlet(WebCharObject):
         else:
             H = DirichletGroup_conrey(mod)
         return H[num].is_primitive()
+
+    @property
+    def gens(self):
+        return map(int, self.H.gens())
 
     @property
     def generators(self):
@@ -356,14 +360,14 @@ class WebDirichlet(WebCharObject):
     @cached_method
     def Gelts(self):
         res = []
-        m,n = self.modulus, 1
-        for k in xrange(1,m):
+        m,n,k = self.modulus, 1, 1
+        while k < m and n <= self.maxcols:
             if gcd(k,m) == 1:
                 res.append(k)
                 n += 1
-                if n > self.maxcols:
-                  self.coltruncate = True
-                  break
+            k += 1
+        if n > self.maxcols:
+          self.coltruncate = True
 
         return res
 
@@ -380,9 +384,11 @@ class WebDirichlet(WebCharObject):
             return 2, 1
         if n == m - 1:
             return m + 1, 1
-        for k in xrange(n + 1, m):
+        k = n+1
+        while k < m:
             if gcd(m, k) == 1:
                 return m, k
+            k += 1
         raise Exception("nextchar")
 
     @staticmethod
@@ -394,9 +400,11 @@ class WebDirichlet(WebCharObject):
             m, n = m - 1, m
         if m <= 2:
             return m, 1  # important : 2,2 is not a character
-        for k in xrange(n - 1, 0, -1):
+        k = n-1
+        while k > 0:
             if gcd(m, k) == 1:
                 return m, k
+            k -= 1
         raise Exception("prevchar")
 
     @staticmethod
@@ -449,8 +457,8 @@ class WebHecke(WebCharObject):
     def _compute(self):
         self.k = self.label2nf(self.nflabel)
         self._modulus = self.label2ideal(self.k, self.modlabel)
-        self.G = G = RayClassGroup(self.k, self._modulus)
-        self.H = H = self.G.dual_group()
+        self.G = RayClassGroup(self.k, self._modulus)
+        self.H = self.G.dual_group()
         #self.number = lmfdb_label2hecke(self.numlabel)
         # make this canonical
         self.modlabel = self.ideal2label(self._modulus)
@@ -546,8 +554,8 @@ class WebHecke(WebCharObject):
         return s
 
     @staticmethod
-    def group2label(x):
-        return number2label(x.exponents())
+    def group2label(self,x):
+        return self.number2label(x.exponents())
 
     def label2group(self,x):
         """ x is either an element of k or a tuple of ints or an ideal """
@@ -650,7 +658,7 @@ class WebCharGroup(WebCharObject):
     _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
             'nfpol', 'modulus', 'modlabel', 'texname', 'codeinit', 'previous',
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
-            'codeorder', 'generators', 'codegen', 'valuefield', 'vflabel',
+            'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties2', 'friends', 'rowtruncate', 'coltruncate'] 
 
@@ -707,7 +715,8 @@ class WebCharGroup(WebCharObject):
 
     @property
     def properties2(self):
-        return [("Structure", [self.structure]),
+        return [("Modulus", [self.modulus]),
+                ("Structure", [self.structure]),
                 ("Order", [self.order]),
                 ]
 
@@ -803,13 +812,11 @@ class WebChar(WebCharObject):
             vf = r'\(\Q(i)\)'
         else:
             vf = r'\(\Q(\zeta_{%d})\)' % order2
-        self._order2 = order2
         return vf
 
     @property
     def vflabel(self):
-      _ = self.valuefield # make sure valuefield was computed
-      order2 = self._order2
+      order2 = self.order if self.order % 4 != 2 else self.order / 2
       if order2 == 1:
           return '1.1.1.1'
       elif order2 == 4:
@@ -834,14 +841,15 @@ class WebChar(WebCharObject):
     def friends(self):
         f = []
         cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
-        f.append( ("character group", cglink) )
+        f.append( ("Character Group", cglink) )
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
-            f.append( ('L-function', '/L'+ url_character(type=self.type,
-                                    number_field=self.nflabel,
-                                    modulus=self.modlabel,
-                                    number=self.numlabel) ) )
+            url = url_character(type=self.type, umber_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
+            if lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata(url[1:]):
+                f.append( ('L-function', '/L'+ url) )
+        if self.type == 'Dirichlet':
+            f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
         if len(self.vflabel)>0:
             f.append( ("Value Field", '/NumberField/' + self.vflabel) )
         return f
@@ -892,7 +900,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
 
     @property
     def title(self):
-      return r"Dirichlet Group modulo %s" % (self.modulus)
+      return r"Group of Dirichlet Characters of modulus %s" % (self.modulus)
 
     @property
     def codegen(self):
@@ -920,6 +928,10 @@ class WebSmallDirichletGroup(WebDirichletGroup):
     @property
     def contents(self):
         return None
+
+    @property
+    def gens(self):
+        return self.H.gens_values()
 
     @property
     def generators(self):
@@ -999,7 +1011,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in xrange(1, order) if gcd(k, order) == 1)
+        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
         return ( self._char_desc(num, prim=prim) for num in orbit )
 
     def symbol_numerator(self): 
@@ -1056,7 +1068,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         m = self.modulus
         self.number = n = int(self.numlabel)
         assert gcd(m, n) == 1
-        self.chi = chi = self.H[n]
+        self.chi = self.H[n]
 
     @property
     def previous(self):
@@ -1217,7 +1229,7 @@ class WebHeckeExamples(WebHecke):
         nf = WebNumberField(nflabel)
         #nflink = (nflabel, url_for('number_fields.by_label',label=nflabel))
         nflink = (nflabel, url_for('characters.render_Heckewebpage',number_field=nflabel))
-        F = WebHeckeFamily(number_field=nflabel)
+        #F = WebHeckeFamily(number_field=nflabel)
         self._contents.append( (nflink, nf.signature(), nf.web_poly() ) )
 
 
@@ -1284,7 +1296,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
         WebHecke._compute(self) 
         self.number = self.label2number(self.numlabel)
         assert len(self.number) == self.G.ngens()
-        self.chi = chi = HeckeChar(self.H, self.number)
+        self.chi = HeckeChar(self.H, self.number)
 
         self.zetaorder = 0 # FIXME H.zeta_order()
 

@@ -8,37 +8,36 @@
 <h2> Browse {{ KNOWL('character.dirichlet', title="Dirichlet characters") }}</h2>
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.modulus', title="modulus") }}:
-&nbsp;&nbsp;<a href="?modbrowse=1-25">1&mdash;25</a>
-&nbsp;&nbsp;<a href="?modbrowse=26-50">26&mdash;50</a>
-&nbsp;&nbsp;<a href="?modbrowse=51-75">51&mdash;75</a>
-&nbsp;&nbsp;<a href="?modbrowse=76-100">76&mdash;100</a>
+{% set step = 20 %}
+{% for c in range(1,101,step) %}
+&nbsp;&nbsp;<a href="?modbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
+{% endfor %}
 </p>
 
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.conductor', title="conductor") }}:
-&nbsp;&nbsp;<a href="?condbrowse=1-10">1&mdash;10</a>
-&nbsp;&nbsp;<a href="?condbrowse=11-20">11&mdash;20</a>
-&nbsp;&nbsp;<a href="?condbrowse=21-30">21&mdash;30</a>
-&nbsp;&nbsp;<a href="?condbrowse=31-40">31&mdash;40</a>
+{% set step = 20 %}
+{% for c in range(1,101,step) %}
+&nbsp;&nbsp;<a href="?condbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
+{% endfor %}
 </p>
 
 <p>
 &nbsp;&nbsp;By {{ KNOWL('character.dirichlet.order', title="order") }}:</td>
-&nbsp;&nbsp;<a href="?ordbrowse=1-10">1&mdash;10</a>
-&nbsp;&nbsp;<a href="?ordbrowse=11-20">11&mdash;20</a>
-&nbsp;&nbsp;<a href="?ordbrowse=21-30">21&mdash;30</a>
-&nbsp;&nbsp;<a href="?ordbrowse=31-40">31&mdash;40</a>
+{% set step = 20 %}
+{% for c in range(1,101,step) %}
+&nbsp;&nbsp;<a href="?ordbrowse={{c}}-{{c+step-1}}">{{c}}&mdash;{{c+step-1}}</a>
+{% endfor %}
 </p>
 
 <p>
 &nbsp;&nbsp;A <a href="random">random Dirichlet character</a> from the database</td>
 </p>
 
-<h2> Find a specific {{ KNOWL('character.dirichlet', title="Dirichlet character") }} </h2>
-
+<h2> Find a specific Dirichlet character by {{KNOWL('character.dirichlet.conrey', title="label") }} </h2>
 <form>
-    <input type='text' name='natural' size=10 placeholder="13.2" required>
-    <button type='submit' name='search' value='Go'> Find  </button>
+    <input type='text' name='label' size=10 value="{{args.label}}" placeholder="13.2" required>
+    <button type='submit' name='lookup' value='1'> Find  </button>
     <span class="formexample"> e.g. 13.2 -- represents the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\).</span>
 </form>
 
@@ -48,28 +47,29 @@ Enter criteria into one or more boxes to restrict the search.
 
 <form>
     <table>
-        <tr>    
+        <tr>
             <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</td>
-            <td> <input type='text' name='modulus' size = '10' placeholder="13"></td>
+            <td> <input type='text' name='modulus' value="{{args.modulus}}" size = '10' placeholder="13"></td>
             <td><span class="formexample"> e.g. 13 </span></td>
         </tr>
 
         <tr>
             <td> {{ KNOWL('character.dirichlet.conductor', title="conductor") }} </td>
-            <td> <input type='text' name='conductor' size = '10' placeholder="5"></td>
+            <td> <input type='text' name='conductor' value="{{args.conductor}}" size = '10' placeholder="5"></td>
             <td><span class="formexample"> e.g. 5 </span></td>
         </tr>
 
         <tr>
             <td> {{ KNOWL('character.dirichlet.order', title="order") }} </td>
-            <td> <input type='text' name='order' size = '10' placeholder="2"></td>
+            <td> <input type='text' name='order' value="{{args.order}}" size = '10' placeholder="2"></td>
             <td><span class="formexample"> e.g. 2 </span></td>
         </tr>
     </table>
     <p></p>
     <td>
-        <button type='submit' value='Search' > Search </button>
+        <button type='submit' name='search' value='1' > Search </button>
     </td>
+    <input type='hidden' name='limit' value='25'/>
 </form>
 
 <h2> Create a character table </h2>
@@ -77,16 +77,13 @@ Enter criteria into one or more boxes to restrict the search.
     <table>
         <tr>
             <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }} </td>
-            <td> <input type='text' name='modulus' size='10'
-              placeholder="13" required></td>
+            <td> <input type='text' name='modulus' value="{{args.table_modulus}}" size='10' placeholder="13" required></td>
             <td><span class="formexample"> e.g. 13 </span></td>
         </tr>
     </table>
     <p></p>
     <td>
-        <button type='submit' value='Create' > Create </button>
+        <button type='submit' name='create' value='1' > Create </button>
     </td>
 </form>
 {% endblock %}
-
-

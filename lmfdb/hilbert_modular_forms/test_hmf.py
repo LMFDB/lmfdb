@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
 
 class HMFTest(LmfdbTest):
     def test_home(self):
@@ -52,7 +50,7 @@ class HMFTest(LmfdbTest):
         assert 'no' in L.data
         assert '-6' in L.data
         assert '2w + 10' in L.data
-        assert '1.1.1.1' in L.data
+        assert '\Q' in L.data
         assert '[2, 2]' in L.data
 
     def test_hmf_page_higherdim(self):

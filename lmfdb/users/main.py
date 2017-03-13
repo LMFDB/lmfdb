@@ -8,7 +8,7 @@ ASC = pymongo.ASCENDING
 import flask
 from functools import wraps
 from lmfdb.base import app, getDBConnection
-from flask import render_template, request, abort, Blueprint, url_for, make_response
+from flask import render_template, request, Blueprint, url_for, make_response
 from flask.ext.login import login_required, login_user, current_user, logout_user
 
 login_page = Blueprint("users", __name__, template_folder='templates')
@@ -81,12 +81,17 @@ def base_bread():
 @login_required
 def list():
     import pwdmanager
+    COLS = 5
     users = pwdmanager.get_user_list()
-    # trying to be smart and sorting by last name
-    users = sorted(users, key=lambda x: x[1].split(" ")[-1].lower())
+    # attempt to sort by last name
+    users = sorted(users, key=lambda x: x[1].strip().split(" ")[-1].lower())
+    if len(users)%COLS:
+        users += [{} for i in range(COLS-len(users)%COLS)]
+    n = len(users)/COLS
+    user_rows = zip(*[users[i*n:(i+1)*n] for i in range(COLS)])
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
-                           users=users, bread=bread)
+                           user_rows=user_rows, bread=bread)
 
 
 @login_page.route("/myself")
@@ -123,19 +128,13 @@ def profile(userid):
     #    pass
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
-    userknowls = getDBConnection(
-    ).knowledge.knowls.find({'authors': userid}, ['title']).sort([('title', ASC)])
-    userfiles = getDBConnection(
-    ).upload.fs.files.find({'metadata.uploader_id': userid, 'metadata.status': 'approved'})
-    userfilesmod = getDBConnection(
-    ).upload.fs.files.find({'metadata.uploader_id': userid, 'metadata.status': 'unmoderated'})
+    userknowls = getDBConnection().knowledge.knowls.find({'authors': userid}, ['title']).sort([('title', ASC)])
     return render_template("user-detail.html", user=user,
-                           title="%s" % user.name, bread=bread, userknowls=userknowls, userfiles=userfiles, userfilesmod=userfilesmod)
+                           title="%s" % user.name, bread=bread, userknowls=userknowls)
 
 
 @login_page.route("/login", methods=["POST"])
 def login(**kwargs):
-    bread = base_bread() + [('Login', url_for('.login'))]
     # login and validate the user …
     # remember = True sets a cookie to remmeber the user
     name = request.form["name"]
@@ -289,7 +288,6 @@ def change_password():
 @login_page.route("/logout")
 @login_required
 def logout():
-    bread = base_bread() + [('Login', url_for('.logout'))]
     logout_user()
     flask.flash("You are logged out now. Have a nice day!")
     return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'))

@@ -1,0 +1,278 @@
+{% extends 'homepage.html' %}
+{% import 'color.css' as color %}
+{% block content %}
+
+<!--New table class to avoid spacing in LaTeX-links -->
+<style type="text/css">
+table.g2 a {
+  padding: 0;
+}
+
+<style>
+.toggle {margin-top:5px; margin-left:20px;}
+div.properties-body table tr td.label { vertical-align: top; }
+#content > h2.subhead { color:{{color.black}};}
+</style>
+
+<script>
+var cur_invstyle = null;
+function show_invs(invstyle) {
+    $('.igusa_clebsch').hide();
+    $('.igusa').hide();
+    $('.G2').hide();
+    $('.'+invstyle).show();
+  }
+</script>
+
+<script type="text/javascript"
+        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+<script type="text/javascript"
+        src="http://place_code.jquery.com/jquery-latest.min.js"></script>
+{#
+<script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
+#}
+
+{% set KNOWL_ID = "g2c.%s"|format(data['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+
+<h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
+{{place_code('curve')}}
+
+<p> ${{ data.min_eqn_display }}$ </p>
+
+<h2> {{ KNOWL('g2c.invariants', title='Invariants') }}  </h2>
+
+<table>
+    <tr>
+        <td colspan="6">
+            {{place_code('cond')}}
+        </td>
+    </tr>
+    <tr>
+        <td> \( N \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\( {{ data.cond }} \)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.cond_factor_latex }}</td>
+    </tr>
+    <tr>
+        <td colspan="6">
+            {{place_code('disc')}}
+        </td>
+    </tr>
+    <tr>
+        <td> \( \Delta \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.disc }}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.disc_factor_latex }}</td>
+    </tr>
+</table>
+
+<h3 class='igusa_clebsch'>
+    {{KNOWL("g2c.igusa_clebsch_invariants", title="Igusa-Clebsch invariants")}}
+</h3>
+<div class='igusa_clebsch'>
+    <p>{{place_code('igusa_clebsch')}}</p>
+</div>
+<h3 class='igusa nodisplay'>
+    {{KNOWL("g2c.igusa_invariants", title="Igusa invariants")}}
+</h3>
+<div class='igusa nodisplay'>
+    <p>{{place_code('igusa')}}</p>
+</div>
+<h3 class='G2 nodisplay'>
+    {{KNOWL("g2c.g2_invariants", title="G2 invariants")}}
+</h3>
+<div class='G2 nodisplay'>
+    <p>{{place_code('g2')}}</p>
+</div>
+
+<table>
+    <tr class='igusa_clebsch'>
+        <td> \( I_2 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.igusa_clebsch[0] }}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.igusa_clebsch_factor_latex[0] }}</td>
+    </tr>
+    <tr class='igusa_clebsch'>
+        <td> \( I_4 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.igusa_clebsch[1] }}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.igusa_clebsch_factor_latex[1] }}</td>
+    </tr>
+    <tr class='igusa_clebsch'>
+        <td> \( I_6 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.igusa_clebsch[2] }}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.igusa_clebsch_factor_latex[2] }}</td>
+    </tr>
+    <tr class='igusa_clebsch'>
+        <td> \( I_{10} \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.igusa_clebsch[3]}}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.igusa_clebsch_factor_latex[3] }}</td>
+    </tr>
+    <tr class='igusa nodisplay'>
+        <td> \( J_2 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.igusa[0] }}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.igusa_factor_latex[0] }}</td>
+    </tr>
+    <tr class='igusa nodisplay'>
+        <td> \( J_4 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.igusa[1] }}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.igusa_factor_latex[1] }}</td>
+    </tr>
+    <tr class='igusa nodisplay'>
+        <td> \( J_6 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.igusa[2] }}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.igusa_factor_latex[2] }}</td>
+    </tr>
+    <tr class='igusa nodisplay'>
+        <td> \( J_8 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.igusa[3] }}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.igusa_factor_latex[3] }}</td>
+    </tr>
+    <tr class='igusa nodisplay'>
+        <td> \( J_{10} \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.igusa[4]}}\)</td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>{{ data.igusa_factor_latex[4] }}</td>
+    </tr>
+    <tr class='G2 nodisplay'>
+        <td> \( g_1 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.g2[0] }}\)</td>
+    </tr>
+    <tr class='G2 nodisplay'>
+        <td> \( g_2 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.g2[1] }}\)</td>
+    </tr>
+    <tr class='G2 nodisplay'>
+        <td> \( g_3 \) </td>
+        <td>&nbsp;=&nbsp;</td>
+        <td>\({{ data.g2[2] }}\)</td>
+    </tr>
+</table>
+
+<div class="toggle">Alternative geometric invariants:
+    <span class='igusa G2 nodisplay'><a onclick="show_invs('igusa_clebsch'); return false" href='#'>Igusa-Clebsch</a>,</span>
+    <span class='igusa_clebsch G2'><a onclick="show_invs('igusa'); return false" href='#'>Igusa</a>,</span>
+    <span class='igusa_clebsch igusa'><a onclick="show_invs('G2'); return false" href='#'>G2</a></span>
+</div>
+
+<h2> {{ KNOWL('g2c.aut_grp', title='Automorphism group') }} </h2>
+
+<table>
+    <tr>
+        <td colspan="6">
+            {{place_code('aut')}}
+        </td>
+    </tr>
+    <tr>
+        <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td> <td>\({{ info.aut_grp_dict[data.aut_grp_id]}} \)</td> <td>(GAP id : {{data.aut_grp_id}})</td>
+    </tr>
+    <tr>
+        <td colspan="6">
+            {{place_code('autQbar')}}
+        </td>
+    </tr>
+    <tr>
+        <td>\(\mathrm{Aut}(X_{\overline{\Q}})\)</td><td>\(\simeq\)</td> <td>\({{ info.geom_aut_grp_dict[data.geom_aut_grp_id]}} \) </td> <td>(GAP id : {{data.geom_aut_grp_id}})</td>
+    </tr>
+</table>
+
+{{place_code('num_rat_wpts')}}
+<br>
+<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h2>\({{data.num_rat_wpts}}\)
+
+<br>
+{{place_code('locally_solvable')}}
+<br>
+<h3 class="inline"> {{ KNOWL('g2c.locally_solvable', title='Locally solvable') }}: </h3>{{data.locally_solvable}}
+
+<br>
+<h2 class='subhead'> Invariants of the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
+
+<h3 class="inline"> {{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}: </h3>\({{data.analytic_rank}}\)
+
+<br>
+{{place_code('two_selmer')}}
+<br>
+<h3 class="inline"> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: </h3>\({{data.two_selmer_rank}}\)
+
+<br>
+{{place_code('has_square_sha')}}
+<br>
+<h3 class="inline"> {{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}: </h3>{{data.has_square_sha}}
+
+<br>
+{{place_code('torsion_subgroup')}}
+<br>
+<h3 class="inline"> {{ KNOWL('g2c.torsion', title='Torsion') }}: </h3>\({{data.torsion_subgroup}}\)
+
+<br>
+<h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
+
+<table>
+    <tr>
+        <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.st_group_link|safe}}</td>
+    </tr>
+    <tr>
+        <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\) </td>
+    </tr>
+</table>
+
+<br>
+
+<h3 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition') }} </h3>
+
+<!-- Description of a splitting field of minimal degree: -->
+<p>{{data.split_field_statement|safe}}</p>
+
+<!-- Description of the splittings themselves. -->
+<p>{{data.split_statement|safe}}</p>
+
+<h3 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms') }} </h3>
+
+<!-- Description over QQ: -->
+<p>{{data.gl2_statement_base}}</p>
+{{data.end_statement_base|safe}}
+
+<!-- Description of field of definition: -->
+<p>{{data.end_field_statement|safe}}</p>
+
+<!-- Description over QQbar: -->
+<p>{{data.gl2_statement_geom}}</p>
+{{data.end_statement_geom|safe}}
+<!-- Excuse the upcoming dirty spacing hack, but putting paragraph tags around
+the previous statement ruins its table spacing.
+Same for all other occasions of it.-->
+<p></p>
+
+<!-- Remainder of the lattice: -->
+{% if data.end_lattice_statement %}
+<h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', title='endomorphism lattice') }} by field</h3>
+<p></p>
+{{data.end_lattice_statement|safe}}
+<p></p>
+{% endif %}
+
+<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+
+{% endblock %}

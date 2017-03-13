@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 import re
-import tempfile
 import os
 import yaml
-from pymongo import ASCENDING, DESCENDING
-from flask import url_for, make_response
+from flask import url_for
 import lmfdb.base
-from lmfdb.utils import comma, make_logger, web_latex, encode_plot
+from lmfdb.utils import make_logger, web_latex, encode_plot
 from lmfdb.search_parsing import split_list
-from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
-import sage.all
-from sage.all import EllipticCurve, latex, matrix, ZZ, QQ, prod, Factorization, PowerSeriesRing
+from lmfdb.sato_tate_groups.main import st_link_by_name
+from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
@@ -196,7 +193,6 @@ class WebEC(object):
         try:
             data['equation'] = self.equation
             local_data = self.local_data
-            badprimes = [ZZ(ld['p']) for ld in local_data]
             D = self.signD * prod([ld['p']**ld['ord_disc'] for ld in local_data])
             data['disc'] = D
             Nfac = Factorization([(ZZ(ld['p']),ld['ord_cond']) for ld in local_data])
@@ -275,8 +271,6 @@ class WebEC(object):
                 local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
                 local_data.append(local_data_p)
 
-        jfac = Factorization([(ZZ(ld['p']),ld['ord_den_j']) for ld in local_data])
-
         # If we got the data from the database, the root numbers may
         # not have been stored there, so we have to compute them.  If
         # there are additive primes this means constructing the curve.
@@ -308,11 +302,11 @@ class WebEC(object):
                 data['EndE'] = "\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = "\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
-            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.N(U(1))'),'N(\\mathrm{U}(1))')
+            data['ST'] = st_link_by_name(1,2,'N(U(1))')
         else:
-            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.SU(2)'),'\\mathrm{SU}(2)')
+            data['ST'] = st_link_by_name(1,2,'SU(2)')
 
-        data['p_adic_primes'] = [p for i,p in enumerate(sage.all.prime_range(5, 100))
+        data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
                                  if (N*data['ap'][i]) %p !=0]
 
         try:
@@ -365,7 +359,7 @@ class WebEC(object):
         cp_fac = [cp.factor() for cp in tamagawa_numbers]
         cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
         bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
-        bsd['tamagawa_product'] = sage.misc.all.prod(tamagawa_numbers)
+        bsd['tamagawa_product'] = prod(tamagawa_numbers)
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))

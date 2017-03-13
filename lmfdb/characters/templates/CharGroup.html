@@ -7,13 +7,13 @@
 
 <p>{{ place_code('init') }}</p>
 <h2>
-  Underlying
   {% if type=='Dirichlet' %}
-  {{ KNOWL('character.unit_group', title="unit group") }}
+  {{ KNOWL('character.dirichlet.group', title="Character group") }}
   {% elif type=='Hecke' %}
+  Underlying
   {{ KNOWL('character.ray_class_group', title="ray class group") }}
-  {% endif %}
   modulo {{modulus}}
+  {% endif %}
 </h2>
 
 {% if type=='Hecke' %}
@@ -25,20 +25,18 @@
 {% endif %}
 
 
-<table class="props">
+<table>
   <tr> <td colspan="3"> {{ place_code('order') }} </td> </tr>
-  <tr> <td>Order</td> <td>=</td> <td>{{ order }}</td> </tr>
-
+  <tr> <td>{{KNOWL('charcter.dirichlet.group.order',title='Order')}}</td> <td>=</td> <td>{{ order }}</td> </tr>
   <tr> <td colspan="3"> {{ place_code('struct') }} </td> </tr>
-  <tr> <td>Structure</td> <td>=</td> <td>{{ structure }}</td> </tr>
+  <tr> <td>{{KNOWL('charcter.dirichlet.group.structure',title='Structure')}}</td> <td>=</td> <td>{{ structure }}</td> </tr>
   <tr> <td colspan="3"> {{ place_code('gen') }} </td> </tr>
-  <tr> <td> Generators </td> <td>=</td> <td>{{ generators }}</td> </tr>
-
+  <tr> <td>{{KNOWL('charcter.dirichlet.group.generators',title='Generators')}}</td> <td>=</td> <td>{{ generators | safe }}</td> </tr>
 </table>
 
 {% if contents %}
 {# Characters #}
-<h2> {%if rowtruncate%}First characters{% else %}Characters{%endif%}</h2>
+<h2> {%if rowtruncate%}First {{contents|count}} of {{order}} {{KNOWL('character.dirichlet',title='characters')}}{% else %}{{KNOWL('character.dirichlet',title='Characters')}}{%endif%}</h2>
 <table class="ntdata" id="chitable">
   <thead class="space">
     <tr> 
@@ -63,7 +61,7 @@
       {% for value in values %} <td style="font-family: serif;" >{{value}}</td> {% endfor %} 
     </tr>
     {% endfor %} 
-  </tbody>    
+  </tbody>
 </table>
 {% endif %}
 

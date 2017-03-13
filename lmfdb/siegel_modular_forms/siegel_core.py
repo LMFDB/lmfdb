@@ -5,7 +5,7 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from sage.all_cmdline import *
+from sage.all import QQ, ZZ, PowerSeriesRing, is_even, is_prime, divisors
 
 tbi = 't.b.i.'
 uk = '?'
@@ -48,7 +48,7 @@ def _dimension_Sp4Z_2(wt):
     (x,) = R._first_ngens(1)
     H = 1 / (1 - x ** 4) / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
     V = 1 / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
-    W = 1 / (1 - x ** 10) / (1 - x ** 12)
+    # W = 1 / (1 - x ** 10) / (1 - x ** 12)
     a = H[wt - 10] + H[wt - 14] + H[wt - 16] + V[wt - 16] + V[wt - 18] + V[wt - 22]
     return (a, uk, uk)
 
@@ -131,7 +131,7 @@ def __JacobiDimension(k, m):
     return x
 
 
-def _dimension_Kp(wt, tp):
+def _dimension_Kp(wt, p):
     """
     Return the dimensions of subspaces of Siegel modular forms on $K(p)$
     for primes $p$.
@@ -139,12 +139,10 @@ def _dimension_Kp(wt, tp):
     OUTPUT
         ("Total", "Gritsenko Lifts", "Nonlifts", "Oldforms")
     """
-    p = tp
-    one = QQ(1)
     oldforms = 0
-    grits = __JacobiDimension(wt, tp)
+    grits = __JacobiDimension(wt, p)
 
-    if not is_prime(tp):
+    if not is_prime(p):
         return (uk, grits, uk, uk)
 
     if wt <= 1:
@@ -152,19 +150,19 @@ def _dimension_Kp(wt, tp):
     if wt == 2:
         newforms = '?'
         total = '' + str(grits) + ' - ?'
-        if tp < 600:
+        if p < 600:
             newforms = 0
             total = grits
             interestingPrimes = [277, 349, 353, 389, 461, 523, 587]
-            if tp in interestingPrimes:
-                if tp == 587:
+            if p in interestingPrimes:
+                if p == 587:
                     newforms = '0 - 2'
                     total = '' + str(grits) + ' - ' + str(grits + 2)
                 newforms = '0 - 1'
                 total = '' + str(grits) + ' - ' + str(grits + 1)
         return (total, grits, newforms, oldforms)
 
-    total = dimKp(wt, tp)
+    total = dimKp(wt, p)
     newforms = total - grits - oldforms
     return (total, grits, newforms, oldforms)
 
@@ -320,19 +318,19 @@ def _dimension_Gamma0_4_half(k):
 
 # David's code for the dimension of S_k(K(p)), originally written by Cris in Maple #########
 
-_sage_const_3 = Integer(3)
-_sage_const_2 = Integer(2)
-_sage_const_1 = Integer(1)
-_sage_const_0 = Integer(0)
-_sage_const_7 = Integer(7)
-_sage_const_6 = Integer(6)
-_sage_const_5 = Integer(5)
-_sage_const_4 = Integer(4)
-_sage_const_9 = Integer(9)
-_sage_const_8 = Integer(8)
-_sage_const_12 = Integer(12)
-_sage_const_11 = Integer(11)
-_sage_const_10 = Integer(10)
+_sage_const_3 = ZZ(3)
+_sage_const_2 = ZZ(2)
+_sage_const_1 = ZZ(1)
+_sage_const_0 = ZZ(0)
+_sage_const_7 = ZZ(7)
+_sage_const_6 = ZZ(6)
+_sage_const_5 = ZZ(5)
+_sage_const_4 = ZZ(4)
+_sage_const_9 = ZZ(9)
+_sage_const_8 = ZZ(8)
+_sage_const_12 = ZZ(12)
+_sage_const_11 = ZZ(11)
+_sage_const_10 = ZZ(10)
 
 
 def H1(k, p):

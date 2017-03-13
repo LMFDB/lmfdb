@@ -12,6 +12,7 @@ def body_class():
     return {'body_class': 'modlmf'}
 
 import main
+assert main
 
 app.register_blueprint(modlmf_page, url_prefix="/ModularForm/GL2/ModL")
 

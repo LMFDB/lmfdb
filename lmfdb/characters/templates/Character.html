@@ -20,7 +20,7 @@
         {# Inducing character #}
         {% if isprimitive=="No" and indlabel %}
             <h2>
-                Inducing {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
+                {{KNOWL('character.dirichlet.induce',title='Inducing')}} {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
             </h2>
             {{ place_code('inducing') }}
            <p>
@@ -46,7 +46,7 @@
         {% endif %}
 
         {# Values #}
-        
+
         {% if values %}
         <h2>
            {% if coltruncate %}
@@ -66,31 +66,30 @@
         </div>
 
         {% set value_default = 2 %}
-        <form> value  at 
+        <form> value  at&nbsp; 
             <input id="calc-value-input" size=10 placeholder={{value_default}}>
             <button id="calc-value-go"> Compute </button>
             <span class="formexample"> e.g. {{value_default}} </span>
         </form>
         <div class="output"><span id="calc-value-output"></span></div>
         {% endif %}
-        
-                
+
         {# Basic properties #}
 
         <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
 
-        <table class="props">
+        <table>
             <tr> <td colspan='3'> {{ place_code('cond') }} </td> </tr>
-            <tr> <td>Conductor</td> <td>=</td> <td>{{ conductor }}</td> </tr>
+            <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}</td> <td>=</td> <td>{{ conductor }}</td> </tr>
             <tr> <td colspan='3'> {{ place_code('order') }} </td> </tr>
-            <tr> <td> Order </td> <td>=</td> <td>{{ order }}</td> </tr>
+            <tr> <td> {{KNOWL('character.dirichlet.order',title='Order')}} </td> <td>=</td> <td>{{ order }}</td> </tr>
             {% if parity %}
             <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
-            <tr> <td> Parity </td> <td>=</td> <td> {{ parity }}</td> </tr>
+            <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}} </td> <td>=</td> <td> {{ parity }}</td> </tr>
             {% endif %}
-            <tr> <td> Real </td> <td>=</td> <td> {{ isreal }} </td> </tr>
+            <tr> <td> {{KNOWL('character.dirichlet.real',title='Real')}} </td> <td>=</td> <td> {{ isreal }} </td> </tr>
             <tr> <td colspan='3'> {{ place_code('isprimitive') }} </td> </tr>
-            <tr> <td> Primitive </td> <td>=</td> <td> {{ isprimitive }} </td> </tr>
+            <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} </td> </tr>
         </table>
 
          {# Galois Orbits #}
@@ -112,11 +111,17 @@
             {{ KNOWL('character.dirichlet.related_fields', 'Related number fields') }}
         </h2>
         <table>
+            {% if valuefield %}
             <tr>
-                <td> Field of values </td>
-                <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a></td>
+                <td> {{KNOWL('character.dirichlet.value_field',title='Field of values')}} </td>
+                {% if vflabel %}
+                <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a> </td>
+                {% else %}
+                <td> {{ valuefield }} </td>
+                {% endif %}
             </tr>
-            {% if kflabel %}
+            {% endif %}
+            {% if kerfield %}
             <tr>
                 <td>{{ kerfield }}</td>
                 <td> Field <a href="/NumberField/{{kflabel}}">{{ kflabel }}</a>
@@ -127,7 +132,7 @@
         </table>
 
         {# sums #}
-        
+
         {% if type=='Dirichlet' and values %}
 
         {# Gauss sum #}
@@ -159,7 +164,7 @@
             <div class="slider" id="slider-jacobi-b"></div>
         </form>
         <div class="output"><span id="calc-jacobi-output"></span></div>
-        
+
         {# Kloosterman sum #}
 
         <h2>
@@ -294,6 +299,6 @@ $(function() {
 });
 </script>
 
-       
+
 {% endblock %}
 

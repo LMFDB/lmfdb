@@ -1,30 +1,22 @@
 # -*- coding: utf-8 -*-
 
-import re
 import pymongo
 
-import lmfdb.base
-from lmfdb.base import app, getDBConnection
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from lmfdb.hilbert_modular_forms import hmf_page, hmf_logger
+from lmfdb.base import getDBConnection
+from flask import render_template, url_for, request, redirect, make_response, flash
+
+from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
-from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_summary, hmf_degree_summary
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
 
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 
-import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
-
-import flask
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash
+from lmfdb.WebNumberField import WebNumberField
 
 from markupsafe import Markup
-
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, web_latex_split_on_pm, random_object_from_collection
+from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
-
-from lmfdb.WebNumberField import *
 
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
@@ -90,7 +82,7 @@ def split_full_label(lab):
 def hilbert_modular_form_by_label(lab):
     if isinstance(lab, basestring):
         C = getDBConnection()
-        res = C.hmfs.forms.find_one({'label': lab})
+        res = C.hmfs.forms.search.find_one({'label': lab},{'label':True})
     else:
         res = lab
         lab = res['label']
@@ -128,7 +120,7 @@ def hilbert_modular_form_search(**args):
 
     info['query'] = dict(query)
     C = getDBConnection()
-    res = C.hmfs.forms.find(
+    res = C.hmfs.forms.search.find(
         query).sort([('deg', pymongo.ASCENDING), ('disc', pymongo.ASCENDING), ('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
     if(start >= nres):
@@ -188,7 +180,6 @@ def render_hmf_webpage_download(**args):
 
 def download_hmf_magma(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     f = C.hmfs.forms.find_one({'label': label})
     if f is None:
@@ -245,7 +236,6 @@ def download_hmf_magma(**args):
 
 def download_hmf_sage(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     f = C.hmfs.forms.find_one({'label': label})
     if f is None:
@@ -341,16 +331,14 @@ def render_hmf_webpage(**args):
 
     t = "Hilbert Cusp Form %s" % info['label']
 
-    forms_space = C.hmfs.forms.find(
-        {'field_label': data['field_label'], 'level_ideal': data['level_ideal']})
+    forms_space = C.hmfs.forms.search.find(
+        {'field_label': data['field_label'], 'level_ideal': data['level_ideal']},{'dimension':True})
     dim_space = 0
     for v in forms_space:
         dim_space += v['dimension']
 
     info['newspace_dimension'] = dim_space
 
-    w = polygen(QQ, 'w')
-    e = polygen(QQ, 'e')
     eigs = data['hecke_eigenvalues']
     eigs = eigs[:min(len(eigs), numeigs)]
 

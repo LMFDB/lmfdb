@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
-from base import app
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+from base import app, getDBConnection
+from flask import render_template, url_for, abort
 
 @app.route("/about")
 def about():
-    return render_template("about.html", title="About")
+    return render_template("about.html", title="About the LMFDB")
 
 # acknowledgement page, reads info from CONTRIBUTORS.yaml
 try:
@@ -19,8 +19,16 @@ _curdir = os.path.dirname(os.path.abspath(__file__))
 contribs = yaml.load_all(open(os.path.join(_curdir, "..", "CONTRIBUTORS.yaml")))
 contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 
-
-
+# basic health check
+@app.route("/health")
+@app.route("/alive")
+def alive():
+    try:
+        conn = getDBConnection()
+        assert conn.userdb.users.count()
+    except:
+        abort(503)
+    return "LMFDB!"
 
 @app.route("/acknowledgment")
 def acknowledgment():
@@ -161,7 +169,7 @@ def news():
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
-    lm = [('History of varieties', '/Variety/history')]
+    # lm = [('History of varieties', '/Variety/history')]
     return render_template('single.html', title=t, kid='varieties.about', bread=b) #, learnmore=lm)
 
 
@@ -172,20 +180,12 @@ def varieties_history():
     b.append(('History', url_for("varieties_history")))
     return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
 
-@app.route("/ModularForm/GL2/Q/holomorphic/history")
-def holomorphic_mf_history():
-    t = 'History'
-    b = [("Modular forms", url_for('modular_form_toplevel'))]
-    b.append(('Holomorphic', url_for("emf.render_elliptic_modular_forms")))
-    b.append(('History', url_for("holomorphic_mf_history")))
-    return render_template(_single_knowl, title="A brief history of holomorphic GL(2) modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
-
 
 @app.route('/Field')
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
-    lm = [('History of fields', '/Field/history')]
+    # lm = [('History of fields', '/Field/history')]
     return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 @app.route("/Field/history")
@@ -200,7 +200,7 @@ def fields_history():
 def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
-    lm = [('History of representations', '/Representation/history')]
+    # lm = [('History of representations', '/Representation/history')]
     return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 
@@ -217,7 +217,7 @@ def representations_history():
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
-    lm = [('History of groups', '/Group/history')]
+    # lm = [('History of groups', '/Group/history')]
     return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
 
 
@@ -228,19 +228,36 @@ def groups_history():
     b.append(('History', url_for("groups_history")))
     return render_template(_single_knowl, title="A brief history of groups", kid='g.history', body_class=_bc, bread=b)
 
-
-
 @app.route("/editorial-board")
-def edit_board():
-    t = "Editorial and Management Boards"
-    b = [(t, url_for("edit_board"))]
-    return render_template(_single_knowl, title=t, kid='content.edit-board', body_class='', bread=b)
+@app.route("/management-board")
+@app.route("/management")
+def management_board():
+    t = "Management Board"
+    b = [(t, url_for("management_board"))]
+    return render_template('management.html', title=t, bread=b)
 
 @app.route("/citation")
 def citation():
-    t = "How to cite LMFDB"
+    t = "Citing the LMFDB"
     b = [(t, url_for("citation"))]
+    return render_template('citation.html', title=t, body_class='', bread=b)
+
+@app.route("/citation/citing")
+def citing():
+    t = "How to cite LMFDB"
+    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
     return render_template(_single_knowl, title=t, kid='content.how-to-cite', body_class='', bread=b)
+
+@app.route("/citation/citations")
+def citations():
+    t = "LMFDB citations"
+    b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citations"))]
+    return render_template('citations.html', title=t, body_class='', bread=b)
+
+@app.route("/citation/citations_bib")
+def citations_bib():
+    t = "LMFDB citations (BiBTeX entries)"
+    return render_template('citations_content_bib.html', title=t, body_class='')
 
 @app.route("/contact")
 def contact():

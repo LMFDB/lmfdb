@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
-import time
 import json
-import sage.all
-from sage.all import *
+import os
+import gzip
 
 from pymongo.connection import Connection
 hgm = Connection(port=37010).hgm.families
@@ -25,22 +24,22 @@ def do_import(F):
         'weight': weight,
         'A': A,
         'B': B,
-	    'hodge': hodge,
-	    'gal2': gal2,
-	    'gal3': gal3,
-	    'gal5': gal5,
-	    'gal7': gal7
+        'hodge': hodge,
+        'gal2': gal2,
+        'gal3': gal3,
+        'gal5': gal5,
+        'gal7': gal7
     }
     is_new = True
     for field in hgm.find({'label': label}):
-	is_new = False
-	break
+        is_new = False
+        break
 
     if is_new:
-	    print "new family"
-	    hgm.save(data)
+        print "new family"
+        hgm.save(data)
     else:
-	print "Have this one"
+        print "Have this one"
 
 for path in sys.argv[1:]:
     print path

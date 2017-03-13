@@ -4,31 +4,21 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
-import flask
-from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, flash, redirect
+from lmfdb.base import getDBConnection
+from flask import render_template, request, url_for, flash, redirect
 from markupsafe import Markup
 
-from lmfdb.artin_representations import artin_representations_page, artin_logger
+from lmfdb.artin_representations import artin_representations_page
 from lmfdb.utils import to_dict, random_object_from_collection
-from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_paired_fields, parse_count, parse_start, clean_input
+from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_count, parse_start, clean_input
 
-from lmfdb.transitive_group import *
-from lmfdb.WebCharacter import WebDirichletCharacter
+from math_classes import ArtinRepresentation
+from lmfdb.transitive_group import group_display_knowl
+
+from sage.all import ZZ
+
 import re, random
 
-
-from lmfdb.math_classes import *
-from lmfdb.WebNumberField import *
-
-def initialize_indices():
-    try:
-#        ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor_plus", ASC),("galorbit", ASC)])
-#        ArtinRepresentation.collection().ensure_index([("Dim", ASC), ("Conductor", ASC)])
-#        ArtinRepresentation.collection().ensure_index([("Conductor", ASC), ("Dim", ASC)])
-	pass
-    except pymongo.errors.OperationFailure:
-        pass
 
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
@@ -44,7 +34,7 @@ def make_cond_key(D):
 
 def parse_artin_label(label):
     label = clean_input(label)
-    if re.compile(r'^\d+\.\d+e\d+(_\d+e\d+)*\.\d+t\d\.\d+c\d+$').match(label):
+    if re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$').match(label):
         return label
     else:
         raise ValueError("Error parsing input %s.  It is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1"% label)
@@ -73,7 +63,7 @@ def artin_representation_search(**args):
             flash(Markup("Error: %s" % (err)), "error")
             bread = get_bread([('Search results','')])
             return search_input_error({'err':''}, bread)
-        return render_artin_representation_webpage(label)
+        return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
     title = 'Artin representation search results'
     bread = [('Artin representation', url_for(".index")), ('Search results', ' ')]
@@ -123,23 +113,6 @@ def artin_representation_search(**args):
     return render_template("artin-representation-search.html", req=info, data=data, title=title, bread=bread, query=query, start=start, report=report, nres=nres, initfunc=initfunc, sign_code=sign_code)
 
 
-# Obsolete
-#@artin_representations_page.route("/search", methods = ["GET", "POST"])
-# def search():
-#  if request.method == "GET":
-#    val = request.args.get("val", "no value")
-#    bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-#    return render_template("artin-representations-search.html", title="Artin Representations Search", bread = bread, val = val)
-#  elif request.method == "POST":
-#    return "ERROR: we always do http get to explicitly display the search parameters"
-#  else:
-#    return flask.redirect(404)
-#
-#@artin_representations_page.route("/<label>/")
-#def by_label_with_slash(label):
-#    print "here"
-#    return flask.redirect(url_for(".render_artin_representation_webpage", label=label), code=301)
-
 def search_input_error(info, bread):
     return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
 
@@ -162,7 +135,9 @@ def render_artin_representation_webpage(label):
 
     # label=dim.cond.nTt.indexcj, c is literal, j is index in conj class
     # Should we have a big try around this to catch bad labels?
-    label = clean_input(label)
+    clean_label = clean_input(label)
+    if clean_label != label:
+        return redirect(url_for('.render_artin_representation_webpage', label=clean_label), 301)
     try:
         the_rep = ArtinRepresentation(label)
     except:
@@ -178,8 +153,6 @@ def render_artin_representation_webpage(label):
 
     title = "Artin representation %s" % label
     the_nf = the_rep.number_field_galois_group()
-    from lmfdb.number_field_galois_groups import nfgg_page
-    from lmfdb.number_field_galois_groups.main import by_data
     if the_rep.sign() == 0:
         processed_root_number = "not computed"
     else:
@@ -197,7 +170,7 @@ def render_artin_representation_webpage(label):
     friends = []
     nf_url = the_nf.url_for()
     if nf_url:
-    	friends.append(("Artin Field", nf_url))
+        friends.append(("Artin Field", nf_url))
     cc = the_rep.central_character()
     if cc is not None:
         if cc.modulus <= 100000: 
@@ -213,7 +186,7 @@ def render_artin_representation_webpage(label):
         if cc.modulus == 1 and cc.number == 1:
             friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
         else:
-            lfuncdb = base.getDBConnection().Lfunctions.instances
+            lfuncdb = getDBConnection().Lfunctions.instances
             # looking for Lhash dirichlet_L_modulus.number
             mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
             lres = lfuncdb.find_one({'Lhash': mylhash})
@@ -241,7 +214,7 @@ def random_representation():
     rep = random_object_from_collection(ArtinRepresentation.collection())
     num = random.randrange(0, len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"c"+str(num+1)
-    return redirect(url_for(".render_artin_representation_webpage", label=label), 301)
+    return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 
 @artin_representations_page.route("/Completeness")

@@ -1,6 +1,6 @@
-# from utils import *
-from lmfdb.modular_forms.maass_forms.picard import *  # MWFP,mwfp_logger, mwfp
-from lmfdb.modular_forms.backend.mf_utils import *
+# -*- coding: utf-8 -*-
+
+from lmfdb.modular_forms.maass_forms.picard import mwfp_logger
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
 from flask import url_for
 
@@ -77,8 +77,6 @@ class PicardFormTable(MFDataTable):
         self._props['ev'] = f['ev']
         self._props['sym'] = f['sym']
         self._props['prec'] = f['prec']
-        i = 0
-        coeffs = list()
         self._row_heads = []
         self._col_heads = []
         row_min = self._nrows * skip

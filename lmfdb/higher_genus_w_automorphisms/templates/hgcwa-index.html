@@ -19,20 +19,22 @@ text-align:right;
       <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
 
 <p>
-By genus:
+By  {{KNOWL('ag.curve.genus',title='genus')}}:
 {% for gen in info.genus_list %}
 <a href="?genus={{gen}}">{{gen}}</a>
 {% endfor %}</p>
 
 <p>Hyperelliptic curves by genus:
 {% for gen in info.genus_list %}
-<a href="?genus={{gen}}&hyperelliptic=True">{{gen}}</a>
+<a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>
 {% endfor %} 
 </p>
 
 
+<p>A  <a href={{url_for('.random_passport')}}>random refined passport</a> from the database.</p>
 
-    <h2>Find specific automorphisms of higher genus curve</h2>
+
+    <h2>Find specific automorphisms of higher genus curves</h2>
 
     <form name="search" method = "get" action="{{search}}">
         <table class="">
@@ -46,7 +48,7 @@ By genus:
           <button type="submit" value="Find">Find</button>
 	      </td>
 	      <td>
-		<span class="formexample">family with automorphisms label, e.g. 2.12-4.0.2-2-2-3 </span>
+		<span class="formexample">family or passport label, e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2 </span>
 	      </td>
 	    </tr>
 	  </table>
@@ -59,7 +61,7 @@ By genus:
         <table class="">
           <tr align=left>
             <td align=right>
-            Genus:
+             {{KNOWL('ag.curve.genus',title='Genus')}}:
             </td><td><input type="integer" name="genus" value=""
       placeholder="3"></td>
       <td>
@@ -78,9 +80,9 @@ By genus:
 	  <tr>
             <td align=right>
               {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
-            </td><td><input type="list" name="signature" value="" placeholder="[0,2,3,3,6]"></td>
+            </td><td><input type="text" name="signature" value="" placeholder="[0,2,3,3,6]"></td>
       <td>
-	<span class="formexample">e.g. [0,2,3,3,6].</span>
+	<span class="formexample">e.g. [0,2,3,3,6] or [0;2,3,8]</span>
 	  </td> </tr>
 	 <tr><td align=right>
               {{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
@@ -89,8 +91,8 @@ By genus:
 	<span class="formexample">e.g. 1, or a range like 0..2</span>
 	 </td> </tr>
               <tr>  <td align=right>
-	       Hyperelliptic Curve(s):
-            </td>  <td> <select name='hyperelliptic'>
+	       Hyperelliptic curve(s):
+            </td>  <td> <select name='inc_hyper'>
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>
                     <option value='only'>only</option>
@@ -99,7 +101,31 @@ By genus:
                 </td>  <td>
 	<span class="formexample"></span>
 	 </td></tr>
-	 
+
+	  <tr>  <td align=right>
+	       Cyclic trigonal curve(s):
+            </td>  <td> <select name='inc_cyc_trig'>
+                    <option value='include'>include </option>
+		    <option value='exclude'>exclude</option>
+                    <option value='only'>only</option>
+                 
+                  </select>
+                </td>  <td>
+	<span class="formexample"></span>
+	 </td></tr>
+
+ <tr>  <td align=right>
+      Full automorphism group:
+            </td>  <td> <select name='inc_full'>
+                    <option value='include'>include </option>
+		    <option value='exclude'>exclude</option>
+                    <option value='only'>only</option>
+                 
+                  </select>
+                </td>  <td>
+	<span class="formexample"></span>
+	 </td></tr>
+	  
           <tr>
           <td align=right>
               Maximum number of families to display:

@@ -1,248 +1,222 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% if not error %}
 <script>
     $(document).ready( function() {
-	$("#toggle").click( function() {
-	    var toggle = document.getElementById( "toggle");
-	    if ( toggle.innerHTML == "Hide") {
-		$("#def_polynomial").hide("Slow");
-		toggle.innerHTML = "Show";
-		console.log( "Hide on");
-	    }
-	    else {
-		$("#def_polynomial").show("Slow");
-		toggle.innerHTML = "Hide";
-		console.log( "Show on");
-	    }
-	});
+    $("#toggle").click( function() {
+        var toggle = document.getElementById( "toggle");
+        if ( toggle.innerHTML == "Hide") {
+        $("#def_polynomial").hide();
+        toggle.innerHTML = "Show";
+        }
+        else {
+        $("#def_polynomial").show();
+        toggle.innerHTML = "Hide";
+        }
+    });
         $("#toggle1").click( function() {
-	    var toggle1 = document.getElementById( "toggle1") 
-	    if ( toggle1.innerHTML == "Hide") {
-		$("#explicit_formula").hide("Slow");
-		toggle1.innerHTML = "Show";
-		console.log( "Hide on");
-	    }
-	    else {
-		$("#explicit_formula").show("Slow");
-		toggle1.innerHTML = "Hide";
-		console.log( "Show on");
-	    }
-	});
+        var toggle1 = document.getElementById( "toggle1") 
+        if ( toggle1.innerHTML == "Hide") {
+        $("#explicit_formula").hide();
+        toggle1.innerHTML = "Show";
+        }
+        else {
+        $("#explicit_formula").show();
+        toggle1.innerHTML = "Hide";
+        }
+    });
     });
 </script>
 
 <h2>Basic properties</h2>
-{% macro nice( x) %}
-{% if x == None %}
-  unknown
-{% else %}
-  {{ x }}
-{% endif %}
-{% endmacro %}
+{% set sam=info.sam %}
+
 <table>
-  <tr> <td>Type</td> <td>{{ nice( sam.type()) }}</td> </tr>
-  <tr> <td>Weight</td> <td>${{ nice(sam.weight()) }}$</td> </tr>
-  <tr> <td>Hecke eigenform?</td> <td>{{ nice(sam.is_eigenform()) }}</td> </tr>
-  <tr> <td>Integral Fourier coefficients?</td> <td>{{ nice(sam.is_integral()) }}</td> </tr>
-  <tr> <td>Degree of field</td> <td>${{ nice(sam.field().degree()) }}$</td> </tr>
+  <tr> <td>{{KNOWL('mf.siegel.space',title='Space')}}:</td> <td>{{ info.space_href|safe }}</td> </tr>
+  <tr> <td>{{KNOWL('mf.siegel.form_type',title='Type')}}:</td> <td>{{ info.type }}</td> </tr>
+  <tr> <td>{{KNOWL('mf.siegel.weight',title='Weight')}}:</td> <td>{{ info.weight }}</td> </tr>
+  <tr> <td>{{KNOWL('mf.siegel.eigenform',title='Hecke eigenform')}}:</td> <td>{{ info.is_eigenform }}</td> </tr>
+  <tr> <td>{{KNOWL('mf.siegel.integral_fc',title='Integral Fourier coefficients')}}:</td> <td>{% if info.is_integral is defined %}{{ info.is_integral }}{% else %} unknown {% endif %}</td> </tr>
 </table>
 
-{% if sam.field() %}
-<h2>Field</h2>
-{% if sam.field().degree() == 1 %}
+<h2>{{KNOWL('mf.siegel.field',title='Coefficient field')}}</h2>
+{% if info.fdeg == 1 %}
 {% set K='\mathbb{Q}' %}
-<table>
-  <tr> <td>Field</td> <td>$\mathbb{Q}$</td> </tr>
-</table>
 {% else %}
 {% set K='\mathbb{Q}(a)' %} 
+{% endif %}
 <table>
-  <tr> <td>Field</td> <td>$\mathbb{Q}(a)$</td> </tr>
-  {% if sam.field().degree() <= 5 %}
-  <tr> <td>Discriminant</td> <td>${{ latex(sam.field().discriminant().factor()) }}$</td> </tr>
-  <tr> <td>Signature</td> <td>${{ sam.field().signature() }}$</td> </tr>
-  <tr> <td>Is Galois</td> <td>${{ sam.field().is_galois() }}$</td> </tr>
-  {% else %}
-  <tr> <td>Discriminant</td> <td>{# ${{ latex(sam.field().discriminant().factor()) }}$ #}</td> </tr>
-  <tr> <td>Signature</td> <td>{# {{ sam.field().signature() }} #}</td> </tr>
-  <tr> <td>Is Galois</td> <td>{# {{ sam.field().is_galois() }} #}</td> </tr>
+  <tr> <td>Field:</td> <td>{% if info.field_href %} {{info.field_href|safe}} {% else %} $\mathbb{Q}(a)$ {% endif %}</td> </tr>
+  <tr> <td>Degree:</td> <td>{{info.fdeg}}</td> </tr>
+  {% if info.fdeg > 1 and info.modulus is defined %}
+  <tr> <td>Discriminant:</td> <td>${{ info.latex(info.field.discriminant().factor()) }}$</td> </tr>
+  <tr> <td>Signature:</td> <td>${{ info.field.signature() }}$</td> </tr>
+  <tr> <td>Is Galois:</td> <td>{{ info.field.is_galois() }}</td> </tr>
   {% endif %}
   <tr>
-    <td>Field equation</td>
-    {% set pol = sam.field().defining_polynomial() %}
-    {% set latex_pol = latex(pol) %}
-    {% if latex_pol|count > 100 %}
+    {% if info.fdeg > 1 %}
+    <td>Field equation:</td>
+    {% set pol = info.field_poly %}
+    {% set latex_pol = info.latex(pol) %}
     <td>
-      <button id ="toggle">Show</button>&nbsp;
-      <span id="def_polynomial" style="display: none;">	
-	<div class="small">{{ pol }}</span>
-      </span>
+    {% if latex_pol|count > 200 %} <button id ="toggle">Show</button>&nbsp;<span id="def_polynomial" style="display: none;"><div class="small">{{pol}}</div></span>({{latex_pol|count}} bytes) {% else %} ${{latex_pol}}$ {% endif %}
     </td>
-    {% else %}
-    <td>${{ latex_pol }}$</td>
     {% endif %}
   </tr>
 </table>
-{% endif %}
-{% endif %}
 
-{% set ex_fo = sam.explicit_formula() %}
-{% if ex_fo %}
-<h2>Explicit formula</h2>
-{% if ex_fo|count > 200 %}
-<button id ="toggle1">Show</button>&nbsp;
-<span id="explicit_formula" style="display: none;">
-  <div class="small">
-    {{ ex_fo }}
-  </div>      
-</span>
+{% if info.explicit_formula_bytes %}
+<h2>{{KNOWL('mf.siegel.explicit_formula',title='Explicit formula')}}</h2>
+{% if not info.explicit_formula %}
+<button id ="toggle1">Show</button>&nbsp;<span id="explicit_formula" style="display: none;"><span style="color:red"><i>&nbsp;&nbsp;Too large to display, please use download button to view</i></span><br></span>({{info.explicit_formula_bytes}} bytes)
 {% else %}
-{{ ex_fo }}
+{% set ex_fo = info.explicit_formula %}
+{% if ex_fo|count > 200 %} <button id ="toggle1">Show</button>&nbsp;<span id="explicit_formula" style="display: none;"><div class="small">{{ex_fo}}</div></span>({{ex_fo|count}} bytes) {% else %} ${{ex_fo}}$ {% endif %}
 {% endif %}
 {% endif %}
 
+{% set mod_m = '' %}
+{% if info.modulus is defined %}
+{% if info.modulus %} {% set mod_m = ' \\bmod \\mathfrak{m}' %} {% endif %}
+{% set too_large_msg = '(too large to render, please specify modulus or download to view)' %}
+{% else %}
+{% set too_large_msg = '(too large to render, please download to view)' %}
+{% endif %}
 
-{% set red = ideal_l.reduce %}
-{% set mod_l = '' if 0 == ideal_l else ' \\bmod \\mathfrak{L}' %}
-{% set evs = sam.available_eigenvalues() %}
-{% if evs|count > 0 %}
-<h2>Eigenvalues $\lambda(l)$ of $T(l)$</h2>
-{% set ev_dict = sam.eigenvalues( evs_to_show) %}
+{% if info.evs_to_show|count > 0 %}
+<h2>Selected {{KNOWL('mf.siegel.eigenvalues',title='eigenvalues')}} $\lambda(l)$ of $T(l)$</h2>
+{% set ev_dict = sam.eigenvalues(info.evs_to_show) %}
   <table>
     <thead>
-      <tr><th>$l$</th><th>${{ '\lambda(l)' + mod_l }}$</th></tr>
+      <tr><th>$l$</th><th>${{ '\lambda(l)' + mod_m }}$</th></tr>
     </thead>
     {% for l in ev_dict|sort %}
+    {% set ev = info.reduce(ev_dict[l]) %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
-      <td valign="top">${{ l }}$</td><td>${{ red(ev_dict[l]) }}$</td>
+      <td valign="top">${{ l }}$</td><td overflow=="visible">{% if ev|count > 200 %} <span class="small">{{too_large_msg}}</span> {% else %} ${{ev}}$ {% endif %}</td>
     </tr>
     {% endfor %}
   </table>
 {% endif %}
 
-{% set fcs = sam.available_Fourier_coefficients() %} 
-{% if fcs|count > 0 %}
-<h2>Fourier coefficients $c(F)$</h2>
-{% set fc_dict = sam.Fourier_coefficients( fcs_to_show) %}
+{% if info.fcs_avail|count > 0 %}
+<h2>Selected {{KNOWL('mf.siegel.coefficients',title='Fourier coefficients')}} $c(F)$</h2>
+{% set fc_dict = sam.Fourier_coefficients(info.fcs_to_show) %}
   <table>
     <thead>
-      <tr><th>\(\det(F)\)</th><th>\(F\)</th><th>${{ 'c(F)' + mod_l }}$</th></tr>
+      <tr><th>\(\det(F)\)</th><th>\(F\)</th><th>${{ 'c(F)' + mod_m }}$</th></tr>
     </thead>
     {% for d in fc_dict|sort %}
     <tr class = "{{ loop.cycle( 'odd', 'even') }}">
       {% set dk = fc_dict[d].keys()|sort %}
+      {% set fc = info.reduce(fc_dict[d][dk[0]]) %}
       <td rowspan="{{ dk|count }}" valign="top">{{ d }}</td>
-      <td>{{ dk[0] }}</td><td>{{ red(fc_dict[d][dk[0]]) }}</td>
+      <td>{{ dk[0] }}</td><td overflow="visible">{% if fc|count > 200 %} <span class="small">{{too_large_msg}}</span> {% else %} ${{fc}}$ {% endif %}</td>
     </tr>
     {% for F in dk[1:]%}
+    {% set fc = info.reduce(fc_dict[d][F]) %}
     <tr>
-      <td>{{ F }}</td><td overflow="visible">{{ red(fc_dict[d][F]) }}</td>
+      <td>{{ F }}</td><td overflow="visible">{% if fc|count > 200 %} <span class="small">{{too_large_msg}}</span> {% else %} ${{fc}}$ {% endif %}</td>
     </tr>
     {% endfor %}
     {% endfor %}
   </table>
 {% endif %}
 
-{% if evs|count > 0 or fcs|count > 0 %}
-<h2>Find more</h2>
-<h3>Find more
-{% if evs|count > 0 %}$\lambda(l)${% endif %}
-{% if evs|count > 0 and fcs|count > 0%} and {% endif %}
-{% if fcs|count > 0 %}$c(F)${% endif %} reduced modulo an ideal $\mathfrak{L}$ of ${{ K }}$
-</h3>
+{% if info.modulus %}
+<p>Where $\mathfrak{m}$ = {{ info.modulus }}.</p>
+{% endif %}
+
+{% if info.evs_avail|count > 0 or info.fcs_avail|count > 0 %}
+<h2>Select different
+{% if info.evs_avail|count > 0 %}$\lambda(l)${% endif %}
+{% if info.evs_avail|count > 0 and info.fcs_avail|count > 0%} and {% endif %}
+{% if info.fcs_avail|count > 0 %}$c(F)${% endif %} to display {% if info.modulus is defined %} or specify a modulus $\mathfrak{m}$ to reduce them by {% endif %}
+</h2>
 <table>
-  {% if evs|count > 0 %}
+  {% if info.evs_avail|count > 0 %}
   <tr valign="top">
-    <td>$\lambda(l)$ for $l$ in:</td>
-    <td width="80%">
-      {% for l in evs %} 
-      <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), indices=l) }}">{{ l }}</a>
-      {% endfor %}
+    <td>$\lambda(l)$ available for $l$ in:</td>
+    <td>
+      {% if info.evs_avail|count > 40 %}
+          {% for l in info.evs_avail[:10] %} 
+          <a href="{{ url_for('.by_label', label=info.full_name, ev_index=l, fc_det=info.args.fc_det, modulus=info.args.modulus) }}">{{ l }}</a>
+          {% endfor %}
+          ...
+          {% for l in info.evs_avail[-10:] %} 
+          <a href="{{ url_for('.by_label', label=info.full_name, ev_index=l, fc_det=info.args.fc_det, modulus=info.args.modulus) }}">{{ l }}</a>
+          {% endfor %}
+      {% else %}
+          {% for l in info.evs_avail %} 
+          <a href="{{ url_for('.by_label', label=info.full_name, ev_index=l, fc_det=info.args.fc_det, modulus=info.args.modulus) }}">{{ l }}</a>
+          {% endfor %}
+      {% endif %}
     </td>
   </tr>
   {% endif %}
-  {% if fcs|count > 0 %}
+  {% if info.fcs_avail|count > 0 %}
   <tr valign="top">
-    <td>$c(F)$ for $\det(F)$ in:</td>
-    <td width="80%">
-      {% for d in fcs %} 
-      <a href="{{ url_for( 'ModularForm_GSp4_Q_top_level', page=sam.collection()[0]+'.'+sam.name(), dets=d) }}">{{ d }}</a>
-      {% endfor %}
+    <td>$c(F)$ available for $\det(F)$ in:</td>
+    <td>
+      {% if info.fcs_avail|count > 40 %}
+          {% for d in info.fcs_avail[:10] %} 
+          <a href="{{ url_for('.by_label', label=info.full_name, fc_det=d, ev_index=info.args.ev_index, modulus=info.args.modulus) }}">{{ d }}</a>
+          {% endfor %}
+          ...
+          {% for d in info.fcs_avail[-10:] %} 
+          <a href="{{ url_for('.by_label', label=info.full_name, fc_det=d, ev_index=info.args.ev_index, modulus=info.args.modulus) }}">{{ d }}</a>
+          {% endfor %}
+      {% else %}
+          {% for d in info.fcs_avail %} 
+          <a href="{{ url_for('.by_label', label=info.full_name, fc_det=d, ev_index=info.args.ev_index, modulus=info.args.modulus) }}">{{ d }}</a>
+          {% endfor %}
+      {% endif %}
     </td>
   </tr>
   {% endif %}
 </table>
 
-<br />
-
-<script type="text/javascript">
-    function validate_modulus() {
-	var m = document.getElementById( "modulus_field").value
-	
-	try {
-	    gens = m.trim().split( /\s+/);
-	    a = 1;
-	    for ( n=0; n< gens.length; n++) {
-		b = eval( gens[n]);
-	    }
-	    return true;
-	}
-	catch(err) {
-	    txt ="Check the field for the reducing ideal $\mathfrak{L}$.\n\nThe generators must be expressions which define rational polynomials in $a$ and which must not contain spaces.";
-	    alert(txt);
-	    return false;
-	}
-
-    }
-</script> 
-<form id="EvFcForm" action="{{ '/ModularForm/GSp/Q/'+sam.collection()[0]+'.'+sam.name() }}" method="get" onsubmit="return validate_modulus()">
+<form id="EvFcForm" action="{{ url_for('.by_label', label=info.full_name) }}" method="get">
   <table>
-    {% if evs|count > 0 %}
+    {% if info.evs_avail|count > 0 %}
     <tr>
       <td>
-	<input name="indices" value="{{ evs_to_show|join(' ') }}" size="30" example="2 3 5" pattern="^(\s*\d+)+\s*$">list of $l$</input>
-        <br />
-	<span class="formexample">e.g. 2 or 2 3 5</span>
-      </td><td></td>
-    </tr>
-    {% endif %}
-    {% if fcs|count > 0 %}
-    <tr>
-      <td>
-	<input name="dets" value="{{ fcs_to_show|join(' ') }}" size="30" example="4 7 21" pattern="^(\s*\d+)+\s*$">list of $\det(F)$</input>
-        <br />
-	<span class="formexample">e.g. 3 or 3 7 41</span>
-      </td><td></td>
-    </tr>
-    {% endif %}
-    <tr>
-      <td>
-	<input id="modulus_field" name="modulus" value="{{ ideal_l.gens()|join('#')|replace(' ','')|replace('#',' ') }}" size="30" example="3 a+5">generators of $\mathfrak{L}$</input>
-	<br />
-	<span class="formexample">e.g. 17 or 3 a^2+1</span>
+      List or range of $l$:
       </td>
       <td>
-	<button type="submit" name="submit" value="submit">Find</button>
+    <input name="ev_index" value="{{ info.args.ev_index}}" size="30" placeholder="1..20"></input> <span class="formexample">e.g. 2, or 2,3,5,8, or 2..10</span>
+    </td>
+    </tr><tr><br><tr>
+    {% endif %}
+    {% if info.fcs_avail|count > 0 %}
+    <tr>
+      <td>
+        List or range of $\det(F):$
+      </td>
+      <td>
+    <input name="fc_det" value="{{ info.args.fc_det}}" size="30" placeholder="0,4,7"></input> <span class="formexample">e.g. 3 or 3 7 41</span>
+      </td>
+    {% endif %}
+    {% if info.modulus is defined %}
+    <tr>
+      <td>
+      Reduction modulus $\mathfrak{m}$:
+      </td>
+      <td>
+    <input name="modulus" value="{{ info.args.modulus}}" size="30" placeholder="17"></input> <span class="formexample">e.g. 17 or 3*a+14 or 3,a+1</span>
       </td>
     </tr>
+    <tr><td></td><td><div class="small">(for best results, specify an ideal of prime norm)</div></td>
+    {% endif %}
   </table>
+<button type="submit" name="update" value="1">Update</button>
 </form>
 {% endif %}
 
+<h2>Download</h2>
 <p>
-  Here $\mathfrak{L}$ equals {{ ideal_l }}.
+<button value="Download" onclick="window.location.href = '{{ url_for( '.index', download=info.full_name) }}'">Download</button> (json file containing all available data)
 </p>
-<p>
-  <button value="Download" onclick="window.location.href = '{{ url_for( 'ModularForm_GSp4_Q_top_level', download=sam.collection()[0]+'.'+sam.name()) }}'">Download</button>
-  this sample in JavaScript object notation (json).
-</p>
-
-
-{% else %}
-{% include 'None.html' %}
-{% endif %}
 
 {% endblock %}
 

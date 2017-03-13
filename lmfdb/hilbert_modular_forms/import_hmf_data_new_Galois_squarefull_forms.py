@@ -1,14 +1,10 @@
+# -*- coding: utf-8 -*-
 import os.path
-import gzip
-import re
-import sys
-import time
 import sage.misc.preparser
 from sage.misc.preparser import preparse
-import subprocess
 from sage.interfaces.magma import magma
 
-from sage.all import ZZ, Integer
+from sage.all import ZZ, Rationals, PolynomialRing
 
 from lmfdb.base import getDBConnection
 print "getting connection"
@@ -42,7 +38,7 @@ def import_all_data(n, fileprefix=None, ferrors=None, test=True):
     files = [f[:-1] for f in files]
 #    subprocess.call("rm dir.tmp", shell=True)
 
-    files = [ff for ff in files if ff.find('_old') == -1]
+    files = [f for f in files if f.find('_old') == -1]
     for file_name in files:
         print("About to import data from file %s" % file_name)
         import_data(file_name, fileprefix=fileprefix, ferrors=ferrors, test=test)
@@ -158,8 +154,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
     # Collect levels
     v = hmff.readline()
     if v[:9] == 'LEVELS :=':
-        levels_str = v[10:][:-2]
-        levels_array = [str(t) for t in eval(preparse(levels_str))]
+        # Skip this line since we do not use the list of levels
         v = hmff.readline()
     for i in range(3):
         if v[:11] != 'NEWFORMS :=':
@@ -282,7 +277,10 @@ def repair_fields(D):
     F = hmf_fields.find_one({"label": '2.2.' + str(D) + '.1'})
 
     P = PolynomialRing(Rationals(), 'w')
-    w = P.gens()[0]
+    # P is used implicitly in the eval() calls below.  When these are
+    # removed, this will not longer be neceesary, but until then the
+    # assert statement is for pyflakes.
+    assert P
 
     primes = F['primes']
     primes = [[int(eval(p)[0]), int(eval(p)[1]), str(eval(p)[2])] for p in primes]
@@ -323,7 +321,10 @@ def attach_new_label(f):
     F = hmf_fields.find_one({"label": f['field_label']})
 
     P = PolynomialRing(Rationals(), 'w')
-    w = P.gens()[0]
+    # P is used implicitly in the eval() calls below.  When these are
+    # removed, this will not longer be neceesary, but until then the
+    # assert statement is for pyflakes.
+    assert P
 
     if type(f['level_ideal']) == str or type(f['level_ideal']) == unicode:
         N = eval(f['level_ideal'])

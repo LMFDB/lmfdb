@@ -1,6 +1,5 @@
 # / modular_forms/__init__.py
-import lmfdb.base
-import lmfdb.utils
+import lmfdb
 from lmfdb.utils import make_logger
 import flask
 
@@ -9,12 +8,13 @@ MF = "mf"
 mf = flask.Blueprint(MF, __name__, template_folder="views/templates", static_folder="views/static")
 mf_logger = make_logger(mf)
 
-import views
-import backend
 import elliptic_modular_forms
+assert elliptic_modular_forms
 import maass_forms
-from elliptic_modular_forms import *
-from maass_forms import *
+assert maass_forms
+import views
+assert views
+
 lmfdb.base.app.register_blueprint(mf, url_prefix="/ModularForm/")
 lmfdb.base.app.register_blueprint(mf, url_prefix="/AutomorphicForm/")
 lmfdb.base.app.register_blueprint(elliptic_modular_forms.emf, url_prefix="/ModularForm/GL2/Q/holomorphic")
