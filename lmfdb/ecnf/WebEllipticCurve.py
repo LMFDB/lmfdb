@@ -14,7 +14,7 @@ nfdb = None
 def db_ecnf():
     global ecnf
     if ecnf is None:
-        ecnf = getDBConnection().elliptic_curves.nfcurves
+        ecnf = getDBConnection().elliptic_curves.nfcurves2
     return ecnf
 
 def db_nfdb():
@@ -345,6 +345,14 @@ class ECNF(object):
         self.cm_bool = "no"
         self.End = "\(\Z\)"
         if self.cm:
+            self.rational_cm = K(self.cm).is_square()
+            self.cm_ramp = ZZ(self.cm).support()
+            self.cm_1ramp = len(self.cm_ramp)==1
+            if self.cm_1ramp:
+                self.cm_ramp = self.cm_ramp[0]
+            else:
+                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
+            self.cm_sqf = ZZ(self.cm).squarefree_part()
             self.cm_bool = "yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
                 d4 = ZZ(self.cm) // 4

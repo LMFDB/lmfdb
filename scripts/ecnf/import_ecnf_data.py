@@ -488,30 +488,48 @@ def galrep(line):
     start with a 1 or 2 digit prime followed a letter in
     ['B','C','N','S'].
 
-    Input line fields (4+); the first 4 are the standard labels and
-    any remaining ones are galrep codes.
+    Input line fields (4+); the first is a standard label of the form
+    field-conductor-an where 'a' is the isogeny class (one or more
+    letters), 'n' is the number ofe the curve in the class (from 1)
+    and any remaining ones are galrep codes.
 
-    field_label conductor_label iso_label number codes
+    label codes
 
-    Sample input line (not genuine):
+    Sample input line (field='2.0.3.1', conductor='10000.0.100', class='a', number=1)
 
-    2.0.4.1 [65,18,1] a 1 2B 5B.1.2
+    2.0.3.1-10000.0.100-a1 2B 3B[2]
 
     """
     data = split(line)
-    field_label = data[0]       # string
-    conductor_label = data[1]   # string
-    iso_label = data[2]         # string
-    number = int(data[3])       # int
-    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
-    label = "%s-%s" % (field_label, short_label)
-
-    image_codes = data[4:]
+    label = data[0] # single string
+    image_codes = data[1:]
     pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
     return label, {
         'non-surjective_primes': pr,
         'galois_images': image_codes,
     }
+
+def readgalreps(base_path, filename):
+    h = open(os.path.join(base_path, filename))
+    print("opened {}".format(os.path.join(base_path, filename)))
+    dat = {}
+    for L in h.readlines():
+        lab, dat1 = galrep(L)
+        dat[lab] = dat1
+    return dat
+
+# Before using the following, define galrepdat using a command such as
+#
+# galrepdat=readgalreps("/home/jec/ecnf-data/", "nfcurves_galois_images.txt")
+#
+# then use rewrite like this:
+# %runfile data_mgt/utilities/rewrite.py
+# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves2", add_galrep_data_to_nfcurve)
+#
+def add_galrep_data_to_nfcurve(cu):
+    if cu['label'] in galrepdat:
+        cu.update(galrepdat[cu['label']])
+    return cu
 
 filename_base_list = ['curves', 'curve_data']
 
