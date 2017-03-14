@@ -453,9 +453,10 @@ No \(p\)-adic data exists for this curve.
 {% if data.data.isogeny_degrees != "unknown" %}
 <p>
 {% if data.data.isogeny_degrees %}
-This curve has cyclic isogenies of degree {{ data.data.isogeny_degrees
-}}.  Isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
-    consists of {{data.ncurves}} curves.
+This curve has non-trivial cyclic isogenies of degree \(d\) for \(d=\)
+{{ data.data.isogeny_degrees}}.
+Isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
+consists of {{data.ncurves}} curves.
 {% else %}
 This curve has no rational isogenies.  Isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
     consists of this curve only.

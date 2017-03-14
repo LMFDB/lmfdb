@@ -324,7 +324,12 @@ class WebEC(object):
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
         self.ncurves = db_ec().count({'lmfdb_iso':self.lmfdb_iso})
-        data['isogeny_degrees'] = " and ".join([str(d) for d in self.isogeny_degrees if d>1])
+        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
+        if len(isodegs)<3:
+            data['isogeny_degrees'] = " and ".join(isodegs)
+        else:
+            data['isogeny_degrees'] = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
+
 
         if self.twoadic_gens:
             from sage.matrix.all import Matrix
