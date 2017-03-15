@@ -345,11 +345,14 @@ primes \( p\le 59 \).
 </p>
 {% if ec.cm %}
 <p>
-For all other primes \(p\), the image is a Borel subgroup
-{% if ec.cm_1ramp %}
+For all other primes \(p\), the image is
+{% if ec.cm_nramp!=0 %}
+a Borel subgroup
+{% if ec.cm_nramp==1 %}
 if \(p={{ec.cm_ramp}}\),
 {% else %}
 if \(p\in \{ {{ ec.cm_ramp }}\}\),
+{% endif %}
 {% endif %}
 {% if ec.rational_cm %}
 {% else %}
