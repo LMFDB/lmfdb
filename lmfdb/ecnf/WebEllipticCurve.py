@@ -14,7 +14,7 @@ nfdb = None
 def db_ecnf():
     global ecnf
     if ecnf is None:
-        ecnf = getDBConnection().elliptic_curves.nfcurves.new
+        ecnf = getDBConnection().elliptic_curves.nfcurves
     return ecnf
 
 def db_nfdb():
@@ -345,12 +345,13 @@ class ECNF(object):
 
         if not hasattr(self,'galois_images'):
             #print "No Galois image data"
-            self.galois_images = []
-            self.non_surjective_primes = []
-
-        self.galois_data = [{'p': p,'image': im }
-                               for p,im in zip(self.non_surjective_primes,
-                                               self.galois_images)]
+            self.galois_images = "?"
+            self.non_surjective_primes = "?"
+            self.galois_data = []
+        else:
+            self.galois_data = [{'p': p,'image': im }
+                                for p,im in zip(self.non_surjective_primes,
+                                                self.galois_images)]
 
         # CM and End(E)
         self.cm_bool = "no"

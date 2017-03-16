@@ -310,24 +310,21 @@ No primes of bad reduction.
 
 <div>
 <h2> {{KNOWL('ec.galois_rep', title='Galois Representations')}} </h2>
+
+{% if ec.galois_images=="?" %}
+
 <p>
-The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
-Representation')}}
-has {{KNOWL('ec.galois_rep', title='maximal image')}}
-{% if ec.cm %}
-{% else %}
-(i.e., contains \(\SL(2,\mathbb{F}_p)\))
-{% endif %}
- for all primes
-{% if ec.galois_data %}
- \( p \) except those listed.
-{#
-The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
-Representations')}} of an elliptic curve with {{
-KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
-are non-surjective for all primes \( p \).  We only show the image for
-primes \( p\le 59 \).
-#}
+The mod \( p \) Galois Representation data has not yet been computed for this curve.
+</p>
+
+{% else %} {# we have Galois data #}
+
+<p>
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois Representation')}}
+has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
+for all primes \( p \)
+{% if ec.galois_data %} {# there are non-maximal primes #}
+except those listed.
 </p>
 <p>
 <table>
@@ -342,10 +339,17 @@ primes \( p\le 59 \).
 </tr>
 {% endfor %}
 </table>
+{% else %}
+.
+{% endif %}
 </p>
+
 {% if ec.cm %}
 <p>
-For all other primes \(p\), the image is
+{% if ec.galois_data %} For all other primes \(p\), the
+{% else %} The
+{% endif %}
+image is
 {% if ec.cm_nramp!=0 %}
 a Borel subgroup
 {% if ec.cm_nramp==1 %}
@@ -354,23 +358,26 @@ if \(p={{ec.cm_ramp}}\),
 if \(p\in \{ {{ ec.cm_ramp }}\}\),
 {% endif %}
 {% endif %}
+
 {% if ec.rational_cm %}
 {% else %}
 the normalizer of
 {% endif %}
+
 a split Cartan subgroup
 if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=+1\) or
+
 {% if ec.rational_cm %}
 {% else %}
 the normalizer of
 {% endif %}
+
 a non-split Cartan subgroup
 if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 </p>
-{% endif %}
-{% else %}
- \( p \).
-{% endif %}
+{% endif %} {# CM case #}
+{% endif %} {# Galois image data exists #}
+
 </div>
 
 {% if DEBUG %}
