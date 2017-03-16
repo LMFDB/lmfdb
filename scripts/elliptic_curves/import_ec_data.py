@@ -364,7 +364,7 @@ def galrep(line):
         'galois_images': image_codes,
     }
 
-def allisog(line):
+def allisog(line, lmfdb_order=True):
     r""" Parses one line from an allisog file.
 
     Note that unlike all the other input files this does not have one
@@ -382,11 +382,14 @@ def allisog(line):
 
     NB The matrices in the allisog files number the curves using
     Cremona labelling, not LMFDB labelling (these are different for
-    smaller conductors).  This is also true for the matrices stored in
-    the database: we do not permute on upload.  But the website shows
-    the isogeny class w.r.t. LMFDB ordering, so the matrices must be
-    permuted before displaying (see code in
-    lmfdb/elliptic_curves/isog_class.py)
+    smaller conductors).  By default we permute the rows and columns
+    of the matrix here so that the resulting matrix is in LMFDB order
+    for storing in the database and then displaying with no need for
+    further permutation.  Set lmfdb_order=False to not do this.
+
+    Note that the website shows the isogeny class w.r.t. LMFDB
+    ordering, so if the matrices were stored in Cremona order they
+    would have to be permuted before displaying.
 
     Input line fields:
 
@@ -400,6 +403,15 @@ def allisog(line):
     data = split(line)
     isomat = data[5]
     isomat = [[int(d) for d in row.split(",")] for row in isomat[2:-2].split("],[")]
+
+    if lmfdb_order:
+        curves = data[4] # string
+        curves = [[ZZ(ai) for ai in c.split(",")] for c in curves[2:-2].split("],[")]
+        perm = dict([[i,curves.index(c)] for i,c in enumerate(sorted(curves))])
+        # that maps L to C (with offset by 1)
+        ncurves = len(curves)
+        isomat = [[isomat[perm[i]][perm[j]] for i in range(ncurves)] for j in range(ncurves)]
+
     # count the curves in the class
     isogeny_degrees = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(isomat)])
 
@@ -575,9 +587,9 @@ def add_isogs(base_path, min_N, max_N, upload=False):
             else:
                 print("(not) adding {} to record for {}".format(val,label))
 
-def read1isogmats(base_path, min_N, max_N):
+def read1isogmats(base_path, min_N, max_N, lmfdb_order=True):
     r""" Returns a dictionary whose keys are Cremona labels of individual
-    curves, and whose values are the isogeny_matrix (in Cremona
+    curves, and whose values are the isogeny_matrix (in LMFDB (default) or Cremona
     ordering) and isogeny_degrees for each curve in the class,
     together with the class size and the maximal degree in the class.
 
@@ -591,7 +603,7 @@ def read1isogmats(base_path, min_N, max_N):
     print("Opened {}".format(os.path.join(base_path, f)))
     data = {}
     for line in h.readlines():
-        data1 = allisog(line)
+        data1 = allisog(line, lmfdb_order=lmfdb_order)
         N,iso,num = data1['label']
         class_label = N+iso
         isogmat = data1['isogeny_matrix']
@@ -859,7 +871,11 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=90000
     if Nquery:
         query['conductor'] = Nquery
 
+    count=0
     for c in C.elliptic_curves.get_collection(collection).find(query):
+        count +=1
+        if count%10000==0:
+            print("Checked {} entries...".format(count))
         expected_keys = key_set
         if c['number']!=1:
             expected_keys = expected_keys - number_1_only_keys

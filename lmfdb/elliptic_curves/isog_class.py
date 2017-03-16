@@ -65,17 +65,8 @@ class ECisog_class(object):
             c['ai'] = [int(a) for a in c['ainvs']]
             c['url'] = url_for(".by_triple_label", conductor=N, iso_label=iso, number=c['lmfdb_number'])
 
-        # Extract the isogeny degree matrix from the database; there
-        # the order of the curves is the Cremona ordering, so we will
-        # reorder to match the LMFDB ordering.  Also the matrix
-        # entries are based at 1 but array indices are based at 0!
-        perm = dict([[c['lmfdb_number']-1,c['number']-1] for c in self.curves])
-        isogmat = [[self.isogeny_matrix[perm[i]][perm[j]]
-                    for i in range(ncurves)]
-                   for j in range(ncurves)]
-
         from sage.matrix.all import Matrix
-        self.isogeny_matrix = Matrix(isogmat)
+        self.isogeny_matrix = Matrix(self.isogeny_matrix)
         self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
 
         # Create isogeny graph:
