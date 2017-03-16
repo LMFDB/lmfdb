@@ -57,7 +57,7 @@ In general "number" means an int or double or string representing a number (e.g.
 
 """
 import os
-from sage.all import ZZ, primes, sqrt, EllipticCurve
+from sage.all import ZZ, primes, sqrt, EllipticCurve, prime_pi
 
 from lmfdb.base import getDBConnection
 print "getting connection"
