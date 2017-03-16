@@ -58,6 +58,8 @@ K=Q(w) of degree d.
    - torsion_gens       *     list of point-strings (see below)
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
+   - non-surjective_primes    list of ints
+   - galois_images            list of strings
 
    - equation           *     string
    - local_data         *     list of dicts (one per bad prime)
@@ -446,7 +448,7 @@ def add_heights(data):
     return data
 
 def isoclass(line):
-    r""" Parses one line from an isovlass file.  Returns the label and a dict
+    r""" Parses one line from an isoclass file.  Returns the label and a dict
     containing fields with keys .
 
     Input line fields (5); the first 4 are the standard labels and the
@@ -475,6 +477,62 @@ def isoclass(line):
     edata = {'label': label, 'isogeny_matrix': mat}
     return label, edata
 
+def galrep(line):
+    r""" Parses one line from a galrep file.  Returns the label and a
+    dict containing two fields: 'non-surjective_primes', a list of
+    primes p for which the Galois representation modulo p is not
+    surjective (cut off at p=37 for CM curves for which this would
+    otherwise contain all primes), 'galois_images', a list of strings
+    encoding the image when not surjective, following Sutherland's
+    coding scheme for subgroups of GL(2,p).  Note that these codes
+    start with a 1 or 2 digit prime followed a letter in
+    ['B','C','N','S'].
+
+    Input line fields (4+); the first is a standard label of the form
+    field-conductor-an where 'a' is the isogeny class (one or more
+    letters), 'n' is the number ofe the curve in the class (from 1)
+    and any remaining ones are galrep codes.
+
+    label codes
+
+    Sample input line (field='2.0.3.1', conductor='10000.0.100', class='a', number=1)
+
+    2.0.3.1-10000.0.100-a1 2B 3B[2]
+
+    """
+    data = split(line)
+    label = data[0] # single string
+    image_codes = data[1:]
+    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
+    return label, {
+        'non-surjective_primes': pr,
+        'galois_images': image_codes,
+    }
+
+def readgalreps(base_path, filename):
+    h = open(os.path.join(base_path, filename))
+    print("opened {}".format(os.path.join(base_path, filename)))
+    dat = {}
+    for L in h.readlines():
+        lab, dat1 = galrep(L)
+        dat[lab] = dat1
+    return dat
+
+# Before using the following, define galrepdat using a command such as
+#
+# galrepdat=readgalreps("/home/jec/ecnf-data/", "nfcurves_galois_images.txt")
+#
+# then use rewrite like this:
+# %runfile data_mgt/utilities/rewrite.py
+# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves2", add_galrep_data_to_nfcurve)
+#
+galrepdat = {} # for pyflakes
+
+def add_galrep_data_to_nfcurve(cu):
+    if cu['label'] in galrepdat:
+        cu.update(galrepdat[cu['label']])
+    return cu
+
 filename_base_list = ['curves', 'curve_data']
 
 #
@@ -487,10 +545,12 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
+    galrep_filename = 'galrep.%s' % (filename_suffix)
     file_list = [curves_filename, curve_data_filename, isoclass_filename]
-#    file_list = [isoclass_filename]
-#    file_list = [curves_filename]
-#    file_list = [curve_data_filename]
+    file_list = [isoclass_filename]
+    file_list = [curves_filename]
+    file_list = [curve_data_filename]
+    file_list = [galrep_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
 
