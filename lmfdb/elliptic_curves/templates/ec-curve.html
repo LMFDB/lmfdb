@@ -455,10 +455,12 @@ No \(p\)-adic data exists for this curve.
 {% if data.data.isogeny_degrees %}
 This curve has non-trivial cyclic isogenies of degree \(d\) for \(d=\)
 {{ data.data.isogeny_degrees}}.
-Isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
-consists of {{data.ncurves}} curves.
+<br>
+Its isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
+consists of {{data.class_size}} curves linked by isogenies of degrees
+dividing {{data.class_deg}}.
 {% else %}
-This curve has no rational isogenies.  Isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
+This curve has no rational isogenies.  Its isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
     consists of this curve only.
 </p>
 {% endif %}

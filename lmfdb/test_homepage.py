@@ -57,7 +57,7 @@ class HomePageTest(LmfdbTest):
         """
         homepage = self.tc.get("/").data
         self.check(homepage, "/L/degree4/MaassForm/", 'data on L-functions associated to Maass cusp forms for GSp(4) of level 1')
-        self.check(homepage, "/EllipticCurve/Q/102/c/", r'4 &amp; 8 &amp; 4 &amp; 1 &amp; 8 &amp; 2 \\')
+        self.check(homepage, "/EllipticCurve/Q/102/c/", r'1 &amp; 2 &amp; 4 &amp; 4 &amp; 8 &amp; 8')
 
     # Box 5
     def test_box5(self):

@@ -53,10 +53,9 @@ class ECisog_class(object):
         N, iso, number = split_lmfdb_label(self.lmfdb_iso)
 
         # Extract the size of the isogeny class from the database
-        ncurves = self.ncurves = len(self.isogeny_matrix)
-
+        ncurves = self.class_size
         # Create a list of the curves in the class from the database
-        self.curves = [db_ec().find_one({'iso':self.iso, 'lmfdb_number':int(i+1)})
+        self.curves = [db_ec().find_one({'iso':self.iso, 'lmfdb_number': i+1})
                           for i in range(ncurves)]
 
         # Set optimality flags.  The optimal curve is number 1 except
@@ -68,8 +67,9 @@ class ECisog_class(object):
 
         # Extract the isogeny degree matrix from the database; there
         # the order of the curves is the Cremona ordering, so we will
-        # reorder to match the LMFDB ordering.
-        perm = dict([[c['number']-1,c['lmfdb_number']-1] for c in self.curves])
+        # reorder to match the LMFDB ordering.  Also the matrix
+        # entries are based at 1 but array indices are based at 0!
+        perm = dict([[c['lmfdb_number']-1,c['number']-1] for c in self.curves])
         isogmat = [[self.isogeny_matrix[perm[i]][perm[j]]
                     for i in range(ncurves)]
                    for j in range(ncurves)]
