@@ -110,7 +110,7 @@ def todays_curve():
     n = (date.today()-mordells_birthday).days
     label = db_ec().find({'number' : int(1)})[n]['label']
     #return render_curve_webpage_by_label(label)
-    return redirect(url_for(".by_ec_label", label=label), 301)
+    return redirect(url_for(".by_ec_label", label=label), 307)
 
 @ec_page.route("/stats")
 def statistics():
@@ -134,7 +134,7 @@ def by_conductor(conductor):
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
-            return redirect (url_for(".rational_elliptic_curves", **request.args), 301)
+            return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
         info['title'] += ' search results'
         info['bread'].append(('search results',''))
     info['conductor'] = conductor
