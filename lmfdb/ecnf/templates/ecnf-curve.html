@@ -330,7 +330,7 @@ except those listed.
 <table>
 <tr>
 <th>prime</th>
-<th>{{KNOWL('ec.q.galois_rep_image', title='Image of Galois Representation')}}</th>
+<th>{{KNOWL('ec.galois_rep_image', title='Image of Galois Representation')}}</th>
 </tr>
 {% for pr in ec.galois_data %}
 <tr>
@@ -351,7 +351,7 @@ except those listed.
 {% endif %}
 image is
 {% if ec.cm_nramp!=0 %}
-a Borel subgroup
+a {{KNOWL('gl2.borel', title='Borel subgroup')}}
 {% if ec.cm_nramp==1 %}
 if \(p={{ec.cm_ramp}}\),
 {% else %}
@@ -360,19 +360,19 @@ if \(p\in \{ {{ ec.cm_ramp }}\}\),
 {% endif %}
 
 {% if ec.rational_cm %}
+a {{KNOWL('gl2.split_cartan', title='split Cartan subgroup')}}
 {% else %}
-the normalizer of
+the {{KNOWL('gl2.normalizer_split_cartan', title='normalizer of a split Cartan subgroup')}}
 {% endif %}
 
-a split Cartan subgroup
 if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=+1\) or
 
 {% if ec.rational_cm %}
+a {{KNOWL('gl2.nonsplit_cartan', title='nonsplit Cartan subgroup')}}
 {% else %}
-the normalizer of
+the {{KNOWL('gl2.normalizer_nonsplit_cartan', title='normalizer of a nonsplit Cartan subgroup')}}
 {% endif %}
 
-a non-split Cartan subgroup
 if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 </p>
 {% endif %} {# CM case #}

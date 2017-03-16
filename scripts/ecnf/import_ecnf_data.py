@@ -526,6 +526,8 @@ def readgalreps(base_path, filename):
 # %runfile data_mgt/utilities/rewrite.py
 # rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves2", add_galrep_data_to_nfcurve)
 #
+galrepdat = {} # for pyflakes
+
 def add_galrep_data_to_nfcurve(cu):
     if cu['label'] in galrepdat:
         cu.update(galrepdat[cu['label']])
@@ -544,10 +546,10 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
     galrep_filename = 'galrep.%s' % (filename_suffix)
-#    file_list = [curves_filename, curve_data_filename, isoclass_filename]
-#    file_list = [isoclass_filename]
-#    file_list = [curves_filename]
-#    file_list = [curve_data_filename]
+    file_list = [curves_filename, curve_data_filename, isoclass_filename]
+    file_list = [isoclass_filename]
+    file_list = [curves_filename]
+    file_list = [curve_data_filename]
     file_list = [galrep_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
