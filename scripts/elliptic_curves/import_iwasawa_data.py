@@ -152,7 +152,7 @@ def read_iwasawa_data(base_path, filename):
 
 # for use with the rewrite script in data_mgt/utilities/rewrite.py we
 # need to give it the old and new collection names (e.g. curves and
-# curves2) and a function taking one mongodb record (dictionary) and
+# curves.new) and a function taking one mongodb record (dictionary) and
 # returning a possible changed version of it.
 
 #  The following returns such a function, only applying it to curves with conductors in a given range
@@ -162,6 +162,8 @@ def iw_data_update(N1, N2, base_path, filename):
     def update_function(C):
         N = int(C['conductor'])
         if N1 <= N <= N2:
-            C.update(iw_data[C['label']])
+            label = C['label']
+            if label in iw_data:
+                C.update(iw_data[label])
         return C
     return update_function

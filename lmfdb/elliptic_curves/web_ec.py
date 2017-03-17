@@ -369,12 +369,13 @@ class WebEC(object):
                     # Additive primes are excluded from the table
                     # if red==0:
                     #    continue
-                    rtype = ["nsmult","add", "smult"][1+red]
+                    #rtype = ["nsmult","add", "smult"][1+red]
+                    rtype = ["nonsplit","add", "split"][1+red]
                 p = str(p)
                 pdata = self.iwdata[p]
                 if isinstance(pdata, type(u'?')):
                     if not rtype:
-                        rtype = "ord" if pdata=="o?" else "ss"
+                        rtype = "ordinary" if pdata=="o?" else "ss"
                     if rtype == "add":
                         data['iwdata'] += [[p,rtype,"-","-"]]
                         data['additive_shown'] = True
@@ -384,7 +385,7 @@ class WebEC(object):
                 else:
                     if len(pdata)==2:
                         if not rtype:
-                            rtype = "ord"
+                            rtype = "ordinary"
                         lambdas = str(pdata[0])
                         mus = str(pdata[1])
                     else:
