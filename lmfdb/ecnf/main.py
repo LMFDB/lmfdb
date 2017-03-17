@@ -201,15 +201,15 @@ def index():
         data['fields'].append(['%s totally real quartic fields, including' % nquartics,
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quartics)])
     # Quintics
-    quintics = ['5.5.%s.1' % str(d) for d in [14641]]
+    quintics = ['5.5.%s.1' % str(d) for d in [14641, 24217, 36497, 38569, 65657]]
     if 5 in counts['nfields_by_degree']:
         nquintics = counts['nfields_by_degree'][5]
-        data['fields'].append(['%s totally real quintic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
+        data['fields'].append(['%s totally real quintic fields, including' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
     # Sextics
-    sextics = ['6.6.%s.1' % str(d) for d in [371293]]
+    sextics = ['6.6.%s.1' % str(d) for d in [300125, 371293, 434581, 453789, 485125]]
     if 6 in counts['nfields_by_degree']:
-        nquintics = counts['nfields_by_degree'][6]
-        data['fields'].append(['%s totally real sextic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in sextics)])
+        nsextics = counts['nfields_by_degree'][6]
+        data['fields'].append(['%s totally real sextic fields, including' % nsextics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in sextics)])
 
     data['degrees'] = sorted(counts['degrees'])
 
