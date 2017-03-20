@@ -335,7 +335,7 @@ def alllabels(line):
         'lmfdb_number': int(data[5])
     }
 
-def galrep(line):
+def galrep(line, new_format=True):
     r""" Parses one line from a galrep file.  Returns the label and a
     dict containing two fields: 'non-surjective_primes', a list of
     primes p for which the Galois representation modulo p is not
@@ -346,7 +346,7 @@ def galrep(line):
     start with a 1 or 2 digit prime followed a letter in
     ['B','C','N','S'].
 
-    Input line fields:
+    Input line fields (new_format=False):
 
     conductor iso number ainvs rank torsion codes
 
@@ -354,10 +354,22 @@ def galrep(line):
 
     66 c 3 [1,0,0,-10065,-389499] 0 2 2B 5B.1.2
 
+    Input line fields (new_format=True):
+
+    label codes
+
+    Sample input line:
+
+    66c3 2B 5B.1.2
+
     """
     data = split(line)
-    label = data[0] + data[1] + data[2]
-    image_codes = data[6:]
+    if new_format:
+        label = data[0]
+        image_codes = data[1:]
+    else:
+        label = data[0] + data[1] + data[2]
+        image_codes = data[6:]
     pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
     return label, {
         'non-surjective_primes': pr,
@@ -643,6 +655,37 @@ isogdata = {} # to keep pyflakes happy
 def add_isogs_to_one(c):
     c.update(isogdata[c['label']])
     c['lmfdb_number'] = int(c['lmfdb_number'])
+    return c
+
+def readallgalreps(base_path, f):
+    r""" Returns a dictionary whose keys are Cremona labels of individual
+    curves, and whose values are a dictionary with the keys
+    'non-surjective_primes' and 'galois_images'
+
+    This function reads one new-format galrep file.
+    """
+    h = open(os.path.join(base_path, f))
+    print("Opened {}".format(os.path.join(base_path, f)))
+    data = {}
+    for line in h.readlines():
+        label, data1 = galrep(line, new_format=True)
+        data[label] = data1
+    return data
+
+# To add all the galrep data to the database, first use the
+# preceding function readllgalreps() to create a large dict called
+# galrepdata keyed on curve labels, then pass the following function to
+# the rewrite_collection() function:
+
+galrepdata = {} # to keep pyflakes happy
+
+def add_galreps_to_one(c):
+    if c['cm']:
+        c.update(galrepdata[c['label']])
+    else:
+        # test no change
+        for k in ['non-surjective_primes', 'galois_images']:
+            assert c[k]==galrepdata[c['label']][k]
     return c
 
 

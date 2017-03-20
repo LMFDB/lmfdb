@@ -58,7 +58,7 @@ def db_ec():
     global ecdb
     if ecdb is None:
         ec = lmfdb.base.getDBConnection().elliptic_curves
-        ecdb = ec.curves
+        ecdb = ec.curves.new
     return ecdb
 
 def padic_db():
@@ -292,10 +292,24 @@ class WebEC(object):
         data['disc_latex'] = web_latex(D)
         data['cond_latex'] = web_latex(N)
 
+        data['galois_images'] = [trim_galois_image_code(s) for s in self.galois_images]
+        data['non_surjective_primes'] = self.non_surjective_primes
+        data['galois_data'] = [{'p': p,'image': im }
+                               for p,im in zip(data['non_surjective_primes'],
+                                               data['galois_images'])]
+
         data['CMD'] = self.cm
         data['CM'] = "no"
         data['EndE'] = "\(\Z\)"
         if self.cm:
+            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            data['cm_nramp'] = len(data['cm_ramp'])
+            if data['cm_nramp']==1:
+                data['cm_ramp'] = data['cm_ramp'][0]
+            else:
+                data['cm_ramp'] = ", ".join([str(p) for p in data['cm_ramp']])
+            data['cm_sqf'] = ZZ(self.cm).squarefree_part()
+
             data['CM'] = "yes (\(D=%s\))" % data['CMD']
             if data['CMD']%4==0:
                 d4 = ZZ(data['CMD'])//4
@@ -308,18 +322,6 @@ class WebEC(object):
 
         data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
                                  if (N*data['ap'][i]) %p !=0]
-
-        try:
-            data['galois_images'] = [trim_galois_image_code(s) for s in self.galois_images]
-            data['non_surjective_primes'] = self.non_surjective_primes
-        except AttributeError:
-            #print "No Galois image data"
-            data['galois_images'] = []
-            data['non_surjective_primes'] = []
-
-        data['galois_data'] = [{'p': p,'image': im }
-                               for p,im in zip(data['non_surjective_primes'],
-                                               data['galois_images'])]
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
