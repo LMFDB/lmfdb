@@ -16,10 +16,6 @@ affil: University of Heidelberg
 ---
 name: Salman Baig
 ---
-name: Sarunas Burdulis
-affil: Dartmouth College
-url: https://math.dartmouth.edu/~sarunas/
----
 name: Jennifer Balakrishnan
 url: http://math.bu.edu/people/jbala/
 affil: Boston University
@@ -43,9 +39,17 @@ url: http://www.maths.bris.ac.uk/people/faculty/maarb/
 name: Robert Bradshaw
 affil: Google Inc.
 ---
+name: Peter Bruin
+affil: Universiteit Leiden
+url: http://pub.math.leidenuniv.nl/~bruinpj/
+---
 name: Alina Bucur
 url: http://www.math.ucsd.edu/~alina/
 affil: University of California, San Diego
+---
+name: Sarunas Burdulis
+affil: Dartmouth College
+url: https://math.dartmouth.edu/~sarunas/
 ---
 name: Henri Cohen
 url: http://www.math.u-bordeaux1.fr/~hecohen/
