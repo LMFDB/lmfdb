@@ -175,7 +175,11 @@ def render_artin_representation_webpage(label):
     if cc is not None:
         if cc.modulus <= 100000: 
             if the_rep.dimension()==1:
-                friends.append(("Corresponding Dirichlet character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+                if cc.order == 2:
+                    cc_name = cc.symbol
+                else:
+                    cc_name = cc.texname
+                friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
             else:
                 friends.append(("Determinant character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
 
