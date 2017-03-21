@@ -57,7 +57,7 @@ In general "number" means an int or double or string representing a number (e.g.
 
 """
 import os
-from sage.all import ZZ, primes, sqrt, EllipticCurve
+from sage.all import ZZ, primes, sqrt, EllipticCurve, prime_pi
 
 from lmfdb.base import getDBConnection
 print "getting connection"
@@ -117,22 +117,145 @@ def make_one_euler_factor(E, p):
         return [1,-ap]
     return [1]
 
+def make_one_euler_factor_db(E, p):
+    r"""
+    Returns the Euler factor at p from a database elliptic curve E.
+    """
+    ld = [ld for ld in E['local_data'] if ld['p']==p]
+    if ld: # p is bad, we get ap from the stored local data:
+        ap = ld[0]['red']
+        if ap:
+            return [1,-ap]
+        else:
+            return [1]
+
+    # Now p is good and < 100 so we retrieve ap from the stored aplist:
+
+    ap = E['aplist'][prime_pi(p)-1] # rebase count from 1 to 0
+    return [1,-ap,int(p)]
+
 def make_euler_factors(E, maxp=100):
     r"""
     Returns a list of the Euler factors for all primes up to max_p,
-        given a Sage elliptic curve E,
+    given a Sage elliptic curve E.
     """
-    return [make_one_euler_factor(E, p) for p in primes(100)]
+    return [make_one_euler_factor(E, p) for p in primes(maxp)]
+
+def make_euler_factors_db(E):
+    r"""
+    Returns a list of the Euler factors for all primes up to 100,
+    given a database elliptic curve E (which has this many ap stored)
+    """
+    return [make_one_euler_factor_db(E, p) for p in primes(100)]
 
 def make_bad_lfactors(E):
     r"""
-    Returns a list of the bad Euler factors, given a database elliptic curve E,
+    Returns a list of the bad Euler factors, given a Sage elliptic curve E,
     """
     return [[int(p),make_one_euler_factor(E, p)] for p in E.conductor().support()]
 
+def make_bad_lfactors_db(E):
+    r"""
+    Returns a list of the bad Euler factors, given a database elliptic curve E,
+    """
+    return [[p,make_one_euler_factor_db(E, p)] for p in [ld['p'] for ld in E['local_data']]]
+
 def read_line(line):
-    r""" Parses one line from input file.  Returns the hash and a
-    dict containing fields with keys as above.
+    r""" Parses one line from input file.  Returns the hash and a dict
+    containing fields with keys as above.  This version expects 9
+    fields on each line, separated by a colon:
+
+    0. hash
+    1. label
+    2. root number
+    3. (not used)
+    4. [a(n) for n in [2..10]
+    5. Special value L^(r)(1)/r!
+    6. zeros
+    7. plot spacing
+    8. plot data
+
+
+    """
+    fields = line.split(":")
+    if len(fields)==6:
+        return read_line_old(line)
+    assert len(fields)==9
+    label = fields[1]
+    # get a curve from the database in this isogeny class.  It must
+    # have number 1 since only those have the ap and an stored.
+    E = curves.find_one({'iso': label, 'number':1})
+
+    data = constant_data()
+    instances = {}
+
+    # Set the fields in the Instances collection:
+
+    cond = data['conductor'] = int(E['conductor'])
+    iso = E['lmfdb_iso'].split('.')[1]
+    instances['url'] = 'EllipticCurve/Q/%s/%s' % (cond,iso)
+    instances['Lhash'] = Lhash = fields[0]
+    instances['type'] = 'ECQ'
+
+    # Set the fields in the Lfunctions collection:
+
+    data['Lhash'] = Lhash
+    data['root_number'] = int(fields[2])
+    data['order_of_vanishing'] = int(E['rank'])
+    data['central_character'] = '%s.1' % cond
+    data['st_group'] = 'N(U(1))' if E['cm'] else 'SU(2)'
+    data['leading_term'] = lt = float(fields[5])
+    #
+    lt_db = float(E['special_value'])
+    dif = abs(lt-lt_db)
+    eps = 1e-14
+    if dif > eps:
+        print("{}: special value in db = {}, in input file = {}, difference = {}".format(label,lt_db,lt,dif))
+
+    # Zeros
+
+    zeros = fields[6][1:-1].split(",")
+    # omit negative ones and 0, using only string tests:
+    data['positive_zeros'] = [y for y in zeros if y!='0' and y[0]!='-']
+    data['z1'] = data['positive_zeros'][0]
+    data['z2'] = data['positive_zeros'][1]
+    data['z3'] = data['positive_zeros'][2]
+
+    # plot data
+
+    # constant difference in x-coordinate sequence:
+    data['plot_delta'] = float(fields[7])
+    # list of y coordinates for x>0:
+    data['plot_values'] = [float(y) for y in fields[8][1:-2].split(",")]
+
+    # Euler factors:
+
+    data['bad_lfactors'] = make_bad_lfactors_db(E)
+    data['euler_factors'] = make_euler_factors_db(E)
+
+    # Dirichlet coefficients
+
+    an = E['anlist'] # list indexed from 0 to 10 inclusive
+    input_an = [int(a) for a in fields[4][1:-1].split(",")]
+    assert an[2:11]==input_an
+    for n in range(2,11):
+        data['A%s' % n] = str(an[n])
+        data['a%s' % n] = [an[n]/sqrt(float(n)),0]
+
+    return Lhash, data, instances
+
+def read_line_old(line):
+    r""" Parses one line from input file.  Returns the hash and a dict
+    containing fields with keys as above.  This original version
+    expects 6 fields on each line, separated by a colon:
+
+    0. hash
+    1. label
+    2. root number
+    3. (not used)
+    4. zeros
+    5. plot data
+
     """
     fields = line.split(":")
     assert len(fields)==6
@@ -231,8 +354,8 @@ def upload_to_db(base_path, f, test=True):
 
     for val in vals:
         #print val
-        Lfunctions.update({'Lhash': val['Lhash']}, {"$set": val}, upsert=True)
-        Instances.update({'Lhash': val['Lhash']}, {"$set": instances_to_insert[val['Lhash']]}, upsert=True)
+        Lfunctions.update_one({'Lhash': val['Lhash']}, {"$set": val}, upsert=True)
+        Instances.update_one({'Lhash': val['Lhash']}, {"$set": instances_to_insert[val['Lhash']]}, upsert=True)
         count += 1
         if count % 1000 == 0:
             print("inserted %s items" % count)
