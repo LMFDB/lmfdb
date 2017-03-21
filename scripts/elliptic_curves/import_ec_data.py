@@ -335,6 +335,14 @@ def alllabels(line):
         'lmfdb_number': int(data[5])
     }
 
+def split_galois_image_code(s):
+    """Each code starts with a prime (1-3 digits but we allow for more)
+    followed by an image code or that prime.  This function returns
+    two substrings, the prefix number and the rest.
+    """
+    p = re.findall(r'\d+', s)[0]
+    return p, s[len(p):]
+
 def galrep(line, new_format=True):
     r""" Parses one line from a galrep file.  Returns the label and a
     dict containing two fields: 'non-surjective_primes', a list of
@@ -370,11 +378,21 @@ def galrep(line, new_format=True):
     else:
         label = data[0] + data[1] + data[2]
         image_codes = data[6:]
-    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
-    return label, {
-        'non-surjective_primes': pr,
-        'galois_images': image_codes,
-    }
+
+    pr = [ int(split_galois_image_code(s)[0]) for s in image_codes]
+
+    if new_format:
+        d = {
+            'non-maximal_primes': pr,
+            'mod-p_images': image_codes,
+        }
+    else:
+        d = {
+            'non-surjective_primes': pr,
+            'galois_images': image_codes,
+        }
+
+    return label, d
 
 def allisog(line, lmfdb_order=True):
     r""" Parses one line from an allisog file.
@@ -680,14 +698,8 @@ def readallgalreps(base_path, f):
 galrepdata = {} # to keep pyflakes happy
 
 def add_galreps_to_one(c):
-    if c['cm']:
-        c.update(galrepdata[c['label']])
-    else:
-        # test no change
-        for k in ['non-surjective_primes', 'galois_images']:
-            assert c[k]==galrepdata[c['label']][k]
+    c.update(galrepdata[c['label']])
     return c
-
 
 # A one-off script to add (1) exact Sha order; (2) prime factors of Sha; (3) prime factors of torsion
 

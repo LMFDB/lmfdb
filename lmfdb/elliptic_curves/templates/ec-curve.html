@@ -385,14 +385,22 @@ data.twoadic_index }}.
 
     {{ place_code('galrep') }}
 
+{% if data.data.new_galois_data %}
+
+{# ######## code for new Galois data (non-maximal primes) ###### #}
+
 <p>
 The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
 representation')}}
 has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
+{% if not data.data.CMD %}
+\(\GL(2,\F_p)\)
+{% endif %}
 for all primes \( p \)
 {% if data.data.galois_data %} {# there are non-maximal primes #}
 except those listed.
 </p>
+
 <p>
 <table>
 <tr>
@@ -431,6 +439,53 @@ the {{KNOWL('gl2.normalizer_nonsplit_cartan', title='normalizer of a nonsplit Ca
 if \(\left(\frac{ {{data.data.cm_sqf}} }{p}\right)=-1\).
 </p>
 {% endif %} {# CM case #}
+
+{% else %}
+
+{# ######## code for old Galois data (non-surjective primes) ###### #}
+
+
+
+{% if data.data.galois_data %}
+<p>
+{% if data.data.CMD %}
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
+representations')}} of an elliptic curve with {{
+KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
+are non-surjective for all odd primes \( p \).  We only show the image
+for
+primes \( p\le 37 \).
+{% else %}
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
+representation')}} is surjective for all primes \( p \) except those
+    listed.
+{% endif %}
+</p>
+<table>
+<tr>
+<th>prime</th>
+<th>{{KNOWL('ec.q.galois_rep_image', title='Image of Galois
+  representation')}}</th>
+</tr>
+{% for pr in data.data.galois_data %}
+<tr>
+<td align=center> \({{pr.p}}\)</td>
+<td align=center>{{pr.image}}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+<p>
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
+representation')}} is surjective for all primes \( p \).
+</p>
+{% endif %}
+
+
+{# ######## end of new/old Galois data split ###### #}
+
+{% endif %}
+
 
 
     <h2> p-adic data </h2>

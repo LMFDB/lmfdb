@@ -95,6 +95,9 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
+    info['galois_data_type'] = 'old'
+    if 'non-maximal_primes' in db_ec().find_one():
+        info['galois_data_type'] = 'new'
     return render_template("ec-index.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), **err_args)
 
 @ec_page.route("/random")
@@ -278,6 +281,10 @@ def elliptic_curve_search(info):
     credit = 'John Cremona'
     if 'non-surjective_primes' in query:
         credit += 'and Andrew Sutherland'
+    info['galois_data_type'] = 'old'
+    if 'non-maximal_primes' in db_ec().find_one():
+        info['galois_data_type'] = 'new'
+
     t = info.get('title','Elliptic Curves search results')
     return render_template("ec-search-results.html", info=info, credit=credit, bread=bread, title=t)
 
