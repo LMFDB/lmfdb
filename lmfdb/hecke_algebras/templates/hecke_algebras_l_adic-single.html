@@ -16,12 +16,11 @@
 
 {% for j in info.l_adic_orbits %}
     <hr>
-
+    <p>Orbit index: {{j.index}}</p>
     <h3>{{info.ell}}-adic data</h3>
 
 
     <table cellpadding=3 >
-    <tr align= right><td>Orbit index:</td><td align=left>{{j.index}}</td><tr>
     {% if j.idempotent_display == [] %}
         <tr><td align= right valign= top>Idempotent:</td><td>Download the idempotent for {% for e in j.download_id %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
     {% else %}
