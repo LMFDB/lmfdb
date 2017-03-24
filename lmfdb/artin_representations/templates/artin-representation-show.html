@@ -55,7 +55,15 @@
         \end{aligned}\]
     </div>
     
-    <h3>Generators of the action on the roots $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$</h3>
+    <h3>Generators of the action on the roots 
+    {% if object.number_field_galois_group().degree() < 4  %}
+        ${% for i in range(1, object.number_field_galois_group().degree()+1) %}
+             r_{ {{i}} }{% if not loop.last %},  {% endif %}
+        {% endfor %}$
+    {% else %}
+        $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$
+    {% endif %}
+</h3>
     <div>
     <center>
     <table class="ntdata">
@@ -76,7 +84,13 @@
     <div> 
       <center><table class="ntdata">
       <thead><tr><td>Size</td><td>Order</td><td>Action on
-      $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$</td><td>Character value</td></tr></thead>
+    {% if object.number_field_galois_group().degree() < 4  %}
+        ${% for i in range(1, object.number_field_galois_group().degree()+1) %}
+             r_{ {{i}} }{% if not loop.last %},  {% endif %}
+        {% endfor %}$
+    {% else %}
+        $r_1, \ldots, r_{ {{object.number_field_galois_group().degree()}} }$
+    {% endif %}</td><td>Character value</td></tr></thead>
 
       <tbody>
         {% for gen in object.number_field_galois_group().conjugacy_classes()%}
