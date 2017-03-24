@@ -13,7 +13,11 @@
         <tr><td> Smallest {{ KNOWL('artin.permutation_container', title='containing permutation representation') }}: <td> {{object.smallest_gal_t_format()|safe}}
         <tr><td> {{ KNOWL('artin.parity', title='Parity') }}:<td> {{ object.parity()}} </tr>
         {% if object.dimension() == 1 %}
-            <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }}: <td> {{ object.det_display()|safe}} </tr>
+            {%if object.det_url()=="Not available"%}
+                <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }}: <td> {{ object.det_display()|safe}} </tr>
+            {%else%}
+                <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }}: <td> <a href={{object.det_url()}}>{{ object.det_display()|safe}}</a> </tr>
+            {%endif%}
         {% else %}
             <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }}: <td> {{ object.det_display()|safe}} </tr>
         {% endif %}

@@ -265,6 +265,12 @@ class ArtinRepresentation(object):
             return cc.symbol
         return cc.texname
 
+    def det_url(self):
+        cc= self.central_character()
+        if cc is None:
+           return 'Not available'
+        return url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)
+
     def central_char_old(self, p):
         """
           Returns the value of the central character at p.
