@@ -971,7 +971,9 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def codeinit(self):
         return {
-          'sage': 'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed\nchi = DirichletGroup_conrey(%i)[%i]\n' %(self.modulus,self.number),
+          'sage': '\n'.join(['from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                             'G = DirichletGroup_conrey(%i)' %(self.modulus),
+                             'chi = G[%i]' %(self.number)])+'\n',
           'pari': 'g = idealstar(,%i,2)\nchi = znconreychar(g,%i)\n'%(self.modulus,self.number) ,
           }
 
@@ -1097,8 +1099,8 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codegenvalues(self):
-        return { 'sage': 'chi.values_on_gens()',
-                 'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ value in Q/Z' }
+        return { 'sage': '[(g,chi.logvalue(g)) for g in G.gens()] # values in Q/Z',
+                 'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ values in Q/Z' }
 
     def value(self, val):
         val = int(val)
@@ -1300,10 +1302,11 @@ class WebHeckeCharacter(WebChar, WebHecke):
         kpol = self.k.polynomial()
         return {
                 'sage':  '\n'.join(['k.<a> = NumberField(%s)'%kpol,
-                          'm = k.ideal(%s)'%self.modulus,
-                          'G = RayClassGroup(k,m)',
-                          'H = G.dual_group()',
-                          'chi = H(%s)'%self.number])+'\n',
+                                    'm = k.ideal(%s)'%self._modulus.gens_reduced(),
+                                    '# N.B. RayClassGroup() is not yet available in Sage',
+                                    'G = RayClassGroup(k,m)',
+                                    'H = G.dual_group()',
+                                    'chi = H(%s)'%self.number])+'\n',
                 'pari':  '\n'.join(['k=bnfinit(%s)'%kpol,
                            'g=bnrinit(k,m,1)',
                            'chi = %s'%self.number])+'\n'
