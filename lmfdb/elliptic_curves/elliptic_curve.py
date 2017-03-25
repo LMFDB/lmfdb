@@ -215,6 +215,10 @@ def elliptic_curve_search(info):
         else:
             query['label'] = ''
 
+    info['galois_data_type'] = 'old'
+    if 'non-maximal_primes' in db_ec().find_one():
+        info['galois_data_type'] = 'new'
+
     try:
         parse_rational(info,query,'jinv','j-invariant')
         parse_ints(info,query,'conductor')
@@ -231,14 +235,22 @@ def elliptic_curve_search(info):
             elif info['include_cm'] == 'only':
                 query['cm'] = {'$ne' : 0}
 
-        parse_primes(info, query, 'surj_primes', name='surjective primes',
-                     qfield='non-surjective_primes', mode='complement')
+        if info['galois_data_type'] == 'new':
+            parse_primes(info, query, 'surj_primes', name='surjective primes',
+                         qfield='non-maximal_primes', mode='complement')
+        else:
+            parse_primes(info, query, 'surj_primes', name='surjective primes',
+                         qfield='non-surjective_primes', mode='complement')
         if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
-        parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
-                     qfield='non-surjective_primes',mode=mode)
+        if info['galois_data_type'] == 'new':
+            parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
+                         qfield='non-maximal_primes',mode=mode)
+        else:
+            parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
+                         qfield='non-surjective_primes',mode=mode)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)
@@ -279,11 +291,8 @@ def elliptic_curve_search(info):
         else:
             info['report'] = 'displaying all %s matches' % nres
     credit = 'John Cremona'
-    if 'non-surjective_primes' in query:
+    if 'non-surjective_primes' in query or 'non-maximal_primes' in query:
         credit += 'and Andrew Sutherland'
-    info['galois_data_type'] = 'old'
-    if 'non-maximal_primes' in db_ec().find_one():
-        info['galois_data_type'] = 'new'
 
     t = info.get('title','Elliptic Curves search results')
     return render_template("ec-search-results.html", info=info, credit=credit, bread=bread, title=t)
