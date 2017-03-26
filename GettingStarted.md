@@ -6,7 +6,7 @@ Installation
   move into a new directory and type
 
   ```
-     git clone git@github.com:LMFDB/lmfdb.git lmfdb
+     git clone https://github.com/LMFDB/lmfdb.git lmfdb
   ```
 
   and follow these instructions.
