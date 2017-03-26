@@ -292,7 +292,7 @@ def elliptic_curve_search(info):
             info['report'] = 'displaying all %s matches' % nres
     credit = 'John Cremona'
     if 'non-surjective_primes' in query or 'non-maximal_primes' in query:
-        credit += 'and Andrew Sutherland'
+        credit += ' and Andrew Sutherland'
 
     t = info.get('title','Elliptic Curves search results')
     return render_template("ec-search-results.html", info=info, credit=credit, bread=bread, title=t)
