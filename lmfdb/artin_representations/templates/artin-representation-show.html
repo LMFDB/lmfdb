@@ -19,7 +19,7 @@
                 <tr><td> {{ KNOWL('artin.dimensionone', title='Corresponding Dirichlet character') }}: <td> <a href={{object.det_url()}}>{{ object.det_display()|safe}}</a> </tr>
             {%endif%}
         {% else %}
-            <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }}: <td> {{ object.det_display()|safe}} </tr>
+            <tr><td> {{ KNOWL('artin.determinant', title='Determinant') }}: <td> {{ object.det_as_artin_display()|safe}} </tr>
         {% endif %}
     </table>
 

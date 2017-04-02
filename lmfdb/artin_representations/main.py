@@ -180,8 +180,9 @@ def render_artin_representation_webpage(label):
                 else:
                     cc_name = cc.texname
                 friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
-            else:
-                friends.append(("Determinant character", url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+        if the_rep.dimension()>1:
+            detrep = the_rep.central_character_as_artin_rep()
+            friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
 
     # once the L-functions are in the database, the link can always be shown
     #if the_rep.dimension() <= 6:
