@@ -254,13 +254,11 @@ class ArtinRepresentation(object):
         arts = nfgg.ArtinReps()
         # Filter for 1-dim
         arts = [a for a in arts if ArtinRepresentation(str(a['Baselabel'])+"c1").dimension()==1]
-        # Explode these to see actual characters, not just conj classes
         artfull = [ArtinRepresentation(str(a['Baselabel'])+"c"+str(a['GalConj'])) for a in arts]
-        #artfull = [a for b in artfull for a in b]
-        hold = artfull
+        # hold = artfull
         # Loop as we evaluate at primes until there is only one left
         # Fix the return value to be what we want
-        artfull = [[a, a.central_char_function()] for a in artfull]
+        artfull = [[a, a.central_char_function(),2*a.character_field()] for a in artfull]
         n = 2*self.character_field()
         p = 2
         disc = nfgg.discriminant()
@@ -268,7 +266,7 @@ class ArtinRepresentation(object):
             if (disc % p) != 0:
               k=0
               while k<len(artfull):
-                  if artfull[k][1](p,n) == myfunc(p,n):
+                  if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
                       k += 1
                   else:
                       # Quick deletion of k-th term
