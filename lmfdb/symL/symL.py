@@ -13,15 +13,9 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 ########################################################################
 
-import os
-import weakref
 
 from sage.structure.sage_object import SageObject
-from sage.misc.all import pager, verbose
 import sage.rings.all
-
-
-from sage.schemes.elliptic_curves.constructor import EllipticCurve
 
 from sage.all import binomial
 from sympowlmfdb import sympowlmfdb
@@ -82,7 +76,8 @@ class SymmetricPowerLFunction(SageObject):
     def an_list(self, upperbound=100000):
         from sage.rings.fast_arith import prime_range
         PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', 30)
-        x = PP('x')
+        # FIXME THIS VARIABLE IS NEVER USED
+        # x = PP('x')
         prime_l = prime_range(upperbound)
         result = upperbound * [1]
 
@@ -208,7 +203,7 @@ def symmetricPowerLfunction(E, n):
     gives lcalc version of symmetric power L function
     """
 
-    bad_primes, conductor, root_number = sympow.local_data(E, n)
+    bad_primes, conductor, root_number = sympowlmfdb.local_data(E, n)
 
-
+#What is the point of this last line?
 sympowlmfdb

@@ -21,12 +21,14 @@ AUTHORS:
  - Stephan Ehlen
 
 """
-from flask import render_template, url_for, request, redirect, make_response, send_file, send_from_directory,flash
-import os
-from lmfdb.base import app, db, getDBConnection
+from flask import url_for, request, redirect, make_response, send_from_directory,flash, render_template
+import os, tempfile
+import sage
+from lmfdb.base import getDBConnection
+from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.utils import to_dict, random_object_from_collection
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf
+from lmfdb.modular_forms.elliptic_modular_forms import EMF, EMF_TOP, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
     render_fd_plot,
@@ -76,6 +78,12 @@ def browse_web_modform_spaces_in_ranges(**kwds):
     group=request.args.getlist('group')
     return render_elliptic_modular_form_navigation_wp(level=level,weight=weight,group=group)
 
+@emf.route("/history")
+def holomorphic_mf_history():
+    b = [(MF_TOP, url_for('mf.modular_form_main_page'))]
+    b.append((EMF_TOP, url_for(".render_elliptic_modular_forms")))
+    b.append(('History', url_for(".holomorphic_mf_history")))
+    return render_template("single.html", title="A brief history of holomorphic GL(2) modular forms", kid='mf.gl2.history', bread=b)
 
 @emf.route("/", methods=met)
 @emf.route("/<level>/", methods=met)
@@ -219,7 +227,7 @@ def get_qexp(level, weight, character, label, prec, latex=False, **kwds):
         if not latex:
             c = WNF.q_expansion
         else:
-            c = WNF.q_expansion_latex(prec=prec, name = 'a')
+            c = WNF.q_expansion_latex(prec=prec, name = '\\alpha ')
         return c
     except Exception as e:
         return "<span style='color:red;'>ERROR: %s</span>" % e.message

@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 import re
-import tempfile
 import os
 import yaml
-from pymongo import ASCENDING, DESCENDING
-from flask import url_for, make_response
+from flask import url_for
 import lmfdb.base
-from lmfdb.utils import comma, make_logger, web_latex, encode_plot
+from lmfdb.utils import make_logger, web_latex, encode_plot
 from lmfdb.search_parsing import split_list
-from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
-import sage.all
-from sage.all import EllipticCurve, latex, matrix, ZZ, QQ, prod, Factorization, PowerSeriesRing
+from lmfdb.sato_tate_groups.main import st_link_by_name
+from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
 
@@ -70,8 +67,18 @@ def padic_db():
         padicdb = lmfdb.base.getDBConnection().elliptic_curves.padic_db
     return padicdb
 
+def split_galois_image_code(s):
+    """Each code starts with a prime (1-3 digits but we allow for more)
+    followed by an image code or that prime.  This function returns
+    two substrings, the prefix number and the rest.
+    """
+    p = re.findall(r'\d+', s)[0]
+    return p, s[len(p):]
+
 def trim_galois_image_code(s):
-    return s[2:] if s[1].isdigit() else s[1:]
+    """Return the image code with the prime prefix removed.
+    """
+    return split_galois_image_code(s)[1]
 
 def parse_point(s):
     r""" Converts a string representing a point in affine or
@@ -108,11 +115,18 @@ class WebEC(object):
 
             - dbdata: the data from the database
         """
-        logger.debug("Constructing an instance of ECisog_class")
+        logger.debug("Constructing an instance of WebEC")
         self.__dict__.update(dbdata)
         # Next lines because the hyphens make trouble
         self.xintcoords = split_list(dbdata['x-coordinates_of_integral_points'])
         self.non_surjective_primes = dbdata['non-surjective_primes']
+        try:
+            self.non_maximal_primes = dbdata['non-maximal_primes']
+            self.mod_p_images = dbdata['mod-p_images']
+            self.new_galois_data = True
+        except KeyError:
+            self.new_galois_data = False
+
         # Next lines because the python identifiers cannot start with 2
         self.twoadic_index = dbdata['2adic_index']
         self.twoadic_log_level = dbdata['2adic_log_level']
@@ -196,7 +210,6 @@ class WebEC(object):
         try:
             data['equation'] = self.equation
             local_data = self.local_data
-            badprimes = [ZZ(ld['p']) for ld in local_data]
             D = self.signD * prod([ld['p']**ld['ord_disc'] for ld in local_data])
             data['disc'] = D
             Nfac = Factorization([(ZZ(ld['p']),ld['ord_cond']) for ld in local_data])
@@ -275,8 +288,6 @@ class WebEC(object):
                 local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
                 local_data.append(local_data_p)
 
-        jfac = Factorization([(ZZ(ld['p']),ld['ord_den_j']) for ld in local_data])
-
         # If we got the data from the database, the root numbers may
         # not have been stored there, so we have to compute them.  If
         # there are additive primes this means constructing the curve.
@@ -298,34 +309,56 @@ class WebEC(object):
         data['disc_latex'] = web_latex(D)
         data['cond_latex'] = web_latex(N)
 
+        if self.new_galois_data:
+            data['new_galois_data'] = True
+            data['galois_images'] = [trim_galois_image_code(s) for s in self.mod_p_images]
+            data['non_maximal_primes'] = self.non_maximal_primes
+            data['galois_data'] = [{'p': p,'image': im }
+                                   for p,im in zip(data['non_maximal_primes'],
+                                                   data['galois_images'])]
+        else:
+            data['new_galois_data'] = False
+            data['galois_images'] = [trim_galois_image_code(s) for s in self.galois_images]
+            data['non_surjective_primes'] = self.non_surjective_primes
+            data['galois_data'] = [{'p': p,'image': im }
+                                   for p,im in zip(data['non_surjective_primes'],
+                                                   data['galois_images'])]
+
         data['CMD'] = self.cm
         data['CM'] = "no"
         data['EndE'] = "\(\Z\)"
         if self.cm:
+            if self.new_galois_data:
+                data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+                data['cm_nramp'] = len(data['cm_ramp'])
+                if data['cm_nramp']==1:
+                    data['cm_ramp'] = data['cm_ramp'][0]
+                else:
+                    data['cm_ramp'] = ", ".join([str(p) for p in data['cm_ramp']])
+                data['cm_sqf'] = ZZ(self.cm).squarefree_part()
+
             data['CM'] = "yes (\(D=%s\))" % data['CMD']
             if data['CMD']%4==0:
                 d4 = ZZ(data['CMD'])//4
                 data['EndE'] = "\(\Z[\sqrt{%s}]\)" % d4
             else:
                 data['EndE'] = "\(\Z[(1+\sqrt{%s})/2]\)" % data['CMD']
-            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.N(U(1))'),'N(\\mathrm{U}(1))')
+            data['ST'] = st_link_by_name(1,2,'N(U(1))')
         else:
-            data['ST'] = '<a href="%s">$%s$</a>' % (url_for('st.by_label', label='1.2.SU(2)'),'\\mathrm{SU}(2)')
+            data['ST'] = st_link_by_name(1,2,'SU(2)')
 
-        data['p_adic_primes'] = [p for i,p in enumerate(sage.all.prime_range(5, 100))
+        data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
                                  if (N*data['ap'][i]) %p !=0]
 
-        try:
-            data['galois_images'] = [trim_galois_image_code(s) for s in self.galois_images]
-            data['non_surjective_primes'] = self.non_surjective_primes
-        except AttributeError:
-            #print "No Galois image data"
-            data['galois_images'] = []
-            data['non_surjective_primes'] = []
+        cond, iso, num = split_lmfdb_label(self.lmfdb_label)
+        self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+        self.ncurves = db_ec().count({'lmfdb_iso':self.lmfdb_iso})
+        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
+        if len(isodegs)<3:
+            data['isogeny_degrees'] = " and ".join(isodegs)
+        else:
+            data['isogeny_degrees'] = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
 
-        data['galois_data'] = [{'p': p,'image': im }
-                               for p,im in zip(data['non_surjective_primes'],
-                                               data['galois_images'])]
 
         if self.twoadic_gens:
             from sage.matrix.all import Matrix
@@ -365,17 +398,17 @@ class WebEC(object):
         cp_fac = [cp.factor() for cp in tamagawa_numbers]
         cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
         bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
-        bsd['tamagawa_product'] = sage.misc.all.prod(tamagawa_numbers)
+        bsd['tamagawa_product'] = prod(tamagawa_numbers)
 
-        cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
         data['newform_label'] = self.newform_label = newform_label(cond,2,1,iso)
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso)
         self.newform_exists_in_db = is_newform_in_db(self.newform_label)
         self._code = None
 
+        self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
         self.friends = [
-            ('Isogeny class ' + self.lmfdb_iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
+            ('Isogeny class ' + self.lmfdb_iso, self.class_url),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", label=self.lmfdb_label))]

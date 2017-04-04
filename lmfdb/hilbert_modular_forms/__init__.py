@@ -12,5 +12,6 @@ def body_class():
     return {'body_class': 'hmf'}
 
 import hilbert_modular_form
+assert hilbert_modular_form
 
 app.register_blueprint(hmf_page, url_prefix="/ModularForm/GL2/TotallyReal")

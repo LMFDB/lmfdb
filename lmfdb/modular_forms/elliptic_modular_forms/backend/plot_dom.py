@@ -17,10 +17,8 @@ r""" Excerpt from my MySubgroup class. Contains routines to draw fundamental dom
 
 AUTHOR: Fredrik Stroemberg
 r"""
-import matplotlib.patches as patches
-import matplotlib.path as path
 import logging
-from sage.all import I, Gamma0, Gamma1, Gamma, SL2Z, ZZ, RR, ceil, sqrt, CC, line, text, latex, exp, pi, infinity
+from sage.all import I,SL2Z, ZZ, RR, ceil, sqrt, CC, line, text, latex, exp, pi, infinity, Gamma0, Gamma1, Gamma
 
 
 def draw_fundamental_domain(N, group='Gamma0', model="H", axes=None, filename=None, **kwds):
@@ -40,7 +38,14 @@ def draw_fundamental_domain(N, group='Gamma0', model="H", axes=None, filename=No
     sage: G.draw_fundamental_domain()
 
     """
-    G = eval(group + '(' + str(N) + ')')
+    if group.strip() == 'Gamma0':
+        G = Gamma0(N)
+    elif group.strip() == 'Gamma1':
+        G = Gamma1(N)
+    elif group.strip() == 'Gamma':
+        G = Gamma(N)
+    else:
+        raise ValueError('group must be one of: "Gamma0", "Gamma1", "Gamma"')
     s = "$" + latex(G) + "$"
     s = s.replace("mbox", "mathrm")
     s = s.replace("Bold", "mathbb")
@@ -66,7 +71,7 @@ def draw_fundamental_domain(N, group='Gamma0', model="H", axes=None, filename=No
         y1 = 1
     else:
         # find the width of the fundamental domain
-        w = 0  # self.cusp_width(Cusp(Infinity))
+        # w = 0  # self.cusp_width(Cusp(Infinity)) FIXME: w is never used
         wmin = 0
         wmax = 1
         max_x = RR(0.55)
@@ -208,7 +213,7 @@ def _draw_funddom_d(coset_reps, format="MP", z0=I):
     """
     # The fundamental domain consists of copies of the standard fundamental domain
     pi = RR.pi()
-    from sage.plot.plot import (Graphics, line)
+    from sage.plot.plot import Graphics
     g = Graphics()
     bdcirc = _circ_arc(0, 2 * pi, 0, 1, 1000)
     g = g + bdcirc
@@ -217,7 +222,6 @@ def _draw_funddom_d(coset_reps, format="MP", z0=I):
     y1 = RR(sqrt(3) / 2)
     x2 = RR(0.5)
     y2 = RR(sqrt(3) / 2)
-    z_inf = 1
     l1 = _geodesic_between_two_points_d(x1, y1, x1, infinity)
     l2 = _geodesic_between_two_points_d(x2, y2, x2, infinity)
     c0 = _geodesic_between_two_points_d(x1, y1, x2, y2)
@@ -311,9 +315,9 @@ def _geodesic_between_two_points(x1, y1, x2, y2):
         t2 = RR(arcsin(r2))
     else:
         t2 = RR(pi) - arcsin(r2)
-    tmid = (t1 + t2) * RR(0.5)
-    a0 = min(t1, t2)
-    a1 = max(t1, t2)
+    # tmid = (t1 + t2) * RR(0.5)
+    # a0 = min(t1, t2)
+    # a1 = max(t1, t2)
     # logging.debug("c,r=%s,%s" % (c,r))
     # logging.debug("t1,t2=%s,%s"%(t1,t2))
     return _circ_arc(t1, t2, c, r)
@@ -338,8 +342,6 @@ def _geodesic_between_two_points_d(x1, y1, x2, y2, z0=I):
         sage: l=_geodesic_between_two_points_d(0.1,0.2,0.0,0.5)
 
     """
-    pi = RR.pi()
-    from sage.plot.plot import line
     from sage.functions.trig import (cos, sin)
     # First compute the points
     if(y1 < 0 or y2 < 0):
@@ -401,7 +403,7 @@ def _circ_arc(t0, t1, c, r, num_pts=500):
         sage: ca=_circ_arc(0.1,0.2,0.0,1.0,100)
 
     """
-    from sage.plot.plot import line, parametric_plot
+    from sage.plot.plot import  parametric_plot
     from sage.functions.trig import (cos, sin)
     from sage.all import var
     t00 = t0
@@ -480,7 +482,6 @@ def nice_coset_reps(G):
                     pass
         # We now addd the rest of the "flips" of these reps.
         # So that we end up with a connected domain
-        i = 1
         while(True):
             lold = len(cl)
             for V in cl:

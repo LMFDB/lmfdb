@@ -1,7 +1,5 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
 
 class HMFTest(LmfdbTest):
     def test_home(self):
@@ -19,7 +17,7 @@ class HMFTest(LmfdbTest):
         assert 'edirect' in L.data
 
     def test_EC(self): #778
-        L = self.tc.get('ModularForm/GL2/TotallyReal/6.6.300125.1/holomorphic/6.6.300125.1-631.2-d')
+        L = self.tc.get('ModularForm/GL2/TotallyReal/6.6.1312625.1/holomorphic/6.6.1312625.1-1.1-a')
         assert 'Elliptic curve not available' in L.data     #TODO remove or change url when
                                                             #the elliptic curve is in the database
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.89.1/holomorphic/2.2.89.1-2.1-a')
@@ -52,7 +50,7 @@ class HMFTest(LmfdbTest):
         assert 'no' in L.data
         assert '-6' in L.data
         assert '2w + 10' in L.data
-        assert '1.1.1.1' in L.data
+        assert '\Q' in L.data
         assert '[2, 2]' in L.data
 
     def test_hmf_page_higherdim(self):

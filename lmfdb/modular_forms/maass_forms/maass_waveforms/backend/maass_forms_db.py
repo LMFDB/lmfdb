@@ -5,6 +5,8 @@
 import pymongo
 import gridfs
 import bson
+from copy import copy
+from sage.all import RR, real, imag
 from sage.symbolic.expression import Expression
 import datetime
 from lmfdb import base
@@ -13,10 +15,9 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
 import math
 logger = mwf_logger
 try:
-    from dirichlet_conrey import *
+    from dirichlet_conrey import DirichletGroup_conrey
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
-import cython
 
 
 class MaassDB(object):
@@ -155,7 +156,7 @@ class MaassDB(object):
         mwf_logger.debug("Is in database:".format(isin))
         if not data.get('Conrey', False):
             # Then we have to convert the character to Conrey's label
-            ch = db.getDircharConrey(level, ch)
+            ch = self.getDircharConrey(level, ch)
         insert_data = {'Level': level, 'Weight': weight,
                        'Character': ch, 'Symmetry': sym_type,
                        'Error': err,
@@ -179,7 +180,7 @@ class MaassDB(object):
                 idd = idd0
         # See if we have coefficients to insert as well.
         if F is None:
-            coeffs = []
+            C = []
             numc = 0
         else:
             if hasattr(F, "is_automorphic_form"):
@@ -283,7 +284,8 @@ class MaassDB(object):
             date_begun = ff['date']
             now = bson.datetime.datetime.utcnow()
             elapsed = now - date_begun
-            date_beguns = ff['date'].strftime("%d:%m:%y %H:%M:%s")
+            # FIXME: date_beguns is never used
+            # date_beguns = ff['date'].strftime("%d:%m:%y %H:%M:%s")
             if self._verbose > 0:
                 print "Removing N,weight,ch,R1,R2".format(ff.get('Level'), ff.get('Weight'), ff.get('Character'), ff.get('R1'), ff.get('R2'))
                 print "Work took time:".format(elapsed)
@@ -310,8 +312,8 @@ class MaassDB(object):
                      'Eigenvalue': data.get('Eigenvalue', 0)}
         if verbose > 0:
             s = "Register coefficient computation:"
-            s += "N,weight,ch,R=", level, weight, ch, R
-            s += " in range NA,NB=", NA, NB
+            s += "N,weight,ch,R=", find_data['Level'], find_data['Weight'], find_data['Character'], find_data['Eigenvalue']
+            s += " in range NA,NB=", find_data['NA'], find_data['NB']
             print s
         try:
             t0 = self._collection_progress.find(data)
@@ -344,7 +346,11 @@ class MaassDB(object):
         r"""
         Find a Maass form matching the information in the dictionary data
         """
-        find_data = arg_to_search_parameters(data, **kwds)
+        from bson.errors import InvalidId
+        try:
+            find_data = arg_to_search_parameters(data, **kwds)
+        except InvalidId:
+            return []
         # print "find_data",find_data
         res = []
         for collection in self._show_collection:
@@ -355,7 +361,7 @@ class MaassDB(object):
                     if not xid:
                         if self._verbose > 0:
                             mwf_logger.debug("Error: got record without id:{0}".format(x))
-                            mwf_logger.debug("coeffid={0}".format(coeff_id))
+                            mwf_logger.debug("coeffid={0}".format(x.get('coeff_id')))
                     res.append(x['_id'])
         return res
 
@@ -513,6 +519,7 @@ class MaassDB(object):
                     C1 = fn.get('Coefficients', [])
                     if C1 != []:
                         if get_filename != '':
+                            R = fn.get('Eigenvalue') # AVS July 18, 2016: set undefined R to what I believe was intended (without this the line below will always fail)
                             Rst = str(R).split(".")
                             Rst = (Rst[0] + "." + Rst[1][0:10])[0:12]
                             fname = '{0}-{1}-{2}-{3}-{4}'.format(
@@ -613,9 +620,9 @@ class MaassDB(object):
         s += "Nr.\tLevel \tWeight \tChar\tR1 \tR2 \tStart time \tStop time \tTotal time\n"
         j = 0
         for f in prog:
-            date_begun = f['start_time']
+            # date_begun = f['start_time']
             # elapsed_t = bson.datetime.datetime.utcnow() - date_begun
-            elapsed_t = f['elapsed']
+            # elapsed_t = f['elapsed']
             s += str(j) + "\t" + self.display_one_job_record(f)
 # s+="{0}\t{1}\t{2}\t{3}\t{4}\t{6}\t{7}
 # \n".format(j,f['Level'],f['Weight'],f['Char'],f['R1'],f['R2'],f['date'],elapsed_t)
@@ -647,9 +654,8 @@ class MaassDB(object):
         ## Reset and repopulate in case we want to remove one of these
         self._list_of_jobs = {}
         for f in prog:
-            date_begun = f['date']
-            elapsed_t = bson.datetime.datetime.utcnow() - date_begun
-
+            # date_begun = f['date']
+            # elapsed_t = bson.datetime.datetime.utcnow() - date_begun
             s += str(j) + "\t" + self.display_one_progress_record(f)
 # s+="{0}\t{1}\t{2}\t{3}\t{4}\t{6}\t{7}
 # \n".format(j,f['Level'],f['Weight'],f['Char'],f['R1'],f['R2'],f['date'],elapsed_t)
@@ -675,7 +681,7 @@ class MaassDB(object):
         if isinstance(jobnr, bson.objectid.ObjectId):
             self._collection_progress.deregister_work({'_id': jobnr})
         elif isinstance(jobnr, dict):  # treat job as a search pattern
-            f = self._collection_progress.find(job)
+            f = self._collection_progress.find(jobnr)
             for x in f:
                 print "Removing: \n"
                 print self.display_one_progress_record(x)
@@ -752,7 +758,6 @@ class MaassDB(object):
         for c in DC:
             if c.sage_character() == x:
                 return c.number()
-    from sage.all import euler_phi
 
     @cached_method
     def getDircharSageFromConrey(self, N, j):
@@ -837,8 +842,8 @@ class MaassDB(object):
         if html == 1:
             tr0 = "<tr>"
             tr1 = "</tr>"
-            td0 = "<td>"
-            td1 = "</td>"
+            # td0 = "<td>"  # unused
+            # td1 = "</td>" # unused
             th0 = "<th>"
             th1 = "</th>"
             tstart = "<table>"
@@ -846,8 +851,8 @@ class MaassDB(object):
         else:
             tr0 = ""
             tr1 = ""
-            td0 = ""
-            td1 = ""
+            # td0 = "" # unused
+            # td1 = "" # unused
             th0 = ""
             th1 = ""
             tstart = ""
@@ -949,23 +954,22 @@ class MaassDB(object):
                         date = prob.get("date", "")
                         message = prob.get("Message", "")
                         s = "{0} \ t {1} \t {2} \t {3} \t {4} \t {5}".format(N, x, R1, R2, date, message)
-                        level = x.get('Level', '')
+                        # level = x.get('Level', '') # unused
 
-                    res[k][N][x] = numr
+                    # FIXME: numr is not defined and it is not clear what is intended
+                    # res[k][N][x] = numr
 
             lN = res[k].keys()
             lN.sort()
             for N in lN:
                 s += str(N) + "\t"
-                lx = res[k][N].keys()
+                lx = res[k][N].keys() # FIXME: this will be an empty list until FIXME above is addressed
                 lx.sort()
                 for x in lx:
                     s += "\t " + str(x) + ":" + str(res[k][N][x])
                 s += "\n"
             s += "=============================================== \n"
             print s
-
-        # pri#nt N
 
     def show_eigenvalues(self, data={}, **kwds):
         verbose = kwds.get('verbose', 0)
@@ -1055,7 +1059,7 @@ class MaassDB(object):
                        'Message': message
                        }
         mwf_logger.debug("inserting:", insert_data)
-        idd = self._collection_problems.insert(insert_data)
+        self._collection_problems.insert(insert_data)
 
     def sync_dbs(self, other, search={}, update=False, verbose=0):
         r"""
@@ -1123,7 +1127,7 @@ class MaassDB(object):
             data['Conrey'] = conrey
             data['Dim'] = dim
             data['_id'] = idd
-            data['Contributor'] = Contr
+            data['Contributor'] = Contributor
             coeff_id = None
             f = None
             ff = other.find_Maass_form_id({'_id': idd})  # find_data)
@@ -1140,7 +1144,7 @@ class MaassDB(object):
                 else:
                     # if other._collection.find(key).count()==0:
                     raise ArithmeticError(
-                        "Insertion unsuccessful!\n key={0}, inserts={1}, ind:{2}".format(key, data, ins))
+                        "Insertion unsuccessful!\n key={0}, inserts={1}, ind:{2}".format(idd, data, ins))
                         # print "Insertion unsuccessful! ins:{0}".format(ins)
                 ncnew = 0
                 idnew = ins
@@ -1227,28 +1231,27 @@ class MaassDB(object):
 ## Default to this if we don't have a mongodb connection?
 # DB=None
 
+#~ def setup_sqldb():
+    #~ table_skeleton = {
+        #~ 'R': {'sql': 'REAL', 'index': True},
+        #~ 'ch': {'sql': 'INTEGER', 'index': True},
+        #~ 'level': {'sql': 'INTEGER', 'index': True, 'primary_key': False},
+        #~ 'id': {'sql': 'INTEGER', 'index': True, 'primary_key': True},
+        #~ 'file': {'sql': 'TEXT'}
+    #~ }
 
-def setup_sqldb():
-    table_skeleton = {
-        'R': {'sql': 'REAL', 'index': True},
-        'ch': {'sql': 'INTEGER', 'index': True},
-        'level': {'sql': 'INTEGER', 'index': True, 'primary_key': False},
-        'id': {'sql': 'INTEGER', 'index': True, 'primary_key': True},
-        'file': {'sql': 'TEXT'}
-    }
-
-    if not DB:
-        DB = SQLDatabase()  # filename="maasstable.db")
-        DB.create_table('maass_forms', table_skeleton)
-    DB.show('maass_forms')
-    Q = SQLQuery(
-        DB, {'table_name': 'maass_forms', 'display_cols': ['level'], 'expression': ['level', '=', 1]})
+    #~ if not DB:
+        #~ DB = SQLDatabase()  # filename="maasstable.db")
+        #~ DB.create_table('maass_forms', table_skeleton)
+    #~ DB.show('maass_forms')
+    #~ Q = SQLQuery(
+        #~ DB, {'table_name': 'maass_forms', 'display_cols': ['level'], 'expression': ['level', '=', 1]})
 
 
-def get_Maass(N, R1, R2, verbose=0):
-    G = MySubgroup(Gamma0(N))
-    find_Maass_for_one_N(G, R1, R2, char='all', verbose=verbose, db=DB)
-    DB.save("maasstable.db")
+#~ def get_Maass(N, R1, R2, verbose=0):
+    #~ G = MySubgroup(Gamma0(N))
+    #~ find_Maass_for_one_N(G, R1, R2, char='all', verbose=verbose, db=DB)
+    #~ DB.save("maasstable.db")
 
 
 def mongify_dict(data, lowercase=False):

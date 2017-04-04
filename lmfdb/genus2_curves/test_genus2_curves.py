@@ -80,6 +80,11 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/?abs_disc=3976')
         assert '1988.a.3976.1' in L.data
 
+    def test_download(self):
+        self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=1&submit=gp")
+        self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=1&submit=sage")
+        self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=1&submit=magma")
+
     def test_rational_weierstrass_points_search(self):
         L = self.tc.get('/Genus2Curve/Q/?num_rat_wpts=4')
         assert '360.a.6480.1' in L.data

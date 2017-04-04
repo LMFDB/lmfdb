@@ -14,5 +14,8 @@ def body_class():
     return {'body_class': 'higher_genus_w_automorphisms'}
 
 import main
+assert main # silence pyflakes
 
-app.register_blueprint(higher_genus_w_automorphisms_page, url_prefix="/HigherGenus/C/aut")
+app.register_blueprint(higher_genus_w_automorphisms_page, url_prefix="/HigherGenus/C/Aut")
+
+

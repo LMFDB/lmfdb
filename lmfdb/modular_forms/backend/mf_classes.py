@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from lmfdb.base import getDBConnection
 from lmfdb.modular_forms import mf_logger
 
@@ -97,7 +99,7 @@ class MFDisplay(object):
         self.table = {}
 
     def connect(self):
-        self.db = base.getDBConnection()[dbname]
+        self.db = getDBConnection()[self._dbname]
 
     def set_table(self):
         raise NotImplementedError("Needs to be overwritten in subclasses!")

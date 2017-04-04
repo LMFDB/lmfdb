@@ -1,20 +1,18 @@
+# -*- coding: utf-8 -*-
 r"""
 Routines for rendering the navigation.
 """
-import json
 from flask import url_for,render_template,request,redirect
 from lmfdb.utils import to_dict
-from lmfdb.search_parsing import parse_range
 from lmfdb.base import getDBConnection
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf,EMF_TOP,emf_version
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, EMF_TOP
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import extract_limits_as_tuple, render_fd_plot
 
 def render_elliptic_modular_form_navigation_wp(**args):
     r"""
     Renders the webpage for the navigational page.
-
     """
     from sage.all import is_even
     from lmfdb.modular_forms.elliptic_modular_forms import WebModFormSpace
@@ -28,31 +26,34 @@ def render_elliptic_modular_form_navigation_wp(**args):
     emf_logger.debug("render_c_m_f_n_wp info={0}".format(info))
     level = my_get(info, 'level', None, int)
     weight = my_get(info, 'weight', None, int)
-    character = my_get(info, 'character', 1, int)
-    label = info.get('label', '')
-    if('plot' in info and level is not None):
+    # character = my_get(info, 'character', 1, int) # not used
+    # label = info.get('label', '') # not used
+    if('plot' in info and isinstance(level,int) and level > 0):
         return render_fd_plot(level, info)
     is_set = dict()
     is_set['weight'] = False
     is_set['level'] = False
     limits_weight = extract_limits_as_tuple(info, 'weight')
     limits_level = extract_limits_as_tuple(info, 'level')
-    if isinstance(weight,int) and weight > 0:
-        is_set['weight'] = True
-        weight = int(weight)
-    else:
-       weight = None
-       info.pop('weight',None)
+    title = "Holomorphic Cusp Forms"
+    bread = [(MF_TOP, url_for('mf.modular_form_main_page')), (EMF_TOP, url_for('.render_elliptic_modular_forms'))]
     if isinstance(level,int) and level > 0:
         is_set['level'] = True
         level = int(level)
+        bread.append(('Level %d'%level, url_for('emf.render_elliptic_modular_forms', level=level)))
+        title += " of level %d"%level 
     else:
         level = None
         info.pop('level',None)
+    if isinstance(weight,int) and weight > 0:
+        is_set['weight'] = True
+        weight = int(weight)
+        bread.append(('Weight %d'%weight, url_for('emf.render_elliptic_modular_forms', level=level, weight=weight)))
+        title += " of weight %d"%weight
+    else:
+       weight = None
+       info.pop('weight',None)
     ## This is the list of weights we initially put on the form
-    title = "Holomorphic Cusp Forms"
-    bread = [(MF_TOP, url_for('mf.modular_form_main_page'))]
-    bread.append((EMF_TOP, url_for('.render_elliptic_modular_forms')))
     if is_set['weight']:
         limits_weight = (weight, weight)
     elif limits_weight is None:
@@ -88,8 +89,6 @@ def render_elliptic_modular_form_navigation_wp(**args):
         s['cchi']=int(1)
     else:
         s['gamma1_label']={"$exists":True}
-    # g = db_dim.find(s).sort([('level',int(1)),('weight',int(1))]) never used
-    table = {}
     info['table'] = {}
     level_range = range(limits_level[0],limits_level[1]+1)
     weight_range = range(limits_weight[0],limits_weight[1]+1)
@@ -123,4 +122,5 @@ def render_elliptic_modular_form_navigation_wp(**args):
             info['table'][N][k]['in_db'] = indb
     info['col_heads'] = level_range
     info['row_heads'] = weight_range
-    return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread)
+    lm = [('History of modular forms', url_for(".holomorphic_mf_history"))]
+    return render_template("emf_browse_spaces.html", info=info, title=title, bread=bread, learnmore=lm)

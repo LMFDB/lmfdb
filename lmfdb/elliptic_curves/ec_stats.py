@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import re
-from pymongo import ASCENDING, DESCENDING
-import lmfdb.base
+from pymongo import DESCENDING
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
 from lmfdb.elliptic_curves.web_ec import db_ec
@@ -63,6 +61,14 @@ class ECstats(object):
         counts['nclasses'] = nclasses
         counts['nclasses_c'] = comma(nclasses)
         max_N = ecdb.find().sort('conductor', DESCENDING).limit(1)[0]['conductor']
+        # round up to nearest multiple of 1000
+        max_N = 1000*((max_N/1000)+1)
+        # NB while we only have the Cremona database, the upper bound
+        # will always be a multiple of 1000, but it looks funny to
+        # show the maximum condictor as something like 399998; there
+        # are no elliptic curves whose conductor is a multiple of
+        # 1000.
+
         counts['max_N'] = max_N
         counts['max_N_c'] = comma(max_N)
         counts['max_rank'] = ecdb.find().sort('rank', DESCENDING).limit(1)[0]['rank']

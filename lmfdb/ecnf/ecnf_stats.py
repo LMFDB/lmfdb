@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-import re
-from pymongo import ASCENDING, DESCENDING
-import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
 from lmfdb.number_fields.number_field import field_pretty
-from flask import url_for
+from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 
 def format_percentage(num, denom):
     return "%10.2f"%((100.0*num)/denom)
@@ -132,7 +129,7 @@ class ECNFstats(object):
 
     def __init__(self):
         logger.debug("Constructing an instance of ECstats")
-        self.ecdb = lmfdb.base.getDBConnection().elliptic_curves.nfcurves
+        self.ecdb = db_ecnf()
         self._counts = {}
         self._stats = {}
         self._dstats = {}
@@ -211,7 +208,7 @@ class ECNFstats(object):
                 }
                 for F in counts['fields_by_degree'][d]:
                     if F[:3]==sig_code:
-                        fsds[F] = fs = {'ncurves' : ecdb.find({'field_label':F}).count(),
+                        fsds[F] = {'ncurves' : ecdb.find({'field_label':F}).count(),
                                         'nclasses': ecdb.find({'field_label':F, 'number':1}).count(),
                                         'maxnorm': max(ecdb.find({'field_label':F}).distinct('conductor_norm'))
                                     }

@@ -1,4 +1,3 @@
----
 1intro:
    type: simple
    heading:
@@ -101,7 +100,7 @@
        style: rotate
        part2:
          - title: Siegel
-           url_for: "ModularForm_GSp4_Q_top_level"
+           url_for: "smf.index"
          - title: U(2,1)
            status: future
          - title: Other
@@ -143,8 +142,13 @@
            status: future
          - title: Belyi
            status: future
-         - title: Higher genus
-           status: future
+         - title: "Higher genus:"
+           status: beta
+           part3:
+             - title: Families
+               url_for:  "higher_genus_w_automorphisms.index"
+               status: beta
+               colspan: onecolumn
            colspan: onecolumn
      - title: 2-d
        style: rotate
@@ -165,6 +169,17 @@
            colspan: onecolumn 
          - title: Higher
            status: future
+     - title: ""
+       style: rotate
+       status: beta_rotated
+       part2:
+         - title: "Abelian Varieties:"
+           status: beta
+           part3:
+              - title: $/\F_{q}$
+                url_for: "abvarfq.abelian_varieties"
+                status: beta
+                colspan: onecolumn 
 
 5Fields:
    type: simple

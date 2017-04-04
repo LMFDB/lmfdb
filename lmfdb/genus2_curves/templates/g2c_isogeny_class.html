@@ -1,0 +1,97 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<!--New table class to avoid spacing in LaTeX-links -->
+<style type="text/css">
+table.g2 a {
+  padding: 0;
+}
+
+<style type="text/css">
+#isogeny_class_table th, #isogeny_class_table td {
+padding : 4px;
+text-align: center;
+}
+</style>
+
+{% set KNOWL_ID = "g2c.%s"|format(data.label) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+<h2>Genus 2 curves in {{KNOWL("g2c.isogeny_class", title="isogeny class" )}} {{data.label}}</h2>
+<table id = "isogeny_class_table">
+<tr>
+<th>{{ KNOWL('g2c.label', title='Label')}}</th>
+<th>{{ KNOWL('g2c.equation', title='Equation') }}</th>
+</tr>
+{% for c in data.curves %}
+<tr>
+<td class="center"><a href="{{c.url}}">{{c.label}}</a></td>
+<td align="center">\({{c.equation_formatted}}\)</td>
+{% endfor %}
+</table>
+
+<h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
+
+<p>
+<!-- Someone please redo this table with css.-->
+<table>
+    <tr><td> {{KNOWL('g2c.analytic_rank', title='Analytic rank')}}:</td><td>\({{ data.analytic_rank }}\)</td> </tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
+        <table id = "bad_lfactors_table">
+        <tr>
+            <th>Prime</th>
+            <th align="left">L-Factor</th>
+        </tr>
+        {% for c in data.bad_lfactors_pretty %}
+        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\( {{ c[1] }}\)</td></tr>
+        {% endfor %}
+        </table>
+    </tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td valign=top> {{ KNOWL('g2c.good_lfactors', title='Good L-factors') }}:<td>
+        <table id = "good_lfactors_table">
+        <tr>
+            <th>Prime</th>
+            <th align="left">L-Factor</th>
+        </tr>
+        {% for c in data.good_lfactors_pretty %}
+        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\( {{ c[1] }}\)</td></tr>
+        {% endfor %}
+        <tr><td>$\cdots$</td><td>$\cdots$</td>
+        </table>
+    </tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td colspan="2">See <a href="{{data.lfunc_url}}">L-function page</a> for more information</td></tr>
+</table>
+
+<h2>{{ KNOWL('g2c.st_group', title='Sato-Tate group')}}</h2>
+<p>
+{% if data.st_group == 'USp(4)'%}
+\(\mathrm{ST} =\) {{ data.st_group_link|safe }}
+{% else %}
+\(\mathrm{ST} =\) {{ data.st_group_link|safe }}, \(\quad \mathrm{ST}^0 = {{ data.st0_group_name}}\)
+{% endif %}
+</p>
+
+<h2> {{ KNOWL('g2c.jac_endomorphisms', title='Endomorphisms of the Jacobian') }} </h2>
+
+<p>{{data.gl2_statement_base}}</p>
+
+<!-- Description over QQ: --(<p> intentionally omitted for spacing)>
+{{data.end_statement_base|safe}}
+
+<!-- Description of field of definition: -->
+<p>{{data.end_field_statement|safe}}</p>
+
+<!-- Description over QQbar: -->
+{{data.end_statement_geom|safe}}
+
+<p>More complete information on endomorphism algebras and rings can be found on the pages of the individual curves in the isogeny class.</p>
+
+<!-- <h2>{{ KNOWL('ag.isogeny', title='Isogenies') }}</h2>
+
+<p>More complete information on the decomposition of the Jacobian found on the
+pages of the individual curves in the isogeny class.</p>
+-->
+{% endblock %}

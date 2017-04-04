@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import re
-from pymongo import ASCENDING, DESCENDING
+from pymongo import DESCENDING
 import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import make_logger, comma
@@ -60,7 +59,7 @@ class modlmf_stats(object):
         max_level = modlmf.find().sort('level', DESCENDING).limit(1)[0]['level']
         counts['max_level'] = max_level
         counts['max_level_c'] = comma(max_level)
-        max_weight = modlmf.find().sort('min_weight', DESCENDING).limit(1)[0]['min_weight']
+        max_weight = modlmf.find().sort('weight_grading', DESCENDING).limit(1)[0]['weight_grading']
         counts['max_weight'] = max_weight
         counts['max_weight_c'] = comma(max_weight)
         self._counts  = counts

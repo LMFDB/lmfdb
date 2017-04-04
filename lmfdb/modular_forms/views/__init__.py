@@ -1,1 +1,2 @@
-from mf_main import *
+import mf_main
+assert mf_main

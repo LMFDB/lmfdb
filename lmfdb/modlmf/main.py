@@ -1,27 +1,23 @@
+# -*- coding: utf-8 -*-
 import re
 import pymongo
 ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-import flask
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
+from flask import render_template, request, url_for, make_response, redirect, flash, send_file
 
-from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html, make_logger, web_latex_split_on_pm, comma, random_object_from_collection
+from lmfdb.base import getDBConnection
+from lmfdb.utils import to_dict, random_object_from_collection, web_latex_split_on_pm
 
-import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi, latex, matrix, srange, PowerSeriesRing, sqrt, conway_polynomial, prime_range
+from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
 
-from lmfdb.modlmf import modlmf_page, modlmf_logger
+from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
-
+from lmfdb.search_parsing import parse_ints, parse_count, parse_start
 
 from markupsafe import Markup
 
 import time
-import os
 import ast
 import StringIO
 
@@ -33,7 +29,6 @@ modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Robert
 def print_q_expansion(list):
      list=[str(c) for c in list]
      Qb=PolynomialRing(QQ,'b')
-     b = QQ['b'].gen()
      Qq=PowerSeriesRing(Qb['a'],'q')
      return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
 
@@ -72,10 +67,12 @@ def modlmf_render_webpage():
     if len(args) == 0:
         counts = get_stats().counts()
         characteristic_list= [2,3,5,7,11]
-        level_list_endpoints = [1, 10, 20, 30, 40, 50]
+        max_lvl=min(counts['max_level'],150)
+        level_list_endpoints = range(1, max_lvl+1, 10)
         level_list = ["%s-%s" % (start, end - 1) for start, end in zip(level_list_endpoints[:-1], level_list_endpoints[1:])]
-        weight_list= [1, 2, 3, 4, 5]
-        label_list = ["2.1.1.0.1.1","2.1.3.0.1.1"]
+        max_wt=min(counts['max_weight'], 10)
+        weight_list= range(1, max_wt+1)
+        label_list = ["3.1.0.1.1","13.1.0.1.1"]
         info = {'characteristic_list': characteristic_list, 'level_list': level_list,'weight_list': weight_list, 'label_list': label_list}
         credit = modlmf_credit
         t = 'Mod &#x2113; Modular Forms'
@@ -119,7 +116,7 @@ def modlmf_search(**args):
     query = {}
     try:
         for field, name in (('characteristic','Field characteristic'),('deg','Field degree'),('level', 'Level'),
-                            ('conductor','Conductor'), ('min_weight', 'Minimal weight')):
+                            ('conductor','Conductor'), ('weight_grading', 'Weight grading')):
             parse_ints(info, query, field, name)
     except ValueError as err:
         info['err'] = str(err)
@@ -131,7 +128,7 @@ def modlmf_search(**args):
     start = parse_start(info)
 
     info['query'] = dict(query)
-    res = C.mod_l_eigenvalues.modlmf.find(query).sort([('characteristic', ASC), ('deg', ASC), ('level', ASC), ('min_weight', ASC), ('conductor', ASC)]).skip(start).limit(count)
+    res = C.mod_l_eigenvalues.modlmf.find(query).sort([('characteristic', ASC), ('deg', ASC), ('level', ASC), ('weight_grading', ASC)]).skip(start).limit(count)
     nres = res.count()
 
     if(start >= nres):
@@ -156,7 +153,7 @@ def modlmf_search(**args):
     res_clean = []
     for v in res:
         v_clean = {}
-        for m in ['label','characteristic','deg','level','min_weight','conductor']:
+        for m in ['label','characteristic','deg','level','weight_grading']:
             v_clean[m]=v[m]
         res_clean.append(v_clean)
 
@@ -193,20 +190,31 @@ def render_modlmf_webpage(**args):
 
     bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('%s' % data['label'], ' ')]
     credit = modlmf_credit
-    f = C.mod_l_eigenvalues.modlmf.find_one({'characteristic':data['characteristic'], 'deg' : data['deg'], 'level' : data['level'],'conductor' : data['conductor'],'min_weight': data['min_weight'], 'dirchar' : data['dirchar'], 'atkinlehner': data['atkinlehner'],'n_coeffs': data['n_coeffs'],'coeffs': data['coeffs']})
-    for m in ['characteristic','deg','level','min_weight', 'n_coeffs']:
+
+    f = C.mod_l_eigenvalues.modlmf.find_one({'characteristic':data['characteristic'], 'deg' : data['deg'], 'level' : data['level'],'weight_grading': data['weight_grading'], 'reducible' : data['reducible'], 'cuspidal_lift': data['cuspidal_lift'], 'dirchar' : data['dirchar'], 'atkinlehner': data['atkinlehner'],'n_coeffs': data['n_coeffs'],'coeffs': data['coeffs'], 'ordinary': data['ordinary'],'min_theta_weight': data['min_theta_weight'], 'theta_cycle' : data['theta_cycle']})
+
+    for m in ['characteristic','deg','level','weight_grading', 'n_coeffs', 'min_theta_weight', 'ordinary']:
         info[m]=int(f[m])
     info['atkinlehner']=f['atkinlehner']
     info['dirchar']=str(f['dirchar'])
     info['label']=str(f['label'])
+    if f['reducible']:
+        info['reducible']=f['reducible']
+    info['cuspidal_lift']=f['cuspidal_lift']
+    info['cuspidal_lift_weight']=int(f['cuspidal_lift'][0])
+    info['cuspidal_lift_orbit']=str(f['cuspidal_lift'][1])
+
+    if f['cuspidal_lift'][2]=='x':
+        info['cuspidal_hecke_field']=1
+    else:
+        info['cuspidal_hecke_field']=latex(f['cuspidal_lift'][2])
+
+    info['cuspidal_lift_gen']=f['cuspidal_lift'][3]
+
+    if f['theta_cycle']:
+        info['theta_cycle']=f['theta_cycle']
 
     info['coeffs']=[str(s).replace('x','a').replace('*','') for s in f['coeffs']]
-
-#this fix will be removed once the conductor are all computed
-    try:
-        info['conductor']=int(f['conductor'])
-    except:
-        info['conductor']=int(0)
 
     if f['deg'] != int(1):
         try:
@@ -234,8 +242,7 @@ def render_modlmf_webpage(**args):
         ('Field characteristic', '%s' %info['characteristic']),
         ('Field degree', '%s' %info['deg']),
         ('Level', '%s' %info['level']),
-        ('Conductor', '%s' %info['conductor']),
-        ('Minimal weight', '%s' %info['min_weight'])]
+        ('Weight grading', '%s' %info['weight_grading'])]
     return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
 
 
@@ -313,7 +320,7 @@ def download_search(info):
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 
 @modlmf_page.route('/<label>/download/<lang>/')
@@ -326,7 +333,6 @@ def render_modlmf_webpage_download(**args):
 
 def download_modlmf_full_lists(**args):
     C = getDBConnection()
-    data = None
     label = str(args['label'])
     res = C.mod_l_eigenvalues.modlmf.find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
@@ -335,6 +341,13 @@ def download_modlmf_full_lists(**args):
     lang = args['lang']
     c = download_comment_prefix[lang]
     outstr = c + ' List of q-expansion coefficients downloaded from the LMFDB on %s. \n\n'%(mydate)
+    if lang == 'magma':
+        outstr += 'F<x>:=FiniteField(%s,%s); \n' %(res['characteristic'], res['deg'])
+
+    elif lang == 'sage':
+        outstr += 'F.<x>=GF(%s^(%s), conway_polynomial(%s,%s)) \n'%(res['characteristic'], res['deg'], res['characteristic'], res['deg'])
+
+    outstr += '\\\n'
     outstr += download_assignment_start[lang] + '\\\n'
     outstr += str(res['coeffs']).replace("'", "").replace("u", "")
     outstr += download_assignment_end[lang]

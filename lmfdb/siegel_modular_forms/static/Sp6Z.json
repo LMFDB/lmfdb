@@ -1,8 +1,0 @@
-{
-    "description": "includes/Sp6Z_basic.html",
-    "dimension": "lmfdb.siegel_modular_forms.dimensions.dimension_Sp6Z",
-    "dim_args_default": "[range(21)]",
-    "latex_name": "M_{k}\\left(\\textrm{Sp}(6,\\mathbb{Z})\\right)", 
-    "name": "Sp6Z",
-    "order": 130
-}

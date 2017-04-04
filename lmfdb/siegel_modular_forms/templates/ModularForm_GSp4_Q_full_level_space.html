@@ -1,26 +1,20 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% if not error %}
-
-<p>This is a space of <a knowl="mf.siegel.vector_valued">vector valued Siegel modular forms</a>
-with real representation $\mathrm{Det}^{ {{k}}}\otimes\mathrm{Sym}^{ {{j}} }$. It has
-the following interesting subspaces:</p>
+<p>This is a space of {{KNOWL('mf.siegel.vector_valued',title='vector valued Siegel modular forms')}}
+with real representation $\mathrm{Det}^{ {{info.args.k}}}\otimes\mathrm{Sym}^{ {{info.args.j}} }$.
+It contains the following subspaces:</p>
 <table>
-  {% for key in headers%}
-  <tr><td>{{key}}</td><td>{{subspace[key]}}</td></tr>
+  {% for key in info.headers%}
+  <tr><td>{{key}}</td><td>{{info.subspace[key]}}</td></tr>
   {% endfor %}
 </table>
 
-{% if samples !=[] %}
+{% if info.samples %}
 <p> The following samples live in this space.</p>
-{% for form in samples %}
-<a href="{{form['url']}}">{{form['name']}}</a>&nbsp;
+{% for form in info.samples %}
+<a href="{{form['url']}}">{{form['name']}}</a>&nbsp;&nbsp;
 {% endfor %}
-{% endif %}
-
-{% else %}
-{% include 'None.html' %}
 {% endif %}
 
 {% endblock %}

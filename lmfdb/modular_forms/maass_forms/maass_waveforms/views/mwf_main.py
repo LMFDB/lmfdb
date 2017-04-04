@@ -20,26 +20,18 @@ AUTHORS:
 
 
 """
-import lmfdb.base
-from lmfdb.base import app
-from flask import render_template, url_for, request, redirect, make_response, send_file
+
+import flask
+from flask import render_template, url_for, request, make_response, send_file
 import bson
 import StringIO
-import pymongo
-from sage.all import is_odd, is_even, dumps, loads
-# mwf = flask.Blueprint('mwf', __name__, template_folder="templates",static_folder="static")
+from sage.all import loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import *
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import MaassFormTable, WebMaassForm
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
-from mwf_upload_data import *
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters, connect_db, get_collections_info
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
-try:
-    from dirichlet_conrey import *
-except:
-    mwf_logger.critical("Could not import dirichlet_conrey!")
 
 
 # this is a blueprint specific default for the tempate system.
@@ -79,7 +71,9 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
 
     DB = connect_db()
     if not info['collection'] or info['collection'] == 'all':
-        md = get_collections_info()
+        # FIXME: metadata returned by get_collections_info is never used, only side effect appears to be logging messages
+        # md = get_collections_info()
+        get_collections_info()
     info['cur_character'] = character
     if level > 0:
         info['maass_weight'] = DB.weights(int(level))
@@ -142,13 +136,19 @@ def render_one_maass_waveform(maass_id, **kwds):
     in a format that is readable by python.
     """
     info = get_args_mwf(**kwds)
-    info['maass_id'] = bson.objectid.ObjectId(maass_id)
+    try:
+        info['maass_id'] = bson.objectid.ObjectId(maass_id)
+    except bson.errors.InvalidId:
+        return flask.abort(404)
     mwf_logger.debug("in_render_one_maass_form: info={0}".format(info))
     if (info.get('download', '') == 'coefficients'  or
         info.get('download', '') == 'all'):
         DB = connect_db()
         maass_id = info['maass_id']
-        f = WebMaassForm(DB, maass_id)
+        try:
+            f = WebMaassForm(DB, maass_id)
+        except KeyError:
+            flask.abort(404)
         filename = str(f._maassid) + '.txt'
         if info.get('download', '') == 'coefficients':
             res = f.coeffs
@@ -161,7 +161,8 @@ def render_one_maass_waveform(maass_id, **kwds):
         try:
             return send_file(strIO,
                              attachment_filename=filename,
-                             as_attachment=True)
+                             as_attachment=True,
+                             add_etags=False)
         except IOError:
             info['error'] = "Could not send file!"
 
@@ -174,8 +175,14 @@ def plot_maassform(maass_id):
     Render the plot of the Maass waveform as a pg-file.
     Loads it from the database.
     """
+    try:
+        maass_id = bson.objectid.ObjectId(maass_id)
+    except bson.errors.InvalidId:
+        return flask.abort(404)
     DB = connect_db()
     data = DB.get_maassform_plot_by_id(maass_id)
+    if not data:
+        return flask.abort(404)
     data = data['plot']
     response = make_response(loads(data))
     response.headers['Content-type'] = 'image/png'
@@ -190,20 +197,37 @@ def render_one_maass_waveform_wp(info):
     DB = connect_db()
     maass_id = info['maass_id']
     mwf_logger.debug("id1={0}".format(maass_id))
-    info['MF'] = WebMaassForm(DB, maass_id)
+    try:
+        MF = WebMaassForm(DB, maass_id)
+    except KeyError:
+        return flask.abort(404)
+    info['MF'] = MF
+    info['title'] = "Maass form"
+    info['bread'] = [('Modular forms', url_for('mf.modular_form_main_page')),
+                     ('Maass waveforms', url_for('.render_maass_waveforms'))]
+    if hasattr(MF,'level'):
+        info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
+        info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
+        if hasattr(MF, 'R') and MF.R:
+            info['title'] += " with \(R=%s\)" % info['MF'].R
+
+    # make sure all the expected attributes of a WebMaassForm are actually present
+    missing = [attr for attr in ['level', 'dim', 'num_coeff', 'R', 'character'] if not hasattr(MF, attr)]
+    if missing:
+        mwf_logger.critical("Unable to render Maass form {0}; required attributes {1} missing from database record.".format(maass_id,missing))
+        info['explain'] = "Unable to render Maass form {0} because the following required attributes were missing from the database record:".format(maass_id) \
+                      + "<ul>" + "".join(["<li>"+attr+"</li>" for attr in missing]) + "</ul>"
+        return render_template("problem.html", **info)
+
     level = info['MF'].level
     dim = info['MF'].dim
-    numc = info['MF'].num_coeff
+    # numc = info['MF'].num_coeff # never used
     if info['MF'].has_plot(): # and level == 1: # Bara level = 1 har rätt format för tillfället //Lemurell
         info['plotlink'] = url_for('mwf.plot_maassform', maass_id=maass_id)
     # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
     Llink = "/L" + url_for('mwf.render_one_maass_waveform', maass_id=maass_id)  # + '/?db=' + info['db']
     if dim == 1:
         info["friends"] = [("L-function", Llink)]
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),
-             ('Maass waveforms', url_for('.render_maass_waveforms')),
-             ('Level {0}'.format(level),
-             url_for('.render_maass_waveforms', level=level))]
 
     # Navigation to previous and next form
     next_form_id = info['MF'].next_maassform_id()
@@ -227,21 +251,21 @@ def render_one_maass_waveform_wp(info):
                           ('All coefficients of the form',
                            url_for('mwf.render_one_maass_waveform', maass_id=maass_id,
                                    download='coefficients')) ]
-    lenc = 20
     mwf_logger.debug("count={0}".format(DB.count()))
     ch = info['MF'].character
     s = "\( \chi_{" + str(level) + "}(" + str(ch) + ",\cdot) \)"
-    # is it possible to get the knowls into the properties?
-    knowls = knowls = {'level': 'mf.maass.mwf.level',
-                       'weight': 'mf.maass.mwf.weight',
-                       'char': 'mf.maass.mwf.character',
-                       'R': 'mf.maass.mwf.eigenvalue',
-                       'sym': 'mf.maass.mwf.symmetry',
-                       'prec': 'mf.maass.mwf.precision',
-                       'mult': 'mf.maass.mwf.dimension',
-                       'ncoeff': 'mf.maass.mwf.ncoefficients',
-                       'fricke': 'mf.maass.mwf.fricke',
-                       'atkinlehner': 'mf.maass.mwf.atkinlehner'}
+    # Q: Is it possible to get the knowls into the properties?
+    # A: Not in a nice way and this is not done elsewhere in the LMFDB; the knowls should appear on labels in the template
+    # knowls = {'level': 'mf.maass.mwf.level',
+    #                   'weight': 'mf.maass.mwf.weight',
+    #                   'char': 'mf.maass.mwf.character',
+    #                   'R': 'mf.maass.mwf.eigenvalue',
+    #                   'sym': 'mf.maass.mwf.symmetry',
+    #                   'prec': 'mf.maass.mwf.precision',
+    #                   'mult': 'mf.maass.mwf.dimension',
+    #                   'ncoeff': 'mf.maass.mwf.ncoefficients',
+    #                   'fricke': 'mf.maass.mwf.fricke',
+    #                   'atkinlehner': 'mf.maass.mwf.atkinlehner'}
     properties = [('Level', [info['MF'].level]),
                   ('Symmetry', [info['MF'].even_odd()]),
                   ('Weight', [info['MF'].the_weight()]),
@@ -253,8 +277,6 @@ def render_one_maass_waveform_wp(info):
                   ]
     if dim > 1 and info['MF'].the_character() == "trivial":
         properties.append(("Possibly oldform", []))
-    info['title'] = "Maass form on \(\Gamma_{0}( %s )\) with $R=%s$" % (info['MF'].level, info['MF'].R)
-    info['bread'] = bread
     info['properties2'] = properties
 
     info['MF'].set_table()
@@ -285,7 +307,6 @@ def render_search_results_wp(info, search):
     """
     mwf_logger.debug("in render_search_results. info1={0}".format(info))
     mwf_logger.debug("Search:{0}".format(search))
-    evs = {'table': {}}
     if not isinstance(search, dict):
         search = {}
     if 'limit' not in search:
@@ -580,7 +601,4 @@ def evs_table(search, twodarray=False):
 
 
 def conrey_character_name(N, chi):
-    return "\chi_{" + str(self._N) + "}(" + strIO(chi.number()) + ",\cdot)"
-
-
-
+    return "\chi_{" + str(N) + "}(" + str(chi.number()) + ",\cdot)"

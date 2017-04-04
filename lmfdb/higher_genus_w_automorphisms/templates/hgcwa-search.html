@@ -9,7 +9,7 @@
 
 <tr>
 <td align=left> 
-Genus:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
+{{KNOWL('ag.curve.genus',title='Genus')}}:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
 </td>
 <td align=left> 
 Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
@@ -20,15 +20,8 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 
 </tr>
 
-<tr>
-  
-  <td align=left> 
-{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
-<td align=left> <input type="text" name="dim" size="5" value="{{info.dim}}" > 
-
-
-<td align=right>
-	       Hyperelliptic Curve(s):
+<tr><td>
+	       Hyperelliptic curve(s):
 </td>
 
   <td> <select name='inc_hyper'>
@@ -49,10 +42,61 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 {% endif %}
 </td> 
 
+<td >
+	      Cyclic trigonal curve(s):
+</td>
 
+  <td> <select name='inc_cyc_trig'>
+{% if info.inc_cyc_trig == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_cyc_trig == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
+
+
+<td>
+	      Full automorphism group:
+</td>
+
+  <td> <select name='inc_full'>
+{% if info.inc_full == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_full == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
+  
+  
 </tr>
 
 <tr>
+
+ <td align=left> 
+{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
+<td align=left> <input type="text" name="dim" size="5" value="{{info.dim}}" > </td>
+
+  
 <td align='left' colspan='4'>Maximum number of families to display: <input type='text' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
@@ -64,34 +108,22 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </table>
 </form>
 
+
+
 {% if info.err is defined %}
-
-{% if info.label is defined %}
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>There is no curve with this label:&nbsp;&nbsp;</td>
-<td ><input type='text' name='jump_to' size=60 value="{{info.label}}"> </td>
-<td><button type='submit' value='Find'>Find</button></td>
-</tr>
-<tr>
-<td colspan="3" rowspan="2"><span class="formexample"> a higher genus curve with automorphisms label, e.g. 3.4-2.0.2-2-2-2-2-2</span></td>
-</tr>
-</table>
-</form>
-
-{% endif %}
-
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
   <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
+    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)"> </p>
+{% else  %}
 
 
-<h2> Results: ({{info.report}}) </h2>
+<h2> Results: ({{info.report}})
+     {% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+     {% endif %}
+     {% if info.start +info.count  < info.number %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+     {% endif %}
+</h2>
 
 {% if info.number > 0 %}
 
@@ -99,12 +131,11 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 <thead>
 <tr>
 
-  <th>Label</th>
-  <th>Genus</th>
+  <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}}</th>
+  <th>{{KNOWL('ag.curve.genus',title='Genus')}}</th>
   <th>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension')}}</th>
   <th>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma group')}}</th>
-  <th>Signature</th>
-<!--<th>{{KNOWL('lf.slope_content',title='label')}}</th>-->
+  <th>{{KNOWL('curve.highergenus.aut.signature',title='Signature')}}</th>
 </tr>
 </thead>
 <tbody>
@@ -112,7 +143,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 {% for field in info.fields: %}
 <tr>
 
-  <td align='left'><a href="/HigherGenus/C/aut/{{field.label}}">{{field.label}}</a></td>
+  <td align='left'><a href="/HigherGenus/C/Aut/{{field.passport_label}}">{{field.passport_label}}</a></td>
     <td>{{field.genus}}</td>
   <td>{{field.dim}}</td>
   <td>{{field.group}}</td>
@@ -136,8 +167,8 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 
 
 {% endif %}
-{% endif %}
 
+{% endif %}
 
 
 {% endblock %}

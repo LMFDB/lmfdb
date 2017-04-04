@@ -115,9 +115,10 @@
 <div id="sidebar">
 {%- include "sidebar.html" -%}
 
-{% if user_is_authenticated -%}
-    {{ entry("Data", getUploadedFor(request.path, true) ) }}
-{% endif %}
+{# remove upload from sidebar #}
+{#% if user_is_authenticated -%#}
+    {#{ entry("Data", getUploadedFor(request.path, true) ) }#}
+{#% endif %#}
 
 </div>
 
@@ -184,11 +185,11 @@
    {% if navi %}
        {{ neighbors("Nearby objects", navi) }}
    {% endif %}
+
    {% if downloads %}
-     {{ rightnavig("Downloads", downloads + getUploadedFor(request.path, false) ) }}
-   {% else %}
-     {{ rightnavig("Data", getUploadedFor(request.path, false) ) }}
+     {{ rightnavig("Downloads", downloads) }}
    {% endif %}
+
    {{ rightnavig("Learn more about", learnmore) }}
     </div>
     {%- endif %}
@@ -235,6 +236,21 @@
             {% endfor %}
         </div>
     {% endif %}
+    {% block content_js %}
+        <script type="text/javascript">
+        // strips empty input/select fields from query URLs.  To enable, put onsubmit="cleanSubmit(this.id)" in form tag (and give it an id).
+        function cleanSubmit(id)
+        {
+            var myForm = document.getElementById(id);
+            var allInputs = myForm.getElementsByTagName('input')
+            var allSelects = myForm.getElementsByTagName('select')
+            var item, i;
+
+            for(i = 0; item = allInputs[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '');
+            for(i = 0; item = allSelects[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '');
+        }
+        </script>
+    {% endblock content_js %}
     {% block content -%}
     There is nothing here. This is just a template.
     {%- endblock content %}
@@ -259,7 +275,7 @@
       &middot;
       <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
       &middot;
-      <a href="{{ url_for('edit_board') }}">Editorial and Management Boards</a>
+      <a href="{{ url_for('management_board') }}">Management Board</a>
       {# <a href="{{ 'about' }}">About</a> #}
       &middot;
       {{ current_source|safe }}

@@ -1,5 +1,5 @@
-from lfunctions import *
-
+from pipes import populator
+from lfunctions import lf_data, dirichlet_l_iterator, artin_l_iterator, ec_l_iterator, hypergeometric_l_iterator
 
 up = populator("test","l_main")
 

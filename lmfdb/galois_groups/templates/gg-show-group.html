@@ -36,11 +36,16 @@ table.reptable td, table.reptable th {
    </blockquote>
    </p>
 
-  <p><h2>{{ KNOWL('gg.other_representations', title='Other low-degree representations') }}</h2>
+  <p><h2>{{ KNOWL('gg.other_representations', title='Low degree siblings') }}</h2>
    <p>
    <blockquote>
     {{info.otherreps|safe}}
    </blockquote>
+   {% if info.arith_equiv %}
+     <blockquote>
+        {{info.arith_equiv|safe}}
+     </blockquote>
+   {% endif %}
    </p>
 
   <p><h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy Classes') }}</h2>

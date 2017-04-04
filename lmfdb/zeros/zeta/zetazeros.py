@@ -5,7 +5,7 @@ from flask import render_template, request, url_for
 ZetaZeros = flask.Blueprint("zeta zeros", __name__, template_folder="templates")
 logger = lmfdb.utils.make_logger(ZetaZeros)
 
-from platt_zeros import *
+from platt_zeros import zeros_starting_at_N, zeros_starting_at_t
 
 
 @ZetaZeros.route("/")
@@ -68,9 +68,9 @@ def list_zeros(N=None,
 
     if limit > 100000:
         # limit = 100000
-        return """hello downloader. you hurt the server :(
-                  get the data here: http://www.lmfdb.org/data/zeros/zeta/ --
-                  code how to read it is here: http://code.google.com/p/lmfdb/source/browse/#hg%2Fzeros%2Fzeta"""
+        #
+        bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros"))]
+        return render_template('single.html', title="Too many zeros", bread=bread, kid = "dq.zeros.zeta.toomany")
 
     if N is not None:
         zeros = zeros_starting_at_N(N, limit)

@@ -9,8 +9,8 @@
 <div>
 Formats:
 - <a href="{{ url }}">HTML</a>
-- <a href="{{ url_for(".api_query", db=database, collection=collection, _format = "yaml", **url_args) }}">YAML</a>
-- <a href="{{ url_for(".api_query", db=database, collection=collection, _format = "json", **url_args) }}">JSON</a>
+- <a href="{{ url_for('.api_query', db=database, collection=collection, _format = 'yaml', **url_args) }}">YAML</a>
+- <a href="{{ url_for('.api_query', db=database, collection=collection, _format = 'json', **url_args) }}">JSON</a>
 - {{ timestamp }}
 {% if not single_object %}
 - <a href="{{ next }}">next page</a>
@@ -22,13 +22,14 @@ Query: <code><a href="{{ query }}">{{ query_unquote }}</a></code>
 
 {% if single_object %}
 <br/>
-<code>{{ data[0] }}</code>
+<code>{{ pretty(data[0]) }}</code>
 {% else %}
 <ol class="api-entries" start="{{ start }}">
 {% for entry in data %}
   <li>
-    <a href="{{ url_for(".api_query_id", db=database, collection=collection, id=entry["_id"]) }}">{{ entry["_id"] }}</a><br/>
-    <code>{{ entry }}</code>
+  
+    <a href="{{ url_for('.api_query_id', db=database, collection=collection, id=oid_strip(entry['_id'])) }}">{{ entry['_id'] }}</a><br/>
+    <code>{{ pretty(entry,id=False) }}</code>
   </li>
 {% endfor %}
 </ol>

@@ -17,7 +17,7 @@ version_major, version_minor = [int(x) for x in SAGE_VERSION.split('.')[:2]]
 #    emf_version = 1.1
 emf_version = 1.3
 
-EMF_TOP = "Holomorphic Modular Forms"  # The name to use for the top of this catergory
+EMF_TOP = "Holomorphic Cusp Forms"  # The name to use for the top of this catergory
 EMF = "emf"  # The current blueprint name
 emf = flask.Blueprint(EMF, __name__, template_folder="views/templates", static_folder="views/static")
 emf_logger = make_logger(emf)
@@ -36,7 +36,7 @@ N_max_extra_comp = 500
 ## https://github.com/LMFDB/lmfdb/pull/1409#issuecomment-220733555
 use_cache = False
 
-
 import views
-import backend
-from backend import *
+assert views
+from backend import WebNewForm, WebModFormSpace
+assert WebNewForm and WebModFormSpace

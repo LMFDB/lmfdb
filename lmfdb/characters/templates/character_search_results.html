@@ -1,0 +1,119 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2>Refine search</h2>
+
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+
+<table border="0">
+<tr>
+<td align=left>{{ KNOWL('character.dirichlet.modulus', title='Modulus') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.order', title='Order') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
+</tr>
+
+<tr>
+<td align=left><input type='text' name='modulus' size=6 value="{{args.modulus}}"></td>
+<td align=left><input type='text' name='conductor'size=6 value="{{args.conductor}}"></td>
+<td align=left><input type='text' name='order'size=6 value="{{args.order}}"></td>
+<td align=left>
+<select name='parity'>
+    {% for x in ('All', 'Odd', 'Even') %}
+    <option {{ 'selected' if args.parity == x }} value="{{x}}">{{x}}</option>
+    {% endfor %}
+</select>
+</td>
+<td align=left>
+<select name='primitive'>
+    {% for x in ('All', 'Yes', 'No') %}
+    <option {{ 'selected' if args.primitive == x }} value="{{x}}">{{x}}</option>
+    {% endfor %}
+</select>
+</td>
+</tr>
+<tr>
+<td colspan=2 align=left>maximum results to display</td>
+<td align=left> <input type='text' name='limit'size=6 value="{{args.limit}}"> </td>
+<td colspan=2><button type='submit' width="170" style="width: 170px" name='refine' value='1'>Refine or change search</button>
+</td> </tr>
+</table>
+
+</form>
+
+{% if not err %}
+
+<style type="text/css">
+table td.center {
+  text-align: center;
+}
+table td.params {
+  text-align: left;
+  font-family: monospace;
+}
+
+</style>
+
+{% if info.chars|count > 0 %}
+
+<h2> Results ({{info.report}})&nbsp;
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+</h2>
+
+<table>
+<tr>
+  <th class="center">{{ KNOWL('character.dirichlet.conrey', title='Conrey label')}}</th>
+  <th class="center">{{ KNOWL('character.dirichlet.modulus', title='Modulus')}}</th>
+  <th class="center">{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</th>
+  <th align="center">{{ KNOWL('character.dirichlet.order', title='Order') }}</th>
+  <th align="center">{{ KNOWL('character.dirichlet.parity', title='Parity') }}</th>
+  <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
+</tr>
+
+{% for (mod,num,cond,order,par,prim,name) in info.chars: %}
+<tr>
+<td class="center"><a href="{{mod}}/{{num}}">{{name}}</a></td>
+<td class="center">{{mod}}</td>
+<td class="center">{{cond}}</td>
+<td class="center">{{order}}</td>
+<td class="center">{{'Odd' if par else 'Even'}}</td>
+<td class="center">{{'&#x2713;'|safe if prim}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<br>
+
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+
+
+{#
+<form>
+Download all search results for
+<input type="submit" name="Submit" value="gp">
+<input type="submit" name="Submit" value="sage">
+<input type="submit" name="Submit" value="magma">
+<input type="hidden" name="download" value="1"/>
+</form>
+#}
+
+{% else %}
+<h2> No matches found</h2>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

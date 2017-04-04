@@ -1,76 +1,64 @@
 {% extends 'homepage.html' %}
 {% block content %}
 <p>
-  The database contains information about {{ number_of_samples
-  }} examples of scalar and vector
-  valued <a knowl="mf.siegel"> Siegel modular forms</a>, as well as
+  The database contains information about {{ info.number_of_samples }} examples of scalar and vector
+  valued {{KNOWL('mf.siegel.degree',title='Siegel modular forms')}}, as well as
   dimension formulas for spaces of Siegel modular forms.  The examples
   not in the image of a lift from a lower rank group are almost all of
   the known examples in the literature, and most published dimension
   formulas are included.
 </p> 
 
-<h2>Browse examples</h2>
+<h2>Browse spaces</h2>
 <p>
-In each of these spaces we give explicit examples of Siegel modular forms,
-as well as dimension formulas and some additional information.
+For each of the following spaces we give explicit examples of {{KNOWL('mf.siegel',title='Siegel modular forms')}},
+as well as dimension formulas and some additional information:
 </p>
 <p>
-<a href="/ModularForm/GSp/Q/Sp4Z_j/">
-    $M_{k,j}\left(\textrm{Sp}(4,\mathbb{Z})\right)$ 
-</a>
-<br />
-<a href="/ModularForm/GSp/Q/Kp/">
-    $M_2\left(K(p)\right)$ 
- </a>
-<br />
- <a href="/ModularForm/GSp/Q/Sp6Z/">
-    $M_{k}\left(\textrm{Sp}(6,\mathbb{Z})\right)$ 
- </a>
- &nbsp;
-  <a href="/ModularForm/GSp/Q/Sp8Z/">
-    $M_k\left(\textrm{Sp}(8,\mathbb{Z})\right)$ 
-  </a>
+<a href="{{url_for('.by_label',label='Sp4Z_j')}}">$M_{k,j}\left(\textrm{Sp}(4,\mathbb{Z})\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Sp6Z')}}">$M_{k}\left(\textrm{Sp}(6,\mathbb{Z})\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Sp8Z')}}">$M_k\left(\textrm{Sp}(8,\mathbb{Z})\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Kp')}}">$M_2\left(K(p)\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
 </p>
 
-<h2>Browse dimension formulas</h2>
 <p>
-For these spaces we provide dimension formulas and some additional information.
+For the following spaces we provide dimension tables, decompositions, and some additional information.
 </p>
 <p>
-   <a href="/ModularForm/GSp/Q/Gamma0_2/">
-    $M_{k,j}\left(\Gamma_0(2)\right)$
-   </a>
-   &nbsp;
-    <a href="/ModularForm/GSp/Q/Gamma1_2/">
-    $M_{k,j}\left(\Gamma_1(2)\right)$
-    </a>
-    &nbsp;
-    <a href="/ModularForm/GSp/Q/Gamma_2/">
-    $M_{k,j}\left(\Gamma(2)\right)$
-  </a>
-  <br />
-    <a href="/ModularForm/GSp/Q/Gamma0_3/">
-    $M_k\left(\Gamma_0(3)\right)$
-  </a> &nbsp;
-    <a href="/ModularForm/GSp/Q/Gamma0_3_psi_3/">
-    $M_k\left(\Gamma_0(3),\psi_3\right)$
-  </a>
-  <br />
-    <a href="/ModularForm/GSp/Q/Gamma0_4/">
-    $M_k\left(\Gamma_0(4)\right)$
-    </a>
-    &nbsp;
-    <a href="/ModularForm/GSp/Q/Gamma0_4_psi_4/">
-    $M_k\left(\Gamma_0(4),\psi_4\right)$
-  </a>
-  <br />
-    <a href="/ModularForm/GSp/Q/Gamma0_4_half/">
-    $M_{k-1/2}\left(\Gamma_0(4)\right)$
-  </a>
-  <br />
-  
+<a href="{{url_for('.by_label',label='Gamma0_2')}}">$M_{k,j}\left(\Gamma_0(2)\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Gamma1_2')}}">$M_{k,j}\left(\Gamma_1(2)\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Gamma_2')}}">$M_{k,j}\left(\Gamma(2)\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Gamma0_3')}}">$M_k\left(\Gamma_0(3)\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Gamma0_3_psi_3')}}">$M_k\left(\Gamma_0(3),\psi_3\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Gamma0_4')}}">$M_k\left(\Gamma_0(4)\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Gamma0_4_psi_4')}}">$M_k\left(\Gamma_0(4),\psi_4\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{{url_for('.by_label',label='Gamma0_4_half')}}">$M_{k-1/2}\left(\Gamma_0(4)\right)$</a>&nbsp;&nbsp;&nbsp;&nbsp;
 </p>
 
+<h2>Browse dimension tables</h2>
+
+{% include 'includes/form_for_dimension_table_search.html' %}
+
+<h2>Browse example forms</h2>
+
+View a <a href="{{url_for('.random_sample')}}">random example</a> from the database.
+
+<h4>Enter search criteria for examples:</h4>
+<form>
+<span>Degree: <input name="deg" size=9.5 placeholder="2" value="{{info.args.deg}}"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span>$k$: <input name="wt" size=10 placeholder="4..16" value="{{info.args.wt}}"></span>&nbsp;&nbsp;&nbsp;&nbsp;
+<span>Field degree: <input name="fdeg" size=3 placeholder="1" value="{{info.args.fdeg}}">&nbsp;&nbsp;&nbsp;&nbsp;
+<button type="submit" style="width: 110px"name="search" value="1">Find examples</button>
+</form>
+
+<!-- Hiding this for the moment.  LMFDB labels for Siegel modular forms really need to be thought out before we start calling them labels
+<h4>Lookup a specific example by label:</h4>
+<form>
+<span>Label:
+<input name="label" size=20 placeholder="Sp4Z.22_E"/>
+<span class="formexample"> e.g. Sp4Z, Sp4Z.22_E, or SpZ8.8_Ikeda</span>&nbsp;&nbsp;&nbsp;&nbsp;
+<button type="submit" style="width: 110px" name="lookup" value="1">Find example</button>
+</form>
+-->
 
 {% endblock %}
