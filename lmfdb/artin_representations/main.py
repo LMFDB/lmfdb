@@ -173,14 +173,13 @@ def render_artin_representation_webpage(label):
         friends.append(("Artin Field", nf_url))
     cc = the_rep.central_character()
     if cc is not None:
-        if cc.modulus <= 100000: 
-            if the_rep.dimension()==1:
-                if cc.order == 2:
-                    cc_name = cc.symbol
-                else:
-                    cc_name = cc.texname
-                friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
-        if the_rep.dimension()>1:
+        if the_rep.dimension()==1:
+            if cc.order == 2:
+                cc_name = cc.symbol
+            else:
+                cc_name = cc.texname
+            friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+        else:
             detrep = the_rep.central_character_as_artin_rep()
             friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
 
