@@ -81,7 +81,7 @@ Running
     installing mongo on your machine):
 
     ```
-       mongod --port 40000 --dbpath [db_directory] --smallfiles
+       mongod --port 37010 --dbpath [db_directory] --smallfiles
     ```
 
 * Now you can launch the webserver like this:
