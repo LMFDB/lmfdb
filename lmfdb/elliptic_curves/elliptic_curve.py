@@ -455,6 +455,8 @@ def render_curve_webpage_by_label(label):
 
     if data.twoadic_label:
         credit = credit.replace(' and',',') + ' and Jeremy Rouse'
+    if data.data['iwdata']:
+        credit = credit.replace(' and',',') + ' and Robert Pollack'
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     code = data.code()

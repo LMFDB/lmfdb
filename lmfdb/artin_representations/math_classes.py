@@ -4,7 +4,7 @@ from lmfdb.base import getDBConnection
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.artin_representations.databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
 from lmfdb.artin_representations.databases.standard_types import PolynomialAsSequenceTooLargeInt
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime
 from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.WebCharacter import WebSmallDirichletCharacter
@@ -238,6 +238,44 @@ class ArtinRepresentation(object):
             return (pvals % n)
         return myfunc
 
+    def central_character_as_artin_rep(self):
+        """
+          Returns the central character, i.e., determinant character
+          as a web character, but as an Artin representation
+        """
+        if self.dimension() == 1:
+            return self
+        if 'central_character_as_artin_rep' in self._data:
+            return self._data['central_character_as_artin_rep']
+        myfunc = self.central_char_function()
+        # Get the Artin field
+        nfgg = self.number_field_galois_group()
+        # Get its artin reps
+        arts = nfgg.ArtinReps()
+        # Filter for 1-dim
+        arts = [a for a in arts if ArtinRepresentation(str(a['Baselabel'])+"c1").dimension()==1]
+        artfull = [ArtinRepresentation(str(a['Baselabel'])+"c"+str(a['GalConj'])) for a in arts]
+        # hold = artfull
+        # Loop as we evaluate at primes until there is only one left
+        # Fix the return value to be what we want
+        artfull = [[a, a.central_char_function(),2*a.character_field()] for a in artfull]
+        n = 2*self.character_field()
+        p = 2
+        disc = nfgg.discriminant()
+        while len(artfull)>1:
+            if (disc % p) != 0:
+              k=0
+              while k<len(artfull):
+                  if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
+                      k += 1
+                  else:
+                      # Quick deletion of k-th term
+                      artfull[k] = artfull[-1]
+                      del artfull[-1]
+            p = next_prime(p)
+        self._data['central_character_as_artin_rep'] = artfull[0][0]
+        return artfull[0][0]
+
     def central_character(self):
         """
           Returns the central character, i.e., determinant character
@@ -264,6 +302,9 @@ class ArtinRepresentation(object):
         if cc.order == 2:
             return cc.symbol
         return cc.texname
+
+    def det_as_artin_display(self):
+        return self.central_character_as_artin_rep().label()
 
     def det_url(self):
         cc= self.central_character()
