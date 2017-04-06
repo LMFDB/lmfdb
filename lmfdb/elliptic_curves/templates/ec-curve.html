@@ -488,7 +488,9 @@ representation')}} is surjective for all primes \( p \).
 
 
 
-    <h2> p-adic data </h2>
+    <h2> $p$-adic data </h2>
+
+<h3>$p$-adic regulators</h3>
 
     {{ place_code('padicreg') }}
 
@@ -498,7 +500,7 @@ All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
 {% else %}
 {% if data.data.p_adic_data_exists %}
 <p>
-Note: \(p\)-adic data only exists for primes \(p\ge5\) of good ordinary
+Note: \(p\)-adic regulator data only exists for primes \(p\ge5\) of good ordinary
 reduction.
 </p>
         <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p='xxx', rank=data.mw.rank).replace('xxx', "'+this.value+'")}}', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'padic']);}); ">
@@ -517,6 +519,71 @@ No \(p\)-adic data exists for this curve.
 {% endif %}
     </p>
 
+{% if data.iwdata %}
+<h2>{{ KNOWL('ec.iwasawa_invariants', title='Iwasawa invariants') }} </h2>
+<p>
+<table border=1>
+<tr>
+<th>$p$</th>
+{% for pdata in data.data.iwdata %}
+<td>
+{{pdata[0]}}
+</td>
+{% endfor %}
+</tr>
+
+<tr>
+<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+{% for pdata in data.data.iwdata %}
+<td>
+{{ KNOWL('ec.q.reduction_type', title=pdata[1]) }}
+</td>
+{% endfor %}
+</tr>
+
+<tr>
+<th>{{ KNOWL('ec.lambda_invariant', title='$\lambda$-invariant(s)')  }} </th>
+{% for pdata in data.data.iwdata %}
+<td>
+{{ pdata[2] }}
+</td>
+{% endfor %}
+</tr>
+
+<tr>
+<th>{{ KNOWL('ec.mu_invariant', title='$\mu$-invariant(s)') }} </th>
+{% for pdata in data.data.iwdata %}
+<td>
+{{ pdata[3] }}
+</td>
+{% endfor %}
+</tr>
+
+</table>
+</p>
+{% if data.iwp0 %}
+<p>
+All Iwasawa $\lambda$ and $\mu$-invariants for primes $p\ge
+{{data.iwp0}}$ of {{KNOWL('ec.good_reduction', title='good reduction')}} are zero.
+</p>
+{% endif %}
+{% if data.data.iw_missing_flag %}
+<p>
+An entry ? indicates that the invariants have not yet been computed.
+</p>
+{% endif %}
+{% if data.data.additive_shown %}
+<p>
+An entry - indicates that the invariants are not computed because the reduction is additive.
+</p>
+{% endif %}
+
+{% else %}
+<p>
+No Iwasawa invariant data is available for this curve.
+</p>
+{% endif %}
+
     <h2> Isogenies </h2>
 {% if data.data.isogeny_degrees != "unknown" %}
 <p>
@@ -533,6 +600,7 @@ This curve has no rational isogenies.  Its isogeny class <a href={{ data.class_u
 </p>
 {% endif %}
 {% endif %}
+
 
 
 {#
@@ -562,7 +630,7 @@ $(function() {
 </script>
 
     {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
-    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='Additional information') }}</h2>
 
 {% if DEBUG %}
 <hr>
