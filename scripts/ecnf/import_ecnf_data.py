@@ -38,6 +38,8 @@ K=Q(w) of degree d.
 
    - label              *     string (see below)
    - short_label        *     string
+   - class_label        *     string
+   - short_class_label  *     string
    - conductor_label    *     string
    - iso_label          *     string (letter code of isogeny class)
    - iso_nlabel         *     int (numerical code of isogeny class)
