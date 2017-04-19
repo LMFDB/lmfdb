@@ -853,7 +853,7 @@ def add_extra_data1(C):
 
 def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=100000):
     r""" Check that for conductors in the specified range (or all
-    conductors) every database entry has all the fields it sould, and
+    conductors) every database entry has all the fields it should, and
     that these have the correct type.
     """
     str_type = type(unicode('abc'))
