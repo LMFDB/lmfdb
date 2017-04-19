@@ -278,6 +278,8 @@
       <a href="{{ url_for('management_board') }}">Management Board</a>
       {# <a href="{{ 'about' }}">About</a> #}
       &middot;
+      {{ lmfdb_version|safe }}
+      &middot;
       {{ current_source|safe }}
       &middot;
       {{ latest_changeset|safe }}
