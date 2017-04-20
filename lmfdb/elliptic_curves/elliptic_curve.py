@@ -235,6 +235,8 @@ def elliptic_curve_search(info):
             elif info['include_cm'] == 'only':
                 query['cm'] = {'$ne' : 0}
 
+        parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
+
         if info['galois_data_type'] == 'new':
             parse_primes(info, query, 'surj_primes', name='surjective primes',
                          qfield='non-maximal_primes', mode='complement')

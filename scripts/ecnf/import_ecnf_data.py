@@ -83,7 +83,7 @@ import os
 import pymongo
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ
+from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ, Set
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF, parse_ainvs, parse_point
@@ -819,7 +819,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
     int_type = type(int(1))
     float_type = type(float(1))
     list_type = type([1,2,3])
-    dict_type = type({'a':1})
+    #dict_type = type({'a':1})
     bool_type = type(True)
 
     keys_and_types = {'field_label':  str_type,
