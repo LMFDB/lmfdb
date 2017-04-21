@@ -380,6 +380,22 @@ if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 
 </div>
 
+<div>
+  <h2> Isogenies </h2>
+<p>
+{% if ec.isogeny_degrees %}
+This curve has non-trivial cyclic isogenies of degree \(d\) for \(d=\)
+{{ ec.isogeny_degrees}}.
+<br>
+Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>
+consists of {{ec.ncurves}} curves linked by isogenies of degrees
+dividing {{ec.class_deg}}.
+{% else %}
+This curve has no rational isogenies.  Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   consists of this curve only.
+</p>
+{% endif %}
+</div>
+
 {% if DEBUG %}
 <hr>
 <div>

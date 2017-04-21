@@ -454,6 +454,21 @@ class ECNF(object):
         self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=quote(self.conductor_label))
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
 
+        # Isogeny information
+
+        if self.number==1:
+            isogmat = self.isogeny_matrix
+        else:
+            isogmat = db_ecnf().find_one({'class_label':self.class_label, 'number':1})['isogeny_matrix']
+        self.class_deg = max([max(d) for d in isogmat])
+        self.ncurves = db_ecnf().count({'class_label':self.class_label})
+        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
+        if len(isodegs)<3:
+            self.isogeny_degrees = " and ".join(isodegs)
+        else:
+            self.isogeny_degrees = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
+
+
         sig = self.signature
         totally_real = sig[1] == 0
         imag_quadratic = sig == [0,1]
