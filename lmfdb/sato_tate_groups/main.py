@@ -152,7 +152,7 @@ def index():
 @st_page.route('/random')
 def random():
     data = random_object_from_collection(st_groups())
-    return redirect(url_for('.by_label', label=data['label']), 301)
+    return redirect(url_for('.by_label', label=data['label']), 307)
 
 @st_page.route('/<label>')
 def by_label(label):

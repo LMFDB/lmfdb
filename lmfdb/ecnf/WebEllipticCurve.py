@@ -228,6 +228,7 @@ class ECNF(object):
         # del dbdata["_id"]
         self.__dict__.update(dbdata)
         self.field = make_field(self.field_label)
+        self.non_surjective_primes = dbdata.get('non-surjective_primes',None)
         self.make_E()
 
     @staticmethod
@@ -340,10 +341,30 @@ class ECNF(object):
         # store the factorization of the denominator of j and display
         # that, which is the most interesting part.
 
+        # Images of Galois representations
+
+        if not hasattr(self,'galois_images'):
+            #print "No Galois image data"
+            self.galois_images = "?"
+            self.non_surjective_primes = "?"
+            self.galois_data = []
+        else:
+            self.galois_data = [{'p': p,'image': im }
+                                for p,im in zip(self.non_surjective_primes,
+                                                self.galois_images)]
+
         # CM and End(E)
         self.cm_bool = "no"
         self.End = "\(\Z\)"
         if self.cm:
+            self.rational_cm = K(self.cm).is_square()
+            self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            self.cm_nramp = len(self.cm_ramp)
+            if self.cm_nramp==1:
+                self.cm_ramp = self.cm_ramp[0]
+            else:
+                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
+            self.cm_sqf = ZZ(self.cm).squarefree_part()
             self.cm_bool = "yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
                 d4 = ZZ(self.cm) // 4
@@ -432,6 +453,22 @@ class ECNF(object):
         self.urls['class'] = url_for(".show_ecnf_isoclass", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label)
         self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=quote(self.conductor_label))
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
+
+        # Isogeny information
+
+        if self.number==1:
+            isogmat = self.isogeny_matrix
+        else:
+            isogmat = db_ecnf().find_one({'class_label':self.class_label, 'number':1})['isogeny_matrix']
+        self.class_deg = max([max(d) for d in isogmat])
+        self.one_deg = ZZ(self.class_deg).is_prime()
+        self.ncurves = db_ecnf().count({'class_label':self.class_label})
+        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
+        if len(isodegs)<3:
+            self.isogeny_degrees = " and ".join(isodegs)
+        else:
+            self.isogeny_degrees = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
+
 
         sig = self.signature
         totally_real = sig[1] == 0

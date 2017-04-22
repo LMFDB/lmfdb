@@ -50,7 +50,7 @@ def index():
 
 @smf_page.route("/random")
 def random_sample():
-    return redirect(url_for('.by_label', label='.'.join(sample.random_sample_name())), 301)
+    return redirect(url_for('.by_label', label='.'.join(sample.random_sample_name())), 307)
 
 @smf_page.route('/<label>')
 @smf_page.route('/<label>/')

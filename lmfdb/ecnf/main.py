@@ -114,7 +114,7 @@ def get_nf_info(lab):
     return label, pretty
 
 
-ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, John Voight, Dan Yasaki"
+ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, Andrew V Sutherland, John Voight, Dan Yasaki"
 
 
 def get_bread(*breads):
@@ -201,15 +201,15 @@ def index():
         data['fields'].append(['%s totally real quartic fields, including' % nquartics,
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quartics)])
     # Quintics
-    quintics = ['5.5.%s.1' % str(d) for d in [14641]]
+    quintics = ['5.5.%s.1' % str(d) for d in [14641, 24217, 36497, 38569, 65657]]
     if 5 in counts['nfields_by_degree']:
         nquintics = counts['nfields_by_degree'][5]
-        data['fields'].append(['%s totally real quintic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
+        data['fields'].append(['%s totally real quintic fields, including' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
     # Sextics
-    sextics = ['6.6.%s.1' % str(d) for d in [371293]]
+    sextics = ['6.6.%s.1' % str(d) for d in [300125, 371293, 434581, 453789, 485125]]
     if 6 in counts['nfields_by_degree']:
-        nquintics = counts['nfields_by_degree'][6]
-        data['fields'].append(['%s totally real sextic field' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in sextics)])
+        nsextics = counts['nfields_by_degree'][6]
+        data['fields'].append(['%s totally real sextic fields, including' % nsextics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in sextics)])
 
     data['degrees'] = sorted(counts['degrees'])
 
@@ -246,7 +246,7 @@ def index():
 @ecnf_page.route("/random")
 def random_curve():
     E = random_object_from_collection(db_ecnf())
-    return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 301)
+    return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 307)
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
@@ -262,7 +262,7 @@ def show_ecnf1(nf):
     if len(request.args) > 0:
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
-            return redirect (url_for(".index", **request.args), 301)
+            return redirect (url_for(".index", **request.args), 307)
         info['title'] += ' search results'
         info['bread'].append(('search results',''))
     info['field'] = nf_label
@@ -286,7 +286,7 @@ def show_ecnf_conductor(nf, conductor_label):
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
-            return redirect (url_for(".index", **request.args), 301)
+            return redirect (url_for(".index", **request.args), 307)
         info['title'] += ' search results'
         info['bread'].append(('search results',''))
     info['field'] = nf_label
@@ -402,6 +402,7 @@ def elliptic_curve_search(info):
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
         if 'torsion_structure' in query and not 'torsion_order' in query:
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
+        parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
     except (TypeError,ValueError):
         return search_input_error(info, bread)
 

@@ -95,6 +95,9 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
+    info['galois_data_type'] = 'old'
+    if 'non-maximal_primes' in db_ec().find_one():
+        info['galois_data_type'] = 'new'
     return render_template("ec-index.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), **err_args)
 
 @ec_page.route("/random")
@@ -110,7 +113,7 @@ def todays_curve():
     n = (date.today()-mordells_birthday).days
     label = db_ec().find({'number' : int(1)})[n]['label']
     #return render_curve_webpage_by_label(label)
-    return redirect(url_for(".by_ec_label", label=label), 301)
+    return redirect(url_for(".by_ec_label", label=label), 307)
 
 @ec_page.route("/stats")
 def statistics():
@@ -134,7 +137,7 @@ def by_conductor(conductor):
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
-            return redirect (url_for(".rational_elliptic_curves", **request.args), 301)
+            return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
         info['title'] += ' search results'
         info['bread'].append(('search results',''))
     info['conductor'] = conductor
@@ -212,6 +215,10 @@ def elliptic_curve_search(info):
         else:
             query['label'] = ''
 
+    info['galois_data_type'] = 'old'
+    if 'non-maximal_primes' in db_ec().find_one():
+        info['galois_data_type'] = 'new'
+
     try:
         parse_rational(info,query,'jinv','j-invariant')
         parse_ints(info,query,'conductor')
@@ -228,14 +235,24 @@ def elliptic_curve_search(info):
             elif info['include_cm'] == 'only':
                 query['cm'] = {'$ne' : 0}
 
-        parse_primes(info, query, 'surj_primes', name='surjective primes',
-                     qfield='non-surjective_primes', mode='complement')
+        parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
+
+        if info['galois_data_type'] == 'new':
+            parse_primes(info, query, 'surj_primes', name='surjective primes',
+                         qfield='non-maximal_primes', mode='complement')
+        else:
+            parse_primes(info, query, 'surj_primes', name='surjective primes',
+                         qfield='non-surjective_primes', mode='complement')
         if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
-        parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
-                     qfield='non-surjective_primes',mode=mode)
+        if info['galois_data_type'] == 'new':
+            parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
+                         qfield='non-maximal_primes',mode=mode)
+        else:
+            parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
+                         qfield='non-surjective_primes',mode=mode)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)
@@ -276,8 +293,9 @@ def elliptic_curve_search(info):
         else:
             info['report'] = 'displaying all %s matches' % nres
     credit = 'John Cremona'
-    if 'non-surjective_primes' in query:
-        credit += 'and Andrew Sutherland'
+    if 'non-surjective_primes' in query or 'non-maximal_primes' in query:
+        credit += ' and Andrew Sutherland'
+
     t = info.get('title','Elliptic Curves search results')
     return render_template("ec-search-results.html", info=info, credit=credit, bread=bread, title=t)
 
@@ -439,6 +457,8 @@ def render_curve_webpage_by_label(label):
 
     if data.twoadic_label:
         credit = credit.replace(' and',',') + ' and Jeremy Rouse'
+    if data.data['iwdata']:
+        credit = credit.replace(' and',',') + ' and Robert Pollack'
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     code = data.code()

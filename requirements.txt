@@ -10,4 +10,4 @@ coverage
 nose
 cython
 markupsafe
-git+git://github.com/jwbober/conrey-dirichlet-characters.git@master#egg=dirichlet_conrey
+git+https://github.com/jwbober/conrey-dirichlet-characters.git@master#egg=dirichlet_conrey
