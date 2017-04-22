@@ -38,7 +38,10 @@ def random_object_from_collection(collection):
         m = collection.count()
         if m != n:
             current_app.logger.warning("Random object index {0}.rand is out of date ({1} != {2}), proceeding anyway.".format(collection,n,m))
-        return collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
+        try:
+            return collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
+        except:
+            pass
     if pymongo.version_tuple[0] < 3:
         return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next()
     else:
