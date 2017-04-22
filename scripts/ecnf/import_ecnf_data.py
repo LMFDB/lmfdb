@@ -547,12 +547,12 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
-    galrep_filename = 'galrep.%s' % (filename_suffix)
+    #galrep_filename = 'galrep.%s' % (filename_suffix)
     file_list = [curves_filename, curve_data_filename, isoclass_filename]
-    file_list = [isoclass_filename]
-    file_list = [curves_filename]
-    file_list = [curve_data_filename]
-    file_list = [galrep_filename]
+#    file_list = [isoclass_filename]
+#    file_list = [curves_filename]
+#    file_list = [curve_data_filename]
+#    file_list = [galrep_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
 
@@ -774,46 +774,6 @@ def make_indices():
 def check_database_consistency(collection, field=None, degree=None, ignore_ranks=False):
     r""" Check that for given field (or all) every database entry has all
     the fields it should, and that these have the correct type.
-
-   - field_label  *   string          2.2.5.1
-   - degree       *   int             2
-   - signature    *   [int,int]       [2,0]
-   - abs_disc     *   int             5
-
-   - label              *     string (see below)
-   - short_label        *     string
-   - class_label        *     string
-   - short_class_label  *     string
-   - conductor_label    *     string
-   - iso_label          *     string (letter code of isogeny class)
-   - iso_nlabel         *     int (numerical code of isogeny class)
-   - conductor_ideal    *     ideal-string
-   - conductor_norm     *     int
-   - number             *     int    (number of curve in isogeny class, from 1)
-   - ainvs              *     string joining 5 NFelt-strings by ";"
-   - jinv               *     NFelt-string
-   - cm                 *     either int (a negative discriminant, or 0) or '?'
-   - q_curve            *     boolean (True, False)
-   - base_change        *     list of labels of elliptic curve over Q
-   - rank                     int
-   - rank_bounds              list of 2 ints
-   - analytic_rank            int
-   - torsion_order            int
-   - torsion_structure        list of 0, 1 or 2 ints
-   - gens                     list of point-strings (see below)
-   - torsion_gens       *     list of point-strings (see below)
-   - sha_an                   int
-   - isogeny_matrix     *     list of list of ints (degrees)
-   - non-surjective_primes    list of ints
-   - galois_images            list of strings
-
-   - equation           *     string
-   - local_data         *     list of dicts (one per bad prime)
-   - non_min_p          *     list of strings (one per nonminimal prime)
-   - minD               *     ideal-string (minimal discriminant ideal)
-   - heights                  list of floats (one per gen)
-   - reg                      float
-
     """
     str_type = type(unicode('abc'))
     int_type = type(int(1))
@@ -849,6 +809,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'torsion_gens': list_type, # of strings
                       #'sha_an': int_type,
                       'isogeny_matrix': list_type, # of lists of ints
+                      'isogeny_degrees': list_type, # of ints
                       'non-surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
                       'galois_images': list_type, # of strings
@@ -925,3 +886,46 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
             diff2 = [k for k in db_keys if not k in expected_keys]
             if diff1: print("expected but absent:      {}".format(diff1))
             if diff2: print("not expected but present: {}".format(diff2))
+
+# Functions to add isogeny_degrees fields to existing data
+#
+# 1. Read all curves with 'number':1 and return a dictionary with keys
+# full curve labels and values the associated isogeny degree lists
+# (sorted and with no repeats).
+
+def make_isog_degree_dict(field=None):
+    r""" If field is not None, only work on curve with this field_label
+    (for testing), otherwise work on every curve.
+    """
+    query = {}
+    query['number'] = int(1)
+    if field:
+        query['field_label'] = field
+    isog_dict = {}
+    for e in nfcurves.find(query):
+        class_label = e['class_label']
+        #print(class_label)
+        isomat = e['isogeny_matrix']
+        allisogdegs = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(isomat)])
+        for n in range(len(isomat)):
+            label = class_label+str(n+1)
+            isog_dict[label] = {'isogeny_degrees': allisogdegs[n+1]}
+    return isog_dict
+
+#
+# 2. Now set isog_dict = make_isog_degree_dict() and use the following
+#
+
+#isogdata = make_isog_degree_dict()
+isogdata = {} # to keep pyflakes happy
+
+def add_isogs_to_one(c):
+    c.update(isogdata[c['label']])
+    return c
+
+#
+# 3. in a call to rewrite_collection such as
+#
+#  %runfile data_mgt/utilities/rewrite.py
+#  rewrite_collection(C.elliptic_curves,'nfcurves','nfcurves.new',add_isogs_to_one)
+
