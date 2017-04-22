@@ -55,11 +55,11 @@ def random_value_from_collection(collection,attribute):
         m = collection.count()
         if m != n:
             current_app.logger.warning("Random object index {0}.rand is out of date ({1} < {2})".format(collection,n,m))
-        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True}).get(attribute)
+        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True})
         if obj:
-            return obj
+            return obj.get(attribute)
     if pymongo.version_tuple[0] < 3:
-        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't both optimizing this
+        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't bother optimizing this
     else:
         # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
         return collection.aggregate([{ '$sample': { 'size': int(1) } }, { '$project' : {'_id':False,attribute:True}} ]).next().get(attribute)
