@@ -55,12 +55,13 @@
   {% endif %}
   <tr>
     {% if info.fdeg > 1 %}
-    <td>Field equation:</td>
+    <td>Field polynomial:</td>
     {% set pol = info.field_poly %}
     {% set latex_pol = info.latex(pol) %}
     <td>
     {% if latex_pol|count > 200 %} <button id ="toggle">Show</button>&nbsp;<span id="def_polynomial" style="display: none;"><div class="small">{{pol}}</div></span>({{latex_pol|count}} bytes) {% else %} ${{latex_pol}}$ {% endif %}
     </td>
+    <td>Field generator:</td><td>$a$</td>
     {% endif %}
   </tr>
 </table>
