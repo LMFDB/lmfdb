@@ -352,6 +352,7 @@ class WebEC(object):
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+        self.one_deg = ZZ(self.class_deg).is_prime()
         self.ncurves = db_ec().count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:

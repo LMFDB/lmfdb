@@ -38,6 +38,8 @@ K=Q(w) of degree d.
 
    - label              *     string (see below)
    - short_label        *     string
+   - class_label        *     string
+   - short_class_label  *     string
    - conductor_label    *     string
    - iso_label          *     string (letter code of isogeny class)
    - iso_nlabel         *     int (numerical code of isogeny class)
@@ -46,7 +48,7 @@ K=Q(w) of degree d.
    - number             *     int    (number of curve in isogeny class, from 1)
    - ainvs              *     string joining 5 NFelt-strings by ";"
    - jinv               *     NFelt-string
-   - cm                 *     either int (a negative discriminant, or 0) or '?'
+   - cm                 *     int (a negative discriminant, or 0)
    - q_curve            *     boolean (True, False)
    - base_change        *     list of labels of elliptic curve over Q
    - rank                     int
@@ -81,7 +83,7 @@ import os
 import pymongo
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ
+from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ, Set
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF, parse_ainvs, parse_point
@@ -431,7 +433,7 @@ def add_heights(data):
     ngens = data.get('ngens', 0)
     if ngens == 0:
         data['heights'] = []
-        data['reg'] = 1
+        data['reg'] = float(1)
         return data
     # Now there is work to do
     K = nf_lookup(data['field_label'])
@@ -545,12 +547,12 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
-    galrep_filename = 'galrep.%s' % (filename_suffix)
+    #galrep_filename = 'galrep.%s' % (filename_suffix)
     file_list = [curves_filename, curve_data_filename, isoclass_filename]
-    file_list = [isoclass_filename]
-    file_list = [curves_filename]
-    file_list = [curve_data_filename]
-    file_list = [galrep_filename]
+#    file_list = [isoclass_filename]
+#    file_list = [curves_filename]
+#    file_list = [curve_data_filename]
+#    file_list = [galrep_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
 
@@ -762,3 +764,168 @@ def make_indices():
     for x in ['field_label', 'degree', 'number', 'label']:
         nfcurves.create_index(x)
     nfcurves.create_index([(x,pymongo.ASCENDING) for x in ['field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']])
+
+########################################################
+#
+# Script to check that data is complete and consistent
+#
+########################################################
+
+def check_database_consistency(collection, field=None, degree=None, ignore_ranks=False):
+    r""" Check that for given field (or all) every database entry has all
+    the fields it should, and that these have the correct type.
+    """
+    str_type = type(unicode('abc'))
+    int_type = type(int(1))
+    float_type = type(float(1))
+    list_type = type([1,2,3])
+    #dict_type = type({'a':1})
+    bool_type = type(True)
+
+    keys_and_types = {'field_label':  str_type,
+                      'degree': int_type,
+                      'signature': list_type, # of ints
+                      'abs_disc': int_type,
+                      'label':  str_type,
+                      'short_label':  str_type,
+                      'class_label':  str_type,
+                      'short_class_label':  str_type,
+                      'conductor_label': str_type,
+                      'conductor_ideal': str_type,
+                      'conductor_norm': int_type,
+                      'iso_label': str_type,
+                      'iso_nlabel': int_type,
+                      'number': int_type,
+                      'ainvs': str_type,
+                      'jinv': str_type,
+                      'cm': int_type,
+                      'ngens': int_type,
+                      'rank': int_type,
+                      'rank_bounds': list_type, # 2 ints
+                      #'analytic_rank': int_type,
+                      'torsion_order': int_type,
+                      'torsion_structure': list_type, # 0,1,2 ints
+                      'gens': list_type, # of strings
+                      'torsion_gens': list_type, # of strings
+                      #'sha_an': int_type,
+                      'isogeny_matrix': list_type, # of lists of ints
+                      'isogeny_degrees': list_type, # of ints
+                      'non-surjective_primes': list_type, # of ints
+                      #'non-maximal_primes': list_type, # of ints
+                      'galois_images': list_type, # of strings
+                      #'mod-p_images': list_type, # of strings
+                      'equation': str_type,
+                      'local_data': list_type, # of dicts
+                      'non_min_p': list_type, # of strings
+                      'minD': str_type,
+                      'heights': list_type, # of floats
+                      'reg': float_type, # or int(1)
+                      'q_curve': bool_type,
+                      'base_change': list_type, # of strings
+    }
+
+    key_set = Set(keys_and_types.keys())
+#
+#   Some keys are only used for the first curve in each class.
+#   Currently only the isogeny matrix, but later there may be more.
+#
+    number_1_only_keys = ['isogeny_matrix'] # only present if 'number':1
+#
+#   As of April 2017 rank data is only computed for imaginary
+#   quadratic fields so we need to be able to say to ignore the
+#   associated keys.  Also (not yet implemented) if we compute rank
+#   upper and lower bounds then the rank key is not set, and this
+#   script should allow for that.
+#
+    rank_keys = ['analytic_rank', 'rank', 'rank_bounds', 'ngens', 'gens']
+#
+#   As of April 2017 we have mod p Galois representration data for all
+#   curves except some of those over degree 6 fields since over these
+#   fields the curves are still being found and uploaded, o we ignore
+#   these keys over degree 6 fields for now.
+#
+    galrep_keys = ['galois_images', 'non-surjective_primes']
+    print("key_set has {} keys".format(len(key_set)))
+
+    query = {}
+    if field is not None:
+        query['field_label'] = field
+    elif degree is not None:
+        query['degree'] = int(degree)
+
+    count=0
+    for c in C.elliptic_curves.get_collection(collection).find(query):
+        count +=1
+        if count%1000==0:
+            print("Checked {} entries...".format(count))
+        expected_keys = key_set
+        if ignore_ranks:
+            expected_keys = expected_keys - rank_keys
+        if c['number']!=1:
+            expected_keys = expected_keys - number_1_only_keys
+        if c['degree']==6:
+            expected_keys = expected_keys - galrep_keys
+        db_keys = Set([str(k) for k in c.keys()]) - ['_id']
+        if ignore_ranks:
+            db_keys = db_keys - rank_keys
+        if c['degree']==6:
+            db_keys = db_keys - galrep_keys
+
+        label = c['label']
+
+        if db_keys == expected_keys:
+            for k in db_keys:
+                ktype = keys_and_types[k]
+                if type(c[k]) != ktype and not k=='reg' and ktype==type(int):
+                    print("Type mismatch for key {} in curve {}".format(k,label))
+                    print(" in database: {}".format(type(c[k])))
+                    print(" expected:    {}".format(keys_and_types[k]))
+        else:
+            print("keys mismatch for {}".format(label))
+            diff1 = [k for k in expected_keys if not k in db_keys]
+            diff2 = [k for k in db_keys if not k in expected_keys]
+            if diff1: print("expected but absent:      {}".format(diff1))
+            if diff2: print("not expected but present: {}".format(diff2))
+
+# Functions to add isogeny_degrees fields to existing data
+#
+# 1. Read all curves with 'number':1 and return a dictionary with keys
+# full curve labels and values the associated isogeny degree lists
+# (sorted and with no repeats).
+
+def make_isog_degree_dict(field=None):
+    r""" If field is not None, only work on curve with this field_label
+    (for testing), otherwise work on every curve.
+    """
+    query = {}
+    query['number'] = int(1)
+    if field:
+        query['field_label'] = field
+    isog_dict = {}
+    for e in nfcurves.find(query):
+        class_label = e['class_label']
+        #print(class_label)
+        isomat = e['isogeny_matrix']
+        allisogdegs = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(isomat)])
+        for n in range(len(isomat)):
+            label = class_label+str(n+1)
+            isog_dict[label] = {'isogeny_degrees': allisogdegs[n+1]}
+    return isog_dict
+
+#
+# 2. Now set isog_dict = make_isog_degree_dict() and use the following
+#
+
+#isogdata = make_isog_degree_dict()
+isogdata = {} # to keep pyflakes happy
+
+def add_isogs_to_one(c):
+    c.update(isogdata[c['label']])
+    return c
+
+#
+# 3. in a call to rewrite_collection such as
+#
+#  %runfile data_mgt/utilities/rewrite.py
+#  rewrite_collection(C.elliptic_curves,'nfcurves','nfcurves.new',add_isogs_to_one)
+

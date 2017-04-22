@@ -18,7 +18,7 @@ Additional data fields for each elliptic curve over Q
 
 """
 import os
-from sage.all import ZZ, primes, sqrt, EllipticCurve
+from sage.all import ZZ, primes
 
 from lmfdb.base import getDBConnection
 print "getting connection"
@@ -54,7 +54,6 @@ def read_line(line, debug=0):
     N = ZZ(fields[0])
     badp = N.support()
     nbadp = len(badp)
-    ainvs = fields[3]
     p0 = int(fields[4])
     data['iwp0'] = p0
     if debug: print("p0={}".format(p0))
