@@ -55,7 +55,9 @@ def random_value_from_collection(collection,attribute):
         m = collection.count()
         if m != n:
             current_app.logger.warning("Random object index {0}.rand is out of date ({1} < {2})".format(collection,n,m))
-        return collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True}).get(attribute)
+        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True}).get(attribute)
+        if obj:
+            return obj
     if pymongo.version_tuple[0] < 3:
         return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't both optimizing this
     else:
