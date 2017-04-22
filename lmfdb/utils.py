@@ -39,7 +39,7 @@ def random_object_from_collection(collection):
         if m != n:
             current_app.logger.warning("Random object index {0}.rand is out of date ({1} != {2}), proceeding anyway.".format(collection,n,m))
         obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
-        if obj:
+        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
             return obj
     if pymongo.version_tuple[0] < 3:
         return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next()
@@ -56,7 +56,7 @@ def random_value_from_collection(collection,attribute):
         if m != n:
             current_app.logger.warning("Random object index {0}.rand is out of date ({1} < {2})".format(collection,n,m))
         obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True})
-        if obj:
+        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
             return obj.get(attribute)
     if pymongo.version_tuple[0] < 3:
         return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't bother optimizing this
