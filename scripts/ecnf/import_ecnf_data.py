@@ -475,9 +475,45 @@ def isoclass(line):
 
     mat = data[4]
     mat = [[int(a) for a in r.split(",")] for r in mat[2:-2].split("],[")]
+    isogeny_degrees = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(mat)])
 
-    edata = {'label': label, 'isogeny_matrix': mat}
+    edata = {'label': data[:4], 'isogeny_matrix': mat, 'isogeny_degrees': isogeny_degrees}
     return label, edata
+
+def read1isogmats(base_path, filename_suffix):
+    r""" Returns a dictionary whose keys are labels of individual curves,
+    and whose values are the isogeny_matrix and isogeny_degrees for
+    each curve in the class, together with the class size and the
+    maximal degree in the class.
+
+    This function reads a single isoclass file.
+    """
+    isoclass_filename = 'isoclass.%s' % (filename_suffix)
+    h = open(os.path.join(base_path, isoclass_filename))
+    print("Opened {}".format(os.path.join(base_path, isoclass_filename)))
+    data = {}
+    for line in h.readlines():
+        label, data1 = isoclass(line)
+        class_label = "-".join(data1['label'][:3])
+        isogmat = data1['isogeny_matrix']
+        # maxdeg is the maximum degree of a cyclic isogeny in the
+        # class, which uniquely determines the isogeny graph (over Q)
+        maxdeg = max(max(r) for r in isogmat)
+        allisogdegs = data1['isogeny_degrees']
+        ncurves = len(allisogdegs)
+        for n in range(ncurves):
+            isogdegs = allisogdegs[n+1]
+            label = class_label+str(n+1)
+            data[label] = {'isogeny_degrees': isogdegs,
+                           'class_size': ncurves,
+                           'class_deg': maxdeg}
+            if n==0:
+                print("adding isogmat = {} to {}".format(isogmat,label))
+                data[label]['isogeny_matrix'] = isogmat
+
+    return data
+
+
 
 def galrep(line):
     r""" Parses one line from a galrep file.  Returns the label and a
@@ -557,6 +593,8 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     data_to_insert = {}  # will hold all the data to be inserted
 
     for f in file_list:
+        if f==isoclass_filename: # dealt with differently
+            continue
         try:
             h = open(os.path.join(base_path, f))
             print "opened %s" % os.path.join(base_path, f)
@@ -589,8 +627,13 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     print("adding heights of gens")
     for val in vals:
         val = add_heights(val)
-        # if val['reg']!=1:
-        #     print("reg = {}".format(val['reg']))
+
+    if isoclass_filename in file_list: # code added March 2017, not yet tested
+        print("processing isogeny matrices")
+        isogmats = read1isogmats(base_path, filename_suffix)
+        for val in vals:
+            val.update(isogmats[val['label']])
+
     if insert:
         print("inserting all data")
         nfcurves.insert_many(vals)
@@ -810,6 +853,8 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       #'sha_an': int_type,
                       'isogeny_matrix': list_type, # of lists of ints
                       'isogeny_degrees': list_type, # of ints
+                      #'class_deg': int_type, # of ints
+                      #'class_deg': int_type, # of ints
                       'non-surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
                       'galois_images': list_type, # of strings
@@ -865,7 +910,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
             expected_keys = expected_keys - number_1_only_keys
         if c['degree']==6:
             expected_keys = expected_keys - galrep_keys
-        db_keys = Set([str(k) for k in c.keys()]) - ['_id']
+        db_keys = Set([str(k) for k in c.keys()]) - ['_id', 'class_deg', 'class_size']
         if ignore_ranks:
             db_keys = db_keys - rank_keys
         if c['degree']==6:

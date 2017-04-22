@@ -55,7 +55,7 @@
   {% endif %}
   <tr>
     {% if info.fdeg > 1 %}
-    <td>Field equation:</td>
+    <td>Field polynomial:</td>
     {% set pol = info.field_poly %}
     {% set latex_pol = info.latex(pol) %}
     <td>
@@ -63,6 +63,7 @@
     </td>
     {% endif %}
   </tr>
+  <tr> <td>Field generator:</td><td>$a$</td> </tr>
 </table>
 
 {% if info.explicit_formula_bytes %}
