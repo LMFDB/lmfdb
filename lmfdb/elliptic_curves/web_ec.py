@@ -352,6 +352,7 @@ class WebEC(object):
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+        self.one_deg = ZZ(self.class_deg).is_prime()
         self.ncurves = db_ec().count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
@@ -393,6 +394,49 @@ class WebEC(object):
         data['p_adic_data_exists'] = False
         if data['Gamma0optimal']:
             data['p_adic_data_exists'] = (padic_db().find({'lmfdb_iso': self.lmfdb_iso}).count()) > 0
+
+        data['iwdata'] = []
+        try:
+            pp = [int(p) for p in self.iwdata]
+            badp = [l['p'] for l in self.local_data]
+            rtypes = [l['red'] for l in self.local_data]
+            data['iw_missing_flag'] = False # flags that there is at least one "?" in the table
+            data['additive_shown'] = False # flags that there is at least one additive prime in table
+            for p in sorted(pp):
+                rtype = ""
+                if p in badp:
+                    red = rtypes[badp.index(p)]
+                    # Additive primes are excluded from the table
+                    # if red==0:
+                    #    continue
+                    #rtype = ["nsmult","add", "smult"][1+red]
+                    rtype = ["nonsplit","add", "split"][1+red]
+                p = str(p)
+                pdata = self.iwdata[p]
+                if isinstance(pdata, type(u'?')):
+                    if not rtype:
+                        rtype = "ordinary" if pdata=="o?" else "ss"
+                    if rtype == "add":
+                        data['iwdata'] += [[p,rtype,"-","-"]]
+                        data['additive_shown'] = True
+                    else:
+                        data['iwdata'] += [[p,rtype,"?","?"]]
+                        data['iw_missing_flag'] = True
+                else:
+                    if len(pdata)==2:
+                        if not rtype:
+                            rtype = "ordinary"
+                        lambdas = str(pdata[0])
+                        mus = str(pdata[1])
+                    else:
+                        rtype = "ss"
+                        lambdas = ",".join([str(pdata[0]), str(pdata[1])])
+                        mus = str(pdata[2])
+                        mus = ",".join([mus,mus])
+                    data['iwdata'] += [[p,rtype,lambdas,mus]]
+        except AttributeError:
+            # For curves with no Iwasawa data
+            pass
 
         tamagawa_numbers = [ZZ(ld['cp']) for ld in local_data]
         cp_fac = [cp.factor() for cp in tamagawa_numbers]

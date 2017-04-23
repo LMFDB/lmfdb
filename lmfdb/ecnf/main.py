@@ -402,6 +402,7 @@ def elliptic_curve_search(info):
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
         if 'torsion_structure' in query and not 'torsion_order' in query:
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
+        parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
     except (TypeError,ValueError):
         return search_input_error(info, bread)
 

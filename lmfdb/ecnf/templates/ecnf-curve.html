@@ -6,7 +6,7 @@
 </style>
 
 {#
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
 
 </script><style type="text/css">
   .sagecell .CodeMirror-scroll {
@@ -378,6 +378,26 @@ if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 {% endif %} {# CM case #}
 {% endif %} {# Galois image data exists #}
 
+</div>
+
+<div>
+  <h2> Isogenies </h2>
+<p>
+{% if ec.isogeny_degrees %}
+This curve has non-trivial cyclic isogenies {% if ec.rational_cm %}
+(excluding endomorphisms){% endif %} of degree \(d\) for \(d=\)
+{{ ec.isogeny_degrees}}.
+<br>
+Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>
+consists of {{ec.ncurves}} curves linked by isogenies of
+{% if ec.one_deg %}degree{% else %}degrees dividing {% endif %}
+{{ec.class_deg}}.
+{% else %}
+This curve has no rational isogenies{% if ec.rational_cm %} other than
+endomorphisms{% endif %}.
+Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   consists of this curve only.
+</p>
+{% endif %}
 </div>
 
 {% if DEBUG %}

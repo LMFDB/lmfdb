@@ -851,9 +851,9 @@ def add_extra_data1(C):
     C.update(make_extra_data(C['label'],C['number'],C['ainvs'],C['gens']))
     return C
 
-def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=90000):
+def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=100000):
     r""" Check that for conductors in the specified range (or all
-    conductors) every database entry has all the fields it sould, and
+    conductors) every database entry has all the fields it should, and
     that these have the correct type.
     """
     str_type = type(unicode('abc'))
@@ -885,7 +885,9 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=90000
                       'real_period': float_type,
                       'degree': int_type,
                       'non-surjective_primes': list_type, # of ints
+                      'non-maximal_primes': list_type, # of ints
                       'galois_images': list_type, # of strings
+                      'mod-p_images': list_type, # of strings
                       '2adic_index': int_type,
                       '2adic_log_level': int_type,
                       '2adic_gens': list_type, # of lists of 4 ints
