@@ -130,10 +130,31 @@ Please enter a value or leave blank:
           {{ KNOWL('ec.q.torsion_subgroup',title="torsion structure") }}
           </td>
           <td>
-          <input type='text' name='torsion_structure' example="[2,4]" size=10 value="{{torsion_structure}}" />
+         <select name='torsion_structure'>
+           <option value="" selected="yes">any</option>
+           <option value="[]">trivial</option>
+           <option value="[2]">$C_2$</option>
+           <option value="[3]">$C_3$</option>
+           <option value="[4]">$C_4$</option>
+           <option value="[5]">$C_5$</option>
+           <option value="[6]">$C_6$</option>
+           <option value="[7]">$C_7$</option>
+           <option value="[8]">$C_8$</option>
+           <option value="[9]">$C_9$</option>
+           <option value="[10]">$C_{10}$</option>
+           <option value="[12]">$C_{12}$</option>
+           <option value="[2,2]">$C_2\times C_2$</option>
+           <option value="[2,4]">$C_2\times C_4$</option>
+           <option value="[2,6]">$C_2\times C_6$</option>
+           <option value="[2,8]">$C_2\times C_8$</option>
+         </select>
+         {#
+         <input type='text' name='torsion_structure' example="[2,4]"
+                size=10 value="{{torsion_structure}}" />
+         #}
           </td>
           <td>
-          <span class="formexample"> e.g. [2,4] </span>
+          {#<span class="formexample"> e.g. [2,4] </span>#}
           </td>
       </tr>
 

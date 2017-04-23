@@ -9,7 +9,7 @@
 
 <form id='re-search'>
 <input type="hidden" name="start" value="{{info.start}}"/>
-<table border="0">
+<table border="0" cellpadding="5">
 
 <tr>
 <td align=left>{{ KNOWL('ec.q.conductor', title='Conductor') }}</td>
@@ -19,7 +19,6 @@
 <td align=left>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</td>
 <td align=left>{{ KNOWL('ec.q.torsion_subgroup', title='Torsion structure') }}</td>
 <td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
-<td align=left>{{ KNOWL('ec.isogeny', title='isogeny degree') }}</td>
 </tr>
 
 <tr>
@@ -45,12 +44,93 @@
 </td>
 <td align=left><input type='text' name='rank'size=2 value={{info.rank}}></td>
 <td align=left><input type='text' name='torsion' size=6 value={{info.torsion}}> </td>
-<td align=left><input type='text' name='torsion_structure' size=7 value={{info.torsion_structure}}> </td>
+<td align=left>
+         <select name='torsion_structure'>
+           {% if info.torsion_structure=="[]" %}
+           <option value="[]" selected="yes">trivial</option>
+           {% else %}
+           <option value="[]">trivial</option>
+           {% endif %}
+           {% if info.torsion_structure=="[2]" %}
+           <option value="[2]" selected="yes">$C_2$</option>
+           {% else %}
+           <option value="[2]">$C_2$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[3]" %}
+           <option value="[3]" selected="yes">$C_3$</option>
+           {% else %}
+           <option value="[3]">$C_3$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[4]" %}
+           <option value="[4]" selected="yes">$C_4$</option>
+           {% else %}
+           <option value="[4]">$C_4$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[5]" %}
+           <option value="[5]" selected="yes">$C_5$</option>
+           {% else %}
+           <option value="[5]">$C_5$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[6]" %}
+           <option value="[6]" selected="yes">$C_6$</option>
+           {% else %}
+           <option value="[6]">$C_6$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[7]" %}
+           <option value="[7]" selected="yes">$C_7$</option>
+           {% else %}
+           <option value="[7]">$C_7$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[8]" %}
+           <option value="[8]" selected="yes">$C_8$</option>
+           {% else %}
+           <option value="[8]">$C_8$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[9]" %}
+           <option value="[9]" selected="yes">$C_9$</option>
+           {% else %}
+           <option value="[9]">$C_9$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[10]" %}
+           <option value="[10]" selected="yes">$C_{10}$</option>
+           {% else %}
+           <option value="[10]">$C_{10}$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[12]" %}
+           <option value="[12]" selected="yes">$C_{12}$</option>
+           {% else %}
+           <option value="[12]">$C_{12}$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[2,2]" %}
+           <option value="[2,2]" selected="yes">$C_2\times C_2$</option>
+           {% else %}
+           <option value="[2,2]">$C_2\times C_2$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[2,4]" %}
+           <option value="[2,4]" selected="yes">$C_2\times C_4$</option>
+           {% else %}
+           <option value="[2,4]">$C_2\times C_4$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[2,6]" %}
+           <option value="[2,6]" selected="yes">$C_2\times C_6$</option>
+           {% else %}
+           <option value="[2,6]">$C_2\times C_6$</option>
+           {% endif %}
+           {% if info.torsion_structure=="[2,8]" %}
+           <option value="[2,8]" selected="yes">$C_2\times C_8$</option>
+           {% else %}
+           <option value="[2,8]">$C_2\times C_8$</option>
+           {% endif %}
+         </select>
+{#  <input type='text' name='torsion_structure' size=7
+           value={{info.torsion_structure}}>
+         #}
+</td>
 <td align=left><input type='text' name='sha' size=5 value={{info.sha}}> </td>
-<td align=left><input type='text' name='isodeg' size=5 value={{info.isodeg}}> </td>
 </tr>
 
 <tr>
+<td align=left>{{ KNOWL('ec.isogeny', title='isogeny degree') }}</td>
 {% if info.galois_data_type=='new' %}
 <td align=left>{{KNOWL('ec.maximal_galois_rep', title='maximal primes')}} 
 {% else %}
@@ -66,6 +146,7 @@
 <td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
 </tr>
 <tr>
+<td align=left><input type='text' name='isodeg' size=5 value={{info.isodeg}}> </td>
 <td align=left>
    <input type='text' name='surj_primes' size=10 value={{info.surj_primes}}>
 </td>
@@ -99,8 +180,10 @@
 </td>
 <td align=left><input type='text' name='count' value={{info.count}} size=10>
 </td>
+<td>&nbsp;
+</td>
 <td colspan=3>
-<button type='submit' value='refine'>Refine or change search</button>
+<button type='submit' value='refine'>Update search</button>
 </td> </tr>
 </table>
 </form>
