@@ -10,7 +10,7 @@ import pymongo
 ASC = pymongo.ASCENDING
 from operator import mul
 from urllib import quote, unquote
-from lmfdb.base import  getDBConnection
+from lmfdb.base import  getDBConnection, app
 from flask import render_template, request, url_for, redirect, flash, send_file
 from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
@@ -637,3 +637,32 @@ def download_search(info):
                      attachment_filename=filename,
                      as_attachment=True,
                      add_etags=False)
+
+def tor_struct_search_nf(prefill="any"):
+    def fix(t):
+        return t + ' selected = "yes"' if prefill==t else t
+    def cyc(n):
+        return [fix("["+str(n)+"]"), "$C_{{{}}}$".format(n)]
+    def cyc2(m,n):
+        return [fix("[{},{}]".format(m,n)), "$C_{{{}}}\\times C_{{{}}}$".format(m,n)]
+    gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
+
+    # all the orders of cyclic groups
+    # Note that db_ecnf().distinct('torsion_structure') does not give what we need.
+
+    orders = range(2,23) + [25, 27, 37]
+    for n in orders:
+        gps.append(cyc(n))
+
+    # pending some decent code to get these pairs from the database
+    # quickly, here is a list.  Note that over fields with a real
+    # embedding the only possible type is [2,2*n]
+
+    orders2 = [[2,2*n] for n in range(1,10)] + [[3,3], [3,6], [4,4]]
+    for n1,n2 in orders2:
+        gps.append(cyc2(n1,n2))
+
+    return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+
+# the following allows the preceding function to be used in any template via {{...}}
+app.jinja_env.globals.update(tor_struct_search_nf=tor_struct_search_nf)
