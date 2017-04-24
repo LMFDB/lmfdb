@@ -638,6 +638,29 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
+torsion_structures = None
+def get_torsion_structures():
+    global torsion_structures
+    if torsion_structures==None:
+        print("Getting list of torsion structures from the database")
+        from bson.code import Code
+        mapper = Code("""
+              function() {
+                  emit(""+this.torsion_structure,1);
+                }
+                """)
+
+        reducer = Code("""
+                function (key,values) {
+                  return Array.sum(values);
+                }
+                """)
+
+        torsion_structures = [r['_id'] for r in db_ecnf().inline_map_reduce(mapper,reducer)]
+        torsion_structures = [[int(str(n)) for n in t.split(",")] for t in torsion_structures if t]
+        torsion_structures.sort()
+    return torsion_structures
+
 def tor_struct_search_nf(prefill="any"):
     def fix(t):
         return t + ' selected = "yes"' if prefill==t else t
@@ -647,20 +670,16 @@ def tor_struct_search_nf(prefill="any"):
         return [fix("[{},{}]".format(m,n)), "$C_{{{}}}\\times C_{{{}}}$".format(m,n)]
     gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
 
-    # all the orders of cyclic groups
-    # Note that db_ecnf().distinct('torsion_structure') does not give what we need.
+    tors = get_torsion_structures()
 
-    orders = range(2,23) + [25, 27, 37]
-    for n in orders:
-        gps.append(cyc(n))
+    # The following was the set as of 24/4/2017:
+    # assert tors == [[2], [2, 2], [2, 4], [2, 6], [2, 8], [2, 10], [2, 12], [2, 14], [2, 16], [2, 18], [3], [3, 3], [3, 6], [4], [4, 4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20], [21], [22], [25], [27], [37]]
 
-    # pending some decent code to get these pairs from the database
-    # quickly, here is a list.  Note that over fields with a real
-    # embedding the only possible type is [2,2*n]
-
-    orders2 = [[2,2*n] for n in range(1,10)] + [[3,3], [3,6], [4,4]]
-    for n1,n2 in orders2:
-        gps.append(cyc2(n1,n2))
+    for t in tors:
+        if len(t)==1:
+            gps.append(cyc(t[0]))
+        elif len(t)==2:
+            gps.append(cyc2(*t))
 
     return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
 
