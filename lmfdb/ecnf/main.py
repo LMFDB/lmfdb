@@ -642,21 +642,9 @@ torsion_structures = None
 def get_torsion_structures():
     global torsion_structures
     if torsion_structures==None:
-        print("Getting list of torsion structures from the database")
-        from bson.code import Code
-        mapper = Code("""
-              function() {
-                  emit(""+this.torsion_structure,1);
-                }
-                """)
-
-        reducer = Code("""
-                function (key,values) {
-                  return Array.sum(values);
-                }
-                """)
-
-        torsion_structures = [r['_id'] for r in db_ecnf().inline_map_reduce(mapper,reducer)]
+        #print("Getting list of torsion structures from the database")
+        ecnfstats = getDBConnection().elliptic_curves.nfcurves.stats
+        torsion_structures = [t[0] for t in ecnfstats.find_one({'_id':'torsion_structure'})['counts']]
         torsion_structures = [[int(str(n)) for n in t.split(",")] for t in torsion_structures if t]
         torsion_structures.sort()
     return torsion_structures
