@@ -94,13 +94,16 @@ def create_random_object_index(db, incoll, filter=None):
 # statistic record contains a list of counts of each distinct value of the specified attribute
 # pymongo will raise an error if the size of this exceeds 16MB
 def update_attribute_stats(db, coll, attributes):
+    from bson.code import Code
     statscoll = coll + ".stats"
     if isinstance(attributes,basestring):
         attributes = [attributes]
     for attr in attributes:
         db[statscoll].delete_one({'_id':attr})
     total = db[coll].count()
+    reducer = Code("""function(key,values){return Array.sum(values);}""")
     for attr in attributes:
-        counts = [[value,db[coll].find({attr:value}).count()] for value in sorted(db[coll].distinct(attr))]
+        mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
+        counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer)])
         min, max = counts[0][0], counts[-1][0]
         db[statscoll].insert_one({'_id':attr, 'total':total, 'counts':counts, 'min':min, 'max':max})

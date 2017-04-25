@@ -130,10 +130,10 @@ Please enter a value or leave blank:
           {{ KNOWL('ec.q.torsion_subgroup',title="torsion structure") }}
           </td>
           <td>
-          <input type='text' name='torsion_structure' example="[2,4]" size=10 value="{{torsion_structure}}" />
+            {{ tor_struct_search_Q()|safe }}
           </td>
           <td>
-          <span class="formexample"> e.g. [2,4] </span>
+          &nbsp;
           </td>
       </tr>
 
