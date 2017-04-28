@@ -187,7 +187,7 @@ def update_joint_attribute_stats(db, coll, attributes):
     """
     from bson.code import Code
     statscoll = coll + ".stats"
-    jointkey = "-".join(attributes)
+    jointkey = ":".join(attributes)
     db[statscoll].delete_one({'_id':jointkey})
     total = db[coll].count()
     reducer = Code("""function(key,values){return Array.sum(values);}""")
