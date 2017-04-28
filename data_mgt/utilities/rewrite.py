@@ -147,7 +147,7 @@ def update_attribute_stats(db, coll, attributes):
         
         attributes: a string or list of strings specifying attributes whose statistics will be collected, each attribute will get its own statistics record (use update_joint_attribute_stats for joint statistics)
 
-    Each statistics record contains a list of counts of each distinct value of the specified attribute
+    Each statistics record contains a list of [value,count] pairs, where value is a string and count is an integer, one for each distinct value of the specified attribute
     NOTE: pymongo will raise an error if the size of this list exceeds 16MB
 
     """
@@ -179,7 +179,9 @@ def update_joint_attribute_stats(db, coll, attributes):
         
         attributes: a list of strings specifying attributes whose joint statistics will be collected
 
-    Each statistics record contains a list of counts of each distinct value of the specified attribute
+    The joint statistics record contains a list of [jointvalue,count] where jointvalue is a colon-delimited string of attribute values and count is an integer,
+    one for each distinct combination of values of the specified attributes    
+    
     NOTE: pymongo will raise an error if the size of this list exceeds 16MB
 
     """
@@ -189,7 +191,8 @@ def update_joint_attribute_stats(db, coll, attributes):
     db[statscoll].delete_one({'_id':jointkey})
     total = db[coll].count()
     reducer = Code("""function(key,values){return Array.sum(values);}""")
-    mapper = Code("""function(){emit(""+"""+"+"":""".join(["this."+attr for attr in attributes])+""",1);}""")
+    mapper = Code("""function(){emit(""+"""+"+':'+".join(["this."+attr for attr in attributes])+""",1);}""")
+    print mapper
     counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer)])
     min, max = counts[0][0], counts[-1][0]
     db[statscoll].insert_one({'_id':jointkey, 'total':total, 'counts':counts, 'min':min, 'max':max})
