@@ -1,23 +1,43 @@
 import time
 
-# rewrite_collection(db,incoll,outcoll,func)
-#
-# function to pipe an existing collection to a new collection through a user specified function
-# that may update records as the pass through.  All indexes will be recreated (in lex order),
-# unless reindex is set to false.
-#
-# Arguments:
-#
-#    db: should be a mongo database to which the caller has write access (authenticate as editor)
-#    incoll: the name of the input collection in db
-#    outcoll: the name of the output collection (must not already exist in db)
-#    func: filter that takes a mongo db document (dictionary) and returns a (possibly) updated version of it
-#
-# Example usage: rewrite_collection(db,"old_stuff","new_stuff",lambda x: x)
-#
-# For collections with large records, you will want to specify a batchsize smaller than 1000
-#
 def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, filter=None, projection=None):
+    """
+    
+    Pipes an existing collection to a new collection via a user specified function
+    that may update records as the pass through.
+    
+    All indexes will be recreated (in lex order), unless reindex is set to false.
+    The parameter outcoll must be the name of a collection that does not exist,
+    rewrite_collection will not overwrite an existing collection.
+    
+    Required arguments:
+    
+     db: a mongo db to which the caller has write access
+     
+     incoll: name of an existing collection in db
+     
+     outcoll: name of the output collection (must not exist)
+     
+     func: function that takes a mongo db document (dictionary) and returns a (possibly) updated version of it
+     
+    Optional arguments:
+ 
+      batchsize: number of records to process at once
+      
+      reindex: whether or not to recreate indexes (if false, no indexes will be created, you must create them)
+      
+      filter: pymongo filter string you may use to select a subset of the input records
+      
+      projection: pymongo filter you may use to select a subset of record attributes
+ 
+    For collections with large records, you will likely want to specify a batchsize less than 1000
+    (the total size of a batch should be less than 16MB)
+
+    Example usage:
+    
+        rewrite_collection(db,"old_stuff","new_stuff",lambda x: x)
+
+    """
     if outcoll in db.collection_names():
         print "Collection %s already exists in database %s, please drop it first" % (outcoll, db.name)
         return
@@ -49,11 +69,21 @@ def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, 
         reindex_collection(db,incoll,outcoll)
     print "Rewrote %s to %s, total time %.3f secs" % (incoll, outcoll, time.time()-start)
 
-# reindex_collection(db,incoll,outcoll)
-#
-# Take indexes from incoll and create them in outcoll (in lex order).
-#
 def reindex_collection(db, incoll, outcoll):
+    """
+    
+    Creates indexes on outcoll matching those that exist on incoll.
+    Indexes are created in lexicographic order.
+    
+    Required arguments:
+    
+     db: a mongo db to which the caller has write access
+     
+     incoll: the name of an existing collection in db whose index information will be used
+     
+     outcoll: the name of an existing collection in db on which indexes will be created
+    
+    """
     indexes = db[incoll].index_information()
     keys = [(k,indexes[k]['key']) for k in indexes if k != '_id_']
     keys.sort() # sort indexes by keyname so (attr1) < (attr1,attr2) < (attr1,attr2,attr3) < ...
@@ -73,27 +103,54 @@ def add_counter(rec=None):
     return rec
 add_counter.num = 0
 
-# create_random_object_index(db,coll)
-#
-# Creates (or recreates) a collection named coll.rand used to support fast random object access
-# The new collection consists of records with "_id" taken from coll and a sequentially assigned "num" (starting at 1)
-# An index is created on num which can be used to efficiently generate random object ids in coll
-#
-def create_random_object_index(db, incoll, filter=None):
-    outcoll = incoll+".rand"
+def create_random_object_index(db, coll, filter=None):
+    """
+
+    Creates (or recreates) a collection named incoll.rand used to support fast random object access.
+    This index will automatically be used by the functions random_object_from_collection and
+    random_value_from_collection (in lmfdb.utils) to improve performance.
+    
+    Required arguments:
+
+        db: a mongo db to which the caller has write access
+        
+        coll: the name of an existing collection in db (string)
+     
+    Optional arugments:
+    
+     filter: pymongo filter string you may use to restrict random object access to a subset of records
+    
+    
+    The new collection consists of records with "_id" taken from coll and a sequentially assigned "num"
+    (starting at 1) with an index on num.
+
+    """
+    outcoll = coll+".rand"
     if outcoll in db.collection_names():
         print "Dropping existing collection %s in db %s" % (outcoll,db.name)
         db[outcoll].drop()
     add_counter() # reset counter
-    rewrite_collection (db, incoll, outcoll, add_counter, reindex=False, filter=filter, projection={'_id':True})
+    rewrite_collection (db, coll, outcoll, add_counter, reindex=False, filter=filter, projection={'_id':True})
     db[outcoll].create_index('num')
 
-# update_attribute_value_counts(db, coll, attributes)
-#
-# updates statistic record in coll.stats for the specified attribute or list of attributes (creates coll.stats if need be)
-# statistic record contains a list of counts of each distinct value of the specified attribute
-# pymongo will raise an error if the size of this exceeds 16MB
 def update_attribute_stats(db, coll, attributes):
+    """
+    
+    Creates or updates statistic record in coll.stats for the specified attribute or list of attributes.
+    The collection coll.stats will be created if it does not already exist.
+    
+    Required arguments:
+
+        db: a mongo db to which the caller has write access
+        
+        coll: the name of an existing collection in db
+        
+        attributes: a string or list of strings specifying attributes whose statistics will be collected
+
+    Each statistics record contains a list of counts of each distinct value of the specified attribute
+    NOTE: pymongo will raise an error if the size of this list exceeds 16MB
+
+    """
     from bson.code import Code
     statscoll = coll + ".stats"
     if isinstance(attributes,basestring):
