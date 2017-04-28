@@ -2,18 +2,16 @@
 # This Blueprint is about Local Number Fields
 # Author: John Jones
 
-import re
 import pymongo
-ASC = pymongo.ASCENDING
-import flask
 from lmfdb import base
 from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, parse_range2, coeff_to_poly, pol_to_html, make_logger, clean_input
-from sage.all import ZZ, var, PolynomialRing, QQ
+from flask import render_template, request, url_for, redirect
+from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, random_object_from_collection
+from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input
+from sage.all import PolynomialRing, QQ
 from lmfdb.local_fields import local_fields_page, logger
 
-from lmfdb.transitive_group import *
+from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia
 
 LF_credit = 'J. Jones and D. Roberts'
 
@@ -43,8 +41,29 @@ def group_display_shortC(C):
         return group_display_short(nt[0], nt[1], C)
     return gds
 
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
+def lf_knowl_guts(label, C):
+    f = C.localfields.fields.find_one({'label':label})
+    ans = 'Local number field %s<br><br>'% label
+    ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
+    GG = f['gal']
+    ans += 'Degree: %s<br>' % str(GG[0])
+    ans += 'Ramification index $e$: %s<br>' % str(f['e'])
+    ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
+    ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
+    ans += 'Galois group $G$: %s<br>' % group_display_knowl(GG[0], GG[1], C)
+    ans += '<div align="right">'
+    ans += '<a href="%s">%s home page</a>' % (str(url_for("local_fields.by_label", label=label)),label)
+    ans += '</div>'
+    return ans
+
+def local_field_data(label):
+    C = getDBConnection()
+    return lf_knowl_guts(label, C)
+
+@app.context_processor
+def ctx_local_fields():
+    return {'local_field_data': local_field_data}
 
 @local_fields_page.route("/")
 def index():
@@ -60,92 +79,29 @@ def index():
 
 @local_fields_page.route("/<label>")
 def by_label(label):
+    clean_label = clean_input(label)
+    if label != clean_label:
+        return redirect(url_for('.by_label',label=clean_label), 301)
     return render_field_webpage({'label': label})
-
-
-@local_fields_page.route("/search", methods=["GET", "POST"])
-def search():
-    if request.method == "GET":
-        val = request.args.get("val", "no value")
-        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-        return render_template("lf-search.html", title="Local Number Field Search", bread=bread, val=val)
-    elif request.method == "POST":
-        return "ERROR: we always do http get to explicitly display the search parameters"
-    else:
-        return flask.redirect(404)
-
 
 def local_field_search(**args):
     info = to_dict(args)
-    bread = get_bread([("Search results", url_for('.search'))])
+    bread = get_bread([("Search results", ' ')])
     C = base.getDBConnection()
     query = {}
-    if 'jump_to' in info:
-        return render_field_webpage({'label': info['jump_to']})
+    if info.get('jump_to'):
+        return redirect(url_for(".by_label",label=info['jump_to']), 301)
 
-    for param in ['p', 'n', 'c', 'e', 'gal']:
-        if info.get(param):
-            info[param] = clean_input(info[param])
-            if param == 'gal':
-                try:
-                    gcs = complete_group_codes(info[param])
-                    if len(gcs) == 1:
-                        tmp = ['gal', list(gcs[0])]
-                    if len(gcs) > 1:
-                        tmp = [{'gal': list(x)} for x in gcs]
-                        tmp = ['$or', tmp]
-                except NameError as code:
-                    info['err'] = 'Error parsing input for Galois group: unknown group label %s.  It needs to be a <a title = "Galois group labels" knowl="nf.galois_group.name">group label</a>, such as C5 or 5T1, or comma separated list of labels.' % code
-                    return search_input_error(info, bread)
-            else:
-                ran = info[param]
-                ran = ran.replace('..', '-')
-                if LIST_RE.match(ran):
-                    tmp = parse_range2(ran, param)
-                else:
-                    names = {'p': 'prime p', 'n': 'degree', 'c':
-                             'discriminant exponent c', 'e': 'ramification index e'}
-                    info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
-                    return search_input_error(info, bread)
-            # work around syntax for $or
-            # we have to foil out multiple or conditions
-            if tmp[0] == '$or' and '$or' in query:
-                newors = []
-                for y in tmp[1]:
-                    oldors = [dict.copy(x) for x in query['$or']]
-                    for x in oldors:
-                        x.update(y)
-                    newors.extend(oldors)
-                tmp[1] = newors
-            query[tmp[0]] = tmp[1]
-
-    count_default = 20
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        count = count_default
-    info['count'] = count
-
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
-    if info.get('paging'):
-        try:
-            paging = int(info['paging'])
-            if paging == 0:
-                start = 0
-        except:
-            pass
+    try:
+        parse_galgrp(info,query,'gal', use_bson=False)
+        parse_ints(info,query,'p',name='Prime p')
+        parse_ints(info,query,'n',name='Degree')
+        parse_ints(info,query,'c',name='Discriminant exponent c')
+        parse_ints(info,query,'e',name='Ramification index e')
+    except ValueError:
+        return search_input_error(info, bread)
+    count = parse_count(info)
+    start = parse_start(info)
 
     # logger.debug(query)
     res = C.localfields.fields.find(query).sort([('p', pymongo.ASCENDING), (
@@ -183,11 +139,11 @@ def render_field_webpage(args):
         C = base.getDBConnection()
         data = C.localfields.fields.find_one({'label': label})
         if data is None:
-            bread = get_bread([("Search error", url_for('.search'))])
+            bread = get_bread([("Search error", ' ')])
             info['err'] = "Field " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Local Number Field:' + label
+        title = 'Local Number Field ' + label
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
         e = data['e']
@@ -197,6 +153,7 @@ def render_field_webpage(args):
         gn = GG[0]
         gt = GG[1]
         prop2 = [
+            ('Label', label),
             ('Base', '\(\Q_{%s}\)' % p),
             ('Degree', '\(%s\)' % data['n']),
             ('e', '\(%s\)' % e),
@@ -265,9 +222,9 @@ def show_slope_content(sl,t,u):
     if sc == '[]':
         sc = r'[\ ]'
     if t>1:
-        sc += '_%d'%t
+        sc += '_{%d}'%t
     if u>1:
-        sc += '^%d'%u
+        sc += '^{%d}'%u
     return(sc)
 
 def printquad(code, p):
@@ -285,6 +242,11 @@ def printquad(code, p):
 
 def search_input_error(info, bread):
     return render_template("lf-search.html", info=info, title='Local Field Search Input Error', bread=bread)
+
+@local_fields_page.route("/random")
+def random_field():
+    label = random_object_from_collection(base.getDBConnection().localfields.fields)['label']
+    return redirect(url_for(".by_label", label=label), 307)
 
 @local_fields_page.route("/Completeness")
 def completeness_page():
@@ -314,3 +276,4 @@ def how_computed_page():
     return render_template("single.html", kid='dq.lf.source',
                            credit=LF_credit, title=t, bread=bread, 
                            learnmore=learnmore)
+

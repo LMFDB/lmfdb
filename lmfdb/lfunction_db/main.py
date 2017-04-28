@@ -1,9 +1,8 @@
-from lmfdb.base import app, getDBConnection
+from lmfdb.base import getDBConnection
 import flask
 from flask import render_template, request
 
 from lmfdb.utils import LazyMongoDBPagination
-from copy import copy
 
 import pymongo
 

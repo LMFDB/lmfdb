@@ -1,0 +1,106 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+
+{% set KNOWL_ID = "gal.modl.%s"|format(info['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+<h2> {{ KNOWL('gal.modl.irreducible', title='Irreducible')}} {{ KNOWL('gal.modl.definition', title='mod &#x2113; Galois representation')}} </h2>
+<p align='center'>$\rho\colon(\mathrm{Gal}(\overline{K}/K))\to
+{% if info.rep_type == "Symplectic" %}
+    \mathrm{GSp}_
+{% else %}
+    \mathrm{GL}_
+{% endif %}
+{{info.dim}}(\mathbb{F}_{
+{% if info.field_deg >1%}
+    {{info.field_char}}^{{info.field_deg}}
+{% else %}
+    {{info.field_char}}
+{% endif %}
+})$
+</p>
+
+
+<table>
+    <tr><td align=right>{{ KNOWL('gal.modl.base_field', title='Base Field') }}:</td><td>${{info.base_field}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('gal.modl.dim', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
+    <tr><td align=right>{{ KNOWL('gal.modl.conductor', title='Conductor') }}:</td><td>${{info.conductor}}$</td></tr>
+    <tr><td align=right>Primes dividing the {{ KNOWL('gal.modl.conductor', title='conductor') }}:</td><td>
+{% for n in info.primes_conductor %}
+${{n}}${% if not loop.last %},  {% endif %}
+{% endfor %}
+</td></tr>
+    <tr><td align=right>{{ KNOWL('gal.modl.weight', title='Weight') }}:</td><td>${{info.weight }}$</td></tr>
+    <tr><td align=right>{{ KNOWL('gal.modl.abs_irred', title='Absolutely irreducible') }}:</td><td>{% if info.abs_irr == 0%}No{% else %}Yes{% endif %}</td></tr>
+    <tr><td align=right>{{ KNOWL('gal.modl.rep_type', title='Representation type') }}:</td><td>{{info.rep_type }}</td></tr>
+    <tr><td align=right>Characteristic of the {{ KNOWL('gal.modl.field_def', title='field of definition') }}:</td><td>${{info.field_char}}$</td></tr>
+    <tr><td align=right>Degree of the {{ KNOWL('gal.modl.field_def', title='field of definition') }}:</td><td>${{info.field_deg}}$</td></tr>
+    {% if info.field_str %}
+        <tr><td align=right>{{ KNOWL('finite_fields.structure', title='Field structure') }}:</td><td>{{info.field_str| safe}}</td></tr>
+    {% endif %}
+    <tr><td align=right>{{ KNOWL('gal.modl.image_type', title='Image type') }}:</td><td>{{info.image_type }}</td></tr>
+    <tr><td align=right>{{ KNOWL('gal.modl.image_label', title='Image label') }}:</td><td>{{info.image_label }}</td></tr>
+    <tr><td align=right>{{ KNOWL('gal.modl.image_at', title='Image attribute') }}:</td><td>{{info.image_at }}</td></tr>
+
+    <tr><td align=right>{{ KNOWL('gal.modl.proj_image_type', title='Projective image type') }}:</td><td>{{info.projective_type}}</td></tr>
+    <tr><td align=right>{{ KNOWL('gal.modl.proj_image_label', title='Projective image label') }}:</td><td>{{info.projective_label}}</td></tr>
+</table>
+
+<h2> {{ KNOWL('gal.modl.ramified_primes', title='Ramified primes')}} </h2>
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<tr><td>$p$</td><td>{{ KNOWL('gal.modl.bad_local.char_poly', title='Characteristic polynomial')}} of $\rho(\mathrm{Frob}_p)$</td><td>{{ KNOWL('gal.modl.bad_local.rep_type', title='Type')}}Type</td>
+<td>{{ KNOWL('gal.modl.bad_local.order', title='Order')}} of $\rho(\mathrm{Frob}_p)$</td><td>{{ KNOWL('gal.modl.bad_local.proj_order', title='Projective order')}} of $\rho(\mathrm{Frob}_p)$</td></tr>
+{% for p in info.bad_prime_list%}
+    <tr>
+    {% for i in range(5) %}
+        {% if p[i] =="" %}
+            <td>{{p[i]}}</td>
+        {% else %}
+            <td>${{p[i]}}$</td>
+        {% endif %}
+    {% endfor %}
+    </tr>
+{% endfor %}
+</table>
+
+<h2> {{ KNOWL('gal.modl.unramified_primes', title='Unramified primes')}} </h2>
+
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
+<tr><td>$p$</td>
+{% for i in info['len_good']%}
+    {% if i ==1 %}
+        <td>$a_{p}$</td>
+    {% else %}
+        <td>$a_{p^{{i}}}$</td>
+    {% endif%}
+
+{% endfor %}<td>{{ KNOWL('gal.modl.frobp.char_poly', title='Characteristic polynomial')}} of $\rho(\mathrm{Frob}_p)$</td>
+<td>{{ KNOWL('gal.modl.frobp.order', title='Order')}} of $\rho(\mathrm{Frob}_p)$</td><td>{{ KNOWL('gal.modl.frobp.proj_order', title='Projective order')}} of $\rho(\mathrm{Frob}_p)$</td></tr>
+
+{% for p in info.good_prime_list%}
+    <tr><td>${{p[0]}}$</td>{% for i in p[1] %}<td>${{i}}$</td>{% endfor %}<td>${{p[2]}}$</td><td>${{p[3]}}$</td><td>${{p[4]}}$</td></tr>
+{% endfor %}
+</table>
+
+
+
+<h2>Fields associated</h2>
+
+
+<h3>{{ KNOWL('gal.modl.linear_rep', title='Linear representation')}}</h3>
+<p>Polynomial with splitting field $\overline{K}^{\mathrm{ker}(\rho)}$:&nbsp;&nbsp; ${{info.poly_ker}}$</p>
+
+<h3>{{ KNOWL('gal.modl.proj_rep', title='Projective representation')}}</h3>
+
+
+<p>Polynomial with splitting field $\overline{K}^{\mathrm{ker}(\mathbb{P}\rho)}$:&nbsp;&nbsp; ${{info.poly_proj_ker}}$</p>
+</table>
+
+<h2>Related objects</h2>
+
+<p>
+{{info.related_objects}}
+</p>
+{% endblock %}

@@ -83,7 +83,10 @@ By {{ KNOWL('lfunction.underlying_object', title='underlying object:')}}
 <h2>Search Degree 4 L-functions</h2>
 #}
 
+{% endif %}
 
+{% if degree > 4 %}
+There is currently no L-function data available for {{ KNOWL('lfunction.degree', title='degree')}} {{degree}} L-functions.  Click <a href="{{url_for('l_functions.l_function_top_page')}}">here</a> to return to the main L-functions page.
 {% endif %}
 
 {% endblock %}

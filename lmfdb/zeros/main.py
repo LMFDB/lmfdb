@@ -1,6 +1,5 @@
-from lmfdb.base import app
 import flask
-from flask import render_template, request
+from flask import redirect, url_for
 
 mod = flask.Blueprint('zeros', __name__, template_folder="templates")
 title = "zeros"
@@ -13,9 +12,9 @@ def body_class():
 
 @mod.route("/")
 def default_route():
-    return ""
+    return redirect(url_for("zeta zeros.zetazeros"))
 
 
 @mod.route("/zeta")
 def query(**kwargs):
-    pass
+    return redirect(url_for("zeta zeros.zetazeros"))

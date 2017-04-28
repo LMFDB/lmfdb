@@ -18,14 +18,11 @@ import re
 import sys
 import json
 
-from pymongo.cursor import Cursor
-from pymongo.errors import AutoReconnect
 from pymongo.connection import Connection
 try:
   from bson.objectid import ObjectId
 except ImportError:
   from pymongo.objectid import ObjectId
-import pymongo
 
 from gridfs import GridFS
 
@@ -34,7 +31,6 @@ from gridfs import GridFS
 
 def parseSingle(i):
     try:
-        v = int(i)
         assert abs(i) < 1000000000000000000
         return int(i)
     except:
@@ -161,7 +157,7 @@ if len(sys.argv) == 2:
     print guessParsing(file1)[1]
     quit()
 
-db = Connection(port=dbport)
+from lmfdb.website import DEFAULT_DB_PORT as dbport
 db = Connection(port=dbport)
 fs = GridFS(db.upload)
 for entry in db.upload.fs.files.find({"$or": [{"metadata.status": "approved"}, {"metadata.status": "approvedchild"}]}, sort=[("uploadDate", -1)]):

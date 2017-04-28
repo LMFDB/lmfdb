@@ -1,27 +1,29 @@
+{% if not info.error %}
 <p>
-  The table shows, for each
-  $k$ in the table header
-  {% if dim_args[1] %}
-  and for $j={{ dim_args[1] }}$
-  {% endif %}
-  the dimensions of the following subspaces of ${{ col.latex_name() }}$:
-  {{ col.dimension_glossary()|safe }}
-  <table>
+  The table below lists, for each bold value of $k$ in the header, the dimensions of the following subspaces of ${{ info.family.latex_name }}${% if 'j' in info.kwargs %} for $j={{ info.kwargs.j }}$: {% else %}:{% endif %}
+  {{ info.family.dimension_glossary()|safe }}
+  <table class="ntdata">
     <thead>
-      <tr>
-	<th></th>
-	{% for k in dimensions|sort() %}
-	<th>${{ k }}$</th>
-	{% endfor %}
-      </tr>
+    <tr>
+    <th class = "left" style="text-align:left"></th>
+    {% for k in info.table|sort() %}
+    <th>${{ k }}$</th>
+    {% endfor %}
+    </tr>
     </thead>
-    {% for header in table_headers %}
-    <tr class = "{{ loop.cycle( 'odd', 'even') }}">
-      <th align = "left">{{ header }}</th>
-      {% for k in dimensions|sort() %}
-      <td>{{ dimensions[k][header] }}</td>
+    {% for header in info.headers %}
+    <tr class="space" align="center">
+      <th class = "left" style="text-align:left">{{ header }}</th>
+      {% for k in info.table|sort() %}
+      <td>{{ info.table[k][header] }}</td>
       {% endfor %}
     </tr>
     {% endfor %}
   </table>
 </p>
+
+{% else %}
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red"><i>Please modify weight range below</i></span>
+
+{% endif %}

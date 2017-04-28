@@ -2,9 +2,10 @@
 
 import re
 from lmfdb.lfunctions import logger
-from sage.all import *
-from lmfdb.genus2_curves.isog_class import list_to_factored_poly_otherorder
-from lmfdb.number_fields import group_display_knowl
+import math
+from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, log, exp, pi, prod, floor
+from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
+from lmfdb.transitive_group import group_display_knowl
 from lmfdb.base import getDBConnection
 
 ###############################################################
@@ -12,10 +13,57 @@ from lmfdb.base import getDBConnection
 ###############################################################
 
 def p2sage(s):
-    # convert python type to sage
-    # this interprets strings, so e.g. '1/2' gets converted to Rational
-    return sage_eval(str(s))
+    """Convert s to something sensible in Sage.  Can handle objects
+    (including strings) representing integers, reals, complexes (in
+    terms of 'i' or 'I'), polynomials in 'a' with integer
+    coefficients, or lists of the above.
+    """
+    z = s
+    if type(z) in [list, tuple]:
+        return [p2sage(t) for t in z]
+    else:
+        Qa = PolynomialRing(RationalField(),"a");
+        for f in [ZZ, RR, CC, Qa]:
+            try:
+                return f(z)
+            # SyntaxError is raised by CC('??')
+            # NameError is raised by CC('a')
+            except (ValueError, TypeError, NameError, SyntaxError):
+                try:
+                    return f(str(z))
+                except (ValueError, TypeError, NameError, SyntaxError):
+                    pass
+        if z!='??':
+            logger.error('Error converting "{}" in p2sage'.format(z))
+        return z
 
+def string2number(s):
+    # a start to replace p2sage (used for the paramters in the FE)
+
+    strs = str(s).replace(' ','')
+    try:
+        if 'e' in strs:
+            # check for e(m/n) := exp(2*pi*i*m/n), used by Dirichlet characters, for example
+            r = re.match('^\$?e\\\\left\(\\\\frac\{(?P<num>\d+)\}\{(?P<den>\d+)\}\\\\right\)\$?$',strs)
+            if not r:
+                r = re.match('^e\((?P<num>\d+)/(?P<den>\d+)\)$',strs)
+            if r:
+                q = Rational(r.groupdict()['num'])/Rational(r.groupdict()['den'])
+                return CDF(exp(2*pi*I*q))
+        if 'I' in strs:
+            return CDF(strs)
+        elif '/' in strs:
+            return Rational(strs)
+        elif strs=='0.5':  # Temporary fix because 0.5 in db for EC
+            return Rational('1/2')
+        elif '.' in strs:
+            return float(strs)
+        else:
+            return Integer(strs)
+    except:
+        return s
+
+    
 def pair2complex(pair):
     ''' Turns the pair into a complex number.
     '''
@@ -94,12 +142,25 @@ def styleTheSign(sign):
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
     truncation = float(10 ** truncationexp)
-    if type(coeff) == complex:
-        rp = coeff.real
-        ip = coeff.imag
-    else:
-        rp = real_part(coeff)
-        ip = imag_part(coeff)
+    try:
+        if isinstance(coeff,str) or isinstance(coeff,unicode):
+            coeff = string2number(coeff)
+        if type(coeff) == complex:
+            rp = coeff.real
+            ip = coeff.imag
+        else:
+            rp = real_part(coeff)
+            ip = imag_part(coeff)
+    except TypeError:     # mostly a hack for Dirichlet L-functions
+        if seriescoefftype == "serieshtml":
+            if coeff == "I":
+                return " + " + "$i$" + "&middot;" + seriesvar(index, seriestype) 
+            elif coeff == "-I":
+                return "&minus;" + " $i$" + "&middot;" + seriesvar(index, seriestype)
+            else:
+                return " +" + coeff + "&middot;" + seriesvar(index, seriestype)
+        else:
+            return coeff
 # below we use float(abs()) instead of abs() to avoid a sage bug
     if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):  # has a real and an imaginary part
         ans = ""
@@ -298,10 +359,12 @@ def lfuncDShtml(L, fmt):
             ans += "1<sup></sup>" + "&nbsp;"
             ans += "</span>"
         else:
-            ans += '$' 
-            ans += L.texname
-            ans += " = "
-            ans += "1^{\mathstrut}" + "$"  + "&nbsp;"
+            ans += "<span class='term'>"
+            ans += '$'+L.texname+'$'
+            ans += "&thinsp;"
+            ans += "&nbsp;=&nbsp;"
+            ans += "1<sup></sup>" + "&nbsp;"
+            ans += "</span>"
         ans += "</td><td valign='top'>"
 
         if fmt == "arithmetic":
@@ -316,7 +379,6 @@ def lfuncDShtml(L, fmt):
             else:
                 tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1,
                     "serieshtml", "dirichlethtml", -6, 5)
-
             if tmp != "":
                 nonzeroterms += 1
             ans = ans + " <span class='term'>" + tmp + "</span> "  
@@ -486,7 +548,6 @@ def lfuncEPhtml(L,fmt):
     ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most "
     ans += str(L.degree - 1) + ". "
 #    ans += "with $F_p(0) = 1$."
-    factN = list(factor(L.level))
     bad_primes = []
     for lf in L.bad_lfactors:
         bad_primes.append(lf[0])
@@ -498,9 +559,11 @@ def lfuncEPhtml(L,fmt):
             good_primes.append(this_prime)
     eptable = "<table id='eptable' class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th><th class='weight galois'>$\Gal(F_p)$</th></tr>\n"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th>"
+    if L.degree > 2:
+        eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
+    eptable += "</tr>\n"
     eptable += "</thead>"
-    numfactors = len(L.localfactors)
     goodorbad = "bad"
     C = getDBConnection()
     for lf in L.bad_lfactors:
@@ -509,19 +572,19 @@ def lfuncEPhtml(L,fmt):
             eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
                         "$" + thispolygal[0] + "$" +
                         "</td>")
-            eptable += "<td class='galois'>" 
-       #     eptable += group_display_knowl(4,thispolygal[1][0],C) 
-            this_gal_group = thispolygal[1]
-            if this_gal_group[0]==[0,0]:
-                pass   # do nothing, because the local faco is 1
-            elif this_gal_group[0]==[1,1]:
-                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
-            else:
-                eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
-            for j in range(1,len(thispolygal[1])):
-                eptable += "$\\times$"
-                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-            eptable += "</td>"
+            if L.degree > 2:
+                eptable += "<td class='galois'>" 
+                this_gal_group = thispolygal[1]
+                if this_gal_group[0]==[0,0]:
+                    pass   # do nothing, because the local faco is 1
+                elif this_gal_group[0]==[1,1]:
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
+                else:
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+                for j in range(1,len(thispolygal[1])):
+                    eptable += "$\\times$"
+                    eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                eptable += "</td>"
             eptable += "</tr>\n"
 
         except IndexError:
@@ -537,13 +600,14 @@ def lfuncEPhtml(L,fmt):
         eptable += ("<tr" + firsttime + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + thispolygal[0] + "$" +
                     "</td>")
-        this_gal_group = thispolygal[1]
-        eptable += "<td class='galois'>"
-        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
-        for j in range(1,len(thispolygal[1])):
-            eptable += "$\\times$"
-            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-        eptable += "</td>"
+        if L.degree > 2:
+            eptable += "<td class='galois'>"
+            this_gal_group = thispolygal[1]
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
         eptable += "</tr>\n"
 
 
@@ -554,17 +618,18 @@ def lfuncEPhtml(L,fmt):
     firsttime = " id='moreep'"
     for j in good_primes2:
         this_prime_index = prime_pi(j) - 1
+        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
         eptable += ("<tr" + firsttime +  " class='more nodisplay'" + "><td>" + goodorbad + "</td><td>" + str(j) + "</td><td>" +
                     "$" + list_to_factored_poly_otherorder(L.localfactors[this_prime_index], galois=True)[0] + "$" +
                     "</td>")
-        thispolygal = list_to_factored_poly_otherorder(L.localfactors[this_prime_index],galois=True)
-        this_gal_group = thispolygal[1]
-        eptable += "<td class='galois'>"
-        eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
-        for j in range(1,len(thispolygal[1])):
-            eptable += "$\\times$"
-            eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
-        eptable += "</td>"
+        if L.degree > 2:
+            this_gal_group = thispolygal[1]
+            eptable += "<td class='galois'>"
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+            for j in range(1,len(thispolygal[1])):
+                eptable += "$\\times$"
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+            eptable += "</td>"
 
         eptable += "</tr>\n"
         firsttime = ""
@@ -718,8 +783,10 @@ def lfuncFEtex(L, fmt):
         ans += "("
         if L.mu_fe != []:
             for mu in range(len(L.mu_fe) - 1):
-                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, 5) + ", "
-            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, 5)
+                prec = len(str(L.mu_fe[mu]))
+                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, prec) + ", "
+            prec = len(str(L.mu_fe[-1]))
+            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, prec)
         else:
             ans += "\\ "
         ans += ":"
@@ -744,14 +811,17 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['special_values']):
+        for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
                 val = x[1]
                 break
     if val is None:
-        val = L.sageLfunction.value(s)
+        if L.fromDB:
+            val = "not computed"
+        else:
+            val = L.sageLfunction.value(s)
     if normalization == "arithmetic":
         lfunction_value_tex = L.texname_arithmetic.replace('s)',  sLatex + ')')
     else:
@@ -780,27 +850,34 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     val = None
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['special_values']):
+        if 'values' in L.lfunc_data.keys():
+          for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
                 val = x[1]
                 break
     if val is None:
-        val = L.sageLfunction.value(s)
+        if L.fromDB:
+            val = "not computed"
+        else:
+            val = L.sageLfunction.value(s)
     # We must test for NaN first, since it would show as zero otherwise
     # Try "RR(NaN) < float(1e-10)" in sage -- GT
 
     lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
     lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
 
-    if CC(val).real().is_NaN():
-        Lval = "\\infty"
-    elif val.abs() < 1e-10:
-        Lval = "0"
-    else:
-        Lval = latex(round(val.real(), number_of_decimals)
+    try:
+        if CC(val).real().is_NaN():
+            Lval = "\\infty"
+        elif val.abs() < 1e-10:
+            Lval = "0"
+        else:
+            Lval = latex(round(val.real(), number_of_decimals)
                          + round(val.imag(), number_of_decimals) * I)
+    except (TypeError, NameError):
+        Lval = val    # if val is text
 
     return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
 
@@ -818,7 +895,8 @@ def compute_dirichlet_series(p_list, PREC):
     LL = [0] * PREC
     # create an empty list of the right size and now populate it with the powers of p
     for (p, y) in p_list:
-        p_prec = log(PREC) / log(p) + 1
+        # FIXME p_prec is never used, but perhaps it should be?
+        # p_prec = log(PREC) / log(p) + 1
         ep = euler_p_factor(y, PREC)
         for n in range(ep.prec()):
             if p ** n < PREC:
@@ -842,13 +920,10 @@ def euler_p_factor(root_list, PREC):
     return ep + O(x ** (PREC + 1))
 
 
-def compute_local_roots_SMF2_scalar_valued(ev_data, k, embedding):
+def compute_local_roots_SMF2_scalar_valued(K, ev, k, embedding):
     ''' computes the dirichlet series for a Lfunction_SMF2_scalar_valued
     '''
 
-    logger.debug("Start SMF2")
-    K = ev_data[0].parent().fraction_field()  # field of definition for the eigenvalues
-    ev = ev_data[1]  # dict of eigenvalues
     L = ev.keys()
     m = ZZ(max(L)).isqrt() + 1
     ev2 = {}
@@ -947,4 +1022,5 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
     if abs(abs(sign) - 1) > tol:
         logger.critical("Not enough coefficients to compute the sign of the L-function.")
         sign = "Not able to compute."
+        sign = 1 # wrong, but we need some type of error handling here.
     return sign

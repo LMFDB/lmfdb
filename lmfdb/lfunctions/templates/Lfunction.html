@@ -1,5 +1,5 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <script>
@@ -10,16 +10,16 @@ function show_normalization(normstyle) {
     $('button.analytic').show();
     $('button.arithmetic').show();
     if (normstyle == 'analytic') {
-       $('button.analytic').css('background', '#DFD');
-       $('button.analytic').css('border', '2px solid #ADA');
-       $('button.arithmetic').css('background', '#EEE');
-       $('button.arithmetic').css('border', '1px solid #EDD');
+       $('button.analytic').css('background', '{{color.lf_an_button_bkg}}');
+       $('button.analytic').css('border', '2px solid {{color.lf_an_button_brd}}');
+       $('button.arithmetic').css('background', '{{color.lf_ar_button_bkg}}');
+       $('button.arithmetic').css('border', '1px solid {{color.lf_ar_button_brd}}');
     }
     if (normstyle == 'arithmetic') {
-       $('button.arithmetic').css('background', '#DFD');
-       $('button.arithmetic').css('border', '2px solid #ADA');
-       $('button.analytic').css('background', '#EEE');
-       $('button.analytic').css('border', '1px solid #EDD');
+       $('button.arithmetic').css('background', '{{color.lf_an_button_bkg}}');
+       $('button.arithmetic').css('border', '2px solid {{color.lf_an_button_brd}}');
+       $('button.analytic').css('background', '{{color.lf_ar_button_bkg}}');
+       $('button.analytic').css('border', '1px solid {{color.lf_ar_button_brd}}');
     }
   }
 
@@ -32,11 +32,11 @@ function show_moreless(ml) {
 
 <style type="text/css">
 table.ntdata tr.toggle { font-size: 80%; text-align: right; }
-table.ntdata tr.toggle:nth-child(2n) { background: #FFF; }
-table.ntdata tr.toggle a:hover { background: #FFF; }
+table.ntdata tr.toggle:nth-child(2n) { background: {{color.table_ntdata_background_c1}}; }
+table.ntdata tr.toggle a:hover { background: {{color.table_ntdata_background_c1}}; }
 /*
 table.ntdata tr.more:last-child { font-size: 80%; text-align: right; }
-table.ntdata tr.more:nth-child(2n) { background: #FFF; }
+table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background_c1}}; }
 */
 </style>
 
@@ -44,7 +44,9 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
  <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
 <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
 
-{% elif BETA %}
+{% elif Ltype=="riemann" %}
+
+{% elif algebraic %}
 <div align='center'><div style="display: inline-block; vertical-align:top;">{{ KNOWL('lfunction.normalization', title='Normalization') }}:  &nbsp; 
 </div>
 <div style="display: inline-block; vertical-align:top;">
@@ -87,14 +89,14 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
   <table>
 
         <tr>
-        <td> \( d \)</td>
+        <td> {{ KNOWL('lfunction.degree', title="\( d \)") }} </td>
         <td>&nbsp;=&nbsp;</td>
         <td> \({{ degree }}\)
         </td>
         </tr>
 
         <tr>
-        <td> \( N \)</td>
+        <td> {{ KNOWL('lfunction.level', title="\( N \)") }} </td>
         <td>&nbsp;=&nbsp;</td>
         <td> \({{ conductor }}\)
 {% if conductor_factored -%}
@@ -104,17 +106,17 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
         </tr>
 
         <tr>
-        <td> \( \varepsilon \)</td>
+        <td> {{ KNOWL('lfunction.sign', title="\( \\varepsilon \)") }}</td>
         <td>&nbsp;=&nbsp;</td>
         <td> {{ sign }}
         </td>
         </tr>
 
-{% if weight %}
+{% if motivic_weight %}
         <tr>
-        <td> \( w \)</td>
+        <td> {{ KNOWL('lfunction.motivic_weight', title="weight") }} </td>
         <td>&nbsp;=&nbsp;</td>
-        <td> {{ weight }}
+        <td> {{ motivic_weight }}
         </td>
         </tr>
 
@@ -122,7 +124,7 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 
 {% if chi %}
         <tr>
-        <td> \( \chi \)</td>
+        <td> {{ KNOWL('lfunction.central_character', title="\( \\chi \)") }} </td>
         <td>&nbsp;:&nbsp;</td>
         <td> {{ chi }}
         </td>
@@ -130,48 +132,37 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 
 {% endif %}
 
-{% if ST -%}
+{% if st_group -%}
 
         <tr>
-        <td> ST </td>
+        <td> {{ KNOWL('g2c.st_group', title="Sato-Tate") }} </td>
         <td>&nbsp;:&nbsp;</td>
-        <td> {{ ST }}
+        <td> {{ st_link | safe}}
         </td>
         </tr>
 
 {% endif %}
 
         <tr>
-        <td> {{ KNOWL('lfunction.primitive', title="Primitive") }}  </td>
+        <td> {{ KNOWL('lfunction.primitive', title="primitive") }}  </td>
         <td>&nbsp;:&nbsp;</td>
         <td> {{ primitive }}
         </td>
         </tr>
 
         <tr>
-        <td> {{ KNOWL('lfunction.self-dual', title="Self-dual") }} </td>
+        <td> {{ KNOWL('lfunction.self-dual', title="self-dual") }} </td>
         <td>&nbsp;:&nbsp;</td>
         <td> {{ selfdual }}
         </td>
         </tr>
 
-{% if rank -%}
+{% if rank is defined -%}
 
         <tr>
-        <td> Rank </td>
+        <td> {{ KNOWL('lfunction.analytic_rank', title="analytic rank") }} </td>
         <td>&nbsp;=&nbsp;</td>
         <td> {{ rank }}
-        </td>
-        </tr>
-
-{% endif %}
-
-{% if satotategroup -%}
-
-        <tr>
-        <td> Sato-Tate group </td>
-        <td>&nbsp;:&nbsp;</td>
-        <td> {{ satotategroup }}
         </td>
         </tr>
 
@@ -211,13 +202,23 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
   {% if sv_edge_arithmetic %}
         <tr class="arithmetic">
         <td> ${{ sv_edge_arithmetic[0] }}$ </td>
+        {% if sv_edge_arithmetic[1] == 'not computed' %}
+        <td>&nbsp;</td>
+        <td> not available </td>
+        {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
         <td> ${{ sv_edge_arithmetic[1] }}$ </td>
+        {% endif %}
         </tr>
         <tr class="analytic nodisplay">
         <td> ${{ sv_edge_analytic[0] }}$ </td>
+        {% if sv_edge_analytic[1] == 'not computed' %}
+        <td>&nbsp;</td>
+        <td> not available </td>
+        {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
         <td> ${{ sv_edge_analytic[1] }}$ </td>
+        {% endif %}
         </tr>
   {% endif %}
 
@@ -239,7 +240,7 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
   </div>
  {% endif %}
 
-{% if not dirichlet_arithmetic %}
+{% if not dirichlet_arithmetic and algebraic %}
 <h2>Particular Values</h2>
 {#
 {% if dirichlet_arithmetic -%}
@@ -303,8 +304,8 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 
  <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
 
- {% if zeroeslink %}
-     <div><span id="zeroes"></span></div>
+ {% if zeroslink %}
+     <div><span id="zeros"></span></div>
  {% elif tpzeroslink %}
      {{zeroswarning}}.
      <div><span id="tpzeros">{{tpzeroslink|safe}}</span></div>
@@ -327,7 +328,7 @@ table.ntdata tr.more:nth-child(2n) { background: #FFF; }
 
 <script type="text/javascript">
   $(function() {
-      $("#zeroes").load("{{ zeroeslink|safe }}");
+      $("#zeros").load("{{ zeroslink|safe }}");
   });
   
 </script>

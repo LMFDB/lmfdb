@@ -1,0 +1,174 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<form id="re-search">
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="paging" value="0"/>
+<table border="0">
+
+<tr>
+<td align=left> 
+{{KNOWL('ag.curve.genus',title='Genus')}}:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
+</td>
+<td align=left> 
+Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
+
+<td align=left> 
+{{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
+<td align=left> <input type="text" name="signature" size="15" value="{{info.signature}}" >
+
+</tr>
+
+<tr><td>
+	       Hyperelliptic curve(s):
+</td>
+
+  <td> <select name='inc_hyper'>
+{% if info.inc_hyper == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_hyper == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
+
+<td >
+	      Cyclic trigonal curve(s):
+</td>
+
+  <td> <select name='inc_cyc_trig'>
+{% if info.inc_cyc_trig == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_cyc_trig == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
+
+
+<td>
+	      Full automorphism group:
+</td>
+
+  <td> <select name='inc_full'>
+{% if info.inc_full == "only" %}
+           <option value="include">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only" selected="yes">only</option>
+{% else %}
+{% if info.inc_full == "exclude" %}
+           <option value="include">include</option>
+           <option value="exclude" selected="yes">exclude</option>
+           <option value="only">only</option>
+{% else %}
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+{% endif %}
+{% endif %}
+</td> 
+  
+  
+</tr>
+
+<tr>
+
+ <td align=left> 
+{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
+<td align=left> <input type="text" name="dim" size="5" value="{{info.dim}}" > </td>
+
+  
+<td align='left' colspan='4'>Maximum number of families to display: <input type='text' name='count' value="{{info.count}}" size='10'>
+</td>
+</tr>
+
+<tr>
+<td align=left colspan="2"> 
+<button type='submit' value='refine'>Search again</button>
+</td></tr>
+</table>
+</form>
+
+
+
+{% if info.err is defined %}
+  <p>
+    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)"> </p>
+{% else  %}
+
+
+<h2> Results: ({{info.report}})
+     {% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+     {% endif %}
+     {% if info.start +info.count  < info.number %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+     {% endif %}
+</h2>
+
+{% if info.number > 0 %}
+
+<table border=1 cellpadding=5 class="ntdata">
+<thead>
+<tr>
+
+  <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}}</th>
+  <th>{{KNOWL('ag.curve.genus',title='Genus')}}</th>
+  <th>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension')}}</th>
+  <th>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma group')}}</th>
+  <th>{{KNOWL('curve.highergenus.aut.signature',title='Signature')}}</th>
+</tr>
+</thead>
+<tbody>
+
+{% for field in info.fields: %}
+<tr>
+
+  <td align='left'><a href="/HigherGenus/C/Aut/{{field.passport_label}}">{{field.passport_label}}</a></td>
+    <td>{{field.genus}}</td>
+  <td>{{field.dim}}</td>
+  <td>{{field.group}}</td>
+   <td>${{info.sign_display(field.signature)}}$</td>
+
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+</table>
+<br>
+
+     {% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+     {% endif %}
+     {% if info.start +info.count  < info.number %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+     {% endif %}
+
+
+{% endif %}
+
+{% endif %}
+
+
+{% endblock %}

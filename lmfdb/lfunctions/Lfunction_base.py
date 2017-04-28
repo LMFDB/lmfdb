@@ -1,5 +1,4 @@
 from sage.all import imag_part
-from lmfdb.lfunctions import logger
 
 #############################################################################
 # The base Lfunction class. The goal is to make this dependent on the least possible, so it can be loaded from sage or even python
@@ -30,17 +29,20 @@ class Lfunction:
             whether L-function is selfdual
         """
 
-        self.selfdual = True
-        for n in range(1, min(8, len(self.dirichlet_coefficients))):
-            if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
-                self.selfdual = False
+        if not hasattr(self, 'selfdual'):
+    #    if 'selfdual' not in self:
+     #   if self.selfdual not in [True, False]:
+            self.selfdual = True
+            for n in range(1, min(8, len(self.dirichlet_coefficients))):
+                if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
+                    self.selfdual = False
 
     def Lkey(self):
         # Lkey should be a dictionary
-        raise Error("not all L-function implement the Lkey scheme atm")
+        raise KeyError("not all L-function implement the Lkey scheme atm")
 
     def source_object(self):
-        raise Error("not all L-functions give back a source object. This might be due to limited knowledge or missing code")
+        raise KeyError("not all L-functions give back a source object. This might be due to limited knowledge or missing code")
 
     def source_information(self):
         # Together, these give in principle enough to identify the object
@@ -97,7 +99,8 @@ class Lfunction:
             allZeros = self.compute_checked_zeros(**kwargs)
 
         # Sort the zeros and divide them into negative and positive ones
-        allZeros.sort()
+        if not isinstance(allZeros,str):
+            allZeros.sort()
         return allZeros
 
     def compute_checked_zeros(self, count = None, do_negative = False, **kwargs):
@@ -108,6 +111,9 @@ class Lfunction:
         return self.compute_lcalc_zeros(via_N = True, count = count, do_negative = do_negative or not self.selfdual)
 
     def compute_heuristic_zeros(self, step_size = 0.02, upper_bound = 20, lower_bound = None):
+     #   if self.Ltype() == "hilbertmodularform":
+        if self.Ltype() not in ["riemann", "maass", "ellipticmodularform", "ellipticcurveQ"]:
+            upper_bound = 10
         if self.selfdual:
             lower_bound = lower_bound or - step_size / 2
         else:
@@ -115,17 +121,29 @@ class Lfunction:
         return self.compute_lcalc_zeros(via_N = False, step_size = step_size, upper_bound = upper_bound, lower_bound = lower_bound)
     
     def compute_lcalc_zeros(self, via_N = True, **kwargs):
+
+        if not hasattr(self,"fromDB"):
+            self.fromDB = False
+
         if via_N == True:
             count = kwargs["count"]
             do_negative = kwargs["do_negative"]
+            if self.fromDB:
+                return "not available"
+            if not self.sageLfunction:
+                return "not available"
             return self.sageLfunction.find_zeros_via_N(count, do_negative)
         else:
             T1 = kwargs["lower_bound"]
             T2 = kwargs["upper_bound"]
             stepsize = kwargs["step_size"]
+            if self.fromDB:
+                return "not available"
+            if not self.sageLfunction:
+                return "not available"
             return self.sageLfunction.find_zeros(T1, T2, stepsize)
     
-    def compute_zeros(algorithm , **kwargs):
+    def compute_zeros(self, algorithm, **kwargs):
         if algorithm == "lcalc":
             return self.compute_lcalc_zeros(self, **kwargs)
         if algorithm == "quick":

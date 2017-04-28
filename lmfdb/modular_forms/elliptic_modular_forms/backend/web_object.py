@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 #*****************************************************************************
 #  Copyright (C) 2014
 #  Stephan Ehlen <stephan.j.ehlen@gmail.com>
@@ -22,20 +22,19 @@ AUTHORS:
  - Stephan Ehlen
  - Fredrik Stromberg 
 """
-from lmfdb.base import app
 from flask import url_for
-from lmfdb.modular_forms.elliptic_modular_forms import emf_version, emf_logger
-from lmfdb.modular_forms.elliptic_modular_forms.backend import get_files_from_gridfs, connect_to_modularforms_db
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
+from copy import copy
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
+from lmfdb.modular_forms.elliptic_modular_forms.backend import connect_to_modularforms_db
+from lmfdb.WebNumberField import field_pretty
 from lmfdb.utils import web_latex_split_on_pm
 
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.all import SageObject,dumps,loads, QQ, NumberField, latex
 
-import pymongo
 import gridfs
 import re
-import datetime
+from datetime import datetime
 
 class WebProperty(object):
     r"""
@@ -183,6 +182,9 @@ class WebProperties(object):
     def list(self):
         return self._d.values()
 
+    def as_dict(self):
+        return { p.name: p.value() for p in self } 
+
     def __getitem__(self, n):
         return self._d[n]
 
@@ -215,16 +217,27 @@ class WebObject(object):
 
     _collection_name = None
     _key = None
+    _key_multi = None
     _file_key = None
+    _file_key_multi = None
     _properties = None
     _has_updated_from_db = False
     _has_updated_from_fs = False
+    _add_to_db_query = None
+    _add_to_fs_query = None
+    _sort = None
+    _sort_files = None
     
     r"""
           _key: a list - The parameters that are needed to initialize a WebObject of this type.
+          _key_multi: a list or string - this is just added to the file key but these are properties 
+                            that do not uniquely identify the
+                           (mathematical) object and one mathematical object can have several files
+                           with varying values of the keys in _key_multi (example "prec" of a q-expansion)
           _file_key:  a string - the field in the database that is the unique identifier for this object
                  This can also be a list of strings if the key is a compound.
-          _collection_name: a database collection name to use
+          _file_key_multi: list or string - same as _key_multi but for the files
+          _collection_name: a string -  a database collection name to use
                             We assume that the gridfs collection is given by 'collection_name.files'
     """
 
@@ -241,6 +254,17 @@ class WebObject(object):
         C = cls.connect_to_db()
         return gridfs.GridFS(C,coll)
 
+    @classmethod
+    def _find_document_in_db_collection(cls,search={},**kwds):
+        r"""
+        Searches the database for fields matching values in a dict containing
+        values for the keys (or using keywords) in self._key without constructing the object. 
+        """
+        coll = cls.connect_to_db(cls._collection_name)
+        search_pattern = { key : search[key] for key in search.keys() if key in cls._key }
+        search_pattern.update(kwds) ## add keywords
+        return coll.find(search_pattern) 
+    
     def __init__(self,
                  use_separate_db = True,
                  use_gridfs = True,
@@ -282,13 +306,12 @@ class WebObject(object):
         self._files = self.get_files_from_gridfs(self._collection_name)
         emf_logger.debug('Connected to db and got files!')
         # Initialize _db_properties and _db_properties to be easily accesible
+        for k in self._key:
+            self._properties[k].save_to_db = True
+        #for k in self._file_key:
+        #    self._properties[k].save_to_fs = True
         self._db_properties = self._properties.db_properties()
         self._fs_properties = self._properties.fs_properties()
-
-        # check that the file key is contained in the _db_properties
-        for k in self._file_key:
-            assert k in self._db_properties, \
-                   "The file key has to be contained in self._db_properties. This is not the case for {0}".format(k)
 
         #print hasattr(self, 'level')
 
@@ -299,18 +322,19 @@ class WebObject(object):
             #emf_logger.debug("Adding {0} : {1}".format(p.name,p))
             self.__dict__[p.name] = p
 
-        if not hasattr(self, '_add_to_db_query'):
-            self._add_to_db_query = None
-        if not hasattr(self, '_add_to_fs_query'):
-            self._add_to_fs_query = None
+        if self._sort is None:
+            self._sort = []
+        if self._sort_files is None:
+            self._sort_files = []
+        emf_logger.debug("For {} have self._add_to_fs_query = {}".format(self.__class__, self._add_to_fs_query))
                 
         if update_from_db:
             #emf_logger.debug('Update requested for {0}'.format(self.__dict__))
             emf_logger.debug('Update requested')
-            try:
-                self.update_from_db()
-            except Exception as e:
-                raise RuntimeError(str(e))
+            #try:
+            self.update_from_db(add_to_fs_query = self._add_to_fs_query, add_to_db_query = self._add_to_db_query)
+            #except Exception as e:
+            #    raise RuntimeError(str(e))
         #emf_logger.debug('init_dynamic_properties will be called for {0}'.format(self.__dict__))
         if init_dynamic_properties:
             emf_logger.debug('init_dynamic_properties will be called')
@@ -389,7 +413,6 @@ class WebObject(object):
         for p in self._properties:
             if p.required:
                 assert hasattr(self, p.name), "Missing property {0}".format(p)
-            v = getattr(self, p.name)
             got = type(self._properties[p.name].to_fs())
             expected = p.fs_data_type
             assert p.has_been_set(), "Did we compute {0}? It has not been set yet.".format(p.name)
@@ -404,22 +427,27 @@ class WebObject(object):
         """
         pass
         
-    def file_key_dict(self):
+    def file_key_dict(self, include_multi = True):
         r"""
         Return a dictionary where the keys are the dbkeys of ``self``` and
         the values are the corresponding values of ```self```.
         """
         emf_logger.debug('key: {0}'.format(self._key))
         #emf_logger.debug('properties: {0}'.format(self._properties))
-        return { key : self._properties[key].to_db() for key in self._file_key }
+        keys = copy(self._file_key)
+        if include_multi and self._file_key_multi is not None:
+            keys +=  self._file_key_multi
+        return { key : self._properties[key].to_db() for key in keys }
 
-    def key_dict(self):
+    def key_dict(self, include_multi = True):
         r"""
         Return a dictionary where the keys are the keys of ``self``` and
         the values are the corresponding values of ```self```.
         """
-
-        return { key : self._properties[key].to_db() for key in self._key }
+        keys = copy(self._key)
+        if include_multi and self._key_multi is not None:
+            keys +=  self._key_multi
+        return { key : self._properties[key].to_db() for key in keys}
 
     def db_dict(self):
         r"""
@@ -437,35 +465,117 @@ class WebObject(object):
         """
         return { p.name : p.to_fs() for p in self._fs_properties }
 
-    def get_db_record(self):
+    def get_db_record(self, add_to_db_query = None, projection = None):
         r"""
           Get the db record from the database. This is the mongodb record in self._collection_name.
         """
         coll = self._collection
-        rec = coll.find_one(self.key_dict())
+        if add_to_db_query is None:
+            add_to_db_query = self._add_to_db_query
+        elif self._add_to_db_query is not None:
+            q=add_to_db_query
+            add_to_db_query = copy(self._add_to_db_query)
+            add_to_db_query.update(q)
+        if add_to_db_query is not None:
+            key = self.key_dict()
+            key = key.update(add_to_db_query)
+        else:
+            key = self.key_dict()
+        sort = self._sort
+        emf_logger.debug("add_to_db_query: {0}".format(add_to_db_query))
+        emf_logger.debug("key: {0} coll={1}".format(key,self._collection))
+        if projection is not None:
+            rec = coll.find_one(key, sort = sort, projection = projection)
+        else:
+            rec = coll.find_one(key, sort = sort)
         return rec
 
-    def authorize(self):
+    def get_file(self, add_to_fs_query=None, get_all=False, meta_only=False, ignore_multi_if_failed=True):
+        r"""
+          Get the file(s) from gridfs.
+        """
+        if not self._use_gridfs:
+            raise ValueError('We do not use gridfs for this class.')
+        fs = self._files
+        emf_logger.debug("{} self._add_to_fs_query: {}".format(self.__class__, self._add_to_fs_query))
+        if add_to_fs_query is None:
+            add_to_fs_query = self._add_to_fs_query
+        elif self._add_to_fs_query is not None:
+            q=add_to_fs_query
+            add_to_fs_query = copy(self._add_to_fs_query)
+            add_to_fs_query.update(q)
+        file_key = self.file_key_dict(include_multi = not get_all)
+        if add_to_fs_query is not None and not get_all:
+            file_key.update(add_to_fs_query)
+        sort = self._sort_files
+        emf_logger.debug("{} add_to_fs_query: {}".format(self.__class__, add_to_fs_query))
+        emf_logger.debug("file_key: {0} fs={1}".format(file_key,self._file_collection))
+        results = []
+        if fs.exists(file_key):
+            coll = self._file_collection
+            if get_all:
+                files = coll.find(file_key, sort = sort)
+            else:
+                files = [coll.find_one(file_key, sort = sort)]
+            for m in files:
+                fid = m['_id']
+                #emf_logger.debug("col={0}".format(coll))
+                #emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
+                if not meta_only:
+                    try: 
+                        d = loads(fs.get(fid).read())
+                        results.append((d,m))
+                    except ValueError as e:
+                        raise ValueError("Wrong format in database! : {0} coll: {1} rec:{2}".format(e,coll,m))
+                else:
+                    results.append(m)
+        else:
+            raise IndexError("File not found with file_key = {}".format(file_key))
+        emf_logger.debug("len(results) = {}".format(len(results)))
+        if len(results) == 1 and not get_all:
+            return results[0]
+        else:
+            return results
+
+    def get_files(self, add_to_fs_query=None):
+        if self._file_key_multi is None or add_to_fs_query is not None:
+            l = self.get_file(add_to_fs_query)
+            if isinstance(l,dict):
+                l = [l]
+            return l
+        else:
+            return self.get_file(add_to_fs_query, get_all=True)
+
+    def get_file_list(self, add_to_fs_query=None):
+        if self._file_key_multi is None or add_to_fs_query is not None:
+            l = self.get_file(add_to_fs_query, meta_only=True)
+            if isinstance(l,dict):
+                l = [l]
+            return l
+        else:
+            return self.get_file(add_to_fs_query, get_all=True, meta_only=True)
+
+    @classmethod
+    def authorize(cls):
         r"""
         Need to be authorized to insert data
         """
-        from lmfdb.base import getDBConnection
         from os.path import dirname, join
         pw_filename = join(dirname(dirname(__file__)), "password")
         user = 'editor'
         password = open(pw_filename, "r").readlines()[0].strip()
-        C = getDBConnection()
-        C["modularforms2"].authenticate(user,password)
-        emf_logger.critical("Authenticated with user:{0} and pwd:{1}".format(user,password))
-                            
-    def logout(self):
+        emf_logger.debug("Authenticating user={0} password={1}".format(user,password))
+        cls.connect_to_db().authenticate(user,password)
+        emf_logger.debug("Authenticated with user:{0} and pwd:{1}".format(user,password))
+
+    @classmethod
+    def logout(cls):
         r"""
         Logout authorized user.
         """
         import lmfdb.base
-        from lmfdb.base import getDBConnection        
-        C = getDBConnection()
-        C["modularforms2"].logout()
+        C = cls.connect_to_db()
+        C.logout()
         # log back in with usual read-only access
         lmfdb.base._init(lmfdb.base.dbport)
         
@@ -492,38 +602,39 @@ class WebObject(object):
         except OperationFailure:
             emf_logger.critical("Authentication failed. You are not authorized to save data to the database!")
             return False
-        file_key = self.file_key_dict()
-        coll = self._file_collection
-        if fs.exists(file_key):
-            emf_logger.debug("File exists with key={0}".format(file_key))
-            if not update:
+        if self._use_gridfs:
+            file_key = self.file_key_dict()
+            coll = self._file_collection
+            if fs.exists(file_key):
+                emf_logger.debug("File exists with key={0}".format(file_key))
+                if not update:
+                    return True
+                else:
+                    fid = coll.find_one(file_key, projection=['_id'])['_id']
+                    fs.delete(fid)
+                    emf_logger.debug("Deleted file with fid={0}".format(fid))
+            # insert
+            s = dumps(self.fs_dict())
+            if not self._use_separate_db:
+                file_key.update(self.db_dict())
+            try:
+                t = fs.put(s, **file_key)
+                emf_logger.debug("Inserted file with filekey={1}".format(t,file_key))
+            except Exception, e:
+                emf_logger.debug("Could not insert file with filekey={1}".format(s,file_key))
+                emf_logger.warn("Error inserting record: {0}".format(e))
+            #fid = coll.find_one(key)['_id']
+            # insert extended record
+            if not self._use_separate_db:
+                self.logout()
                 return True
-            else:
-                fid = coll.find_one(file_key, projection=['_id'])['_id']
-                fs.delete(fid)
-                emf_logger.debug("Deleted file with fid={0}".format(fid))
-        # insert
-        s = dumps(self.fs_dict())
-        if not self._use_separate_db:
-            file_key.update(self.db_dict())
-        try:
-            t = fs.put(s, **file_key)
-            emf_logger.debug("Inserted file t={0}, filekey={1}".format(t,file_key))
-        except Exception, e:
-            emf_logger.debug("Could not insert file s={0}, filekey={1}".format(s,file_key))     
-            emf_logger.warn("Error inserting record: {0}".format(e))
-        #fid = coll.find_one(key)['_id']
-        # insert extended record
-        if not self._use_separate_db:
-            self.logout()
-            return True
         coll = self._collection
         key = self.key_dict()
         #key.update(file_key)
         #print meta_key
         dbd = self.db_dict()
         ## Add modification data
-        dbd['modification_date'] = datetime.datetime.utcnow()
+        dbd['modification_date'] = datetime.utcnow()
         #emf_logger.debug("update with dbd={0} and key:{1}".format(dbd,key))
         #meta['fid'] = fid
         if coll.find(key).count()>0:
@@ -541,48 +652,58 @@ class WebObject(object):
         return True
         
 
-    def delete_from_db(self, all=False):
+    def delete_from_db(self, delete_all=False):
         r"""
         Deletes ```self``` to the database, i.e.
         deletes the meta record and the file in the gridfs file system.
         """
         coll = self._collection
         key = self.key_dict()
-        if all:
-            r = coll.delete_many(key) # delete meta records
-        else:
-            r = coll.delete_one(key) # delete meta records
-        if r.deleted_count == 0:
-            emf_logger.debug("There was no meta record present matching {0}".format(key))
-        fs = self._files
-        file_key = self.file_key_dict()
-        r = self._file_collection.find_one(file_key)
-        if r is None:
-            raise IndexError("Record does not exist")
-        fid = r['_id']
-        fs.delete(fid)
-                
+        if self._use_separate_db or not self._use_gridfs:
+            if delete_all:
+                r = coll.delete_many(key) # delete meta records
+            else:
+                r = coll.delete_one(key) # delete meta record
+                if r.deleted_count == 0:
+                    emf_logger.debug("There was no meta record present matching {0}".format(key))
+        files = self.get_file_list() if delete_all else [self.get_file(meta_only=True)]
+        for f in files:
+            try:
+                self._files.delete(f['_id'])
+            except:
+                raise IndexError("Error deleting file {}".format(f['_id']))
 
+    def update_db_properties_from_dict(self, d):
+        for p in self.db_properties():
+            pn = p.name
+            if d.has_key(pn):
+                try:
+                    p.set_from_db(d[pn])
+                    if not p.name in self._fs_properties:
+                        p.has_been_set(True)
+                except NotImplementedError:
+                    continue
+        return True
+
+    def update_fs_properties_from_dict(self, d):
+        for p in self.fs_properties():
+            pn = p.name
+            if d.has_key(pn):
+                try:
+                    p.set_from_fs(d[pn])
+                    p.has_been_set(True)
+                except NotImplementedError:
+                    continue
+        return True
+    
     def update_from_db(self, ignore_non_existent = True, \
-                       add_to_fs_query=None, add_to_db_query=None):
+                       add_to_fs_query=None, add_to_db_query=None, \
+                       update_from_fs=True, include_only=None):
         r"""
         Updates the properties of ```self``` from the database using params and dbkey.
         """
         self._has_updated_from_db = False
         self._has_updated_from_fs = False
-        if add_to_db_query is None:
-            add_to_db_query = self._add_to_db_query
-        elif self._add_to_db_query is not None:
-            q=add_to_db_query
-            add_to_db_query = copy(self._add_to_db_query)
-            add_to_db_query.update(q)
-
-        if add_to_fs_query is None:
-            add_to_fs_query = self._add_to_fs_query
-        elif self._add_to_fs_query is not None:
-            q=add_to_fs_query
-            add_to_fs_query = copy(self._add_to_fs_query)
-            add_to_fs_query.update(q)
             
         #emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
         #emf_logger.debug("self._add_to_fs_query: {0}".format(self._add_to_fs_query))
@@ -590,22 +711,16 @@ class WebObject(object):
         succ_db = False
         succ_fs = False
         if self._use_separate_db or not self._use_gridfs:
-            coll = self._collection
-            key = self.key_dict()
-            if add_to_db_query is not None:
-                key.update(add_to_db_query)
-            emf_logger.debug("key: {0} for {1}".format(key,self._collection_name))
-            if coll.find(key).count()>0:
-                props_to_fetch = { }  #p.name:True for p in self._key}
-                for p in self._db_properties:
-                    if p.include_in_update and (not p.name in self._fs_properties or p._extend_fs_with_db):
-                        props_to_fetch[p.name] = True
-                        p.has_been_set(False)
-#                props_to_fetch = {p.name:True for p in self._db_properties
-#                                  if (p.include_in_update and not p.name in self._fs_properties)
-#                                  or p.name in self._key}
-                emf_logger.debug("props_to_fetch: {0}".format(props_to_fetch))                
-                rec = coll.find_one(key, projection = props_to_fetch)
+            props_to_fetch = { }  #p.name:True for p in self._key}
+            for p in self._db_properties:
+                if p.include_in_update \
+                  and (not p.name in self._fs_properties or p._extend_fs_with_db) \
+                  and (include_only is None or p.name in include_only):
+                    props_to_fetch[p.name] = True
+                    p.has_been_set(False)
+            emf_logger.debug("properties to fetch: {}".format(props_to_fetch))
+            try:
+                rec = self.get_db_record(add_to_db_query, projection = props_to_fetch)
                 for pn in props_to_fetch:
                     p = self._properties[pn]
                     if rec.has_key(pn):
@@ -616,58 +731,72 @@ class WebObject(object):
                         except NotImplementedError:
                             continue
                 succ_db = True
-            else:
-                emf_logger.critical("record with key:{0} was not found!".format(key))
+            except Exception as e:
                 if not ignore_non_existent:
                     raise IndexError("DB record does not exist")
+                emf_logger.critical("Error occured while updating from db: {}".format(e))
                 succ_db = False
-        if self._use_gridfs:
-            fs = self._files
-            file_key = self.file_key_dict()
-            if add_to_fs_query is not None:
-                file_key.update(add_to_fs_query)
-            emf_logger.debug("add_to_fs_query: {0}".format(add_to_fs_query))
-            emf_logger.debug("file_key: {0}".format(file_key))
-            if fs.exists(file_key):
-                coll = self._file_collection
-                fid = coll.find_one(file_key)['_id']
-                #emf_logger.debug("col={0}".format(coll))
-                #emf_logger.debug("rec={0}".format(coll.find_one(file_key)))
-                try: 
-                    d = loads(fs.get(fid).read())
-                except ValueError as e:
-                    raise ValueError("Wrong format in database! : {0}".format(e))
-                #emf_logger.debug("type(d)={0}".format(type(d)))                                
-                #emf_logger.debug("d.keys()={0}".format(d.keys()))                
+        if self._use_gridfs and update_from_fs:
+            try:
+                d, m = self.get_file(add_to_fs_query)
+                self._file_record_length = m['length']
                 for p in self._fs_properties:
                     #emf_logger.debug("p={0}, update:{1}".format(p,p.include_in_update))
                     #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                     if p.include_in_update and d.has_key(p.name):
+                        #emf_logger.debug("d[{0}]={1}".format(p.name,type(d.get(p.name))))
                         p.has_been_set(False)
                         p.set_from_fs(d[p.name])
+                    if p.include_in_update and m.has_key(p.name):
+                        #emf_logger.debug("d[{0}]={1}".format(p.name,type(m.get(p.name))))
+                        p.has_been_set(False)
+                        p.set_from_fs(m[p.name])
                 succ_fs = True
-            else:
+                emf_logger.debug("loaded from fs")
+            except IndexError as e:
+                emf_logger.debug(e)
                 if not ignore_non_existent:
-                    raise IndexError("File does not exist")
+                    raise IndexError(e)
                 succ_fs = False
         if succ_db: self._has_updated_from_db = True
         if succ_fs: self._has_updated_from_fs = True
 
+    def properties_as_dict(self):
+        r"""
+          Return all WebProperties of ```self``` in a dict.
+        """
+        return self._properties.as_dict()
+
     @classmethod
-    def find(cls, query):
+    def find(cls, query={}, projection = None, sort=[], gridfs_only=False):
         r'''
           Search the database using ```query``` and return
           an iterator over the set of matching objects of this WebObject
         '''
-        coll = cls.connect_to_db(cls._collection_name)
-        if float(pymongo.version_tuple[0])>=3:
-            for s in coll.find(query, projection = cls._key):
-                s.pop('_id')
-                yield cls(**s)
+        if gridfs_only: # stupid hack, should be a property of the class or standard that way
+            coll = cls.connect_to_db(cls._collection_name).files
         else:
-            for s in coll.find(query, fields = cls._key):
-                s.pop('_id')
-                yield cls(**s)                
+            coll = cls.connect_to_db(cls._collection_name)
+        for s in coll.find(query, sort=sort, projection=projection):
+            s.pop('_id')
+            try:
+                k = {key:s[key] for key in cls._key}
+                o = cls(update_from_db=False, init_dynamic_properties=False, **k)
+                o.update_db_properties_from_dict(s)
+                yield o
+            except KeyError as e:
+                emf_logger.critical("Malformed data in the database {}, {}".format(e,s))
+                continue
+
+    @classmethod
+    def count(cls, query={}):
+        r'''
+          Search the database using ```query``` and return
+          the number of results
+        '''
+        coll = cls.connect_to_db(cls._collection_name)
+        return coll.find(query).count()
+    
     def __repr__(self):
         return "WebObject"
 
@@ -697,10 +826,10 @@ class WebObjectTest(WebObject):
 
 
 class WebDate(WebProperty):
-    _default_value = datetime.datetime(1970, 1, 1, 0, 0)
+    _default_value = datetime.now()
 
     def __init__(self, name, value=None, save_to_fs=False, save_to_db=True, **kwargs):
-        date_fn = lambda t: datetime.datetime(t.year,t.month,t.day,t.hour,t.minute)
+        date_fn = lambda t: datetime(t.year, t.month, t.day, t.hour, t.minute, t.second)
         super(WebDate, self).__init__(name, value, date_fn, date_fn, save_to_fs=save_to_fs, save_to_db=save_to_db, **kwargs)
     
     
@@ -810,21 +939,15 @@ class WebNumberField(WebDict):
         r"""
         We store the LMFDB label of the absolute field in the db.
         """
-        if self._db_value_has_been_set and not self._db_value is None:
-            return self._db_value
-        
+
         K = self._value
         if hasattr(K, "lmfdb_label"):
             return K.lmfdb_label
         
-        if K.absolute_degree() == 1:
-            p = 'x'
+        if self._db_value_has_been_set and not self._db_value is None:
+            return self._db_value
         else:
-            p = K.absolute_polynomial()
-
-        l = poly_to_field_label(p)
-        
-        return l
+            return ''
 
     def from_db(self, k):
         return k
@@ -832,21 +955,37 @@ class WebNumberField(WebDict):
     def extend_from_db(self):
         setattr(self._value, "lmfdb_label", self._db_value)
         if not self._db_value is None and self._db_value != '':
+            label = self._db_value
+            setattr(self._value, "lmfdb_pretty", field_pretty(label))
+        else:
+            if self._value == QQ:
+                label = '1.1.1.1'
+                setattr(self._value, "lmfdb_pretty", field_pretty(label))
+                setattr(self._value, "lmfdb_label", label)
+            else:
+                emf_logger.critical("could not set lmfdb_pretty for the label")
+                label = ''
+        if label != '':
             try:
-                url =  url_for("number_fields.by_label", label=self._db_value)
+                url =  url_for("number_fields.by_label", label=label)
+                setattr(self._value, "lmfdb_url", url)
             except RuntimeError:
                 emf_logger.critical("could not set url for the label")
-                url = ''
-            setattr(self._value, "lmfdb_url",url)
-            setattr(self._value, "lmfdb_pretty", field_pretty(self._db_value))
-        else:
-            setattr(self._value, "lmfdb_pretty", web_latex_split_on_pm(self._value.absolute_polynomial()))
-
+            
     def set_extended_properties(self):
         if self._has_been_set:
-            setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
-            setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
-
+            try:
+                if hasattr(self._value,'absolute_polynomial'):
+                    setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
+                else:
+                    setattr(self._value, "absolute_polynomial_latex",'')
+                if hasattr(self._value,'relative_polynomial'):
+                    setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
+                else:
+                    setattr(self._value, "relative_polynomial_latex",'')
+            except AttributeError as e:
+                    emf_logger.debug(e)
+                    pass
 
 def web_latex_poly(pol, name='x', keepzeta=False):
     """

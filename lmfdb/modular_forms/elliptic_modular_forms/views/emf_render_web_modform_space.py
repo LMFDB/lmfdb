@@ -19,14 +19,14 @@ Routines for rendering webpages for holomorphic modular forms on GL(2,Q)
 AUTHOR: Fredrik Strömberg  <fredrik314@gmail.com>
 
 """
-from flask import render_template, url_for, send_file,flash
-from lmfdb.utils import to_dict 
+from flask import render_template, url_for, send_file,flash, redirect
+from lmfdb.utils import to_dict
+from lmfdb.base import getDBConnection
 from sage.all import uniq
+from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached, WebModFormSpace
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf_logger, emf, EMF_TOP
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
-###
-###
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, EMF_TOP, default_max_height
+
 
 def render_web_modform_space(level=None, weight=None, character=None, label=None, **kwds):
     r"""
@@ -41,7 +41,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     info['character'] = character
     try:
         info = set_info_for_modular_form_space(**info)
-    except RuntimeError as e:
+    except RuntimeError:
         errst = "The space {0}.{1}.{2} is not in the database!".format(level,weight,character)
         flash(errst,'error')
         info = {'error': ''}
@@ -49,7 +49,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     if info.has_key('error'):
         emf_logger.critical("error={0}".format(info['error']))
     if 'download' in kwds and 'error' not in kwds:
-        return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'])
+        return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'], add_etags=False)
     if 'dimension_newspace' in kwds and kwds['dimension_newspace'] == 1:
         # if there is only one orbit we list it
         emf_logger.debug("Dimension of newforms is one!")
@@ -59,7 +59,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
         info['title'] = "Newforms of weight %s for \(\Gamma_{0}(%s)\) with character \(\chi_{%s}(%s, \cdot)\)" % (weight, level, level, character)
     else:
         info['title'] = "Newforms of weight %s for \(\Gamma_{0}(%s)\)" % (weight, level)
-    bread = [(EMF_TOP, url_for('emf.render_elliptic_modular_forms'))]
+    bread = [(MF_TOP, url_for('mf.modular_form_main_page')), (EMF_TOP, url_for('emf.render_elliptic_modular_forms'))]
     bread.append(("Level %s" % level, url_for('emf.render_elliptic_modular_forms', level=level)))
     bread.append(
         ("Weight %s" % weight, url_for('emf.render_elliptic_modular_forms', level=level, weight=weight)))
@@ -67,6 +67,7 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
         ("Character \(\chi_{%s}(%s, \cdot)\)" % (level, character), url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=character)))
     # emf_logger.debug("friends={0}".format(friends))
     info['bread'] = bread
+    info['learnmore'] = [('History of modular forms', url_for('.holomorphic_mf_history'))]
     emf_logger.debug("info={0}".format(info))
     if info.has_key('space'):
         emf_logger.debug("space={0}".format(info['space']))        
@@ -74,8 +75,6 @@ def render_web_modform_space(level=None, weight=None, character=None, label=None
     if info.has_key('error'):
         emf_logger.debug("error={0}".format(info['error']))
     return render_template("emf_web_modform_space.html", **info)
-
-
 
     
 def set_info_for_modular_form_space(level=None, weight=None, character=None, label=None, **kwds):
@@ -92,28 +91,22 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         return info
     try:
         WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = character, update_from_db=True)
-        if not WMFS.has_updated():
-            stop = False
-            orbit = WMFS.character.character.galois_orbit()
-            while not stop:
-                if len(orbit) == 0:
-                    stop = True
-                    continue
-                c = orbit.pop()
-                if c.number() == WMFS.character.number:
-                    continue
-                print c.number()
-                WMFS_rep = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = c.number(), update_from_db=True)
-                if WMFS_rep.has_updated_from_db():
-                    stop = True
-                    info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character = c.number())
-                    info['wmfs_rep_number'] =  c.number()
-                    
         emf_logger.debug("Created WebModFormSpace %s"%WMFS)
-        if 'download' in info and 'tempfile' in info:
-            save(WNF,info['tempfile'])
-            info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
-            return info
+        if not WMFS.has_updated():
+            #get the representative we have in the db for this space (Galois conjugate)
+            #note that this does not use the web_object infrastructure at all right now
+            #which should be changed for sure!
+            dimension_table_name = WebModFormSpace._dimension_table_name
+            db_dim = getDBConnection()['modularforms2'][dimension_table_name]
+            rep = db_dim.find_one({'level': level, 'weight': weight, 'character_orbit': {'$in': [character]}})
+            if not rep is None and not rep['cchi'] == character: # don't link back to myself!
+                info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=rep['cchi'])
+                info['wmfs_rep_number'] =  rep['cchi']
+        # FIXME: the variable WNF is not defined above, so the code below cannot work (I don't think it is ever used)
+        # if 'download' in info and 'tempfile' in info:
+        #     save(WNF,info['tempfile'])
+        #     info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
+        #     return info
     except ValueError as e:
         emf_logger.debug(e)
         emf_logger.debug(e.message)
@@ -131,8 +124,28 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         #        F = 
         #        WMFS.hecke_orbits.append(F)
         info['space'] = WMFS
+        info['max_height'] = default_max_height
 #    info['old_decomposition'] = WMFS.oldspace_decomposition()
-
+    info['oldspace_decomposition']=''
+    try: 
+        emf_logger.debug("Oldspace = {0}".format(WMFS.oldspace_decomposition))
+        if WMFS.oldspace_decomposition != []:
+            emf_logger.debug("oldspace={0}".format(WMFS.oldspace_decomposition))
+            l = []
+            for t in WMFS.oldspace_decomposition:
+                emf_logger.debug("t={0}".format(t))
+                N,k,chi,mult,d = t
+                url = url_for('emf.render_elliptic_modular_forms', level=N, weight=k, character=chi)
+                if chi != 1:
+                    sname = "S^{{ new }}_{{ {k} }}(\\Gamma_0({N}),\\chi_{{ {N} }}({chi},\\cdot))".format(k=k,N=N,chi=chi)
+                else:
+                    sname = "S^{{ new }}_{{ {k} }}(\\Gamma_0({N}))".format(k=k,N=N)
+                l.append("\href{{ {url} }}{{ {sname} }}^{{\oplus {mult} }}".format(sname=sname,mult=mult,url=url))
+            if l != []:            
+                s = "\\oplus ".join(l)
+                info['oldspace_decomposition']=' $ {0} $'.format(s)
+    except Exception as e:
+        emf_logger.critical("Oldspace decomposition failed. Error:{0}".format(e))
     ## For side-bar
     lifts = list()
     lifts.append(('Half-Integral Weight Forms', '/ModularForm/Mp2/Q'))
@@ -149,6 +162,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     friends.append(("Dirichlet character \(" + WMFS.character.latex_name + "\)", WMFS.character.url()))
     friends = uniq(friends)
     info['friends'] = friends
+    info['code'] = WMFS.code
     
     return info
 

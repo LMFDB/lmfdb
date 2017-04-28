@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from lmfdb.utils import make_logger
 from flask import Blueprint
 
@@ -6,6 +8,6 @@ mwf = Blueprint(MWF, __name__, template_folder="views/templates", static_folder=
 mwf_logger = make_logger(mwf)
 
 import backend
+assert backend
 import views
-from backend import *
-from views import *
+assert views

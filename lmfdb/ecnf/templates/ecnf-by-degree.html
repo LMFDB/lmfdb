@@ -1,0 +1,42 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.error %}
+
+<p>
+{{ info.error }}
+</p>
+
+{% else %}
+
+<div>
+{{ info.degree_stats|safe }}
+</div>
+
+
+{% set ddat = info.dstats %}
+
+{% for s, sdat in info.stats[info.degree].iteritems() %}
+{% if sdat %}
+<h3><a href="{{url_for('ecnf.statistics_by_signature',d=info.degree,
+             r=s)}}">Signature {{s}}</a>:
+{{info.sig_stats[s]['ncurves']}} curves in
+{{info.sig_stats[s]['nclasses']}} isogeny classes, conductor norm &le;
+{{info.sig_stats[s]['maxnorm']}}
+ </h3>
+<table>
+<tr><th> Field <th> Number of curves <th> Number of isogeny classes <th> Maximum conductor norm </tr>
+{% for F in info.counts.fields_by_degree[info.degree] %}
+{% if F in sdat %}
+<tr><td> <a href="{{url_for('ecnf.show_ecnf1',nf=F)}}">{{F}}</a> <td> {{sdat[F].ncurves}} <td> {{sdat[F].nclasses}} <td> {{sdat[F].maxnorm}} </tr>
+{% endif %}
+{% endfor %}
+</table>
+
+{% endif %}
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}
+</html>

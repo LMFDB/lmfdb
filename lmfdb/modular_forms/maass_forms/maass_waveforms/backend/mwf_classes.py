@@ -1,5 +1,6 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from mwf_utils import *
+from mwf_utils import mwf_logger
+from sage.all import Gamma0, CC
 import bson
 
 
@@ -101,7 +102,7 @@ class WebMaassForm(object):
         if not isinstance(maassid, (bson.objectid.ObjectId, str)):
             ids = db.find_Maass_form_id(id=maassid)
             if len(ids) == 0:
-                return
+                raise KeyError("maassid %s not found in database"%maassid)
             mwf_logger.debug("maassid is not an objectid! {0}".format(maassid))
             maassid = ids[0]
         self._maassid = bson.objectid.ObjectId(maassid)
@@ -109,7 +110,7 @@ class WebMaassForm(object):
         ff = db.get_Maass_forms(id=self._maassid)
         # print "ff=",ff
         if len(ff) == 0:
-            return
+            raise KeyError("massid %s not found in database"%maassid)
         f = ff[0]
 
         # print "f here=",f
@@ -192,7 +193,7 @@ class WebMaassForm(object):
                         n2 = len(self.coeffs.get(j, {}).keys())
                         mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j, n2))
                         if n2 != nc:
-                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())=".format(nc, n2))
+                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())={1}".format(nc, n2))
 
         self.nc = 1  # len(self.coeffs.keys())
         if not self._get_dirichlet_c_only:
@@ -308,7 +309,7 @@ class WebMaassForm(object):
                         c = None
                         try:
                             c = self.coeffs[k][cusp].get(n, None)
-                        except KeyError, IndexError:
+                        except (KeyError, IndexError):
                             mwf_logger.critical(
                                 "Got coefficient in wrong format for id={0}".format(self._maassid))
                         # mwf_logger.debug("{0},{1}".format(k,c))
@@ -317,7 +318,7 @@ class WebMaassForm(object):
                             row.append(pretty_coeff(c))
                     else:
                         for j in range(self.dim):
-                            c = ((self.coeffs.get(j, {})).get(0, None)).get(n, None)
+                            c = ((self.coeffs.get(j, {})).get(0, {})).get(n, None)
                             if c is not None:
                                 row.append(pretty_coeff(c))
                                 realnumc += 1

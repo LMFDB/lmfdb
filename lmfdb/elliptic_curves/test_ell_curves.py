@@ -1,7 +1,5 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest
-import math
-import unittest2
 
 class EllCurveTest(LmfdbTest):
 
@@ -69,7 +67,7 @@ class EllCurveTest(LmfdbTest):
 
     def test_dl_all(self):
         L = self.tc.get('/EllipticCurve/Q/download_all/26.b2')
-        assert '[1, -1, 1, -3, 3]' in L.data
+        assert '["1", "-1", "1", "-3", "3"]' in L.data
 
     def test_sha(self):
         L = self.tc.get('EllipticCurve/Q/?start=0&conductor=&jinv=&rank=2&torsion=&torsion_structure=&sha=2-&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')

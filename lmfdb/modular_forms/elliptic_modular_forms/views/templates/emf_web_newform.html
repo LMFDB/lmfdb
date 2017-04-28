@@ -1,38 +1,52 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_util-functions.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('emf.static', filename='elliptic_modular_form_scripts.js') }}"></script>
 
 {% set KNOWL_ID = "mf.%s.%s.%s.%s"|format(level,weight,character,label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
 
 {% if error is defined %}
-   {{ error | safe }}
+   <h3>{{ error | safe }}</h3>
 {% else %}
+
+{% if character == 1 %}
+{{ place_code('newforms-triv-char') }}
+{% else %}
+{{ place_code('newforms-nontriv-char') }}
+{% endif %}
+{{ place_code('f')}}
 
 <div id="qexp">
 <!-- from emf_web_newform.html -->
   <h2> {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}</h2>
-  <div>
+<div>
+  {{ place_code('qexp')}}
+  {% if not hide_qexp %}
     <form>
         <div class="output">
           <span id="qexp_display">{{ qexp | safe }}</span>
         </div>
-	<div class="output">{{ polynomial_st | safe }}
-	</div>
-	<div class="emptyspace"><br>
+    <div class="output">{{ polynomial_st | safe }}
+    </div>
+    <div class="emptyspace"><br>
         </div>
         <button id="morebutton">Show more coefficients</button>
         <small>(To download coefficients, see below.)</small>
     </form>
+    {% else %}
+    <p>The Fourier coefficients of this newform are large.
+    They are available for download below.<br>
+    The first non-zero Fourier coefficient $a(n)$ with $n>1$ is $a({{ index_nv }})$ and has trace ${{ trace_nv }}$ and norm ${{ norm_nv }}$.
+    </p>
+    {% endif %}
 </div>
 </div>
 <br>
 
 <h3>Coefficient field</h3>
 <div>
+  <div>{{ place_code('coefficient_field') }}</div>
 <!-- from emf_web_newform.html -->
 The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is 
 {% if is_rational ==1 %}
@@ -44,9 +58,12 @@ The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is
     {% else %}
         $\Q({{ polvars['coefficient_field']}})$
     {% endif %}
-    where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} {{coeff_field[0] | safe}} over $\Q$. 
+where $ {{ polvars['coefficient_field']}} $ has {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}}
+<div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[0] | safe}}</div> over $\Q$.
+    {{place_code('absolute_polynomial')}}
     {% if coeff_field|length >2 and coeff_field[2]>2 %}
-    <br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is {{coeff_field[1]}}.
+<br/>The {{ KNOWL('nf.minimal_polynomial',title='minimal polynomial')}} of $\alpha$ over $\Q(\zeta_{ {{coeff_field[2]}} })$ is <div style='overflow-x:auto; overflow-y:hidden'>{{coeff_field[1] | safe}}.</div>
+     {{ place_code('relative_polynomial') }}
     {% endif %}
 {% endif %}
 </div>
@@ -57,12 +74,12 @@ The {{ KNOWL('mf.elliptic.coefficient_field',title='coefficient field')}} is
 <h3>{{ KNOWL('mf.elliptic.embeddings',title='Embeddings')}}</h3>
 It is possible to embed the Fourier coefficients in the \(q\)-expansion above
 in the field of complex numbers. The different embeddings of the first few Fourier coefficients
-that preserve the character are shown in the table below.
+are shown in the table below. Note that these include embeddings that do not preserve the character.
 
 <table class="ntdata">
 <thead>
   <tr><th>\(n\)</th>
-    {% for n in range(1,4) %}
+    {% for n in range(2,6) %}
     <th>{{n}}</th>
     {% endfor %}
   </tr>
@@ -73,9 +90,9 @@ that preserve the character are shown in the table below.
     <th style="border-right:solid black 1px">
       \( v_{ {{h}} }(a(n)) \)
     </th>
-    {% for n in range(1,4) %}
+    {% for n in range(2,6) %}
     <td style="white-space:nowrap;" align=right>
-      \({{ embeddings[n][h] |replace("*I", "i")}}\)
+      {{ embeddings[n][h] |replace("*I", "i")}}
     </td>
     {% endfor %}
   </tr>
@@ -215,7 +232,7 @@ that preserve the character are shown in the table below.
   </ul>
 </div>
   {% endif %}
-<h2>Download {{KNOWL('mf.elliptic.fouriercoefficients',title='Fourier coefficients')}} </h2>
+<h2>Download this Newform </h2>
 
 The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1 }} \).
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
@@ -223,16 +240,23 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1
 <input type="hidden" name="max_num" value="{{max_cn - 1}}"/>
 
 <table>
-<tr><td rowspan=4>Choose format to download:</td>
-<td>
-      <label><input type=radio name="format" checked
-    value="q_expansion" onclick="return selectCFormat(event)">
-    text file of the q-expansion</label>
-</td>
+  <tr><td rowspan=5>Choose format to download:</td>
+  <td>
+    <label><input type=radio name="format" value="sage" checked
+    onclick="return selectCFormat(event)">
+    .sage file (contains more information)</label>
+  </td>
+</tr>
+<tr>
+    <td>
+    <label><input type=radio name="format" value="sobj"
+    onclick="return selectCFormat(event)">
+    .sobj file for sage (only coefficients)</label>
+  </td>
 </tr>
 <tr>
 <td>
-      <label><input type=radio name="format" checked
+      <label><input type=radio name="format" 
     value="coefficients" onclick="return selectCFormat(event)">
     text file of the algebraic coefficients in a table</label>
 </td>
@@ -247,17 +271,17 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1
 </tr>
 <tr>
 <td>
-    <label><input type=radio name="format" value="sage"
-    onclick="return selectCFormat(event)">
-    sage object (representing a list of algebraic numbers) </label>
+      <label><input type=radio name="format" 
+    value="q_expansion" onclick="return selectCFormat(event)">
+    text file of the q-expansion</label>
 </td>
 </tr>
 <tr>
 <td>  Download coefficients of&nbsp;\(q^n\)&nbsp;for&nbsp;\(0\le n\le \)</td>
 <td>
   {% set examplemax = 100 %}
-  {% if max_cn - 1 < 100 %}
-    {% set examplemax = max_cn - 1 %}
+  {% if max_cn  < 100 %}
+    {% set examplemax = max_cn-1 %}
   {% endif %}
   <input type="text" size="10" name="number" example = {{examplemax}} > (maximum {{ max_cn - 1 }})
   <br><span class=" " id="num_error"></span>
@@ -270,36 +294,14 @@ The database contains the coefficients of \(q^n\) for \(0 \le n\le {{ max_cn - 1
   </div>
   </form>
 
-{#
-<h2>Download this newform as {{KNOWL('sage',title='Sage')}} Object</h2>
-<form name="download_object_form" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
-  <input type="hidden" name="download" value="object">
-  <input type="hidden" name="level" value="{{level }}">
-  <input type="hidden" name="character" value="{{character }}">
-  <input type="hidden" name="weight" value="{{weight }}">
-  <input type="hidden" name="label" value="{{label }}">
-  <input type="submit" name="Submit" value="Download" Onclick="document.download.submit()">
-</form>
-<div class="formexample"> 
-<!--  Note: In order to use this data file you currently need to download
-  and import the entire lmfdb from:  
-<a href="https://github.com/LMFDB/lmfdb">lmfdb at github</a>. -->
-<form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
-  Note: In order to use this data file you currently need to download
-  <input type="hidden" name="download" value="file">
-  <input type="hidden" name="download_file" value="web_modforms.py">
-  <a href="javascript:void(0);"
-  OnClick="document.download_file.submit()">web_modforms.py</a>
- </form>
-#}
 </div>
 {% endif %}
 </div>
-{% endif %}
 
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% include 'emf_web_newform_post_load_scripts.html' %}
+{% endif %}
 
 
 {% endblock %}

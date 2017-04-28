@@ -2,8 +2,10 @@
 # copyright: harald schilly <harald.schilly@gmail.com>
 # license: Apache 2.0
 
+import pymongo
 import random
-from math import floor, ceil
+import sys
+from math import floor
 from lmfdb import base
 
 conn = base.getDBConnection()
@@ -54,7 +56,6 @@ test.insert({'val': [5.5232, 1.212121, 9.919191, 11.1111]})
 #    return int(round(x, val) * 10**val)
 
 def significant(x, n):
-    import math
     return int(floor(x * 10 ** n))
 
 
@@ -69,7 +70,6 @@ for e in test.find({'val': {'$exists': True}}):
 if False:
     for e in test.find({'val': {'$exists': True}}, limit=10):
         print e['search']
-    import sys
     sys.exit()
 
 query = test.find_one({'val': {'$exists': True}})['search']['3'][0:2]

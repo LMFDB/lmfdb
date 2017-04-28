@@ -1,7 +1,7 @@
 prompt:
-  sage:   'sage:'
-  pari:   'gp:'
-  magma:  'magma:'
+  sage:   'sage'
+  pari:   'gp'
+  magma:  'magma'
 
 logo:
   sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
@@ -46,7 +46,7 @@ cond:
   magma: Conductor(E);
 
 disc:
-  sage:  E.dicriminant().factor()
+  sage:  E.discriminant().factor()
   pari:  E.disc
   magma: Discriminant(E);
 
@@ -70,21 +70,21 @@ real_period:
 
 cp:
   sage:  E.tamagawa_numbers()
-  pari:  E.omega[1]
-  magma: RealPeriod(E);
+  pari:  gr=ellglobalred(E); [[gr[4][i,1],gr[5][i][4]] | i<-[1..#gr[4][,1]]]
+  magma: TamagawaNumbers(E);
 
 
 ntors:
   sage:  E.torsion_order()
   pari:  elltors(E)[1]
-  magma: OrderTorsionSubgroup(E);
+  magma: Order(TorsionSubgroup(E));
 
 sha:
   sage:  E.sha().an_numerical()
   magma: MordellWeilShaInformation(E);
 
 qexp:
-  sage:  E.q_eigenform(10)
+  sage:  E.q_eigenform(20)
   pari:  |
     xy = elltaniyama(E);
     deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)
@@ -121,5 +121,5 @@ galrep:
 
 padicreg:
   sage: |
-    [E.padic_regulator(p) for p in primes(3,20)]
+    [E.padic_regulator(p) for p in primes(3,20) if E.conductor().valuation(p)<2]
 

@@ -1,4 +1,3 @@
----
 1intro:
    type: simple
    heading:
@@ -9,16 +8,12 @@
       url_for: "introduction"
     - title: Features
       url_for: "introduction_features"
-    - title: Tutorial
-      url_for: "introduction_tutorial"
-    - title: Map
-      url_for: "bigpicture"
-    - title: Contact
-      url_for: "contact"
-    - title: Citation
-      url_for: "citation"
+    - title: Universe
+      url_for: "universe"
     - title: Future Plans
       url_for: "roadmap"
+    - title: News
+      url_for: "news"
 
 2L-functions:
    type: L
@@ -45,7 +40,6 @@
           url_for: "l_functions.l_function_degree_page"
           url_args:
             degree: 'degree4'
-          status: beta
         - title: "5+"
           status: future
    secondpart:
@@ -88,6 +82,10 @@
          - title: Noncongruence
            status: future
            colspan: onecolumn
+         - title: mod &#8467; 
+           url_for: "modlmf.modlmf_render_webpage"
+           status: future
+           colspan: onecolumn
      - title: GL(3)
        style: rotate
        part2:
@@ -102,7 +100,7 @@
        style: rotate
        part2:
          - title: Siegel
-           url_for: "ModularForm_GSp4_Q_top_level"
+           url_for: "smf.index"
          - title: U(2,1)
            status: future
          - title: Other
@@ -144,8 +142,13 @@
            status: future
          - title: Belyi
            status: future
-         - title: Higher genus
-           status: future
+         - title: "Higher genus:"
+           status: beta
+           part3:
+             - title: Families
+               url_for:  "higher_genus_w_automorphisms.index"
+               status: beta
+               colspan: onecolumn
            colspan: onecolumn
      - title: 2-d
        style: rotate
@@ -166,6 +169,17 @@
            colspan: onecolumn 
          - title: Higher
            status: future
+     - title: ""
+       style: rotate
+       status: beta_rotated
+       part2:
+         - title: "Abelian Varieties:"
+           status: beta
+           part3:
+              - title: $/\F_{q}$
+                url_for: "abvarfq.abelian_varieties"
+                status: beta
+                colspan: onecolumn 
 
 5Fields:
    type: simple
@@ -199,10 +213,13 @@
            url_for:  "characters.render_Heckewebpage"
            status: beta
       colspan: onecolumn
-    - title: Artin
-      url_for: "artin_representations.index"
-    - title: Galois
+    - title: "Galois:"
       status: future
+      part2:
+         - title: Artin
+           url_for: "artin_representations.index"
+         - title: mod &#8467;
+           status: future
       colspan: onecolumn
     - title: Weil-Deligne
       status: future
@@ -243,11 +260,10 @@
       url_for: "galois_groups.index"
       colspan: onecolumn
     - title: Sato-Tate groups
-      status: future
+      url_for: "st.index"
       colspan: onecolumn
     - title: Lattices
       url_for: "lattice.lattice_render_webpage"
-      status: beta
     - title: Subgroups of
       part2:
          - title: $\SL(2)$

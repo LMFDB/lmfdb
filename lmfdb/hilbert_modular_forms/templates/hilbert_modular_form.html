@@ -6,7 +6,8 @@
  {{ KNOWL('nf.generator', 'Generator') }} \({{
  info.field.generator_name() }}\), with {{
  KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
- \({{info.field_poly}}\); {{ KNOWL('nf.class_number', 'class number')
+ \({{info.field_poly}}\); {{ KNOWL('nf.narrow_class_number', 'narrow class number')
+ }} \({{info.hmf_field.narrow_class_no}}\) and {{ KNOWL('nf.class_number', 'class number')
  }} \({{info.field.class_number()}}\).
 </p>
 
@@ -17,7 +18,7 @@
 <table>
 <tr><td>{{ KNOWL('mf.hilbert.weight_vector', title='Weight') }}<td> {{ info.weight }} </tr>
 <tr><td> {{ KNOWL('mf.hilbert.level_norm', title='Level') }}<td> ${{ info.level_ideal }}$ </tr>
-<tr><td> Label<td> ${{ info.label_suffix }}$ </tr>
+<tr><td> Label<td> {{ info.label }} </tr>
 <tr><td> {{ KNOWL('mf.hilbert.dimension', title='Dimension') }}<td> {{ info.dimension }} </tr>
 <tr><td> Is {{ KNOWL('mf.cm', title='CM') }}<td> {{ info.is_CM }} </tr>
 <tr><td> Is {{ KNOWL('mf.base_change', title='base change') }}<td> {{ info.is_base_change }} </tr>
@@ -34,17 +35,27 @@
   <h2>  Hecke eigenvalues ({{ KNOWL('mf.hilbert.q_expansion', title='$q$-expansion') }}) </h2>
 
 {% if info.dimension > 1 %}
-<p>
-<table>
-<tr><td> $e$ is a root of the defining polynomial <td> ${{ info.hecke_polynomial }}$ </tr>
-</table>
-</p>
-{% endif %}
+<div>The Hecke eigenvalue field is $\Q(e)$ where $e$ is a root of the defining polynomial:</div> 
+<div style='overflow-x:auto; overflow-y:hidden'>${{ info.hecke_polynomial }}$ </div>
 
-<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Print full eigenvalues</a>
+<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Show full eigenvalues</a>
 &nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>
 
-<table class="ntdata" cellpadding=5>
+{% else %}
+<div>The Hecke eigenvalue field is $\Q$</a>.</div>
+
+{% endif %}
+
+<style type="text/css">
+div.scrollable {
+    height: 100%;
+    width: 100%;
+    margin: 10;
+    padding: 10;
+}
+</style>
+
+<table class="ntdata" cellpadding=3 style="table-layout:fixed">
 <tr>
 <th>Norm</th>
 <th>{{ KNOWL('nf.ideal.label.hmf', title='Prime') }} </th>
@@ -54,7 +65,7 @@
 <tr>
 <td>{{entry.prime_norm}}</td>
 <td>${{entry.prime_ideal}}$</td>
-<td align=right>${{entry.eigenvalue}}$</td>
+<td>${{entry.eigenvalue}}$</td>
 </tr>
 {% endfor %}
 </table>
@@ -72,7 +83,7 @@
 </table>
 </form>
 
-  <h2>  Atkin-Lehner eigenvalues  </h2>
+<h2>  Atkin-Lehner eigenvalues  </h2>
 
 {% if info.AL_eigs_count %} 
 <p>

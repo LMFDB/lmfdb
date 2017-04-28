@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # HeckeCharacters.py
 
-from sage.all import *
+from sage.all import gp, xmrange, Integer, pari, gcd, LCM, prod
+from sage.misc.cachefunc import cached_method
 from sage.groups.abelian_gps.abelian_group import AbelianGroup_class
 from sage.groups.abelian_gps.abelian_group_element import AbelianGroupElement
-from sage.groups.abelian_gps.dual_abelian_group import DualAbelianGroup_class, DualAbelianGroupElement
 from sage.groups.abelian_gps.dual_abelian_group import DualAbelianGroup_class, DualAbelianGroupElement
 
 class RayClassGroup(AbelianGroup_class):
@@ -17,7 +17,7 @@ class RayClassGroup(AbelianGroup_class):
         # Use PARI to compute ray class group
         bnr = bnf.bnrinit([mod_ideal, mod_archimedean],1)
         invariants = bnr[5][2]         # bnr.clgp.cyc
-        invariants = tuple([ ZZ(x) for x in invariants ])
+        invariants = tuple([ Integer(x) for x in invariants ])
         names = tuple([ "I%i"%i for i in range(len(invariants)) ])
         generators = bnr[5][3]         # bnr.gen = bnr.clgp[3]
         generators = [ number_field.ideal(pari(x)) for x in generators ]
@@ -36,7 +36,7 @@ class RayClassGroup(AbelianGroup_class):
     def log(self,I):
         # Use PARI to compute class of given ideal
         g = self.__bnr.bnrisprincipal(I, flag = 0)
-        g = [ ZZ(x) for x in g ]
+        g = [ Integer(x) for x in g ]
         return g
 
     def number_field(self):
@@ -89,7 +89,6 @@ class HeckeCharGroup(DualAbelianGroup_class):
         names = tuple([ "chi%i"%i for i in range(ray_class_group.ngens()) ])
         if base_ring is None:
             from sage.rings.number_field.number_field import CyclotomicField
-            from sage.rings.arith import LCM
             base_ring = CyclotomicField(LCM(ray_class_group.gens_orders()))
         DualAbelianGroup_class.__init__(self, ray_class_group, names, base_ring)
         """ ray_class_group accessible as self.group() """

@@ -1,0 +1,149 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+
+<h2>Invariants</h2>
+
+<p>
+<table>
+    <tr><td>Base field:</td>&nbsp;&nbsp;<td>${{cl.field()}}$</td></tr>
+    <tr><td>Dimension:</td>&nbsp;&nbsp;<td>${{cl.g}}$</td></tr>
+    <tr><td>Weil polynomial:</td>&nbsp;&nbsp;<td>${{cl.formatted_polynomial}}$</td></tr>
+    <tr><td>Frobenius angles:</td>&nbsp;&nbsp;<td>${{cl.frob_angles()}}$</td></tr>
+    <tr><td>Angle rank:</td>&nbsp;&nbsp;<td>${{cl.angle_ranks}}$</td></tr>
+    {% if cl.is_simple() %}
+    <tr><td>Number field:</td>&nbsp;&nbsp;<td>{{cl.display_number_field()|safe}}</td></tr>
+    <tr><td>Galois group:</td>&nbsp;&nbsp;<td>{{cl.display_galois_group()|safe}}</td></tr>
+    {% endif %}
+</table>
+</p>
+
+<p>
+{% if cl.is_simple() %}
+This isogeny class is simple.</br>
+{% endif %}
+
+<!--
+ {% if cl.known_jacobian == "1" %}
+ This isogeny class contains a Jacobian.
+ {% else %}
+ {% if cl.known_jacobian == "-1" %}
+ This isogeny class does not contain a Jacobian.
+ {% if cl.principally_polarizable == "1" %}
+ This isogeny class is principally polarizable.
+ {% else %}
+ {% if cl.principally_polarizable == "-1" %}
+ This isogeny class is not principally polarizable.
+ {% else %}
+ It is unknown whether this isogeny class is principally polarizable.
+ {% endif %}
+ {% endif %}
+ {% else %}
+ It is unknown whether this isogeny class contains a Jacobian.
+ {% if cl.principally_polarizable == "1" %}
+ This isogeny class is principally polarizable.
+ {% else %}
+ {% if cl.principally_polarizable == "-1" %}
+ This isogeny class is not principally polarizable.
+ {% else %}
+ It is unknown whether this isogeny class is principally polarizable.
+ {% endif %}
+ {% endif %}
+ {% endif %}
+ {% endif %}
+ -->
+</p>
+
+<p><h2>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</h2>
+
+{% if cl.is_ordinary() %}
+This isogeny class is ordinary.
+{% endif %}
+{% if cl.is_supersingular() %}
+This isogeny class is supersingular.
+{% endif %}
+
+<table>
+    <tr><td>$p$-rank:<td>&nbsp;&nbsp;<td>${{cl.p_rank}}$</tr>
+    <tr><td>Slopes:<td>&nbsp;&nbsp;<td>${{cl.display_slopes()}}$</tr>
+</table>
+</p>
+
+
+
+<p><h2>Point counts</h2></p>
+
+<p>
+{% if cl.principally_polarizable == 1 %}
+{% if cl.known_jacobian == 1 %}
+This isogeny class contains a Jacobian.
+{% elif cl.known_jacobian == -1 %}
+This isogeny class is principally polarizable but does not contain a Jacobian.
+{% else %}
+This isogeny class is principally polarizable, but it is unknown whether it contains a Jacobian.
+{% endif %}
+{% elif cl.principally_polarizable == -1 %}
+This isogeny class is not principally polarizable.
+{% endif %}
+</p>
+
+<p>{{ KNOWL('ag.fq.point_count',title="Point counts of the abelian variety") }}:
+
+<table class = "ntdata">
+    <tr><td>$r$</td>
+        {% for r in range(1, cl.length_A_counts()+1) %}
+        <td class="center"> {{ r }} </td>
+        {% endfor %}
+    </tr>
+    <tr><td>$A(\F_{q^r})$</td>
+        {% for count in cl.A_counts %}
+        <td> {{ count }} </td>
+        {% endfor %}
+    </tr>
+</table>
+</p>
+
+<p>
+{% if cl.known_jacobian == 1 %}
+{{ KNOWL('av.fq.curve_point_count',title="Point counts of the curve") }}
+{% else %}
+{{ KNOWL('av.fq.curve_point_count',title="Point counts of the (virtual) curve") }}
+{% endif %}
+
+<table class = "ntdata">
+    <tr><td>$r$</td>
+        {% for r in range(1, cl.length_C_counts()+1) %}
+        <td class="center"> {{ r }} </td>
+        {% endfor %}
+    </tr>
+    <tr><td>$C(\F_{q^r})$</td>
+        {% for count in cl.C_counts %}
+        <td>{{ count }}</td>
+        {% endfor %}
+    </tr>
+</table>
+
+</p>
+
+<p><h2>{{ KNOWL('av.decomposition',title="Decomposition") }}</h2>
+
+{% if cl.is_simple() %}
+This is a simple isogeny class.
+{% else %}
+<blockquote>
+    {{cl.decompositioninfo|safe}}
+</blockquote>
+{% endif %}
+</p>
+
+<p><h2>Base change</h2>
+
+{% if cl.is_primitive() %}
+This is a primitive isogeny class.
+{% else %}
+This isogeny class is not primitive.  It is a base change from the following isogeny classes over subfields of ${{cl.field()}}$.
+{{cl.basechangeinfo|safe}}
+{% endif %}
+
+{% endblock %}

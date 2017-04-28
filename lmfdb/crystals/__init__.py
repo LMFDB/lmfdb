@@ -12,5 +12,6 @@ def body_class():
     return {'body_class': 'Crystals'}
 
 import main
+assert main # silence pyflakes
 
 app.register_blueprint(crystals_page, url_prefix="/Crystals")

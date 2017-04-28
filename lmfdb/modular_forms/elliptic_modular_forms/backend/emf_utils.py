@@ -20,54 +20,71 @@ AUTHOR: Fredrik Strömberg
 
 """
 import random
-import sage.plot.plot
-from flask import jsonify
-from lmfdb.utils import *
-from lmfdb.modular_forms.elliptic_modular_forms import EMF, emf, emf_logger, default_prec
+from sage.all import AlphabeticStrings, gcd, Mod
+from flask import jsonify, flash, Markup
+from lmfdb.utils import web_latex, ajax_url
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf_version
 logger = emf_logger
-from sage.all import dimension_new_cusp_forms, vector, dimension_modular_forms, dimension_cusp_forms, is_odd, loads, dumps, Gamma0, Gamma1, Gamma,QQ,Matrix
+from sage.all import vector, QQ, Matrix, cached_method
 from sage.misc.cachefunc import cached_function 
-from lmfdb.modular_forms.backend.mf_utils import my_get
 from plot_dom import draw_fundamental_domain
 import lmfdb.base
-from bson.binary import *
-from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
-from lmfdb.utils import web_latex_split_on_re, web_latex_split_on_pm
-
+import re
+from lmfdb.search_parsing import parse_range
 try:
-    from dirichlet_conrey import *
+    from dirichlet_conrey import DirichletGroup, DirichletGroup_conrey, DirichletCharacter_conrey
 except:
     emf_logger.critical("Could not import dirichlet_conrey!")
 
 def newform_label(level, weight, character, label, embedding=None, make_cache_label=False):
+    r"""
+    Uses the label format {level}.{weight}.{character number}.{orbit label}.{embedding}
+    """
     l = ''
     if make_cache_label:
         l = 'emf.'
     if embedding is None:
-        l += "{0}.{1}.{2}{3}".format(level, weight, character, label)
+        l += "{0}.{1}.{2}.{3}".format(level, weight, character, label)
     else:
-        l += "{0}.{1}.{2}{3}.{4}".format(level, weight, character, label, embedding)
+        l += "{0}.{1}.{2}.{3}.{4}".format(level, weight, character, label, embedding)
     return l
 
 def parse_newform_label(label):
     r"""
-    Essentially the inverse of the above. Given "N.k.ix" it returns N,k,i,x
-    or given "N.k.ix.d" return N,k,i,x,d
+    Essentially the inverse of the above with addition that we also parse the previous label format 
+    (without dot between character and label.
+    
+    Given "N.k.i.x" or "N.k.ix" it returns N,k,i,x
+    or given "N.k.i.x.d" or "N.k.ix.d" return N,k,i,x,d
+
     """
     if not isinstance(label,basestring):
         raise ValueError,"Need label in string format"
     l = label.split(".")
-    if len(l) not in [3,4]:
+    ## l[0] = label, l[1] = weight, l[2]="{character}{label}" or {character}
+    ## l[3] = {label} or {embedding}, l[4] is either non-existing or {embedding}
+    if len(l) not in [3,4,5]:
         raise ValueError,"{0} is not a valid newform label!".format(label)
     if not l[0].isdigit() or not l[1].isdigit():
         raise ValueError,"{0} is not a valid newform label!".format(label)
-    level = int(l[0]); weight = int(l[1])
-    character = "".join([x for x in l[2] if x.isdigit()])
-    orbit_label = "".join([x for x in l[2] if x.isalpha()])
-    if orbit_label == "" or not character.isdigit():
+    level = int(l[0]); weight = int(l[1]); orbit_label = ""
+    emb = None
+    try:
+        if len(l) >= 3 and not l[2].isdigit(): # we have N.k.ix or 
+            character = "".join([x for x in l[2] if x.isdigit()])
+            orbit_label = "".join([x for x in l[2] if x.isalpha()])
+            if len(l)==4:
+                emb = int(l[3])
+        elif len(l) >= 4: # we have N.k.i.x or N.k.i.x.j 
+            character = int(l[2])
+            orbit_label = l[3]
+            if len(l)==5:
+                emb = int(l[4])
+        if orbit_label == "" or not orbit_label.isalpha():
+            raise ValueError
+    except (ValueError,IndexError):
         raise ValueError,"{0} is not a valid newform label!".format(label)
-    if len(l)==4:
-        emb = int(l[3])
+    if not emb is None:
         return level,weight,int(character),orbit_label,emb
     else:
         return level,weight,int(character),orbit_label
@@ -82,44 +99,83 @@ def parse_space_label(label):
     if not isinstance(label,basestring):
         raise ValueError,"Need label in string format"    
     l = label.split(".")
-    level = int(l[0]); weight = int(l[1]); character = int(l[2])
-    return level,weight,character
+    try:
+        if len(l) ==3:
+            level = int(l[0]); weight = int(l[1]); character = int(l[2])
+            return level,weight,character
+        else:
+            raise ValueError
+    except ValueError:
+        raise ValueError,"{0} is not a valid space label!".format(label)
 
-def parse_range(arg, parse_singleton=int):
-    # TODO: graceful errors
-    if type(arg) == parse_singleton:
-        return arg
-    if ',' in arg:
-        return [parse_range(a) for a in arg.split(',')]
-    elif '-' in arg[1:]:
-        ix = arg.index('-', 1)
-        start, end = arg[:ix], arg[ix + 1:]
-        q = {}
-        if start:
-            q['min'] = parse_singleton(start)
-        if end:
-            q['max'] = parse_singleton(end)
-        return q
-    else:
-        return parse_singleton(arg)
+@cached_function
+def orbit_index_from_label(label):
+    r"""
+    Inverse of the above
+    """
+    res = 0
+    A = AlphabeticStrings()
+    x = A.gens()
+    label = str(label)
+    l = list(label)
+    
+    su = A(l.pop().upper())
+    res = x.index(su)
+    l.reverse()
+    i = 1
+    for s in l:
+        su = A(s.upper())
+        res+=(1+x.index(su))*26**i
+        i+=1
+    return res
+
+@cached_method
+def is_newform_in_db(newform_label):
+    from .web_newforms import WebNewForm
+    # first check that it is a valid label, otherwise raise ValueError
+    t = parse_newform_label(newform_label)
+    if len(t)==4:
+       level,weight,character,label = t
+    elif len(t)==5:
+        level,weight,character,label,emb = t
+    search = {'level':level,'weight':weight,'character':character,'label':label,'version':float(emf_version)}
+    return WebNewForm._find_document_in_db_collection(search).count() > 0
+
+@cached_method
+def is_modformspace_in_db(space_label):
+    from web_modform_space import WebModFormSpace
+    # first check that we clled with a valid label, otherwise raise ValueError
+    level,weight,character = parse_space_label(space_label)
+    search = {'level':level,'weight':weight,'character':character,'version':float(emf_version)}
+    return WebModFormSpace._find_document_in_db_collection(search).count()>0
 
 
 def extract_limits_as_tuple(arg, field):
     fld = arg.get(field)
-    if isinstance(fld,basestring):
-        tmp = parse_range(fld)
-        if isinstance(tmp,dict):
-            limits = (tmp['min'],tmp['max'])
+    try:
+        if isinstance(fld,basestring):
+            tmp = parse_range(fld, use_dollar_vars=False)
+            if isinstance(tmp,dict):
+                limits = (tmp['min'],tmp['max'])
+            else:
+                limits = (tmp,tmp)
+        elif isinstance(fld,(tuple,list)):
+            limits = (int(fld[0]),int(fld[1]))
+        elif isinstance(fld,dict):
+            limits = (fld['min'], fld['max'])
+        elif not fld is None: 
+            limits = (fld,fld)
         else:
-            limits = (tmp,tmp)
-    elif isinstance(fld,(tuple,list)):
-        limits = (int(fld[0]),int(fld[1]))
-    elif isinstance(fld,dict):
-        limits = (fld['min'], fld['max'])
-    elif not fld is None: 
-        limits = (fld,fld)
-    else:
-        limits = None
+            limits = None
+    except (TypeError,ValueError) as e:
+        emf_logger.debug("Error in search parameters. {0} ".format(e))
+        msg = safe_non_valid_input_error(arg.get(field),field)
+        if field == 'label':
+            msg += " Need a label which is a sequence of letters, for instance 'a' or 'ab' for input"
+        else:
+            msg += " Need either a positive integer or a range of positive integers as input."
+        flash(msg,"error")
+        return None
     return limits
 
 def is_range(arg):
@@ -133,32 +189,65 @@ def is_range(arg):
         if arg.split(sep)>1:
             return True
     return False
+
 def extract_data_from_jump_to(s):
-    label = ''
-
+    r"""
+    Try to get a label from the search box
+    """
     args = dict()
-    if s == 'delta':
-        weight = 12
-        level = 1
-        label = "a"
-    else:
-        # first see if we have a label or not, i.e. if we have precisely one string of letters at the end
-        test = re.findall("[a-z]+", s)
-        if len(test) == 1:
-            args['label'] = test[0]
-            # emf_logger.debug("label1={0}".format(label))
-            # the first string of integers should be the level
-        test = re.findall("\d+", s)
-        if not test is None and len(test)>0:
-            args['level'] = int(test[0])
-            if len(test) > 1:  # we also have weight
-                args['weight'] = int(test[1])
-            if len(test) > 2:  # we also have character
-                args['character']=int(test[2])
-    emf_logger.debug("args=%s" % label)
-
+    try:
+        if s == 'delta':
+            args['weight'] = 12
+            args['level'] = 1
+            args['label'] = "a"
+        else:
+            # see if we can parse the argument as a label 
+            s = s.replace(" ","") # remove white space
+            try: 
+                t = parse_newform_label(s)
+                if len(t) == 4:
+                    args['level'],args['weight'],args['character'],args['label'] = t
+                elif len(t) == 5:
+                    args['level'],args['weight'],args['character'],args['label'],args['embedding'] = t
+                else:
+                    raise ValueError
+                return args
+            except ValueError:
+                pass
+            t = parse_space_label(s)
+            if len(t) == 3:
+                args['level'],args['weight'],args['character'] = t
+                return args
+            else:
+                raise ValueError
+            test = re.findall("[a-z]+", s)
+            if len(test) == 1:
+                args['label'] = test[0]
+            test = re.findall("\d+", s)
+            if not test is None and len(test)>0:
+                args['level'] = int(test[0])
+                if len(test) > 1:  # we also have weight
+                    args['weight'] = int(test[1])
+                if len(test) > 2:  # we also have character
+                    args['character']=int(test[2])
+    except (TypeError,ValueError) as e:
+        emf_logger.error("Did not get a valid label from search box: {0} ".format(e))
+        msg  = safe_non_valid_input_error(s," either a newform or a space of modular forms.")
+        msg += " Need input of the form 1.12.1 (for a space) or 1.12.1.a (for a  newform)."
+        flash(msg,"error")
+    emf_logger.debug("args={0}".format(s))
     return args
 
+def safe_non_valid_input_error(user_input,field_name):
+    r"""
+    Returns a formatted error message where all non-fixed parameters
+    (in particular user input) is escaped.
+    """
+    msg  = Markup("Error: <span style='color:black'>")+Markup.escape(user_input)
+    msg += Markup("</span>")
+    msg += Markup(" is not a valid input for <span style='color:black'>")
+    msg += Markup.escape(field_name)+Markup("</span>")
+    return msg
 
 def ajax_more2(callback, *arg_list, **kwds):
     r"""
@@ -216,19 +305,6 @@ def ajax_more2(callback, *arg_list, **kwds):
         return (s0 + s1 + t)
     else:
         return res
-
-
-def ajax_url(callback, *args, **kwds):
-    if '_ajax_sticky' in kwds:
-        _ajax_sticky = kwds.pop('_ajax_sticky')
-    else:
-        _ajax_sticky = False
-    if not isinstance(args, tuple):
-        args = args,
-    nonce = hex(random.randint(0, 1 << 128))
-    pending[nonce] = callback, args, kwds, _ajax_sticky
-    return url_for('ajax_result', id=nonce)
-
 
 def ajax_once(callback, *arglist, **kwds):
     r"""
@@ -373,7 +449,6 @@ def dirichlet_character_conrey_galois_orbits_reps(N):
     D = DirichletGroup_conrey(N)
     if N == 1:
         return [D[1]]
-    Ds = dirichlet_character_sage_galois_orbits_reps(N)
     Dl = list(D)
     reps=[]
     for x in D:
@@ -391,55 +466,6 @@ def dirichlet_character_conrey_galois_orbits_reps(N):
 def conrey_character_from_number(N,c):
     D = DirichletGroup_conrey(N)
     return DirichletCharacter_conrey(D,c)
-
-@cached_function
-def dimension_from_db(level,weight,chi=None,group='gamma0'):
-    import json
-    db = lmfdb.base.getDBConnection()['modularforms2']['webmodformspace_dimension']
-    q = db.find_one({'group':group})
-    dim_table = {}
-    if q:
-        dim_table = q.get('data',{})
-        dim_table = json.loads(dim_table)
-    if group=='gamma0' and chi!=None:
-        d,t = dim_table.get(str(level),{}).get(str(weight),{}).get(str(chi),[-1,0])
-        return  d,t
-    elif chi is None:
-        d,t = dim_table.get(str(level),{}).get(str(weight),[-1,0])
-        return  d,t
-    elif chi == 'all':
-        res = {level: {weight:{}}}
-        dtable = dim_table.get(str(level),{}).get(str(weight),{})
-        for i in dtable.keys():
-            res[level][weight][int(i)] = dtable[i]
-        return res
-
-def field_label(F, pretty = True, check=False):
-    r"""
-      Returns the LMFDB label of the field F.
-    """
-    if F.absolute_degree() == 1:
-        p = 'x'
-    else:
-        pp = F.absolute_polynomial()
-        x = pp.parent().gen()
-        p = str(pp).replace(str(x), 'x')
-    l = poly_to_field_label(p)
-    if l is None:
-        if check:
-            return False
-        else:
-            if pretty:
-                return web_latex_split_on_pm(pp)
-            else:
-                return pp
-    else:
-        if check:
-            return True
-    if pretty:
-        return field_pretty(l)
-    else:
-        return l
 
 @cached_function
 def dirichlet_character_conrey_galois_orbit_embeddings(N,xi):

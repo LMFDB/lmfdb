@@ -6,7 +6,7 @@ Initial version (University of Warwick 2015) Aurel Page and John Cremona
 """
 
 from sage.all import ZZ
-from lmfdb.base import app, getDBConnection
+from lmfdb.base import getDBConnection
 from lmfdb.WebNumberField import WebNumberField
 
 hmf_nfdb = None

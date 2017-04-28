@@ -1,15 +1,12 @@
 import re
-import pymongo
 import string
 import bson
 
-from lmfdb.base import app, getDBConnection
-from flask import Flask, session, g, render_template, url_for, request, redirect
+from lmfdb.base import getDBConnection
 
-import sage.all
-from sage.all import ZZ, latex, AbelianGroup, pari, gap
+from sage.all import ZZ, gap
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range, list_to_latex_matrix
+from lmfdb.utils import list_to_latex_matrix
 
 MAX_GROUP_DEGREE = 23
 
@@ -49,6 +46,11 @@ class WebGaloisGroup:
         if self._data['ab'] == 1:
             return True
         return False
+
+    def arith_equivalent(self):
+        if 'arith_equiv' in self._data:
+          return self._data['arith_equiv']
+        return 0
 
     def order(self):
         return int(self._data['order'])
@@ -403,17 +405,18 @@ def group_display_inertia(code, C):
     if str(code[1]) == "t":
         return group_display_knowl(code[2][0], code[2][1], C)
     ans = "Intransitive group isomorphic to "
-    if len(code[2]) > 1:
+    if code[2] and len(code[2]) > 1:
+    #if len(code[2]) > 1:
         ans += group_display_short(code[2][0], code[2][1], C)
         return ans
     ans += code[3]
     return ans
 
-    label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
-    if group['pretty']:
-        return group['pretty']
-    return group['name']
+    #label = base_label(n, t)
+    #group = C.transitivegroups.groups.find_one({'label': label})
+    #if group['pretty']:
+    #    return group['pretty']
+    #return group['name']
 
 
 def conjclasses(g, n):
@@ -461,8 +464,7 @@ def chartable(n, t):
         G = gap.SmallGroup(n, t)
     else:
         G = gap.TransitiveGroup(n, t)
-    CT = G.CharacterTable()
-    ctable = gap.eval("Display(%s)" % CT.name())
+    ctable = str(G.CharacterTable().Display())
     ctable = re.sub("^.*\n", '', ctable)
     ctable = re.sub("^.*\n", '', ctable)
     return ctable
@@ -563,6 +565,7 @@ aliases['GL(3,2)'] = [(7, 5), (8, 37)]
 aliases['A7'] = [(7, 6)]
 aliases['S7'] = [(7, 7)]
 aliases['C4XC2'] = [(8, 2)]
+aliases['C2XC4'] = [(8, 2)]
 aliases['C2XC2XC2'] = [(8, 3)]
 aliases['Q8'] = [(8, 5)]
 aliases['D8'] = [(8, 6),(16,7)]
@@ -575,6 +578,7 @@ aliases['S8'] = [(8, 50)]
 aliases['C3XC3'] = [(9, 2)]
 aliases['D9'] = [(9, 3)]
 aliases['S3XC3'] = [(6, 5), (9, 4)]
+aliases['C3XS3'] = [(6, 5), (9, 4)]
 aliases['S3XS3'] = [(6, 9), (9, 8), (12, 16)]
 aliases['M9'] = [(9, 14), (12, 47)]
 aliases['PSL(2,8)'] = [(9, 27)]
@@ -593,6 +597,7 @@ aliases['M11'] = [(11, 6)]
 aliases['A11'] = [(11, 7)]
 aliases['S11'] = [(11, 8)]
 aliases['C6XC2'] = [(12, 2)]
+aliases['C2XC6'] = [(12, 2)]
 aliases['A12'] = [(12, 300)]
 aliases['S12'] = [(12, 301)]
 aliases['D13'] = [(13, 2)]

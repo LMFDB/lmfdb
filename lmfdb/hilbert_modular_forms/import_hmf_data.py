@@ -1,14 +1,13 @@
-import os.path
-import gzip
-import re
-import sys
-import time
-import sage.misc.preparser
-import subprocess
+# -*- coding: utf-8 -*-
+import os
+import sage
+from sage.misc.preparser import preparse
+from sage.interfaces.magma import magma
+from sage.all import PolynomialRing, Rationals
 
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
-C= MongoClient(port=dbport)
+from lmfdb.base import getDBConnection
+print "getting connection"
+C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 import yaml
@@ -38,9 +37,18 @@ def parse_label(field_label, weight, level_label, label_suffix):
         weight_label = str(weight) + '-'
     return field_label + '-' + weight_label + level_label + '-' + label_suffix
 
-P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
+P = sage.rings.polynomial.polynomial_ring_constructor.PolynomialRing(sage.rings.rational_field.RationalField(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
 
+
+def add_narrow_classno_data():
+    # Adds narrow class number data to all fields
+    for F in hmf_fields.find():
+         Fcoeff = fields.find_one({'label' : F['label']})['coeffs']
+         magma.eval('F<w> := NumberField(Polynomial([' + str(Fcoeff) + ']));')
+         hplus = magma.eval('NarrowClassNumber(F);')
+         hmf_fields.update({ '_id': F['_id'] }, { "$set": {'narrow_class_no': int(hplus)} })
+         print Fcoeff, hplus
 
 def import_all_data(n):
     nstr = str(n)
@@ -52,7 +60,7 @@ def import_all_data(n):
     files = [f[:-1] for f in files]
 #    subprocess.call("rm dir.tmp", shell=True)
 
-    files = [ff for ff in files if ff.find('_old') == -1]
+    files = [f for f in files if f.find('_old') == -1]
     for file_name in files:
         print file_name
         import_data(file_name)
@@ -126,10 +134,10 @@ def import_data(hmf_filename):
     magma.eval('primes_indices := [Index(ideals, pp) : pp in primes];')
     try:
         assert magma('&and[primes_indices[j] gt primes_indices[j-1] : j in [2..#primes_indices]]')
-        resort = false
+        resort = False
     except AssertionError:
         print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Primes reordered!"
-        resort = true
+        resort = True
         magma.eval('_, sigma := Sort(primes_indices, func<x,y | x-y>);')
         magma.eval('perm := [[xx : xx in x] : x in CycleDecomposition(sigma) | #x gt 1]')
         # Check at least they have the same norm
@@ -155,8 +163,7 @@ def import_data(hmf_filename):
     # Collect levels
     v = hmff.readline()
     if v[:9] == 'LEVELS :=':
-        levels_str = v[10:][:-2]
-        levels_array = [str(t) for t in eval(preparse(levels_str))]
+        # skip this line, we do not use the list of levels
         v = hmff.readline()
     for i in range(3):
         if v[:11] != 'NEWFORMS :=':
@@ -269,7 +276,10 @@ def repair_fields(D):
     F = hmf_fields.find_one({"label": '2.2.' + str(D) + '.1'})
 
     P = PolynomialRing(Rationals(), 'w')
-    w = P.gens()[0]
+    # P is used implicitly in the eval() calls below.  When these are
+    # removed, this will not longer be neceesary, but until then the
+    # assert statement is for pyflakes.
+    assert P
 
     primes = F['primes']
     primes = [[int(eval(p)[0]), int(eval(p)[1]), str(eval(p)[2])] for p in primes]
@@ -310,7 +320,10 @@ def attach_new_label(f):
     F = hmf_fields.find_one({"label": f['field_label']})
 
     P = PolynomialRing(Rationals(), 'w')
-    w = P.gens()[0]
+    # P is used implicitly in the eval() calls below.  When these are
+    # removed, this will not longer be neceesary, but until then the
+    # assert statement is for pyflakes.
+    assert P
 
     if type(f['level_ideal']) == str or type(f['level_ideal']) == unicode:
         N = eval(f['level_ideal'])
@@ -318,7 +331,7 @@ def attach_new_label(f):
         N = f['level_ideal']
     if type(N) != list or len(N) != 3:
         print f, N, type(N)
-        assert false
+        raise ValueError("{} does not define a valid level ideal".format(N))
 
     f['level_ideal'] = [N[0], N[1], str(N[2])]
 
@@ -331,3 +344,31 @@ def attach_new_label(f):
     except ValueError:
         hmf_forms.remove(f)
         print "REMOVED!"
+
+def make_stats():
+    degrees = hmf_fields.distinct('degree')
+    stats = {}
+    for d in degrees:
+        statsd = {}
+        statsd['fields'] = [F['label'] for F in hmf_fields.find({'degree':d},['label']).hint('degree_1')]
+        field_sort_key = lambda F: int(F.split(".")[2]) # by discriminant
+        statsd['fields'].sort(key=field_sort_key)
+        statsd['nfields'] = len(statsd['fields'])
+        statsd['nforms'] = hmf_forms.find({'deg':d}).hint('deg_1').count()
+        statsd['maxnorm'] = max(hmf_forms.find({'deg':d}).hint('deg_1_level_norm_1').distinct('level_norm')+[0])
+        statsd['counts'] = {}
+        for F in statsd['fields']:
+            #print("Field %s" % F)
+            res = [f['level_norm'] for f in hmf_forms.find({'field_label':F}, ['level_norm'])]
+            statsdF = {}
+            statsdF['nforms'] = len(res)
+            statsdF['maxnorm'] = max(res+[0])
+            statsd['counts'][F] = statsdF
+        stats[d] = statsd
+    return stats
+
+# To store these in a yaml file, after loading the current file do
+# sage: hst = make_stats() # takes a few minutes
+# sage: sage: hst_yaml_file = open("lmfdb/hilbert_modular_forms/hst_stats.yaml", 'w')
+# sage: yaml.safe_dump(hst, hst_yaml_file)
+# sage: hst_yaml_file.close()

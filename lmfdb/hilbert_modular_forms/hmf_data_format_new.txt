@@ -20,7 +20,7 @@ line 2: PRIMES <ideal-triple-list>
 
         where ideal-triple := [int,int,<int-list>]
 
-        where the first entry is te notm, the second the least
+        where the first entry is the norm, the second the least positive
         integer, and the third is the list of coefficients of a second
         generator of the ideal with respect to the power basis.  This
         defines the fixed ordering of the prime ideals, which will be

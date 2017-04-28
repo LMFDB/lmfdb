@@ -1,38 +1,14 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 
 {% block content %}
 
 <style type="text/css">
-table.ntdata th.left { 
-    border-right: 2px solid #9b9; 
-    background: #efe;
-    border-bottom: 0;
-    text-align: center;
-}
-
-table.ntdata th.weight {
-  text-align: center;
-  background: #efe;
-  border-bottom: 2px solid #9b9;
-  border-left: 0;
-  vertical-align: center;
-}
-
-table.ntdata thead tr.space {
-  background: #efe;
-  border-bottom: 0;
-}
-
-table.ntdata thead th.spaceleft {
-  border-right: 2px solid #9b9;
-  vertical-align: top;
-}
 .modulus {
     vertical-align: top;
     padding-top:    .5em;
     padding-bottom: .5em;
-    border-right: 2px solid #8a8;
+    border-right: 2px solid {{color.chi_border}};
 }
 .chi {
     padding: 5px 5px;
@@ -46,26 +22,26 @@ table.ntdata thead th.spaceleft {
 #chitable td div { float: left; padding-left: .5em; padding-right: .5em; }
 #chitable td div>a { text-align: right; }
 #chitable td { vertical-align: middle;  white-space: nowrap; }
-#chitable td.a { background: #DFD; }
+#chitable td.a { background: {{color.chi_table_background}}; }
 #chitable td.b { background: none; }
 #chitable th { text-align: center; }
 table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 table.ntdata tr.odd, table.ntdata tr:nth-child(odd), table.ntdata tr:first-child { background: none; }
-#chitable .imprimitive a:visited { color:blue;}
-#chitable .primitive   a:visited { color:green;}
+#chitable .imprimitive a:visited { color:{{color.chitable_imprimitive}};}
+#chitable .primitive   a:visited { color:{{color.chitable_primitive}};}
 #chitable .imprimitive { display:none; }
 #chitable a { display: inline; }
 #legend {
   margin: 0 20px 10px 0;
-  border-left: 2px solid #006400;
+  border-left: 2px solid {{color.chi_table_border}};
 }
 #legend td { cursor: pointer; }
 
 .primitive, .primitive a {
-  color:green;
+  color:{{color.chitable_primitive}};
 }
 .imprimitive, .imprimitive a {
-  color:blue;
+  color:{{color.chitable_imprimitive}};
 }
 </style>
 
@@ -86,7 +62,7 @@ var prim = true;
 var impr = false;
 $(function() {
   $("#legend-imp").hover(
-     function() { $(".imprimitive").css("background", "#DDF"); },
+     function() { $(".imprimitive").css("background", "{{color.knowl_border}}"); },
      function() { $(".imprimitive").css("background", "inherit"); }
      );
   $("#legend-imp").click(function() {
@@ -100,22 +76,22 @@ $(function() {
     $("#legend-prim input").prop("checked", prim);
   });
   $("#legend-prim").hover(
-     function() { $(".primitive").css("background", "#90EE90"); },
+     function() { $(".primitive").css("background", "{{color.chi_background}}"); },
      function() { $(".primitive").css("background", "inherit"); }
    );
  }
 );
-            
+
 </script>
 
-<table id="legend" style="float:right;">    
+<table id="legend" style="float:right;">
   <tr><td class="imprimitive" id="legend-imp"><input type="checkbox" /> Imprimitive</td></tr>
   <tr><td class="primitive" id="legend-prim"><input type="checkbox" checked /> Primitive</td></tr>
 </table>
 
 <div>
 The table below displays {{ KNOWL('character.dirichlet', title="Dirichlet characters" ) }} of a 
-given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} \(q\) and index \(n\). If \(q\) is the 
+given {{ KNOWL('character.dirichlet.modulus', title="modulus") }} \(q\) and {{KNOWL('character.dirichlet.conrey.index', title='index')}} \(n\). If \(q\) is the 
 {{ KNOWL('character.dirichlet.modulus', title="modulus") }}, then each integer \(n\) (on the \(q\)-th row)
 represents the {{ KNOWL('character.dirichlet', title="Dirichlet character" ) }} \(\chi_{q}(n,&middot;)\). The 
 characters are grouped with respect to order and stacked integers indicate (complex) conjugate characters.

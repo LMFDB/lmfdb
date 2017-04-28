@@ -1,24 +1,31 @@
 Installation
 ============
 
-* To develop and contribute new code, see below on Sharing Your
-  Work. If you **only** want to run a copy of the site, move into a
-  new directory and type
+* To develop and contribute new code, see below on [Sharing Your
+  Work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#code-development-and-sharing-your-work). If you **only** want to run a copy of the site,
+  move into a new directory and type
 
   ```
-     git clone git@github.com:LMFDB/lmfdb.git lmfdb
+     git clone https://github.com/LMFDB/lmfdb.git lmfdb
   ```
 
-  but **follow the instructions below instead** (see *Code development
-  and sharing your work*) to set up your own fork on github and clone
-  from there if you want to carry out development on the code.
+  and follow these instructions.
 
-* Make sure you have sage (>=6.8) installed and that
-  `sage` is available from the commandline.
+* Make sure you have Sage (>=7.0) installed and that `sage` is available from
+  the commandline.  In particular see
+  [Sage installation](http://doc.sagemath.org/html/en/installation/source.html).
+  Also check that your version of Sage has ssl available by checking that
+  `import ssl` works on its command line. If not, then the `pip install`
+  commands below will fail. To remedy this, either install SSL globally on
+  your system or have Sage build its own local version, as mentioned
+  [here](http://doc.sagemath.org/html/en/installation/source.html#notebook-additional-features)
+  and
+  [here](http://doc.sagemath.org/html/en/installation/source.html#building-the-notebook-with-ssl-support),
+  respectively.
 
 * Install dependencies.  This requires you to have write access to the
   Sage installation directory, so should be no problem on a personal
-  machine, but if yo are using a system-wide Sage install on a shared
+  machine, but if you are using a system-wide Sage install on a shared
   machine, you will need ask a system administrator to do this step.
 
    ```
@@ -26,10 +33,9 @@ Installation
       sage -i database_gap
       sage -i pip
       sage -b
-      # in the `lmfdb/` directory:
+      # in the 'lmfdb/' directory:
       sage -pip install -r requirements.txt
    ```
-
   * [optional] Memcache.  *This step is not at all necessary and can
     safely be ignored!* Memcache speeds up recompilation of python
     modules during development.  Using it requires both installing the
@@ -75,7 +81,7 @@ Running
     installing mongo on your machine):
 
     ```
-       mongod --port 40000 --dbpath [db_directory] --smallfiles
+       mongod --port 37010 --dbpath [db_directory] --smallfiles
     ```
 
 * Now you can launch the webserver like this:
@@ -131,12 +137,19 @@ Troubleshooting
 If the `pymongo` module is not able to connect to the database, make
 sure that the warwick.sh script is still running.
 
+[warning] Recently on some linux machines, users have had to install the
+contents of requirements.txt by manually.  If the above instructions do not
+work, un-install the above packages and re-install them one at a time,
+including those in requirements.txt.
+
 Code development and sharing your work
 ======================================
 
- * Get a (free) github account if you do not have one already
+ * Get a (free) [github](https://github.com/) account if you do not have one
+   already.
  * Login to github
- * Go to `https://github.com/LMFDB/lmfdb` and click on `Fork` in the upper right corner
+ * Go to `https://github.com/LMFDB/lmfdb` and click on `Fork` in the upper
+   right corner.
  * On your machine, create a new directory and type
 
 ```
@@ -147,11 +160,14 @@ Code development and sharing your work
   using your own github user id.  Your github repository will be known
   to git as a remote called `origin`.
 
- * Add the (official) LMFDB repository as a remote called `upstream`
+ * Add the (official) LMFDB repository as a remote called `upstream`.
 
 ```
     git remote add upstream git@github.com:LMFDB/lmfdb.git
 ```
+ * To run LMFDB, go through the rest of the instructions in
+   [Installation](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#installation) and
+   [Running](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
 
  * You should make a new branch if you want to work on a new feature.
    The following command creates a new branch named `new_feature` and

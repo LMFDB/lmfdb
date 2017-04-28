@@ -6,16 +6,19 @@
 ---
 name: Matthew Alderson
 ---
+name: Bill Allombert
+affil: University Bordeaux I
+url: https://www.math.u-bordeaux.fr/~ballombe/
+---
 name: Samuele Anni
 email: samuele.anni@gmail.com
-affil: University of Warwick
-url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/anni/
+affil: University of Heidelberg
 ---
 name: Salman Baig
 ---
 name: Jennifer Balakrishnan
-url: http://www.math.harvard.edu/~jen/
-affil: University of Oxford
+url: http://math.bu.edu/people/jbala/
+affil: Boston University
 ---
 name: Alex Bartel
 url: http://homepages.warwick.ac.uk/~maslan/
@@ -29,6 +32,10 @@ name: Jonathan W. Bober
 url: http://sage.math.washington.edu/home/bober/www/
 affil: University of Bristol
 ---
+name: Raymond van Bommel
+affil: Universiteit Leiden
+url: http://pub.math.leidenuniv.nl/~bommelvan/
+---
 name: Andrew Booker
 affil: University of Bristol
 url: http://www.maths.bris.ac.uk/people/faculty/maarb/
@@ -36,9 +43,17 @@ url: http://www.maths.bris.ac.uk/people/faculty/maarb/
 name: Robert Bradshaw
 affil: Google Inc.
 ---
+name: Peter Bruin
+affil: Universiteit Leiden
+url: http://pub.math.leidenuniv.nl/~bruinpj/
+---
 name: Alina Bucur
 url: http://www.math.ucsd.edu/~alina/
 affil: University of California, San Diego
+---
+name: Sarunas Burdulis
+affil: Dartmouth College
+url: https://math.dartmouth.edu/~sarunas/
 ---
 name: Henri Cohen
 url: http://www.math.u-bordeaux1.fr/~hecohen/
@@ -47,6 +62,10 @@ affil: University Bordeaux I
 name: Brian Conrey
 affil: University of Bristol and AIM
 url: http://www.aimath.org/conrey/
+---
+name: Edgar Costa
+url: http://www.math.dartmouth.edu/~edgarcosta/
+affil: Dartmouth College
 ---
 name: John Cremona
 affil: University of Warwick
@@ -59,6 +78,9 @@ url: http://www.math.purdue.edu/~davis705
 name: Paul-Olivier Dehaye
 url: http://user.math.uzh.ch/dehaye/
 affil: Universitat Zurich
+---
+name: Alyson Deines
+affil: CCR La Jolla
 ---
 name: Lassina Dembele
 url: http://homepages.warwick.ac.uk/staff/L.Dembele/
@@ -77,12 +99,17 @@ name: Tim Dokchitser
 url: http://www.maths.bris.ac.uk/~matyd/
 affil: University of Bristol
 ---
+name: Taylor Dupuy
+url: http://www.uvm.edu/~tdupuy/
+affil: University of Vermont
+email: taylor.dupuy@uvm.edu
+---
 name: Bas Edixhoven
 affil: Universiteit Leiden
 ---
 name: Stephan Ehlen
-url: http://www3.mathematik.tu-darmstadt.de/index.php?id=2037
-affil: Technische Universität Darmstadt
+url: http://www.stephanehlen.de
+affil: Universität zu Köln
 ---
 name: David W. Farmer
 email: farmer@aimath.org
@@ -108,7 +135,7 @@ name: Anna Haensch
 affil: Duquesne University
 url: http://www.mathcs.duq.edu/~haensch/
 ---
-name: Jonthan Hanke
+name: Jonathan Hanke
 ---
 name: William Hart
 affil: Technische Universit&auml;t Kaiserslautern
@@ -138,8 +165,14 @@ name: Sally Koutsoliotas
 url: http://www.bucknell.edu/x18772.xml
 affil: Bucknell University
 ---
+name: Patrick Kühn
+affil: Universität Zürich
+---
 name: Watson Ladd
 affil: University of California
+---
+name: Anthony Lazzaro
+url: http://skynab.net/
 ---
 name: Stefan Lemurell
 url: http://www.math.chalmers.se/~sj/
@@ -154,10 +187,13 @@ email: mmcconnell17704@yahoo.com
 affil: Princeton
 ---
 name: Anna Medvedovsky
-affil: ICERM
+affil: MPI Bonn
 ---
 name: Robert Miller
 url: http://www.rlmiller.org/
+---
+name: Andreea Mocanu
+affil: University of Nottingham
 ---
 name: Pascal Molin
 url: http://www.math.jussieu.fr/~molinp/
@@ -167,14 +203,27 @@ name: Warren Moore
 email: warrenmoore30@yahoo.co.uk
 affil: University of Warwick
 ---
+name: Bartosz Naskręcki
+email: nasqret@gmail.com
+affil: University of Bristol
+url: https://bnaskrecki.faculty.wmi.amu.edu.pl/
+---
 name: Aurel Page
 url: http://www.normalesup.org/~page/index-en.html
 email: aurel.page@normalesup.org
 affil: University of Warwick
 ---
+name: Jennifer Paulhus
+affil: Grinnell College
+url: http://www.math.grinnell.edu/~paulhusj/
+---
 name: David Platt
 affil: University of Bristol
 url: http://www.maths.bris.ac.uk/~madjp/
+---
+name: Robert Pollack
+affil: Boston University
+url: http://math.bu.edu/people/rpollack/
 ---
 name: Rishikesh
 ---
@@ -190,23 +239,31 @@ name: Nathan Ryan
 url: http://www.eg.bucknell.edu/~ncr006/
 affil: Bucknell University
 ---
-name: Ralf Schmidt
-url: http://www2.math.ou.edu/~rschmidt/
-affil: University of Oklahoma
+name: George J. Schaeffer
+email: gschaeff@stanford.edu
+affil: Stanford University
 ---
-name:  Harald Schilly
-url:   http://harald.schil.ly
+name: Harald Schilly
+url: http://harald.schil.ly
 email: harald@schil.ly
 affil: University of Vienna
 location: Vienna, Austria
+---
+name: Ralf Schmidt
+url: http://www2.math.ou.edu/~rschmidt/
+affil: University of Oklahoma
 ---
 name: Gagan Sekhon
 ---
 name: Haluk Sengun
 affil: University of Sheffield
 ---
+name: Jerry Shurman
+affil: Reed College
+url: http://people.reed.edu/~jerry/
+---
 name: Jeroen Sijsling
-affil: Dartmouth College
+affil: Universität Ulm
 url: https://sites.google.com/site/sijsling/
 ---
 name: Samir Siksek
@@ -227,14 +284,14 @@ affil: University of Washington
 notes:
   - Creator of <a href="http://www.sagemath.org">SageMath</a>
 ---
+name: Fredrik Str&ouml;mberg
+affil: University of Nottingham
+url: https://sites.google.com/site/fredrikstroemberg/
+---
 name: Andrew Sutherland
 url: http://math.mit.edu/~drew
 email: drew@math.mit.edu
 affil: MIT
----
-name: Fredrik Str&ouml;mberg
-affil: University of Nottingham
-url: https://sites.google.com/site/fredrikstroemberg/
 ---
 name: Holly Swisher
 url: http://people.oregonstate.edu/~swisherh/home/
@@ -288,7 +345,5 @@ affil: The University of North Carolina Greensboro
 name: David Yuen
 affil: Lake Forest College
 url: http://www.lakeforest.edu/academics/faculty/yuen/
----
-name: Patrick Kühn
-affil: Universität Zürich
+
 
