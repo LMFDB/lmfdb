@@ -189,7 +189,7 @@ def update_joint_attribute_stats(db, coll, attributes):
     db[statscoll].delete_one({'_id':jointkey})
     total = db[coll].count()
     reducer = Code("""function(key,values){return Array.sum(values);}""")
-    mapper = Code("""function(){emit(""+"""+"+".join(["this."+attr for attr in attributes])+""",1);}""")
+    mapper = Code("""function(){emit(""+"""+"+"":""".join(["this."+attr for attr in attributes])+""",1);}""")
     counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer)])
     min, max = counts[0][0], counts[-1][0]
     db[statscoll].insert_one({'_id':jointkey, 'total':total, 'counts':counts, 'min':min, 'max':max})
