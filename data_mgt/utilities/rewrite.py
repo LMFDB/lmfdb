@@ -145,7 +145,7 @@ def update_attribute_stats(db, coll, attributes):
         
         coll: the name of an existing collection in db
         
-        attributes: a string or list of strings specifying attributes whose statistics will be collected
+        attributes: a string or list of strings specifying attributes whose statistics will be collected, each attribute will get its own statistics record (use update_joint_attribute_stats for joint statistics)
 
     Each statistics record contains a list of counts of each distinct value of the specified attribute
     NOTE: pymongo will raise an error if the size of this list exceeds 16MB
@@ -164,3 +164,33 @@ def update_attribute_stats(db, coll, attributes):
         counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer)])
         min, max = counts[0][0], counts[-1][0]
         db[statscoll].insert_one({'_id':attr, 'total':total, 'counts':counts, 'min':min, 'max':max})
+
+def update_joint_attribute_stats(db, coll, attributes):
+    """
+    
+    Creates or updates joint statistic record in coll.stats for the specified attributes.
+    The collection coll.stats will be created if it does not already exist.
+    
+    Required arguments:
+
+        db: a mongo db to which the caller has write access
+        
+        coll: the name of an existing collection in db
+        
+        attributes: a list of strings specifying attributes whose joint statistics will be collected
+
+    Each statistics record contains a list of counts of each distinct value of the specified attribute
+    NOTE: pymongo will raise an error if the size of this list exceeds 16MB
+
+    """
+    from bson.code import Code
+    statscoll = coll + ".stats"
+    jointkey = "-".join(attributes)
+    db[statscoll].delete_one({'_id':jointkey})
+    total = db[coll].count()
+    reducer = Code("""function(key,values){return Array.sum(values);}""")
+    mapper = Code("""function(){emit(""+"""+"+".join(["this."+attr for attr in attributes])+""",1);}""")
+    counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer)])
+    min, max = counts[0][0], counts[-1][0]
+    db[statscoll].insert_one({'_id':jointkey, 'total':total, 'counts':counts, 'min':min, 'max':max})
+
