@@ -137,7 +137,7 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
     """
     
     Creates or updates statistic record in coll.stats for the specified attribute or list of attributes.
-    The collection coll.stats will be created if it does not already exist.
+    The collection coll.stats will be created if it does not already exist.  Returns the number of stats records created
     
     Required arguments:
 
@@ -155,6 +155,9 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
 
     Each statistics record contains a list of [value,count] pairs, where value is a string and count is an integer, one for each distinct value of the specified attribute
     NOTE: pymongo will raise an error if the size of this list exceeds 16MB
+    
+    Existing stats records for the same attribute will be overwritten (but only if they have the same prefix, if specified).
+    If the collection is empty or if no records match the specified filter, no stats records will be created.
 
     """
     from bson.code import Code
@@ -162,15 +165,17 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
     if isinstance(attributes,basestring):
         attributes = [attributes]
     for attr in attributes:
+        id = prefix + "/" + attr if prefix else attr
         db[statscoll].delete_one({'_id':attr})
     total = db[coll].count()
     reducer = Code("""function(key,values){return Array.sum(values);}""")
     for attr in attributes:
         mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
         counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
-        min, max = counts[0][0], counts[-1][0]
-        id = prefix + "/" + attr if prefix else attr
-        db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
+        if counts:
+            min, max = counts[0][0], counts[-1][0]
+            id = prefix + "/" + attr if prefix else attr
+            db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
 
 def update_joint_attribute_stats(db, coll, attributes):
     """
