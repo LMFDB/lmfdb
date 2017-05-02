@@ -170,7 +170,7 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
         mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
         counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
         id = prefix + "/" + attr if prefix else attr
-        min, max = counts[0][0], counts[-1][0] if counts else None, None
+        min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
         db[statscoll].delete_one({'_id':id})
         db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
 
@@ -229,7 +229,7 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
             vcounts.append([":".join(vals[1:]),pair[1]])
     else:
         jointkey = prefix + "/" + ":".join(attributes) if prefix else ":".join(attributes)
-        min, max = counts[0][0], counts[-1][0] if counts else None, None
+        min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
         db[statscoll].delete_one({'_id':jointkey})
         db[statscoll].insert_one({'_id':jointkey, 'total':total, 'counts':counts, 'min':min, 'max':max})
 
