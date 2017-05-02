@@ -166,7 +166,7 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
         attributes = [attributes]
     for attr in attributes:
         id = prefix + "/" + attr if prefix else attr
-        db[statscoll].delete_one({'_id':attr})
+        db[statscoll].delete_one({'_id':id})
     total = db[coll].find(filter).count()
     reducer = Code("""function(key,values){return Array.sum(values);}""")
     for attr in attributes:
