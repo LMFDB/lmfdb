@@ -169,7 +169,7 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
         mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
         counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
         min, max = counts[0][0], counts[-1][0]
-        id = prefix "/" + attr if prefix else attr
+        id = prefix + "/" + attr if prefix else attr
         db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
 
 def update_joint_attribute_stats(db, coll, attributes):
