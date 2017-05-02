@@ -227,7 +227,7 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
                 db[statscoll].delete_one({'_id':vkey})
                 db[statscoll].insert_one({'_id':vkey, 'total':vtotal, 'counts':vcounts, 'min':min, 'max':max})
                 vcounts = []; vtotal = 0
-            vototal += pair[1]
+            vtotal += pair[1]
             vcounts.append([":".join(values[1:]),pair[1]])
             lastval = values[0]
     else:
