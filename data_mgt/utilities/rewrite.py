@@ -26,9 +26,9 @@ def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, 
       
       reindex: whether or not to recreate indexes (if false, no indexes will be created, you must create them)
       
-      filter: pymongo filter string you may use to select a subset of the input records
+      filter: pymongo filter you may use to select a subset of the input records
       
-      projection: pymongo filter you may use to select a subset of record attributes
+      projection: pymongo projection you may use to select a subset of fields in each record
  
     For collections with large records, you will likely want to specify a batchsize less than 1000
     (the total size of a batch should be less than 16MB)
@@ -133,7 +133,7 @@ def create_random_object_index(db, coll, filter=None):
     rewrite_collection (db, coll, outcoll, add_counter, reindex=False, filter=filter, projection={'_id':True})
     db[outcoll].create_index('num')
 
-def update_attribute_stats(db, coll, attributes):
+def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
     """
     
     Creates or updates statistic record in coll.stats for the specified attribute or list of attributes.
@@ -146,6 +146,12 @@ def update_attribute_stats(db, coll, attributes):
         coll: the name of an existing collection in db
         
         attributes: a string or list of strings specifying attributes whose statistics will be collected, each attribute will get its own statistics record (use update_joint_attribute_stats for joint statistics)
+        
+    Optional arugments:
+    
+        prefix: string used to prefix attribute name when constructing stats record identifier; this can be used to distinguish stats for the same attribute that were collected using different filters
+        
+        filter: pymongo filter that may be used to restrict stats to a subset of records
 
     Each statistics record contains a list of [value,count] pairs, where value is a string and count is an integer, one for each distinct value of the specified attribute
     NOTE: pymongo will raise an error if the size of this list exceeds 16MB
@@ -161,9 +167,10 @@ def update_attribute_stats(db, coll, attributes):
     reducer = Code("""function(key,values){return Array.sum(values);}""")
     for attr in attributes:
         mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
-        counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer)])
+        counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
         min, max = counts[0][0], counts[-1][0]
-        db[statscoll].insert_one({'_id':attr, 'total':total, 'counts':counts, 'min':min, 'max':max})
+        id = prefix "/" + attr if prefix else attr
+        db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
 
 def update_joint_attribute_stats(db, coll, attributes):
     """
