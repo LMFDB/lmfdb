@@ -146,7 +146,7 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
         coll: the name of an existing collection in db
         
         attributes: a string or list of strings specifying attributes whose statistics will be collected, each attribute will get its own statistics record (use update_joint_attribute_stats for joint statistics)
-        
+
     Optional arugments:
     
         prefix: string used to prefix attribute name when constructing stats record identifier; this can be used to distinguish stats for the same attribute that were collected using different filters
@@ -157,27 +157,24 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
     NOTE: pymongo will raise an error if the size of this list exceeds 16MB
     
     Existing stats records for the same attribute will be overwritten (but only if they have the same prefix, if specified).
-    If the collection is empty or if no records match the specified filter, no stats records will be created.
 
     """
     from bson.code import Code
+    
     statscoll = coll + ".stats"
     if isinstance(attributes,basestring):
         attributes = [attributes]
-    for attr in attributes:
-        id = prefix + "/" + attr if prefix else attr
-        db[statscoll].delete_one({'_id':id})
     total = db[coll].find(filter).count()
     reducer = Code("""function(key,values){return Array.sum(values);}""")
     for attr in attributes:
         mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
         counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
-        if counts:
-            min, max = counts[0][0], counts[-1][0]
-            id = prefix + "/" + attr if prefix else attr
-            db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
+        id = prefix + "/" + attr if prefix else attr
+        min, max = counts[0][0], counts[-1][0] if counts else None, None
+        db[statscoll].delete_one({'_id':id})
+        db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
 
-def update_joint_attribute_stats(db, coll, attributes):
+def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None, unflatten=False):
     """
     
     Creates or updates joint statistic record in coll.stats for the specified attributes.
@@ -191,20 +188,48 @@ def update_joint_attribute_stats(db, coll, attributes):
         
         attributes: a list of strings specifying attributes whose joint statistics will be collected
 
+    Optional arugments:
+    
+        prefix: string used to prefix attribute name when constructing stats record identifier; this can be used to distinguish stats for the same attribute that were collected using different filters
+        
+        filter: pymongo filter that may be used to restrict stats to a subset of records
+
     The joint statistics record contains a list of [jointvalue,count] where jointvalue is a colon-delimited string of attribute values and count is an integer,
     one for each distinct combination of values of the specified attributes    
-    
     NOTE: pymongo will raise an error if the size of this list exceeds 16MB
+
+    Any existing stats record for the same combination of attribute will be overwritten (but only if they have the same prefix, if specified).
+    If the collection is empty or if no records match the specified filter, no stats records will be created.
 
     """
     from bson.code import Code
+    
     statscoll = coll + ".stats"
-    jointkey = ":".join(attributes)
-    db[statscoll].delete_one({'_id':jointkey})
-    total = db[coll].count()
+    total = db[coll].find(filter).count()
     reducer = Code("""function(key,values){return Array.sum(values);}""")
     mapper = Code("""function(){emit(""+"""+"+':'+".join(["this."+attr for attr in attributes])+""",1);}""")
-    counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer)])
-    min, max = counts[0][0], counts[-1][0]
-    db[statscoll].insert_one({'_id':jointkey, 'total':total, 'counts':counts, 'min':min, 'max':max})
+    counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
+    if unflatten:
+        assert len(attributes) > 1
+        if not counts:
+            return
+        lastval = None
+        counts.append(["sentinel",-1])
+        for pair in counts:
+            values = pair[0].split(":")
+            if values[0] != lastval or pair[1] < 0:
+                min, max = vcounts[0][0], vcounts[-1][0]
+                vkey = prefix + "/" if prefix else ""
+                vkey += values[0] + "/" + ":".join(attributes[1:])
+                db[statscoll].delete_one({'_id':vkey})
+                db[statscoll].insert_one({'_id':vkey, 'total':vtotal, 'counts':vcounts, 'min':min, 'max':max})
+                vtotal = 0
+                vcounts = []
+            vototal += pair[1]
+            vcounts.append([":".join(vals[1:]),pair[1]])
+    else:
+        jointkey = prefix + "/" + ":".join(attributes) if prefix else ":".join(attributes)
+        min, max = counts[0][0], counts[-1][0] if counts else None, None
+        db[statscoll].delete_one({'_id':jointkey})
+        db[statscoll].insert_one({'_id':jointkey, 'total':total, 'counts':counts, 'min':min, 'max':max})
 
