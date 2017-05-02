@@ -193,13 +193,15 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
         prefix: string used to prefix attribute name when constructing stats record identifier; this can be used to distinguish stats for the same attribute that were collected using different filters
         
         filter: pymongo filter that may be used to restrict stats to a subset of records
+        
+        unflatten: if true, rather than creating a single record with counts for each combination of values for attributes[0],...,attributes[-1],
+        a separate stats record will be created for each distinct value of attributes[0] with counts for combinations of values for attributes[1],...,attributes[-1].
 
     The joint statistics record contains a list of [jointvalue,count] where jointvalue is a colon-delimited string of attribute values and count is an integer,
     one for each distinct combination of values of the specified attributes    
     NOTE: pymongo will raise an error if the size of this list exceeds 16MB
 
     Any existing stats record for the same combination of attribute will be overwritten (but only if they have the same prefix, if specified).
-    If the collection is empty or if no records match the specified filter, no stats records will be created.
 
     """
     from bson.code import Code
@@ -214,19 +216,20 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
         if not counts:
             return
         lastval = None
+        vcounts = []; vtotal = 0
         counts.append(["sentinel",-1])
         for pair in counts:
             values = pair[0].split(":")
-            if values[0] != lastval or pair[1] < 0:
+            if lastval and (values[0] != lastval or pair[1] < 0):
                 min, max = vcounts[0][0], vcounts[-1][0]
                 vkey = prefix + "/" if prefix else ""
-                vkey += values[0] + "/" + ":".join(attributes[1:])
+                vkey += lastval + "/" + ":".join(attributes[1:])
                 db[statscoll].delete_one({'_id':vkey})
                 db[statscoll].insert_one({'_id':vkey, 'total':vtotal, 'counts':vcounts, 'min':min, 'max':max})
-                vtotal = 0
-                vcounts = []
+                vcounts = []; vtotal = 0
             vototal += pair[1]
-            vcounts.append([":".join(vals[1:]),pair[1]])
+            vcounts.append([":".join(values[1:]),pair[1]])
+            lastval = values[0]
     else:
         jointkey = prefix + "/" + ":".join(attributes) if prefix else ":".join(attributes)
         min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
