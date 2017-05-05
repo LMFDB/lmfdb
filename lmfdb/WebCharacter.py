@@ -499,6 +499,11 @@ class WebHecke(WebCharObject):
     def ideal2tex(ideal):
         a,b = ideal.gens_two()
         return "\(\langle %s, %s\\rangle\)"%(a._latex_(), b._latex_())
+
+    @staticmethod
+    def ideal2cas(ideal):
+        return '%s,%s'%(ideal.gens_two())
+
     @staticmethod
     def ideal2label(ideal):
         """
@@ -1303,20 +1308,21 @@ class WebHeckeCharacter(WebChar, WebHecke):
     @property
     def codeinit(self):
         kpol = self.k.polynomial()
+        mod = self.ideal2cas(self._modulus)
         return {
-                'sage':  '\n'.join([
+                'sage':  [
                           'k.<a> = NumberField(%s)'%kpol,
-                          'm = k.ideal(%s)'%self.modulus,
+                          'm = k.ideal(%s)'%mod,
                           'G = RayClassGroup(k,m)',
                           'H = G.dual_group()',
                           'chi = H(%s)'%self.number
-                          ]),
-                'pari':  '\n'.join([
-                           'k=bnfinit(%s)'%kpol,
-                           'm=idealhnf(k,)'%self.modulus,
+                          ],
+                'pari':  [
+                           'k=bnfinit(%s)'%str(kpol).replace('x','a'),
+                           'm=idealhnf(k,%s)'%mod,
                            'g=bnrinit(k,m,1)',
                            'chi = %s'%self.number
-                           ])
+                           ]
                 }
 
     @property
@@ -1327,7 +1333,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
     def codecond(self):
         return {
                 'sage': 'chi.conductor()',
-                'pari': 'bnrconductorofchar(G,chi)'
+                'pari': 'bnrconductorofchar(g,chi)'
                 }
 
     @property
@@ -1382,14 +1388,21 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     @property
     def codeinit(self):
         kpol = self.k.polynomial()
+        mod = self.ideal2cas(self._modulus)
         return {
-                'sage':  ['k.<a> = NumberField(%s)'%kpol,
-                          'm = k.ideal(%s)'%self.modulus,
+                'sage':  [
+                          'k.<a> = NumberField(%s)'%kpol,
+                          'm = k.ideal(%s)'%mod,
                           'G = RayClassGroup(k,m)',
-                          'H = G.dual_group()' ],
-                'pari':  ['k=bnfinit(%s)'%kpol,
-                           'g=bnrinit(k,m,1)']
+                          'H = G.dual_group()',
+                          ],
+                'pari':  [
+                           'k=bnfinit(%s)'%str(kpol).replace('x','a'),
+                           'm=idealhnf(k,%s)'%mod,
+                           'g=bnrinit(k,m,1)',
+                           ]
                 }
+
 
     @property
     def title(self):
@@ -1404,6 +1417,6 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     def codegen(self):
         return {
                 'sage': 'G.gen_ideals()',
-                'pari': 'G.gen'
+                'pari': 'g.gen'
                 }
 
