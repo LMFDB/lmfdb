@@ -36,16 +36,29 @@ Installation
       # in the 'lmfdb/' directory:
       sage -pip install -r requirements.txt
    ```
-  If you have not run the site for a while you might get an error
-  ```
-    ImportError: cannot import name monitoring
-  ```
-  In this case or if you need to upgrade for any reason run 
-  ```
-    sage -pip install -r requirements.txt --upgrade
-  ```
-  
+
+  Troubleshooting with packages.
+
+  - If you have not run the site for a while you might get an error
+    with packages like
+    ```
+      ImportError: cannot import name monitoring
+    ```
+    In this case or if you need to upgrade for any reason run 
+    ```
+      sage -pip install -r requirements.txt --upgrade
+    ```
    
+  - In case the last step fails due to some missing SSL library,
+    (this may be the case on osX) follow these steps
+    ```
+    sage -i openssl
+    sage -f python2 # takes some time
+    sage -i pyopenssl
+    sage -pip install --upgrade pip
+    sage -pip install -r requirements.txt
+    ```
+
   * [optional] Memcache.  *This step is not at all necessary and can
     safely be ignored!* Memcache speeds up recompilation of python
     modules during development.  Using it requires both installing the
