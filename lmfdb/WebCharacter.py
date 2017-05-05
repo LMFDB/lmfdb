@@ -1304,14 +1304,19 @@ class WebHeckeCharacter(WebChar, WebHecke):
     def codeinit(self):
         kpol = self.k.polynomial()
         return {
-                'sage':  ['k.<a> = NumberField(%s)'%kpol,
+                'sage':  '\n'.join([
+                          'k.<a> = NumberField(%s)'%kpol,
                           'm = k.ideal(%s)'%self.modulus,
                           'G = RayClassGroup(k,m)',
                           'H = G.dual_group()',
-                          'chi = H(%s)'%self.number],
-                'pari':  ['k=bnfinit(%s)'%kpol,
+                          'chi = H(%s)'%self.number
+                          ]),
+                'pari':  '\n'.join([
+                           'k=bnfinit(%s)'%kpol,
+                           'm=idealhnf(k,)'%self.modulus,
                            'g=bnrinit(k,m,1)',
-                           'chi = %s'%self.number]
+                           'chi = %s'%self.number
+                           ])
                 }
 
     @property
