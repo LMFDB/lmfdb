@@ -5,7 +5,11 @@
 {% if code and code[item] %}
 {% for L in code[item] %}
 {% if code[item][L] %}
+{% if code[item][L] is string %}
 {% set lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]] %}
+{% else %}
+{% set lines = code[item][L] %}
+{% endif %}
 {% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
 {# keep the line below as is to avoid annoying line breaks #}
 <div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<br>{% endfor %}</div>
