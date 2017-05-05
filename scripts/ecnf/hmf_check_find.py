@@ -644,7 +644,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             Plist0 = [Plist[i] for i in inds]
             aplist0 = [aplist[i] for i in inds]
             curves = EllipticCurveSearch(K.K(), Plist0, N, aplist0, effort)
-            rep = 0
+            # rep = 0
             allrep=0
             while not curves and allrep<10:
                 allrep += 1

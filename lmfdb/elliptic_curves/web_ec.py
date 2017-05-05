@@ -53,6 +53,7 @@ logger = make_logger("ec")
 
 ecdb = None
 padicdb = None
+ecdbstats = None
 
 def db_ec():
     global ecdb
@@ -60,6 +61,13 @@ def db_ec():
         ec = lmfdb.base.getDBConnection().elliptic_curves
         ecdb = ec.curves
     return ecdb
+
+def db_ecstats():
+    global ecdbstats
+    if ecdbstats is None:
+        ec = lmfdb.base.getDBConnection().elliptic_curves
+        ecdbstats = ec.curves.stats
+    return ecdbstats
 
 def padic_db():
     global padicdb
