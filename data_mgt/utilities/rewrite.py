@@ -1,23 +1,43 @@
 import time
 
-# rewrite_collection(db,incoll,outcoll,func)
-#
-# function to pipe an existing collection to a new collection through a user specified function
-# that may update records as the pass through.  All indexes will be recreated (in lex order),
-# unless reindex is set to false.
-#
-# Arguments:
-#
-#    db: should be a mongo database to which the caller has write access (authenticate as editor)
-#    incoll: the name of the input collection in db
-#    outcoll: the name of the output collection (must not already exist in db)
-#    func: filter that takes a mongo db document (dictionary) and returns a (possibly) updated version of it
-#
-# Example usage: rewrite_collection(db,"old_stuff","new_stuff",lambda x: x)
-#
-# For collections with large records, you will want to specify a batchsize smaller than 1000
-#
 def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, filter=None, projection=None):
+    """
+    
+    Pipes an existing collection to a new collection via a user specified function
+    that may update records as the pass through.
+    
+    All indexes will be recreated (in lex order), unless reindex is set to false.
+    The parameter outcoll must be the name of a collection that does not exist,
+    rewrite_collection will not overwrite an existing collection.
+    
+    Required arguments:
+    
+     db: a mongo db to which the caller has write access
+     
+     incoll: name of an existing collection in db
+     
+     outcoll: name of the output collection (must not exist)
+     
+     func: function that takes a mongo db document (dictionary) and returns a (possibly) updated version of it
+     
+    Optional arguments:
+ 
+      batchsize: number of records to process at once
+      
+      reindex: whether or not to recreate indexes (if false, no indexes will be created, you must create them)
+      
+      filter: pymongo filter you may use to select a subset of the input records
+      
+      projection: pymongo projection you may use to select a subset of fields in each record
+ 
+    For collections with large records, you will likely want to specify a batchsize less than 1000
+    (the total size of a batch should be less than 16MB)
+
+    Example usage:
+    
+        rewrite_collection(db,"old_stuff","new_stuff",lambda x: x)
+
+    """
     if outcoll in db.collection_names():
         print "Collection %s already exists in database %s, please drop it first" % (outcoll, db.name)
         return
@@ -49,11 +69,21 @@ def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, 
         reindex_collection(db,incoll,outcoll)
     print "Rewrote %s to %s, total time %.3f secs" % (incoll, outcoll, time.time()-start)
 
-# reindex_collection(db,incoll,outcoll)
-#
-# Take indexes from incoll and create them in outcoll (in lex order).
-#
 def reindex_collection(db, incoll, outcoll):
+    """
+    
+    Creates indexes on outcoll matching those that exist on incoll.
+    Indexes are created in lexicographic order.
+    
+    Required arguments:
+    
+     db: a mongo db to which the caller has write access
+     
+     incoll: the name of an existing collection in db whose index information will be used
+     
+     outcoll: the name of an existing collection in db on which indexes will be created
+    
+    """
     indexes = db[incoll].index_information()
     keys = [(k,indexes[k]['key']) for k in indexes if k != '_id_']
     keys.sort() # sort indexes by keyname so (attr1) < (attr1,attr2) < (attr1,attr2,attr3) < ...
@@ -73,34 +103,136 @@ def add_counter(rec=None):
     return rec
 add_counter.num = 0
 
-# create_random_object_index(db,coll)
-#
-# Creates (or recreates) a collection named coll.rand used to support fast random object access
-# The new collection consists of records with "_id" taken from coll and a sequentially assigned "num" (starting at 1)
-# An index is created on num which can be used to efficiently generate random object ids in coll
-#
-def create_random_object_index(db, incoll, filter=None):
-    outcoll = incoll+".rand"
+def create_random_object_index(db, coll, filter=None):
+    """
+
+    Creates (or recreates) a collection named incoll.rand used to support fast random object access.
+    This index will automatically be used by the functions random_object_from_collection and
+    random_value_from_collection (in lmfdb.utils) to improve performance.
+    
+    Required arguments:
+
+        db: a mongo db to which the caller has write access
+        
+        coll: the name of an existing collection in db (string)
+     
+    Optional arugments:
+    
+     filter: pymongo filter string you may use to restrict random object access to a subset of records
+    
+    
+    The new collection consists of records with "_id" taken from coll and a sequentially assigned "num"
+    (starting at 1) with an index on num.
+
+    """
+    outcoll = coll+".rand"
     if outcoll in db.collection_names():
         print "Dropping existing collection %s in db %s" % (outcoll,db.name)
         db[outcoll].drop()
     add_counter() # reset counter
-    rewrite_collection (db, incoll, outcoll, add_counter, reindex=False, filter=filter, projection={'_id':True})
+    rewrite_collection (db, coll, outcoll, add_counter, reindex=False, filter=filter, projection={'_id':True})
     db[outcoll].create_index('num')
 
-# update_attribute_value_counts(db, coll, attributes)
-#
-# updates statistic record in coll.stats for the specified attribute or list of attributes (creates coll.stats if need be)
-# statistic record contains a list of counts of each distinct value of the specified attribute
-# pymongo will raise an error if the size of this exceeds 16MB
-def update_attribute_stats(db, coll, attributes):
+def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
+    """
+    
+    Creates or updates statistic record in coll.stats for the specified attribute or list of attributes.
+    The collection coll.stats will be created if it does not already exist.  Returns the number of stats records created
+    
+    Required arguments:
+
+        db: a mongo db to which the caller has write access
+        
+        coll: the name of an existing collection in db
+        
+        attributes: a string or list of strings specifying attributes whose statistics will be collected, each attribute will get its own statistics record (use update_joint_attribute_stats for joint statistics)
+
+    Optional arugments:
+    
+        prefix: string used to prefix attribute name when constructing stats record identifier; this can be used to distinguish stats for the same attribute that were collected using different filters
+        
+        filter: pymongo filter that may be used to restrict stats to a subset of records
+
+    Each statistics record contains a list of [value,count] pairs, where value is a string and count is an integer, one for each distinct value of the specified attribute
+    NOTE: pymongo will raise an error if the size of this list exceeds 16MB
+    
+    Existing stats records for the same attribute will be overwritten (but only if they have the same prefix, if specified).
+
+    """
+    from bson.code import Code
+    
     statscoll = coll + ".stats"
     if isinstance(attributes,basestring):
         attributes = [attributes]
+    total = db[coll].find(filter).count()
+    reducer = Code("""function(key,values){return Array.sum(values);}""")
     for attr in attributes:
-        db[statscoll].delete_one({'_id':attr})
-    total = db[coll].count()
-    for attr in attributes:
-        counts = [[value,db[coll].find({attr:value}).count()] for value in sorted(db[coll].distinct(attr))]
-        min, max = counts[0][0], counts[-1][0]
-        db[statscoll].insert_one({'_id':attr, 'total':total, 'counts':counts, 'min':min, 'max':max})
+        mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
+        counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
+        id = prefix + "/" + attr if prefix else attr
+        min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
+        db[statscoll].delete_one({'_id':id})
+        db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
+
+def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None, unflatten=False):
+    """
+    
+    Creates or updates joint statistic record in coll.stats for the specified attributes.
+    The collection coll.stats will be created if it does not already exist.
+    
+    Required arguments:
+
+        db: a mongo db to which the caller has write access
+        
+        coll: the name of an existing collection in db
+        
+        attributes: a list of strings specifying attributes whose joint statistics will be collected
+
+    Optional arugments:
+    
+        prefix: string used to prefix attribute name when constructing stats record identifier; this can be used to distinguish stats for the same attribute that were collected using different filters
+        
+        filter: pymongo filter that may be used to restrict stats to a subset of records
+        
+        unflatten: if true, rather than creating a single record with counts for each combination of values for attributes[0],...,attributes[-1],
+        a separate stats record will be created for each distinct value of attributes[0] with counts for combinations of values for attributes[1],...,attributes[-1].
+
+    The joint statistics record contains a list of [jointvalue,count] where jointvalue is a colon-delimited string of attribute values and count is an integer,
+    one for each distinct combination of values of the specified attributes    
+    NOTE: pymongo will raise an error if the size of this list exceeds 16MB
+
+    Any existing stats record for the same combination of attribute will be overwritten (but only if they have the same prefix, if specified).
+
+    """
+    from bson.code import Code
+    
+    statscoll = coll + ".stats"
+    total = db[coll].find(filter).count()
+    reducer = Code("""function(key,values){return Array.sum(values);}""")
+    mapper = Code("""function(){emit(""+"""+"+':'+".join(["this."+attr for attr in attributes])+""",1);}""")
+    counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
+    if unflatten:
+        assert len(attributes) > 1
+        if not counts:
+            return
+        lastval = None
+        vcounts = []; vtotal = 0
+        counts.append(["sentinel",-1])
+        for pair in counts:
+            values = pair[0].split(":")
+            if lastval and (values[0] != lastval or pair[1] < 0):
+                min, max = vcounts[0][0], vcounts[-1][0]
+                vkey = prefix + "/" if prefix else ""
+                vkey += lastval + "/" + ":".join(attributes[1:])
+                db[statscoll].delete_one({'_id':vkey})
+                db[statscoll].insert_one({'_id':vkey, 'total':vtotal, 'counts':vcounts, 'min':min, 'max':max})
+                vcounts = []; vtotal = 0
+            vtotal += pair[1]
+            vcounts.append([":".join(values[1:]),pair[1]])
+            lastval = values[0]
+    else:
+        jointkey = prefix + "/" + ":".join(attributes) if prefix else ":".join(attributes)
+        min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
+        db[statscoll].delete_one({'_id':jointkey})
+        db[statscoll].insert_one({'_id':jointkey, 'total':total, 'counts':counts, 'min':min, 'max':max})
+

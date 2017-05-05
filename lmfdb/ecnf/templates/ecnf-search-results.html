@@ -97,7 +97,7 @@
           <input type='text' name='torsion' size=6 value="{{info.torsion}}" />
           </td>
           <td>
-          <input type='text' name='torsion_structure' size=8 value="{{info.torsion_structure}}" />
+            {{ tor_struct_search_nf(info.torsion_structure)| safe }}
           </td>
           <td>
           <input type='text' name='isodeg' size=5 value={{info.isodeg}}>

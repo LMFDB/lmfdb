@@ -687,3 +687,21 @@ def ec_code(**args):
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
             code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
     return code
+
+def tor_struct_search_Q(prefill="any"):
+    def fix(t):
+        return t + ' selected = "yes"' if prefill==t else t
+    def cyc(n):
+        return [fix("["+str(n)+"]"), "$C_{{{}}}$".format(n)]
+    def cyc2(m,n):
+        return [fix("[{},{}]".format(m,n)), "$C_{{{}}}\\times C_{{{}}}$".format(m,n)]
+    gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
+    for n in range(2,13):
+        if n!=11:
+            gps.append(cyc(n))
+    for n in range(1,5):
+        gps.append(cyc2(2,2*n))
+    return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+
+# the following allows the preceding function to be used in any template via {{...}}
+app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)

@@ -9,7 +9,7 @@
 
 <form id='re-search'>
 <input type="hidden" name="start" value="{{info.start}}"/>
-<table border="0">
+<table border="0" cellpadding="5">
 
 <tr>
 <td align=left>{{ KNOWL('ec.q.conductor', title='Conductor') }}</td>
@@ -19,7 +19,6 @@
 <td align=left>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</td>
 <td align=left>{{ KNOWL('ec.q.torsion_subgroup', title='Torsion structure') }}</td>
 <td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
-<td align=left>{{ KNOWL('ec.isogeny', title='isogeny degree') }}</td>
 </tr>
 
 <tr>
@@ -45,12 +44,14 @@
 </td>
 <td align=left><input type='text' name='rank'size=2 value={{info.rank}}></td>
 <td align=left><input type='text' name='torsion' size=6 value={{info.torsion}}> </td>
-<td align=left><input type='text' name='torsion_structure' size=7 value={{info.torsion_structure}}> </td>
+<td align=left>
+  {{ tor_struct_search_Q(info.torsion_structure)|safe }}
+</td>
 <td align=left><input type='text' name='sha' size=5 value={{info.sha}}> </td>
-<td align=left><input type='text' name='isodeg' size=5 value={{info.isodeg}}> </td>
 </tr>
 
 <tr>
+<td align=left>{{ KNOWL('ec.isogeny', title='isogeny degree') }}</td>
 {% if info.galois_data_type=='new' %}
 <td align=left>{{KNOWL('ec.maximal_galois_rep', title='maximal primes')}} 
 {% else %}
@@ -66,6 +67,7 @@
 <td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
 </tr>
 <tr>
+<td align=left><input type='text' name='isodeg' size=5 value={{info.isodeg}}> </td>
 <td align=left>
    <input type='text' name='surj_primes' size=10 value={{info.surj_primes}}>
 </td>
@@ -99,8 +101,10 @@
 </td>
 <td align=left><input type='text' name='count' value={{info.count}} size=10>
 </td>
+<td>&nbsp;
+</td>
 <td colspan=3>
-<button type='submit' value='refine'>Refine or change search</button>
+<button type='submit' value='refine'>Update search</button>
 </td> </tr>
 </table>
 </form>
