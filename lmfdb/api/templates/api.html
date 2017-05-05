@@ -39,7 +39,7 @@ The overall limit is at about 10000 results and beyond that it is necessary to f
 <h4>Meta-parameters</h4>
 <div>
 <ul>
-<li><code>_format</code> is used to specify the encoding. Possible values are html (defualt), json and yaml.</li>
+<li><code>_format</code> is used to specify the encoding. Possible values are html (default), json and yaml.</li>
 <li>To only retrieve a selected list of entries per document,
 use <code>_fields=name1,name2</code> to reduce the amount of data sent back to only those fields named <code>name1</code> and <code>name2</code>.
 </li>
@@ -75,7 +75,7 @@ where the prefix "-" indicates to sort in descending order.
     </li>
     <li>
     To see those elliptic curves, where the <code>ainvs</code> list contains the string-encoded integer <code>-769</code>
-    and the field <code>non-surjective_primes</code> contains the integer number 5:
+    and the field <code>non-surjective_primes</code> contains the integer number 3:
     {% set kw = {"non-surjective_primes" : "ci3"} %}
     <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="cs-769", **kw) }}'>?ainvs=cs-769&amp;non-surjective_primes=ci3</a>.
     </li>

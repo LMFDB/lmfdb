@@ -89,7 +89,6 @@ password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
 print "setting curves"
 curves = C.elliptic_curves.curves
-curves2 = C.elliptic_curves.curves2
 
 def parse_tgens(s):
     r"""
@@ -803,6 +802,7 @@ def add_extra_data(N1,N2,store=False):
    - 'anlist': (list of ints) a_p for p<20
 
     """
+    curves2 = C.elliptic_curves.curves2
     query = {}
     query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
     res = curves.find(query)
@@ -810,10 +810,10 @@ def add_extra_data(N1,N2,store=False):
     n = 0
     res = list(res) # since the cursor times out after a few thousand curves
     newcurves = []
-    for C in res:
+    for c in res:
         n += 1
         if n%100==0:
-            print C['lmfdb_label']
+            print c['lmfdb_label']
         if n%1000==0:
             if store and len(newcurves):
                 curves2.insert_many(newcurves)
@@ -821,13 +821,13 @@ def add_extra_data(N1,N2,store=False):
         else:
             sys.stdout.write(".")
             sys.stdout.flush()
-        data = make_extra_data(C['label'],C['number'],C['ainvs'],C['gens'])
-        C.update(data)
+        data = make_extra_data(c['label'],c['number'],c['ainvs'],c['gens'])
+        c.update(data)
         if store:
-            newcurves.append(C)
+            newcurves.append(c)
         else:
             pass
-            #print("Not writing updated %s to database.\n" % C['label'])
+            #print("Not writing updated %s to database.\n" % c['label'])
     # insert the final left-overs since the last full batch
     if store and len(newcurves):
         curves2.insert_many(newcurves)
@@ -958,3 +958,36 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=10000
             diff2 = [k for k in db_keys if not k in expected_keys]
             if diff1: print("expected but absent:      {}".format(diff1))
             if diff2: print("not expected but present: {}".format(diff2))
+
+def update_stats(verbose=True):
+    if verbose:
+        print("Finding max and min conductor and total number of curves")
+    Nlist = curves.distinct('conductor')
+    Nmax = int(max(Nlist))
+    Nmin = int(min(Nlist))
+    Ncurves = int(curves.count())
+    if verbose:
+        print("{} curves of conductor from {} to {}".format(Ncurves,Nmin,Nmax))
+    curves.stats.insert_one({'_id':'conductor', 'min':Nmin, 'max': Nmax, 'total': Ncurves})
+    from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
+    # Basic counts for these attributes:
+    ec = C.elliptic_curves
+    if verbose:
+        print("Adding simple counts for rank, torsion, torsion structure and Sha")
+    update_attribute_stats(ec, 'curves', ['rank', 'torsion', 'torsion_structure', 'sha'])
+    # rank counts for isogeny classes:
+    if verbose:
+        print("Adding isogeny class rank counts")
+    update_attribute_stats(ec, 'curves', 'rank', prefix='class', filter={'number':1})
+    # torsion order by rank:
+    if verbose:
+        print("Adding torsion counts by rank")
+    update_joint_attribute_stats(ec, 'curves', ['rank','torsion'], prefix='byrank', unflatten=True)
+    # torsion structure by rank:
+    if verbose:
+        print("Adding torsion structure counts by rank")
+    update_joint_attribute_stats(ec, 'curves', ['rank','torsion_structure'], prefix='byrank', unflatten=True)
+    # sha by rank:
+    if verbose:
+        print("Adding sha counts by rank")
+    update_joint_attribute_stats(ec, 'curves', ['rank','sha'], prefix='byrank', unflatten=True)
