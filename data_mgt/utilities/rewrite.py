@@ -172,7 +172,7 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
         counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
         # convert integer floats to ints (the javascript mapper converts all numbers to floats)
         try:
-            if prod([c[0] == int(c[0]) for c in counts]):
+            if all([c[0] == int(c[0]) for c in counts]):
                 counts = [[int(c[0]),c[1]] for c in counts]
         except:
             pass
@@ -229,7 +229,7 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
             values = pair[0].split(":")
             if lastval and (values[0] != lastval or pair[1] < 0):
                 try:
-                    if prod([c[0] == unicode(int(c[0])) for c in vcounts]):
+                    if all([c[0] == unicode(int(c[0])) for c in vcounts]):
                         vcounts = sorted([[int(c[0]),c[1]] for c in vcounts])
                 except:
                     pass
