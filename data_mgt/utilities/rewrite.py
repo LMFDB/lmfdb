@@ -241,10 +241,10 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
                         vcounts = sorted([[int(c[0]),c[1]] for c in vcounts])
                 except:
                     pass
-                if type(counts[0][0]) == unicode:
+                if type(vcounts[0][0]) == unicode:
                     try:
-                        if all([c[0] == unicode(float(c[0])) for c in counts]):
-                            counts = [[float(c[0]),c[1]] for c in counts]
+                        if all([c[0] == unicode(float(c[0])) for c in vcounts]):
+                            vcounts = sorted([[float(c[0]),c[1]] for c in vcounts])
                     except:
                         pass
                 min, max = vcounts[0][0], vcounts[-1][0]
