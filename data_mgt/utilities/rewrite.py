@@ -170,8 +170,11 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
         mapper = Code("""function(){emit(this."""+attr+""",1);}""")
         counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
         # convert integer floats to ints (the javascript mapper converts all numbers to floats)
-        if prod([c[0] == int(c[0]) for c in counts]):
-            counts = [[int(c[0]),c[1]] for c in counts]
+        try:
+            if prod([c[0] == int(c[0]) for c in counts]):
+                counts = [[int(c[0]),c[1]] for c in counts]
+        except:
+            pass
         id = prefix + "/" + attr if prefix else attr
         min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
         db[statscoll].delete_one({'_id':id})
@@ -224,11 +227,16 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
         for pair in counts:
             values = pair[0].split(":")
             if lastval and (values[0] != lastval or pair[1] < 0):
+                try:
+                    if prod([c[0] == unicode(int(c[0])) for c in vcounts]):
+                        vcounts = sorted([[int(c[0]),c[1]] for c in vcounts])
+                except:
+                    pass
                 min, max = vcounts[0][0], vcounts[-1][0]
                 vkey = prefix + "/" if prefix else ""
                 vkey += lastval + "/" + ":".join(attributes[1:])
                 db[statscoll].delete_one({'_id':vkey})
-                db[statscoll].insert_one({'_id':vkey, 'total':vtotal, 'counts':vcounts, 'min':min, 'max':max})
+                db[statscoll].insert_one({'_id':vkey, 'total':int(vtotal), 'counts':vcounts, 'min':min, 'max':max})
                 vcounts = []; vtotal = 0
             vtotal += pair[1]
             vcounts.append([":".join(values[1:]),pair[1]])
