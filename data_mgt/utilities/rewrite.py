@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import time
 
 def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, filter=None, projection=None):
