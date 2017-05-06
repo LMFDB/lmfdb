@@ -167,8 +167,11 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
     total = db[coll].find(filter).count()
     reducer = Code("""function(key,values){return Array.sum(values);}""")
     for attr in attributes:
-        mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
+        mapper = Code("""function(){emit(this."""+attr+""",1);}""")
         counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
+        # convert integer floats to ints (the javascript mapper converts all numbers to floats)
+        if prod([c[0] == int(c[0]) for c in counts]):
+            counts = [[int(c[0]),c[1]] for c in counts]
         id = prefix + "/" + attr if prefix else attr
         min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
         db[statscoll].delete_one({'_id':id})
