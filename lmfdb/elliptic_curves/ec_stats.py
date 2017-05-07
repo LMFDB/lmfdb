@@ -86,12 +86,8 @@ class ECstats(object):
         rdict = dict(ecdbstats.find_one({'_id':'rank'})['counts'])
         crdict = dict(ecdbstats.find_one({'_id':'class/rank'})['counts'])
         for r in range(counts['max_rank']+1):
-            try:
-                ncu = rdict[str(r)]
-                ncl = crdict[str(r)]
-            except KeyError:
-                ncu = rdict[r]
-                ncl = crdict[r]
+            ncu = rdict[r]
+            ncl = crdict[r]
             prop = format_percentage(ncl,counts['nclasses'])
             rank_counts.append({'r': r, 'ncurves': ncu, 'nclasses': ncl, 'prop': prop})
         stats['rank_counts'] = rank_counts
@@ -101,10 +97,7 @@ class ECstats(object):
         tdict = dict(ecdbstats.find_one({'_id':'torsion'})['counts'])
         tsdict = dict(ecdbstats.find_one({'_id':'torsion_structure'})['counts'])
         for t in  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16]:
-            try:
-                ncu = tdict[t]
-            except KeyError:
-                ncu = tdict[str(t)]
+            ncu = tdict[t]
             if t in [4,8,12]: # two possible structures
                 ncyc = tsdict[str(t)]
                 gp = "\(C_{%s}\)"%t
@@ -130,7 +123,7 @@ class ECstats(object):
         from sage.misc.functional import isqrt
         for s in range(1,1+isqrt(stats['max_sha'])):
             s2 = s*s
-            nc = shadict.get(str(s2),0)
+            nc = shadict.get(s2,0)
             if nc:
                 sha_counts.append({'s': s, 'ncurves': nc})
         stats['sha_counts'] = sha_counts
