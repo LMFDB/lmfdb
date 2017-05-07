@@ -974,3 +974,10 @@ def add_isogs_to_one(c):
 #  %runfile data_mgt/utilities/rewrite.py
 #  rewrite_collection(C.elliptic_curves,'nfcurves','nfcurves.new',add_isogs_to_one)
 
+def update_stats(verbose=True):
+    from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
+    # Basic counts for these attributes:
+    ec = C.elliptic_curves
+    if verbose:
+        print("Adding simple counts for torsion order, torsion structure")
+    update_attribute_stats(ec, 'nfcurves', ['torsion_order', 'torsion_structure'])
