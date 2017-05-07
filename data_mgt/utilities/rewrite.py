@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import time
 
 def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, filter=None, projection=None):
@@ -168,8 +169,21 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
     reducer = Code("""function(key,values){return Array.sum(values);}""")
     for attr in attributes:
         mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
-        counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
+        counts = [ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)]
+        # convert numeric value back to numeric values if possible so they sort correctly
+        try:
+            if all([c[0] == unicode(int(c[0])) for c in counts]):
+                counts = [[int(c[0]),c[1]] for c in counts]
+        except:
+            pass
+        if type(counts[0][0]) == unicode:
+            try:
+                if all([c[0] == unicode(float(c[0])) for c in counts]):
+                    counts = [[float(c[0]),c[1]] for c in counts]
+            except:
+                pass
         id = prefix + "/" + attr if prefix else attr
+        counts.sort()
         min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
         db[statscoll].delete_one({'_id':id})
         db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
@@ -221,11 +235,23 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
         for pair in counts:
             values = pair[0].split(":")
             if lastval and (values[0] != lastval or pair[1] < 0):
+                # convert numeric value back to numeric values if possible so they sort correctly
+                try:
+                    if all([c[0] == unicode(int(c[0])) for c in vcounts]):
+                        vcounts = sorted([[int(c[0]),c[1]] for c in vcounts])
+                except:
+                    pass
+                if type(vcounts[0][0]) == unicode:
+                    try:
+                        if all([c[0] == unicode(float(c[0])) for c in vcounts]):
+                            vcounts = sorted([[float(c[0]),c[1]] for c in vcounts])
+                    except:
+                        pass
                 min, max = vcounts[0][0], vcounts[-1][0]
                 vkey = prefix + "/" if prefix else ""
                 vkey += lastval + "/" + ":".join(attributes[1:])
                 db[statscoll].delete_one({'_id':vkey})
-                db[statscoll].insert_one({'_id':vkey, 'total':vtotal, 'counts':vcounts, 'min':min, 'max':max})
+                db[statscoll].insert_one({'_id':vkey, 'total':int(vtotal), 'counts':vcounts, 'min':min, 'max':max})
                 vcounts = []; vtotal = 0
             vtotal += pair[1]
             vcounts.append([":".join(values[1:]),pair[1]])
