@@ -128,9 +128,17 @@ class ECstats(object):
         stats['max_sha'] = max([int(s) for s in shadict])
         sha_counts = []
         from sage.misc.functional import isqrt
+        sha_is_int = True
+        try:
+            nc = shadict[1]
+        except KeyError:
+            sha_is_int = False
         for s in range(1,1+isqrt(stats['max_sha'])):
             s2 = s*s
-            nc = shadict.get(str(s2),0)
+            if sha_is_int:
+                nc = shadict.get(s2,0)
+            else:
+                nc = shadict.get(str(s2),0)
             if nc:
                 sha_counts.append({'s': s, 'ncurves': nc})
         stats['sha_counts'] = sha_counts
