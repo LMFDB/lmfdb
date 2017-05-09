@@ -25,6 +25,9 @@ table,td {
   <td>{{info.gpid}}</td></tr>
   <tr><td> {{ KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
   <tr><td> Conjugacy classes for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>{{info.passport_cc}}</td></tr>
+  {% if 'Ndim' in info %}
+  <tr><td>Ndim</td><td>{{ info.Ndim}}</td></tr>
+  {% endif %}
   </table></p>
 
 
@@ -47,6 +50,11 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
       {% if info.cinv  %}
        <tr><td>Trigonal automorphism:</td> <td>{{info.cinv}}</td></tr>
        {% endif %}  {% endif %}
+      {% if info.jacobian_decomp %}
+      <tr><td>Jacobian Decomposition:</td> <td>${{info.jacobian_decomp}}$</td></tr>
+      {% if info.conjClasses %}
+      <tr><td style="padding-left:1.8em;">Corresponding Conjugacy Classes:</td> <td>{{info.conjClasses}}</td></tr>
+      {% endif %} {% endif %}
     </table>
 
     {% if info.eqns %}

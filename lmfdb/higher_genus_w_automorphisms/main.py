@@ -98,6 +98,21 @@ def label_to_breadcrumbs(L):
     newsig += ']'    
     return newsig
 
+def decjac_format(decjac_list):
+    entries = []
+    for ints in decjac_list:
+        entry = ""
+        if ints[0] == 1:
+            entry = entry + "E"
+        else:
+            entry = entry + "A_" + str(ints[0])
+        if ints[1] != 1:
+            entry = entry + "^" + str(ints[1])
+        entries.append(entry)
+    latex = "\\times ".join(entries)
+    ccClasses = [ints[2] for ints in decjac_list]
+    return latex, ccClasses
+
 @higher_genus_w_automorphisms_page.route("/")
 def index():
     bread = get_bread()
@@ -389,8 +404,11 @@ def render_passport(args):
         info.update({'passport_cc': cc_display(ast.literal_eval(data['con']))})
 
         if 'eqn' in data:
-           info.update({'eqns': data['eqn']})
+            info.update({'eqns': data['eqn']})
         
+        if 'Ndim' in data:
+            info.update({'Ndim': data['Ndim']})
+
         other_data = False
 
         if 'hyperelliptic' in data:
@@ -406,6 +424,10 @@ def render_passport(args):
             info.update({'iscyctrig':  tfTOyn(data['cyclic_trigonal'])})
             other_data = True
 
+        if 'jacobian_decomp' in data:
+            jcLatex, conjClasses = decjac_format(data['jacobian_decomp'])
+            info.update({'conjClasses': conjClasses, 'jacobian_decomp': jcLatex})
+            other_data = True
             
         if 'cinv' in data:
             cinv=Permutation(data['cinv']).cycle_string()
@@ -425,7 +447,6 @@ def render_passport(args):
                          'signH':sign_display(ast.literal_eval(data['signH'])),
                          'higgenlabel' : data['full_label'] })
 
-            
 
         urlstrng,br_g, br_gp, br_sign, refined_p = split_passport_label(label)
        
