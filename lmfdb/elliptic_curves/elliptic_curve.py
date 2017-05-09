@@ -95,9 +95,6 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    info['galois_data_type'] = 'old'
-    if 'non-maximal_primes' in db_ec().find_one():
-        info['galois_data_type'] = 'new'
     return render_template("ec-index.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), **err_args)
 
 @ec_page.route("/random")
@@ -215,10 +212,6 @@ def elliptic_curve_search(info):
         else:
             query['label'] = ''
 
-    info['galois_data_type'] = 'old'
-    if 'non-maximal_primes' in db_ec().find_one():
-        info['galois_data_type'] = 'new'
-
     try:
         parse_rational(info,query,'jinv','j-invariant')
         parse_ints(info,query,'conductor')
@@ -237,22 +230,14 @@ def elliptic_curve_search(info):
 
         parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
 
-        if info['galois_data_type'] == 'new':
-            parse_primes(info, query, 'surj_primes', name='surjective primes',
-                         qfield='non-maximal_primes', mode='complement')
-        else:
-            parse_primes(info, query, 'surj_primes', name='surjective primes',
-                         qfield='non-surjective_primes', mode='complement')
+        parse_primes(info, query, 'surj_primes', name='surjective primes',
+                     qfield='non-maximal_primes', mode='complement')
         if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
-        if info['galois_data_type'] == 'new':
-            parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
-                         qfield='non-maximal_primes',mode=mode)
-        else:
-            parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
-                         qfield='non-surjective_primes',mode=mode)
+        parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
+                     qfield='non-maximal_primes',mode=mode)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)

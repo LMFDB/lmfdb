@@ -52,17 +52,9 @@
 
 <tr>
 <td align=left>{{ KNOWL('ec.isogeny', title='isogeny degree') }}</td>
-{% if info.galois_data_type=='new' %}
-<td align=left>{{KNOWL('ec.maximal_galois_rep', title='maximal primes')}} 
-{% else %}
-<td align=left>{{KNOWL('ec.q.surjective_prime', title='surjective primes')}} 
-{% endif %}
+<td align=left>{{KNOWL('ec.maximal_galois_rep', title='maximal primes')}}
 </td>
-{% if info.galois_data_type=='new' %}
-<td align=left colspan=2>{{KNOWL('ec.maximal_galois_rep', title='non-maximal primes')}} 
-{% else %}
-<td align=left colspan=2>{{KNOWL('ec.q.surjective_prime', title='non-surjective primes')}} 
-{% endif %}
+<td align=left colspan=2>{{KNOWL('ec.maximal_galois_rep', title='non-maximal primes')}}
 </td>
 <td align=left>{{ KNOWL('ec.q.optimal', title='Optimal only') }}</td>
 </tr>
@@ -152,11 +144,7 @@ table td.params {
   <th class="center">{{ KNOWL('ec.q.rank', title='Rank') }}</th>
   <th class="center">{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
 {% if info.surj_primes or info.nonsurj_primes  %}
-{% if info.galois_data_type=='new' %}
   <th class="center">{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}</th>
-{% else %}
-  <th class="center">{{KNOWL('ec.q.non-surjective_prime', title='Non-surjective primes')}}</th>
-{% endif %}
 {% endif %}
 </tr>
 {% for curve in info.curves: %}
@@ -168,11 +156,7 @@ table td.params {
 <td class="center">{{curve.rank}}</td>
 <td class="center">{{curve.torsion}}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
-{% if info.galois_data_type=='new' %}
 <td class="center">{{curve['non-maximal_primes']}}</td>
-{% else %}
-<td class="center">{{curve['non-surjective_primes']}}</td>
-{% endif %}
 {% endif %}
 </tr>
 {% endfor %}
