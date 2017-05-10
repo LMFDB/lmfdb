@@ -853,8 +853,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       #'sha_an': int_type,
                       'isogeny_matrix': list_type, # of lists of ints
                       'isogeny_degrees': list_type, # of ints
-                      #'class_deg': int_type, # of ints
-                      #'class_deg': int_type, # of ints
+                      #'class_deg': int_type,
                       'non-surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
                       'galois_images': list_type, # of strings
@@ -976,8 +975,98 @@ def add_isogs_to_one(c):
 
 def update_stats(verbose=True):
     from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
-    # Basic counts for these attributes:
     ec = C.elliptic_curves
+    ecdbstats = ec.nfcurves.stats
+
     if verbose:
-        print("Adding simple counts for torsion order, torsion structure")
+        print("Adding curve counts for torsion order, torsion structure")
     update_attribute_stats(ec, 'nfcurves', ['torsion_order', 'torsion_structure'])
+
+    if verbose:
+        print("Adding curve counts by degree, signature and field")
+    update_attribute_stats(ec, 'nfcurves', ['degree', 'signature', 'field_label'])
+    if verbose:
+        print("Adding class counts by degree, signature and field")
+    update_attribute_stats(ec, 'nfcurves', ['degree', 'signature', 'field_label'],
+                           prefix="classes", filter={'number':int(1)})
+
+    # conductor norm ranges:
+
+    # total:
+    if verbose:
+        print("Adding curve and class counts and conductor range")
+    entry = {'_id': 'conductor_norm'}
+    ecdbstats.delete_one(entry)
+    entry['ncurves'] = ec.nfcurves.count()
+    entry['nclasses'] = ec.nfcurves.find({'number':1}).count()
+    norms = ec.nfcurves.distinct('conductor_norm')
+    entry['min_norm'] = min(norms)
+    entry['max_norm'] = max(norms)
+    ecdbstats.insert_one(entry)
+
+    # by degree:
+    if verbose:
+        print("Adding curve and class counts and conductor range, by degree")
+    entry = {'_id': 'conductor_norm_by_degree'}
+    ecdbstats.delete_one(entry)
+    degree_curve_data = ecdbstats.find_one({'_id':'degree'})
+    for d,n in degree_curve_data['counts']:
+        norms = ec.nfcurves.find({'degree':d}).distinct('conductor_norm')
+        entry[str(d)] = {'ncurves': ecdbstats.find_one({'_id':'bydegree/{}/field_label'.format(d)})['total'],
+                         'nclasses': ecdbstats.find_one({'_id':'classbydegree/{}/field_label'.format(d)})['total'],
+                         'min_norm': min(norms),
+                         'max_norm': max(norms)}
+    ecdbstats.insert_one(entry)
+
+    # by signature:
+    if verbose:
+        print("Adding curve and class counts and conductor range, by signature")
+    entry = {'_id': 'conductor_norm_by_signature'}
+    ecdbstats.delete_one(entry)
+    sig_curve_data = ecdbstats.find_one({'_id':'signature'})
+    for sig,n in sig_curve_data['counts']:
+        sig_list = [int(c) for c in sig.split(",")]
+        norms = ec.nfcurves.find({'signature':sig_list}).distinct('conductor_norm')
+        entry[sig] = {'ncurves': ecdbstats.find_one({'_id':'bysignature/{}/field_label'.format(sig)})['total'],
+                      'nclasses': ecdbstats.find_one({'_id':'classbysignature/{}/field_label'.format(sig)})['total'],
+                      'min_norm': min(norms),
+                      'max_norm': max(norms)}
+    ecdbstats.insert_one(entry)
+
+    # by field:
+    if verbose:
+        print("Adding curve and class counts and conductor range, by field")
+    entry = {'_id': 'conductor_norm_by_field'}
+    ecdbstats.delete_one(entry)
+    field_curve_data = ecdbstats.find_one({'_id':'field_label'})
+    field_class_data = ecdbstats.find_one({'_id':'classes/field_label'})
+    field_curve_dict = dict(field_curve_data['counts'])
+    field_class_dict = dict(field_class_data['counts'])
+    for f,n in field_curve_data['counts']:
+        norms = ec.nfcurves.find({'field_label':f}).distinct('conductor_norm')
+        ff = f.replace(".",":")
+        entry[ff] = {'ncurves': field_curve_dict[f],
+                     'nclasses': field_class_dict[f],
+                     'min_norm': min(norms),
+                     'max_norm': max(norms)}
+    ecdbstats.insert_one(entry)
+
+    # curves by field by degree:
+    if verbose:
+        print("Adding curve counts by degree/field")
+    update_joint_attribute_stats(ec, 'nfcurves', ['degree', 'field_label'], prefix='bydegree', unflatten=True)
+
+    # classes by field by degree:
+    if verbose:
+        print("Adding class counts by degree/field")
+    update_joint_attribute_stats(ec, 'nfcurves', ['degree', 'field_label'], filter={'number':1}, prefix='classbydegree', unflatten=True)
+
+    # curves by field by signature:
+    if verbose:
+        print("Adding curve counts by signature/field")
+    update_joint_attribute_stats(ec, 'nfcurves', ['signature', 'field_label'], prefix='bysignature', unflatten=True)
+
+    # classes by field by signature:
+    if verbose:
+        print("Adding class counts by signature/field")
+    update_joint_attribute_stats(ec, 'nfcurves', ['signature', 'field_label'], filter={'number':1}, prefix='classbysignature', unflatten=True)

@@ -16,7 +16,7 @@ from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import get_stats, get_signature_stats, ecnf_degree_summary, ecnf_signature_summary
-from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
+from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, db_ecnfstats, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
@@ -507,6 +507,7 @@ def statistics_by_degree(d):
             info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
     info['degree_stats'] = ecnf_degree_summary(d)
     sigs = ["(%s,%s)" % (r,(d-r)/2) for r in range(d%2,d+1,2)]
+    sigs = [s for s in sigs if get_signature_stats(s)]
     info['sig_stats'] = dict([(s,get_signature_stats(s)) for s in sigs])
     credit = 'John Cremona'
     if d==2:
@@ -643,7 +644,7 @@ def get_torsion_structures():
     global torsion_structures
     if torsion_structures==None:
         #print("Getting list of torsion structures from the database")
-        ecnfstats = getDBConnection().elliptic_curves.nfcurves.stats
+        ecnfstats = db_ecnfstats()
         torsion_structures = [t[0] for t in ecnfstats.find_one({'_id':'torsion_structure'})['counts']]
         torsion_structures = [[int(str(n)) for n in t.split(",")] for t in torsion_structures if t]
         torsion_structures.sort()

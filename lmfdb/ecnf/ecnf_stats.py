@@ -2,7 +2,7 @@
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.ecnf.WebEllipticCurve import db_ecnf
+from lmfdb.ecnf.WebEllipticCurve import db_ecnfstats
 
 def format_percentage(num, denom):
     return "%10.2f"%((100.0*num)/denom)
@@ -47,7 +47,7 @@ def get_signature_stats(s):
     global the_ECNFstats
     if the_ECNFstats is None:
         the_ECNFstats = ECNFstats()
-    return the_ECNFstats.sigstats()[s]
+    return the_ECNFstats.sigstats().get(s,None)
 
 def ecnf_summary():
     counts = get_stats().counts()
@@ -71,9 +71,9 @@ def ecnf_field_summary(field):
     s = '' if stats['nclasses']==1 else 'es'
     iso_knowl = '<a knowl="ec.isogeny_class">isogeny class%s</a>' % s
     nf_knowl = '<a knowl="nf">number field</a>'
-    s = '' if stats['maxnorm']==1 else 's'
+    s = '' if stats['max_norm']==1 else 's'
     cond_knowl = '<a knowl="ec.conductor">conductor%s</a>' % s
-    s = '' if stats['maxnorm']==1 else 'up to '
+    s = '' if stats['max_norm']==1 else 'up to '
     return ''.join([r'The database currently contains %s ' % stats['ncurves'],
                     ec_knowl,
                     r' defined over the ',
@@ -82,7 +82,7 @@ def ecnf_field_summary(field):
                     iso_knowl,
                     r', with ',
                     cond_knowl,
-                    r' of norm %s %s.' % (s,stats['maxnorm'])])
+                    r' of norm %s %s.' % (s,stats['max_norm'])])
 
 def ecnf_signature_summary(s):
     stats = get_signature_stats(s)
@@ -100,7 +100,7 @@ def ecnf_signature_summary(s):
                     iso_knowl,
                     r', with ',
                     cond_knowl,
-                    r' of norm up to %s.' % stats['maxnorm']])
+                    r' of norm up to %s.' % stats['max_norm']])
 
 def ecnf_degree_summary(d):
     stats = get_degree_stats(d)
@@ -116,7 +116,7 @@ def ecnf_degree_summary(d):
                     iso_knowl,
                     r', with ',
                     cond_knowl,
-                    r' of norm up to %s.' % stats['maxnorm']])
+                    r' of norm up to %s.' % stats['max_norm']])
 
 @app.context_processor
 def ctx_ecnf_summary():
@@ -129,7 +129,7 @@ class ECNFstats(object):
 
     def __init__(self):
         logger.debug("Constructing an instance of ECstats")
-        self.ecdb = db_ecnf()
+        self.ecdbstats = db_ecnfstats()
         self._counts = {}
         self._stats = {}
         self._dstats = {}
@@ -163,21 +163,24 @@ class ECNFstats(object):
         if self._counts:
             return
         logger.debug("Computing elliptic curve (nf) counts...")
-        ecdb = self.ecdb
+        ecdbstats = self.ecdbstats
         counts = {}
-        fields = ecdb.distinct('field_label')
+        fields_dict = dict(ecdbstats.find_one({'_id':'field_label'})['counts'])
+        fields = sorted(fields_dict.keys(), key=sort_field)
         counts['fields'] = fields
         counts['nfields'] = len(fields)
-        degrees = ecdb.distinct('degree')
+        degrees_dict = dict(ecdbstats.find_one({'_id':'degree'})['counts'])
+        degrees = sorted(degrees_dict.keys())
         counts['degrees'] = degrees
         counts['maxdeg'] = max(degrees)
-        counts['ncurves_by_degree'] = dict([(d,ecdb.find({'degree':d}).count()) for d in degrees])
-        counts['fields_by_degree'] = dict([(d,sorted(ecdb.find({'degree':d}).distinct('field_label'),key=sort_field)) for d in degrees])
+        counts['ncurves_by_degree'] = degrees_dict
+        counts['fields_by_degree'] = dict([(d,sorted([f for f,n in ecdbstats.find_one({'_id':'bydegree/{}/field_label'.format(d)})['counts']],key=sort_field)) for d in degrees])
         counts['nfields_by_degree'] = dict([(d,len(counts['fields_by_degree'][d])) for d in degrees])
-        ncurves = ecdb.count()
+        data = ecdbstats.find_one({'_id':'conductor_norm'})
+        ncurves = data['ncurves']
+        nclasses = data['nclasses']
         counts['ncurves']  = ncurves
         counts['ncurves_c'] = comma(ncurves)
-        nclasses = ecdb.find({'number': 1}).count()
         counts['nclasses'] = nclasses
         counts['nclasses_c'] = comma(nclasses)
         self._counts  = counts
@@ -186,32 +189,28 @@ class ECNFstats(object):
     def init_ecnfdb_stats(self):
         if self._stats:
             return
-        ecdb = self.ecdb
+        ecdbstats = self.ecdbstats
         counts = self._counts
         stats = {}
         dstats = {}
         sigstats = {}
+        data_deg = ecdbstats.find_one({'_id':'conductor_norm_by_degree'})
+        data_sig = ecdbstats.find_one({'_id':'conductor_norm_by_signature'})
+        print("Signatures: {}".format(data_sig.keys()))
+        data_field = ecdbstats.find_one({'_id':'conductor_norm_by_field'})
         for d in counts['degrees']:
-            dstats[d] =  {'ncurves' : ecdb.find({'degree':d}).count(),
-                          'nclasses': ecdb.find({'degree':d, 'number':1}).count(),
-                          'maxnorm': max(ecdb.find({'degree':d}).distinct('conductor_norm'))
-                      }
+            dstats[d] = data_deg[str(d)]
             fsd = stats[d] = {}
             for r in range(d%2,d+1,2):
-                sig_code = "%s.%s" % (d,r)
-                xsig_code = "^%s\.%s\.*" % (d,r)
-                sig = "(%s,%s)" % (r,(d-r)/2)
-                fsd[sig] = fsds = {}
-                sigstats[sig] = {'ncurves' : ecdb.find({'field_label':{'$regex': xsig_code}}).count(),
-                                 'nclasses': ecdb.find({'field_label':{'$regex': xsig_code}, 'number':1}).count(),
-                                 'maxnorm': max([0]+ecdb.find({'field_label':{'$regex': xsig_code}}).distinct('conductor_norm'))
-                }
-                for F in counts['fields_by_degree'][d]:
-                    if F[:3]==sig_code:
-                        fsds[F] = {'ncurves' : ecdb.find({'field_label':F}).count(),
-                                        'nclasses': ecdb.find({'field_label':F, 'number':1}).count(),
-                                        'maxnorm': max(ecdb.find({'field_label':F}).distinct('conductor_norm'))
-                                    }
+                s = (d-r)//2
+                sig_code = "%s,%s" % (r,s)
+                if sig_code in data_sig:
+                    sig = "(%s,%s)" % (r,s)
+                    fsd[sig] = fsds = {}
+                    sigstats[sig] = data_sig[sig_code]
+                    data_f = ecdbstats.find_one({'_id':'bysignature/{}/field_label'.format(sig_code)})
+                    for F,n in data_f['counts']:
+                        fsds[F] = data_field[F.replace(".",":")]
         self._stats = stats
         self._dstats = dstats
         self._sigstats = sigstats
