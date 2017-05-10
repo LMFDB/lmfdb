@@ -53,6 +53,7 @@ logger = make_logger("ec")
 
 ecdb = None
 padicdb = None
+ecdbstats = None
 
 def db_ec():
     global ecdb
@@ -60,6 +61,13 @@ def db_ec():
         ec = lmfdb.base.getDBConnection().elliptic_curves
         ecdb = ec.curves
     return ecdb
+
+def db_ecstats():
+    global ecdbstats
+    if ecdbstats is None:
+        ec = lmfdb.base.getDBConnection().elliptic_curves
+        ecdbstats = ec.curves.stats
+    return ecdbstats
 
 def padic_db():
     global padicdb
@@ -120,12 +128,8 @@ class WebEC(object):
         # Next lines because the hyphens make trouble
         self.xintcoords = split_list(dbdata['x-coordinates_of_integral_points'])
         self.non_surjective_primes = dbdata['non-surjective_primes']
-        try:
-            self.non_maximal_primes = dbdata['non-maximal_primes']
-            self.mod_p_images = dbdata['mod-p_images']
-            self.new_galois_data = True
-        except KeyError:
-            self.new_galois_data = False
+        self.non_maximal_primes = dbdata['non-maximal_primes']
+        self.mod_p_images = dbdata['mod-p_images']
 
         # Next lines because the python identifiers cannot start with 2
         self.twoadic_index = dbdata['2adic_index']
@@ -309,33 +313,23 @@ class WebEC(object):
         data['disc_latex'] = web_latex(D)
         data['cond_latex'] = web_latex(N)
 
-        if self.new_galois_data:
-            data['new_galois_data'] = True
-            data['galois_images'] = [trim_galois_image_code(s) for s in self.mod_p_images]
-            data['non_maximal_primes'] = self.non_maximal_primes
-            data['galois_data'] = [{'p': p,'image': im }
-                                   for p,im in zip(data['non_maximal_primes'],
-                                                   data['galois_images'])]
-        else:
-            data['new_galois_data'] = False
-            data['galois_images'] = [trim_galois_image_code(s) for s in self.galois_images]
-            data['non_surjective_primes'] = self.non_surjective_primes
-            data['galois_data'] = [{'p': p,'image': im }
-                                   for p,im in zip(data['non_surjective_primes'],
-                                                   data['galois_images'])]
+        data['galois_images'] = [trim_galois_image_code(s) for s in self.mod_p_images]
+        data['non_maximal_primes'] = self.non_maximal_primes
+        data['galois_data'] = [{'p': p,'image': im }
+                               for p,im in zip(data['non_maximal_primes'],
+                                               data['galois_images'])]
 
         data['CMD'] = self.cm
         data['CM'] = "no"
         data['EndE'] = "\(\Z\)"
         if self.cm:
-            if self.new_galois_data:
-                data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
-                data['cm_nramp'] = len(data['cm_ramp'])
-                if data['cm_nramp']==1:
-                    data['cm_ramp'] = data['cm_ramp'][0]
-                else:
-                    data['cm_ramp'] = ", ".join([str(p) for p in data['cm_ramp']])
-                data['cm_sqf'] = ZZ(self.cm).squarefree_part()
+            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            data['cm_nramp'] = len(data['cm_ramp'])
+            if data['cm_nramp']==1:
+                data['cm_ramp'] = data['cm_ramp'][0]
+            else:
+                data['cm_ramp'] = ", ".join([str(p) for p in data['cm_ramp']])
+            data['cm_sqf'] = ZZ(self.cm).squarefree_part()
 
             data['CM'] = "yes (\(D=%s\))" % data['CMD']
             if data['CMD']%4==0:
