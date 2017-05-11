@@ -980,7 +980,7 @@ def add_isogs_to_one(c):
 ################################################################################
 
 def update_stats(verbose=True):
-    from data_mgt.utilities.rewrite import update_attribute_stats
+    from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
     from bson.code import Code
     ec = C.elliptic_curves
     ecdbstats = ec.nfcurves.stats
