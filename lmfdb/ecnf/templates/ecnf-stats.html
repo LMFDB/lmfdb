@@ -7,16 +7,15 @@
 
 <h3>Browse by field degree or signature:</h3>
 <ul>
-{% for d, ddat in info.stats.iteritems() %}
+{% for data in info %}
 <li>
-<a href={{url_for('ecnf.statistics_by_degree', d=d)}}>Degree {{d}}</a>
+<a href={{url_for('ecnf.statistics_by_degree', d=data.0)}}>Degree {{data[0]}}</a>
 <ul>
-{% for s, sdat in ddat.iteritems() %}
-{% if sdat %}
+{% for sig in data.1 %}
 <li>
-<a href={{url_for('ecnf.statistics_by_signature', d=d, r=s)}}>Signature {{s}}</a>
+  <a href={{url_for('ecnf.statistics_by_signature', d=data.0,
+  r=sig.split(",").0)}}>Signature ({{sig}})</a>
 </li>
-{% endif %}
 {% endfor %}
 </ul>
 </li>

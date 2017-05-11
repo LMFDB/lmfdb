@@ -973,10 +973,68 @@ def add_isogs_to_one(c):
 #  %runfile data_mgt/utilities/rewrite.py
 #  rewrite_collection(C.elliptic_curves,'nfcurves','nfcurves.new',add_isogs_to_one)
 
+################################################################################
+#
+# Function to update the nfcurves.stats collection, to be run after adding data
+#
+################################################################################
+
 def update_stats(verbose=True):
-    from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
+    from data_mgt.utilities.rewrite import update_attribute_stats
+    from bson.code import Code
     ec = C.elliptic_curves
     ecdbstats = ec.nfcurves.stats
+
+    # get list of degrees
+
+    degrees = nfcurves.distinct('degree')
+    if verbose:
+        print("degrees: {}".format(degrees))
+    reducer = Code("""function(key,values){return Array.sum(values);}""")
+    attr = 'signature'
+    mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
+    sigs_by_deg = {}
+    for d in degrees:
+        sigs_by_deg[str(d)] = [ r['_id'] for r in nfcurves.inline_map_reduce(mapper,reducer,query={'degree':d})]
+        if verbose:
+            print("degree {} has signatures {}".format(d,sigs_by_deg[str(d)]))
+
+    # get list of signatures for each degree
+
+    entry = {'_id': 'signatures_by_degree'}
+    ecdbstats.delete_one(entry)
+    entry.update(sigs_by_deg)
+    ecdbstats.insert_one(entry)
+
+    attr = 'field_label'
+    mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
+    fields_by_sig = {}
+    for d in degrees:
+        for sig in sigs_by_deg[str(d)]:
+            rs = [int(x) for x in sig.split(",")]
+            fields_by_sig[sig] = [ r['_id'] for r in nfcurves.inline_map_reduce(mapper,reducer,query={'degree':d, 'signature':rs})]
+            if verbose:
+                print("signature {} has fields {}".format(rs,fields_by_sig[sig]))
+
+    # get list of fields for each signature
+
+    entry = {'_id': 'fields_by_signature'}
+    ecdbstats.delete_one(entry)
+    entry.update(fields_by_sig)
+    ecdbstats.insert_one(entry)
+
+    # get list of fields for each degree
+
+    fields_by_deg = {}
+    for d in degrees:
+        fields_by_deg[str(d)] = [ r['_id'] for r in nfcurves.inline_map_reduce(mapper,reducer,query={'degree':d})]
+        if verbose:
+            print("degree {} has fields {}".format(d,fields_by_deg[str(d)]))
+
+    entry = {'_id': 'fields_by_degree'}
+    ecdbstats.delete_one(entry)
+    entry.update(fields_by_deg)
+    ecdbstats.insert_one(entry)
 
     if verbose:
         print("Adding curve counts for torsion order, torsion structure")
@@ -990,8 +1048,27 @@ def update_stats(verbose=True):
     update_attribute_stats(ec, 'nfcurves', ['degree', 'signature', 'field_label'],
                            prefix="classes", filter={'number':int(1)})
 
-    # conductor norm ranges:
+    # curves by field by degree:
+    if verbose:
+        print("Adding curve counts by degree/field")
+    update_joint_attribute_stats(ec, 'nfcurves', ['degree', 'field_label'], prefix='bydegree', unflatten=True)
 
+    # classes by field by degree:
+    if verbose:
+        print("Adding class counts by degree/field")
+    update_joint_attribute_stats(ec, 'nfcurves', ['degree', 'field_label'], filter={'number':1}, prefix='classbydegree', unflatten=True)
+
+    # curves by field by signature:
+    if verbose:
+        print("Adding curve counts by signature/field")
+    update_joint_attribute_stats(ec, 'nfcurves', ['signature', 'field_label'], prefix='bysignature', unflatten=True)
+
+    # classes by field by signature:
+    if verbose:
+        print("Adding class counts by signature/field")
+    update_joint_attribute_stats(ec, 'nfcurves', ['signature', 'field_label'], filter={'number':1}, prefix='classbysignature', unflatten=True)
+
+    # conductor norm ranges:
     # total:
     if verbose:
         print("Adding curve and class counts and conductor range")
@@ -1051,22 +1128,3 @@ def update_stats(verbose=True):
                      'max_norm': max(norms)}
     ecdbstats.insert_one(entry)
 
-    # curves by field by degree:
-    if verbose:
-        print("Adding curve counts by degree/field")
-    update_joint_attribute_stats(ec, 'nfcurves', ['degree', 'field_label'], prefix='bydegree', unflatten=True)
-
-    # classes by field by degree:
-    if verbose:
-        print("Adding class counts by degree/field")
-    update_joint_attribute_stats(ec, 'nfcurves', ['degree', 'field_label'], filter={'number':1}, prefix='classbydegree', unflatten=True)
-
-    # curves by field by signature:
-    if verbose:
-        print("Adding curve counts by signature/field")
-    update_joint_attribute_stats(ec, 'nfcurves', ['signature', 'field_label'], prefix='bysignature', unflatten=True)
-
-    # classes by field by signature:
-    if verbose:
-        print("Adding class counts by signature/field")
-    update_joint_attribute_stats(ec, 'nfcurves', ['signature', 'field_label'], filter={'number':1}, prefix='classbysignature', unflatten=True)

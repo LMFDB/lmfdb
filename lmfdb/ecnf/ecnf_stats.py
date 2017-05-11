@@ -50,73 +50,89 @@ def get_signature_stats(s):
     return the_ECNFstats.sigstats().get(s,None)
 
 def ecnf_summary():
-    counts = get_stats().counts()
+    ecnfstats = db_ecnfstats()
     ec_knowl = '<a knowl="ec">elliptic curves</a>'
     iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
     nf_knowl = '<a knowl="nf">number fields</a>'
     deg_knowl = '<a knowl="nf.degree">degree</a>'
-    return ''.join([r'The database currently contains %s ' % counts['ncurves_c'],
+    data = ecnfstats.find_one({'_id':'conductor_norm'})
+    ncurves = comma(data['ncurves'])
+    nclasses = comma(data['nclasses'])
+    data = ecnfstats.find_one({'_id':'field_label'})
+    nfields = len(data['counts'])
+    data = ecnfstats.find_one({'_id':'signatures_by_degree'})
+    maxdeg = max(int(d) for d in data if d!='_id')
+    return ''.join([r'The database currently contains {} '.format(ncurves),
                     ec_knowl,
-                    r' in %s ' % counts['nclasses_c'],
+                    r' in {} '.format(nclasses),
                     iso_knowl,
-                    r', over %s ' % counts['nfields'],
+                    r', over {} '.format(nfields),
                     nf_knowl, ' (not including $\mathbb{Q}$) of ',
                     deg_knowl,
-                    r' up to %s.' % counts['maxdeg']])
+                    r' up to {}.'.format(maxdeg)])
 
 def ecnf_field_summary(field):
-    stats = get_field_stats(field)
-    s = '' if stats['ncurves']==1 else 's'
-    ec_knowl = '<a knowl="ec">elliptic curve%s</a>' % s
-    s = '' if stats['nclasses']==1 else 'es'
-    iso_knowl = '<a knowl="ec.isogeny_class">isogeny class%s</a>' % s
+    data = db_ecnfstats().find_one({'_id':'conductor_norm_by_field'})[field]
+    ncurves = data['ncurves']
+    s = '' if ncurves==1 else 's'
+    ec_knowl = '<a knowl="ec">elliptic curve{}</a>'.format(s)
+    nclasses = data['nclasses']
+    s = '' if nclasses==1 else 'es'
+    iso_knowl = '<a knowl="ec.isogeny_class">isogeny class{}</a>'.format(s)
     nf_knowl = '<a knowl="nf">number field</a>'
-    s = '' if stats['max_norm']==1 else 's'
-    cond_knowl = '<a knowl="ec.conductor">conductor%s</a>' % s
-    s = '' if stats['max_norm']==1 else 'up to '
-    return ''.join([r'The database currently contains %s ' % stats['ncurves'],
+    max_norm = data['max_norm']
+    s = '' if max_norm==1 else 's'
+    cond_knowl = '<a knowl="ec.conductor">conductor{}</a>'.format(s)
+    s = '' if max_norm==1 else 'up to '
+    return ''.join([r'The database currently contains {} '.format(ncurves),
                     ec_knowl,
                     r' defined over the ',
                     nf_knowl,
-                    r' %s, in %s ' % (field_pretty(field), stats['nclasses']),
+                    r' {}, in {} '.format(field_pretty(field), nclasses),
                     iso_knowl,
                     r', with ',
                     cond_knowl,
-                    r' of norm %s %s.' % (s,stats['max_norm'])])
+                    r' of norm {} {}.'.format(s,data['max_norm'])])
 
-def ecnf_signature_summary(s):
-    stats = get_signature_stats(s)
+def ecnf_signature_summary(sig):
     ec_knowl = '<a knowl="ec">elliptic curves</a>'
     iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
     nf_knowl = '<a knowl="nf">number fields</a>'
     cond_knowl = '<a knowl="ec.conductor">conductors</a>'
-    r1, r2 = [int(r) for r in s[1:-1].split(",")]
-    d = r1+2*r2
-    return ''.join([r'The database currently contains %s ' % stats['ncurves'],
+    r, s = [int(x) for x in sig.split(",")]
+    d = r+2*s
+    data = db_ecnfstats().find_one({'_id':'conductor_norm_by_signature'})[sig]
+    ncurves = data['ncurves']
+    nclasses = data['nclasses']
+    max_norm = data['max_norm']
+    return ''.join([r'The database currently contains {} '.format(ncurves),
                     ec_knowl,
                     r' defined over ',
                     nf_knowl,
-                    r' of signature %s (degree %s), in %s ' % (s, d, stats['nclasses']),
+                    r' of signature ({}) (degree {}), in {} '.format(sig, d, nclasses),
                     iso_knowl,
                     r', with ',
                     cond_knowl,
-                    r' of norm up to %s.' % stats['max_norm']])
+                    r' of norm up to {}.'.format(max_norm)])
 
 def ecnf_degree_summary(d):
-    stats = get_degree_stats(d)
     ec_knowl = '<a knowl="ec">elliptic curves</a>'
     iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
     nf_knowl = '<a knowl="nf">number fields</a>'
     cond_knowl = '<a knowl="ec.conductor">conductors</a>'
-    return ''.join([r'The database currently contains %s ' % stats['ncurves'],
+    data = db_ecnfstats().find_one({'_id':'conductor_norm_by_degree'})[str(d)]
+    ncurves = data['ncurves']
+    nclasses = data['nclasses']
+    max_norm = data['max_norm']
+    return ''.join([r'The database currently contains {} '.format(ncurves),
                     ec_knowl,
                     r' defined over ',
                     nf_knowl,
-                    r' of degree %s, in %s ' % (d, stats['nclasses']),
+                    r' of degree {}, in {} '.format(d, nclasses),
                     iso_knowl,
                     r', with ',
                     cond_knowl,
-                    r' of norm up to %s.' % stats['max_norm']])
+                    r' of norm up to {}.'.format(max_norm)])
 
 @app.context_processor
 def ctx_ecnf_summary():
@@ -208,6 +224,9 @@ class ECNFstats(object):
                     sig = "(%s,%s)" % (r,s)
                     fsd[sig] = fsds = {}
                     sigstats[sig] = data_sig[sig_code]
+                    sigstats[sig]['r'] = str(r)
+                    print("sig = {}".format(sig))
+                    print("sigstats[sig] = {}".format(sigstats[sig]))
                     data_f = ecdbstats.find_one({'_id':'bysignature/{}/field_label'.format(sig_code)})
                     for F,n in data_f['counts']:
                         fsds[F] = data_field[F.replace(".",":")]
