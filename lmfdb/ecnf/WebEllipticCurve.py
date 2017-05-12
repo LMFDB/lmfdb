@@ -9,6 +9,7 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
 ecnf = None
+ecnfstats = None
 nfdb = None
 
 def db_ecnf():
@@ -16,6 +17,12 @@ def db_ecnf():
     if ecnf is None:
         ecnf = getDBConnection().elliptic_curves.nfcurves
     return ecnf
+
+def db_ecnfstats():
+    global ecnfstats
+    if ecnfstats is None:
+        ecnfstats = getDBConnection().elliptic_curves.nfcurves.stats
+    return ecnfstats
 
 def db_nfdb():
     global nfdb
