@@ -980,7 +980,7 @@ def add_isogs_to_one(c):
 ################################################################################
 
 def update_stats(verbose=True):
-    from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
+    from data_mgt.utilities.rewrite import update_attribute_stats
     from bson.code import Code
     ec = C.elliptic_curves
     ecdbstats = ec.nfcurves.stats
@@ -990,6 +990,15 @@ def update_stats(verbose=True):
     degrees = nfcurves.distinct('degree')
     if verbose:
         print("degrees: {}".format(degrees))
+
+    # get list of signatures for each degree.  Note that it would not
+    # work to use nfcurves.find({'degree':d}).distinct('signature')
+    # since 'signature' is currently a list of integers an mongo would
+    # return a list of integers, not a list of lists.  With hindsight
+    # it would have been better to store the signature as a string.
+
+    if verbose:
+        print("Adding signatures_by_degree")
     reducer = Code("""function(key,values){return Array.sum(values);}""")
     attr = 'signature'
     mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
@@ -999,25 +1008,18 @@ def update_stats(verbose=True):
         if verbose:
             print("degree {} has signatures {}".format(d,sigs_by_deg[str(d)]))
 
-    # get list of signatures for each degree
-
     entry = {'_id': 'signatures_by_degree'}
     ecdbstats.delete_one(entry)
     entry.update(sigs_by_deg)
     ecdbstats.insert_one(entry)
 
-    attr = 'field_label'
-    mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
-    fields_by_sig = {}
-    for d in degrees:
-        for sig in sigs_by_deg[str(d)]:
-            rs = [int(x) for x in sig.split(",")]
-            fields_by_sig[sig] = [ r['_id'] for r in nfcurves.inline_map_reduce(mapper,reducer,query={'degree':d, 'signature':rs})]
-            if verbose:
-                print("signature {} has fields {}".format(rs,fields_by_sig[sig]))
+    # get list of fields for each signature.  Simple code here faster than map/reduce
 
-    # get list of fields for each signature
-
+    if verbose:
+        print("Adding fields_by_signature")
+    from sage.misc.flatten import flatten
+    sigs = flatten(sigs_by_deg.values())
+    fields_by_sig = dict([sig,nfcurves.find({'signature':[int(x) for x in sig.split(",")]}).distinct('field_label')] for sig in sigs)
     entry = {'_id': 'fields_by_signature'}
     ecdbstats.delete_one(entry)
     entry.update(fields_by_sig)
@@ -1025,16 +1027,17 @@ def update_stats(verbose=True):
 
     # get list of fields for each degree
 
-    fields_by_deg = {}
-    for d in degrees:
-        fields_by_deg[str(d)] = [ r['_id'] for r in nfcurves.inline_map_reduce(mapper,reducer,query={'degree':d})]
-        if verbose:
-            print("degree {} has fields {}".format(d,fields_by_deg[str(d)]))
-
+    if verbose:
+        print("Adding fields_by_degree")
+    fields_by_deg = dict([str(d),sorted(nfcurves.find({'degree':d}).distinct('field_label')) ] for d in degrees)
     entry = {'_id': 'fields_by_degree'}
     ecdbstats.delete_one(entry)
     entry.update(fields_by_deg)
     ecdbstats.insert_one(entry)
+
+    fields = flatten(fields_by_deg.values())
+    if verbose:
+        print("{} fields, {} signatures, {} degrees".format(len(fields),len(sigs),len(degrees)))
 
     if verbose:
         print("Adding curve counts for torsion order, torsion structure")
@@ -1043,71 +1046,72 @@ def update_stats(verbose=True):
     if verbose:
         print("Adding curve counts by degree, signature and field")
     update_attribute_stats(ec, 'nfcurves', ['degree', 'signature', 'field_label'])
+
     if verbose:
         print("Adding class counts by degree, signature and field")
     update_attribute_stats(ec, 'nfcurves', ['degree', 'signature', 'field_label'],
                            prefix="classes", filter={'number':int(1)})
 
-    # curves by field by degree:
-    if verbose:
-        print("Adding curve counts by degree/field")
-    update_joint_attribute_stats(ec, 'nfcurves', ['degree', 'field_label'], prefix='bydegree', unflatten=True)
-
-    # classes by field by degree:
-    if verbose:
-        print("Adding class counts by degree/field")
-    update_joint_attribute_stats(ec, 'nfcurves', ['degree', 'field_label'], filter={'number':1}, prefix='classbydegree', unflatten=True)
-
-    # curves by field by signature:
-    if verbose:
-        print("Adding curve counts by signature/field")
-    update_joint_attribute_stats(ec, 'nfcurves', ['signature', 'field_label'], prefix='bysignature', unflatten=True)
-
-    # classes by field by signature:
-    if verbose:
-        print("Adding class counts by signature/field")
-    update_joint_attribute_stats(ec, 'nfcurves', ['signature', 'field_label'], filter={'number':1}, prefix='classbysignature', unflatten=True)
-
     # conductor norm ranges:
     # total:
     if verbose:
         print("Adding curve and class counts and conductor range")
+    norms = ec.nfcurves.distinct('conductor_norm')
+    data = {'ncurves': ec.nfcurves.count(),
+            'nclasses': ec.nfcurves.find({'number':1}).count(),
+            'min_norm': min(norms),
+            'max_norm': max(norms),
+            }
     entry = {'_id': 'conductor_norm'}
     ecdbstats.delete_one(entry)
-    entry['ncurves'] = ec.nfcurves.count()
-    entry['nclasses'] = ec.nfcurves.find({'number':1}).count()
-    norms = ec.nfcurves.distinct('conductor_norm')
-    entry['min_norm'] = min(norms)
-    entry['max_norm'] = max(norms)
+    entry.update(data)
     ecdbstats.insert_one(entry)
 
     # by degree:
     if verbose:
         print("Adding curve and class counts and conductor range, by degree")
+    degree_data = {}
+    for d in degrees:
+        query = {'degree':d}
+        res = nfcurves.find(query)
+        ncurves = res.count()
+        Ns = res.distinct('conductor_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        query['number'] = 1
+        nclasses = nfcurves.count(query)
+        degree_data[str(d)] = {'ncurves':ncurves,
+                               'nclasses':nclasses,
+                               'min_norm':min_norm,
+                               'max_norm':max_norm,
+        }
+
     entry = {'_id': 'conductor_norm_by_degree'}
     ecdbstats.delete_one(entry)
-    degree_curve_data = ecdbstats.find_one({'_id':'degree'})
-    for d,n in degree_curve_data['counts']:
-        norms = ec.nfcurves.find({'degree':d}).distinct('conductor_norm')
-        entry[str(d)] = {'ncurves': ecdbstats.find_one({'_id':'bydegree/{}/field_label'.format(d)})['total'],
-                         'nclasses': ecdbstats.find_one({'_id':'classbydegree/{}/field_label'.format(d)})['total'],
-                         'min_norm': min(norms),
-                         'max_norm': max(norms)}
+    entry.update(degree_data)
     ecdbstats.insert_one(entry)
 
     # by signature:
     if verbose:
         print("Adding curve and class counts and conductor range, by signature")
+    sig_data = {}
+    for sig in sigs:
+        query = {'signature': [int(c) for c in sig.split(",")]}
+        res = nfcurves.find(query)
+        ncurves = res.count()
+        Ns = res.distinct('conductor_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        query['number'] = 1
+        nclasses = nfcurves.count(query)
+        sig_data[sig] = {'ncurves':ncurves,
+                               'nclasses':nclasses,
+                               'min_norm':min_norm,
+                               'max_norm':max_norm,
+        }
     entry = {'_id': 'conductor_norm_by_signature'}
     ecdbstats.delete_one(entry)
-    sig_curve_data = ecdbstats.find_one({'_id':'signature'})
-    for sig,n in sig_curve_data['counts']:
-        sig_list = [int(c) for c in sig.split(",")]
-        norms = ec.nfcurves.find({'signature':sig_list}).distinct('conductor_norm')
-        entry[sig] = {'ncurves': ecdbstats.find_one({'_id':'bysignature/{}/field_label'.format(sig)})['total'],
-                      'nclasses': ecdbstats.find_one({'_id':'classbysignature/{}/field_label'.format(sig)})['total'],
-                      'min_norm': min(norms),
-                      'max_norm': max(norms)}
+    entry.update(sig_data)
     ecdbstats.insert_one(entry)
 
     # by field:
@@ -1115,16 +1119,24 @@ def update_stats(verbose=True):
         print("Adding curve and class counts and conductor range, by field")
     entry = {'_id': 'conductor_norm_by_field'}
     ecdbstats.delete_one(entry)
-    field_curve_data = ecdbstats.find_one({'_id':'field_label'})
-    field_class_data = ecdbstats.find_one({'_id':'classes/field_label'})
-    field_curve_dict = dict(field_curve_data['counts'])
-    field_class_dict = dict(field_class_data['counts'])
-    for f,n in field_curve_data['counts']:
-        norms = ec.nfcurves.find({'field_label':f}).distinct('conductor_norm')
-        ff = f.replace(".",":")
-        entry[ff] = {'ncurves': field_curve_dict[f],
-                     'nclasses': field_class_dict[f],
-                     'min_norm': min(norms),
-                     'max_norm': max(norms)}
+    field_data = {}
+    for f in fields:
+        ff = f.replace(".",":") # mongo does not allow "." in key strings
+        query = {'field_label': f}
+        res = nfcurves.find(query)
+        ncurves = res.count()
+        Ns = res.distinct('conductor_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        query['number'] = 1
+        nclasses = nfcurves.count(query)
+        field_data[ff] = {'ncurves':ncurves,
+                               'nclasses':nclasses,
+                               'min_norm':min_norm,
+                               'max_norm':max_norm,
+        }
+    entry = {'_id': 'conductor_norm_by_field'}
+    ecdbstats.delete_one(entry)
+    entry.update(field_data)
     ecdbstats.insert_one(entry)
 
