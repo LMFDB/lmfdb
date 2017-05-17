@@ -22,12 +22,12 @@ table,td {
   <p>
     <table>
       <tr><td>Base field:</td> <td>$\Q_{ {{info.p}} }$</td></tr>
-      <tr><td>Degree $d$ :</td> <td>${{info.n}}$</td></tr>
-      <tr><td>Ramification exponent $e$ :</td> <td>${{info.e}}$</td></tr>
-      <tr><td>Residue field degree $f$ :</td> <td>${{info.f}}$</td></tr>
-      <tr><td>Discriminant exponent $c$ :</td> <td>${{info.c}}$</td></tr>
-      <tr><td>Discriminant root field:</td> <td>{{info.rf}}</td></tr>
-      <tr><td>Root number:</td> <td>{{info.hw}}</td></tr>
+      <tr><td>{{ KNOWL('lf.degree', title='Degree') }} $d$ :</td> <td>${{info.n}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.ramification_index', title='Ramification exponent') }} $e$ :</td> <td>${{info.e}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.residue_field_degree', title='Residue field degree') }} $f$ :</td> <td>${{info.f}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.discriminant_exponent', title='Discriminant exponent') }} $c$ :</td> <td>${{info.c}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.discriminant_root_field', title='Discriminant root field') }}:</td> <td>{{info.rf}}</td></tr>
+      <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>
       <tr><td> $|{{ info.autstring|safe }}(K/\Q_{ {{info.p}} })|$:</td> <td>${{info.aut}}$</td></tr>
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
     </table>
