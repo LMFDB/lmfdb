@@ -28,7 +28,8 @@ table,td {
       <tr><td>Discriminant exponent $c$ :</td> <td>${{info.c}}$</td></tr>
       <tr><td>Discriminant root field:</td> <td>{{info.rf}}</td></tr>
       <tr><td>Root number:</td> <td>{{info.hw}}</td></tr>
-      <tr><td> $|\textrm{Aut}(K/\Q_{ {{info.p}} })|$:</td> <td>${{info.aut}}$</td></tr>
+      <tr><td> $|{{ info.autstring|safe }}(K/\Q_{ {{info.p}} })|$:</td> <td>${{info.aut}}$</td></tr>
+      <tr><td colspan="2">{{info.galphrase}}</td></tr>
     </table>
   </p>
 

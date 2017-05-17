@@ -12,7 +12,7 @@ from sage.all import PolynomialRing, QQ
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.WebNumberField import string2list, do_mult
 
-from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia, small_group_knowl_guts
+from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia, small_group_knowl_guts, WebGaloisGroup
 
 LF_credit = 'J. Jones and D. Roberts'
 
@@ -184,6 +184,11 @@ def render_field_webpage(args):
         GG = data['gal']
         gn = GG[0]
         gt = GG[1]
+        the_gal = WebGaloisGroup.from_nt(gn,gt)
+        isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
+        abelian = ' and abelian' if the_gal.is_abelian() else ''
+        galphrase = 'This field is'+isgal+abelian+' over $\Q_{%d}$.'%p
+        autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
         prop2 = [
             ('Label', label),
             ('Base', '\(\Q_{%s}\)' % p),
@@ -238,6 +243,8 @@ def render_field_webpage(args):
                     'eisen': web_latex(eisenp),
                     'gms': data['gms'],
                     'gsm': gsm,
+                    'galphrase': galphrase,
+                    'autstring': autstring,
                     'subfields': format_subfields(data['subfields'],p),
                     'aut': data['aut'],
                     })
