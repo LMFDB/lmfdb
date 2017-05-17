@@ -32,6 +32,27 @@ table,td {
     </table>
   </p>
 
+        <p><h2> {{ KNOWL('lf.intermediate_fields', title='Intermediate fields') }}</h2>
+        <p>
+        {% if info.subfields=='' %}
+        <table>
+          <tr><td>
+            The extension is primitive: there are no intermediate fields 
+            between this field and $\Q_{ {{info.p}} }$.
+          </td></tr>
+        </table>
+        {% else %}
+        <table>
+          <tr><td>
+            {{ info.subfields | safe }}
+          </td></tr>
+        </table>
+        <p>
+        Fields in the database are given up to isomorphism.  Isomorphic 
+        intermediate fields are shown with their multiplicities.
+        {% endif %}
+
+
   <p><h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
     <table>
       <tr><td>Unramified subfield:</td><td>{{info.unram}}</tr>
@@ -45,7 +66,8 @@ table,td {
       <tr><td>Unramified degree:</td><td>${{info.u}}$</td></tr>
       <tr><td>Tame degree:</td><td>${{info.t}}$</td></tr>
       <tr><td>Wild slopes:</td><td>{{info.slopes}}</td></tr>
-      <tr><td>GMS:</td><td>${{info.gms}}$</td></tr>
+      <tr><td>Galois Mean Slope:</td><td>${{info.gms}}$</td></tr>
+      <tr><td>Galois Splitting Model:</td><td>{{info.gsm}}</td></tr>
     </table>
   </p>
 
