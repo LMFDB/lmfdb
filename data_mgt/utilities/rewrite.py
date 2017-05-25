@@ -134,7 +134,7 @@ def create_random_object_index(db, coll, filter=None):
     rewrite_collection (db, coll, outcoll, add_counter, reindex=False, filter=filter, projection={'_id':True})
     db[outcoll].create_index('num')
 
-def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
+def update_attribute_stats(db, coll, attributes, prefix=None, filter=None, nocounts=False, wrapper=None):
     """
     
     Creates or updates statistic record in coll.stats for the specified attribute or list of attributes.
@@ -153,9 +153,16 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
         prefix: string used to prefix attribute name when constructing stats record identifier; this can be used to distinguish stats for the same attribute that were collected using different filters
         
         filter: pymongo filter that may be used to restrict stats to a subset of records
+        
+        nocounts: only the min and max of the specified attribute or attributes will be stored, not individual counts by value
+        
+        wrapper: string specifying a javascript function that computes a derived attribute, must be of the form 'function f(rec){...};'
+                 the wrapper function will be passed the entire document, if specified only one attribute should be specified, not a list
 
     Each statistics record contains a list of [value,count] pairs, where value is a string and count is an integer, one for each distinct value of the specified attribute
-    NOTE: pymongo will raise an error if the size of this list exceeds 16MB
+    as well as the min, max, and the total number of records matching filter (all the records in the colleciton if filter=None)
+    
+    NOTE: pymongo will raise an error if the size of a statistics recrod exceeds 16MB
     
     Existing stats records for the same attribute will be overwritten (but only if they have the same prefix, if specified).
 
@@ -166,27 +173,47 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None):
     if isinstance(attributes,basestring):
         attributes = [attributes]
     total = db[coll].find(filter).count()
-    reducer = Code("""function(key,values){return Array.sum(values);}""")
+    if nocounts:
+        reducer = Code("function(key,values){return values.reduce(function r(a,b){return { min: a.min < b.min ? a.min : b.min, max : a.max > b.max ? a.max : b.max}; });}")
+    else:
+        reducer = Code("function(key,values){return Array.sum(values);}")
     for attr in attributes:
-        mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
-        counts = [ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)]
-        # convert numeric value back to numeric values if possible so they sort correctly
-        try:
-            if all([c[0] == unicode(int(c[0])) for c in counts]):
-                counts = [[int(c[0]),c[1]] for c in counts]
-        except:
-            pass
-        if type(counts[0][0]) == unicode:
-            try:
-                if all([c[0] == unicode(float(c[0])) for c in counts]):
-                    counts = [[float(c[0]),c[1]] for c in counts]
-            except:
-                pass
-        id = prefix + "/" + attr if prefix else attr
-        counts.sort()
-        min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
-        db[statscoll].delete_one({'_id':id})
-        db[statscoll].insert_one({'_id':id, 'total':total, 'counts':counts, 'min':min, 'max':max})
+        id = prefix + '/' + attr if prefix else attr
+        stats = { '_id':id, 'total':total}
+        if total:
+            if nocounts:
+                mapper = Code("function(){emit('minmax',{min:this."+attr+",max:this."+attr+"});}")
+                minmax = db[coll].inline_map_reduce(mapper,reducer,query=filter)
+                min = minmax[0]['value']['min']
+                max = minmax[0]['value']['max']
+                # javascript reducer will convert ints to floats, convert them back if we can
+                if type(min) == float and min.is_integer() and type(max) == float and max.is_integer():
+                    min,max = int(min),int(max)
+                stats["min"],stats["max"] = min,max
+            else:
+                if wrapper:
+                    # try to protect caller from themselves
+                    assert wrapper.startswith("function f(rec){") and wrapper.endswith("};") and len(attributes) == 1
+                    mapper = Code("function(){"+wrapper+"emit(''+f(this),1);}")
+                else:
+                    mapper = Code("function(){emit(''+this."+attr+",1);}")
+                counts = [ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)]
+                # convert numeric value back to numeric values if possible so they sort correctly
+                try:
+                    if all([c[0] == unicode(int(c[0])) for c in counts]):
+                        counts = [[int(c[0]),c[1]] for c in counts]
+                except:
+                    pass
+                if type(counts[0][0]) == unicode:
+                    try:
+                        if all([c[0] == unicode(float(c[0])) for c in counts]):
+                            counts = [[float(c[0]),c[1]] for c in counts]
+                    except:
+                        pass
+                counts.sort()
+                stats['counts'] = counts
+                stats['min'],stats['max'] = counts[0][0],counts[-1][0]
+        db[statscoll].replace_one({'_id':id}, stats, upsert=True)
 
 def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None, unflatten=False):
     """
@@ -221,19 +248,21 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
     from bson.code import Code
     
     statscoll = coll + ".stats"
+    if isinstance(attributes,basestring):
+        attributes = [attributes]
+    assert len(attributes) > 1
     total = db[coll].find(filter).count()
-    reducer = Code("""function(key,values){return Array.sum(values);}""")
-    mapper = Code("""function(){emit(""+"""+"+':'+".join(["this."+attr for attr in attributes])+""",1);}""")
+    reducer = Code("function(key,values){return Array.sum(values);}")
+    mapper = Code("function(){emit(''+"+"+\':\'+".join(["this."+attr for attr in attributes])+",1);}")
     counts = sorted([ [r['_id'],int(r['value'])] for r in db[coll].inline_map_reduce(mapper,reducer,query=filter)])
     if unflatten:
-        assert len(attributes) > 1
         if not counts:
             return
         lastval = None
         vcounts = []; vtotal = 0
-        counts.append(["sentinel",-1])
+        counts.append(['sentinel',-1])
         for pair in counts:
-            values = pair[0].split(":")
+            values = pair[0].split(':')
             if lastval and (values[0] != lastval or pair[1] < 0):
                 # convert numeric value back to numeric values if possible so they sort correctly
                 try:
@@ -254,10 +283,10 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
                 db[statscoll].insert_one({'_id':vkey, 'total':int(vtotal), 'counts':vcounts, 'min':min, 'max':max})
                 vcounts = []; vtotal = 0
             vtotal += pair[1]
-            vcounts.append([":".join(values[1:]),pair[1]])
+            vcounts.append([':'.join(values[1:]),pair[1]])
             lastval = values[0]
     else:
-        jointkey = prefix + "/" + ":".join(attributes) if prefix else ":".join(attributes)
+        jointkey = prefix + '/' + ':'.join(attributes) if prefix else ':'.join(attributes)
         min, max = (counts[0][0], counts[-1][0]) if counts else (None, None)
         db[statscoll].delete_one({'_id':jointkey})
         db[statscoll].insert_one({'_id':jointkey, 'total':total, 'counts':counts, 'min':min, 'max':max})
