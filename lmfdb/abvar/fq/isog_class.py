@@ -131,7 +131,7 @@ class AbvarFq_isoclass(object):
                 ('Base Field', '$%s$'%(self.field(self.q))),
                 ('Dimension', '$%s$'%(self.g)),
                 (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
-                ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
+                #('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
                 ('$p$-rank', '$%s$'%(self.p_rank))]
                 # Add a-number
 
