@@ -34,6 +34,9 @@ def g2c_db_lfunction_instances():
 def g2c_db_isogeny_classes_count():
     return getDBConnection().Lfunctions.instances.find({'type':'G2Q'}).count()
 
+def g2c_db_tamagawa_numbers():
+	return getDBConnection().genus2_curves.tamagawa_numbers
+
 
 ###############################################################################
 # Pretty print functions
@@ -501,8 +504,8 @@ class WebG2C(object):
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, is_curve=True):
-        self.make_object(curve, endo, is_curve)
+    def __init__(self, curve, endo, tama, is_curve=True):
+        self.make_object(curve, endo, tama, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -530,9 +533,13 @@ class WebG2C(object):
         if not endo:
             g2c_logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
             raise KeyError("Endomorphism data for genus 2 curve %s not found in database." % label)
-        return WebG2C(curve, endo, is_curve=(len(slabel)==4))
+        tama = g2c_db_tamagawa_numbers().find({"label" : curve['label']}).sort('p', ASCENDING)
+        if tama.count() == 0:
+            g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
+            raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)        
+        return WebG2C(curve, endo, tama, is_curve=(len(slabel)==4))
 
-    def make_object(self, curve, endo, is_curve):
+    def make_object(self, curve, endo, tama, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
@@ -583,6 +590,16 @@ class WebG2C(object):
                 data['torsion_subgroup'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in data['torsion_factors'] ])
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
+            data['tama'] = ''
+            for i in range(tama.count()):
+            	item = tama.next()
+            	if item['tamagawa_number'] > 0:
+            		tamgwnr = str(item['tamagawa_number'])
+            	else:
+            		tamgwnr = 'N/A'
+            	data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + ')'
+            	if (i+1 < tama.count()):
+            		data['tama'] += ', '
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])

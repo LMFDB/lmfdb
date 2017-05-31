@@ -110,7 +110,7 @@ def todays_curve():
     n = (date.today()-mordells_birthday).days
     label = db_ec().find({'number' : int(1)})[n]['label']
     #return render_curve_webpage_by_label(label)
-    return redirect(url_for(".by_ec_label", label=label), 301)
+    return redirect(url_for(".by_ec_label", label=label), 307)
 
 @ec_page.route("/stats")
 def statistics():
@@ -134,7 +134,7 @@ def by_conductor(conductor):
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
-            return redirect (url_for(".rational_elliptic_curves", **request.args), 301)
+            return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
         info['title'] += ' search results'
         info['bread'].append(('search results',''))
     info['conductor'] = conductor
@@ -228,14 +228,16 @@ def elliptic_curve_search(info):
             elif info['include_cm'] == 'only':
                 query['cm'] = {'$ne' : 0}
 
+        parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
+
         parse_primes(info, query, 'surj_primes', name='surjective primes',
-                     qfield='non-surjective_primes', mode='complement')
+                     qfield='non-maximal_primes', mode='complement')
         if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
         parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
-                     qfield='non-surjective_primes',mode=mode)
+                     qfield='non-maximal_primes',mode=mode)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)
@@ -276,8 +278,9 @@ def elliptic_curve_search(info):
         else:
             info['report'] = 'displaying all %s matches' % nres
     credit = 'John Cremona'
-    if 'non-surjective_primes' in query:
-        credit += 'and Andrew Sutherland'
+    if 'non-surjective_primes' in query or 'non-maximal_primes' in query:
+        credit += ' and Andrew Sutherland'
+
     t = info.get('title','Elliptic Curves search results')
     return render_template("ec-search-results.html", info=info, credit=credit, bread=bread, title=t)
 
@@ -439,6 +442,8 @@ def render_curve_webpage_by_label(label):
 
     if data.twoadic_label:
         credit = credit.replace(' and',',') + ' and Jeremy Rouse'
+    if data.data['iwdata']:
+        credit = credit.replace(' and',',') + ' and Robert Pollack'
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     code = data.code()
@@ -667,3 +672,21 @@ def ec_code(**args):
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
             code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
     return code
+
+def tor_struct_search_Q(prefill="any"):
+    def fix(t):
+        return t + ' selected = "yes"' if prefill==t else t
+    def cyc(n):
+        return [fix("["+str(n)+"]"), "$C_{{{}}}$".format(n)]
+    def cyc2(m,n):
+        return [fix("[{},{}]".format(m,n)), "$C_{{{}}}\\times C_{{{}}}$".format(m,n)]
+    gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
+    for n in range(2,13):
+        if n!=11:
+            gps.append(cyc(n))
+    for n in range(1,5):
+        gps.append(cyc2(2,2*n))
+    return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+
+# the following allows the preceding function to be used in any template via {{...}}
+app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)

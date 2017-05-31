@@ -681,7 +681,7 @@ class WebNumberField:
          # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "number_fields/code.yaml")))
-        self.code['show'] = {'sage':'','pari':''} # use default show names
+        self.code['show'] = {'sage':'','pari':'', 'magma':''} # use default show names
 
         # Fill in placeholders for this specific field:
         for lang in ['sage', 'pari']:

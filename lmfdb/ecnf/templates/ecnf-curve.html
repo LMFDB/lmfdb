@@ -6,7 +6,7 @@
 </style>
 
 {#
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js"></script><script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script><script src="http://aleph.sagemath.org/embedded_sagecell.js">
 
 </script><style type="text/css">
   .sagecell .CodeMirror-scroll {
@@ -308,6 +308,97 @@ No primes of bad reduction.
 {% endif %}
 </div>
 
+<div>
+<h2> {{KNOWL('ec.galois_rep', title='Galois Representations')}} </h2>
+
+{% if ec.galois_images=="?" %}
+
+<p>
+The mod \( p \) Galois Representation data has not yet been computed for this curve.
+</p>
+
+{% else %} {# we have Galois data #}
+
+<p>
+The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois Representation')}}
+has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}}
+for all primes \( p \)
+{% if ec.galois_data %} {# there are non-maximal primes #}
+except those listed.
+</p>
+<p>
+<table>
+<tr>
+<th>prime</th>
+<th>{{KNOWL('ec.galois_rep_image', title='Image of Galois Representation')}}</th>
+</tr>
+{% for pr in ec.galois_data %}
+<tr>
+<td align=center> \({{pr.p}}\)</td>
+<td align=center>{{pr.image}}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+.
+{% endif %}
+</p>
+
+{% if ec.cm %}
+<p>
+{% if ec.galois_data %} For all other primes \(p\), the
+{% else %} The
+{% endif %}
+image is
+{% if ec.cm_nramp!=0 %}
+a {{KNOWL('gl2.borel', title='Borel subgroup')}}
+{% if ec.cm_nramp==1 %}
+if \(p={{ec.cm_ramp}}\),
+{% else %}
+if \(p\in \{ {{ ec.cm_ramp }}\}\),
+{% endif %}
+{% endif %}
+
+{% if ec.rational_cm %}
+a {{KNOWL('gl2.split_cartan', title='split Cartan subgroup')}}
+{% else %}
+the {{KNOWL('gl2.normalizer_split_cartan', title='normalizer of a split Cartan subgroup')}}
+{% endif %}
+
+if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=+1\) or
+
+{% if ec.rational_cm %}
+a {{KNOWL('gl2.nonsplit_cartan', title='nonsplit Cartan subgroup')}}
+{% else %}
+the {{KNOWL('gl2.normalizer_nonsplit_cartan', title='normalizer of a nonsplit Cartan subgroup')}}
+{% endif %}
+
+if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
+</p>
+{% endif %} {# CM case #}
+{% endif %} {# Galois image data exists #}
+
+</div>
+
+<div>
+  <h2> Isogenies </h2>
+<p>
+{% if ec.isogeny_degrees %}
+This curve has non-trivial cyclic isogenies {% if ec.rational_cm %}
+(excluding endomorphisms){% endif %} of degree \(d\) for \(d=\)
+{{ ec.isogeny_degrees}}.
+<br>
+Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>
+consists of {{ec.ncurves}} curves linked by isogenies of
+{% if ec.one_deg %}degree{% else %}degrees dividing {% endif %}
+{{ec.class_deg}}.
+{% else %}
+This curve has no rational isogenies{% if ec.rational_cm %} other than
+endomorphisms{% endif %}.
+Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   consists of this curve only.
+</p>
+{% endif %}
+</div>
 
 {% if DEBUG %}
 <hr>

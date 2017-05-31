@@ -15,7 +15,7 @@ from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
-credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight, and Dan Yasaki"
+credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight,  Raymond von Bommel, Dan Yasaki."
 
 ###############################################################################
 # global database connection and stats objects
@@ -115,7 +115,7 @@ def index_Q():
 @g2c_page.route("/Q/random")
 def random_curve():
     label = random_value_from_collection(g2c_db_curves(), 'label')
-    return redirect(url_for_curve_label(label), 301)
+    return redirect(url_for_curve_label(label), 307)
 
 @g2c_page.route("/Q/stats")
 def statistics():
@@ -150,7 +150,7 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
         # if conductor or discriminant changed, fall back to a general search
         if ('cond' in request.args and request.args['cond'] != str(cond)) or \
            ('abs_disc' in request.args and request.args['abs_disc'] != str(disc)):
-            return redirect (url_for(".index", **request.args), 301)
+            return redirect (url_for(".index", **request.args), 307)
         data['title'] += ' search results'
         data['bread'].append(('search results',''))
     data['cond'] = cond
@@ -170,7 +170,7 @@ def by_conductor(cond):
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'cond' in request.args and request.args['cond'] != str(cond):
-            return redirect (url_for(".index", **request.args), 301)
+            return redirect (url_for(".index", **request.args), 307)
         data['title'] += ' search results'
         data['bread'].append(('search results',''))
     data['cond'] = cond

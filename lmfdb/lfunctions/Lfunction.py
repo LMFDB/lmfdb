@@ -473,8 +473,8 @@ class Lfunction_EMF(Lfunction):
                 float(n ** self.automorphyexp))
 
         # Determining the sign
-        if self.level == 1:  # For level 1, the sign is always plus
-            self.sign = 1
+        if self.level == 1:  # For level 1, sign = (-1)^(k/2)
+            self.sign = (-1)** (self.weight/2)
         else:  # for level>1, calculate sign from Fricke involution and weight
             if self.character > 0:
                 self.sign = signOfEmfLfunction(self.level, self.weight,

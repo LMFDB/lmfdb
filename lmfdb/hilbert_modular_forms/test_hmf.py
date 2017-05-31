@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
 
 class HMFTest(LmfdbTest):
@@ -17,7 +17,7 @@ class HMFTest(LmfdbTest):
         assert 'edirect' in L.data
 
     def test_EC(self): #778
-        L = self.tc.get('ModularForm/GL2/TotallyReal/6.6.300125.1/holomorphic/6.6.300125.1-631.2-d')
+        L = self.tc.get('ModularForm/GL2/TotallyReal/5.5.126032.1/holomorphic/5.5.126032.1-82.1-b')
         assert 'Elliptic curve not available' in L.data     #TODO remove or change url when
                                                             #the elliptic curve is in the database
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.89.1/holomorphic/2.2.89.1-2.1-a')
