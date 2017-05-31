@@ -34,9 +34,11 @@ This isogeny class is {{KNOWL('av.fq.ordinary',title='ordinary')}}.
 This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 {% endif %}
 
+<img src="{{cl.newton_plot()}}" width="400" height="300"/>
+
 <table>
     <tr><td>{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}:<td>&nbsp;&nbsp;<td>${{cl.p_rank}}$</tr>
-    <tr><td>{{KNOWL('lf.newton_slopes',title='Slopes')}}':<td>&nbsp;&nbsp;<td>${{cl.display_slopes()}}$</tr>
+    <tr><td>{{KNOWL('lf.newton_slopes',title='Slopes')}}:<td>&nbsp;&nbsp;<td>${{cl.display_slopes()}}$</tr>
 </table>
 </p>
 
@@ -58,7 +60,7 @@ This isogeny class is not {{ KNOWL('av.princ_polarizable', title = 'principally 
 {% endif %}
 </p>
 
-<p>{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}:
+<p>{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}
 
 <table class = "ntdata">
     <tr><td>$r$</td>
