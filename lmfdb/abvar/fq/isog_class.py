@@ -105,13 +105,17 @@ class AbvarFq_isoclass(object):
             x += c
             y += c*s
             pts.append((x,y))
-        print pts
-        from sage.plot.plot import plot
-        A = plot([],ticks=[1,1])
-        L = line(pts, thickness = 3) + points(pts, size=30)
+        L = line(pts, thickness = 2)
+        for i in range(len(pts)-1):
+            P = pts[i]
+            Q = pts[i+1]
+            for x in range(P[0],Q[0]+1):
+                L += line([(x,P[1]),(x,P[1] + (x-P[0])*(Q[1]-P[1])/(Q[0]-P[0]))],color="grey")
+            for y in range(P[1],Q[1]):
+                L += line([(P[0] + (y-P[1])*(Q[0]-P[0])/(Q[1]-P[1]),y),(Q[0],y)],color="grey")
         L.axes(False)
         L.set_aspect_ratio(1)
-        return encode_plot(A+L)
+        return encode_plot(L)
 
     def circle_plot(self):
         pts = []
