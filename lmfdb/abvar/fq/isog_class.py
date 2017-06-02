@@ -96,7 +96,7 @@ class AbvarFq_isoclass(object):
             return '\F_{' + '{0}^{1}'.format(p,r) + '}'
 
     def newton_plot(self):
-        S = [QQ(s) for s in self.slopes]
+        S = [QQ(str(s)) for s in self.slopes]
         C = Counter(S)
         pts = [(0,0)]
         x = y = 0
@@ -105,10 +105,13 @@ class AbvarFq_isoclass(object):
             x += c
             y += c*s
             pts.append((x,y))
-        L = line(pts) + points(pts, size=16)
+        print pts
+        from sage.plot.plot import plot
+        A = plot([],ticks=[1,1])
+        L = line(pts, thickness = 3) + points(pts, size=30)
         L.axes(False)
         L.set_aspect_ratio(1)
-        return encode_plot(L)
+        return encode_plot(A+L)
 
     def circle_plot(self):
         pts = []
