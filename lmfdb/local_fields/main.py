@@ -6,11 +6,11 @@ import pymongo
 #from lmfdb import base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, request, url_for, redirect
-from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, random_object_from_collection
+from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, random_object_from_collection, display_multiset
 from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input
 from sage.all import PolynomialRing, QQ
 from lmfdb.local_fields import local_fields_page, logger
-from lmfdb.WebNumberField import string2list, do_mult
+from lmfdb.WebNumberField import string2list
 
 from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia, small_group_knowl_guts, WebGaloisGroup
 
@@ -82,22 +82,20 @@ def ctx_local_fields():
             'small_group_data': small_group_data}
 
 # Utilities for subfield display
-def subhelper(coefmult,p):
-    data = lfdb().find_one({'coeffs': coefmult[0], 'p': p})
+def format_lfield(coefmult,p):
+    data = lfdb().find_one({'coeffs': coefmult, 'p': p})
     if data is None:
         # This should not happen, what do we do?
         # This is wrong
         return ''
     # This is the nf version
-    return [lf_display_knowl(data['label'],db()), coefmult[1]]
+    return lf_display_knowl(data['label'],db())
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
     if subdata == []:
         return ''
-    subs = [subhelper(a, p) for a in subdata]
-    subs = [do_mult(a) for a in subs]
-    return ', '.join(subs)
+    return display_multiset(subdata, format_lfield, p)
 
 @local_fields_page.route("/")
 def index():

@@ -6,7 +6,7 @@ from lmfdb.base import getDBConnection
 
 from sage.all import ZZ, gap
 
-from lmfdb.utils import list_to_latex_matrix
+from lmfdb.utils import list_to_latex_matrix, display_multiset
 
 MAX_GROUP_DEGREE = 23
 
@@ -30,6 +30,12 @@ def small_group_display_knowl(n, k, C, name=None):
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + name + '</a>'
 
+def small_group_label_display_knowl(label, C, name=None):
+    if not name:
+        group = C.sato_tate_groups.small_groups.find_one({'label': label})
+        name = '$%s$'%group['pretty']
+    return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
+
 def small_group_knowl_guts(gapid, C):
     parts = gapid.split('.')
     n = int(parts[0])
@@ -37,13 +43,24 @@ def small_group_knowl_guts(gapid, C):
     group = C.sato_tate_groups.small_groups.find_one({'label': str(gapid)})
     #group = C.sato_tate_groups.small_groups.find_one()
     inf = "Group $%s$"%str(group['pretty'])
+    inf += '&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  '
+    inf += ('' if group['cyclic'] else 'not')+' cyclic, '
+    inf += ('' if group['abelian'] else 'non-')+'abelian, '
+    inf += ('' if group['solvable'] else 'not')+' solvable'
     inf += '<p>Order: '+str(n)
     inf += '<br>Gap small group number: '+str(k)
-    inf += '<br>Cyclic: '+str(group['cyclic'])
-    inf += '<br>Abelian: '+str(group['abelian'])
+    inf += '<br>Exponent: '+str(group['exponent'])
     inf += '<br>Perfect: '+str(group['perfect'])
-    inf += '<br>Solvable: '+str(group['solvable'])
     inf += '<br>Simple: '+str(group['simple'])
+    inf += '<br>Normal subgroups: '+display_multiset(group['normal_subgroups'],small_group_label_display_knowl, C)
+    inf += '<br>Maximal subgroups: '+display_multiset(group['maximal_subgroups'], small_group_label_display_knowl, C)
+    inf += '<br>Center: '+small_group_label_display_knowl(group['center'],C)
+    inf += '<br>Derived subgroup: '+small_group_label_display_knowl(group['derived_group'],C)
+    inf += '<br>Abelianization: '+small_group_label_display_knowl(group['abelian_quotient'],C)
+    inf += '<br>Conjugacy class information: <table style="text-align: center;"><tr><th>Element Order<th>Size<th>Multiplicity'
+    for row in group['clases']:
+        inf += '<tr><td>%d<td>%d<td>%d'%(row[0],row[1],row[2])
+    inf += '</table>'
     return inf
 
 ############  Galois group object
@@ -238,7 +255,7 @@ def group_display_long(n, t, C):
     elif group['ab'] == 1:
         inf += ", abelian"
     elif group['solv'] == 1:
-        inf += ", non-abelian solvable"
+        inf += ", non-abelian, solvable"
     else:
         inf += ", non-solvable"
     if group['prim'] == 1:
@@ -306,7 +323,7 @@ def group_cclasses_knowl_guts(n, t, C):
     rest += '<blockquote>'
     rest += cclasses(n, t)
     rest += '</blockquote></div>'
-    return(rest)
+    return rest
 
 
 def group_character_table_knowl_guts(n, t, C):
