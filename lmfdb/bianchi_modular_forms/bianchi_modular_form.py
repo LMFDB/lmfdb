@@ -6,7 +6,6 @@ import pymongo
 from lmfdb.base import app, getDBConnection
 from pymongo import ASCENDING, DESCENDING
 from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
-from sage.misc.preparser import preparse
 
 import sage.all
 from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
@@ -68,7 +67,7 @@ def bianchi_modular_form_render_webpage():
         t = 'Bianchi Cusp Forms'
         bread = [('Bianchi Modular Forms', url_for(".bianchi_modular_form_render_webpage"))]
         info['learnmore'] = []
-        return render_template("browse.html", info=info, credit=credit, title=t, bread=bread)
+        return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread)
     else:
         return bianchi_modular_form_search(**args)
 
@@ -147,7 +146,7 @@ def bianchi_modular_form_search(**args):
     bread = [('Bianchi Modular Forms', url_for(".bianchi_modular_form_render_webpage")), (
         'Search results', ' ')]
     properties = []
-    return render_template("search_results.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("bmf-search_results.html", info=info, title=t, properties=properties, bread=bread)
 
 @bmf_page.route('/<field_label>')
 def render_bmf_field_dim_table(**args):
@@ -163,19 +162,7 @@ def render_bmf_field_dim_table(**args):
     # parse field label, which can either be a coded label such as
     # '2.0.8.1' or a nickname such as 'Qi' or 'Qsqrt-1'
     field_label=argsdict['field_label']
-    new_field_label = parse_field_label(field_label)
-    if not new_field_label:
-        info['err'] = "'%s' is not recognised as an imaginary quadratic field: use a name of the form 'Qi' or 'Qsqrt-m', or a label of the form '2.0.d.1' where d is the absolute value of the discriminant." % field_label
-
-        pretty_field_label=field_label
-        info['field'] = field_label
-        info['field_pretty'] = pretty_field_label
-        bread = [('Bianchi Modular Forms', url_for(".bianchi_modular_form_render_webpage")), (pretty_field_label, ' ')]
-        properties = []
-        t = ' '.join(['Dimensions of spaces of Bianchi modular forms over', pretty_field_label])
-        return render_template("field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
-
-    field_label = new_field_label
+    print("field label = {}".format(field_label))
     pretty_field_label = field_pretty(field_label)
     bread = [('Bianchi Modular Forms', url_for(".bianchi_modular_form_render_webpage")), (
         pretty_field_label, ' ')]
@@ -228,7 +215,7 @@ def render_bmf_field_dim_table(**args):
                  'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']),
                   'dims': [(dat['dimension_data'][w]['cuspidal_dim'],dat['dimension_data'][w]['new_dim']) for w in weights]} for dat in data.skip(start).limit(count)]
     info['dimtable'] = dimtable
-    return render_template("field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("bmf-field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
 
 
 @bmf_page.route('/<field_label>/<level_label>')
@@ -284,4 +271,4 @@ def render_bmf_space_webpage(field_label, level_label):
                 # info['new_dim'] = dim_data['new_dim']
                 # info['dimension'] = info['cuspidal_dim']
 
-    return render_template("space.html", info=info, credit=credit, title=t, bread=bread)
+    return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread)
