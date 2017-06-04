@@ -1,0 +1,75 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if err in info %}
+{{info.err}}
+{% else %}
+
+<h2>  Base Field  {{info.pretty_field_label}}</h2>
+
+<p>
+Generator \({{ info.field_gen }}\) with minimal polynomial \({{
+info.field_poly }}\).
+{#
+<table>
+<tr><td>Label:<td><A HREF="/NumberField/{{info.field_label }}">{{info.field_label}}</A> </tr>
+<tr><td>Degree:<td> \({{ info.field_degree }}\) </tr>
+<tr><td>Discriminant:<td> \({{ info.field_disc }}\) </tr>
+<tr><td>Defining polynomial:<td> \({{ info.field_poly }}\) </tr>
+<tr><td>Generator name:<td> \({{ info.field_gen }}\) </tr>
+<tr><td>Class number:<td> \({{ info.field_classno }}\) </tr>
+</table>
+#}
+</p>
+
+
+<h2>  Level  </h2>
+
+<p>
+<table>
+<tr><td> Level norm:<td> {{ info.level_norm }} </tr>
+<tr><td> Level label:<td> {{ info.level_label }} </tr>
+<tr><td> Level ideal:<td> \(({{ info.level_gen }}) = {{info.level_fact}} \) </tr>
+<tr><td> Level number of cusps:<td> \({{ info.level_tr }} \) </n>
+</table>
+</p>
+
+<h2> Modular form spaces </h2>
+
+<p>
+<table border=1>
+<tr>
+{% if info.nweights == 1 %}
+<th colspan={{info.nweights}}>Weight</th>
+{% else %}
+<th colspan={{info.nweights}}>Weights</th>
+{% endif %}
+{% for w in info.weights %}
+<th> {{w}} </th>
+{% endfor %}
+</tr>
+<tr>
+<td> Cuspidal dimension:
+{% for w in info.weights %}
+<td> {{ info.dim_data[w].cuspidal_dim }} </td>
+{% endfor %}
+</tr>
+<tr>
+<td> New cuspidal dimension:
+{% for w in info.weights %}
+<td> {{ info.dim_data[w].new_dim }} </td>
+{% endfor %}
+</tr>
+</table>
+</p>
+
+{% endif %}
+
+{% if DEBUG %}
+<div>
+<hr>
+{{ info }}
+</div>
+{% endif %}
+
+{% endblock %}

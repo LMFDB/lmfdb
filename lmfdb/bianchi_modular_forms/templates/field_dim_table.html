@@ -1,0 +1,71 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.err is defined %}
+<p> {{info.err}}
+</p>
+{% else %}
+
+<p>
+Table of the dimensions of the spaces of Bianchi modular forms for
+\(\Gamma_0(\mathfrak{n})\) for levels \(\mathfrak{n}\) ordered by
+norm, including both cusp forms and Eisenstein series.
+</p>
+
+{% if info.number %}
+
+<form>
+
+<p>Dislaying <input type="text" name="count"
+                    placeholder="{{info.count}}" size=2
+                    value="{{info.count}}"/> levels out of
+                    {{info.number}} starting at level number
+                    <input type="text" name="start"
+                    placeholder="{{info.start}}"
+                    value="{{info.start}}" size=2/>
+<button type='submit' value='Go'>Go</button>
+</p>
+</form>
+
+<div align=center>
+{% if info.start %}
+<a href= {{info.prev_page}}>...see previous levels...</a>
+{% endif %}
+<table border=2>
+<tr>
+<th colspan=2 style="border-left:none; border-top:none;" >&nbsp;</th>
+{% for k in info.weights %}
+<th >Weight {{k}}</th>
+{% endfor %}
+</tr>
+<tr>
+<th>Level</th>
+<th>Norm</th>
+{% for k in info.weights %}
+<th>cuspidal dimension (new)</th>
+{% endfor %}
+</tr>
+{% for data in info.dimtable %}
+<tr>
+<td align=right>{{data.level_label}}</td>
+<td align=right>{{data.level_norm}}</td>
+{% for d in data.dims %}
+<td align=center><a href={{data.level_space}}>{{d.0}} ({{d.1}})</a></td>
+{% endfor %}
+</tr>
+{% endfor %}
+</table>
+<p>
+{% if not info.complete %}
+<a href= {{info.next_page}}>...see next levels...</a>
+{% endif %}
+</p>
+</div>
+{% else %}
+<p>
+No data available for {{info.field_pretty}}
+</p>
+{% endif %}
+{% endif %}
+
+{% endblock %}
