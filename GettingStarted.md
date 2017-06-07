@@ -36,6 +36,18 @@ Installation
       # in the 'lmfdb/' directory:
       sage -pip install -r requirements.txt
    ```
+  
+  In case the last step fails due to some missing SSL library,
+  (this may be the case on osX) run
+
+  ```
+  sage -i openssl
+  sage -f python2 # takes some time
+  sage -i pyopenssl
+  sage -pip install --upgrade pip
+  sage -pip install -r requirements.txt
+  ```
+
   * [optional] Memcache.  *This step is not at all necessary and can
     safely be ignored!* Memcache speeds up recompilation of python
     modules during development.  Using it requires both installing the
