@@ -14,6 +14,22 @@ from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.WebNumberField import field_pretty, WebNumberField
 
+bmf_dims = None
+bmf_forms = None
+
+def db_dims():
+    global bmf_dims
+    if bmf_dims is None:
+        bmf_dims = getDBConnection().bmfs.dimensions
+    return bmf_dims
+
+def db_forms():
+    global bmf_forms
+    if bmf_forms is None:
+        bmf_forms = getDBConnection().bmfs.forms
+    return bmf_forms
+
+
 bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
 
 field_label_regex = re.compile(r'2\.0\.(\d+)\.1')
@@ -43,8 +59,6 @@ def bianchi_modular_form_render_webpage():
 
 
 def bianchi_modular_form_search(**args):
-    C = getDBConnection()
-    C.bmfs.forms.ensure_index([('level_norm', ASCENDING), ('label', ASCENDING)])
 
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info:
@@ -82,7 +96,7 @@ def bianchi_modular_form_search(**args):
         count = 100
 
     info['query'] = dict(query)
-    res = C.bmfs.forms.find(
+    res = db_forms().find(
         query).sort([('level_norm', ASCENDING), ('label', ASCENDING)]).limit(count)
     nres = res.count()
 
@@ -138,7 +152,6 @@ def render_bmf_field_dim_table(**args):
         pretty_field_label, ' ')]
     properties = []
     t = ' '.join(['Dimensions of spaces of Bianchi modular forms over', pretty_field_label])
-    C = getDBConnection()
     query = {}
     query['field_label'] = field_label
     if argsdict.get('level_norm'):
@@ -159,9 +172,11 @@ def render_bmf_field_dim_table(**args):
                 newors.extend(oldors)
             tmp[1] = newors
         query[tmp[0]] = tmp[1]
-    data = C.bmfs.dimensions.find(query)
+    data = db_dims().find(query)
     data = data.sort([('level_norm', ASCENDING)])
-    print "found %s records in Bianchi dimension table for field %s" % (data.count(),field_label)
+    info['number'] = nrec = data.count()
+    print "found %s records in Bianchi dimension table for field %s" % (nrec,field_label)
+    data = list(data.skip(start).limit(count))
     info['field'] = field_label
     info['field_pretty'] = pretty_field_label
     nf = WebNumberField(field_label)
@@ -169,12 +184,15 @@ def render_bmf_field_dim_table(**args):
     info['field_degree'] = nf.degree()
     info['field_disc'] = str(nf.disc())
     info['field_poly'] = teXify_pol(str(nf.poly()))
-    weights = [str(w) for w in [2]] # need to dynamically get this from the data
+    weights = set()
+    for dat in data:
+        weights = weights.union(set([int(w) for w in dat['dimension_data']]))
+    weights = list(weights)
+    weights.sort()
     info['weights'] = weights
     info['nweights'] = len(weights)
     info['count'] = count
     info['start'] = start
-    info['number'] = data.count()
     info['complete'] = int(info['number'] < info['count'])
     info['next_page'] = url_for(".render_bmf_field_dim_table", field_label=field_label, start=str(start+count), count=str(count), level_norm=argsdict.get('level_norm',''))
     info['prev_page'] = url_for(".render_bmf_field_dim_table", field_label=field_label, start=str(max(0,start-count)), count=str(count))
@@ -182,7 +200,7 @@ def render_bmf_field_dim_table(**args):
     dimtable = [{'level_label': dat['level_label'],
                  'level_norm': dat['level_norm'],
                  'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']),
-                  'dims': [(dat['dimension_data'][w]['cuspidal_dim'],dat['dimension_data'][w]['new_dim']) for w in weights]} for dat in data.skip(start).limit(count)]
+                  'dims': [(dat['dimension_data'][w]['cuspidal_dim'],dat['dimension_data'][w]['new_dim']) for w in dat['dimension_data']]} for dat in data]
     info['dimtable'] = dimtable
     return render_template("bmf-field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
 
@@ -192,18 +210,19 @@ def render_bmf_space_webpage(field_label, level_label):
     info = {}
     t = "Bianchi Modular Forms of level %s over %s" % (level_label, field_label)
     credit = bianchi_credit
-    bread = [('Bianchi Modular Forms', url_for(".render_bmf_space_webpage", field_label=field_label, level_label=level_label))]
+    bread = [('Bianchi Modular Forms', url_for(".bianchi_modular_form_render_webpage")),
+             (field_pretty(field_label), url_for(".render_bmf_field_dim_table", field_label=field_label)),
+             (level_label, url_for(".render_bmf_space_webpage", field_label=field_label, level_label=level_label))]
 
     if not field_label_regex.match(field_label):
         info['err'] = "%s is not a valid label for an imaginary quadratic field" % field_label
     else:
         pretty_field_label = field_pretty(field_label)
-        C = getDBConnection()
-        if not C.bmfs.dimensions.find({'field_label': field_label}):
+        if not db_dims().find({'field_label': field_label}):
             info['err'] = "no information exists in the database for field %s" % pretty_field_label
         else:
             t = "Bianchi Modular Forms of level %s over %s" % (level_label, pretty_field_label)
-            data = C.bmfs.dimensions.find({'field_label': field_label, 'level_label': level_label})
+            data = db_dims().find({'field_label': field_label, 'level_label': level_label})
             n = data.count()
             if n==0:
                 info['err'] = "no information exists in the database for level %s and field %s" % (level_label, pretty_field_label)
@@ -229,10 +248,11 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['level_gen'] = latex(I.gens_reduced()[0])
                 info['level_fact'] = latex(I.factor())
                 dim_data = data['dimension_data']
-                for w in dim_data.keys():
+                weights = dim_data.keys()
+                weights.sort(key=lambda w: int(w))
+                for w in weights:
                     dim_data[w]['dim']=dim_data[w]['cuspidal_dim']
                 info['dim_data'] = dim_data
-                weights = [str(w) for w in [2]] # need to dynamically get this from the data
                 info['weights'] = weights
                 info['nweights'] = len(weights)
                 # info['cuspidal_dim'] = dim_data['cuspidal_dim']

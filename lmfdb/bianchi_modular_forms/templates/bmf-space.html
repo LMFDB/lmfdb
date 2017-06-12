@@ -23,14 +23,12 @@ info.field_poly }}\).
 </p>
 
 
-<h2>  Level  </h2>
+<h2>  Level {{ info.level_label }}  </h2>
 
 <p>
 <table>
-<tr><td> Level norm:<td> {{ info.level_norm }} </tr>
-<tr><td> Level label:<td> {{ info.level_label }} </tr>
-<tr><td> Level ideal:<td> \(({{ info.level_gen }}) = {{info.level_fact}} \) </tr>
-<tr><td> Level number of cusps:<td> \({{ info.level_tr }} \) </n>
+<tr><td> Norm:<td> {{ info.level_norm }} </tr>
+<tr><td> Ideal:<td> \(({{ info.level_gen }}) = {{info.level_fact}} \) </tr>
 </table>
 </p>
 
@@ -39,11 +37,7 @@ info.field_poly }}\).
 <p>
 <table border=1>
 <tr>
-{% if info.nweights == 1 %}
-<th colspan={{info.nweights}}>Weight</th>
-{% else %}
-<th colspan={{info.nweights}}>Weights</th>
-{% endif %}
+<th>Weight</th>
 {% for w in info.weights %}
 <th> {{w}} </th>
 {% endfor %}

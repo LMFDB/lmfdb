@@ -9,14 +9,19 @@
 <p>
 Table of the dimensions of the spaces of Bianchi modular forms for
 \(\Gamma_0(\mathfrak{n})\) for levels \(\mathfrak{n}\) ordered by
-norm, including both cusp forms and Eisenstein series.
+norm.
+</p>
+<p>
+  Each entry of the form $d\ (n)$ in column $w$ indicates that the space of cusp
+  forms of weight $w$ has dimension $d$ and the new subspace has
+  dimension $n$.
 </p>
 
 {% if info.number %}
 
 <form>
 
-<p>Dislaying <input type="text" name="count"
+<p>Displaying <input type="text" name="count"
                     placeholder="{{info.count}}" size=2
                     value="{{info.count}}"/> levels out of
                     {{info.number}} starting at level number
@@ -33,16 +38,17 @@ norm, including both cusp forms and Eisenstein series.
 {% endif %}
 <table border=2>
 <tr>
-<th colspan=2 style="border-left:none; border-top:none;" >&nbsp;</th>
+<th style="border-left:none; border-top:none;" >&nbsp;</th>
+<th style="border-left:none; border-top:none;" >Weight</th>
 {% for k in info.weights %}
-<th >Weight {{k}}</th>
+<th >{{k}}</th>
 {% endfor %}
 </tr>
 <tr>
 <th>Level</th>
 <th>Norm</th>
 {% for k in info.weights %}
-<th>cuspidal dimension (new)</th>
+<th> $d\ (n)$</th>
 {% endfor %}
 </tr>
 {% for data in info.dimtable %}

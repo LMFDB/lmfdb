@@ -38,8 +38,8 @@ dims = bmfs.dimensions
 # The following ensure_index command checks if there is an index on
 # level norm, field_absdisc. If there is no index it creates one.
 
-dims.ensure_index('level_norm')
-dims.ensure_index('field_absdisc')
+#dims.ensure_index('level_norm')
+#dims.ensure_index('field_absdisc')
 
 whitespace = re.compile(r'\s+')
 
@@ -65,7 +65,7 @@ def dimtab(line):
     field_label = data[0]
     d, s, field_absdisc, n = [int(x) for x in field_label.split(".")]
     weight = int(data[1])
-    assert weight==2
+    #assert weight==2
     level_params = data[2].split(',')
     level_norm = int(level_params[0][1:])
     level_a = int(level_params[1])
@@ -74,7 +74,7 @@ def dimtab(line):
     label = '-'.join([field_label,level_label])
     cuspidal_dim = int(data[3])
     new_cuspidal_dim = int(data[4])
-    dim_data = {str(2): {'cuspidal_dim': cuspidal_dim, 'new_dim': new_cuspidal_dim}}
+    dim_data = {str(weight): {'cuspidal_dim': cuspidal_dim, 'new_dim': new_cuspidal_dim}}
     return label, {
         'label': label,
         'field_label': field_label,
@@ -98,6 +98,8 @@ def upload_to_db(base_path, suffix):
 
         count = 0
         for line in h.readlines():
+            if line[0]=='#':
+                continue
             label, data = parse(line)
             if label=='':
                 continue
@@ -109,8 +111,13 @@ def upload_to_db(base_path, suffix):
             space = data_to_insert[label]
             for key in data:
                 if key in space:
-                    if space[key] != data[key]:
-                        raise RuntimeError("Inconsistent data for %s" % label)
+                    if key=='dimension_data':
+                        space[key].update(data[key])
+                    else:
+                        if space[key] != data[key]:
+                            print("space[{}] = {}".format(key,space[key]))
+                            print("data[{}] = {}".format(key,data[key]))
+                            raise RuntimeError("Inconsistent data for %s" % label)
                 else:
                     space[key] = data[key]
         print "finished reading %s lines from file" % count
@@ -119,7 +126,7 @@ def upload_to_db(base_path, suffix):
     count = 0
     for val in vals:
         #print val
-        dims.update({'label': val['label']}, {"$set": val}, upsert=True)
+        dims.update_one({'label': val['label']}, {"$set": val}, upsert=True)
         count += 1
-        if count % 5000 == 0:
+        if count % 50 == 0:
             print "inserted %s" % (val['label'])
