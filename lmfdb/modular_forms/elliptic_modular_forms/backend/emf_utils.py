@@ -521,30 +521,63 @@ def find_newform_label(level,weight,character,field,aps):
     r"""
     Find the label of the newform orbit in the database which matches the input.
     
+    INPUT:
+    - 'level'     -- the level,
+    - 'weight'    -- the weight
+    - 'character' -- the character'
+    - 'field'     -- the field, given in terms of a list of integer coefficients for the absolute polynomial  
+    - 'aps'       -- the coefficients - given as a dictionary of lists giving the coefficient in terms of the generator of the field as above.
+    
+    
+    EXAMPLE:
+    
+    sage: find_newform_label(9,16,1,[-119880,0,1],{2:[0,1]})
+    u'e'
+    sage: find_newform_label(71,2,1,[-3,-4,1,1],{3:[0,-1,0]})
+    u'a'
+    sage: find_newform_label(71,2,1,[-3,-4,1,1],{5:[5,1,-1]})
+    u'a'
+    
+    NOTE: We implicitly assume that the input given is correct in the sense that 
+        if there is a unique orbit with a coefficient field of the same degree as the input
+        then we simply return that label. (This will save a lot of time...)
+        
     """
+    from web_modform_space import WebModFormSpace
+    from sage.all import NumberField,QQ
     M = WebModFormSpace(level=level,weight=weight,character=character)
     if M.dimension_new_cusp_forms==1:
         return 'a'
-    orbits = M.hecke_orbits()
+    orbits = M.hecke_orbits
     ## construct field from field input... 
-    assert isinstance(field,list)
-    NF = NumberField(QQ['x'](field))
+    if not isinstance(field,list):
+        raise ValueError,"Need to give field as a list!"
+    if not isinstance(aps,dict):
+        raise ValueError,"Need to give aps as a dict!"
+    if field == [1]:
+        NF = QQ
+    else:
+        NF = NumberField(QQ['x'](field),names='x')
     degree_of_input = NF.absolute_degree()
-    degrees = map(f.coefficient_field_degree for label,f in orbits.viewitems())
+    degrees = map(lambda x:x[1].coefficient_field_degree,orbits.viewitems())
     if degrees.count(degree_of_input)==0:
         raise ValueError,"No newform with this level, weight, character and field degree!"
     if degrees.count(degree_of_input)==1:
+        ## If there is a unique mathcing field we return this orbit label.
         l = filter(lambda x: x[1].coefficient_field_degree==degree_of_input,orbits.viewitems() )
-        return l[0]
+        return l[0][0]
     aps_input = { p: NF(a) for p,a in aps.viewitems()}
-    homs = f.coefficient_field.Hom(NF)
-    possible_labels = orbits.viewkeys()
+    possible_labels = orbits.keys()
     for label,f in orbits.viewitems():
         if f.coefficient_field_degree != degree_of_input:
             possible_labels.remove(label)
             continue
         try:
             for p,ap_input in aps_input.viewitems():
+                if f.coefficient_field == QQ:
+                    homs = [lambda x: x]
+                else:
+                    homs = f.coefficient(p).parent().Hom(NF)
                 for h in homs:
                     ap = h(f.coefficient(p))
                     if ap_input != ap:
