@@ -63,6 +63,8 @@ def sign_display(L):
 
 def cc_display(L):
     sizeL = len(L)
+    if sizeL == 1:
+        return str(L[0])
     stg = str(L[0])+ ", "
     for i in range(1,sizeL-1):
         stg =stg + str(L[i])+", "
@@ -110,7 +112,8 @@ def decjac_format(decjac_list):
             entry = entry + "^" + str(ints[1])
         entries.append(entry)
     latex = "\\times ".join(entries)
-    ccClasses = [ints[2] for ints in decjac_list]
+    ccClasses = cc_display ([ints[2] for ints in decjac_list])
+    #ccClasses = [ints[2] for ints in decjac_list]
     return latex, ccClasses
 
 @higher_genus_w_automorphisms_page.route("/")
@@ -406,8 +409,8 @@ def render_passport(args):
         if 'eqn' in data:
             info.update({'eqns': data['eqn']})
         
-        if 'Ndim' in data:
-            info.update({'Ndim': data['Ndim']})
+        if 'ndim' in data:
+            info.update({'Ndim': data['ndim']})
 
         other_data = False
 
@@ -427,7 +430,7 @@ def render_passport(args):
         if 'jacobian_decomp' in data:
             jcLatex, conjClasses = decjac_format(data['jacobian_decomp'])
             info.update({'conjClasses': conjClasses, 'jacobian_decomp': jcLatex})
-            other_data = True
+            
             
         if 'cinv' in data:
             cinv=Permutation(data['cinv']).cycle_string()
@@ -600,5 +603,3 @@ def hgcwa_code(**args):
     code += '\n'.join(lines)
     print "%s seconds for %d bytes" %(time.time() - start,len(code))
     return code
-
-
