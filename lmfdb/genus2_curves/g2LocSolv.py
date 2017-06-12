@@ -17,6 +17,7 @@ def IsSquareInQp(x,p):
   return false
  # Renormalise to get a unit
  x//=p**v
+ # Reduce mod p and conclude
  if p==2:
   return Mod(x,8)==1
  else:
@@ -43,10 +44,8 @@ def IsSolvableAt(F,p,c): # Tests whether the curve y²=c*F(x) has a point over Q
    if IsSquareInQp(c*F.leading_coefficient(),p):
     if p>r:# Then there is x s.t. R(x) nonzero and C is a square
      return true
-   #else: # C nonsquare, so if we have a Zp-point it must have R(x)=0 mod p
-   #Z=R.roots()
-   ##TODO
-  else:
+    # TODO It would save time to do something clever when p is large and leading coeff not a square
+  else: # Now S(x) is not constant
    g=S.degree()//2-1 # genus of the curve y²=C*S(x)
    B=floor(p-1-2*g*sqrt(p)) # lower bound on number of points on y²=C*S(x) not at infty
    if B>r+s: # Then there is a point on y²=C*S(x) not at infty and with R(x) and S(x) nonzero
@@ -59,13 +58,13 @@ def IsSolvableAt(F,p,c): # Tests whether the curve y²=c*F(x) has a point over Q
   if IsSquareInQp(c*F(x),p):
    return true
  #So now, if we have a Qp-point, its y-coordinate must be 0 mod p
- Z=F.roots(Fp)
+ Z=F.roots(Fp) # So the x-coordinate must reduce to one of these
  t=F.variables()[0]
  for z in Z:
-  F1=F(lift(z[0])+p*t)
+  F1=F(lift(z[0])+p*t) # Change variable to center around candidate x-coordinate (i.e. we are blowing up without saying it) 
   c1=F1.content()
-  F1//=c1
-  if IsSolvableAt(F1,p,(c*c1).squarefree_part()):
+  F1//=c1 # Sotre and clear new content
+  if IsSolvableAt(F1,p,(c*c1).squarefree_part()): # Throw away squares from new content
    return true
  return false
  
@@ -79,12 +78,13 @@ def NonLocSolvPlaces(f,h=0): # List of primes at which the curve y²+h(x)*y=f(x)
  # Do we have a rational point an infty ?
  if F.degree()%2 or F.leading_coefficient().is_square():
   return []
- if F.leading_coefficient()<0 and len(F.real_roots())==0: # Points over RR ?
+ # Points over RR ?
+ if F.leading_coefficient()<0 and len(F.real_roots())==0:
   S.append(oo)
  D=ZZ(F.disc()) # Primes of bad red for our model
  P=Set(D.prime_divisors()).union(Set([2,3,5,7,11,13])) # Add primes at which Weil bounds do not guarantee a mod p point
  c=F.content()
- F//=c
+ F//=c # Store content and clear it
  for p in P:
   if not IsSolvableAt(F,p,c.squarefree_part()): # Throw away squares from content
    S.append(p)
