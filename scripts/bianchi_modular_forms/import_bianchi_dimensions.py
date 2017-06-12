@@ -18,22 +18,21 @@ The "dimensions" collection entries have the following fields:
                        dict with keys 'cuspidal_dim', 'new_dim'
 
 """
-import os.path
-import gzip
 import re
-import sys
-import time
 import os
-import random
-import glob
-import pymongo
-import lmfdb.base as base
-from sage.rings.all import ZZ
 
-dbport=37010
-base._init(dbport, '')
-conn = base.getDBConnection()
-bmfs = conn.bmfs
+from lmfdb.base import getDBConnection
+print "getting connection"
+C= getDBConnection()
+print "authenticating on the elliptic_curves database"
+import yaml
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['bmfs'].authenticate(username, password)
+print "setting bmfs"
+bmfs = C.bmfs
+print "setting dims"
 dims = bmfs.dimensions
 
 # The following ensure_index command checks if there is an index on
@@ -66,6 +65,7 @@ def dimtab(line):
     field_label = data[0]
     d, s, field_absdisc, n = [int(x) for x in field_label.split(".")]
     weight = int(data[1])
+    assert weight==2
     level_params = data[2].split(',')
     level_norm = int(level_params[0][1:])
     level_a = int(level_params[1])
@@ -96,7 +96,6 @@ def upload_to_db(base_path, suffix):
 
         parse = globals()[f[:f.find('.')]]
 
-        t = time.time()
         count = 0
         for line in h.readlines():
             label, data = parse(line)

@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import re
-import pymongo
 
-from lmfdb.base import app, getDBConnection
-from pymongo import ASCENDING, DESCENDING
-from flask import Flask, session, g, render_template, url_for, request, redirect, make_response
+from lmfdb.base import getDBConnection
+from pymongo import ASCENDING
+from flask import render_template, url_for, request
 
-import sage.all
-from sage.all import Integer, ZZ, QQ, PolynomialRing, NumberField, CyclotomicField, latex, AbelianGroup, polygen, euler_phi
+from sage.all import ZZ, latex
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, coeff_to_poly, pol_to_html
-from lmfdb.search_parsing import parse_list, parse_range, parse_range2
-from lmfdb.bianchi_modular_forms import bmf_page, bmf_logger
-from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.WebNumberField import *
+from lmfdb.utils import to_dict
+from lmfdb.search_parsing import parse_range, parse_range2, parse_nf_string
+from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
+from lmfdb.bianchi_modular_forms import bmf_page
+from lmfdb.WebNumberField import field_pretty, WebNumberField
 
 bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
 
@@ -24,39 +22,11 @@ LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 # parse field label, which can either be a coded label such as
 # '2.0.8.1' or a nickname such as 'Qi' or 'Qsqrt-1'
 def parse_field_label(lab):
-    res = parse_field_string(lab)
-    if 'not a valid field label' in res:
-        return False
-    if field_label_regex.match(res):
-        if int(res.split('.')[2])%4 in [0,3]:
-            return res
+    if field_label_regex.match(lab):
+        if int(lab.split('.')[2])%4 in [0,3]:
+            return lab
         return False
     return False
-
-def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    o_str = pol_str.replace('*', '')
-    ind_mid = o_str.find('/')
-    while ind_mid != -1:
-        ind_start = ind_mid - 1
-        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_start -= 1
-        ind_end = ind_mid + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
-            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_mid = o_str.find('/')
-
-    ind_start = o_str.find('^')
-    while ind_start != -1:
-        ind_end = ind_start + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_start = o_str.find('^', ind_end)
-
-    return o_str
-
 
 @bmf_page.route("/")
 def bianchi_modular_form_render_webpage():
@@ -172,7 +142,6 @@ def render_bmf_field_dim_table(**args):
     query = {}
     query['field_label'] = field_label
     if argsdict.get('level_norm'):
-        argsdict['level_norm'] = clean_input(argsdict['level_norm'])
         ran = argsdict['level_norm']
         ran = ran.replace('..', '-').replace(' ', '')
         if not LIST_RE.match(ran):
@@ -253,7 +222,6 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['field_poly'] = teXify_pol(str(nf.poly()))
                 w = 'i' if nf.disc()==-4 else 'a'
                 L = nf.K().change_names(w)
-                phi = L.structure()[1]
                 alpha = L.gen()
                 info['field_gen'] = latex(alpha)
                 N,c,d = [ZZ(x) for x in level_label.split('.')]
@@ -272,3 +240,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 # info['dimension'] = info['cuspidal_dim']
 
     return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread)
+
+@bmf_page.route('/<field_label>/<level_label>')
+def render_bmf_webpage(field_label, level_label):
+    pass
