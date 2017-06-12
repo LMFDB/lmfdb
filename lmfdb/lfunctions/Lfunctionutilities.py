@@ -278,10 +278,12 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return(ans + truncatenumber(ip, precision) + "i")
     elif ip < -1 * truncation:
         if float(abs(ip + 1)) < truncation:
-            if seriescoefftype == "serieshtml":
-               return(" &minus;  <em>i</em>" + "&middot;" + seriesvar(index, seriestype))
+            if seriescoefftype == "factor": #assumes that factor is used in math mode
+                return("- i \cdot" + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(" &minus; <em>i</em> &middot;" + seriesvar(index, seriestype))
             else:
-               return("-i" + "&middot;" + seriesvar(index, seriestype))
+                return("- i" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + "i" + seriesvar(index, seriestype))
