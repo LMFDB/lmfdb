@@ -516,3 +516,45 @@ def convert_matrix_to_extension_fld(E,K):
         for b in range(E.ncols()):
             EE[a,b]=E[a,b].polynomial().substitute({x:z})
     return EE
+
+def find_newform_label(level,weight,character,field,aps):
+    r"""
+    Find the label of the newform orbit in the database which matches the input.
+    
+    """
+    M = WebModFormSpace(level=level,weight=weight,character=character)
+    if M.dimension_new_cusp_forms==1:
+        return 'a'
+    orbits = M.hecke_orbits()
+    ## construct field from field input... 
+    assert isinstance(field,list)
+    NF = NumberField(QQ['x'](field))
+    degree_of_input = NF.absolute_degree()
+    degrees = map(f.coefficient_field_degree for label,f in orbits.viewitems())
+    if degrees.count(degree_of_input)==0:
+        raise ValueError,"No newform with this level, weight, character and field degree!"
+    if degrees.count(degree_of_input)==1:
+        l = filter(lambda x: x[1].coefficient_field_degree==degree_of_input,orbits.viewitems() )
+        return l[0]
+    aps_input = { p: NF(a) for p,a in aps.viewitems()}
+    homs = f.coefficient_field.Hom(NF)
+    possible_labels = orbits.viewkeys()
+    for label,f in orbits.viewitems():
+        if f.coefficient_field_degree != degree_of_input:
+            possible_labels.remove(label)
+            continue
+        try:
+            for p,ap_input in aps_input.viewitems():
+                for h in homs:
+                    ap = h(f.coefficient(p))
+                    if ap_input != ap:
+                        possible_labels.remove(label)
+                        raise StopIteration
+        except StopIteration:
+            continue
+    if len(possible_labels) > 1:
+        raise ArithmeticError,"Not sufficient data (or errors) to determine orbit!"
+    if len(possible_labels) == 0:
+        raise ArithmeticError,"Not sufficient data (or errors) to determine orbit! NO matching label found!"
+    return possible_labels[0]
+            
