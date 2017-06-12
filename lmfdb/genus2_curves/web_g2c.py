@@ -6,6 +6,7 @@ from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
+from lmfdb.genus2_curves.g2LocSolv import QpName, NonLocSolvPlaces
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
@@ -582,6 +583,12 @@ class WebG2C(object):
             data['two_selmer_rank'] = ZZ(curve['two_selmer_rank'])
             data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
             data['locally_solvable'] = "yes" if curve['locally_solvable'] else "no"
+            eq=eval(curve['eqn'])
+            Zx=PolynomialRing(ZZ,'x')
+            NSolv=NonLocSolvPlaces(Zx(eq[0]),Zx(eq[1]))
+            NSolv.sort()
+            if len(NSolv):
+             data['locally_solvable'] += ", no points defined over " + " nor ".join([QpName(p) for p in NSolv])+"."
             data['torsion_order'] = curve['torsion_order']
             data['torsion_factors'] = [ ZZ(a) for a in literal_eval(curve['torsion_subgroup']) ]
             if len(data['torsion_factors']) == 0:
