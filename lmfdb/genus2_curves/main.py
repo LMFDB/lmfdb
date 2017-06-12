@@ -15,7 +15,7 @@ from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
-credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight, and Dan Yasaki"
+credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight,  Raymond van Bommel, Dan Yasaki."
 
 ###############################################################################
 # global database connection and stats objects

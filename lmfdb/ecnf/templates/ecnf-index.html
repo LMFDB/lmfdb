@@ -116,11 +116,11 @@ Please enter a value or leave blank:
           {{ KNOWL('ec.j_invariant', title="j-invariant") }}
           </td>
           <td colspan=2>
-          <input type='text' name='jinv' example=" (818172355/1024)*a-(2133314821/512)" size=20 value="{{jinv}}" />
+          <input type='text' name='jinv' example="105474/49 + a*34213/49" size=18 value="{{jinv}}" />
           </td>
           <td colspan=2>
           <span class="formexample">
-          e.g. (818172355/1024)*a-(2133314821/512) over 2.2.89.1</span>
+          e.g. 105474/49 + a*34213/49 over 2.0.7.1</span>
           </td>
 
           <td align=right>&nbsp; </td>
@@ -133,7 +133,7 @@ Please enter a value or leave blank:
           {{ KNOWL('ec.torsion_order',title="torsion order") }}
           </td>
           <td>
-          <input type='text' name='torsion' example="2" size=10 value="{{torsion}}" />
+          <input type='text' name='torsion' example="2" size=5 value="{{torsion}}" />
           </td>
           <td>
           <span class="formexample"> e.g. 2 </span>
@@ -143,13 +143,25 @@ Please enter a value or leave blank:
           {{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}
           </td>
           <td>
-          <input type='text' name='torsion_structure' example="[2,4]" size=10 value="{{torsion_structure}}" />
+            {{ tor_struct_search_nf()| safe }}
           </td>
           <td>
-          <span class="formexample"> e.g. [2,4] </span>
+          &nbsp;
           </td>
-      </tr>
 
+      </tr>
+    <tr>
+      <td colspan=3>&nbsp;</td>
+      <td align=right>
+        {{ KNOWL('ec.isogeny',title="isogeny degree") }}
+      </td>
+      <td>
+        <input type='text' name='isodeg' example="16" size=5 />
+      </td>
+      <td>
+        <span class="formexample"> e.g. 16 </span>
+      </td>
+    </tr>
  <tr>
   <td align=right>Maximum number of curves to display</td>
   <td>

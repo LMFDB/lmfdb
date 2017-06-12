@@ -10,30 +10,31 @@
 {% else %}
 
 <div>
-{{ info.degree_stats|safe }}
+{{ info.summary|safe }}
 </div>
 
 
-{% set ddat = info.dstats %}
+{% set stats = info.sig_stats %}
 
-{% for s, sdat in info.stats[info.degree].iteritems() %}
-{% if sdat %}
+{% for sigdat in stats %}
+{% set sig = sigdat.0 %}
+{% set sig_counts = sigdat.1 %}
+{% set field_counts = sigdat.2 %}
 <h3><a href="{{url_for('ecnf.statistics_by_signature',d=info.degree,
-             r=s)}}">Signature {{s}}</a>:
-{{info.sig_stats[s]['ncurves']}} curves in
-{{info.sig_stats[s]['nclasses']}} isogeny classes, conductor norm &le;
-{{info.sig_stats[s]['maxnorm']}}
+             r=sig.split(",")[0])}}">Signature ({{sig}})</a>:
+{{sig_counts.ncurves}} curves in
+{{sig_counts.nclasses}} isogeny classes, conductor norm &le;
+{{sig_counts.max_norm}}
  </h3>
 <table>
 <tr><th> Field <th> Number of curves <th> Number of isogeny classes <th> Maximum conductor norm </tr>
-{% for F in info.counts.fields_by_degree[info.degree] %}
-{% if F in sdat %}
-<tr><td> <a href="{{url_for('ecnf.show_ecnf1',nf=F)}}">{{F}}</a> <td> {{sdat[F].ncurves}} <td> {{sdat[F].nclasses}} <td> {{sdat[F].maxnorm}} </tr>
-{% endif %}
+{% for fdat in field_counts %}
+{% set f = fdat.0 %}
+{% set f_counts = fdat.1 %}
+<tr><td> <a href="{{url_for('ecnf.show_ecnf1',nf=f)}}">{{f}}</a> <td> {{f_counts.ncurves}} <td> {{f_counts.nclasses}} <td> {{f_counts.max_norm}} </tr>
 {% endfor %}
 </table>
 
-{% endif %}
 {% endfor %}
 
 {% endif %}

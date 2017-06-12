@@ -34,6 +34,9 @@ def g2c_db_lfunction_instances():
 def g2c_db_isogeny_classes_count():
     return getDBConnection().Lfunctions.instances.find({'type':'G2Q'}).count()
 
+def g2c_db_tamagawa_numbers():
+	return getDBConnection().genus2_curves.tamagawa_numbers
+
 
 ###############################################################################
 # Pretty print functions
@@ -124,11 +127,12 @@ def ring_pretty(L, f):
     return r'\Z [\frac{1 +' + str(f) + r'\sqrt{' + str(D) + r'}}{2}]'
 
 # currently galois functionality is not used here, but it is used in lfunctions so don't delete it
-def list_to_factored_poly_otherorder(s, galois=False):
+def list_to_factored_poly_otherorder(s, galois=False, vari = 'T'):
     """ Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
         and the second entry a list describing the Galois groups
         of the factors.
+        vari allows to choose the variable of the polynomial to be returned.
     """
     gal_list=[]
     if len(s) == 1:
@@ -173,9 +177,9 @@ def list_to_factored_poly_otherorder(s, galois=False):
                     elif vcf[i] == -1:
                         outstr += '-'
                     if i == 1:
-                        outstr += 'T'
+                        outstr += vari #instead of putting in T for the variable, put in a variable of your choice
                     elif i > 1:
-                        outstr += 'T^{' + str(i) + '}'
+                        outstr += vari + '^{' + str(i) + '}'
         if len(sfacts) > 1 or v[1] > 1:
             outstr += ')'
         if v[1] > 1:
@@ -500,8 +504,8 @@ class WebG2C(object):
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, is_curve=True):
-        self.make_object(curve, endo, is_curve)
+    def __init__(self, curve, endo, tama, is_curve=True):
+        self.make_object(curve, endo, tama, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -529,9 +533,13 @@ class WebG2C(object):
         if not endo:
             g2c_logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
             raise KeyError("Endomorphism data for genus 2 curve %s not found in database." % label)
-        return WebG2C(curve, endo, is_curve=(len(slabel)==4))
+        tama = g2c_db_tamagawa_numbers().find({"label" : curve['label']}).sort('p', ASCENDING)
+        if tama.count() == 0:
+            g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
+            raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)        
+        return WebG2C(curve, endo, tama, is_curve=(len(slabel)==4))
 
-    def make_object(self, curve, endo, is_curve):
+    def make_object(self, curve, endo, tama, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
@@ -582,6 +590,16 @@ class WebG2C(object):
                 data['torsion_subgroup'] = ' \\times '.join([ '\Z/{%s}\Z' % n for n in data['torsion_factors'] ])
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
+            data['tama'] = ''
+            for i in range(tama.count()):
+            	item = tama.next()
+            	if item['tamagawa_number'] > 0:
+            		tamgwnr = str(item['tamagawa_number'])
+            	else:
+            		tamgwnr = 'N/A'
+            	data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + ')'
+            	if (i+1 < tama.count()):
+            		data['tama'] += ', '
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])

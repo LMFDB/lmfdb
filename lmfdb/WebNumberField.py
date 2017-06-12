@@ -5,7 +5,7 @@ from sage.all import gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, 
 import yaml, os
 import hashlib
 from sage.misc.cachefunc import cached_function
-from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html
+from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html, display_multiset
 from flask import url_for
 from collections import Counter
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
@@ -103,10 +103,17 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
-def do_mult(ent):
-    if ent[1]==1:
-        return ent[0]
-    return "%s x%d" % (ent[0], ent[1])
+def formatfield(coef):
+    coef = string2list(coef)
+    thefield = WebNumberField.from_coeffs(coef)
+    C = base.getDBConnection()
+    if thefield._data is None:
+        deg = len(coef) - 1
+        mypol = sage.all.latex(coeff_to_poly(coef))
+        mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
+        mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
+        return mypol
+    return nf_display_knowl(thefield.get_label(),C,thefield.field_pretty())
 
 # input is a list of pairs, module and multiplicity
 def modules2string(n, t, modlist):
@@ -356,7 +363,7 @@ class WebNumberField:
         resall = self.resolvents()
         if 'sib' in resall:
             # list of [degree, knowl
-            helpout = [[len(string2list(a))-1,self.myhelper([a,1])] for a in resall['sib']]
+            helpout = [[len(string2list(a))-1,formatfield(a)] for a in resall['sib']]
         else:
             helpout = []
         degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts.keys())]
@@ -372,8 +379,7 @@ class WebNumberField:
             # Don't include Q in labels
             sex = [z for z in sex if z != '1.1.1.1']
             labels = sorted(Set(sex))
-            helpout = [self.myhelper([a,1]) for a in resall['sex']]
-            knowls = [a[0] for a in helpout]
+            knowls = [formatfield(a) for a in resall['sex']]
             return [1, knowls, labels]
         return [1,[],[]]
 
@@ -381,8 +387,7 @@ class WebNumberField:
         resall = self.resolvents()
         cnt = self.galois_sib_data()[2]
         if 'gal' in resall:
-            helpout = [self.myhelper([a,1]) for a in resall['gal']]
-            knowls= [a[0] for a in helpout]
+            knowls= [formatfield(a) for a in resall['gal']]
             gal = [self.from_coeffs(str(a)) for a in resall['gal']]
             labs = [a.label for a in gal if a._data is not None]
             return [cnt, knowls, labs]
@@ -392,8 +397,7 @@ class WebNumberField:
         resall = self.resolvents()
         cnt = self.galois_sib_data()[1]
         if 'ae' in resall:
-            helpout = [self.myhelper([a,1]) for a in resall['ae']]
-            knowls = [a[0] for a in helpout]
+            knowls = [formatfield(a) for a in resall['ae']]
             ae = [self.from_coeffs(str(a)) for a in resall['ae']]
             labs = [a.label for a in ae if a._data is not None]
             return [cnt, knowls, labs]
@@ -408,9 +412,7 @@ class WebNumberField:
         subs = self.subfields()
         if subs == []:
             return []
-        subs = [self.myhelper(a) for a in subs]
-        subs = [do_mult(a) for a in subs]
-        return ', '.join(subs)
+        return display_multiset(subs, formatfield)
 
     def unit_galois_action(self):
         if not self.haskey('unitsGmodule'):
@@ -681,7 +683,7 @@ class WebNumberField:
          # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "number_fields/code.yaml")))
-        self.code['show'] = {'sage':'','pari':''} # use default show names
+        self.code['show'] = {'sage':'','pari':'', 'magma':''} # use default show names
 
         # Fill in placeholders for this specific field:
         for lang in ['sage', 'pari']:

@@ -6,7 +6,7 @@ Installation
   move into a new directory and type
 
   ```
-     git clone git@github.com:LMFDB/lmfdb.git lmfdb
+     git clone https://github.com/LMFDB/lmfdb.git lmfdb
   ```
 
   and follow these instructions.
@@ -81,7 +81,7 @@ Running
     installing mongo on your machine):
 
     ```
-       mongod --port 40000 --dbpath [db_directory] --smallfiles
+       mongod --port 37010 --dbpath [db_directory] --smallfiles
     ```
 
 * Now you can launch the webserver like this:
