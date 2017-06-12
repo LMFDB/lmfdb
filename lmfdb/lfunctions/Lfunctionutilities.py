@@ -145,7 +145,7 @@ def styleTheSign(sign):
 
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
-#  truncationexp is used to determine if a number is 'really' 0 or 1 or -1 or I or -I
+#  truncationexp is used to determine if a number is 'really' 0 or 1 or -1 or I or -I or 0.5 or -0.5
 #  precision is used to truncate decimal numbers
     truncation = float(10 ** truncationexp)
     try:
