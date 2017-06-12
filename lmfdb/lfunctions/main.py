@@ -495,11 +495,6 @@ def initLfunction(L, args, request):
         info['credit'] = L.credit
 
         try:
-            info['factorization'] = L.factorization
-        except:
-            pass
-
-        try:
             info['url'] = L.url
         except:
             info['url'] = ''
@@ -512,17 +507,6 @@ def initLfunction(L, args, request):
     (info['bread'], info['friends'] ) = set_bread_and_friends(L, request)
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
-
-
-#    # an inelegant way to remove zeros/plot in certain cases -- TODO: it would be better to do this by setting sageLFunction = None when L is created
-    if L.Ltype() == 'ellipticmodularform':
-        if ( (L.number == 1 and (1 + L.level) * L.weight > 50) or 
-               (L.number > 1 and L.level * L.weight > 50)):
-            info['zeroslink'] = ""
-            info['plotlink'] = ""
-
-
-
 
 
     if (L.degree > 1 and L.Ltype()!="genus2curveQ" and
@@ -981,7 +965,6 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         # FIXME there could be a filename collission
         #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
         plotStep = .1
-    #    if pythonL._Ltype == "hilbertmodularform":
         if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurveQ"]:
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
@@ -1074,12 +1057,12 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'TotallyReal' and arg5 == 'holomorphic':  # Hilbert modular form
         # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
-        return Lfunction_HMF(field=arg4, label=arg6, character=arg7, number=arg8)
+        return Lfunction_HMF(label=arg6, character=arg7, number=arg8)
 
 # next option is probably from an archaic HMF url
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 != 'Q' and arg4 == 'holomorphic':  # Hilbert modular form
         # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
-        return Lfunction_HMF(field=arg3, label=arg5, character=arg6, number=arg7)
+        return Lfunction_HMF(label=arg5, character=arg6, number=arg7)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
         # logger.debug(db)

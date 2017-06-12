@@ -185,6 +185,9 @@ class Lfunction:
         if hasattr(self, 'plot'):
             info['plot'] = self.plot
 
+        if hasattr(self, 'factorization'):
+            info['factorization'] = self.factorization
+            
         if self.fromDB and self.algebraic:
             info['dirichlet_arithmetic'] = lfuncDShtml(self, "arithmetic")
             info['eulerproduct_arithmetic'] = lfuncEPtex(self, "arithmetic")

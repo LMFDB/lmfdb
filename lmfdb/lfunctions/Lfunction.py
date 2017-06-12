@@ -13,7 +13,7 @@ from flask import url_for
 
 from Lfunctionutilities import (p2sage, string2number,
                                 compute_local_roots_SMF2_scalar_valued,
-                                compute_dirichlet_series,
+                                compute_siegel_dirichlet_series,
                                 signOfEmfLfunction)
 from LfunctionComp import nr_of_EC_in_isogeny_class, modform_from_EC, EC_from_modform
 import LfunctionDatabase
@@ -32,6 +32,8 @@ from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebN
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
+from lmfdb.artin_representations.math_classes import ArtinRepresentation
+import lmfdb.hypergm.hodge
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
@@ -594,7 +596,11 @@ class Lfunction_EMF(Lfunction):
         self.credit = 'Sage'
 
         # Generate a function to do computations
-        generateSageLfunction(self)
+        if ( (self.number == 1 and (1 + self.level) * self.weight > 50) or 
+               (self.number > 1 and self.level * self.weight > 50)):
+            self.sageLFunction = None
+        else:
+            generateSageLfunction(self)
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
@@ -610,185 +616,6 @@ class Lfunction_EMF(Lfunction):
         
     def original_object(self):
         return self.MF
-
-#############################################################################
-
-
-class Lfunction_HMF(Lfunction):
-    """Class representing a Hilbert modular form L-function
-
-    Compulsory parameters: label
-
-    Possible parameters: number
-
-    """
-
-    def __init__(self, **args):
-        # Check for compulsory arguments
-        validate_required_args ('Unable to construct Hilbert modular form L-function.', args, 'label')
-
-        self._Ltype = "hilbertmodularform"
-        logger.debug(str(args))
-        # Initialize default values
-        if not args['number']:
-            args['number'] = 0  # Default choice of embedding of coefficients
-        args['character'] = 0   # Only trivial character
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.algebraic = True
-        logger.debug(str(self.character) + str(self.label) + str(self.number))
-
-        # Load form from database
-        (f, F_hmf) = LfunctionDatabase.getHmfData(self.label)
-        if f is None:
-            raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.label)
-
-        F = WebNumberField(f['field_label'])
-        if not F or F.is_null():
-            raise KeyError('Error constructing number field %s'%f['field_label'])
-
-        self.character = args['character']
-        if self.character > 0:
-            raise KeyError("L-functions of Hilbert modular forms with non-trivial character are not yet implemented.")
-        self.number = int(args['number'])
-
-        # It is a Sage int
-        self.field_disc = F.disc()
-        self.field_degree = int(F.degree())
-        try:
-            self.weight = int(f['parallel_weight'])
-        except KeyError:
-            self.weight = int(f['weight'].split(', ')[0][1:])
-
-        self.motivic_weight = self.weight - 1
-        self.level = f['level_norm'] * self.field_disc ** 2
-
-        # Extract the L-function information from the hilbert modular form
-        self.automorphyexp = float(self.weight - 1) / float(2)
-        
-        self.mu_fe = []
-        self.nu_fe = [self.automorphyexp for i in range(self.field_degree)]
-        
-        self.kappa_fe = [1 for i in range(self.field_degree)]
-        self.lambda_fe = [self.automorphyexp for i in range(self.field_degree)]
-        self.Q_fe = (float(sqrt(self.level)) / (2 * math.pi) **
-                     (self.field_degree))
-
-        # POD: Consider using self.compute_kappa_lambda_Q_from_mu_nu (inherited from Lfunction or overloaded for this particular case), this will help standardize, reuse code and avoid problems
-        
-
-        R = QQ['x']
-        (x,) = R._first_ngens(1)
-        K = NumberField(R(str(f['hecke_polynomial']).replace('^', '**')), 'e')
-        # e = K.gens()[0]
-        iota = K.complex_embeddings()[self.number]
-
-        if self.level == 1:  # For level 1, the sign is always plus
-            self.sign = 1
-        else:  # for level>1, calculate sign from Fricke involution and weight
-            ALeigs = [al[1].replace('^', '**') for al in f['AL_eigenvalues']]
-            # the above fixed a bug at
-            # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
-            # but now the sign is wrong (i.e., not of absolute value 1 *)
-            AL_signs = [iota(K(str(al))) for al in ALeigs]
-            self.sign = prod(AL_signs) * (-1) ** (float(self.weight *
-                                                        self.field_degree / 2))
-        logger.debug("Sign: " + str(self.sign))
-
-        self.selfdual = True
-        self.langlands = True
-        self.primitive = True
-        self.degree = 2 * self.field_degree
-        self.poles = []
-        self.residues = []
-
-        # Compute Dirichlet coefficients
-        hecke_eigenvalues = [iota(K(str(ae))) for ae in f['hecke_eigenvalues']]
-        primes = [pp_str.split(', ') for pp_str in F_hmf['primes']]
-        primes = [[int(pp[0][1:]), int(pp[1])] for pp in primes]
-        primes = [[pp[0], pp[1], factor(pp[0])[0][1]] for pp in primes]
-
-        PP = primes[-1][0]
-        self.numcoeff = PP  # The number of coefficients is given by the
-                            # norm of the last prime
-
-        ppmidNN = [c[0] for c in f['AL_eigenvalues']]
-
-        ratl_primes = [p for p in range(primes[-1][0] + 1) if is_prime(p)]
-        RCC = CC['T']
-        (T,) = RCC._first_ngens(1)
-        heckepols = [RCC(1) for p in ratl_primes]
-        for l in range(len(hecke_eigenvalues)):
-            if F_hmf['primes'][l] in ppmidNN:
-                heckepols[ratl_primes.index(primes[l][1])] *= (
-                    1 - hecke_eigenvalues[l] / float(sqrt(primes[l][0]))
-                    * (T ** primes[l][2]))
-            else:
-                heckepols[ratl_primes.index(primes[l][1])] *= (
-                    1 - hecke_eigenvalues[l] / float(
-                    sqrt(primes[l][0])) * (T ** primes[l][2])
-                    + (T ** (2 * primes[l][2])))
-
-        # Compute inverses up to given degree
-        heckepolsinv = [heckepols[i].xgcd(T ** ceil(log(PP * 1.0) /
-                                    log(ratl_primes[i] * 1.0)))[1]
-                                    for i in range(len(heckepols))]
-
-        dcoeffs = [0, 1]
-        for n in range(2, ratl_primes[-1] + 1):
-            nfact = factor(n)
-            if len(nfact) == 1:
-                # prime power
-                p = nfact[0][0]
-                k = nfact[0][1]
-                # S = [1] + [dcoeffs[p ** i] for i in range(1, k)]
-                heckepol = heckepolsinv[ratl_primes.index(p)]
-                dcoeffs.append(heckepol[k])
-            else:
-                # composite
-                ancoeff = prod([dcoeffs[pe[0] ** pe[1]] for pe in nfact])
-                dcoeffs.append(ancoeff)
-
-        # ff = open('dcoeffs.txt', 'w')
-        # ff.write(str(primes) + '\n')
-        # ff.write(str(heckepols) + '\n')
-        # ff.write(str(ratl_primes) + '\n')
-        # ff.close()
-
-        self.dirichlet_coefficients = dcoeffs[1:]
-
-        self.coefficient_period = 0
-        self.coefficient_type = 3
-        self.quasidegree = self.degree
-
-        self.checkselfdual()
-
-        self.texname = "L(s,f)"
-        self.texnamecompleteds = "\\Lambda(s,f)"
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
-        else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-        self.title = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp form " 
-                      + "over " + F.field_pretty() 
-                      + " with parallel weight " + str(self.weight)
-                      + ", level norm " + str(f['level_norm']) )
-        if self.character:
-            self.title += ", and character " + str(self.character)
-        else:
-            self.title += ", and trivial character"
-
-        self.credit = ''
-
-        generateSageLfunction(self)
-        constructor_logger(self, args)
-
-    def Lkey(self):
-        return {"label", self.label}
-
-
-
 
 #############################################################################
 
@@ -831,9 +658,18 @@ class Lfunction_Maass(Lfunction):
             
             # Extract the data 
             makeLfromdata(self)
+
+            # Mandatory properties
+            self.coefficient_period = 0
+            self.coefficient_type = 0
+            self.poles = []
+            self.residues = []
+            self.langlands = True
+            self.quasidegree = self.degree
+            
+            # Specific properties
             if not self.selfdual:
                 self.dual_link = '/L' + self.lfunc_data['conjugate']
-
             title_end = " on $%s$" % (self.group)
 
         else:   # Generate from Maass form
@@ -903,75 +739,411 @@ class Lfunction_Maass(Lfunction):
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
-        self.info['knowltype'] = "degree" + str(self.degree)
+        self.info['knowltype'] = "mf.maass"
         self.info['title'] = ("$L(s,f)$, where $f$ is a Maass cusp form with "
                       + "level %s" % (self.level)) + title_end
 
     def Lkey(self):
         return {"dbid": self.dbid}
 
+#############################################################################
+
+
+class Lfunction_HMF(Lfunction):
+    """Class representing a Hilbert modular form L-function
+
+    Compulsory parameters: label
+
+    Possible parameters: number, character
+
+    """
+
+    def __init__(self, **args):
+        constructor_logger(self, args)
+
+        # Check for compulsory arguments
+        validate_required_args ('Unable to construct Hilbert modular form ' +
+                                'L-function.', args, 'label')
+        self._Ltype = "hilbertmodularform"
+
+        # Put the arguments into the object dictionary
+        self.label = args['label']
+        if args['number']:
+            self.number = int(args['number'])
+        else:
+            self.number = 0  # Default choice of embedding of coefficients
+        if args['character']:
+            self.character= int(args['character'])
+        else:
+            self.character = 0  # Default is trivial character
+        if self.character != 0:
+            raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
+        
+        # Load form (f) from database 
+        (f, F_hmf) = LfunctionDatabase.getHmfData(self.label)
+        if f is None:
+            raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.label)
+        try:
+            self.weight = int(f['parallel_weight'])
+        except KeyError:
+            self.weight = int(f['weight'].split(', ')[0][1:])
+
+        # Load the field (F) 
+        F = WebNumberField(f['field_label'])
+        if not F or F.is_null():
+            raise KeyError('Error constructing number field %s'%f['field_label'])
+        self.field_disc = F.disc()
+        self.field_degree = int(F.degree())
+
+        # Mandatory properties
+        self.fromDB = False       
+        self.coefficient_type = 3
+        self.coefficient_period = 0
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.primitive = True
+        self.degree = 2 * self.field_degree
+        self.quasidegree = self.degree
+        self.level = f['level_norm'] * self.field_disc ** 2
+        self.mu_fe = []
+        self.nu_fe = [Rational(self.weight - 1)/2 for i in range(self.field_degree)]
+        self.compute_kappa_lambda_Q_from_mu_nu()
+        self.algebraic = True
+        self.motivic_weight = self.weight - 1
+        self.automorphyexp = self.motivic_weight / 2.
+        
+        # Compute Dirichlet coefficients ########################
+        R = QQ['x']
+        (x,) = R._first_ngens(1)
+        K = NumberField(R(str(f['hecke_polynomial']).replace('^', '**')), 'e')
+        iota = K.complex_embeddings()[self.number]
+
+        hecke_eigenvalues = [iota(K(str(ae))) for ae in f['hecke_eigenvalues']]
+        primes = [pp_str.split(', ') for pp_str in F_hmf['primes']]
+        primes = [[int(pp[0][1:]), int(pp[1])] for pp in primes]
+        primes = [[pp[0], pp[1], factor(pp[0])[0][1]] for pp in primes]
+
+        PP = primes[-1][0]
+        self.numcoeff = PP  # The number of coefficients is given by the
+                            # norm of the last prime
+
+        ppmidNN = [c[0] for c in f['AL_eigenvalues']]
+
+        ratl_primes = [p for p in range(primes[-1][0] + 1) if is_prime(p)]
+        RCC = CC['T']
+        (T,) = RCC._first_ngens(1)
+        heckepols = [RCC(1) for p in ratl_primes]
+        for l in range(len(hecke_eigenvalues)):
+            if F_hmf['primes'][l] in ppmidNN:
+                heckepols[ratl_primes.index(primes[l][1])] *= (
+                    1 - hecke_eigenvalues[l] / float(sqrt(primes[l][0]))
+                    * (T ** primes[l][2]))
+            else:
+                heckepols[ratl_primes.index(primes[l][1])] *= (
+                    1 - hecke_eigenvalues[l] / float(
+                    sqrt(primes[l][0])) * (T ** primes[l][2])
+                    + (T ** (2 * primes[l][2])))
+
+        # Compute inverses up to given degree
+        heckepolsinv = [heckepols[i].xgcd(T ** ceil(log(PP * 1.0) /
+                                    log(ratl_primes[i] * 1.0)))[1]
+                                    for i in range(len(heckepols))]
+
+        dcoeffs = [0, 1]
+        for n in range(2, ratl_primes[-1] + 1):
+            nfact = factor(n)
+            if len(nfact) == 1:
+                # prime power
+                p = nfact[0][0]
+                k = nfact[0][1]
+                # S = [1] + [dcoeffs[p ** i] for i in range(1, k)]
+                heckepol = heckepolsinv[ratl_primes.index(p)]
+                dcoeffs.append(heckepol[k])
+            else:
+                # composite
+                ancoeff = prod([dcoeffs[pe[0] ** pe[1]] for pe in nfact])
+                dcoeffs.append(ancoeff)
+
+        self.dirichlet_coefficients = dcoeffs[1:]
+
+        # Compute the sign ########################
+        if self.level == 1:  # For level 1, the sign is always plus
+            self.sign = 1
+        else:  # for level>1, calculate sign from Fricke involution and weight
+            ALeigs = [al[1].replace('^', '**') for al in f['AL_eigenvalues']]
+            # the above fixed a bug at
+            # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
+            # but now the sign is wrong (i.e., not of absolute value 1 *)
+            AL_signs = [iota(K(str(al))) for al in ALeigs]
+            self.sign = prod(AL_signs) * (-1) ** (float(self.weight *
+                                                        self.field_degree / 2))
+        self.checkselfdual()
+
+        # Text for the web page
+        self.texname = "L(s,f)"
+        self.texnamecompleteds = "\\Lambda(s,f)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
+        self.credit = ''
+            
+        # Generate a function to do computations
+        generateSageLfunction(self)
+
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "mf.hilbert"
+        self.info['title'] = ("$L(s,f)$, " + "where $f$ is a holomorphic Hilbert cusp form " 
+                      + "over " + F.field_pretty() 
+                      + " with parallel weight " + str(self.weight)
+                      + ", level norm " + str(f['level_norm']) )
+        if self.character:
+            self.info['title'] += ", and character " + str(self.character)
+        else:
+            self.info['title'] += ", and trivial character"
+
+    def Lkey(self):
+        return {"label", self.label}
+        
+    def original_object(self):
+        return self.f
+
 
 #############################################################################
 
-class DedekindZeta(Lfunction):   # added by DK
-    """Class representing the Dedekind zeta-function
+class Lfunction_SMF2_scalar_valued(Lfunction):
+    """Class representing an L-function for a scalar valued Siegel modular form of degree 2
+
+    Compulsory parameters: weight
+                           orbit (SMF sample name is weight_orbt (e.g. 16_Klingen))
+
+    Optional parameters: number (indicates choice of embedding)
+    """
+
+    def __init__(self, **args):
+        constructor_logger(self, args)
+
+        # Check for compulsory arguments
+        validate_required_args('Unable to construct Siegel modular form L-function.',
+                               args, 'weight', 'orbit')
+        if self.orbit[0] == 'U':
+            self._Ltype = "siegelnonlift"
+        elif self.orbit[0] == 'E':
+            self._Ltype = "siegeleisenstein"
+        elif self.orbit[0] == 'K':
+            self._Ltype = "siegelklingeneisenstein"
+        elif self.orbit[0] == 'M':
+            self._Ltype = "siegelmaasslift"
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        self.weight = int(self.weight)
+        if args['number']:
+            self.number = int(args['number'])
+        else:
+            self.number = 0     # Default embedding of the coefficients
+
+        # Load form (S) from database 
+        label = '%d_%s'%(self.weight,self.orbit)
+        self.S = Sample('Sp4Z', label)
+        if not self.S:
+            raise KeyError("Siegel modular form Sp4Z.%s not found in database." % label)
+        self.field = self.S.field()
+        evlist = self.S.available_eigenvalues()
+        if len(evlist) < 3: # FIXME -- we should sanity check that we have enough eigenvalues for it make sense to display an L-function page (presumably 3 is not enough)
+            raise ValueError("Eigenvalue data for Siegel modular form Sp4Z.%s not available or insufficient." % label)
+        self.evs = self.S.eigenvalues(self.S.available_eigenvalues())
+        for ev in self.evs:
+            self.evs[ev] = self.field(self.evs[ev])
+        
+        # Mandatory properties
+        self.fromDB = False       
+        self.coefficient_type = 3
+        self.coefficient_period = 0
+        if self.orbit[0] == 'U':  # if the form isn't a lift but is a cusp form
+            self.poles = []  # the L-function is entire
+            self.residues = []
+            self.primitive = True  # and primitive
+        elif self.orbit[0] == 'E':  # if the function is an Eisenstein series
+            self.poles = [float(3) / float(2)]
+            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
+            self.primitive = False
+        elif self.orbit[0] == 'M':  # if the function is a lift and a cusp form
+            self.poles = [float(3) / float(2)]
+            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
+            self.primitive = False
+        elif self.orbit[0] == 'K':
+            self.poles = [float(3) / float(2)]
+            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
+            self.primitive = False
+        self.langlands = True
+        self.degree = 4
+        self.quasidegree = 1
+        self.level = 1
+        self.mu_fe = []  # the shifts of the Gamma_R to print
+        self.automorphyexp = float(self.weight) - float(1.5)
+        self.nu_fe = [Rational(1/2), self.automorphyexp]  # the shift of the Gamma_C to print
+        self.compute_kappa_lambda_Q_from_mu_nu()
+        self.algebraic = True        
+        self.motivic_weight = 2*self.weight - 3 # taken from A. Panchiskin's talk @ Oberwolfach, Oct. 2007 
+
+        # Compute Dirichlet coefficients ########################
+        roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
+        self.numcoeff = max([a[0] for a in roots])+1  # include a_0 = 0
+        self.dirichlet_coefficients = compute_siegel_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
+
+        self.sign = (-1) ** float(self.weight)
+        self.checkselfdual()
+
+        # Text for the web page
+        self.texname = "L(s,F)"
+        self.texnamecompleteds = "\\Lambda(s,F)"
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s,F)"
+        else:
+            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{F})"
+        self.credit = ''
+
+        # Generate a function to do computations
+        generateSageLfunction(self)
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "mf.siegel"
+        self.info['title'] = ("$L(s,F)$, " + "where $F$ is a scalar-valued Siegel " +
+                      "modular form of weight " + str(self.weight) + ".")
+
+    def Lkey(self):
+        return {"weight": self.weight, "orbit": self.orbit}
+
+    def original_object(self):
+        return self.S
+
+#############################################################################
+
+class Lfunction_genus2_Q(Lfunction):
+    """Class representing the L-function of a genus 2 curve over Q
 
     Compulsory parameters: label
 
     """
 
     def __init__(self, **args):
-        validate_required_args ('Unable to construct Dedekind zeta function.', args, 'label')
-        
-        constructor_logger(self, args)
-
-        self._Ltype = "dedekindzeta"
-
-        self.motivic_weight = 0
         # Check for compulsory arguments
+        validate_required_args('Unabel to construct L-function of genus 2 curve.',
+                               args, 'label')
         
-        # Initialize default values
+        self._Ltype = "genus2curveQ"
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        self.algebraic = True
+        self.numcoeff = 30
+
+        # Load data from the database
+        label_slash = self.label.replace(".","/")
+        db_label = "Genus2Curve/Q/" + label_slash
+        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
+        if not self.lfunc_data:
+            raise KeyError('No L-function instance data for "%s" was found ' +
+                           'in the database.'%db_label)
+
+        # Extract the data 
+        makeLfromdata(self)
+        self.fromDB = True
+
+        # Mandatory properties
+        self.coefficient_period = 0
+        self.coefficient_type = 2
+        self.poles = []
+        self.residues = []
+        self.langlands = True
+        self.quasidegree = 2
+              
+        # Text for the web page
+        self.htmlname = "<em>L</em>(<em>s,A</em>)"
+        self.texname = "L(s,A)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>A,s</em>)"
+        self.texname_arithmetic = "L(A,s)"
+        self.texnamecompleteds = "\\Lambda(s,A)"
+        self.texnamecompleted1ms = "\\Lambda(1-s,A)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(A,s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(A, " + str(self.motivic_weight + 1) + "-s)"
+        title_end = ("where $A$ is the Jacobian of a genus 2 curve "
+                      + "with label " + self.label)
+        self.credit = ''
+
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "g2c.q"
+        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
+        self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" + ", " +
+                                 title_end)
+        self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
+
+    def Lkey(self):
+        return {"label", self.label}
+
+
+
+#############################################################################
+
+class DedekindZeta(Lfunction):   
+    """Class representing the Dedekind zeta-function
+
+    Compulsory parameters: label
+
+    """
+
+    def __init__(self, **args):        
+        constructor_logger(self, args)
+
+        # Check for compulsory arguments
+        validate_required_args ('Unable to construct Dedekind zeta function.', args, 'label')
+        self._Ltype = "dedekindzeta"
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
 
         # Fetch the polynomial of the field from the database
         wnf = WebNumberField(self.label)
         if not wnf or wnf.is_null():
             raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database'%self.label)
-        # poly_coeffs = wnf.coeffs()
-
-        # Extract the L-function information from the polynomial
-        #R = QQ['x']
-        #(x,) = R._first_ngens(1)
-        # self.polynomial = (sum([poly_coeffs[i]*x**i
-        # for i in range(len(poly_coeffs))]))
         self.NF = wnf.K()
-        self.signature = wnf.signature()  # self.NF.signature()
-        self.sign = 1
-        self.quasidegree = sum(self.signature)
-        self.level = wnf.disc().abs()  # self.NF.discriminant().abs()
-        self.degreeofN = self.NF.degree()
-        
-        self.mu_fe = self.signature[0] * [0]  
-        self.nu_fe = self.signature[1] * [0] 
-        self.compute_kappa_lambda_Q_from_mu_nu()
-        
-        self.langlands = True
-        self.degree = self.degreeofN
-        self.dirichlet_coefficients = [Integer(x) for x in
-                                       self.NF.zeta_coefficients(5000)]
-        self.h = wnf.class_number()  # self.NF.class_number()
-        self.R = wnf.regulator()  # self.NF.regulator()
+        self.h = self.NF.class_number()
+        self.R = self.NF.regulator()
         self.w = len(self.NF.roots_of_unity())
-        # We can only compute the reside if we know the class number and regulator (not always the case)
+        self.signature = self.NF.signature() 
+
+        # Mandatory properties
+        self.fromDB = False       
+        self.coefficient_type = 3
+        self.coefficient_period = 0
+        self.poles = [1, 0]  # poles of the Lambda(s) function
         if self.h == "Not computed" or self.R == "Not computed":
-            self.res = self.residues = 0
+            self.res = self.residues = 0  # Not able to compute residue
         else:
             self.res = RR(2 ** self.signature[0] * self.h * self.R) / self.w
             self.residues = [self.res, -self.res]
-        
+        self.poles_L = [1]  # poles of L(s) used by createLcalcfile_ver2
+        self.residues_L = [1234] # residues of L(s) used by createLcalcfile_ver2,
+                                 # TODO: needs to be set
+        self.langlands = True
+        self.primitive = False
+        self.degree = self.NF.degree()
+        self.quasidegree = sum(self.signature)
+        self.level = self.NF.discriminant().abs()
+        self.mu_fe = self.signature[0] * [0]  
+        self.nu_fe = self.signature[1] * [0] 
+        self.compute_kappa_lambda_Q_from_mu_nu()
+        self.algebraic = True
+        self.motivic_weight = 0
+        self.dirichlet_coefficients = [Integer(x) for x in
+                                       self.NF.zeta_coefficients(5000)] # TODO: adjust nr of coef
+        self.sign = 1
+        self.selfdual = True
+
+        # Specific properties
+        # Determine the factorization       
         self.grh = wnf.used_grh()
         if self.degree > 1:
             if wnf.is_abelian() and len(wnf.dirichlet_group())>0:
@@ -1011,36 +1183,116 @@ class DedekindZeta(Lfunction):   # added by DK
                             self.factorization += (r'<a href="%s">\(L(s, \rho_{%s})\)</a>' % (ar_url, tex_label))
                             self.factorization += right
 
-        self.poles = [1, 0]  # poles of the Lambda(s) function
-
-        self.poles_L = [1]  # poles of L(s) used by createLcalcfile_ver2
-        self.residues_L = [1234]
-            # residues of L(s) used by createLcalcfile_ver2,
-            # XXXXXXXXXXXX needs to be set
-
-        self.coefficient_period = 0
-        self.selfdual = True
-        self.primitive = False
-        self.coefficient_type = 3
+        # Text for the web page
         self.texname = "\\zeta_K(s)"
         self.texnamecompleteds = "\\Lambda_K(s)"
         if self.selfdual:
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
         else:
             self.texnamecompleted1ms = "\\Lambda_K(1-s)"
-        self.title = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
         self.credit = 'Sage'
-        
-        # If we know the residue create a Sage L-function we can call to compute values
-        # But only when the degree is at most 4, due to bugs in the Sage lcalc library (see issues #1687 and #1691)
+
+        # Generate a function to do computations
+        # But only if we know the residue and when the degree is at most 4, due to bugs in the
+        # Sage lcalc library (see issues #1687 and #1691)
         if self.res and self.degree <= 4:
             generateSageLfunction(self)
         else:
             self.sageLfunction = None
             
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "nf"
+        self.info['label'] = self.label
+        self.info['title'] = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
 
     def Lkey(self):
         return {"label": self.label}
+
+    def original_object(self):
+        return self.NF
+
+       
+#############################################################################
+
+class ArtinLfunction(Lfunction):
+    """Class representing the Artin L-function
+
+    Compulsory parameters: label
+
+    """
+    def __init__(self, **args):
+        constructor_logger(self, args)
+
+        # Check for compulsory arguments
+        validate_required_args('Unable to construct Artin L-function', args, 'label')
+        self._Ltype = "artin"
+        
+        # Put the arguments into the object dictionary
+        self.label = args["label"]
+
+        # Create the Artin representation
+        try:
+            self.artin = ArtinRepresentation(self.label)
+        except Exception as err:
+            raise KeyError('Error constructing Artin representation %s.'%self.label, *err.args)
+        if not self.artin:
+            raise KeyError('No data for the Artin representation %s was found in the database.'%self.label)
+
+        # Mandatory properties
+        self.fromDB = False       
+        self.coefficient_type = 0
+        self.poles = self.artin.completed_poles()
+        self.residues = self.artin.completed_residues()
+        self.poles_L = self.artin.poles()
+        self.residues_L = self.artin.residues()
+        self.langlands = self.artin.langlands()
+        self.primitive = self.artin.primitive()
+        self.degree = self.artin.dimension()
+        self.level = self.artin.conductor()
+        self.mu_fe = self.artin.mu_fe()
+        self.nu_fe = self.artin.nu_fe()
+        self.compute_kappa_lambda_Q_from_mu_nu()
+        self.quasidegree = len(self.mu_fe) + len(self.nu_fe)
+        self.algebraic = True
+        self.motivic_weight = 0
+        
+        # Compute Dirichlet coefficients and period ########################
+        if self.degree == 1:
+            self.coefficient_period = Integer(self.artin.conductor())
+            self.dirichlet_coefficients = self.artin.coefficients_list(
+                upperbound=self.coefficient_period)
+        else:
+            self.coefficient_period = 0
+            self.dirichlet_coefficients = self.artin.coefficients_list(
+                upperbound=1000)
+
+        self.sign = self.artin.root_number()
+        self.selfdual = self.artin.selfdual()
+
+        # Text for the web page
+        self.texname = "L(s,\\rho)"  
+        self.texnamecompleteds = "\\Lambda(s)"  
+        if self.selfdual:
+            self.texnamecompleted1ms = "\\Lambda(1-s)" 
+        else:
+            self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
+        self.credit = ('Sage, lcalc, and data precomputed in ' +
+                       'Magma by Tim Dokchitser')
+
+        # Generate a function to do computations
+        generateSageLfunction(self)
+
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "artin"
+        self.info['title'] = ("L-function for Artin representation " + str(self.label))
+
+    def Lkey(self):
+        return {"label": self.label}
+    
+    def original_object(self):
+        return self.artin
 
 #############################################################################
 
@@ -1055,158 +1307,78 @@ class HypergeometricMotiveLfunction(Lfunction):
     """
     def __init__(self, **args):
         constructor_logger(self, args)
+
+        # Check for compulsory arguments
         if "t" in args and "family" in args:
             args["label"] = args["family"] + "_" + args["t"]
         validate_required_args ('Unable to construct hypergeometric motive L-function.', args, 'label')
         self._Ltype = "hgmQ"
 
+        # Put the arguments into the object dictionary
         self.label = args["label"]
+
+        # Get the motive from the database
         self.motive = LfunctionDatabase.getHgmData(self.label)
         if not self.motive:
             raise KeyError('No data for the hypergeometric motive "%s" was found in the database.'%self.label)
 
-        self.conductor = self.motive["cond"]
-
-        self.level = self.conductor
-        self.title = ("L-function for the hypergeometric motive with label  "+self.label)
-
-        self.credit = 'Dave Roberts, using Magma'
-        
-        self.motivic_weight = 0
-        self.algebraic = True
+        # Mandatory properties
+        self.fromDB = False       
         self.coefficient_type = 0
-        self.degree = self.motive["degree"]
-        try:
-            self.arith_coeffs = self.motive["coeffs"]
-        except:
-            self.arith_coeffs = map(Integer, self.motive["coeffs_string"])
-
-        self.support = "Support by Paul-Olivier Dehaye"
-        
-        self.sign = self.motive["sign"]
-        self.motivic_weight =  self.motive["weight"]
-        
+        self.coefficient_period = 0
         # level, residues, selfdual, primitive, langlands
         # will not work for some values!!!!
         self.poles = []
         self.residues = []
-        self.primitive = True
         self.langlands = True
-            
-        hodge = self.motive["hodge"]
-        signature = self.motive["sig"]
-        # hodge_index = lambda p: hodge[p]
-            # The hodge number p,q
-        
-        from lmfdb.hypergm.hodge import mu_nu
-        
-        
-        
-        self.mu_fe, self.nu_fe = mu_nu(hodge, signature)
-         
-        self.selfdual = True 
-        self.coefficient_period = 0
-
+        self.primitive = True
+        self.degree = self.motive["degree"]
+        self.level = self.motive["cond"]
+        self.mu_fe, self.nu_fe = lmfdb.hypergm.hodge.mu_nu(self.motive["hodge"], self.motive["sig"])
         self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
-                
-        self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(self.motivic_weight/2.) for n, x in enumerate(self.arith_coeffs)]
+        self.quasidegree = len(self.mu_fe) + len(self.nu_fe)
+        self.algebraic = True
+        self.motivic_weight =  self.motive["weight"]
+        # Compute Dirichlet coefficients ########################
+        try:
+            self.arith_coeffs = self.motive["coeffs"]
+        except:
+            self.arith_coeffs = map(Integer, self.motive["coeffs_string"])
+        self.dirichlet_coefficients = [Reals()(Integer(x))/Reals()(n+1)**(self.motivic_weight/2.)
+                                       for n, x in enumerate(self.arith_coeffs)]
+        self.sign = self.motive["sign"]
+        self.selfdual = True 
 
-        
+        # Text for the web page
         self.texname = "L(s)"  
         self.texnamecompleteds = "\\Lambda(s)"  
         if self.selfdual:
             self.texnamecompleted1ms = "\\Lambda(1-s)" 
         else:
             self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
-        import sage.libs.lcalc.lcalc_Lfunction as lc
-        
-        Lexponent = self.motivic_weight/2.            
-        normalize =lambda coeff, n, exponent: Reals()(coeff)/n**exponent
-        self.dirichlet_coefficient = [normalize(coeff, i+1, Lexponent) for i, coeff in enumerate(self.arith_coeffs)]
+        self.credit = 'Dave Roberts, using Magma'
 
-        period = 0
-        
-        self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficient, period, self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
-        
+        # Generate a function to do computations
+##        Lexponent = self.motivic_weight/2.            
+##        normalize =lambda coeff, n, exponent: Reals()(coeff)/n**exponent
+##        self.dirichlet_coefficient = [normalize(coeff, i+1, Lexponent) for i, coeff in enumerate(self.arith_coeffs)]
+##        Are these coefficients not the same as dirichlet_coefficients computed above 
+        self.sageLfunction = lc.Lfunction_D("LfunctionHypergeometric", 0, self.dirichlet_coefficients, self.coefficient_period,
+                                            self.Q_fe, self.sign, self.kappa_fe, self.lambda_fe, self.poles, self.residues)
+
+
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "hgm"
+        self.info['title'] = ("L-function for the hypergeometric motive with label "+self.label)
+              
     def Lkey(self):
         return {"label":self.label}
-        
-#############################################################################
 
-class ArtinLfunction(Lfunction):
-    """Class representing the Artin L-function
+    def original_object(self):
+        return self.motive
 
-    Compulsory parameters: label
-
-    """
-    def __init__(self, **args):
-        constructor_logger(self, args)
-        validate_required_args('Unable to construct Artin L-function', args, 'label')
-
-        self._Ltype = "artin"
-        
-        from lmfdb.artin_representations.math_classes import ArtinRepresentation
-        self.label = args["label"]
-        try:
-            self.artin = ArtinRepresentation(self.label)
-        except Exception as err:
-            raise KeyError('Error constructing Artin representation %s.'%self.label, *err.args)
-        if not self.artin:
-            raise KeyError('No data for the Artin representation %s was found in the database.'%self.label)
-
-        self.title = ("L-function for Artin representation " + str(self.label))
-
-        self.motivic_weight = 0
-        self.algebraic = True
-        self.degree = self.artin.dimension()
-        self.coefficient_type = 0
-        
-        if self.degree == 1:
-            self.coefficient_period = Integer(self.artin.conductor())
-            self.dirichlet_coefficients = self.artin.coefficients_list(
-                upperbound=self.coefficient_period)
-        else:
-            self.coefficient_period = 0
-            self.dirichlet_coefficients = self.artin.coefficients_list(
-                upperbound=1000)
-        
-        
-        self.sign = self.artin.root_number()
-        self.poles_L = self.artin.poles()
-        self.residues_L = self.artin.residues()
-        self.poles = self.artin.completed_poles()
-        self.residues = self.artin.completed_residues()
-        self.level = self.artin.conductor()
-        self.selfdual = self.artin.selfdual()
-        self.primitive = self.artin.primitive()
-        self.langlands = self.artin.langlands()
-        self.mu_fe = self.artin.mu_fe()
-        self.nu_fe = self.artin.nu_fe()
-        
-        
-        self.Q_fe = self.Q_fe = float(sqrt(Integer(self.artin.conductor()))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
-        self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
-        self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
-        
-        self.credit = ('Sage, lcalc, and data precomputed in ' +
-                       'Magma by Tim Dokchitser')
-        
-        
-        self.support = "Support by Paul-Olivier Dehaye"
-
-        self.texname = "L(s,\\rho)"  
-        self.texnamecompleteds = "\\Lambda(s)"  
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s)" 
-        else:
-            self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
-        
-        generateSageLfunction(self)
-
-    def Lkey(self):
-        return {"label": self.label}
-
-#############################################################################
+ #############################################################################
 
 
 class SymmetricPowerLfunction(Lfunction):
@@ -1221,25 +1393,13 @@ class SymmetricPowerLfunction(Lfunction):
 
     def __init__(self, **args):
         constructor_logger(self, args)
+        
+        # Check for compulsory arguments
         validate_required_args('Unable to construct symmetric power L-function.', args, 'power', 'underlying_type', 'field')
-
         self._Ltype = "SymmetricPower"
 
-        def ordinal(n):
-            if n == 2:
-                return "Square"
-            elif n == 3:
-                return "Cube"
-            elif 10 <= n % 100 < 20:
-                return str(n) + "th Power"
-            else:
-                return (str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th") +
-                        " Power")
-
         # Put the arguments into the object dictionary
-        # They are: power, underlying_type, field, label  (for EC)
         self.__dict__.update(args)
-
         try:
             self.m = int(self.power)
         except TypeError:
@@ -1260,149 +1420,66 @@ class SymmetricPowerLfunction(Lfunction):
                             ' and the symmetric power of its L-function is ' +
                             'then not primitive. This has not yet been ' +
                             'implemented')
-
+        
+        # Create the symmetric power L-function
         from lmfdb.symL.symL import SymmetricPowerLFunction
         self.S = SymmetricPowerLFunction(self.E, self.m)
-        self.algebraic = True
-        self.title = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
-                      % (ordinal(self.m), self.m, self.label))
 
-        self.dirichlet_coefficients = self.S._coeffs
-
-        self.sageLfunction = self.S._construct_L()
-
-        # Initialize some default values
+        # Mandatory properties
+        self.fromDB = False       
+        self.coefficient_type = 0
         self.coefficient_period = 0
-        self.degree = self.m + 1
-        self.Q_fe = self.S._Q_fe
         self.poles = self.S._poles
         self.residues = self.S._residues
+        self.langlands = True
+        self.primitive = True  
+        self.degree = self.m + 1
+        self.level = self.S.conductor
         self.kappa_fe = self.S._kappa_fe
         self.lambda_fe = self.S._lambda_fe
-        
+        self.Q_fe = self.S._Q_fe
         self.compute_some_mu_nu()
-        
-        
-        
-        #self.mu_fe = self.kappa_fe
-        #self.nu_fe = self.lambda_fe
-        
-        self.sign = self.S.root_number
+        self.quasidegree = len(self.mu_fe) + len(self.nu_fe)       
+        self.algebraic = True
         self.motivic_weight = self.m
+        self.dirichlet_coefficients = self.S._coeffs
+        self.sign = self.S.root_number
         self.selfdual = True
-        self.langlands = True
+
+        # Text for the web page
         self.texname = "L(s, E, \mathrm{sym}^{%d})" % self.m  
         self.texnamecompleteds = "\\Lambda(s,E,\mathrm{sym}^{%d})" % self.S.m
         self.texnamecompleted1ms = ("\\Lambda(1-{s}, E,\mathrm{sym}^{%d})"
                                     % self.S.m)
-        self.primitive = True  
         self.credit = ' '
-        self.level = self.S.conductor
+
+        # Generate a function to do computations
+        self.sageLfunction = self.S._construct_L()
+        
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        self.info['knowltype'] = "hmf"
+
+        def ordinal(n):
+            if n == 2:
+                return "Square"
+            elif n == 3:
+                return "Cube"
+            elif 10 <= n % 100 < 20:
+                return str(n) + "th Power"
+            else:
+                return (str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th") +
+                        " Power")
+
+        self.info['title'] = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
+                      % (ordinal(self.m), self.m, self.label))
 
     def Lkey(self):
         return {"power": self.power, "underlying_type": self.underlying_type,
                 "field": self.field}
-
-#############################################################################
-
-class Lfunction_SMF2_scalar_valued(Lfunction):
-    """Class representing an L-function for a scalar valued Siegel modular form of degree 2
-
-    Compulsory parameters: weight
-                           orbit (SMF sample name is weight_orbt (e.g. 16_Klingen))
-
-    Optional parameters: number (indicates choice of embedding)
-    """
-
-    def __init__(self, **args):
-
-        # Check for compulsory arguments
-        validate_required_args('Unable to construct Siegel modular form L-function.', args, 'weight', 'orbit')
-
-        if not args['number']:
-            args['number'] = 0     # Default embedding of the coefficients
-
-        self.__dict__.update(args)
-        self.algebraic = True
-        self.weight = int(self.weight)
-        self.motivic_weight = 2*self.weight - 3 # taken from A. Panchiskin's talk @ Oberwolfach, Oct. 2007 
-        self.number = int(self.number)
-
-        if self.orbit[0] == 'U':
-            self._Ltype = "siegelnonlift"
-        elif self.orbit[0] == 'E':
-            self._Ltype = "siegeleisenstein"
-        elif self.orbit[0] == 'K':
-            self._Ltype = "siegelklingeneisenstein"
-        elif self.orbit[0] == 'M':
-            self._Ltype = "siegelmaasslift"
-
-        name = '%d_%s'%(self.weight,self.orbit)
-        S = Sample('Sp4Z',name)
-        if not S:
-            raise KeyError("Siegel modular form Sp4Z.%s not found in database." % name)
-        self.field = S.field()
-        evlist = S.available_eigenvalues()
-        if len(evlist) < 3: # FIXME -- we should sanity check that we have enough eigenvalues for it make sense to display an L-function page (presumably 3 is not enough)
-            raise ValueError("Eigenvalue data for Siegel modular form Sp4Z.%s not available of insufficient." % name)
-        self.evs = S.eigenvalues(S.available_eigenvalues())
-        for ev in self.evs:
-            self.evs[ev] = self.field(self.evs[ev])
-        self.mu_fe = []  # the shifts of the Gamma_R to print
-        self.automorphyexp = float(self.weight) - float(1.5)
-        self.nu_fe = [float(1) / float(2), self.automorphyexp]  # the shift of the Gamma_C to print
-        self.level = 1
-        self.compute_kappa_lambda_Q_from_mu_nu()
-
-        self.sign = (-1) ** float(self.weight)
-
-        self.degree = 4
-        roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
-        self.numcoeff = max([a[0] for a in roots])+1  # include a_0 = 0
-        self.dirichlet_coefficients = compute_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
-        self.selfdual = True
-        if self.orbit[0] == 'U':  # if the form isn't a lift but is a cusp form
-            self.poles = []  # the L-function is entire
-            self.residues = []
-            self.langlands = True
-            self.primitive = True  # and primitive
-        elif self.orbit[0] == 'E':  # if the function is an Eisenstein series
-            self.poles = [float(3) / float(2)]
-            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
-            self.langlands = True
-            self.primitive = False
-        elif self.orbit[0] == 'M':  # if the function is a lift and a cusp form
-            self.poles = [float(3) / float(2)]
-            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
-            self.langlands = True
-            self.primitive = False
-        elif self.orbit[0] == 'K':
-            self.poles = [float(3) / float(2)]
-            self.residues = [math.pi ** 2 / 6]  # FIXME: fix this
-            self.langlands = True
-            self.primitive = False
-
-        self.coefficient_period = 0
-        self.coefficient_type = 3
-        self.quasidegree = 1
-
-        self.checkselfdual()
-
-        self.texname = "L(s,F)"
-        self.texnamecompleteds = "\\Lambda(s,F)"
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,F)"
-        else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{F})"
-        self.title = ("$L(s,F)$, " + "where $F$ is a scalar-valued Siegel " +
-                      "modular form of weight " + str(self.weight) + ".")
-
-        self.credit = ''
-
-        generateSageLfunction(self)
-
-    def Lkey(self):
-        return {"weight": self.weight, "orbit": self.orbit}
+        
+    def original_object(self):
+        return self.S
 
 
 class Lfunction_lcalc(Lfunction):
@@ -1562,71 +1639,6 @@ class TensorProductLfunction(Lfunction):
         return {"ellipticcurvelabel": self.Elabel,
                 "charactermodulus": self.charactermodulus,
                 "characternumber": self.characternumber}
-
-#############################################################################
-
-class Lfunction_genus2_Q(Lfunction):
-    """Class representing the L-function of a genus 2 curve over Q
-
-    Compulsory parameters: label
-
-    """
-
-    def __init__(self, **args):
-        # Check for compulsory arguments
-        validate_required_args('Unabel to construct L-function of genus 2 curve.',
-                               args, 'label')
-        
-        self._Ltype = "genus2curveQ"
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.numcoeff = 30
-
-        # Load data from the database
-        label_slash = self.label.replace(".","/")
-        db_label = "Genus2Curve/Q/" + label_slash
-        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
-        if not self.lfunc_data:
-            raise KeyError('No L-function instance data for "%s" was found ' +
-                           'in the database.'%db_label)
-
-        # Extract the data 
-        makeLfromdata(self)
-        self.fromDB = True
-
-        # Mandatory properties
-        self.coefficient_period = 0
-        self.coefficient_type = 2
-        self.poles = []
-        self.residues = []
-        self.langlands = True
-        self.quasidegree = 2
-              
-        # Text for the web page
-        self.htmlname = "<em>L</em>(<em>s,A</em>)"
-        self.texname = "L(s,A)"
-        self.htmlname_arithmetic = "<em>L</em>(<em>A,s</em>)"
-        self.texname_arithmetic = "L(A,s)"
-        self.texnamecompleteds = "\\Lambda(s,A)"
-        self.texnamecompleted1ms = "\\Lambda(1-s,A)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(A,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(A, " + str(self.motivic_weight + 1) + "-s)"
-        title_end = ("where $A$ is the Jacobian of a genus 2 curve "
-                      + "with label " + self.label)
-        self.credit = ''
-
-        # Initiate the dictionary info that contains the data for the webpage
-        self.info = self.general_webpagedata()
-        self.info['knowltype'] = "g2c.q"
-        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-        self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" + ", " +
-                                 title_end)
-        self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
-
-    def Lkey(self):
-        return {"label", self.label}
-
 
 #############################################################################
 
