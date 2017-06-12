@@ -499,34 +499,14 @@ class WebHecke(WebCharObject):
     def ideal2tex(ideal):
         a,b = ideal.gens_two()
         return "\(\langle %s, %s\\rangle\)"%(a._latex_(), b._latex_())
+
     @staticmethod
-    def ideal2label(ideal):
-        """
-        labeling convention for ideal f:
-        use two elements representation f = (n,b)
-        with n = f cap Z an integer
-         and b an algebraic element sum b_i a^i
-        label f as n.b1+b2*a^2+...bn*a^n
-        (dot between n and b, a is the field generator, use '+' and )
-        """
-        a,b = ideal.gens_two()
-        s = '+'.join( '%sa%i'%(b,i) for i,b in enumerate(b.polynomial().list())
-                                      if b != 0 ) 
-        return "%s.%s"%(a,s.replace('+-','-').replace('/','o'))
+    def ideal2label(k, ideal):
+        return nfutils.ideal_label(k, ideal)
 
     @staticmethod
     def label2ideal(k,label):
-        """ k = underlying number field """
-        if label.count('.'):
-            n, b = label.split(".")
-        else:
-            n, b = label, '0'
-        a = k.gen()
-        # FIXME: dangerous
-        n, b = evalpolelt(n,a,'a'), evalpolelt(b,a,'a')
-        n, b = k(n), k(b)
-        return k.ideal( (n,b) )
-
+        return nfutils.ideal_from_label(k, label)
 
     """
     underlying group contains ideal classes, but are represented
@@ -576,14 +556,9 @@ class WebHecke(WebCharObject):
     def label2number(label):
         return map(int,label.split('.'))
 
-
     @staticmethod
     def label2nf(label):
         return WebNumberField(label).K()
-        # FIXME: replace by calls to WebNF
-        #x = var('x')
-        #pol = evalpolelt(label,x,'x')
-        #return NumberField(pol,'a')
 
     @property
     def groupelts(self):
