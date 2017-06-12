@@ -7,6 +7,7 @@ from flask import url_for
 import lmfdb
 from lmfdb.utils import make_logger
 logger = make_logger("DC")
+from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from WebNumberField import WebNumberField
 try:
     from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
@@ -501,12 +502,12 @@ class WebHecke(WebCharObject):
         return "\(\langle %s, %s\\rangle\)"%(a._latex_(), b._latex_())
 
     @staticmethod
-    def ideal2label(k, ideal):
-        return nfutils.ideal_label(k, ideal)
+    def ideal2label(ideal):
+        return ideal_label(ideal)
 
     @staticmethod
     def label2ideal(k,label):
-        return nfutils.ideal_from_label(k, label)
+        return ideal_from_label(k, label)
 
     """
     underlying group contains ideal classes, but are represented
