@@ -109,6 +109,10 @@ def truncatenumber(numb, precision):
         return("-1")
     elif float(abs(numb + 2)) < truncation:
         return("-2")
+    elif float(abs(numb - 0.5)) < truncation:
+        return("0.5")
+    elif float(abs(numb + 0.5)) < truncation:
+        return("-0.5")
     return(str(numb)[0:int(localprecision)])
 
 
@@ -141,6 +145,8 @@ def styleTheSign(sign):
 
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
+#  truncationexp is used to determine if a number is 'really' 0 or 1 or -1 or I or -I
+#  precision is used to truncate decimal numbers
     truncation = float(10 ** truncationexp)
     try:
         if isinstance(coeff,str) or isinstance(coeff,unicode):
