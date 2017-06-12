@@ -165,6 +165,39 @@ def update_attribute_stats(db, coll, attributes, prefix=None, filter=None, nocou
     NOTE: pymongo will raise an error if the size of a statistics recrod exceeds 16MB
     
     Existing stats records for the same attribute will be overwritten (but only if they have the same prefix, if specified).
+    
+    EXAMPLES:
+    
+    To create a statistic record with counts of elliptic curves over Q in the LMFDB with a given rank, one could use:
+    
+        sage: import lmfdb
+        
+        sage: db = lmfdb.base.getDBConnection().elliptic_curves
+        
+        sage: db.authenticate('editor','password')
+
+        sage: update_attribute_stats (db, "curves", "rank")
+
+    This will result in the following record being inserted/replaced in the collection curves.stats:
+    
+        {'_id': 'rank', 'counts': [[0,956086], [1,1246537], [2,274346], [3,6679], [4,1]], 'max': 4, 'min': 0, 'total': 2483649}
+
+    To count isogney classes rather than curves, one could instead use:
+    
+        sage: update_attribute_stats (db, "curves", "rank", prefix='class', filter={'number':int(1)})
+        
+    which will create the record:
+    
+        {'_id': 'class/rank', 'counts': [[0,639862], [1,875337], [2,219508], [3,6294], [4,1]], 'max': 4, 'min': 0, 'total': 1741002}
+
+    To create a record with counts of elliptic curves over Q that fall within a given conductor range, say in blocks of 10000, one could use:
+    
+        sage: update_attribute_stats (db, "curves", "cond_ranges", wrapper=
+              "function f(rec){return 10000*Math.ceil(rec.cond/10000);};")
+        
+    which will create the record:
+    
+        {'_id': 'cond_ranges', 'counts': [[10000,64687], [20000,67848], ..., [400000,58170]], 'max': 400000, 'min': 10000, 'total': 2483649}
 
     """
     from bson.code import Code
@@ -243,6 +276,30 @@ def update_joint_attribute_stats(db, coll, attributes, prefix=None, filter=None,
     NOTE: pymongo will raise an error if the size of this list exceeds 16MB
 
     Any existing stats record for the same combination of attribute will be overwritten (but only if they have the same prefix, if specified).
+    
+    EXAMPLES:
+    
+    To create a statistic records with torsion counts organized by rank for elliptic curves over Q one could use
+    
+        sage: import lmfdb
+        
+        sage: db = lmfdb.base.getDBConnection().elliptic_curves
+        
+        sage: db.authenticate('editor','password')
+
+        sage: update_joint_attribute_stats (db, 'curves', ['rank','torsion'], prefix='byrank', unflatten=True)
+
+    This will result in the following records being inserted/replaced in the collection curves.stats:
+    
+        {'_id': 'byrank/0/torsion', 'counts': [[1,477703], [2,404596], ..., [16,3]], 'max': 16, 'min': 1, 'total': 956086}
+        
+        {'_id': 'byrank/1/torsion', 'counts': [[1,679194], [2,485681], ..., [16,3]], 'max': 16, 'min': 1, 'total': 1246537}
+        
+        {'_id': 'byrank/2/torsion', 'counts': [[1,186326], [2,78532], ..., [12, 1]], 'max': 12, 'min': 1, 'total': 274346}
+        
+        {'_id': 'byrank/3/torsion', 'counts': [[1,6018], [2,635], [3,11], [4,15]], 'max': 4, 'min': 1, 'total': 6679}
+        
+        {'_id': 'byrank/4/torsion', 'counts': [[1,1]], 'max': 1, 'min': 1, 'total': 1}
 
     """
     from bson.code import Code

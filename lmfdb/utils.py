@@ -580,6 +580,16 @@ def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ
     return PolynomialRing(QQ, 'x')(c)
 
+def display_multiset(mset, formatter=str, *args):
+    """
+    Input mset is a list of pairs [item, multiplicity]
+    Return a string for display of the multi-set.  The
+    function formatter is a function whose first argument
+    is the item, and *args are the other arguments
+    and is applied to each item.
+    """
+    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
+
 def debug():
     """
     this triggers the debug environment on purpose. you have to start
