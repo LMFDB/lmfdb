@@ -971,10 +971,10 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def codeinit(self):
         return {
-          'sage': [ 'H = DirichletGroup_conrey(%i)'%(self.modulus),
-                 'chi = H[%i]'%(self.number) ],
-          'pari': [ 'g = idealstar(,%i,2)'%(self.modulus),
-                    'chi = znconreychar(g,%i)'%(self.number) ],
+          'sage': '\n'.join(['from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                             'G = DirichletGroup_conrey(%i)' %(self.modulus),
+                             'chi = G[%i]' %(self.number)])+'\n',
+          'pari': 'g = idealstar(,%i,2)\nchi = znconreychar(g,%i)\n'%(self.modulus,self.number) ,
           }
 
     @property
@@ -1033,13 +1033,10 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def codegaloisorbit(self):
-        return { 'sage': 'chi_sage.galois_orbit()',
-                 'pari': [
-                     '[mod,num,order] = [%i,%i,%i]'%(self.modulus,self.number,self.order),
-                     '[Mod(num,mod)^k | k<-[1..order-1], gcd(k,order)==1]',
-                     #'order = charorder(g,chi)',
-                     #'[ chi*k % order | k <-[1..order-1], gcd(k,order)==1 ]'
-                     ]
+        return { 'sage': 'chi.galois_orbit()',
+                 'pari': ''.join([
+                     '[mod,num,order] = [%i,%i,%i]\n'%(self.modulus,self.number,self.order),
+                     '[Mod(num,mod)^k | k<-[1..order-1], gcd(k,order)==1]\n']),
                  }
 
 
@@ -1092,8 +1089,8 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codeinducing(self):
-        return { 'sage': 'sage: chi.primitive_character()',
-                 'pari': ['znconreyconductor(g,chi,&chi0)','chi0'] }
+        return { 'sage': 'chi.primitive_character()',
+                 'pari': 'znconreyconductor(g,chi,&chi0)\nchi0\n' }
 
     @property
     def genvalues(self):
@@ -1102,8 +1099,8 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codegenvalues(self):
-        return { 'sage': 'chi_sage.values_on_gens()',
-                 'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ value in Q/Z' }
+        return { 'sage': '[(g,chi.logvalue(g)) for g in G.gens()] # values in Q/Z',
+                 'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ values in Q/Z' }
 
     def value(self, val):
         val = int(val)
@@ -1117,7 +1114,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codevalue(self):
-        return { 'sage': 'chi_sage(x) # x integer',
+        return { 'sage': 'chi(x) # x integer',
                  'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
 
     def gauss_sum(self, val):
@@ -1185,7 +1182,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codekloosterman(self):
-        return { 'sage': 'chi_sage.kloosterman_sum(a,b)' }
+        return { 'sage': 'chi.kloosterman_sum(a,b)' }
 
 
 class WebHeckeExamples(WebHecke):
@@ -1304,14 +1301,15 @@ class WebHeckeCharacter(WebChar, WebHecke):
     def codeinit(self):
         kpol = self.k.polynomial()
         return {
-                'sage':  ['k.<a> = NumberField(%s)'%kpol,
-                          'm = k.ideal(%s)'%self.modulus,
-                          'G = RayClassGroup(k,m)',
-                          'H = G.dual_group()',
-                          'chi = H(%s)'%self.number],
-                'pari':  ['k=bnfinit(%s)'%kpol,
+                'sage':  '\n'.join(['k.<a> = NumberField(%s)'%kpol,
+                                    'm = k.ideal(%s)'%self._modulus.gens_reduced(),
+                                    '# N.B. RayClassGroup() is not yet available in Sage',
+                                    'G = RayClassGroup(k,m)',
+                                    'H = G.dual_group()',
+                                    'chi = H(%s)'%self.number])+'\n',
+                'pari':  '\n'.join(['k=bnfinit(%s)'%kpol,
                            'g=bnrinit(k,m,1)',
-                           'chi = %s'%self.number]
+                           'chi = %s'%self.number])+'\n'
                 }
 
     @property
