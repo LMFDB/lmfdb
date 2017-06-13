@@ -13,7 +13,6 @@ from flask import url_for
 
 from Lfunctionutilities import (p2sage, string2number,
                                 compute_local_roots_SMF2_scalar_valued,
-                                compute_siegel_dirichlet_series,
                                 signOfEmfLfunction)
 from LfunctionComp import nr_of_EC_in_isogeny_class, modform_from_EC, EC_from_modform
 import LfunctionDatabase
@@ -38,7 +37,6 @@ import lmfdb.hypergm.hodge
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
     if len(missing_keys):
-        print errmsg
         raise KeyError(errmsg, "Missing required parameters: %s." % ','.join(missing_keys))
 
 def validate_integer_args(errmsg, args, *keys):
@@ -125,7 +123,6 @@ def makeLfromdata(L):
     else:
         L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(
             data['euler_factors']), L.numcoeff)
-
     L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
     L.normalize_by = string2number(data['analytic_normalization'])
     for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
@@ -159,7 +156,7 @@ def makeLfromdata(L):
         L.negative_zeros = L.negative_zeros[:zero_truncation]
 
     L.negative_zeros.reverse()
-    L.negative_zeros += [0 for _ in range(data['order_of_vanishing'])]
+    L.negative_zeros += ['0' for _ in range(data['order_of_vanishing'])]
     L.negative_zeros = ", ".join(L.negative_zeros)
     L.positive_zeros = ", ".join(L.positive_zeros)
     if len(L.positive_zeros) > 2 and len(L.negative_zeros) > 2:  # Add comma and empty space between negative and positive
@@ -352,11 +349,12 @@ class Lfunction_Dirichlet(Lfunction):
         self.label = str(self.charactermodulus) + "." + str(self.characternumber)
         Lhash = "dirichlet_L_{0}.{1}".format(self.charactermodulus,
                                                 self.characternumber)
-        self.lfunc_data = LfunctionDatabase.getInstanceLdata(Lhash,
+        try:
+            self.lfunc_data = LfunctionDatabase.getInstanceLdata(Lhash,
                                                          label_type = "Lhash")
-        if not self.lfunc_data:
+        except:
             raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
-
+ 
         # Extract the data 
         makeLfromdata(self)
         self.fromDB = True
@@ -432,10 +430,6 @@ class Lfunction_EC_Q(Lfunction):
         self.__dict__.update(args)
         self.numcoeff = 30
  
-        # Remove the ending number (if given) in the label to get isogeny class
-        while self.label[len(self.label) - 1].isdigit():
-            self.label = self.label[0:len(self.label) - 1]
-
         # Load data from the database
         label_slash = self.label.replace(".","/")
         db_label = "EllipticCurve/Q/" + label_slash
@@ -529,6 +523,8 @@ class Lfunction_EMF(Lfunction):
             self.MF = WebNewForm(weight = self.weight, level = self.level,
                                  character = self.character, label = self.label, 
                                  prec = self.numcoeff)
+            # Currently WebNewForm never generates an error so check that it has coefficients
+            test_if_loaded = self.MF.coefficient_embedding(1,self.number)
         except:
             raise KeyError("The specified modular form does not appear to be in the database.")
         
@@ -763,19 +759,16 @@ class Lfunction_HMF(Lfunction):
 
         # Check for compulsory arguments
         validate_required_args ('Unable to construct Hilbert modular form ' +
-                                'L-function.', args, 'label')
+                                'L-function.', args, 'label', 'number', 'character')
+        validate_integer_args ('Unable to construct Hilbert modular form L-function.',
+                               args, 'character','number')
+
         self._Ltype = "hilbertmodularform"
 
         # Put the arguments into the object dictionary
         self.label = args['label']
-        if args['number']:
-            self.number = int(args['number'])
-        else:
-            self.number = 0  # Default choice of embedding of coefficients
-        if args['character']:
-            self.character= int(args['character'])
-        else:
-            self.character = 0  # Default is trivial character
+        self.number = int(args['number'])
+        self.character= int(args['character'])
         if self.character != 0:
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
         
@@ -1043,11 +1036,11 @@ class Lfunction_genus2_Q(Lfunction):
         label_slash = self.label.replace(".","/")
         db_label = "Genus2Curve/Q/" + label_slash
         self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
-        if not self.lfunc_data:
-            raise KeyError('No L-function instance data for "%s" was found ' +
-                           'in the database.'%db_label)
-
-        # Extract the data 
+        if self.lfunc_data == None:
+            raise KeyError('No L-function instance data for "%s" was found '% db_label +
+                           'in the database.' )
+        
+        # Extract the data
         makeLfromdata(self)
         self.fromDB = True
 
@@ -1109,8 +1102,8 @@ class DedekindZeta(Lfunction):
         if not wnf or wnf.is_null():
             raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database'%self.label)
         self.NF = wnf.K()
-        self.h = self.NF.class_number()
-        self.R = self.NF.regulator()
+        self.h = wnf.class_number()
+        self.R = wnf.regulator()
         self.w = len(self.NF.roots_of_unity())
         self.signature = self.NF.signature() 
 
@@ -1141,7 +1134,7 @@ class DedekindZeta(Lfunction):
                                        self.NF.zeta_coefficients(5000)] # TODO: adjust nr of coef
         self.sign = 1
         self.selfdual = True
-
+        
         # Specific properties
         # Determine the factorization       
         self.grh = wnf.used_grh()
@@ -1186,10 +1179,7 @@ class DedekindZeta(Lfunction):
         # Text for the web page
         self.texname = "\\zeta_K(s)"
         self.texnamecompleteds = "\\Lambda_K(s)"
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda_K(1-s)"
-        else:
-            self.texnamecompleted1ms = "\\Lambda_K(1-s)"
+        self.texnamecompleted1ms = "\\Lambda_K(1-s)"
         self.credit = 'Sage'
 
         # Generate a function to do computations
@@ -1199,7 +1189,7 @@ class DedekindZeta(Lfunction):
             generateSageLfunction(self)
         else:
             self.sageLfunction = None
-            
+        
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "nf"
@@ -1236,8 +1226,6 @@ class ArtinLfunction(Lfunction):
             self.artin = ArtinRepresentation(self.label)
         except Exception as err:
             raise KeyError('Error constructing Artin representation %s.'%self.label, *err.args)
-        if not self.artin:
-            raise KeyError('No data for the Artin representation %s was found in the database.'%self.label)
 
         # Mandatory properties
         self.fromDB = False       
@@ -1395,18 +1383,18 @@ class SymmetricPowerLfunction(Lfunction):
         constructor_logger(self, args)
         
         # Check for compulsory arguments
-        validate_required_args('Unable to construct symmetric power L-function.', args, 'power', 'underlying_type', 'field')
+        validate_required_args('Unable to construct symmetric power L-function.',
+                               args, 'power', 'underlying_type', 'field', 'label')
+        validate_integer_args ('The power has to be an integer.',
+                               args, 'power')
         self._Ltype = "SymmetricPower"
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
-        try:
-            self.m = int(self.power)
-        except TypeError:
-            raise TypeError("The power has to be an integer")
+        self.m = int(self.power)
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
             raise TypeError("The symmetric L-functions have been implemented " +
-                            "only for Elliptic Curves over Q")
+                            "only for Elliptic Curves over Q.")
 
         # Create the elliptic curve
         Edata = LfunctionDatabase.getEllipticCurveData(self.label + '1')
@@ -1454,11 +1442,14 @@ class SymmetricPowerLfunction(Lfunction):
         self.credit = ' '
 
         # Generate a function to do computations
-        self.sageLfunction = self.S._construct_L()
-        
+        if self.level < 15000:
+            self.sageLfunction = self.S._construct_L()
+        else:
+            self.sageLfunction = None
+            
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
-        self.info['knowltype'] = "hmf"
+        self.info['knowltype'] = "sym"
 
         def ordinal(n):
             if n == 2:
@@ -1473,6 +1464,7 @@ class SymmetricPowerLfunction(Lfunction):
 
         self.info['title'] = ("The Symmetric %s $L$-function $L(s,E,\mathrm{sym}^{%d})$ of Elliptic Curve Isogeny Class %s"
                       % (ordinal(self.m), self.m, self.label))
+
 
     def Lkey(self):
         return {"power": self.power, "underlying_type": self.underlying_type,
