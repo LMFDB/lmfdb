@@ -18,12 +18,12 @@ class LfunctionTest(LmfdbTest):
     def test_LDirichlet(self):
         L = self.tc.get('/L/Character/Dirichlet/19/9/')
         assert '0.4813597784' in L.data and 'mu(9)' in L.data
-        L = self.tc.get('/L/Zeros/Character/Dirichlet/19/9/')
         assert '2.13818063440820276534' in L.data
         L = self.tc.get('/L/Character/Dirichlet/6400/3/')
         assert '2.1312850332' in L.data in L.data and 'mu(320)' in L.data
-        L = self.tc.get('/L/Zeros/Character/Dirichlet/6400/3/')
         assert '3.1381043104275982' in L.data
+        L = self.tc.get('/L/Character/Dirichlet/17/16/')
+        assert '1.01608483' in L.data
         L = self.tc.get('/L/Character/Dirichlet/6400/2/')
         assert '2 is not coprime to the modulus 6400' in L.data
         L = self.tc.get('/L/Character/Dirichlet/6400/6399/')
@@ -62,6 +62,10 @@ class LfunctionTest(LmfdbTest):
         assert '0.3329817715' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/7/3/6/a/0/')
         assert '7.214589181287' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/1/a/0/')
+        assert '0.27971563' in L.data
+        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/1/a/0/')
+        assert '18.17341115038' in L.data
 
     def test_Lhmf(self):
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/')
@@ -72,6 +76,8 @@ class LfunctionTest(LmfdbTest):
         assert '0.22396252' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-9.1-a/0/0/')
         assert '3.03882077536' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.24.1/holomorphic/2.2.24.1-1.1-a/0/0/')
+        assert '0.28781' in L.data
 
     def test_Lgl2maass(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4f5695df88aece2afe000021/')
@@ -82,6 +88,8 @@ class LfunctionTest(LmfdbTest):
         assert '5.0987419087' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/Maass/4f55571b88aece241f000013/')
         assert '11.6149703378' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032/')
+        assert '9.5336952613' in L.data
 
     def test_Lgl3maass(self):
         L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/')
@@ -90,10 +98,9 @@ class LfunctionTest(LmfdbTest):
         assert '0.9615558824' in L.data
 
     def test_Lgl4maass(self):
-        L = self.tc.get('/L/ModularForm/GL4/Q/Maass/GL4Maass_1_17.6101_7.81101_-6.0675/')
-        assert 'Graph' in L.data
         L = self.tc.get('/L/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/')
         assert '0.556' in L.data
+        assert 'Graph' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/')        
         assert '16.18901597' in L.data
 
@@ -109,13 +116,14 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/SymmetricPower/4/EllipticCurve/Q/11.a/')
         assert '0.6058003921' in L.data
 
-    def test_Lsym5EC(self):
+    def test_LsymHighEC(self):
         L = self.tc.get('/L/SymmetricPower/5/EllipticCurve/Q/11.a/')
-        assert '1.1434943586' in L.data
-
-    def test_Lsym6EC(self):
+        assert '161051' in L.data
         L = self.tc.get('/L/SymmetricPower/6/EllipticCurve/Q/11.a/')
-        assert '1.1814669745' in L.data
+        assert '1771561' in L.data
+        L = self.tc.get('/L/SymmetricPower/11/EllipticCurve/Q/11.a/')
+        assert '285311670611' in L.data
+
 
     def test_Ldedekind(self):
         L = self.tc.get('/L/NumberField/3.1.23.1/')
@@ -176,11 +184,7 @@ class LfunctionTest(LmfdbTest):
     def test_Ldegree1(self):
         L = self.tc.get('/L/degree1/')
         assert 'Dirichlet L-function' in L.data and 'Conductor range' in L.data and 'Primitive Dirichlet character' in L.data
-        L = self.tc.get('/L/degree2/')
-        L = self.tc.get('/L/degree3/')
-        L = self.tc.get('/L/degree4/')
-
-
+   
     def test_Ldegree2(self):
         L = self.tc.get('/L/degree2/')
         assert '1.73353' in L.data and '/EllipticCurve/Q/234446.a' in L.data
@@ -281,6 +285,37 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')
         assert '4.307350233' in L.data
 
+
+    #------------------------------------------------------
+    # Testing error messages
+    #------------------------------------------------------
+
+    def test_errorMessages(self):
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/5/k/4/a/1/')
+        assert 'Unable to convert parameter' in L.data
+        L = self.tc.get('/L/Character/Dirichlet/9/10/')
+        assert 'should not exceed the modulus ' in L.data
+        L = self.tc.get('/L/EllipticCurve/Q/11.b/')
+        assert 'No L-function instance data for' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/5/6/4/c/1/')
+        assert 'The specified modular form does not appear to be in the database' in L.data
+        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.421999/')
+        assert 'No L-function instance data for' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/2/0/')
+        assert 'L-function of Hilbert form of non-trivial character not implemented yet' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.5-a/0/0/')
+        assert 'No Hilbert modular form with label' in L.data
+        L = self.tc.get('/L/Genus2Curve/Q/247/a/')
+        assert 'No L-function instance data for' in L.data
+        L = self.tc.get('/L/NumberField/2.2.7.1/')
+        assert 'No data for the number field' in L.data
+        L = self.tc.get('/L/ArtinRepresentation/3.231.4t5.1c1/')
+        assert 'Error constructing Artin representation' in L.data
+        L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/37.d/')
+        assert 'No elliptic curve with label ' in L.data
+        L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/27.a/')
+        assert 'This Elliptic curve has complex multiplication and the symmetric power of its L-function is then not primitive.' in L.data
+        
 
     #------------------------------------------------------
     # Testing units not tested above
