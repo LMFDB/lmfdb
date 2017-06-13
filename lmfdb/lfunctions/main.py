@@ -22,6 +22,7 @@ from LfunctionComp import isogeny_class_table, isogeny_class_cm
 import LfunctionDatabase
 from lmfdb import base
 from pymongo import ASCENDING
+from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -102,6 +103,7 @@ def l_function_cuspform_browse_page():
 def l_function_maass_browse_page():
     info = {"bread": get_bread(2, [("MaassForm", url_for('.l_function_maass_browse_page'))])}
     info["contents"] = [processMaassNavigation()]
+    info["gl2spectrum0"] = [paintSvgMaass(1, 10, 0, 10, L="/L")]
     return render_template("MaassformGL2.html", title='L-functions of GL(2) Maass Forms of weight 0', **info)
 
 

@@ -3,12 +3,13 @@ from lmfdb import base
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
      import MaassDB
 
-def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
-                  width = 1000, heightfactor = 20):
+def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
+                  width=1000, heightfactor=20, L=""):
     ''' Returns the contents (as a string) of the svg-file for
         all Maass forms in the database.
         Takes all levels from min_level to max_level
-        Spectral parameter in [min_R, max_R]
+        Spectral parameter in [min_R, max_R] 
+        Set L="/L" to make link go to the L-function
     '''
     xMax = int(max_R)
     yMax = int(max_level)
@@ -49,11 +50,11 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
               'R1': xMin, 'R2': xMax, 'Newform' : None, 'weight' : weight}
     fields = {'Eigenvalue', 'Level', 'Symmetry'}
     forms = db.get_Maass_forms(search, fields, 
-                               do_sort = False, limit = 10000)
+                               do_sort=False, limit=10000)
 
     # Loop through all forms and add a clickable dot for each
     for f in forms:
-        linkurl = "/ModularForm/GL2/Q/Maass/{0}".format(f['_id'])
+        linkurl = L + "/ModularForm/GL2/Q/Maass/{0}".format(f['_id'])
         x = (f['Eigenvalue'] - xMin) * xfactor + xshift
         y = (f['Level'] - yMin + 1) * yfactor
         try:  # Shifting even slightly up and odd slightly down
