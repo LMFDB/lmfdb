@@ -718,7 +718,10 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     @property
     def codeinit(self):
         return {
-                'sage': 'H = DirichletGroup_conrey(%i)'%(self.modulus),
+                'sage': [
+                    'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                    'H = DirichletGroup_conrey(%i)'%(self.modulus)
+                    ],
                 'pari': 'g = idealstar(,%i,2)'%(self.modulus)
                 }
 
@@ -795,7 +798,8 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def codeinit(self):
         return {
-          'sage': [ 'H = DirichletGroup_conrey(%i)'%(self.modulus),
+          'sage': [ 'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                 'H = DirichletGroup_conrey(%i)'%(self.modulus),
                  'chi = H[%i]'%(self.number) ],
           'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
           }
@@ -856,13 +860,9 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def codegaloisorbit(self):
-        return { 'sage': 'chi_sage.galois_orbit()',
-                 'pari': [
-                     '[mod,num,order] = [%i,%i,%i]'%(self.modulus,self.number,self.order),
-                     '[Mod(num,mod)^k | k<-[1..order-1], gcd(k,order)==1]',
-                     #'order = charorder(g,chi)',
-                     #'[ chi*k % order | k <-[1..order-1], gcd(k,order)==1 ]'
-                     ]
+        return { 'sage': 'chi.sage_character().galois_orbit()',
+                 'pari': [ 'order = charorder(g,chi)',
+                           '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
                  }
 
 
@@ -925,7 +925,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codegenvalues(self):
-        return { 'sage': 'chi_sage.values_on_gens()',
+        return { 'sage': 'chi(k) for k in H.gens()',
                  'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ value in Q/Z' }
 
     def value(self, val):
@@ -940,7 +940,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codevalue(self):
-        return { 'sage': 'chi_sage(x) # x integer',
+        return { 'sage': 'chi(x) # x integer',
                  'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
 
     def gauss_sum(self, val):
@@ -962,7 +962,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codegauss(self):
-        return { 'sage': 'chi.gauss_sum(a)' }
+        return { 'sage': 'chi.sage_character().gauss_sum(a)' }
 
     def jacobi_sum(self, val):
         mod, num = self.modulus, self.number
@@ -984,7 +984,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codejacobi(self):
-        return { 'sage': 'chi.jacobi_sum(n)' }
+        return { 'sage': 'chi.sage_character().jacobi_sum(n)' }
 
     def kloosterman_sum(self, arg):
         a, b = map(int, arg.split(','))
@@ -1008,7 +1008,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codekloosterman(self):
-        return { 'sage': 'chi_sage.kloosterman_sum(a,b)' }
+        return { 'sage': 'chi.sage_character().kloosterman_sum(a,b)' }
 
 
 class WebHeckeExamples(WebHecke):
@@ -1131,6 +1131,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
                 'sage':  [
                           'k.<a> = NumberField(%s)'%kpol,
                           'm = k.ideal(%s)'%mod,
+                          'from HeckeCharacters import RayClassGroup # use package in the lmfdb',
                           'G = RayClassGroup(k,m)',
                           'H = G.dual_group()',
                           'chi = H(%s)'%self.number
@@ -1211,6 +1212,7 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
                 'sage':  [
                           'k.<a> = NumberField(%s)'%kpol,
                           'm = k.ideal(%s)'%mod,
+                          'from HeckeCharacters import RayClassGroup # use package in the lmfdb',
                           'G = RayClassGroup(k,m)',
                           'H = G.dual_group()',
                           ],
