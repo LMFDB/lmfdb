@@ -962,7 +962,8 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codegauss(self):
-        return { 'sage': 'chi.sage_character().gauss_sum(a)' }
+        return { 'sage': 'chi.sage_character().gauss_sum(a)',
+                 'pari': 'znchargauss(g,chi,a)' }
 
     def jacobi_sum(self, val):
         mod, num = self.modulus, self.number
