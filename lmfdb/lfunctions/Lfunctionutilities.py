@@ -124,20 +124,6 @@ def styleTheSign(sign):
         if sign == 0:
             return "unknown"
         return(seriescoeff(sign, 0, "literal", "", -6, 5))
-# the remaining code in this function can probably be deleted.
-# It does not correctly format 1.23-4.56i, and the seriescoeff function should andle all cases
-        if abs(1 - sign) < 1e-10:
-            return '1'
-        elif abs(1 + sign) < 1e-10:
-            return '-1'
-        elif abs(1 - sign.imag()) < 1e-10:
-            return 'i'
-        elif abs(1 + sign.imag()) < 1e-10:
-            return '-i'
-        elif sign.imag > 0:
-            return "${0} + {1}i$".format(truncatenumber(sign.real(), 5), truncatenumber(sign.imag(), 5))
-        else:
-            return "${0} {1}i$".format(truncatenumber(sign.real(), 5), truncatenumber(sign.imag(), 5))
     except:
         logger.debug("no styling of sign")
         return str(sign)
@@ -212,10 +198,6 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             return("0")
 # if we get this far, either pure real or pure imaginary
     ans = ""
-#    if seriescoefftype=="series":
-#        ans=ans+" + "
-# commenting out the above "if" code so as to fix + - problem
-#    logger.info("rp={0}".format(rp))
     if rp > truncation:
         if float(abs(rp - 1)) < truncation:
             if seriescoefftype == "literal":
@@ -249,12 +231,10 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("-" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
-#                return(ans + " - " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
                 return(ans + " - " + truncatenumber(-1*rp, precision) + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
                 return(ans + "-" + truncatenumber(-1*rp, precision))
             elif seriescoefftype == "serieshtml":
-#                return(ans + " &minus; " + truncatenumber(float(abs(rp)), precision) + seriesvar(index, seriestype))
                 return(ans + " &minus; " + truncatenumber(-1*rp, precision) + "&middot;" +  seriesvar(index, seriestype))
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
                 return(ans + truncatenumber(rp, precision))
@@ -300,8 +280,6 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
                 return(ans + truncatenumber(ip, precision) + "i")
 
-#    elif float(abs(ip+1))<truncation:
-#        return("-" + "i"+ seriesvar(index, seriestype))
     else:
         return(latex(coeff) + seriesvar(index, seriestype))
 
@@ -319,15 +297,6 @@ def seriesvar(index, seriestype):
         return("\\, " + "q^{" + str(index) + "}")
     else:
         return("")
-
-#-------
-
-def lfuncDStex(L, fmt):
-    return("unused")
-    #return(lfuncDShtml(L, fmt))
-# the Dirichlet series on an L-function home page did not wrap when the window was
-# narrow.  So we made a lfuncDShtml funciton which makes the Dirichlet series in
-# HTML.  Then we redirect the tex version to the html version.
 
 
 def lfuncDShtml(L, fmt):
@@ -395,11 +364,8 @@ def lfuncDShtml(L, fmt):
             if nonzeroterms > maxcoeffs:
                 break
             if(nonzeroterms % numperline == 0):
-              #  ans = ans + "\\cr\n"     
                 ans = ans + "\n"     # don't need  \cr in the html version
-              #  ans = ans + "&"
                 nonzeroterms += 1   # This ensures we don t add more than one newline
-   #     ans = ans + "<span> + &middot;&middot;&middot;</span>\n</td></tr>\n</table>\n"
         ans = ans + "<span> + &#8943;</span>\n</td></tr>\n</table>\n"
 
     elif fmt == "abstract":
@@ -417,63 +383,12 @@ def lfuncDShtml(L, fmt):
     return(ans)
 
 
-def lfuncDStex_old(L, fmt):
-    """ Returns the LaTex for displaying the Dirichlet series of the L-function L.
-        fmt could be any of the values: "analytic", "langlands", "abstract"
-    """
-
-    if len(L.dirichlet_coefficients) == 0:
-        return '\\text{No Dirichlet coefficients supplied.}'
-
-    numperline = 4
-    maxcoeffs = 20
-    if L.selfdual:
-        numperline = 9  # Actually, we want 8 per line, and one extra addition to counter to ensure
-                        # we add only one newline
-        maxcoeffs = 30
-    ans = ""
-    # Changes to account for very sparse series, only count actual nonzero terms to decide when to go to next line
-    # This actually jumps by 2 whenever we add a newline, to ensure we just add one new line
-    nonzeroterms = 1
-    if fmt == "analytic" or fmt == "langlands":
-        ans = "\\begin{align}\n"
-        ans += L.texname + "=" + seriescoeff(L.dirichlet_coefficients[0], 0, "literal", "", -
-                                                  6, 5) + "\\mathstrut&"
-        for n in range(1, len(L.dirichlet_coefficients)):
-            tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1, "series", "dirichlet", -6, 5)
-            if tmp != "":
-                nonzeroterms += 1
-            ans += tmp
-            if nonzeroterms > maxcoeffs:
-                break
-            if(nonzeroterms % numperline == 0):
-                ans += "\\cr\n"
-                ans += "&"
-                nonzeroterms += 1   # This ensures we don t add more than one newline
-        ans += " + \\ \\cdots\n\\end{align}"
-
-    elif fmt == "abstract":
-        if L.Ltype() == "riemann":
-            ans = "\\begin{equation} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{equation} \n"
-
-        elif L.Ltype() == "dirichlet":
-            ans = "\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}"
-            ans += "where $\\chi$ is the character modulo " + str(L.charactermodulus)
-            ans += ", number " + str(L.characternumber) + "."
-
-        else:
-            ans = "\\begin{equation} \n " + L.texname + \
-                " = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{equation}"
-    return(ans)
-
-#---------
 
 
 def lfuncEPtex(L, fmt):
     """ Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
-#    if L.Ltype() == "genus2curveQ" and fmt == "arithmetic":
     if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and fmt == "arithmetic":
         return lfuncEPhtml(L, fmt)
 
@@ -542,7 +457,6 @@ def lfuncEPhtml(L,fmt):
 
 
     ans = ""
- #   ans += texform_gen + "where, for $p\\nmid " + str(L.level) + "$,\n"
     ans += texform_gen + "where, for " + pgoodset + ",\n"
     if L.degree == 4 and L.motivic_weight == 1:
         ans += "\[F_p(T) = 1 - a_p T + b_p T^2 -  a_p p T^3 + p^2 T^4 \]"
@@ -551,11 +465,8 @@ def lfuncEPhtml(L,fmt):
         ans += "\[F_p(T) = 1 - a_p T + p T^2 .\]"
     else:
         ans += "\(F_p\) is a polynomial of degree " + str(L.degree) + ". "
-  #  ans += "If $p \mid "  + str(L.level) + "$, then $F_p$ is a polynomial of degree at most 3, "
-  #  ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most 3, "
     ans += "If " + pbadset + ", then $F_p$ is a polynomial of degree at most "
     ans += str(L.degree - 1) + ". "
-#    ans += "with $F_p(0) = 1$."
     bad_primes = []
     for lf in L.bad_lfactors:
         bad_primes.append(lf[0])
@@ -952,38 +863,6 @@ def compute_local_roots_SMF2_scalar_valued(K, ev, k, embedding):
 
 
 ###############################################################
-# Functions for computing the number of coefficients needed
-# in order to be able to show plot and compute zeros.
-###############################################################
-def number_of_coefficients_needed(Q, kappa_fe, lambda_fe, max_t):
-    # TODO: This doesn't work. Trouble when computing t0
-    # We completely mimic what lcalc does when it decides whether
-    # to print a warning.
-
-    DIGITS = 14    # These are names of lcalc parameters, and we are
-    DIGITS2 = 2    # mimicking them.
-
-    logger.debug("Start NOC")
-    theta = sum(kappa_fe)
-    c = DIGITS2 * log(10.0)
-    a = len(kappa_fe)
-
-    c1 = 0.0
-    for j in range(a):
-        logger.debug("In loop NOC")
-        t0 = kappa_fe[j] * max_t + complex(lambda_fe[j]).imag()
-        logger.debug("In loop 2 NOC")
-        if abs(t0) < 2 * c / (math.pi * a):
-            logger.debug("In loop 3_1 NOC")
-            c1 += kappa_fe[j] * pi / 2.0
-        else:
-            c1 += kappa_fe[j] * abs(c / (t0 * a))
-            logger.debug("In loop 3_2 NOC")
-
-    return int(round(Q * exp(log(2.3 * DIGITS * theta / c1) * theta) + 10))
-
-
-###############################################################
 # Functions for cusp forms
 ###############################################################
 
@@ -1011,3 +890,35 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
         sign = "Not able to compute."
         sign = 1 # wrong, but we need some type of error handling here.
     return sign
+
+###############################################################
+# Functions for elliptic curves
+###############################################################
+
+def getConductorIsogenyFromLabel(label):
+    ''' Returns the pair (conductor, isogeny) where label is either
+        a LMFDB label or a Cremona label of either an elliptic curve
+        or an isogeny class.
+    '''
+    try:
+        if '.' in label:
+            #LMFDB label
+            cond, iso = label.split('.')
+        else:
+            # Cremona label
+            cond = ''
+            iso = label
+            while iso[0].isdigit():
+                cond += iso[0]
+                iso = iso[1:]
+                
+        # Strip off the curve number
+        while iso[-1].isdigit():
+            iso = iso[:-1]
+        return cond, iso
+
+    except:
+        return None, None
+    
+
+

@@ -306,7 +306,7 @@ def by_triple_label(conductor,iso_label,number):
 # LMFDB or Cremona format, and also whether it is a curve label or an
 # isogeny class label, and calls the appropriate function
 
-@ec_page.route("/<label>")
+@ec_page.route("/<label>/")
 def by_ec_label(label):
     ec_logger.debug(label)
 

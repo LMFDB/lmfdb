@@ -11,9 +11,13 @@ class LfunctionTest(LmfdbTest):
     # Testing at least one example of each type of L-function page
     #------------------------------------------------------
 
+    def test_history(self):
+        L = self.tc.get('/L/history')
+        assert 'Anzahl der Primzahlen' in L.data
+
     def test_riemann(self):
         L = self.tc.get('/L/Riemann/')
-        assert 'Graph' in L.data
+        assert 'Riemann Zeta-function' in L.data
 
     def test_LDirichlet(self):
         L = self.tc.get('/L/Character/Dirichlet/19/9/')
@@ -40,17 +44,17 @@ class LfunctionTest(LmfdbTest):
         assert 'lcalc file' in L.data
 
     def test_Lec(self):
-        L = self.tc.get('/L/EllipticCurve/Q/11.a/')
+        L = self.tc.get('/L/EllipticCurve/Q/11/a/')
         assert '0.2538418609' in L.data and 'Isogeny class 11.a' in L.data and 'Modular form 11.2a' in L.data and '/SatoTateGroup/1.2.' in L.data
-        L = self.tc.get('/L/Zeros/EllipticCurve/Q/11.a/')
+        L = self.tc.get('/L/Zeros/EllipticCurve/Q/11/a/')
         assert '6.362613894713' in L.data
-        L = self.tc.get('/L/EllipticCurve/Q/27.a/')
+        L = self.tc.get('/L/EllipticCurve/Q/27/a/')
         assert '0.5888795834' in L.data and 'Isogeny class 27.a' in L.data and 'Modular form 27.2a' in L.data and '/SatoTateGroup/1.2.' in L.data
-        L = self.tc.get('/L/Zeros/EllipticCurve/Q/27.a/')
+        L = self.tc.get('/L/Zeros/EllipticCurve/Q/27/a/')
         assert '4.043044013797' in L.data
-        L = self.tc.get('/L/EllipticCurve/Q/379998.d/')
-        assert '9.3643111977' in L.data in L.data and 'Isogeny class 379998.d' and '/SatoTateGroup/1.2.' in L.data
-        L = self.tc.get('/L/Zeros/EllipticCurve/Q/379998.d/')
+        L = self.tc.get('/L/EllipticCurve/Q/379998/d/')
+        assert '9.3643111977' in L.data and 'Isogeny class 379998.d' in L.data and '/SatoTateGroup/1.2.' in L.data
+        L = self.tc.get('/L/Zeros/EllipticCurve/Q/379998/d/')
         assert '0.8292065891985' in L.data
 
     def test_Lemf(self):
@@ -66,6 +70,10 @@ class LfunctionTest(LmfdbTest):
         assert '0.27971563' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/1/a/0/')
         assert '18.17341115038' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/4/3/a/0/')
+        assert '0.52375796' in L.data
+        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/13/4/3/a/0/')
+        assert '2.1369513202' in L.data
 
     def test_Lhmf(self):
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/0/0/')
@@ -105,23 +113,25 @@ class LfunctionTest(LmfdbTest):
         assert '16.18901597' in L.data
 
     def test_Lsym2EC(self):
-        L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/11.a/')
+        L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/11/a/')
         assert '0.8933960461' in L.data
+        L = self.tc.get('/L/Zeros/SymmetricPower/2/EllipticCurve/Q/11/a/')
+        assert '4.7345954' in L.data
 
     def test_Lsym3EC(self):
-        L = self.tc.get('/L/SymmetricPower/3/EllipticCurve/Q/11.a/')
+        L = self.tc.get('/L/SymmetricPower/3/EllipticCurve/Q/11/a/')
         assert '1.1402308684' in L.data
 
     def test_Lsym4EC(self):
-        L = self.tc.get('/L/SymmetricPower/4/EllipticCurve/Q/11.a/')
+        L = self.tc.get('/L/SymmetricPower/4/EllipticCurve/Q/11/a/')
         assert '0.6058003921' in L.data
 
     def test_LsymHighEC(self):
-        L = self.tc.get('/L/SymmetricPower/5/EllipticCurve/Q/11.a/')
+        L = self.tc.get('/L/SymmetricPower/5/EllipticCurve/Q/11/a/')
         assert '161051' in L.data
-        L = self.tc.get('/L/SymmetricPower/6/EllipticCurve/Q/11.a/')
+        L = self.tc.get('/L/SymmetricPower/6/EllipticCurve/Q/11/a/')
         assert '1771561' in L.data
-        L = self.tc.get('/L/SymmetricPower/11/EllipticCurve/Q/11.a/')
+        L = self.tc.get('/L/SymmetricPower/11/EllipticCurve/Q/11/a/')
         assert '285311670611' in L.data
 
 
@@ -154,7 +164,7 @@ class LfunctionTest(LmfdbTest):
         assert 'lcalc' in L.data
 
     def test_LlcalcfileEc(self):
-        L = self.tc.get('/L/EllipticCurve/Q/56.a/?download=lcalcfile')
+        L = self.tc.get('/L/EllipticCurve/Q/56/a/?download=lcalcfile')
         assert 'lcalc' in L.data
 
     def test_LcalcfileMaass(self):
@@ -259,12 +269,10 @@ class LfunctionTest(LmfdbTest):
         assert '6.18357819' in L.data
 
     def test_LecZeros(self):
-        L = self.tc.get('/L/Zeros/EllipticCurve/Q/56.a/')
+        L = self.tc.get('/L/Zeros/EllipticCurve/Q/56/a/')
         assert '2.791838' in L.data
 
     def test_LemfPlot(self):
-        #L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/10/3/1/a/0/')
-        # The modular form above does not exist in current labelling
         L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/14/6/1/a/0/')
         print str(L)
         assert 'OK' in str(L)
@@ -278,7 +286,7 @@ class LfunctionTest(LmfdbTest):
         assert 'OK' in str(L)
 
     def test_LecPlot(self):
-        L = self.tc.get('/L/Plot/EllipticCurve/Q/56.a/')
+        L = self.tc.get('/L/Plot/EllipticCurve/Q/56/a/')
         assert 'OK' in str(L)
 
     def test_LHGMZeros(self):
@@ -295,7 +303,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Unable to convert parameter' in L.data
         L = self.tc.get('/L/Character/Dirichlet/9/10/')
         assert 'should not exceed the modulus ' in L.data
-        L = self.tc.get('/L/EllipticCurve/Q/11.b/')
+        L = self.tc.get('/L/EllipticCurve/Q/11/b/')
         assert 'No L-function instance data for' in L.data
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/5/6/4/c/1/')
         assert 'The specified modular form does not appear to be in the database' in L.data
@@ -311,9 +319,9 @@ class LfunctionTest(LmfdbTest):
         assert 'No data for the number field' in L.data
         L = self.tc.get('/L/ArtinRepresentation/3.231.4t5.1c1/')
         assert 'Error constructing Artin representation' in L.data
-        L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/37.d/')
+        L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/37/d/')
         assert 'No elliptic curve with label ' in L.data
-        L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/27.a/')
+        L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/27/a/')
         assert 'This Elliptic curve has complex multiplication and the symmetric power of its L-function is then not primitive.' in L.data
         
 
@@ -336,13 +344,3 @@ class LfunctionTest(LmfdbTest):
     def test_paintSVGchar(self):
         svg = paintSvgChar(1,20,1,12)
         assert "/L/Character/Dirichlet/8/5" in svg
-
-    # To quote from the function number_of_coefficients_needed() in
-    # lfunctions/Lfunctionutilities.py: "This doesn't work. Trouble
-    # when computing t0. We completely mimic what lcalc does when it
-    # decides whether to print a warning."
-
-    # def test_number_of_coefficients_needed(self):
-    #     nr = number_of_coefficients_needed(1 / sqrt(math.pi), [0.5], [0], 50)
-    #     print nr
-    #     assert nr > 10

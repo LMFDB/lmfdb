@@ -412,17 +412,15 @@ class Lfunction_Dirichlet(Lfunction):
 
 class Lfunction_EC_Q(Lfunction):
     """Class representing an elliptic curve L-function
-    It can be called with a dictionary of these forms:
+    It should be called with a dictionary of the forms:
 
-    dict = { 'label': ... }  label is the LMFDB label of the elliptic curve
-
+    dict = { 'conductor': ..., 'isogeny':  }
     """
-    #     This is bad, it assumes the label is Cremona's and the ground
-    #     field is Q
+    
     def __init__(self, **args):
         constructor_logger(self, args)
         validate_required_args('Unable to construct elliptic curve L-function.',
-                               args, 'label')
+                               args, 'conductor', 'isogeny')
 
         self._Ltype = "ellipticcurveQ"
 
@@ -431,7 +429,8 @@ class Lfunction_EC_Q(Lfunction):
         self.numcoeff = 30
  
         # Load data from the database
-        label_slash = self.label.replace(".","/")
+        self.label = self.conductor + '.' + self.isogeny
+        label_slash = self.conductor + '/' + self.isogeny
         db_label = "EllipticCurve/Q/" + label_slash
         self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
         if not self.lfunc_data:
@@ -721,7 +720,11 @@ class Lfunction_Maass(Lfunction):
             title_end = " and $R= %s$" % (self.eigenvalue)
 
             # Generate a function to do computations
-            generateSageLfunction(self)
+            minNumberOfCoefficients = 100     # TODO: Fix this to take level into account 
+            if len(self.dirichlet_coefficients) >= minNumberOfCoefficients: 
+                generateSageLfunction(self)
+            else:
+                self.sageLfunction = None
 
         # Text for the web page
         self.texname = "L(s,f)"
@@ -1269,7 +1272,10 @@ class ArtinLfunction(Lfunction):
                        'Magma by Tim Dokchitser')
 
         # Generate a function to do computations
-        generateSageLfunction(self)
+        if self.sign == 0:
+            self.sageLfunction = None
+        else:
+            generateSageLfunction(self)
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
@@ -1375,7 +1381,7 @@ class SymmetricPowerLfunction(Lfunction):
     Only implemented for (non-CM) elliptic curves
 
     Compulsory parameters: power, underlying_type, field
-    For ellitic curves: label
+    For ellitic curves: conductor, isogeny
 
     """
 
@@ -1384,14 +1390,16 @@ class SymmetricPowerLfunction(Lfunction):
         
         # Check for compulsory arguments
         validate_required_args('Unable to construct symmetric power L-function.',
-                               args, 'power', 'underlying_type', 'field', 'label')
+                               args, 'power', 'underlying_type', 'field',
+                               'conductor', 'isogeny')
         validate_integer_args ('The power has to be an integer.',
-                               args, 'power')
+                               args, 'power', 'conductor')
         self._Ltype = "SymmetricPower"
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
         self.m = int(self.power)
+        self.label = str(self.conductor) + '.' + self.isogeny
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
             raise TypeError("The symmetric L-functions have been implemented " +
                             "only for Elliptic Curves over Q.")
@@ -1426,7 +1434,9 @@ class SymmetricPowerLfunction(Lfunction):
         self.kappa_fe = self.S._kappa_fe
         self.lambda_fe = self.S._lambda_fe
         self.Q_fe = self.S._Q_fe
-        self.compute_some_mu_nu()
+        pairs_fe = zip(self.kappa_fe, self.lambda_fe)
+        self.mu_fe = [lambda_fe*2. for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 0.5) < 0.001]
+        self.nu_fe = [lambda_fe for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 1) < 0.001]
         self.quasidegree = len(self.mu_fe) + len(self.nu_fe)       
         self.algebraic = True
         self.motivic_weight = self.m
@@ -1544,9 +1554,6 @@ class Lfunction_lcalc(Lfunction):
     
     def Lkey(self):
         return {"filecontents": self.filecontents}
-    
-    def source_object(self):
-        return self.filecontents
 
 #############################################################################
 
