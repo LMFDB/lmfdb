@@ -26,7 +26,7 @@ import sage
 from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
-from lmfdb.WebCharacter import ConreyCharacter
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
