@@ -209,6 +209,10 @@ body.knowl #header {
     color: {{color.header_text_title}};
 }
 
+#header #title .MathJax{
+    font-weight: bold !important;
+}
+
 #header #title-content {
   position: absolute;
   bottom: 4px;

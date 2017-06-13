@@ -4,7 +4,7 @@ from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
 from lmfdb.base import getDBConnection
-from lmfdb.utils import web_latex, web_latex_ideal_fact, encode_plot
+from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
@@ -66,7 +66,10 @@ def parse_ainvs(K,ainvs):
 
 def web_ainvs(field_label, ainvs):
     K = make_field(field_label).K()
-    return web_latex(parse_ainvs(K,ainvs))
+    ainvsinlatex = web_latex_split_on(parse_ainvs(K,ainvs), on=[","])
+    ainvsinlatex = ainvsinlatex.replace("\\left[", "\\bigl[")
+    ainvsinlatex = ainvsinlatex.replace("\\right]", "\\bigr]")
+    return ainvsinlatex
 
 from sage.misc.all import latex
 def web_point(P):
