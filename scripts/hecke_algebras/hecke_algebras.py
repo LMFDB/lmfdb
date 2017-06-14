@@ -22,8 +22,8 @@ import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
-C['mod_l_eigenvalues'].authenticate('editor', password)
-hecke_algebras = C['mod_l_eigenvalues'].hecke_algebras
+C['hecke_algebras'].authenticate('editor', password)
+hecke_algebras = C['hecke_algebras'].hecke_algebras
 
 saving = True 
 
