@@ -82,7 +82,7 @@ def split_hecke_algebras_orbit_label(lab):
     return hecke_algebras_orbit_label_regex.match(lab).groups()
 
 def hecke_algebras_by_label(lab, C):
-    if C.mod_l_eigenvalues.hecke_algebras.find({'label': lab}).limit(1).count() > 0:
+    if C.hecke_algebras.hecke_algebras.find({'label': lab}).limit(1).count() > 0:
         return render_hecke_algebras_webpage(label=lab)
     if hecke_algebras_label_regex.match(lab):
         flash(Markup("The Hecke Algebra <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
@@ -91,7 +91,7 @@ def hecke_algebras_by_label(lab, C):
     return redirect(url_for(".hecke_algebras_render_webpage"))
 
 def hecke_algebras_by_orbit_label(lab, C):
-    if C.mod_l_eigenvalues.hecke_algebras_orbits.find({'orbit_label': lab}).limit(1).count() > 0:
+    if C.hecke_algebras.hecke_algebras_orbits.find({'orbit_label': lab}).limit(1).count() > 0:
         sp=split_hecke_algebras_orbit_label(lab)
         ol=sp[0]+'.'+sp[1]+'.'+sp[2]
         return render_hecke_algebras_webpage(label=ol)
@@ -127,7 +127,7 @@ def hecke_algebras_search(**args):
     start = parse_start(info)
 
     info['query'] = dict(query)
-    res = C.mod_l_eigenvalues.hecke_algebras.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
+    res = C.hecke_algebras.hecke_algebras.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
     nres = res.count()
 
     if(start >= nres):
@@ -180,7 +180,7 @@ def render_hecke_algebras_webpage(**args):
         lab = clean_input(args.get('label'))
         if lab != args.get('label'):
             return redirect(url_for('.render_hecke_algebras_webpage', label=lab), 301)
-        data = C.mod_l_eigenvalues.hecke_algebras.find_one({'label': lab })
+        data = C.hecke_algebras.hecke_algebras.find_one({'label': lab })
     if data is None:
         t = "Hecke Agebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
@@ -191,12 +191,12 @@ def render_hecke_algebras_webpage(**args):
 
     bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")), ('%s' % data['label'], ' ')]
     credit = hecke_algebras_credit
-    f = C.mod_l_eigenvalues.hecke_algebras.find_one({'level': data['level'],'weight': data['weight'],'num_orbits': data['num_orbits']})
+    f = C.hecke_algebras.hecke_algebras.find_one({'level': data['level'],'weight': data['weight'],'num_orbits': data['num_orbits']})
     info['level']=int(f['level'])
     info['weight']= int(f['weight'])
     info['num_orbits']= int(f['num_orbits'])
 
-    orb = C.mod_l_eigenvalues.hecke_algebras_orbits.find({'parent_label': f['label']}).sort([('orbit', ASC)])
+    orb = C.hecke_algebras.hecke_algebras_orbits.find({'parent_label': f['label']}).sort([('orbit', ASC)])
     if orb.count()!=0:
         #consistency check
         if orb.count()!= int(f['num_orbits']):
@@ -269,7 +269,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         except ValueError as err:
             base_lab=".".join([split(lab)[i] for i in [0,1,2]])
             return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
-        data = C.mod_l_eigenvalues.hecke_algebras_l_adic.find_one({'orbit_label': lab , 'ell': ell})
+        data = C.hecke_algebras.hecke_algebras_l_adic.find_one({'orbit_label': lab , 'ell': ell})
     if data is None:
         t = "Hecke Agebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
@@ -277,7 +277,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
-    res = C.mod_l_eigenvalues.hecke_algebras_l_adic.find({'level': data['level'],'weight': data['weight'],'orbit_label': data['orbit_label'], 'ell': data['ell']})
+    res = C.hecke_algebras.hecke_algebras_l_adic.find({'level': data['level'],'weight': data['weight'],'orbit_label': data['orbit_label'], 'ell': data['ell']})
 
     info['num_l_adic_orbits']=res.count()
     res_clean = []
@@ -403,7 +403,7 @@ def render_hecke_algebras_webpage_download(**args):
 def download_hecke_algebras_full_lists_op(**args):
     C = getDBConnection()
     label = str(args['orbit_label'])
-    res = C.mod_l_eigenvalues.hecke_algebras_orbits.find_one({'orbit_label': label})
+    res = C.hecke_algebras.hecke_algebras_orbits.find_one({'orbit_label': label})
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No operators available"
@@ -424,7 +424,7 @@ def download_hecke_algebras_full_lists_op(**args):
 def download_hecke_algebras_full_lists_gen(**args):
     C = getDBConnection()
     label = str(args['orbit_label'])
-    res = C.mod_l_eigenvalues.hecke_algebras_orbits.find_one({'orbit_label': label})
+    res = C.hecke_algebras.hecke_algebras_orbits.find_one({'orbit_label': label})
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No generators available"
@@ -460,7 +460,7 @@ def download_hecke_algebras_full_lists_mod_op(**args):
     label = str(args['orbit_label'])
     ell=int(args['prime'])
     index=int(args['index'])
-    res = C.mod_l_eigenvalues.hecke_algebras_l_adic.find_one({'orbit_label': label, 'index': index, 'ell': ell })
+    res = C.hecke_algebras.hecke_algebras_l_adic.find_one({'orbit_label': label, 'index': index, 'ell': ell })
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No mod %s operators available"%ell
@@ -485,7 +485,7 @@ def download_hecke_algebras_full_lists_id(**args):
     label = str(args['orbit_label'])
     ell=int(args['prime'])
     index=int(args['index'])
-    res = C.mod_l_eigenvalues.hecke_algebras_l_adic.find_one({'orbit_label': label, 'index': index, 'ell': ell })
+    res = C.hecke_algebras.hecke_algebras_l_adic.find_one({'orbit_label': label, 'index': index, 'ell': ell })
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No mod %s operators available"%ell
