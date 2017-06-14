@@ -36,7 +36,7 @@
 
 {% if info.dimension > 1 %}
 <div>The Hecke eigenvalue field is $\Q(e)$ where $e$ is a root of the defining polynomial:</div> 
-<div style='overflow-x:auto; overflow-y:hidden'>${{ info.hecke_polynomial }}$ </div>
+<div style='overflow-x:auto; overflow-y:hidden'>{{ info.hecke_polynomial }}</div>
 
 <p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Show full eigenvalues</a>
 &nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>

@@ -360,7 +360,10 @@ def render_hmf_webpage(**args):
     if 'numeigs' in request.args:
         display_eigs = True
 
-    info['hecke_polynomial'] = teXify_pol(info['hecke_polynomial'])
+    # Break hecke polynomial on each term to allow newlines in rendering webpage
+    info['hecke_polynomial'] = "\(" + teXify_pol(info['hecke_polynomial']) + "\)"
+    info['hecke_polynomial'] = info['hecke_polynomial'].replace("+", "+ \) \(")
+    info['hecke_polynomial'] = info['hecke_polynomial'].replace("-", "- \) \(")
 
     if 'AL_eigenvalues_fixed' in data:
         if data['AL_eigenvalues_fixed'] == 'done':
