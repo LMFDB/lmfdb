@@ -197,42 +197,43 @@ function show_invs(invstyle) {
     </tr>
 </table>
 
-{{place_code('num_rat_wpts')}}
-<br>
-<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h2>\({{data.num_rat_wpts}}\)
+<h2> Rational points </h2>
 
-<br>
+<p>
 {{place_code('locally_solvable')}}
-<br>
+</p>
 <h3 class="inline"> This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</h3>
 
-<br>
+<p>
+{{place_code('num_rat_wpts')}}
+</p>
+<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h2>\({{data.num_rat_wpts}}\)
+
 <h2 class='subhead'> Invariants of the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
 
 <h3 class="inline"> {{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}: </h3>\({{data.analytic_rank}}\)
 
-<br>
+<p>
 {{place_code('two_selmer')}}
-<br>
+</p>
 <h3 class="inline"> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: </h3>\({{data.two_selmer_rank}}\)
 
-<br>
+<p>
 {{place_code('has_square_sha')}}
-<br>
+</p>
 <h3 class="inline"> {{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}: </h3>{{data.has_square_sha}}
 
-<br>
+<p>
 {{place_code('tamagawa')}}
-<br>
+</p>
 <h3 class="inline"> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: </h3>
 {{data.tama}}
 
-<br>
+<p>
 {{place_code('torsion_subgroup')}}
-<br>
+</p>
 <h3 class="inline"> {{ KNOWL('g2c.torsion', title='Torsion') }}: </h3>\({{data.torsion_subgroup}}\)
 
-<br>
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
 <table>
@@ -243,8 +244,6 @@ function show_invs(invstyle) {
         <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\) </td>
     </tr>
 </table>
-
-<br>
 
 <h3 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition') }} </h3>
 
