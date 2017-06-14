@@ -26,11 +26,35 @@ C['hmfs'].authenticate(username, password) ## read/write on hmfs
 
 #Caching WebNumberFields
 WNFs = {}
+nf_data = {}
 
 def get_WNF(label):
     if not label in WNFs:
         WNFs[label] = WebNumberField(label)
     return WNFs[label]
+
+def get_nf_data(label):
+    """List of allowed numbers of eigenvalues for an HMF over that field.
+    """
+    if not label in nf_data:
+        WebF = get_WNF(label)
+        F = WebF.K()
+        Fhmf = fields.find_one({'label':label})
+        primes = Fhmf['primes']
+        N = len(primes)
+        last = primes[N-1]
+        last = last.encode()[1:]
+        last = last.split(",")[0]
+        last = ZZ(last)
+        L = [0]
+        for n in range(last+1):
+            p,f = ZZ(n).is_prime_power(get_data=True)
+            if f > 0:
+                Lp = F.primes_above(p, degree=f)
+                L.append(L[len(L)-1]+len(Lp))
+        L.append(Infinity)
+        nf_data[label] = L
+    return nf_data[label]
 
 def find_discrepancies():
     with open('numap2-done-fields.txt','w') as donefile:
@@ -49,44 +73,48 @@ def find_discrepancies():
                 donefile.write(flabel+'\n')
                 donefile.flush()
 
+def binary_search(L,x):
+    N = len(L)
+    #this case happens if the form has all the eigenvalues
+    if x == L[N-2]:
+        return x
+    i = 0
+    j = N-1
+    while j-i > 1:
+      k = (i+j)//2
+      if x < L[k]:
+        j = k
+      else:
+        i = k
+    return L[i]
+
 #note: could be optimised by precomputing the number of primes up to each norm
-def truncation_bound(form_label):
-    """Given the form label of an HMF f, return a bound X on the norm 
+def truncation_bound(f):
+    """Given an HMF f or its label, compute a bound X on the norm 
     of the primes at which the list of eigenvalues should be truncated 
     to ensure that the list of primes P for which a_P(f) contains every 
-    prime up to X. Also return the total number of primes of norm up to X
+    prime up to X. Return the total number of primes of norm up to X
     and the number of eigenvalues stored for f.
     """
-    f = forms.find_one({'label':form_label})
+    if type(f) == str:
+        f = forms.find_one({'label':f})
     num_ap = len(f['hecke_eigenvalues'])
     field_label = f['field_label']
-    WebF = get_WNF(field_label)
-    F = WebF.K()
-    X = 0
-    n = 1
-    prev_totprimes = 0
-    totprimes = 0
-    while True:
-        n += 1
-        p,f = n.is_prime_power(get_data=True)
-        if f>0:
-            Lp = F.primes_above(p, degree=f)
-            totprimes += len(Lp)
-            if num_ap < totprimes:
-                return X, prev_totprimes, num_ap
-            else:
-                X = n
-                prev_totprimes = totprimes
+    data = get_nf_data(field_label)
+    nb = binary_search(data,num_ap)
+    return nb,num_ap
 
-def check_form(form_label, dofix=False):
+def check_form(f, dofix=False):
+    if type(f) == str:
+        f = forms.find_one({'label':f})
+    form_label = f['label']
     print "\tchecking form " + form_label
-    X,nb,nbap = truncation_bound(form_label)
-    if nb<nbap:
-        print "\tform needs fixing";
-        f = forms.find_one({'label':form_label})
+    nb, nbap = truncation_bound(f)
+    if nb < nbap:
+        print ("\tform needs fixing: %s eigenvalues -> truncate at %s eigenvalues" % (nbap, nb));
         ev = f['hecke_eigenvalues']
         ev = ev[0:nb]
-        update = {"$set":{'hecke_eigenvalue':ev}}
+        update = {"$set":{'hecke_eigenvalues':ev}}
         if dofix:
             forms.update_one({'label':form_label}, update)
             print "\tform fixed";
@@ -101,7 +129,7 @@ def check_field(field_label, dofix=False):
     nbtodo = 0
     nbfixed = 0
     for f in forms.find({'field_label':field_label}):
-        res = check_form(f['label'], dofix=dofix)
+        res = check_form(f, dofix=dofix)
         nbforms += 1
         if res>0:
             nbtodo += 1
