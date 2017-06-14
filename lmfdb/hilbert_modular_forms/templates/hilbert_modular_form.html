@@ -38,8 +38,8 @@
 <div>The Hecke eigenvalue field is $\Q(e)$ where $e$ is a root of the defining polynomial:</div> 
 <div style='overflow-x:auto; overflow-y:hidden'>${{ info.hecke_polynomial }}$ </div>
 
-<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Show full eigenvalues</a>
-&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>
+<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True&numeigs={{ info.numeigs }}'>Show full eigenvalues</a>
+&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False&numeigs={{ info.numeigs }}'>Hide large eigenvalues</a></p>
 
 {% else %}
 <div>The Hecke eigenvalue field is $\Q$</a>.</div>
@@ -75,6 +75,7 @@ div.scrollable {
 <tr>
 <td>Display number of eigenvalues</td>
 <td><input type='text' name='numeigs' placeholder='20' size=10>
+  <input type="hidden" name="display_eigs" value="{{ info.display_eigs }}">
 </tr>
 <tr>
 <td colspan=3><button type='submit' value='display'>Display</button>
