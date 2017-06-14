@@ -586,13 +586,14 @@ class WebG2C(object):
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
             data['two_selmer_rank'] = ZZ(curve['two_selmer_rank'])
             data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
-            P = curve['insoluble_places']
-            sz = ""
+            P = curve['non_solvable_places']
             if len(P):
-                sz = " except over "
+                sz = "except over "
                 sz += ", ".join([QpName(p) for p in P])
                 sz = " and".join(sz.rsplit(",",1))
-            data['insoluble_places'] = sz
+            else:
+                sz = "everywhere"
+            data['non_solvable_places'] = sz
             data['torsion_order'] = curve['torsion_order']
             data['torsion_factors'] = [ ZZ(a) for a in literal_eval(curve['torsion_subgroup']) ]
             if len(data['torsion_factors']) == 0:
