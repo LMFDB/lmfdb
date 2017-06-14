@@ -186,8 +186,8 @@ def render_bmf_field_dim_table(**args):
     info['field_poly'] = teXify_pol(str(nf.poly()))
     weights = set()
     for dat in data:
-        weights = weights.union(set([int(w) for w in dat['dimension_data']]))
-    weights = list(weights)
+        weights = weights.union(set(dat['dimension_data'].keys()))
+    weights = list([int(w) for w in weights])
     weights.sort()
     info['weights'] = weights
     info['nweights'] = len(weights)
@@ -197,10 +197,22 @@ def render_bmf_field_dim_table(**args):
     info['next_page'] = url_for(".render_bmf_field_dim_table", field_label=field_label, start=str(start+count), count=str(count), level_norm=argsdict.get('level_norm',''))
     info['prev_page'] = url_for(".render_bmf_field_dim_table", field_label=field_label, start=str(max(0,start-count)), count=str(count))
 
+    dims = {}
+    for dat in data:
+        dims[dat['level_label']] = d = {}
+        for w in weights:
+            sw = str(w)
+            if sw in dat['dimension_data']:
+                d[w] = {'d': dat['dimension_data'][sw]['cuspidal_dim'],
+                        'n': dat['dimension_data'][sw]['new_dim']}
+            else:
+                d[w] = {'d': '?', 'n': '?'}
+
     dimtable = [{'level_label': dat['level_label'],
                  'level_norm': dat['level_norm'],
                  'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']),
-                  'dims': [(dat['dimension_data'][w]['cuspidal_dim'],dat['dimension_data'][w]['new_dim']) for w in dat['dimension_data']]} for dat in data]
+                  'dims': dims[dat['level_label']]} for dat in data]
+    print "dimtable = ", dimtable
     info['dimtable'] = dimtable
     return render_template("bmf-field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
 

@@ -53,10 +53,16 @@ norm.
 </tr>
 {% for data in info.dimtable %}
 <tr>
-<td align=right>{{data.level_label}}</td>
+<td align=right><a href={{data.level_space}}>{{data.level_label}}</a></td>
 <td align=right>{{data.level_norm}}</td>
-{% for d in data.dims %}
-<td align=center><a href={{data.level_space}}>{{d.0}} ({{d.1}})</a></td>
+{% for k in info.weights %}
+<td align=center>
+  {% if data.dims[k]['d'] == '?' %}
+  &nbsp;
+  {% else %}
+  {{data.dims[k]['d']}} ({{data.dims[k]['n']}})
+  {% endif %}
+</td>
 {% endfor %}
 </tr>
 {% endfor %}

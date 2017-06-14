@@ -84,8 +84,50 @@ def dimtab(line):
         'dimension_data': dim_data,
     }
 
-def upload_to_db(base_path, suffix):
-    dims_filename = ".".join(['dimtab',suffix])
+def dimtabeis(line):
+    r""" Parses one line from a dimtabeis file.  Returns a complete entry
+    for the dimensions collection.
+
+    Input line fields:
+
+    field weight level all-dim cusp-dim new-cusp-dim eis-dims
+
+    Sample input line:
+
+    11 	2 	[81,6,3] 	9 	2 	0 	7
+
+    """
+    if line[0] =="#":  return '', {}
+    data = split(line)
+    # Skip header lines
+    if data[0] in ["Table","Field"]:  return '', {}
+
+    field = int(data[0])
+    field_label = "2.0.{}.1".format([0,4,8,3,0,0,0,7,0,0,0,11][field])
+    d, s, field_absdisc, n = [int(x) for x in field_label.split(".")]
+    weight = int(data[1])
+    level_params = data[2].split(',')
+    level_norm = int(level_params[0][1:])
+    level_a = int(level_params[1])
+    level_b = int(level_params[2][:-1])
+    level_label = ".".join([str(level_norm),str(level_a), str(level_b)])
+    label = '-'.join([field_label,level_label])
+    #all_dim = int(data[3]) # not used
+    cuspidal_dim = int(data[4])
+    new_cuspidal_dim = int(data[5])
+    dim_data = {str(weight): {'cuspidal_dim': cuspidal_dim, 'new_dim': new_cuspidal_dim}}
+    return label, {
+        'label': label,
+        'field_label': field_label,
+        'field_absdisc': field_absdisc,
+        'level_label': level_label,
+        'level_norm': level_norm,
+        'dimension_data': dim_data,
+    }
+
+def upload_to_db(base_path, filename, insert=True):
+    #dims_filename = ".".join(['dimtab',suffix])
+    dims_filename = filename
     file_list = [dims_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
@@ -112,7 +154,10 @@ def upload_to_db(base_path, suffix):
             for key in data:
                 if key in space:
                     if key=='dimension_data':
+                        print("Before update, space[{}] = {}".format(key,space[key]))
+                        print("data[{}] = {}".format(key,data[key]))
                         space[key].update(data[key])
+                        print("After update, space[{}] = {}".format(key,space[key]))
                     else:
                         if space[key] != data[key]:
                             print("space[{}] = {}".format(key,space[key]))
@@ -123,10 +168,15 @@ def upload_to_db(base_path, suffix):
         print "finished reading %s lines from file" % count
 
     vals = data_to_insert.values()
-    count = 0
-    for val in vals:
-        #print val
-        dims.update_one({'label': val['label']}, {"$set": val}, upsert=True)
-        count += 1
-        if count % 50 == 0:
-            print "inserted %s" % (val['label'])
+    if insert:
+        print("inserting all data")
+        dims.insert_many(vals)
+    else:
+        count = 0
+        print("inserting data one at a time...")
+        for val in vals:
+            #print val
+            dims.update_one({'label': val['label']}, {"$set": val}, upsert=True)
+            count += 1
+            if count % 100 == 0:
+                print "inserted %s" % (val['label'])
