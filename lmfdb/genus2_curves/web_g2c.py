@@ -590,7 +590,10 @@ class WebG2C(object):
             if len(P):
                 sz = "except over "
                 sz += ", ".join([QpName(p) for p in P])
-                sz = " and".join(sz.rsplit(",",1))
+                last = " and"
+                if len(P) > 2:
+                    last = ", and"
+                sz = last.join(sz.rsplit(",",1))
             else:
                 sz = "everywhere"
             data['non_solvable_places'] = sz
