@@ -1,44 +1,50 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-  <h2>  Base Field  </h2>
-<p>
-<table>
-<tr><td>Base field label:<td><A HREF="/NumberField/{{info.field_label }}">{{info.field_label}}</A> </tr>
-<tr><td>Base field degree:<td> {{ info.field_degree }} </tr>
-<tr><td>Base field discriminant:<td> {{ info.field_disc }} </tr>
-<tr><td>Base field defining polynomial:<td> ${{ info.field_poly }}$ </tr>
-</table>
-</p>
+  <h2>  Base Field: {{data.field_knowl |safe}}  </h2>
 
-  <h2>  Form  </h2>
+  <h2>  Level: ${{ data.level_ideal }}$ of norm {{ data.level_norm }}
+  (label {{data.level_label}}) </h2>
+
+
+<h2> Properties </h2>
 
 <p>
 <table>
-<tr><td> Level norm:<td> {{ info.level_norm }} </tr>
-<tr><td> Level:<td> ${{ info.level_ideal }}$ </tr>
-<tr><td> Dimension:<td> {{ info.dimension }} </tr>
-<tr><td> Is CM?:<td> {{ info.is_CM }} </tr>
-<tr><td> Is base change?:<td> {{ info.is_base_change }} </tr>
-<tr><td> Parent newspace dimension:<td> {{ info.newspace_dimension }} </tr>
+{% if data.dimension > 1 %}
+<tr><td> Dimension:<td> {{ data.dimension }} </tr>
+{% endif %}
+<tr><td> CM?:<td> {{data.cm}} </tr>
+<tr><td> Base-change?:<td> {{data.bc}} </tr>
+<tr><td> Parent newspace dimension:<td> {{ data.newspace_dimension }}
+    (to be fixed) </tr>
 </table>
 </p>
 
-{# 
- <p><a href='{{ info.label }}/download/magma' target='_blank'>Download to Magma</a></p>
- <p><a href='{{ info.label }}/download/sage' target='_blank'>Download to Sage</a></p>
-#}
+<h2>  Atkin-Lehner eigenvalues  </h2>
+
+{% if data.AL_eigs %} 
+<p>
+<table class="ntdata" cellpadding=5>
+<tr>
+<th>Norm</th>
+<th>Prime</th>
+<th>Eigenvalue</th>
+</tr>
+{% for entry in data.AL_table: %}
+<tr>
+<td>{{entry[0]}}</td>
+<td>{{entry[1]}}</td>
+<td align=right>{{entry[2]}}</td>
+</tr>
+{% endfor %}
+</table>
+</p>
+{% else %}
+<p>None</P>
+{% endif %}
 
   <h2>  Hecke eigenvalues  </h2>
-
-<p>
-<table>
-<tr><td> $e$ is a root of the defining polynomial: <td> ${{ info.hecke_polynomial }}$ </tr>
-</table>
-</p>
-
-<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Print full eigenvalues</a>
-&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>
 
 <table class="ntdata" cellpadding=5>
 <tr>
@@ -46,15 +52,16 @@
 <th>Prime</th>
 <th>Eigenvalue</th>
 </tr>
-{% for entry in info.eigs: %}
+{% for entry in data.hecke_table: %}
 <tr>
-<td>{{entry.prime_norm}}</td>
-<td>${{entry.prime_ideal}}$</td>
-<td align=right>${{entry.eigenvalue}}$</td>
+<td>{{entry[0]}}</td>
+<td>{{entry[1]}}</td>
+<td align=right>{{entry[2]}}</td>
 </tr>
 {% endfor %}
 </table>
 
+{#
 <form>
 <table>
 <tr>
@@ -67,30 +74,7 @@
 </tr>
 </table>
 </form>
-
-  <h2>  Atkin-Lehner eigenvalues  </h2>
-
-{% if info.AL_eigs_count %} 
-<p>
-<table class="ntdata" cellpadding=5>
-<tr>
-<th>Norm</th>
-<th>Prime</th>
-<th>Eigenvalue</th>
-</tr>
-{% for entry in info.AL_eigs: %}
-<tr>
-<td>{{entry.prime_norm}}</td>
-<td>${{entry.prime_ideal}}$</td>
-<td align=right>${{entry.eigenvalue}}$</td>
-</tr>
-{% endfor %}
-</table>
-</p>
-{% else %}
-<p>None</P> 
-{% endif %}
-
+#}
 
 
 {% endblock %}

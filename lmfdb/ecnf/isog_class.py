@@ -113,7 +113,8 @@ class ECNF_isoclass(object):
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
             self.friends += [('L-function', self.urls['Lfunction'])]
         if imag_quadratic:
-            self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+            #self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+            self.friends += [('Bianchi Modular Form %s' % self.bmf_label, url_for('bmf.render_bmf_webpage', label=self.bmf_label))]
 
         self.properties = [('Base field', self.field),
                            ('Label', self.class_label),

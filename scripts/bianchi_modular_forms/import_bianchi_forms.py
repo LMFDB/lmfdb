@@ -134,11 +134,11 @@ def newforms(line):
 
     Input line fields:
 
-    field_label level_label level_suffix level_ideal sign Lratio AL_eigs hecke_eigs
+    field_label level_label level_suffix level_ideal wt bc cm sign Lratio AL_eigs pol hecke_eigs
 
     Sample input line:
 
-    2.0.4.1 65.18.1 a (7+4i) 1 1 [1,-1] [0,0,-1,-2,1,-4,0,6,6,-6,2,2,6,0,-4,6,-6,-10,-10,2,2,6,6,-10,8]
+    2.0.4.1 65.18.1 a (7+4i) 2 0 ? 1 1 [1,-1] x [0,0,-1,-2,1,-4,0,6,6,-6,2,2,6,0,-4,6,-6,-10,-10,2,2,6,6,-10,8]
 
     NB We expect 3-component HNF-style labels for ideals (N.c.d) but will convert to LMFDB labels N.i on input.
     """
@@ -160,16 +160,17 @@ def newforms(line):
     label_nsuffix = numerify_iso_label(label_suffix)
     short_label = '-'.join([level_label, label_suffix])
     label = '-'.join([field_label, short_label])
+    weight = int(data[4])
+    bc = data[5]
+    if bc!='?': bc=int(bc)
+    cm = data[6]
+    if cm!='?': bc=int(cm)
+    sfe = int(data[7]) # sign
+    Lratio = data[8]   # string representing rational number
     dimension = 1
-    hecke_poly = 'x'
-    weight = 2
-    sfe = int(data[4]) # sign
-    Lratio = data[5]   # string representing rational number
-    bc = '?' # base_change (should be bool)
-    cm = '?' # CM (should be bool)
-
-    AL_eigs = [int(x) for x in data[6][1:-1].split(",")]
-    hecke_eigs = [int(x) for x in data[7][1:-1].split(",")]
+    AL_eigs = [int(x) for x in data[9][1:-1].split(",")]
+    hecke_poly = data[10]
+    hecke_eigs = [int(x) for x in data[11][1:-1].split(",")]
 
     return label, {
         'label': label,

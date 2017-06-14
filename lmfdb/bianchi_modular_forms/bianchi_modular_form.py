@@ -12,22 +12,8 @@ from lmfdb.utils import to_dict
 from lmfdb.search_parsing import parse_range, parse_range2, parse_nf_string
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
+from lmfdb.bianchi_modular_forms.web_BMF import WebBMF, db_dims, db_forms
 from lmfdb.WebNumberField import field_pretty, WebNumberField
-
-bmf_dims = None
-bmf_forms = None
-
-def db_dims():
-    global bmf_dims
-    if bmf_dims is None:
-        bmf_dims = getDBConnection().bmfs.dimensions
-    return bmf_dims
-
-def db_forms():
-    global bmf_forms
-    if bmf_forms is None:
-        bmf_forms = getDBConnection().bmfs.forms
-    return bmf_forms
 
 
 bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
@@ -273,6 +259,10 @@ def render_bmf_space_webpage(field_label, level_label):
 
     return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread)
 
-@bmf_page.route('/<field_label>/<level_label>')
-def render_bmf_webpage(field_label, level_label):
-    pass
+@bmf_page.route('/<label>/')
+def render_bmf_webpage(label):
+    credit = "John Cremona"
+    bread = []
+    data = WebBMF.by_label(label)
+    title = "Bianchi cusp form {} over {}".format(data.short_label,field_pretty(data.field_label))
+    return render_template("bmf-newform.html", title=title, credit=credit, bread=bread, data=data, properties2=data.properties2, friends=data.friends)
