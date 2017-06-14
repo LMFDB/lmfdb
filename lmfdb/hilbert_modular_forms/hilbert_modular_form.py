@@ -15,7 +15,7 @@ from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 from lmfdb.WebNumberField import WebNumberField
 
 from markupsafe import Markup
-from lmfdb.utils import to_dict, random_object_from_collection
+from lmfdb.utils import to_dict, random_object_from_collection, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
@@ -360,10 +360,7 @@ def render_hmf_webpage(**args):
     if 'numeigs' in request.args:
         display_eigs = True
 
-    # Break hecke polynomial on each term to allow newlines in rendering webpage
-    info['hecke_polynomial'] = "\(" + teXify_pol(info['hecke_polynomial']) + "\)"
-    info['hecke_polynomial'] = info['hecke_polynomial'].replace("+", "+ \) \(")
-    info['hecke_polynomial'] = info['hecke_polynomial'].replace("-", "- \) \(")
+    info['hecke_polynomial'] = web_latex_split_on_pm(teXify_pol(info['hecke_polynomial']))
 
     if 'AL_eigenvalues_fixed' in data:
         if data['AL_eigenvalues_fixed'] == 'done':
