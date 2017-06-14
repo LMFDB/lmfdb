@@ -148,5 +148,5 @@ def check_all(degree, disc_bound=Infinity, dofix=False):
         query['discriminant'] = {"$lte":int(disc_bound)}
     for F in fields.find(query):
         nbforms, nbtodo, nbfixed = check_field(F['label'], dofix=dofix)
-        print("Total so far: %s forms, %s needed fixing, %s fixed" % (totoforms, tottodo, totfixed))
+        print("Total so far: %s forms, %s needed fixing, %s fixed" % (totforms, tottodo, totfixed))
 
