@@ -346,6 +346,10 @@ class WebHecke(WebCharObject):
         return "\(\langle %s, %s\\rangle\)"%(a._latex_(), b._latex_())
 
     @staticmethod
+    def ideal2cas(ideal):
+        return '%s,%s'%(ideal.gens_two())
+
+    @staticmethod
     def ideal2label(ideal):
         return ideal_label(ideal)
 
@@ -714,7 +718,10 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     @property
     def codeinit(self):
         return {
-                'sage': 'H = DirichletGroup_conrey(%i)'%(self.modulus),
+                'sage': [
+                    'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                    'H = DirichletGroup_conrey(%i)'%(self.modulus)
+                    ],
                 'pari': 'g = idealstar(,%i,2)'%(self.modulus)
                 }
 
@@ -791,7 +798,8 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def codeinit(self):
         return {
-          'sage': [ 'H = DirichletGroup_conrey(%i)'%(self.modulus),
+          'sage': [ 'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                 'H = DirichletGroup_conrey(%i)'%(self.modulus),
                  'chi = H[%i]'%(self.number) ],
           'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
           }
@@ -852,13 +860,9 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def codegaloisorbit(self):
-        return { 'sage': 'chi_sage.galois_orbit()',
-                 'pari': [
-                     '[mod,num,order] = [%i,%i,%i]'%(self.modulus,self.number,self.order),
-                     '[Mod(num,mod)^k | k<-[1..order-1], gcd(k,order)==1]',
-                     #'order = charorder(g,chi)',
-                     #'[ chi*k % order | k <-[1..order-1], gcd(k,order)==1 ]'
-                     ]
+        return { 'sage': 'chi.sage_character().galois_orbit()',
+                 'pari': [ 'order = charorder(g,chi)',
+                           '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
                  }
 
 
@@ -921,7 +925,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codegenvalues(self):
-        return { 'sage': 'chi_sage.values_on_gens()',
+        return { 'sage': 'chi(k) for k in H.gens()',
                  'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ value in Q/Z' }
 
     def value(self, val):
@@ -936,7 +940,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codevalue(self):
-        return { 'sage': 'chi_sage(x) # x integer',
+        return { 'sage': 'chi(x) # x integer',
                  'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
 
     def gauss_sum(self, val):
@@ -958,7 +962,8 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codegauss(self):
-        return { 'sage': 'chi.gauss_sum(a)' }
+        return { 'sage': 'chi.sage_character().gauss_sum(a)',
+                 'pari': 'znchargauss(g,chi,a)' }
 
     def jacobi_sum(self, val):
         mod, num = self.modulus, self.number
@@ -980,7 +985,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codejacobi(self):
-        return { 'sage': 'chi.jacobi_sum(n)' }
+        return { 'sage': 'chi.sage_character().jacobi_sum(n)' }
 
     def kloosterman_sum(self, arg):
         a, b = map(int, arg.split(','))
@@ -1004,7 +1009,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codekloosterman(self):
-        return { 'sage': 'chi_sage.kloosterman_sum(a,b)' }
+        return { 'sage': 'chi.sage_character().kloosterman_sum(a,b)' }
 
 
 class WebHeckeExamples(WebHecke):
@@ -1122,15 +1127,22 @@ class WebHeckeCharacter(WebChar, WebHecke):
     @property
     def codeinit(self):
         kpol = self.k.polynomial()
+        mod = self.ideal2cas(self._modulus)
         return {
-                'sage':  ['k.<a> = NumberField(%s)'%kpol,
-                          'm = k.ideal(%s)'%self.modulus,
+                'sage':  [
+                          'k.<a> = NumberField(%s)'%kpol,
+                          'm = k.ideal(%s)'%mod,
+                          'from HeckeCharacters import RayClassGroup # use package in the lmfdb',
                           'G = RayClassGroup(k,m)',
                           'H = G.dual_group()',
-                          'chi = H(%s)'%self.number],
-                'pari':  ['k=bnfinit(%s)'%kpol,
+                          'chi = H(%s)'%self.number
+                          ],
+                'pari':  [
+                           'k=bnfinit(%s)'%str(kpol).replace('x','a'),
+                           'm=idealhnf(k,%s)'%mod,
                            'g=bnrinit(k,m,1)',
-                           'chi = %s'%self.number]
+                           'chi = %s'%self.number
+                           ]
                 }
 
     @property
@@ -1141,7 +1153,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
     def codecond(self):
         return {
                 'sage': 'chi.conductor()',
-                'pari': 'bnrconductorofchar(G,chi)'
+                'pari': 'bnrconductorofchar(g,chi)'
                 }
 
     @property
@@ -1196,14 +1208,22 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     @property
     def codeinit(self):
         kpol = self.k.polynomial()
+        mod = self.ideal2cas(self._modulus)
         return {
-                'sage':  ['k.<a> = NumberField(%s)'%kpol,
-                          'm = k.ideal(%s)'%self.modulus,
+                'sage':  [
+                          'k.<a> = NumberField(%s)'%kpol,
+                          'm = k.ideal(%s)'%mod,
+                          'from HeckeCharacters import RayClassGroup # use package in the lmfdb',
                           'G = RayClassGroup(k,m)',
-                          'H = G.dual_group()' ],
-                'pari':  ['k=bnfinit(%s)'%kpol,
-                           'g=bnrinit(k,m,1)']
+                          'H = G.dual_group()',
+                          ],
+                'pari':  [
+                           'k=bnfinit(%s)'%str(kpol).replace('x','a'),
+                           'm=idealhnf(k,%s)'%mod,
+                           'g=bnrinit(k,m,1)',
+                           ]
                 }
+
 
     @property
     def title(self):
@@ -1218,6 +1238,6 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     def codegen(self):
         return {
                 'sage': 'G.gen_ideals()',
-                'pari': 'G.gen'
+                'pari': 'g.gen'
                 }
 

@@ -296,6 +296,7 @@ def render_hmf_webpage(**args):
         numeigs = int(numeigs)
     except:
         numeigs = 20
+    info['numeigs'] = numeigs
 
     hmf_field = C.hmfs.fields.find_one({'label': data['field_label']})
     gen_name = findvar(hmf_field['ideals'])
@@ -375,6 +376,7 @@ def render_hmf_webpage(**args):
 
     max_eig_len = max([len(eig['eigenvalue']) for eig in info['eigs']])
     display_eigs = display_eigs or (max_eig_len<=300)
+    info['display_eigs'] = display_eigs
     if not display_eigs:
         for eig in info['eigs']:
             if len(eig['eigenvalue']) > 300:

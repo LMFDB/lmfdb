@@ -16,7 +16,7 @@ def isogeny_class_table(Nmin, Nmax):
     cursor = db_ec().find(query,{'_id':False,'conductor':True,'lfmdb_label':True,'lmfdb_iso':True})
     res = cursor.sort([('conductor', ASCENDING), ('lmfdb_label', ASCENDING)])
 
-    iso_list = [E['lmfdb_iso'] for E in res]
+    iso_list = [E['lmfdb_iso'].split('.') for E in res]
 
     return iso_list
     
