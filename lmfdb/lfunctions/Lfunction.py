@@ -222,12 +222,10 @@ def convert_dirichlet_Lfunction_coefficients(L, coeff_info):
 def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
     """
-    from lmfdb.lfunctions import logger
     logger.debug("Generating Sage Lfunction with parameters %s and there are %s coefficients "
                 % ([L.coefficient_type, L.coefficient_period,
                 L.Q_fe, L.sign, L.kappa_fe, L.lambda_fe,
                 L.poles, L.residues], len(L.dirichlet_coefficients)))
-    import sage.libs.lcalc.lcalc_Lfunction as lc
     L.sageLfunction = lc.Lfunction_C("", L.coefficient_type,
                                         L.dirichlet_coefficients,
                                         L.coefficient_period,
