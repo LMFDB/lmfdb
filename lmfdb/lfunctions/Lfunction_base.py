@@ -1,7 +1,12 @@
-from sage.all import imag_part
+from sage.all import ZZ, is_prime, latex, factor, imag_part
+from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
+                                styleTheSign, specialValueString,
+                                specialValueTriple)
+
 
 #############################################################################
-# The base Lfunction class. The goal is to make this dependent on the least possible, so it can be loaded from sage or even python
+# The base Lfunction class. The goal is to make this dependent on the least
+# possible, so it can be loaded from sage or even python
 # Please do not pollute with flask, pymongo, logger or similar
 #############################################################################
 
@@ -9,18 +14,6 @@ class Lfunction:
     """Class representing a general L-function
     """
 
-    def initStandard(self):
-        """ Sets some properties that are almost always the same
-        """
-        self.coefficient_type = 0
-        self.coefficient_period = 0
-        self.poles = []
-        self.residues = []
-        self.langlands = True
-        self.primitive = True
-        self.citation = ''
-
-    
     def Ltype(self):
         return self._Ltype
 
@@ -30,8 +23,6 @@ class Lfunction:
         """
 
         if not hasattr(self, 'selfdual'):
-    #    if 'selfdual' not in self:
-     #   if self.selfdual not in [True, False]:
             self.selfdual = True
             for n in range(1, min(8, len(self.dirichlet_coefficients))):
                 if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
@@ -153,4 +144,88 @@ class Lfunction:
     def critical_value(self):
         pass
 
-  
+    def general_webpagedata(self):
+        info = {}
+        try:
+            info['support'] = self.support
+        except AttributeError:
+            info['support'] = ''
+
+        info['Ltype'] = self.Ltype()
+        info['label'] = self.label
+        info['credit'] = self.credit
+
+        info['degree'] = int(self.degree)
+        info['conductor'] = self.level
+        if not is_prime(int(self.level)):
+            info['conductor_factored'] = latex(factor(int(self.level)))
+
+        info['sign'] = "$" + styleTheSign(self.sign) + "$"
+        info['algebraic'] = self.algebraic
+        if self.selfdual:
+            info['selfdual'] = 'yes'
+        else:
+            info['selfdual'] = 'no'
+        if self.primitive:
+            info['primitive'] = 'yes'
+        else:
+            info['primitive'] = 'no'
+        info['dirichlet'] = lfuncDShtml(self, "analytic")
+        # Hack, fix this more general?
+        info['dirichlet'] = info['dirichlet'].replace('*I','<em>i</em>')
+        
+        info['eulerproduct'] = lfuncEPtex(self, "abstract")
+        info['functionalequation'] = lfuncFEtex(self, "analytic")
+        info['functionalequationSelberg'] = lfuncFEtex(self, "selberg")
+
+        if hasattr(self, 'positive_zeros'):
+            info['positive_zeros'] = self.positive_zeros
+            info['negative_zeros'] = self.negative_zeros
+
+        if hasattr(self, 'plot'):
+            info['plot'] = self.plot
+
+        if hasattr(self, 'factorization'):
+            info['factorization'] = self.factorization
+            
+        if self.fromDB and self.algebraic:
+            info['dirichlet_arithmetic'] = lfuncDShtml(self, "arithmetic")
+            info['eulerproduct_arithmetic'] = lfuncEPtex(self, "arithmetic")
+            info['functionalequation_arithmetic'] = lfuncFEtex(self, "arithmetic")
+
+            if self.motivic_weight % 2 == 0:
+               arith_center = "\\frac{" + str(1 + self.motivic_weight) + "}{2}"
+            else:
+               arith_center = str(ZZ(1)/2 + self.motivic_weight/2)
+            svt_crit = specialValueTriple(self, 0.5, '\\frac12',arith_center)
+            info['sv_critical'] = svt_crit[0] + "\\ =\\ " + svt_crit[2]
+            info['sv_critical_analytic'] = [svt_crit[0], svt_crit[2]]
+            info['sv_critical_arithmetic'] = [svt_crit[1], svt_crit[2]]
+
+            if self.motivic_weight % 2 == 1:
+               arith_edge = "\\frac{" + str(2 + self.motivic_weight) + "}{2}"
+            else:
+               arith_edge = str(ZZ(1) + self.motivic_weight/2)
+
+            svt_edge = specialValueTriple(self, 1, '1',arith_edge)
+            info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
+            info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
+            info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
+
+            info['st_group'] = self.st_group
+            info['st_link'] = self.st_link
+            info['rank'] = self.order_of_vanishing
+            info['motivic_weight'] = self.motivic_weight
+        
+        elif self.Ltype() != "artin" or (self.Ltype() == "artin" and self.sign != 0):
+            try:
+                info['sv_edge'] = specialValueString(self, 1, '1')
+                info['sv_critical'] = specialValueString(self, 0.5, '1/2')
+            except:
+                info['sv_critical'] = "L(1/2): not computed"
+                info['sv_edge'] = "L(1): not computed"
+
+        return info
+
+
+
