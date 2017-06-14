@@ -89,7 +89,6 @@ password = pw_dict['data']['password']
 C['elliptic_curves'].authenticate(username, password)
 print "setting curves"
 curves = C.elliptic_curves.curves
-curves2 = C.elliptic_curves.curves2
 
 def parse_tgens(s):
     r"""
@@ -335,7 +334,15 @@ def alllabels(line):
         'lmfdb_number': int(data[5])
     }
 
-def galrep(line):
+def split_galois_image_code(s):
+    """Each code starts with a prime (1-3 digits but we allow for more)
+    followed by an image code or that prime.  This function returns
+    two substrings, the prefix number and the rest.
+    """
+    p = re.findall(r'\d+', s)[0]
+    return p, s[len(p):]
+
+def galrep(line, new_format=True):
     r""" Parses one line from a galrep file.  Returns the label and a
     dict containing two fields: 'non-surjective_primes', a list of
     primes p for which the Galois representation modulo p is not
@@ -346,7 +353,7 @@ def galrep(line):
     start with a 1 or 2 digit prime followed a letter in
     ['B','C','N','S'].
 
-    Input line fields:
+    Input line fields (new_format=False):
 
     conductor iso number ainvs rank torsion codes
 
@@ -354,15 +361,37 @@ def galrep(line):
 
     66 c 3 [1,0,0,-10065,-389499] 0 2 2B 5B.1.2
 
+    Input line fields (new_format=True):
+
+    label codes
+
+    Sample input line:
+
+    66c3 2B 5B.1.2
+
     """
     data = split(line)
-    label = data[0] + data[1] + data[2]
-    image_codes = data[6:]
-    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
-    return label, {
-        'non-surjective_primes': pr,
-        'galois_images': image_codes,
-    }
+    if new_format:
+        label = data[0]
+        image_codes = data[1:]
+    else:
+        label = data[0] + data[1] + data[2]
+        image_codes = data[6:]
+
+    pr = [ int(split_galois_image_code(s)[0]) for s in image_codes]
+
+    if new_format:
+        d = {
+            'non-maximal_primes': pr,
+            'mod-p_images': image_codes,
+        }
+    else:
+        d = {
+            'non-surjective_primes': pr,
+            'galois_images': image_codes,
+        }
+
+    return label, d
 
 def allisog(line, lmfdb_order=True):
     r""" Parses one line from an allisog file.
@@ -645,6 +674,31 @@ def add_isogs_to_one(c):
     c['lmfdb_number'] = int(c['lmfdb_number'])
     return c
 
+def readallgalreps(base_path, f):
+    r""" Returns a dictionary whose keys are Cremona labels of individual
+    curves, and whose values are a dictionary with the keys
+    'non-surjective_primes' and 'galois_images'
+
+    This function reads one new-format galrep file.
+    """
+    h = open(os.path.join(base_path, f))
+    print("Opened {}".format(os.path.join(base_path, f)))
+    data = {}
+    for line in h.readlines():
+        label, data1 = galrep(line, new_format=True)
+        data[label] = data1
+    return data
+
+# To add all the galrep data to the database, first use the
+# preceding function readllgalreps() to create a large dict called
+# galrepdata keyed on curve labels, then pass the following function to
+# the rewrite_collection() function:
+
+galrepdata = {} # to keep pyflakes happy
+
+def add_galreps_to_one(c):
+    c.update(galrepdata[c['label']])
+    return c
 
 # A one-off script to add (1) exact Sha order; (2) prime factors of Sha; (3) prime factors of torsion
 
@@ -748,6 +802,7 @@ def add_extra_data(N1,N2,store=False):
    - 'anlist': (list of ints) a_p for p<20
 
     """
+    curves2 = C.elliptic_curves.curves2
     query = {}
     query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
     res = curves.find(query)
@@ -755,10 +810,10 @@ def add_extra_data(N1,N2,store=False):
     n = 0
     res = list(res) # since the cursor times out after a few thousand curves
     newcurves = []
-    for C in res:
+    for c in res:
         n += 1
         if n%100==0:
-            print C['lmfdb_label']
+            print c['lmfdb_label']
         if n%1000==0:
             if store and len(newcurves):
                 curves2.insert_many(newcurves)
@@ -766,13 +821,13 @@ def add_extra_data(N1,N2,store=False):
         else:
             sys.stdout.write(".")
             sys.stdout.flush()
-        data = make_extra_data(C['label'],C['number'],C['ainvs'],C['gens'])
-        C.update(data)
+        data = make_extra_data(c['label'],c['number'],c['ainvs'],c['gens'])
+        c.update(data)
         if store:
-            newcurves.append(C)
+            newcurves.append(c)
         else:
             pass
-            #print("Not writing updated %s to database.\n" % C['label'])
+            #print("Not writing updated %s to database.\n" % c['label'])
     # insert the final left-overs since the last full batch
     if store and len(newcurves):
         curves2.insert_many(newcurves)
@@ -796,9 +851,9 @@ def add_extra_data1(C):
     C.update(make_extra_data(C['label'],C['number'],C['ainvs'],C['gens']))
     return C
 
-def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=90000):
+def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=100000):
     r""" Check that for conductors in the specified range (or all
-    conductors) every database entry has all the fields it sould, and
+    conductors) every database entry has all the fields it should, and
     that these have the correct type.
     """
     str_type = type(unicode('abc'))
@@ -830,7 +885,9 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=90000
                       'real_period': float_type,
                       'degree': int_type,
                       'non-surjective_primes': list_type, # of ints
+                      'non-maximal_primes': list_type, # of ints
                       'galois_images': list_type, # of strings
+                      'mod-p_images': list_type, # of strings
                       '2adic_index': int_type,
                       '2adic_log_level': int_type,
                       '2adic_gens': list_type, # of lists of 4 ints
@@ -901,3 +958,36 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=90000
             diff2 = [k for k in db_keys if not k in expected_keys]
             if diff1: print("expected but absent:      {}".format(diff1))
             if diff2: print("not expected but present: {}".format(diff2))
+
+def update_stats(verbose=True):
+    if verbose:
+        print("Finding max and min conductor and total number of curves")
+    Nlist = curves.distinct('conductor')
+    Nmax = int(max(Nlist))
+    Nmin = int(min(Nlist))
+    Ncurves = int(curves.count())
+    if verbose:
+        print("{} curves of conductor from {} to {}".format(Ncurves,Nmin,Nmax))
+    curves.stats.insert_one({'_id':'conductor', 'min':Nmin, 'max': Nmax, 'total': Ncurves})
+    from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
+    # Basic counts for these attributes:
+    ec = C.elliptic_curves
+    if verbose:
+        print("Adding simple counts for rank, torsion, torsion structure and Sha")
+    update_attribute_stats(ec, 'curves', ['rank', 'torsion', 'torsion_structure', 'sha'])
+    # rank counts for isogeny classes:
+    if verbose:
+        print("Adding isogeny class rank counts")
+    update_attribute_stats(ec, 'curves', 'rank', prefix='class', filter={'number':1})
+    # torsion order by rank:
+    if verbose:
+        print("Adding torsion counts by rank")
+    update_joint_attribute_stats(ec, 'curves', ['rank','torsion'], prefix='byrank', unflatten=True)
+    # torsion structure by rank:
+    if verbose:
+        print("Adding torsion structure counts by rank")
+    update_joint_attribute_stats(ec, 'curves', ['rank','torsion_structure'], prefix='byrank', unflatten=True)
+    # sha by rank:
+    if verbose:
+        print("Adding sha counts by rank")
+    update_joint_attribute_stats(ec, 'curves', ['rank','sha'], prefix='byrank', unflatten=True)

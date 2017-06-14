@@ -15,7 +15,7 @@ from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
-credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight, and Dan Yasaki"
+credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight,  Raymond van Bommel, Dan Yasaki."
 
 ###############################################################################
 # global database connection and stats objects
@@ -440,16 +440,20 @@ class G2C_stats(object):
 
 download_languages = ['magma', 'sage', 'gp', 'text']
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
-download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =[','text':'data - ['}
-download_assignment_end = {'magma':'];','sage':']','gp':']','text':']'}
+download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
+download_assignment_end = {'magma':'];','sage':']','gp':']}','text':']'}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
 download_make_data = {
 'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
 'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
-'gp':'',
+'gp':'make_data()=[apply(Polrev,c)|c<-data];\n\n',
 'text':''
 }
-download_make_data_comment = {'magma': 'To create a list of curves, type "curves:= make_data();"','sage':'To create a list of curves, type "curves = make_data()"', 'gp':'', 'text':''}
+download_make_data_comment = {
+        'magma': 'To create a list of curves, type "curves:= make_data();"',
+        'sage':'To create a list of curves, type "curves = make_data()"',
+        'gp':'To create a list of curves [f,h], type "curves = make_data()"',
+        'text':''}
 
 def download_search(info):
     lang = info.get('language','text').strip()

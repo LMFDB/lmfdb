@@ -53,6 +53,7 @@ logger = make_logger("ec")
 
 ecdb = None
 padicdb = None
+ecdbstats = None
 
 def db_ec():
     global ecdb
@@ -61,14 +62,31 @@ def db_ec():
         ecdb = ec.curves
     return ecdb
 
+def db_ecstats():
+    global ecdbstats
+    if ecdbstats is None:
+        ec = lmfdb.base.getDBConnection().elliptic_curves
+        ecdbstats = ec.curves.stats
+    return ecdbstats
+
 def padic_db():
     global padicdb
     if padicdb is None:
         padicdb = lmfdb.base.getDBConnection().elliptic_curves.padic_db
     return padicdb
 
+def split_galois_image_code(s):
+    """Each code starts with a prime (1-3 digits but we allow for more)
+    followed by an image code or that prime.  This function returns
+    two substrings, the prefix number and the rest.
+    """
+    p = re.findall(r'\d+', s)[0]
+    return p, s[len(p):]
+
 def trim_galois_image_code(s):
-    return s[2:] if s[1].isdigit() else s[1:]
+    """Return the image code with the prime prefix removed.
+    """
+    return split_galois_image_code(s)[1]
 
 def parse_point(s):
     r""" Converts a string representing a point in affine or
@@ -110,6 +128,9 @@ class WebEC(object):
         # Next lines because the hyphens make trouble
         self.xintcoords = split_list(dbdata['x-coordinates_of_integral_points'])
         self.non_surjective_primes = dbdata['non-surjective_primes']
+        self.non_maximal_primes = dbdata['non-maximal_primes']
+        self.mod_p_images = dbdata['mod-p_images']
+
         # Next lines because the python identifiers cannot start with 2
         self.twoadic_index = dbdata['2adic_index']
         self.twoadic_log_level = dbdata['2adic_log_level']
@@ -292,10 +313,24 @@ class WebEC(object):
         data['disc_latex'] = web_latex(D)
         data['cond_latex'] = web_latex(N)
 
+        data['galois_images'] = [trim_galois_image_code(s) for s in self.mod_p_images]
+        data['non_maximal_primes'] = self.non_maximal_primes
+        data['galois_data'] = [{'p': p,'image': im }
+                               for p,im in zip(data['non_maximal_primes'],
+                                               data['galois_images'])]
+
         data['CMD'] = self.cm
         data['CM'] = "no"
         data['EndE'] = "\(\Z\)"
         if self.cm:
+            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            data['cm_nramp'] = len(data['cm_ramp'])
+            if data['cm_nramp']==1:
+                data['cm_ramp'] = data['cm_ramp'][0]
+            else:
+                data['cm_ramp'] = ", ".join([str(p) for p in data['cm_ramp']])
+            data['cm_sqf'] = ZZ(self.cm).squarefree_part()
+
             data['CM'] = "yes (\(D=%s\))" % data['CMD']
             if data['CMD']%4==0:
                 d4 = ZZ(data['CMD'])//4
@@ -309,20 +344,9 @@ class WebEC(object):
         data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
                                  if (N*data['ap'][i]) %p !=0]
 
-        try:
-            data['galois_images'] = [trim_galois_image_code(s) for s in self.galois_images]
-            data['non_surjective_primes'] = self.non_surjective_primes
-        except AttributeError:
-            #print "No Galois image data"
-            data['galois_images'] = []
-            data['non_surjective_primes'] = []
-
-        data['galois_data'] = [{'p': p,'image': im }
-                               for p,im in zip(data['non_surjective_primes'],
-                                               data['galois_images'])]
-
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+        self.one_deg = ZZ(self.class_deg).is_prime()
         self.ncurves = db_ec().count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
@@ -364,6 +388,49 @@ class WebEC(object):
         data['p_adic_data_exists'] = False
         if data['Gamma0optimal']:
             data['p_adic_data_exists'] = (padic_db().find({'lmfdb_iso': self.lmfdb_iso}).count()) > 0
+
+        data['iwdata'] = []
+        try:
+            pp = [int(p) for p in self.iwdata]
+            badp = [l['p'] for l in self.local_data]
+            rtypes = [l['red'] for l in self.local_data]
+            data['iw_missing_flag'] = False # flags that there is at least one "?" in the table
+            data['additive_shown'] = False # flags that there is at least one additive prime in table
+            for p in sorted(pp):
+                rtype = ""
+                if p in badp:
+                    red = rtypes[badp.index(p)]
+                    # Additive primes are excluded from the table
+                    # if red==0:
+                    #    continue
+                    #rtype = ["nsmult","add", "smult"][1+red]
+                    rtype = ["nonsplit","add", "split"][1+red]
+                p = str(p)
+                pdata = self.iwdata[p]
+                if isinstance(pdata, type(u'?')):
+                    if not rtype:
+                        rtype = "ordinary" if pdata=="o?" else "ss"
+                    if rtype == "add":
+                        data['iwdata'] += [[p,rtype,"-","-"]]
+                        data['additive_shown'] = True
+                    else:
+                        data['iwdata'] += [[p,rtype,"?","?"]]
+                        data['iw_missing_flag'] = True
+                else:
+                    if len(pdata)==2:
+                        if not rtype:
+                            rtype = "ordinary"
+                        lambdas = str(pdata[0])
+                        mus = str(pdata[1])
+                    else:
+                        rtype = "ss"
+                        lambdas = ",".join([str(pdata[0]), str(pdata[1])])
+                        mus = str(pdata[2])
+                        mus = ",".join([mus,mus])
+                    data['iwdata'] += [[p,rtype,lambdas,mus]]
+        except AttributeError:
+            # For curves with no Iwasawa data
+            pass
 
         tamagawa_numbers = [ZZ(ld['cp']) for ld in local_data]
         cp_fac = [cp.factor() for cp in tamagawa_numbers]

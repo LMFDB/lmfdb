@@ -38,7 +38,9 @@ def random_object_from_collection(collection):
         m = collection.count()
         if m != n:
             current_app.logger.warning("Random object index {0}.rand is out of date ({1} != {2}), proceeding anyway.".format(collection,n,m))
-        return collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
+        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
+        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
+            return obj
     if pymongo.version_tuple[0] < 3:
         return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next()
     else:
@@ -53,9 +55,11 @@ def random_value_from_collection(collection,attribute):
         m = collection.count()
         if m != n:
             current_app.logger.warning("Random object index {0}.rand is out of date ({1} < {2})".format(collection,n,m))
-        return collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True}).get(attribute)
+        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True})
+        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
+            return obj.get(attribute)
     if pymongo.version_tuple[0] < 3:
-        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't both optimizing this
+        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't bother optimizing this
     else:
         # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
         return collection.aggregate([{ '$sample': { 'size': int(1) } }, { '$project' : {'_id':False,attribute:True}} ]).next().get(attribute)
@@ -575,6 +579,16 @@ def comma(x):
 def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ
     return PolynomialRing(QQ, 'x')(c)
+
+def display_multiset(mset, formatter=str, *args):
+    """
+    Input mset is a list of pairs [item, multiplicity]
+    Return a string for display of the multi-set.  The
+    function formatter is a function whose first argument
+    is the item, and *args are the other arguments
+    and is applied to each item.
+    """
+    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
 
 def debug():
     """

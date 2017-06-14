@@ -38,6 +38,8 @@ K=Q(w) of degree d.
 
    - label              *     string (see below)
    - short_label        *     string
+   - class_label        *     string
+   - short_class_label  *     string
    - conductor_label    *     string
    - iso_label          *     string (letter code of isogeny class)
    - iso_nlabel         *     int (numerical code of isogeny class)
@@ -46,7 +48,7 @@ K=Q(w) of degree d.
    - number             *     int    (number of curve in isogeny class, from 1)
    - ainvs              *     string joining 5 NFelt-strings by ";"
    - jinv               *     NFelt-string
-   - cm                 *     either int (a negative discriminant, or 0) or '?'
+   - cm                 *     int (a negative discriminant, or 0)
    - q_curve            *     boolean (True, False)
    - base_change        *     list of labels of elliptic curve over Q
    - rank                     int
@@ -81,7 +83,7 @@ import os
 import pymongo
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ
+from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ, Set
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF, parse_ainvs, parse_point
@@ -431,7 +433,7 @@ def add_heights(data):
     ngens = data.get('ngens', 0)
     if ngens == 0:
         data['heights'] = []
-        data['reg'] = 1
+        data['reg'] = float(1)
         return data
     # Now there is work to do
     K = nf_lookup(data['field_label'])
@@ -473,9 +475,45 @@ def isoclass(line):
 
     mat = data[4]
     mat = [[int(a) for a in r.split(",")] for r in mat[2:-2].split("],[")]
+    isogeny_degrees = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(mat)])
 
-    edata = {'label': label, 'isogeny_matrix': mat}
+    edata = {'label': data[:4], 'isogeny_matrix': mat, 'isogeny_degrees': isogeny_degrees}
     return label, edata
+
+def read1isogmats(base_path, filename_suffix):
+    r""" Returns a dictionary whose keys are labels of individual curves,
+    and whose values are the isogeny_matrix and isogeny_degrees for
+    each curve in the class, together with the class size and the
+    maximal degree in the class.
+
+    This function reads a single isoclass file.
+    """
+    isoclass_filename = 'isoclass.%s' % (filename_suffix)
+    h = open(os.path.join(base_path, isoclass_filename))
+    print("Opened {}".format(os.path.join(base_path, isoclass_filename)))
+    data = {}
+    for line in h.readlines():
+        label, data1 = isoclass(line)
+        class_label = "-".join(data1['label'][:3])
+        isogmat = data1['isogeny_matrix']
+        # maxdeg is the maximum degree of a cyclic isogeny in the
+        # class, which uniquely determines the isogeny graph (over Q)
+        maxdeg = max(max(r) for r in isogmat)
+        allisogdegs = data1['isogeny_degrees']
+        ncurves = len(allisogdegs)
+        for n in range(ncurves):
+            isogdegs = allisogdegs[n+1]
+            label = class_label+str(n+1)
+            data[label] = {'isogeny_degrees': isogdegs,
+                           'class_size': ncurves,
+                           'class_deg': maxdeg}
+            if n==0:
+                print("adding isogmat = {} to {}".format(isogmat,label))
+                data[label]['isogeny_matrix'] = isogmat
+
+    return data
+
+
 
 def galrep(line):
     r""" Parses one line from a galrep file.  Returns the label and a
@@ -545,16 +583,18 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
-    galrep_filename = 'galrep.%s' % (filename_suffix)
+    #galrep_filename = 'galrep.%s' % (filename_suffix)
     file_list = [curves_filename, curve_data_filename, isoclass_filename]
-    file_list = [isoclass_filename]
-    file_list = [curves_filename]
-    file_list = [curve_data_filename]
-    file_list = [galrep_filename]
+#    file_list = [isoclass_filename]
+#    file_list = [curves_filename]
+#    file_list = [curve_data_filename]
+#    file_list = [galrep_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
 
     for f in file_list:
+        if f==isoclass_filename: # dealt with differently
+            continue
         try:
             h = open(os.path.join(base_path, f))
             print "opened %s" % os.path.join(base_path, f)
@@ -587,8 +627,13 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     print("adding heights of gens")
     for val in vals:
         val = add_heights(val)
-        # if val['reg']!=1:
-        #     print("reg = {}".format(val['reg']))
+
+    if isoclass_filename in file_list: # code added March 2017, not yet tested
+        print("processing isogeny matrices")
+        isogmats = read1isogmats(base_path, filename_suffix)
+        for val in vals:
+            val.update(isogmats[val['label']])
+
     if insert:
         print("inserting all data")
         nfcurves.insert_many(vals)
@@ -762,3 +807,336 @@ def make_indices():
     for x in ['field_label', 'degree', 'number', 'label']:
         nfcurves.create_index(x)
     nfcurves.create_index([(x,pymongo.ASCENDING) for x in ['field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']])
+
+########################################################
+#
+# Script to check that data is complete and consistent
+#
+########################################################
+
+def check_database_consistency(collection, field=None, degree=None, ignore_ranks=False):
+    r""" Check that for given field (or all) every database entry has all
+    the fields it should, and that these have the correct type.
+    """
+    str_type = type(unicode('abc'))
+    int_type = type(int(1))
+    float_type = type(float(1))
+    list_type = type([1,2,3])
+    #dict_type = type({'a':1})
+    bool_type = type(True)
+
+    keys_and_types = {'field_label':  str_type,
+                      'degree': int_type,
+                      'signature': list_type, # of ints
+                      'abs_disc': int_type,
+                      'label':  str_type,
+                      'short_label':  str_type,
+                      'class_label':  str_type,
+                      'short_class_label':  str_type,
+                      'conductor_label': str_type,
+                      'conductor_ideal': str_type,
+                      'conductor_norm': int_type,
+                      'iso_label': str_type,
+                      'iso_nlabel': int_type,
+                      'number': int_type,
+                      'ainvs': str_type,
+                      'jinv': str_type,
+                      'cm': int_type,
+                      'ngens': int_type,
+                      'rank': int_type,
+                      'rank_bounds': list_type, # 2 ints
+                      #'analytic_rank': int_type,
+                      'torsion_order': int_type,
+                      'torsion_structure': list_type, # 0,1,2 ints
+                      'gens': list_type, # of strings
+                      'torsion_gens': list_type, # of strings
+                      #'sha_an': int_type,
+                      'isogeny_matrix': list_type, # of lists of ints
+                      'isogeny_degrees': list_type, # of ints
+                      #'class_deg': int_type,
+                      'non-surjective_primes': list_type, # of ints
+                      #'non-maximal_primes': list_type, # of ints
+                      'galois_images': list_type, # of strings
+                      #'mod-p_images': list_type, # of strings
+                      'equation': str_type,
+                      'local_data': list_type, # of dicts
+                      'non_min_p': list_type, # of strings
+                      'minD': str_type,
+                      'heights': list_type, # of floats
+                      'reg': float_type, # or int(1)
+                      'q_curve': bool_type,
+                      'base_change': list_type, # of strings
+    }
+
+    key_set = Set(keys_and_types.keys())
+#
+#   Some keys are only used for the first curve in each class.
+#   Currently only the isogeny matrix, but later there may be more.
+#
+    number_1_only_keys = ['isogeny_matrix'] # only present if 'number':1
+#
+#   As of April 2017 rank data is only computed for imaginary
+#   quadratic fields so we need to be able to say to ignore the
+#   associated keys.  Also (not yet implemented) if we compute rank
+#   upper and lower bounds then the rank key is not set, and this
+#   script should allow for that.
+#
+    rank_keys = ['analytic_rank', 'rank', 'rank_bounds', 'ngens', 'gens']
+#
+#   As of April 2017 we have mod p Galois representration data for all
+#   curves except some of those over degree 6 fields since over these
+#   fields the curves are still being found and uploaded, o we ignore
+#   these keys over degree 6 fields for now.
+#
+    galrep_keys = ['galois_images', 'non-surjective_primes']
+    print("key_set has {} keys".format(len(key_set)))
+
+    query = {}
+    if field is not None:
+        query['field_label'] = field
+    elif degree is not None:
+        query['degree'] = int(degree)
+
+    count=0
+    for c in C.elliptic_curves.get_collection(collection).find(query):
+        count +=1
+        if count%1000==0:
+            print("Checked {} entries...".format(count))
+        expected_keys = key_set
+        if ignore_ranks:
+            expected_keys = expected_keys - rank_keys
+        if c['number']!=1:
+            expected_keys = expected_keys - number_1_only_keys
+        if c['degree']==6:
+            expected_keys = expected_keys - galrep_keys
+        db_keys = Set([str(k) for k in c.keys()]) - ['_id', 'class_deg', 'class_size']
+        if ignore_ranks:
+            db_keys = db_keys - rank_keys
+        if c['degree']==6:
+            db_keys = db_keys - galrep_keys
+
+        label = c['label']
+
+        if db_keys == expected_keys:
+            for k in db_keys:
+                ktype = keys_and_types[k]
+                if type(c[k]) != ktype and not k=='reg' and ktype==type(int):
+                    print("Type mismatch for key {} in curve {}".format(k,label))
+                    print(" in database: {}".format(type(c[k])))
+                    print(" expected:    {}".format(keys_and_types[k]))
+        else:
+            print("keys mismatch for {}".format(label))
+            diff1 = [k for k in expected_keys if not k in db_keys]
+            diff2 = [k for k in db_keys if not k in expected_keys]
+            if diff1: print("expected but absent:      {}".format(diff1))
+            if diff2: print("not expected but present: {}".format(diff2))
+
+# Functions to add isogeny_degrees fields to existing data
+#
+# 1. Read all curves with 'number':1 and return a dictionary with keys
+# full curve labels and values the associated isogeny degree lists
+# (sorted and with no repeats).
+
+def make_isog_degree_dict(field=None):
+    r""" If field is not None, only work on curve with this field_label
+    (for testing), otherwise work on every curve.
+    """
+    query = {}
+    query['number'] = int(1)
+    if field:
+        query['field_label'] = field
+    isog_dict = {}
+    for e in nfcurves.find(query):
+        class_label = e['class_label']
+        #print(class_label)
+        isomat = e['isogeny_matrix']
+        allisogdegs = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(isomat)])
+        for n in range(len(isomat)):
+            label = class_label+str(n+1)
+            isog_dict[label] = {'isogeny_degrees': allisogdegs[n+1]}
+    return isog_dict
+
+#
+# 2. Now set isog_dict = make_isog_degree_dict() and use the following
+#
+
+#isogdata = make_isog_degree_dict()
+isogdata = {} # to keep pyflakes happy
+
+def add_isogs_to_one(c):
+    c.update(isogdata[c['label']])
+    return c
+
+#
+# 3. in a call to rewrite_collection such as
+#
+#  %runfile data_mgt/utilities/rewrite.py
+#  rewrite_collection(C.elliptic_curves,'nfcurves','nfcurves.new',add_isogs_to_one)
+
+################################################################################
+#
+# Function to update the nfcurves.stats collection, to be run after adding data
+#
+################################################################################
+
+def update_stats(verbose=True):
+    from data_mgt.utilities.rewrite import update_attribute_stats
+    from bson.code import Code
+    ec = C.elliptic_curves
+    ecdbstats = ec.nfcurves.stats
+
+    # get list of degrees
+
+    degrees = nfcurves.distinct('degree')
+    if verbose:
+        print("degrees: {}".format(degrees))
+
+    # get list of signatures for each degree.  Note that it would not
+    # work to use nfcurves.find({'degree':d}).distinct('signature')
+    # since 'signature' is currently a list of integers an mongo would
+    # return a list of integers, not a list of lists.  With hindsight
+    # it would have been better to store the signature as a string.
+
+    if verbose:
+        print("Adding signatures_by_degree")
+    reducer = Code("""function(key,values){return Array.sum(values);}""")
+    attr = 'signature'
+    mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
+    sigs_by_deg = {}
+    for d in degrees:
+        sigs_by_deg[str(d)] = [ r['_id'] for r in nfcurves.inline_map_reduce(mapper,reducer,query={'degree':d})]
+        if verbose:
+            print("degree {} has signatures {}".format(d,sigs_by_deg[str(d)]))
+
+    entry = {'_id': 'signatures_by_degree'}
+    ecdbstats.delete_one(entry)
+    entry.update(sigs_by_deg)
+    ecdbstats.insert_one(entry)
+
+    # get list of fields for each signature.  Simple code here faster than map/reduce
+
+    if verbose:
+        print("Adding fields_by_signature")
+    from sage.misc.flatten import flatten
+    sigs = flatten(sigs_by_deg.values())
+    fields_by_sig = dict([sig,nfcurves.find({'signature':[int(x) for x in sig.split(",")]}).distinct('field_label')] for sig in sigs)
+    entry = {'_id': 'fields_by_signature'}
+    ecdbstats.delete_one(entry)
+    entry.update(fields_by_sig)
+    ecdbstats.insert_one(entry)
+
+    # get list of fields for each degree
+
+    if verbose:
+        print("Adding fields_by_degree")
+    fields_by_deg = dict([str(d),sorted(nfcurves.find({'degree':d}).distinct('field_label')) ] for d in degrees)
+    entry = {'_id': 'fields_by_degree'}
+    ecdbstats.delete_one(entry)
+    entry.update(fields_by_deg)
+    ecdbstats.insert_one(entry)
+
+    fields = flatten(fields_by_deg.values())
+    if verbose:
+        print("{} fields, {} signatures, {} degrees".format(len(fields),len(sigs),len(degrees)))
+
+    if verbose:
+        print("Adding curve counts for torsion order, torsion structure")
+    update_attribute_stats(ec, 'nfcurves', ['torsion_order', 'torsion_structure'])
+
+    if verbose:
+        print("Adding curve counts by degree, signature and field")
+    update_attribute_stats(ec, 'nfcurves', ['degree', 'signature', 'field_label'])
+
+    if verbose:
+        print("Adding class counts by degree, signature and field")
+    update_attribute_stats(ec, 'nfcurves', ['degree', 'signature', 'field_label'],
+                           prefix="classes", filter={'number':int(1)})
+
+    # conductor norm ranges:
+    # total:
+    if verbose:
+        print("Adding curve and class counts and conductor range")
+    norms = ec.nfcurves.distinct('conductor_norm')
+    data = {'ncurves': ec.nfcurves.count(),
+            'nclasses': ec.nfcurves.find({'number':1}).count(),
+            'min_norm': min(norms),
+            'max_norm': max(norms),
+            }
+    entry = {'_id': 'conductor_norm'}
+    ecdbstats.delete_one(entry)
+    entry.update(data)
+    ecdbstats.insert_one(entry)
+
+    # by degree:
+    if verbose:
+        print("Adding curve and class counts and conductor range, by degree")
+    degree_data = {}
+    for d in degrees:
+        query = {'degree':d}
+        res = nfcurves.find(query)
+        ncurves = res.count()
+        Ns = res.distinct('conductor_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        query['number'] = 1
+        nclasses = nfcurves.count(query)
+        degree_data[str(d)] = {'ncurves':ncurves,
+                               'nclasses':nclasses,
+                               'min_norm':min_norm,
+                               'max_norm':max_norm,
+        }
+
+    entry = {'_id': 'conductor_norm_by_degree'}
+    ecdbstats.delete_one(entry)
+    entry.update(degree_data)
+    ecdbstats.insert_one(entry)
+
+    # by signature:
+    if verbose:
+        print("Adding curve and class counts and conductor range, by signature")
+    sig_data = {}
+    for sig in sigs:
+        query = {'signature': [int(c) for c in sig.split(",")]}
+        res = nfcurves.find(query)
+        ncurves = res.count()
+        Ns = res.distinct('conductor_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        query['number'] = 1
+        nclasses = nfcurves.count(query)
+        sig_data[sig] = {'ncurves':ncurves,
+                               'nclasses':nclasses,
+                               'min_norm':min_norm,
+                               'max_norm':max_norm,
+        }
+    entry = {'_id': 'conductor_norm_by_signature'}
+    ecdbstats.delete_one(entry)
+    entry.update(sig_data)
+    ecdbstats.insert_one(entry)
+
+    # by field:
+    if verbose:
+        print("Adding curve and class counts and conductor range, by field")
+    entry = {'_id': 'conductor_norm_by_field'}
+    ecdbstats.delete_one(entry)
+    field_data = {}
+    for f in fields:
+        ff = f.replace(".",":") # mongo does not allow "." in key strings
+        query = {'field_label': f}
+        res = nfcurves.find(query)
+        ncurves = res.count()
+        Ns = res.distinct('conductor_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        query['number'] = 1
+        nclasses = nfcurves.count(query)
+        field_data[ff] = {'ncurves':ncurves,
+                               'nclasses':nclasses,
+                               'min_norm':min_norm,
+                               'max_norm':max_norm,
+        }
+    entry = {'_id': 'conductor_norm_by_field'}
+    ecdbstats.delete_one(entry)
+    entry.update(field_data)
+    ecdbstats.insert_one(entry)
+

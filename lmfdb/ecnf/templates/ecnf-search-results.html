@@ -23,9 +23,6 @@
 <td align=left>{{ KNOWL('ec.base_change',title="base change") }} curves</td>
 <td align=left>{{ KNOWL('ec.q_curve',title="Q-curves") }}</td>
 <td align=left>{{ KNOWL('ec.complex_multiplication',title="CM") }} curves</td>
-<td align=left>{{ KNOWL('ec.torsion_order',title="torsion order") }}</td>
-<td align=left>{{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}</td>
-<td align=left>{{ KNOWL('ec.j_invariant', title="j-invariant") }}</td>
 </tr>
 
 <tr>
@@ -88,13 +85,24 @@
 {% endif %}
          </select>
 </td>
+</tr>
+<tr>
+<td align=left>{{ KNOWL('ec.torsion_order',title="torsion order") }}</td>
+<td align=left>{{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}</td>
+<td align=left>{{ KNOWL('ec.isogeny', title='isogeny degree') }}</td>
+<td align=left>{{ KNOWL('ec.j_invariant', title="j-invariant") }}</td>
+</tr>
+<tr>
           <td>
           <input type='text' name='torsion' size=6 value="{{info.torsion}}" />
           </td>
           <td>
-          <input type='text' name='torsion_structure' size=8 value="{{info.torsion_structure}}" />
+            {{ tor_struct_search_nf(info.torsion_structure)| safe }}
           </td>
           <td>
+          <input type='text' name='isodeg' size=5 value={{info.isodeg}}>
+          </td>
+          <td colspan=2>
           <input type='text' name='jinv' size=20 value="{{info.jinv}}" />
           </td>
 

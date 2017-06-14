@@ -4,11 +4,12 @@ from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
 from lmfdb.base import getDBConnection
-from lmfdb.utils import web_latex, web_latex_ideal_fact, encode_plot
+from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
 ecnf = None
+ecnfstats = None
 nfdb = None
 
 def db_ecnf():
@@ -16,6 +17,12 @@ def db_ecnf():
     if ecnf is None:
         ecnf = getDBConnection().elliptic_curves.nfcurves
     return ecnf
+
+def db_ecnfstats():
+    global ecnfstats
+    if ecnfstats is None:
+        ecnfstats = getDBConnection().elliptic_curves.nfcurves.stats
+    return ecnfstats
 
 def db_nfdb():
     global nfdb
@@ -59,7 +66,10 @@ def parse_ainvs(K,ainvs):
 
 def web_ainvs(field_label, ainvs):
     K = make_field(field_label).K()
-    return web_latex(parse_ainvs(K,ainvs))
+    ainvsinlatex = web_latex_split_on(parse_ainvs(K,ainvs), on=[","])
+    ainvsinlatex = ainvsinlatex.replace("\\left[", "\\bigl[")
+    ainvsinlatex = ainvsinlatex.replace("\\right]", "\\bigr]")
+    return ainvsinlatex
 
 from sage.misc.all import latex
 def web_point(P):
@@ -453,6 +463,22 @@ class ECNF(object):
         self.urls['class'] = url_for(".show_ecnf_isoclass", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label)
         self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=quote(self.conductor_label))
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
+
+        # Isogeny information
+
+        if self.number==1:
+            isogmat = self.isogeny_matrix
+        else:
+            isogmat = db_ecnf().find_one({'class_label':self.class_label, 'number':1})['isogeny_matrix']
+        self.class_deg = max([max(d) for d in isogmat])
+        self.one_deg = ZZ(self.class_deg).is_prime()
+        self.ncurves = db_ecnf().count({'class_label':self.class_label})
+        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
+        if len(isodegs)<3:
+            self.isogeny_degrees = " and ".join(isodegs)
+        else:
+            self.isogeny_degrees = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
+
 
         sig = self.signature
         totally_real = sig[1] == 0

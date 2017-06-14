@@ -480,7 +480,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
             output_magma_curve_search(K, form, outfilename, verbose=verbose, effort=effort)
 
 
-def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=None, verbose=False, effort=500):
+def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, outfilename=None, verbose=False, effort=500):
     r""" Go through all Hilbert Modular Forms with the given field label,
     assumed totally real, for level norms in the given range, test
     whether an elliptic curve exists with the same label; if not, find
@@ -499,11 +499,13 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
         return None
 
     query['dimension'] = 1  # only look at rational newforms
-    query['level_norm'] = {'$gte': int(min_norm)}
-    if max_norm:
-        query['level_norm']['$lte'] = int(max_norm)
+    if label:
+        print("looking for {} only".format(label))
+        query['short_label'] = label # e.g. '91.1-a'
     else:
-        max_norm = 'infinity'
+        query['level_norm'] = {'$gte': int(min_norm)}
+        if max_norm:
+            query['level_norm']['$lte'] = int(max_norm)
     cursor = forms.find(query)
     cursor.sort([('level_norm', pymongo.ASCENDING)])
     labels = [f['label'] for f in cursor]
@@ -578,10 +580,16 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
         return
 
     # Step 2: for each newform for which there was no curve, call interface to Magma's EllipticCurveSearch()
+    # (unless outfilename is None in which case just dump the missing labels to a file)
 
     if outfilename:
         outfile = file(outfilename, mode="w")
     else:
+        t = file("curves_missing.{}".format(field_label), mode="w")
+        for c in missing_curves:
+            t.write(c)
+            t.write("\n")
+        t.close()
         return
 
     def output(L):
@@ -600,7 +608,10 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
     if field_label=='4.4.11025.1': bad_p = [17**2,37**2,43**2]
     if field_label=='4.4.13824.1': bad_p = [19**2]
     if field_label=='4.4.12400.1': bad_p = [23**2]
+    if field_label=='4.4.180769.1': bad_p = [23**2]
+    if field_label=='6.6.905177.1': bad_p = [2**3]
 
+    effort0 = effort
     for nf_label in missing_curves:
         if verbose:
             print("Curve %s is missing from the database..." % nf_label)
@@ -623,6 +634,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             Plist = [P for i,P in goodP]
             nap = len(Plist)
             neigs0 = min(nap,100)
+            effort=effort0
             if verbose:
                 print("Using %s ap from Hilbert newform and effort %s" % (neigs0,effort))
                 if bad_p:
@@ -632,15 +644,16 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilename=No
             Plist0 = [Plist[i] for i in inds]
             aplist0 = [aplist[i] for i in inds]
             curves = EllipticCurveSearch(K.K(), Plist0, N, aplist0, effort)
-            rep = 0
+            # rep = 0
             allrep=0
-            while not curves and allrep<30:
+            while not curves and allrep<10:
                 allrep += 1
-                if rep<5:
-                    rep += 1
-                else:
-                    rep = 1
-                    effort *=2
+                effort*=2
+                # if rep<2:
+                #     rep += 1
+                # else:
+                #     rep = 1
+                #     effort *=2
                 if verbose:
                     print("No curves found by Magma, trying again with effort %s..." % effort)
                 curves = EllipticCurveSearch(K.K(), Plist0, N, aplist0, effort)
@@ -719,10 +732,14 @@ def EllipticCurveSearch(K, Plist, N, aplist, effort=1000):
     mag.eval('aplist := %s;' % aplist)
     mag.eval('goodP := [P: P in Plist | Valuation(N,P) eq 0];\n')
     mag.eval('goodP := [goodP[i]: i in [1..#(aplist)]];\n')
-    mag.eval('curves := EllipticCurveSearch(N,effort : Primes:=goodP, Traces:=aplist);\n')
-    mag.eval('curves := [E: E in curves | &and[TraceOfFrobenius(E,goodP[i]) eq aplist[i] : i in [1..#(aplist)]]];\n')
-    mag.eval('ncurves := #curves;')
-    ncurves = mag('ncurves;').sage()
+    try:
+        mag.eval('curves := EllipticCurveSearch(N,effort : Primes:=goodP, Traces:=aplist);\n')
+        mag.eval('curves := [E: E in curves | &and[TraceOfFrobenius(E,goodP[i]) eq aplist[i] : i in [1..#(aplist)]]];\n')
+        mag.eval('ncurves := #curves;')
+        ncurves = mag('ncurves;').sage()
+    except RuntimeError, arg:
+        print("RuntimError in Magma: {}".format(arg))
+        return []
     if ncurves==0:
         return []
     Elist = [0 for i in range(ncurves)]

@@ -40,26 +40,22 @@ class AVTest(LmfdbTest):
         r"""
         Check that is_simple is computed correctly
         """
-        # this field and Galois group are currently not in the database (first example)    
-        self.check_args("/Variety/Abelian/Fq/3/9/d_h_bb",'number field of')
-        self.check_args("/Variety/Abelian/Fq/3/9/d_h_bb",'Galois group of')
-        self.check_args("/Variety/Abelian/Fq/4/3/ab_d_ad_g",'isogeny class is simple')
-        self.check_args("/Variety/Abelian/Fq/2/81/ao_do",'a simple isogeny class')
+        self.check_args("/Variety/Abelian/Fq/4/3/ab_d_ad_g",'simple')
         #TODO: do all non simple checks
         
     def test_is_ordinary(self):
         r"""
         Check that is_ordinary is computed correctly
         """      
-        self.check_args("/Variety/Abelian/Fq/3/3/ad_i_aq",'class is ordinary')
-        self.not_check_args("/Variety/Abelian/Fq/2/61/ah_a",'class is ordinary')
+        self.check_args("/Variety/Abelian/Fq/3/3/ad_i_aq",'ordinary')
+        self.not_check_args("/Variety/Abelian/Fq/2/61/ah_a",'ordinary')
         
     def test_is_supersingular(self):
         r"""
         Check that is_supersingular is computed correctly
         """  
-        self.check_args("/Variety/Abelian/Fq/2/7/a_a", 'class is supersingular')
-        self.not_check_args("/Variety/Abelian/Fq/2/71/ah_a", 'class is supersingular')
+        self.check_args("/Variety/Abelian/Fq/2/7/a_a", 'supersingular')
+        self.not_check_args("/Variety/Abelian/Fq/2/71/ah_a", 'supersingular')
         
     def test_slopes(self):
         r"""
@@ -79,15 +75,16 @@ class AVTest(LmfdbTest):
         Check that display_number_field works
         """
         self.check_args("/Variety/Abelian/Fq/2/4/ac_e",'4.0.125.1')
-        self.not_check_args("/Variety/Abelian/Fq/2/7/g_v", 'number field of')
+        self.check_args("/Variety/Abelian/Fq/3/9/d_h_bb",'The number field of this isogeny class is not in the database.')
+        self.not_check_args("/Variety/Abelian/Fq/2/7/g_v", 'The number field of this isogeny class is not in the database.')
         
     def test_display_gal_gp(self):
         r"""
         Check that display_galois_group works
         """
         self.check_args("/Variety/Abelian/Fq/2/19/g_bt", 'n=4&t=3')
-        self.not_check_args("/Variety/Abelian/Fq/2/27/f_n",'Galois group of')
-
+        self.check_args("/Variety/Abelian/Fq/3/9/d_h_bb",'The Galois group of this isogeny class is not in the database.')
+        self.not_check_args("/Variety/Abelian/Fq/2/27/f_n",'The Galois group of this isogeny class is not in the database.')
 
 
     

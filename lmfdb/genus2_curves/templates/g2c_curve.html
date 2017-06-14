@@ -25,7 +25,7 @@ function show_invs(invstyle) {
 </script>
 
 <script type="text/javascript"
-        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js"></script>
 <script type="text/javascript"
         src="http://place_code.jquery.com/jquery-latest.min.js"></script>
 {#
@@ -220,6 +220,12 @@ function show_invs(invstyle) {
 {{place_code('has_square_sha')}}
 <br>
 <h3 class="inline"> {{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}: </h3>{{data.has_square_sha}}
+
+<br>
+{{place_code('tamagawa')}}
+<br>
+<h3 class="inline"> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: </h3>
+{{data.tama}}
 
 <br>
 {{place_code('torsion_subgroup')}}

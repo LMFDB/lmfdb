@@ -10,13 +10,13 @@ import pymongo
 ASC = pymongo.ASCENDING
 from operator import mul
 from urllib import quote, unquote
-from lmfdb.base import  getDBConnection
+from lmfdb.base import  getDBConnection, app
 from flask import render_template, request, url_for, redirect, flash, send_file
 from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.ecnf import ecnf_page
-from lmfdb.ecnf.ecnf_stats import get_stats, get_signature_stats, ecnf_degree_summary, ecnf_signature_summary
-from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, web_ainvs
+from lmfdb.ecnf.ecnf_stats import ecnf_degree_summary, ecnf_signature_summary, sort_field
+from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, db_ecnfstats, web_ainvs
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
@@ -114,7 +114,7 @@ def get_nf_info(lab):
     return label, pretty
 
 
-ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, John Voight, Dan Yasaki"
+ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren Moore, Haluk Sengun, Andrew V Sutherland, John Voight, Dan Yasaki"
 
 
 def get_bread(*breads):
@@ -162,56 +162,70 @@ def labels_page():
 
 @ecnf_page.route("/")
 def index():
-#    if 'jump' in request.args:
-#        return show_ecnf1(request.args['label'])
+    #    if 'jump' in request.args:
+    #        return show_ecnf1(request.args['label'])
     if len(request.args) > 0:
         return elliptic_curve_search(to_dict(request.args))
     bread = get_bread()
 
-# the dict data will hold additional information to be displayed on
-# the main browse and search page
+    # the dict data will hold additional information to be displayed on
+    # the main browse and search page
 
     data = {}
 
-# data['fields'] holds data for a sample of number fields of different
-# signatures for a general browse:
+    # data['fields'] holds data for a sample of number fields of different
+    # signatures for a general browse:
 
-    counts = get_stats().counts()
+    ecnfstats = db_ecnfstats()
+    fields_by_deg = ecnfstats.find_one({'_id':'fields_by_degree'})
+    fields_by_sig = ecnfstats.find_one({'_id':'fields_by_signature'})
     data['fields'] = []
     # Rationals
     data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)])
-    # Real quadratics (only a sample)
-    rqfs = ['2.2.%s.1' % str(d) for d in [5, 89, 229, 497]]
-    nquadratics = counts['nfields_by_degree'].get(2,0)
-    niqfs = 5
-    nrqfs = nquadratics - niqfs
-    data['fields'].append(['%s real quadratic fields, including' % nrqfs, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in rqfs)])
-    # Imaginary quadratics
-    iqfs = ['2.0.%s.1' % str(d) for d in [4, 8, 3, 7, 11]]
-    data['fields'].append(['%s imaginary quadratic fields' % niqfs, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in iqfs)])
-    # Cubics
-    cubics = ['3.1.23.1'] + ['3.3.%s.1' % str(d) for d in [49,148,1957]]
-    if 3 in counts['nfields_by_degree']:
-        ncubics = counts['nfields_by_degree'][3]
-        data['fields'].append(['%s cubic fields, including' % ncubics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in cubics)])
-    # Quartics
-    quartics = ['4.4.%s.1' % str(d) for d in [725,2777,9909,19821]]
-    if 4 in counts['nfields_by_degree']:
-        nquartics = counts['nfields_by_degree'][4]
-        data['fields'].append(['%s totally real quartic fields, including' % nquartics,
-                           ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quartics)])
-    # Quintics
-    quintics = ['5.5.%s.1' % str(d) for d in [14641, 24217, 36497, 38569, 65657]]
-    if 5 in counts['nfields_by_degree']:
-        nquintics = counts['nfields_by_degree'][5]
-        data['fields'].append(['%s totally real quintic fields, including' % nquintics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in quintics)])
-    # Sextics
-    sextics = ['6.6.%s.1' % str(d) for d in [300125, 371293, 434581, 453789, 485125]]
-    if 6 in counts['nfields_by_degree']:
-        nsextics = counts['nfields_by_degree'][6]
-        data['fields'].append(['%s totally real sextic fields, including' % nsextics, ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)]) for nf in sextics)])
 
-    data['degrees'] = sorted(counts['degrees'])
+    # Real quadratics (sample)
+    rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
+    niqfs = len(fields_by_sig['0,1'])
+    nrqfs = len(fields_by_sig['2,0'])
+    data['fields'].append(['{} real quadratic fields, including'.format(nrqfs),
+                           ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
+                            for nf in rqfs)])
+
+    # Imaginary quadratics (sample)
+    iqfs = ['2.0.{}.1'.format(d) for d in [4, 8, 3, 7, 11]]
+    data['fields'].append(['{} imaginary quadratic fields, including'.format(niqfs),
+                           ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
+                            for nf in iqfs)])
+
+    # Cubics (sample)
+    cubics = ['3.1.23.1'] + ['3.3.{}.1'.format(d) for d in [49,148,1957]]
+    ncubics = len(fields_by_deg['3'])
+    data['fields'].append(['{} cubic fields, including'.format(ncubics),
+                           ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
+                            for nf in cubics)])
+
+    # Quartics (sample)
+    quartics = ['4.4.{}.1'.format(d) for d in [725,2777,9909,19821]]
+    nquartics = len(fields_by_deg['4'])
+    data['fields'].append(['{} totally real quartic fields, including'.format(nquartics),
+                           ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
+                            for nf in quartics)])
+
+    # Quintics (sample)
+    quintics = ['5.5.{}.1'.format(d) for d in [14641, 24217, 36497, 38569, 65657]]
+    nquintics = len(fields_by_deg['5'])
+    data['fields'].append(['{} totally real quintic fields, including'.format(nquintics),
+                           ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
+                            for nf in quintics)])
+
+    # Sextics (sample)
+    sextics = ['6.6.{}.1'.format(d) for d in [300125, 371293, 434581, 453789, 485125]]
+    nsextics = len(fields_by_deg['6'])
+    data['fields'].append(['{} totally real sextic fields, including'.format(nsextics),
+                           ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
+                            for nf in sextics)])
+
+    data['degrees'] = sorted([int(d) for d in fields_by_deg.keys() if d!='_id'])
 
 # data['highlights'] holds data (URL and descriptive text) for a
 # sample of elliptic curves with interesting features:
@@ -402,6 +416,7 @@ def elliptic_curve_search(info):
         parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
         if 'torsion_structure' in query and not 'torsion_order' in query:
             query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
+        parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
     except (TypeError,ValueError):
         return search_input_error(info, bread)
 
@@ -478,10 +493,10 @@ def search_input_error(info=None, bread=None):
 
 @ecnf_page.route("/browse/")
 def browse():
-    info = {
-        'counts': get_stats().counts(),
-        'stats': get_stats().stats(),
-    }
+    data = db_ecnfstats().find_one({'_id':'signatures_by_degree'}, projection={'_id': False})
+    # We could use the dict directly but then could not control the order
+    # of the keys (degrees), so we use a list
+    info = [[d,data[str(d)]] for d in sorted([int(d) for d in data.keys()])]
     credit = 'John Cremona'
     t = 'Elliptic curves over number fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
@@ -490,23 +505,31 @@ def browse():
 
 @ecnf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
-    stats = get_stats()
-    info = {
-        'counts': stats.counts(),
-        'stats': stats.stats(),
-        'dstats': stats.dstats()[d],
-        'degree': d
-    }
-    if not d in info['counts']['degrees']:
-        if d==1:
-            return redirect(url_for("ec.statistics"))
-        if d<0:
-            info['error'] = "Negative degree!"
-        else:
-            info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
-    info['degree_stats'] = ecnf_degree_summary(d)
-    sigs = ["(%s,%s)" % (r,(d-r)/2) for r in range(d%2,d+1,2)]
-    info['sig_stats'] = dict([(s,get_signature_stats(s)) for s in sigs])
+    if d==1:
+        return redirect(url_for("ec.statistics"))
+    info = {}
+
+    ecnfstats = db_ecnfstats()
+    sigs_by_deg = ecnfstats.find_one({'_id':'signatures_by_degree'}, projection={'_id': False})
+    if not str(d) in sigs_by_deg:
+        info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
+    else:
+        info['degree'] = d
+
+    fields_by_sig = ecnfstats.find_one({'_id':'fields_by_signature'}, projection={'_id': False})
+    counts_by_sig = ecnfstats.find_one({'_id':'conductor_norm_by_signature'}, projection={'_id': False})
+    counts_by_field = ecnfstats.find_one({'_id':'conductor_norm_by_field'}, projection={'_id': False})
+
+    def field_counts(f):
+        ff = f.replace(".",":")
+        return [f,counts_by_field[ff]]
+
+    def sig_counts(sig):
+        sorted_fields = sorted(fields_by_sig[sig], key=sort_field)
+        return [sig, counts_by_sig[sig], [field_counts(f) for f in sorted_fields]]
+
+    info['summary'] = ecnf_degree_summary(d)
+    info['sig_stats'] = [sig_counts(sig) for sig in sigs_by_deg[str(d)]]
     credit = 'John Cremona'
     if d==2:
         t = 'Elliptic curves over quadratic number fields'
@@ -519,57 +542,61 @@ def statistics_by_degree(d):
     elif d==6:
         t = 'Elliptic curves over sextic number fields'
     else:
-        t = 'Elliptic curves over number fields of degree %s' % d
+        t = 'Elliptic curves over number fields of degree {}'.format(d)
 
     bread = [('Elliptic Curves', url_for("ecnf.index")),
               ('degree %s' % d,' ')]
     return render_template("ecnf-by-degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
-@ecnf_page.route("/browse/<int:d>/<r>/")
+@ecnf_page.route("/browse/<int:d>/<int:r>/")
 def statistics_by_signature(d,r):
-    info = {
-        'counts': get_stats().counts(),
-        'stats': get_stats().stats(),
-        'degree': d,
-    }
-    if isinstance(r,basestring):
-        info['sig_code'] = r
-        info['r'] = r = int(r[1:-1].split(",")[0])
-    else:
-        info['r'] = r
-        info['sig_code'] = '%s.%s' % (d,r),
-    info['sig'] = '(%s,%s)' % (r,(d-r)/2)
-    info['sig_stats'] = ecnf_signature_summary(info['sig'])
+    if d==1:
+        return redirect(url_for("ec.statistics"))
 
-    if not d in info['counts']['degrees']:
-        if d==1:
-            return redirect(url_for("ec.statistics"))
-        if d<0:
-            info['error'] = "Negative degree!"
-        else:
-            info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
+    info = {}
+
+    ecnfstats = db_ecnfstats()
+    sigs_by_deg = ecnfstats.find_one({'_id':'signatures_by_degree'}, projection={'_id': False})
+    if not str(d) in sigs_by_deg:
+        info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
+    else:
+        info['degree'] = d
+
     if not r in range(d%2,d+1,2):
         info['error'] = "Invalid signature %s" % info['sig']
+    s = (d-r)//2
+    info['sig'] = sig = '%s,%s' % (r,s)
+    info['summary'] = ecnf_signature_summary(sig)
+
+    fields_by_sig = ecnfstats.find_one({'_id':'fields_by_signature'}, projection={'_id': False})
+    counts_by_field = ecnfstats.find_one({'_id':'conductor_norm_by_field'}, projection={'_id': False})
+
+    def field_counts(f):
+        ff = f.replace(".",":")
+        return [f,counts_by_field[ff]]
+
+    sorted_fields = sorted(fields_by_sig[sig], key=sort_field)
+    info['sig_stats'] = [field_counts(f) for f in sorted_fields]
     credit = 'John Cremona'
-    if info['sig'] == '(2,0)':
+    if info['sig'] == '2,0':
         t = 'Elliptic curves over real quadratic number fields'
-    elif info['sig'] == '(0,1)':
+    elif info['sig'] == '0,1':
         t = 'Elliptic curves over imaginary quadratic number fields'
-    elif info['sig'] == '(3,0)':
+    elif info['sig'] == '3,0':
         t = 'Elliptic curves over totally real cubic number fields'
-    elif info['sig'] == '(1,1)':
+    elif info['sig'] == '1,1':
         t = 'Elliptic curves over mixed cubic number fields'
-    elif info['sig'] == '(4,0)':
+    elif info['sig'] == '4,0':
         t = 'Elliptic curves over totally real quartic number fields'
-    elif info['sig'] == '(5,0)':
+    elif info['sig'] == '5,0':
         t = 'Elliptic curves over totally real quintic number fields'
-    elif info['sig'] == '(6,0)':
+    elif info['sig'] == '6,0':
         t = 'Elliptic curves over totally real sextic number fields'
     else:
-        t = 'Elliptic curves over number fields of degree %s, signature %s' % (d,info['sig'])
+        t = 'Elliptic curves over number fields of degree %s, signature (%s)' % (d,info['sig'])
     bread = [('Elliptic Curves', url_for("ecnf.index")),
               ('degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
-              ('signature %s' % info['sig'],' ')]
+              ('signature (%s)' % info['sig'],' ')]
     return render_template("ecnf-by-signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 
@@ -636,3 +663,39 @@ def download_search(info):
                      attachment_filename=filename,
                      as_attachment=True,
                      add_etags=False)
+
+torsion_structures = None
+def get_torsion_structures():
+    global torsion_structures
+    if torsion_structures==None:
+        #print("Getting list of torsion structures from the database")
+        ecnfstats = db_ecnfstats()
+        torsion_structures = [t[0] for t in ecnfstats.find_one({'_id':'torsion_structure'})['counts']]
+        torsion_structures = [[int(str(n)) for n in t.split(",")] for t in torsion_structures if t]
+        torsion_structures.sort()
+    return torsion_structures
+
+def tor_struct_search_nf(prefill="any"):
+    def fix(t):
+        return t + ' selected = "yes"' if prefill==t else t
+    def cyc(n):
+        return [fix("["+str(n)+"]"), "$C_{{{}}}$".format(n)]
+    def cyc2(m,n):
+        return [fix("[{},{}]".format(m,n)), "$C_{{{}}}\\times C_{{{}}}$".format(m,n)]
+    gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
+
+    tors = get_torsion_structures()
+
+    # The following was the set as of 24/4/2017:
+    # assert tors == [[2], [2, 2], [2, 4], [2, 6], [2, 8], [2, 10], [2, 12], [2, 14], [2, 16], [2, 18], [3], [3, 3], [3, 6], [4], [4, 4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20], [21], [22], [25], [27], [37]]
+
+    for t in tors:
+        if len(t)==1:
+            gps.append(cyc(t[0]))
+        elif len(t)==2:
+            gps.append(cyc2(*t))
+
+    return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+
+# the following allows the preceding function to be used in any template via {{...}}
+app.jinja_env.globals.update(tor_struct_search_nf=tor_struct_search_nf)

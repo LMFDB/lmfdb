@@ -287,12 +287,16 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
                     cc = str(abs(c))
                 s += "{0} \cdot ".format(cc)
                 a = monom[i][0]; b = monom[i][1]
+                if a == 1:
+                    a = ""
+                if b == 1:
+                    b = ""
                 if a == 0 and b != 0:
-                    s+="E_6^{{ {0} }}".format(b)
+                    s+="E_6^{{ {0} }}(z)".format(b)
                 elif b ==0 and a != 0:
-                    s+="E_4^{{ {0} }}".format(a)
+                    s+="E_4^{{ {0} }}(z)".format(a)
                 else:
-                    s+="E_4^{{ {0} }}E_6^{{ {1} }}".format(a,b)
+                    s+="E_4^{{ {0} }}(z) \cdot E_6^{{ {1} }}(z)".format(a,b)
                 info['explicit_formulas'] += s
             info['explicit_formulas'] += " \)"            
     # cur_url = '?&level=' + str(level) + '&weight=' + str(weight) + '&character=' + str(character) + '&label=' + str(label) # never used

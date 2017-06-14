@@ -109,6 +109,10 @@ def truncatenumber(numb, precision):
         return("-1")
     elif float(abs(numb + 2)) < truncation:
         return("-2")
+    elif float(abs(numb - 0.5)) < truncation:
+        return("0.5")
+    elif float(abs(numb + 0.5)) < truncation:
+        return("-0.5")
     return(str(numb)[0:int(localprecision)])
 
 
@@ -141,6 +145,8 @@ def styleTheSign(sign):
 
 def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
   # seriescoefftype can be: series, serieshtml, signed, literal, factor
+#  truncationexp is used to determine if a number is 'really' 0 or 1 or -1 or I or -I or 0.5 or -0.5
+#  precision is used to truncate decimal numbers
     truncation = float(10 ** truncationexp)
     try:
         if isinstance(coeff,str) or isinstance(coeff,unicode):
@@ -278,10 +284,12 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return(ans + truncatenumber(ip, precision) + "i")
     elif ip < -1 * truncation:
         if float(abs(ip + 1)) < truncation:
-            if seriescoefftype == "serieshtml":
-               return(" &minus;  <em>i</em>" + "&middot;" + seriesvar(index, seriestype))
+            if seriescoefftype == "factor": #assumes that factor is used in math mode
+                return("- i \cdot" + seriesvar(index, seriestype))
+            elif seriescoefftype == "serieshtml":
+                return(" &minus; <em>i</em> &middot;" + seriesvar(index, seriestype))
             else:
-               return("-i" + "&middot;" + seriesvar(index, seriestype))
+                return("- i" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
                 return(ans + truncatenumber(ip, precision) + "i" + seriesvar(index, seriestype))
@@ -710,28 +718,6 @@ def lfuncFEtex(L, fmt):
         tex_name_s = L.texnamecompleteds
         tex_name_1ms = L.texnamecompleted1ms
     ans = ""
-#    if fmt == "analytic":
-#        ans = "\\begin{align}\n" + L.texnamecompleteds + "=\\mathstrut &"
-#        if L.level > 1:
-#            # ans+=latex(L.level)+"^{\\frac{s}{2}}"
-#            ans += latex(L.level) + "^{s/2}"
-#        for mu in L.mu_fe:
-#            ans += "\Gamma_{\R}(s" + seriescoeff(mu, 0, "signed", "", -6, 5) + ")"
-#        for nu in L.nu_fe:
-#            ans += "\Gamma_{\C}(s" + seriescoeff(nu, 0, "signed", "", -6, 5) + ")"
-#        ans += " \\cdot " + L.texname + "\\cr\n"
-#        ans += "=\\mathstrut & "
-#        if L.sign == 0:
-#            ans += "\epsilon \cdot "
-#        else:
-#            ans += seriescoeff(L.sign, 0, "factor", "", -6, 5)
-#        ans += L.texnamecompleted1ms
-#        if L.sign == 0 and L.degree == 1:
-#            ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
-#        if L.sign == 0 and L.degree > 1:
-#            ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
-#        ans += "\n\\end{align}\n"
-#    elif fmt == "arithmetic":
     if fmt == "arithmetic" or fmt == "analytic":
         ans = "\\begin{align}\n" + tex_name_s + "=\\mathstrut &"
         if L.level > 1:
@@ -843,7 +829,8 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
 
 def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     ''' Returns [L_arithmetic, L_analytic, L_val]
-        Currently only used for genus 2 curves.
+        Currently only used for genus 2 curves
+        and Dirichlet characters.
         Eventually want to use for all L-functions.
     '''
     number_of_decimals = 10
@@ -851,12 +838,12 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     if hasattr(L,"lfunc_data"):
         s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
         if 'values' in L.lfunc_data.keys():
-          for x in p2sage(L.lfunc_data['values']):
+            for x in p2sage(L.lfunc_data['values']):
             # the numbers here are always half integers
             # so this comparison is exact
-            if x[0] == s_alg:
-                val = x[1]
-                break
+                if x[0] == s_alg:
+                    val = x[1]
+                    break
     if val is None:
         if L.fromDB:
             val = "not computed"

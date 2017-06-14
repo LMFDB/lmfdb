@@ -10,27 +10,27 @@
 {% else %}
 
 <div>
-{{ info.sig_stats|safe }}
+{{ info.summary|safe }}
 </div>
 
 
-{% set sdat = info.stats[info.degree][info.sig] %}
+{% set stats = info.sig_stats %}
 
-{% if sdat %}
+{% if stats %}
 <h2>Number of curves and maximum conductor norm for fields of
-  signature {{info.sig}}</h2>
+  signature ({{info.sig}})</h2>
 <table>
 <tr><th> Field <th> Number of curves <th> Number of isogeny classes <th> Maximum conductor norm </tr>
-{% for F in info.counts.fields_by_degree[info.degree] %}
-{% if F in sdat %}
-<tr><td> <a href="{{url_for('ecnf.show_ecnf1',nf=F)}}">{{F}}</a> <td> {{sdat[F].ncurves}} <td> {{sdat[F].nclasses}} <td> {{sdat[F].maxnorm}} </tr>
-{% endif %}
+{% for fdat in stats %}
+{% set f = fdat.0 %}
+{% set f_counts = fdat.1 %}
+<tr><td> <a href="{{url_for('ecnf.show_ecnf1',nf=f)}}">{{f}}</a> <td> {{f_counts.ncurves}} <td> {{f_counts.nclasses}} <td> {{f_counts.max_norm}} </tr>
 {% endfor %}
 </table>
 
 {% else %}
 The database does not contain any elliptic curves defined over fields
-of signature {{s}}.
+of signature ({{s}}).
 {% endif %}
 {% endif %}
 

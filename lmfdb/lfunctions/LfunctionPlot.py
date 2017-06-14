@@ -20,38 +20,11 @@ from sage.all import prod, CC
 
 
 ## ============================================
-## Returns the id for the L-function of given group, level, sign and
-## spectral parameters. (Used for Maass forms and works for GL(n) and GSp(4).)
-## This id is used in the database as '_id' of the L-function document.
-## NOTE: SHOULD CHANGE THIS TO INCLUDE THE SIGN IN THE ID
-## ============================================
-def createLid(group, objectName, level, sign, parameters):
-    ans = group + objectName + '_' + str(level) + '_' + str(sign)
-    if group == 'GSp4':
-        knownParameters = 2
-    else:
-        knownParameters = 1
-    for index, item in enumerate(parameters):
-        if index < len(parameters) - knownParameters:
-            ans += '_'
-            toAdd = str(item)
-            ans += toAdd
-    return ans
-
-
-## ============================================
 ## Returns all the html including links to the svg-files for Maass forms
 ## of given degree (gives output for degree 3 and 4). Data is fetched from
 ## the database.
 ## ============================================
 def getAllMaassGraphHtml(degree):
-##    conn = base.getDBConnection()
-##    db = conn.Lfunctions
-##    collection = db.Lfunctions
-##    groups = collection.group(['group'], {'degree': degree},
-##                              {'csum': 0},
-##                              'function(obj,prev) { prev.csum += 1; }')
-
     if degree == 3:
         groups = [ ["GL3", [1 , 4] ] ] 
     elif degree == 4:
@@ -62,12 +35,7 @@ def getAllMaassGraphHtml(degree):
     ans = ""
     for i in range(0, len(groups)):
         g = groups[i][0]
-        # logger.debug(g)
         ans += getGroupHtml(g)
-##        levels = collection.group(['conductor'], {'degree': degree, 'group': g},
-##                                  {'csum': 0},
-##                                  'function(obj,prev) { prev.csum += 1; }')
-        # logger.debug(levels)
         for j in range(0, len(groups[i][1])):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
@@ -222,12 +190,11 @@ def getWidthAndHeight(gls):
 
 ## ============================================
 ## Returns the contents (as a string) of the svg-file for
-## the L-functions of the Maass forms for a set of given groups, levels and
-## signs (of the functional equation).
+## the L-functions of the Maass forms for a set of given groups and levels
 ## ============================================
 
 
-def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
+def paintSvgFileAll(glslist):  # list of group and level
     xfactor = 20
     yfactor = 20
     extraSpace = 20
@@ -248,7 +215,8 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
         level = gls[1]
 
         LfunctionList = collection.find(
-                {'group': group, 'conductor': level}, {'origin': True, 'root_number': True})
+                {'group': group, 'conductor': level},
+                {'origin': True, 'root_number': True})
 
         for l in LfunctionList:
             splitOrigin = l['origin'].split('/')
@@ -283,63 +251,6 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
             ans += "' style='fill:" + signtocolour(sign) + "'>"
             ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
             ans += "</circle></a>\n"
-
-    ans += "</svg>"
-    return(ans)
-
-def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
-    index1 = 2
-    index2 = 3
-
-    xfactor = 20
-    yfactor = 20
-    extraSpace = 20
-    ticlength = 4
-    radius = 3
-
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
-
-    conn = base.getDBConnection()
-    db = conn.Lfunction
-    collection = db.LemurellMaassHighDegree
-    paralist = []
-    xMax = 0
-    yMax = 0
-    for gls in glslist:
-        if len(gls) > 2:
-            LfunctionList = collection.find(
-                {'group': gls[0], 'level': gls[1], 'sign': gls[2]}, {'_id': True, 'sign': True})
-        else:
-            LfunctionList = collection.find({'group': gls[0], 'level': gls[1]}, {'_id': True, 'sign': True})
-
-        for l in LfunctionList:
-            splitId = l['_id'].split("_")
-            paralist.append((splitId[index1], splitId[index2], l['_id'], gls[0], gls[1], l['sign']))
-            if float(splitId[index1]) > xMax:
-                xMax = float(splitId[index1])
-            if float(splitId[index2]) > yMax:
-                yMax = float(splitId[index2])
-
-    xMax = int(math.ceil(xMax))
-    yMax = int(math.ceil(yMax))
-    width = xfactor * xMax + extraSpace
-    height = yfactor * yMax + extraSpace
-
-    ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
-
-    for (x, y, lid, group, level, sign) in paralist:
-        try:
-            linkurl = url_for('.l_function_maass_gln_page', group=group, dbid=lid)
-        except Exception:  # catch when running a test
-            linkurl = lid
-        ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
-        ans += "<circle cx='" + str(float(x) * xfactor)[0:7]
-        ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
-        ans += "' r='" + str(radius)
-        ans += "' style='fill:" + signtocolour(sign) + "'>"
-        ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
-        ans += "</circle></a>\n"
 
     ans += "</svg>"
     return(ans)
