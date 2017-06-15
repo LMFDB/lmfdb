@@ -172,7 +172,7 @@ def render_bmf_field_dim_table(**args):
     info['field_poly'] = teXify_pol(str(nf.poly()))
     weights = set()
     for dat in data:
-        weights = weights.union(set(dat['dimension_data'].keys()))
+        weights = weights.union(set(dat['gl2_dims'].keys()))
     weights = list([int(w) for w in weights])
     weights.sort()
     info['weights'] = weights
@@ -188,9 +188,9 @@ def render_bmf_field_dim_table(**args):
         dims[dat['level_label']] = d = {}
         for w in weights:
             sw = str(w)
-            if sw in dat['dimension_data']:
-                d[w] = {'d': dat['dimension_data'][sw]['cuspidal_dim'],
-                        'n': dat['dimension_data'][sw]['new_dim']}
+            if sw in dat['gl2_dims']:
+                d[w] = {'d': dat['gl2_dims'][sw]['cuspidal_dim'],
+                        'n': dat['gl2_dims'][sw]['new_dim']}
             else:
                 d[w] = {'d': '?', 'n': '?'}
 
@@ -245,7 +245,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 I = L.ideal(N//d,c+d*alpha)
                 info['level_gen'] = latex(I.gens_reduced()[0])
                 info['level_fact'] = latex(I.factor())
-                dim_data = data['dimension_data']
+                dim_data = data['gl2_dims']
                 weights = dim_data.keys()
                 weights.sort(key=lambda w: int(w))
                 for w in weights:

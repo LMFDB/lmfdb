@@ -77,7 +77,7 @@ class WebBMF(object):
         pretty_field = field_pretty(self.field_label)
         print self.label
         self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
-        dims = db_dims().find_one({'field_label':self.field_label})['dimension_data']
+        dims = db_dims().find_one({'field_label':self.field_label})['gl2_dims']
         self.newspace_dimension = dims['2']['new_dim']
         K = self.field.K()
         self.hecke_table = [[web_latex(p.norm()),
