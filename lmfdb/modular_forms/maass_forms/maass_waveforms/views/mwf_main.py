@@ -32,6 +32,7 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import 
 from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
+from lmfdb.utils import rgbtohex, signtocolour
 
 
 # this is a blueprint specific default for the tempate system.
@@ -121,6 +122,8 @@ def render_maass_browse_graph(min_level, max_level, min_R, max_R):
     info['max_level'] = max_level
     info['min_R'] = min_R
     info['max_R'] = max_R
+    info['coloreven'] = rgbtohex(signtocolour(1))
+    info['colorodd'] = rgbtohex(signtocolour(-1))
     bread = [('Modular forms', url_for('mf.modular_form_main_page')),
              ('Maass waveforms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
