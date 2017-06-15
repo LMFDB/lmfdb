@@ -145,7 +145,11 @@
     <div class="properties-body">
     <ul>
         {% for text,url in entries %}
+        {% if url %}
            <li><a href="{{ url }}">{{ text }}</a></li>
+        {% else %}
+           <li>{{ text }}</li>
+        {% endif %}
         {% endfor %}
     </ul>
   </div>
@@ -165,7 +169,7 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties2 or friends or downloads or learnmore) %}
+{% if (properties2 or origins or friends or downloads or learnmore) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
@@ -190,6 +194,7 @@
       </table>
       </div>
     {% endif %}
+   {{ rightnavig("Origins", origins) }}
    {{ rightnavig("Related objects", friends) }}
    {% if navi %}
        {{ neighbors("Nearby objects", navi) }}

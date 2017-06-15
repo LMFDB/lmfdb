@@ -439,7 +439,7 @@ def lfuncEPtex(L, fmt):
 def lfuncEPhtml(L,fmt):
     """ Euler product as a formula and a table of local factors.
     """
-    texform_gen = "\[L(A,s) = "
+    texform_gen = "\[L(s) = "  # "\[L(A,s) = "
     texform_gen += "\prod_{p \\text{ prime}} F_p(p^{-s})^{-1} \]\n"
 
     pfactors = prime_divisors(L.level)
