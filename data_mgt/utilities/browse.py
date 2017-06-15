@@ -6,19 +6,10 @@ Utility script to connect to the database (read-only) for browsing.
 To run this, cd to the top-level lmfdb directory, start sage and use
 the command
 
-   sage: %runfile scripts/usilities/browse.py
+   sage: %runfile scripts/utilities/browse.py
 """
 
-import os.path
-import re
-import os
-import pymongo
 from lmfdb.base import getDBConnection
-from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ, Set
-from sage.databases.cremona import cremona_to_lmfdb
-from lmfdb.ecnf.ecnf_stats import field_data
-from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF, parse_ainvs, parse_point
 
 print "getting connection"
 C= getDBConnection()
