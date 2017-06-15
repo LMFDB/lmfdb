@@ -102,6 +102,7 @@ def truncation_bound(f):
     field_label = f['field_label']
     data = get_nf_data(field_label)
     nb = binary_search(data,num_ap)
+    assert abs(nb - num_ap) <= int(f['label'].split('.')[0]) - 1
     return nb,num_ap
 
 def check_form(f, dofix=False):
@@ -116,7 +117,8 @@ def check_form(f, dofix=False):
         ev = ev[0:nb]
         update = {"$set":{'hecke_eigenvalues':ev}}
         if dofix:
-            forms.update_one({'label':form_label}, update)
+            res = forms.update_one({'label':form_label}, update)
+            assert res.acknowledged and res.modified_count == 1
             print "\tform fixed";
             return 2
         else:
@@ -146,7 +148,9 @@ def check_all(degree, disc_bound=Infinity, dofix=False):
     query['degree'] = int(degree)
     if disc_bound < Infinity:
         query['discriminant'] = {"$lte":int(disc_bound)}
-    for F in fields.find(query):
-        nbforms, nbtodo, nbfixed = check_field(F['label'], dofix=dofix)
+    LF = fields.find(query)
+    Llab = [F['label'] for F in LF]
+    for field_label in Llab:
+        nbforms, nbtodo, nbfixed = check_field(field_label, dofix=dofix)
         print("Total so far: %s forms, %s needed fixing, %s fixed" % (totforms, tottodo, totfixed))
 
