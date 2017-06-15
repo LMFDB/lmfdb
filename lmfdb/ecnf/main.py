@@ -25,7 +25,6 @@ from markupsafe import Markup
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
-OLD_COND_RE = re.compile(r'^\[\d+,\d+,\d+\]$')
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
@@ -91,14 +90,12 @@ def split_short_class_label(lab):
     conductor_label = data[0]
     isoclass_label = data[1]
     return (conductor_label, isoclass_label)
-    
+
 def conductor_label_norm(lab):
     r""" extract norm from conductor label (as a string)"""
     s = lab.replace(' ','')
     if re.match(r'\d+.\d+',s):
         return s.split('.')[0]
-    elif re.match(r'\[\d+,\d+,\d+\]',s):
-        return s[1:-1].split(',')[0]
     else:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid conductor label. It must be of the form N.m or [N,c,d]" % lab), "error")
         raise ValueError
@@ -285,9 +282,6 @@ def show_ecnf1(nf):
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
     conductor_label = unquote(conductor_label)
-    if re.match(OLD_COND_RE, conductor_label):
-        conductor_label = '.'.join(conductor_label[1:-1].split(','))
-        return redirect(url_for('.show_ecnf_conductor',nf=nf,conductor_label=conductor_label),301)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
         conductor_norm = conductor_label_norm(conductor_label)
@@ -311,9 +305,6 @@ def show_ecnf_conductor(nf, conductor_label):
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
     conductor_label = unquote(conductor_label)
-    if re.match(OLD_COND_RE, conductor_label):
-        conductor_label = '.'.join(conductor_label[1:-1].split(','))
-        return redirect(url_for('.show_ecnf_isoclass',nf=nf,conductor_label=conductor_label,class_label=class_label),301)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
@@ -342,9 +333,6 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<number>")
 def show_ecnf(nf, conductor_label, class_label, number):
     conductor_label = unquote(conductor_label)
-    if re.match(OLD_COND_RE, conductor_label):
-        conductor_label = '.'.join(conductor_label[1:-1].split(','))
-        return redirect(url_for('.show_ecnf',nf=nf,conductor_label=conductor_label,class_label=class_label,number=number),301)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
