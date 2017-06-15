@@ -36,6 +36,16 @@ Installation
       # in the 'lmfdb/' directory:
       sage -pip install -r requirements.txt
    ```
+  If you have not run the site for a while you might get an error
+  ```
+    ImportError: cannot import name monitoring
+  ```
+  In this case or if you need to upgrade for any reason run 
+  ```
+    sage -pip install -r requirements.txt --upgrade
+  ```
+  
+   
   * [optional] Memcache.  *This step is not at all necessary and can
     safely be ignored!* Memcache speeds up recompilation of python
     modules during development.  Using it requires both installing the
@@ -227,6 +237,8 @@ Code development and sharing your work
      whatever your own development or feature branch is called.
      Others will review your code, and release managers will
      (eventually, if all is well) merge it into the master branch.
+     
+     
 
 LMFDB On Windows
 ================

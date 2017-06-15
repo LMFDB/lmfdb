@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import getDBConnection
 import flask
 from flask import render_template, url_for, request, make_response
 
-from sage.all import ZZ, is_prime, latex, factor, plot, srange, spline, line
+from sage.all import plot, srange, spline, line
+
 import tempfile
+import bson
 import os
 import re
 import sqlite3
 import numpy
-from Lfunction import Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_EMF, Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued
-from Lfunction import RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction, HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc
-import LfunctionPlot as LfunctionPlot
+
+from Lfunction import (Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_EMF,
+                       Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
+                       RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
+                       HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc)
+import LfunctionPlot
+import LfunctionDatabase
+from LfunctionComp import isogeny_class_table, isogeny_class_cm
+from Lfunctionutilities import p2sage, styleTheSign, getConductorIsogenyFromLabel
 from lmfdb.utils import to_dict
-import bson
-from Lfunctionutilities import p2sage, lfuncDShtml, lfuncEPtex, lfuncFEtex, styleTheSign, specialValueString, specialValueTriple
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
-from lmfdb.elliptic_curves.web_ec import cremona_label_regex, lmfdb_label_regex
-from LfunctionComp import isogeny_class_table, isogeny_class_cm
-import LfunctionDatabase
-from lmfdb import base
-from pymongo import ASCENDING
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
 
 def get_degree(degree_string):
@@ -233,29 +233,20 @@ def l_function_dirichlet_page(modulus, number):
 
 
 # L-function of Elliptic curve #################################################
+@l_function_page.route("/EllipticCurve/Q/<conductor>/<isogeny>/")
+def l_function_ec_page(conductor, isogeny):
+    args = {'conductor': conductor, 'isogeny': isogeny}
+    return render_single_Lfunction(Lfunction_EC_Q, args, request)
+
 @l_function_page.route("/EllipticCurve/Q/<label>/")
-def l_function_ec_page(label):
-    logger.debug(label)
-
-    m = lmfdb_label_regex.match(label)
-    if m is not None:
-        # Lmfdb label is given
-        if m.groups()[2]:
-            # strip off the curve number
-            return flask.redirect(url_for('.l_function_ec_page', label=label[:-1]), 301)
-        else:
-            args = {'label': label}
-            return render_single_Lfunction(Lfunction_EC_Q, args, request)
-
-    m = cremona_label_regex.match(label)
-    if m is not None:
-        # Do a redirect if cremona label is given
-        if m.groups()[2]:
-            C = getDBConnection().elliptic_curves.curves.find_one({'label': label})
-        else:
-            C = getDBConnection().elliptic_curves.curves.find_one({'iso': label})
-        return flask.redirect(url_for('.l_function_ec_page', label=(C['lmfdb_iso'])), 301)
-
+def l_function_ec_page_label(label):
+    conductor, isogeny = getConductorIsogenyFromLabel(label)
+    if conductor and isogeny:
+        return flask.redirect(url_for('.l_function_ec_page', conductor = conductor,
+                                      isogeny = isogeny), 301)
+    else:
+        errmsg = 'The string %s is not an admissible elliptic curve label' % label
+        return render_lfunction_exception(errmsg)
 
 # L-function of Cusp form ############################################
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/<label>/<number>/")
@@ -267,7 +258,6 @@ def l_function_emf_page(level, weight, character, label, number):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/<label>/")
 def l_function_emf_redirect_1(level, weight, character, label):
-    logger.debug(level, weight, character, label)
     return flask.redirect(url_for('.l_function_emf_page', level=level, weight=weight,
                                   character=character, label=label, number='0'), code=301)
 
@@ -280,9 +270,8 @@ def l_function_emf_redirect_2(level, weight, character):
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/")
 def l_function_emf_redirect_3(level, weight):
-    logger.debug(level, weight)
     return flask.redirect(url_for('.l_function_emf_page', level=level, weight=weight,
-                                  character='0', label='a', number='0'), code=301)
+                                  character='1', label='a', number='0'), code=301)
 
 
 # L-function of Hilbert modular form ###########################################
@@ -295,14 +284,12 @@ def l_function_hmf_page(field, label, character, number):
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
 def l_function_hmf_redirect_1(field, label, character):
-    logger.debug(field, label, character)
     return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character=character, number='0'), code=301)
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/")
 def l_function_hmf_redirect_2(field, label):
-    logger.debug(field, label)
     return flask.redirect(url_for('.l_function_hmf_page', field=field, label=label,
                                   character='0', number='0'), code=301)
 
@@ -322,12 +309,6 @@ def l_function_maass_page(dbid):
 def l_function_maass_gln_page(group, level, char, R, ap_id):
     args = {'fromDB': True, 'group': group, 'level': level,
             'char': char, 'R': R, 'ap_id': ap_id}
-    return render_single_Lfunction(Lfunction_Maass, args, request)
-
-@l_function_page.route("/ModularForm/<group>/Q/Maass/<dbid>/")
-def l_function_maass_gln_page_noDb(group, dbid):
-    args = {'dbid': dbid, 'dbName': 'Lfunction',
-            'dbColl': 'LemurellMaassHighDegree', 'fromDB': False}
     return render_single_Lfunction(Lfunction_Maass, args, request)
 
 
@@ -361,10 +342,21 @@ def l_function_hgm_page(label,t):
     return render_single_Lfunction(HypergeometricMotiveLfunction, args, request)
 
 # L-function of symmetric powers of Elliptic curve #############################
-@l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<label>/")
-def l_function_ec_sym_page(power, label):
-    args = {'power': power, 'underlying_type': 'EllipticCurve', 'field': 'Q', 'label': label}
+@l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<conductor>/<isogeny>/")
+def l_function_ec_sym_page(power, conductor, isogeny):
+    args = {'power': power, 'underlying_type': 'EllipticCurve', 'field': 'Q',
+            'conductor': conductor, 'isogeny': isogeny}
     return render_single_Lfunction(SymmetricPowerLfunction, args, request)
+
+@l_function_page.route("/SymmetricPower/<power>/EllipticCurve/Q/<label>/")
+def l_function_ec_sym_page_label(power, label):
+    conductor, isogeny = getConductorIsogenyFromLabel(label)
+    if conductor and isogeny:
+        return flask.redirect(url_for('.l_function_ec_sym_page', conductor = conductor,
+                                      isogeny = isogeny, power = power), 301)
+    else:
+        errmsg = 'The string %s is not an admissible elliptic curve label' % label
+        return render_lfunction_exception(errmsg)
 
 # L-function of genus 2 curve/Q ########################################
 @l_function_page.route("/Genus2Curve/Q/<cond>/<x>/")
@@ -385,8 +377,6 @@ def l_function_lcalc_page():
 
 def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
-    logger.debug(args)
-    logger.debug(temp_args)
 
     try:
         L = Lclass(**args)
@@ -404,12 +394,9 @@ def render_single_Lfunction(Lclass, args, request):
 
 
 def render_lfunction_exception(err):
-    # from flask import current_app
-    # if current_app.debug:
-    #    raise err
-    if err.args:
+    try:
         errmsg = "Unable to render L-function page due to the following problem(s):<br><ul>" + reduce(lambda x,y:x+y,["<li>"+msg+"</li>" for msg in err.args]) + "</ul>"
-    else:
+    except:
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
     bread =  [('L-functions', url_for('.l_function_top_page')), ('Error', '')]
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
@@ -500,22 +487,23 @@ def set_bread_and_friends(L, request):
 
     elif L.Ltype() == 'ellipticcurveQ':
         label = L.label
-        while friendlink[len(friendlink) - 1].isdigit():  # Remove any number at the end to get isogeny class url
-            friendlink = friendlink[0:len(friendlink) - 1]
 
         friends = [('Isogeny class ' + label, friendlink)]
         for i in range(1, L.nr_of_curves_in_class + 1):
-            friends.append(('Elliptic curve ' + label + str(i), friendlink + str(i)))
+            friends.append(('Elliptic curve ' + label + str(i), friendlink + '/' + str(i)))
         if L.modform:
-            friends.append(('Modular form ' + label.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms", level=L.modform['level'], weight=2, character=1, label=L.modform['iso'])))
+            friends.append(('Modular form ' + label.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms",
+                                                                                level=L.modform['level'], weight=2,
+                                                                                character=1, label=L.modform['iso'])))
         if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
             friends.append(
-                ('Symmetric square L-function', url_for(".l_function_ec_sym_page",
+                ('Symmetric square L-function', url_for(".l_function_ec_sym_page_label",
                                                         power='2', label=label)))
             friends.append(
-                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page", power='3', label=label)))
+                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page_label", power='3', label=label)))
         bread = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                                      (label, url_for('.l_function_ec_page', label=label))])
+                                      (label, url_for('.l_function_ec_page', conductor=L.conductor,
+                                                      isogeny = L.isogeny))])
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
@@ -538,11 +526,11 @@ def set_bread_and_friends(L, request):
             if not isogeny_class_cm(L.ellipticcurve):
                 friends.append(
                     ('Symmetric square L-function',
-                     url_for(".l_function_ec_sym_page", power='2',
+                     url_for(".l_function_ec_sym_page_label", power='2',
                              label=L.ellipticcurve)))
                 friends.append(
                     ('Symmetric cube L-function',
-                     url_for(".l_function_ec_sym_page", power='3',
+                     url_for(".l_function_ec_sym_page_label", power='3',
                              label=L.ellipticcurve)))
         bread = get_bread(2, [('Cusp form', url_for('.l_function_cuspform_browse_page')),
                                       (full_label, request.url)])
@@ -629,18 +617,18 @@ def set_bread_and_friends(L, request):
         if L.m == 2:
             bread = get_bread(3, [("Symmetric square of Elliptic curve",
                                            url_for('.l_function_ec_sym2_browse_page')),
-                                          (L.label, url_for('.l_function_ec_sym_page',
+                                          (L.label, url_for('.l_function_ec_sym_page_label',
                                                             label=L.label,power=L.m))])
         elif L.m == 3:
             bread = get_bread(4, [("Symmetric cube of Elliptic curve",
                                            url_for('.l_function_ec_sym3_browse_page')),
-                                          (L.label, url_for('.l_function_ec_sym_page',
+                                          (L.label, url_for('.l_function_ec_sym_page_label',
                                                             label=L.label,power=L.m))])
         else:
             bread = [('L-functions', url_for('.l_function_top_page')),
                              ('Symmetric %s of Elliptic curve ' % ordinal(L.m)
                               + str(L.label),
-                              url_for('.l_function_ec_sym_page',
+                              url_for('.l_function_ec_sym_page_label',
                                       label=L.label,power=L.m))]
 
         friendlink = request.url.replace('/L/SymmetricPower/%d/' % L.m, '/')
@@ -675,21 +663,14 @@ def set_zeroslink_and_plotlink(L, args):
     # this could either be because we already know them (in which case lfunc_data is set), or we can compute them via sageLfunction)
     # in the former case there is really no reason to use zeroslink at all, we could just fill them in now
     # but keep it as is for the moment for backward compatibility
+    # Lemurell 13/06/2017
+    # The zeros are now filled in for those in the Lfunctions database, but this is kept for the moment
     if hasattr(L,'lfunc_data') or (hasattr(L,'sageLfunction') and L.sageLfunction):
         zeroslink = request.url.replace('/L/', '/L/Zeros/')
         plotlink = request.url.replace('/L/', '/L/Plot/')
     else:
         zeroslink = ''
         plotlink = ''
-
-    if L.Ltype() == 'maass' and L.group == 'GL2':
-        minNumberOfCoefficients = 100     # TODO: Fix this to take level into account
-        if len(L.dirichlet_coefficients) < minNumberOfCoefficients:
-            zeroslink = ''
-            plotlink = ''
-    elif L.Ltype() == "artin" and L.sign == 0:  # The root number is now unknown
-            zeroslink = ''
-            plotlink = ''
 
     return (zeroslink, plotlink)    
 
@@ -851,15 +832,9 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         F = p2sage(pythonL.plotpoints)
     else:
      # obsolete, because lfunc_data comes from DB?
-      #  if pythonL.fromDB:
-      #      return ""
         L = pythonL.sageLfunction
-        # HSY: I got exceptions that "L.hardy_z_function" doesn't exist
-        # SL: Reason, it's not in the distribution of Sage
         if not hasattr(L, "hardy_z_function"):
             return None
-        # FIXME there could be a filename collission
-        #F = [(i, L.hardy_z_function(CC(.5, i)).real()) for i in srange(-30, 30, .1)]
         plotStep = .1
         if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurveQ"]:
             plotrange = 12
@@ -945,23 +920,15 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_Dirichlet(charactermodulus=arg3, characternumber=arg4)
 
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
-        return Lfunction_EC_Q(label=arg3)
+        return Lfunction_EC_Q(conductor=arg3, isogeny=arg4)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':  # this has args: one for weight and one for level
-        # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_EMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'TotallyReal' and arg5 == 'holomorphic':  # Hilbert modular form
-        # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
         return Lfunction_HMF(label=arg6, character=arg7, number=arg8)
 
-# next option is probably from an archaic HMF url
-    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 != 'Q' and arg4 == 'holomorphic':  # Hilbert modular form
-        # logger.debug(arg5+arg6+str(arg7)+str(arg8)+str(arg9))
-        return Lfunction_HMF(label=arg5, character=arg6, number=arg7)
-
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
-        # logger.debug(db)
         try:
             dbid = bson.objectid.ObjectId(arg5)
         except Exception:
@@ -982,7 +949,8 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return ArtinLfunction(label=str(arg2))
 
     elif arg1 == "SymmetricPower":
-        return SymmetricPowerLfunction(power=arg2, underlying_type=arg3, field=arg4, label=arg5)
+        return SymmetricPowerLfunction(power=arg2, underlying_type=arg3, field=arg4,
+                                       conductor=arg5, isogeny = arg6)
 
     elif arg1 == "Motive" and arg2 == "Hypergeometric" and arg3 == "Q":
         if arg5:
@@ -1027,7 +995,6 @@ def browseGraphChar():
 #   Functions for rendering graphs for browsing L-functions.
 ###########################################################################
 def render_browseGraph(args):
-    # logger.debug(args)
     data = LfunctionPlot.paintSvgFileAll([[args['group'],
                                            int(args['level'])]])
     response = make_response(data)
@@ -1036,7 +1003,6 @@ def render_browseGraph(args):
 
 
 def render_browseGraphHolo(args):
-    # logger.debug(args)
     data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
     response = make_response(data)
     response.headers['Content-type'] = 'image/svg+xml'
@@ -1044,7 +1010,6 @@ def render_browseGraphHolo(args):
 
 
 def render_browseGraphTMP(args):
-    # logger.debug(args)
     data = LfunctionPlot.paintSvgHoloGeneral(
         args['Nmin'], args['Nmax'], args['kmin'], args['kmax'], args['imagewidth'], args['imageheight'])
     response = make_response(data)
@@ -1053,7 +1018,6 @@ def render_browseGraphTMP(args):
 
 
 def render_browseGraphChar(args):
-    # logger.debug(args)
     data = LfunctionPlot.paintSvgChar(
         args['min_cond'], args['max_cond'], args['min_order'], args['max_order'])
     response = make_response(data)
@@ -1092,16 +1056,16 @@ def processEllipticCurveNavigation(startCond, endCond):
     s = '<h5>Examples of L-functions attached to isogeny classes of elliptic curves</h5>'
     s += '<table>'
 
-    logger.debug(iso_list)
-
     counter = 0
     nr_of_columns = 10
-    for label in iso_list:
+    for cond, iso in iso_list:
+        label = str(cond) + '.' + iso
         if counter == 0:
             s += '<tr>'
 
         counter += 1
-        s += '<td><a href="' + url_for('.l_function_ec_page', label=label) + '">%s</a></td>\n' % label
+        s += '<td><a href="' + url_for('.l_function_ec_page', conductor=cond,
+                                       isogeny = iso) + '">%s</a></td>\n' % label
 
         if counter == nr_of_columns:
             s += '</tr>\n'
@@ -1196,17 +1160,16 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
         ' L-functions attached to isogeny classes of elliptic curves</h5>'
     s += '<table>'
 
-    logger.debug(iso_list)
-
     counter = 0
     nr_of_columns = 10
-    for label in iso_list:
+    for cond, iso in iso_list:
+        label = str(cond) + '.' + iso
         if counter == 0:
             s += '<tr>'
 
         counter += 1
         s += '<td><a href="' + url_for('.l_function_ec_sym_page', power=str(power),
-                                       label=label) + '">%s</a></td>\n' % label
+                                       conductor=cond, isogeny=iso) + '">%s</a></td>\n' % label
 
         if counter == nr_of_columns:
             s += '</tr>\n'
@@ -1218,47 +1181,3 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
     s += '</table>\n'
     return s
 
-def processGenus2CurveNavigation(startCond, endCond):
-    """
-    Produces a table of all L-functions of genus 2 curves with conductors
-    from startCond to endCond
-    DOESN'T WORK  Stefan L 2017-02-20
-    """
-    Nmin = startCond
-    if Nmin < 169:
-        Nmin = 169
-
-    Nmax = endCond
-    if Nmax > 10000:
-        Nmax = 10000
-
-    query = {'cond': {'$lte': Nmax, '$gte': Nmin}}
-
-    # Get all the isogeny classes and sort them according to conductor
-    cursor = base.getDBConnection().genus2_curves.isogeny_classes.find(query)
-    iso_list = cursor.sort([('cond', ASCENDING), ('label', ASCENDING)])
-
-    s = '<h5>Examples of L-functions attached to isogeny classes of genus 2 curves</h5>'
-    s += '<table>'
-
-    logger.debug(iso_list)
-
-    counter = 0
-    nr_of_columns = 10
-    for iso in iso_list:
-        if counter == 0:
-            s += '<tr>'
-
-        counter += 1
-        condx = iso['label'].split('.')
-        s += '<td><a href="' + url_for('.l_function_genus2_page',cond=condx[0], x=condx[1]) + '">%s</a></td>\n' % iso['label']
-
-        if counter == nr_of_columns:
-            s += '</tr>\n'
-            counter = 0
-
-    if counter > 0:
-        s += '</tr>\n'
-
-    s += '</table>\n'
-    return s

@@ -32,27 +32,6 @@ class Lfunction:
         # Lkey should be a dictionary
         raise KeyError("not all L-function implement the Lkey scheme atm")
 
-    def source_object(self):
-        raise KeyError("not all L-functions give back a source object. This might be due to limited knowledge or missing code")
-
-    def source_information(self):
-        # Together, these give in principle enough to identify the object
-        # In practice, might be better to require Ltype to be the constructor class and Lkey to be the argument to that constructor        
-        return self.Ltype(), self.Lkey()
-        
-
-    def compute_mu_nu(self):
-        raise NotImplementedError               # time-consuming to get exactly right, will do later
-        
-    def compute_standard_mu_nu(self):
-        raise NotImplementedError               # time-consuming to get exactly right, will do later
-
-    def compute_some_mu_nu(self):
-        pairs_fe = zip(self.kappa_fe, self.lambda_fe)
-        self.mu_fe = [lambda_fe*2. for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 0.5) < 0.001]
-        self.nu_fe = [lambda_fe for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 1) < 0.001]
-        
-        
     def compute_kappa_lambda_Q_from_mu_nu(self):
         """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
         """
@@ -65,13 +44,7 @@ class Lfunction:
             self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         except Exception as e:
             raise Exception("Expecting a mu and a nu to be defined"+str(e))
-    
-    def compute_lcalc_parameters_from_mu_nu(self):
-        """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
-            Ideally would be optimized, using fewer gamma functions
-        """
-	self.compute_kappa_lambda_Q_from_mu_nu()
-    
+        
         
     ############################################################################
     ### other useful methods not implemented universally yet
@@ -134,16 +107,6 @@ class Lfunction:
                 return "not available"
             return self.sageLfunction.find_zeros(T1, T2, stepsize)
     
-    def compute_zeros(self, algorithm, **kwargs):
-        if algorithm == "lcalc":
-            return self.compute_lcalc_zeros(self, **kwargs)
-        if algorithm == "quick":
-            return self.compute_quick_zeros(self, **kwargs)
-            
-
-    def critical_value(self):
-        pass
-
     def general_webpagedata(self):
         info = {}
         try:
