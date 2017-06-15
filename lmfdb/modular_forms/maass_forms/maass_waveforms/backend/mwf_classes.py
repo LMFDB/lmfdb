@@ -363,6 +363,9 @@ import sage
 
 
 def pretty_coeff(c, digits=10, prec=1e-9):
+    '''
+    Format the complex coefficient `c` for display on the website.
+    '''
     if isinstance(c, complex):
         x = c.real
         y = c.imag
@@ -372,69 +375,45 @@ def pretty_coeff(c, digits=10, prec=1e-9):
     else:
         x = c
         y = 0
-    # if y==0:
-    #    x = round(x,digits)
-    #    return x
-    ##
-    d2 = digits
-    d1 = digits + 1
 
-#    # print "d,d1,d2=",digits,d1,d2
-#    # print "x0=",x
-#    if abs(x) < 10.0 ** -digits:
-#        if x > 0:
-#            xs = "+{0:<2.1g}".format(float(x))
-#        else:
-#            xs = "{0:<3.1g}".format(float(x))
-#    else:
-#        x = round(x, digits)
-#        if x > 0:
-#            xs = "&nbsp;{x:<{width}.{digs}}".format(width=d2, digs=d2, x=float(x))
-#        elif x < 0:
-#            xs = "{x:<{width}.{digs}}".format(width=d2, digs=d1, x=float(x))
-#        # x = round(x,digits)
-#        # y = round(y,digits)
     xs = remove_small_vals(x, digits=digits, prec=prec)
     ys = remove_small_vals(y, digits=digits, prec=prec)
 
-    if xs == "0" and ys == "0":
-        return "0"
-    if ys == "0":
+    if xs == '0' and ys == '0':
+        return '&nbsp;0'
+    if ys == '0':
         return xs
-    if xs == "0":
-        return ys + "i"
+    if xs == '0':
+        return ys + 'i'
 
-#    if abs(y) < 10.0 ** -digits:
-#        if y > 0:
-#            ys = "+{0:<2.1e}".format(float(y))
-#        else:
-#            ys = "{0:<3.1e}".format(float(y))
-#    else:
-#        y = round(y, digits)
-#        if y > 0:
-#            ys = "+{y:<{width}.0{digs}}".format(width=d2, digs=d2, y=y)
-#        elif y < 0:
-#            ys = "{y:<{width}.0{digs}}".format(width=d2, digs=d1, y=y)
+    return xs + ' + ' + ys + 'i'
 
-    return xs + " + " + ys + "i"
 
 def remove_small_vals(x, digits=10, prec=1e-9):
-    d2 = digits
-    d1 = digits + 1
-    # detect if number is below precision level
+    '''
+    If |x| < prec, return 0. Otherwise, return formatted string.
+    '''
     if abs(x) < prec:
         return '0'
-    #TODO abstract as a format_number_string
     else:
-        if abs(x) < 10.0 ** -digits:
-            if x > 0:
-                xs = '{0:<2.1g}'.format(float(x))
-            else:
-                xs = '{0:<3.1g}'.format(float(x))
+        return format_num(x, digits=digits)
+
+
+def format_num(x, digits=10):
+    '''
+    Format real number x for website display.
+    '''
+    d2 = digits
+    d1 = digits + 1
+    if abs(x) < 10.0 ** -digits:
+        if x > 0:
+            xs = '{0:<2.1g}'.format(float(x))
         else:
-            x = round(x, digits)
-            if x > 0:
-                xs = '&nbsp;{x:<{width}.{digs}}'.format(width=d2, digs=d2, x=float(x))
-            elif x < 0:
-                xs = '{x:<{width}.{digs}}'.format(width=d2, digs=d1, x=float(x))
+            xs = '{0:<3.1g}'.format(float(x))
+    else:
+        x = round(x, digits)
+        if x > 0:
+            xs = '&nbsp;{x:<{width}.{digs}}'.format(width=d2, digs=d2, x=float(x))
+        elif x < 0:
+            xs = '{x:<{width}.{digs}}'.format(width=d2, digs=d1, x=float(x))
     return xs
