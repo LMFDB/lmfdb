@@ -338,7 +338,6 @@ class WebMaassForm(object):
                 if self.dim == 1:
                     for k in range(table['ncols']):
                         #cpositive and cnegative
-                        #TODO handle these precisions
                         cp = self.coeffs.get(n, 0)
                         cn = self.coeffs.get(-n, 0)
                         row.append((cp, cn))
@@ -351,7 +350,6 @@ class WebMaassForm(object):
                             cn1 = c.get(-n, None)
                             c1 = CC(c1)
                             cn1 = CC(cn1)
-                            #TODO handle these precisions
                             row.append((c1, cn1))
                             realnumc += 1
                         table['data'].append(row)
