@@ -20,14 +20,15 @@ The "dimensions" collection entries have the following fields:
                          dict with keys 'cuspidal_dim', 'new_dim' (and possibly more)
 
 """
-import re
-import os
+from sage.all import polygen, QQ, ZZ, NumberField
 
 from lmfdb.base import getDBConnection
 print "getting connection"
 C= getDBConnection()
 print "authenticating on the elliptic_curves database"
 import yaml
+import os
+import re
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
@@ -140,7 +141,7 @@ def dimtab(line, gl_or_sl = "gl"):
         'field_absdisc': field_absdisc,
         'level_label': level_label,
         'level_norm': level_norm,
-        dim-key: dim_data,
+        dim_key: dim_data,
     }
 
 def dimtabeis(line, gl_or_sl = "gl"):

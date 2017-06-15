@@ -1,7 +1,8 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Browse {{ KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi modular forms') }} </h2>
+<h2> Browse {{ KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi
+  modular forms') }} spaces </h2>
 
 <p>
 By field:
@@ -13,30 +14,33 @@ By field:
 </p>
 
 
-<h2> Search </h2>
+
+<h2> Find a specific form by label </h2>
+
+<form>
+<input type='text' name='label' placeholder='2.0.4.1-65.2-a'>
+<button type='submit'>Label</button>
+<br><span class="formexample">e.g. 2.0.4.1-65.2-a </span>
+</form>
+
+
+<p>A <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a> from the database</p>
+
+
+<h2> Search for a form </h2>
 
 <form>
 <table>
 <tr>
-<td>Field</td>  
+<td>Field</td> 
 <td><input type='text' name='field_label' placeholder='2.0.4.1' size=10>
 <td><span class="formexample"> either a field label, e.g. 2.0.4.1 for
     \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1 </span></td>
 </tr>
 <tr>
-<td>{{ KNOWL('mf.bianchi.weight', title='Weight') }}</td>
-<td><input type='text' name='weight' placeholder='2' size=10>
-<td><span class="formexample"> e.g. 2</td>
-</tr>
-<tr>
 <td>{{ KNOWL('mf.bianchi.level_norm', title='Level norm') }}</td>
 <td><input type='text' name='level_norm' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1</td>
-</tr>
-<tr>
-<td>{{ KNOWL('mf.bianchi.dimension', title='Dimension') }}</td>
-<td><input type='text' name='dimension' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1</td>
+<td><span class="formexample"> e.g. 1 or 1-100</td>
 </tr>
 <tr>
 <td>Maximum number</td>
@@ -50,14 +54,5 @@ By field:
 </table>
 </form>
 
-<h2> Find a specific form by label </h2>
-
-<form>
-<input type='text' name='label' placeholder='2.0.4.1-65.1-a'>
-<button type='submit'>Label</button>
-<br><span class="formexample">e.g. 2.0.4.1-65.1-a </span>
-</form>
-#}
-w
 
 {% endblock %}

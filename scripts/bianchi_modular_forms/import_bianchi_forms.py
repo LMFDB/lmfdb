@@ -43,6 +43,7 @@ NB 1. Both AL_eigs and hecke_eigs are indexed by the primes in standard order
      (i) sfe does not exist for HMFs
      (j) Lratio does not exist for HMFs
 """
+from sage.all import polygen, QQ, ZZ, NumberField
 import re
 import os
 
@@ -126,9 +127,7 @@ def numerify_iso_label(lab):
 
 
 def newforms(line):
-    r
-
-    """ Parses one line from a newforms file.  Returns a complete entry
+    r""" Parses one line from a newforms file.  Returns a complete entry
     for the forms collection. This is only for rational newforms of
     weight 2.
 

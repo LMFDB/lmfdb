@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 from lmfdb.base import getDBConnection
 from lmfdb.utils import make_logger
-from lmfdb.WebNumberField import nf_display_knowl, WebNumberField, field_pretty
+from lmfdb.WebNumberField import nf_display_knowl, field_pretty
 from lmfdb.ecnf.WebEllipticCurve import make_field
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label
 from lmfdb.utils import web_latex
 from flask import url_for
-
-from sage.all import QQ, polygen
 
 logger = make_logger("bmf")
 
@@ -33,8 +31,6 @@ def db_nf_fields():
     if nf_fields is None:
         nf_fields = getDBConnection().numberfields.fields
     return nf_fields
-
-from lmfdb.hilbert_modular_forms.web_HMF import construct_full_label
 
 class WebBMF(object):
     """
@@ -80,28 +76,31 @@ class WebBMF(object):
         dims = db_dims().find_one({'field_label':self.field_label})['gl2_dims']
         self.newspace_dimension = dims['2']['new_dim']
         K = self.field.K()
+        self.nap = len(self.hecke_eigs)
+        self.nap0 = min(25, self.nap)
         self.hecke_table = [[web_latex(p.norm()),
                              web_latex(p.gens_reduced()[0]),
-                             web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs)]
+                             web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.nap0])]
         level = ideal_from_label(K,self.level_label)
         badp = level.prime_factors()
         self.AL_table = [[web_latex(p.norm()),
                           web_latex(p.gens_reduced()[0]),
                           web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
-        self.properties2 = [('Base field', pretty_field),
-                            ('Weight', str(self.weight)),
-                            ('Level norm', str(self.level_norm)),
-                            ('Level', self.level_ideal),
-                            ('Label', self.label)
+        self.properties2 = [('base field', pretty_field),
+                            ('label', self.label),
+                            ('level', self.level_ideal),
+                            ('level norm', str(self.level_norm)),
+                            ('weight', str(self.weight))
                             ]
         if self.is_base_change == '?':
             self.bc = 'not determined'
         else:
-            self.bc = 'Yes' if self.is_base_change else "No"
-            self.properties2.append(('Base-change', self.bc))
+            self.bc = 'yes' if self.is_base_change else "no"
+            self.properties2.append(('base-change', self.bc))
         if self.is_CM == '?':
             self.cm = 'not determined'
         else:
             self.cm = 'Yes' if self.is_CM else "No"
-            self.properties2.append(('CM', self.cm))
-        self.friends = [('Elliptic curve isogeny class {}'.format(self.label),url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix))]
+        self.properties2.append(('CM', self.cm))
+        self.friends = [('Elliptic curve isogeny class {}'.format(self.label),url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)),
+                        ('L-function not available','')]

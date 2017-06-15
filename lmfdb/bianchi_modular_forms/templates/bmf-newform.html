@@ -1,22 +1,26 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+{% if info.err  %}
+{{info.err}}
+{% else %}
+
   <h2>  Base Field: {{data.field_knowl |safe}}  </h2>
 
   <h2>  Level: ${{ data.level_ideal }}$ of norm {{ data.level_norm }}
   (label {{data.level_label}}) </h2>
 
 
-<h2> Properties </h2>
+<h2> Form </h2>
 
 <p>
 <table>
 {% if data.dimension > 1 %}
 <tr><td> Dimension:<td> {{ data.dimension }} </tr>
 {% endif %}
-<tr><td> CM?:<td> {{data.cm}} </tr>
-<tr><td> Base-change?:<td> {{data.bc}} </tr>
-<tr><td> Parent newspace dimension:<td> {{ data.newspace_dimension }} </tr>
+<tr><td> CM:<td> {{data.cm}} </tr>
+<tr><td> base-change:<td> {{data.bc}} </tr>
+<tr><td> parent newspace dimension:<td> {{ data.newspace_dimension }} </tr>
 </table>
 </p>
 
@@ -44,6 +48,11 @@
 {% endif %}
 
   <h2>  Hecke eigenvalues  </h2>
+
+<p>
+  The database contains {{data.nap}} eigenvalues{% if data.nap0 <
+  data.nap %} of which we only show {{data.nap0}}{%endif%}.
+</p>
 
 <table class="ntdata" cellpadding=5>
 <tr>
@@ -75,5 +84,6 @@
 </form>
 #}
 
+{% endif %}
 
 {% endblock %}
