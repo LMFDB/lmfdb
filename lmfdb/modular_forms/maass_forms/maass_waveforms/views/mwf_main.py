@@ -192,9 +192,12 @@ def plot_maassform(maass_id):
     return response
 
 
-def render_one_maass_waveform_wp(info):
+def render_one_maass_waveform_wp(info, prec=1e-9):
     r"""
     Render the webpage of one Maass waveform.
+
+    The precision kwarg `prec` is passed to the coefficient table, and
+    indicates when to write zero instead of a very small number.
     """
     info["check"] = []
     DB = connect_db()
@@ -286,7 +289,7 @@ def render_one_maass_waveform_wp(info):
     # For instance, if the imaginary part is less than the precision in
     # absolute value, then it is set to 0 in set_table.
     # The value 1e-9 is chosen arbitrarily, as recommended in issue #2076.
-    info['MF'].set_table(prec=1e-9)
+    info['MF'].set_table(prec=prec)
     cols = [{"aaSorting": "asc", "sWidth": "10%", "bSortable": "true", "bSearchable": "false",
              "sType": "numeric"}]
     negc = info['MF'].table.get('negc', 0)
