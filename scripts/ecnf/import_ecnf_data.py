@@ -692,7 +692,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     else:
         count = 0
         print("inserting data one curve at a time...")
-        for val in vals[:10]:
+        for val in vals:
             #print val
             nfcurves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
             count += 1
