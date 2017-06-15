@@ -286,10 +286,11 @@ class WebMaassForm(object):
         return self._db.get_prev_maassform_id(self.level, self.character,
                                               self.weight, self.R, self._maassid)
 
-    def set_table(self, fnr=-1, cusp=0):
+    def set_table(self, fnr=-1, cusp=0, prec=1e-9):
         r"""
         Setup a table with coefficients for function nr. fnr in self,
-        at cusp nr. cusp
+        at cusp nr. cusp. If the real or imaginary parts are less than `prec`,
+        then set them to zero.
         """
         table = {'nrows': self.num_coeff}
         if fnr < 0:
@@ -318,12 +319,12 @@ class WebMaassForm(object):
                         # mwf_logger.debug("{0},{1}".format(k,c))
                         if c is not None:
                             realnumc += 1
-                            row.append(pretty_coeff(c))
+                            row.append(pretty_coeff(c, prec=prec))
                     else:
                         for j in range(self.dim):
                             c = ((self.coeffs.get(j, {})).get(0, {})).get(n, None)
                             if c is not None:
-                                row.append(pretty_coeff(c))
+                                row.append(pretty_coeff(c, prec=prec))
                                 realnumc += 1
                 table['data'].append(row)
         else:
@@ -336,6 +337,8 @@ class WebMaassForm(object):
                 row = [n]
                 if self.dim == 1:
                     for k in range(table['ncols']):
+                        #cpositive and cnegative
+                        #TODO handle these precisions
                         cp = self.coeffs.get(n, 0)
                         cn = self.coeffs.get(-n, 0)
                         row.append((cp, cn))
@@ -348,6 +351,7 @@ class WebMaassForm(object):
                             cn1 = c.get(-n, None)
                             c1 = CC(c1)
                             cn1 = CC(cn1)
+                            #TODO handle these precisions
                             row.append((c1, cn1))
                             realnumc += 1
                         table['data'].append(row)
@@ -358,7 +362,7 @@ class WebMaassForm(object):
 import sage
 
 
-def pretty_coeff(c, digits=10):
+def pretty_coeff(c, digits=10, prec=1e-9):
     if isinstance(c, complex):
         x = c.real
         y = c.imag
@@ -375,34 +379,62 @@ def pretty_coeff(c, digits=10):
     d2 = digits
     d1 = digits + 1
 
-    # print "d,d1,d2=",digits,d1,d2
-    # print "x0=",x
-    if abs(x) < 10.0 ** -digits:
-        if x > 0:
-            xs = "+{0:<2.1g}".format(float(x))
-        else:
-            xs = "{0:<3.1g}".format(float(x))
-    else:
-        x = round(x, digits)
-        if x > 0:
-            xs = "&nbsp;{x:<{width}.{digs}}".format(width=d2, digs=d2, x=float(x))
-        elif x < 0:
-            xs = "{x:<{width}.{digs}}".format(width=d2, digs=d1, x=float(x))
-        # x = round(x,digits)
-        # y = round(y,digits)
-    if y == 0:
-        return xs
-    # print "x1=",xs
-    if abs(y) < 10.0 ** -digits:
-        if y > 0:
-            ys = "+{0:<2.1e}".format(float(y))
-        else:
-            ys = "{0:<3.1e}".format(float(y))
-    else:
-        y = round(y, digits)
-        if y > 0:
-            ys = "+{y:<{width}.0{digs}}".format(width=d2, digs=d2, y=y)
-        elif y < 0:
-            ys = "{y:<{width}.0{digs}}".format(width=d2, digs=d1, y=y)
+#    # print "d,d1,d2=",digits,d1,d2
+#    # print "x0=",x
+#    if abs(x) < 10.0 ** -digits:
+#        if x > 0:
+#            xs = "+{0:<2.1g}".format(float(x))
+#        else:
+#            xs = "{0:<3.1g}".format(float(x))
+#    else:
+#        x = round(x, digits)
+#        if x > 0:
+#            xs = "&nbsp;{x:<{width}.{digs}}".format(width=d2, digs=d2, x=float(x))
+#        elif x < 0:
+#            xs = "{x:<{width}.{digs}}".format(width=d2, digs=d1, x=float(x))
+#        # x = round(x,digits)
+#        # y = round(y,digits)
+    xs = remove_small_vals(x, digits=digits, prec=prec)
+    ys = remove_small_vals(y, digits=digits, prec=prec)
 
-    return xs + ys + "i"
+    if xs == "0" and ys == "0":
+        return "0"
+    if ys == "0":
+        return xs
+    if xs == "0":
+        return ys + "i"
+
+#    if abs(y) < 10.0 ** -digits:
+#        if y > 0:
+#            ys = "+{0:<2.1e}".format(float(y))
+#        else:
+#            ys = "{0:<3.1e}".format(float(y))
+#    else:
+#        y = round(y, digits)
+#        if y > 0:
+#            ys = "+{y:<{width}.0{digs}}".format(width=d2, digs=d2, y=y)
+#        elif y < 0:
+#            ys = "{y:<{width}.0{digs}}".format(width=d2, digs=d1, y=y)
+
+    return xs + " + " + ys + "i"
+
+def remove_small_vals(x, digits=10, prec=1e-9):
+    d2 = digits
+    d1 = digits + 1
+    # detect if number is below precision level
+    if abs(x) < prec:
+        return '0'
+    #TODO abstract as a format_number_string
+    else:
+        if abs(x) < 10.0 ** -digits:
+            if x > 0:
+                xs = '{0:<2.1g}'.format(float(x))
+            else:
+                xs = '{0:<3.1g}'.format(float(x))
+        else:
+            x = round(x, digits)
+            if x > 0:
+                xs = '&nbsp;{x:<{width}.{digs}}'.format(width=d2, digs=d2, x=float(x))
+            elif x < 0:
+                xs = '{x:<{width}.{digs}}'.format(width=d2, digs=d1, x=float(x))
+    return xs

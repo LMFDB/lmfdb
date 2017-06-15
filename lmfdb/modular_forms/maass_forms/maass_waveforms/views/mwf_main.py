@@ -154,7 +154,7 @@ def render_one_maass_waveform(maass_id, **kwds):
             res = f.coeffs
         else:
             res = f.download_text()
-        
+
         strIO = StringIO.StringIO()
         strIO.write(res)
         strIO.seek(0)
@@ -242,9 +242,9 @@ def render_one_maass_waveform_wp(info):
                                                                 maass_id = prev_form_id) )
     else:
         prev_data = ('','','')
-        
+
     info['navi'] = ( prev_data, next_data )
-    
+
     info["downloads"] = [ ('All stored data of the form',
                            url_for('mwf.render_one_maass_waveform', maass_id=maass_id,
                                    download='all')),
@@ -279,7 +279,11 @@ def render_one_maass_waveform_wp(info):
         properties.append(("Possibly oldform", []))
     info['properties2'] = properties
 
-    info['MF'].set_table()
+    # The precision in set_table indicates which coefficients to set to zero.
+    # For instance, if the imaginary part is less than the precision in
+    # absolute value, then it is set to 0 in set_table.
+    # The value 1e-9 is chosen arbitrarily, as recommended in issue #2076.
+    info['MF'].set_table(prec=1e-9)
     cols = [{"aaSorting": "asc", "sWidth": "10%", "bSortable": "true", "bSearchable": "false",
              "sType": "numeric"}]
     negc = info['MF'].table.get('negc', 0)
