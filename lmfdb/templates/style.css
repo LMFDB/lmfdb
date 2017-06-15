@@ -333,6 +333,9 @@ body.knowl #header {
 .properties-body table tr:last-child td {
   padding-bottom: 7px;
 }
+.properties-body table tr:first-child td {
+  padding-top: 7px;
+}
 .properties-body .label {
   font-weight: bold;
 }
@@ -347,13 +350,22 @@ body.knowl #header {
 }
 .properties-body li {
   display: block;
-  padding: 0;
+  padding: 5px 0 0 7px;
   margin: 0;
+}
+.properties-body li:first-child {
+  padding-top: 7px;
+}
+.properties-body li:last-child {
+  padding-bottom: 5px;
 }
 .properties-body li a {
  display: block;
+/*
  padding: 5px;
+*/
 }
+
 .properties-body {
   margin: 0px;
   padding: 0px;
@@ -367,7 +379,7 @@ body.knowl #header {
   -moz-border-radius-topleft: 10px;
   margin: 0;
   margin-top: 10px;
-  padding: 5px 10px;
+  padding: 5px 9px;
   color: {{ color.properties_header_text }};
   background: {{ color.properties_header_background }};
   font-size: 14px;
