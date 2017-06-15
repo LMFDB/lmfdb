@@ -5,7 +5,16 @@
 {% if code and code[item] %}
 {% for L in code[item] %}
 {% if code[item][L] %}
+{# currently there are two uses of multiline code:
+   - either strings containing newlines and ending with a newline
+   - or arrays of lines
+   first convert the first case to the second
+#}
+{% if code[item][L] is string %}
 {% set lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]] %}
+{% else %}
+{% set lines = code[item][L] %}
+{% endif %}
 {% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
 {# keep the line below as is to avoid annoying line breaks #}
 <div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<br>{% endfor %}</div>
@@ -136,7 +145,11 @@
     <div class="properties-body">
     <ul>
         {% for text,url in entries %}
+        {% if url %}
            <li><a href="{{ url }}">{{ text }}</a></li>
+        {% else %}
+           <li>{{ text }}</li>
+        {% endif %}
         {% endfor %}
     </ul>
   </div>
@@ -156,7 +169,7 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties2 or friends or downloads or learnmore) %}
+{% if (properties2 or origins or friends or downloads or learnmore) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
@@ -181,6 +194,7 @@
       </table>
       </div>
     {% endif %}
+   {{ rightnavig("Origins", origins) }}
    {{ rightnavig("Related objects", friends) }}
    {% if navi %}
        {{ neighbors("Nearby objects", navi) }}
@@ -256,6 +270,19 @@
     {%- endblock content %}
   </div>
 </div>
+
+{% if DEBUG %}
+<div class="debug">
+<p>
+The template for this page is: {{ self._TemplateReference__context.name }}
+</p>
+{% if calling_function %}
+<p>
+The function which was called for this page is: {{calling_function}}
+</p>
+{% endif %}
+</div>
+{% endif %}
 
 <div id="footer">
     {% if credit -%}

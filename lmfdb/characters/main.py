@@ -6,7 +6,7 @@ import flask
 from flask import render_template, url_for, request, redirect
 from sage.all import gcd, randint
 from lmfdb.utils import to_dict, flash_error
-from lmfdb.WebCharacter import url_character
+from lmfdb.characters.utils import url_character
 from lmfdb.WebCharacter import WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter
 from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
 from lmfdb.WebNumberField import WebNumberField

@@ -33,7 +33,7 @@ def createLcalcfile_ver2(L, url):
     try:
         thefile += "###     type = %s\n" % L.Ltype()
         thefile += "### Data passed to lcalc wrapper, if it is used: \n"
-        thefile += "###     title = %s \n" % L.title
+        thefile += "###     title = %s \n" % L.info['title']
         thefile += "###     coefficient_type = %s \n" % L.coefficient_type
         thefile += "###     dirichlet_coefficients = %s \n" % L.dirichlet_coefficients[:50]
         thefile += "###         (here limited to 50, but in reality %s are passed )\n" % len(

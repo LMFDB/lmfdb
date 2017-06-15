@@ -95,7 +95,7 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("ec-index.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), **err_args)
+    return render_template("ec-index.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), calling_function = "ec.rational_elliptic_curves", **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -306,7 +306,7 @@ def by_triple_label(conductor,iso_label,number):
 # LMFDB or Cremona format, and also whether it is a curve label or an
 # isogeny class label, and calls the appropriate function
 
-@ec_page.route("/<label>")
+@ec_page.route("/<label>/")
 def by_ec_label(label):
     ec_logger.debug(label)
 
