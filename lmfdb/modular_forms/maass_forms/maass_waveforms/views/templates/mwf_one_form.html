@@ -107,10 +107,10 @@ table.coeffs { clear: both;}
         <th> n </th>
           {% for k in range(1,ncols)  %}
             {% if table.negc is defined and table.negc == 0 %}
-                <th colspan="1">\( c_{ {{k}} } (n) \) </td>
+                <th colspan="1">\( c_{ {{k}} } (n) \) </th>
              {% else %}
-                <th>\( c_{ {{k}} } (n) \) </td>
-                <th>\(c_{ {{k}} } (-n) \) </td>
+                <th>\( c_{ {{k}} } (n) \) </th>
+                <th>\(c_{ {{k}} } (-n) \) </th>
              {%endif%}
          {%endfor%}
      {%endif%}
