@@ -266,6 +266,19 @@
   </div>
 </div>
 
+{% if DEBUG %}
+<div>
+<p>
+The template for this page is: {{ self._TemplateReference__context.name }}
+</p>
+{% if calling_function %}
+<p>
+The function which was called for this page is: {{calling_function}}
+</p>
+{% endif %}
+</div>
+{% endif %}
+
 <div id="footer">
     {% if credit -%}
       Data computed by {{ credit|safe }}.<br />
