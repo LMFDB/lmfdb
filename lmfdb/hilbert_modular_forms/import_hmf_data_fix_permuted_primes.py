@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import os.path
-import sage.misc.preparser
-from sage.misc.preparser import preparse
+import sage.repl.preparse
+from sage.repl.preparse import preparse
 from sage.interfaces.magma import magma
 
-from sage.all import ZZ, Rationals, PolynomialRing
+from sage.all import ZZ, Rationals, PolynomialRing, Integer
 
 from lmfdb.base import getDBConnection
 print "getting connection"
@@ -32,8 +32,8 @@ def import_all_data_fix_perm_primes(n, fileprefix=None, ferrors=None, test=True)
     nstr = str(n)
 
     if fileprefix == None:
-        fileprefix = "/home/jvoight/Elements/ModFrmHilDatav1/Data/" + nstr + "/dir.tmp"
-    ff = open(fileprefix, 'r')
+        fileprefix = "/home/jvoight/Elements/ModFrmHilDatav1/Data/" + nstr 
+    ff = open(fileprefix + "/dir.tmp", 'r')
     files = ff.readlines()
     files = [f[:-1] for f in files]
 #    subprocess.call("rm dir.tmp", shell=True)
@@ -41,7 +41,7 @@ def import_all_data_fix_perm_primes(n, fileprefix=None, ferrors=None, test=True)
     files = [f for f in files if f.find('_old') == -1]
     for file_name in files:
         print("About to import data from file %s" % file_name)
-        import_data(file_name, fileprefix=fileprefix, ferrors=ferrors, test=test)
+        import_data_fix_perm_primes(file_name, fileprefix=fileprefix, ferrors=ferrors, test=test)
 
 
 def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, test=True):
@@ -55,7 +55,7 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
     # Parse field data
     v = hmff.readline()
     assert v[:9] == 'COEFFS :='
-    coeffs = eval(v[10:][:-2])
+    coeffs = eval(v[10:].split(';')[0])
     v = hmff.readline()
     assert v[:4] == 'n :='
     n = int(v[4:][:-2])
@@ -120,18 +120,19 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
         primes_resort = eval(magma.eval('Eltseq(sigma)'))
         primes_resort = [c - 1 for c in primes_resort]
 
-    primes_indices = eval(magma.eval('primes_indices'))
-    primes_str = [ideals_str[j - 1] for j in primes_indices]
-    assert len(primes_array) == len(primes_str)
-    print "...comparing..."
-    for i in range(len(primes_array)):
-        assert magma('ideal<ZF | {F!x : x in ' + primes_array[i] + '}> eq '
-                     + 'ideal<ZF | {F!x : x in ' + primes_str[i] + '}>;')
     if resort:
+        primes_indices = eval(magma.eval('primes_indices'))
+        primes_str = [ideals_str[j - 1] for j in primes_indices]
+        assert len(primes_array) == len(primes_str)
+        print "...comparing..."
+        for i in range(len(primes_array)):
+            assert magma('ideal<ZF | {F!x : x in ' + primes_array[i] + '}> eq '
+                        + 'ideal<ZF | {F!x : x in ' + primes_str[i] + '}>;')
+
         # Important also to resort the list of primes themselves!
         # not just the a_pp's
         primes_str = [primes_str[i] for i in primes_resort]
-        print("Compare primes in hmf.fields\n  %s\n with NEW primes\n  %s" % F_hmf['primes'], primes_str[:100])
+        print("Compare primes in hmf.fields\n  %s\n with NEW primes\n  %s" % (F_hmf['primes'], primes_str))
         if test:
             print("...Didn't do anything!  Just a test")
         else:
