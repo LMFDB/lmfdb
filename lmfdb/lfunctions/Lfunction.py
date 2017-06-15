@@ -466,15 +466,15 @@ class Lfunction_EC_Q(Lfunction):
         self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
         self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"  # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
         #title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
-        title_end = "an $L$-function of degree 2, weight 1, conductor %s, and trivial character" % self.conductor
+        title_end = " of degree 2, weight 1, conductor %s, and trivial character" % self.conductor
         self.credit = ''
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "ec.q"
         self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-        self.info['title_arithmetic'] = "$" + self.texname_arithmetic + "$" + ", " + title_end
-        self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
+        self.info['title_arithmetic'] = "L-function "  + title_end
+        self.info['title_analytic'] = "L-function " + title_end
         
     def ground_field(self):
         return "Q"
