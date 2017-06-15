@@ -60,7 +60,7 @@ h2.link > a {
     font-size: 120%;
     text-align: left;
     font-weight: bold;
-    color: {{color.content_text}};
+    color: {{color.a_text}};
     padding: 5px 0 5px 0;
     margin: 15px 0 10px 0;
 }
@@ -71,7 +71,7 @@ h2.link > a {
     text-align: left;
     font-weight: bold;
     padding: 5px 0 5px 0;
-    color: {{color.conent_main_3}};
+    color: {{color.a_text}};
     margin: 10px 0 5px 0;
 }
 
@@ -594,6 +594,7 @@ table {
 }
 
 table th {
+  color: {{color.a_text}};
   padding-bottom: 5px;
 }
 
