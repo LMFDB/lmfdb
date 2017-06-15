@@ -12,14 +12,14 @@
     }
 </style>
 <div>
-There are finitely many {{ KNOWL('av.isogeny_class',title='isogeny classes') }} of {{ KNOWL('ag.abelian_variety',title='abelian varieties') }} over a finite field, if the dimension and cardinality of the field are fixed.  They are classified by their {{ KNOWL('abvar.fq.weil-polynomial',title='Weil polynomial') }}, from which many invariants may be computed.
+There are finitely many {{ KNOWL('av.isogeny_class',title='isogeny classes') }} of {{ KNOWL('ag.abelian_variety',title='abelian varieties') }} over a finite field, if the {{KNOWL('ag.dimension',title='dimension')}} of the abelian variety and the cardinality of the {{ KNOWL('ag.base_field',title='base field') }} are fixed.  They are classified by their {{ KNOWL('av.fq.weil_polynomial',title='Weil polynomial') }}, from which many invariants may be computed.
 </div>
 <h2> Browse {{ KNOWL('av.isogeny_class',title='isogeny classes')}} of {{ KNOWL('ag.abelian_variety',title='abelian varieties')}} over finite fields</h2>
 <p>
 A <a href={{url_for('.random_class')}}>random isogeny class</a> from the database.
 </p>
 <p>
-<h3>By {{ KNOWL('ag.field_of_definition',title = "field of definition")}} and {{ KNOWL('ag.dimension', title="dimension")}}:</h3>
+<h3>By {{ KNOWL('ag.base_field',title='field of definition') }} and {{ KNOWL('ag.dimension', title="dimension")}}:</h3>
 {% set table = info.table %}
 <!-- check if the table is empty-->
 {% set vars = {'emptytable': true} %}
@@ -81,7 +81,7 @@ A <a href={{url_for('.random_class')}}>random isogeny class</a> from the databas
 <form>
     <table>
         <tr>
-            <td>{{ KNOWL('ag.field_of_definition',title = "cardinality of the base field") }} range:</td>
+            <td>cardinality of the {{ KNOWL('ag.base_field',title='base field') }} range:</td>
             <td><input type="text" name="table_field_range" example="2-32" value="{{info.table_field_range}}"></td>
         </tr>
         <tr>
@@ -110,7 +110,7 @@ Please enter a value or leave blank:
 <form>
     <table>
         <tr>
-            <td>{{ KNOWL('ag.field_of_definition',title = "cardinality of the base field") }}</td>
+            <td>cardinality  of the {{ KNOWL('ag.base_field',title='base field') }}</td>
             <td>
                 <input type='text' name='q' example="81" size=10 value="{{info.q}}" />
             </td>
@@ -154,7 +154,7 @@ Please enter a value or leave blank:
                 <span class="formexample"> e.g. 2 </span>
             </td>
             <td>
-                Jacobian
+                {{KNOWL('ag.jacobian',title='Jacobian')}}
             </td>
             <td>
                 <select name='jacobian'>
@@ -166,7 +166,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.fq.angle_rank',title="angle-rank") }}
+                {{ KNOWL('av.fq.angle_rank',title="angle rank") }}
             </td>
             <td>
                 <input type='text' name='angle_ranks' example="3" size=10 value="{{info.angle_ranks}}" />
@@ -175,7 +175,7 @@ Please enter a value or leave blank:
                 <span class="formexample"> e.g. 3 </span>
             </td>
             <td>
-                principally polarizable
+                {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}
             </td>
             <td>
                 <select name='polarizable'>
@@ -198,7 +198,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                initial coefficients
+                {{ KNOWL('av.fq.initial_coefficients',title='initial coefficients')}}
             </td>
             <td colspan=3>
                 <input type='text' name='initial_coefficients' example="[1,-1,3,9]" size=40 value="{{info.initial_coefficients}}" />
@@ -209,7 +209,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('ag.fq.point_count',title="point counts of the abelian variety") }}
+                {{ KNOWL('ag.fq.point_counts',title="point counts of the abelian variety") }}
             </td>
             <td colspan=3>
                 <input type='text' name='abvar_point_count' example="[75,7125]" size=40 value="{{info.abvar_point_count}}" />
@@ -220,7 +220,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.fq.curve_point_count',title="point counts of the curve") }}
+                {{ KNOWL('av.fq.curve_point_counts',title="point counts of the curve") }}
             </td>
             <td colspan=3>
                 <input type='text' name='curve_point_count' example="[9,87]" size=40 value="{{info.curve_point_count}}"/>
@@ -242,7 +242,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                number field
+                {{KNOWL('av.fq.number_field',title='number field')}}
             </td>
             <td colspan=3>
                 <input type='text' name='number_field' example="4.0.29584.2" size=40 value="{{info.number_field}}"/>

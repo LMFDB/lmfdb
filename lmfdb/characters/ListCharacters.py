@@ -4,7 +4,10 @@
 import re
 from sage.all import lcm, factor, divisors
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter
-from dirichlet_conrey import DirichletGroup_conrey
+try:
+    from dirichlet_conrey import DirichletGroup_conrey
+except:
+    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 from flask import flash
 from markupsafe import Markup
 

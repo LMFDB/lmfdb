@@ -20,38 +20,11 @@ from sage.all import prod, CC
 
 
 ## ============================================
-## Returns the id for the L-function of given group, level, sign and
-## spectral parameters. (Used for Maass forms and works for GL(n) and GSp(4).)
-## This id is used in the database as '_id' of the L-function document.
-## NOTE: SHOULD CHANGE THIS TO INCLUDE THE SIGN IN THE ID
-## ============================================
-def createLid(group, objectName, level, sign, parameters):
-    ans = group + objectName + '_' + str(level) + '_' + str(sign)
-    if group == 'GSp4':
-        knownParameters = 2
-    else:
-        knownParameters = 1
-    for index, item in enumerate(parameters):
-        if index < len(parameters) - knownParameters:
-            ans += '_'
-            toAdd = str(item)
-            ans += toAdd
-    return ans
-
-
-## ============================================
 ## Returns all the html including links to the svg-files for Maass forms
 ## of given degree (gives output for degree 3 and 4). Data is fetched from
 ## the database.
 ## ============================================
 def getAllMaassGraphHtml(degree):
-##    conn = base.getDBConnection()
-##    db = conn.Lfunctions
-##    collection = db.Lfunctions
-##    groups = collection.group(['group'], {'degree': degree},
-##                              {'csum': 0},
-##                              'function(obj,prev) { prev.csum += 1; }')
-
     if degree == 3:
         groups = [ ["GL3", [1 , 4] ] ] 
     elif degree == 4:
@@ -62,12 +35,7 @@ def getAllMaassGraphHtml(degree):
     ans = ""
     for i in range(0, len(groups)):
         g = groups[i][0]
-        # logger.debug(g)
         ans += getGroupHtml(g)
-##        levels = collection.group(['conductor'], {'degree': degree, 'group': g},
-##                                  {'csum': 0},
-##                                  'function(obj,prev) { prev.csum += 1; }')
-        # logger.debug(levels)
         for j in range(0, len(groups[i][1])):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
@@ -222,12 +190,11 @@ def getWidthAndHeight(gls):
 
 ## ============================================
 ## Returns the contents (as a string) of the svg-file for
-## the L-functions of the Maass forms for a set of given groups, levels and
-## signs (of the functional equation).
+## the L-functions of the Maass forms for a set of given groups and levels
 ## ============================================
 
 
-def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
+def paintSvgFileAll(glslist):  # list of group and level
     xfactor = 20
     yfactor = 20
     extraSpace = 20
@@ -248,7 +215,8 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
         level = gls[1]
 
         LfunctionList = collection.find(
-                {'group': group, 'conductor': level}, {'origin': True, 'root_number': True})
+                {'group': group, 'conductor': level},
+                {'origin': True, 'root_number': True})
 
         for l in LfunctionList:
             splitOrigin = l['origin'].split('/')
@@ -283,63 +251,6 @@ def paintSvgFileAllNEW(glslist):  # list of group, level, and (maybe) sign
             ans += "' style='fill:" + signtocolour(sign) + "'>"
             ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
             ans += "</circle></a>\n"
-
-    ans += "</svg>"
-    return(ans)
-
-def paintSvgFileAll(glslist):  # list of group, level, and (maybe) sign
-    index1 = 2
-    index2 = 3
-
-    xfactor = 20
-    yfactor = 20
-    extraSpace = 20
-    ticlength = 4
-    radius = 3
-
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
-
-    conn = base.getDBConnection()
-    db = conn.Lfunction
-    collection = db.LemurellMaassHighDegree
-    paralist = []
-    xMax = 0
-    yMax = 0
-    for gls in glslist:
-        if len(gls) > 2:
-            LfunctionList = collection.find(
-                {'group': gls[0], 'level': gls[1], 'sign': gls[2]}, {'_id': True, 'sign': True})
-        else:
-            LfunctionList = collection.find({'group': gls[0], 'level': gls[1]}, {'_id': True, 'sign': True})
-
-        for l in LfunctionList:
-            splitId = l['_id'].split("_")
-            paralist.append((splitId[index1], splitId[index2], l['_id'], gls[0], gls[1], l['sign']))
-            if float(splitId[index1]) > xMax:
-                xMax = float(splitId[index1])
-            if float(splitId[index2]) > yMax:
-                yMax = float(splitId[index2])
-
-    xMax = int(math.ceil(xMax))
-    yMax = int(math.ceil(yMax))
-    width = xfactor * xMax + extraSpace
-    height = yfactor * yMax + extraSpace
-
-    ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
-
-    for (x, y, lid, group, level, sign) in paralist:
-        try:
-            linkurl = url_for('.l_function_maass_gln_page', group=group, dbid=lid)
-        except Exception:  # catch when running a test
-            linkurl = lid
-        ans += "<a xlink:href='" + linkurl + "' target='_top'>\n"
-        ans += "<circle cx='" + str(float(x) * xfactor)[0:7]
-        ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
-        ans += "' r='" + str(radius)
-        ans += "' style='fill:" + signtocolour(sign) + "'>"
-        ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
-        ans += "</circle></a>\n"
 
     ans += "</svg>"
     return(ans)
@@ -611,198 +522,6 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 
     return(xmlText)
 
-
-## ===========================================
-## THIS HASN'T BEEN FINISHED AND TESTED
-## Returns the contents (as a string) of the svg-file for
-## the L-functions of holomorphic cusp forms.
-## General code to be used with plotsector routine.
-## ============================================
-def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
-    xfactor = 90
-    yfactor = 30
-    extraSpace = 20
-    ticlength = 4
-    radius = 3.3
-    xdotspacing = 0.30  # horizontal spacing of dots
-    ydotspacing = 0.11  # vertical spacing of dots
-    # colourplus = signtocolour(1) # not used
-    # colourminus = signtocolour(-1) # not used
-    maxdots = 5  # max number of dots to display
-
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
-
-    xMax = int(Nmax)
-    yMax = int(kmax)
-    width = xfactor * xMax + extraSpace
-    height = yfactor * yMax + extraSpace
-
-    # make the coordinate system
-    ans += paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength)
-    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
-
-# create appearanceinfo, common to all points
-    appearanceinfo = []
-
-# loop over levels and weights, using plotsector to put the appropriate dots at each lattice point
-    for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
-        for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
-            # lid = "(" + str(x) + "," + str(y) + ")" # not used
-            # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
-            WS = WebModFormSpace(level = x, weight = y)  # space of modular forms of weight y, level x
-            galois_orbits = WS.hecke_orbits   # make a list of Galois orbits
-            numlabels = len(galois_orbits)  # one label per Galois orbit
-            thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
-            # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) (not used)
-            # countminus = 0   # count how many Galois orbits have sign Minus (- 1) (not used)
-            # ybaseplus = y  # baseline y-coord for plus cases (not used)
-            # ybaseminus = y  # baseline y-coord for minus cases (not used)
-            # numpluslabels = 0 # not used
-            # numminuslabels = 0 # not used
-# plotsector requires three dictionaries: dimensioninfo, appearanceinfo, and urlinfo
-# create dimensioninfo
-            dimensioninfo = {}
-            dimensioninfo['offset'] = [0, height]
-            dimensioninfo['scale'] = [xfactor, -1 * yfactor]
-            dimensioninfo['vertexlocation'] = [x, y]
-            dimensioninfo['maxdots'] = maxdots
-            dimensioninfo['dotspacing'] = [xdotspacing, ydotspacing]
-            dimensioninfo['edge'] = [[0, 1], [1, 0]]     # unit vectors defining edges of sector
-            # dimensioninfo['edgelength'] = [float(dimensioninfo['scale'][0])/float(Nmax), float(dimensioninfo['scale'][1])/float(kmax)] #add comment
-            dimensioninfo['edgelength'] = [0.5, 0.5]
-            dimensioninfo['dotradius'] = radius
-            dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius'] / 1.5
-            dimensioninfo['firstdotoffset'] = [0.0, 0.0]
-#
-            appearanceinfo = {}
-            # appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
-            appearanceinfo['edgewidth'] = [0, 0]  # remove the sector edges
-            appearanceinfo['edgestyle'] = 'stroke-dasharray:3,3'
-            appearanceinfo['edgecolor'] = 'rgb(202,202,102)'
-            appearanceinfo['fontsize'] = 'font-size:11px'
-            appearanceinfo['fontweight'] = ""
-#
-            urlinfo = {'base': '/L/ModularForm/GL2/Q/holomorphic?'}
-            urlinfo['space'] = {'weight': y}
-            urlinfo['space']['level'] = x
-            urlinfo['space']['character'] = 0
-#
-            # scale = 1 # not used
-            # Symmetry types: +1 or -1
-            symmetrytype = [1, -1]
-            for signtmp in symmetrytype:
-                # urlinfo['space']['orbits'] = [ [] for label in thelabels ] # initialise
-                # an empty list for each orbit
-                urlinfo['space']['orbits'] = []
-                for label in thelabels:  # looping over Galois orbit: one label per orbit
-                    # do '+' case first
-                    MF = WebNewForm(N = x, k = y, chi = 0, label = label)   # one of the Galois orbits for weight y, level x
-                    numberwithlabel = MF.degree()  # number of forms in the Galois orbit
-                    if x == 1:  # For level 1, the sign is always plus
-                        signfe = 1
-                    else:
-                        # signfe = -1
-                        frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
-                        signfe = frickeeigenvalue * (-1) ** float(y / 2)  # sign of functional equation
-                    if signfe == signtmp:  # we find an orbit with sign of "signtmp"
-                        if signfe == 1:
-                            dimensioninfo['edge'] = [[0, 1], [1, 0]]
-                                # unit vectors defining edges of sector for signfe positive
-                        else:
-                            # dimensioninfo['edge'] = [[0,1],[-1,0]]     # unit vectors defining edges
-                            # of sector for signfe negative
-                            dimensioninfo['edge'] = [[0, -1], [-1, 0]]
-                                # unit vectors defining edges of sector for signfe negative
-                        dimensioninfo['dotspacing'] = [signfe * xdotspacing, ydotspacing]
-                        dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0]
-                        signcolour = signtocolour(signfe)
-                        appearanceinfo['edgecolor'] = signcolour
-                        orbitdescriptionlist = []
-                        for n in range(numberwithlabel):
-                            orbitdescriptionlist.append({'label': label, 'number': n, 'color': signcolour})
-                        urlinfo['space']['orbits'].append(orbitdescriptionlist)
-                # urlinfo['space']['orbits'][0][0]['color'] = signtocolour(-1)
-                # appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
-                    ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
-
-    ans += "</svg>"
-    return(ans)
-
-#=====================
-
-## ============================================
-#
-#
-## ============================================
-## Returns the svg-code for a simple coordinate system.
-## width = width of the system
-## height = height of the system
-## xMax = maximum in first (x) coordinate
-## yMax = maximum in second (y) coordinate
-## xfactor = the number of pixels per unit in x
-## yfactor = the number of pixels per unit in y
-## ticlength = the length of the tickmarks
-## ============================================
-# ============================================
-
-
-def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
-    xmlText = ("<line x1='-50' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")   # draw horizontal axis
-#     xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.4, 0.7], "", "", "", 'rgb(0,0,0)')
-#    xmlText += '<text x="18" y="395" style="stroke:none" font-style = "italic";>level</text>'
-    xmlText = xmlText + ("<line x1='0' y1='" + str(
-        height) + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")  # draw vertical axis
-    xmlText += "<text x='50.0' y='491.0' font-style='italic'>level</text>"
-#
-    # xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.2, 0.7],
-    # "", 'font-size:11px', "", 'rgb(0,0,0)')
-    xmlText += "<text x='33.0' y='411.0' transform='rotate(270 33, 411)' font-style='italic'>weight</text>"
-    # xmlText += '<text x="118"  y="365" transform="rotate(90 118, 365)" style="stroke:none" font-style="italic";>weight</text>'
-    # xmlText += '<text x="118"  y="365" transform="rotate(-90 118, 365)"
-    # style="stroke:none" font-style = "italic";>weight</text>'
-    for i in range(1, xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
-
-    for i in range(1, xMax + 1, 1):
-        digitoffset = 6
-        if i < 10:
-            digitoffset = 3
-        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
-                             + str(i) + "</text>\n")
-
-        # xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
-        #                 "' y2='" + str(height) + "' x2='" +
-        #                 str(i*xfactor) +
-        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
-
-    for i in range(1, yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
-
-    for i in range(2, yMax + 1, 2):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i * yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
-
-        # if i%4==0 :  #  put dahes every four units
-        #   xmlText = xmlText + ("<line x1='0' y1='" +
-        #                 str(height - i*yfactor) + "' x2='" + str(width) +
-        #                 "' y2='" + str(height - i*yfactor) +
-        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
-
-    return(xmlText)
 
 ##================================================
 #+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1084,6 +803,200 @@ def reindex_characters(min_mod, max_mod, order_limit=12):
 ###############################################################################
 # Uncompleted code to create a more elaborate graph for cusp forms
 ###############################################################################
+
+## ===========================================
+## THIS HASN'T BEEN FINISHED AND TESTED
+## Returns the contents (as a string) of the svg-file for
+## the L-functions of holomorphic cusp forms.
+## General code to be used with plotsector routine.
+## ============================================
+def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
+    xfactor = 90
+    yfactor = 30
+    extraSpace = 20
+    ticlength = 4
+    radius = 3.3
+    xdotspacing = 0.30  # horizontal spacing of dots
+    ydotspacing = 0.11  # vertical spacing of dots
+    # colourplus = signtocolour(1) # not used
+    # colourminus = signtocolour(-1) # not used
+    maxdots = 5  # max number of dots to display
+
+    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
+    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
+
+    xMax = int(Nmax)
+    yMax = int(kmax)
+    width = xfactor * xMax + extraSpace
+    height = yfactor * yMax + extraSpace
+
+    # make the coordinate system
+    ans += paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength)
+    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+
+# create appearanceinfo, common to all points
+    appearanceinfo = []
+
+# loop over levels and weights, using plotsector to put the appropriate dots at each lattice point
+    for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
+        for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
+            # lid = "(" + str(x) + "," + str(y) + ")" # not used
+            # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
+            WS = WebModFormSpace(level = x, weight = y)  # space of modular forms of weight y, level x
+            galois_orbits = WS.hecke_orbits   # make a list of Galois orbits
+            numlabels = len(galois_orbits)  # one label per Galois orbit
+            thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
+            # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) (not used)
+            # countminus = 0   # count how many Galois orbits have sign Minus (- 1) (not used)
+            # ybaseplus = y  # baseline y-coord for plus cases (not used)
+            # ybaseminus = y  # baseline y-coord for minus cases (not used)
+            # numpluslabels = 0 # not used
+            # numminuslabels = 0 # not used
+# plotsector requires three dictionaries: dimensioninfo, appearanceinfo, and urlinfo
+# create dimensioninfo
+            dimensioninfo = {}
+            dimensioninfo['offset'] = [0, height]
+            dimensioninfo['scale'] = [xfactor, -1 * yfactor]
+            dimensioninfo['vertexlocation'] = [x, y]
+            dimensioninfo['maxdots'] = maxdots
+            dimensioninfo['dotspacing'] = [xdotspacing, ydotspacing]
+            dimensioninfo['edge'] = [[0, 1], [1, 0]]     # unit vectors defining edges of sector
+            # dimensioninfo['edgelength'] = [float(dimensioninfo['scale'][0])/float(Nmax), float(dimensioninfo['scale'][1])/float(kmax)] #add comment
+            dimensioninfo['edgelength'] = [0.5, 0.5]
+            dimensioninfo['dotradius'] = radius
+            dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius'] / 1.5
+            dimensioninfo['firstdotoffset'] = [0.0, 0.0]
+#
+            appearanceinfo = {}
+            # appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
+            appearanceinfo['edgewidth'] = [0, 0]  # remove the sector edges
+            appearanceinfo['edgestyle'] = 'stroke-dasharray:3,3'
+            appearanceinfo['edgecolor'] = 'rgb(202,202,102)'
+            appearanceinfo['fontsize'] = 'font-size:11px'
+            appearanceinfo['fontweight'] = ""
+#
+            urlinfo = {'base': '/L/ModularForm/GL2/Q/holomorphic?'}
+            urlinfo['space'] = {'weight': y}
+            urlinfo['space']['level'] = x
+            urlinfo['space']['character'] = 0
+#
+            # scale = 1 # not used
+            # Symmetry types: +1 or -1
+            symmetrytype = [1, -1]
+            for signtmp in symmetrytype:
+                # urlinfo['space']['orbits'] = [ [] for label in thelabels ] # initialise
+                # an empty list for each orbit
+                urlinfo['space']['orbits'] = []
+                for label in thelabels:  # looping over Galois orbit: one label per orbit
+                    # do '+' case first
+                    MF = WebNewForm(N = x, k = y, chi = 0, label = label)   # one of the Galois orbits for weight y, level x
+                    numberwithlabel = MF.degree()  # number of forms in the Galois orbit
+                    if x == 1:  # For level 1, the sign is always plus
+                        signfe = 1
+                    else:
+                        # signfe = -1
+                        frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
+                        signfe = frickeeigenvalue * (-1) ** float(y / 2)  # sign of functional equation
+                    if signfe == signtmp:  # we find an orbit with sign of "signtmp"
+                        if signfe == 1:
+                            dimensioninfo['edge'] = [[0, 1], [1, 0]]
+                                # unit vectors defining edges of sector for signfe positive
+                        else:
+                            # dimensioninfo['edge'] = [[0,1],[-1,0]]     # unit vectors defining edges
+                            # of sector for signfe negative
+                            dimensioninfo['edge'] = [[0, -1], [-1, 0]]
+                                # unit vectors defining edges of sector for signfe negative
+                        dimensioninfo['dotspacing'] = [signfe * xdotspacing, ydotspacing]
+                        dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0]
+                        signcolour = signtocolour(signfe)
+                        appearanceinfo['edgecolor'] = signcolour
+                        orbitdescriptionlist = []
+                        for n in range(numberwithlabel):
+                            orbitdescriptionlist.append({'label': label, 'number': n, 'color': signcolour})
+                        urlinfo['space']['orbits'].append(orbitdescriptionlist)
+                # urlinfo['space']['orbits'][0][0]['color'] = signtocolour(-1)
+                # appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
+                    ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
+
+    ans += "</svg>"
+    return(ans)
+
+#=====================
+
+## ============================================
+#
+#
+## ============================================
+## Returns the svg-code for a simple coordinate system.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
+## ============================================
+# ============================================
+
+
+def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
+    xmlText = ("<line x1='-50' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
+               "' style='stroke:rgb(0,0,0);'/>\n")   # draw horizontal axis
+#     xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.4, 0.7], "", "", "", 'rgb(0,0,0)')
+#    xmlText += '<text x="18" y="395" style="stroke:none" font-style = "italic";>level</text>'
+    xmlText = xmlText + ("<line x1='0' y1='" + str(
+        height) + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")  # draw vertical axis
+    xmlText += "<text x='50.0' y='491.0' font-style='italic'>level</text>"
+#
+    # xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.2, 0.7],
+    # "", 'font-size:11px', "", 'rgb(0,0,0)')
+    xmlText += "<text x='33.0' y='411.0' transform='rotate(270 33, 411)' font-style='italic'>weight</text>"
+    # xmlText += '<text x="118"  y="365" transform="rotate(90 118, 365)" style="stroke:none" font-style="italic";>weight</text>'
+    # xmlText += '<text x="118"  y="365" transform="rotate(-90 118, 365)"
+    # style="stroke:none" font-style = "italic";>weight</text>'
+    for i in range(1, xMax + 1):
+        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
+                             str(height - ticlength) + "' x2='" +
+                             str(i * xfactor) + "' y2='" + str(height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range(1, xMax + 1, 1):
+        digitoffset = 6
+        if i < 10:
+            digitoffset = 3
+        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='" +
+                             str(height - 2 * ticlength) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
+
+        # xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
+        #                 "' y2='" + str(height) + "' x2='" +
+        #                 str(i*xfactor) +
+        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range(1, yMax + 1):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i * yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i * yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range(2, yMax + 1, 2):
+        xmlText = xmlText + ("<text x='5' y='" +
+                             str(height - i * yfactor + 3) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
+                             str(i) + "</text>\n")
+
+        # if i%4==0 :  #  put dahes every four units
+        #   xmlText = xmlText + ("<line x1='0' y1='" +
+        #                 str(height - i*yfactor) + "' x2='" + str(width) +
+        #                 "' y2='" + str(height - i*yfactor) +
+        #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    return(xmlText)
+
+
 ## ============================================
 ## Plot the dots in a sector
 ##

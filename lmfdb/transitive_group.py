@@ -6,9 +6,62 @@ from lmfdb.base import getDBConnection
 
 from sage.all import ZZ, gap
 
-from lmfdb.utils import list_to_latex_matrix
+from lmfdb.utils import list_to_latex_matrix, display_multiset
 
 MAX_GROUP_DEGREE = 23
+
+the_db = None
+
+def db():
+    global the_db
+    if the_db is None:
+        the_db = getDBConnection()
+    return the_db
+
+def tgdb():
+    return db().transitivegroups.groups
+
+def sgdb():
+    return db().sato_tate_groups.small_groups
+
+def small_group_display_knowl(n, k, C, name=None):
+    if not name:
+        group = C.sato_tate_groups.small_groups.find_one({'label': '%d.%d'%(n,k)})
+        name = '$%s$'%group['pretty']
+    return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + name + '</a>'
+
+def small_group_label_display_knowl(label, C, name=None):
+    if not name:
+        group = C.sato_tate_groups.small_groups.find_one({'label': label})
+        name = '$%s$'%group['pretty']
+    return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
+
+def small_group_knowl_guts(gapid, C):
+    parts = gapid.split('.')
+    n = int(parts[0])
+    k = int(parts[1])
+    group = C.sato_tate_groups.small_groups.find_one({'label': str(gapid)})
+    #group = C.sato_tate_groups.small_groups.find_one()
+    inf = "Group $%s$"%str(group['pretty'])
+    inf += '&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  '
+    inf += ('' if group['cyclic'] else 'not')+' cyclic, '
+    inf += ('' if group['abelian'] else 'non-')+'abelian, '
+    inf += ('' if group['solvable'] else 'not')+' solvable'
+    inf += '<p>Order: '+str(n)
+    inf += '<br>Gap small group number: '+str(k)
+    inf += '<br>Exponent: '+str(group['exponent'])
+    inf += '<br>Perfect: '+str(group['perfect'])
+    inf += '<br>Simple: '+str(group['simple'])
+    inf += '<br>Normal subgroups: '+display_multiset(group['normal_subgroups'],small_group_label_display_knowl, C)
+    inf += '<br>Maximal subgroups: '+display_multiset(group['maximal_subgroups'], small_group_label_display_knowl, C)
+    inf += '<br>Center: '+small_group_label_display_knowl(group['center'],C)
+    inf += '<br>Derived subgroup: '+small_group_label_display_knowl(group['derived_group'],C)
+    inf += '<br>Abelianization: '+small_group_label_display_knowl(group['abelian_quotient'],C)
+    inf += '<br>Conjugacy class information: <table style="text-align: center;"><tr><th>Element Order<th>Size<th>Multiplicity'
+    for row in group['clases']:
+        inf += '<tr><td>%d<td>%d<td>%d'%(row[0],row[1],row[2])
+    inf += '</table>'
+    return inf
 
 ############  Galois group object
 
@@ -33,8 +86,7 @@ class WebGaloisGroup:
         return cls(data['label'], data)
 
     def _get_dbdata(self):
-        tgdb = getDBConnection().transitivegroups.groups
-        return tgdb.find_one({'label': self.label})
+        return tgdb().find_one({'label': self.label})
 
     def n(self):
         return self._data['n']
@@ -121,8 +173,7 @@ def trylink(n, t):
 
 def tryknowl(n, t):
     if n <= MAX_GROUP_DEGREE:
-        C = getDBConnection()
-        return group_display_knowl(n, t, C, '%dT%d' % (n, t))
+        return group_display_knowl(n, t, db(), '%dT%d' % (n, t))
     return '%dT%d' % (n, t)
 
 
@@ -204,7 +255,7 @@ def group_display_long(n, t, C):
     elif group['ab'] == 1:
         inf += ", abelian"
     elif group['solv'] == 1:
-        inf += ", non-abelian solvable"
+        inf += ", non-abelian, solvable"
     else:
         inf += ", non-solvable"
     if group['prim'] == 1:
@@ -272,7 +323,7 @@ def group_cclasses_knowl_guts(n, t, C):
     rest += '<blockquote>'
     rest += cclasses(n, t)
     rest += '</blockquote></div>'
-    return(rest)
+    return rest
 
 
 def group_character_table_knowl_guts(n, t, C):
@@ -400,24 +451,13 @@ def resolve_display(C, resolves):
         ans = 'None'
     return ans
 
-
 def group_display_inertia(code, C):
-    if str(code[1]) == "t":
-        return group_display_knowl(code[2][0], code[2][1], C)
-    ans = "Intransitive group isomorphic to "
-    if code[2] and len(code[2]) > 1:
-    #if len(code[2]) > 1:
-        ans += group_display_short(code[2][0], code[2][1], C)
-        return ans
-    ans += code[3]
+    if str(code[0]) == "t":
+        return group_display_knowl(code[1][0], code[1][1], C)
+    if code[1] == [1,1]:
+        return "Trivial"
+    ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1],C)
     return ans
-
-    #label = base_label(n, t)
-    #group = C.transitivegroups.groups.find_one({'label': label})
-    #if group['pretty']:
-    #    return group['pretty']
-    #return group['name']
-
 
 def conjclasses(g, n):
     gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
