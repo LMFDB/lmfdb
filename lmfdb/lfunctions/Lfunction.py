@@ -457,15 +457,16 @@ class Lfunction_EC_Q(Lfunction):
         self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.label)
 
         # Text for the web page
-        self.texname = "L(s,E)"
-        self.htmlname = "<em>L</em>(<em>s,E</em>)"
-        self.texname_arithmetic = "L(E,s)"
-        self.htmlname_arithmetic = "<em>L</em>(<em>E,s</em>)"
-        self.texnamecompleteds = "\\Lambda(s,E)"
-        self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(E,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-        title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
+        self.texname = "L(s)"  # "L(s,E)"
+        self.htmlname = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>s,E</em>)"
+        self.texname_arithmetic = "L(s)"  # "L(E,s)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>E,s</em>)"
+        self.texnamecompleteds = "\\Lambda(s)"  # "\\Lambda(s,E)"
+        self.texnamecompleted1ms = "\\Lambda(1-s)"  # "\\Lambda(1-s,E)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"  # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
+        #title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
+        title_end = "an $L$-function of degree 2, weight 1, conductor %s, and trivial character" % self.conductor
         self.credit = ''
 
         # Initiate the dictionary info that contains the data for the webpage
