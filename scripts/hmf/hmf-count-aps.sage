@@ -153,4 +153,3 @@ def check_all(degree, disc_bound=Infinity, dofix=False):
     for field_label in Llab:
         nbforms, nbtodo, nbfixed = check_field(field_label, dofix=dofix)
         print("Total so far: %s forms, %s needed fixing, %s fixed" % (totforms, tottodo, totfixed))
-
