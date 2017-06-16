@@ -458,7 +458,7 @@ def curves(line, verbose=False):
 
 
 
-def add_heights(data):
+def add_heights(data, verbose = False):
     r""" If data holds the data fields for a curve this returns the same
     with the heights of the points included as a new field with key
     'heights'.  It is more convenient to do this separately than while
