@@ -145,6 +145,9 @@ class WebMaassForm(object):
         if self._get_coeffs:
             self.coeffs = f.get('Coefficient', [0, 1, 0, 0, 0])
 
+            if self.coeffs != [0,1,0,0,0]:
+                self.num_coeff = len(self.coeffs)
+
             if self._get_dirichlet_c_only:
                 # if self.coeffs!=[0,1,0,0,0]:
                 if len(self.coeffs) == 1:

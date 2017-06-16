@@ -135,7 +135,38 @@ def nf_lookup(label):
     nf_lookup_table[label] = K
     return K
 
+from lmfdb.nfutils.psort import ideal_label
 
+the_labels = {}
+
+def convert_ideal_label(K, lab):
+    """An ideal label of the form N.c.d is converted to N.i.  Here N.c.d
+    defines the ideal I with Z-basis [a, c+d*w] where w is the standard
+    generator of K, N=N(I) and a=N/d.  The standard label is N.i where I is the i'th ideal of norm N in the standard ordering.
+
+    NB Only intended for use in coverting IQF labels!  To get the standard label from any ideal I just use ideal_label(I).
+    """
+    global the_labels
+    if K in the_labels:
+        if lab in the_labels[K]:
+            return the_labels[K][lab]
+        else:
+            pass
+    else:
+        the_labels[K] = {}
+
+    comps = lab.split(".")
+    # test for labels which do not need any conversion
+    if len(comps)==2:
+        return lab
+    assert len(comps)==3
+    N, c, d = [int(x) for x in comps]
+    a = N//d
+    I = K.ideal(a, c+d*K.gen())
+    newlab = ideal_label(I)
+    #print("Ideal label converted from {} to {} over {}".format(lab,newlab,K))
+    the_labels[K][lab] = newlab
+    return newlab
 
 
 
@@ -273,8 +304,18 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
         file[prefix].close()
 
 
+def convert_conductor_label(field_label, label):
+    """If the field is imaginary quadratic, calls convert_ideal_label, otherwise just return label unchanged.
+    """
+    if field_label.split(".")[:2] != ['2','0']:
+        return label
+    K = nf_lookup(field_label)
+    new_label = convert_ideal_label(K,label)
+    #print("Converting conductor label from {} to {}".format(label, new_label))
+    return new_label
 
-def curves(line):
+
+def curves(line, verbose=False):
     r""" Parses one line from a curves file.  Returns the label and a dict
     containing fields with keys 'field_label', 'degree', 'signature',
     'abs_disc', 'label', 'short_label', conductor_label',
@@ -296,7 +337,11 @@ def curves(line):
     if len(data) != 13:
         print "line %s does not have 13 fields, skipping" % line
     field_label = data[0]       # string
+    IQF_flag = field_label.split(".")[:2] == ['2','0']
+    K = nf_lookup(field_label) if IQF_flag else None
     conductor_label = data[1]   # string
+    # convert label (does nothing except for imaginary quadratic)
+    conductor_label = convert_conductor_label(field_label, conductor_label)
     iso_label = data[2]         # string
     iso_nlabel = numerify_iso_label(iso_label)         # int
     number = int(data[3])       # int
@@ -345,12 +390,15 @@ def curves(line):
     # get label of elliptic curve over Q for base_change cases (a
     # subset of Q-curves)
 
-    if q_curve:
-        # print "%s is a Q-curve, testing for base-change..." % label
+    if True:  # q_curve: now we have not precomputed Q-curve status
+              # but still want to test for base change!
+        if verbose:
+            print("testing {} for base-change...".format(label))
         E1list = E.descend_to(QQ)
         if len(E1list):
             base_change = [cremona_to_lmfdb(E1.label()) for E1 in E1list]
-            print "%s is base change of %s" % (label, base_change)
+            if verbose:
+                print "%s is base change of %s" % (label, base_change)
         else:
             base_change = []
             # print "%s is a Q-curve, but not base-change..." % label
@@ -435,7 +483,8 @@ def add_heights(data):
     gens = [E(parse_point(K,x)) for x in data['gens']]
     data['heights'] = [float(P.height()) for P in gens]
     data['reg'] = float(E.regulator_of_points(gens))
-    print("added heights %s and regulator %s to %s" % (data['heights'],data['reg'], data['label']))
+    if verbose:
+        print("added heights %s and regulator %s to %s" % (data['heights'],data['reg'], data['label']))
     return data
 
 
