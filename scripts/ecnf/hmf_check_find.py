@@ -42,7 +42,7 @@ fld=None # else after re-reading this file fld gets left set to 6.6.905177.1
 #
 
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
-from scripts.ecnf.import_ecnf_data import make_curves_line
+from scripts.ecnf.import_utils import make_curves_line
 from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
 
 def make_conductor(ecnfdata, hfield):
