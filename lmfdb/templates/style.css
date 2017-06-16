@@ -295,6 +295,17 @@ body.knowl #header {
   min-height: 700px;
 }
 
+.debug {
+    background: #FF9;
+    font-style: italic;
+}
+
+body > .debug {
+    margin: 20px;
+    padding: 2px;
+}
+
+
 /*These are the right hand side properties and sidebar stuffs.*/
 #properties {
     z-index: 99;
