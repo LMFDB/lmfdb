@@ -4,6 +4,7 @@ from sage.all import Gamma0, CC
 import bson
 
 
+
 class MaassFormTable(MFDataTable):
     r"""
     To Display one form
@@ -286,11 +287,11 @@ class WebMaassForm(object):
         return self._db.get_prev_maassform_id(self.level, self.character,
                                               self.weight, self.R, self._maassid)
 
-    def set_table(self, fnr=-1, cusp=0, prec=1e-9):
+    def set_table(self, fnr=-1, cusp=0, prec=9):
         r"""
         Setup a table with coefficients for function nr. fnr in self,
-        at cusp nr. cusp. If the real or imaginary parts are less than `prec`,
-        then set them to zero.
+        at cusp nr. cusp. If the real or imaginary parts are less than
+        1e-`prec`, then set them to zero.
         """
         table = {'nrows': self.num_coeff}
         if fnr < 0:
@@ -360,10 +361,11 @@ class WebMaassForm(object):
 import sage
 
 
-def pretty_coeff(c, digits=10, prec=1e-9):
+def pretty_coeff(c, digits=10, prec=9):
     '''
     Format the complex coefficient `c` for display on the website.
     '''
+    from lmfdb.lfunctions.Lfunctionutilities import truncatenumber
     if isinstance(c, complex):
         x = c.real
         y = c.imag
@@ -374,27 +376,20 @@ def pretty_coeff(c, digits=10, prec=1e-9):
         x = c
         y = 0
 
-    xs = remove_small_vals(x, digits=digits, prec=prec)
-    ys = remove_small_vals(y, digits=digits, prec=prec)
+    x_trunc = float(truncatenumber(x, precision=prec))
+    y_trunc = float(truncatenumber(y, precision=prec))
 
-    if xs == '0' and ys == '0':
+    xs = format_num(x_trunc, digits=digits)
+    ys = format_num(y_trunc, digits=digits)
+
+    if xs.strip() == '0' and ys.strip() == '0':
         return '&nbsp;0'
-    if ys == '0':
+    if ys.strip() == '0':
         return xs
-    if xs == '0':
+    if xs.strip() == '0':
         return ys + 'i'
 
     return xs + ' + ' + ys + 'i'
-
-
-def remove_small_vals(x, digits=10, prec=1e-9):
-    '''
-    If |x| < prec, return 0. Otherwise, return formatted string.
-    '''
-    if abs(x) < prec:
-        return '0'
-    else:
-        return format_num(x, digits=digits)
 
 
 def format_num(x, digits=10):

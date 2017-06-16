@@ -192,12 +192,12 @@ def plot_maassform(maass_id):
     return response
 
 
-def render_one_maass_waveform_wp(info, prec=1e-9):
+def render_one_maass_waveform_wp(info, prec=9):
     r"""
     Render the webpage of one Maass waveform.
 
     The precision kwarg `prec` is passed to the coefficient table, and
-    indicates when to write zero instead of a very small number.
+    indicates to round to 0 when the difference is less than 1e-`prec`.
     """
     info["check"] = []
     DB = connect_db()
