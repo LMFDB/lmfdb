@@ -6,7 +6,7 @@ from lmfdb.ecnf.WebEllipticCurve import make_field
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label
 from lmfdb.utils import web_latex
 from flask import url_for
-from sage.all import QQ
+from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
 
@@ -75,8 +75,21 @@ class WebBMF(object):
         print self.label
         self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
         dims = db_dims().find_one({'field_label':self.field_label})['gl2_dims']
-        self.newspace_dimension = dims['2']['new_dim']
+        self.newspace_dimension = dims[str(self.weight)]['new_dim']
         K = self.field.K()
+
+        if self.dimension>1:
+            Qx = PolynomialRing(QQ,'x')
+            self.hecke_poly = Qx(str(self.hecke_poly))
+            F = NumberField(self.hecke_poly,'z')
+            self.hecke_poly = web_latex(self.hecke_poly)
+            def conv(ap):
+                if '?' in ap:
+                    return '?'
+                else:
+                    return F(str(ap))
+
+            self.hecke_eigs = [conv(ap) for ap in self.hecke_eigs]
         self.nap = len(self.hecke_eigs)
         self.nap0 = min(25, self.nap)
         self.hecke_table = [[web_latex(p.norm()),
@@ -84,17 +97,30 @@ class WebBMF(object):
                              web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.nap0])]
         level = ideal_from_label(K,self.level_label)
         badp = level.prime_factors()
-        self.AL_table = [[web_latex(p.norm()),
-                          web_latex(p.gens_reduced()[0]),
-                          web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
-        self.sign = "+1" if self.sfe==1 else "-1"
-        self.Lratio = QQ(self.Lratio)
-        self.anrank = "\(0\)" if self.Lratio!=0 else "\(\ge1\), odd" if self.sfe==-1 else "\(\ge2\), even" 
+        self.have_AL = self.AL_eigs[0]!='?'
+        if self.have_AL:
+            self.AL_table = [[web_latex(p.norm()),
+                              web_latex(p.gens_reduced()[0]),
+                              web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
+        self.sign = 'not determined'
+        if self.sfe == 1:
+            self.sign = "+1"
+        elif self.sfe == -1:
+            self.sign = "-1"
+
+        if self.Lratio == '?':
+            self.Lratio = "not determined"
+            self.anrank = "not determined"
+        else:
+            self.Lratio = QQ(self.Lratio)
+            self.anrank = "\(0\)" if self.Lratio!=0 else "\(\ge1\), odd" if self.sfe==-1 else "\(\ge2\), even"
+
         self.properties2 = [('base field', pretty_field),
                             ('label', self.label),
                             ('level', self.level_ideal),
                             ('level norm', str(self.level_norm)),
-                            ('weight', str(self.weight))
+                            ('weight', str(self.weight)),
+                            ('dimension', str(self.dimension))
                             ]
         if self.is_base_change == '?':
             self.bc = 'not determined'
@@ -108,5 +134,7 @@ class WebBMF(object):
         self.properties2.append(('CM', self.cm))
         self.properties2.append(('Sign', self.sign))
         self.properties2.append(('Analytic rank', self.anrank))
-        self.friends = [('Elliptic curve isogeny class {}'.format(self.label),url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)),
-                        ('L-function not available','')]
+        self.friends = []
+        if self.dimension==1:
+            self.friends += [('Elliptic curve isogeny class {}'.format(self.label),url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix))]
+        self.friends += [ ('L-function not available','')]

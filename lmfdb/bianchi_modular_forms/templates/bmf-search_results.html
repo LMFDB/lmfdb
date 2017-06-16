@@ -13,7 +13,7 @@
 {% for form in info.forms: %}
 <tr>
 <td>{{form.field_label}}</td>
-<td align='left'><a href="{{url_for('bmf.render_bmf_webpage',label=form.label)}}">
+<td align='left'><a href="{{form.url}}">
     {{form.short_label}} </a></td>
 <td>${{form.level_ideal}}$</td>
 <td>{{form.dimension}}</td>

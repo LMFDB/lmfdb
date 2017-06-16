@@ -31,7 +31,7 @@
 
 <h2>  Atkin-Lehner eigenvalues  </h2>
 
-{% if data.AL_eigs %} 
+{% if data.have_AL %} 
 <p>
 <table class="ntdata" cellpadding=5>
 <tr>
@@ -49,7 +49,7 @@
 </table>
 </p>
 {% else %}
-<p>None</P>
+<p>Not known</P>
 {% endif %}
 
   <h2>  Hecke eigenvalues  </h2>
@@ -58,6 +58,12 @@
   The database contains {{data.nap}} eigenvalues{% if data.nap0 <
   data.nap %} of which we only show {{data.nap0}}{%endif%}.
 </p>
+
+{% if data.dimension > 1 %}
+<p>
+The eigenvalues are expressed in terms of $z$ where $z$ is a root of {{data.hecke_poly}}.
+</p>
+{% endif %}
 
 <table class="ntdata" cellpadding=5>
 <tr>

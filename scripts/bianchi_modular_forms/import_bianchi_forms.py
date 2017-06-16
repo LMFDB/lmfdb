@@ -149,6 +149,10 @@ def newforms(line):
     K = field_from_label(field_label)
     field_disc = - int(field_label.split(".")[2])
     field_deg = 2
+    # Hecke field degree (=dimension)
+    hecke_poly = data[10]
+    Qx = PolynomialRing(QQ,'x')
+    dimension = int(Qx(hecke_poly).degree())
     # level
     level_label = convert_ideal_label(K, data[1])
     level_norm = int(level_label.split(".")[0])
@@ -157,6 +161,8 @@ def newforms(line):
 
     label_suffix = data[2]
     label_nsuffix = numerify_iso_label(label_suffix)
+    if dimension>1:
+        label_suffix = label_suffix+str(dimension)
     short_label = '-'.join([level_label, label_suffix])
     label = '-'.join([field_label, short_label])
     weight = int(data[4])
@@ -164,12 +170,17 @@ def newforms(line):
     if bc!='?': bc=int(bc)
     cm = data[6]
     if cm!='?': bc=int(cm)
-    sfe = int(data[7]) # sign
+    sfe = data[7] # sign
+    if sfe!='?': sfe = int(sfe) # sign
     Lratio = data[8]   # string representing rational number
-    dimension = 1
-    AL_eigs = [int(x) for x in data[9][1:-1].split(",")]
-    hecke_poly = data[10]
-    hecke_eigs = [int(x) for x in data[11][1:-1].split(",")]
+    try:
+        AL_eigs = [int(x) for x in data[9][1:-1].split(",")]
+    except ValueError:
+        AL_eigs = [x for x in data[9][1:-1].split(",")]
+    try:
+        hecke_eigs = [int(x) for x in data[11][1:-1].split(",")]
+    except ValueError:
+        hecke_eigs = [x for x in data[11][1:-1].split(",")]
 
     return label, {
         'label': label,
@@ -239,7 +250,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
         count = 0
         print("inserting data one at a time...")
         for val in vals:
-            print val
+            #print val
             forms.update_one({'label': val['label']}, {"$set": val}, upsert=True)
             count += 1
             if count % 100 == 0:

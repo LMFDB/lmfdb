@@ -66,14 +66,14 @@ def bianchi_modular_form_search(**args):
         print("parsing field {} in {}".format(field, info))
         if info.get(field):
             if field == 'weight':
-                query['weight'] = '2'
+                query['weight'] = info[field]
             elif field == 'field_label':
                 print("parsing {}".format(info[field]))
                 parse_nf_string(info,query,field,'base number field',field)
             elif field == 'label':
                 query[field] = info[field]
             elif field == 'dimension':
-                query['dimension'] = '1'
+                query['dimension'] = int(info[field])
             elif field == 'level_norm':
                 query[field] = parse_range(info[field])
             else:
@@ -111,9 +111,12 @@ def bianchi_modular_form_search(**args):
         v_clean = {}
         v_clean['field_label'] = v['field_label']
         v_clean['short_label'] = v['short_label']
+        v_clean['level_label'] = v['level_label']
+        v_clean['label_suffix'] = v['label_suffix']
         v_clean['label'] = v['label']
         v_clean['level_ideal'] = teXify_pol(v['level_ideal'])
         v_clean['dimension'] = v['dimension']
+        v_clean['url'] = url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix'])
         res_clean.append(v_clean)
 
     info['forms'] = res_clean

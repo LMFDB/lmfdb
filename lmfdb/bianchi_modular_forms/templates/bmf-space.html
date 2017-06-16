@@ -65,14 +65,17 @@ There
 {%if info.nnewforms == 1 %}
 is one rational cuspidal newform
 {%else%}
-are {{info.nnewforms}} rational cuspidal newforms
+are {{info.nnewforms}} cuspidal newforms
 {%endif%}
-at this level:
+at this level in the database:
 {%for nf in info.newforms %}
+{%- if loop.index > 0 -%}
+,
+{% endif %}
 <a href={{nf[1]}}>{{nf[0]}}</a>
 {%endfor%}
 {% else %}
-There are no rational cuspidal newforms at this level.
+There are no cuspidal newforms at this level in the database.
 {% endif %}
 
 {% endif %}
