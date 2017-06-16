@@ -38,10 +38,14 @@
 <tr align=left><td>{{KNOWL('modlmf.q_expansion', title='Coefficient')}} of <i>q<sup>n</sup></i> for <i>n=</i><input type='text' name='index_coeff' size=5 value="{{info.index_coeff}}"> is <input type='text' name='req_coeff' size=5 value="{{info.req_coeff}}">
 </td><td><button type='button' id='more_modp_button'>more</button>
 </td></tr>
+<tr>
+<td class="button"><button type='submit' size=10  value='refine'>Search again</button>
+ </td>
+</tr>
+
 </table>
 
 
-<button type='submit' size=10  value='refine'>Search again</button></td>
 </form>
 
 {% if info.err is defined %}
