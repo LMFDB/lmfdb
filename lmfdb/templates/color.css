@@ -23,6 +23,7 @@
     {% set col_search_border = col_main%}
     {% set col_main_2  = '#afa' %} /* Main link hovers*/
     {% set col_main_l  = '#bfb' %} /* Tabs*/
+    {% set col_main_b  = '#cfc' %} /* Buttons*/
     {% set col_main_lg = '#8b8' %} /* Shadow and bottom border*/
     {% set col_main_ld = '#dfd' %} /* Box background*/
     {% set col_main_ll = '#efe' %} /* Beta text*/
@@ -1045,7 +1046,8 @@
 
 
 /* Buttons */
-{% set button_background = col_main_ld %}
+{% set button_background = col_main_b %}
+{% set select_background = col_main_ll %}
 {% set button_border = col_main_lg %}
 {% set button_background_hover = col_main_l %}
 {% set button_border_hover = col_main_lg %}
