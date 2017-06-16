@@ -83,9 +83,13 @@ def makeLfromdata(L):
     # Mandatory properties
     L.algebraic = data['algebraic']
     L.degree = data['degree']
-    L.selfdual = data['self_dual']
     L.level = data['conductor']
+    central_character = data['central_character']
+    L.charactermodulus, L.characternumber = central_character.split(".")
+    L.charactermodulus = int(L.charactermodulus)
+    L.characternumber = int(L.characternumber)
     L.primitive = data['primitive']
+    L.selfdual = data['self_dual']
     if 'root_number' in data:
         L.sign = string2number(data['root_number'])
     else:

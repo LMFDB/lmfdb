@@ -33,11 +33,11 @@ class HomePageTest(LmfdbTest):
         Check that the links in Box 2 work.
         """
         homepage = self.tc.get("/").data
-        self.check(homepage,"/L/Riemann/",  '\approx -1.4603545088\]')
+        self.check(homepage,"/L/Riemann/",  'Pole at \(s=1\)')
         self.check(homepage,"/ModularForm/GL2/Q/holomorphic/1/12/1/a/", '0.2993668')
         self.check(homepage,"/L/ModularForm/GL2/Q/holomorphic/1/12/1/a/0/", 'approx 0.839345512')
         self.check(homepage,"/EllipticCurve/Q/5077/a/1", r'y^2 + y = x^{3} - 7 x + 6')
-        self.check(homepage,"/L/EllipticCurve/Q/5077.a/", 'is an elliptic curve in isogeny class 5077.a')
+        self.check(homepage,"/L/EllipticCurve/Q/5077.a/", '5077')
 
     # Box 3
     def test_box3(self):
