@@ -2,41 +2,47 @@
 
 from lmfdb import base
 import pymongo
-import bson
 from lmfdb.lfunctions import logger
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
-     import MaassDB
-
-
-def getLmaassByDatabaseId(dbid):
-    collList = [('Lfunction','LemurellMaassHighDegree'),
-                ('Lfunction','FarmerMaass'),
-                ('Lfunction','LemurellTest')]
-    dbName = ''
-    dbColl = ''
-    dbEntry = None
-    i = 0
-    # Go through all collections to find a Maass form with correct id
-    while i < len(collList) and dbEntry is None:
-        connection = base.getDBConnection()
-        db = pymongo.database.Database(connection, collList[i][0])
-        collection = pymongo.collection.Collection(db, collList[i][1])
-        logger.debug(str(collection))
-        logger.debug(dbid)
-        
-        dbEntry = collection.find_one({'_id': dbid})
-        if dbEntry is None:
-            i += 1
-        else:
-            (dbName,dbColl) = collList[i]
-
-    return [dbName, dbColl, dbEntry]
+from lmfdb.lfunctions.Lfunctionutilities import string2number
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 
 def getEllipticCurveData(label):
     connection = base.getDBConnection()
     curves = connection.elliptic_curves.curves
     return curves.find_one({'lmfdb_label': label})
     
+def getInstanceLdata(label,label_type="url"):
+    db = base.getDBConnection().Lfunctions
+    try:
+        if label_type == "url":
+            Lpointer = db.instances.find_one({'url': label})
+            if not Lpointer:
+                return None
+            Lhash = Lpointer['Lhash']
+            Ldata = db.Lfunctions.find_one({'Lhash': Lhash})
+            # do not ignore this error, if the instances record exists the
+            # Lhash should be there and we want to know if it is not
+            if not Ldata:
+                raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (label, Lhash))
+        elif label_type == "Lhash":
+            Ldata = db.Lfunctions.find_one({'Lhash': label})
+        else:
+            raise ValueError("Invalid label_type = '%s', should be 'url' or 'Lhash'" % label)
+            
+        # Need to change this so it shows the nonvanishing derivative
+        if Ldata['order_of_vanishing'] or 'leading_term' not in Ldata.keys():
+            central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
+        else:
+            central_value = [0.5 + 0.5*Ldata['motivic_weight'],Ldata['leading_term']]
+        if 'values' not in Ldata:
+            Ldata['values'] = [ central_value ]
+        else:
+            Ldata['values'] += [ central_value ]
+
+    except ValueError:
+        Ldata = None
+    return Ldata
+
 def getHmfData(label):
     connection = base.getDBConnection()
     try:
@@ -48,8 +54,13 @@ def getHmfData(label):
     return (f, F_hmf)
 
 def getMaassDb():
-    host = base.getDBConnection().host
-    port = base.getDBConnection().port
+    # NB although base.getDBConnection().PORT works it gives the
+    # default port number of 27017 and not the actual one!
+    if pymongo.version_tuple[0] < 3:
+        host = base.getDBConnection().host
+        port = base.getDBConnection().port
+    else:
+        host, port = base.getDBConnection().address
     return MaassDB(host=host, port=port)
     
 def getHgmData(label):

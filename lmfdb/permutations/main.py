@@ -3,12 +3,8 @@
 # Author: Sebastien Labbe
 
 import flask
-from lmfdb import base
-from flask import render_template, request, abort, url_for, make_response, redirect
-import os
-import re
+from flask import render_template, request, url_for, redirect
 from lmfdb.permutations import permutations_page, logger
-import sage.all
 from sage.all import Permutation, Integer
 
 def get_bread(breads=[]):

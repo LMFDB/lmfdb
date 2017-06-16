@@ -2,17 +2,11 @@
 {% block content %}
 {# Offers options to browse and search #}
 
-<p>
-This database contains {{ info.nfields }}
-{{KNOWL('nf', title='global number fields')}} of
-{{KNOWL('nf.degree', title='degree')}} $n\leq {{ info.maxdeg }}$.  The data is
-complete in a variety of ways, see 
-<a href="Discriminants">completeness of global number field data</a>
-for details.
+<div>
+{{ KNOWL_INC('dq.nf.extent') }}
+</div>
 
-</p>
-
-<h3> Browse {{KNOWL('nf', title='global number fields')}} </h3>
+<h2> Browse {{KNOWL('nf', title='global number fields')}} </h2>
 
 <ul>
 <li>
@@ -37,7 +31,32 @@ By {{KNOWL('nf.class_number', title='class number')}}:
 {% endfor %}
 </ul>
 
-<h3> Search for fields </h3>
+<p>
+A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from the database
+</p>
+
+
+<h2>Go to a specific field by {{KNOWL('nf.label',title='label')}}, 
+  {{KNOWL('nf.nickname',title='nickname')}}, or 
+  {{KNOWL('nf.defining_polynomial',title='polynomial')}}</h2>
+
+<form>
+<table border=0 cellpadding=5>
+<tr>
+<td>Field:&nbsp;&nbsp;</td>
+<td ><input type='text' name='natural' size=60 example='x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1'> </td>
+<td><button type='submit' name='search' value='Go'>Go</button></td>
+</tr>
+<tr>
+<td colspan="3" rowspan="2"><span class="formexample"> e.g.,
+ 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for
+    \(\Q(\sqrt{5})\)</span></td>
+</tr>
+</table>
+</form>
+
+
+<h2> Search for fields </h2>
 <form>
 <p>
 Enter values into one or more boxes to restrict the search.
@@ -67,11 +86,13 @@ Enter values into one or more boxes to restrict the search.
    <td><input type='text' name='ur_primes' size=10 example='2,3'>
 <span class="formexample"> e.g. 2,3</span></td>
 <td>
-<td align=left><select name='ram_quantifier'>
-  <option value='some'>some</option>
-  <option value='all'>all</option>
+<td>
+set of {{KNOWL('nf.ramified_prime', title='ramified primes')}} 
+<select name='ram_quantifier'>
+  <option value='contained'>subset of</option>
+  <option value='exactly' selected='yes'>equal to</option>
+  <option value='include'>superset of</option>
   </select>
-{{KNOWL('nf.ramified_prime', title='ramified primes')}} 
   <td><input type='text' name='ram_primes' size=10 example='2,3'>
 <span class="formexample"> e.g. 2,3</span></td>
 </tr>
@@ -82,38 +103,18 @@ Enter values into one or more boxes to restrict the search.
 <span class="formexample"> e.g. 5</span></td>
 <td>
 <td align=left>{{KNOWL('nf.ideal_class_group', title = 'class group')}} structure
-  <td><input type='text' name='class_group' size=10 example='[2,2]'>
-<span class="formexample"> e.g. [ ], [3], or [2,2]</span></td>
+  <td><input type='text' name='class_group' size=10 example='[2,4]'>
+<span class="formexample"> e.g. [ ], [3], or [2,4]</span></td>
 </tr>
 <tr>
 <td align="left" colspan="4">Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size="6" />
-</td><td>
+<tr><td>
 <button type='submit' name='search' value='Search'>Search</button></td>
-</tr>
 
 
 </table>
 </form>
 
-
-<h3>Go to a specific field by {{KNOWL('nf.label',title='label')}}, 
-  {{KNOWL('nf.nickname',title='nickname')}}, or 
-  {{KNOWL('nf.defining_polynomial',title='polynomial')}}</h3>
-
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>Field:&nbsp;&nbsp;</td>
-<td ><input type='text' name='natural' size=60 example='x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1'> </td>
-<td><button type='submit' name='search' value='Go'>Go</button></td>
-</tr>
-<tr>
-<td colspan="3" rowspan="2"><span class="formexample"> e.g.,
- 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for
-    \(\Q(\sqrt{5})\)</span></td>
-</tr>
-</table>
-</form>
 
 
 {% endblock %}

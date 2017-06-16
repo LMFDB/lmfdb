@@ -1,0 +1,74 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<p>Data from extensive computations on class groups
+of quadratic imaginary fields is available below.
+
+It is organized by fundamental discriminant $-d$, and divided
+into four groups based on congruences:
+<ul>
+<li> $d\equiv 3\pmod 8$
+<li> $d\equiv 7\pmod 8$
+<li> $d\equiv 4\pmod {16}$
+<li> $d\equiv 8\pmod {16}$
+</ul>
+For each congruence class above, there are 4096 files, indexed from
+$k=0$ to $k=4095$.  The $k$th file contains data for 
+$k\cdot 2^{28} \leq |d| \lt (k+1)\cdot 2^{28}$.  The files are named
+accordingly, so the $k=12$ file for $d\equiv 7\pmod8$ is called
+<code>cl7mod8.12.gz</code>, the final extension because it has been
+compressed with <code>gzip</code>.  The compressed files range in size
+from 50 to 200 megabytes.
+
+<p>
+After uncompressing with <code>gzip</code>,
+files have the following format:
+<ul>
+<li>There is one line per field
+<li>Discriminants for a given file are listed in order (in absolute value)
+<li>If $-d_i$ is the $i$th discriminant for a file, line $i+1$ has the form
+<table>
+ <tr><td>$a$</td><td> $b$</td><td> $c_1 c_2 \ldots c_t$</td></tr>
+</table>
+</blockquote>
+to signify that 
+<ul>
+ <li>$d_{i+1} = d_i+m\cdot a$, ($m$ is the modulus for the file)
+ <li>$h(-d_{i+1}) = b$,
+ <li>invariant factors for the class group are $[c_1, c_2,\ldots, c_t]$.
+</ul>
+In particular, $b=\prod_{j=1}^t c_j$.
+</ul>
+<h3>Getting files</h3>
+
+<form>
+<table>
+<tr>
+<td align="right">
+$d \equiv $ 
+<td align="left">
+<select name="filenamebase">
+<option value="cl3mod8">3 (mod 8)</option>
+<option value="cl7mod8">7 (mod 8)</option>
+<option value="cl4mod16">4 (mod 16)</option>
+<option value="cl8mod16">8 (mod 16)</option>
+</select>
+<tr>
+<td align="right">
+$k = $ 
+<td align="left">
+<input type='text' name='k' size='7' example='123'>
+<span class='formexample'> integer from 0 to 4095</span>
+<tr>
+<td align="left">
+<button type="submit" name="Fetch" value="fetch"
+        onclick="$('#infomessage').text('');return true">Fetch file</button>
+</table>
+</form>
+
+</p>
+<div id='infomessage'>
+{{ info.message }}
+</div>
+
+{% endblock %}

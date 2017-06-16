@@ -3,20 +3,84 @@
 # @app.route(....)
 # @cached()
 # def func(): ...
+
 import logging
-
 import re
+import tempfile
+import random
+import os
+import time
+import sage
 
-from flask import request, make_response
+from random import randint
+from flask import request, make_response, flash, url_for, current_app
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
 
 from copy import copy
 from werkzeug import cached_property
-from flask import url_for
+from markupsafe import Markup
+
+from lmfdb.base import app
+
+import math
+import cmath
+from sage.all import latex, CC
+
+
+def flash_error(errmsg, *args):
+    """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
+    flash(Markup("Error: %s"%(errmsg%tuple(map(lambda x: "<span style='color:black'>%s</span>"%x, args)))),"error")
+
+def random_object_from_collection(collection):
+    """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
+    import pymongo
+    n = collection.rand.count()
+    if n:
+        m = collection.count()
+        if m != n:
+            current_app.logger.warning("Random object index {0}.rand is out of date ({1} != {2}), proceeding anyway.".format(collection,n,m))
+        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
+        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
+            return obj
+    if pymongo.version_tuple[0] < 3:
+        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next()
+    else:
+        # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
+        return collection.aggregate([{ '$sample': { 'size': int(1) } } ]).next()
+
+def random_value_from_collection(collection,attribute):
+    """ retrieves the value of attribute (e.g. label) from a random object in mongo db collection; uses collection.rand to improve performance if present """
+    import pymongo
+    n = collection.rand.count()
+    if n:
+        m = collection.count()
+        if m != n:
+            current_app.logger.warning("Random object index {0}.rand is out of date ({1} < {2})".format(collection,n,m))
+        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True})
+        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
+            return obj.get(attribute)
+    if pymongo.version_tuple[0] < 3:
+        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't bother optimizing this
+    else:
+        # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
+        return collection.aggregate([{ '$sample': { 'size': int(1) } }, { '$project' : {'_id':False,attribute:True}} ]).next().get(attribute)
+
+def attribute_value_counts(collection,attribute):
+    """ returns a sorted array of pairs (value,count) with count=collection.find({attribute:value}); uses collection.stats to improve peroformance if present """
+    if collection.stats.count():
+        m = collection.count()
+        stats = collection.stats.find_one({'_id':attribute},{'total':True,'counts':True})
+        if stats and 'counts' in stats:
+            # Don't use statistics that we know are out of date.
+            if stats['total'] != m:
+                current_app.logger.warning("Statistics in {0}.stats are out of date ({1} != {2}), they will not be used until they are updated.".format(collection,stats['total'],m))
+            else:
+                return stats['counts']
+    # note that pymongo will raise an error if the return value from .distinct is large than 16MB (this is a good thing)
+    return [[value,collection.find({attribute:value}).count()] for value in sorted(collection.distinct(attribute))]
 
 cache = SimpleCache()
-
 
 def cached(timeout=15 * 60, key='cache::%s::%s'):
     def decorator(f):
@@ -59,13 +123,15 @@ class LmfdbFormatter(logging.Formatter):
 
         # some colors for severity level
         if record.levelno >= logging.CRITICAL:
-            self._fmt = '\033[91m' + self._fmt
+            self._fmt = '\033[31m' + self._fmt
+        elif record.levelno >= logging.ERROR:
+            self._fmt = '\033[35m' + self._fmt
         elif record.levelno >= logging.WARNING:
-            self._fmt = '\033[93m' + self._fmt
+            self._fmt = '\033[33m' + self._fmt
         elif record.levelno <= logging.DEBUG:
-            self._fmt = '\033[94m' + self._fmt
+            self._fmt = '\033[34m' + self._fmt
         elif record.levelno <= logging.INFO:
-            self._fmt = '\033[92m' + self._fmt
+            self._fmt = '\033[32m' + self._fmt
 
         # bold, if module name matches
         if record.name == self._hl:
@@ -168,41 +234,6 @@ def orddict_to_strlist(v):
 
 
 ### this was formerly in utilities.py
-import tempfile
-import random
-import os
-import re
-import time
-
-from lmfdb.base import app
-from flask import url_for, make_response
-import sage.all
-
-###############################################################################
-## url_for modified for characters
-def url_character(**kwargs):
-    if 'type' not in kwargs:
-        return url_for('characters.render_characterNavigation')
-    elif kwargs['type'] == 'Dirichlet':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.dc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Dirichletwebpage',**kwargs)
-    elif kwargs['type'] == 'Hecke':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.hc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Heckewebpage',**kwargs)
-
-## make it available from templates
-@app.context_processor
-def ctx_characters():
-    chardata = {}
-    chardata['url_character'] = url_character
-    return chardata
-
 def to_dict(args):
     d = {}
     for key in args:
@@ -238,7 +269,6 @@ def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field=sage.rings
     from math import ceil, log
     PP = PowerSeriesRing(base_field, 'x', 1 + ceil(log(upperbound) / log(2.)))
 
-    x = PP('x')
     prime_l = prime_range(upperbound + 1)
     result = [1 for i in range(upperbound)]
     for p in prime_l:
@@ -286,18 +316,98 @@ def web_latex(x):
     if isinstance(x, (str, unicode)):
         return x
     else:
-        return "\( %s \)" % sage.all.latex(x)
+        return "\( %s \)" % latex(x)
 
+# if you just use web_latex(x) where x is a factored ideal then the
+# parentheses are doubled which does not look good!
+def web_latex_ideal_fact(x):
+    y = web_latex(x)
+    y = y.replace("(\\left(","\\left(")
+    y = y.replace("\\right))","\\right)")
+    return y
 
-def web_latex_split_on_pm(x):
+def web_latex_split_on(x, on=['+', '-']):
     if isinstance(x, (str, unicode)):
         return x
     else:
-        A = "\( %s \)" % sage.all.latex(x)
-        A = A.replace('+', '\) + \(')
-        A = A.replace('-', '\) - \(')
-        return A
+        A = "\( %s \)" % latex(x)
+        for s in on:
+            A = A.replace(s, '\) ' + s + ' \( ')
+    return A
+    
+# web_latex_split_on was not splitting polynomials, so we make an expanded version
+def web_latex_split_on_pm(x):
+    on = ['+', '-']
+ #   A = "\( %s \)" % latex(x)
+    try:
+        A = "\(" + x + "\)"  # assume we are given LaTeX to split on
+    except:
+        A = "\( %s \)" % latex(x)
 
+       # need a more clever split_on_pm that inserts left and right properly
+    A = A.replace("\\left","")
+    A = A.replace("\\right","")
+    for s in on:
+  #      A = A.replace(s, '\) ' + s + ' \( ')
+   #     A = A.replace(s, '\) ' + ' \( \mathstrut ' + s )
+        A = A.replace(s, '\)' + ' \(\mathstrut ' + s + '\mathstrut ')
+    # the above will be re-done using a more sophisticated method involving
+    # regular expressions.  Below fixes bad spacing when the current approach
+    # encounters terms like (-3+x)
+    for s in on:
+        A = A.replace('(\) \(\mathstrut '+s,'(' + s)
+    A = A.replace('( {}','(')
+    A = A.replace('(\) \(','(')
+    A = A.replace('\(+','\(\mathstrut+')
+    A = A.replace('\(-','\(\mathstrut-')
+    A = A.replace('(  ','(')
+    A = A.replace('( ','(')
+
+    return A
+    # return web_latex_split_on(x)
+
+def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
+
+    def insert_latex(s):
+        return s.group(1) + '\) \('
+
+    if isinstance(x, (str, unicode)):
+        return x
+    else:
+        A = "\( %s \)" % latex(x)
+        c = re.compile(r)
+        A = A.replace('+', '\) \( {}+ ')
+        A = A.replace('-', '\) \( {}- ')
+#        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
+#        A = A.replace('\\right)','\left.\\right)')        
+        A = A.replace('\left(','\\bigl(')
+        A = A.replace('\\right)','\\bigr)')        
+        A = c.sub(insert_latex, A)
+
+    # the above will be re-done using a more sophisticated method involving
+    # regular expressions.  Below fixes bad spacing when the current approach
+    # encounters terms like (-3+x)
+    A = A.replace('( {}','(')
+    A = A.replace('(\) \(','(')
+    A = A.replace('\(+','\(\mathstrut+')
+    A = A.replace('\(-','\(\mathstrut-')
+    A = A.replace('(  ','(')
+    A = A.replace('( ','(')
+    A = A.replace('+\) \(O','+O')
+    return A
+
+
+# make latex matrix from list of lists
+def list_to_latex_matrix(li):
+    dim = str(len(li[0]))
+    mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
+    for row in li:
+        row = [str(a) for a in row]
+        mm += ' & '.join(row)
+        mm += r'\\'
+    mm = mm[:-2] # remove final line break
+    mm += r'\end{array}\right)'
+    return mm
 
 class LinkedList(object):
     __slots__ = ('value', 'next', 'timestamp')
@@ -424,50 +534,6 @@ def image_callback(G):
     response.headers['Content-type'] = 'image/png'
     return response
 
-
-def parse_range(arg, parse_singleton=int):
-    # TODO: graceful errors
-    if type(arg) == parse_singleton:
-        return arg
-    if ',' in arg:
-        return {'$or': [parse_range(a) for a in arg.split(',')]}
-    elif '-' in arg[1:]:
-        ix = arg.index('-', 1)
-        start, end = arg[:ix], arg[ix + 1:]
-        q = {}
-        if start:
-            q['$gte'] = parse_singleton(start)
-        if end:
-            q['$lte'] = parse_singleton(end)
-        return q
-    else:
-        return parse_singleton(arg)
-
-
-# version above does not produce legal results when there is a comma
-# to deal with $or, we return [key, value]
-def parse_range2(arg, key, parse_singleton=int):
-    if type(arg) == str:
-        arg = arg.replace(' ', '')
-    if type(arg) == parse_singleton:
-        return [key, arg]
-    if ',' in arg:
-        tmp = [parse_range2(a, key, parse_singleton) for a in arg.split(',')]
-        tmp = [{a[0]: a[1]} for a in tmp]
-        return ['$or', tmp]
-    elif '-' in arg[1:]:
-        ix = arg.index('-', 1)
-        start, end = arg[:ix], arg[ix + 1:]
-        q = {}
-        if start:
-            q['$gte'] = parse_singleton(start)
-        if end:
-            q['$lte'] = parse_singleton(end)
-        return [key, q]
-    else:
-        return [key, parse_singleton(arg)]
-
-
 def len_val_fn(value):
     """ This creates a SON pair of the type {len:len(value), val:value}, with the len first so lexicographic ordering works.
         WATCH OUT however as later manipulations of the database are likely to mess up this ordering if not careful.
@@ -512,20 +578,19 @@ def order_values(doc, field, sub_fields=["len", "val"]):
 def comma(x):
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
 
-# Remove whitespace for simpler parsing
-# Remove brackets to avoid tricks (so we can echo it back safely)
-
-
-def clean_input(inp):
-    return re.sub(r'[\s<>]', '', str(inp))
-
-
 def coeff_to_poly(c):
     from sage.all import PolynomialRing, QQ
     return PolynomialRing(QQ, 'x')(c)
 
-from flask import current_app
-
+def display_multiset(mset, formatter=str, *args):
+    """
+    Input mset is a list of pairs [item, multiplicity]
+    Return a string for display of the multi-set.  The
+    function formatter is a function whose first argument
+    is the item, and *args are the other arguments
+    and is applied to each item.
+    """
+    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
 
 def debug():
     """
@@ -534,3 +599,45 @@ def debug():
     don't forget to remove the debug() from your code!!!
     """
     assert current_app.debug is False, "Don't panic! You're here by request of debug()"
+
+def encode_plot(P):
+    """
+    Convert a plot object to base64-encoded png format.
+
+    The resulting object is a base64-encoded version of the png
+    formatted plot, which can be displayed in web pages with no
+    further intervention.
+    """
+    from StringIO import StringIO
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from base64 import b64encode
+    from urllib import quote
+
+    virtual_file = StringIO()
+    fig = P.matplotlib()
+    fig.set_canvas(FigureCanvasAgg(fig))
+    fig.savefig(virtual_file, format='png')
+    virtual_file.seek(0)
+    return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
+
+
+def signtocolour(sign):
+    argument = cmath.phase(CC(str(sign)))
+    r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
+    g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
+    b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
+    return("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
+
+def rgbtohex(rgb):
+    """
+    convert rgb(63,255,100) to #3fff64
+    """
+
+    r,g,b = rgb[4:-1].split(',')
+    r = int(r)
+    g = int(g)
+    b = int(b)
+
+    return "#{:02x}{:02x}{:02x}".format(r,g,b)
+
+

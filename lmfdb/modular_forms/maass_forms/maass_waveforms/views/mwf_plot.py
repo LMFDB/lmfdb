@@ -1,13 +1,16 @@
+import pymongo
 from lmfdb import base
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
      import MaassDB
+from lmfdb.utils import signtocolour
 
-def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
-                  width = 1000, heightfactor = 20):
+def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
+                  width=1000, heightfactor=20, L=""):
     ''' Returns the contents (as a string) of the svg-file for
         all Maass forms in the database.
         Takes all levels from min_level to max_level
-        Spectral parameter in [min_R, max_R]
+        Spectral parameter in [min_R, max_R] 
+        Set L="/L" to make link go to the L-function
     '''
     xMax = int(max_R)
     yMax = int(max_level)
@@ -15,7 +18,7 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
     yMin = int(min_level)
     extraSpace = 40
     length_R = xMax - xMin
-    length_level = yMax - yMin
+    length_level = yMax - yMin + 1
     if length_level < 15:
         heightfactor = heightfactor * 2
     height = length_level * heightfactor + extraSpace
@@ -24,9 +27,6 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
     ticlength = 4
     radius = 3
     xshift = extraSpace
-    color_even = 'rgb(255,0,0)'
-    color_odd = 'rgb(0,0,255)'
-    color_neither = 'rgb(0,255,0)'
 
     # Start of file and add coordinate system
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
@@ -36,31 +36,36 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight = 0, char = 1,
                         xfactor, yfactor, ticlength, xshift)
 
     # Fetch Maass forms from database
-    host = base.getDBConnection().host
-    port = base.getDBConnection().port
+    # NB although base.getDBConnection().PORT works it gives the
+    # default port number of 27017 and not the actual one!
+    if pymongo.version_tuple[0] < 3:
+        host = base.getDBConnection().host
+        port = base.getDBConnection().port
+    else:
+        host, port = base.getDBConnection().address
     db = MaassDB(host=host, port=port)
     search = {'level1': yMin, 'level2': yMax, 'char': char,
               'R1': xMin, 'R2': xMax, 'Newform' : None, 'weight' : weight}
     fields = {'Eigenvalue', 'Level', 'Symmetry'}
-    forms = db.get_Maass_forms(search, fields, verbose = 1,
-                               do_sort = False, limit = 10000)
+    forms = db.get_Maass_forms(search, fields, 
+                               do_sort=False, limit=10000)
 
     # Loop through all forms and add a clickable dot for each
     for f in forms:
-        linkurl = "/ModularForm/GL2/Q/Maass/{0}".format(f['_id'])
+        linkurl = L + "/ModularForm/GL2/Q/Maass/{0}".format(f['_id'])
         x = (f['Eigenvalue'] - xMin) * xfactor + xshift
         y = (f['Level'] - yMin + 1) * yfactor
         try:  # Shifting even slightly up and odd slightly down
             if f['Symmetry'] == 0 or f['Symmetry'] == 'even':
                 y -=  1
-                color = color_even
+                color = signtocolour(1)
             elif f['Symmetry'] == 1 or f['Symmetry'] == 'odd':
                 y += 1
-                color = color_odd
+                color = signtocolour(-1)
             else:
-                color = color_neither
+                color = signtocolour(0)
         except Exception:
-            color = color_neither
+            color = signtocolour(0)
             
         ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
         ans += "<circle cx='{0}' cy='{1}' ".format(str(x)[0:6],str(y))

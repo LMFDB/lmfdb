@@ -2,7 +2,7 @@
 {% block content %}  
 
 <table>
-  {% for user_row in users|batch(5,'') %}
+  {% for user_row in user_rows %}
   <tr>
     {% for user in user_row %}
     <td>

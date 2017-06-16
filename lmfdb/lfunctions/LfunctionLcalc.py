@@ -4,12 +4,20 @@ import math
 import time  # for printing the date on an lcalc file
 import socket  # for printing the machine used to generate the lcalc file
 from sage.all import Infinity, imag_part, real_part
-from Lfunctionutilities import splitcoeff, pair2complex
+from Lfunctionutilities import splitcoeff, pair2complex, string2number
 
 
 def parse_complex_number(z):
-    z_parsed = "(" + str(real_part(z)) + "," + str(imag_part(z)) + ")"
-    return z_parsed
+    """convert a string representing a complex number to another string looking like "(x,y)"
+    """
+    from sage.all import CC
+    try:
+        # need to convert from unicode to orginary string type
+        x,y = CC(string2number(str(z)))
+        return "({},{})".format(x,y)
+    except (TypeError, SyntaxError):
+        print("Unable to parse {} as complex number".format(z))
+        return "(0,0)"
 
 # Lcalc Version 2 ###########################################################
 
@@ -25,7 +33,7 @@ def createLcalcfile_ver2(L, url):
     try:
         thefile += "###     type = %s\n" % L.Ltype()
         thefile += "### Data passed to lcalc wrapper, if it is used: \n"
-        thefile += "###     title = %s \n" % L.title
+        thefile += "###     title = %s \n" % L.info['title']
         thefile += "###     coefficient_type = %s \n" % L.coefficient_type
         thefile += "###     dirichlet_coefficients = %s \n" % L.dirichlet_coefficients[:50]
         thefile += "###         (here limited to 50, but in reality %s are passed )\n" % len(
@@ -102,7 +110,7 @@ def createLcalcfile_ver2(L, url):
     thefile += "\n\n"
 
     thefile += "name = \"" + url.partition('/L/')[2].partition('?download')[0].strip('/') + "\"\n"
-    kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0]
+    # kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0] -- not used
     kind_of_L = url.partition('/L/')[2].partition('?download')[0].split('/')
     # thefile += str(kind_of_L) + "\n\n\n\n"
     if len(kind_of_L) > 2:
@@ -194,13 +202,13 @@ def createLcalcfile_ver2(L, url):
         else:
             period = L.coefficient_period
 
-        if hasattr(L, 'dirichlet_coefficients_unnormalized'):
-            total = min(len(L.dirichlet_coefficients_unnormalized), period - 1)
+        if hasattr(L, 'dirichlet_coefficients_arithmetic'):
+            total = min(len(L.dirichlet_coefficients_arithmetic), period - 1)
             for n in range(0, total):
                 if L.selfdual:
-                    thefile += str(L.dirichlet_coefficients_unnormalized[n])
+                    thefile += str(L.dirichlet_coefficients_arithmetic[n])
                 else:
-                    thefile += parse_complex_number(L.dirichlet_coefficients_unnormalized[n])
+                    thefile += parse_complex_number(L.dirichlet_coefficients_arithmetic[n])
                 if n < total - 1:           # We will be back
                     thefile += ","
                 if n < 2:

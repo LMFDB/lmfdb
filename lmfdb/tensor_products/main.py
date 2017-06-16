@@ -4,31 +4,23 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
-import flask
-from lmfdb.base import app, getDBConnection
-from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response
-from lmfdb.tensor_products import tensor_products_page, tensor_products_logger 
-from lmfdb.utils import to_dict
-from lmfdb.transitive_group import *
-from string import split
-from sets import Set
-from sage.all import *
-
-from lmfdb.math_classes import *
-from lmfdb.WebNumberField import *
-from lmfdb.lfunctions.Lfunctionutilities import *
-from lmfdb.lfunctions import *
+from lmfdb.base import  getDBConnection
+from flask import render_template, request, url_for
+from lmfdb.tensor_products import tensor_products_page 
 
 from galois_reps import GaloisRepresentation
-from sage.schemes.elliptic_curves.constructor import EllipticCurve
-from lmfdb.WebCharacter import *
-from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
-from lmfdb.lfunctions import *
+from sage.all import ZZ, EllipticCurve
+from lmfdb.artin_representations.main import ArtinRepresentation
+from lmfdb.WebCharacter import WebDirichletCharacter
+from lmfdb.modular_forms.elliptic_modular_forms.backend import WebNewForm
+from lmfdb.lfunctions.Lfunctionutilities import lfuncDShtml, lfuncEPtex, lfuncFEtex, specialValueString
+from lmfdb.lfunctions.main import render_lfunction_exception
 
 # The method "show" shows the page for the Lfunction of a tensor product object.  This is registered on to the tensor_products_page blueprint rather than going via the l_function blueprint, hence the idiosyncrasies.  Sorry about that.  The reason is due to a difference in implementation; the tensor products are not (currently) in the database and the current L functions framewo  
 
 def get_bread(breads=[]):
-    bc = [("Tensor products", url_for(".index"))]
+    bc = [("L-functions", url_for("l_functions.l_function_top_page")),
+          ("Tensor products", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -50,7 +42,6 @@ def navigate():
 @tensor_products_page.route("/show/")
 def show():
     args = request.args
-    bread = get_bread()
 
     objLinks = args # an immutable dict of links to objects to tp
 
@@ -67,10 +58,11 @@ def show():
         gr.lfunction()
 
         info = {}
-        info['dirichlet'] = lfuncDStex(tp, "analytic")
-        info['eulerproduct'] = lfuncEPtex(tp, "abstract")
-        info['functionalequation'] = lfuncFEtex(tp, "analytic")
-        info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
+        info['dirichlet'] = lfuncDShtml(gr, "analytic")
+        info['eulerproduct'] = lfuncEPtex(gr, "abstract")
+        info['functionalequation'] = lfuncFEtex(gr, "analytic")
+        info['functionalequationSelberg'] = lfuncFEtex(gr, "selberg")
+        info['bread'] = get_bread()
 
         return render_template('Lfunction.html', **info)
 
@@ -82,7 +74,7 @@ def show():
             tp.lfunction()
 
             info = {}
-            info['dirichlet'] = lfuncDStex(tp, "analytic")
+            info['dirichlet'] = lfuncDShtml(tp, "analytic")
             info['eulerproduct'] = lfuncEPtex(tp, "abstract")
             info['functionalequation'] = lfuncFEtex(tp, "analytic")
             info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
@@ -100,8 +92,8 @@ def show():
                 info['svwarning'] = '' 
     
             info['tpzeroslink'] = zeros(tp) 
-            info['sv1'] = specialValueString(tp, 1, '1')
-            info['sv12'] = specialValueString(tp, 0.5, '1/2')
+            info['sv_edge'] = specialValueString(tp, 1, '1')
+            info['sv_critical'] = specialValueString(tp, 0.5, '1/2')
 
 #            friends = []
 #            friends.append(('L-function of first object', url_for('.show', obj1=objLinks[0])))
@@ -109,11 +101,10 @@ def show():
 #            info['friends'] = friends
 
             info['eulerproduct'] = 'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
-
+            info['bread'] = get_bread()
             return render_template('Lfunction.html', **info)
-        except Exception as ex:
-            info = {'content': 'Sorry, there was a problem: ' + str(ex.args), 'title':'Error'}
-            return render_template('LfunctionSimple.html', **info) 
+        except (KeyError,ValueError,RuntimeError,NotImplementedError) as err:
+            return render_lfunction_exception(err)
     else:
         return render_template("not_yet_implemented.html")
 
@@ -144,10 +135,9 @@ def zeros(L):
 
 def galois_rep_from_path(p):
     C = getDBConnection()
-
     if p[0]=='EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
-        data = C.elliptic_curves.curves.find_one({'lmfdb_label':p[2]})
+        data = C.elliptic_curves.curves.find_one({'lmfdb_label':p[2]+"."+p[3]+p[4]})
         ainvs = [int(a) for a in data['ainvs']]
         E = EllipticCurve(ainvs)
         return GaloisRepresentation(E)

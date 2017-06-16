@@ -1,4 +1,5 @@
 {% extends 'homepage.html' %}
+{% import 'color.css' as color %}
 
 {% block content %}
 
@@ -16,7 +17,7 @@ table td.params {
     font-family: serif;
     vertical-align: top;
     padding-top: 1em;
-    border-right: 2px solid #8a8;
+    border-right: 2px solid {{color.chi_border}};
 }
 .modulus a { display: inline; font-family: serif; }
 .modulus font { display: inline; font-family: serif }
@@ -28,10 +29,10 @@ table td.params {
     white-space:nowrap;}
 .chi a { display: inline; font-family: serif;}
 .primitive {
-  color:green;
+  color:{{color.chitable_primitive}};
 }
 .nonprimitive {
-    color:blue;
+    color:{{color.chitable_imprimitive}};
 }
 .heading {
     padding: 30px 30px
@@ -69,7 +70,7 @@ table td.params {
     {#<input type="hidden" name="start" value="{{start}}"/>#}
     <table border="0">
         <tr>
-            <td align=left> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}  
+            <td align=left> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}
                 <input type = 'text' name = 'modulus' size=10 value={{modulus}}>
             </td>
             <td align=left> {{ KNOWL('character.dirichlet.conductor', title="conductor") }} 
@@ -113,11 +114,11 @@ table td.params {
     {% for chi in l %}
     <tr class="{{ row_class.next() }}">
       <td class="modulus" align="center">
-        <a href="{{url_character(type='Dirichlet', modulus=chi[2], number=chi[0])}}" title="{{loop.index}}">
+        <a href="{{url_for('characters.render_Dirichletwebpage', modulus=chi[2], number=chi[0])}}" title="{{loop.index}}">
           {% if chi[5] == True %}
-          <font color="green">
+          <font color="{{color.chitable_primitive}}">
             {% else %}
-            <font color="blue">
+            <font color="{{color.chitable_imprimitive}}">
               {% endif %} 
               {% if chi[4] == 2 %}
               {{ chi[1] }}

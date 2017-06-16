@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import app, getDBConnection
+from lmfdb.base import app
 from lmfdb.utils import make_logger
 from flask import Blueprint
 
@@ -15,5 +15,6 @@ def body_class():
     return {'body_class': 'tensor_products'}
 
 import main
+assert main #silence pyflakes
 
 app.register_blueprint(tensor_products_page, url_prefix="/TensorProducts")

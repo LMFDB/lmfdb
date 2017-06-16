@@ -1,0 +1,144 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<p>
+The database currently contains {{info["counts"]["ncurves_c"]}} <a title="Genus 2 curves [g2c.g2curve]" knowl="g2c.g2curve" kwargs="">genus 2 curves</a> over $\Q$
+of <a title="Genus 2 curves [g2c.abs_discriminant]" knowl="g2c.abs_discriminant" kwargs="">absolute discriminant</a> up to {{info["counts"]["max_D_c"]}}.
+Here are some <a href={{info["stats_url"]}}>further statistics</a>.
+</p>
+
+<h2> Browse {{ KNOWL('g2c.g2curve', title='genus 2 curves over $\Q$') }} </h2>
+<p>
+By {{ KNOWL('ag.conductor', title='conductor')}}:
+{% for rnge in info.conductor_list %}
+<a href="?cond={{rnge}}">{{rnge}}</a>&nbsp;
+{% endfor %}
+</p>
+
+<p>
+By {{ KNOWL('g2c.abs_discriminant', title='absolute discriminant')}}:
+{% for rnge in info.discriminant_list %}
+<a href="?abs_disc={{rnge}}">{{rnge}}</a>&nbsp;
+{% endfor %}
+</p>
+<p>
+Some of our favorite curves:
+{% for curve in info.curve_list: %}
+<a href = "{{curve.url}}"> {{curve.label}} </a>&nbsp;
+{% endfor %}
+</p>
+<p>
+A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the database.
+</p>
+<h2> Find a specific curve by {{ KNOWL('g2c.label', title='label')}} </h2>
+
+<form>
+<input type='text' name='jump' placeholder='169.a.169.1'>
+<button type='submit'>Search by label</button>
+<br><span class="formexample">e.g. 169.a.169.1 </span>
+</form>
+
+
+<h2> Search </h2>
+<form id='search' onsubmit="cleanSubmit(this.id)">
+<table>
+<tr>
+<td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
+<td><input type='text' name='cond' placeholder='169' size=10>
+<td><span class="formexample"> e.g. 169, 100-1000 </span></td>
+<td>{{ KNOWL('g2c.gl2type', title='$\GL_2$-type') }}</td>
+<td><select name='is_gl2_type' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+      </select></td>
+</tr>
+<tr>
+<td>{{ KNOWL('g2c.abs_discriminant', title='absolute discriminant') }}</td>
+<td><input type='text' name='abs_disc' placeholder='169' size=10>
+<td><span class="formexample"> e.g. 169, 0-1000</td>
+<td>{{ KNOWL('g2c.st_group', title='Sato-Tate group') }}</td>
+<td><select name='st_group' width="122" style="width: 122px">
+        <option ></option>
+    {% for G in info.st_group_list %}
+        <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+</tr>
+<tr>
+<td>{{ KNOWL('g2c.num_rat_wpts', title='rational Weierstrass points') }}</td>
+<td><input type='text' name='num_rat_wpts' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1, 0-6 </span></td>
+<td>{{KNOWL('g2c.st_group_identity_component',title='Sato-Tate identity component')}}</td>
+<td><select name='real_geom_end_alg' width="122" style="width: 122px">
+        <option ></option>
+    {% for G in info.real_geom_end_alg_list %}
+        <option value='{{G}}'>{{info.real_geom_end_alg_to_ST0_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+</tr>
+<tr>
+<td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
+<td><input type='text' name='torsion_order' placeholder='2' size=10>
+<td><span class="formexample"> e.g. 2 </span></td>
+<td>{{ KNOWL('g2c.aut_grp', title='\(\Q\)-automorphism group') }}</td>
+<td><select name='aut_grp_id' width="122" style="width: 122px">
+        <option ></option>
+    {% for G in info.aut_grp_list %}
+        <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+</tr>
+<tr>
+<td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>
+<td><input type='text' name='torsion' placeholder='[2,2,2]' size=10>
+<td><span class="formexample"> e.g. [2,2,2] </span></td>
+<td>{{ KNOWL('g2c.aut_grp', title='\(\overline{\Q}\)-automorphism group') }}</td>
+<td><select name='geom_aut_grp_id' width="122" style="width: 122px">
+        <option ></option>
+    {% for G in info.geom_aut_grp_list %}
+        <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+</tr>
+<tr>
+<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
+<td><input type='text' name='two_selmer_rank' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1 </span></td>
+<td>{{ KNOWL('g2c.locally_solvable', title='locally solvable') }}</td>
+<td><select name='locally_solvable' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+</select></td>
+</tr>
+<tr>
+<td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
+<td><input type='text' name='analytic_rank' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1 </span></td>
+<td>{{ KNOWL('g2c.has_square_sha', title='order of &#1064; is square*') }}</td>
+<td><select name='has_square_sha' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+</select></td>
+</tr>
+<tr>
+<td>Maximum number of curves to display</td>
+<td><input type='text' name='count' value=50 size=10></td>
+<td><span class="formexample"> &nbsp;</td>
+<td>{{ KNOWL('ag.geom_simple', title='geometrically simple') }}</td>
+<td><select name='is_simple_geom' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>True</option>
+                   <option value='False'>False</option>
+</select></td>
+</tr>
+<tr>
+<td><button type='submit' value='Search'>Search</button></td>
+</tr>
+</table>
+
+</form>
+
+{% endblock %}

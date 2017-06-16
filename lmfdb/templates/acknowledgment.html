@@ -1,28 +1,38 @@
 {% extends 'homepage.html' %}
-
+{% import 'color.css' as color %}
 {% block content %}
 <style>
   #contribs { overflow: hidden; }
-  #contribs > div { padding: 0 ; margin: 5px; font-size: 70%; height: 4em; border: 1px solid #dfd; float:left; width: 200px;  overflow: hidden; }
+  #contribs > div {
+  padding: 0 ;
+  margin: 5px;
+  font-size: 70%;
+  height: 4em;
+  border: 1px solid {{color.contrib_border}};
+  float:left;
+  width: 200px;
+  overflow: hidden;
+  }
   #contribs > div > div { padding-left: 5px; }
-  #contribs > div > div.name { font-weight: bold; background: #dfd; font-size: 100%; position: relative; }
+  #contribs > div > div.name {
+  font-weight: bold;
+  background: {{color.contrib_background}};
+  font-size: 100%;
+  position: relative;
+  }
   #contribs > div > div.name > a { position: absolute; right: 5px; }
-  #contribs > div > div.affil { color: #333;}
-  #contribs > div > div.notes { color: #666; }
+  #contribs > div > div.affil { color: {{color.contrib_text_affil}};}
+  #contribs > div > div.notes { color: {{color.contrib_text_notes}}; }
 </style>
 
-<h1>Contributors</h1>
-<div id="contribs">
-{% for c in contribs %}
-  <div>
-    <div class="name">{{ c.name|safe }}
-      {% if c.url -%}<a href="{{ c.url }}">www</a>{%- endif %}
-    </div>
-    {% if c.affil -%}<div class="affil">{{ c.affil|safe }}</div>{%- endif %}
-    {# {% if c.notes -%}<div class="notes">{{ c.notes|join(', ')|safe }}</div>{%- endif %} #}
-  </div>
-{% endfor %}
+<div>
+We are grateful for all of the support that has enabled the construction of the LMFDB.  
+In particular, here we acknowledge <a href="#sponsors">financial sponsors</a>, 
+<a href="#institutions">institutions</a> that have hosted workshops, semester programs, and other activities, support in the form 
+of <a href="#software">software</a> and <a href="#hosting">hardware</a>, and list the 
+<a href="#individuals">individuals</a> who have contributed to the LMFDB database or website.
 </div>
+
 <a name="sponsors"></a>
 <h1 >Sponsors</h1>
 <div>
@@ -44,62 +54,108 @@
         <a href="http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/K034383/1">EP/K034383/1</a> (2013-2019)</li>
     </ul>
     </ul>
- We have also received support in the form of workshops
-    hosted at various institutions:
+    Further support has come via the following grants.
     <ul>
-        <li><a href="http://www.institut.math.jussieu.fr/">Institut de
-        Math&eacute;matiques de Jussieu</a>, Paris</li>
-        <li><a href="http://www.msri.org">Mathematical Sciences
-        Research Institute</a>, Berkeley</li>
-        <li><a href="http://www.maths.bris.ac.uk/">University of
-        Bristol</a></li>
-        <li><a href="http://www.icms.org.uk/">International Centre for
-        Mathematical Sciences</a>, Edinburgh</li>
+    <li>Awarded to
+    the <a href="http://opendreamkit.org/">OpenDreamKit</a> project:
+    an EU Horizon 2020 European Research Infrastructure project
+    (<a href="http://cordis.europa.eu/project/rcn/198334_en.html">#676541</a>)
+  </li>
+    <li>Awarded to John Voight and Edgar Costa:
+    a <a href="http://neukom.dartmouth.edu/programs/2016compx.html">CompX Grant</A> by the <A HREF="http://neukom.dartmouth.edu">Neukom Institute</A> at Dartmouth College (2016-2017)
     </ul>
 </div>
 
-<a name="software" ></a>
+<a name="institutions"></a>    
+<h1 >Meetings</h1>
+<div>    
+ We have also received support in the form of meetings and workshops hosted at the institutions below.  
+See the <a href="{{url_for('workshops')}}">list of activities</a> for details. 
+    <ul>
+        <li><a href="http://www.imj-prg.fr/">Institut de
+        Math&eacute;matiques de Jussieu</a>, Paris</li>
+        <li><a href="http://www.msri.org">Mathematical Sciences
+        Research Institute</a>, UC Berkeley</li>
+        <li><a href="http://www.maths.bris.ac.uk/">School of
+        Mathematics</a>, University of  Bristol</li>
+        <li><a href="http://www.icms.org.uk/">International Centre for
+        Mathematical Sciences</a>, University of Edinburgh</li>
+        <li><a href="https://math.asu.edu/frontpage">
+        School of Mathematical and Statistical Sciences</a>,
+        Arizona State University
+        <li><a href="http://aimath.org">American Institute of Mathematics</a>, Palo Alto, CA</li>
+        <li><a href="http://www2.warwick.ac.uk/fac/sci/maths">Warwick
+        Mathematics Institute</a>, University of Warwick</li>
+		<li><a href="http://www.math.oregonstate.edu/">Department of Mathematics</a>, Oregon
+    	State University</li>
+    	<li><a href="https://www.ictp.it/">International Centre for Theoretical Physics</a>,
+    	Trieste, Italy
+    	<li><a href="http://icerm.brown.edu/home/">Institute for Computational
+    	and Experimental Research in Mathematics</a>, Providence, RI</li>
+    </ul>
+</div>
+
+<a name="software"></a>
 <h1>Software</h1>
 
 <div>
-    Our website is run on free open source software. We use <a href="http://www.sagemath.org">Sage</a> for
+    Our website is run on free open source software. We use <a href="http://www.sagemath.org">SageMath</a> for
     computations on the fly. Some important components used are
-        <ul>
-            <li><a href="http://pari.math.u-bordeaux.fr/">PARI</a></li>
-            <li><a href="http://homepages.warwick.ac.uk/staff/J.E.Cremona/mwrank">eclib</a></li>
-            <li><a href="http://code.google.com/p/l-calc/">lcalc</a></li>
-        </ul>
-    </ul>
+<a href="http://pari.math.u-bordeaux.fr/">PARI</a>,
+<a href="http://homepages.warwick.ac.uk/staff/J.E.Cremona/mwrank">eclib</a>,
+and
+<a href="http://code.google.com/p/l-calc/">lcalc</a>.
+
     The non-mathematical software used includes
-    <ul>
-        <li><a href="http://www.python.org">Python</a></li>
-        <li><a href="http://flask.pocoo.org/">Flask</a></li>
-        <li><a href="http://jinja.pocoo.org/">Jinja</a></li>
-        <li><a href="http://www.mongodb.org/">MongoDB</a></li>
-        <li><a href="http://api.mongodb.org/python/current/">pymongo</a></li>
-        <li><a href="http://mercurial.selenic.com">Mercurial</a></li>
-        <li><a href="http://git-scm.com">Git</a></li>
-    </ul>
+<a href="http://www.python.org">Python</a>,
+<a href="http://flask.pocoo.org/">Flask</a>,
+<a href="http://jinja.pocoo.org/">Jinja</a>,
+<a href="http://www.mongodb.org/">MongoDB</a>,
+<a href="http://api.mongodb.org/python/current/">pymongo</a>,
+<a href="https://www.mathjax.org/">MathJax</a>
+<!---<a href="http://mercurial.selenic.com">Mercurial</a>,--->
+and
+<a href="http://git-scm.com">Git</a>.
+
     Some of the data on this website was computed using other
     programs, including
-    <ul>
-      <li><a href="http://magma.maths.usyd.edu.au/magma/">Magma</a></li>
-      <li><a href="http://www.wolfram.com/mathematica/">Mathematica</a></li>
-    </ul>
-</ul>
+<a href="http://magma.maths.usyd.edu.au/magma/">Magma</a>,
+<a href="http://www.wolfram.com/mathematica/">Mathematica</a>, and
+<a href="http://www.gap-system.org/">GAP</a>.
 </div>
 
+<a name="hosting"></a>
 <h1>Hosting</h1>
 <div>
- <ul>
-  <li>William Stein's<a href="http://wstein.org/grants/screms/">
-  NSF-funded</a> cluster at University of Washington (database and
-  web server)</li>
-  <li><a href="https://github.com/LMFDB/lmfdb">GitHub</a> (source code)</li>
+The database and web server were hosted until September 2013 on William
+  Stein's <a href="http://wstein.org/grants/screms/">
+  NSF-funded</a> cluster at the University of Washington.
+
+The database and web server have been hosted since September
+  2013 on the
+  <a href="http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/K034383/1">EPSRC-funded</a>
+  clusters at the Universities of Warwick and Bristol, as well as the <a href="https://cloud.google.com/">Google Cloud Platform</a> since 
+  April 2016, funded by a <a href="http://neukom.dartmouth.edu/programs/2016compx.html">CompX</a> grant
+  from the <a href="http://neukom.dartmouth.edu/">Neukom Institute</a>.
+
+The website source code is hosted
+  at <a href="https://github.com/LMFDB/lmfdb">GitHub</a>.
 
  </ul>
 </div>
 
-
+<a name="individuals"></a>
+<h1>Contributors</h1>
+<div id="contribs">
+{% for c in contribs %}
+  <div>
+    <div class="name">{{ c.name|safe }}
+      {% if c.url -%}<a href="{{ c.url }}">www</a>{%- endif %}
+    </div>
+    {% if c.affil -%}<div class="affil">{{ c.affil|safe }}</div>{%- endif %}
+    {# {% if c.notes -%}<div class="notes">{{ c.notes|join(', ')|safe }}</div>{%- endif %} #}
+  </div>
+{% endfor %}
+</div>
 
 {% endblock %}

@@ -2,8 +2,6 @@ import sys
 
 from sage.all import DirichletGroup
 
-import pymongo
-from pymongo import Connection
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb import base

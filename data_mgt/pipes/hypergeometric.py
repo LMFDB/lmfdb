@@ -1,6 +1,4 @@
-from pipes import iterator, C
-from operator import itemgetter
-
+from pipes import C
 
 def hypergeometric_label_iterator(min_conductor = 0, max_conductor = 10**3):
     collection = C["hgm"]["motives"]

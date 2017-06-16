@@ -1,19 +1,13 @@
-import os.path
-import gzip
-import re
-import sys
-import time
-import sage.misc.preparser
-import subprocess
-from pymongo import Connection
+# -*- coding: utf-8 -*-
+from sage.misc.preparser import preparse
+from sage.interfaces.magma import magma
+from sage.all import PolynomialRing, Rationals
+from lmfdb.base import getDBConnection
+C = getDBConnection()
 
-hmf_forms = Connection(port=dbport).hmfs.forms
-hmf_forms = Connection(port=dbport).hmfs.forms
-hmf_fields = Connection(port=dbport).hmfs.fields
-hmf_fields = Connection(port=dbport).hmfs.fields
-
-fields = Connection(port=dbport).numberfields.fields
-fields = Connection(port=dbport).numberfields.fields
+hmf_forms = C.hmfs.forms
+hmf_fields = C.hmfs.fields
+fields = C.numberfields.fields
 
 P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
@@ -29,8 +23,8 @@ def qexpansion(field_label=None):
     field_label = None
 
     v = S.next()
-    while true:
-        NN_label = v["level_label"]
+    while True:
+        # NN_label = v["level_label"] # never used
         v_label = v["label"]
 
         print v_label

@@ -1,0 +1,76 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+{% set KNOWL_ID = "st_group.%s"|format(info['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+<h2> {{ KNOWL('st_group.invariants', title='Invariants') }} </h2>
+<table>
+    <tr><td>{{ KNOWL('st_group.weight', title='Weight') }}:</td><td>${{info['weight']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.degree', title='Degree') }}:</td><td>${{info['degree']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.real_dimension', title='$\mathbb{R}$-dimension') }}:</td><td>${{info['real_dimension']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.components', title='Components') }}:</td><td>${{info['components']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.ambient', title='Contained in') }}:</td><td>${{info['ambient']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.rational', title='Rational') }}:</td><td>${{info['rational']}}$</td></tr>
+</table>
+
+<h2> {{ KNOWL('st_group.identity_component', title='Identity Component') }} </h2>
+<table>
+    <tr><td>{{ KNOWL('st_group.identity_component', title='Name') }}:</td><td>${{info['st0_name']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.index', title='Index') }}:</td><td>${{info['components']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.real_dimension', title='$\\mathbb{R}$-dimension') }}:</td><td>${{info['real_dimension']}}$</td></tr>
+    <tr><td>Description:</td><td>${{info['st0_description']}}$</td></tr>
+</table>
+
+{% if info['components'] > 1 %}
+<h2> {{ KNOWL('st_group.component_group', title='Component Group') }} </h2>
+<table>
+    <tr><td>{{ KNOWL('st_group.component_group', title='Name') }}:</td><td>${{info['component_group']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.order', title='Order') }}:</td><td>${{info['components']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.abelian', title='Abelian') }}:</td><td>${{info['abelian']}}$</td></tr>
+    {% if info['numgens'] > 0 %}
+        <tr><td>{{ KNOWL('st_group.generators', title='Generators') }}:</td><td>${{info['gens']}}$</td></tr>
+    {% endif %}
+</table>
+{% endif %}
+
+{% if info['subgroups']|count or info['supgroups']|count %}
+<h2> {{ KNOWL('st_group.subsupgroups', title='Subgoups and Supergroups') }} </h2>
+<table>
+    <tr><td>{{ KNOWL('st_group.subgroups', title='Maximal Subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
+    <tr><td>{{ KNOWL('st_group.supgroups', title='Minimal Supergroups') }}:</td><td>{{info['supgroups']|safe}}</td></tr>
+</table>
+{% endif %}
+
+{% if info['moments'] %}
+<h2> {{ KNOWL('st_group.moments', title='Moment Statistics') }} </h2>
+<table border=1>
+    {% for m in info['moments'] %}
+        <tr>
+        {% for a in m %}
+            {% if m[0] == 'x' %}
+                <th align="right">${{a}}$</th>
+            {% else %}
+                <td align="right">${{a}}$</td>
+            {% endif %}
+        {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+{% if info['probabilities'] %}
+<h2> {{ KNOWL('st_group.probabilities', title='Event Probabilities') }} </h2>
+<table border=1>
+    {% for m in info['probabilities'] %}
+        <tr>
+        {% for a in m %}
+            <td align="right">${{a}}$</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+
+{% endblock %}

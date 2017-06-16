@@ -3,8 +3,8 @@
 # license: Apache 2.0
 
 
-from pymongo import *
 import base
+from pymongo import son_manipulator
 
 db = base.getDBConnection().db
 data1 = db.refdata1

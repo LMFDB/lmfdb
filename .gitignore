@@ -1,5 +1,6 @@
-password.py
+password*
 config.ini
+mongoclient.config
 
 *.pyc
 *.pyo
@@ -25,3 +26,4 @@ lmfdb/cover
 lmfdb/.coverage
 .coverage
 .DS_Store
+.idea/

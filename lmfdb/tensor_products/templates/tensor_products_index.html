@@ -1,17 +1,17 @@
 {% extends "homepage.html" %}
 {% block content %}
-<p> Please select two types of object to form the tensor product of: </p>
+<p> Please select two types of objects to form their tensor product: </p>
 <form action={{url_for(".navigate")}}>
   <select name='type1'>
-    <option value={{url_character()}}>Dirichlet Character</option>
-    <option value={{url_for('EC_toplevel')}}>Elliptic Curve</option>
+    <option value={{url_for('characters.render_characterNavigation')}}>Dirichlet Character</option>
+    <option value={{url_for('ec.rational_elliptic_curves')}}>Elliptic Curve</option>
     <option value={{url_for('emf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
     <option value={{url_for('artin_representations.index')}}>Artin representation</option>
   </select>
 
   <select name='type2'>
-    <option value={{url_character()}}>Dirichlet Character</option>
-    <option value={{url_for('EC_toplevel')}}>Elliptic Curve</option>
+    <option value={{url_for('characters.render_characterNavigation')}}>Dirichlet Character</option>
+    <option value={{url_for('ec.rational_elliptic_curves')}}>Elliptic Curve</option>
     <option value={{url_for('emf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
     <option value={{url_for('artin_representations.index')}}>Artin representation</option>
   </select>

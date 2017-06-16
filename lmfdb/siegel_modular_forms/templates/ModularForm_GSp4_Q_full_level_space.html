@@ -1,0 +1,20 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<p>This is a space of {{KNOWL('mf.siegel.vector_valued',title='vector valued Siegel modular forms')}}
+with real representation $\mathrm{Det}^{ {{info.args.k}}}\otimes\mathrm{Sym}^{ {{info.args.j}} }$.
+It contains the following subspaces:</p>
+<table>
+  {% for key in info.headers%}
+  <tr><td>{{key}}</td><td>{{info.subspace[key]}}</td></tr>
+  {% endfor %}
+</table>
+
+{% if info.samples %}
+<p> The following samples live in this space.</p>
+{% for form in info.samples %}
+<a href="{{form['url']}}">{{form['name']}}</a>&nbsp;&nbsp;
+{% endfor %}
+{% endif %}
+
+{% endblock %}

@@ -1,37 +1,43 @@
 # -*- coding: utf-8 -*-
 import sys
-import time
-import bson
-import sage.all
-from sage.all import *
+import json
+import os
+import gzip
+from sage.all import QQ
 
 from pymongo.connection import Connection
 hgm = Connection(port=37010).hgm.motives
 
-from motdata import li
-
 saving = True
-
-def makeb(n, d):
-    return bson.SON([('n', n), ('d', d)])
 
 def fix_t(t):
     tsage = QQ("%d/%d" % (t[0], t[1]))
     return [int(tsage.numerator()), int(tsage.denominator())]
 
-tot = len(li)
-print "finished importing li, number = %s" % tot
 count = 0
 
-for F in li:
-# for F in li[0:1]:
-    count += 1
-    print "%d of %d: " % (count, tot)
-    degree, weight, A, B, tnd, hodge, sign, sig, locinfo, req, a2, b2, a3, b3, a5, b5, a7, b7, ae2, be2, ae3, be3, ae5, be5, ae7, be7, coeffs, cond = F
-#    t = makeb(tnd[0], tnd[1])
+def do_import(F):
+    #print "%d of %d: " % (count, tot)
+    degree, weight, A, B, tnd, hodge, sign, sig, locinfo, req, a2, b2, a3, b3, a5, b5, a7, b7, ae2, be2, ae3, be3, ae5, be5, ae7, be7, coeffs, cond, centralval = F
     tnd = fix_t(tnd)
     A.sort()
     B.sort()
+    a2.sort()
+    a3.sort()
+    a5.sort()
+    a7.sort()
+    b2.sort()
+    b3.sort()
+    b5.sort()
+    b7.sort()
+    ae2.sort()
+    ae3.sort()
+    ae5.sort()
+    ae7.sort()
+    be2.sort()
+    be3.sort()
+    be5.sort()
+    be7.sort()
     if A[0] < B[0]:
         temp = A
         A = B
@@ -73,23 +79,22 @@ for F in li:
         'ae7':ae7,
         'be7':be7,
         'coeffs':coeffs,
-        'cond':cond
+        'cond':cond,
+        'centralval': centralval
     }
-    #index = 1
-    #is_new = True
-    #holdfield = ''
-    #for field in fields.find({'degree': d,
-    #                          'signature': data['signature'],
-    #                          'disc_abs_key': dstr}):
-    #    index += 1
-    #    if field['coeffs'] == data['coeffs']:
-    #        holdfield = field
-    #        is_new = False
-    #        break
-
-    #if is_new:
-    #print "new field"
-    #label = base_label(d, sig[0], absD, index)
-    #info = {'label': label}
     hgm.save(data)
+
+for path in sys.argv[1:]:
+    print path
+    filename = os.path.basename(path)
+    fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
+    dat = fn.read().replace('\n', ' ')
+    dat = dat.replace('>',']')
+    dat = dat.replace('<','[')
+    l = json.loads(dat)
+    for mot in l:
+        do_import(mot)
+        count += 1
+        print "Count %d"%(count)
+    fn.close()
 

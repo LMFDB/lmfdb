@@ -1,117 +1,280 @@
 Installation
 ============
 
-  * To contribute, see below on sharing your work.  To simply run a copy of the site move into a new directory and type
-```
-    git clone git@github.com:LMFDB/lmfdb.git lmfdb
-```
+* To develop and contribute new code, see below on [Sharing Your
+  Work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#code-development-and-sharing-your-work). If you **only** want to run a copy of the site,
+  move into a new directory and type
 
-  * Install dependencies, i.e. you need Sage. Inside the Sage environment `sage -sh`:
-```
-    easy_install -U flask
-    easy_install -U flask-login
-    easy_install -U pymongo
-    easy_install -U flask-markdown
-    easy_install -U flask-cache
-    easy_install -U pyyaml
-    easy_install -U unittest2
-    # optional packages, necessary for contributing:
-    easy_install -U coverage
-    easy_install -U nose
-```
-  * From the command-line:
-    `
-    sage -i gap_packages
-    ` 
-  (should check if we really need gap_packages.)
-    `
-    sage -i database_gap 
-    `
-    
-  * Regarding !MathJax: No longer necessary to install !MathJax.
+  ```
+     git clone https://github.com/LMFDB/lmfdb.git lmfdb
+  ```
 
-  `
-  ssh -C -N -L 37010:localhost:37010 mongo-user@lmfdb.warwick.ac.uk
-  ` 
-  (please send your public SSH key to Harald Schilly, Jonathan Bober or John Cremona to make it work)
+  and follow these instructions.
 
-    * -C for compression of communication
-    * -N to not open a remote shell, just a blocking command in the shell (end connection with Ctrl-C)
-  If you don't have access to this server, you can temporarily start your own mongodb server and use it locally. There is no data (obviously) but it will work.
-    * Mongo locally:
-    ` 
-    mongod --port 40000 --dbpath [db_directory] --smallfiles 
-    `
+* Make sure you have Sage (>=7.0) installed and that `sage` is available from
+  the commandline.  In particular see
+  [Sage installation](http://doc.sagemath.org/html/en/installation/source.html).
+  Also check that your version of Sage has ssl available by checking that
+  `import ssl` works on its command line. If not, then the `pip install`
+  commands below will fail. To remedy this, either install SSL globally on
+  your system or have Sage build its own local version, as mentioned
+  [here](http://doc.sagemath.org/html/en/installation/source.html#notebook-additional-features)
+  and
+  [here](http://doc.sagemath.org/html/en/installation/source.html#building-the-notebook-with-ssl-support),
+  respectively.
 
-Note: Inside Sage, you might have to update the setuptools first, i.e. ` easy_install -U setuptools `
+* Install dependencies.  This requires you to have write access to the
+  Sage installation directory, so should be no problem on a personal
+  machine, but if you are using a system-wide Sage install on a shared
+  machine, you will need ask a system administrator to do this step.
 
-Optional Parts
---------------
+   ```
+      sage -i gap_packages
+      sage -i database_gap
+      sage -i pip
+      sage -b
+      # in the 'lmfdb/' directory:
+      sage -pip install -r requirements.txt
+   ```
 
-* `dirichlet_conrey.pyx`:
-```
-goto [https://github.com/jwbober/conrey-dirichlet-characters its github page]
-download dirichlet_conrey.pyx and setup.py
-run: `sage setup.py install`
-if it doesn't compile, update sage's cython and then try again:
-    `sage -sh`
-    `easy_install -U cython`
-    `exit`
-```
+  Troubleshooting with packages.
 
-* Lfunction plots:
+  - If you have not run the site for a while you might get an error
+    with packages like
+    ```
+      ImportError: cannot import name monitoring
+    ```
+    In this case or if you need to upgrade for any reason run 
+    ```
+      sage -pip install -r requirements.txt --upgrade
+    ```
+   
+  - In case the last step fails due to some missing SSL library,
+    (this may be the case on osX) follow these steps
+    ```
+    sage -i openssl
+    sage -f python2 # takes some time
+    sage -i pyopenssl
+    sage -pip install --upgrade pip
+    sage -pip install -r requirements.txt
+    ```
 
-To get plots locally, for sage <= 6.2, need a patch
+  * [optional] Memcache.  *This step is not at all necessary and can
+    safely be ignored!* Memcache speeds up recompilation of python
+    modules during development.  Using it requires both installing the
+    appropriate package for your Operating System and installing an
+    additional python module.  The first line below needs to be run in
+    a Sage shell, and the for second you need to be a super-user to
+    install memcached if your machine does not have it.
 
-From within sage directory
-```
-     git remote add trac git://trac.sagemath.org/sage.git -t master
-     git fetch trac u/chapoton/8621 
-     git checkout -b patch8621 FETCH_HEAD
-```
+    * `easy_install -U python-memcached`
 
-Then rebuild:
+    or even better and only possible if you have the dev headers:
 
-```
-     sage -b
-```
+    * `easy_install -U pylibmc`
 
-* Memcache:
-
-```
-   ` easy_install -U python-memcached` or even better and only possible if you have the dev headers: ` easy_install -U pylibmc `
-   install *memcached* (e.g. ` apt-get install memcached `)
-   run the service at 127.0.0.1:11211
-```
+    * install *memcached* (e.g. ` apt-get install memcached `) and
+    run the service at `127.0.0.1:11211`
 
 Running
 =======
 
-Once everything is setup, `sage -python start-lmfdb.py` should do the trick, but there can be some problems running in debug mode, so you might have omit the `--debug` (`--debug` doesn't work right now, but will soon!).  Once the server is running, visit http://localhost:37777/
+* You need to connect to the lmfdb database on the machine
+  lmfdb.warwick.ac.uk, using ssh tunelling so that your local
+  machine's port 37010 (where the website code expects the database to
+  be running) maps to the same port number on the database server.
+  For this to work you must first send your public SSH key (as an
+  email attachment preferably) to Harald Schilly, Jonathan Bober or
+  John Cremona who will install it on the database server
+  lmfdb.warwick.ac.uk.  To make life easier, the necessary ssh command
+  is in the lmfdb root directory in the script warwick.sh, so just
+  type
 
-Maybe, you have to suppress loading of your local python libraries: `sage -python -s start-lmfdb.py`
+  ```
+     ./warwick.sh &
+  ```
 
-If you use a local MongoDB instance, specify its port:  `sage  -python start-lmfdb.py --debug --dbport 40000` 
+  The ampersand here makes this run in the background, so you should
+  not have to run this more than once unless you close the current
+  shell or logout.
+
+* If you don't have access to this server, you can temporarily start
+    your own mongodb server and use it locally.  There is no data
+    (obviously) but it will work.  To start mongo locally (after
+    installing mongo on your machine):
+
+    ```
+       mongod --port 37010 --dbpath [db_directory] --smallfiles
+    ```
+
+* Now you can launch the webserver like this:
+
+  ```
+     sage -python start-lmfdb.py --debug
+  ```
+
+  * The effect of the (optional) --debug is that you will be running
+  with the beta flag switched on as at beta.lmfdb.org, and also that
+  if code fails your browser will show useful debugging information.
+  Without `--debug` what you see will be more like www.lmfdb.org.
+
+* Once the server is running, visit http://localhost:37777/
+
+* You may have to suppress loading of your local python libraries: `sage -python -s start-lmfdb.py`
+
+* If you use a local MongoDB instance, specify its port:  `sage  -python start-lmfdb.py --debug --dbport 40000`
+
+* If several people are running their own version of the webserver on
+    the same machine, they cannot all use port 37777 -- if they try,
+    they can get very confused.  In such a scenario, all involved
+    should agree to using a sequence of port numbers from 37700
+    upwards and allocate one such number to each user, then add it to
+    the command line: e.g.
+
+    ```
+       sage -python ./start-lmfdb.py --debug -p 37702
+    ```
+
+    To avoid having to remember that, it is a good idea to define an
+    alias for this.  e.g. with bash you can insert the line
+
+    ```
+    function start_lmfdb () { sage -python ./start-lmfdb.py --debug -p 37702;}
+    ```
+
+    in your .bashrc file, so that all you have to type to start the
+    server is `start_lmfdb`.
+
+* When running with `--debug`, whenever a python (*.py) file changes
+      the server will reload automatically.  If you save while editing
+      at a point where such a file is not syntactically correct, the
+      server will crash and you will need to `start_lmfdb` again.   Any
+      changes to html files will not cause the server to restart, so
+      you will need to reload the pages in your borowser.  Changes in
+      the yaml files which are read only once at startup will require
+      you to manually stop the server and restart it.
 
 Troubleshooting
 ===============
 
-Sometimes the `pymongo` module is not able to connect to the database.
-It works, if you force it to an earlier version:
+If the `pymongo` module is not able to connect to the database, make
+sure that the warwick.sh script is still running.
 
-    easy_install pymongo==2.4.1
+[warning] Recently on some linux machines, users have had to install the
+contents of requirements.txt by manually.  If the above instructions do not
+work, un-install the above packages and re-install them one at a time,
+including those in requirements.txt.
 
-Sharing Your Work
-=================
+Code development and sharing your work
+======================================
 
- * Get a (free) github account if you do not have one already
+ * Get a (free) [github](https://github.com/) account if you do not have one
+   already.
  * Login to github
- * Go to `https://github.com/LMFDB/lmfdb` and click on `Fork` in the upper right corner
+ * Go to `https://github.com/LMFDB/lmfdb` and click on `Fork` in the upper
+   right corner.
  * On your machine, create a new directory and type
+
 ```
     git init
     git clone git@github.com:YourGithubUserId/lmfdb.git
 ```
-  using your own github user id. 
- * Push your code to the fork.
- * Tell the [lmdb mailing list](https://groups.google.com/forum/#!forum/lmdb) that you have some new code!
+
+  using your own github user id.  Your github repository will be known
+  to git as a remote called `origin`.
+
+ * Add the (official) LMFDB repository as a remote called `upstream`.
+
+```
+    git remote add upstream git@github.com:LMFDB/lmfdb.git
+```
+ * To run LMFDB, go through the rest of the instructions in
+   [Installation](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#installation) and
+   [Running](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
+
+ * You should make a new branch if you want to work on a new feature.
+   The following command creates a new branch named `new_feature` and
+   switches to that branch, after first switching to the master branch
+   and making sure that it is up-to-date:
+
+```
+    git checkout master
+    git pull upstream master
+    git checkout -b new_feature
+```
+
+ * After making your local changes, testing them and committing the
+   changes, push your branch to your own github fork:
+
+```
+    git push -u origin new_feature
+```
+
+   * Here, the option -u tells git to set up the remote branch
+   `origin/new_feature` to be the corresponding upstream  branch you
+   push to.
+
+   * You should make sure from time to time that you pull the latest
+  changes from the official LMFDB repository.  There are three
+  branches upstream to be aware of: `prod`, `beta` and `master`:
+
+    - `prod` is changed rarely and contains the code currently running at
+      www.lmfdb.org
+    - `beta` is changed more often and contains the code currently running at
+      beta.lmfdb.org
+    - `master` is the development branch.
+
+   Normal developers only need to be aware of the master
+   (=development) branch.
+
+   * To pull in the most recent changes there to your own master
+     branch locally and update your github repository too:
+
+    ```
+    git checkout master
+    git pull upstream master
+    git push origin master
+    ```
+
+   * To rebase your current working branch on the latest master:
+
+   ```
+   git pull --rebase upstream master
+   ```
+
+   * Tell the [lmdb mailing
+     list](https://groups.google.com/forum/#!forum/lmdb) that you have
+     some new code!  You should also issue a pull request at github
+     (from your feature branch `new_feature`) at the same time.  Make
+     sure that your pull request is to the lmfdb `master` branch,
+     whatever your own development or feature branch is called.
+     Others will review your code, and release managers will
+     (eventually, if all is well) merge it into the master branch.
+     
+     
+
+LMFDB On Windows
+================
+
+We do not recommend attempting to run LMFDB from within the Sage virtual image.
+For anyone who would like to attempt it, the following steps should theoretically work.
+
+ * Download `VirtualBox` and the Sage appliance, following the instructions [here](http://wiki.sagemath.org/SageAppliance).
+ * The default Sage appliance does not have enough space to install LMFDB's prerequisites.  Moreover, the default
+   file type (vmdk) installed by `VirtualBox` does not support resizing.  You will need to
+   increase the available space by cloning into a vdi file, increasing the space and cloning back, following the
+   instructions [here](http://stackoverflow.com/questions/11659005/how-to-resize-a-virtualbox-vmdk-file) and
+   [here](http://www.howtogeek.com/124622/how-to-enlarge-a-virtual-machines-disk-in-virtualbox-or-vmware/).  We had
+   trouble at this stage: make sure to keep the .ova file in case you screw up your virtual image.
+ * The resulting disk image needs to be repartitioned to make the space available.  Unfortunately, the Sage appliance
+   does not include gparted, the linux partition editor.  So, you'll need to install gparted into the appliance
+   (perhaps following instructions [here](https://gembuls.wordpress.com/2011/02/12/how-to-install-epel-repository-on-centos/))
+   and use it to repartition.
+ * You now need to set up port forwarding so that the sage appliance can use the ports 37777 and 37010 used by lmfdb.
+   See Section 6.3.1 [here](https://www.virtualbox.org/manual/ch06.html).
+ * Clone the LMFDB git repository into your host OS, and set up shared folders so that you can access
+   the LMFDB code from within the Sage appliance.  See the [Sage instructions](http://wiki.sagemath.org/SageAppliance) for how to share folders.
+ * Now you need to run ssh-keygen within the Sage appliance and e-mail the result to Harald Schilly, Jonathan Bober or John Cremona (see above).
+   Since copy-and-paste can be tricky from inside the virtual image, we suggest writing to a file shared by the host OS.
+ * The instructions for Linux/OS X should now work.  You should be able to forward the mongo database and run `sage -python start-lmfdb.py` within the Sage appliance,
+   and access the resulting website from your host OS' web browser.

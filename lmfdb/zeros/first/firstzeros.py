@@ -1,14 +1,14 @@
 import flask
 import lmfdb.utils
 import os
-from flask import render_template, request
+from flask import render_template, request, url_for
 
 FirstZeros = flask.Blueprint('first L-function zeros', __name__, template_folder="templates")
 logger = lmfdb.utils.make_logger(FirstZeros)
 
 import sqlite3
 data_location = os.path.expanduser("~/data/zeros/")
-print data_location
+#print data_location
 
 
 @FirstZeros.route("/")
@@ -27,7 +27,11 @@ def firstzeros():
     # return render_template("first_zeros.html", start=start, end=end,
     # limit=limit, degree=degree, signature_r=signature_r,
     # signature_c=signature_c)
-    return render_template("first_zeros.html", start=start, end=end, limit=limit, degree=degree, title="First zero search", bread=[("First zeros search", " "), ])
+    title = "Search for first zeros of L-functions"
+    bread=[("L-functions", url_for("l_functions.l_function_top_page")), ("First zeros search", " "), ]
+    return render_template("first_zeros.html",
+                           start=start, end=end, limit=limit,
+                           degree=degree, title=title, bread=bread)
 
 
 @FirstZeros.route("/list")
@@ -89,7 +93,7 @@ def list_zeros(start=None,
     else:
         query = 'SELECT * FROM zeros {} ORDER BY zero DESC LIMIT {}'.format(where_clause, limit)
 
-    print query
+    #print query
     c = sqlite3.connect(data_location + 'first_zeros.db').cursor()
     c.execute(query)
 
