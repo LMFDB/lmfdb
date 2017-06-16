@@ -378,15 +378,14 @@ def pretty_coeff(c, digits=10, prec=9):
 
     x_trunc = float(truncatenumber(x, precision=prec))
     y_trunc = float(truncatenumber(y, precision=prec))
-
     xs = format_num(x_trunc, digits=digits)
     ys = format_num(y_trunc, digits=digits)
 
-    if xs.strip() == '0' and ys.strip() == '0':
+    if xs == '0' and ys == '0':
         return '&nbsp;0'
-    if ys.strip() == '0':
+    if ys == '0':
         return xs
-    if xs.strip() == '0':
+    if xs == '0':
         return ys + 'i'
 
     return xs + ' + ' + ys + 'i'
@@ -396,6 +395,8 @@ def format_num(x, digits=10):
     '''
     Format real number x for website display.
     '''
+    if x == 0:
+        return '0'
     d2 = digits
     d1 = digits + 1
     if abs(x) < 10.0 ** -digits:
