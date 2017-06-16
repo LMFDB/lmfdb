@@ -13,6 +13,7 @@
     {% set col_main_d  = '#040' %} /* Header and footer */
     {% set col_main_dl = '#060' %} /* Header and footer text*/
     {% set col_main    = '#157715' %}*/ /* Links */
+    {% set col_link    = '#292' %}*/ /* Links */
     {% set col_visited = col_main %} /* visited links in body */
     {% set col_body_text = col_main %} /* links in body*/
     {% set col_sidebar_text = col_main%} /* Sidebar text in body and header, under Dat, gets over-written for the rest.*/

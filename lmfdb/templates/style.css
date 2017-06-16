@@ -101,7 +101,7 @@ h2.link > a {
 
 /* Body links, sidebar links, and sidebar header text. */
 a {
-    color: {{color.a_text}};
+    color: {{color.col_link}};
   text-decoration: none;
   font-family: sans-serif;
 }
