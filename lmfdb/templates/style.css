@@ -619,6 +619,10 @@ body.knowl form select:hover {
     border: 2px solid {{color.knowl_thin_border}};
 }
 
+form table td.button {
+	padding-top: 7px
+}
+
 table {
     border: 0;
     border-collapse:collapse;
