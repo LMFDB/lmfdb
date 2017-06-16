@@ -1,13 +1,24 @@
 # -*- coding: utf-8 -*-
+Dan_test = True
 import os.path
-import sage.misc.preparser
-from sage.misc.preparser import preparse
+if Dan_test:
+    import sys
+    from sage.all import preparse
+    sys.path.append('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf')
+    pw_dict = yaml.load(open(os.path.join(os.getcwd(), "../../passwords.yaml")))
+    username = pw_dict['data']['username']
+    password = pw_dict['data']['password']
+    C['hmfs'].authenticate(username, password)
+    hmf_forms = C.hmfs.forms_dan
+else:
+    import sage.misc.preparser
+    from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma
 
 from sage.all import ZZ, Rationals, PolynomialRing
 
 from lmfdb.base import getDBConnection
-from lmfdb.scripts.check_conjugates import fix_one_label
+from check_conjugates import fix_one_label
 from sage.databases.cremona import class_to_int
 
 print "getting connection"
@@ -52,7 +63,10 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
     hmff = file(os.path.join(fileprefix,hmf_filename))
 
     if ferrors==None:
-        ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+        if Dan_test:
+            ferrors = file('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_data.err', 'a')
+        else:
+            ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data
     v = hmff.readline()
@@ -89,6 +103,8 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
     # Find the field in the HMF database
     print("Finding field %s in HMF..." % field_label)
     F_hmf = hmf_fields.find_one({"label": field_label})
+    if Dan_test:
+        assert F_hmf is not None  # Assuming the hmf field is already there!
     if F_hmf is None:
         # Create list of ideals
         print "...adding!"
@@ -146,7 +162,8 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
         # Important also to resort the list of primes themselves!
         # not just the a_pp's
         primes_str = [primes_str[i] for i in primes_resort]
-
+    if Dan_test:
+        assert 'primes' in F_hmf  # DY:  want to make sure the fields are not touched!
     if 'primes' in F_hmf:  # Nothing smart: make sure it is the same
         assert F_hmf['primes'] == primes_str
     else:
@@ -226,8 +243,9 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
                 "label_nsuffix" : label_nsuffix,
                 "dimension": hecke_polynomial.degree(),
                 "hecke_polynomial": str(hecke_polynomial),
-                "hecke_eigenvalues": hecke_eigenvalues,
-                "AL_eigenvalues": [[str(a[0]), str(a[1])] for a in AL_eigenvalues]}
+                "hecke_eigenvalues": hecke_eigenvalues}  # DY: don't deal with AL right now.
+                #,
+                #"AL_eigenvalues": [[str(a[0]), str(a[1])] for a in AL_eigenvalues]}
         print info['label']
 
         existing_forms = hmf_forms.find({"label": label})
