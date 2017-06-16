@@ -148,7 +148,7 @@
         {% if url %}
            <li><a href="{{ url }}">{{ text }}</a></li>
         {% else %}
-           <li>{{ text }}</li>
+           <li>{{ text|safe }}</li>
         {% endif %}
         {% endfor %}
     </ul>

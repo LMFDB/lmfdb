@@ -1,7 +1,9 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
+from lmfdb.utils import truncatenumber
 from mwf_utils import mwf_logger
 from sage.all import Gamma0, CC
 import bson
+
 
 
 class MaassFormTable(MFDataTable):
@@ -286,10 +288,11 @@ class WebMaassForm(object):
         return self._db.get_prev_maassform_id(self.level, self.character,
                                               self.weight, self.R, self._maassid)
 
-    def set_table(self, fnr=-1, cusp=0):
+    def set_table(self, fnr=-1, cusp=0, prec=9):
         r"""
         Setup a table with coefficients for function nr. fnr in self,
-        at cusp nr. cusp
+        at cusp nr. cusp. If the real or imaginary parts are less than
+        1e-`prec`, then set them to zero.
         """
         table = {'nrows': self.num_coeff}
         if fnr < 0:
@@ -318,12 +321,12 @@ class WebMaassForm(object):
                         # mwf_logger.debug("{0},{1}".format(k,c))
                         if c is not None:
                             realnumc += 1
-                            row.append(pretty_coeff(c))
+                            row.append(pretty_coeff(c, prec=prec))
                     else:
                         for j in range(self.dim):
                             c = ((self.coeffs.get(j, {})).get(0, {})).get(n, None)
                             if c is not None:
-                                row.append(pretty_coeff(c))
+                                row.append(pretty_coeff(c, prec=prec))
                                 realnumc += 1
                 table['data'].append(row)
         else:
@@ -336,6 +339,7 @@ class WebMaassForm(object):
                 row = [n]
                 if self.dim == 1:
                     for k in range(table['ncols']):
+                        #cpositive and cnegative
                         cp = self.coeffs.get(n, 0)
                         cn = self.coeffs.get(-n, 0)
                         row.append((cp, cn))
@@ -358,7 +362,10 @@ class WebMaassForm(object):
 import sage
 
 
-def pretty_coeff(c, digits=10):
+def pretty_coeff(c, digits=10, prec=9):
+    '''
+    Format the complex coefficient `c` for display on the website.
+    '''
     if isinstance(c, complex):
         x = c.real
         y = c.imag
@@ -368,41 +375,39 @@ def pretty_coeff(c, digits=10):
     else:
         x = c
         y = 0
-    # if y==0:
-    #    x = round(x,digits)
-    #    return x
-    ##
+
+    x_trunc = float(truncatenumber(x, precision=prec))
+    y_trunc = float(truncatenumber(y, precision=prec))
+    xs = format_num(x_trunc, digits=digits)
+    ys = format_num(y_trunc, digits=digits)
+
+    if xs == '0' and ys == '0':
+        return '&nbsp;0'
+    if ys == '0':
+        return xs
+    if xs == '0':
+        return ys + 'i'
+
+    return xs + ' + ' + ys + 'i'
+
+
+def format_num(x, digits=10):
+    '''
+    Format real number x for website display.
+    '''
+    if x == 0:
+        return '0'
     d2 = digits
     d1 = digits + 1
-
-    # print "d,d1,d2=",digits,d1,d2
-    # print "x0=",x
     if abs(x) < 10.0 ** -digits:
         if x > 0:
-            xs = "+{0:<2.1g}".format(float(x))
+            xs = '{0:<2.1g}'.format(float(x))
         else:
-            xs = "{0:<3.1g}".format(float(x))
+            xs = '{0:<3.1g}'.format(float(x))
     else:
         x = round(x, digits)
         if x > 0:
-            xs = "&nbsp;{x:<{width}.{digs}}".format(width=d2, digs=d2, x=float(x))
+            xs = '&nbsp;{x:<{width}.{digs}}'.format(width=d2, digs=d2, x=float(x))
         elif x < 0:
-            xs = "{x:<{width}.{digs}}".format(width=d2, digs=d1, x=float(x))
-        # x = round(x,digits)
-        # y = round(y,digits)
-    if y == 0:
-        return xs
-    # print "x1=",xs
-    if abs(y) < 10.0 ** -digits:
-        if y > 0:
-            ys = "+{0:<2.1e}".format(float(y))
-        else:
-            ys = "{0:<3.1e}".format(float(y))
-    else:
-        y = round(y, digits)
-        if y > 0:
-            ys = "+{y:<{width}.0{digs}}".format(width=d2, digs=d2, y=y)
-        elif y < 0:
-            ys = "{y:<{width}.0{digs}}".format(width=d2, digs=d1, y=y)
-
-    return xs + ys + "i"
+            xs = '{x:<{width}.{digs}}'.format(width=d2, digs=d1, x=float(x))
+    return xs
