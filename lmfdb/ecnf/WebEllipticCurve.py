@@ -366,7 +366,7 @@ class ECNF(object):
         # CM and End(E)
         self.cm_bool = "no"
         self.End = "\(\Z\)"
-        if self.cm:
+        if self.cm and self.galois_images != '?':
             self.rational_cm = K(self.cm).is_square()
             self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
             self.cm_nramp = len(self.cm_ramp)

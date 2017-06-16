@@ -23,6 +23,7 @@ from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page, logger
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
+from lmfdb.utils import signtocolour, rgbtohex
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -104,6 +105,8 @@ def l_function_maass_browse_page():
     info = {"bread": get_bread(2, [("MaassForm", url_for('.l_function_maass_browse_page'))])}
     info["contents"] = [processMaassNavigation()]
     info["gl2spectrum0"] = [paintSvgMaass(1, 10, 0, 10, L="/L")]
+    info["colorminus1"] = rgbtohex(signtocolour(-1))
+    info["colorplus1"] = rgbtohex(signtocolour(1))
     return render_template("MaassformGL2.html", title='L-functions of GL(2) Maass Forms of weight 0', **info)
 
 
@@ -421,7 +424,7 @@ def initLfunction(L, args, request):
     info = L.info                        
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
-    (info['bread'], info['friends'] ) = set_bread_and_friends(L, request)
+    (info['bread'], info['origins'], info['friends'] ) = set_bread_and_friends(L, request)
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
 
@@ -463,7 +466,8 @@ def set_bread_and_friends(L, request):
     Depends on the type of L-function and needs to be added to for new types
     '''
     bread = []
-    fiends = []
+    friends = []
+    origins = []
 
     # Create default friendlink by removing 'L/' and ending '/'
     friendlink = request.url.replace('/L/', '/').replace('/L-function/', '/').replace('/Lfunction/', '/')
@@ -488,13 +492,17 @@ def set_bread_and_friends(L, request):
     elif L.Ltype() == 'ellipticcurveQ':
         label = L.label
 
-        friends = [('Isogeny class ' + label, friendlink)]
-        for i in range(1, L.nr_of_curves_in_class + 1):
-            friends.append(('Elliptic curve ' + label + str(i), friendlink + '/' + str(i)))
+        #for i in range(1, L.nr_of_curves_in_class + 1):
+        #    friends.append(('Elliptic curve ' + label + str(i), friendlink + '/' + str(i)))
         if L.modform:
-            friends.append(('Modular form ' + label.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms",
+            origins.append(('Modular form ' + label.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms",
                                                                                 level=L.modform['level'], weight=2,
                                                                                 character=1, label=L.modform['iso'])))
+        else:
+            origins.append(('Modular form not available', ""))
+           
+        origins.append(('Isogeny class ' + label, friendlink))
+
         if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
             friends.append(
                 ('Symmetric square L-function', url_for(".l_function_ec_sym_page_label",
@@ -651,7 +659,7 @@ def set_bread_and_friends(L, request):
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
 
-    return (bread, friends)
+    return (bread, origins, friends)
 
 
 def set_zeroslink_and_plotlink(L, args):
