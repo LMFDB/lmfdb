@@ -1,3 +1,4 @@
+from flask import url_for
 from sage.all import ZZ, is_prime, latex, factor, imag_part
 from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
@@ -174,6 +175,11 @@ class Lfunction:
             info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
             info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
             info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
+
+            chilatex = "$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) +", \cdot )$"
+            info['chi'] = '<a href="' + url_for('characters.render_Dirichletwebpage', 
+                                                    modulus=self.charactermodulus, number=self.characternumber)
+            info['chi'] += '">' + chilatex + '</a>'
 
             info['st_group'] = self.st_group
             info['st_link'] = self.st_link

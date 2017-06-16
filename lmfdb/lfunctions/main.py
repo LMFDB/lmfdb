@@ -499,7 +499,7 @@ def set_bread_and_friends(L, request):
                                                                                 level=L.modform['level'], weight=2,
                                                                                 character=1, label=L.modform['iso'])))
         else:
-            origins.append(('Modular form not available', ""))
+            origins.append(('Modular form ' + label.replace('.', '.2') +'&nbsp;  n/a', ""))
            
         origins.append(('Isogeny class ' + label, friendlink))
 

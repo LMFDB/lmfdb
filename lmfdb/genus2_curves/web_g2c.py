@@ -193,6 +193,11 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T'):
         return [outstr, gal_list]
     return outstr
 
+def QpName(p):
+    if p==0:
+        return "$\\R$"
+    return "$\\Q_{"+str(p)+"}$"
+
 ###############################################################################
 # Plot functions
 ###############################################################################
@@ -581,7 +586,17 @@ class WebG2C(object):
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
             data['two_selmer_rank'] = ZZ(curve['two_selmer_rank'])
             data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
-            data['locally_solvable'] = "yes" if curve['locally_solvable'] else "no"
+            P = curve['non_solvable_places']
+            if len(P):
+                sz = "except over "
+                sz += ", ".join([QpName(p) for p in P])
+                last = " and"
+                if len(P) > 2:
+                    last = ", and"
+                sz = last.join(sz.rsplit(",",1))
+            else:
+                sz = "everywhere"
+            data['non_solvable_places'] = sz
             data['torsion_order'] = curve['torsion_order']
             data['torsion_factors'] = [ ZZ(a) for a in literal_eval(curve['torsion_subgroup']) ]
             if len(data['torsion_factors']) == 0:
