@@ -176,8 +176,10 @@ class Lfunction:
             info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
             info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
 
-            info['chi'] = "423"
-            info['chi'] = '<a href=" ' + url_for('characters.render_Dirichletwebpage', modulus=1, number=1) + ' "> $\chi_{44}$</a>'
+            chilatex = "$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) +", \cdot )$"
+            info['chi'] = '<a href=" ' + url_for('characters.render_Dirichletwebpage', 
+                                                    modulus=self.charactermodulus, number=self.characternumber)
+            info['chi'] += ' "> ' + chilatex + '</a>'
 
             info['st_group'] = self.st_group
             info['st_link'] = self.st_link
