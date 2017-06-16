@@ -126,12 +126,11 @@
 </tr>
 
 <tr>
-<td></td>
 <td>{{ KNOWL('ag.geom_simple', title='$\\overline{\\mathbb Q}$-simple') }}</td>
 </tr>
 
+
 <tr>
-<td><button type='submit' value='refine' style="width: 110px">Search again</button></td>
 <td><select name='is_simple_geom' width="110" style="width: 110px">
   <option ></option>
 {% if info.is_simple_geom == 'True' %}
@@ -145,7 +144,10 @@
   <option value="False">False</option>
 {% endif %}
 </select></td>
+
 </tr>
+
+<tr><td><br><button type='submit' value='refine' style="width: 110px">Search again</button></td></tr>
 
 </table>
 </form>
