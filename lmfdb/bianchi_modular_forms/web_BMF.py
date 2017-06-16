@@ -6,6 +6,7 @@ from lmfdb.ecnf.WebEllipticCurve import make_field
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label
 from lmfdb.utils import web_latex
 from flask import url_for
+from sage.all import QQ
 
 logger = make_logger("bmf")
 
@@ -86,6 +87,9 @@ class WebBMF(object):
         self.AL_table = [[web_latex(p.norm()),
                           web_latex(p.gens_reduced()[0]),
                           web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
+        self.sign = "+1" if self.sfe==1 else "-1"
+        self.Lratio = QQ(self.Lratio)
+        self.anrank = "\(0\)" if self.Lratio!=0 else "\(\ge1\), odd" if self.sfe==-1 else "\(\ge2\), even" 
         self.properties2 = [('base field', pretty_field),
                             ('label', self.label),
                             ('level', self.level_ideal),
@@ -102,5 +106,7 @@ class WebBMF(object):
         else:
             self.cm = 'Yes' if self.is_CM else "No"
         self.properties2.append(('CM', self.cm))
+        self.properties2.append(('Sign', self.sign))
+        self.properties2.append(('Analytic rank', self.anrank))
         self.friends = [('Elliptic curve isogeny class {}'.format(self.label),url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)),
                         ('L-function not available','')]

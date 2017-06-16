@@ -14,6 +14,7 @@ from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF, db_dims, db_forms
 from lmfdb.WebNumberField import field_pretty, WebNumberField
+from lmfdb.nfutils.psort import primes_iter, ideal_from_label
 
 
 bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
@@ -57,8 +58,9 @@ def bianchi_modular_form_search(**args):
 
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info:
-        args = {'label': info['label']}
-        return render_bmf_webpage(**args)
+        #args = {'label': info['label']}
+        field_label, level_label, label_suffix = info['label'].split("-")
+        return render_bmf_webpage(field_label, level_label, label_suffix)
     query = {}
     for field in ['field_label', 'weight', 'level_norm', 'dimension']:
         print("parsing field {} in {}".format(field, info))
@@ -209,7 +211,6 @@ def render_bmf_field_dim_table(**args):
                  'level_norm': dat['level_norm'],
                  'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']),
                   'dims': dims[dat['level_label']]} for dat in data]
-    print "dimtable = ", dimtable
     info['dimtable'] = dimtable
     return render_template("bmf-field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
 
@@ -221,7 +222,7 @@ def render_bmf_space_webpage(field_label, level_label):
     credit = bianchi_credit
     bread = [('Bianchi modular forms', url_for(".bianchi_modular_form_render_webpage")),
              (field_pretty(field_label), url_for(".render_bmf_field_dim_table", field_label=field_label)),
-             (level_label, url_for(".render_bmf_space_webpage", field_label=field_label, level_label=level_label))]
+             (level_label, '')]
 
     if not field_label_regex.match(field_label):
         info['err'] = "%s is not a valid label for an imaginary quadratic field" % field_label
@@ -252,8 +253,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 L = nf.K().change_names(w)
                 alpha = L.gen()
                 info['field_gen'] = latex(alpha)
-                N,c,d = [ZZ(x) for x in level_label.split('.')]
-                I = L.ideal(N//d,c+d*alpha)
+                I = ideal_from_label(L,level_label)
                 info['level_gen'] = latex(I.gens_reduced()[0])
                 info['level_fact'] = latex(I.factor())
                 dim_data = data['gl2_dims']
@@ -264,14 +264,19 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['dim_data'] = dim_data
                 info['weights'] = weights
                 info['nweights'] = len(weights)
-                # info['cuspidal_dim'] = dim_data['cuspidal_dim']
-                # info['new_dim'] = dim_data['new_dim']
-                # info['dimension'] = info['cuspidal_dim']
+
+                newdim = data['gl2_dims']['2']['new_dim']
+                if newdim:
+                    newforms = db_forms().find({'field_label':field_label, 'level_label':level_label})
+                    info['newforms'] = [[f['short_label'],
+                                         url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix'])] for f in newforms]
+                    info['nnewforms'] = len(info['newforms'])
 
     return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread)
 
-@bmf_page.route('/<label>/')
-def render_bmf_webpage(label):
+@bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
+def render_bmf_webpage(field_label, level_label, label_suffix):
+    label = "-".join([field_label, level_label, label_suffix])
     credit = "John Cremona"
     bread = []
     info = {}
@@ -285,7 +290,8 @@ def render_bmf_webpage(label):
         title = "Bianchi cusp form {} over {}".format(data.short_label,field_pretty(data.field_label))
         bread = [('Bianchi modular forms', url_for(".bianchi_modular_form_render_webpage")),
                  (field_pretty(data.field_label), url_for(".render_bmf_field_dim_table", field_label=data.field_label)),
-                 (data.short_label, url_for(".render_bmf_webpage", label=label))]
+                 (data.level_label, url_for('.render_bmf_space_webpage', field_label=data.field_label, level_label=data.level_label)),
+                 (data.short_label, '')]
         properties2 = data.properties2
         friends = data.friends
     except ValueError:

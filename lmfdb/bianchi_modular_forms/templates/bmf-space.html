@@ -57,6 +57,24 @@ info.field_poly }}\).
 </table>
 </p>
 
+
+<h2> Newforms </h2>
+
+{% if info.nnewforms > 0 %}
+There
+{%if info.nnewforms == 1 %}
+is one rational cuspidal newform
+{%else%}
+are {{info.nnewforms}} rational cuspidal newforms
+{%endif%}
+at this level:
+{%for nf in info.newforms %}
+<a href={{nf[1]}}>{{nf[0]}}</a>
+{%endfor%}
+{% else %}
+There are no rational cuspidal newforms at this level.
+{% endif %}
+
 {% endif %}
 
 {% if DEBUG %}
