@@ -1,4 +1,5 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
+from lmfdb.utils import truncatenumber
 from mwf_utils import mwf_logger
 from sage.all import Gamma0, CC
 import bson
@@ -365,7 +366,6 @@ def pretty_coeff(c, digits=10, prec=9):
     '''
     Format the complex coefficient `c` for display on the website.
     '''
-    from lmfdb.lfunctions.Lfunctionutilities import truncatenumber
     if isinstance(c, complex):
         x = c.real
         y = c.imag
