@@ -7,6 +7,9 @@ from sage.interfaces.magma import magma
 from sage.all import ZZ, Rationals, PolynomialRing
 
 from lmfdb.base import getDBConnection
+from lmfdb.scripts.check_conjugates import fix_one_label
+from sage.databases.cremona import class_to_int
+
 print "getting connection"
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
@@ -174,8 +177,9 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
         data = eval(preparse(v))
         level_ideal = data[0]
         level_norm = data[0][0]
-        label_suffix = data[1]
+        label_suffix = fix_one_label(data[1])
         weight = [2 for i in range(n)]
+        label_nsuffix = class_to_int(label_suffix)
 
         level_ind = int(magma('Index(ideals, ideal<ZF | {F!x : x in ' + str(level_ideal) + '}>)')
                         ) - 1  # Magma counts starting at 1
@@ -219,6 +223,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
                 "level_label": level_label,
                 "weight": str(weight),
                 "label_suffix": label_suffix,
+                "label_nsuffix" : label_nsuffix,
                 "dimension": hecke_polynomial.degree(),
                 "hecke_polynomial": str(hecke_polynomial),
                 "hecke_eigenvalues": hecke_eigenvalues,
