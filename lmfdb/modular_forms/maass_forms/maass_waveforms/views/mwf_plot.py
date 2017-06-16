@@ -2,6 +2,7 @@ import pymongo
 from lmfdb import base
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
      import MaassDB
+from lmfdb.utils import signtocolour
 
 def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
                   width=1000, heightfactor=20, L=""):
@@ -26,9 +27,6 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
     ticlength = 4
     radius = 3
     xshift = extraSpace
-    color_even = 'rgb(255,0,0)'
-    color_odd = 'rgb(0,0,255)'
-    color_neither = 'rgb(0,255,0)'
 
     # Start of file and add coordinate system
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
@@ -60,14 +58,14 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
         try:  # Shifting even slightly up and odd slightly down
             if f['Symmetry'] == 0 or f['Symmetry'] == 'even':
                 y -=  1
-                color = color_even
+                color = signtocolour(1)
             elif f['Symmetry'] == 1 or f['Symmetry'] == 'odd':
                 y += 1
-                color = color_odd
+                color = signtocolour(-1)
             else:
-                color = color_neither
+                color = signtocolour(0)
         except Exception:
-            color = color_neither
+            color = signtocolour(0)
             
         ans += "<a xlink:href='{0}' target='_top'>".format(linkurl)
         ans += "<circle cx='{0}' cy='{1}' ".format(str(x)[0:6],str(y))

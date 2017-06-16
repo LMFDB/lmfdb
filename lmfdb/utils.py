@@ -23,7 +23,9 @@ from markupsafe import Markup
 
 from lmfdb.base import app
 
-from sage.all import latex
+import math
+import cmath
+from sage.all import latex, CC
 
 
 def flash_error(errmsg, *args):
@@ -617,3 +619,25 @@ def encode_plot(P):
     fig.savefig(virtual_file, format='png')
     virtual_file.seek(0)
     return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
+
+
+def signtocolour(sign):
+    argument = cmath.phase(CC(str(sign)))
+    r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
+    g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
+    b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
+    return("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
+
+def rgbtohex(rgb):
+    """
+    convert rgb(63,255,100) to #3fff64
+    """
+
+    r,g,b = rgb[4:-1].split(',')
+    r = int(r)
+    g = int(g)
+    b = int(b)
+
+    return "#{:02x}{:02x}{:02x}".format(r,g,b)
+
+
