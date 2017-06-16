@@ -75,6 +75,10 @@ h2.link > a {
     margin: 10px 0 5px 0;
 }
 
+#content > h2 a[knowl], #content > h3 a[knowl] {
+    color: {{color.col_main}};
+}
+
 #content > h2.inline,
 #content > h3.inline {
     font-weight: normal;
@@ -104,6 +108,10 @@ a {
     color: {{color.col_link}};
   text-decoration: none;
   font-family: sans-serif;
+}
+
+a[knowl] {
+    color: {{color.col_a_knowl}};
 }
 
 a.inactive {
