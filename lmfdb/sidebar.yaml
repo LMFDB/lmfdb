@@ -76,7 +76,7 @@
            url_for: "hmf.hilbert_modular_form_render_webpage"
          - title: Bianchi
            status: beta
-           url_for: "bmf.bianchi_modular_form_render_webpage"
+           url_for: "bmf.index"
          - title: Half-integral
            status: future
            colspan: onecolumn

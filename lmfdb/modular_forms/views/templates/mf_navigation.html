@@ -21,7 +21,8 @@ mathematical physics.
 <p>
 Below you can browse classes of modular forms currently in the LMFDB.
 </div>
-<p>
+
+  <p>
 <a href="{{ url_for('emf.render_elliptic_modular_forms')
          }}">Holomorphic Cusp Forms</a> (on \(\GL(2)\) over \(\Q\))
 </p>
@@ -40,6 +41,8 @@ Below you can browse classes of modular forms currently in the LMFDB.
 <p><a href="{{ url_for('smf.index') }}">Siegel Modular Forms</a> 
 </p>
 
-</ul>
+<p><a href="{{ url_for('bmf.index') }}">Bianchi Modular Forms</a> 
+</p>
+
 
 {% endblock content %}
