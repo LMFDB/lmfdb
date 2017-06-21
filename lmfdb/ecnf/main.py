@@ -16,7 +16,7 @@ from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ecnf_degree_summary, ecnf_signature_summary, sort_field
-from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, db_ecnfstats, web_ainvs
+from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, db_ecnfstats, web_ainvs, convert_IQF_label
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
@@ -282,6 +282,7 @@ def show_ecnf1(nf):
 @ecnf_page.route("/<nf>/<conductor_label>/")
 def show_ecnf_conductor(nf, conductor_label):
     conductor_label = unquote(conductor_label)
+    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
         conductor_norm = conductor_label_norm(conductor_label)
@@ -305,6 +306,7 @@ def show_ecnf_conductor(nf, conductor_label):
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/")
 def show_ecnf_isoclass(nf, conductor_label, class_label):
     conductor_label = unquote(conductor_label)
+    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
@@ -333,6 +335,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<number>")
 def show_ecnf(nf, conductor_label, class_label, number):
     conductor_label = unquote(conductor_label)
+    conductor_label = convert_IQF_label(nf,conductor_label)
     try:
         nf_label = nf_string_to_label(nf)
     except ValueError:
