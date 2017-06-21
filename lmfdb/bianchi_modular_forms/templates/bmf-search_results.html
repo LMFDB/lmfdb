@@ -1,7 +1,49 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<h2> Further refine search </h2>
+
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+<table>
+<tr>
+<td>Field</td>
+<td>{{ KNOWL('mf.bianchi.level_norm', title='Level norm') }}</td>
+<td>{{ KNOWL('mf.dimension', title='dimension') }}</td>
+</tr>
+<tr>
+<td><input type='text' name='field_label' placeholder='2.0.4.1' size=10 value={{info.field_label}}>
+<td><input type='text' name='level_norm' placeholder='1' size=10 value={{info.level_norm}}>
+<td><input type='text' name='dimension' placeholder='1' size=10  value={{info.dimension}}>
+</tr>
+<tr>
+<td>Maximum number</td>
+<td><input type='text' name='count' value=50 size=10></td>
+<td colspan=3><button type='submit' value='Search'>Search</button></td>
+</tr>
+</table>
+</form>
+
+{% if info.number == 0 %}
+
+<h2> No matches</h2>
+
+<a href={{url_for("bmf.bianchi_modular_form_render_webpage")}}>Search again</a>
+
+{% else %}
+
 <h2> Results ({{info.report}})</h2>
+
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</a>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</a></td>
+{% endif %}
 
 <table class="ntdata">
 <tr>
@@ -21,6 +63,15 @@
 {% endfor %}
 </table>
 
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+{% endif %}
+<br>
+
 <br>
 <!--
    <p class="tex2jax_ignore">
@@ -28,4 +79,5 @@
    </p>
 -->
 
+{% endif %}
 {% endblock %}

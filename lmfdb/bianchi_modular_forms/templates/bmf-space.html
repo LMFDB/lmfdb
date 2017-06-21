@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% if err in info %}
+{% if 'err' in info %}
 {{info.err}}
 {% else %}
 
@@ -10,16 +10,6 @@
 <p>
 Generator \({{ info.field_gen }}\) with minimal polynomial \({{
 info.field_poly }}\).
-{#
-<table>
-<tr><td>Label:<td><A HREF="/NumberField/{{info.field_label }}">{{info.field_label}}</A> </tr>
-<tr><td>Degree:<td> \({{ info.field_degree }}\) </tr>
-<tr><td>Discriminant:<td> \({{ info.field_disc }}\) </tr>
-<tr><td>Defining polynomial:<td> \({{ info.field_poly }}\) </tr>
-<tr><td>Generator name:<td> \({{ info.field_gen }}\) </tr>
-<tr><td>Class number:<td> \({{ info.field_classno }}\) </tr>
-</table>
-#}
 </p>
 
 
@@ -60,7 +50,7 @@ info.field_poly }}\).
 
 <h2> Newforms </h2>
 
-{% if info.nnewforms > 0 %}
+{%if info.nnewforms > 0 %}
 There
 {%if info.nnewforms == 1 %}
 is one rational cuspidal newform
@@ -69,22 +59,22 @@ are {{info.nnewforms}} cuspidal newforms
 {%endif%}
 at this level in the database:
 {%for nf in info.newforms %}
-{%- if loop.index > 0 -%}
+{%-if loop.index > 0 -%}
 ,
-{% endif %}
+{%endif %}
 <a href={{nf[1]}}>{{nf[0]}}</a>
 {%endfor%}
-{% else %}
+{%else %}
 There are no cuspidal newforms at this level in the database.
-{% endif %}
+{%endif %}
 
-{% endif %}
+{%endif %}
 
-{% if DEBUG %}
+{%if DEBUG %}
 <div>
 <hr>
-{{ info }}
+ {{ info }}
 </div>
-{% endif %}
+{%endif %}
 
-{% endblock %}
+{%endblock %}
