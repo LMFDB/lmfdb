@@ -11,6 +11,7 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 ecnf = None
 ecnfstats = None
 nfdb = None
+IQF_labels = None
 
 def db_ecnf():
     global ecnf
@@ -29,6 +30,39 @@ def db_nfdb():
     if nfdb is None:
         nfdb = getDBConnection().numberfields.fields
     return nfdb
+
+def db_iqf_labels():
+    global IQF_labels
+    if IQF_labels is None:
+        IQF_labels = getDBConnection().elliptic_curves.IQF_labels
+    return IQF_labels
+
+# For backwards compatibility of labels of conductors (ideals) over
+# imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
+# 1. [N,c,d] with N=norm and [N/d,0;c,d] the HNF
+# 2. N.c.d
+# 3. N.i with N=norm and i the index in the standard list of ideals of norm N (per field).
+#
+# Converting 1->2 is trivial and 2->3 is done via a stored lookup
+# table, which contains entries for the five Euclidean imaginary
+# quadratic fields 2.0.d.1 for d in [4,8,3,7,11] and all N<=10000.
+#
+
+def convert_IQF_label(fld, lab):
+    if fld.split(".")[:2] != ['2','0']:
+        return lab
+    newlab = lab
+    if lab[0]=='[':
+        newlab = lab[1:-1].replace(",",".")
+    if len(newlab.split("."))!=3:
+        return newlab
+    data = db_iqf_labels().find_one({'fld':fld, 'old':newlab})
+    if data:
+        newlab = data['new']
+        if newlab!=lab:
+            print("Converted label {} to {} over {}".format(lab, newlab, fld))
+        return newlab
+    return lab
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
