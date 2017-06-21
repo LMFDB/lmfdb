@@ -5,12 +5,7 @@
 {{info.err}}
 {% else %}
 
-<h2>  Base Field  {{info.pretty_field_label}}</h2>
-
-<p>
-Generator \({{ info.field_gen }}\) with minimal polynomial \({{
-info.field_poly }}\).
-</p>
+<h2>  Base Field  {{info.field_knowl | safe}}</h2>
 
 
 <h2>  Level {{ info.level_label }}  </h2>
@@ -33,13 +28,13 @@ info.field_poly }}\).
 {% endfor %}
 </tr>
 <tr>
-<td> Cuspidal dimension:
+<td> Dimension of cuspidal subspace:
 {% for w in info.weights %}
 <td> {{ info.dim_data[w].cuspidal_dim }} </td>
 {% endfor %}
 </tr>
 <tr>
-<td> New cuspidal dimension:
+<td> Dimension of new cuspidal subspace:
 {% for w in info.weights %}
 <td> {{ info.dim_data[w].new_dim }} </td>
 {% endfor %}
@@ -59,11 +54,11 @@ are {{info.nnewforms}} cuspidal newforms
 {%endif%}
 at this level in the database:
 {%for nf in info.newforms %}
-{%-if loop.index > 0 -%}
+{%-if loop.index > 1 -%}
 ,
 {%endif %}
 <a href={{nf[1]}}>{{nf[0]}}</a>
-{%endfor%}
+{%-endfor%}
 {%else %}
 There are no cuspidal newforms at this level in the database.
 {%endif %}

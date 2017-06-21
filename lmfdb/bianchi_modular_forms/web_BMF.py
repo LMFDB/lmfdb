@@ -96,6 +96,7 @@ class WebBMF(object):
                              web_latex(p.gens_reduced()[0]),
                              web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.nap0])]
         level = ideal_from_label(K,self.level_label)
+        self.level_ideal2 = web_latex(level)
         badp = level.prime_factors()
         self.have_AL = self.AL_eigs[0]!='?'
         if self.have_AL:
@@ -117,7 +118,7 @@ class WebBMF(object):
 
         self.properties2 = [('base field', pretty_field),
                             ('label', self.label),
-                            ('level', self.level_ideal),
+                            ('level', self.level_ideal2),
                             ('level norm', str(self.level_norm)),
                             ('weight', str(self.weight)),
                             ('dimension', str(self.dimension))
@@ -137,4 +138,5 @@ class WebBMF(object):
         self.friends = []
         if self.dimension==1:
             self.friends += [('Elliptic curve isogeny class {}'.format(self.label),url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix))]
+        self.friends += [ ('Newspace {}-{}'.format(self.field_label,self.level_label),url_for(".render_bmf_space_webpage", field_label=self.field_label, level_label=self.level_label))]
         self.friends += [ ('L-function not available','')]

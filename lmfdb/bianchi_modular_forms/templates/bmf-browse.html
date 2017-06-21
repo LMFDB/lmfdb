@@ -6,11 +6,10 @@
 
 <p>
 By field:
-<a href="?field_label={{'2.0.4.1'}}">\(\Q(\sqrt{-1})\)</a>, 
-<a href="?field_label={{'2.0.8.1'}}">\(\Q(\sqrt{-2})\)</a>, 
-<a href="?field_label={{'2.0.3.1'}}">\(\Q(\sqrt{-3})\)</a>, 
-<a href="?field_label={{'2.0.7.1'}}">\(\Q(\sqrt{-7})\)</a>, 
-<a href="?field_label={{'2.0.11.1'}}">\(\Q(\sqrt{-11})\)</a>
+{%-for f in info.field_list %}
+{%-if loop.index > 1 %}, {% endif%}
+<a href={{f.url}}>{{f.name}}</a>
+{%-endfor %}
 </p>
 
 

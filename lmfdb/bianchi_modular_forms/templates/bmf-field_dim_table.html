@@ -21,18 +21,31 @@ norm.
 
 <form>
 
-<p>Displaying <input type="text" name="count"
-                    placeholder="{{info.count}}" size=2
+<p> For <input type="text" name="count"
+                    placeholder="{{info.count}}" size=4
                     value="{{info.count}}"/> levels out of
                     {{info.number}} starting at level number
-                    <input type="text" name="start"
+                    <input type="text" name="start" size=6
                     placeholder="{{info.start}}"
-                    value="{{info.start}}" size=2/>
+                           value="{{info.start}}" size=2/>
+                    {%-if info.nontrivial_only %}
+                    , showing only {{info.nlevels}} level.
+                    <select name='nontrivial_only'>
+                      <option value=false>Show all levels</option>
+                      <option selected value=true>Show only levels with positive new dimension</option>
+                    </select>
+                    {%-else %}
+                    , showing all levels.
+                    <select name='nontrivial_only'>
+                      <option selected value=false>Show all levels</option>
+                      <option value=true>Show only levels with positive new dimension</option>
+                    </select>
+                    {%-endif %}
 <button type='submit' value='Go'>Go</button>
 </p>
 </form>
 
-<div align=center>
+<div align=left>
 {% if info.start %}
 <a href= {{info.prev_page}}>...see previous levels...</a>
 {% endif %}
@@ -40,6 +53,7 @@ norm.
 <tr>
 <th style="border-left:none; border-top:none;" >&nbsp;</th>
 <th style="border-left:none; border-top:none;" >Weight</th>
+<th style="border-left:none; border-top:none;" >all</th>
 {% for k in info.weights %}
 <th >{{k}}</th>
 {% endfor %}
@@ -47,14 +61,17 @@ norm.
 <tr>
 <th>Level</th>
 <th>Norm</th>
+<th>\(n\)</th>
 {% for k in info.weights %}
 <th> $d\ (n)$</th>
 {% endfor %}
 </tr>
 {% for data in info.dimtable %}
+{% if (data.dims.total_new!=0) or (not info.nontrivial_only) %}
 <tr>
 <td align=right><a href={{data.level_space}}>{{data.level_label}}</a></td>
 <td align=right>{{data.level_norm}}</td>
+<td align=right>{{data.dims.total_new}}</td>
 {% for k in info.weights %}
 <td align=center>
   {% if data.dims[k]['d'] == '?' %}
@@ -65,6 +82,7 @@ norm.
 </td>
 {% endfor %}
 </tr>
+{% endif %}
 {% endfor %}
 </table>
 <p>
