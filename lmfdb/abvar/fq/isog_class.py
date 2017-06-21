@@ -140,7 +140,6 @@ class AbvarFq_isoclass(object):
                 (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
                 #('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
                 ('$p$-rank', '$%s$'%(self.p_rank))]
-                # Add a-number
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
     # this is not covered by the tests
