@@ -167,12 +167,11 @@ def dimtabeis(line, gl_or_sl = "gl"):
     K = field_from_label(field_label)
     d, s, field_absdisc, n = [int(x) for x in field_label.split(".")]
     weight = int(data[1])
-    level_params = data[2].split(',')
-    level_norm = int(level_params[0][1:])
-    level_a = int(level_params[1])
-    level_b = int(level_params[2][:-1])
-    level_label = ".".join([str(level_norm),str(level_a), str(level_b)])
+    level_label = data[2]
+    if "[" in level_label:
+        level_label = ".".join([x for x in level_norm[1:-1].split(',')])
     level_label = convert_ideal_label(K, level_label)
+    level_norm = int(level_label.split(".")[0])
     label = '-'.join([field_label,level_label])
     #all_dim = int(data[3]) # not used
     cuspidal_dim = int(data[4])
