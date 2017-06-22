@@ -1192,3 +1192,17 @@ def update_stats(verbose=True):
     entry.update(field_data)
     ecdbstats.insert_one(entry)
 
+def make_IQF_ideal_table(infile, insert=False):
+    items = []
+    n = 0
+    for L in file(infile).readlines():
+        n += 1
+        f, old, new = L.split()
+        item = {'fld':f, 'old':old, 'new':new}
+        items.append(item)
+    print("read {} lines from {}".format(n,infile))
+    if insert:
+        print("inserting into IQF_labels collection")
+        C['elliptic_curves']['IQF_labels'].insert_many(items)
+    else:
+        print("No insertion, dummy run")
