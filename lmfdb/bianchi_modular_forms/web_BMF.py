@@ -33,6 +33,13 @@ def db_nf_fields():
         nf_fields = getDBConnection().numberfields.fields
     return nf_fields
 
+nfcurves = None
+def db_ecnf():
+    global nfcurves
+    if nfcurves is None:
+        nfcurves = getDBConnection().elliptic_curves.nfcurves
+    return nfcurves
+
 class WebBMF(object):
     """
     Class for an Bianchi Newform
@@ -72,7 +79,6 @@ class WebBMF(object):
         #
         self.field = make_field(self.field_label)
         pretty_field = field_pretty(self.field_label)
-        print self.label
         self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
         dims = db_dims().find_one({'field_label':self.field_label})['gl2_dims']
         self.newspace_dimension = dims[str(self.weight)]['new_dim']
@@ -137,6 +143,10 @@ class WebBMF(object):
         self.properties2.append(('Analytic rank', self.anrank))
         self.friends = []
         if self.dimension==1:
-            self.friends += [('Elliptic curve isogeny class {}'.format(self.label),url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix))]
+            if db_ecnf().find_one({'class_label':self.label}):
+                self.friends += [('Elliptic curve isogeny class {}'.format(self.label),url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix))]
+            else:
+                self.friends += [('Elliptic curve {} not available'.format(self.label),"")]
+
         self.friends += [ ('Newspace {}-{}'.format(self.field_label,self.level_label),url_for(".render_bmf_space_webpage", field_label=self.field_label, level_label=self.level_label))]
         self.friends += [ ('L-function not available','')]
