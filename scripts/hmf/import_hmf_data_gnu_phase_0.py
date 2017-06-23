@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 Dan_test = True
-import os.path
+import os.path, yaml
 if Dan_test:
     import sys
     from sage.all import preparse
