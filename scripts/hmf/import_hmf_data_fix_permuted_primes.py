@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import sage.repl.preparse
 from sage.repl.preparse import preparse
 from sage.interfaces.magma import magma
@@ -22,7 +23,6 @@ fields = C.numberfields.fields
 magma.eval('nice_idealstr := function(F : Bound := 10000); idealsstr := []; ideals := IdealsUpTo(Bound, F); for I in ideals do bl, g := IsPrincipal(I); if bl then s := Sprintf("[%o, %o, %o]", Norm(I), Minimum(I), F!g); else zs := Generators(I); z := zs[#zs]; m := Minimum(I); z := F![(Integers()!c) mod m : c in Eltseq(F!z)]; assert ideal<Integers(F) | [m, z]> eq I; s := Sprintf("[%o, %o, %o]", Norm(I), m, z); end if; Append(~idealsstr, s); end for; return idealsstr; end function;')
 
 from lmfdb.number_fields.number_field import make_disc_key
-from lmfdb.hilbert_modular_forms.web_HMF import construct_full_label
 
 P = sage.rings.polynomial.polynomial_ring_constructor.PolynomialRing(sage.rings.rational_field.RationalField(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
