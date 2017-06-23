@@ -91,8 +91,9 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
 
     print "Computing ideals..."
     ideals_str = F_hmf['ideals']
-#    ideals = [eval(preparse(c)) for c in ideals_str] # never used
-#    ideals_norms = [c[0] for c in ideals] # never used
+    ideals = [eval(preparse(c)) for c in ideals_str] # doesn't appear to be used
+    ideals_norms = [c[0] for c in ideals] # doesn't appear to be used
+    ideal_norms = ideal_norms # shut up pyflakes
     magma.eval('ideals_str := [' + ''.join(F_hmf['ideals']).replace('][', '], [') + ']')
     magma.eval('ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];')
 
