@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sage.all import ZZ, sqrt, Set, valuation, kronecker_symbol, GF, floor, true, false, Mod, lift, oo, PolynomialRing, next_prime
-
-import yaml
-
+from sage.all import ZZ, sqrt, Set, valuation, kronecker_symbol, GF, floor, true, false, Mod, PolynomialRing, next_prime
 
 def IsSquareInQp(x,p):
     if x==0:
