@@ -2,9 +2,8 @@
 # ListCharacters.py
 
 import re
-from lmfdb import logger
 from sage.all import lcm, factor, divisors
-from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter
+from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter, logger
 try:
     from dirichlet_conrey import DirichletGroup_conrey
 except:
