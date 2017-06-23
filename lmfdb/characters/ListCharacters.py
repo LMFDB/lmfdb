@@ -2,6 +2,7 @@
 # ListCharacters.py
 
 import re
+from lmfdb import logger
 from sage.all import lcm, factor, divisors
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter
 try:
