@@ -6,16 +6,16 @@ from pymongo import ASCENDING
 from flask import render_template, url_for, request, redirect, flash
 from markupsafe import Markup
 
-from sage.all import ZZ, latex
+from sage.all import latex
 
 from lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict, random_object_from_collection
-from lmfdb.search_parsing import parse_range, parse_range2, nf_string_to_label, parse_nf_string
+from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF, db_dims, db_forms
 from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_display_knowl
-from lmfdb.nfutils.psort import primes_iter, ideal_from_label
+from lmfdb.nfutils.psort import ideal_from_label
 
 
 bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
@@ -159,7 +159,7 @@ def render_bmf_field_dim_table(**args):
     query['gl2_dims'] = {'$exists': True}
     data = db_dims().find(query)
     data = data.sort([('level_norm', ASCENDING)])
-    info['number'] = nrec = data.count()
+    info['number'] = data.count()
     data = list(data.skip(start).limit(count))
     info['field'] = field_label
     info['field_pretty'] = pretty_field_label

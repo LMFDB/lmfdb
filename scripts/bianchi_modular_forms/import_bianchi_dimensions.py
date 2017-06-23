@@ -169,7 +169,7 @@ def dimtabeis(line, gl_or_sl = "gl"):
     weight = int(data[1])
     level_label = data[2]
     if "[" in level_label:
-        level_label = ".".join([x for x in level_norm[1:-1].split(',')])
+        level_label = ".".join([x for x in level_label[1:-1].split(',')])
     level_label = convert_ideal_label(K, level_label)
     level_norm = int(level_label.split(".")[0])
     label = '-'.join([field_label,level_label])

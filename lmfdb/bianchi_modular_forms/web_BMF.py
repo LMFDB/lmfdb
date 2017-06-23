@@ -139,7 +139,8 @@ class WebBMF(object):
         if self.is_CM == '?':
             self.cm = 'not determined'
         else:
-            self.cm = 'Yes' if self.is_CM else "No"
+            self.cm = self.is_CM
+            if self.cm=='0': self.cm='no'
         self.properties2.append(('CM', self.cm))
         self.properties2.append(('Sign', self.sign))
         self.properties2.append(('Analytic rank', self.anrank))

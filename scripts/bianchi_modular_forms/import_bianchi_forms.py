@@ -43,7 +43,7 @@ NB 1. Both AL_eigs and hecke_eigs are indexed by the primes in standard order
      (i) sfe does not exist for HMFs
      (j) Lratio does not exist for HMFs
 """
-from sage.all import polygen, QQ, ZZ, NumberField
+from sage.all import polygen, QQ, ZZ, NumberField, PolynomialRing
 import re
 import os
 
