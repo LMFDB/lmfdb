@@ -37,6 +37,7 @@ def index():
         fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
         names = ["\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
         info['field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table", field_label=f), 'name':n} for f,n in zip(fields,names)]
+        info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(fields,names)]
         credit = bianchi_credit
         t = 'Bianchi modular forms'
         bread = [('Bianchi modular forms', url_for(".index"))]
@@ -212,19 +213,21 @@ def render_bmf_space_webpage(field_label, level_label):
     bread = [('Bianchi modular forms', url_for(".index")),
              (field_pretty(field_label), url_for(".render_bmf_field_dim_table", field_label=field_label)),
              (level_label, '')]
+    friends = []
+    properties2 = []
 
     if not field_label_regex.match(field_label):
         info['err'] = "%s is not a valid label for an imaginary quadratic field" % field_label
     else:
         pretty_field_label = field_pretty(field_label)
         if not db_dims().find({'field_label': field_label}):
-            info['err'] = "no information exists in the database for field %s" % pretty_field_label
+            info['err'] = "no dimension information exists in the database for field %s" % pretty_field_label
         else:
             t = "Bianchi Modular Forms of level %s over %s" % (level_label, pretty_field_label)
             data = db_dims().find({'field_label': field_label, 'level_label': level_label})
             n = data.count()
             if n==0:
-                info['err'] = "no information exists in the database for level %s and field %s" % (level_label, pretty_field_label)
+                info['err'] = "no dimension information exists in the database for level %s and field %s" % (level_label, pretty_field_label)
             else:
                 data = data.next()
                 info['label'] = data['label']

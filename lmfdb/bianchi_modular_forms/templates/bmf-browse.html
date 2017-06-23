@@ -6,7 +6,19 @@
 
 <p>
 By field:
-{%-for f in info.field_list %}
+{% for f in info.field_list %}
+{%-if loop.index > 1 %}, {% endif%}
+<a href={{f.url}}>{{f.name}}</a>
+{%-endfor %}
+</p>
+
+
+<h2> Browse {{ KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi
+  modular forms') }} </h2>
+
+<p>
+By field:
+{% for f in info.field_forms %}
 {%-if loop.index > 1 %}, {% endif%}
 <a href={{f.url}}>{{f.name}}</a>
 {%-endfor %}

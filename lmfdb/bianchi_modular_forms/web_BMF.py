@@ -82,6 +82,8 @@ class WebBMF(object):
         self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
         dims = db_dims().find_one({'field_label':self.field_label})['gl2_dims']
         self.newspace_dimension = dims[str(self.weight)]['new_dim']
+        self.newspace_label = "-".join([self.field_label,self.level_label])
+        self.newspace_url = url_for(".render_bmf_space_webpage", field_label=self.field_label, level_label=self.level_label)
         K = self.field.K()
 
         if self.dimension>1:
@@ -148,5 +150,5 @@ class WebBMF(object):
             else:
                 self.friends += [('Elliptic curve {} not available'.format(self.label),"")]
 
-        self.friends += [ ('Newspace {}-{}'.format(self.field_label,self.level_label),url_for(".render_bmf_space_webpage", field_label=self.field_label, level_label=self.level_label))]
+        self.friends += [ ('Newspace {}'.format(self.newspace_label),self.newspace_url)]
         self.friends += [ ('L-function not available','')]
