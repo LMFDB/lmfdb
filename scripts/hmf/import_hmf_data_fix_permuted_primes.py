@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-import os.path
 import sage.repl.preparse
 from sage.repl.preparse import preparse
 from sage.interfaces.magma import magma
 
-from sage.all import ZZ, Rationals, PolynomialRing, Integer
+from sage.all import ZZ
 
 from lmfdb.base import getDBConnection
 print "getting connection"
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
-import yaml
+#import yaml
 #pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
 #username = pw_dict['data']['username']
 #password = pw_dict['data']['password']
