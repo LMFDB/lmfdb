@@ -12,7 +12,6 @@ Initial version (University of Warwick 2015) Aurel Page
 
 """
 
-import os
 import sys
 sys.path.append("../..");
 from copy import copy
