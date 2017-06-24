@@ -527,6 +527,7 @@ class Lfunction_EMF(Lfunction):
                                  prec = self.numcoeff)
             # Currently WebNewForm never generates an error so check that it has coefficients
             test_if_loaded = self.MF.coefficient_embedding(1,self.number)
+            test_if_loaded = test_if_loaded # shut up pyflakes
         except:
             raise KeyError("The specified modular form does not appear to be in the database.")
         
@@ -993,6 +994,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         # Compute Dirichlet coefficients ########################
         roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
         self.numcoeff = max([a[0] for a in roots])+1  # include a_0 = 0
+        # FIX THIS: the function compute_siegel_dirichlet_coefficients is not defined anywhere!
         self.dirichlet_coefficients = compute_siegel_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
 
         self.sign = (-1) ** float(self.weight)

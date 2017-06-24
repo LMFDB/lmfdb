@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 Dan_test = True
-import os.path
+import os.path, yaml
+
+from lmfdb.base import getDBConnection
+print "getting connection"
+C= getDBConnection()
+C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
+
 if Dan_test:
     import sys
     from sage.all import preparse
@@ -17,13 +23,8 @@ from sage.interfaces.magma import magma
 
 from sage.all import ZZ, Rationals, PolynomialRing
 
-from lmfdb.base import getDBConnection
 from check_conjugates import fix_one_label
 from sage.databases.cremona import class_to_int
-
-print "getting connection"
-C= getDBConnection()
-C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 import yaml
 #pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))

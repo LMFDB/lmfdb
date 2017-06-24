@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-import os.path
+import os
 import sage.repl.preparse
 from sage.repl.preparse import preparse
 from sage.interfaces.magma import magma
 
-from sage.all import ZZ, Rationals, PolynomialRing, Integer
+from sage.all import ZZ
 
 from lmfdb.base import getDBConnection
 print "getting connection"
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
-import yaml
+#import yaml
 #pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
 #username = pw_dict['data']['username']
 #password = pw_dict['data']['password']
@@ -23,7 +23,6 @@ fields = C.numberfields.fields
 magma.eval('nice_idealstr := function(F : Bound := 10000); idealsstr := []; ideals := IdealsUpTo(Bound, F); for I in ideals do bl, g := IsPrincipal(I); if bl then s := Sprintf("[%o, %o, %o]", Norm(I), Minimum(I), F!g); else zs := Generators(I); z := zs[#zs]; m := Minimum(I); z := F![(Integers()!c) mod m : c in Eltseq(F!z)]; assert ideal<Integers(F) | [m, z]> eq I; s := Sprintf("[%o, %o, %o]", Norm(I), m, z); end if; Append(~idealsstr, s); end for; return idealsstr; end function;')
 
 from lmfdb.number_fields.number_field import make_disc_key
-from lmfdb.hilbert_modular_forms.web_HMF import construct_full_label
 
 P = sage.rings.polynomial.polynomial_ring_constructor.PolynomialRing(sage.rings.rational_field.RationalField(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
@@ -92,8 +91,8 @@ def import_data_fix_perm_primes(hmf_filename, fileprefix=None, ferrors=None, tes
 
     print "Computing ideals..."
     ideals_str = F_hmf['ideals']
-    ideals = [eval(preparse(c)) for c in ideals_str]
-    ideals_norms = [c[0] for c in ideals]
+    # ideals = [eval(preparse(c)) for c in ideals_str] # doesn't appear to be used
+    # ideals_norms = [c[0] for c in ideals] # doesn't appear to be used
     magma.eval('ideals_str := [' + ''.join(F_hmf['ideals']).replace('][', '], [') + ']')
     magma.eval('ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];')
 
