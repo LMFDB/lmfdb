@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
 
 class EllCurveTest(LmfdbTest):
@@ -33,7 +33,7 @@ class EllCurveTest(LmfdbTest):
 
     def test_Weierstrass_search(self):
         L = self.tc.get('/EllipticCurve/Q/[1,2,3,4,5]')
-        assert 'You should be redirected automatically to target URL: <a href="/EllipticCurve/Q/10351.b1">/EllipticCurve/Q/10351.b1</a>' in L.data
+        assert 'You should be redirected automatically to target URL: <a href="http://localhost/EllipticCurve/Q/%5B1%2C2%2C3%2C4%2C5%5D/">http://localhost/EllipticCurve/Q/%5B1%2C2%2C3%2C4%2C5%5D/</a>' in L.data
 
     def test_j_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=2000&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
