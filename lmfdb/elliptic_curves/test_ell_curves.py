@@ -17,7 +17,8 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/12350/s/')
         assert '[1, -1, 1, -3655, -83403]' in L.data
         L = self.tc.get('/EllipticCurve/Q/12350/s')
-        assert 'You should be redirected automatically to target URL: <a href="http://localhost/EllipticCurve/Q/12350/s/">http://localhost/EllipticCurve/Q/12350/s/</a>' in L.data
+        assert 'You should be redirected automatically to target URL:' in L.data
+        assert '/EllipticCurve/Q/12350/s/' in L.data
 
     def test_Cremona_label_mal(self):
         L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class')
@@ -29,11 +30,13 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/210/')
         assert '[1, 0, 0, 729, -176985]' in L.data
         L = self.tc.get('/EllipticCurve/Q/210')
-        assert 'You should be redirected automatically to target URL: <a href="http://localhost/EllipticCurve/Q/210/">http://localhost/EllipticCurve/Q/210/</a>' in L.data
+        assert 'You should be redirected automatically to target URL:' in L.data
+        assert '/EllipticCurve/Q/210/' in L.data
 
     def test_Weierstrass_search(self):
         L = self.tc.get('/EllipticCurve/Q/[1,2,3,4,5]')
-        assert 'You should be redirected automatically to target URL: <a href="http://localhost/EllipticCurve/Q/%5B1%2C2%2C3%2C4%2C5%5D/">http://localhost/EllipticCurve/Q/%5B1%2C2%2C3%2C4%2C5%5D/</a>' in L.data
+        assert 'You should be redirected automatically to target URL:' in L.data
+        assert '/EllipticCurve/Q/%5B1%2C2%2C3%2C4%2C5%5D/' in L.data
 
     def test_j_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=2000&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
