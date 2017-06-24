@@ -2,8 +2,6 @@
 
 from lmfdb import base
 import pymongo
-from lmfdb.lfunctions import logger
-from lmfdb.lfunctions.Lfunctionutilities import string2number
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 
 def getEllipticCurveData(label):
