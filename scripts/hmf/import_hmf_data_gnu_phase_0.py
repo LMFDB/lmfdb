@@ -26,7 +26,6 @@ from sage.all import ZZ, Rationals, PolynomialRing
 from check_conjugates import fix_one_label
 from sage.databases.cremona import class_to_int
 
-import yaml
 #pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
 #username = pw_dict['data']['username']
 #password = pw_dict['data']['password']
