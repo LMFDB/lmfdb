@@ -99,7 +99,7 @@ class WebBMF(object):
 
             self.hecke_eigs = [conv(ap) for ap in self.hecke_eigs]
         self.nap = len(self.hecke_eigs)
-        self.nap0 = min(25, self.nap)
+        self.nap0 = min(50, self.nap)
         self.hecke_table = [[web_latex(p.norm()),
                              web_latex(p.gens_reduced()[0]),
                              web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.nap0])]
@@ -131,17 +131,29 @@ class WebBMF(object):
                             ('weight', str(self.weight)),
                             ('dimension', str(self.dimension))
                             ]
-        if self.is_base_change == '?':
+        self.bc_extra = ''
+        self.bcd = 0
+        if self.bc == '?':
             self.bc = 'not determined'
+        elif self.bc == 0:
+            self.bc = 'no'
+        elif self.bc == 1:
+            self.bcd = self.bc
+            self.bc = 'yes'
+        elif self.bc == -1:
+            self.bc = 'no'
+            self.bc_extra = ' (but is a twist of a base-change form)'
         else:
-            self.bc = 'yes' if self.is_base_change else "no"
-            self.properties2.append(('base-change', self.bc))
-        if self.is_CM == '?':
-            self.cm = 'not determined'
-        else:
-            self.cm = self.is_CM
-            if self.cm=='0': self.cm='no'
-        self.properties2.append(('CM', self.cm))
+            self.bcd = self.bc
+            self.bc = 'yes'
+            self.bc_extra = ' (of a form with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\))'
+        self.properties2.append(('base-change', str(self.bc)))
+
+        if self.CM == '?':
+            self.CM = 'not determined'
+        elif self.CM == 0:
+            self.CM = 'no'
+        self.properties2.append(('CM', str(self.CM)))
         self.properties2.append(('Sign', self.sign))
         self.properties2.append(('Analytic rank', self.anrank))
         self.friends = []

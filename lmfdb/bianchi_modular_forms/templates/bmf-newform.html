@@ -19,8 +19,8 @@
 {% if data.dimension >1 %}
 <tr><td> Dimension:<td> {{ data.dimension }} </tr>
 {% endif %}
-<tr><td> CM:<td> {{data.cm}} </tr>
-<tr><td> base-change:<td> {{data.bc}} </tr>
+<tr><td> CM:<td> {{data.CM}} </tr>
+<tr><td> base-change:<td> {{data.bc}}{{data.bc_extra}} </tr>
 <tr><td> Sign of functional equation:<td> {{data.sign}} </tr>
 <tr><td> Analytic rank:<td> {{data.anrank}} </tr>
 {% if data.Lratio %}

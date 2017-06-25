@@ -23,8 +23,8 @@ The "forms" collection entries have the following fields:
    - 'weight':         (int) weight
    - 'sfe':            (int) sign of functional equation
    - 'Lratio':         (string) ratio L(1)/period
-   - 'is_base_change': (bool or '?') True iff form is base change from Q
-   - 'is_CM':          (bool or '?') True iff form is CM
+   - 'bc':             (int or '?') d>0 if form is base change from Q with eigs in Q(sqrt(d)), 0 if not base-change
+   - 'CM':             (int or '?') d<0 if CM by Q(sqrt(d)), 0 if not CM
    - 'AL_eigs':        (list of ints) Atkin-Lehner eigenvalues
    - 'hecke_eigs':     (list of ints or strings) Atkin-Lehner eigenvalues
 
@@ -32,8 +32,8 @@ NB 1. Both AL_eigs and hecke_eigs are indexed by the primes in standard order
    2. hecke_eigs are ints if dimension=1, else strings
 
    3. Fields agree with those for Hilbert modular forms except:
-     (a) is_base_change is boolean, not string ("yes"/"no")
-     (b) is_CM is boolean, not string ("yes"/"no")
+     (a) bc is int, not is_base_change as string ("yes"/"no")
+     (b) CM is int, not is_CM as string ("yes"/"no")
      (c) parallel_weight is not used as we only have one infinite place
      (d) field_disc replaces disc
      (e) field_deg replaces deg
@@ -169,7 +169,7 @@ def newforms(line):
     bc = data[5]
     if bc!='?': bc=int(bc)
     cm = data[6]
-    if cm!='?': bc=int(cm)
+    if cm!='?': cm=int(cm)
     sfe = data[7] # sign
     if sfe!='?': sfe = int(sfe) # sign
     Lratio = data[8]   # string representing rational number
@@ -200,8 +200,8 @@ def newforms(line):
         'weight': weight,
         'sfe': sfe,
         'Lratio': Lratio,
-        'is_base_change': bc,
-        'is_CM': cm,
+        'bc': bc,
+        'CM': cm,
         'AL_eigs': AL_eigs,
         'hecke_eigs': hecke_eigs,
     }
@@ -225,7 +225,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
             label, data = parse(line)
             if label=='':
                 continue
-            if count%500==0:
+            if count%1000==0:
                 print "read %s" % label
             count += 1
             if label not in data_to_insert:
