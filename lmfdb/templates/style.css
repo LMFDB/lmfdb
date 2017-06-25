@@ -578,13 +578,20 @@ input, textarea {
 
 button, select {
   padding: 3px 6px;
-  background: {{color.button_background}};
   border-radius: 4px;
   -moz-border-radius:4px;
   -webkit-border-radius:4px;
   cursor: pointer;
   border: 2px solid {{color.button_border}};
   min-width: 75px;
+}
+
+button {
+   background: {{color.button_background}};
+}
+
+select {
+   background: {{color.select_background}};
 }
 
 body.knowl form button, 
