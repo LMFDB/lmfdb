@@ -428,8 +428,8 @@ def render_passport(args):
             other_data = True
 
         if 'jacobian_decomp' in data:
-            jcLatex, conjClasses = decjac_format(data['jacobian_decomp'])
-            info.update({'conjClasses': conjClasses, 'jacobian_decomp': jcLatex})
+            jcLatex, corrChar = decjac_format(data['jacobian_decomp'])
+            info.update({'corrChar': corrChar, 'jacobian_decomp': jcLatex})
             
             
         if 'cinv' in data:
