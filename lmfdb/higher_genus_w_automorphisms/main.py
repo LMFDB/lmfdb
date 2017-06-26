@@ -63,6 +63,8 @@ def sign_display(L):
 
 def cc_display(L):
     sizeL = len(L)
+    if sizeL == 1:
+        return str(L[0])
     stg = str(L[0])+ ", "
     for i in range(1,sizeL-1):
         stg =stg + str(L[i])+", "
@@ -97,6 +99,21 @@ def label_to_breadcrumbs(L):
             
     newsig += ']'    
     return newsig
+
+def decjac_format(decjac_list):
+    entries = []
+    for ints in decjac_list:
+        entry = ""
+        if ints[0] == 1:
+            entry = entry + "E"
+        else:
+            entry = entry + "A_{" + str(ints[0]) + "}"
+        if ints[1] != 1:
+            entry = entry + "^{" + str(ints[1]) + "}"
+        entries.append(entry)
+    latex = "\\times ".join(entries)
+    ccClasses = cc_display ([ints[2] for ints in decjac_list])
+    return latex, ccClasses
 
 @higher_genus_w_automorphisms_page.route("/")
 def index():
@@ -389,8 +406,11 @@ def render_passport(args):
         info.update({'passport_cc': cc_display(ast.literal_eval(data['con']))})
 
         if 'eqn' in data:
-           info.update({'eqns': data['eqn']})
+            info.update({'eqns': data['eqn']})
         
+        if 'ndim' in data:
+            info.update({'Ndim': data['ndim']})
+
         other_data = False
 
         if 'hyperelliptic' in data:
@@ -406,6 +426,10 @@ def render_passport(args):
             info.update({'iscyctrig':  tfTOyn(data['cyclic_trigonal'])})
             other_data = True
 
+        if 'jacobian_decomp' in data:
+            jcLatex, corrChar = decjac_format(data['jacobian_decomp'])
+            info.update({'corrChar': corrChar, 'jacobian_decomp': jcLatex})
+            
             
         if 'cinv' in data:
             cinv=Permutation(data['cinv']).cycle_string()
@@ -425,7 +449,6 @@ def render_passport(args):
                          'signH':sign_display(ast.literal_eval(data['signH'])),
                          'higgenlabel' : data['full_label'] })
 
-            
 
         urlstrng,br_g, br_gp, br_sign, refined_p = split_passport_label(label)
        
@@ -579,5 +602,3 @@ def hgcwa_code(**args):
     code += '\n'.join(lines)
     print "%s seconds for %d bytes" %(time.time() - start,len(code))
     return code
-
-
