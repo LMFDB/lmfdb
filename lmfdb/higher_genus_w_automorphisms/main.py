@@ -107,13 +107,12 @@ def decjac_format(decjac_list):
         if ints[0] == 1:
             entry = entry + "E"
         else:
-            entry = entry + "A_" + str(ints[0])
+            entry = entry + "A_{" + str(ints[0]) + "}"
         if ints[1] != 1:
-            entry = entry + "^" + str(ints[1])
+            entry = entry + "^{" + str(ints[1]) + "}"
         entries.append(entry)
     latex = "\\times ".join(entries)
     ccClasses = cc_display ([ints[2] for ints in decjac_list])
-    #ccClasses = [ints[2] for ints in decjac_list]
     return latex, ccClasses
 
 @higher_genus_w_automorphisms_page.route("/")
