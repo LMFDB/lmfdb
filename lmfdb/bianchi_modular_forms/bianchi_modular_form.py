@@ -47,7 +47,7 @@ def index():
         info = {}
         fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
         names = ["\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
-        info['field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table", field_label=f), 'name':n} for f,n in zip(fields,names)]
+        info['field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(fields,names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(fields,names)]
         bc_examples = []
         bc_examples.append(('base-change of a newform with rational coefficients',
@@ -167,9 +167,17 @@ def bmf_search_field(field_label):
     return bianchi_modular_form_search(field_label=field_label)
 
 @bmf_page.route('/gl2dims/<field_label>')
-def render_bmf_field_dim_table(**args):
+def render_bmf_field_dim_table_gl2(**args):
+    return bmf_field_dim_table(gl_or_sl='gl2_dims', **args)
+
+@bmf_page.route('/sl2dims/<field_label>')
+def render_bmf_field_dim_table_sl2(**args):
+    return bmf_field_dim_table(gl_or_sl='sl2_dims', **args)
+
+def bmf_field_dim_table(**args):
     argsdict = to_dict(args)
     argsdict.update(to_dict(request.args))
+    gl_or_sl = argsdict['gl_or_sl']
 
     field_label=argsdict['field_label']
     field_label = nf_string_to_label(field_label)
@@ -177,21 +185,28 @@ def render_bmf_field_dim_table(**args):
     start = 0
     if 'start' in argsdict:
         start = int(argsdict['start'])
-    count = 50
-    if 'count' in argsdict:
-        count = int(argsdict['count'])
 
     info={}
     nontrivial_only = argsdict.get('nontrivial_only', 'true') == 'true'
     info['nontrivial_only'] = nontrivial_only
+    count = 200 if nontrivial_only else 50
+    if 'count' in argsdict:
+        count = int(argsdict['count'])
+
     pretty_field_label = field_pretty(field_label)
     bread = [('Bianchi Modular Forms', url_for(".index")), (
         pretty_field_label, ' ')]
     properties = []
-    t = ' '.join(['Dimensions of spaces of Bianchi modular forms over', pretty_field_label])
+    if gl_or_sl=='gl2_dims':
+        info['group'] = 'GL(2)'
+        info['bgroup'] = '\GL(2,\mathcal{O}_K)'
+    else:
+        info['group'] = 'SL(2)'
+        info['bgroup'] = '\SL(2,\mathcal{O}_K)'
+    t = ' '.join(['Dimensions of spaces of {} Bianchi modular forms over'.format(info['group']), pretty_field_label])
     query = {}
     query['field_label'] = field_label
-    query['gl2_dims'] = {'$exists': True}
+    query[gl_or_sl] = {'$exists': True}
     data = db_dims().find(query)
     data = data.sort([('level_norm', ASCENDING)])
     info['number'] = data.count()
@@ -205,7 +220,7 @@ def render_bmf_field_dim_table(**args):
     info['field_poly'] = teXify_pol(str(nf.poly()))
     weights = set()
     for dat in data:
-        weights = weights.union(set(dat['gl2_dims'].keys()))
+        weights = weights.union(set(dat[gl_or_sl].keys()))
     weights = list([int(w) for w in weights])
     weights.sort()
     info['weights'] = weights
@@ -213,8 +228,9 @@ def render_bmf_field_dim_table(**args):
     info['count'] = count
     info['start'] = start
     info['complete'] = int(info['number'] < info['count'])
-    info['next_page'] = url_for(".render_bmf_field_dim_table", field_label=field_label, start=str(start+count), count=str(count), level_norm=argsdict.get('level_norm',''), nontrivial_only=argsdict.get('nontrivial_only','true'))
-    info['prev_page'] = url_for(".render_bmf_field_dim_table", field_label=field_label, start=str(max(0,start-count)), count=str(count), nontrivial_only=argsdict.get('nontrivial_only','true'))
+    render_func = ".render_bmf_field_dim_table_gl2" if gl_or_sl=='gl2_dims' else ".render_bmf_field_dim_table_sl2"
+    info['next_page'] = url_for(render_func, field_label=field_label, start=str(start+count), count=str(count), level_norm=argsdict.get('level_norm',''), nontrivial_only=argsdict.get('nontrivial_only','true'))
+    info['prev_page'] = url_for(render_func, field_label=field_label, start=str(max(0,start-count)), count=str(count), nontrivial_only=argsdict.get('nontrivial_only','true'))
 
     dims = {}
     nlevels = 0
@@ -223,9 +239,9 @@ def render_bmf_field_dim_table(**args):
         d['total_new'] = 0
         for w in weights:
             sw = str(w)
-            if sw in dat['gl2_dims']:
-                d[w] = {'d': dat['gl2_dims'][sw]['cuspidal_dim'],
-                        'n': dat['gl2_dims'][sw]['new_dim']}
+            if sw in dat[gl_or_sl]:
+                d[w] = {'d': dat[gl_or_sl][sw]['cuspidal_dim'],
+                        'n': dat[gl_or_sl][sw]['new_dim']}
                 d['total_new'] += d[w]['n']
             else:
                 d[w] = {'d': '?', 'n': '?'}
@@ -246,7 +262,7 @@ def render_bmf_space_webpage(field_label, level_label):
     t = "Bianchi modular forms of level %s over %s" % (level_label, field_label)
     credit = bianchi_credit
     bread = [('Bianchi modular forms', url_for(".index")),
-             (field_pretty(field_label), url_for(".render_bmf_field_dim_table", field_label=field_label)),
+             (field_pretty(field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=field_label)),
              (level_label, '')]
     friends = []
     properties2 = []
@@ -318,7 +334,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
         data = WebBMF.by_label(label)
         title = "Bianchi cusp form {} over {}".format(data.short_label,field_pretty(data.field_label))
         bread = [('Bianchi modular forms', url_for(".index")),
-                 (field_pretty(data.field_label), url_for(".render_bmf_field_dim_table", field_label=data.field_label)),
+                 (field_pretty(data.field_label), url_for(".render_bmf_field_dim_table_gl2", field_label=data.field_label)),
                  (data.level_label, url_for('.render_bmf_space_webpage', field_label=data.field_label, level_label=data.level_label)),
                  (data.short_label, '')]
         properties2 = data.properties2
