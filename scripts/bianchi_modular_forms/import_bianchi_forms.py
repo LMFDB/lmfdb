@@ -255,3 +255,21 @@ def upload_to_db(base_path, filename_suffix, insert=True):
             count += 1
             if count % 100 == 0:
                 print "inserted %s" % (val['label'])
+
+def make_indices():
+    from pymongo import ASCENDING
+    forms.create_index('label')
+    forms.create_index('field_label')
+    forms.create_index([('field_label',ASCENDING),
+                        ('level_label',ASCENDING)])
+    forms.create_index([('field_label',ASCENDING),
+                        ('level_label',ASCENDING),
+                        ('CM',ASCENDING)])
+    forms.create_index([('field_label',ASCENDING),
+                        ('level_label',ASCENDING),
+                        ('bc',ASCENDING)])
+    forms.create_index([('field_label',ASCENDING),
+                        ('level_label',ASCENDING),
+                        ('CM',ASCENDING),
+                        ('bc',ASCENDING)])
+

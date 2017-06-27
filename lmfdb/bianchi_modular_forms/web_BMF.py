@@ -80,8 +80,11 @@ class WebBMF(object):
         self.field = make_field(self.field_label)
         pretty_field = field_pretty(self.field_label)
         self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
-        dims = db_dims().find_one({'field_label':self.field_label})['gl2_dims']
-        self.newspace_dimension = dims[str(self.weight)]['new_dim']
+        try:
+            dims = db_dims().find_one({'field_label':self.field_label, 'level_label':self.level_label})['gl2_dims']
+            self.newspace_dimension = dims[str(self.weight)]['new_dim']
+        except TypeError:
+            self.newspace_dimension = 'not available'
         self.newspace_label = "-".join([self.field_label,self.level_label])
         self.newspace_url = url_for(".render_bmf_space_webpage", field_label=self.field_label, level_label=self.level_label)
         K = self.field.K()
@@ -99,7 +102,7 @@ class WebBMF(object):
 
             self.hecke_eigs = [conv(ap) for ap in self.hecke_eigs]
         self.nap = len(self.hecke_eigs)
-        self.nap0 = min(50, self.nap)
+        self.nap0 = min(100, self.nap)
         self.hecke_table = [[web_latex(p.norm()),
                              web_latex(p.gens_reduced()[0]),
                              web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.nap0])]
@@ -133,6 +136,7 @@ class WebBMF(object):
                             ]
         self.bc_extra = ''
         self.bcd = 0
+        self.bct = self.bc!='?' and self.bc!=0
         if self.bc == '?':
             self.bc = 'not determined'
         elif self.bc == 0:
@@ -140,28 +144,45 @@ class WebBMF(object):
         elif self.bc == 1:
             self.bcd = self.bc
             self.bc = 'yes'
-        elif self.bc == -1:
-            self.bc = 'no'
-            self.bc_extra = ' (but is a twist of a base-change form)'
-        else:
+        elif self.bc >1:
             self.bcd = self.bc
             self.bc = 'yes'
-            self.bc_extra = ' (of a form with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\))'
+            self.bc_extra = ', of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
+        elif self.bc == -1:
+            self.bc = 'no'
+            self.bc_extra = ', but is a twist of a base-change form over \(\mathbb{Q}\)'
+        elif self.bc < -1:
+            self.bcd = -self.bc
+            self.bc = 'no'
+            self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
         self.properties2.append(('base-change', str(self.bc)))
 
         if self.CM == '?':
             self.CM = 'not determined'
         elif self.CM == 0:
             self.CM = 'no'
+
+        if db_ecnf().find_one({'class_label':self.label}):
+            self.ec_status = 'exists'
+            self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
+        else:
+            if self.bct:
+                self.ec_status = 'none'
+            else:
+                self.ec_status = 'missing'
+
         self.properties2.append(('CM', str(self.CM)))
         self.properties2.append(('Sign', self.sign))
         self.properties2.append(('Analytic rank', self.anrank))
+
         self.friends = []
         if self.dimension==1:
-            if db_ecnf().find_one({'class_label':self.label}):
-                self.friends += [('Elliptic curve isogeny class {}'.format(self.label),url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix))]
+            if self.ec_status == 'exists':
+                self.friends += [('Elliptic curve isogeny class {}'.format(self.label), self.ec_url)]
+            elif self.ec_status == 'missing':
+                self.friends += [('Elliptic curve {} missing'.format(self.label), "")]
             else:
-                self.friends += [('Elliptic curve {} not available'.format(self.label),"")]
+                self.friends += [('No elliptic curve', "")]
 
         self.friends += [ ('Newspace {}'.format(self.newspace_label),self.newspace_url)]
         self.friends += [ ('L-function not available','')]

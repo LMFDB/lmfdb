@@ -11,11 +11,39 @@
 <td>Field</td>
 <td>{{ KNOWL('mf.bianchi.level_norm', title='Level norm') }}</td>
 <td>{{ KNOWL('mf.dimension', title='dimension') }}</td>
+<td>{{ KNOWL('mf.bianchi.base_change', title='base change') }}</td>
+<td>{{ KNOWL('mf.bianchi.complex_multiplication', title='CM') }}</td>
 </tr>
 <tr>
 <td><input type='text' name='field_label' placeholder='2.0.4.1' size=10 value={{info.field_label}}>
 <td><input type='text' name='level_norm' placeholder='1' size=10 value={{info.level_norm}}>
 <td><input type='text' name='dimension' placeholder='1' size=10  value={{info.dimension}}>
+<td> <select name='include_base_change'>
+    {% if info.include_base_change == "off" %}
+    <option value="off" selected>exclude</option>
+    <option value="on" >include</option>
+    {% else %}
+    <option value="off">exclude</option>
+    <option value="on" selected>include</option>
+    {% endif %}
+  </select>
+<td>
+  <select name='include_cm'>
+    {% if info.include_cm == "include" %}
+    <option value="include" selected>include</option>
+    <option value="exclude">exclude</option>
+    <option value="only">only</option>
+    {% elif info.include_cm == "exclude" %}
+    <option value="include">include</option>
+    <option value="exclude" selected>exclude</option>
+    <option value="only">only</option>
+    {% else %}
+    <option value="include">include</option>
+    <option value="exclude">exclude</option>
+    <option value="only" selected>only</option>
+    {% endif %}
+  </select>
+</td>
 </tr>
 <tr>
 <td>Maximum number</td>

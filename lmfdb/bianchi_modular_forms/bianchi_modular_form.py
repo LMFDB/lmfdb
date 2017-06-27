@@ -23,6 +23,17 @@ bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
 field_label_regex = re.compile(r'2\.0\.(\d+)\.1')
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 
+def learnmore_list():
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Bianchi newform labels', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+
+
+
 @bmf_page.route("/")
 def index():
     """Function to deal with the base URL
@@ -38,11 +49,25 @@ def index():
         names = ["\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
         info['field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table", field_label=f), 'name':n} for f,n in zip(fields,names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(fields,names)]
+        bc_examples = []
+        bc_examples.append(('base-change of a newform with rational coefficients',
+                         '2.0.4.1-100.2-a',
+                         url_for('.render_bmf_webpage',field_label='2.0.4.1', level_label='100.2', label_suffix='a'),' (with an associated elliptic curve which is a base-change)'))
+        bc_examples.append(('base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{2})\)',
+                         '2.0.4.1-16384.1-d',
+                         url_for('.render_bmf_webpage',field_label='2.0.4.1', level_label='16384.1', label_suffix='d'),' (with an associated elliptic curve which is not a base-change)'))
+        bc_examples.append(('base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{6})\)',
+                         '2.0.3.1-6561.1-b',
+                         url_for('.render_bmf_webpage',field_label='2.0.3.1', level_label='6561.1', label_suffix='b'),' (with no associated elliptic curve)'))
+        bc_examples.append(('base-change of a newform with coefficients in \(\mathbb{Q}(\sqrt{5})\), with CM by \(\mathbb{Q}(\sqrt{-35})\)',
+                         '2.0.7.1-10000.1-b',
+                         url_for('.render_bmf_webpage',field_label='2.0.7.1', level_label='10000.1', label_suffix='b'),' (with no associated elliptic curve)'))
+
         credit = bianchi_credit
         t = 'Bianchi modular forms'
         bread = [('Bianchi modular forms', url_for(".index"))]
         info['learnmore'] = []
-        return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread)
+        return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, bc_examples=bc_examples, learnmore=learnmore_list())
     else:
         return bianchi_modular_form_search(**args)
 
@@ -74,6 +99,16 @@ def bianchi_modular_form_search(**args):
                 query[field] = parse_range(info[field])
             else:
                 query[field] = info[field]
+
+    if 'include_cm' in info:
+        if info['include_cm'] == 'exclude':
+            query['CM'] = 0
+        elif info['include_cm'] == 'only':
+            query['CM'] = {'$ne' : [0,'?']}
+    if 'include_base_change' in info and info['include_base_change'] == 'off':
+        query['bc'] = 0
+    else:
+        info['include_base_change'] = "on"
 
     start = 0
     if 'start' in request.args:
@@ -125,7 +160,7 @@ def bianchi_modular_form_search(**args):
     bread = [('Bianchi Modular Forms', url_for(".index")), (
         'Search results', ' ')]
     properties = []
-    return render_template("bmf-search_results.html", info=info, title=t, properties=properties, bread=bread)
+    return render_template("bmf-search_results.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
 @bmf_page.route('/<field_label>')
 def bmf_search_field(field_label):
@@ -307,3 +342,31 @@ def bianchi_modular_form_by_label(lab):
         return redirect(url_for(".index"))
     else:
         return redirect(url_for(".render_bmf_webpage", field_label = res['field_label'], level_label = res['level_label'], label_suffix = res['label_suffix']))
+
+@bmf_page.route("/Source")
+def how_computed_page():
+    t = 'Source of the Bianchi modular forms'
+    bread = [('Bianchi modular forms', url_for(".index")),
+             ('Source', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.mf.bianchi.source',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@bmf_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of the Bianchi modular form data'
+    bread = [('Bianchi modular forms', url_for(".index")),
+             ('Completeness', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.mf.bianchi.extent',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@bmf_page.route("/Labels")
+def labels_page():
+    t = 'Labels for Bianchi newforms'
+    bread = [('Bianchi modular forms', url_for(".index")),
+             ('Labels', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='mf.bianchi.labels',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+

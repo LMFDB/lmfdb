@@ -29,16 +29,16 @@ norm.
                     placeholder="{{info.start}}"
                            value="{{info.start}}" size=2/>
                     {%-if info.nontrivial_only %}
-                    , showing only {{info.nlevels}} level.
+                    , showing only {{info.nlevels}} levels with positive new dimension.
                     <select name='nontrivial_only'>
-                      <option value=false>Show all levels</option>
-                      <option selected value=true>Show only levels with positive new dimension</option>
+                      <option selected value=false>Show all levels</option>
+                      <option value=true>Show only levels with positive new dimension</option>
                     </select>
                     {%-else %}
                     , showing all levels.
                     <select name='nontrivial_only'>
-                      <option selected value=false>Show all levels</option>
-                      <option value=true>Show only levels with positive new dimension</option>
+                      <option value=false>Show all levels</option>
+                      <option selected value=true>Show only levels with positive new dimension</option>
                     </select>
                     {%-endif %}
 <button type='submit' value='Go'>Go</button>

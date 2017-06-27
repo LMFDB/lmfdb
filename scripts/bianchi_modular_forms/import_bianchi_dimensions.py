@@ -242,3 +242,11 @@ def upload_to_db(base_path, filename, insert=True):
             count += 1
             if count % 100 == 0:
                 print "inserted %s" % (val['label'])
+
+def make_indices():
+    from pymongo import ASCENDING
+    dims.create_index('field_label')
+    dims.create_index([('field_label',ASCENDING),
+                        ('level_label',ASCENDING)])
+    dims.create_index([('field_label',ASCENDING),
+                        ('gl2_dims',ASCENDING)])

@@ -34,6 +34,13 @@ By field:
 <br><span class="formexample">e.g. 2.0.4.1-65.2-a </span>
 </form>
 
+{#<h2> Examples of Bianchi newforms </h2>#}
+<h4>Examples of base change forms</h4>
+<ul>
+  {% for ex in bc_examples %}
+  <li>{{ex[0]}}: <a href={{ex[2]}}>{{ex[1]}}</a> {{ex[3]}}</li>
+  {% endfor %}
+</ul>
 
 <p>A <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a> from the database</p>
 
@@ -58,6 +65,28 @@ By field:
 <td><input type='text' name='dimension' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1 or 2</td>
 </tr>
+<tr>
+  <td align=right>{{ KNOWL('mf.bianchi.base_change',title="base change") }}
+  forms</td>
+  <td>
+         <select name='include_base_change'>
+           <option value="off">exclude</option>
+           <option value="on" selected="yes">include</option>
+         </select>
+  </td>
+</tr>
+   <tr>
+   <td>
+    {{ KNOWL('mf.bianchi.complex_multiplication',title="CM") }}
+    </td>
+     <td>
+         <select name='include_cm'>
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+         </select>
+     </td>
+    </tr>
 <tr>
 <td>Maximum number</td>
 <td><input type='text' name='count' value=50 size=10></td>
