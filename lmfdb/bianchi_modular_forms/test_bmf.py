@@ -43,7 +43,7 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+t,'forms of weight $w$ has dimension $d$ and the new subspace has')
         t = '2.0.4.1/100.2/a/'
         assert t in homepage
-        self.check_args(base_url+t,'base-change:<td> yes')
+        self.check_args(base_url+t,'base change:')
 
     #
     # Jump to specfic newform
@@ -81,7 +81,7 @@ class BMFTest(LmfdbTest):
         r"""
         Check newform pages
         """
-        self.check_args(base_url+'2.0.11.1/207.6/b', 'base-change:<td> no')
+        self.check_args(base_url+'2.0.11.1/207.6/b', 'base change:')
         # I don't know why the follwing fails, as the text was copied from the page source:
         #self.check_args(base_url+'2.0.11.1/207.6/b', 'Level: \( \left(2 a + 13\right) \) of norm 207')
         self.check_args(base_url+'2.0.3.1/44332.1/a/', 'Elliptic curve isogeny class 2.0.3.1-44332.1-a')

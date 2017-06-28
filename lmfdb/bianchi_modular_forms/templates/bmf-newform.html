@@ -20,17 +20,17 @@
 
 <p>
 <table>
-<tr><td> Weight<td> {{data.weight}} </tr>
-<tr><td> Level<td>  {{data.level_label}} = {{ data.level_ideal2 }}{#,  norm {{ data.level_norm }}#} </tr>
-<tr><td> Label<td> {{ data.label }} </tr>
-<tr><td> Dimension:<td> {{ data.dimension }} </tr>
-<tr><td> CM:<td> {{data.CM}} </tr>
-<tr><td> base-change:<td> {{data.bc}}{{data.bc_extra}} </tr>
-<tr><td> parent newspace:<td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> (dimension {{ data.newspace_dimension }}) </tr>
-<tr><td> Sign of functional equation:<td> {{data.sign}} </tr>
-<tr><td> Analytic rank:<td> {{data.anrank}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.weight', 'Weight')}}<td> {{data.weight}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.level', 'Level')}}<td>  {{data.level_label}} = {{ data.level_ideal2 }}{#,  norm {{ data.level_norm }}#} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.labels', 'Label')}}<td> {{ data.label }} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.dimension', title='Dimension') }}:<td> {{ data.dimension }} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.complex_multiplication',title="CM") }}:<td> {{data.CM}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.base_change',title="base change") }}:<td> {{data.bc}}{{data.bc_extra}} </tr>
+<tr><td> parent {{ KNOWL('mf.bianchi.newforms', title='newspace')}}:<td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> (dimension {{ data.newspace_dimension }}) </tr>
+<tr><td> {{ KNOWL('mf.bianchi.sfe',title="Sign of functional equation") }}:<td> {{data.sign}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.anr',title="Analytic rank")}}:<td> {{data.anrank}} </tr>
 {% if data.Lratio %}
-<tr><td> L-ratio:<td> {{data.Lratio}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.anr',title="L-ratio")}}:<td> {{data.Lratio}} </tr>
 {% endif %}
 </table>
 </p>

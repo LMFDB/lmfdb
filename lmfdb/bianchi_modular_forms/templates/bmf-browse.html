@@ -9,7 +9,7 @@
   modular forms') }} </h2>
 
 <p>
-Browse newforms by base field:
+Browse {{ KNOWL('mf.bianchi.newforms', title='newforms')}} by {{ KNOWL('nf', title='base field')}}:
 {% for f in info.field_forms %}
 {%-if loop.index > 1 %}, {% endif%}
 <a href={{f.url}}>{{f.name}}</a>
@@ -17,7 +17,7 @@ Browse newforms by base field:
 </p>
 
 <p>
-Browse newform spaces by base field:
+Browse {{ KNOWL('mf.bianchi.newforms', title='newform spaces')}} by  {{ KNOWL('nf', title='base field')}}:
 {% for f in info.field_list %}
 {%-if loop.index > 1 %}, {% endif%}
 <a href={{f.url}}>{{f.name}}</a>
@@ -27,7 +27,7 @@ Browse newform spaces by base field:
 
 
 
-<h2> Find a specific form by label </h2>
+<h2> Find a specific form by  {{ KNOWL('mf.bianchi.labels', title='label')}} </h2>
 
 <form>
 <input type='text' name='label' placeholder='2.0.4.1-65.2-a'>
@@ -35,8 +35,7 @@ Browse newform spaces by base field:
 <br><span class="formexample">e.g. 2.0.4.1-65.2-a </span>
 </form>
 
-{#<h2> Examples of Bianchi newforms </h2>#}
-<h4>Examples of base change forms</h4>
+<h4>Examples of  {{ KNOWL('mf.bianchi.base_change', title='base change')}} forms</h4>
 <ul>
   {% for ex in bc_examples %}
   <li>{{ex[0]}}: <a href={{ex[2]}}>{{ex[1]}}</a> {{ex[3]}}</li>
@@ -51,7 +50,7 @@ Browse newform spaces by base field:
 <form>
 <table>
 <tr>
-<td>Field</td> 
+<td> {{ KNOWL('nf', title='Base field')}}</td> 
 <td><input type='text' name='field_label' placeholder='2.0.4.1' size=10>
 <td><span class="formexample"> either a field label, e.g. 2.0.4.1 for
     \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1 </span></td>
@@ -62,7 +61,7 @@ Browse newform spaces by base field:
 <td><span class="formexample"> e.g. 1 or 1-100</td>
 </tr>
 <tr>
-<td>{{ KNOWL('mf.dimension', title='dimension') }}</td>
+<td>{{ KNOWL('mf.bianchi.dimension', title='dimension') }}</td>
 <td><input type='text' name='dimension' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1 or 2</td>
 </tr>
