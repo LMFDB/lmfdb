@@ -75,6 +75,10 @@ h2.link > a {
     margin: 10px 0 5px 0;
 }
 
+#content > h2 a[knowl], #content > h3 a[knowl] {
+    color: {{color.col_main}};
+}
+
 #content > h2.inline,
 #content > h3.inline {
     font-weight: normal;
@@ -101,9 +105,13 @@ h2.link > a {
 
 /* Body links, sidebar links, and sidebar header text. */
 a {
-    color: {{color.a_text}};
+    color: {{color.col_link}};
   text-decoration: none;
   font-family: sans-serif;
+}
+
+a[knowl] {
+    color: {{color.col_a_knowl}};
 }
 
 a.inactive {
@@ -570,13 +578,20 @@ input, textarea {
 
 button, select {
   padding: 3px 6px;
-  background: {{color.button_background}};
   border-radius: 4px;
   -moz-border-radius:4px;
   -webkit-border-radius:4px;
   cursor: pointer;
   border: 2px solid {{color.button_border}};
   min-width: 75px;
+}
+
+button {
+   background: {{color.button_background}};
+}
+
+select {
+   background: {{color.select_background}};
 }
 
 body.knowl form button, 
@@ -609,6 +624,10 @@ body.knowl form button:hover,
 body.knowl form select:hover {
     background:    {{color.knowl_hover}};
     border: 2px solid {{color.knowl_thin_border}};
+}
+
+form table td.button {
+	padding-top: 7px
 }
 
 table {

@@ -3,10 +3,11 @@
 import re
 from lmfdb.lfunctions import logger
 import math
-from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, log, exp, pi, prod, floor
+from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.base import getDBConnection
+from lmfdb.utils import truncatenumber
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -88,32 +89,6 @@ def splitcoeff(coeff):
             answer.append(pair2complex(s))
 
     return answer
-
-
-def truncatenumber(numb, precision):
-    localprecision = precision
-    if numb < 0:
-        localprecision = localprecision + 1
-    truncation = float(10 ** (-1.0*localprecision))
-    if float(abs(numb - 1)) < truncation:
-        return("1")
-    elif float(abs(numb - 2)) < truncation:
-        return("2")
-    elif float(abs(numb - 3)) < truncation:
-        return("3")
-    elif float(abs(numb - 4)) < truncation:
-        return("4")
-    elif float(abs(numb)) < truncation:
-        return("0")
-    elif float(abs(numb + 1)) < truncation:
-        return("-1")
-    elif float(abs(numb + 2)) < truncation:
-        return("-2")
-    elif float(abs(numb - 0.5)) < truncation:
-        return("0.5")
-    elif float(abs(numb + 0.5)) < truncation:
-        return("-0.5")
-    return(str(numb)[0:int(localprecision)])
 
 
 def styleTheSign(sign):

@@ -33,10 +33,18 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
     {% endif %} 
 </p>
 
-{% if info.other_data %}     
+
+{% if info.jacobian_decomp %}
+  <table><tr><td>{{KNOWL('ag.jacobian',title='Jacobian variety')}} decomposition:</td><td>${{info.jacobian_decomp}}$</td></tr>
+    <tr><td >Corresponding character(s):</td><td> {{info.corrChar}}</td></tr>
+  </table>
+ {% endif %}
+
+
 
   <p><h2>Other Data</h2>
     <table>
+        <tr><td>Dimension of the corresponding {{KNOWL('ag.shimura_variety',title='Shimura variety')}}:</td><td>{{ info.Ndim}}</td></tr>
       {% if info.ishyp %}     
       <tr><td>Hyperelliptic curve(s):</td><td>{{info.ishyp}}</td></tr>
       {% if info.hypinv  %}
@@ -51,7 +59,7 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
     {% if info.eqns %}
     <br>
-    Equations(s) of curve(s) in this refined passport:
+    Equations(s) of curve(s) in this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}:
        <table>{% for eqn in info.eqns %}
 	  <tr><td> &nbsp; </td><td>${{eqn}}$</td></tr>
 	  {% endfor %} </table> <br>
@@ -59,7 +67,6 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
   </p>
   
 
- {% endif %}
 
 
 <p><h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating Vector(s)')}}</h2>

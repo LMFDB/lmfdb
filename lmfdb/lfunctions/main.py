@@ -21,7 +21,7 @@ from LfunctionComp import isogeny_class_table, isogeny_class_cm
 from Lfunctionutilities import p2sage, styleTheSign, getConductorIsogenyFromLabel
 from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
-from lmfdb.lfunctions import l_function_page, logger
+from lmfdb.lfunctions import l_function_page
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
 from lmfdb.utils import signtocolour, rgbtohex
 
@@ -160,7 +160,7 @@ def l_function_ec_sym3_browse_page():
 def l_function_genus2_browse_page():
     info = {"bread": get_bread(2, [("Genus 2 curve", url_for('.l_function_genus2_browse_page'))])}
     info["representation"] = ''
-    info["contents"] = [processGenus2CurveNavigation(169, 700)]
+    info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
     return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
 
 

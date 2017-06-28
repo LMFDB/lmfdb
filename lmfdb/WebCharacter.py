@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
 from sage.misc.cachefunc import cached_method
-from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp, xsrange
-import re
+from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
 import lmfdb
 from lmfdb.utils import make_logger
