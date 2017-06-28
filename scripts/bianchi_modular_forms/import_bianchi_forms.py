@@ -261,6 +261,9 @@ def make_indices():
     forms.create_index('label')
     forms.create_index('field_label')
     forms.create_index([('field_label',ASCENDING),
+                        ('dimension',ASCENDING),
+                        ('level_norm',ASCENDING)])
+    forms.create_index([('field_label',ASCENDING),
                         ('level_label',ASCENDING)])
     forms.create_index([('field_label',ASCENDING),
                         ('level_label',ASCENDING),
@@ -273,3 +276,48 @@ def make_indices():
                         ('CM',ASCENDING),
                         ('bc',ASCENDING)])
 
+# function to compare newforms and curves:
+def curve_check(fld, min_norm=1, max_norm=None):
+    nfcurves = C['elliptic_curves']['nfcurves']
+    # first check numbers
+    norm_range = {}
+    norm_range['$gte'] = min_norm
+    if max_norm!=None:
+        norm_range['$lte'] = max_norm
+    print("Checking field {}, norm range {}".format(fld, norm_range))
+    form_query = {'field_label':fld, 'dimension':1, 'level_norm':norm_range}
+    curve_query = {'field_label':fld, 'number':1, 'conductor_norm':norm_range}
+    nforms = forms.count(form_query)
+    ncurves = len([c for c in nfcurves.find(curve_query) if not 'CM' in c['label']])
+    if nforms==ncurves:
+        print("# curves = # forms = {}".format(ncurves))
+    else:
+        print("# curves = {} but # forms = {}".format(ncurves, nforms))
+    if nforms>ncurves:
+        print("{} curves missing".format(nforms-ncurves))
+    print("Checking whether there is a curve for each newform...")
+    n = 0
+    for f in forms.find(form_query):
+        lab = f['label']
+        nc = nfcurves.count({'class_label':lab})
+        if nc==0:
+            print("newform {} has no curve (bc={}, cm={})".format(lab,f['bc'],f['CM']))
+            n +=1
+    if n==0:
+        print("no missing curves")
+    else:
+        print("{} missing curves listed".format(n))
+    print("Checking whether there is a newform for each non-CM curve...")
+    n = 0
+    for f in nfcurves.find(curve_query):
+        lab = f['class_label']
+        if 'CM' in lab:
+            continue
+        nf = forms.count({'label':lab})
+        if nf==0:
+            print("curve class {} has no newform".format(lab))
+            n +=1
+    if n==0:
+        print("no missing newforms")
+    else:
+        print("{} missing newforms listed".format(n))

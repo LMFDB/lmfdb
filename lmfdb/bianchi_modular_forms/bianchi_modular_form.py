@@ -348,7 +348,7 @@ def bianchi_modular_form_by_label(lab):
         # do nothing: display the top page
         return redirect(url_for(".index"))
     if isinstance(lab, basestring):
-        res = db_forms().find_one({'label': lab},{'label':True})
+        res = db_forms().find_one({'label': lab})
     else:
         res = lab
         lab = res['label']
