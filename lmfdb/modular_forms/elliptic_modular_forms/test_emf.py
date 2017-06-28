@@ -168,9 +168,7 @@ class EmfTest(LmfdbTest):
         assert "This space is a Galois conjugate of" in page.data
         assert "/ModularForm/GL2/Q/holomorphic/32/2/5/" in page.data
         assert "There are no newforms" not in page.data
-        assert "empty" not in page.data
         assert "Decomposition" not in page.data
-
 
     def test_nontriv_zero_space(self):
         r"""
@@ -180,3 +178,22 @@ class EmfTest(LmfdbTest):
         assert "ModularForm/GL2/Q/holomorphic/5/4/4" in page.data
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/5/4/4/')
         assert "There are no newforms" in page.data
+
+    def test_label_finder(self):
+        r"""
+        Test the function which finds a label for a newform in the database using input 
+        level, weight, character, field and coefficients
+        """
+        from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import find_newform_label
+        ## Two successful searches
+        self.assertTrue(find_newform_label(9,16,1,[-119880,0,1],{2:[0,1]})=='e')
+        self.assertTrue(find_newform_label(71,2,1,[-3,-4,1,1],{3:[0,-1,0]})=='a')
+
+        with self.assertRaises(ArithmeticError):
+            ## check for wrong a(3)
+            find_newform_label(71,2,1,[-3,-4,1,1],{3:[1,-1,0]})
+        with self.assertRaises(ValueError):
+            ## check for wrong degree number field
+            find_newform_label(71,2,1,[-4,1,1],{3:[1,0]})
+        
+            

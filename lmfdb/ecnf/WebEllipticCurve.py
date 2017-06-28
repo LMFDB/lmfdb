@@ -4,12 +4,14 @@ from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
 from lmfdb.base import getDBConnection
-from lmfdb.utils import web_latex, web_latex_ideal_fact, encode_plot
+from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
 ecnf = None
+ecnfstats = None
 nfdb = None
+IQF_labels = None
 
 def db_ecnf():
     global ecnf
@@ -17,11 +19,50 @@ def db_ecnf():
         ecnf = getDBConnection().elliptic_curves.nfcurves
     return ecnf
 
+def db_ecnfstats():
+    global ecnfstats
+    if ecnfstats is None:
+        ecnfstats = getDBConnection().elliptic_curves.nfcurves.stats
+    return ecnfstats
+
 def db_nfdb():
     global nfdb
     if nfdb is None:
         nfdb = getDBConnection().numberfields.fields
     return nfdb
+
+def db_iqf_labels():
+    global IQF_labels
+    if IQF_labels is None:
+        IQF_labels = getDBConnection().elliptic_curves.IQF_labels
+    return IQF_labels
+
+# For backwards compatibility of labels of conductors (ideals) over
+# imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
+# 1. [N,c,d] with N=norm and [N/d,0;c,d] the HNF
+# 2. N.c.d
+# 3. N.i with N=norm and i the index in the standard list of ideals of norm N (per field).
+#
+# Converting 1->2 is trivial and 2->3 is done via a stored lookup
+# table, which contains entries for the five Euclidean imaginary
+# quadratic fields 2.0.d.1 for d in [4,8,3,7,11] and all N<=10000.
+#
+
+def convert_IQF_label(fld, lab):
+    if fld.split(".")[:2] != ['2','0']:
+        return lab
+    newlab = lab
+    if lab[0]=='[':
+        newlab = lab[1:-1].replace(",",".")
+    if len(newlab.split("."))!=3:
+        return newlab
+    data = db_iqf_labels().find_one({'fld':fld, 'old':newlab})
+    if data:
+        newlab = data['new']
+        if newlab!=lab:
+            print("Converted label {} to {} over {}".format(lab, newlab, fld))
+        return newlab
+    return lab
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
@@ -59,7 +100,10 @@ def parse_ainvs(K,ainvs):
 
 def web_ainvs(field_label, ainvs):
     K = make_field(field_label).K()
-    return web_latex(parse_ainvs(K,ainvs))
+    ainvsinlatex = web_latex_split_on(parse_ainvs(K,ainvs), on=[","])
+    ainvsinlatex = ainvsinlatex.replace("\\left[", "\\bigl[")
+    ainvsinlatex = ainvsinlatex.replace("\\right]", "\\bigr]")
+    return ainvsinlatex
 
 from sage.misc.all import latex
 def web_point(P):
@@ -358,12 +402,6 @@ class ECNF(object):
         self.End = "\(\Z\)"
         if self.cm:
             self.rational_cm = K(self.cm).is_square()
-            self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
-            self.cm_nramp = len(self.cm_ramp)
-            if self.cm_nramp==1:
-                self.cm_ramp = self.cm_ramp[0]
-            else:
-                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
             self.cm_sqf = ZZ(self.cm).squarefree_part()
             self.cm_bool = "yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
@@ -371,8 +409,20 @@ class ECNF(object):
                 self.End = "\(\Z[\sqrt{%s}]\)" % (d4)
             else:
                 self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
-            # The line below will need to change once we have curves over non-quadratic fields
-            # that contain the Hilbert class field of an imaginary quadratic field
+
+        # Galois images in CM case:
+        if self.cm and self.galois_images != '?':
+            self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            self.cm_nramp = len(self.cm_ramp)
+            if self.cm_nramp==1:
+                self.cm_ramp = self.cm_ramp[0]
+            else:
+                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
+
+        # Sato-Tate:
+        # The lines below will need to change once we have curves over non-quadratic fields
+        # that contain the Hilbert class field of an imaginary quadratic field
+        if self.cm:
             if self.signature == [0,1] and ZZ(-self.abs_disc*self.cm).is_square():
                 self.ST = st_link_by_name(1,2,'U(1)')
             else:

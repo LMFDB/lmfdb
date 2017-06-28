@@ -86,7 +86,7 @@ from lmfdb.utils import web_latex
 from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ, Set
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
-from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, ideal_HNF, parse_ainvs, parse_point
+from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, parse_ainvs, parse_point
 
 print "getting connection"
 C= getDBConnection()
@@ -134,18 +134,39 @@ def nf_lookup(label):
     nf_lookup_table[label] = K
     return K
 
-# Label of an ideal I in a quadratic field: string formed from the
-# Norm and HNF of the ideal
+from lmfdb.nfutils.psort import ideal_label
 
+the_labels = {}
 
-def ideal_label(I):
-    r"""
-    Returns the HNF-based label of an ideal I in a quadratic field
-    with integral basis [1,w].  This is the string 'N.c.d' where
-    [a,c,d] is the HNF form of I and N=a*d=Norm(I).
+def convert_ideal_label(K, lab):
+    """An ideal label of the form N.c.d is converted to N.i.  Here N.c.d
+    defines the ideal I with Z-basis [a, c+d*w] where w is the standard
+    generator of K, N=N(I) and a=N/d.  The standard label is N.i where I is the i'th ideal of norm N in the standard ordering.
+
+    NB Only intended for use in coverting IQF labels!  To get the standard label from any ideal I just use ideal_label(I).
     """
-    a, c, d = ideal_HNF(I)
-    return "%s.%s.%s" % (a * d, c, d)
+    global the_labels
+    if K in the_labels:
+        if lab in the_labels[K]:
+            return the_labels[K][lab]
+        else:
+            pass
+    else:
+        the_labels[K] = {}
+
+    comps = lab.split(".")
+    # test for labels which do not need any conversion
+    if len(comps)==2:
+        return lab
+    assert len(comps)==3
+    N, c, d = [int(x) for x in comps]
+    a = N//d
+    I = K.ideal(a, c+d*K.gen())
+    newlab = ideal_label(I)
+    #print("Ideal label converted from {} to {} over {}".format(lab,newlab,K))
+    the_labels[K][lab] = newlab
+    return newlab
+
 
 # Reconstruct an ideal in a quadratic field from its label.
 
@@ -240,7 +261,18 @@ def numerify_iso_label(lab):
     else:
         return class_to_int(lab.lower())
 
-def curves(line):
+def convert_conductor_label(field_label, label):
+    """If the field is imaginary quadratic, calls convert_ideal_label, otherwise just return label unchanged.
+    """
+    if field_label.split(".")[:2] != ['2','0']:
+        return label
+    K = nf_lookup(field_label)
+    new_label = convert_ideal_label(K,label)
+    #print("Converting conductor label from {} to {}".format(label, new_label))
+    return new_label
+
+
+def curves(line, verbose=False):
     r""" Parses one line from a curves file.  Returns the label and a dict
     containing fields with keys 'field_label', 'degree', 'signature',
     'abs_disc', 'label', 'short_label', conductor_label',
@@ -262,7 +294,11 @@ def curves(line):
     if len(data) != 13:
         print "line %s does not have 13 fields, skipping" % line
     field_label = data[0]       # string
+    IQF_flag = field_label.split(".")[:2] == ['2','0']
+    K = nf_lookup(field_label) if IQF_flag else None
     conductor_label = data[1]   # string
+    # convert label (does nothing except for imaginary quadratic)
+    conductor_label = convert_conductor_label(field_label, conductor_label)
     iso_label = data[2]         # string
     iso_nlabel = numerify_iso_label(iso_label)         # int
     number = int(data[3])       # int
@@ -311,12 +347,15 @@ def curves(line):
     # get label of elliptic curve over Q for base_change cases (a
     # subset of Q-curves)
 
-    if q_curve:
-        # print "%s is a Q-curve, testing for base-change..." % label
+    if True:  # q_curve: now we have not precomputed Q-curve status
+              # but still want to test for base change!
+        if verbose:
+            print("testing {} for base-change...".format(label))
         E1list = E.descend_to(QQ)
         if len(E1list):
             base_change = [cremona_to_lmfdb(E1.label()) for E1 in E1list]
-            print "%s is base change of %s" % (label, base_change)
+            if verbose:
+                print "%s is base change of %s" % (label, base_change)
         else:
             base_change = []
             # print "%s is a Q-curve, but not base-change..." % label
@@ -397,6 +436,8 @@ def curve_data(line):
         print "line %s does not have 9 fields (excluding gens), skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
+    # convert label (does nothing except for imaginary quadratic)
+    conductor_label = convert_conductor_label(field_label, conductor_label)
     iso_label = data[2]         # string
     number = int(data[3])       # int
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
@@ -421,7 +462,7 @@ def curve_data(line):
         edata['sha_an'] = int(sha)
     return label, edata
 
-def add_heights(data):
+def add_heights(data, verbose=False):
     r""" If data holds the data fields for a curve this returns the same
     with the heights of the points included as a new field with key
     'heights'.  It is more convenient to do this separately than while
@@ -446,7 +487,8 @@ def add_heights(data):
     gens = [E(parse_point(K,x)) for x in data['gens']]
     data['heights'] = [float(P.height()) for P in gens]
     data['reg'] = float(E.regulator_of_points(gens))
-    print("added heights %s and regulator %s to %s" % (data['heights'],data['reg'], data['label']))
+    if verbose:
+        print("added heights %s and regulator %s to %s" % (data['heights'],data['reg'], data['label']))
     return data
 
 def isoclass(line):
@@ -468,6 +510,9 @@ def isoclass(line):
         print "isoclass line %s does not have 5 fields (excluding gens), skipping" % line
     field_label = data[0]       # string
     conductor_label = data[1]   # string
+    # convert label (does nothing except for imaginary quadratic)
+    conductor_label = convert_conductor_label(field_label, conductor_label)
+    print("Converting conductor label from {} to {}".format(data[1], conductor_label))
     iso_label = data[2]         # string
     number = int(data[3])       # int
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
@@ -477,7 +522,9 @@ def isoclass(line):
     mat = [[int(a) for a in r.split(",")] for r in mat[2:-2].split("],[")]
     isogeny_degrees = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(mat)])
 
-    edata = {'label': data[:4], 'isogeny_matrix': mat, 'isogeny_degrees': isogeny_degrees}
+    edata = {'label': [field_label,conductor_label,iso_label],
+             'isogeny_matrix': mat,
+             'isogeny_degrees': isogeny_degrees}
     return label, edata
 
 def read1isogmats(base_path, filename_suffix):
@@ -607,7 +654,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
         count = 0
         print "Starting to read lines from file %s" % f
         for line in h.readlines():
-            # if count==10: break # for testing
+            #if count==20: break # for testing
             label, data = parse(line)
             if count % 100 == 0:
                 print "read %s from %s (%s so far)" % (label, f, count)
@@ -632,7 +679,12 @@ def upload_to_db(base_path, filename_suffix, insert=True):
         print("processing isogeny matrices")
         isogmats = read1isogmats(base_path, filename_suffix)
         for val in vals:
-            val.update(isogmats[val['label']])
+            lab = val['label']
+            print("adding isog data for {}".format(lab))
+            if lab in isogmats:
+                val.update(isogmats[lab])
+            else:
+                print("error: label {} not in isogmats!".format(lab))
 
     if insert:
         print("inserting all data")
@@ -641,6 +693,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
         count = 0
         print("inserting data one curve at a time...")
         for val in vals:
+            #print val
             nfcurves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
             count += 1
             if count % 100 == 0:
@@ -673,8 +726,7 @@ def make_curves_line(ec):
                      str(ec['number']),
                      ec['conductor_ideal'],
                      str(ec['conductor_norm'])
-                     ] + [",".join(t) for t in ec['ainvs']
-                          ] + [str(ec['cm']), str(int(len(ec['base_change']) > 0))]
+                     ] + ec['ainvs'].split(";") + [str(ec['cm']), str(int(len(ec['base_change']) > 0))]
     return " ".join(output_fields)
 
 
@@ -773,7 +825,7 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
 
     file = {}
     prefixes = ['curves', 'curve_data', 'isoclass']
-    prefixes = ['curve_data']
+    #prefixes = ['curve_data']
     suffix = ''.join([".", field_label, ".", str(min_norm), "-", str(max_norm)])
     for prefix in prefixes:
         filename = os.path.join(base_path, ''.join([prefix, suffix]))
@@ -853,8 +905,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       #'sha_an': int_type,
                       'isogeny_matrix': list_type, # of lists of ints
                       'isogeny_degrees': list_type, # of ints
-                      #'class_deg': int_type, # of ints
-                      #'class_deg': int_type, # of ints
+                      #'class_deg': int_type,
                       'non-surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
                       'galois_images': list_type, # of strings
@@ -973,4 +1024,171 @@ def add_isogs_to_one(c):
 #
 #  %runfile data_mgt/utilities/rewrite.py
 #  rewrite_collection(C.elliptic_curves,'nfcurves','nfcurves.new',add_isogs_to_one)
+
+################################################################################
+#
+# Function to update the nfcurves.stats collection, to be run after adding data
+#
+################################################################################
+
+def update_stats(verbose=True):
+    from data_mgt.utilities.rewrite import update_attribute_stats
+    from bson.code import Code
+    ec = C.elliptic_curves
+    ecdbstats = ec.nfcurves.stats
+
+    # get list of degrees
+
+    degrees = nfcurves.distinct('degree')
+    if verbose:
+        print("degrees: {}".format(degrees))
+
+    # get list of signatures for each degree.  Note that it would not
+    # work to use nfcurves.find({'degree':d}).distinct('signature')
+    # since 'signature' is currently a list of integers an mongo would
+    # return a list of integers, not a list of lists.  With hindsight
+    # it would have been better to store the signature as a string.
+
+    if verbose:
+        print("Adding signatures_by_degree")
+    reducer = Code("""function(key,values){return Array.sum(values);}""")
+    attr = 'signature'
+    mapper = Code("""function(){emit(""+this."""+attr+""",1);}""")
+    sigs_by_deg = {}
+    for d in degrees:
+        sigs_by_deg[str(d)] = [ r['_id'] for r in nfcurves.inline_map_reduce(mapper,reducer,query={'degree':d})]
+        if verbose:
+            print("degree {} has signatures {}".format(d,sigs_by_deg[str(d)]))
+
+    entry = {'_id': 'signatures_by_degree'}
+    ecdbstats.delete_one(entry)
+    entry.update(sigs_by_deg)
+    ecdbstats.insert_one(entry)
+
+    # get list of fields for each signature.  Simple code here faster than map/reduce
+
+    if verbose:
+        print("Adding fields_by_signature")
+    from sage.misc.flatten import flatten
+    sigs = flatten(sigs_by_deg.values())
+    fields_by_sig = dict([sig,nfcurves.find({'signature':[int(x) for x in sig.split(",")]}).distinct('field_label')] for sig in sigs)
+    entry = {'_id': 'fields_by_signature'}
+    ecdbstats.delete_one(entry)
+    entry.update(fields_by_sig)
+    ecdbstats.insert_one(entry)
+
+    # get list of fields for each degree
+
+    if verbose:
+        print("Adding fields_by_degree")
+    fields_by_deg = dict([str(d),sorted(nfcurves.find({'degree':d}).distinct('field_label')) ] for d in degrees)
+    entry = {'_id': 'fields_by_degree'}
+    ecdbstats.delete_one(entry)
+    entry.update(fields_by_deg)
+    ecdbstats.insert_one(entry)
+
+    fields = flatten(fields_by_deg.values())
+    if verbose:
+        print("{} fields, {} signatures, {} degrees".format(len(fields),len(sigs),len(degrees)))
+
+    if verbose:
+        print("Adding curve counts for torsion order, torsion structure")
+    update_attribute_stats(ec, 'nfcurves', ['torsion_order', 'torsion_structure'])
+
+    if verbose:
+        print("Adding curve counts by degree, signature and field")
+    update_attribute_stats(ec, 'nfcurves', ['degree', 'signature', 'field_label'])
+
+    if verbose:
+        print("Adding class counts by degree, signature and field")
+    update_attribute_stats(ec, 'nfcurves', ['degree', 'signature', 'field_label'],
+                           prefix="classes", filter={'number':int(1)})
+
+    # conductor norm ranges:
+    # total:
+    if verbose:
+        print("Adding curve and class counts and conductor range")
+    norms = ec.nfcurves.distinct('conductor_norm')
+    data = {'ncurves': ec.nfcurves.count(),
+            'nclasses': ec.nfcurves.find({'number':1}).count(),
+            'min_norm': min(norms),
+            'max_norm': max(norms),
+            }
+    entry = {'_id': 'conductor_norm'}
+    ecdbstats.delete_one(entry)
+    entry.update(data)
+    ecdbstats.insert_one(entry)
+
+    # by degree:
+    if verbose:
+        print("Adding curve and class counts and conductor range, by degree")
+    degree_data = {}
+    for d in degrees:
+        query = {'degree':d}
+        res = nfcurves.find(query)
+        ncurves = res.count()
+        Ns = res.distinct('conductor_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        query['number'] = 1
+        nclasses = nfcurves.count(query)
+        degree_data[str(d)] = {'ncurves':ncurves,
+                               'nclasses':nclasses,
+                               'min_norm':min_norm,
+                               'max_norm':max_norm,
+        }
+
+    entry = {'_id': 'conductor_norm_by_degree'}
+    ecdbstats.delete_one(entry)
+    entry.update(degree_data)
+    ecdbstats.insert_one(entry)
+
+    # by signature:
+    if verbose:
+        print("Adding curve and class counts and conductor range, by signature")
+    sig_data = {}
+    for sig in sigs:
+        query = {'signature': [int(c) for c in sig.split(",")]}
+        res = nfcurves.find(query)
+        ncurves = res.count()
+        Ns = res.distinct('conductor_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        query['number'] = 1
+        nclasses = nfcurves.count(query)
+        sig_data[sig] = {'ncurves':ncurves,
+                               'nclasses':nclasses,
+                               'min_norm':min_norm,
+                               'max_norm':max_norm,
+        }
+    entry = {'_id': 'conductor_norm_by_signature'}
+    ecdbstats.delete_one(entry)
+    entry.update(sig_data)
+    ecdbstats.insert_one(entry)
+
+    # by field:
+    if verbose:
+        print("Adding curve and class counts and conductor range, by field")
+    entry = {'_id': 'conductor_norm_by_field'}
+    ecdbstats.delete_one(entry)
+    field_data = {}
+    for f in fields:
+        ff = f.replace(".",":") # mongo does not allow "." in key strings
+        query = {'field_label': f}
+        res = nfcurves.find(query)
+        ncurves = res.count()
+        Ns = res.distinct('conductor_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        query['number'] = 1
+        nclasses = nfcurves.count(query)
+        field_data[ff] = {'ncurves':ncurves,
+                               'nclasses':nclasses,
+                               'min_norm':min_norm,
+                               'max_norm':max_norm,
+        }
+    entry = {'_id': 'conductor_norm_by_field'}
+    ecdbstats.delete_one(entry)
+    entry.update(field_data)
+    ecdbstats.insert_one(entry)
 

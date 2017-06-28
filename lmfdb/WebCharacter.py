@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
 from sage.misc.cachefunc import cached_method
-from sage.all import gcd, Rational, power_mod, Mod, Integer, Integers, gp, xsrange
-import re
+from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
 import lmfdb
 from lmfdb.utils import make_logger
 logger = make_logger("DC")
+from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from WebNumberField import WebNumberField
 try:
     from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
-from HeckeCharacters import HeckeChar, RayClassGroup
+from lmfdb.characters.HeckeCharacters import HeckeChar, RayClassGroup
+from lmfdb.characters.TinyConrey import ConreyCharacter, kronecker_symbol, symbol_numerator
+from lmfdb.characters.utils import url_character, complex2str, evalpolelt
 
 """
 Any character object is obtained as a double inheritance of
@@ -54,173 +56,15 @@ and one obtains:
 plus the additional WebHeckeExamples which collects interesting examples
 of Hecke characters but could be converted to a yaml file [TODO]
 
+The design is the following:
+
+- the family class ancestor (Dirichler/Hecke) triggers a _compute method
+  which initialize some mathematical class or fetches data in
+  the database
+
+- the object classe ancestor triggers the __init__ method
+
 """
-
-#############################################################################
-###
-###    small utilities to be removed one day
-###
-#############################################################################
-
-def evalpolelt(label,gen,genlabel='a'):
-    """ label is a compact polynomial expression in genlabel                    
-        ( '*' and '**' are removed )                                            
-    """                                                                         
-    res = 0                                                                     
-    regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?'%genlabel                         
-    for m in re.finditer(regexp,label):                                         
-        s,c,e = m.groups()                                                      
-        if c == '' and e == None: break    
-        if c == '':          
-            c = 1                            
-        else:                                
-            """ c may be an int or a rational a/b """
-            from sage.rings.rational import Rational
-            c = str(c).replace('o','/')
-            c = Rational(c)                                                      
-        if s == '-': c = -c                                                     
-        if e == None:                                                           
-            e = 0                                                               
-        elif e == genlabel:                                                     
-            e = 1                                                               
-        else:
-            e = int(e[1:])                                                                   
-        res += c*gen**e           
-    return res              
-
-def complex2str(g, digits=10):
-    real = round(g.real(), digits)
-    imag = round(g.imag(), digits)
-    if imag == 0.:
-        return str(real)
-    elif real == 0.:
-        return str(imag) + 'i'
-    else:
-        return str(real) + '+' + str(imag) + 'i'
-
-def symbol_numerator(cond, parity):
-    #Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
-    # Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
-    # symbol_numerator returns the appropriate Kronecker symbol depending on the conductor of \chi. 
-    m = cond
-    if cond % 2 == 1:
-        if cond % 4 == 3:
-            m = -cond
-    elif cond % 8 == 4:
-        # Fixed cond % 16 == 4 and cond % 16 == 12 were switched in the previous version of the code. 
-        # Let d be a non zero squarefree integer. If d  = 2,3 (mod) 4 and if cond = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12 then we set m = cond. 
-        # On the other hand if d = 1 (mod) 4 and cond = 4d = 4 (4n +1) = 16n + 4 then we set m = -cond. 
-        if cond % 16 == 4:
-            m = -cond
-    elif cond % 16 == 8:
-        if parity == 1:
-            m = -cond
-    else:
-        return None
-    return m
-
-def kronecker_symbol(m):
-    if m:
-        return r'\(\displaystyle\left(\frac{%s}{\bullet}\right)\)' % (m)
-    else:
-        return None
-
-###############################################################################
-## Conrey character with no call to Jonathan's code
-## in order to handle big moduli
-##
-class ConreyCharacter:
-    """
-    tiny implementation on Conrey index only
-    """
-
-    def __init__(self, modulus, number):
-        assert gcd(modulus, number)==1
-        self.modulus = Integer(modulus)
-        self.number = Integer(number)
-
-    @property
-    def texname(self):
-        return WebDirichlet.char2tex(self.modulus, self.number)
-
-    @cached_method
-    def modfactor(self):
-        return self.modulus.factor()
-
-    @cached_method
-    def conductor(self):
-        cond = Integer(1);
-        number = self.number
-        for p,e in self.modfactor():
-            mp = Mod(number, p**e);
-            if mp == 1:
-                continue
-            if p == 2:
-                cond = 4
-                if number % 4 == 3:
-                    mp = -mp
-            else:
-                cond *= p
-                mp = mp**(p-1)
-            while mp != 1:
-                cond *= p
-                mp = mp**p
-        return cond
-
-    def is_primitive(self):
-        return self.conductor() == self.modulus
-
-    @cached_method
-    def parity(self):
-        number = self.number
-        par = 0;
-        for p,e in self.modfactor():
-            if p == 2:
-                if number % 4 == 3:
-                    par = 1 - par
-            else:
-                phi2 = (p-1)/Integer(2) * p **(e-1)
-                if Mod(number, p ** e)**phi2 != 1:
-                    par = 1 - par
-        return par
-
-    def is_odd(self):
-        return self.parity() == 1
-
-    def is_even(self):
-        return self.parity() == 0
-
-    @cached_method
-    def multiplicative_order(self):
-        return Mod(self.number, self.modulus).multiplicative_order()
-
-    @property
-    def order(self):
-        return self.multiplicative_order()
-
-    @cached_method
-    def kronecker_symbol(self):
-        c = self.conductor()
-        p = self.parity()
-        return kronecker_symbol(symbol_numerator(c, p))
-
-###############################################################################
-## url_for modified for characters
-def url_character(**kwargs):
-    if 'type' not in kwargs:
-        return url_for('characters.render_characterNavigation')
-    elif kwargs['type'] == 'Dirichlet':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.dc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Dirichletwebpage',**kwargs)
-    elif kwargs['type'] == 'Hecke':
-        del kwargs['type']
-        if kwargs.get('calc',None):
-            return url_for('characters.hc_calc',**kwargs)
-        else:
-            return url_for('characters.render_Heckewebpage',**kwargs)
 
 #############################################################################
 ###
@@ -499,34 +343,18 @@ class WebHecke(WebCharObject):
     def ideal2tex(ideal):
         a,b = ideal.gens_two()
         return "\(\langle %s, %s\\rangle\)"%(a._latex_(), b._latex_())
+
+    @staticmethod
+    def ideal2cas(ideal):
+        return '%s,%s'%(ideal.gens_two())
+
     @staticmethod
     def ideal2label(ideal):
-        """
-        labeling convention for ideal f:
-        use two elements representation f = (n,b)
-        with n = f cap Z an integer
-         and b an algebraic element sum b_i a^i
-        label f as n.b1+b2*a^2+...bn*a^n
-        (dot between n and b, a is the field generator, use '+' and )
-        """
-        a,b = ideal.gens_two()
-        s = '+'.join( '%sa%i'%(b,i) for i,b in enumerate(b.polynomial().list())
-                                      if b != 0 ) 
-        return "%s.%s"%(a,s.replace('+-','-').replace('/','o'))
+        return ideal_label(ideal)
 
     @staticmethod
     def label2ideal(k,label):
-        """ k = underlying number field """
-        if label.count('.'):
-            n, b = label.split(".")
-        else:
-            n, b = label, '0'
-        a = k.gen()
-        # FIXME: dangerous
-        n, b = evalpolelt(n,a,'a'), evalpolelt(b,a,'a')
-        n, b = k(n), k(b)
-        return k.ideal( (n,b) )
-
+        return ideal_from_label(k, label)
 
     """
     underlying group contains ideal classes, but are represented
@@ -576,14 +404,9 @@ class WebHecke(WebCharObject):
     def label2number(label):
         return map(int,label.split('.'))
 
-
     @staticmethod
     def label2nf(label):
         return WebNumberField(label).K()
-        # FIXME: replace by calls to WebNF
-        #x = var('x')
-        #pol = evalpolelt(label,x,'x')
-        #return NumberField(pol,'a')
 
     @property
     def groupelts(self):
@@ -894,7 +717,10 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     @property
     def codeinit(self):
         return {
-                'sage': 'H = DirichletGroup_conrey(%i)'%(self.modulus),
+                'sage': [
+                    'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                    'H = DirichletGroup_conrey(%i)'%(self.modulus)
+                    ],
                 'pari': 'g = idealstar(,%i,2)'%(self.modulus)
                 }
 
@@ -971,10 +797,10 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def codeinit(self):
         return {
-          'sage': [ 'H = DirichletGroup_conrey(%i)'%(self.modulus),
+          'sage': [ 'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                 'H = DirichletGroup_conrey(%i)'%(self.modulus),
                  'chi = H[%i]'%(self.number) ],
-          'pari': [ 'g = idealstar(,%i,2)'%(self.modulus),
-                    'chi = znconreychar(g,%i)'%(self.number) ],
+          'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
           }
 
     @property
@@ -1033,13 +859,9 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def codegaloisorbit(self):
-        return { 'sage': 'chi_sage.galois_orbit()',
-                 'pari': [
-                     '[mod,num,order] = [%i,%i,%i]'%(self.modulus,self.number,self.order),
-                     '[Mod(num,mod)^k | k<-[1..order-1], gcd(k,order)==1]',
-                     #'order = charorder(g,chi)',
-                     #'[ chi*k % order | k <-[1..order-1], gcd(k,order)==1 ]'
-                     ]
+        return { 'sage': 'chi.sage_character().galois_orbit()',
+                 'pari': [ 'order = charorder(g,chi)',
+                           '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
                  }
 
 
@@ -1102,7 +924,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codegenvalues(self):
-        return { 'sage': 'chi_sage.values_on_gens()',
+        return { 'sage': 'chi(k) for k in H.gens()',
                  'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ value in Q/Z' }
 
     def value(self, val):
@@ -1117,7 +939,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codevalue(self):
-        return { 'sage': 'chi_sage(x) # x integer',
+        return { 'sage': 'chi(x) # x integer',
                  'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
 
     def gauss_sum(self, val):
@@ -1139,7 +961,8 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codegauss(self):
-        return { 'sage': 'chi.gauss_sum(a)' }
+        return { 'sage': 'chi.sage_character().gauss_sum(a)',
+                 'pari': 'znchargauss(g,chi,a)' }
 
     def jacobi_sum(self, val):
         mod, num = self.modulus, self.number
@@ -1161,7 +984,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codejacobi(self):
-        return { 'sage': 'chi.jacobi_sum(n)' }
+        return { 'sage': 'chi.sage_character().jacobi_sum(n)' }
 
     def kloosterman_sum(self, arg):
         a, b = map(int, arg.split(','))
@@ -1185,7 +1008,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codekloosterman(self):
-        return { 'sage': 'chi_sage.kloosterman_sum(a,b)' }
+        return { 'sage': 'chi.sage_character().kloosterman_sum(a,b)' }
 
 
 class WebHeckeExamples(WebHecke):
@@ -1303,15 +1126,22 @@ class WebHeckeCharacter(WebChar, WebHecke):
     @property
     def codeinit(self):
         kpol = self.k.polynomial()
+        mod = self.ideal2cas(self._modulus)
         return {
-                'sage':  ['k.<a> = NumberField(%s)'%kpol,
-                          'm = k.ideal(%s)'%self.modulus,
+                'sage':  [
+                          'k.<a> = NumberField(%s)'%kpol,
+                          'm = k.ideal(%s)'%mod,
+                          'from HeckeCharacters import RayClassGroup # use package in the lmfdb',
                           'G = RayClassGroup(k,m)',
                           'H = G.dual_group()',
-                          'chi = H(%s)'%self.number],
-                'pari':  ['k=bnfinit(%s)'%kpol,
+                          'chi = H(%s)'%self.number
+                          ],
+                'pari':  [
+                           'k=bnfinit(%s)'%str(kpol).replace('x','a'),
+                           'm=idealhnf(k,%s)'%mod,
                            'g=bnrinit(k,m,1)',
-                           'chi = %s'%self.number]
+                           'chi = %s'%self.number
+                           ]
                 }
 
     @property
@@ -1322,7 +1152,7 @@ class WebHeckeCharacter(WebChar, WebHecke):
     def codecond(self):
         return {
                 'sage': 'chi.conductor()',
-                'pari': 'bnrconductorofchar(G,chi)'
+                'pari': 'bnrconductorofchar(g,chi)'
                 }
 
     @property
@@ -1377,14 +1207,22 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     @property
     def codeinit(self):
         kpol = self.k.polynomial()
+        mod = self.ideal2cas(self._modulus)
         return {
-                'sage':  ['k.<a> = NumberField(%s)'%kpol,
-                          'm = k.ideal(%s)'%self.modulus,
+                'sage':  [
+                          'k.<a> = NumberField(%s)'%kpol,
+                          'm = k.ideal(%s)'%mod,
+                          'from HeckeCharacters import RayClassGroup # use package in the lmfdb',
                           'G = RayClassGroup(k,m)',
-                          'H = G.dual_group()' ],
-                'pari':  ['k=bnfinit(%s)'%kpol,
-                           'g=bnrinit(k,m,1)']
+                          'H = G.dual_group()',
+                          ],
+                'pari':  [
+                           'k=bnfinit(%s)'%str(kpol).replace('x','a'),
+                           'm=idealhnf(k,%s)'%mod,
+                           'g=bnrinit(k,m,1)',
+                           ]
                 }
+
 
     @property
     def title(self):
@@ -1399,6 +1237,6 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
     def codegen(self):
         return {
                 'sage': 'G.gen_ideals()',
-                'pari': 'G.gen'
+                'pari': 'g.gen'
                 }
 

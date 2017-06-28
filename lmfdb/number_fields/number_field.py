@@ -380,7 +380,6 @@ def render_field_webpage(args):
             if len(sibdeg[2]) ==0:
                 sibdeg[2] = dnc
             else:
-                sibdeg[2] = [z[0] for z in sibdeg[2]]
                 sibdeg[2] = ', '.join(sibdeg[2])
                 if len(sibdeg[2])<sibdeg[1]:
                     sibdeg[2] += ', some '+dnc
