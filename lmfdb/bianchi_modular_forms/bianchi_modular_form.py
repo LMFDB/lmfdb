@@ -67,7 +67,7 @@ def index():
         t = 'Bianchi modular forms'
         bread = [('Bianchi modular forms', url_for(".index"))]
         info['learnmore'] = []
-        return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, bc_examples=bc_examples, learnmore=learnmore_list())
+        return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, bc_examples=bc_examples, learnmore=learnmore_list_remove('Completeness'))
     else:
         return bianchi_modular_form_search(**args)
 

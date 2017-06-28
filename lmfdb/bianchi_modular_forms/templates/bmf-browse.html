@@ -1,28 +1,29 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<div>
+{{ KNOWL_INC('dq.mf.bianchi.extent') }}
+</div>
+
 <h2> Browse {{ KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi
-  modular forms') }} spaces </h2>
+  modular forms') }} </h2>
 
 <p>
-By field:
+Browse newforms by base field:
+{% for f in info.field_forms %}
+{%-if loop.index > 1 %}, {% endif%}
+<a href={{f.url}}>{{f.name}}</a>
+{%-endfor %}
+</p>
+
+<p>
+Browse newform spaces by base field:
 {% for f in info.field_list %}
 {%-if loop.index > 1 %}, {% endif%}
 <a href={{f.url}}>{{f.name}}</a>
 {%-endfor %}
 </p>
 
-
-<h2> Browse {{ KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi
-  modular forms') }} </h2>
-
-<p>
-By field:
-{% for f in info.field_forms %}
-{%-if loop.index > 1 %}, {% endif%}
-<a href={{f.url}}>{{f.name}}</a>
-{%-endfor %}
-</p>
 
 
 
@@ -45,7 +46,7 @@ By field:
 <p>A <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a> from the database</p>
 
 
-<h2> Search for a form </h2>
+<h2> Search </h2>
 
 <form>
 <table>

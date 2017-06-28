@@ -3,7 +3,7 @@ from lmfdb.base import getDBConnection
 from lmfdb.utils import make_logger
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
 from lmfdb.ecnf.WebEllipticCurve import make_field
-from lmfdb.nfutils.psort import primes_iter, ideal_from_label
+from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
 from lmfdb.utils import web_latex
 from flask import url_for
 from sage.all import QQ, PolynomialRing, NumberField
@@ -96,14 +96,15 @@ class WebBMF(object):
             self.hecke_poly = web_latex(self.hecke_poly)
             def conv(ap):
                 if '?' in ap:
-                    return '?'
+                    return 'not known'
                 else:
                     return F(str(ap))
+            self.hecke_eigs = [conv(str(ap)) for ap in self.hecke_eigs]
 
-            self.hecke_eigs = [conv(ap) for ap in self.hecke_eigs]
         self.nap = len(self.hecke_eigs)
-        self.nap0 = min(100, self.nap)
+        self.nap0 = min(50, self.nap)
         self.hecke_table = [[web_latex(p.norm()),
+                             ideal_label(p),
                              web_latex(p.gens_reduced()[0]),
                              web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.nap0])]
         level = ideal_from_label(K,self.level_label)
@@ -112,6 +113,7 @@ class WebBMF(object):
         self.have_AL = self.AL_eigs[0]!='?'
         if self.have_AL:
             self.AL_table = [[web_latex(p.norm()),
+                             ideal_label(p),
                               web_latex(p.gens_reduced()[0]),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
         self.sign = 'not determined'
@@ -127,13 +129,20 @@ class WebBMF(object):
             self.Lratio = QQ(self.Lratio)
             self.anrank = "\(0\)" if self.Lratio!=0 else "\(\ge1\), odd" if self.sfe==-1 else "\(\ge2\), even"
 
-        self.properties2 = [('base field', pretty_field),
-                            ('label', self.label),
-                            ('level', self.level_ideal2),
-                            ('level norm', str(self.level_norm)),
-                            ('weight', str(self.weight)),
-                            ('dimension', str(self.dimension))
-                            ]
+        self.properties2 = [('Base field', pretty_field),
+                            ('Weight', str(self.weight)),
+                            ('Level norm', str(self.level_norm)),
+                            ('Level', self.level_ideal2),
+                            ('Label', self.label),
+                            ('Dimension', str(self.dimension))
+        ]
+
+        if self.CM == '?':
+            self.CM = 'not determined'
+        elif self.CM == 0:
+            self.CM = 'no'
+        self.properties2.append(('CM', str(self.CM)))
+
         self.bc_extra = ''
         self.bcd = 0
         self.bct = self.bc!='?' and self.bc!=0
@@ -155,12 +164,7 @@ class WebBMF(object):
             self.bcd = -self.bc
             self.bc = 'no'
             self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
-        self.properties2.append(('base-change', str(self.bc)))
-
-        if self.CM == '?':
-            self.CM = 'not determined'
-        elif self.CM == 0:
-            self.CM = 'no'
+        self.properties2.append(('Base-change', str(self.bc)))
 
         if db_ecnf().find_one({'class_label':self.label}):
             self.ec_status = 'exists'
@@ -171,7 +175,6 @@ class WebBMF(object):
             else:
                 self.ec_status = 'missing'
 
-        self.properties2.append(('CM', str(self.CM)))
         self.properties2.append(('Sign', self.sign))
         self.properties2.append(('Analytic rank', self.anrank))
 
