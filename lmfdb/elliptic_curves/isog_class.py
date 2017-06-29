@@ -81,15 +81,15 @@ class ECisog_class(object):
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
         self.newform_exists_in_db = is_newform_in_db(self.newform_label)
 
-        self.lfunction_link = url_for("l_functions.l_function_ec_page", label=self.lmfdb_iso)
+        self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor = N, isogeny = iso)
 
         self.friends =  [('L-function', self.lfunction_link)]
         if not self.CM:
             self.CM = "no"
             if int(N)<=300:
-                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', label=self.lmfdb_iso))]
+                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor = N, isogeny = iso))]
             if int(N)<=50:
-                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', label=self.lmfdb_iso))]
+                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor = N, isogeny = iso))]
         if self.newform_exists_in_db:
             self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
 

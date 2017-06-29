@@ -369,6 +369,3 @@ def ideals_iterator(K,minnorm=1,maxnorm=Infinity):
     for n in srange(minnorm,maxnorm+1):
         for I in ideals_of_norm(K,n):
             yield I
-
-
-

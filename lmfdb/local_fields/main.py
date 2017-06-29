@@ -27,8 +27,7 @@ def db():
     return the_db
 
 def lfdb():
-    #return db().localfields.fields
-    return db().localfields.newfields
+    return db().localfields.fields
 
 
 def get_bread(breads=[]):
@@ -53,7 +52,7 @@ def group_display_shortC(C):
 
 
 def lf_knowl_guts(label, C):
-    f = C.localfields.newfields.find_one({'label':label})
+    f = C.localfields.fields.find_one({'label':label})
     ans = 'Local number field %s<br><br>'% label
     ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(string2list(f['coeffs']))))
     GG = f['gal']

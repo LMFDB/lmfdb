@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # This script runs nosetests for the whole project.
 # It also generates a coverage report when the "coverage" module is installed.
-# When you specify the argument 'html', a HTML report will be generated, too.
+# including a HTML report 
 
 # Note: to run the tests, sage must be in your path.  If necessary do
 # export PATH=$PATH:/path/to/sage
@@ -25,13 +25,11 @@ cd `dirname "$0"`
 # get rid of all cached .pyc files!
 find . -name '*.pyc' -delete
 
-HTML=''
 WHAT=''
 COVER=''
 if [[ "$1" == "coverage" ]]; then
   rm -rf lmfdb/cover
-  HTML='--cover-html'
-  COVER='--with-coverage --cover-erase --cover-package=lmfdb $HTML'
+  COVER='--with-coverage --cover-erase --cover-package=lmfdb --cover-html'
 else
   WHAT="$@"
 fi
