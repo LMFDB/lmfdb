@@ -10,22 +10,20 @@ import tempfile
 import random
 import os
 import time
+import math
+import cmath
 import sage
 
-from random import randint
-from flask import request, make_response, flash, url_for, current_app
-from functools import wraps
-from werkzeug.contrib.cache import SimpleCache
-
+from sage.all import latex, CC
 from copy import copy
+from random import randint
+from functools import wraps
+from flask import request, make_response, flash, url_for, current_app
+from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
 
 from lmfdb.base import app
-
-import math
-import cmath
-from sage.all import latex, CC
 
 
 def flash_error(errmsg, *args):
