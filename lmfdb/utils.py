@@ -504,12 +504,9 @@ def cached(timeout=15 * 60, key='cache::%s::%s'):
 
 
 
-
-
-
-
-
-
+################################################################################
+#  logging utilities
+################################################################################
 
 class LmfdbFormatter(logging.Formatter):
     """
@@ -589,10 +586,6 @@ def make_logger(bp_or_name, hl=False):
     return l
 
 
-def orddict_to_strlist(v):
-    """
-    v -- dictionary with int keys
-    """
 
 
 
@@ -708,3 +701,9 @@ def ajax_more(callback, *arg_list, **kwds):
         return res
 
 
+# What is this? I'm surprised this didn't break anything
+def orddict_to_strlist(v):
+    """
+    v -- dictionary with int keys
+    """
+    return
