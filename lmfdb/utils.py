@@ -213,6 +213,111 @@ def pol_to_html(p):
 
 
 
+################################################################################
+#  latex/mathjax utilities
+################################################################################
+
+def web_latex(x):
+    if isinstance(x, (str, unicode)):
+        return x
+    else:
+        return "\( %s \)" % latex(x)
+
+
+# if you just use web_latex(x) where x is a factored ideal then the
+# parentheses are doubled which does not look good!
+def web_latex_ideal_fact(x):
+    y = web_latex(x)
+    y = y.replace("(\\left(","\\left(")
+    y = y.replace("\\right))","\\right)")
+    return y
+
+
+def web_latex_split_on(x, on=['+', '-']):
+    if isinstance(x, (str, unicode)):
+        return x
+    else:
+        A = "\( %s \)" % latex(x)
+        for s in on:
+            A = A.replace(s, '\) ' + s + ' \( ')
+    return A
+
+
+# web_latex_split_on was not splitting polynomials, so we make an expanded version
+def web_latex_split_on_pm(x):
+    on = ['+', '-']
+ #   A = "\( %s \)" % latex(x)
+    try:
+        A = "\(" + x + "\)"  # assume we are given LaTeX to split on
+    except:
+        A = "\( %s \)" % latex(x)
+
+       # need a more clever split_on_pm that inserts left and right properly
+    A = A.replace("\\left","")
+    A = A.replace("\\right","")
+    for s in on:
+  #      A = A.replace(s, '\) ' + s + ' \( ')
+   #     A = A.replace(s, '\) ' + ' \( \mathstrut ' + s )
+        A = A.replace(s, '\)' + ' \(\mathstrut ' + s + '\mathstrut ')
+    # the above will be re-done using a more sophisticated method involving
+    # regular expressions.  Below fixes bad spacing when the current approach
+    # encounters terms like (-3+x)
+    for s in on:
+        A = A.replace('(\) \(\mathstrut '+s,'(' + s)
+    A = A.replace('( {}','(')
+    A = A.replace('(\) \(','(')
+    A = A.replace('\(+','\(\mathstrut+')
+    A = A.replace('\(-','\(\mathstrut-')
+    A = A.replace('(  ','(')
+    A = A.replace('( ','(')
+
+    return A
+    # return web_latex_split_on(x)
+
+def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
+
+    def insert_latex(s):
+        return s.group(1) + '\) \('
+
+    if isinstance(x, (str, unicode)):
+        return x
+    else:
+        A = "\( %s \)" % latex(x)
+        c = re.compile(r)
+        A = A.replace('+', '\) \( {}+ ')
+        A = A.replace('-', '\) \( {}- ')
+#        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
+#        A = A.replace('\\right)','\left.\\right)')
+        A = A.replace('\left(','\\bigl(')
+        A = A.replace('\\right)','\\bigr)')
+        A = c.sub(insert_latex, A)
+
+    # the above will be re-done using a more sophisticated method involving
+    # regular expressions.  Below fixes bad spacing when the current approach
+    # encounters terms like (-3+x)
+    A = A.replace('( {}','(')
+    A = A.replace('(\) \(','(')
+    A = A.replace('\(+','\(\mathstrut+')
+    A = A.replace('\(-','\(\mathstrut-')
+    A = A.replace('(  ','(')
+    A = A.replace('( ','(')
+    A = A.replace('+\) \(O','+O')
+    return A
+
+
+# make latex matrix from list of lists
+def list_to_latex_matrix(li):
+    dim = str(len(li[0]))
+    mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
+    for row in li:
+        row = [str(a) for a in row]
+        mm += ' & '.join(row)
+        mm += r'\\'
+    mm = mm[:-2] # remove final line break
+    mm += r'\end{array}\right)'
+    return mm
+
+
 
 
 
@@ -430,103 +535,6 @@ def orddict_to_strlist(v):
 
 
 
-def web_latex(x):
-    if isinstance(x, (str, unicode)):
-        return x
-    else:
-        return "\( %s \)" % latex(x)
-
-# if you just use web_latex(x) where x is a factored ideal then the
-# parentheses are doubled which does not look good!
-def web_latex_ideal_fact(x):
-    y = web_latex(x)
-    y = y.replace("(\\left(","\\left(")
-    y = y.replace("\\right))","\\right)")
-    return y
-
-def web_latex_split_on(x, on=['+', '-']):
-    if isinstance(x, (str, unicode)):
-        return x
-    else:
-        A = "\( %s \)" % latex(x)
-        for s in on:
-            A = A.replace(s, '\) ' + s + ' \( ')
-    return A
-    
-# web_latex_split_on was not splitting polynomials, so we make an expanded version
-def web_latex_split_on_pm(x):
-    on = ['+', '-']
- #   A = "\( %s \)" % latex(x)
-    try:
-        A = "\(" + x + "\)"  # assume we are given LaTeX to split on
-    except:
-        A = "\( %s \)" % latex(x)
-
-       # need a more clever split_on_pm that inserts left and right properly
-    A = A.replace("\\left","")
-    A = A.replace("\\right","")
-    for s in on:
-  #      A = A.replace(s, '\) ' + s + ' \( ')
-   #     A = A.replace(s, '\) ' + ' \( \mathstrut ' + s )
-        A = A.replace(s, '\)' + ' \(\mathstrut ' + s + '\mathstrut ')
-    # the above will be re-done using a more sophisticated method involving
-    # regular expressions.  Below fixes bad spacing when the current approach
-    # encounters terms like (-3+x)
-    for s in on:
-        A = A.replace('(\) \(\mathstrut '+s,'(' + s)
-    A = A.replace('( {}','(')
-    A = A.replace('(\) \(','(')
-    A = A.replace('\(+','\(\mathstrut+')
-    A = A.replace('\(-','\(\mathstrut-')
-    A = A.replace('(  ','(')
-    A = A.replace('( ','(')
-
-    return A
-    # return web_latex_split_on(x)
-
-def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
-
-    def insert_latex(s):
-        return s.group(1) + '\) \('
-
-    if isinstance(x, (str, unicode)):
-        return x
-    else:
-        A = "\( %s \)" % latex(x)
-        c = re.compile(r)
-        A = A.replace('+', '\) \( {}+ ')
-        A = A.replace('-', '\) \( {}- ')
-#        A = A.replace('\left(','\left( {}\\right.') # parantheses needs to be balanced
-#        A = A.replace('\\right)','\left.\\right)')        
-        A = A.replace('\left(','\\bigl(')
-        A = A.replace('\\right)','\\bigr)')        
-        A = c.sub(insert_latex, A)
-
-    # the above will be re-done using a more sophisticated method involving
-    # regular expressions.  Below fixes bad spacing when the current approach
-    # encounters terms like (-3+x)
-    A = A.replace('( {}','(')
-    A = A.replace('(\) \(','(')
-    A = A.replace('\(+','\(\mathstrut+')
-    A = A.replace('\(-','\(\mathstrut-')
-    A = A.replace('(  ','(')
-    A = A.replace('( ','(')
-    A = A.replace('+\) \(O','+O')
-    return A
-
-
-# make latex matrix from list of lists
-def list_to_latex_matrix(li):
-    dim = str(len(li[0]))
-    mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
-    for row in li:
-        row = [str(a) for a in row]
-        mm += ' & '.join(row)
-        mm += r'\\'
-    mm = mm[:-2] # remove final line break
-    mm += r'\end{array}\right)'
-    return mm
-
 class LinkedList(object):
     __slots__ = ('value', 'next', 'timestamp')
 
@@ -645,7 +653,7 @@ def len_val_fn(value):
         Later we should implement SON_manipulators that insert and save safely.
 
         Detailed explanation: This is kind of a hack for mongodb:
-        Mongo uses lexicographic(?) ordering on strings, which is not convenient when 
+        Mongo uses lexicographic(?) ordering on strings, which is not convenient when
         strings are used to represent integers (necessary because of large integers).
         For instance, it would not compare properly a generic 2 character/digit
         integer and a 10 character/digit one. This means we lose the ability to
@@ -659,7 +667,7 @@ def len_val_fn(value):
         At the ordered dict stage it uses lexicographic ordering on the keys.
         Inside each key,value pair it compares based on the default ordering of the value type.
         For "Conductor_plus", it will first compare on the length, and if those are equal
-        compare on the strings. 
+        compare on the strings.
     """
     import bson
     return bson.SON([("len", len(value)), ("val", value)])
