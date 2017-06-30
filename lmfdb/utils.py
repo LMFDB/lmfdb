@@ -587,9 +587,11 @@ def make_logger(bp_or_name, hl=False):
 
 
 
+################################################################################
+#  Ajax utilities
+################################################################################
 
-
-
+# LinkedList is used in Ajax below
 class LinkedList(object):
     __slots__ = ('value', 'next', 'timestamp')
 
@@ -604,7 +606,6 @@ class LinkedList(object):
 
 
 class AjaxPool(object):
-
     def __init__(self, size=1e4, expiration=3600):
         self._size = size
         self._key_list = self._head = LinkedList(None, None)
@@ -653,8 +654,6 @@ class AjaxPool(object):
 
 
 pending = AjaxPool()
-
-
 def ajax_url(callback, *args, **kwds):
     if '_ajax_sticky' in kwds:
         _ajax_sticky = kwds.pop('_ajax_sticky')
