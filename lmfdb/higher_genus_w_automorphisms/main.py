@@ -374,7 +374,9 @@ def render_passport(args):
                     'cc': cc_display(data['con']), 
                     'sign': sign_display(ast.literal_eval(data['signature'])),   
                      'group': pretty_group,
-                     'gpid': smallgroup
+                     'gpid': smallgroup,
+                     'numb':numb,
+                     'disp_numb':min(numb,numgenvecs)
                    })
 
         if spname:

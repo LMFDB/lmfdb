@@ -12,7 +12,6 @@ table,td {
 
 
 
-
 <p><h2> Family Information</h2>
 
   <table>
@@ -71,19 +70,30 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 <p><h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating Vector(s)')}}</h2>
 
- 
-    {% for cdata in info.genvects %}
+  {% if info.numb == 1 %}
+  Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+
+  {% else %}
+  Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+  
+  {% endif %}
+
+
+</p>
+
+
+ <p>{% for cdata in info.genvects %}
    {{cdata[0]}}
      <table>{% for perm in cdata[3] %}
 	  <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-	  {% endfor %} </table> <br>
-    {% endfor %}
-</table>    
+	  {% endfor %} </table> <br>   
+  {% endfor %}
 
-<form>
+  {% if info.numb >= 2 %}
+ <form>
   <table>
     <tr>
-      <td>Display number of generating vectors </td>
+      <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
       <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
     </tr>
     <tr>
@@ -91,9 +101,9 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
     </tr>
   </table>
 </form>
+{% endif %} </p>
 
 
-</p>
 
   
 {% endblock %}
