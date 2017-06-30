@@ -698,11 +698,3 @@ def ajax_more(callback, *arg_list, **kwds):
         return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a></span>""" % locals()
     else:
         return res
-
-
-# What is this? I'm surprised this didn't break anything
-def orddict_to_strlist(v):
-    """
-    v -- dictionary with int keys
-    """
-    return
