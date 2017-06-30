@@ -64,10 +64,6 @@ def coeff_to_poly(c):
     return PolynomialRing(QQ, 'x')(c)
 
 
-def comma(x):
-    return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
-
-
 def display_multiset(mset, formatter=str, *args):
     """
     Input mset is a list of pairs [item, multiplicity]
@@ -141,7 +137,84 @@ def splitcoeff(coeff):
 
 
 
-# End number utilities (TODO remove this line)
+################################################################################
+#  display and formatting utilities
+################################################################################
+
+def comma(x):
+    return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
+
+
+def signtocolour(sign):
+    argument = cmath.phase(CC(str(sign)))
+    r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
+    g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
+    b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
+    return("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
+
+
+def rgbtohex(rgb):
+    """
+    convert rgb(63,255,100) to #3fff64
+    """
+    r,g,b = rgb[4:-1].split(',')
+    r = int(r)
+    g = int(g)
+    b = int(b)
+    return "#{:02x}{:02x}{:02x}".format(r,g,b)
+
+
+def encode_plot(P):
+    """
+    Convert a plot object to base64-encoded png format.
+
+    The resulting object is a base64-encoded version of the png
+    formatted plot, which can be displayed in web pages with no
+    further intervention.
+    """
+    from StringIO import StringIO
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from base64 import b64encode
+    from urllib import quote
+
+    virtual_file = StringIO()
+    fig = P.matplotlib()
+    fig.set_canvas(FigureCanvasAgg(fig))
+    fig.savefig(virtual_file, format='png')
+    virtual_file.seek(0)
+    return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
+
+
+def image_src(G):
+    return ajax_url(image_callback, G, _ajax_sticky=True)
+
+
+def image_callback(G):
+    P = G.plot()
+    _, filename = tempfile.mkstemp('.png')
+    P.save(filename)
+    data = open(filename).read()
+    os.unlink(filename)
+    response = make_response(data)
+    response.headers['Content-type'] = 'image/png'
+    return response
+
+
+def pol_to_html(p):
+    r"""
+    Convert polynomial p to html.
+    """
+    s = str(p)
+    s = re.sub("\^(\d*)", "<sup>\\1</sup>", s)
+    s = re.sub("\_(\d*)", "<sub>\\1</sub>", s)
+    s = re.sub("\*", "", s)
+    s = re.sub("x", "<i>x</i>", s)
+    return s
+
+
+
+
+
 
 
 
@@ -357,18 +430,6 @@ def orddict_to_strlist(v):
 
 
 
-def pol_to_html(p):
-    r"""
-    Convert polynomial p to html.
-    """
-    s = str(p)
-    s = re.sub("\^(\d*)", "<sup>\\1</sup>", s)
-    s = re.sub("\_(\d*)", "<sub>\\1</sub>", s)
-    s = re.sub("\*", "", s)
-    s = re.sub("x", "<i>x</i>", s)
-    return s
-
-
 def web_latex(x):
     if isinstance(x, (str, unicode)):
         return x
@@ -577,20 +638,6 @@ def ajax_more(callback, *arg_list, **kwds):
         return res
 
 
-def image_src(G):
-    return ajax_url(image_callback, G, _ajax_sticky=True)
-
-
-def image_callback(G):
-    P = G.plot()
-    _, filename = tempfile.mkstemp('.png')
-    P.save(filename)
-    data = open(filename).read()
-    os.unlink(filename)
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/png'
-    return response
-
 def len_val_fn(value):
     """ This creates a SON pair of the type {len:len(value), val:value}, with the len first so lexicographic ordering works.
         WATCH OUT however as later manipulations of the database are likely to mess up this ordering if not careful.
@@ -628,8 +675,6 @@ def order_values(doc, field, sub_fields=["len", "val"]):
     doc[field] = bson.SON([(sub_field, tmp[sub_field]) for sub_field in sub_fields])
     return doc
 
-# Input is an integer
-# Output is a string of that integer with comma separators
 
 def debug():
     """
@@ -638,44 +683,4 @@ def debug():
     don't forget to remove the debug() from your code!!!
     """
     assert current_app.debug is False, "Don't panic! You're here by request of debug()"
-
-def encode_plot(P):
-    """
-    Convert a plot object to base64-encoded png format.
-
-    The resulting object is a base64-encoded version of the png
-    formatted plot, which can be displayed in web pages with no
-    further intervention.
-    """
-    from StringIO import StringIO
-    from matplotlib.backends.backend_agg import FigureCanvasAgg
-    from base64 import b64encode
-    from urllib import quote
-
-    virtual_file = StringIO()
-    fig = P.matplotlib()
-    fig.set_canvas(FigureCanvasAgg(fig))
-    fig.savefig(virtual_file, format='png')
-    virtual_file.seek(0)
-    return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
-
-
-def signtocolour(sign):
-    argument = cmath.phase(CC(str(sign)))
-    r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
-    g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
-    b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
-    return("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
-
-def rgbtohex(rgb):
-    """
-    convert rgb(63,255,100) to #3fff64
-    """
-
-    r,g,b = rgb[4:-1].split(',')
-    r = int(r)
-    g = int(g)
-    b = int(b)
-
-    return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
