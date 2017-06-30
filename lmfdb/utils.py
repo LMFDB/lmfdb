@@ -466,14 +466,17 @@ class LazyMongoDBPagination(MongoDBPagination):
         raise NotImplementedError
 
 
+################################################################################
+#  web development utilities
+################################################################################
 
-
-
-
-
-
-
-
+def debug():
+    """
+    this triggers the debug environment on purpose. you have to start
+    the server via website.py --debug
+    don't forget to remove the debug() from your code!!!
+    """
+    assert current_app.debug is False, "Don't panic! You're here by request of debug()"
 
 
 def flash_error(errmsg, *args):
@@ -482,7 +485,6 @@ def flash_error(errmsg, *args):
 
 
 cache = SimpleCache()
-
 def cached(timeout=15 * 60, key='cache::%s::%s'):
     def decorator(f):
         @wraps(f)
@@ -499,6 +501,14 @@ def cached(timeout=15 * 60, key='cache::%s::%s'):
             return ret
         return decorated_function
     return decorator
+
+
+
+
+
+
+
+
 
 
 class LmfdbFormatter(logging.Formatter):
@@ -697,12 +707,4 @@ def ajax_more(callback, *arg_list, **kwds):
     else:
         return res
 
-
-def debug():
-    """
-    this triggers the debug environment on purpose. you have to start
-    the server via website.py --debug
-    don't forget to remove the debug() from your code!!!
-    """
-    assert current_app.debug is False, "Don't panic! You're here by request of debug()"
 
