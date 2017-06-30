@@ -362,19 +362,9 @@ def order_values(doc, field, sub_fields=["len", "val"]):
 
 
 
-
-
-
-
-
-
-
-
-
-
-def flash_error(errmsg, *args):
-    """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
-    flash(Markup("Error: %s"%(errmsg%tuple(map(lambda x: "<span style='color:black'>%s</span>"%x, args)))),"error")
+################################################################################
+#  pymongo utilities
+################################################################################
 
 def random_object_from_collection(collection):
     """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
@@ -393,6 +383,7 @@ def random_object_from_collection(collection):
         # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
         return collection.aggregate([{ '$sample': { 'size': int(1) } } ]).next()
 
+
 def random_value_from_collection(collection,attribute):
     """ retrieves the value of attribute (e.g. label) from a random object in mongo db collection; uses collection.rand to improve performance if present """
     import pymongo
@@ -410,6 +401,7 @@ def random_value_from_collection(collection,attribute):
         # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
         return collection.aggregate([{ '$sample': { 'size': int(1) } }, { '$project' : {'_id':False,attribute:True}} ]).next().get(attribute)
 
+
 def attribute_value_counts(collection,attribute):
     """ returns a sorted array of pairs (value,count) with count=collection.find({attribute:value}); uses collection.stats to improve peroformance if present """
     if collection.stats.count():
@@ -423,6 +415,71 @@ def attribute_value_counts(collection,attribute):
                 return stats['counts']
     # note that pymongo will raise an error if the return value from .distinct is large than 16MB (this is a good thing)
     return [[value,collection.find({attribute:value}).count()] for value in sorted(collection.distinct(attribute))]
+
+
+class MongoDBPagination(object):
+    def __init__(self, query, per_page, page, endpoint, endpoint_params):
+        self.query = query
+        self.per_page = int(per_page)
+        self.page = int(page)
+        self.endpoint = endpoint
+        self.endpoint_params = endpoint_params
+
+    @cached_property
+    def count(self):
+        return self.query.count(True)
+
+    @cached_property
+    def entries(self):
+        return self.query.skip(self.start).limit(self.per_page)
+
+    has_previous = property(lambda x: x.page > 1)
+    has_next = property(lambda x: x.page < x.pages)
+    pages = property(lambda x: max(0, x.count - 1) // x.per_page + 1)
+    start = property(lambda x: (x.page - 1) * x.per_page)
+    end = property(lambda x: min(x.start + x.per_page - 1, x.count - 1))
+
+    @property
+    def previous(self):
+        kwds = copy(self.endpoint_params)
+        kwds['page'] = self.page - 1
+        return url_for(self.endpoint, **kwds)
+
+    @property
+    def next(self):
+        kwds = copy(self.endpoint_params)
+        kwds['page'] = self.page + 1
+        return url_for(self.endpoint, **kwds)
+
+
+class LazyMongoDBPagination(MongoDBPagination):
+    @cached_property
+    def has_next(self):
+        return self.query.skip(self.start).limit(self.per_page + 1).count(True) > self.per_page
+
+    @property
+    def count(self):
+        raise NotImplementedError
+
+    @property
+    def pages(self):
+        raise NotImplementedError
+
+
+
+
+
+
+
+
+
+
+
+
+def flash_error(errmsg, *args):
+    """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
+    flash(Markup("Error: %s"%(errmsg%tuple(map(lambda x: "<span style='color:black'>%s</span>"%x, args)))),"error")
+
 
 cache = SimpleCache()
 
@@ -520,55 +577,6 @@ def make_logger(bp_or_name, hl=False):
     ch.setFormatter(formatter)
     l.addHandler(ch)
     return l
-
-
-class MongoDBPagination(object):
-    def __init__(self, query, per_page, page, endpoint, endpoint_params):
-        self.query = query
-        self.per_page = int(per_page)
-        self.page = int(page)
-        self.endpoint = endpoint
-        self.endpoint_params = endpoint_params
-
-    @cached_property
-    def count(self):
-        return self.query.count(True)
-
-    @cached_property
-    def entries(self):
-        return self.query.skip(self.start).limit(self.per_page)
-
-    has_previous = property(lambda x: x.page > 1)
-    has_next = property(lambda x: x.page < x.pages)
-    pages = property(lambda x: max(0, x.count - 1) // x.per_page + 1)
-    start = property(lambda x: (x.page - 1) * x.per_page)
-    end = property(lambda x: min(x.start + x.per_page - 1, x.count - 1))
-
-    @property
-    def previous(self):
-        kwds = copy(self.endpoint_params)
-        kwds['page'] = self.page - 1
-        return url_for(self.endpoint, **kwds)
-
-    @property
-    def next(self):
-        kwds = copy(self.endpoint_params)
-        kwds['page'] = self.page + 1
-        return url_for(self.endpoint, **kwds)
-
-
-class LazyMongoDBPagination(MongoDBPagination):
-    @cached_property
-    def has_next(self):
-        return self.query.skip(self.start).limit(self.per_page + 1).count(True) > self.per_page
-
-    @property
-    def count(self):
-        raise NotImplementedError
-
-    @property
-    def pages(self):
-        raise NotImplementedError
 
 
 def orddict_to_strlist(v):
