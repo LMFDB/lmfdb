@@ -319,6 +319,50 @@ def list_to_latex_matrix(li):
 
 
 
+################################################################################
+#  SON utilities
+################################################################################
+
+def len_val_fn(value):
+    """ This creates a SON pair of the type {len:len(value), val:value}, with the len first so lexicographic ordering works.
+        WATCH OUT however as later manipulations of the database are likely to mess up this ordering if not careful.
+        For this, use order_values below.
+        Later we should implement SON_manipulators that insert and save safely.
+
+        Detailed explanation: This is kind of a hack for mongodb:
+        Mongo uses lexicographic(?) ordering on strings, which is not convenient when
+        strings are used to represent integers (necessary because of large integers).
+        For instance, it would not compare properly a generic 2 character/digit
+        integer and a 10 character/digit one. This means we lose the ability to
+        perform some range queries easily with mongo syntax.
+        The solution we are using is to set up a SON ordered dict for this:
+        If we had one of the field in our document called "Conductor":"342353223525",
+        we replace that with "Conductor_plus":{"len": int(12), "value": "342353223525"}
+        (12 is the length of that string)
+        This SON object is ordered, so the "len" entry comes first.
+        When comparing ordered dicts (=SON), mongo uses a recursive algorithm.
+        At the ordered dict stage it uses lexicographic ordering on the keys.
+        Inside each key,value pair it compares based on the default ordering of the value type.
+        For "Conductor_plus", it will first compare on the length, and if those are equal
+        compare on the strings.
+    """
+    import bson
+    return bson.SON([("len", len(value)), ("val", value)])
+
+
+def order_values(doc, field, sub_fields=["len", "val"]):
+    """ Retrieving a document then saving it messes up the ordering in SON documents. This allows you to take a document,
+        retrieve a specific field, order it according to the order of sub_fields, and return a document with a SON in place,
+        which can then be saved.
+    """
+    import bson
+    tmp = doc[field]
+    doc[field] = bson.SON([(sub_field, tmp[sub_field]) for sub_field in sub_fields])
+    return doc
+
+
+
+
 
 
 
@@ -644,44 +688,6 @@ def ajax_more(callback, *arg_list, **kwds):
         return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a></span>""" % locals()
     else:
         return res
-
-
-def len_val_fn(value):
-    """ This creates a SON pair of the type {len:len(value), val:value}, with the len first so lexicographic ordering works.
-        WATCH OUT however as later manipulations of the database are likely to mess up this ordering if not careful.
-        For this, use order_values below.
-        Later we should implement SON_manipulators that insert and save safely.
-
-        Detailed explanation: This is kind of a hack for mongodb:
-        Mongo uses lexicographic(?) ordering on strings, which is not convenient when
-        strings are used to represent integers (necessary because of large integers).
-        For instance, it would not compare properly a generic 2 character/digit
-        integer and a 10 character/digit one. This means we lose the ability to
-        perform some range queries easily with mongo syntax.
-        The solution we are using is to set up a SON ordered dict for this:
-        If we had one of the field in our document called "Conductor":"342353223525",
-        we replace that with "Conductor_plus":{"len": int(12), "value": "342353223525"}
-        (12 is the length of that string)
-        This SON object is ordered, so the "len" entry comes first.
-        When comparing ordered dicts (=SON), mongo uses a recursive algorithm.
-        At the ordered dict stage it uses lexicographic ordering on the keys.
-        Inside each key,value pair it compares based on the default ordering of the value type.
-        For "Conductor_plus", it will first compare on the length, and if those are equal
-        compare on the strings.
-    """
-    import bson
-    return bson.SON([("len", len(value)), ("val", value)])
-
-
-def order_values(doc, field, sub_fields=["len", "val"]):
-    """ Retrieving a document then saving it messes up the ordering in SON documents. This allows you to take a document,
-        retrieve a specific field, order it according to the order of sub_fields, and return a document with a SON in place,
-        which can then be saved.
-    """
-    import bson
-    tmp = doc[field]
-    doc[field] = bson.SON([(sub_field, tmp[sub_field]) for sub_field in sub_fields])
-    return doc
 
 
 def debug():
