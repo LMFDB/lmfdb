@@ -354,6 +354,13 @@ def render_passport(args):
 
         numb = dataz.count()
 
+        try:
+            numgenvecs = request.args['numgenvecs']
+            numgenvecs = int(numgenvecs)
+        except:
+            numgenvecs = 20
+        info['numgenvecs']=numgenvecs
+
         title = 'One refined passport of genus ' + str(g) + ' with automorphism group $' + pretty_group +'$'
         smallgroup="[" + str(gn) + "," +str(gt) +"]"   
 
@@ -376,7 +383,8 @@ def render_passport(args):
         Ldata=[]
         HypColumn = False
         Lfriends=[]
-        for dat in dataz:
+        for i in range (0, min(numgenvecs,numb)):
+            dat= dataz[i]
             x1=dat['total_label']
             if 'full_auto' in dat:
                 x2='No'
