@@ -25,6 +25,130 @@ from markupsafe import Markup
 
 from lmfdb.base import app
 
+################################################################################
+#   number utilities
+################################################################################
+
+def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field=sage.rings.all.RationalField()):
+    """ Takes a fn that gives for each prime the polynomial of the associated with the prime,
+        given as a list, with independent coefficient first. This list is of length the degree+1.
+    """
+    from sage.rings.fast_arith import prime_range
+    from sage.rings.all import PowerSeriesRing
+    from math import ceil, log
+    PP = PowerSeriesRing(base_field, 'x', 1 + ceil(log(upperbound) / log(2.)))
+
+    prime_l = prime_range(upperbound + 1)
+    result = [1 for i in range(upperbound)]
+    for p in prime_l:
+        euler_factor = (1 / (PP(euler_factor_polynomial_fn(p)))).padded_list()
+        if len(euler_factor) == 1:
+            for j in range(1, 1 + upperbound // p):
+                result[j * p - 1] = 0
+            continue
+
+        k = 1
+        while True:
+            if p ** k > upperbound:
+                break
+            for j in range(1, 1 + upperbound // (p ** k)):
+                if j % p == 0:
+                    continue
+                result[j * p ** k - 1] *= euler_factor[k]
+            k += 1
+    return result
+
+
+def coeff_to_poly(c):
+    from sage.all import PolynomialRing, QQ
+    return PolynomialRing(QQ, 'x')(c)
+
+
+def comma(x):
+    return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
+
+
+def display_multiset(mset, formatter=str, *args):
+    """
+    Input mset is a list of pairs [item, multiplicity]
+    Return a string for display of the multi-set.  The
+    function formatter is a function whose first argument
+    is the item, and *args are the other arguments
+    and is applied to each item.
+    """
+    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
+
+
+def pair2complex(pair):
+    local = re.match(" *([^ ]+)[ \t]*([^ ]*)", pair)
+    if local:
+        rp = local.group(1)
+        if local.group(2):
+            ip = local.group(2)
+        else:
+            ip = 0
+    else:
+        rp = 0
+        ip = 0
+    return [float(rp), float(ip)]
+
+
+def to_dict(args):
+    d = {}
+    for key in args:
+        values = args[key]
+        if isinstance(values, list):
+            if values:
+                d[key] = values[-1]
+        elif values:
+            d[key] = values
+    return d
+
+
+def truncatenumber(numb, precision):
+    localprecision = precision
+    if numb < 0:
+        localprecision = localprecision + 1
+    truncation = float(10 ** (-1.0*localprecision))
+    if float(abs(numb - 1)) < truncation:
+        return("1")
+    elif float(abs(numb - 2)) < truncation:
+        return("2")
+    elif float(abs(numb - 3)) < truncation:
+        return("3")
+    elif float(abs(numb - 4)) < truncation:
+        return("4")
+    elif float(abs(numb)) < truncation:
+        return("0")
+    elif float(abs(numb + 1)) < truncation:
+        return("-1")
+    elif float(abs(numb + 2)) < truncation:
+        return("-2")
+    elif float(abs(numb - 0.5)) < truncation:
+        return("0.5")
+    elif float(abs(numb + 0.5)) < truncation:
+        return("-0.5")
+    return(str(numb)[0:int(localprecision)])
+
+
+def splitcoeff(coeff):
+    local = coeff.split("\n")
+    answer = []
+    for s in local:
+        if s:
+            answer.append(pair2complex(s))
+    return answer
+
+
+
+# End number utilities (TODO remove this line)
+
+
+
+
+
+
+
 
 def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
@@ -231,71 +355,6 @@ def orddict_to_strlist(v):
     """
 
 
-### this was formerly in utilities.py
-def to_dict(args):
-    d = {}
-    for key in args:
-        values = args[key]
-        if isinstance(values, list):
-            if values:
-                d[key] = values[-1]
-        elif values:
-            d[key] = values
-    return d
-
-
-def pair2complex(pair):
-    local = re.match(" *([^ ]+)[ \t]*([^ ]*)", pair)
-    if local:
-        rp = local.group(1)
-        if local.group(2):
-            ip = local.group(2)
-        else:
-            ip = 0
-    else:
-        rp = 0
-        ip = 0
-    return [float(rp), float(ip)]
-
-
-def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field=sage.rings.all.RationalField()):
-    """ Takes a fn that gives for each prime the polynomial of the associated with the prime,
-        given as a list, with independent coefficient first. This list is of length the degree+1.
-    """
-    from sage.rings.fast_arith import prime_range
-    from sage.rings.all import PowerSeriesRing
-    from math import ceil, log
-    PP = PowerSeriesRing(base_field, 'x', 1 + ceil(log(upperbound) / log(2.)))
-
-    prime_l = prime_range(upperbound + 1)
-    result = [1 for i in range(upperbound)]
-    for p in prime_l:
-        euler_factor = (1 / (PP(euler_factor_polynomial_fn(p)))).padded_list()
-        if len(euler_factor) == 1:
-            for j in range(1, 1 + upperbound // p):
-                result[j * p - 1] = 0
-            continue
-
-        k = 1
-        while True:
-            if p ** k > upperbound:
-                break
-            for j in range(1, 1 + upperbound // (p ** k)):
-                if j % p == 0:
-                    continue
-                result[j * p ** k - 1] *= euler_factor[k]
-            k += 1
-    return result
-
-
-def splitcoeff(coeff):
-    local = coeff.split("\n")
-    answer = []
-    for s in local:
-        if s:
-            answer.append(pair2complex(s))
-
-    return answer
 
 
 def pol_to_html(p):
@@ -572,24 +631,6 @@ def order_values(doc, field, sub_fields=["len", "val"]):
 # Input is an integer
 # Output is a string of that integer with comma separators
 
-
-def comma(x):
-    return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
-
-def coeff_to_poly(c):
-    from sage.all import PolynomialRing, QQ
-    return PolynomialRing(QQ, 'x')(c)
-
-def display_multiset(mset, formatter=str, *args):
-    """
-    Input mset is a list of pairs [item, multiplicity]
-    Return a string for display of the multi-set.  The
-    function formatter is a function whose first argument
-    is the item, and *args are the other arguments
-    and is applied to each item.
-    """
-    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
-
 def debug():
     """
     this triggers the debug environment on purpose. you have to start
@@ -638,27 +679,3 @@ def rgbtohex(rgb):
 
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
-def truncatenumber(numb, precision):
-    localprecision = precision
-    if numb < 0:
-        localprecision = localprecision + 1
-    truncation = float(10 ** (-1.0*localprecision))
-    if float(abs(numb - 1)) < truncation:
-        return("1")
-    elif float(abs(numb - 2)) < truncation:
-        return("2")
-    elif float(abs(numb - 3)) < truncation:
-        return("3")
-    elif float(abs(numb - 4)) < truncation:
-        return("4")
-    elif float(abs(numb)) < truncation:
-        return("0")
-    elif float(abs(numb + 1)) < truncation:
-        return("-1")
-    elif float(abs(numb + 2)) < truncation:
-        return("-2")
-    elif float(abs(numb - 0.5)) < truncation:
-        return("0.5")
-    elif float(abs(numb + 0.5)) < truncation:
-        return("-0.5")
-    return(str(numb)[0:int(localprecision)])
