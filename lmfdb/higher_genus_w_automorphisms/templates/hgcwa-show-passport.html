@@ -45,20 +45,22 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
     <table>
         <tr><td>Dimension of the corresponding {{KNOWL('ag.shimura_variety',title='Shimura variety')}}:</td><td>{{ info.Ndim}}</td></tr>
       {% if info.ishyp %}     
-      <tr><td>Hyperelliptic curve(s):</td><td>{{info.ishyp}}</td></tr>
+      <tr><td>{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:</td><td>{{info.ishyp}}</td></tr>
       {% if info.hypinv  %}
        <tr><td>Hyperelliptic involution:</td> <td>{{info.hypinv}}</td></tr>
        {% endif %}  {% endif %}
       {% if info.iscyctrig %}     
-      <tr><td>Cyclic trigonal curve(s):</td><td>{{info.iscyctrig}}</td></tr>
+      <tr><td> {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:</td><td>{{info.iscyctrig}}</td></tr>
       {% if info.cinv  %}
        <tr><td>Trigonal automorphism:</td> <td>{{info.cinv}}</td></tr>
        {% endif %}  {% endif %}
     </table>
 
+  </p>
+
+  <p>
     {% if info.eqns %}
-    <br>
-    Equations(s) of curve(s) in this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}:
+    <table><tr><td>Equations(s) of curve(s) in this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}:</td></tr></table>
        <table>{% for eqn in info.eqns %}
 	  <tr><td> &nbsp; </td><td>${{eqn}}$</td></tr>
 	  {% endfor %} </table> <br>
@@ -68,8 +70,9 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 
 
-<p><h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating Vector(s)')}}</h2>
+<h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating Vector(s)')}}</h2>
 
+<p>
   {% if info.numb == 1 %}
   Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
 
@@ -77,8 +80,6 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
   Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
   
   {% endif %}
-
-
 </p>
 
 
@@ -88,7 +89,9 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 	  <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
 	  {% endfor %} </table> <br>   
   {% endfor %}
+ </p>
 
+ <p>
   {% if info.numb >= 2 %}
  <form>
   <table>
