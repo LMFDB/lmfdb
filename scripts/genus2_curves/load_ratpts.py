@@ -11,7 +11,7 @@ import pymongo
 # mwgens is a list of degree 0 divisors on the Jacobian in Magma's Mumford representation
 
 def load_ratpts_data(filename):
-    db = lmfdb.getDBConnection().genus2_curves
+    db = lmfdb.base.getDBConnection().genus2_curves
     with open(filename,'r') as input_file:
         data = input_file.read()
     outrecs = []
