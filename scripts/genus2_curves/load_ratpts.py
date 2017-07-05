@@ -53,7 +53,7 @@ def load_ratpts_data(filename):
         print "overwriting existing ratpts.new"
         db.ratpts.new.drop()
     db.ratpts.new.insert_many(outrecs)
-    assert db.ratpts.new.count() eq len(outrecs)
+    assert db.ratpts.new.count() == len(outrecs)
     if db.ratpts.old.count() > 0:
         db.ratpts.old.drop()
     db.ratpts.rename('ratpts.old')
