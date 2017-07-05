@@ -56,6 +56,7 @@ def load_ratpts_data(filename):
     assert db.ratpts.new.count() == len(outrecs)
     if db.ratpts.old.count() > 0:
         db.ratpts.old.drop()
-    db.ratpts.rename('ratpts.old')
+    if db.ratpts.count() > 0:
+        db.ratpts.rename('ratpts.old')
     db.ratpts.new.rename('ratpts.new')
 
