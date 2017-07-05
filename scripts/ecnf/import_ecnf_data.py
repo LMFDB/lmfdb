@@ -78,15 +78,16 @@ directory, start sage and use the command
 """
 
 import os.path
-import re
 import os
 import pymongo
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, cm_j_invariants_and_orders, EllipticCurve, ZZ, QQ, Set
+from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, parse_ainvs, parse_point
+from import_utils import read1isogmats, make_curves_line, make_curve_data_line, split, numerify_iso_label, NFelt, get_cm, point_string 
+
 
 print "getting connection"
 C= getDBConnection()
@@ -168,98 +169,140 @@ def convert_ideal_label(K, lab):
     return newlab
 
 
-# Reconstruct an ideal in a quadratic field from its label.
 
 
-def ideal_from_label(K, lab):
-    r"""Returns the ideal with label lab in the quadratic field K.
+
+
+
+
+
+# Before using the following, define galrepdat using a command such as
+#
+# galrepdat=readgalreps("/home/jec/ecnf-data/", "nfcurves_galois_images.txt")
+#
+# then use rewrite like this:
+# %runfile data_mgt/utilities/rewrite.py
+# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves2", add_galrep_data_to_nfcurve)
+#
+galrepdat = {} # for pyflakes
+
+def add_galrep_data_to_nfcurve(cu):
+    if cu['label'] in galrepdat:
+        cu.update(galrepdat[cu['label']])
+    return cu
+
+filename_base_list = ['curves', 'curve_data']
+
+#
+
+def upload_to_db(base_path, filename_suffix, insert=True):
+    r""" Uses insert_one() if insert=True, which is faster but will fail if
+    the label is already in the database; otherwise uses update_one()
+    with upsert=True
     """
-    N, c, d = [ZZ(c) for c in lab.split(".")]
-    a = N // d
-    return K.ideal(a, K([c, d]))
+    curves_filename = 'curves.%s' % (filename_suffix)
+    curve_data_filename = 'curve_data.%s' % (filename_suffix)
+    isoclass_filename = 'isoclass.%s' % (filename_suffix)
+    #galrep_filename = 'galrep.%s' % (filename_suffix)
+    file_list = [curves_filename, curve_data_filename, isoclass_filename]
+#    file_list = [isoclass_filename]
+#    file_list = [curves_filename]
+#    file_list = [curve_data_filename]
+#    file_list = [galrep_filename]
 
+    data_to_insert = {}  # will hold all the data to be inserted
 
-def NFelt(a):
-    r""" Returns an NFelt string encoding the element a (in a number field
-    K).  This consists of d strings representing the rational
-    coefficients of a (with respect to the power basis), separated by
-    commas, with no spaces.
+    for f in file_list:
+        if f==isoclass_filename: # dealt with differently
+            continue
+        try:
+            h = open(os.path.join(base_path, f))
+            print "opened %s" % os.path.join(base_path, f)
+        except IOError:
+            print "No file %s exists" % os.path.join(base_path, f)
+            continue  # in case not all prefixes exist
 
-    For example the element (3+4*w)/2 in Q(w) gives '3/2,2'.
-    """
-    return ",".join([str(c) for c in list(a)])
+        parse = globals()[f[:f.find('.')]]
 
-def QorZ_list(a):
-    r"""
-    Return the list representation of the rational number.
-    """
-    return [int(a.numerator()), int(a.denominator())]
+        count = 0
+        print "Starting to read lines from file %s" % f
+        for line in h.readlines():
+            # if count==10: break # for testing
+            label, data = parse(line)
+            if count % 100 == 0:
+                print "read %s from %s (%s so far)" % (label, f, count)
+            count += 1
+            if label not in data_to_insert:
+                data_to_insert[label] = {'label': label}
+            curve = data_to_insert[label]
+            for key in data:
+                if key in curve:
+                    if curve[key] != data[key]:
+                        raise RuntimeError("Inconsistent data for %s:\ncurve=%s\ndata=%s\nkey %s differs!" % (label, curve, data, key))
+                else:
+                    curve[key] = data[key]
+        print "finished reading %s lines from file %s" % (count, f)
 
+    vals = data_to_insert.values()
+    print("adding heights of gens")
+    for val in vals:
+        val = add_heights(val)
 
-def K_list(a):
-    r"""
-    Return the list representation of the number field element.
-    """
-    # return [QorZ_list(c) for c in list(a)]  # old: [num,den]
-    return [str(c) for c in list(a)]         # new: "num/den"
+    if isoclass_filename in file_list: # code added March 2017, not yet tested
+        print("processing isogeny matrices")
+        isogmats = read1isogmats(base_path, filename_suffix)
+        for val in vals:
+            val.update(isogmats[val['label']])
 
-
-def NFelt_list(a):
-    r"""
-    Return the list representation of the NFelt string.
-    """
-    return [QorZ_list(QQ(c)) for c in a.split(",")]
-
-def point_string(P):
-    r"""Return a string representation of a point on an elliptic
-    curve. This is a single string representing a list of 3 lists,
-    each representing one coordinate as an NFelt string, with no
-    spaces.
-
-    For example, over a field of degree 2, [0:0:1] gives
-    '[0,0],[0,0],[1,0]'.
-    """
-    s = "[" + ",".join(["".join(["[",NFelt(c),"]"]) for c in list(P)]) + "]"
-    return s
-
-def point_string_to_list(s):
-    r"""Return a list representation of a point string
-    """
-    return s[1:-1].split(":")
-
-
-def point_list(P):
-    r"""Return a list representation of a point on an elliptic curve
-    """
-    return [K_list(c) for c in list(P)]
-
-#@cached_function
-def get_cm_list(K):
-    return cm_j_invariants_and_orders(K)
-
-def get_cm(j):
-    r"""
-    Returns the CM discriminant for this j-invariant, or 0
-    """
-    if not j.is_integral():
-        return 0
-    for d, f, j1 in get_cm_list(j.parent()):
-        if j == j1:
-            return int(d * f * f)
-    return 0
-
-whitespace = re.compile(r'\s+')
-
-
-def split(line):
-    return whitespace.split(line.strip())
-
-def numerify_iso_label(lab):
-    from sage.databases.cremona import class_to_int
-    if 'CM' in lab:
-        return -1 - class_to_int(lab[2:])
+    if insert:
+        print("inserting all data")
+        nfcurves.insert_many(vals)
     else:
-        return class_to_int(lab.lower())
+        count = 0
+        print("inserting data one curve at a time...")
+        for val in vals:
+            nfcurves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
+            count += 1
+            if count % 100 == 0:
+                print "inserted %s" % (val['label'])
+
+
+def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
+    r""" Extract curve data for the given field for curves with conductor
+    norm in the given range, and write to output files in the same
+    format as in the curves/curve_data/isoclass input files.
+    """
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_norm'] = {'$gte': int(min_norm)}
+    if max_norm:
+        query['conductor_norm']['$lte'] = int(max_norm)
+    else:
+        max_norm = 'infinity'
+    cursor = C.elliptic_curves.nfcurves.find(query)
+    ASC = pymongo.ASCENDING
+    res = cursor.sort([('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
+
+    file = {}
+    prefixes = ['curves', 'curve_data', 'isoclass']
+    prefixes = ['curve_data']
+    suffix = ''.join([".", field_label, ".", str(min_norm), "-", str(max_norm)])
+    for prefix in prefixes:
+        filename = os.path.join(base_path, ''.join([prefix, suffix]))
+        file[prefix] = open(filename, 'w')
+
+    for ec in res:
+        if 'curves' in prefixes:
+            file['curves'].write(make_curves_line(ec) + "\n")
+        if 'curve_data' in prefixes:
+            file['curve_data'].write(make_curve_data_line(ec) + "\n")
+        if 'isoclass' in prefixes:
+            if ec['number'] == 1:
+                file['isoclass'].write(make_isoclass_line(ec) + "\n")
+
+    for prefix in prefixes:
+        file[prefix].close()
+
 
 def convert_conductor_label(field_label, label):
     """If the field is imaginary quadratic, calls convert_ideal_label, otherwise just return label unchanged.
@@ -412,57 +455,10 @@ def curves(line, verbose=False):
     return label, edata
 
 
-def curve_data(line):
-    r""" Parses one line from a curve_data file.  Returns the label and a dict
-    containing fields with keys 'label', 'rank', 'rank_bounds',
-    'analytic_rank', 'gens', 'heights', 'reg', 'sha_an'.
 
-    Input line fields (9+n where n is the 8th); all but the first 4
-    are optional and if not known should contain"?" except that the 8th
-    should contain 0.
 
-    field_label conductor_label iso_label number rank rank_bounds analytic_rank ngens gen_1 ... gen_n sha_an
 
-    Sample input line:
-
-    2.0.4.1 65.18.1 a 1 0 ? 0 0 ?
-    """
-    # Parse the line and form the full label:
-    data = split(line)
-    if len(data) < 9:
-        print "line %s does not have 9 fields (excluding gens), skipping" % line
-    ngens = int(data[7])
-    if len(data) != 9 + ngens:
-        print "line %s does not have 9 fields (excluding gens), skipping" % line
-    field_label = data[0]       # string
-    conductor_label = data[1]   # string
-    # convert label (does nothing except for imaginary quadratic)
-    conductor_label = convert_conductor_label(field_label, conductor_label)
-    iso_label = data[2]         # string
-    number = int(data[3])       # int
-    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
-    label = "%s-%s" % (field_label, short_label)
-
-    edata = {'label': label, 'field_label': field_label}
-    r = data[4]
-    if r != "?":
-        edata['rank'] = int(r)
-    rb = data[5]
-    if rb != "?":
-        edata['rank_bounds'] = [int(c) for c in rb[1:-1].split(",")]
-    ra = data[6]
-    if ra != "?":
-        edata['analytic_rank'] = int(ra)
-    ngens = int(data[7])
-    edata['ngens'] = ngens
-    edata['gens'] = data[8:8 + ngens]
-
-    sha = data[8 + ngens]
-    if sha != "?":
-        edata['sha_an'] = int(sha)
-    return label, edata
-
-def add_heights(data, verbose=False):
+def add_heights(data, verbose = False):
     r""" If data holds the data fields for a curve this returns the same
     with the heights of the points included as a new field with key
     'heights'.  It is more convenient to do this separately than while
@@ -491,213 +487,6 @@ def add_heights(data, verbose=False):
         print("added heights %s and regulator %s to %s" % (data['heights'],data['reg'], data['label']))
     return data
 
-def isoclass(line):
-    r""" Parses one line from an isoclass file.  Returns the label and a dict
-    containing fields with keys .
-
-    Input line fields (5); the first 4 are the standard labels and the
-    5th the isogeny matrix as a list of lists of ints.
-
-    field_label conductor_label iso_label number isogeny_matrix
-
-    Sample input line:
-
-    2.0.4.1 65.18.1 a 1 [[1,6,3,18,9,2],[6,1,2,3,6,3],[3,2,1,6,3,6],[18,3,6,1,2,9],[9,6,3,2,1,18],[2,3,6,9,18,1]]
-    """
-    # Parse the line and form the full label:
-    data = split(line)
-    if len(data) < 5:
-        print "isoclass line %s does not have 5 fields (excluding gens), skipping" % line
-    field_label = data[0]       # string
-    conductor_label = data[1]   # string
-    # convert label (does nothing except for imaginary quadratic)
-    conductor_label = convert_conductor_label(field_label, conductor_label)
-    print("Converting conductor label from {} to {}".format(data[1], conductor_label))
-    iso_label = data[2]         # string
-    number = int(data[3])       # int
-    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
-    label = "%s-%s" % (field_label, short_label)
-
-    mat = data[4]
-    mat = [[int(a) for a in r.split(",")] for r in mat[2:-2].split("],[")]
-    isogeny_degrees = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(mat)])
-
-    edata = {'label': [field_label,conductor_label,iso_label],
-             'isogeny_matrix': mat,
-             'isogeny_degrees': isogeny_degrees}
-    return label, edata
-
-def read1isogmats(base_path, filename_suffix):
-    r""" Returns a dictionary whose keys are labels of individual curves,
-    and whose values are the isogeny_matrix and isogeny_degrees for
-    each curve in the class, together with the class size and the
-    maximal degree in the class.
-
-    This function reads a single isoclass file.
-    """
-    isoclass_filename = 'isoclass.%s' % (filename_suffix)
-    h = open(os.path.join(base_path, isoclass_filename))
-    print("Opened {}".format(os.path.join(base_path, isoclass_filename)))
-    data = {}
-    for line in h.readlines():
-        label, data1 = isoclass(line)
-        class_label = "-".join(data1['label'][:3])
-        isogmat = data1['isogeny_matrix']
-        # maxdeg is the maximum degree of a cyclic isogeny in the
-        # class, which uniquely determines the isogeny graph (over Q)
-        maxdeg = max(max(r) for r in isogmat)
-        allisogdegs = data1['isogeny_degrees']
-        ncurves = len(allisogdegs)
-        for n in range(ncurves):
-            isogdegs = allisogdegs[n+1]
-            label = class_label+str(n+1)
-            data[label] = {'isogeny_degrees': isogdegs,
-                           'class_size': ncurves,
-                           'class_deg': maxdeg}
-            if n==0:
-                print("adding isogmat = {} to {}".format(isogmat,label))
-                data[label]['isogeny_matrix'] = isogmat
-
-    return data
-
-
-
-def galrep(line):
-    r""" Parses one line from a galrep file.  Returns the label and a
-    dict containing two fields: 'non-surjective_primes', a list of
-    primes p for which the Galois representation modulo p is not
-    surjective (cut off at p=37 for CM curves for which this would
-    otherwise contain all primes), 'galois_images', a list of strings
-    encoding the image when not surjective, following Sutherland's
-    coding scheme for subgroups of GL(2,p).  Note that these codes
-    start with a 1 or 2 digit prime followed a letter in
-    ['B','C','N','S'].
-
-    Input line fields (4+); the first is a standard label of the form
-    field-conductor-an where 'a' is the isogeny class (one or more
-    letters), 'n' is the number ofe the curve in the class (from 1)
-    and any remaining ones are galrep codes.
-
-    label codes
-
-    Sample input line (field='2.0.3.1', conductor='10000.0.100', class='a', number=1)
-
-    2.0.3.1-10000.0.100-a1 2B 3B[2]
-
-    """
-    data = split(line)
-    label = data[0] # single string
-    image_codes = data[1:]
-    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
-    return label, {
-        'non-surjective_primes': pr,
-        'galois_images': image_codes,
-    }
-
-def readgalreps(base_path, filename):
-    h = open(os.path.join(base_path, filename))
-    print("opened {}".format(os.path.join(base_path, filename)))
-    dat = {}
-    for L in h.readlines():
-        lab, dat1 = galrep(L)
-        dat[lab] = dat1
-    return dat
-
-# Before using the following, define galrepdat using a command such as
-#
-# galrepdat=readgalreps("/home/jec/ecnf-data/", "nfcurves_galois_images.txt")
-#
-# then use rewrite like this:
-# %runfile data_mgt/utilities/rewrite.py
-# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves2", add_galrep_data_to_nfcurve)
-#
-galrepdat = {} # for pyflakes
-
-def add_galrep_data_to_nfcurve(cu):
-    if cu['label'] in galrepdat:
-        cu.update(galrepdat[cu['label']])
-    return cu
-
-filename_base_list = ['curves', 'curve_data']
-
-#
-
-def upload_to_db(base_path, filename_suffix, insert=True):
-    r""" Uses insert_one() if insert=True, which is faster but will fail if
-    the label is already in the database; otherwise uses update_one()
-    with upsert=True
-    """
-    curves_filename = 'curves.%s' % (filename_suffix)
-    curve_data_filename = 'curve_data.%s' % (filename_suffix)
-    isoclass_filename = 'isoclass.%s' % (filename_suffix)
-    #galrep_filename = 'galrep.%s' % (filename_suffix)
-    file_list = [curves_filename, curve_data_filename, isoclass_filename]
-#    file_list = [isoclass_filename]
-#    file_list = [curves_filename]
-#    file_list = [curve_data_filename]
-#    file_list = [galrep_filename]
-
-    data_to_insert = {}  # will hold all the data to be inserted
-
-    for f in file_list:
-        if f==isoclass_filename: # dealt with differently
-            continue
-        try:
-            h = open(os.path.join(base_path, f))
-            print "opened %s" % os.path.join(base_path, f)
-        except IOError:
-            print "No file %s exists" % os.path.join(base_path, f)
-            continue  # in case not all prefixes exist
-
-        parse = globals()[f[:f.find('.')]]
-
-        count = 0
-        print "Starting to read lines from file %s" % f
-        for line in h.readlines():
-            #if count==20: break # for testing
-            label, data = parse(line)
-            if count % 100 == 0:
-                print "read %s from %s (%s so far)" % (label, f, count)
-            count += 1
-            if label not in data_to_insert:
-                data_to_insert[label] = {'label': label}
-            curve = data_to_insert[label]
-            for key in data:
-                if key in curve:
-                    if curve[key] != data[key]:
-                        raise RuntimeError("Inconsistent data for %s:\ncurve=%s\ndata=%s\nkey %s differs!" % (label, curve, data, key))
-                else:
-                    curve[key] = data[key]
-        print "finished reading %s lines from file %s" % (count, f)
-
-    vals = data_to_insert.values()
-    print("adding heights of gens")
-    for val in vals:
-        val = add_heights(val)
-
-    if isoclass_filename in file_list: # code added March 2017, not yet tested
-        print("processing isogeny matrices")
-        isogmats = read1isogmats(base_path, filename_suffix)
-        for val in vals:
-            lab = val['label']
-            print("adding isog data for {}".format(lab))
-            if lab in isogmats:
-                val.update(isogmats[lab])
-            else:
-                print("error: label {} not in isogmats!".format(lab))
-
-    if insert:
-        print("inserting all data")
-        nfcurves.insert_many(vals)
-    else:
-        count = 0
-        print("inserting data one curve at a time...")
-        for val in vals:
-            #print val
-            nfcurves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
-            count += 1
-            if count % 100 == 0:
-                print "inserted %s" % (val['label'])
 
 #
 #
@@ -707,66 +496,6 @@ def upload_to_db(base_path, filename_suffix, insert=True):
 #
 
 
-def make_curves_line(ec):
-    r""" for ec a curve object from the database, create a line of text to
-    match the corresponding raw input line from a curves file.
-
-    Output line fields (13):
-
-    field_label conductor_label iso_label number conductor_ideal conductor_norm a1 a2 a3 a4 a6 cm base_change
-
-    Sample output line:
-
-    2.0.4.1 65.18.1 a 1 [65,65,-4*w-7] 65 1,1 1,1 0,1 -1,1 -1,0 0 0
-    """
-    cond_lab = ec['conductor_label']
-    output_fields = [ec['field_label'],
-                     cond_lab,
-                     ec['iso_label'],
-                     str(ec['number']),
-                     ec['conductor_ideal'],
-                     str(ec['conductor_norm'])
-                     ] + ec['ainvs'].split(";") + [str(ec['cm']), str(int(len(ec['base_change']) > 0))]
-    return " ".join(output_fields)
-
-
-def make_curve_data_line(ec):
-    r""" for ec a curve object from the database, create a line of text to
-    match the corresponding raw input line from a curve_data file.
-
-    Output line fields (9+n where n is the 8th); all but the first 4
-    are optional and if not known should contain"?" except that the 8th
-    should contain 0.
-
-    field_label conductor_label iso_label number rank rank_bounds analytic_rank ngens gen_1 ... gen_n sha_an
-
-    Sample output line:
-
-    2.0.4.1 2053.1809.1 a 1 2 [2,2] ? 2 [[0,0],[-1,0],[1,0]] [[2,0],[2,0],[1,0]] ?
-    """
-    rk = '?'
-    if 'rank' in ec:
-        rk = str(ec['rank'])
-    rk_bds = '?'
-    if 'rank_bounds' in ec:
-        rk_bds = str(ec['rank_bounds']).replace(" ", "")
-    an_rk = '?'
-    if 'analytic_rank' in ec:
-        an_rk = str(ec['analytic_rank'])
-    gens = ec.get('gens',[])
-    ngens = str(len(gens))
-    sha = '?'
-    if 'sha_an' in ec:
-        sha = str(int(ec['sha_an']))
-
-    cond_lab = ec['conductor_label']
-    output_fields = [ec['field_label'],
-                     cond_lab,
-                     ec['iso_label'],
-                     str(ec['number']),
-                     rk, rk_bds, an_rk,
-                     ngens] + gens + [sha]
-    return " ".join(output_fields)
 
 def make_isoclass_line(ec):
     r""" for ec a curve object from the database, create a line of text to
@@ -807,41 +536,6 @@ def make_isoclass_line(ec):
     return " ".join(output_fields)
 
 
-def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
-    r""" Extract curve data for the given field for curves with conductor
-    norm in the given range, and write to output files in the same
-    format as in the curves/curve_data/isoclass input files.
-    """
-    query = {}
-    query['field_label'] = field_label
-    query['conductor_norm'] = {'$gte': int(min_norm)}
-    if max_norm:
-        query['conductor_norm']['$lte'] = int(max_norm)
-    else:
-        max_norm = 'infinity'
-    cursor = C.elliptic_curves.nfcurves.find(query)
-    ASC = pymongo.ASCENDING
-    res = cursor.sort([('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
-
-    file = {}
-    prefixes = ['curves', 'curve_data', 'isoclass']
-    #prefixes = ['curve_data']
-    suffix = ''.join([".", field_label, ".", str(min_norm), "-", str(max_norm)])
-    for prefix in prefixes:
-        filename = os.path.join(base_path, ''.join([prefix, suffix]))
-        file[prefix] = open(filename, 'w')
-
-    for ec in res:
-        if 'curves' in prefixes:
-            file['curves'].write(make_curves_line(ec) + "\n")
-        if 'curve_data' in prefixes:
-            file['curve_data'].write(make_curve_data_line(ec) + "\n")
-        if 'isoclass' in prefixes:
-            if ec['number'] == 1:
-                file['isoclass'].write(make_isoclass_line(ec) + "\n")
-
-    for prefix in prefixes:
-        file[prefix].close()
 
 ##############
 #
