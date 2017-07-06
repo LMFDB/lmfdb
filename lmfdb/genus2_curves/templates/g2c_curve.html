@@ -205,12 +205,11 @@ function show_invs(invstyle) {
 </p>
 <h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h3>\({{data.num_rat_wpts}}\)
 
-{% if data.rat_pts_data_available %}
+{% if data.rat_pts_v > 0 %}
 <p>
 {{place_code('rational_points')}}
 </p>
 <p>
-{% if data.rat_pts_v > 0 %}
 {% if data.rat_pts_v == 1 %}
 {% if data.rat_pts %}
 <h3 class="inline"> {{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: </h3>
