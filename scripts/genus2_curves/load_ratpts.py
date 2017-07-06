@@ -58,5 +58,5 @@ def load_ratpts_data(filename):
         db.ratpts.old.drop()
     if db.ratpts.count() > 0:
         db.ratpts.rename('ratpts.old')
-    db.ratpts.new.rename('ratpts.new')
+    db.ratpts.new.rename('ratpts')
 
