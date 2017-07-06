@@ -240,8 +240,11 @@ function show_invs(invstyle) {
 <h3 class="inline"> {{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}: </h3>\({{data.analytic_rank}}\)
 {% endif %}
 
+<p>
+{{place_code('mw_rank')}}
+</p>
 {% if data.mw_rank_v %}
-<h3 class="inline"> {{ KNOWL('g2c.mordell_weil_rank', title='Mordell Weil rank*') }}: </h3>\({{data.mw_rank}}\)
+<h3 class="inline"> {{ KNOWL('g2c.mordell_weil_rank', title='Mordell Weil rank') }}: </h3>\({{data.mw_rank}}\)
 {% endif %}
 
 <p>
