@@ -23,6 +23,9 @@ def g2c_db_curves():
 def g2c_db_endomorphisms():
     return getDBConnection().genus2_curves.endomorphisms
 
+def g2c_db_rational_points():
+    return getDBConnection().genus2_curves.ratpts
+
 def g2c_db_lfunction_by_hash(hash):
     return getDBConnection().Lfunctions.Lfunctions.find_one({'Lhash':hash})
 
@@ -509,8 +512,8 @@ class WebG2C(object):
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, tama, is_curve=True):
-        self.make_object(curve, endo, tama, is_curve)
+    def __init__(self, curve, endo, tama, ratpts, is_curve=True):
+        self.make_object(curve, endo, tama, ratpts, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -542,9 +545,10 @@ class WebG2C(object):
         if tama.count() == 0:
             g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
             raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)        
-        return WebG2C(curve, endo, tama, is_curve=(len(slabel)==4))
+        ratpts = g2c_db_rational_points().find_one({"label" : curve['label']})
+        return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel)==4))
 
-    def make_object(self, curve, endo, tama, is_curve):
+    def make_object(self, curve, endo, tama, ratpts, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
@@ -615,6 +619,9 @@ class WebG2C(object):
             	data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + ')'
             	if (i+1 < tama.count()):
             		data['tama'] += ', '
+            if ratpts:
+                data['ratpts'] = ','.join(web_latex(tuple([ZZ(c) for c in ratpts['ratpts']])
+                data['ratpts_v'] = ratpts['ratpts_v']
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])

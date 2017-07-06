@@ -195,6 +195,10 @@ function show_invs(invstyle) {
 
 <h2> Rational points </h2>
 
+{% if data.ratpts %}
+<h3 style="display: inline"> Rational points {{ KNOWL('g2c.rational_points', title='rational points') }}: </h3>\{{{data.ratpts}}\)
+{% endif %}
+
 <p>
 {{place_code('locally_solvable')}}
 </p>
