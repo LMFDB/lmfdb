@@ -194,12 +194,14 @@ function show_invs(invstyle) {
 </table>
 
 <h2> Rational points </h2>
-
+<p>
+{{place_code('rational_points')}}
+</p>
 {% if data.rat_pts %}
 {% if data.rat_pts_v %}
-<h3 style="display: inline"> {{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: </h3>\({{data.rat_pts}}\)
+<h3 style="display: inline"> {{ KNOWL('g2c.all_rational_points', title='Complete list of rational points') }}: </h3>\({{data.rat_pts}}\)
 {% else %}
-<h3 style="display: inline"> {{ KNOWL('g2c.rational_points', title='Rational points') }}: </h3>\({{data.rat_pts}}\)
+<h3 style="display: inline"> {{ KNOWL('g2c.known_rational_points', title='List of known rational points') }}: </h3>\({{data.rat_pts}}\)
 {% endif %}
 {% endif %}
 
@@ -211,7 +213,7 @@ function show_invs(invstyle) {
 <p>
 {{place_code('num_rat_wpts')}}
 </p>
-<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h2>\({{data.num_rat_wpts}}\)
+<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h3>\({{data.num_rat_wpts}}\)
 
 <h2 class='subhead'> Invariants of the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
 
