@@ -625,7 +625,7 @@ class WebG2C(object):
             if ratpts and ratpts.get('rat_pts'):
                 data['rat_pts_v'] = ratpts['rat_pts_v']
                 if len(ratpts['rat_pts']):
-                    data['rat_pts'] = ', '.join('(' +' : '.join(P) + ')' for P in ratpts['rat_pts'])
+                    data['rat_pts'] = ',\ \ \ '.join('(' +' : '.join(P) + ')' for P in ratpts['rat_pts'])
                 else:
                     data['rat_pts'] = 'none'
         else:
