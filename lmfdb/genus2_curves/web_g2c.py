@@ -620,7 +620,7 @@ class WebG2C(object):
             	if (i+1 < tama.count()):
             		data['tama'] += ', '
             if ratpts:
-                data['ratpts'] = ','.join(web_latex(tuple([ZZ(c) for c in ratpts['ratpts']])
+                data['ratpts'] = ','.join(web_latex(tuple([ZZ(c) for c in ratpts['ratpts']])))
                 data['ratpts_v'] = ratpts['ratpts_v']
         else:
             # invariants specific to isogeny class
