@@ -357,6 +357,7 @@ def st_group_format(name):
     return st_link_by_name(1,4,name)
 
 stats_attribute_list = [
+    {'name':'num_rat_pts','top_title':'rational points','row_title':'rational points','knowl':'g2c.num_rat_pts','avg':True},
     {'name':'num_rat_wpts','top_title':'rational Weierstrass points','row_title':'Weierstrass points','knowl':'g2c.num_rat_wpts','avg':True},
     {'name':'aut_grp_id','top_title':'$\mathrm{Aut}(X)$','row_title':'automorphism group','knowl':'g2c.aut_grp','format':aut_grp_format},
     {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':geom_aut_grp_format},
