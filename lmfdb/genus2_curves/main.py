@@ -248,7 +248,7 @@ def genus2_curve_search(info):
                     errmsg = "%s is not a valid genus 2 curve or isogeny class label"
         flash_error (errmsg, jump)
         return redirect(url_for(".index"))
-
+    print "info",info
     if info.get('download','').strip() == '1':
         return download_search(info)
 
@@ -291,6 +291,7 @@ def genus2_curve_search(info):
     except ValueError as err:
         info['err'] = str(err)
         return render_template("g2c_search_results.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
+    print "query",query
     # Database query happens here
     info["query"] = query # save query for reuse in download_search
     cursor = g2c_db_curves().find(query, {'_id':False, 'label':True, 'eqn':True, 'st_group':True, 'is_gl2_type':True, 'is_simple_geom':True, 'analytic_rank':True})
