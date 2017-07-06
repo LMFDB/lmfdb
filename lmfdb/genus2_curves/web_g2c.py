@@ -623,11 +623,13 @@ class WebG2C(object):
             	if (i+1 < tama.count()):
             		data['tama'] += ', '
             if ratpts and ratpts.get('rat_pts'):
+                print ratpts
                 data['rat_pts_v'] = ratpts['rat_pts_v']
                 if len(ratpts['rat_pts']):
                     data['rat_pts'] = ',\ \ \ '.join('(' +' : '.join(P) + ')' for P in ratpts['rat_pts'])
                 else:
                     data['rat_pts'] = 'none'
+                print data['rat_pts']
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
