@@ -549,7 +549,7 @@ class WebG2C(object):
             ratpts = g2c_db_rational_points().find_one({"label" : curve['label']})
         else:
             ratpts = {}
-            print "no ratpts data found"
+            g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
         return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel)==4))
 
     def make_object(self, curve, endo, tama, ratpts, is_curve):
@@ -624,12 +624,11 @@ class WebG2C(object):
             	if (i+1 < tama.count()):
             		data['tama'] += ', '
             if ratpts:
-                data['rat_pts_v'] = ratpts['rat_pts_v']
                 if len(ratpts['rat_pts']):
                     data['rat_pts'] = ',\ \ \ '.join('(' +' : '.join(P) + ')' for P in ratpts['rat_pts'])
-                else:
-                    data['rat_pts'] = 'none'
-                print data['rat_pts']
+                data['rat_pts_v'] =  2 if ratpts['rat_pts_v'] else 1
+            else:
+                data['rat_pts_v'] = 0
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])

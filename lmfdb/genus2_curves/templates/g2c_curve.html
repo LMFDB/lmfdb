@@ -205,21 +205,30 @@ function show_invs(invstyle) {
 </p>
 <h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h3>\({{data.num_rat_wpts}}\)
 
-{% if data.rat_pts %}
+{% if data.rat_pts_data_available %}
 <p>
 {{place_code('rational_points')}}
 </p>
 <p>
-{% if data.rat_pts_v %}
-<h3 class="inline"> {{ KNOWL('g2c.all_rational_points', title='Complete list of rational points') }}: </h3>
+{% if data.rat_pts_v > 0 %}
+{% if data.rat_pts_v == 1 %}
+{% if data.rat_pts *}
+<h3 class="inline"> {{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: </h3>
 <p>
 \({{data.rat_pts}}\)
 </p>
 {% else %}
-<h3 class="inline"> {{ KNOWL('g2c.known_rational_points', title='List of known rational points') }}: </h3>
+<h3 class="inline"> {{ KNOWL('g2c.known_rational_points', title='No rational points known') }} </h3>
+{% endif %}
+{% else %}
+{% if data.rat_pts *}
+<h3 class="inline"> {{ KNOWL('g2c.all_rational_points', title='All rational points') }}: </h3>
 <p>
 \({{data.rat_pts}}\)
 </p>
+{% else %}
+<h3 class="inline"> {{ KNOWL('g2c.all_rational_points', title='There are no rational points') }}: </h3>
+{% endif %}
 {% endif %}
 {% endif %}
 </p>
