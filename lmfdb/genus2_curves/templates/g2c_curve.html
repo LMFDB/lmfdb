@@ -194,15 +194,17 @@ function show_invs(invstyle) {
 </table>
 
 <h2> Rational points </h2>
+{% if data.rat_pts %}
 <p>
 {{place_code('rational_points')}}
 </p>
-{% if data.rat_pts %}
+<p>
 {% if data.rat_pts_v %}
 <h3 style="display: inline"> {{ KNOWL('g2c.all_rational_points', title='Complete list of rational points') }}: </h3>\({{data.rat_pts}}\)
 {% else %}
 <h3 style="display: inline"> {{ KNOWL('g2c.known_rational_points', title='List of known rational points') }}: </h3>\({{data.rat_pts}}\)
 {% endif %}
+</p>
 {% endif %}
 
 <p>
