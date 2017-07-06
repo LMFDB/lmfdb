@@ -221,7 +221,7 @@ function show_invs(invstyle) {
 <h3 class="inline"> {{ KNOWL('g2c.known_rational_points', title='No rational points known') }} </h3>
 {% endif %}
 {% else %}
-{% if data.rat_pts *}
+{% if data.rat_pts %}
 <h3 class="inline"> {{ KNOWL('g2c.all_rational_points', title='All rational points') }}: </h3>
 <p>
 \({{data.rat_pts}}\)
