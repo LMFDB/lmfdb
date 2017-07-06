@@ -546,11 +546,8 @@ class WebG2C(object):
             g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
             raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
         if len(slabel)==4:
-            print "getting ratpts"
             ratpts = g2c_db_rational_points().find_one({"label" : curve['label']})
-            print ratpts
         else:
-            print "not getting ratpts"
             ratpts = {}
         return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel)==4))
 
@@ -626,9 +623,9 @@ class WebG2C(object):
             	if (i+1 < tama.count()):
             		data['tama'] += ', '
             if ratpts and ratpts.get('ratpts'):
-                data['ratpts'] = ','.join(web_latex(tuple([ZZ(c) for c in ratpts['ratpts']])))
-                data['ratpts_v'] = ratpts['ratpts_v']
-                print "ratpts", data['ratpts']
+                data['rat_pts'] = ','.join(web_latex(tuple([ZZ(c) for c in ratpts['rat_pts']])))
+                data['rat_pts_v'] = ratpts['rat_pts_v']
+                print "rat_pts", data['rat_pts']
             else:
                 print "no ratpts"
         else:
