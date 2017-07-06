@@ -549,6 +549,7 @@ class WebG2C(object):
             ratpts = g2c_db_rational_points().find_one({"label" : curve['label']})
         else:
             ratpts = {}
+            print "no ratpts data found"
         return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel)==4))
 
     def make_object(self, curve, endo, tama, ratpts, is_curve):
@@ -624,6 +625,8 @@ class WebG2C(object):
             		data['tama'] += ', '
             if ratpts:
                 print "ratpts:", ratpts
+            else
+                print "ratpts is null"
             if ratpts and ratpts.get('rat_pts'):
                 data['rat_pts_v'] = ratpts['rat_pts_v']
                 if len(ratpts['rat_pts']):
