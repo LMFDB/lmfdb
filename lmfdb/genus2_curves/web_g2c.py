@@ -625,7 +625,7 @@ class WebG2C(object):
             		data['tama'] += ', '
             if ratpts:
                 print "ratpts:", ratpts
-            else
+            else:
                 print "ratpts is null"
             if ratpts and ratpts.get('rat_pts'):
                 data['rat_pts_v'] = ratpts['rat_pts_v']
