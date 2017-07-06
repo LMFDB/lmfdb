@@ -625,6 +625,9 @@ class WebG2C(object):
             if ratpts and ratpts.get('ratpts'):
                 data['ratpts'] = ','.join(web_latex(tuple([ZZ(c) for c in ratpts['ratpts']])))
                 data['ratpts_v'] = ratpts['ratpts_v']
+                print "ratpts", data['ratpts']
+            else:
+                print "no ratpts"
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
