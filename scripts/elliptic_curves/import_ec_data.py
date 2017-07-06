@@ -112,7 +112,7 @@ def parse_ainvs(s):
  #   return [int(a) for a in s[1:-1].split(':')]
 
 def numerical_iso_label(lmfdb_iso):
-    from scripts.ecnf.import_ecnf_data import numerify_iso_label
+    from scripts.ecnf.import_utils import numerify_iso_label
     return numerify_iso_label(lmfdb_iso.split('.')[1])
 
 whitespace = re.compile(r'\s+')

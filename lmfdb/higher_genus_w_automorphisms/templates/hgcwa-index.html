@@ -24,7 +24,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 <a href="?genus={{gen}}">{{gen}}</a>
 {% endfor %}</p>
 
-<p>Hyperelliptic curves by genus:
+<p>{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curves')}}: by genus:
 {% for gen in info.genus_list %}
 <a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>
 {% endfor %} 
@@ -91,7 +91,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	<span class="formexample">e.g. 1, or a range like 0..2</span>
 	 </td> </tr>
               <tr>  <td align=right>
-	       Hyperelliptic curve(s):
+	       {{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:
             </td>  <td> <select name='inc_hyper'>
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>
@@ -103,7 +103,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	 </td></tr>
 
 	  <tr>  <td align=right>
-	       Cyclic trigonal curve(s):
+	       {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:
             </td>  <td> <select name='inc_cyc_trig'>
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>

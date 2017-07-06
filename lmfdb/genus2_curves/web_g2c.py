@@ -26,7 +26,7 @@ def g2c_db_endomorphisms():
 def g2c_db_lfunction_by_hash(hash):
     return getDBConnection().Lfunctions.Lfunctions.find_one({'Lhash':hash})
 
-# TODO: switch to Lfunctions datbase once all instance data has been moved there (wait until #433 is closed before doing this)
+# TODO: switch to Lfunctions database once all instance data has been moved there (wait until #433 is closed before doing this)
 def g2c_db_lfunction_instances():
     return getDBConnection().genus2_curves.Lfunctions.instances
 
