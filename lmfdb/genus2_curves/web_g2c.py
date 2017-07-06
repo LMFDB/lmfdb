@@ -622,7 +622,7 @@ class WebG2C(object):
             	data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + ')'
             	if (i+1 < tama.count()):
             		data['tama'] += ', '
-            if ratpts and ratpts.get('ratpts'):
+            if ratpts and ratpts.get('rat_pts'):
                 data['rat_pts'] = ','.join(web_latex(tuple([ZZ(c) for c in ratpts['rat_pts']])))
                 data['rat_pts_v'] = ratpts['rat_pts_v']
                 print "rat_pts", data['rat_pts']
