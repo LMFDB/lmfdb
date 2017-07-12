@@ -159,7 +159,7 @@ class WebBMF(object):
             self.bc_extra = ', of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
         elif self.bc == -1:
             self.bc = 'no'
-            self.bc_extra = ', but is a twist of a base-change form over \(\mathbb{Q}\)'
+            self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\)'
         elif self.bc < -1:
             self.bcd = -self.bc
             self.bc = 'no'

@@ -29,18 +29,18 @@
   </select>
 <td>
   <select name='include_cm'>
-    {% if info.include_cm == "include" %}
-    <option value="include" selected>include</option>
+    {% if info.include_cm == "only" %}
+    <option value="include">include</option>
     <option value="exclude">exclude</option>
-    <option value="only">only</option>
+    <option value="only" selected>only</option>
     {% elif info.include_cm == "exclude" %}
     <option value="include">include</option>
     <option value="exclude" selected>exclude</option>
     <option value="only">only</option>
     {% else %}
-    <option value="include">include</option>
+    <option value="include" selected>include</option>
     <option value="exclude">exclude</option>
-    <option value="only" selected>only</option>
+    <option value="only">only</option>
     {% endif %}
   </select>
 </td>

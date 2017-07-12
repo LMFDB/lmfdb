@@ -45,6 +45,7 @@
 
 <h2> Newforms </h2>
 
+<p>
 {%if info.nnewforms > 0 %}
 There
 {%if info.nnewforms == 1 %}
@@ -53,15 +54,22 @@ is one rational cuspidal newform
 are {{info.nnewforms}} cuspidal newforms
 {%endif%}
 at this level in the database:
-{%for nf in info.newforms %}
-{%-if loop.index > 1 -%}
-,
-{%endif %}
-<a href={{nf[1]}}>{{nf[0]}}</a>
-{%-endfor%}
+<table border=1 class="ntdata">
+  <tr><th>Label<th>weight<th>dimension<th>base-change<th>CM</tr>
+{%for nf in info.nfdata %}
+  <tr>
+    <td><a href={{nf.url}}>{{nf.label}}</a>
+      <td>{{nf.wt}}
+      <td>{{nf.dim}}
+      <td>{{nf.bc}}
+      <td>{{nf.cm}}
+  </tr>
+  {% endfor%}
+</table>
 {%else %}
 There are no cuspidal newforms at this level in the database.
 {%endif %}
+</p>
 
 {%endif %}
 

@@ -104,7 +104,7 @@ def bianchi_modular_form_search(**args):
         if info['include_cm'] == 'exclude':
             query['CM'] = 0
         elif info['include_cm'] == 'only':
-            query['CM'] = {'$ne' : [0,'?']}
+            query['CM'] = {'$nin' : [0,'?']}
     if 'include_base_change' in info and info['include_base_change'] == 'off':
         query['bc'] = 0
     else:
@@ -255,6 +255,11 @@ def bmf_field_dim_table(**args):
     info['dimtable'] = dimtable
     return render_template("bmf-field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
 
+def bc_info(bc):
+    return 'yes' if bc>0 else 'yes (twist)' if bc<0 else 'no'
+
+def cm_info(cm):
+    return 'no' if cm==0 else str(cm) if cm%4==1 else str(4*cm)
 
 @bmf_page.route('/<field_label>/<level_label>')
 def render_bmf_space_webpage(field_label, level_label):
@@ -311,11 +316,17 @@ def render_bmf_space_webpage(field_label, level_label):
 
                 newdim = data['gl2_dims']['2']['new_dim']
                 newforms = db_forms().find({'field_label':field_label, 'level_label':level_label}).sort('label_suffix', ASCENDING)
-                info['newforms'] = [[f['short_label'],
-                                     url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix'])] for f in newforms]
-                info['nnewforms'] = len(info['newforms'])
+                info['nfdata'] = [{
+                    'label': f['short_label'],
+                    'url': url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix']),
+                    'wt': f['weight'],
+                    'dim': f['dimension'],
+                    'bc': bc_info(f['bc']),
+                    'cm': cm_info(f['CM']),
+                    } for f in newforms]
+                info['nnewforms'] = len(info['nfdata'])
                 properties2 = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
-                friends = [('Newform {}'.format(f[0]), f[1]) for f in info['newforms'] ]
+                friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
 
     return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties2=properties2, friends=friends)
 
