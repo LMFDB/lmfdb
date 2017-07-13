@@ -41,8 +41,9 @@ Below you can browse classes of modular forms currently in the LMFDB.
 <p><a href="{{ url_for('smf.index') }}">Siegel Modular Forms</a> 
 </p>
 
+{% if BETA %}
 <p><a href="{{ url_for('bmf.index') }}">Bianchi Modular Forms</a> 
 </p>
-
+{% endif %}
 
 {% endblock content %}
