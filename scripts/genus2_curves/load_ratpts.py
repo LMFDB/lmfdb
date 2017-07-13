@@ -3,6 +3,7 @@
 import lmfdb
 import ast
 import pymongo
+from data_mgt.utilities.rewrite import rewrite_collection
 
 # expected input file format is
 # label:eqn:rank:ratpts:ratpts-verified:mwgroup:mwgens:mwgroup-verified:rank-verified
@@ -47,9 +48,6 @@ def load_ratpts_data(filename):
                 # 'mw_group_v': bool(mwgroup_v),
                 # 'mw_rank_v': bool(mwrank_v) }
         outrecs.append(rec)
-    print "Loading %d records to ratpts collection...\n"%len(outrecs)
-    #db.ratpts.insert_many(outrecs)
-    print "...done!"
     if db.ratpts.new.count() > 0:
         print "overwriting existing ratpts.new"
         db.ratpts.new.drop()
@@ -62,7 +60,17 @@ def load_ratpts_data(filename):
         db.ratpts.rename('ratpts.old')
     db.ratpts.new.rename('ratpts')
 
-def ratpts_update_curve(rec):
-    r = db.ratpts.find_one({'label':rec['label']})
-    rec['num_rat_pts'] = r['num_rat_pts']
-    return rec
+    # function to be passed to rewrite_collection
+    def ratpts_update(rec):
+        db = lmfdb.base.getDBConnection().genus2_curves
+        r = db.ratpts.find_one({'label':rec['label']})
+        rec['num_rat_pts'] = r['num_rat_pts']
+        return rec
+    print "Updating num_rat_pts in curves collection"
+    rewrite_collection(db, "curves","curves.new", ratpts_update)
+    print "renaming curves.new to curves"
+    db.curves.old.drop()
+    db.curves.rename("curves.old")
+    db.curves.new.rename("curves")
+    db.curves.create_index([('num_rat_pts',int(1))])
+    print "Done!"
