@@ -419,9 +419,13 @@ class G2C_stats(object):
         # TODO use aggregate $group to speed this up and/or just store these counts in the database
         for attr in stats_attribute_list:
             counts = attribute_value_counts(curves, attr['name'])
+            counts = [c for c in counts if c[0] != None]
+            if len(counts) == 0:
+                continue
             vcounts = []
             rows = []
             avg = 0
+            total = sum([c[1] for c in counts])
             for value,n in counts:
                 prop = format_percentage(n,total)
                 if 'avg' in attr and attr['avg'] and (type(value) == int or type(value) == float):
