@@ -55,14 +55,15 @@ are {{info.nnewforms}} cuspidal newforms
 {%endif%}
 at this level in the database:
 <table border=1 class="ntdata">
-  <tr><th>Label<th>weight<th>dimension<th>base-change<th>CM</tr>
+  <tr><th>label<th>weight<th>dimension<th>sign<th>base-change<th>CM</tr>
 {%for nf in info.nfdata %}
   <tr>
     <td><a href={{nf.url}}>{{nf.label}}</a>
-      <td>{{nf.wt}}
-      <td>{{nf.dim}}
-      <td>{{nf.bc}}
-      <td>{{nf.cm}}
+      <td align='center'>{{nf.wt}}
+      <td align='center'>{{nf.dim}}
+      <td align='center'>{{nf.sfe}}</td>
+      <td align='center'>{{nf.bc}}
+      <td align='center'>{{nf.cm}}
   </tr>
   {% endfor%}
 </table>

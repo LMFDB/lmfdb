@@ -25,8 +25,8 @@
 <tr><td> {{ KNOWL('mf.bianchi.labels', 'Label')}}<td> {{ data.label }} </tr>
 <tr><td> {{ KNOWL('mf.bianchi.dimension', title='Dimension') }}:<td> {{ data.dimension }} </tr>
 <tr><td> {{ KNOWL('mf.bianchi.complex_multiplication',title="CM") }}:<td> {{data.CM}} </tr>
-<tr><td> {{ KNOWL('mf.bianchi.base_change',title="base change") }}:<td> {{data.bc}}{{data.bc_extra}} </tr>
-<tr><td> parent {{ KNOWL('mf.bianchi.newforms', title='newspace')}}:<td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> (dimension {{ data.newspace_dimension }}) </tr>
+<tr><td> {{ KNOWL('mf.bianchi.base_change',title="Base change") }}:<td> {{data.bc}}{{data.bc_extra}} </tr>
+<tr><td> Parent {{ KNOWL('mf.bianchi.newforms', title='newspace')}}:<td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> (dimension {{ data.newspace_dimension }}) </tr>
 <tr><td> {{ KNOWL('mf.bianchi.sfe',title="Sign of functional equation") }}:<td> {{data.sign}} </tr>
 <tr><td> {{ KNOWL('mf.bianchi.anr',title="Analytic rank")}}:<td> {{data.anrank}} </tr>
 {% if data.Lratio %}

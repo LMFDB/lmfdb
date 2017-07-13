@@ -50,23 +50,28 @@ Browse {{ KNOWL('mf.bianchi.newforms', title='newform spaces')}} by  {{ KNOWL('n
 <form>
 <table>
 <tr>
-<td> {{ KNOWL('nf', title='Base field')}}</td> 
+<td> {{ KNOWL('nf', title='base field')}}</td> 
 <td><input type='text' name='field_label' placeholder='2.0.4.1' size=10>
-<td><span class="formexample"> either a field label, e.g. 2.0.4.1 for
+<td colspan=4><span class="formexample"> either a field label, e.g. 2.0.4.1 for
     \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1 </span></td>
 </tr>
 <tr>
-<td>{{ KNOWL('mf.bianchi.level_norm', title='Level norm') }}</td>
+<td>{{ KNOWL('mf.bianchi.level_norm', title='level norm') }}</td>
 <td><input type='text' name='level_norm' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1 or 1-100</td>
-</tr>
-<tr>
 <td>{{ KNOWL('mf.bianchi.dimension', title='dimension') }}</td>
-<td><input type='text' name='dimension' placeholder='1' size=10>
+<td><input type='text' name='dimension' placeholder='1' size=3>
 <td><span class="formexample"> e.g. 1 or 2</td>
 </tr>
 <tr>
-  <td align=right>{{ KNOWL('mf.bianchi.base_change',title="base change") }}
+<td>{{ KNOWL('mf.bianchi.sign', title='sign') }}</td>
+<td>       <select name='sfe'>
+           <option value="any" selected>any</option>
+           <option value="+1">+1</option>
+           <option value="-1">-1</option>
+         </select>
+<td>&nbsp;</td>
+<td>{{ KNOWL('mf.bianchi.base_change',title="base change") }}
   forms</td>
   <td>
          <select name='include_base_change'>
@@ -74,8 +79,6 @@ Browse {{ KNOWL('mf.bianchi.newforms', title='newform spaces')}} by  {{ KNOWL('n
            <option value="on" selected="yes">include</option>
          </select>
   </td>
-</tr>
-   <tr>
    <td>
     {{ KNOWL('mf.bianchi.complex_multiplication',title="CM") }}
     </td>

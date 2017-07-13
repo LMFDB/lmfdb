@@ -6,7 +6,7 @@ from pymongo import ASCENDING
 from flask import render_template, url_for, request, redirect, flash
 from markupsafe import Markup
 
-from sage.all import latex
+from sage.all import latex, Set
 
 from lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict, random_object_from_collection
@@ -32,7 +32,11 @@ def learnmore_list():
 def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
+def bc_info(bc):
+    return 'yes' if bc>0 else 'yes (twist)' if bc<0 else 'no'
 
+def cm_info(cm):
+    return 'no' if cm==0 else str(cm) if cm%4==1 else str(4*cm)
 
 @bmf_page.route("/")
 def index():
@@ -100,6 +104,10 @@ def bianchi_modular_form_search(**args):
             else:
                 query[field] = info[field]
 
+    if not 'sfe' in info:
+        info['sfe'] = "any"
+    elif info['sfe'] != "any":
+        query['sfe'] = int(info['sfe'])
     if 'include_cm' in info:
         if info['include_cm'] == 'exclude':
             query['CM'] = 0
@@ -147,7 +155,10 @@ def bianchi_modular_form_search(**args):
         v_clean['label'] = v['label']
         v_clean['level_ideal'] = teXify_pol(v['level_ideal'])
         v_clean['dimension'] = v['dimension']
+        v_clean['sfe'] = "+1" if v['sfe']==1 else "-1"
         v_clean['url'] = url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix'])
+        v_clean['bc'] = bc_info(v['bc'])
+        v_clean['cm'] = cm_info(v['CM'])
         res_clean.append(v_clean)
 
     info['forms'] = res_clean
@@ -187,9 +198,12 @@ def bmf_field_dim_table(**args):
         start = int(argsdict['start'])
 
     info={}
-    nontrivial_only = argsdict.get('nontrivial_only', 'true') == 'true'
-    info['nontrivial_only'] = nontrivial_only
-    count = 200 if nontrivial_only else 50
+    # level_flag controls whether to list all levels ('all'), only
+    # those with positive cuspidal dimension ('cusp'), or only those
+    # with positive new dimension ('new').  Default is 'cusp'.
+    level_flag = argsdict.get('level_flag', 'cusp')
+    info['level_flag'] = level_flag
+    count = 50
     if 'count' in argsdict:
         count = int(argsdict['count'])
 
@@ -207,9 +221,29 @@ def bmf_field_dim_table(**args):
     query = {}
     query['field_label'] = field_label
     query[gl_or_sl] = {'$exists': True}
+    if level_flag != 'all':
+        # find which weights are present (TODO: get this from a stats collection)
+        wts = list(sum((Set(d.keys()) for d in db_dims().distinct(gl_or_sl)),Set()))
+    if level_flag == 'cusp':
+        # restrict the query to only return levels where at least one
+        # cuspidal dimension is positive:
+        query.update(
+            {'$or':[{gl_or_sl+'.{}.cuspidal_dim'.format(w):{'$gt':0}} for w in wts]}
+        )
+    if level_flag == 'new':
+        # restrict the query to only return levels where at least one
+        # new dimension is positive:
+        query.update(
+            {'$or':[{gl_or_sl+'.{}.new_dim'.format(w):{'$gt':0}} for w in wts]}
+        )
     data = db_dims().find(query)
     data = data.sort([('level_norm', ASCENDING)])
-    info['number'] = data.count()
+    info['number'] = nres = data.count()
+    if nres > count or start != 0:
+        info['report'] = 'Displaying items %s-%s of %s levels,' % (start + 1, min(nres, start + count), nres)
+    else:
+        info['report'] = 'Displaying all %s levels,' % nres
+
     data = list(data.skip(start).limit(count))
     info['field'] = field_label
     info['field_pretty'] = pretty_field_label
@@ -227,39 +261,29 @@ def bmf_field_dim_table(**args):
     info['nweights'] = len(weights)
     info['count'] = count
     info['start'] = start
-    info['complete'] = int(info['number'] < info['count'])
+    info['more'] = int(start + count < nres)
     render_func = ".render_bmf_field_dim_table_gl2" if gl_or_sl=='gl2_dims' else ".render_bmf_field_dim_table_sl2"
-    info['next_page'] = url_for(render_func, field_label=field_label, start=str(start+count), count=str(count), level_norm=argsdict.get('level_norm',''), nontrivial_only=argsdict.get('nontrivial_only','true'))
-    info['prev_page'] = url_for(render_func, field_label=field_label, start=str(max(0,start-count)), count=str(count), nontrivial_only=argsdict.get('nontrivial_only','true'))
+    info['next_page'] = url_for(render_func, field_label=field_label, start=str(start+count), count=str(count), level_norm=argsdict.get('level_norm',''),  level_flag=level_flag)
+    info['prev_page'] = url_for(render_func, field_label=field_label, start=str(max(0,start-count)), count=str(count), level_flag=level_flag)
 
     dims = {}
-    nlevels = 0
     for dat in data:
         dims[dat['level_label']] = d = {}
-        d['total_new'] = 0
         for w in weights:
             sw = str(w)
             if sw in dat[gl_or_sl]:
                 d[w] = {'d': dat[gl_or_sl][sw]['cuspidal_dim'],
                         'n': dat[gl_or_sl][sw]['new_dim']}
-                d['total_new'] += d[w]['n']
             else:
                 d[w] = {'d': '?', 'n': '?'}
-        if d['total_new'] > 0:
-            nlevels += 1
-    info['nlevels'] = nlevels if nontrivial_only else len(data)
+    info['nlevels'] = len(data)
     dimtable = [{'level_label': dat['level_label'],
                  'level_norm': dat['level_norm'],
                  'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']),
                   'dims': dims[dat['level_label']]} for dat in data]
+    print("Length of dimtable = {}".format(len(dimtable)))
     info['dimtable'] = dimtable
     return render_template("bmf-field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
-
-def bc_info(bc):
-    return 'yes' if bc>0 else 'yes (twist)' if bc<0 else 'no'
-
-def cm_info(cm):
-    return 'no' if cm==0 else str(cm) if cm%4==1 else str(4*cm)
 
 @bmf_page.route('/<field_label>/<level_label>')
 def render_bmf_space_webpage(field_label, level_label):
@@ -281,8 +305,8 @@ def render_bmf_space_webpage(field_label, level_label):
         else:
             t = "Bianchi Modular Forms of level %s over %s" % (level_label, pretty_field_label)
             data = db_dims().find({'field_label': field_label, 'level_label': level_label})
-            n = data.count()
-            if n==0:
+            nres = data.count()
+            if nres==0:
                 info['err'] = "no dimension information exists in the database for level %s and field %s" % (level_label, pretty_field_label)
             else:
                 data = data.next()
@@ -321,6 +345,7 @@ def render_bmf_space_webpage(field_label, level_label):
                     'url': url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix']),
                     'wt': f['weight'],
                     'dim': f['dimension'],
+                    'sfe': "+1" if f['sfe']==1 else "-1",
                     'bc': bc_info(f['bc']),
                     'cm': cm_info(f['CM']),
                     } for f in newforms]

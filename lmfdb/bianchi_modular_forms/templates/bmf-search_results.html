@@ -11,13 +11,29 @@
 <td>Field</td>
 <td>{{ KNOWL('mf.bianchi.level_norm', title='Level norm') }}</td>
 <td>{{ KNOWL('mf.dimension', title='dimension') }}</td>
+<td>{{ KNOWL('mf.bianchi.sign', title='sign') }}</td>
 <td>{{ KNOWL('mf.bianchi.base_change', title='base change') }}</td>
 <td>{{ KNOWL('mf.bianchi.complex_multiplication', title='CM') }}</td>
 </tr>
 <tr>
 <td><input type='text' name='field_label' placeholder='2.0.4.1' size=10 value={{info.field_label}}>
 <td><input type='text' name='level_norm' placeholder='1' size=10 value={{info.level_norm}}>
-<td><input type='text' name='dimension' placeholder='1' size=10  value={{info.dimension}}>
+<td><input type='text' name='dimension' placeholder='1' size=3  value={{info.dimension}}>
+<td> <select name='sfe'>
+    {% if info.sfe == "any" %}
+    <option value="any" selected>any</option>
+    <option value="+1">+1</option>
+    <option value="-1">-1</option>
+    {% elif info.sfe == "+1" %}
+    <option value="any">any</option>
+    <option value="+1" selected>+1</option>
+    <option value="-1">-1</option>
+    {% else %}
+    <option value="any">any</option>
+    <option value="+1">+1</option>
+    <option value="-1" selected>-1</option>
+    {% endif %}
+  </select>
 <td> <select name='include_base_change'>
     {% if info.include_base_change == "off" %}
     <option value="off" selected>exclude</option>
@@ -77,6 +93,9 @@
 <th>Level</th>
 <th>Label</th>
 <th>Dimension</th>
+<th>Sign</th>
+<th>Base change</th>
+<th>CM</th>
 </tr>
 {% for form in info.forms: %}
 <tr>
@@ -85,7 +104,10 @@
        level_label=form.level_label)}}>{{form.level_label}}</a> {#$={{form.level_ideal}}$#}</td>
 <td align='left'><a href="{{form.url}}">
     {{form.short_label}} </a></td>
-<td>{{form.dimension}}</td>
+<td align='center'>{{form.dimension}}</td>
+<td align='center'>{{form.sfe}}</td>
+<td align='center'>{{form.bc}}</td>
+<td align='center'>{{form.cm}}</td>
 </tr>
 {% endfor %}
 </table>

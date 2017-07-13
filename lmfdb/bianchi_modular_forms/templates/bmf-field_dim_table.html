@@ -12,58 +12,88 @@ modular forms for \(\Gamma_0(\mathfrak{n})\subseteq {{info.bgroup}}\)
 for levels \(\mathfrak{n}\) ordered by norm, over \(K=\) {{info.field_pretty}}.
 </p>
 <p>
-  Each entry of the form $d\ (n)$ in column $w$ indicates that the space of cusp
-  forms of weight $w$ has dimension $d$ and the new subspace has
-  dimension $n$.
+  Each level label is a link to a page showing further details of the
+  spaces of cusp forms for that level.
+</p>
+<p>
+  For each weight $w$, we show both the dimension $d$ of the space of cusp
+  forms of weight $w$, and the dimension $n$ of the new subspace.
 </p>
 
 {% if info.number %}
 
-<form>
+<form id='level_flag'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
 
-<p> For <input type="text" name="count"
-                    placeholder="{{info.count}}" size=4
-                    value="{{info.count}}"/> levels out of
-                    {{info.number}} starting at level number
-                    <input type="text" name="start" size=6
-                    placeholder="{{info.start}}"
-                           value="{{info.start}}" size=2/>
-                    {%-if info.nontrivial_only %}
-                    , showing only {{info.nlevels}} levels with positive new dimension.
-                    <select name='nontrivial_only'>
-                      <option selected value=false>Show all levels</option>
-                      <option value=true>Show only levels with positive new dimension</option>
+<p>{{info.report}}
+                    {# we have to decide which option is preselected
+                    based on a judgement of what users will want to
+                    switch to, i.e. one of the other two options.  For
+                    simplicity I have used the 3-cycle new -> all ->
+                    cusp -> new. #}
+                    {%-if info.level_flag=='new' %}
+                    showing only levels with positive new dimension.
+                    <select name='level_flag'>
+                      <option value='all' selected>Show all levels</option>
+                      <option value='cusp'>Show only levels with positive cuspidal dimension</option>
+                      <option value='new'>Show only levels with positive new dimension</option>
+                    </select>
+                    {%-elif info.level_flag=='cusp' %}
+                    showing only levels with positive cuspidal dimension.
+                    <select name='level_flag'>
+                      <option value='all'>Show all levels</option>
+                      <option value='cusp'>Show only levels with positive cuspidal dimension</option>
+                      <option value='new' selected>Show only levels with positive new dimension</option>
                     </select>
                     {%-else %}
-                    , showing all levels.
-                    <select name='nontrivial_only'>
-                      <option value=false>Show all levels</option>
-                      <option selected value=true>Show only levels with positive new dimension</option>
+                    showing all levels.
+                    <select name='level_flag'>
+                      <option value='all'>Show all levels</option>
+                      <option value='cusp' selected>Show only levels with positive cuspidal dimension</option>
+                      <option value='new'>Show only levels with positive new dimension</option>
                     </select>
                     {%-endif %}
 <button type='submit' value='Go'>Go</button>
 </p>
 </form>
 
+<form id='next_previous'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+<input type="hidden" name="level_flag" value="{{info.level_flag}}"/>
+</form>
+
 <div align=left>
-{% if info.start %}
-<a href= {{info.prev_page}}>...see previous levels...</a>
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('next_previous');return
+            false">Previous</a>
 {% endif %}
-<table border=2>
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('next_previous');return false">Next</a>
+{% endif %}
+
+<p>
+  <table border=2>
 <tr>
 <th style="border-left:none; border-top:none;" >&nbsp;</th>
-<th style="border-left:none; border-top:none;" >Weight</th>
+<th style="border-left:none; " >weight</th>
+{% if info.nweights > 1 %}
 <th style="border-left:none; border-top:none;" >all</th>
+{% endif %}
 {% for k in info.weights %}
-<th >{{k}}</th>
+<th colspan=2>{{k}}</th>
 {% endfor %}
 </tr>
 <tr>
-<th>Level</th>
-<th>Norm</th>
+<th>level</th>
+<th>norm</th>
+{% if info.nweights > 1 %}
 <th>\(n\)</th>
+{% endif %}
 {% for k in info.weights %}
-<th> $d\ (n)$</th>
+<th>$d$</th> <th>$n$</th>
 {% endfor %}
 </tr>
 {% for data in info.dimtable %}
@@ -71,13 +101,15 @@ for levels \(\mathfrak{n}\) ordered by norm, over \(K=\) {{info.field_pretty}}.
 <tr>
 <td align=right><a href={{data.level_space}}>{{data.level_label}}</a></td>
 <td align=right>{{data.level_norm}}</td>
+{% if info.nweights > 1 %}
 <td align=right>{{data.dims.total_new}}</td>
+{% endif %}
 {% for k in info.weights %}
 <td align=center>
   {% if data.dims[k]['d'] == '?' %}
-  &nbsp;
+  &nbsp;</td><td>&nbsp;
   {% else %}
-  {{data.dims[k]['d']}} ({{data.dims[k]['n']}})
+  {{data.dims[k]['d']}} </td><td>{{data.dims[k]['n']}}
   {% endif %}
 </td>
 {% endfor %}
@@ -85,11 +117,15 @@ for levels \(\mathfrak{n}\) ordered by norm, over \(K=\) {{info.field_pretty}}.
 {% endif %}
 {% endfor %}
 </table>
-<p>
-{% if not info.complete %}
-<a href= {{info.next_page}}>...see next levels...</a>
-{% endif %}
 </p>
+
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('next_previous');return false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('next_previous');return false">Next</A>
+{% endif %}
+
 </div>
 {% else %}
 <p>

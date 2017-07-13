@@ -127,7 +127,7 @@ class WebBMF(object):
             self.anrank = "not determined"
         else:
             self.Lratio = QQ(self.Lratio)
-            self.anrank = "\(0\)" if self.Lratio!=0 else "\(\ge1\), odd" if self.sfe==-1 else "\(\ge2\), even"
+            self.anrank = "\(0\)" if self.Lratio!=0 else "odd" if self.sfe==-1 else "\(\ge2\), even"
 
         self.properties2 = [('Base field', pretty_field),
                             ('Weight', str(self.weight)),
