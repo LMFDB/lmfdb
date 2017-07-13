@@ -2,7 +2,6 @@
 
 import lmfdb
 import ast
-import pymongo
 
 # expected input file format is
 # label:eqn:rank:ratpts:ratpts-verified:mwgroup:mwgens:mwgroup-verified:rank-verified
@@ -21,30 +20,30 @@ def load_ratpts_data(filename):
         items = inrec.split(':')
         assert len(items) == 9
         label = items[0]
-        Lrank = int(items[2])
+        # Lrank = int(items[2])
         ratpts = ast.literal_eval(items[3])
         ratpts_v = True if int(items[4]) == 1 else False
-        mwgroup = ast.literal_eval(items[5])
-        mwrank = len([n for n in mwgroup if n == 0])
-        mwgens = ast.literal_eval(items[6])
-        mwgroup_v = True if int(items[7]) == 1 else False
-        mwrank_v = True if int(items[8]) == 1 else False
-        if mwrank < Lrank and not mwrank_v:
-            print "Skipping record for %s with unverified mwrank %d < Lrank %d"%(label,mwrank,Lrank)
-            continue
-        if mwrank != Lrank:
-            "Hooray you have found a counterexample to BSD! Or your data is wrong/incomplete :("
-            print inrec
-            #return
+        # mwgroup = ast.literal_eval(items[5])
+        # mwrank = len([n for n in mwgroup if n == 0])
+        # mwgens = ast.literal_eval(items[6])
+        # mwgroup_v = True if int(items[7]) == 1 else False
+        # mwrank_v = True if int(items[8]) == 1 else False
+        # if mwrank < Lrank and not mwrank_v:
+        #     print "Skipping record for %s with unverified mwrank %d < Lrank %d"%(label,mwrank,Lrank)
+        #     continue
+        # if mwrank != Lrank:
+        #     "Hooray you have found a counterexample to BSD! Or your data is wrong/incomplete :("
+        #     print inrec
+        #     return
         rec = { 'label': label,
                 'num_rat_pts': int(len(ratpts)),
                 'rat_pts': [[str(c) for c in p] for p in ratpts],
-                'rat_pts_v': bool(ratpts_v),
-                'mw_group' : [int(a) for a in mwgroup],
-                'mw_rank' : int(mwrank),
-                'mw_gens' : mwgens, # divisor coefficients should already be encoded as strings
-                'mw_group_v': bool(mwgroup_v),
-                'mw_rank_v': bool(mwrank_v) }
+                'rat_pts_v': bool(ratpts_v) }
+                # 'mw_group' : [int(a) for a in mwgroup],
+                # 'mw_rank' : int(mwrank),
+                # 'mw_gens' : mwgens, # divisor coefficients should already be encoded as strings
+                # 'mw_group_v': bool(mwgroup_v),
+                # 'mw_rank_v': bool(mwrank_v) }
         outrecs.append(rec)
     print "Loading %d records to ratpts collection...\n"%len(outrecs)
     #db.ratpts.insert_many(outrecs)
