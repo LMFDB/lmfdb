@@ -18,7 +18,8 @@ def load_ratpts_data(filename):
         if not inrec:
             break
         items = inrec.split(':')
-        assert len(items) == 9
+        # assert len(items) == 9
+        assert len(items) == 5
         label = items[0]
         # Lrank = int(items[2])
         ratpts = ast.literal_eval(items[3])
