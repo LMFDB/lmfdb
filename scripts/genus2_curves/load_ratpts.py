@@ -2,6 +2,7 @@
 
 import lmfdb
 import ast
+import pymongo
 
 # expected input file format is
 # label:eqn:rank:ratpts:ratpts-verified:mwgroup:mwgens:mwgroup-verified:rank-verified
@@ -54,9 +55,14 @@ def load_ratpts_data(filename):
         db.ratpts.new.drop()
     db.ratpts.new.insert_many(outrecs)
     assert db.ratpts.new.count() == len(outrecs)
+    db.ratpts.new.create_index([('label',pymongo.ASCENDING)])
     if db.ratpts.old.count() > 0:
         db.ratpts.old.drop()
     if db.ratpts.count() > 0:
         db.ratpts.rename('ratpts.old')
     db.ratpts.new.rename('ratpts')
 
+def ratpts_update_curve(rec):
+    r = db.ratpts.find_one({'label':rec['label']})
+    rec['num_rat_pts'] = r['num_rat_pts']
+    return rec
