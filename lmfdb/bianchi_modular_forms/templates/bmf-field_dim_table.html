@@ -12,8 +12,12 @@ modular forms for \(\Gamma_0(\mathfrak{n})\subseteq {{info.bgroup}}\)
 for levels \(\mathfrak{n}\) ordered by norm, over \(K=\) {{info.field_pretty}}.
 </p>
 <p>
+{% if info.gl_or_sl == 'gl2_dims' %}
   Each level label is a link to a page showing further details of the
-  spaces of cusp forms for that level.
+spaces of cusp forms for that level.
+{% else %}
+
+{% endif %}
 </p>
 <p>
   For each weight $w$, we show both the dimension $d$ of the space of cusp
@@ -79,9 +83,6 @@ for levels \(\mathfrak{n}\) ordered by norm, over \(K=\) {{info.field_pretty}}.
 <tr>
 <th style="border-left:none; border-top:none;" >&nbsp;</th>
 <th style="border-left:none; " >weight</th>
-{% if info.nweights > 1 %}
-<th style="border-left:none; border-top:none;" >all</th>
-{% endif %}
 {% for k in info.weights %}
 <th colspan=2>{{k}}</th>
 {% endfor %}
@@ -89,21 +90,18 @@ for levels \(\mathfrak{n}\) ordered by norm, over \(K=\) {{info.field_pretty}}.
 <tr>
 <th>level</th>
 <th>norm</th>
-{% if info.nweights > 1 %}
-<th>\(n\)</th>
-{% endif %}
 {% for k in info.weights %}
 <th>$d$</th> <th>$n$</th>
 {% endfor %}
 </tr>
 {% for data in info.dimtable %}
-{% if (data.dims.total_new!=0) or (not info.nontrivial_only) %}
 <tr>
+{% if info.gl_or_sl == 'gl2_dims' %}
 <td align=right><a href={{data.level_space}}>{{data.level_label}}</a></td>
-<td align=right>{{data.level_norm}}</td>
-{% if info.nweights > 1 %}
-<td align=right>{{data.dims.total_new}}</td>
+{% else %}
+<td align=right>{{data.level_label}}</td>
 {% endif %}
+<td align=right>{{data.level_norm}}</td>
 {% for k in info.weights %}
 <td align=center>
   {% if data.dims[k]['d'] == '?' %}
@@ -114,7 +112,6 @@ for levels \(\mathfrak{n}\) ordered by norm, over \(K=\) {{info.field_pretty}}.
 </td>
 {% endfor %}
 </tr>
-{% endif %}
 {% endfor %}
 </table>
 </p>

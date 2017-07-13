@@ -198,6 +198,7 @@ def bmf_field_dim_table(**args):
         start = int(argsdict['start'])
 
     info={}
+    info['gl_or_sl'] = gl_or_sl
     # level_flag controls whether to list all levels ('all'), only
     # those with positive cuspidal dimension ('cusp'), or only those
     # with positive new dimension ('new').  Default is 'cusp'.
@@ -263,8 +264,6 @@ def bmf_field_dim_table(**args):
     info['start'] = start
     info['more'] = int(start + count < nres)
     render_func = ".render_bmf_field_dim_table_gl2" if gl_or_sl=='gl2_dims' else ".render_bmf_field_dim_table_sl2"
-    info['next_page'] = url_for(render_func, field_label=field_label, start=str(start+count), count=str(count), level_norm=argsdict.get('level_norm',''),  level_flag=level_flag)
-    info['prev_page'] = url_for(render_func, field_label=field_label, start=str(max(0,start-count)), count=str(count), level_flag=level_flag)
 
     dims = {}
     for dat in data:
@@ -279,7 +278,7 @@ def bmf_field_dim_table(**args):
     info['nlevels'] = len(data)
     dimtable = [{'level_label': dat['level_label'],
                  'level_norm': dat['level_norm'],
-                 'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']),
+                 'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']) if gl_or_sl=='gl2_dims' else "",
                   'dims': dims[dat['level_label']]} for dat in data]
     print("Length of dimtable = {}".format(len(dimtable)))
     info['dimtable'] = dimtable

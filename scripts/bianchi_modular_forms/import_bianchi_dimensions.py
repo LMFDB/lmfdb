@@ -250,3 +250,5 @@ def make_indices():
                         ('level_label',ASCENDING)])
     dims.create_index([('field_label',ASCENDING),
                         ('gl2_dims',ASCENDING)])
+    dims.create_index([('field_label',ASCENDING),
+                        ('sl2_dims',ASCENDING)])
