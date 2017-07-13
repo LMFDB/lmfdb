@@ -1,0 +1,132 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Further refine search </h2>
+
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+<table>
+<tr>
+<td>Field</td>
+<td>{{ KNOWL('mf.bianchi.level_norm', title='Level norm') }}</td>
+<td>{{ KNOWL('mf.dimension', title='dimension') }}</td>
+<td>{{ KNOWL('mf.bianchi.sign', title='sign') }}</td>
+<td>{{ KNOWL('mf.bianchi.base_change', title='base change') }}</td>
+<td>{{ KNOWL('mf.bianchi.complex_multiplication', title='CM') }}</td>
+</tr>
+<tr>
+<td><input type='text' name='field_label' placeholder='2.0.4.1' size=10 value={{info.field_label}}>
+<td><input type='text' name='level_norm' placeholder='1' size=10 value={{info.level_norm}}>
+<td><input type='text' name='dimension' placeholder='1' size=3  value={{info.dimension}}>
+<td> <select name='sfe'>
+    {% if info.sfe == "any" %}
+    <option value="any" selected>any</option>
+    <option value="+1">+1</option>
+    <option value="-1">-1</option>
+    {% elif info.sfe == "+1" %}
+    <option value="any">any</option>
+    <option value="+1" selected>+1</option>
+    <option value="-1">-1</option>
+    {% else %}
+    <option value="any">any</option>
+    <option value="+1">+1</option>
+    <option value="-1" selected>-1</option>
+    {% endif %}
+  </select>
+<td> <select name='include_base_change'>
+    {% if info.include_base_change == "off" %}
+    <option value="off" selected>exclude</option>
+    <option value="on" >include</option>
+    {% else %}
+    <option value="off">exclude</option>
+    <option value="on" selected>include</option>
+    {% endif %}
+  </select>
+<td>
+  <select name='include_cm'>
+    {% if info.include_cm == "only" %}
+    <option value="include">include</option>
+    <option value="exclude">exclude</option>
+    <option value="only" selected>only</option>
+    {% elif info.include_cm == "exclude" %}
+    <option value="include">include</option>
+    <option value="exclude" selected>exclude</option>
+    <option value="only">only</option>
+    {% else %}
+    <option value="include" selected>include</option>
+    <option value="exclude">exclude</option>
+    <option value="only">only</option>
+    {% endif %}
+  </select>
+</td>
+</tr>
+<tr>
+<td>Maximum number</td>
+<td><input type='text' name='count' value={{info.count}} size=10></td>
+<td colspan=3><button type='submit' value='Search'>Search</button></td>
+</tr>
+</table>
+</form>
+
+{% if info.number == 0 %}
+
+<h2> No matches</h2>
+
+{% else %}
+
+<h2> Results ({{info.report}})</h2>
+
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink"
+   onclick="decrease_start_by_count_and_submit_form('re-search');return
+            false">Previous</a>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</a>
+{% endif %}
+
+<table class="ntdata">
+<tr>
+<th>Field</th>
+<th>Level</th>
+<th>Label</th>
+<th>Dimension</th>
+<th>Sign</th>
+<th>Base change</th>
+<th>CM</th>
+</tr>
+{% for form in info.forms: %}
+<tr>
+<td>{{form.field_label}}</td>
+<td><a href={{url_for("bmf.render_bmf_space_webpage",field_label=form.field_label,
+       level_label=form.level_label)}}>{{form.level_label}}</a> {#$={{form.level_ideal}}$#}</td>
+<td align='left'><a href="{{form.url}}">
+    {{form.short_label}} </a></td>
+<td align='center'>{{form.dimension}}</td>
+<td align='center'>{{form.sfe}}</td>
+<td align='center'>{{form.bc}}</td>
+<td align='center'>{{form.cm}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<hr>
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+{% endif %}
+{% if info.more > 0 %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+{% endif %}
+<br>
+
+<br>
+<!--
+   <p class="tex2jax_ignore">
+   Results for database query {{ info.query }}
+   </p>
+-->
+
+{% endif %}
+{% endblock %}
