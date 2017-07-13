@@ -424,7 +424,7 @@ class G2C_stats(object):
             avg = 0
             for value,n in counts:
                 prop = format_percentage(n,total)
-                if 'avg' in attr and attr['avg']:
+                if 'avg' in attr and attr['avg'] and (type(value) == int or type(value) == float):
                     avg += n*value
                 value_string = attr['format'](value) if 'format' in attr else value
                 vcounts.append({'value': value_string, 'curves': n, 'query':url_for(".index_Q")+'?'+attr['name']+'='+str(value),'proportion': prop})
