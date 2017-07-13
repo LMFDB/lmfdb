@@ -203,11 +203,6 @@ function show_invs(invstyle) {
 </p>
 <h3 class="inline"> This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</h3>
 
-<p>
-{{place_code('num_rat_wpts')}}
-</p>
-<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h3>\({{data.num_rat_wpts}}\)
-
 {% if data.rat_pts_v > 0 %}
 <p>
 {{place_code('rational_points')}}
@@ -238,6 +233,12 @@ function show_invs(invstyle) {
 {% endif %}
 {% endif %}
 </p>
+
+<p>
+{{place_code('num_rat_wpts')}}
+</p>
+<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h3>\({{data.num_rat_wpts}}\)
+
 
 <h2 class='subhead'> Invariants of the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
 
