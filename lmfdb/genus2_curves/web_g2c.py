@@ -547,9 +547,10 @@ class WebG2C(object):
             raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
         if len(slabel)==4:
             ratpts = g2c_db_rational_points().find_one({"label" : curve['label']})
+            if not ratpts:
+                g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
         else:
             ratpts = {}
-            g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
         return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel)==4))
 
     def make_object(self, curve, endo, tama, ratpts, is_curve):

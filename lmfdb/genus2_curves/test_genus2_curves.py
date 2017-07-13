@@ -152,6 +152,6 @@ class Genus2Test(LmfdbTest):
         assert '(-15 : -6579 : 14)' in L.data
         assert '(13 : -4732 : 20)' in L.data
         L = self.tc.get('/Genus2Curve/Q/126746/a/126746/1')
-        assert 'is locally solvable everywhere' in L.data
+        assert 'everywhere' in L.data
         assert 'no rational points' in L.data
         
