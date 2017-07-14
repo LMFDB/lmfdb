@@ -8,21 +8,22 @@
 <h2>  Base Field  {{info.field_knowl | safe}}</h2>
 
 
-<h2>  Level {{ info.level_label }}  </h2>
+<h2>  {{ KNOWL('mf.bianchi.level', title='Level')}} {{ info.level_label }}  </h2>
 
 <p>
 <table>
 <tr><td> Norm:<td> {{ info.level_norm }} </tr>
 <tr><td> Ideal:<td> \(({{ info.level_gen }}) = {{info.level_fact}} \) </tr>
+<tr><td> {{ KNOWL('nf.ideal_labels', title='Label') }}:<td> {{ info.level_label }} </tr>
 </table>
 </p>
 
-<h2> Modular form spaces </h2>
+<h2> {{ KNOWL('mf.bianchi.spaces', title='Modular form spaces') }} </h2>
 
 <p>
 <table border=1>
 <tr>
-<th>Weight</th>
+<th>{{ KNOWL('mf.bianchi.weight', title='Weight') }}</th>
 {% for w in info.weights %}
 <th> {{w}} </th>
 {% endfor %}
@@ -55,7 +56,14 @@ are {{info.nnewforms}} cuspidal newforms
 {%endif%}
 at this level in the database:
 <table border=1 class="ntdata">
-  <tr><th>label<th>weight<th>dimension<th>sign<th>base-change<th>CM</tr>
+  <tr>
+    <th>{{ KNOWL('mf.bianchi.labels', title='label') }}
+    <th>{{ KNOWL('mf.bianchi.weight', title='weight') }}
+    <th>{{ KNOWL('mf.bianchi.newform', title='dimension') }}
+    <th>{{ KNOWL('mf.bianchi.sign', title='sign') }}
+    <th>{{ KNOWL('mf.bianchi.base_change', title='base change') }}
+    <th>{{ KNOWL('mf.bianchi.cm', title='CM') }}
+  </tr>
 {%for nf in info.nfdata %}
   <tr>
     <td><a href={{nf.url}}>{{nf.label}}</a>

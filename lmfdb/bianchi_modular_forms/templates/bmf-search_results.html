@@ -9,11 +9,11 @@
 <table>
 <tr>
 <td>Field</td>
-<td>{{ KNOWL('mf.bianchi.level_norm', title='Level norm') }}</td>
-<td>{{ KNOWL('mf.dimension', title='dimension') }}</td>
+<td>{{ KNOWL('mf.bianchi.level', title='Level') }} norm</td>
+<td>{{ KNOWL('mf.bianchi.newform', title='dimension') }}</td>
 <td>{{ KNOWL('mf.bianchi.sign', title='sign') }}</td>
 <td>{{ KNOWL('mf.bianchi.base_change', title='base change') }}</td>
-<td>{{ KNOWL('mf.bianchi.complex_multiplication', title='CM') }}</td>
+<td>{{ KNOWL('mf.bianchi.cm', title='CM') }}</td>
 </tr>
 <tr>
 <td><input type='text' name='field_label' placeholder='2.0.4.1' size=10 value={{info.field_label}}>
@@ -90,12 +90,12 @@
 <table class="ntdata">
 <tr>
 <th>Field</th>
-<th>Level</th>
+<th>{{ KNOWL('mf.bianchi.level', title='Level') }} </th>
 <th>Label</th>
-<th>Dimension</th>
-<th>Sign</th>
-<th>Base change</th>
-<th>CM</th>
+<th>{{ KNOWL('mf.bianchi.newform', title='Dimension') }} </th>
+<th>{{ KNOWL('mf.bianchi.sign', title='Sign') }} </th>
+<th>{{ KNOWL('mf.bianchi.base_change', title='Base change') }} </th>
+<th>{{ KNOWL('mf.bianchi.cm', title='CM') }} </th>
 </tr>
 {% for form in info.forms: %}
 <tr>

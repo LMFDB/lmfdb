@@ -40,10 +40,10 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+t, "/ModularForm/GL2/ImaginaryQuadratic/2.0.3.1/124.1/a/")
         t = "gl2dims/2.0.4.1"
         assert t in homepage
-        self.check_args(base_url+t,'For each weight $w$, we show both the dimension $d$ of the space of cusp')
+        self.check_args(base_url+t,'show both the dimension $d$ of the space of cusp forms of weight')
         t = '2.0.4.1/100.2/a/'
         assert t in homepage
-        self.check_args(base_url+t,'Base change:')
+        self.check_args(base_url+t,'Base change')
 
     #
     # Jump to specfic newform
@@ -51,7 +51,7 @@ class BMFTest(LmfdbTest):
         r"""
         Check that jumping to a specific newform by label works.
         """
-        self.check_args(base_url+"?label=2.0.4.1-65.2-a", 'Analytic rank:<td> \(0\)')
+        self.check_args(base_url+"?label=2.0.4.1-65.2-a", 'Analytic rank')
 
 
     #
@@ -81,7 +81,7 @@ class BMFTest(LmfdbTest):
         r"""
         Check newform pages
         """
-        self.check_args(base_url+'2.0.11.1/207.6/b', 'Base change:')
+        self.check_args(base_url+'2.0.11.1/207.6/b', 'Base change')
         # I don't know why the follwing fails, as the text was copied from the page source:
         #self.check_args(base_url+'2.0.11.1/207.6/b', 'Level: \( \left(2 a + 13\right) \) of norm 207')
         self.check_args(base_url+'2.0.3.1/44332.1/a/', 'Elliptic curve isogeny class 2.0.3.1-44332.1-a')

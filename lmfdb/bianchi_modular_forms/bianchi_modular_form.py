@@ -263,7 +263,6 @@ def bmf_field_dim_table(**args):
     info['count'] = count
     info['start'] = start
     info['more'] = int(start + count < nres)
-    render_func = ".render_bmf_field_dim_table_gl2" if gl_or_sl=='gl2_dims' else ".render_bmf_field_dim_table_sl2"
 
     dims = {}
     for dat in data:

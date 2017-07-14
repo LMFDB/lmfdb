@@ -7,21 +7,27 @@
 {% else %}
 
 <p>
-Table of the dimensions of the spaces of Bianchi
-modular forms for \(\Gamma_0(\mathfrak{n})\subseteq {{info.bgroup}}\)
-for levels \(\mathfrak{n}\) ordered by norm, over \(K=\) {{info.field_pretty}}.
+Table of the dimensions of the spaces of {{
+KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi cusp forms') }}
+for \(\Gamma_0(\mathfrak{n})\subseteq {{info.bgroup}}\) for {{
+KNOWL('mf.bianchi.level', title='levels') }} \(\mathfrak{n}\) ordered
+by norm, over \(K=\) {{info.field_pretty}}.
 </p>
 <p>
 {% if info.gl_or_sl == 'gl2_dims' %}
-  Each level label is a link to a page showing further details of the
-spaces of cusp forms for that level.
+  Each {{ KNOWL('mf.bianchi.level', title='level') }}  {{
+  KNOWL('nf.ideal_labels', title='label') }} is a link to a page
+  showing further details of the {{ KNOWL('mf.bianchi.spaces',
+  title='spaces of cusp forms') }} for that level.
 {% else %}
 
 {% endif %}
 </p>
 <p>
-  For each weight $w$, we show both the dimension $d$ of the space of cusp
-  forms of weight $w$, and the dimension $n$ of the new subspace.
+  For each {{ KNOWL('mf.bianchi.weight', title='weight') }} $w$, we
+  show both the dimension $d$ of the space of cusp forms of weight
+  $w$, and the dimension $n$ of the {{ KNOWL('mf.bianchi.spaces',
+  title='new subspace') }}.
 </p>
 
 {% if info.number %}
@@ -82,13 +88,13 @@ spaces of cusp forms for that level.
   <table border=2>
 <tr>
 <th style="border-left:none; border-top:none;" >&nbsp;</th>
-<th style="border-left:none; " >weight</th>
+<th style="border-left:none; " >{{ KNOWL('mf.bianchi.weight', title='weight') }}</th>
 {% for k in info.weights %}
 <th colspan=2>{{k}}</th>
 {% endfor %}
 </tr>
 <tr>
-<th>level</th>
+<th>{{ KNOWL('mf.bianchi.level', title='level label') }} </th>
 <th>norm</th>
 {% for k in info.weights %}
 <th>$d$</th> <th>$n$</th>
