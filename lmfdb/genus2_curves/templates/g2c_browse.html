@@ -66,9 +66,9 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.num_rat_wpts', title='rational Weierstrass points') }}</td>
-<td><input type='text' name='num_rat_wpts' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1, 0-6 </span></td>
+<td>{{ KNOWL('g2c.num_rat_pts', title='rational points') }}</td>
+<td><input type='text' name='num_rat_pts' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 0, 20-26 </span></td>
 <td>{{KNOWL('g2c.st_group_identity_component',title='Sato-Tate identity component')}}</td>
 <td><select name='real_geom_end_alg' width="122" style="width: 122px">
         <option ></option>
@@ -78,9 +78,9 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
-<td><input type='text' name='torsion_order' placeholder='2' size=10>
-<td><span class="formexample"> e.g. 2 </span></td>
+<td>{{ KNOWL('g2c.num_rat_wpts', title='rational Weierstrass points') }}</td>
+<td><input type='text' name='num_rat_wpts' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1, 0-6 </span></td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\Q\)-automorphism group') }}</td>
 <td><select name='aut_grp_id' width="122" style="width: 122px">
         <option ></option>
@@ -90,9 +90,9 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>
-<td><input type='text' name='torsion' placeholder='[2,2,2]' size=10>
-<td><span class="formexample"> e.g. [2,2,2] </span></td>
+<td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
+<td><input type='text' name='torsion_order' placeholder='2' size=10>
+<td><span class="formexample"> e.g. 2 </span></td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\overline{\Q}\)-automorphism group') }}</td>
 <td><select name='geom_aut_grp_id' width="122" style="width: 122px">
         <option ></option>
@@ -102,9 +102,9 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
-<td><input type='text' name='two_selmer_rank' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1 </span></td>
+<td>{{ KNOWL('g2c.torsion', title='torsion structure')}}</td>
+<td><input type='text' name='torsion' placeholder='[2,2,2]' size=10>
+<td><span class="formexample"> e.g. [2,2,2] </span></td>
 <td>{{ KNOWL('g2c.locally_solvable', title='locally solvable') }}</td>
 <td><select name='locally_solvable' width="122" style="width: 122px">
                    <option ></option>
@@ -113,8 +113,8 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
-<td><input type='text' name='analytic_rank' placeholder='1' size=10>
+<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
+<td><input type='text' name='two_selmer_rank' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1 </span></td>
 <td>{{ KNOWL('g2c.has_square_sha', title='order of &#1064; is square*') }}</td>
 <td><select name='has_square_sha' width="122" style="width: 122px">
@@ -124,15 +124,20 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 </select></td>
 </tr>
 <tr>
-<td>Maximum number of curves to display</td>
-<td><input type='text' name='count' value=50 size=10></td>
-<td><span class="formexample"> &nbsp;</td>
+<td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
+<td><input type='text' name='analytic_rank' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1 </span></td>
 <td>{{ KNOWL('ag.geom_simple', title='geometrically simple') }}</td>
 <td><select name='is_simple_geom' width="122" style="width: 122px">
                    <option ></option>
                    <option value='True'>True</option>
                    <option value='False'>False</option>
 </select></td>
+</tr>
+<tr>
+<td>Maximum number of curves to display</td>
+<td><input type='text' name='count' value=50 size=10></td>
+<td><span class="formexample"> &nbsp;</td>
 </tr>
 <tr>
 <td><button type='submit' value='Search'>Search</button></td>

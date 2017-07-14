@@ -6,11 +6,11 @@
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
-<input type="hidden" name="num_rat_pts" value="{{info.num_rat_pts}}"/>
 
 <table>
 <td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
 <td>{{ KNOWL('g2c.abs_discriminant', title='discriminant')}}</td>
+<td>{{ KNOWL('g2c.num_rat_pts', title='rational points') }}</td>
 <td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrass') }}</td>
 <td>{{ KNOWL('g2c.torsion', title='torsion')}}</td>
 <td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
@@ -21,6 +21,7 @@
 <tr>
 <td><input type='text' name='cond' placeholder='169' style="width: 100px" value="{{info.cond}}"></td>
 <td><input type='text' name='abs_disc' placeholder='169' style="width: 100px" value="{{info.abs_disc}}"></td>
+<td><input type='text' name='num_rat_pts' placeholder='1'  style="width: 100px" value="{{info.num_rat_pts}}">
 <td><input type='text' name='num_rat_wpts' placeholder='1'  style="width: 100px" value="{{info.num_rat_wpts}}">
 <td><input type='text' name='torsion' placeholder='[2,2,2]'  style="width: 100px" value="{{info.torsion}}">
 <td><input type='text' name='torsion_order' placeholder='2'  style="width: 100px" value="{{info.torsion_order}}">
@@ -36,6 +37,7 @@
 <td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
 <td>{{ KNOWL('g2c.locally_solvable',   title='locally solvable') }}</td>
 <td>{{ KNOWL('g2c.has_square_sha',   title='square &#1064;*') }}</td>
+<td>{{ KNOWL('ag.geom_simple', title='$\\overline{\\mathbb Q}$-simple') }}</td>
 </tr>
 
 <tr>
@@ -124,14 +126,7 @@
   <option value="False">False</option>
 {% endif %}
 </select></td>
-</tr>
 
-<tr>
-<td>{{ KNOWL('ag.geom_simple', title='$\\overline{\\mathbb Q}$-simple') }}</td>
-</tr>
-
-
-<tr>
 <td><select name='is_simple_geom' width="110" style="width: 110px">
   <option ></option>
 {% if info.is_simple_geom == 'True' %}
