@@ -1,35 +1,43 @@
 # -*- coding: utf-8 -*-
 Dan_test = True
-import os.path, yaml
+import os.path
 
-from lmfdb.base import getDBConnection
-print "getting connection"
-C= getDBConnection()
-C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
+if Dan_test:
+    from pymongo.mongo_client import MongoClient
+    C = MongoClient(port=int(37010))
+    C['admin'].authenticate('lmfdb','lmfdb')
+else:
+    from lmfdb.lmfdb.base import getDBConnection
+    C= getDBConnection()
+    C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 if Dan_test:
     import sys
     from sage.all import preparse
     sys.path.append('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf')
-    pw_dict = yaml.load(open(os.path.join(os.getcwd(), "../../passwords.yaml")))
-    username = pw_dict['data']['username']
-    password = pw_dict['data']['password']
-    C['hmfs'].authenticate(username, password)
-    hmf_forms = C.hmfs.forms_dan
 else:
     import sage.misc.preparser
     from sage.misc.preparser import preparse
+
 from sage.interfaces.magma import magma
 
 from sage.all import ZZ, Rationals, PolynomialRing
 
 from check_conjugates import fix_one_label
 from sage.databases.cremona import class_to_int
+import yaml
 
-#pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-#username = pw_dict['data']['username']
-#password = pw_dict['data']['password']
-#C['hmfs'].authenticate(username, password)
+if Dan_test:
+    pw_dict = yaml.load(open(os.path.join(os.getcwd(), "../../passwords.yaml")))
+    username = pw_dict['data']['username']
+    password = pw_dict['data']['password']
+    C['hmfs'].authenticate(username, password)
+else:
+    pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+    username = pw_dict['data']['username']
+    password = pw_dict['data']['password']
+    C['hmfs'].authenticate(username, password)
+
 hmf_forms = C.hmfs.forms_dan
 hmf_fields = C.hmfs.fields
 fields = C.numberfields.fields
@@ -113,7 +121,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
         if test:
             print("Would now insert data for %s into hmf_fields" % field_label)
         else:
-            hmf_fields.insert({"label": field_label,
+            hmf_fields.insert_one({"label": field_label,
                                "degree": n,
                                "discriminant": d,
                                "ideals": ideals_str})
@@ -172,7 +180,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
             print("Would now save primes string %s... into hmf_fields" % primes_str[:100])
         else:
             hmf_fields.save(F_hmf)
-    print "...saved!"
+            print "...saved!"
 
     # Collect levels
     v = hmff.readline()
@@ -224,11 +232,17 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
         hecke_eigenvalues = [str(c) for c in hecke_eigenvalues]
         leftout = 0
         while sum([len(s) for s in hecke_eigenvalues]) > 2000000:
-            q = primes_resort[len(hecke_eigenvalues)]
-            while primes_resort[len(hecke_eigenvalues)] == q:
-                # Remove all with same norm 
-                leftout += 1
-                hecke_eigenvalues = hecke_eigenvalues[:-1]
+            hecke_eigenvalues = hecke_eigenvalues[:-1]
+            leftout += 1
+            # commented code below throws an error.  use above.
+            # just be safe and remove one eigenvalue at a time.
+            # Aurel's code with adjust and remove extra when needed.
+            #q = primes_resort[len(hecke_eigenvalues)]
+            #while primes_resort[len(hecke_eigenvalues)] == q:
+            #    # Remove all with same norm 
+            #    leftout += 1
+            #    hecke_eigenvalues = hecke_eigenvalues[:-1]
+            
         if leftout > 0:
             print "Left out", leftout
 
@@ -254,7 +268,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
             if test:
                 print("Would now insert form data %s into hmf_forms" % info)
             else:
-                hmf_forms.insert(info)
+                hmf_forms.insert_one(info)
         else:
             existing_form = existing_forms.next()
             assert info['hecke_polynomial'] == existing_form['hecke_polynomial']

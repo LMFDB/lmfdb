@@ -531,6 +531,7 @@ class ECNF(object):
 
         if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
+            self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
@@ -539,7 +540,11 @@ class ECNF(object):
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
             self.friends += [('L-function', self.urls['Lfunction'])]
         if imag_quadratic:
-            self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+            #self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+            if "CM" in self.label:
+                self.friends += [('Bianchi Modular Form is not cuspidal', '')]
+            else:
+                self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
 
         self.properties = [
             ('Base field', self.field.field_pretty()),
