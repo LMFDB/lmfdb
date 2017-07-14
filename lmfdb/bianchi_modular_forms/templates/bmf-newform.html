@@ -16,18 +16,18 @@
 </p>
 
 
-<h2> Form </h2>
+<h2> {{ KNOWL('mf.bianchi.newform', 'Form') }} </h2>
 
 <p>
 <table>
 <tr><td> {{ KNOWL('mf.bianchi.weight', 'Weight')}}<td> {{data.weight}} </tr>
 <tr><td> {{ KNOWL('mf.bianchi.level', 'Level')}}<td>  {{data.level_label}} = {{ data.level_ideal2 }}{#,  norm {{ data.level_norm }}#} </tr>
 <tr><td> {{ KNOWL('mf.bianchi.labels', 'Label')}}<td> {{ data.label }} </tr>
-<tr><td> {{ KNOWL('mf.bianchi.dimension', title='Dimension') }}:<td> {{ data.dimension }} </tr>
-<tr><td> {{ KNOWL('mf.bianchi.complex_multiplication',title="CM") }}:<td> {{data.CM}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.spaces', title='Dimension') }}:<td> {{ data.dimension }} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.cm',title="CM") }}:<td> {{data.CM}} </tr>
 <tr><td> {{ KNOWL('mf.bianchi.base_change',title="Base change") }}:<td> {{data.bc}}{{data.bc_extra}} </tr>
-<tr><td> Parent {{ KNOWL('mf.bianchi.newforms', title='newspace')}}:<td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> (dimension {{ data.newspace_dimension }}) </tr>
-<tr><td> {{ KNOWL('mf.bianchi.sfe',title="Sign of functional equation") }}:<td> {{data.sign}} </tr>
+<tr><td> {{ KNOWL('mf.bianchi.spaces', title='Newspace')}}:<td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> (dimension {{ data.newspace_dimension }}) </tr>
+<tr><td> {{ KNOWL('mf.bianchi.sign',title="Sign of functional equation") }}:<td> {{data.sign}} </tr>
 <tr><td> {{ KNOWL('mf.bianchi.anr',title="Analytic rank")}}:<td> {{data.anrank}} </tr>
 {% if data.Lratio %}
 <tr><td> {{ KNOWL('mf.bianchi.anr',title="L-ratio")}}:<td> {{data.Lratio}} </tr>
@@ -35,7 +35,7 @@
 </table>
 </p>
 
-  <h2>  Hecke eigenvalues  </h2>
+<h2> {{ KNOWL('mf.bianchi.hecke_algebra', 'Hecke eigenvalues') }} </h2>
 
   {#
 <p>

@@ -9,7 +9,7 @@
   modular forms') }} </h2>
 
 <p>
-Browse {{ KNOWL('mf.bianchi.newforms', title='newforms')}} by {{ KNOWL('nf', title='base field')}}:
+Browse {{ KNOWL('mf.bianchi.newform', title='newforms')}} by {{ KNOWL('nf', title='base field')}}:
 {% for f in info.field_forms %}
 {%-if loop.index > 1 %}, {% endif%}
 <a href={{f.url}}>{{f.name}}</a>
@@ -17,7 +17,7 @@ Browse {{ KNOWL('mf.bianchi.newforms', title='newforms')}} by {{ KNOWL('nf', tit
 </p>
 
 <p>
-Browse {{ KNOWL('mf.bianchi.newforms', title='newform spaces')}} by  {{ KNOWL('nf', title='base field')}}:
+Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf', title='base field')}}:
 {% for f in info.field_list %}
 {%-if loop.index > 1 %}, {% endif%}
 <a href={{f.url}}>{{f.name}}</a>
@@ -56,10 +56,10 @@ Browse {{ KNOWL('mf.bianchi.newforms', title='newform spaces')}} by  {{ KNOWL('n
     \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1 </span></td>
 </tr>
 <tr>
-<td>{{ KNOWL('mf.bianchi.level_norm', title='level norm') }}</td>
+<td>{{ KNOWL('mf.bianchi.level', title='level') }} norm</td>
 <td><input type='text' name='level_norm' placeholder='1' size=10>
 <td><span class="formexample"> e.g. 1 or 1-100</td>
-<td>{{ KNOWL('mf.bianchi.dimension', title='dimension') }}</td>
+<td>{{ KNOWL('mf.bianchi.newform', title='dimension') }}</td>
 <td><input type='text' name='dimension' placeholder='1' size=3>
 <td><span class="formexample"> e.g. 1 or 2</td>
 </tr>
@@ -80,7 +80,7 @@ Browse {{ KNOWL('mf.bianchi.newforms', title='newform spaces')}} by  {{ KNOWL('n
          </select>
   </td>
    <td>
-    {{ KNOWL('mf.bianchi.complex_multiplication',title="CM") }}
+    {{ KNOWL('mf.bianchi.cm',title="CM") }}
     </td>
      <td>
          <select name='include_cm'>
