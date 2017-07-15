@@ -599,7 +599,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             sys.stdout.write(L)
 
     bad_p = []
-    if field_label=='4.4.1600.1': bad_p = [7**2,13**2,29**2]
+    #if field_label=='4.4.1600.1': bad_p = [7**2,13**2,29**2]
     if field_label=='4.4.2304.1': bad_p = [19**2,29**2]
     if field_label=='4.4.4225.1': bad_p = [17**2,23**2]
     if field_label=='4.4.7056.1': bad_p = [29**2,31**2]
@@ -610,6 +610,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
     if field_label=='4.4.12400.1': bad_p = [23**2]
     if field_label=='4.4.180769.1': bad_p = [23**2]
     if field_label=='6.6.905177.1': bad_p = [2**3]
+    bad_p = []
 
     effort0 = effort
     for nf_label in missing_curves:
@@ -680,7 +681,8 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             ec['conductor_ideal'] = form['level_ideal'].replace(" ","")
             ec['conductor_norm'] = form['level_norm']
             ai = E.ainvs()
-            ec['ainvs'] = [[str(c) for c in list(a)] for a in ai]
+            ec['ainvs'] = ";".join([",".join([str(c) for c in list(a)]) for a in ai])
+            #print ec['ainvs']
             ec['cm'] = '?'
             ec['base_change'] = []
             output(make_curves_line(ec) + "\n")
