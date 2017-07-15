@@ -555,7 +555,7 @@ def read1isogmats(base_path, filename_suffix):
                            'class_size': ncurves,
                            'class_deg': maxdeg}
             if n==0:
-                print("adding isogmat = {} to {}".format(isogmat,label))
+                #print("adding isogmat = {} to {}".format(isogmat,label))
                 data[label]['isogeny_matrix'] = isogmat
 
     return data
@@ -680,7 +680,7 @@ def upload_to_db(base_path, filename_suffix, insert=True):
         isogmats = read1isogmats(base_path, filename_suffix)
         for val in vals:
             lab = val['label']
-            print("adding isog data for {}".format(lab))
+            #print("adding isog data for {}".format(lab))
             if lab in isogmats:
                 val.update(isogmats[lab])
             else:
@@ -906,9 +906,9 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'isogeny_matrix': list_type, # of lists of ints
                       'isogeny_degrees': list_type, # of ints
                       #'class_deg': int_type,
-                      'non-surjective_primes': list_type, # of ints
+                      #'non-surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
-                      'galois_images': list_type, # of strings
+                      #'galois_images': list_type, # of strings
                       #'mod-p_images': list_type, # of strings
                       'equation': str_type,
                       'local_data': list_type, # of dicts
