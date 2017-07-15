@@ -177,7 +177,7 @@ def read1isogmats(base_path, filename_suffix):
                            'class_size': ncurves,
                            'class_deg': maxdeg}
             if n==0:
-                print("adding isogmat = {} to {}".format(isogmat,label))
+                #print("adding isogmat = {} to {}".format(isogmat,label))
                 data[label]['isogeny_matrix'] = isogmat
 
     return data

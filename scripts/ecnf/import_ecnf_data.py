@@ -168,105 +168,6 @@ def convert_ideal_label(K, lab):
     the_labels[K][lab] = newlab
     return newlab
 
-
-
-
-
-
-
-
-
-# Before using the following, define galrepdat using a command such as
-#
-# galrepdat=readgalreps("/home/jec/ecnf-data/", "nfcurves_galois_images.txt")
-#
-# then use rewrite like this:
-# %runfile data_mgt/utilities/rewrite.py
-# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves2", add_galrep_data_to_nfcurve)
-#
-galrepdat = {} # for pyflakes
-
-def add_galrep_data_to_nfcurve(cu):
-    if cu['label'] in galrepdat:
-        cu.update(galrepdat[cu['label']])
-    return cu
-
-filename_base_list = ['curves', 'curve_data']
-
-#
-
-def upload_to_db(base_path, filename_suffix, insert=True):
-    r""" Uses insert_one() if insert=True, which is faster but will fail if
-    the label is already in the database; otherwise uses update_one()
-    with upsert=True
-    """
-    curves_filename = 'curves.%s' % (filename_suffix)
-    curve_data_filename = 'curve_data.%s' % (filename_suffix)
-    isoclass_filename = 'isoclass.%s' % (filename_suffix)
-    #galrep_filename = 'galrep.%s' % (filename_suffix)
-    file_list = [curves_filename, curve_data_filename, isoclass_filename]
-#    file_list = [isoclass_filename]
-#    file_list = [curves_filename]
-#    file_list = [curve_data_filename]
-#    file_list = [galrep_filename]
-
-    data_to_insert = {}  # will hold all the data to be inserted
-
-    for f in file_list:
-        if f==isoclass_filename: # dealt with differently
-            continue
-        try:
-            h = open(os.path.join(base_path, f))
-            print "opened %s" % os.path.join(base_path, f)
-        except IOError:
-            print "No file %s exists" % os.path.join(base_path, f)
-            continue  # in case not all prefixes exist
-
-        parse = globals()[f[:f.find('.')]]
-
-        count = 0
-        print "Starting to read lines from file %s" % f
-        for line in h.readlines():
-            # if count==10: break # for testing
-            label, data = parse(line)
-            if count % 100 == 0:
-                print "read %s from %s (%s so far)" % (label, f, count)
-            count += 1
-            if label not in data_to_insert:
-                data_to_insert[label] = {'label': label}
-            curve = data_to_insert[label]
-            for key in data:
-                if key in curve:
-                    if curve[key] != data[key]:
-                        raise RuntimeError("Inconsistent data for %s:\ncurve=%s\ndata=%s\nkey %s differs!" % (label, curve, data, key))
-                else:
-                    curve[key] = data[key]
-        print "finished reading %s lines from file %s" % (count, f)
-
-    vals = data_to_insert.values()
-    print("adding heights of gens")
-    for val in vals:
-        val = add_heights(val)
-
-    if isoclass_filename in file_list: # code added March 2017, not yet tested
-        print("processing isogeny matrices")
-        isogmats = read1isogmats(base_path, filename_suffix)
-        for val in vals:
-            val.update(isogmats[val['label']])
-
-    if insert:
-        print("inserting all data")
-        nfcurves.insert_many(vals)
-    else:
-        count = 0
-        print("inserting data one curve at a time...")
-        for val in vals:
-            nfcurves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
-            count += 1
-            if count % 100 == 0:
-                print "inserted %s" % (val['label'])
-
-
 def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
     r""" Extract curve data for the given field for curves with conductor
     norm in the given range, and write to output files in the same
@@ -487,6 +388,138 @@ def add_heights(data, verbose = False):
         print("added heights %s and regulator %s to %s" % (data['heights'],data['reg'], data['label']))
     return data
 
+def isoclass(line):
+    r""" Parses one line from an isoclass file.  Returns the label and a dict
+    containing fields with keys .
+
+    Input line fields (5); the first 4 are the standard labels and the
+    5th the isogeny matrix as a list of lists of ints.
+
+    field_label conductor_label iso_label number isogeny_matrix
+
+    Sample input line:
+
+    2.0.4.1 65.18.1 a 1 [[1,6,3,18,9,2],[6,1,2,3,6,3],[3,2,1,6,3,6],[18,3,6,1,2,9],[9,6,3,2,1,18],[2,3,6,9,18,1]]
+    """
+    # Parse the line and form the full label:
+    data = split(line)
+    if len(data) < 5:
+        print "isoclass line %s does not have 5 fields (excluding gens), skipping" % line
+    field_label = data[0]       # string
+    conductor_label = data[1]   # string
+    # convert label (does nothing except for imaginary quadratic)
+    conductor_label = convert_conductor_label(field_label, conductor_label)
+    print("Converting conductor label from {} to {}".format(data[1], conductor_label))
+    iso_label = data[2]         # string
+    number = int(data[3])       # int
+    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
+    label = "%s-%s" % (field_label, short_label)
+
+    mat = data[4]
+    mat = [[int(a) for a in r.split(",")] for r in mat[2:-2].split("],[")]
+    isogeny_degrees = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(mat)])
+
+    edata = {'label': [field_label,conductor_label,iso_label],
+             'isogeny_matrix': mat,
+             'isogeny_degrees': isogeny_degrees}
+    return label, edata
+
+
+# Before using the following, define galrepdat using a command such as
+#
+# galrepdat=readgalreps("/home/jec/ecnf-data/", "nfcurves_galois_images.txt")
+#
+# then use rewrite like this:
+# %runfile data_mgt/utilities/rewrite.py
+# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves2", add_galrep_data_to_nfcurve)
+#
+galrepdat = {} # for pyflakes
+
+def add_galrep_data_to_nfcurve(cu):
+    if cu['label'] in galrepdat:
+        cu.update(galrepdat[cu['label']])
+    return cu
+
+filename_base_list = ['curves', 'curve_data']
+
+#
+
+def upload_to_db(base_path, filename_suffix, insert=True):
+    r""" Uses insert_one() if insert=True, which is faster but will fail if
+    the label is already in the database; otherwise uses update_one()
+    with upsert=True
+    """
+    curves_filename = 'curves.%s' % (filename_suffix)
+    curve_data_filename = 'curve_data.%s' % (filename_suffix)
+    isoclass_filename = 'isoclass.%s' % (filename_suffix)
+    #galrep_filename = 'galrep.%s' % (filename_suffix)
+    file_list = [curves_filename, curve_data_filename, isoclass_filename]
+#    file_list = [isoclass_filename]
+#    file_list = [curves_filename]
+#    file_list = [curve_data_filename]
+#    file_list = [galrep_filename]
+
+    data_to_insert = {}  # will hold all the data to be inserted
+
+    for f in file_list:
+        if f==isoclass_filename: # dealt with differently
+            continue
+        try:
+            h = open(os.path.join(base_path, f))
+            print "opened %s" % os.path.join(base_path, f)
+        except IOError:
+            print "No file %s exists" % os.path.join(base_path, f)
+            continue  # in case not all prefixes exist
+
+        parse = globals()[f[:f.find('.')]]
+
+        count = 0
+        print "Starting to read lines from file %s" % f
+        for line in h.readlines():
+            #if count==20: break # for testing
+            label, data = parse(line)
+            if count % 100 == 0:
+                print "read %s from %s (%s so far)" % (label, f, count)
+            count += 1
+            if label not in data_to_insert:
+                data_to_insert[label] = {'label': label}
+            curve = data_to_insert[label]
+            for key in data:
+                if key in curve:
+                    if curve[key] != data[key]:
+                        raise RuntimeError("Inconsistent data for %s:\ncurve=%s\ndata=%s\nkey %s differs!" % (label, curve, data, key))
+                else:
+                    curve[key] = data[key]
+        print "finished reading %s lines from file %s" % (count, f)
+
+    vals = data_to_insert.values()
+    print("adding heights of gens")
+    for val in vals:
+        val = add_heights(val)
+
+    if isoclass_filename in file_list: # code added March 2017, not yet tested
+        print("processing isogeny matrices")
+        isogmats = read1isogmats(base_path, filename_suffix)
+        for val in vals:
+            lab = val['label']
+            #print("adding isog data for {}".format(lab))
+            if lab in isogmats:
+                val.update(isogmats[lab])
+            else:
+                print("error: label {} not in isogmats!".format(lab))
+
+    if insert:
+        print("inserting all data")
+        nfcurves.insert_many(vals)
+    else:
+        count = 0
+        print("inserting data one curve at a time...")
+        for val in vals:
+            #print val
+            nfcurves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
+            count += 1
+            if count % 100 == 0:
+                print "inserted %s" % (val['label'])
 
 #
 #
@@ -600,9 +633,9 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'isogeny_matrix': list_type, # of lists of ints
                       'isogeny_degrees': list_type, # of ints
                       #'class_deg': int_type,
-                      'non-surjective_primes': list_type, # of ints
+                      #'non-surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
-                      'galois_images': list_type, # of strings
+                      #'galois_images': list_type, # of strings
                       #'mod-p_images': list_type, # of strings
                       'equation': str_type,
                       'local_data': list_type, # of dicts
