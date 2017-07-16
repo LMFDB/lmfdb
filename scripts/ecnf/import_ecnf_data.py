@@ -86,7 +86,7 @@ from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, parse_ainvs, parse_point
-from import_utils import read1isogmats, make_curves_line, make_curve_data_line, split, numerify_iso_label, NFelt, get_cm, point_string 
+from scripts.ecnf.import_utils import read1isogmats, readgalreps, make_curves_line, make_curve_data_line, split, numerify_iso_label, NFelt, get_cm, point_string
 
 
 print "getting connection"
@@ -431,7 +431,7 @@ def isoclass(line):
 #
 # then use rewrite like this:
 # %runfile data_mgt/utilities/rewrite.py
-# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves2", add_galrep_data_to_nfcurve)
+# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves.new", add_galrep_data_to_nfcurve)
 #
 galrepdat = {} # for pyflakes
 
