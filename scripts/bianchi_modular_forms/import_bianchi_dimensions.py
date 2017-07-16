@@ -187,6 +187,50 @@ def dimtabeis(line, gl_or_sl = "gl"):
         dim_key: dim_data,
     }
 
+def SL2dimtab(line):
+    r""" Parses one line from a SL2dimtab file.  Returns a complete entry
+    for the dimensions collection.
+
+    Input line fields:
+
+    field weight level cusp-dim new-cusp-dim
+
+    Sample input line:
+
+    2.0.11.1 2 [121,0,11] 5 3
+
+    """
+    #print line
+    if line[0] =="#":
+        return '', {}
+    data = split(line)
+
+    field_label = data[0]
+    K = field_from_label(field_label)
+    d, s, field_absdisc, n = [int(x) for x in field_label.split(".")]
+    weight = int(data[1])
+    level_params = data[2].split(',')
+    level_norm = int(level_params[0][1:])
+    level_a = int(level_params[1])
+    level_b = int(level_params[2][:-1])
+    level_label = ".".join([str(level_norm),str(level_a), str(level_b)])
+    level_label = convert_ideal_label(K, level_label)
+    label = '-'.join([field_label,level_label])
+    #all_dim = int(data[3]) # not used
+    cuspidal_dim = int(data[3])
+    new_cuspidal_dim = int(data[4])
+    dim_data = {str(weight): {'cuspidal_dim': cuspidal_dim, 'new_dim': new_cuspidal_dim}}
+    dim_key = 'sl2_dims'
+    return label, {
+        'label': label,
+        'field_label': field_label,
+        'field_absdisc': field_absdisc,
+        'level_label': level_label,
+        'level_norm': level_norm,
+        dim_key: dim_data,
+    }
+
+
 def upload_to_db(base_path, filename, insert=True):
     #dims_filename = ".".join(['dimtab',suffix])
     dims_filename = filename
