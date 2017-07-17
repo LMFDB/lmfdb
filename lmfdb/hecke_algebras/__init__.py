@@ -14,4 +14,4 @@ def body_class():
 import main
 assert main
 
-app.register_blueprint(hecke_algebras_page, url_prefix="/ModularForm/GL2/Q/holomorphic/HeckeAlgebra")
+app.register_blueprint(hecke_algebras_page, url_prefix="/ModularForm/GL2/Q/HeckeAlgebra")
