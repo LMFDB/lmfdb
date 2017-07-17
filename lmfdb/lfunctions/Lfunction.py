@@ -83,9 +83,13 @@ def makeLfromdata(L):
     # Mandatory properties
     L.algebraic = data['algebraic']
     L.degree = data['degree']
-    L.selfdual = data['self_dual']
     L.level = data['conductor']
+    central_character = data['central_character']
+    L.charactermodulus, L.characternumber = central_character.split(".")
+    L.charactermodulus = int(L.charactermodulus)
+    L.characternumber = int(L.characternumber)
     L.primitive = data['primitive']
+    L.selfdual = data['self_dual']
     if 'root_number' in data:
         L.sign = string2number(data['root_number'])
     else:
@@ -222,12 +226,10 @@ def convert_dirichlet_Lfunction_coefficients(L, coeff_info):
 def generateSageLfunction(L):
     """ Generate a SageLfunction to do computations
     """
-    from lmfdb.lfunctions import logger
     logger.debug("Generating Sage Lfunction with parameters %s and there are %s coefficients "
                 % ([L.coefficient_type, L.coefficient_period,
                 L.Q_fe, L.sign, L.kappa_fe, L.lambda_fe,
                 L.poles, L.residues], len(L.dirichlet_coefficients)))
-    import sage.libs.lcalc.lcalc_Lfunction as lc
     L.sageLfunction = lc.Lfunction_C("", L.coefficient_type,
                                         L.dirichlet_coefficients,
                                         L.coefficient_period,
@@ -412,17 +414,15 @@ class Lfunction_Dirichlet(Lfunction):
 
 class Lfunction_EC_Q(Lfunction):
     """Class representing an elliptic curve L-function
-    It can be called with a dictionary of these forms:
+    It should be called with a dictionary of the forms:
 
-    dict = { 'label': ... }  label is the LMFDB label of the elliptic curve
-
+    dict = { 'conductor': ..., 'isogeny':  }
     """
-    #     This is bad, it assumes the label is Cremona's and the ground
-    #     field is Q
+    
     def __init__(self, **args):
         constructor_logger(self, args)
         validate_required_args('Unable to construct elliptic curve L-function.',
-                               args, 'label')
+                               args, 'conductor', 'isogeny')
 
         self._Ltype = "ellipticcurveQ"
 
@@ -431,7 +431,8 @@ class Lfunction_EC_Q(Lfunction):
         self.numcoeff = 30
  
         # Load data from the database
-        label_slash = self.label.replace(".","/")
+        self.label = self.conductor + '.' + self.isogeny
+        label_slash = self.conductor + '/' + self.isogeny
         db_label = "EllipticCurve/Q/" + label_slash
         self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
         if not self.lfunc_data:
@@ -460,23 +461,24 @@ class Lfunction_EC_Q(Lfunction):
         self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.label)
 
         # Text for the web page
-        self.texname = "L(s,E)"
-        self.htmlname = "<em>L</em>(<em>s,E</em>)"
-        self.texname_arithmetic = "L(E,s)"
-        self.htmlname_arithmetic = "<em>L</em>(<em>E,s</em>)"
-        self.texnamecompleteds = "\\Lambda(s,E)"
-        self.texnamecompleted1ms = "\\Lambda(1-s,E)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(E,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-        title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
+        self.texname = "L(s)"  # "L(s,E)"
+        self.htmlname = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>s,E</em>)"
+        self.texname_arithmetic = "L(s)"  # "L(E,s)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>E,s</em>)"
+        self.texnamecompleteds = "\\Lambda(s)"  # "\\Lambda(s,E)"
+        self.texnamecompleted1ms = "\\Lambda(1-s)"  # "\\Lambda(1-s,E)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"  # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
+        #title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
+        title_end = " of degree 2, weight 1, conductor %s, and trivial character" % self.conductor
         self.credit = ''
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "ec.q"
         self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-        self.info['title_arithmetic'] = "$" + self.texname_arithmetic + "$" + ", " + title_end
-        self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
+        self.info['title_arithmetic'] = "L-function "  + title_end
+        self.info['title_analytic'] = "L-function " + title_end
         
     def ground_field(self):
         return "Q"
@@ -525,6 +527,7 @@ class Lfunction_EMF(Lfunction):
                                  prec = self.numcoeff)
             # Currently WebNewForm never generates an error so check that it has coefficients
             test_if_loaded = self.MF.coefficient_embedding(1,self.number)
+            test_if_loaded = test_if_loaded # shut up pyflakes
         except:
             raise KeyError("The specified modular form does not appear to be in the database.")
         
@@ -721,7 +724,11 @@ class Lfunction_Maass(Lfunction):
             title_end = " and $R= %s$" % (self.eigenvalue)
 
             # Generate a function to do computations
-            generateSageLfunction(self)
+            minNumberOfCoefficients = 100     # TODO: Fix this to take level into account 
+            if len(self.dirichlet_coefficients) >= minNumberOfCoefficients: 
+                generateSageLfunction(self)
+            else:
+                self.sageLfunction = None
 
         # Text for the web page
         self.texname = "L(s,f)"
@@ -821,14 +828,16 @@ class Lfunction_HMF(Lfunction):
         self.numcoeff = PP  # The number of coefficients is given by the
                             # norm of the last prime
 
-        ppmidNN = [c[0] for c in f['AL_eigenvalues']]
+        Fhmfprimes = [st.replace(' ','') for st in F_hmf['primes']]
+
+        ppmidNN = [c[0].replace(' ','') for c in f['AL_eigenvalues']]
 
         ratl_primes = [p for p in range(primes[-1][0] + 1) if is_prime(p)]
         RCC = CC['T']
         (T,) = RCC._first_ngens(1)
         heckepols = [RCC(1) for p in ratl_primes]
         for l in range(len(hecke_eigenvalues)):
-            if F_hmf['primes'][l] in ppmidNN:
+            if Fhmfprimes[l] in ppmidNN:
                 heckepols[ratl_primes.index(primes[l][1])] *= (
                     1 - hecke_eigenvalues[l] / float(sqrt(primes[l][0]))
                     * (T ** primes[l][2]))
@@ -985,6 +994,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         # Compute Dirichlet coefficients ########################
         roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
         self.numcoeff = max([a[0] for a in roots])+1  # include a_0 = 0
+        # FIX THIS: the function compute_siegel_dirichlet_coefficients is not defined anywhere!
         self.dirichlet_coefficients = compute_siegel_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
 
         self.sign = (-1) ** float(self.weight)
@@ -1269,7 +1279,10 @@ class ArtinLfunction(Lfunction):
                        'Magma by Tim Dokchitser')
 
         # Generate a function to do computations
-        generateSageLfunction(self)
+        if self.sign == 0:
+            self.sageLfunction = None
+        else:
+            generateSageLfunction(self)
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
@@ -1375,7 +1388,7 @@ class SymmetricPowerLfunction(Lfunction):
     Only implemented for (non-CM) elliptic curves
 
     Compulsory parameters: power, underlying_type, field
-    For ellitic curves: label
+    For ellitic curves: conductor, isogeny
 
     """
 
@@ -1384,14 +1397,16 @@ class SymmetricPowerLfunction(Lfunction):
         
         # Check for compulsory arguments
         validate_required_args('Unable to construct symmetric power L-function.',
-                               args, 'power', 'underlying_type', 'field', 'label')
+                               args, 'power', 'underlying_type', 'field',
+                               'conductor', 'isogeny')
         validate_integer_args ('The power has to be an integer.',
-                               args, 'power')
+                               args, 'power', 'conductor')
         self._Ltype = "SymmetricPower"
 
         # Put the arguments into the object dictionary
         self.__dict__.update(args)
         self.m = int(self.power)
+        self.label = str(self.conductor) + '.' + self.isogeny
         if self.underlying_type != 'EllipticCurve' or self.field != 'Q':
             raise TypeError("The symmetric L-functions have been implemented " +
                             "only for Elliptic Curves over Q.")
@@ -1426,7 +1441,9 @@ class SymmetricPowerLfunction(Lfunction):
         self.kappa_fe = self.S._kappa_fe
         self.lambda_fe = self.S._lambda_fe
         self.Q_fe = self.S._Q_fe
-        self.compute_some_mu_nu()
+        pairs_fe = zip(self.kappa_fe, self.lambda_fe)
+        self.mu_fe = [lambda_fe*2. for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 0.5) < 0.001]
+        self.nu_fe = [lambda_fe for kappa_fe, lambda_fe in pairs_fe if abs(kappa_fe - 1) < 0.001]
         self.quasidegree = len(self.mu_fe) + len(self.nu_fe)       
         self.algebraic = True
         self.motivic_weight = self.m
@@ -1544,9 +1561,6 @@ class Lfunction_lcalc(Lfunction):
     
     def Lkey(self):
         return {"filecontents": self.filecontents}
-    
-    def source_object(self):
-        return self.filecontents
 
 #############################################################################
 

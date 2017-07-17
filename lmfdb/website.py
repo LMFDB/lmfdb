@@ -17,6 +17,8 @@ import pages
 assert pages
 import api
 assert api
+import bianchi_modular_forms
+assert bianchi_modular_forms
 import hilbert_modular_forms
 assert hilbert_modular_forms
 import half_integral_weight_forms

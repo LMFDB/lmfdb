@@ -26,7 +26,7 @@ class HMFTest(LmfdbTest):
 
     def test_typo(self): #771
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?field_label=2.2.5.1') 
-        assert 'or change' in L.data
+        assert 'Search again' in L.data
 
     def test_large(self): #616
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?field_label=4.4.2000.1&count=1200')

@@ -2,54 +2,13 @@
 
 from lmfdb import base
 import pymongo
-from lmfdb.lfunctions import logger
-from lmfdb.lfunctions.Lfunctionutilities import string2number
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
-
-# This function should be removed as part of resolving issue #1456
-def getLmaassByDatabaseId(dbid):
-    collList = [('Lfunction','LemurellMaassHighDegree'),
-                ('Lfunction','FarmerMaass'),
-                ('Lfunction','LemurellTest')]
-    dbName = ''
-    dbColl = ''
-    dbEntry = None
-    i = 0
-    # Go through all collections to find a Maass form with correct id
-    while i < len(collList) and dbEntry is None:
-        connection = base.getDBConnection()
-        db = pymongo.database.Database(connection, collList[i][0])
-        collection = pymongo.collection.Collection(db, collList[i][1])
-        logger.debug(str(collection))
-        logger.debug(dbid)
-        
-        dbEntry = collection.find_one({'_id': dbid})
-        if dbEntry is None:
-            i += 1
-        else:
-            (dbName,dbColl) = collList[i]
-
-    return [dbName, dbColl, dbEntry]
 
 def getEllipticCurveData(label):
     connection = base.getDBConnection()
     curves = connection.elliptic_curves.curves
     return curves.find_one({'lmfdb_label': label})
-
-def checkInstanceLdata(label,label_type="url"):
-    """
-    Checks whether L-function data for the instance specified by label is available.
-    Currently label is either the URL of an LMFDB object (e.g. Character/Dirichlet/7000/3 or EllipticCurve/Q/11/a) or an Lhash.
-    (the definition of an Lhash depends on the type of L-function but is meant to uniquely identify the L-function within the LMFDB).
-    """
-    db = base.getDBConnection().Lfunctions
-    if label_type == "url":
-        return True if db.instances.find_one({'url':label},{'_id':True}) else False
-    elif label_type == "Lhash":
-        return True if db.Lfunctions.find_one({'Lhash':label},{'_id':True}) else False
-    else:
-        raise ValueError("Invalid label_type = '%s', should be 'url' or 'Lhash'" % label)
-
+    
 def getInstanceLdata(label,label_type="url"):
     db = base.getDBConnection().Lfunctions
     try:
@@ -82,15 +41,6 @@ def getInstanceLdata(label,label_type="url"):
         Ldata = None
     return Ldata
 
-def getGenus2IsogenyClass(label):
-    connection = base.getDBConnection()
-    g2 = connection.genus2_curves
-    try:
-        iso = g2.isogeny_classes.find_one({'label': label})
-    except:
-        iso = None
-    return iso
-    
 def getHmfData(label):
     connection = base.getDBConnection()
     try:

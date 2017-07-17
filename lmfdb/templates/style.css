@@ -60,7 +60,7 @@ h2.link > a {
     font-size: 120%;
     text-align: left;
     font-weight: bold;
-    color: {{color.content_text}};
+    color: {{color.a_text}};
     padding: 5px 0 5px 0;
     margin: 15px 0 10px 0;
 }
@@ -71,8 +71,12 @@ h2.link > a {
     text-align: left;
     font-weight: bold;
     padding: 5px 0 5px 0;
-    color: {{color.conent_main_3}};
+    color: {{color.a_text}};
     margin: 10px 0 5px 0;
+}
+
+#content > h2 a[knowl], #content > h3 a[knowl] {
+    color: {{color.col_main}};
 }
 
 #content > h2.inline,
@@ -101,9 +105,13 @@ h2.link > a {
 
 /* Body links, sidebar links, and sidebar header text. */
 a {
-    color: {{color.a_text}};
+    color: {{color.col_link}};
   text-decoration: none;
   font-family: sans-serif;
+}
+
+a[knowl] {
+    color: {{color.col_a_knowl}};
 }
 
 a.inactive {
@@ -295,6 +303,17 @@ body.knowl #header {
   min-height: 700px;
 }
 
+.debug {
+    background: #FF9;
+    font-style: italic;
+}
+
+body > .debug {
+    margin: 20px;
+    padding: 2px;
+}
+
+
 /*These are the right hand side properties and sidebar stuffs.*/
 #properties {
     z-index: 99;
@@ -333,6 +352,9 @@ body.knowl #header {
 .properties-body table tr:last-child td {
   padding-bottom: 7px;
 }
+.properties-body table tr:first-child td {
+  padding-top: 7px;
+}
 .properties-body .label {
   font-weight: bold;
 }
@@ -347,13 +369,22 @@ body.knowl #header {
 }
 .properties-body li {
   display: block;
-  padding: 0;
+  padding: 5px 0 0 7px;
   margin: 0;
+}
+.properties-body li:first-child {
+  padding-top: 7px;
+}
+.properties-body li:last-child {
+  padding-bottom: 5px;
 }
 .properties-body li a {
  display: block;
+/*
  padding: 5px;
+*/
 }
+
 .properties-body {
   margin: 0px;
   padding: 0px;
@@ -367,7 +398,7 @@ body.knowl #header {
   -moz-border-radius-topleft: 10px;
   margin: 0;
   margin-top: 10px;
-  padding: 5px 10px;
+  padding: 5px 9px;
   color: {{ color.properties_header_text }};
   background: {{ color.properties_header_background }};
   font-size: 14px;
@@ -547,13 +578,20 @@ input, textarea {
 
 button, select {
   padding: 3px 6px;
-  background: {{color.button_background}};
   border-radius: 4px;
   -moz-border-radius:4px;
   -webkit-border-radius:4px;
   cursor: pointer;
   border: 2px solid {{color.button_border}};
   min-width: 75px;
+}
+
+button {
+   background: {{color.button_background}};
+}
+
+select {
+   background: {{color.select_background}};
 }
 
 body.knowl form button, 
@@ -588,12 +626,17 @@ body.knowl form select:hover {
     border: 2px solid {{color.knowl_thin_border}};
 }
 
+form table td.button {
+	padding-top: 7px
+}
+
 table {
     border: 0;
     border-collapse:collapse;
 }
 
 table th {
+  color: {{color.a_text}};
   padding-bottom: 5px;
 }
 
