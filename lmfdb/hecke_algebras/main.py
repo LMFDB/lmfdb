@@ -112,22 +112,49 @@ def hecke_algebras_search(**args):
     if 'label' in info and info.get('label'):
         return hecke_algebras_by_label(info.get('label'), C)
 
-    if 'orbit_label' in info and info.get('orbit_label'):
-        return hecke_algebras_by_orbit_label(info.get('orbit_label'), C)
-
     query = {}
+    
     try:
-        for field, name in (('level','Level'),('weight','Weight'),('num_orbits', 'Number of Hecke orbits')):
+        for field, name in (('level','Level'),('weight','Weight'),('num_orbits', 'Number of Hecke orbits'),('ell','characteristic')):
             parse_ints(info, query, field, name)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info)
-    # here need a check for ell as input, if the orbit is given should go to the right page otherwise list all base labels for which mod l info is available
+
+    if 'orbit_label' in info and info.get('orbit_label'):
+        check=[int(i) for i in info['orbit_label'].split(".")]
+        if 'level' in info and info.get('level'):
+            if int(info.get('level'))!=check[0]:
+                flash(Markup("Orbit label <span style='color:black'>%s</span> and Level <span style='color:black'>%s</span> are not compatible" %(info.get('orbit_label'), info.get('level'))),"error") 
+                return redirect(url_for(".hecke_algebras_render_webpage"))
+        if 'weight' in info and info.get('weight'):
+            if int(info.get('weight'))!=check[1]:
+                flash(Markup("Orbit label <span style='color:black'>%s</span> and Weight <span style='color:black'>%s</span> are not compatible" %(info.get('orbit_label'), info.get('weight'))), "error")
+                return redirect(url_for(".hecke_algebras_render_webpage"))              
+        if 'ell' in info and info.get('ell'):
+            if info.get('ell')>13:
+                flash(Markup("No data for primes greater than $13$ is available"), "error")
+                return redirect(url_for(".hecke_algebras_render_webpage"))
+            else:
+                return render_hecke_algebras_webpage_l_adic(orbit_label=info.get('orbit_label'), prime=info.get('ell'))
+        else:
+            return hecke_algebras_by_orbit_label(info.get('orbit_label'), C)
+            
     count = parse_count(info,50)
     start = parse_start(info)
 
     info['query'] = dict(query)
-    res = C.hecke_algebras.hecke_algebras.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
+    
+    if 'ell' in info and info.get('ell'):
+        if info.get('ell')>13:
+            flash(Markup("No data for primes greater than $13$ is available"), "error")
+            return redirect(url_for(".hecke_algebras_render_webpage"))
+        else:        
+            res= C.hecke_algebras.hecke_algebras_l_adic.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
+    else:
+        res = C.hecke_algebras.hecke_algebras.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
+    
+    
     nres = res.count()
 
     if(start >= nres):
@@ -152,10 +179,17 @@ def hecke_algebras_search(**args):
     res_clean = []
     for v in res:
         v_clean = {}
-        v_clean['label']=v['label']
+        
+        if 'ell' in info and info.get('ell'):
+            v_clean['orbit_label']=v['orbit_label']
+            v_clean['index']=v['index']
+            v_clean['label']=".".join(v['orbit_label'].split(".")[i] for i in [0,1,2])
+        else:
+            v_clean['label']=v['label']        
+            v_clean['num_orbits']=v['num_orbits']
         v_clean['level']=v['level']
         v_clean['weight']=v['weight']
-        v_clean['num_orbits']=v['num_orbits']
+
         res_clean.append(v_clean)
 
     info['hecke_algebras'] = res_clean
@@ -243,7 +277,10 @@ def render_hecke_algebras_webpage(**args):
         ('Level', '%s' %info['level']),
         ('Weight', '%s' %info['weight']),
         ('Label', '%s' %info['label'])]
-    info['friends'] = [('Modular form ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+    if info['num_orbits']!=0:      
+        info['friends'] = [('Modular form ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+    else:
+        info['friends'] = []    
     t = "Hecke Algebra %s" % info['label']
     return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
 

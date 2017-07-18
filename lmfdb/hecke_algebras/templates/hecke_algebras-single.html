@@ -5,6 +5,11 @@
 {% set KNOWL_ID = "hecke_algebra.%s"|format(info['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
+{% if info.num_orbits==0 %}
+
+<div>The Hecke algebra with {{KNOWL('hecke_algebras.label', title='label')}} ${{info.label}}$ is trivial: there are no modular forms of level ${{info.level}}$ and weight ${{info.weight}}$.</div>
+
+{% else %}
 <table>
     <tr><td align=right>{{ KNOWL('mf.elliptic.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
     <tr><td align=right>{{ KNOWL('mf.elliptic.weight', title='Weight') }}:</td><td>${{info.weight}}$</td></tr>
@@ -65,5 +70,6 @@
     {% endfor %}
 {% endif %}
 
+{% endif %}
 
 {% endblock %}

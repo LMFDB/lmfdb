@@ -46,9 +46,22 @@
             <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
         {% endif %}
         </h2>
-
         <table>
         <tr>
+        {% if info.ell %}
+        <th>{{KNOWL('hecke_algebras.orbit_label', title='Orbit label')}}</th>
+        <th>{{ KNOWL('mf.elliptic.level', title='Level') }}</th>
+        <th>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</th>
+        </tr>
+        {% for a in info.hecke_algebras %}
+            <tr>
+            <td align='left'><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage', label=a.label)}}#{{a.index}}">{{a.orbit_label}} </a></td>
+            <td>{{a.level}}</td>
+            <td>{{a.weight}}</td>
+            </tr>
+        {% endfor %}
+
+        {% else %}
         <th>{{KNOWL('hecke_algebras.label', title='Label')}}</th>
         <th>{{ KNOWL('mf.elliptic.level', title='Level') }}</th>
         <th>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</th>
@@ -62,6 +75,7 @@
             <td>{{a.num_orbits}}</td>
             </tr>
         {% endfor %}
+        {% endif %}        
         </table>
         <hr>
         {% if info.start > 0 %}
