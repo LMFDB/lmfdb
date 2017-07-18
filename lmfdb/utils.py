@@ -118,34 +118,18 @@ def to_dict(args):
     return d
 
 
-# TODO remove before submitting pull request
-#def truncatenumber(numb, precision):
-#    localprecision = precision
-#    if numb < 0:
-#        localprecision = localprecision + 1
-#    truncation = float(10 ** (-1.0*localprecision))
-#    if float(abs(numb - 1)) < truncation:
-#        return("1")
-#    elif float(abs(numb - 2)) < truncation:
-#        return("2")
-#    elif float(abs(numb - 3)) < truncation:
-#        return("3")
-#    elif float(abs(numb - 4)) < truncation:
-#        return("4")
-#    elif float(abs(numb)) < truncation:
-#        return("0")
-#    elif float(abs(numb + 1)) < truncation:
-#        return("-1")
-#    elif float(abs(numb + 2)) < truncation:
-#        return("-2")
-#    elif float(abs(numb - 0.5)) < truncation:
-#        return("0.5")
-#    elif float(abs(numb + 0.5)) < truncation:
-#        return("-0.5")
-#    return(str(numb)[0:int(localprecision)])
-
-
 def truncate_number(num, precision):
+    """
+    Truncate `num` to show `precision` characters (as a string). If `num` is
+    nearly an integer or half-integer, return that integer or
+    half-integer instead.
+
+    Examples:
+    >>> truncate_number(1.0001, 4)
+    '1'
+    >>> truncate_number(1.1234567, 4)
+    '1.12'
+    """
     local_precision = precision
     if num < 0:
         local_precision = local_precision + 1
