@@ -78,15 +78,17 @@ directory, start sage and use the command
 """
 
 import os.path
+import re
 import os
 import pymongo
+import pprint
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, parse_ainvs, parse_point
-from scripts.ecnf.import_utils import read1isogmats, readgalreps, make_curves_line, make_curve_data_line, split, numerify_iso_label, NFelt, get_cm, point_string
+from scripts.ecnf.import_utils import make_curves_line, make_curve_data_line, split, numerify_iso_label, NFelt, get_cm, point_string
 
 
 print "getting connection"
@@ -409,7 +411,6 @@ def isoclass(line):
     conductor_label = data[1]   # string
     # convert label (does nothing except for imaginary quadratic)
     conductor_label = convert_conductor_label(field_label, conductor_label)
-    print("Converting conductor label from {} to {}".format(data[1], conductor_label))
     iso_label = data[2]         # string
     number = int(data[3])       # int
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
@@ -424,6 +425,99 @@ def isoclass(line):
              'isogeny_degrees': isogeny_degrees}
     return label, edata
 
+def read1isogmats(base_path, filename_suffix):
+    r""" Returns a dictionary whose keys are labels of individual curves,
+    and whose values are the isogeny_matrix and isogeny_degrees for
+    each curve in the class, together with the class size and the
+    maximal degree in the class.
+
+    This function reads a single isoclass file.
+    """
+    isoclass_filename = 'isoclass.%s' % (filename_suffix)
+    h = open(os.path.join(base_path, isoclass_filename))
+    print("Opened {}".format(os.path.join(base_path, isoclass_filename)))
+    data = {}
+    for line in h.readlines():
+        label, data1 = isoclass(line)
+        class_label = "-".join(data1['label'][:3])
+        isogmat = data1['isogeny_matrix']
+        # maxdeg is the maximum degree of a cyclic isogeny in the
+        # class, which uniquely determines the isogeny graph (over Q)
+        maxdeg = max(max(r) for r in isogmat)
+        allisogdegs = data1['isogeny_degrees']
+        ncurves = len(allisogdegs)
+        for n in range(ncurves):
+            isogdegs = allisogdegs[n+1]
+            label = class_label+str(n+1)
+            data[label] = {'isogeny_degrees': isogdegs,
+                           'class_size': ncurves,
+                           'class_deg': maxdeg}
+            if n==0:
+                #print("adding isogmat = {} to {}".format(isogmat,label))
+                data[label]['isogeny_matrix'] = isogmat
+
+    return data
+
+def split_galois_image_code(s):
+    """Each code starts with a prime (1-3 digits but we allow for more)
+    followed by an image code or that prime.  This function returns
+    two substrings, the prefix number and the rest.
+    """
+    p = re.findall(r'\d+', s)[0]
+    return p, s[len(p):]
+
+def galrep(line):
+    r""" Parses one line from a galrep file.  Returns the label and a
+    dict containing two fields: 'non-surjective_primes', a list of
+    primes p for which the Galois representation modulo p is not
+    surjective (cut off at p=37 for CM curves for which this would
+    otherwise contain all primes), 'galois_images', a list of strings
+    encoding the image when not surjective, following Sutherland's
+    coding scheme for subgroups of GL(2,p).  Note that these codes
+    start with a 1 or 2 digit prime followed a letter in
+    ['B','C','N','S'].
+
+    Input line fields (4+); the first is a standard label of the form
+    field-conductor-an where 'a' is the isogeny class (one or more
+    letters), 'n' is the number ofe the curve in the class (from 1)
+    and any remaining ones are galrep codes.
+
+    label codes
+
+    Sample input line (field='2.0.3.1', conductor='10000.0.100', class='a', number=1)
+
+    2.0.3.1-10000.0.100-a1 2B 3B[2]
+
+    """
+    data = split(line)
+    label = data[0] # single string
+    field_label, conductor_label, c_label = data[0].split("-")
+    iso_label = ''.join([c for c in c_label if c.isalpha()])
+    number = ''.join([c for c in c_label if c.isdigit()])
+    assert iso_label+number==c_label
+    conductor_label = convert_conductor_label(field_label, conductor_label)
+    print("Converting conductor label from {} to {}".format(data[0].split("-")[1], conductor_label))
+    short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
+    label = "%s-%s" % (field_label, short_label)
+    image_codes = data[1:]
+#    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
+    pr = [ int(split_galois_image_code(s)[0]) for s in image_codes]
+    return label, {
+        'non-surjective_primes': pr,
+        'galois_images': image_codes,
+    }
+
+
+
+
+def readgalreps(base_path, filename):
+    h = open(os.path.join(base_path, filename))
+    print("opened {}".format(os.path.join(base_path, filename)))
+    dat = {}
+    for L in h.readlines():
+        lab, dat1 = galrep(L)
+        dat[lab] = dat1
+    return dat
 
 # Before using the following, define galrepdat using a command such as
 #
@@ -444,7 +538,7 @@ filename_base_list = ['curves', 'curve_data']
 
 #
 
-def upload_to_db(base_path, filename_suffix, insert=True):
+def upload_to_db(base_path, filename_suffix, insert=True, test=True):
     r""" Uses insert_one() if insert=True, which is faster but will fail if
     the label is already in the database; otherwise uses update_one()
     with upsert=True
@@ -452,8 +546,8 @@ def upload_to_db(base_path, filename_suffix, insert=True):
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
-    #galrep_filename = 'galrep.%s' % (filename_suffix)
-    file_list = [curves_filename, curve_data_filename, isoclass_filename]
+    galrep_filename = 'galrep.%s' % (filename_suffix)
+    file_list = [curves_filename, curve_data_filename, isoclass_filename, galrep_filename]
 #    file_list = [isoclass_filename]
 #    file_list = [curves_filename]
 #    file_list = [curve_data_filename]
@@ -509,8 +603,15 @@ def upload_to_db(base_path, filename_suffix, insert=True):
                 print("error: label {} not in isogmats!".format(lab))
 
     if insert:
-        print("inserting all data")
-        nfcurves.insert_many(vals)
+        if test:
+            print("(not) inserting all data")
+            #nfcurves.insert_many(vals)
+            print("First 10 vals:")
+            for v in vals[:10]:
+                pprint.pprint(v)
+        else:
+            print("inserting all data ({} items)".format(len(vals)))
+            nfcurves.insert_many(vals)
     else:
         count = 0
         print("inserting data one curve at a time...")
@@ -633,9 +734,9 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'isogeny_matrix': list_type, # of lists of ints
                       'isogeny_degrees': list_type, # of ints
                       #'class_deg': int_type,
-                      #'non-surjective_primes': list_type, # of ints
+                      'non-surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
-                      #'galois_images': list_type, # of strings
+                      'galois_images': list_type, # of strings
                       #'mod-p_images': list_type, # of strings
                       'equation': str_type,
                       'local_data': list_type, # of dicts
