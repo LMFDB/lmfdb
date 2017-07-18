@@ -1,5 +1,5 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from lmfdb.utils import truncatenumber
+from lmfdb.utils import truncate_number
 from mwf_utils import mwf_logger
 from sage.all import Gamma0, CC
 import bson
@@ -376,8 +376,8 @@ def pretty_coeff(c, digits=10, prec=9):
         x = c
         y = 0
 
-    x_trunc = float(truncatenumber(x, precision=prec))
-    y_trunc = float(truncatenumber(y, precision=prec))
+    x_trunc = float(truncate_number(x, precision=prec))
+    y_trunc = float(truncate_number(y, precision=prec))
     xs = format_num(x_trunc, digits=digits)
     ys = format_num(y_trunc, digits=digits)
 
