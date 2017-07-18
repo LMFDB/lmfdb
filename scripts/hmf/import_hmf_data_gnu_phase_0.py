@@ -2,41 +2,38 @@
 Dan_test = True
 import os.path
 
-if Dan_test:
-    from pymongo.mongo_client import MongoClient
-    C = MongoClient(port=int(37010))
-    C['admin'].authenticate('lmfdb','lmfdb')
-else:
-    from lmfdb.lmfdb.base import getDBConnection
-    C= getDBConnection()
-    C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
+from pymongo.mongo_client import MongoClient
+C = MongoClient(port=int(37010))
+C['admin'].authenticate('lmfdb','lmfdb')
 
-if Dan_test:
-    import sys
-    from sage.all import preparse
-    sys.path.append('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf')
-else:
-    import sage.misc.preparser
-    from sage.misc.preparser import preparse
+# Saved login procedure from old script; not working now (JV 07-2017)
+# from lmfdb.lmfdb.base import getDBConnection
+# C= getDBConnection()
+# C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
+
+# if Dan_test:
+#    import sys
+#    from sage.all import preparse
+#    # sys.path.append('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf')
+# else:
+import sys
+from sage.all import preparse
+# import sage.misc.preparser
+# from sage.misc.preparser import preparse
 
 from sage.interfaces.magma import magma
 
 from sage.all import ZZ, Rationals, PolynomialRing
 
-from check_conjugates import fix_one_label
+from scripts.hmf.check_conjugates import fix_one_label
 from sage.databases.cremona import class_to_int
 import yaml
 
-if Dan_test:
-    pw_dict = yaml.load(open(os.path.join(os.getcwd(), "../../passwords.yaml")))
-    username = pw_dict['data']['username']
-    password = pw_dict['data']['password']
-    C['hmfs'].authenticate(username, password)
-else:
-    pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-    username = pw_dict['data']['username']
-    password = pw_dict['data']['password']
-    C['hmfs'].authenticate(username, password)
+# Assumes running from lmfdb root directory
+pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
+username = pw_dict['data']['username']
+password = pw_dict['data']['password']
+C['hmfs'].authenticate(username, password)
 
 hmf_forms = C.hmfs.forms_dan
 hmf_fields = C.hmfs.fields
@@ -122,9 +119,9 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
             print("Would now insert data for %s into hmf_fields" % field_label)
         else:
             hmf_fields.insert_one({"label": field_label,
-                               "degree": n,
-                               "discriminant": d,
-                               "ideals": ideals_str})
+                                   "degree": n,
+                                   "discriminant": d,
+                                   "ideals": ideals_str})
         F_hmf = hmf_fields.find_one({"label": field_label})
     else:
         print "...found!"
@@ -179,7 +176,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
         if test:
             print("Would now save primes string %s... into hmf_fields" % primes_str[:100])
         else:
-            hmf_fields.save(F_hmf)
+            hmf_fields.replace_one(F_hmf)
             print "...saved!"
 
     # Collect levels
@@ -236,7 +233,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
             leftout += 1
             # commented code below throws an error.  use above.
             # just be safe and remove one eigenvalue at a time.
-            # Aurel's code with adjust and remove extra when needed.
+            # Aurel's code will adjust and remove extra when needed.
             #q = primes_resort[len(hecke_eigenvalues)]
             #while primes_resort[len(hecke_eigenvalues)] == q:
             #    # Remove all with same norm 
@@ -359,3 +356,90 @@ def attach_new_label(f):
     except ValueError:
         hmf_forms.remove(f)
         print "REMOVED!"
+
+
+
+
+
+
+## ========= COPIED from import_hmf_extra_gnu_phase_0.py on 7-18-2017
+
+def parseALstring(s):
+    # Drop first char bracket
+    #in [[4,2,1/2*w^3-2*w],-1],[[191,191,-w^3-2*w^2+5*w+7],-1]] 
+    #out ['[[4', '2', '1/2*w^3-2*w]', '-1]', '[[191', '191', '-w^3-2*w^2+5*w+7]', '-1]]']
+    if s == '[]':
+        return []
+    s = s[1:-1]
+    sm = s.split(',')
+    outlist = []
+    #print s, sm
+    assert len(sm) % 4 == 0
+    for i in range(len(sm)/4):
+        outlist += [[sm[4*i][1:]+","+sm[4*i+1]+","+sm[4*i+2], sm[4*i+3][:-1]]]
+    return outlist
+
+
+def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=True):
+    ''' 
+    put in docstring!
+    '''
+    if ferrors==None:
+        if Dan_test:
+            ferrors = file('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_extra.err', 'a')
+        else:
+            ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
+    field_label = hmf_extra_filename.split('-')[0]
+    if fileprefix==None:
+        fileprefix="."
+    hmff = file(os.path.join(fileprefix,hmf_extra_filename))
+
+    with hmff as infile:
+        # assumes the input filename starts with the field label.
+        F = hmf_fields.find_one({'label':field_label})
+        assert F is not None
+        clean_primes = [p.replace(' ','') for p in F['primes']]
+
+        print clean_primes
+
+        for line in infile:
+            # sample line - 4.4.1600.1-25.1-a:[25,5,w^2-3]:no:yes:[[[25,5,w^2-3],1]]:done:[[25,5,w^2-3],-1]
+            line_keys = ['label', 'level_ideal','is_CM','is_base_change','AL_eigenvalues','AL_eigenvalues_fixed'] 
+            data = line.split(':')
+            label = data[0]
+            f = hmf_forms.find_one({'label':label})
+            if f is None:
+                continue
+            assert f['field_label'] == field_label
+            f['AL_eigenvalues'] = parseALstring(data[line_keys.index('AL_eigenvalues')])
+            enter_keys = ['is_CM','is_base_change','AL_eigenvalues_fixed']
+            for k in enter_keys:  
+                f[k] = data[line_keys.index(k)]
+            # need to fix some aps:  data[-1]
+            # adjust f['hecke_eigenvalues']
+            if len(data) > 6:
+                # there are ap to fix
+                for apfix in data[6:]:
+                    pp = apfix.rstrip()[1:-1].split('],')[0] + ']'
+                    ap = apfix.rstrip()[1:-1].split('],')[1]
+                    if not ap in {'1','-1'}:
+                        print '?????   ',ap,label
+                    assert ap in {'1','-1'}
+                    if clean_primes.index(pp) < len(f['hecke_eigenvalues']):
+                        try: 
+                            assert f['hecke_eigenvalues'][clean_primes.index(pp)] in {'0','1','-1'}
+                        except AssertionError:
+                            print f['hecke_eigenvalues'][clean_primes.index(pp)]
+                            print f
+                            assert false
+                        f['hecke_eigenvalues'][clean_primes.index(pp)] = ap
+                    else:
+                        print '!!! a_pp not corrected since not many stored !!!'
+            if not test:
+                print label
+                hmf_forms.save(f)  
+            else:
+                print f
+
+
+
