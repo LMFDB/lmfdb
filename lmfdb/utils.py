@@ -29,9 +29,12 @@ from lmfdb.base import app
 #   number utilities
 ################################################################################
 
-def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field=sage.rings.all.RationalField()):
-    """ Takes a fn that gives for each prime the polynomial of the associated with the prime,
-        given as a list, with independent coefficient first. This list is of length the degree+1.
+def an_list(euler_factor_polynomial_fn,
+            upperbound=100000, base_field=sage.rings.all.RationalField()):
+    """
+    Takes a fn that gives for each prime the polynomial associated with the
+    prime, given as a list, with independent coefficient first. This list is of
+    length the degree+1.
     """
     from sage.rings.fast_arith import prime_range
     from sage.rings.all import PowerSeriesRing
@@ -89,6 +92,20 @@ def pair2complex(pair):
     return [float(rp), float(ip)]
 
 
+def round_to_half_int(num, fraction=2):
+    """
+    Rounds input `num` to the nearest half-integer. The optional kwarg
+    `fraction` is used to round to the nearest `fraction`-part of an integer.
+
+    Examples:
+    >>> round_to_half_int(1.1)
+    1.0
+    >>> round_to_half_int(-0.9)
+    -1.0
+    """
+    return round(num * 1.0 * fraction) / fraction
+
+
 def to_dict(args):
     d = {}
     for key in args:
@@ -101,30 +118,44 @@ def to_dict(args):
     return d
 
 
-def truncatenumber(numb, precision):
-    localprecision = precision
-    if numb < 0:
-        localprecision = localprecision + 1
-    truncation = float(10 ** (-1.0*localprecision))
-    if float(abs(numb - 1)) < truncation:
-        return("1")
-    elif float(abs(numb - 2)) < truncation:
-        return("2")
-    elif float(abs(numb - 3)) < truncation:
-        return("3")
-    elif float(abs(numb - 4)) < truncation:
-        return("4")
-    elif float(abs(numb)) < truncation:
-        return("0")
-    elif float(abs(numb + 1)) < truncation:
-        return("-1")
-    elif float(abs(numb + 2)) < truncation:
-        return("-2")
-    elif float(abs(numb - 0.5)) < truncation:
-        return("0.5")
-    elif float(abs(numb + 0.5)) < truncation:
-        return("-0.5")
-    return(str(numb)[0:int(localprecision)])
+# TODO remove before submitting pull request
+#def truncatenumber(numb, precision):
+#    localprecision = precision
+#    if numb < 0:
+#        localprecision = localprecision + 1
+#    truncation = float(10 ** (-1.0*localprecision))
+#    if float(abs(numb - 1)) < truncation:
+#        return("1")
+#    elif float(abs(numb - 2)) < truncation:
+#        return("2")
+#    elif float(abs(numb - 3)) < truncation:
+#        return("3")
+#    elif float(abs(numb - 4)) < truncation:
+#        return("4")
+#    elif float(abs(numb)) < truncation:
+#        return("0")
+#    elif float(abs(numb + 1)) < truncation:
+#        return("-1")
+#    elif float(abs(numb + 2)) < truncation:
+#        return("-2")
+#    elif float(abs(numb - 0.5)) < truncation:
+#        return("0.5")
+#    elif float(abs(numb + 0.5)) < truncation:
+#        return("-0.5")
+#    return(str(numb)[0:int(localprecision)])
+
+
+def truncatenumber(num, precision):
+    local_precision = precision
+    if num < 0:
+        local_precision = local_precision + 1
+    truncation = float(10 ** (-1.0 * local_precision))
+    test = round_to_half_int(num)
+    if float(abs(num - test)) < truncation:
+        if int(test) == test:
+            return str(int(test))
+        return str(test)
+    return(str(num)[0:int(local_precision)])
 
 
 def splitcoeff(coeff):
