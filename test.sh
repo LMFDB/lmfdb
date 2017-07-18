@@ -42,7 +42,7 @@ else
   echo "pyflakes is happy"
 fi
 
-ARGS='-v -s --testmatch="(?:^|\/)[Tt]est_"'
+ARGS='-v -s --with-doctest --testmatch="(?:^|\/)[Tt]est_"'
 
 SAGE_COMMAND=$SAGE
 if [[ "$SAGE_COMMAND" == "" ]]; then
