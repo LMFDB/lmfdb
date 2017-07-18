@@ -3,6 +3,7 @@
 import pymongo
 ASC = pymongo.ASCENDING
 import time, os
+import flask
 import lmfdb.base as base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, request, url_for, redirect, send_file, flash
@@ -48,19 +49,19 @@ def init_nf_count():
 
 def galois_group_data(n, t):
     C = getDBConnection()
-    return group_knowl_guts(n, t, C)
+    return flask.Markup(group_knowl_guts(n, t, C))
 
 def group_cclasses_data(n, t):
     C = getDBConnection()
-    return group_cclasses_knowl_guts(n, t, C)
+    return flask.Markup(group_cclasses_knowl_guts(n, t, C))
 
 def group_character_table_data(n, t):
     C = getDBConnection()
-    return group_character_table_knowl_guts(n, t, C)
+    return flask.Markup(group_character_table_knowl_guts(n, t, C))
 
 def number_field_data(label):
     C = getDBConnection()
-    return nf_knowl_guts(label, C)
+    return flask.Markup(nf_knowl_guts(label, C))
 
 def na_text():
     return "Not computed"
