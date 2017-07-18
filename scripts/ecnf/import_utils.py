@@ -3,9 +3,7 @@ All the funtions needed in `import_ecnf_data.py` that don't need acces to the ec
 """
 # Label of an ideal I in a quadratic field: string formed from the
 # Norm and HNF of the ideal
-import os.path
 import re
-import os
 from sage.all import cm_j_invariants_and_orders, ZZ, QQ
 from lmfdb.ecnf.WebEllipticCurve import ideal_HNF
 
@@ -148,84 +146,6 @@ def isoclass(line):
 
 
 
-
-def read1isogmats(base_path, filename_suffix):
-    r""" Returns a dictionary whose keys are labels of individual curves,
-    and whose values are the isogeny_matrix and isogeny_degrees for
-    each curve in the class, together with the class size and the
-    maximal degree in the class.
-
-    This function reads a single isoclass file.
-    """
-    isoclass_filename = 'isoclass.%s' % (filename_suffix)
-    h = open(os.path.join(base_path, isoclass_filename))
-    print("Opened {}".format(os.path.join(base_path, isoclass_filename)))
-    data = {}
-    for line in h.readlines():
-        label, data1 = isoclass(line)
-        class_label = "-".join(data1['label'][:3])
-        isogmat = data1['isogeny_matrix']
-        # maxdeg is the maximum degree of a cyclic isogeny in the
-        # class, which uniquely determines the isogeny graph (over Q)
-        maxdeg = max(max(r) for r in isogmat)
-        allisogdegs = data1['isogeny_degrees']
-        ncurves = len(allisogdegs)
-        for n in range(ncurves):
-            isogdegs = allisogdegs[n+1]
-            label = class_label+str(n+1)
-            data[label] = {'isogeny_degrees': isogdegs,
-                           'class_size': ncurves,
-                           'class_deg': maxdeg}
-            if n==0:
-                #print("adding isogmat = {} to {}".format(isogmat,label))
-                data[label]['isogeny_matrix'] = isogmat
-
-    return data
-
-
-def galrep(line):
-    r""" Parses one line from a galrep file.  Returns the label and a
-    dict containing two fields: 'non-surjective_primes', a list of
-    primes p for which the Galois representation modulo p is not
-    surjective (cut off at p=37 for CM curves for which this would
-    otherwise contain all primes), 'galois_images', a list of strings
-    encoding the image when not surjective, following Sutherland's
-    coding scheme for subgroups of GL(2,p).  Note that these codes
-    start with a 1 or 2 digit prime followed a letter in
-    ['B','C','N','S'].
-
-    Input line fields (4+); the first is a standard label of the form
-    field-conductor-an where 'a' is the isogeny class (one or more
-    letters), 'n' is the number ofe the curve in the class (from 1)
-    and any remaining ones are galrep codes.
-
-    label codes
-
-    Sample input line (field='2.0.3.1', conductor='10000.0.100', class='a', number=1)
-
-    2.0.3.1-10000.0.100-a1 2B 3B[2]
-
-    """
-    data = split(line)
-    label = data[0] # single string
-    image_codes = data[1:]
-    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
-    return label, {
-        'non-surjective_primes': pr,
-        'galois_images': image_codes,
-    }
-
-
-
-
-def readgalreps(base_path, filename):
-    h = open(os.path.join(base_path, filename))
-    print("opened {}".format(os.path.join(base_path, filename)))
-    dat = {}
-    for L in h.readlines():
-        lab, dat1 = galrep(L)
-        dat[lab] = dat1
-    return dat
 
 def make_curves_line(ec):
     r""" for ec a curve object from the database, create a line of text to
