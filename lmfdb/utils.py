@@ -145,7 +145,7 @@ def to_dict(args):
 #    return(str(numb)[0:int(localprecision)])
 
 
-def truncatenumber(num, precision):
+def truncate_number(num, precision):
     local_precision = precision
     if num < 0:
         local_precision = local_precision + 1
