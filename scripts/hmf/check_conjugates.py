@@ -188,7 +188,7 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
                 if fix:
                     if fg != None: #else: is a lift (self-conjugate), should have been detected
                         print("adding it : "+fg['label'])
-                        forms.insert(fg)
+                        forms.insert_one(fg)
                         count += 1
     print("\nMissing "+str(countmiss)+" conjugate forms (possibly counted multiple times if several nontrivial automorphisms).")
     print("Added "+str(count)+" new conjugate forms.")
