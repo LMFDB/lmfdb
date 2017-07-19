@@ -121,22 +121,33 @@ def hecke_algebras_search(**args):
         info['err'] = str(err)
         return search_input_error(info)
 
+    if 'ell' in info and info.get('ell'):
+        if int(info.get('ell'))>13:
+            flash(Markup("No data for primes or integers greater than $13$ is available"), "error")
+            return redirect(url_for(".hecke_algebras_render_webpage"))
+        elif int(info.get('ell')) not in [2,3,5,7,11,13]:
+            flash(Markup("No data for integers which are not primes"), "error")
+            return redirect(url_for(".hecke_algebras_render_webpage"))
+                
     if 'orbit_label' in info and info.get('orbit_label'):
         check=[int(i) for i in info['orbit_label'].split(".")]
         if 'level' in info and info.get('level'):
+            try:
+                for field in ['level','weight']:
+                    if info.get(field):
+                        int(info.get(field))
+            except ValueError as err:                
+                flash(Markup("Orbit label <span style='color:black'>%s</span> and input Level or Weight are not compatible" %(info.get('orbit_label'))),"error") 
+                return redirect(url_for(".hecke_algebras_render_webpage"))
             if int(info.get('level'))!=check[0]:
-                flash(Markup("Orbit label <span style='color:black'>%s</span> and Level <span style='color:black'>%s</span> are not compatible" %(info.get('orbit_label'), info.get('level'))),"error") 
+                flash(Markup("Orbit label <span style='color:black'>%s</span> and Level <span style='color:black'>%s</span> are not compatible inputs" %(info.get('orbit_label'), info.get('level'))),"error") 
                 return redirect(url_for(".hecke_algebras_render_webpage"))
         if 'weight' in info and info.get('weight'):
             if int(info.get('weight'))!=check[1]:
-                flash(Markup("Orbit label <span style='color:black'>%s</span> and Weight <span style='color:black'>%s</span> are not compatible" %(info.get('orbit_label'), info.get('weight'))), "error")
+                flash(Markup("Orbit label <span style='color:black'>%s</span> and Weight <span style='color:black'>%s</span> are not compatible inputs" %(info.get('orbit_label'), info.get('weight'))), "error")
                 return redirect(url_for(".hecke_algebras_render_webpage"))              
         if 'ell' in info and info.get('ell'):
-            if info.get('ell')>13:
-                flash(Markup("No data for primes greater than $13$ is available"), "error")
-                return redirect(url_for(".hecke_algebras_render_webpage"))
-            else:
-                return render_hecke_algebras_webpage_l_adic(orbit_label=info.get('orbit_label'), prime=info.get('ell'))
+            return render_hecke_algebras_webpage_l_adic(orbit_label=info.get('orbit_label'), prime=info.get('ell'))
         else:
             return hecke_algebras_by_orbit_label(info.get('orbit_label'), C)
             
@@ -145,12 +156,8 @@ def hecke_algebras_search(**args):
 
     info['query'] = dict(query)
     
-    if 'ell' in info and info.get('ell'):
-        if info.get('ell')>13:
-            flash(Markup("No data for primes greater than $13$ is available"), "error")
-            return redirect(url_for(".hecke_algebras_render_webpage"))
-        else:        
-            res= C.hecke_algebras.hecke_algebras_l_adic.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
+    if 'ell' in info and info.get('ell'):   
+        res= C.hecke_algebras.hecke_algebras_l_adic.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
     else:
         res = C.hecke_algebras.hecke_algebras.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
     
