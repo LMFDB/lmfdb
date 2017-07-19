@@ -550,3 +550,45 @@ def download_hecke_algebras_full_lists_id(**args):
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
+      
+
+def download_search(info):
+    lang = info["submit"]
+    filename = 'Hecke_algebras' + download_file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    # reissue saved query here
+
+    if 'ell' in info["query"]:   
+        res= getDBConnection().hecke_algebras.hecke_algebras_l_adic.find(ast.literal_eval(info["query"])).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)])
+    else:
+        res = getDBConnection().hecke_algebras.hecke_algebras_orbits.find(ast.literal_eval(info["query"])).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)])
+    last=res.count()-1;
+    print "xxxxxxxxxxxxxxxx", last;
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight, list of the first 10 Hecke operators (to download more operators for a given algebra, please visit its webpage).\n\n'%(mydate, res.count())
+    # The list entries are matrices of different sizes.  Sage and gp
+    # do not mind this but Magma requires a different sort of list.
+    list_start = '[*' if lang=='magma' else '['
+    list_end = '*]' if lang=='magma' else ']'
+    s += download_assignment_start[lang] + list_start + '\\\n'
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    # loop through all search results and grab the Hecke operators stored
+    for c, rr in enumerate(res):
+        s += list_start
+        s += ",".join([str(rr['level']), str(rr['weight']),""])
+        s += ",".join([entry(r) for r in [sage_eval(rr['hecke_op'])[i] for i in range(0, min(10, rr['num_hecke_op']))]])
+        if c != last:
+            s += list_end + ',\\\n'
+        else:
+            print c;
+            s += list_end
+    s += list_end    
+    s += download_assignment_end[lang]
+    s += '\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
