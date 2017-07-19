@@ -343,29 +343,33 @@ def render_hecke_algebras_webpage_l_adic(**args):
             f_clean['idempotent_display']=latex(matrix([[1]]))
         f_clean['download_id'] = [(i, url_for(".render_hecke_algebras_webpage_ell_download", orbit_label=f_clean['orbit_label'], index=f_clean['index'], prime=f_clean['ell'], lang=i, obj='idempotents')) for i in ['magma','sage']]  # for 'gp' the code does not work
 
-        f_clean['deg']=int(f['field'][1])
-        f_clean['field_poly']=str(f['field'][2])
-        f_clean['dim']=int(f['structure'][0])
-        f_clean['num_gen']=int(f['structure'][1])
-        f_clean['gens']=[[int(sage_eval(f['structure'][2]).index(i)+1), str(i)] for i in sage_eval(f['structure'][2])]
-        f_clean['rel']=sage_eval(f['structure'][3])
-        f_clean['grading']=[int(i) for i in f['properties'][0]]
-        f_clean['gorenstein_def']=int(f['properties'][1])
-        if f_clean['gorenstein_def']==0:
-            f_clean['gorenstein']="yes"
-        else:
-            f_clean['gorenstein']="no"
-        f_clean['operators_mod_l']=[[int(i) for i in j] for j in f['operators']]
-        f_clean['num_hecke_op']=len(f_clean['operators_mod_l'])
-        f_clean['download_op'] = [(i, url_for(".render_hecke_algebras_webpage_ell_download", orbit_label=f_clean['orbit_label'], index=f_clean['index'], prime=f_clean['ell'], lang=i, obj='operators')) for i in ['magma','sage']]  # for 'gp' the code does not work
-        f_clean['size_op']=sqrt(len(f_clean['operators_mod_l'][0]))
-        if f_clean['size_op']>4:
-            f_clean['operators_mod_l_display']=[]
-        elif f_clean['size_op']==1:
-            f_clean['operators_mod_l_display']=[[i+1, f_clean['operators_mod_l'][i][0]] for i in range(0,10)]
-        else:
-            f_clean['operators_mod_l_display']=[[i+1,latex(matrix(f_clean['size_op'],f_clean['size_op'], f_clean['operators_mod_l'][i]))] for i in range(0,5)]
-        res_clean.append(f_clean)
+
+        try:
+            f_clean['deg']=int(f['field'][1])
+            f_clean['field_poly']=str(f['field'][2])
+            f_clean['dim']=int(f['structure'][0])
+            f_clean['num_gen']=int(f['structure'][1])
+            f_clean['gens']=[[int(sage_eval(f['structure'][2]).index(i)+1), str(i)] for i in sage_eval(f['structure'][2])]
+            f_clean['rel']=sage_eval(f['structure'][3])
+            f_clean['grading']=[int(i) for i in f['properties'][0]]
+            f_clean['gorenstein_def']=int(f['properties'][1])
+            if f_clean['gorenstein_def']==0:
+                f_clean['gorenstein']="yes"
+            else:
+                f_clean['gorenstein']="no"
+            f_clean['operators_mod_l']=[[int(i) for i in j] for j in f['operators']]
+            f_clean['num_hecke_op']=len(f_clean['operators_mod_l'])
+            f_clean['download_op'] = [(i, url_for(".render_hecke_algebras_webpage_ell_download", orbit_label=f_clean['orbit_label'], index=f_clean['index'], prime=f_clean['ell'], lang=i, obj='operators')) for i in ['magma','sage']]  # for 'gp' the code does not work
+            f_clean['size_op']=sqrt(len(f_clean['operators_mod_l'][0]))
+            if f_clean['size_op']>4:
+                f_clean['operators_mod_l_display']=[]
+            elif f_clean['size_op']==1:
+                f_clean['operators_mod_l_display']=[[i+1, f_clean['operators_mod_l'][i][0]] for i in range(0,10)]
+            else:
+                f_clean['operators_mod_l_display']=[[i+1,latex(matrix(f_clean['size_op'],f_clean['size_op'], f_clean['operators_mod_l'][i]))] for i in range(0,5)]
+            res_clean.append(f_clean)
+        except KeyError:
+            pass    
 
     info['l_adic_orbits']=res_clean
 
