@@ -706,14 +706,9 @@ class WebNumberField:
         f = self.conductor()
         return DirichletGroup_conrey(f)
 
-    # Helpers for ramified algebras table
-    def get_local_algebra_dict(self):
-        if 'loc_algebras' in self._data.keys():
-            return self._data['loc_algebras']
-        return None
-
+    # Helper for ramified algebras table
     def get_local_algebra(self, p):
-        local_algebra_dict = self.get_local_algebra_dict()
+        local_algebra_dict = self._data.get('loc_algebras', None)
         if local_algebra_dict is None:
             return None
         if str(p) in local_algebra_dict:
@@ -731,7 +726,7 @@ class WebNumberField:
         return None
 
     def ramified_algebras_data(self):
-        if self.get_local_algebra_dict() is None:
+        if 'loc_algebras' not in self._data:
             return dnc
         return [self.get_local_algebra(p) for p in self.ramified_primes()]
 

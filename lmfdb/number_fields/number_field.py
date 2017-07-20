@@ -318,15 +318,16 @@ def render_field_webpage(args):
                 p = ram_primes[j]
                 loc_alg += '<tr><td rowspan="%d">$%s$</td>'%(len(mydat),str(p))
                 mm = mydat[0]
+                myurl = url_for('local_fields.by_label', label=mm[0])
                 lab = mm[0]
                 if mm[3]*mm[2]==1:
                     lab = r'$\Q_{%s}$'%str(p)
-                loc_alg += '<td><a href="/LocalNumberField/%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(mm[0],lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+                loc_alg += '<td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
                 for mm in mydat[1:]:
                     lab = mm[0]
                     if mm[3]*mm[2]==1:
                         lab = r'$\Q_{%s}$'%str(p)
-                    loc_alg += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(mm[0],lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+                    loc_alg += '<tr><td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
         loc_alg += '</tbody></table>'
 
     ram_primes = str(ram_primes)[1:-1]
