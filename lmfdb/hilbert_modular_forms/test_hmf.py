@@ -18,8 +18,8 @@ class HMFTest(LmfdbTest):
 
     def test_EC(self): #778
         L = self.tc.get('ModularForm/GL2/TotallyReal/5.5.126032.1/holomorphic/5.5.126032.1-82.1-b')
-        assert 'Elliptic curve not available' in L.data     #TODO remove or change url when
-                                                            #the elliptic curve is in the database
+        assert 'EllipticCurve/5.5.126032.1/82.1/b/' in L.data   
+        
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.89.1/holomorphic/2.2.89.1-2.1-a')
         assert 'Isogeny class' in L.data
         assert 'EllipticCurve/2.2.89.1/2.1/a' in L.data
