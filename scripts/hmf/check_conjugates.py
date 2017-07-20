@@ -107,7 +107,7 @@ def conjform_label(f, ig, cideals):
     return f['field_label'] + '-' + short_label
 
 def conjform(f, g, ig, cideals, cprimes, F): #ig index of g in auts
-    if f['is_base_change'][0:3] == 'yes':
+    if 'is_base_change' in f and f['is_base_change'][0:3] == 'yes':
         print("This form is a base-change.")
         #return None
         #if the form is a base-change, but not from Q,
@@ -120,7 +120,8 @@ def conjform(f, g, ig, cideals, cprimes, F): #ig index of g in auts
 
     fg['level_ideal'] = conjstringideal(F,f['level_ideal'],g)
 
-    fg['AL_eigenvalues'] = [[conjstringideal(F,x[0],g),x[1]] for x in f['AL_eigenvalues']]
+    if 'AL_eigenvalues' in f:
+        fg['AL_eigenvalues'] = [[conjstringideal(F,x[0],g),x[1]] for x in f['AL_eigenvalues']]
 
     H = f['hecke_eigenvalues']
     Hg = copy(f['hecke_eigenvalues'])
