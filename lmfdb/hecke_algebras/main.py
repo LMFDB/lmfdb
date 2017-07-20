@@ -25,6 +25,20 @@ import StringIO
 hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
 l_range=[ell for ell in prime_range(14)]
 
+
+
+# Database connection 
+
+def hecke_db():
+    return getDBConnection().hecke_algebras.hecke_algebras
+
+def hecke_orbits_db():
+    return getDBConnection().hecke_algebras.hecke_algebras_orbits
+    
+def hecke_l_adic_db():
+    return getDBConnection().hecke_algebras.hecke_algebras_l_adic
+    
+
 #breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
@@ -67,7 +81,7 @@ def hecke_algebras_render_webpage():
 # Random hecke_algebras
 @hecke_algebras_page.route("/random")
 def random_hecke_algebra():
-    res = random_object_from_collection( getDBConnection().mod_l_eigenvalues.hecke_algebras)
+    res = random_object_from_collection(hecke_db())
     return redirect(url_for(".render_hecke_algebras_webpage", label=res['label']))
 
 
@@ -81,8 +95,8 @@ def split_hecke_algebras_label(lab):
 def split_hecke_algebras_orbit_label(lab):
     return hecke_algebras_orbit_label_regex.match(lab).groups()
 
-def hecke_algebras_by_label(lab, C):
-    if C.hecke_algebras.hecke_algebras.find({'label': lab}).limit(1).count() > 0:
+def hecke_algebras_by_label(lab):
+    if hecke_db().find({'label': lab}).limit(1).count() > 0:
         return render_hecke_algebras_webpage(label=lab)
     if hecke_algebras_label_regex.match(lab):
         flash(Markup("The Hecke Algebra <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
@@ -90,8 +104,8 @@ def hecke_algebras_by_label(lab, C):
         flash(Markup("No Hecke Algebras in the database has label <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".hecke_algebras_render_webpage"))
 
-def hecke_algebras_by_orbit_label(lab, C):
-    if C.hecke_algebras.hecke_algebras_orbits.find({'orbit_label': lab}).limit(1).count() > 0:
+def hecke_algebras_by_orbit_label(lab):
+    if hecke_orbits_db().find({'orbit_label': lab}).limit(1).count() > 0:
         sp=split_hecke_algebras_orbit_label(lab)
         ol=sp[0]+'.'+sp[1]+'.'+sp[2]
         return render_hecke_algebras_webpage(label=ol)
@@ -103,24 +117,21 @@ def hecke_algebras_by_orbit_label(lab, C):
 
 
 def hecke_algebras_search(**args):
-    C = getDBConnection()
     info = to_dict(args)  # what has been entered in the search boxes
 
     if 'download' in info:
         return download_search(info)
-
     if 'label' in info and info.get('label'):
-        return hecke_algebras_by_label(info.get('label'), C)
+        return hecke_algebras_by_label(info.get('label'))
 
     query = {}
-    
+   
     try:
         for field, name in (('level','Level'),('weight','Weight'),('num_orbits', 'Number of Hecke orbits'),('ell','characteristic')):
             parse_ints(info, query, field, name)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info)
-
     if 'ell' in info and info.get('ell'):
         if int(info.get('ell'))>13:
             flash(Markup("No data for primes or integers greater than $13$ is available"), "error")
@@ -128,7 +139,6 @@ def hecke_algebras_search(**args):
         elif int(info.get('ell')) not in [2,3,5,7,11,13]:
             flash(Markup("No data for integers which are not primes"), "error")
             return redirect(url_for(".hecke_algebras_render_webpage"))
-                
     if 'orbit_label' in info and info.get('orbit_label'):
         check=[int(i) for i in info['orbit_label'].split(".")]
         if 'level' in info and info.get('level'):
@@ -149,7 +159,7 @@ def hecke_algebras_search(**args):
         if 'ell' in info and info.get('ell'):
             return render_hecke_algebras_webpage_l_adic(orbit_label=info.get('orbit_label'), prime=info.get('ell'))
         else:
-            return hecke_algebras_by_orbit_label(info.get('orbit_label'), C)
+            return hecke_algebras_by_orbit_label(info.get('orbit_label'))
             
     count = parse_count(info,50)
     start = parse_start(info)
@@ -157,9 +167,9 @@ def hecke_algebras_search(**args):
     info['query'] = dict(query)
     
     if 'ell' in info and info.get('ell'):   
-        res= C.hecke_algebras.hecke_algebras_l_adic.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
+        res= hecke_l_adic_db().find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
     else:
-        res = C.hecke_algebras.hecke_algebras.find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
+        res = hecke_db().find(query).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)]).skip(start).limit(count)
     
     
     nres = res.count()
@@ -221,7 +231,7 @@ def render_hecke_algebras_webpage(**args):
         lab = clean_input(args.get('label'))
         if lab != args.get('label'):
             return redirect(url_for('.render_hecke_algebras_webpage', label=lab), 301)
-        data = C.hecke_algebras.hecke_algebras.find_one({'label': lab })
+        data = hecke_db().find_one({'label': lab })
     if data is None:
         t = "Hecke Agebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
@@ -232,12 +242,12 @@ def render_hecke_algebras_webpage(**args):
 
     bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")), ('%s' % data['label'], ' ')]
     credit = hecke_algebras_credit
-    f = C.hecke_algebras.hecke_algebras.find_one({'level': data['level'],'weight': data['weight'],'num_orbits': data['num_orbits']})
+    f = hecke_db().find_one({'level': data['level'],'weight': data['weight'],'num_orbits': data['num_orbits']})
     info['level']=int(f['level'])
     info['weight']= int(f['weight'])
     info['num_orbits']= int(f['num_orbits'])
 
-    orb = C.hecke_algebras.hecke_algebras_orbits.find({'parent_label': f['label']}).sort([('orbit', ASC)])
+    orb = hecke_orbits_db().find({'parent_label': f['label']}).sort([('orbit', ASC)])
     if orb.count()!=0:
         #consistency check
         if orb.count()!= int(f['num_orbits']):
@@ -313,7 +323,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         except ValueError as err:
             base_lab=".".join([split(lab)[i] for i in [0,1,2]])
             return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
-        data = C.hecke_algebras.hecke_algebras_l_adic.find_one({'orbit_label': lab , 'ell': ell})
+        data = hecke_l_adic_db().find_one({'orbit_label': lab , 'ell': ell})
     if data is None:
         t = "Hecke Agebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
@@ -321,7 +331,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
-    res = C.hecke_algebras.hecke_algebras_l_adic.find({'level': data['level'],'weight': data['weight'],'orbit_label': data['orbit_label'], 'ell': data['ell']})
+    res = hecke_l_adic_db().find({'level': data['level'],'weight': data['weight'],'orbit_label': data['orbit_label'], 'ell': data['ell']})
 
     info['num_l_adic_orbits']=res.count()
     res_clean = []
@@ -341,7 +351,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
                 f_clean['idempotent_display']=latex(matrix(sage_eval(f['idempotent'])))
         else:
             f_clean['idempotent_display']=latex(matrix([[1]]))
-        f_clean['download_id'] = [(i, url_for(".render_hecke_algebras_webpage_ell_download", orbit_label=f_clean['orbit_label'], index=f_clean['index'], prime=f_clean['ell'], lang=i, obj='idempotents')) for i in ['magma','sage']]  # for 'gp' the code does not work
+        f_clean['download_id'] = [(i, url_for(".render_hecke_algebras_webpage_ell_download", orbit_label=f_clean['orbit_label'], index=f_clean['index'], prime=f_clean['ell'], lang=i, obj='idempotents')) for i in ['magma','sage']]  # for 'gp' the code does not work, since p-adics are not implemented
 
 
         try:
@@ -449,9 +459,8 @@ def render_hecke_algebras_webpage_download(**args):
         return response
 
 def download_hecke_algebras_full_lists_op(**args):
-    C = getDBConnection()
     label = str(args['orbit_label'])
-    res = C.hecke_algebras.hecke_algebras_orbits.find_one({'orbit_label': label})
+    res = hecke_orbits_db().find_one({'orbit_label': label})
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No operators available"
@@ -470,9 +479,8 @@ def download_hecke_algebras_full_lists_op(**args):
     return outstr
 
 def download_hecke_algebras_full_lists_gen(**args):
-    C = getDBConnection()
     label = str(args['orbit_label'])
-    res = C.hecke_algebras.hecke_algebras_orbits.find_one({'orbit_label': label})
+    res = hecke_orbits_db().find_one({'orbit_label': label})
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No generators available"
@@ -508,7 +516,7 @@ def download_hecke_algebras_full_lists_mod_op(**args):
     label = str(args['orbit_label'])
     ell=int(args['prime'])
     index=int(args['index'])
-    res = C.hecke_algebras.hecke_algebras_l_adic.find_one({'orbit_label': label, 'index': index, 'ell': ell })
+    res = hecke_l_adic_db().find_one({'orbit_label': label, 'index': index, 'ell': ell })
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No mod %s operators available"%ell
@@ -533,7 +541,7 @@ def download_hecke_algebras_full_lists_id(**args):
     label = str(args['orbit_label'])
     ell=int(args['prime'])
     index=int(args['index'])
-    res = C.hecke_algebras.hecke_algebras_l_adic.find_one({'orbit_label': label, 'index': index, 'ell': ell })
+    res = hecke_l_adic_db().find_one({'orbit_label': label, 'index': index, 'ell': ell })
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No mod %s operators available"%ell
@@ -563,15 +571,14 @@ def download_search(info):
     # reissue saved query here
 
     if 'ell' in info["query"]:   
-        res= getDBConnection().hecke_algebras.hecke_algebras_l_adic.find(ast.literal_eval(info["query"])).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)])
+        res= hecke_l_adic_db().find(ast.literal_eval(info["query"])).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)])
     else:
-        res = getDBConnection().hecke_algebras.hecke_algebras_orbits.find(ast.literal_eval(info["query"])).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)])
+        res = hecke_orbits_db().find(ast.literal_eval(info["query"])).sort([('level', ASC), ('weight', ASC), ('num_orbits', ASC)])
     last=res.count()-1;
-    print "xxxxxxxxxxxxxxxx", last;
     c = download_comment_prefix[lang]
     s =  '\n'
     if 'ell' in info["query"]:
-        s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight, list of the Hecke orbits for which l-adic data is available and idempotents.\n\n'%(mydate, res.count())    
+        s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight and the Hecke orbits for which l-adic data is available.\n\n'%(mydate, res.count())    
     else:
         s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight, list of the first 10 Hecke operators (to download more operators for a given algebra, please visit its webpage).\n\n'%(mydate, res.count())
     # The list entries are matrices of different sizes.  Sage and gp
@@ -587,17 +594,12 @@ def download_search(info):
         s += list_start
         s += ",".join([str(rr['level']), str(rr['weight']),""])
         if 'ell' in info["query"]:   
-            s += '"%s"' % (str(rr['orbit_label'])) + ","
-            if rr['idempotent']:
-                s += str(rr['idempotent'])
-            else:
-                s += ' "not available" '    
+            s += '"%s"' % (str(rr['orbit_label'])) 
         else:
             s += ",".join([entry(r) for r in [sage_eval(rr['hecke_op'])[i] for i in range(0, min(10, rr['num_hecke_op']))]])
         if c != last:
             s += list_end + ',\\\n'
         else:
-            print c;
             s += list_end
     s += list_end    
     s += download_assignment_end[lang]
