@@ -33,7 +33,44 @@
 </tr>
 
 <tr>
+<td>{{ KNOWL('mf.cm',title="CM") }}</td>
+<td>{{ KNOWL('mf.base_change',title="Base Change") }}</td>
 <td>Maximum number</td>
+</tr>
+
+<tr>
+<td><select name='cm'>
+{% if info.cm == "only" %}
+       <option value="include">include</option>
+       <option value="exclude">exclude</option>
+       <option value="only" selected="yes">only</option>
+{% elif info.cm == "exclude" %}
+       <option value="include">include</option>
+       <option value="exclude" selected="yes">exclude</option>
+       <option value="only">only</option>
+{% else %}
+       <option value="include" selected="yes">include</option>
+       <option value="exclude">exclude</option>
+       <option value="only">only</option>
+{% endif %}
+    </select>
+</td>
+<td><select name='bc'>
+{% if info.bc == "only" %}
+       <option value="include">include</option>
+       <option value="exclude">exclude</option>
+       <option value="only" selected="yes">only</option>
+{% elif info.bc == "exclude" %}
+       <option value="include">include</option>
+       <option value="exclude" selected="yes">exclude</option>
+       <option value="only">only</option>
+{% else %}
+       <option value="include" selected="yes">include</option>
+       <option value="exclude">exclude</option>
+       <option value="only">only</option>
+{% endif %}
+    </select>
+</td>
 <td><input type='text' name='count' size=10 value={{info.count}}></td>
 </tr>
 <tr>
