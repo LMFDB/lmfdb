@@ -733,7 +733,6 @@ class WebNumberField:
     def ramified_algebras_data(self):
         if self.get_local_algebra_dict() is None:
             return dnc
-        ramps = self.ramified_primes()
         return [self.get_local_algebra(p) for p in self.ramified_primes()]
 
     def make_code_snippets(self):

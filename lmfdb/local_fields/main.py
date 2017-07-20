@@ -96,7 +96,7 @@ def local_field_data(label):
 def lf_display_knowl(label, C):
     return '<a title = "%s [lf.field.data]" knowl="lf.field.data" kwargs="label=%s">%s</a>' % (label, label, label)
 
-def local_algebra_display_knowl(label, C):
+def local_algebra_display_knowl(labels, C):
     return '<a title = "%s [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels=%s">%s</a>' % (labels, labels, labels)
 
 def small_group_data(label):
