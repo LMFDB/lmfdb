@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import re
 import pymongo
 ASC = pymongo.ASCENDING
@@ -8,13 +7,13 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
 
 from lmfdb.base import getDBConnection
-from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_collection
+from lmfdb.utils import to_dict, random_object_from_collection
 
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, sage_eval, prime_range, sqrt
+from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 
 from lmfdb.hecke_algebras import hecke_algebras_page
-from lmfdb.hecke_algebras.hecke_algebras_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
+from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
+from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_input
 
 from markupsafe import Markup
 
@@ -37,8 +36,8 @@ def hecke_orbits_db():
     
 def hecke_l_adic_db():
     return getDBConnection().hecke_algebras.hecke_algebras_l_adic
+   
     
-
 #breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
@@ -64,7 +63,6 @@ def learnmore_list_remove(matchstring):
 def hecke_algebras_render_webpage():
     args = request.args
     if len(args) == 0:
-#        counts = get_stats().counts()
         weight_list= range(2, 20, 2)
         lvl_list_endpoints = [1, 100, 200, 300, 400, 500]
         lvl_list = ["%s-%s" % (start, end - 1) for start, end in zip(lvl_list_endpoints[:-1], lvl_list_endpoints[1:])]
@@ -73,7 +71,7 @@ def hecke_algebras_render_webpage():
         credit = hecke_algebras_credit
         t = 'Hecke Algebras'
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
-        info['counts'] = get_stats().counts()
+        info['summary'] = hecke_algebras_summary()
         return render_template("hecke_algebras-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
         return hecke_algebras_search(**args)
@@ -225,7 +223,6 @@ def search_input_error(info, bread=None):
 
 @hecke_algebras_page.route('/<label>')
 def render_hecke_algebras_webpage(**args):
-    C = getDBConnection()
     data = None
     if 'label' in args:
         lab = clean_input(args.get('label'))
@@ -311,7 +308,6 @@ def split(lab):
 
 @hecke_algebras_page.route('/<orbit_label>/<prime>')
 def render_hecke_algebras_webpage_l_adic(**args):
-    C = getDBConnection()
     data = None
     if 'orbit_label' in args and 'prime' in args:
         lab = clean_input(args.get('orbit_label'))
@@ -320,7 +316,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
             return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
         try:
             ell = int(args.get('prime'))
-        except ValueError as err:
+        except ValueError:
             base_lab=".".join([split(lab)[i] for i in [0,1,2]])
             return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
         data = hecke_l_adic_db().find_one({'orbit_label': lab , 'ell': ell})
@@ -512,7 +508,6 @@ def render_hecke_algebras_webpage_ell_download(**args):
 
 
 def download_hecke_algebras_full_lists_mod_op(**args):
-    C = getDBConnection()
     label = str(args['orbit_label'])
     ell=int(args['prime'])
     index=int(args['index'])
@@ -537,7 +532,6 @@ def download_hecke_algebras_full_lists_mod_op(**args):
 
 
 def download_hecke_algebras_full_lists_id(**args):
-    C = getDBConnection()
     label = str(args['orbit_label'])
     ell=int(args['prime'])
     index=int(args['index'])

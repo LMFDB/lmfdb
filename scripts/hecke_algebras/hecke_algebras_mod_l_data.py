@@ -5,8 +5,6 @@ Author: Samuele Anni
 """
 
 import os
-from sage.all import sage_eval
-
 
 from pymongo.mongo_client import MongoClient
 C= MongoClient(port=37010)

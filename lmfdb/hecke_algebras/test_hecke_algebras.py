@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# this file is copied from lattices, need to be fixed 
 
 from lmfdb.base import LmfdbTest
 
@@ -14,92 +13,55 @@ class HomePageTest(LmfdbTest):
         assert path in homepage
         assert text in urllib2.urlopen(path).read()
 
-    # The Lattice page
-    def test_lattice(self):
-        homepage = self.tc.get("/Lattice/").data
-        assert 'random' in homepage
-        assert 'Gram' in homepage
+    # Hecke algebra browse page
+    def test_hecke_algebra(self):
+        homepage = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/").data
+        assert 'Hecke Algebras' in homepage
+        assert '139.2.1' in homepage
 
-    def test_lattice_dim(self):
-        L = self.tc.get("/Lattice/9.8.16.1.1").data
-        assert '115712' in L #coeff in theta series
-        assert '1.58740105196819947475170563927' in L #Hermite number
-        assert '11612160' in L #group order
+    # Hecke algebra single page
+    def test_hecke_algebra_one(self):
+        L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/?label=139.2.1").data
+        assert '2145245897' in L 
+        assert 'T_{ 4} =\left' in L 
 
+    # Hecke algebra l-adic  page
+    def test_hecke_algebra_classnumber(self):
+        L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/139.2.1.2/2").data
+        assert 'Gorenstein' in L
+        assert 'x^3 + x + 1' in L
 
-    def test_lattice_classnumber(self):
-        L = self.tc.get("/Lattice/?class_number=1").data
-        assert '2.13.26.1.2' in L #label (class number 1)
+    # Search no orbit
+    def test_hecke_algebra_search(self):
+        L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/?start=0&level=&weight=2&num_orbits=2&orbit_label=&ell=&count=50").data
+        assert '86' in L 
 
-    def test_lattice_classnumber_large(self):
-        L = self.tc.get("/Lattice/3.1942.3884.56.13").data
-        assert '648' in L #test display genus representatives
-
-    def test_lattice_classnumber_large_download(self):
-        L = self.tc.get("/Lattice/3.1942.3884.56.13/download/sage/genus_reps").data
-        assert 'Matrix([[2, 0, 0], [0, 14, -3], [0, -3, 70]]),' in L #test download genus representatives
-
-    def test_lattice_search(self):
-        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=&minimum=&class_number=1&aut=&count=50").data
-        assert '56' in L #search
-
-    def test_lattice_search_next(self):
-        L = self.tc.get("/Lattice/?start=50&dim=&det=&level=&gram=&minimum=&class_number=&aut=2&count=50").data
-        assert '145' in L #search on the next page
-
-    def test_lattice_searchdim(self):
-        L = self.tc.get("/Lattice/?dim=3").data
-        assert '3.1.2.1.1' in L #dimension search
-
-    def test_lattice_searchlevel(self):
-        L = self.tc.get("/Lattice/?start=&dim=&det=&level=90&gram=&minimum=&class_number=&aut=").data
-        assert '16' in L #level search
-
-    def test_lattice_searchminvectlength(self):
-        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=&minimum=3&class_number=&aut=").data
-        assert '2.42.84.1.3' in L #search minimum vector length
-
-    def test_lattice_searchGM(self):
-        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=[17%2C6%2C138]&minimum=&class_number=&aut=").data
-        assert '4620' in L #gram matrix search
-
-    def test_lattice_searchGM_2(self):
-        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=5%2C3%2C2&minimum=&class_number=&aut=").data
-        assert '2.1.2.1.1' in L #gram matrix search through isometries
-
-    def test_latticeZ2(self):
-        L = self.tc.get("/Lattice/2.1.2.1.1").data
-        assert '0.785398163397448309615660845820\dots' in L #Z2 lattice  
-
-    def test_lattice_thetadisplay(self):
-        L = self.tc.get("/Lattice/theta_display/7.576.18.1.1/40").data
-        assert '41' in L # theta display
-        assert '1848' in L # theta display
-        assert '11466' in L # theta display
-
-    def test_lattice_random(self):
-        L = self.tc.get("/Lattice/random").data
-        assert 'redirected automatically' in L # random lattice
-        L = self.tc.get("/Lattice/random", follow_redirects=True)
-        assert 'Normalized minimal vectors:' in L.data # check redirection
-
-    def test_downloadstring(self):
-        L = self.tc.get("/Lattice/5.648.12.1.1").data
-        assert 'matrix' in L
-
-    def test_downloadstring2(self):
-        L = self.tc.get("/Lattice/2.156.312.1.2").data
-        assert 'vector' in L
-
-    def test_downloadstring_search(self):
-        L = self.tc.get("/Lattice/?class_number=8").data
-        assert 'Download all search results for' in L
-
-    def test_download_shortest(self):
-        L = self.tc.get("/Lattice/13.14.28.8.1/download/magma/shortest_vectors").data
-        assert 'data := ' in L
- 
-    def test_download_genus(self):
-        L = self.tc.get("/Lattice/4.5.5.1.1/download/gp/genus_reps").data
-        assert ']~)' in L 
-
+    def test_hecke_algebra_search_next(self):
+        L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/?start=50&level=&weight=&num_orbits=5&orbit_label=&ell=&count=50").data
+        assert '222.2.1' in L
+        
+            
+    # Search with l
+    def test_hecke_algebra_search_with_l(self):
+        L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/?start=50&level=1-100&weight=&num_orbits=&orbit_label=&ell=2&count=50").data
+        assert '17.4.1.1' in L 
+            
+    # Search orbit   
+    def test_hecke_algebra_search_with_orbit(self):
+        L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/?level=&weight=&num_orbits=&orbit_label=139.2.1.3&ell=").data
+        assert 'List of' in L 
+        
+    def test_hecke_algebra_search_with_orbit_and_l(self):
+        L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/?level=&weight=&num_orbits=&orbit_label=139.2.1.3&ell=2").data
+        assert 'Number of $\Z_{ 2 }$ orbits' in L 
+                     
+                     
+    # Download Hecke operators
+    def test_download_hecke_op(self):
+        L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/9.16.1.5/download/magma/operators").data
+        assert '10307091840' in L
+            
+    # Download idempotents
+    def test_download_idempotent(self):
+        L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/139.2.1.3/3/2/download/magma/idempotents").data
+        assert '8504333379429738379' in L
