@@ -341,7 +341,7 @@ def lfuncDShtml(L, fmt):
             if(nonzeroterms % numperline == 0):
                 ans = ans + "\n"     # don't need  \cr in the html version
                 nonzeroterms += 1   # This ensures we don t add more than one newline
-        ans = ans + "<span> + &#8943;</span>\n</td></tr>\n</table>\n"
+        ans = ans + "<span class='term'> + &#8943;</span>\n</td></tr>\n</table>\n"
 
     elif fmt == "abstract":
         if L.Ltype() == "riemann":
