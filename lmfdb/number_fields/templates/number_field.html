@@ -2,6 +2,13 @@
 {% block content %}
 {# Displays individual number field homepage #}
 
+{# Extra style for table below #}
+<style>
+table.ntdata a {
+  display: inline;
+}
+</style>
+
 {% set nf = info.wnf %}
 <p>
    {{ place_code('field') }}
