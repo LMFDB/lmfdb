@@ -676,7 +676,11 @@ def frobs(nf):
             for j in dec:
                 if firstone == 0:
                     s += '{,}\,'
-                s += str(j[0])
+                if j[0]<15:
+                    s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 
+                        label="%d.%d.0.1"%(p,j[0])), j[0])
+                else:
+                    s += str(j[0])
                 if j[1] > 1:
                     s += '^{' + str(j[1]) + '}'
                 firstone = 0
