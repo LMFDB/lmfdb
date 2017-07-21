@@ -36,7 +36,10 @@ def bc_info(bc):
     return 'yes' if bc>0 else 'yes (twist)' if bc<0 else 'no'
 
 def cm_info(cm):
-    return 'no' if cm==0 else str(cm) if cm%4==1 else str(4*cm)
+    try:
+        return 'no' if cm==0 else str(cm) if cm%4==1 else str(4*cm)
+    except TypeError:
+        return str(cm)
 
 @bmf_page.route("/")
 def index():
