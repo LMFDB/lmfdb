@@ -9,7 +9,8 @@ from lmfdb.base import app, getDBConnection
 from flask import render_template, request, url_for, redirect, send_file, flash
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
-from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc
+from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex
+from lmfdb.local_fields.main import show_slope_content
 
 from markupsafe import Markup
 
@@ -268,6 +269,7 @@ def render_field_webpage(args):
     info['wnf'] = nf
     data['degree'] = nf.degree()
     data['class_number'] = nf.class_number()
+    ram_primes = nf.ramified_primes()
     t = nf.galois_t()
     n = nf.degree()
     data['is_galois'] = nf.is_galois()
@@ -282,7 +284,9 @@ def render_field_webpage(args):
         if data['conductor'].is_prime() or data['conductor'] == 1:
             data['conductor'] = "\(%s\)" % str(data['conductor'])
         else:
-            data['conductor'] = "\(%s=%s\)" % (str(data['conductor']), latex(data['conductor'].factor()))
+            factored_conductor = factor_base_factor(data['conductor'], ram_primes)
+            factored_conductor = factor_base_factorization_latex(factored_conductor)
+            data['conductor'] = "\(%s=%s\)" % (str(data['conductor']), factored_conductor)
     data['galois_group'] = group_display_knowl(n, t, C)
     data['cclasses'] = cclasses_display_knowl(n, t, C)
     data['character_table'] = character_table_display_knowl(n, t, C)
@@ -292,17 +296,43 @@ def render_field_webpage(args):
     data['coefficients'] = nf.coeffs()
     nf.make_code_snippets()
     D = nf.disc()
-    ram_primes = D.prime_factors()
     data['disc_factor'] = nf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
         data['discriminant'] = "\(%s\)" % str(D)
     else:
         data['discriminant'] = "\(%s=%s\)" % (str(D), data['disc_factor'])
+    data['frob_data'], data['seeram'] = frobs(nf)
+    # Bad prime information
     npr = len(ram_primes)
+    ramified_algebras_data = nf.ramified_algebras_data()
+    if isinstance(ramified_algebras_data,str):
+        loc_alg = ''
+    else:
+        # [label, latex, e, f, c, gal]
+        loc_alg = ''
+        for j in range(npr):
+            if ramified_algebras_data[j] is None:
+                loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j])
+            else:
+                mydat = ramified_algebras_data[j]
+                p = ram_primes[j]
+                loc_alg += '<tr><td rowspan="%d">$%s$</td>'%(len(mydat),str(p))
+                mm = mydat[0]
+                myurl = url_for('local_fields.by_label', label=mm[0])
+                lab = mm[0]
+                if mm[3]*mm[2]==1:
+                    lab = r'$\Q_{%s}$'%str(p)
+                loc_alg += '<td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+                for mm in mydat[1:]:
+                    lab = mm[0]
+                    if mm[3]*mm[2]==1:
+                        lab = r'$\Q_{%s}$'%str(p)
+                    loc_alg += '<tr><td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+        loc_alg += '</tbody></table>'
+
     ram_primes = str(ram_primes)[1:-1]
     if ram_primes == '':
         ram_primes = r'\textrm{None}'
-    data['frob_data'], data['seeram'] = frobs(nf)
     data['phrase'] = group_phrase(n, t, C)
     zk = nf.zk()
     Ra = PolynomialRing(QQ, 'a')
@@ -337,7 +367,8 @@ def render_field_webpage(args):
         'unit_rank': nf.unit_rank(),
         'root_of_unity': web_latex(rootofunity),
         'fund_units': nf.units(),
-        'grh_label': grh_label
+        'grh_label': grh_label,
+        'loc_alg': loc_alg
     })
 
     bread.append(('%s' % info['label_raw'], ' '))
