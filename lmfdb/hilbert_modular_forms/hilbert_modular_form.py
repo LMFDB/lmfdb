@@ -114,7 +114,19 @@ def hilbert_modular_form_search(**args):
         parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
     except ValueError:
         return search_input_error()
-
+        
+    if 'cm' in info:
+        if info['cm'] == 'exclude':
+            query['is_CM'] = 'no'
+        elif info['cm'] == 'only':
+            query['is_CM'] = 'yes'
+                
+    if 'bc' in info:
+        if info['bc'] == 'exclude':
+            query['is_base_change'] = 'no'
+        elif info['bc'] == 'only':
+            query['is_base_change'] = 'yes'
+                     
     count = parse_count(info,100)
     start = parse_start(info)
 
