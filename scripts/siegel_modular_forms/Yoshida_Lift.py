@@ -12,6 +12,7 @@
 # T(1,1,p,p): a dictionary which has keys all the primes up to primeprec, and has values which are hecke eigenvalues
 # T(1,p,p,p^2): See above
 
+from sage.all import prime_range
 
 
 def Yoshida_Lift(F, hhecke_evals, hlevel, hweight = [2,2], primeprec = 100):
@@ -20,9 +21,8 @@ def Yoshida_Lift(F, hhecke_evals, hlevel, hweight = [2,2], primeprec = 100):
 	lam = {}
 	mu = {}
 	for p in prime_range(primeprec):
-		v = valuation(level,p)
+		v = level.valuation(p)
 		if v == 0:
-			I = F.ideal(p)
 			if len(F.primes_above(p)) == 1:
 				lam[p] = 0
 				mu[p] = p**(2*(weight -3))*(-p**2 - p*hhecke_evals[F.prime_above(p)] - 1)
@@ -30,7 +30,7 @@ def Yoshida_Lift(F, hhecke_evals, hlevel, hweight = [2,2], primeprec = 100):
 				lam[p] = p**((weight  - 3))*p*(hhecke_evals[F.primes_above(p)[0]] + hhecke_evals[F.primes_above(p)[1]])
 				mu[p] = p**(2*(weight - 3))*(p**2 + p*hhecke_evals[F.primes_above(p)[0]]*hhecke_evals[F.primes_above(p)[1]] - 1)
 		if v == 1:
-			if valuation(hlevel,F.primes_above(p)[0]) == 1:
+			if hlevel.valuation(F.primes_above(p)[0]) == 1:
 				po = F.primes_above(p)[0]
 				pt = F.primes_above(p)[1]
 			else:
@@ -41,14 +41,14 @@ def Yoshida_Lift(F, hhecke_evals, hlevel, hweight = [2,2], primeprec = 100):
 		else:
 			if len(F.primes_above(p)) == 2:
 				lam[p] = p**((weight  - 3))*p*(hhecke_evals[F.primes_above(p)[0]] + hhecke_evals[F.primes_above(p)[1]])
-				if valuation(hlevel,F.primes_above(p)[0])*valuation(hlevel,F.primes_above(p)[1]) == 0:
+				if hlevel.valuation(F.primes_above(p)[0])*hlevel.valuation(F.primes_above(p)[1]) == 0:
 					mu[p] = 0
 				else:
 					mu[p] = p**(2*(weight  - 3))*(-p**2)
 			else:
-				if valuation(F.ideal(p), F.prime_above(p)) == 2:
+				if F.ideal(p).valuation(F.prime_above(p)) == 2:
 					lam[p] = p*hhecke_evals[F.prime_above(p)]
-					if valuation(hlevel, F.prime_above(p)) == 0:
+					if hlevel.valuation(F.prime_above(p)) == 0:
 						mu[p] = 0
 					else:
 						mu[p] = p**(2*(weight  - 3))*(-p**2)
