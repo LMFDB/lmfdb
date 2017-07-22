@@ -36,13 +36,14 @@ saving = True
 
 ## Main importing function
 
-def do_import(ll):
+def add_lattice_nf(ll):
     n_field,gram_input = ll
+    gram_input=[[int(i) for i in l] for l in gram_input] 
 
     R = PolynomialRing(QQ, 'x');
     nf_label = poly_to_field_label(R(n_field))
 
-    lattice = l1.find_one({'gram': gram_input})
+    lattice = l1.find_one({'gram': gram_input })
     if lattice is None:
         n=len(gram_input[0])
         d=matrix(gram_input).determinant()
@@ -54,23 +55,22 @@ def do_import(ll):
             print "... need to be checked ..."
             print "***********"
         else :
-            lat_label = ""
+            lat_label = "new"
             is_lat_in = gram_input
+    else:
+       lat_label=lattice['label']
+       is_lat_in = "yes"
     
-    if saving:
-        l2.insert_one({"$set": {'nf_label': nf_label, 'lat_label': lat_label, 'is_lat_in' : is_lat_in} }, upsert=True)
-
-
-# Loop over files
-
-for path in sys.argv[1:]:
-    print "++++++++++++++++++++++++++++++++++"
-    print path
-    filename = os.path.basename(path)
-    fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
-    for line in fn.readlines():
-        line.strip()
-        if re.match(r'\S',line):
-            l = json.loads(line)
-            do_import(l)
-
+    try:
+        lab=nf_label+lat_label
+    except:
+        print nf_label, lat_label
+        print "fail"
+            
+    res=l2.find_one({'label': lab })
+    if res is None:
+        print "new data"
+        if saving:
+            l2.insert_one({'nf_label': nf_label, 'lat_label': lat_label, 'is_lat_in' : is_lat_in, 'label': lab})
+    else:
+        print "data already in the database"
