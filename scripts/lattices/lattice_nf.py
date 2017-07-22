@@ -9,11 +9,7 @@ and returns that.
 
 """
 
-import sys
-import re
-import json
 import os
-import gzip
 import os.path
 
 from sage.all import QQ, PolynomialRing, matrix
