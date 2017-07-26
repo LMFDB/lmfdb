@@ -33,8 +33,11 @@ This isogeny class is {{KNOWL('av.fq.ordinary',title='ordinary')}}.
 {% if cl.is_supersingular() %}
 This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 {% endif %}
+{% if cl.is_ordinary() or c.is_supersingular() %}
+<br>
+{% endif %}
 
-<img src="{{cl.newton_plot()}}" width="400" height="300"/>
+<img src="{{cl.newton_plot()}}" width="500" height="250"/>
 
 <table>
     <tr><td>{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}:<td>&nbsp;&nbsp;<td>${{cl.p_rank}}$</tr>
