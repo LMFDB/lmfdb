@@ -166,9 +166,9 @@ class AbvarFq_isoclass(object):
             if ans != '':
                 ans += ', '
             if abs(angle) > eps and abs(angle - 1) > eps:
-                angle = r'\pm' + str(angle)
+                angle = r'$\pm' + str(angle) + '$'
             else:
-                angle = str(angle)
+                angle = '$' + str(angle) + '$'
             ans += angle
         return ans
 
