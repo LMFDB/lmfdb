@@ -10,7 +10,6 @@ class AVHomeTest(LmfdbTest):
         
     # All tests should pass
     # TODO test link to random isogeny class
-    # TODO? can we test that the field to jump to a specific isogeny class works?
     # TODO once is_primitive is fixed, test the search
     
     
