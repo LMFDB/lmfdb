@@ -9,7 +9,7 @@ from lmfdb.base import app, getDBConnection
 
 from sage.misc.cachefunc import cached_function
 from sage.rings.all import Integer, QQ, RR
-from sage.plot.all import line, points, circle
+from sage.plot.all import line, points, circle, Graphics
 
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
@@ -105,7 +105,12 @@ class AbvarFq_isoclass(object):
             x += c
             y += c*s
             pts.append((x,y))
-        L = line(pts, thickness = 2)
+        L = Graphics()
+        L += line([(0,0),(0,y+0.2)],color="grey")
+        for i in range(1,y+1):
+            L += line([(0,i),(0.06,i)],color="grey")
+        for i in range(1,C[0]):
+            L += line([(i,0),(i,0.06)],color="grey")
         for i in range(len(pts)-1):
             P = pts[i]
             Q = pts[i+1]
@@ -113,9 +118,10 @@ class AbvarFq_isoclass(object):
                 L += line([(x,P[1]),(x,P[1] + (x-P[0])*(Q[1]-P[1])/(Q[0]-P[0]))],color="grey")
             for y in range(P[1],Q[1]):
                 L += line([(P[0] + (y-P[1])*(Q[0]-P[0])/(Q[1]-P[1]),y),(Q[0],y)],color="grey")
+        L += line(pts, thickness = 2)
         L.axes(False)
         L.set_aspect_ratio(1)
-        return encode_plot(L)
+        return encode_plot(L, pad=0, pad_inches=0, bbox_inches='tight')
 
     def circle_plot(self):
         pts = []
@@ -160,9 +166,9 @@ class AbvarFq_isoclass(object):
             if ans != '':
                 ans += ', '
             if abs(angle) > eps and abs(angle - 1) > eps:
-                angle = r'\pm' + str(angle)
+                angle = r'$\pm' + str(angle) + '$'
             else:
-                angle = str(angle)
+                angle = '$' + str(angle) + '$'
             ans += angle
         return ans
 
