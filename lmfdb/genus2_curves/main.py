@@ -248,7 +248,6 @@ def genus2_curve_search(info):
                     errmsg = "%s is not a valid genus 2 curve or isogeny class label"
         flash_error (errmsg, jump)
         return redirect(url_for(".index"))
-
     if info.get('download','').strip() == '1':
         return download_search(info)
 
@@ -270,6 +269,7 @@ def genus2_curve_search(info):
         parse_bool(info,query,'locally_solvable','is locally solvable')
         parse_bool(info,query,'is_simple_geom','is geometrically simple')
         parse_ints(info,query,'cond','conductor')
+        parse_ints(info,query,'num_rat_pts','rational points')
         parse_ints(info,query,'num_rat_wpts','rational Weierstrass points')
         parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
         parse_ints(info,query,'torsion_order','torsion order')
@@ -357,6 +357,7 @@ def st_group_format(name):
     return st_link_by_name(1,4,name)
 
 stats_attribute_list = [
+    {'name':'num_rat_pts','top_title':'rational points','row_title':'rational points','knowl':'g2c.num_rat_pts','avg':True},
     {'name':'num_rat_wpts','top_title':'rational Weierstrass points','row_title':'Weierstrass points','knowl':'g2c.num_rat_wpts','avg':True},
     {'name':'aut_grp_id','top_title':'$\mathrm{Aut}(X)$','row_title':'automorphism group','knowl':'g2c.aut_grp','format':aut_grp_format},
     {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':geom_aut_grp_format},
@@ -418,12 +419,16 @@ class G2C_stats(object):
         # TODO use aggregate $group to speed this up and/or just store these counts in the database
         for attr in stats_attribute_list:
             counts = attribute_value_counts(curves, attr['name'])
+            counts = [c for c in counts if c[0] != None]
+            if len(counts) == 0:
+                continue
             vcounts = []
             rows = []
             avg = 0
+            total = sum([c[1] for c in counts])
             for value,n in counts:
                 prop = format_percentage(n,total)
-                if 'avg' in attr and attr['avg']:
+                if 'avg' in attr and attr['avg'] and (type(value) == int or type(value) == float):
                     avg += n*value
                 value_string = attr['format'](value) if 'format' in attr else value
                 vcounts.append({'value': value_string, 'curves': n, 'query':url_for(".index_Q")+'?'+attr['name']+'='+str(value),'proportion': prop})
@@ -440,16 +445,20 @@ class G2C_stats(object):
 
 download_languages = ['magma', 'sage', 'gp', 'text']
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
-download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data =[','text':'data - ['}
-download_assignment_end = {'magma':'];','sage':']','gp':']','text':']'}
+download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
+download_assignment_end = {'magma':'];','sage':']','gp':']}','text':']'}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
 download_make_data = {
 'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
 'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
-'gp':'',
+'gp':'make_data()=[apply(Polrev,c)|c<-data];\n\n',
 'text':''
 }
-download_make_data_comment = {'magma': 'To create a list of curves, type "curves:= make_data();"','sage':'To create a list of curves, type "curves = make_data()"', 'gp':'', 'text':''}
+download_make_data_comment = {
+        'magma': 'To create a list of curves, type "curves:= make_data();"',
+        'sage':'To create a list of curves, type "curves = make_data()"',
+        'gp':'To create a list of curves [f,h], type "curves = make_data()"',
+        'text':''}
 
 def download_search(info):
     lang = info.get('language','text').strip()

@@ -147,3 +147,11 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/12500/a/')
         assert '2.2.5.1-500.1-a' in L.data
         
+    def test_ratpts(self):
+        L = self.tc.get('/Genus2Curve/Q/792079/a/792079/1')
+        assert '(-15 : -6579 : 14)' in L.data
+        assert '(13 : -4732 : 20)' in L.data
+        L = self.tc.get('/Genus2Curve/Q/126746/a/126746/1')
+        assert 'everywhere' in L.data
+        assert 'no rational points' in L.data
+        

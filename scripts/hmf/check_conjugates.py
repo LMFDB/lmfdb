@@ -12,7 +12,6 @@ Initial version (University of Warwick 2015) Aurel Page
 
 """
 
-import os
 import sys
 sys.path.append("../..");
 from copy import copy
@@ -26,12 +25,12 @@ print "getting connection"
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by default
 
-print "authenticating on the hmfs database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['hmfs'].authenticate(username, password) ## read/write on hmfs
+#print "authenticating on the hmfs database"
+#import yaml
+#pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+#username = pw_dict['data']['username']
+#password = pw_dict['data']['password']
+#C['hmfs'].authenticate(username, password) ## read/write on hmfs
 
 print "setting hmfs, fields and forms"
 hmfs = C.hmfs
@@ -108,7 +107,7 @@ def conjform_label(f, ig, cideals):
     return f['field_label'] + '-' + short_label
 
 def conjform(f, g, ig, cideals, cprimes, F): #ig index of g in auts
-    if f['is_base_change'][0:3] == 'yes':
+    if 'is_base_change' in f and f['is_base_change'][0:3] == 'yes':
         print("This form is a base-change.")
         #return None
         #if the form is a base-change, but not from Q,
@@ -121,7 +120,8 @@ def conjform(f, g, ig, cideals, cprimes, F): #ig index of g in auts
 
     fg['level_ideal'] = conjstringideal(F,f['level_ideal'],g)
 
-    fg['AL_eigenvalues'] = [[conjstringideal(F,x[0],g),x[1]] for x in f['AL_eigenvalues']]
+    if 'AL_eigenvalues' in f:
+        fg['AL_eigenvalues'] = [[conjstringideal(F,x[0],g),x[1]] for x in f['AL_eigenvalues']]
 
     H = f['hecke_eigenvalues']
     Hg = copy(f['hecke_eigenvalues'])
@@ -189,7 +189,7 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
                 if fix:
                     if fg != None: #else: is a lift (self-conjugate), should have been detected
                         print("adding it : "+fg['label'])
-                        forms.insert(fg)
+                        forms.insert_one(fg)
                         count += 1
     print("\nMissing "+str(countmiss)+" conjugate forms (possibly counted multiple times if several nontrivial automorphisms).")
     print("Added "+str(count)+" new conjugate forms.")

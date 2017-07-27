@@ -29,7 +29,7 @@
     <td><a href="/Character/Dirichlet/{{L.special.modulus}}/{{L.special.number}}">
                Dirichlet character number {{L.special.number}} mod {{L.special.modulus}}</a></td>
 {% elif L.special.type == "elliptic" %}
-    <td><a href="{{url_for("l_functions.l_function_ec_page", label=L.special.label)}}">{{L.first_zero}}</a></td>
+    <td><a href="{{url_for("l_functions.l_function_ec_page_label", label=L.special.label)}}">{{L.first_zero}}</a></td>
     <td>{{L.degree}}</td>
     <td>{{L.level}}</td>
     <td>{{L.signature}}</td>

@@ -15,7 +15,7 @@ from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 from lmfdb.WebNumberField import WebNumberField
 
 from markupsafe import Markup
-from lmfdb.utils import to_dict, random_object_from_collection
+from lmfdb.utils import to_dict, random_object_from_collection, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
@@ -114,7 +114,19 @@ def hilbert_modular_form_search(**args):
         parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
     except ValueError:
         return search_input_error()
-
+        
+    if 'cm' in info:
+        if info['cm'] == 'exclude':
+            query['is_CM'] = 'no'
+        elif info['cm'] == 'only':
+            query['is_CM'] = 'yes'
+                
+    if 'bc' in info:
+        if info['bc'] == 'exclude':
+            query['is_base_change'] = 'no'
+        elif info['bc'] == 'only':
+            query['is_base_change'] = 'yes'
+                     
     count = parse_count(info,100)
     start = parse_start(info)
 
@@ -284,7 +296,8 @@ def render_hmf_webpage(**args):
         label = str(args['label'])
         data = C.hmfs.forms.find_one({'label': label})
     if data is None:
-        return "No such form"
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid Hilbert modular form label. It must be of the form (number field label) - (level label) - (orbit label) separated by dashes, such as 2.2.5.1-31.1-a" % args['label']), "error")
+        return search_input_error()
     info = {}
     try:
         info['count'] = args['count']
@@ -296,6 +309,7 @@ def render_hmf_webpage(**args):
         numeigs = int(numeigs)
     except:
         numeigs = 20
+    info['numeigs'] = numeigs
 
     hmf_field = C.hmfs.fields.find_one({'label': data['field_label']})
     gen_name = findvar(hmf_field['ideals'])
@@ -360,7 +374,7 @@ def render_hmf_webpage(**args):
     if 'numeigs' in request.args:
         display_eigs = True
 
-    info['hecke_polynomial'] = teXify_pol(info['hecke_polynomial'])
+    info['hecke_polynomial'] = web_latex_split_on_pm(teXify_pol(info['hecke_polynomial']))
 
     if 'AL_eigenvalues_fixed' in data:
         if data['AL_eigenvalues_fixed'] == 'done':
@@ -375,6 +389,7 @@ def render_hmf_webpage(**args):
 
     max_eig_len = max([len(eig['eigenvalue']) for eig in info['eigs']])
     display_eigs = display_eigs or (max_eig_len<=300)
+    info['display_eigs'] = display_eigs
     if not display_eigs:
         for eig in info['eigs']:
             if len(eig['eigenvalue']) > 300:

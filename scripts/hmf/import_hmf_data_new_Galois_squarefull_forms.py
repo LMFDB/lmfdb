@@ -140,6 +140,10 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
     for i in range(len(primes_array)):
         assert magma('ideal<ZF | {F!x : x in ' + primes_array[i] + '}> eq '
                      + 'ideal<ZF | {F!x : x in ' + primes_str[i] + '}>;')
+    if resort:
+        # Important also to resort the list of primes themselves!
+        # not just the a_pp's
+        primes_str = [primes_str[i] for i in primes_resort]
 
     if 'primes' in F_hmf:  # Nothing smart: make sure it is the same
         assert F_hmf['primes'] == primes_str

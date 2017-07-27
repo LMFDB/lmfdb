@@ -28,14 +28,14 @@
 {% if info.include_cm == "only" %}
            <option value="include">include</option>
            <option value="exclude">exclude</option>
-           <option value="only" selected="yes">only</option>
+           <option value="only" selected>only</option>
 {% else %}
 {% if info.include_cm == "exclude" %}
            <option value="include">include</option>
-           <option value="exclude" selected="yes">exclude</option>
+           <option value="exclude" selected>exclude</option>
            <option value="only">only</option>
 {% else %}
-           <option value="include" selected="yes">include</option>
+           <option value="include" selected>include</option>
            <option value="exclude">exclude</option>
            <option value="only">only</option>
 {% endif %}
@@ -67,7 +67,7 @@
   <select name='surj_quantifier'>
 {% if info.surj_quantifier=='exactly' %}
   <option value='include'>include</option>
-  <option selected="yes" value='exactly'>exactly</option>
+  <option selected value='exactly'>exactly</option>
 {% else %}
   <option value='include'>include</option>
   <option value='exactly'>exactly</option>
@@ -79,7 +79,7 @@
 <select name='optimal'>
 {% if info.optimal=='on' %}
   <option value="">No</option>
-  <option selected="yes" value="on">Yes</option>
+  <option selected value="on">Yes</option>
 {% else %}
   <option value="">No</option>
   <option value="on">Yes</option>
@@ -95,9 +95,8 @@
 </td>
 <td>&nbsp;
 </td>
-<td colspan=3>
-<button type='submit' value='refine'>Update search</button>
-</td> </tr>
+</tr>
+<tr><td class="button"><button type='submit' value='refine'>Search again</button></td></tr>
 </table>
 </form>
 

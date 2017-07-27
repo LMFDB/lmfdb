@@ -33,7 +33,6 @@ from sage.all import euler_phi,gcd,trivial_character
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version,use_cache
 
 from sage.structure.unique_representation import CachedRepresentation
-#from lmfdb.WebCharacter import url_character
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import WebObject, WebInt, WebProperties, WebStr, WebNoStoreObject, WebDict, WebFloat
 
 try:
