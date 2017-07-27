@@ -88,9 +88,8 @@ class AVTest(LmfdbTest):
         r"""
         Check that is_primitive is computed correctly, and that the base change information displays correctly
         """
-        #TODO: this is broken in reality. Once it is fixed the test should be updated
         self.check_args("/Variety/Abelian/Fq/2/9/e_l",'primitive')
-        self.check_args("/Variety/Abelian/Fq/3/13/ao_dz_ars",'3.13.ao_dz_ars')
+        self.check_args("/Variety/Abelian/Fq/3/9/ai_bc_acx",'3.3.ac_ac_j')
 
         
     #def test_weil_nums(self):
