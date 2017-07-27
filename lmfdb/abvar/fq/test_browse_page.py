@@ -10,8 +10,6 @@ class AVHomeTest(LmfdbTest):
         
     # All tests should pass
     # TODO test link to random isogeny class
-    # TODO once is_primitive is fixed, test the search
-    
     
     # The pages themselves
     def test_index_page(self):
@@ -92,10 +90,10 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that we can restrict to primitive or non-primitive abelian varieties only
         """
-        self.check_args("Variety/Abelian/Fq/?start=0&count=50&q=2&g=2&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=no&jacobian=any&polarizable=any",'2.2.ad_f')
-        self.check_args("Variety/Abelian/Fq/?start=0&count=50&q=2&g=2&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=yes&jacobian=any&polarizable=any",'2.2.ac_c')
-        self.not_check_args("Variety/Abelian/Fq/?start=0&count=50&q=2&g=2&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=yes&jacobian=any&polarizable=any",'2.2.ad_f')
-        self.not_check_args("Variety/Abelian/Fq/?start=0&count=50&q=2&g=2&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=no&jacobian=any&polarizable=any",'2.2.ac_c')
+        self.check_args("/Variety/Abelian/Fq/?q=4&primitive=no&g=2&simple=any&p_rank=&jacobian=any&angle_ranks=&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'2.4.ad_f')
+        self.check_args("/Variety/Abelian/Fq/?q=4&primitive=yes&g=2&simple=any&p_rank=&jacobian=any&angle_ranks=&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'2.4.ae_j')
+        self.not_check_args("/Variety/Abelian/Fq/?q=4&primitive=yes&g=2&simple=any&p_rank=&jacobian=any&angle_ranks=&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'2.4.ad_f')
+        self.not_check_args("/Variety/Abelian/Fq/?q=4&primitive=no&g=2&simple=any&p_rank=&jacobian=any&angle_ranks=&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'2.4.ae_j')
 
     def test_search_prank(self):
         r"""

@@ -11,9 +11,9 @@ class AVTest(LmfdbTest):
 
     # All tests should pass
     #
-    # We check everything that is computed on the fly or that uses Sage
-    # TODO: test newton_plot, circle_plot, properties box
-    # TODO: update test_is_primitive when primitive_models is fixed
+    # We check almost everything that is computed on the fly or that uses Sage
+    # TODO: test properties box?
+    # TODO: test newton_plot, circle_plot
     
     def test_polynomial(self):
         r"""
@@ -73,16 +73,16 @@ class AVTest(LmfdbTest):
         Check that display_number_field works
         """
         self.check_args("/Variety/Abelian/Fq/2/4/ac_e",'4.0.125.1')
-        self.check_args("/Variety/Abelian/Fq/3/9/d_h_bb",'The number field of this isogeny class is not in the database.')
-        self.not_check_args("/Variety/Abelian/Fq/2/7/g_v", 'The number field of this isogeny class is not in the database.')
+        #self.check_args("/Variety/Abelian/Fq/3/9/d_h_bb",'The number field of this isogeny class is not in the database.')
+        #self.not_check_args("/Variety/Abelian/Fq/2/7/g_v", 'The number field of this isogeny class is not in the database.')
         
     def test_display_gal_gp(self):
         r"""
         Check that display_galois_group works
         """
         self.check_args("/Variety/Abelian/Fq/2/19/g_bt", 'n=4&t=3')
-        self.check_args("/Variety/Abelian/Fq/3/9/d_h_bb",'The Galois group of this isogeny class is not in the database.')
-        self.not_check_args("/Variety/Abelian/Fq/2/27/f_n",'The Galois group of this isogeny class is not in the database.')
+        #self.check_args("/Variety/Abelian/Fq/3/9/d_h_bb",'The Galois group of this isogeny class is not in the database.')
+        #self.not_check_args("/Variety/Abelian/Fq/2/27/f_n",'The Galois group of this isogeny class is not in the database.')
         
     def test_is_primitive(self):
         r"""
