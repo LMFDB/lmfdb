@@ -2,7 +2,7 @@
 from lmfdb.base import getDBConnection
 from lmfdb.utils import make_logger
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
-from lmfdb.ecnf.WebEllipticCurve import make_field
+from lmfdb.ecnf.WebEllipticCurve import FIELD
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
 from lmfdb.utils import web_latex
 from flask import url_for
@@ -10,35 +10,17 @@ from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
 
-bmf_dims = None
-bmf_forms = None
-
 def db_dims():
-    global bmf_dims
-    if bmf_dims is None:
-        bmf_dims = getDBConnection().bmfs.dimensions
-    return bmf_dims
+    return getDBConnection().bmfs.dimensions
 
 def db_forms():
-    global bmf_forms
-    if bmf_forms is None:
-        bmf_forms = getDBConnection().bmfs.forms
-    return bmf_forms
-
-nf_fields = None
+    return getDBConnection().bmfs.forms
 
 def db_nf_fields():
-    global nf_fields
-    if nf_fields is None:
-        nf_fields = getDBConnection().numberfields.fields
-    return nf_fields
+    return getDBConnection().numberfields.fields
 
-nfcurves = None
 def db_ecnf():
-    global nfcurves
-    if nfcurves is None:
-        nfcurves = getDBConnection().elliptic_curves.nfcurves
-    return nfcurves
+    return getDBConnection().elliptic_curves.nfcurves
 
 class WebBMF(object):
     """
@@ -77,7 +59,7 @@ class WebBMF(object):
         # the database.  We need to reformat these and compute some
         # further (easy) data about it.
         #
-        self.field = make_field(self.field_label)
+        self.field = FIELD(self.field_label)
         pretty_field = field_pretty(self.field_label)
         self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
         try:
