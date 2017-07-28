@@ -3,11 +3,9 @@ from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals
 from lmfdb.base import getDBConnection
-C = getDBConnection()
+from lmfdb.hilbert_modular_forms.hmf_stats import db_forms, db_fields
 
-hmf_forms = C.hmfs.forms
-hmf_fields = C.hmfs.fields
-fields = C.numberfields.fields
+fields = getDBConnection().numberfields.fields
 
 P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
@@ -15,9 +13,9 @@ w, e, x = P.gens()
 
 def qexpansion(field_label=None):
     if field_label is None:
-        S = hmf_forms.find({})
+        S = db_forms().find({})
     else:
-        S = hmf_forms.find({"field_label": field_label})
+        S = db_forms().find({"field_label": field_label})
     S = S.sort("label")
 
     field_label = None
@@ -38,7 +36,7 @@ def qexpansion(field_label=None):
             print "...new field " + field_label
 
             F = fields.find_one({"label": field_label})
-            F_hmf = hmf_fields.find_one({"label": field_label})
+            F_hmf = db_fields().find_one({"label": field_label})
 
             magma.eval('P<x> := PolynomialRing(Rationals());')
             magma.eval('F<w> := NumberField(Polynomial(' + str(F["coefficients"]) + '));')
@@ -112,6 +110,6 @@ def qexpansion(field_label=None):
         q_expansions = [[[str(c) for c in q[0]], [str(c) for c in q[1]]] for q in q_expansions]
 
         v["q_expansions"] = q_expansions
-        hmf_forms.save(v)
+        db_forms().save(v)
 
         v = S.next()
