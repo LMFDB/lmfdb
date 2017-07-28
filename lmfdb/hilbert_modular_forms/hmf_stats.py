@@ -9,28 +9,14 @@ def format_percentage(num, denom):
 
 logger = make_logger("hmf")
 
-hmf_forms = None
-hmf_fields = None
-hmf_search = None
-
 def db_forms():
-    global hmf_forms
-    if hmf_forms is None:
-        hmf_forms = getDBConnection().hmfs.forms
-    return hmf_forms
+    return getDBConnection().hmfs.forms
 
 def db_fields():
-    global hmf_fields
-    if hmf_fields is None:
-        hmf_fields = getDBConnection().hmfs.fields
-    return hmf_fields
+    return getDBConnection().hmfs.fields
 
 def db_search():
-    global hmf_search
-    if hmf_search is None:
-        hmf_search = getDBConnection().hmfs.forms.search
-    return hmf_search
-
+    return getDBConnection().hmfs.forms.search
 
 the_HMFstats = None
 
