@@ -291,7 +291,7 @@ def do_import_yaml(port=None, status_file=None, rootdir=None, datadir=None, rese
 
 def update_stats(port = 37010, datadir = None):
     """
-    Updates the fq_isog_stats collection.
+    Updates the fq_isog.stats collection.
 
     INPUT:
 
@@ -304,7 +304,7 @@ def update_stats(port = 37010, datadir = None):
     try:
         C = authenticated_db(port)
         db = C.fq_isog
-        stats_collection = C.fq_isog_stats
+        stats_collection = C.fq_isog.stats
         qs = db.distinct('q')
         gs = db.distinct('g')
         maxg = max(gs)
