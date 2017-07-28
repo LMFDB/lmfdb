@@ -3,6 +3,8 @@ from lmfdb.base import getDBConnection
 from lmfdb.utils import make_logger
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
 from lmfdb.ecnf.WebEllipticCurve import FIELD
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
 from lmfdb.utils import web_latex
 from flask import url_for
@@ -148,10 +150,18 @@ class WebBMF(object):
             self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
         self.properties2.append(('Base-change', str(self.bc)))
 
-        if db_ecnf().find_one({'class_label':self.label}):
+        curve = db_ecnf().find_one({'class_label':self.label})
+        if curve:
             self.ec_status = 'exists'
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
+            curve_bc = curve['base_change']
+            curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]
+            bc_urls = [url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso) for cond, iso, num in curve_bc_parts]
+            bc_labels = [newform_label(cond,2,1,iso) for cond,iso,num in curve_bc_parts]
+            bc_exists = [is_newform_in_db(lab) for lab in bc_labels]
+            self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]
         else:
+            self.bc_forms = []
             if self.bct:
                 self.ec_status = 'none'
             else:
