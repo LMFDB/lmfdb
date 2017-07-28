@@ -18,13 +18,9 @@ LF_credit = 'J. Jones and D. Roberts'
 
 # centralize db access here so that we can switch collection names when needed
 
-the_db = None
 
 def db():
-    global the_db
-    if the_db is None:
-        the_db = getDBConnection()
-    return the_db
+    return getDBConnection()
 
 def lfdb():
     return db().localfields.fields
@@ -50,6 +46,27 @@ def group_display_shortC(C):
         return group_display_short(nt[0], nt[1], C)
     return gds
 
+def lf_algebra_knowl_guts(labels, C):
+    labs = labels.split(',')
+    f1 = labs[0].split('.')
+    labs = sorted(labs, key=lambda u: (int(j) for j in u.split('.')), reverse=True)
+    ans = '<div align="center">'
+    ans += '$%s$-adic algebra'%str(f1[0])
+    ans += '</div>'
+    ans += '<p>'
+    ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Slopes"
+    fall = [C.localfields.fields.find_one({'label':label}) for label in labs]
+    for f in fall:
+        l = str(f['label'])
+        ans += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>'%(l,l)
+        ans += format_coeffs(f['coeffs'])
+        ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
+        ans += group_display_knowl(f['gal'][0],f['gal'][1],db())
+        ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
+    ans += '</table>'
+    if len(labs) != len(set(labs)):
+        ans +='<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
+    return ans
 
 def lf_knowl_guts(label, C):
     f = C.localfields.fields.find_one({'label':label})
@@ -66,11 +83,17 @@ def lf_knowl_guts(label, C):
     ans += '</div>'
     return ans
 
+def local_algebra_data(labels):
+    return lf_algebra_knowl_guts(labels, db())
+
 def local_field_data(label):
     return lf_knowl_guts(label, db())
 
 def lf_display_knowl(label, C):
     return '<a title = "%s [lf.field.data]" knowl="lf.field.data" kwargs="label=%s">%s</a>' % (label, label, label)
+
+def local_algebra_display_knowl(labels, C):
+    return '<a title = "%s [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels=%s">%s</a>' % (labels, labels, labels)
 
 def small_group_data(label):
     return small_group_knowl_guts(label, db())
@@ -78,7 +101,8 @@ def small_group_data(label):
 @app.context_processor
 def ctx_local_fields():
     return {'local_field_data': local_field_data,
-            'small_group_data': small_group_data}
+            'small_group_data': small_group_data,
+            'local_algebra_data': local_algebra_data}
 
 # Utilities for subfield display
 def format_lfield(coefmult,p):

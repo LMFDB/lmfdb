@@ -657,15 +657,11 @@ def download_search(info):
                      as_attachment=True,
                      add_etags=False)
 
-torsion_structures = None
 def get_torsion_structures():
-    global torsion_structures
-    if torsion_structures==None:
-        #print("Getting list of torsion structures from the database")
-        ecnfstats = db_ecnfstats()
-        torsion_structures = [t[0] for t in ecnfstats.find_one({'_id':'torsion_structure'})['counts']]
-        torsion_structures = [[int(str(n)) for n in t.split(",")] for t in torsion_structures if t]
-        torsion_structures.sort()
+    ecnfstats = db_ecnfstats()
+    torsion_structures = [t[0] for t in ecnfstats.find_one({'_id':'torsion_structure'})['counts']]
+    torsion_structures = [[int(str(n)) for n in t.split(",")] for t in torsion_structures if t]
+    torsion_structures.sort()
     return torsion_structures
 
 def tor_struct_search_nf(prefill="any"):
