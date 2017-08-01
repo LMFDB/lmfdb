@@ -2,7 +2,9 @@
 from lmfdb.base import getDBConnection
 from lmfdb.utils import make_logger
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
-from lmfdb.ecnf.WebEllipticCurve import make_field
+from lmfdb.ecnf.WebEllipticCurve import FIELD
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
 from lmfdb.utils import web_latex
 from flask import url_for
@@ -10,35 +12,17 @@ from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
 
-bmf_dims = None
-bmf_forms = None
-
 def db_dims():
-    global bmf_dims
-    if bmf_dims is None:
-        bmf_dims = getDBConnection().bmfs.dimensions
-    return bmf_dims
+    return getDBConnection().bmfs.dimensions
 
 def db_forms():
-    global bmf_forms
-    if bmf_forms is None:
-        bmf_forms = getDBConnection().bmfs.forms
-    return bmf_forms
-
-nf_fields = None
+    return getDBConnection().bmfs.forms
 
 def db_nf_fields():
-    global nf_fields
-    if nf_fields is None:
-        nf_fields = getDBConnection().numberfields.fields
-    return nf_fields
+    return getDBConnection().numberfields.fields
 
-nfcurves = None
 def db_ecnf():
-    global nfcurves
-    if nfcurves is None:
-        nfcurves = getDBConnection().elliptic_curves.nfcurves
-    return nfcurves
+    return getDBConnection().elliptic_curves.nfcurves
 
 class WebBMF(object):
     """
@@ -77,7 +61,7 @@ class WebBMF(object):
         # the database.  We need to reformat these and compute some
         # further (easy) data about it.
         #
-        self.field = make_field(self.field_label)
+        self.field = FIELD(self.field_label)
         pretty_field = field_pretty(self.field_label)
         self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
         try:
@@ -166,10 +150,18 @@ class WebBMF(object):
             self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
         self.properties2.append(('Base-change', str(self.bc)))
 
-        if db_ecnf().find_one({'class_label':self.label}):
+        curve = db_ecnf().find_one({'class_label':self.label})
+        if curve:
             self.ec_status = 'exists'
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
+            curve_bc = curve['base_change']
+            curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]
+            bc_urls = [url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso) for cond, iso, num in curve_bc_parts]
+            bc_labels = [newform_label(cond,2,1,iso) for cond,iso,num in curve_bc_parts]
+            bc_exists = [is_newform_in_db(lab) for lab in bc_labels]
+            self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]
         else:
+            self.bc_forms = []
             if self.bct:
                 self.ec_status = 'none'
             else:

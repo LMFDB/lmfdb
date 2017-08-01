@@ -9,17 +9,11 @@ from sage.all import ZZ
 from lmfdb.base import getDBConnection
 from lmfdb.WebNumberField import WebNumberField
 
-hmf_nfdb = None
-
-
 def db_hmfnf():
     """
     Return the fields collection from the HMF database
     """
-    global hmf_nfdb
-    if hmf_nfdb is None:
-        hmf_nfdb = getDBConnection().hmfs.fields
-    return hmf_nfdb
+    return getDBConnection().hmfs.fields
 
 def findvar(L):
     """

@@ -57,24 +57,24 @@
         
         <tr>
             <td><select name='simple'>
-                <option value="yes" {% if info.simple == "yes" %}selected = "any"{% endif %}>yes</option>
-                <option value="any" {% if info.simple == "any" %}selected = "any"{% endif %}>unrestricted</option>
-                <option value="no" {% if info.simple == "no" %}selected = "yes"{% endif %}>no</option>
+                <option value="yes" {% if info.simple == "yes" %}selected{% endif %}>yes</option>
+                <option value="any" {% if info.simple == "any" %}selected{% endif %}>unrestricted</option>
+                <option value="no" {% if info.simple == "no" %}selected{% endif %}>no</option>
             </select></td>
             <td><select name='primitive'>
-                <option value="yes" {% if info.primitive == "yes" %}selected = "any"{% endif %}>yes</option>
-                <option value="any" {% if info.primitive == "any" %}selected = "any"{% endif %}>unrestricted</option>
-                <option value="no" {% if info.primitive == "no" %}selected = "yes"{% endif %}>no</option>
+                <option value="yes" {% if info.primitive == "yes" %}selected{% endif %}>yes</option>
+                <option value="any" {% if info.primitive == "any" %}selected{% endif %}>unrestricted</option>
+                <option value="no" {% if info.primitive == "no" %}selected{% endif %}>no</option>
             </select></td>
             <td><select name='jacobian'>
-                <option value="yes" {% if info.jacobian == "yes" %}selected = "any"{% endif %}>yes</option>
-                <option value="any" {% if info.jacobian == "any" %}selected = "any"{% endif %}>unrestricted</option>
-                <option value="no" {% if info.jacobian == "no" %}selected = "yes"{% endif %}>no</option>
+                <option value="yes" {% if info.jacobian == "yes" %}selected{% endif %}>yes</option>
+                <option value="any" {% if info.jacobian == "any" %}selected{% endif %}>unrestricted</option>
+                <option value="no" {% if info.jacobian == "no" %}selected{% endif %}>no</option>
             </select></td>
             <td><select name='polarizable'>
-                <option value="yes" {% if info.polarizable == "yes" %}selected = "any"{% endif %}>yes</option>
-                <option value="any" {% if info.polarizable == "any" %}selected = "any"{% endif %}>unrestricted</option>
-                <option value="no" {% if info.polarizable == "no" %}selected = "any"{% endif %}>no</option>
+                <option value="yes" {% if info.polarizable == "yes" %}selected{% endif %}>yes</option>
+                <option value="any" {% if info.polarizable == "any" %}selected{% endif %}>unrestricted</option>
+                <option value="no" {% if info.polarizable == "no" %}selected{% endif %}>no</option>
             </select></td>
         </tr>
         
