@@ -85,7 +85,7 @@ def lattice_render_webpage():
         t = 'Integral Lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
         info['summary'] = lattice_summary()
-        return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
+        return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list(), bread=bread)
     else:
         return lattice_search(**args)
 
@@ -345,7 +345,7 @@ def completeness_page():
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Completeness', '')]
     credit = lattice_credit
-    return render_template("single.html", kid='dq.lattice.extent',
+    return render_template("single.html", kid='dq.lattice.completeness',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @lattice_page.route("/Source")

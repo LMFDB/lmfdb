@@ -18,16 +18,13 @@ def lattice_summary():
     dim = '<a knowl="lattice.dimension">dimension</a>'
     det = '<a knowl="lattice.determinant">determinant</a>'
     pri = '<a knowl="lattice.primitive">primitive</a>'
-    try:
-        cn_data = latstats.find_one('class_number')
-        number = cn_data['total']
-        max_cn = cn_data['max']
-        dim_data = latstats.find_one('dim')
-        max_dim = dim_data['max']
-        det_data = latstats.find_one('det')
-        max_det = det_data['max']
-    except:
-        cn_data = number = max_cn = dim_data = max_dim = max_det = 5000
+    cn_data = latstats.find_one('class_number')
+    number = cn_data['total']
+    max_cn = cn_data['max']
+    dim_data = latstats.find_one('dim')
+    max_dim = dim_data['max']
+    det_data = latstats.find_one('det')
+    max_det = det_data['max']
 
     return ''.join([r'<p>The database currently contains {} '.format(comma(number)), positivedef,' ', integral,'. It includes data from the ', catalogue,
                     '.</p><p>The largest ', cn , ' is {}, '.format(comma(max_cn)), ' the largest ', dim, ' is {}, '.format(comma(max_dim)),
