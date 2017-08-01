@@ -178,7 +178,7 @@
               - title: $/\F_{q}$
                 url_for: "abvarfq.abelian_varieties"
                 status: beta
-                colspan: onecolumn
+                colspan: onecolumn 
 
 5Fields:
    type: simple
