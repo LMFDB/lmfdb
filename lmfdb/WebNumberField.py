@@ -14,13 +14,8 @@ wnflog = make_logger("WNF")
 dir_group_size_bound = 10000
 dnc = 'data not computed'
 
-the_db=None
-
 def db():
-    global the_db
-    if the_db is None:
-        the_db = base.getDBConnection()
-    return the_db
+    return base.getDBConnection()
 
 def nfdb():
     return db().numberfields.fields
