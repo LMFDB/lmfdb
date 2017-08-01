@@ -10,7 +10,7 @@
     <tr><td>{{ KNOWL('ag.base_field',title = "Base field") }}:</td>&nbsp;&nbsp;<td>${{cl.field()}}$</td></tr>
     <tr><td>{{ KNOWL('ag.dimension',title = "Dimension") }}:</td>&nbsp;&nbsp;<td>${{cl.g}}$</td></tr>
     <tr><td>{{ KNOWL('av.fq.weil_polynomial',title='Weil polynomial') }}:</td>&nbsp;&nbsp;<td>${{cl.formatted_polynomial}}$</td></tr>
-    <tr><td>{{KNOWL('av.fq.frobenius_angles',title='Frobenius angles')}}:</td>&nbsp;&nbsp;<td>${{cl.frob_angles()}}$</td></tr>
+    <tr><td>{{KNOWL('av.fq.frobenius_angles',title='Frobenius angles')}}:</td>&nbsp;&nbsp;<td>{{cl.frob_angles()}}</td></tr>
     <tr><td>{{ KNOWL('av.fq.angle_rank',title="Angle rank") }}:</td>&nbsp;&nbsp;<td>${{cl.angle_ranks}}$</td></tr>
     {% if cl.is_simple() %}
     <tr><td>{{KNOWL('av.fq.number_field',title='Number field')}}:</td>&nbsp;&nbsp;<td>{{cl.display_number_field()|safe}}</td></tr>
@@ -33,10 +33,15 @@ This isogeny class is {{KNOWL('av.fq.ordinary',title='ordinary')}}.
 {% if cl.is_supersingular() %}
 This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 {% endif %}
+{% if cl.is_ordinary() or cl.is_supersingular() %}
+<br>
+{% endif %}
+
+<img src="{{cl.newton_plot()}}" width="500" height="250"/>
 
 <table>
     <tr><td>{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}:<td>&nbsp;&nbsp;<td>${{cl.p_rank}}$</tr>
-    <tr><td>{{KNOWL('lf.newton_slopes',title='Slopes')}}':<td>&nbsp;&nbsp;<td>${{cl.display_slopes()}}$</tr>
+    <tr><td>{{KNOWL('lf.newton_slopes',title='Slopes')}}:<td>&nbsp;&nbsp;<td>${{cl.display_slopes()}}$</tr>
 </table>
 </p>
 
@@ -58,7 +63,7 @@ This isogeny class is not {{ KNOWL('av.princ_polarizable', title = 'principally 
 {% endif %}
 </p>
 
-<p>{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}:
+<p>{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}
 
 <table class = "ntdata">
     <tr><td>$r$</td>

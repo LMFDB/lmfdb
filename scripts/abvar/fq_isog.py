@@ -258,6 +258,8 @@ def do_import_yaml(port=None, status_file=None, rootdir=None, datadir=None, rese
     port_forwarder = Popen(["ssh", "-o", "TCPKeepAlive=yes", "-o", "ServerAliveInterval=50", "-C", "-N", "-L", "%s:localhost:37010"%port, "mongo-user@lmfdb.warwick.ac.uk"])
     try:
         db = authenticated_db(port, rootdir).fq_isog
+        db.create_index('g')
+        db.create_index('q')
         db.create_index('label')
         db.create_index('polynomial')
         db.create_index('p_rank')
@@ -291,7 +293,7 @@ def do_import_yaml(port=None, status_file=None, rootdir=None, datadir=None, rese
 
 def update_stats(port = 37010, datadir = None):
     """
-    Updates the fq_isog_stats collection.
+    Updates the fq_isog.stats collection.
 
     INPUT:
 
@@ -304,7 +306,7 @@ def update_stats(port = 37010, datadir = None):
     try:
         C = authenticated_db(port)
         db = C.fq_isog
-        stats_collection = C.fq_isog_stats
+        stats_collection = C.fq_isog.stats
         qs = db.distinct('q')
         gs = db.distinct('g')
         maxg = max(gs)

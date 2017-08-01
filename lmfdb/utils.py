@@ -600,9 +600,11 @@ def debug():
     """
     assert current_app.debug is False, "Don't panic! You're here by request of debug()"
 
-def encode_plot(P):
+def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None):
     """
     Convert a plot object to base64-encoded png format.
+
+    pad is passed down to matplotlib's tight_layout; pad_inches and bbox_inches to savefig.
 
     The resulting object is a base64-encoded version of the png
     formatted plot, which can be displayed in web pages with no
@@ -616,7 +618,9 @@ def encode_plot(P):
     virtual_file = StringIO()
     fig = P.matplotlib()
     fig.set_canvas(FigureCanvasAgg(fig))
-    fig.savefig(virtual_file, format='png')
+    if pad is not None:
+        fig.tight_layout(pad=pad)
+    fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches)
     virtual_file.seek(0)
     return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
 
