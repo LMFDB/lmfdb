@@ -1,69 +1,38 @@
 # -*- coding: utf-8 -*-
-from pymongo import DESCENDING
 import lmfdb.base
-from lmfdb.base import app
+from lmfdb.base import app, getDBConnection
 from lmfdb.utils import make_logger, comma
 
-def format_percentage(num, denom):
-    return "%10.2f"%((100.0*num)/denom)
+logger = make_logger("lattice")
 
-logger = make_logger("Lattices")
-
-the_Latticestats = None
-
-def get_stats():
-    global the_Latticestats
-    if the_Latticestats is None:
-       the_Latticestats = Latticestats()
-    return the_Latticestats
-
+def db_latstats():
+    return getDBConnection().Lattices.lat.stats
 
 def lattice_summary():
-    counts = get_stats().counts()
-    return r"<p>The database currently contains %s <a title='integral lattices [lattice.definition]' \
-knowl='lattice.positive_definite' kwargs=''>positive definite</a> <a title='integral lattices [lattice.definition]' knowl='lattice.definition' kwargs=''>integral lattices</a>. It includes data from the <a title='Catalogue of Lattices [lattice.catalogue_of_lattices]' knowl='lattice.catalogue_of_lattices' kwargs=''>Catalogue of Lattices</a>.<br>The largest  <a title='Class number [lattice.class_number]' knowl='lattice.class_number' kwargs=''>class number</a> is %s, the largest <a title='dimension [lattice.dimension]' knowl='lattice.dimension' kwargs=''>dimension</a> is %s and the largest <a title='determinant [lattice.determinant]' knowl='lattice.determinant' kwargs=''>determinant</a> is %s.</br>In the case of <a title='primitive [lattice.primitive]' knowl='lattice.primitive' kwargs=''>primitive</a> <a title='integral lattices [lattice.definition]' knowl='lattice.definition' kwargs=''>integral lattices</a> of <a title='class number[lattice.class_number]' knowl='lattice.class_number' kwargs=''>class number</a> one the database is complete.</p>" % (str(counts['nlattice_c']), str(counts['max_class_number_c']), str(counts['max_dim_c']), str(counts['max_det']))
+    latstats = db_latstats()
 
+    integral = '<a knowl="lattice.definition">integral lattices</a>'
+    positivedef = '<a knowl="lattice.postive_definite">postive definite</a>'
+    catalogue = '<a knowl="lattice.catalogue_of_lattices">Catalogue of Lattices</a>'
+    cn = '<a knowl="lattice.class_number">class number</a>'
+    dim = '<a knowl="lattice.dimension">dimension</a>'
+    det = '<a knowl="lattice.determinant">determinant</a>'
+    pri = '<a knowl="lattice.primitive">primitive</a>'
+    try:
+        cn_data = latstats.find_one('class_number')
+        number = cn_data['total']
+        max_cn = cn_data['max']
+        dim_data = latstats.find_one('dim')
+        max_dim = dim_data['max']
+        det_data = latstats.find_one('det')
+        max_det = det_data['max']
+    except:
+        cn_data = number = max_cn = dim_data = max_dim = max_det = 5000
+
+    return ''.join([r'<p>The database currently contains {} '.format(comma(number)), positivedef,' ', integral,'. It includes data from the ', catalogue,
+                    '.</p><p>The largest ', cn , ' is {}, '.format(comma(max_cn)), ' the largest ', dim, ' is {}, '.format(comma(max_dim)),
+                    'and the largest ', det, ' is {}.</p> '.format(comma(max_det)),'<p>In the case of ', pri ,' ', integral, ' of ', cn, ' one the database is complete.</p>'])
 
 @app.context_processor
 def ctx_lattice_summary():
     return {'lattice_summary': lattice_summary}
-
-class Latticestats(object):
-    """
-    Class for creating and displaying statistics for integral Lattices
-    """
-
-    def __init__(self):
-        logger.debug("Constructing an instance of Latticestats")
-        self.lattice = lmfdb.base.getDBConnection().Lattices.lat
-        self._counts = {}
-        self._stats = {}
-
-    def counts(self):
-        self.init_lattice_count()
-        return self._counts
-
-    def stats(self):
-        self.init_lattice_count()
-        self.init_lattice_stats()
-        return self._stats
-
-    def init_lattice_count(self):
-        if self._counts:
-            return
-        logger.debug("Computing Lattice counts...")
-        lattice = self.lattice
-        counts = {}
-        nlattice = lattice.count()
-        counts['nlattice']  = nlattice
-        counts['nlattice_c']  = comma(nlattice)
-        max_dim = lattice.find().sort('dim', DESCENDING).limit(1)[0]['dim']
-        counts['max_dim'] = max_dim
-        counts['max_dim_c'] = comma(max_dim)
-        max_det = lattice.find().sort('det', DESCENDING).limit(1)[0]['det']
-        counts['max_det'] = comma(max_det)
-        max_class_number = lattice.find().sort('class_number', DESCENDING).limit(1)[0]['class_number']
-        counts['max_class_number'] = max_class_number
-        counts['max_class_number_c'] = comma(max_class_number)
-        self._counts  = counts
-        logger.debug("... finished computing Lattice counts.")

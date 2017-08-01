@@ -1,27 +1,25 @@
 # -*- coding: utf-8 -*-
-
 import re
 import pymongo
+import time
+import ast
+import StringIO
+
 ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
-
-from lmfdb.base import getDBConnection
-from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_collection
+from markupsafe import Markup
 
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
-from lmfdb.lattice import lattice_page
-from lmfdb.lattice.lattice_stats import get_stats
+from lmfdb.base import getDBConnection
+from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
+
+from lmfdb.lattice import lattice_page
+from lmfdb.lattice.lattice_stats import lattice_summary
 from lmfdb.lattice.isom import isom
-
-from markupsafe import Markup
-
-import time
-import ast
-import StringIO
 
 lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
@@ -76,20 +74,17 @@ def learnmore_list_remove(matchstring):
 def lattice_render_webpage():
     args = request.args
     if len(args) == 0:
-#        counts = get_stats().counts()
         dim_list= range(1, 11, 1)
         max_class_number=20
         class_number_list=range(1, max_class_number+1, 1)
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
-#        if counts['max_det']>3000:
-#            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
         credit = lattice_credit
         t = 'Integral Lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
-        info['counts'] = get_stats().counts()
+        info['summary'] = lattice_summary()
         return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
         return lattice_search(**args)
