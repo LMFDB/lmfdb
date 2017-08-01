@@ -6,20 +6,11 @@
 
 
 from lmfdb.base import getDBConnection
+from data_mgt.utilities.rewrite import update_attribute_stats
  
                     
 def update_stats(verbose=True):
     h = getDBConnection().hecke_algebras
-    hh= h.hecke_algebras
-    heckedbstats = h.stats
-    
-    data = {}
-    data['num_hecke'] = int(hh.count())
-    data['max_lev_hecke'] = int(max(hh.find().distinct('level')))
-    data['max_weight_hecke'] = int(max(hh.find().distinct('weight')))
-    stats = heckedbstats.find_one()
-    print stats
-    heckedbstats.update_one({'label': 'statistics'},{"$set": data}, upsert=True)
-    print stats
-    print "done updating stats"
-    
+    update_attribute_stats(h,'hecke_algebras','level', nocounts=True)
+    update_attribute_stats(h,'hecke_algebras','weight', nocounts=True)
+
