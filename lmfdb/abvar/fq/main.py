@@ -124,8 +124,8 @@ def abelian_variety_search(**args):
     query = {}
 
     try:
-        parse_ints(info,query,'q')
-        parse_ints(info,query,'g')
+        parse_ints(info,query,'q',name='base field')
+        parse_ints(info,query,'g',name='dimension')
         if 'simple' in info:
             if info['simple'] == 'yes':
                 query['decomposition'] = {'$size' : 1}
