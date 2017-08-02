@@ -36,7 +36,7 @@ def get_bread(*breads):
     map(bc.append, breads)
     return bc
 
-abvarfq_credit = 'Kiran Kedlaya'
+abvarfq_credit = 'Taylor Dupuy, Kiran Kedlaya, David Roe, Christelle Vincent'
 
 @app.route("/EllipticCurves/Fq")
 def ECFq_redirect():
@@ -322,25 +322,22 @@ def download_search(info):
 def completeness_page():
     t = 'Completeness of the Weil polynomial data'
     bread = get_bread(('Completeness', '.'))
-    credit = 'Kiran Kedlaya'
     return render_template("single.html", kid='dq.av.fq.extent',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @abvarfq_page.route("/Source")
 def how_computed_page():
     t = 'Source of the Weil polynomial data'
     bread = get_bread(('Source', '.'))
-    credit = 'Kiran Kedlaya'
     return render_template("single.html", kid='dq.av.fq.source',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+                           credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @abvarfq_page.route("/Labels")
 def labels_page():
     t = 'Labels for isogeny classes of abelian varieties'
     bread = get_bread(('Labels', '.'))
-    credit = 'Kiran Kedlaya'
     return render_template("single.html", kid='av.fq.lmfdb_label',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+                           credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
 lmfdb_label_regex = re.compile(r'(\d+)\.(\d+)\.([a-z_]+)')
 
