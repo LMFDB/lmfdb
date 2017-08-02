@@ -45,7 +45,7 @@ def ECFq_redirect():
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Labels for isogeny classes of abelian varieties', url_for(".labels_page"))]
+            ('Labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
