@@ -10,7 +10,7 @@
     <tr><td>{{ KNOWL('ag.base_field',title = "Base field") }}:</td><td>&nbsp;&nbsp;${{cl.field()}}$</td></tr>
     <tr><td>{{ KNOWL('ag.dimension',title = "Dimension") }}:</td><td>&nbsp;&nbsp;${{cl.g}}$</td></tr>
     <tr><td>{{ KNOWL('av.fq.weil_polynomial',title='Weil polynomial') }}:</td><td>&nbsp;&nbsp;${{cl.formatted_polynomial}}$</td></tr>
-    <tr><td>{{KNOWL('av.fq.frobenius_angles',title='Frobenius angles')}}:</td><td>&nbsp;&nbsp;{{cl.frob_angles()}}</td></tr>
+    <tr><td>{{KNOWL('av.fq.frobenius_angles',title='Frobenius angles')}}:</td><td>&nbsp;&nbsp;{{cl.frob_angles()}} ({{KNOWL('av.fq.frobenius_angles_correctness',title='numerical')}})</td></tr>
     <tr><td>{{ KNOWL('av.fq.angle_rank',title="Angle rank") }}:</td><td>&nbsp;&nbsp;${{cl.angle_ranks}}$</td></tr>
     {% if cl.is_simple() %}
     <tr><td>{{KNOWL('av.fq.number_field',title='Number field')}}:</td><td>&nbsp;&nbsp;{{cl.display_number_field()|safe}}</td></tr>
