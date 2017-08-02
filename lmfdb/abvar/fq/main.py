@@ -75,7 +75,6 @@ def abelian_varieties_by_g(g):
     D = to_dict(request.args)
     if 'g' not in D: D['g'] = g
     D['bread'] = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)))
-    print "Dbread1", D['bread']
     return abelian_variety_search(**D)
 
 @abvarfq_page.route("/<int:g>/<int:q>/")
@@ -85,7 +84,6 @@ def abelian_varieties_by_gq(g, q):
     if 'q' not in D: D['q'] = q
     D['bread'] = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)),
                            (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)))
-    print "Dbread2", D['bread']
     return abelian_variety_search(**D)
 
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
@@ -104,7 +102,9 @@ def abelian_varieties_by_gqi(g, q, iso):
     bread = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)),
                       (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
                       (iso, url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)))
+
     return render_template("show-abvarfq.html",
+                           properties2=cl.properties(),
                            credit=abvarfq_credit,
                            title='Abelian Variety isogeny class %s over $%s$'%(label, cl.field()),
                            bread=bread,
@@ -132,11 +132,15 @@ def abelian_variety_search(**args):
                 query['decomposition.0.1'] = 1
             elif info['simple'] == 'no':
                 query['$or'] = [{'decomposition': {'$not' : {'$size' : 1}}}, {'decomposition.0.1' : {'$gt': 1}}]
+        else:
+            info['simple'] = "any"
         if 'primitive' in info:
             if info['primitive'] == 'yes':
                 query['primitive_models'] = {'$size' : 0}
             elif info['primitive'] == 'no':
                 query['primitive_models'] = {'$not' : {'$size' : 0}}
+        else:
+            info['primitive'] = "any"
         if 'jacobian' in info:
             if info['jacobian'] == 'yes':
                 query['known_jacobian'] = 1
