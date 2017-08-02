@@ -49,7 +49,7 @@ class HomePageTest(LmfdbTest):
     # Search orbit   
     def test_hecke_algebra_search_with_orbit(self):
         L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/?level=&weight=&num_orbits=&orbit_label=139.2.1.3&ell=").data
-        assert 'List of' in L 
+        assert 'Labels' in L 
         
     def test_hecke_algebra_search_with_orbit_and_l(self):
         L = self.tc.get("/ModularForm/GL2/Q/HeckeAlgebra/?level=&weight=&num_orbits=&orbit_label=139.2.1.3&ell=2").data

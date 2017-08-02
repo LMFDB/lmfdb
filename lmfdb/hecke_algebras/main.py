@@ -243,6 +243,7 @@ def render_hecke_algebras_webpage(**args):
     info['level']=int(f['level'])
     info['weight']= int(f['weight'])
     info['num_orbits']= int(f['num_orbits'])
+    dim_count = "not available"
 
     orb = hecke_orbits_db().find({'parent_label': f['label']}).sort([('orbit', ASC)])
     if orb.count()!=0:
@@ -287,7 +288,8 @@ def render_hecke_algebras_webpage(**args):
             res_clean.append(v_clean)
 
         info['orbits'] = res_clean
-    info['dim_alg'] = int(dim_count)
+
+    info['dim_alg'] = dim_count
     info['l_adic'] = l_range
     info['properties'] = [
         ('Label', '%s' %info['label']),
