@@ -250,49 +250,51 @@ def render_hecke_algebras_webpage(**args):
         if orb.count()!= int(f['num_orbits']):
             return search_input_error(info)
 
+        dim_count=0
         res_clean = []
         for v in orb:
             v_clean = {}
-            v_clean['orbit_label']=v['orbit_label']
-            v_clean['hecke_op']=v['hecke_op']
-            v_clean['gen']=v['gen']
-            v_clean['dim']=int(matrix(sage_eval(v_clean['hecke_op'])[0]).dimensions()[0])
+            v_clean['orbit_label'] = v['orbit_label']
+            v_clean['hecke_op'] = v['hecke_op']
+            v_clean['gen'] = v['gen']
+            v_clean['dim'] = int(matrix(sage_eval(v_clean['hecke_op'])[0]).dimensions()[0])
+            dim_count = dim_count + v_clean['dim']
             if v_clean['dim']>4:
-                v_clean['hecke_op_display']=[]
+                v_clean['hecke_op_display'] = []
             elif v_clean['dim']==1:
-                v_clean['hecke_op_display']=[[i+1, (sage_eval(v_clean['hecke_op'])[i])[0][0]] for i in range(0,10)]
+                v_clean['hecke_op_display'] = [[i+1, (sage_eval(v_clean['hecke_op'])[i])[0][0]] for i in range(0,10)]
             else:
-                v_clean['hecke_op_display']=[[i+1, latex(matrix(sage_eval(v_clean['hecke_op'])[i]))] for i in range(0,5)]
-            v_clean['num_hecke_op']=v['num_hecke_op']
+                v_clean['hecke_op_display'] = [[i+1, latex(matrix(sage_eval(v_clean['hecke_op'])[i]))] for i in range(0,5)]
+            v_clean['num_hecke_op'] = v['num_hecke_op']
             v_clean['download_op'] = [(i, url_for(".render_hecke_algebras_webpage_download", orbit_label=v_clean['orbit_label'], lang=i, obj='operators')) for i in ['gp', 'magma','sage']]
             if 'Zbasis' in v.keys():
-                v_clean['Zbasis']=[[int(i) for i in j] for j in v['Zbasis']]
+                v_clean['Zbasis'] = [[int(i) for i in j] for j in v['Zbasis']]
                 if v_clean['dim']>4:
-                    v_clean['gen_display']=[]
+                    v_clean['gen_display'] = []
                 elif v_clean['dim']==1:
-                    v_clean['gen_display']=[v_clean['Zbasis'][0][0]]
+                    v_clean['gen_display'] = [v_clean['Zbasis'][0][0]]
                 else:
-                    v_clean['gen_display']=[latex(matrix(v_clean['dim'],v_clean['dim'], v_clean['Zbasis'][i])) for i in range(0,v_clean['dim'])]
-                v_clean['discriminant']= int(v['discriminant'])
-                v_clean['disc_fac']= [[int(i) for i in j] for j in v['disc_fac']]
-                v_clean['Qbasis']=[int(i) for i in v['Qbasis']]
-                v_clean['Qalg_gen']=[int(i) for i in v['Qalg_gen']]
+                    v_clean['gen_display'] = [latex(matrix(v_clean['dim'],v_clean['dim'], v_clean['Zbasis'][i])) for i in range(0,v_clean['dim'])]
+                v_clean['discriminant'] = int(v['discriminant'])
+                v_clean['disc_fac'] = [[int(i) for i in j] for j in v['disc_fac']]
+                v_clean['Qbasis'] = [int(i) for i in v['Qbasis']]
+                v_clean['Qalg_gen'] = [int(i) for i in v['Qalg_gen']]
                 if 'inner_twists' in v.keys():
-                    v_clean['inner_twists']= [str(i) for i in v['inner_twists']]
+                    v_clean['inner_twists'] = [str(i) for i in v['inner_twists']]
                 else:
-                    v_clean['inner_twists']="not available"
+                    v_clean['inner_twists'] = "not available"
                 v_clean['download_gen'] = [(i, url_for(".render_hecke_algebras_webpage_download", orbit_label=v_clean['orbit_label'], lang=i, obj='gen')) for i in ['gp', 'magma','sage']]
             res_clean.append(v_clean)
 
-        info['orbits']=res_clean
-
-    info['l_adic']=l_range
+        info['orbits'] = res_clean
+    info['dim_alg'] = int(dim_count)
+    info['l_adic'] = l_range
     info['properties'] = [
+        ('Label', '%s' %info['label']),
         ('Level', '%s' %info['level']),
-        ('Weight', '%s' %info['weight']),
-        ('Label', '%s' %info['label'])]
+        ('Weight', '%s' %info['weight'])]
     if info['num_orbits']!=0:      
-        info['friends'] = [('Modular form ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+        info['friends'] = [('Newforms space ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
     else:
         info['friends'] = []    
     t = "Hecke Algebra %s" % info['label']

@@ -13,6 +13,7 @@
 <table>
     <tr><td align=right>{{ KNOWL('mf.elliptic.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
     <tr><td align=right>{{ KNOWL('mf.elliptic.weight', title='Weight') }}:</td><td>${{info.weight}}$</td></tr>
+    <tr><td align=right>{{KNOWL('hecke_algebras.dimension', title='Dimension')}}:</td><td>${{info.dim_alg}}$</td></tr>
     <tr><td align=right>{{KNOWL('hecke_algebras.label', title='Label')}}:</td><td>${{info.label}}$</td></tr>
 </table>
 
@@ -20,12 +21,12 @@
 
 {% if info.orbits %}
 <h2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</h2>
-
-<p>Number of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}: ${{info.num_orbits}}$</p>
-<p>List of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}: 
+<div><table>
+    <tr><td align="center">{{KNOWL('hecke_algebras.label', title='Label')}}</td><td align="center">Dimension</td></tr>
     {% for j in info.orbits %}
-        <a href="#{{loop.index}}">{{j.orbit_label}}</a>{% if not loop.last %},   {% endif %}
-    {% endfor %}</p>
+        <tr><td align="center"><a href="#{{loop.index}}">{{j.orbit_label}}</a></td><td align="center">{{j.dim}}</td></tr>
+    {% endfor %}
+</table></div>
 
 </br>
     {% for j in info.orbits %}
@@ -60,7 +61,7 @@
                 {% endif %}</td></tr>
                 <tr><td align= right>Inner twists:</td><td>{{j.inner_twists}}</td></tr>
                 <tr><td align= right>$\Q$-basis:</td><td>${% for n in j.Qbasis %}T_{ {{n}} }{% if not loop.last %},  {% endif %}{% endfor %}$</td></tr>
-                <tr><td align= right>{{KNOWL('hecke_algebras.generator', title='Generators')}} as $\Q$-algebra:</td><td>${% for n in j.Qalg_gen %}T_{ {{n}} }{% if not loop.last %},  {% endif %}{% endfor %}$</td></tr>
+                <tr><td align= right>{{KNOWL('hecke_algebras.generator', title='Generator')}} as $\Q$-algebra:</td><td>${% for n in j.Qalg_gen %}T_{ {{n}} }{% if not loop.last %},  {% endif %}{% endfor %}$</td></tr>
         {% endif %}
         </table>
         <p>&nbsp;&nbsp;&nbsp;&#x2113;-adic and mod &#x2113; data for &#x2113;=

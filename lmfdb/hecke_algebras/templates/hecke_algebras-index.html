@@ -1,6 +1,7 @@
 {% extends "homepage.html" %}
 {% import 'color.css' as color %}
 {% block content %}
+{% if BETA %}
 <div>
 {{ KNOWL_INC('dq.hecke_algebras.extent') }}
 </div>
@@ -98,6 +99,7 @@ Some of our favourite {{ KNOWL('hecke_algebra.definition', title='Hecke Algebras
 </tr>
 </table>
 </form>
-
-
+{% else %}
+<div>This data is not yet available.</div>
+{% endif %}
 {% endblock %}
