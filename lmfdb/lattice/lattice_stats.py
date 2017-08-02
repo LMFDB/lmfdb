@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import lmfdb.base
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import make_logger, comma
 

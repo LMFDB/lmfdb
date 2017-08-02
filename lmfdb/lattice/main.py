@@ -101,7 +101,7 @@ lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 def split_lattice_label(lab):
     return lattice_label_regex.match(lab).groups()
 
-def lattice_by_label_or_name(lab, C):
+def lattice_by_label_or_name(lab):
     clean_lab=str(lab).replace(" ","")
     clean_and_cap=str(clean_lab).capitalize()
     for l in [lab, clean_lab, clean_and_cap]:
@@ -122,7 +122,7 @@ def lattice_search(**args):
         return download_search(info)
 
     if 'label' in info and info.get('label'):
-        return lattice_by_label_or_name(info.get('label'), C)
+        return lattice_by_label_or_name(info.get('label'))
 
     query = {}
     try:
@@ -204,7 +204,6 @@ def search_input_error(info, bread=None):
 
 @lattice_page.route('/<label>')
 def render_lattice_webpage(**args):
-    C = getDBConnection()
     data = None
     if 'label' in args:
         lab = clean_input(args.get('label'))
@@ -332,7 +331,6 @@ def theta_display(label, number):
         number = 30
     if number > 150:
         number = 150
-    C = getDBConnection()
     data = lattice_db().find_one({'label': label})
     coeff=[data['theta_series'][i] for i in range(number+1)]
     return print_q_expansion(coeff)
@@ -424,7 +422,6 @@ def render_lattice_webpage_download(**args):
 
 
 def download_lattice_full_lists_v(**args):
-    C = getDBConnection()
     label = str(args['label'])
     res = lattice_db().find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
@@ -444,7 +441,6 @@ def download_lattice_full_lists_v(**args):
 
 
 def download_lattice_full_lists_g(**args):
-    C = getDBConnection()
     label = str(args['label'])
     res = lattice_db().find_one({'label': label})
     mydate = time.strftime("%d %B %Y")
@@ -463,4 +459,3 @@ def download_lattice_full_lists_g(**args):
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
-
