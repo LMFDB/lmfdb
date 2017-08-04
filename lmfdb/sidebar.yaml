@@ -87,6 +87,10 @@
            url_for: "modlmf.modlmf_render_webpage"
            status: future
            colspan: onecolumn
+         - title: Hecke Algebra 
+           url_for: "hecke_algebras.hecke_algebras_render_webpage"
+           status: future
+           colspan: onecolumn
      - title: GL(3)
        style: rotate
        part2:

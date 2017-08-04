@@ -235,6 +235,15 @@ def orddict_to_strlist(v):
 
 ### this was formerly in utilities.py
 def to_dict(args):
+    r"""
+    Input a dictionary `args` whose values may be lists.
+    Output a dictionary whose values are not lists, by choosing the last
+    element in a list if the input was a list.
+
+    Example:
+    >>> to_dict({"not_list": 1, "is_list":[2,3,4]})
+    {'is_list': 4, 'not_list': 1}
+    """
     d = {}
     for key in args:
         values = args[key]
@@ -247,6 +256,16 @@ def to_dict(args):
 
 
 def pair2complex(pair):
+    """
+    Converts a string of two white-space delimited numbers to a
+    list representation of a complex number.
+
+    Examples:
+    >>> pair2complex("1 2")
+    [1.0, 2.0]
+    >>> pair2complex("-1.5 3")
+    [-1.5, 3.0]
+    """
     local = re.match(" *([^ ]+)[ \t]*([^ ]*)", pair)
     if local:
         rp = local.group(1)
@@ -261,8 +280,20 @@ def pair2complex(pair):
 
 
 def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field=sage.rings.all.RationalField()):
-    """ Takes a fn that gives for each prime the polynomial of the associated with the prime,
-        given as a list, with independent coefficient first. This list is of length the degree+1.
+    """
+    Takes a fn that gives for each prime the Euler polynomial of the associated
+    with the prime, given as a list, with independent coefficient first. This
+    list is of length the degree+1.
+    Output the first `upperbound` coefficients built from the Euler polys.
+
+    Example:
+    The `euler_factor_polynomial_fn` should in practice come from an L-function
+    or data. For a simple example, we construct just the 2 and 3 factors of the
+    Riemann zeta function, which have Euler factors (1 - 1*2^(-s))^(-1) and
+    (1 - 1*3^(-s))^(-1).
+    >>> euler = lambda p: [1, -1] if p <= 3 else [1, 0]
+    >>> an_list(euler)[:20]
+    [1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0]
     """
     from sage.rings.fast_arith import prime_range
     from sage.rings.all import PowerSeriesRing
@@ -291,6 +322,15 @@ def an_list(euler_factor_polynomial_fn, upperbound=100000, base_field=sage.rings
 
 
 def splitcoeff(coeff):
+    """
+    Return a list of list-represented complex numbers given a string of the
+    form "r0 i0 \n r1 i1 \n r2 i2", where r0 is the real part of the 0th number
+    and i0 is the imaginary part of the 0th number, and so on.
+
+    Example:
+    >>> splitcoeff("1 1 \n -1 2")
+    [[1.0, 1.0], [-1.0, 2.0]]
+    """
     local = coeff.split("\n")
     answer = []
     for s in local:
@@ -302,7 +342,11 @@ def splitcoeff(coeff):
 
 def pol_to_html(p):
     r"""
-    Convert polynomial p to html.
+    Convert polynomial p with variable x to html.
+
+    Example:
+    >>> pol_to_html("x^2 + 2*x + 1")
+    '<i>x</i><sup>2</sup> + 2<i>x</i> + 1'
     """
     s = str(p)
     s = re.sub("\^(\d*)", "<sup>\\1</sup>", s)
@@ -313,20 +357,56 @@ def pol_to_html(p):
 
 
 def web_latex(x):
+    """
+    Convert input to latex string unless it's a string or unicode.
+
+    Note:
+    if input is a factored ideal, use web_latex_ideal_fact instead.
+
+    Example:
+    >>> x = var('x')
+    >>> web_latex(x**23 + 2*x + 1)
+    '\\( x^{23} + 2 \\, x + 1 \\)'
+    """
     if isinstance(x, (str, unicode)):
         return x
     else:
         return "\( %s \)" % latex(x)
 
-# if you just use web_latex(x) where x is a factored ideal then the
-# parentheses are doubled which does not look good!
+
 def web_latex_ideal_fact(x):
+    """
+    Convert input factored ideal to latex string.
+
+    sage puts many parentheses around latex representations of factored ideals.
+    This function removes excessive parentheses.
+
+    Example:
+    >>> x = var('x')
+    >>> K = NumberField(x**2 - 5, 'a')
+    >>> a = K.gen()
+    >>> I = K.ideal(2/(5+a)).factor()
+    >>> print(latex(I))
+    (\left(-a\right))^{-1}
+    >>> web_latex_ideal_fact(I)
+    '\\( \\left(-a\\right)^{-1} \\)'
+    """
     y = web_latex(x)
     y = y.replace("(\\left(","\\left(")
     y = y.replace("\\right))","\\right)")
     return y
 
+
 def web_latex_split_on(x, on=['+', '-']):
+    """
+    Convert input into a latex string. A different latex surround `\(` `\)` is
+    used, with splits occuring at `on` (+ - by default).
+
+    Example:
+    >>> x = var('x')
+    >>> web_latex_split_on(x**2 + 1)
+    '\\( x^{2} \\) + \\(  1 \\)'
+    """
     if isinstance(x, (str, unicode)):
         return x
     else:
@@ -334,9 +414,18 @@ def web_latex_split_on(x, on=['+', '-']):
         for s in on:
             A = A.replace(s, '\) ' + s + ' \( ')
     return A
-    
+
 # web_latex_split_on was not splitting polynomials, so we make an expanded version
 def web_latex_split_on_pm(x):
+    """
+    Convert input into a latex string, with specific handling of expressions
+    including `+` and `-`.
+
+    Example:
+    >>> x = var('x')
+    >>> web_latex_split_on_pm(x**2 + 1)
+    '\\(x^{2} \\) \\(\\mathstrut +\\mathstrut  1 \\)'
+    """
     on = ['+', '-']
  #   A = "\( %s \)" % latex(x)
     try:
@@ -367,6 +456,16 @@ def web_latex_split_on_pm(x):
     # return web_latex_split_on(x)
 
 def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
+    """
+    Convert input into a latex string, with splits into separate latex strings
+    occurring on given regex `r`.
+    CAUTION: this gives a different result than web_latex_split_on_pm
+
+    Example:
+    >>> x = var('x')
+    >>> web_latex_split_on_re(x**2 + 1)
+    '\\(x^{2} \\) \\(\\mathstrut+  1 \\)'
+    """
 
     def insert_latex(s):
         return s.group(1) + '\) \('
@@ -397,8 +496,15 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     return A
 
 
-# make latex matrix from list of lists
 def list_to_latex_matrix(li):
+    """
+    Given a list of lists representing a matrix, output a latex representation
+    of that matrix as a string.
+
+    Example:
+    >>> list_to_latex_matrix([[1,0],[0,1]])
+    '\\left(\\begin{array}{*{2}{r}}1 & 0\\\\0 & 1\\end{array}\\right)'
+    """
     dim = str(len(li[0]))
     mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
     for row in li:
@@ -571,14 +677,27 @@ def order_values(doc, field, sub_fields=["len", "val"]):
     doc[field] = bson.SON([(sub_field, tmp[sub_field]) for sub_field in sub_fields])
     return doc
 
-# Input is an integer
-# Output is a string of that integer with comma separators
-
-
 def comma(x):
+    """
+    Input is an integer. Output is a string of that integer with commas.
+    CAUTION: this misbehaves if the input is not an integer.
+
+    Example:
+    >>> comma("12345")
+    '12,345'
+    """
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
 
 def coeff_to_poly(c):
+    """
+    Convert a string representation of a polynomial to a sage polynomial.
+
+    Examples:
+    >>> coeff_to_poly("1 - 3x + x^2")
+    x**2 - 3*x + 1
+    >>> coeff_to_poly("1 - 3*x + x**2")
+    x**2 - 3*x + 1
+    """
     from sage.all import PolynomialRing, QQ
     return PolynomialRing(QQ, 'x')(c)
 
@@ -589,6 +708,10 @@ def display_multiset(mset, formatter=str, *args):
     function formatter is a function whose first argument
     is the item, and *args are the other arguments
     and is applied to each item.
+
+    Example:
+    >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
+    'a x5, 1 x3, cat x2'
     """
     return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
 
@@ -626,6 +749,9 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None):
 
 
 def signtocolour(sign):
+    """
+    Assigns an rgb string colour to a complex number based on its argument.
+    """
     argument = cmath.phase(CC(str(sign)))
     r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
@@ -634,15 +760,15 @@ def signtocolour(sign):
 
 def rgbtohex(rgb):
     """
-    convert rgb(63,255,100) to #3fff64
+    Convergs an rgb string color representation into a hex string color
+    representation. For example, this converts rgb(63,255,100) to #3fff64
     """
-
     r,g,b = rgb[4:-1].split(',')
     r = int(r)
     g = int(g)
     b = int(b)
-
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
+
 
 def truncatenumber(numb, precision):
     localprecision = precision
