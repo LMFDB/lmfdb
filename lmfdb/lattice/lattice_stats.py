@@ -32,7 +32,6 @@ def lattice_summary():
 def lattice_summary_data():
     latstats = db_latstats()
     cn_data = latstats.find_one('class_number')
-    number = cn_data['total']
     max_cn = cn_data['max']
     dim_data = latstats.find_one('dim')
     max_dim = dim_data['max']
