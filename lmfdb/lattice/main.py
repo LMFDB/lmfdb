@@ -147,7 +147,7 @@ def lattice_search(**args):
     start = parse_start(info)
 
     info['query'] = dict(query)
-    res = lattice_db().find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC)]).skip(start).limit(count)
+    res = lattice_db().find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC), ('minimum', ASC), ('aut', ASC)]).skip(start).limit(count)
     nres = res.count()
 
     # here we are checking for isometric lattices if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
@@ -191,7 +191,9 @@ def lattice_search(**args):
         v_clean['det']=v['det']
         v_clean['level']=v['level']
         v_clean['class_number']=v['class_number']
-        v_clean['gram']=vect_to_matrix(v['gram'])
+        v_clean['min']=v['minimum']
+        v_clean['aut']=v['aut']
+
         res_clean.append(v_clean)
 
     info['lattices'] = res_clean
