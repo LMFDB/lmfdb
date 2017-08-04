@@ -29,6 +29,16 @@ def lattice_summary():
                     '.</p><p>The largest ', cn , ' is {}, '.format(comma(max_cn)), ' the largest ', dim, ' is {}, '.format(comma(max_dim)),
                     'and the largest ', det, ' is {}.</p> '.format(comma(max_det)),'<p>In the case of ', pri ,' ', integral, ' of ', cn, ' one the database is complete.</p>'])
 
+def lattice_summary_data():
+    latstats = db_latstats()
+    cn_data = latstats.find_one('class_number')
+    max_cn = cn_data['max']
+    dim_data = latstats.find_one('dim')
+    max_dim = dim_data['max']
+    det_data = latstats.find_one('det')
+    max_det = det_data['max']
+    return [max_cn, max_dim, max_det]
+
 @app.context_processor
 def ctx_lattice_summary():
     return {'lattice_summary': lattice_summary}
