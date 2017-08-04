@@ -18,7 +18,7 @@ from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_colle
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
 
 from lmfdb.lattice import lattice_page
-from lmfdb.lattice.lattice_stats import lattice_summary
+from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
 from lmfdb.lattice.isom import isom
 
 lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and Neil Sloane'
@@ -74,6 +74,7 @@ def learnmore_list_remove(matchstring):
 def lattice_render_webpage():
     args = request.args
     if len(args) == 0:
+        maxs=lattice_summary_data()
         dim_list= range(1, 11, 1)
         max_class_number=20
         class_number_list=range(1, max_class_number+1, 1)
@@ -85,6 +86,9 @@ def lattice_render_webpage():
         t = 'Integral Lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
         info['summary'] = lattice_summary()
+        info['max_cn']=maxs[0]
+        info['max_dim']=maxs[1]
+        info['max_det']=maxs[2]
         return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list(), bread=bread)
     else:
         return lattice_search(**args)
@@ -186,6 +190,7 @@ def lattice_search(**args):
         v_clean['dim']=v['dim']
         v_clean['det']=v['det']
         v_clean['level']=v['level']
+        v_clean['class_number']=v['class_number']
         v_clean['gram']=vect_to_matrix(v['gram'])
         res_clean.append(v_clean)
 
