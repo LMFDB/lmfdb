@@ -7,7 +7,7 @@ import lmfdb.base
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger, random_object_from_collection
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_list_start, parse_count, parse_start, parse_range, parse_nf_string
+from lmfdb.search_parsing import parse_ints, parse_list_start, parse_count, parse_start, parse_nf_string
 from search_parsing import parse_newton_polygon, parse_abvar_decomp
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
@@ -223,7 +223,7 @@ def abelian_variety_browse(**args):
             flash(Markup("Error: You cannot use commas in the table ranges."), "error")
             raise ValueError
         parse_ints(info,table_params,'table_dimension_range',qfield='g')
-    except (ValueError, AttributeError, TypeError) as err:
+    except (ValueError, AttributeError, TypeError):
         gmin, gmax = 1, 6
     else:
         if isinstance(table_params['g'], int):
@@ -239,7 +239,7 @@ def abelian_variety_browse(**args):
             flash(Markup("Error: You cannot use commas in the table ranges."), "error")
             raise ValueError
         parse_ints(info,table_params,'table_field_range',qfield='q')
-    except (ValueError, AttributeError, TypeError) as err:
+    except (ValueError, AttributeError, TypeError):
         qmin, qmax = 2, 27
     else:
         if isinstance(table_params['q'], int):
