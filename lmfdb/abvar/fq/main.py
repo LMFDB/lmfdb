@@ -142,16 +142,26 @@ def abelian_variety_search(**args):
         else:
             info['primitive'] = "any"
         if 'jacobian' in info:
-            if info['jacobian'] == 'yes':
+            jac = info['jacobian']
+            if jac == 'yes':
                 query['known_jacobian'] = 1
-            elif info['jacobian'] == 'no':
+            elif jac == 'not_no':
+                query['known_jacobian'] = {'$ne' : -1}
+            elif jac == 'not_yes':
+                query['known_jacobian'] = {'$ne' : 1}
+            elif jac == 'no':
                 query['known_jacobian'] = -1
         else:
             info['jacobian'] = "any"
         if 'polarizable' in info:
-            if info['polarizable'] == 'yes':
+            pol = info['polarizable']
+            if pol == 'yes':
                 query['principally_polarizable'] = 1
-            elif info['polarizable'] == 'no':
+            elif pol == 'not_no':
+                query['principally_polarizable'] = {'$ne' : -1}
+            elif pol == 'not_yes':
+                query['principally_polarizable'] = {'$ne' : 1}
+            elif pol == 'no':
                 query['principally_polarizable'] = -1
         else:
             info['polarizable'] = "any"
