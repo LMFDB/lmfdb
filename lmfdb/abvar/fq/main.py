@@ -203,24 +203,41 @@ def abelian_variety_browse(**args):
     if not('table_field_range' in info)  or (info['table_field_range']==''):
         info['table_field_range'] = "2-27"
 
-    gD = parse_range(info['table_dimension_range'])
-    qD = parse_range(info['table_field_range'])
+    table_params = {}
     av_stats=AbvarFqStats()
-    qs = av_stats.qs
+
+    # Handle dimension range
     gs = av_stats.gs
+    try:
+        if ',' in info['table_dimension_range']:
+            flash(Markup("Error: You cannot use commas in the table ranges."), "error")
+            raise ValueError
+        parse_ints(info,table_params,'table_dimension_range',qfield='g')
+    except (ValueError, AttributeError, TypeError) as err:
+        gmin, gmax = 1, 6
+    else:
+        if isinstance(table_params['g'], int):
+            gmin = gmax = table_params['g']
+        else:
+            gmin = table_params['g'].get('$gte',min(gs) if gs else table_params['g'].get('$lte',1))
+            gmax = table_params['g'].get('$lte',max(gs) if gs else table_params['g'].get('$gte',20))
 
+    # Handle field range
+    qs = av_stats.qs
+    try:
+        if ',' in info['table_field_range']:
+            flash(Markup("Error: You cannot use commas in the table ranges."), "error")
+            raise ValueError
+        parse_ints(info,table_params,'table_field_range',qfield='q')
+    except (ValueError, AttributeError, TypeError) as err:
+        qmin, qmax = 2, 27
+    else:
+        if isinstance(table_params['q'], int):
+            qmin = qmax = table_params['q']
+        else:
+            qmin = table_params['q'].get('$gte',min(qs) if qs else table_params['q'].get('$lte',0))
+            qmax = table_params['q'].get('$lte',max(qs) if qs else table_params['q'].get('$gte',1000))
     info['table'] = {}
-    if isinstance(qD, int):
-        qmin = qmax = qD
-    else:
-        qmin = qD.get('$gte',min(qs) if qs else qD.get('$lte',0))
-        qmax = qD.get('$lte',max(qs) if qs else qD.get('$gte',1000))
-    if isinstance(gD, int):
-        gmin = gmax = gD
-    else:
-        gmin = gD.get('$gte',min(gs) if gs else gD.get('$lte',1))
-        gmax = gD.get('$lte',max(gs) if gs else gD.get('$gte',20))
-
     if gmin == gmax:
         info['table_dimension_range'] = "{0}".format(gmin)
     else:
