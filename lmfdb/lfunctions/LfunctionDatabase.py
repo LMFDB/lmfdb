@@ -42,13 +42,10 @@ def getInstanceLdata(label,label_type="url"):
     return Ldata
 
 def getHmfData(label):
-    connection = base.getDBConnection()
-    try:
-        f = connection.hmfs.forms.find_one({'label': label})
-        F_hmf = connection.hmfs.fields.find_one({'label': f['field_label']})
-    except:
-        f = None
-        F_hmf = None
+    from lmfdb.hilbert_modular_forms.hmf_stats import db_forms, db_fields
+    # these will return None if nothing is found:
+    f = db_forms().find_one({'label': label})
+    F_hmf = db_fields().find_one({'label': f['field_label']})
     return (f, F_hmf)
 
 def getMaassDb():

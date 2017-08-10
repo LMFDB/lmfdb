@@ -10,13 +10,8 @@ from lmfdb.utils import list_to_latex_matrix, display_multiset
 
 MAX_GROUP_DEGREE = 23
 
-the_db = None
-
 def db():
-    global the_db
-    if the_db is None:
-        the_db = getDBConnection()
-    return the_db
+    return getDBConnection()
 
 def tgdb():
     return db().transitivegroups.groups

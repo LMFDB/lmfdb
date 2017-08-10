@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import lmfdb.base
+from lmfdb.base import getDBConnection
 from lmfdb.utils import make_logger
 
 from sage.all import QQ, polygen
@@ -8,27 +8,14 @@ from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
 
 logger = make_logger("hmf")
 
-hmf_forms = None
-hmf_fields = None
-nf_fields = None
-
 def db_hmf_forms():
-    global hmf_forms
-    if hmf_forms is None:
-        hmf_forms = lmfdb.base.getDBConnection().hmfs.forms
-    return hmf_forms
+    return getDBConnection().hmfs.forms
 
 def db_hmf_fields():
-    global hmf_fields
-    if hmf_fields is None:
-        hmf_fields = lmfdb.base.getDBConnection().hmfs.fields
-    return hmf_fields
+    return getDBConnection().hmfs.fields
 
 def db_nf_fields():
-    global nf_fields
-    if nf_fields is None:
-        nf_fields = lmfdb.base.getDBConnection().numberfields.fields
-    return nf_fields
+    return getDBConnection().numberfields.fields
 
 def construct_full_label(field_label, weight, level_label, label_suffix):
     if all([w==2 for w in weight]):           # Parellel weight 2

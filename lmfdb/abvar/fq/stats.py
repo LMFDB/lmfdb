@@ -9,7 +9,7 @@ logger = make_logger("abvarfq")
 
 @cached_function
 def stats_db():
-    return getDBConnection().abvar.fq_isog_stats
+    return getDBConnection().abvar.fq_isog.stats
 
 class AbvarFqStats(UniqueRepresentation):
     def __init__(self):

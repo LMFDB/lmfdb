@@ -18,13 +18,9 @@ LF_credit = 'J. Jones and D. Roberts'
 
 # centralize db access here so that we can switch collection names when needed
 
-the_db = None
 
 def db():
-    global the_db
-    if the_db is None:
-        the_db = getDBConnection()
-    return the_db
+    return getDBConnection()
 
 def lfdb():
     return db().localfields.fields
