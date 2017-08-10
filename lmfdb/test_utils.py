@@ -16,10 +16,10 @@ from lmfdb.utils import (
     coeff_to_poly,
     display_multiset,
     pair2complex,
-    #round_to_half_int,
+    round_to_half_int,
     splitcoeff,
     to_dict,
-    truncatenumber,
+    truncate_number,
     comma,
     signtocolour,
     rgbtohex,
@@ -77,12 +77,12 @@ class UtilsTest(unittest2.TestCase):
         self.assertEqual(pair2complex("1.5"), [1.5, 0])
         self.assertEqual(pair2complex("  -1.3    4.1   "), [-1.3, 4.1])
 
-#    def test_round_to_half_int(self):
-#        r"""
-#        Checking utility: round_to_half_int
-#        """
-#        self.assertEqual(round_to_half_int(1.1), 1.0)
-#        self.assertEqual(round_to_half_int(-0.9), -1.0)
+    def test_round_to_half_int(self):
+        r"""
+        Checking utility: round_to_half_int
+        """
+        self.assertEqual(round_to_half_int(1.1), 1.0)
+        self.assertEqual(round_to_half_int(-0.9), -1.0)
 
     def test_to_dict(self):
         r"""
@@ -93,12 +93,12 @@ class UtilsTest(unittest2.TestCase):
 
     def test_truncate_number(self):
         r"""
-        Checking utility: truncatenumber
+        Checking utility: truncate_number
         """
-        self.assertEqual(truncatenumber(1.000001, 5), "1")
-        self.assertEqual(truncatenumber(1.123456, 5), "1.123")
-        self.assertEqual(truncatenumber(-1.123456, 5), "-1.123")
-        self.assertEqual(truncatenumber(0.000002, 5), "0")
+        self.assertEqual(truncate_number(1.000001, 5), "1")
+        self.assertEqual(truncate_number(1.123456, 5), "1.123")
+        self.assertEqual(truncate_number(-1.123456, 5), "-1.123")
+        self.assertEqual(truncate_number(0.000002, 5), "0")
 
     def test_splitcoeff(self):
         r"""
