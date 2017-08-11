@@ -380,14 +380,15 @@ if \(\left(\frac{ {{ec.cm_sqf}} }{p}\right)=-1\).
 </div>
 
 <div>
-  <h2> Isogenies </h2>
+  <h2> {{KNOWL('ec.isogeny_class','Isogenies')}} and {{KNOWL('ec.isogeny_class','isogeny class')}}</h2>
 <p>
 {% if ec.isogeny_degrees %}
-This curve has non-trivial cyclic isogenies {% if ec.rational_cm %}
+This curve has non-trivial cyclic {{KNOWL('ec.isogeny_class','isogenies')}} {% if ec.rational_cm %}
 (excluding endomorphisms){% endif %} of degree \(d\) for \(d=\)
 {{ ec.isogeny_degrees}}.
 <br>
-Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>
+Its {{KNOWL('ec.isogeny_class','isogeny class')}}
+<a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>
 consists of {{ec.ncurves}} curves linked by isogenies of
 {% if ec.one_deg %}degree{% else %}degrees dividing {% endif %}
 {{ec.class_deg}}.
@@ -396,6 +397,20 @@ This curve has no rational isogenies{% if ec.rational_cm %} other than
 endomorphisms{% endif %}.
 Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   consists of this curve only.
 </p>
+{% endif %}
+</div>
+
+<div>
+<h2> {{KNOWL('ec.base_change','Base change')}} </h2>
+This curve {% if ec.base_change %} is the
+{{KNOWL('ec.base_change','base-change')}} of elliptic curves
+{% for E0 in ec.base_change%}
+<a href={{url_for("ec.by_ec_label",label=E0)}}>{{E0}}</a>,
+{% endfor %}
+defined over \(\Q\), so is also a {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{% else %}
+is not the {{KNOWL('ec.base_change','base-change')}} of an elliptic curve defined over \(\Q\).
+It {% if ec.qc=="yes" %} is {% else %} is not {% endif %} a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 {% endif %}
 </div>
 
