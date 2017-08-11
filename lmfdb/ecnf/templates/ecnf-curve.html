@@ -410,7 +410,13 @@ This curve {% if ec.base_change %} is the
 defined over \(\Q\), so it is also a {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 {% else %}
 is not the {{KNOWL('ec.base_change','base-change')}} of an elliptic curve defined over \(\Q\).
-It {% if ec.qc=="yes" %} is {% else %} is not {% endif %} a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{% if ec.qc=="yes" %}
+It is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{% elif ec.qc=="no" %}
+It is not a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{% else %}
+It has not yet been determined whether or not it is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+{% endif %}
 {% endif %}
 </div>
 
