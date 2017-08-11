@@ -408,12 +408,15 @@ class ECNF(object):
             self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
-        self.qc = "no"
-        try:
-            if self.q_curve:
-                self.qc = "yes"
-        except AttributeError:  # in case the db entry does not have this field set
-            pass
+        self.qc = self.q_curve
+        if self.qc == "?":
+            self.qc = "not determined"
+        elif self.qc == True:
+            self.qc = "yes"
+        elif self.qc == False:
+            self.qc = "no"
+        else: # just in case
+            self.qc = "not determined"
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)
@@ -544,7 +547,8 @@ class ECNF(object):
             self.properties += [('base-change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
         else:
             self.base_change = []  # in case it was False instead of []
-            self.properties += [('Q-curve', self.qc)]
+            self.properties += [('base-change', 'no')]
+        self.properties += [('Q-curve', self.qc)]
 
         r = self.rk
         if r == "?":
