@@ -407,7 +407,7 @@ This curve {% if ec.base_change %} is the
 {% for E0 in ec.base_change%}
 <a href={{url_for("ec.by_ec_label",label=E0)}}>{{E0}}</a>,
 {% endfor %}
-defined over \(\Q\), so is also a {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+defined over \(\Q\), so it is also a {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
 {% else %}
 is not the {{KNOWL('ec.base_change','base-change')}} of an elliptic curve defined over \(\Q\).
 It {% if ec.qc=="yes" %} is {% else %} is not {% endif %} a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
