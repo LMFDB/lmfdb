@@ -77,6 +77,7 @@ def an_from_data(euler_factors,upperbound=30):
 # As of July 2015, some of the fields are hard coded specifically
 # for L-functions of genus 2 curves.  Need to update after the
 # general data format has been specified.
+# FIXME: Perhaps this should be a method of generic Lfunction class
 def makeLfromdata(L):
     data = L.lfunc_data
     
@@ -412,6 +413,131 @@ class Lfunction_Dirichlet(Lfunction):
 
 #############################################################################
 
+
+class Lfunction_EC(Lfunction):
+    """Class representing an elliptic curve L-function
+     over a number field, possibly QQ.
+    It should be called with a dictionary of the forms:
+
+    dict = { 'field_label': <field_label>, 'conductor_label': <conductor_label>, 'isogeny_class_label': <isogeny_class_label> }
+    """
+    def __init__(self, **args):
+        constructor_logger(self, args)
+        validate_required_args('Unable to construct elliptic curve L-function.',
+                               args, 'field_label', 'conductor_label', 'isogeny_class_label')
+
+        #FIXME wrong type
+        self._Ltype = "ellipticcurve"
+
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+        self.numcoeff = 30
+        
+        # parse the labels
+        self.field_degree, self.field_real_signature, self.field_absdisc, self.field_index  = map(int, self.field_label.split("."));
+
+        self.ec_conductor_norm  = int(self.conductor_label.split(".")[0])
+
+
+        self.conductor = self.ec_conductor_norm * (self.field_absdisc ** self.field_degree)
+ 
+        # Load data from the database
+        self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
+
+        # I'm not sure what this is used for
+        if self.field_degree == 1:
+            self.label = self.long_isogeny_class_label;
+        if self.field_degree != 1:
+            self.label = self.field_label + "." + self.long_isogeny_class_label;
+
+        self.field = "Q" if self.field_degree == 1 else self.field_label;
+        isogeny_class_url = "EllipticCurve/%s/%s/%s" % (self.field, self.conductor_label, self.isogeny_class_label,)
+        self.lfunc_data = LfunctionDatabase.getInstanceLdata(isogeny_class_url)
+        if not self.lfunc_data:
+                raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
+
+        # Extract the data 
+        # this perhaps should be a method not an external function
+        makeLfromdata(self)
+        # TODO: makeLfromdata should set this to True
+        self.fromDB = True
+
+        # Mandatory properties
+        self.coefficient_period = 0
+        self.coefficient_type = 2
+        self.poles = []
+        self.residues = []
+        self.degree = self.field_degree * 2;
+        
+        #FIXME, are these correct?
+        self.langlands = True;
+        self.quasidegree = 1
+        
+        # Get the data for the corresponding modular form if possible
+        self.get_modular_form();
+
+        
+        # Compute the # of curves in the isogeny class
+        self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.long_isogeny_class_label, self.field_label)
+
+        # Text for the web page
+        self.texname = "L(s)"  # "L(s,E)"
+        self.htmlname = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>s,E</em>)"
+        self.texname_arithmetic = "L(s)"  # "L(E,s)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>E,s</em>)"
+        self.texnamecompleteds = "\\Lambda(s)"  # "\\Lambda(s,E)"
+        self.texnamecompleted1ms = "\\Lambda(1-s)"  # "\\Lambda(1-s,E)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"  # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
+        #title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
+        title_end = " of degree %d, weight 1, conductor %d, and trivial character" % (self.degree, self.conductor,)
+        self.credit = ''
+
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+        #FIXME wrong type
+        self.info['knowltype'] = "ec.q"
+        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
+        self.info['title_arithmetic'] = "L-function "  + title_end
+        self.info['title_analytic'] = "L-function " + title_end
+        
+    def ground_field(self):
+        return 'Q';
+
+    def base_field(self):
+        if self.field_label == "1.1.1.1":
+            return 'Q'
+        else:
+            self.field_label;
+
+    def get_modular_form(self):
+        # Get the data for the corresponding modular form if possible
+        # In the future we should perhaps have derived classes that overwrite this function
+        self.modform = False; 
+        if self.field_degree == 1:
+            # EC over QQ
+            modform_translation_limit = 101
+            if self.level <= modform_translation_limit:
+                self.modform = modform_from_EC(self.long_isogeny_class_label)
+        elif self.field_degree == 2:
+            # quadratic extension
+            if self.field_real_signature == 2:
+                # FIXME find HMF
+                # if C.hmfs.forms.search.find({ u'label' : label }).count() > 
+                pass;
+            elif self.field_real_signature == 0:
+                # FIXME find BMF
+                # if C.bmfs.forms.search.find({ u'label' : label }).count() > 0
+                pass;
+
+    def Lkey(self):
+        #FIXME
+        # If over Q, the lmfdb label determines the curve
+        return {"label": self.long_isogeny_class_label}
+
+
+
 class Lfunction_EC_Q(Lfunction):
     """Class representing an elliptic curve L-function
     It should be called with a dictionary of the forms:
@@ -574,8 +700,7 @@ class Lfunction_EMF(Lfunction):
         # Get the data for the corresponding elliptic curve if possible
         if self.weight == 2 and self.MF.is_rational:
             self.ellipticcurve = EC_from_modform(self.level, self.label)
-            self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(
-                                                    self.ellipticcurve)
+            self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.ellipticcurve)
         else:
             self.ellipticcurve = False
 
@@ -994,8 +1119,8 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         # Compute Dirichlet coefficients ########################
         roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
         self.numcoeff = max([a[0] for a in roots])+1  # include a_0 = 0
-        # FIX THIS: the function compute_siegel_dirichlet_coefficients is not defined anywhere!
-        self.dirichlet_coefficients = compute_siegel_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
+        # FIXME: the function compute_siegel_dirichlet_coefficients is not defined anywhere!
+        # self.dirichlet_coefficients = compute_siegel_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
 
         self.sign = (-1) ** float(self.weight)
         self.checkselfdual()
