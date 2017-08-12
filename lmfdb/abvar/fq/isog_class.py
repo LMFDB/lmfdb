@@ -139,13 +139,25 @@ class AbvarFq_isoclass(object):
         P.set_aspect_ratio(1)
         return encode_plot(P)
 
+    def _make_jacpol_property(self):
+        ans = []
+        if self.principally_polarizable == 1:
+            ans.append((None, 'Principally polarizable'))
+        elif self.principally_polarizable == -1:
+            ans.append((None, 'Not principally polarizable'))
+        if self.known_jacobian == 1:
+            ans.append((None, 'Contains a Jacobian'))
+        elif self.known_jacobian == -1:
+            ans.append((None, 'Does not contain a Jacobian'))
+        return ans
+
     def properties(self):
         return [('Label', self.label),
                 ('Base Field', '$%s$'%(self.field(self.q))),
                 ('Dimension', '$%s$'%(self.g)),
                 (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
                 #('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
-                ('$p$-rank', '$%s$'%(self.p_rank))]
+                ('$p$-rank', '$%s$'%(self.p_rank))] + self._make_jacpol_property()
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
     # this is not covered by the tests
