@@ -50,14 +50,16 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 <p>
 {% if cl.principally_polarizable == 1 %}
 {% if cl.known_jacobian == 1 %}
-This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}.
+This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
 {% elif cl.known_jacobian == -1 %}
-This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}} but does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
+This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
 {% else %}
-This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but it is unknown whether it contains a {{KNOWL('ag.jacobian',title='Jacobian')}}.
+This isogeny class is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but it is unknown whether it contains a {{KNOWL('ag.jacobian',title='Jacobian')}}.
 {% endif %}
 {% elif cl.principally_polarizable == -1 %}
-This isogeny class is not {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}} (and therefore does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}).
+This isogeny class is not {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, and therefore does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
+{% elif cl.known_jacobian == -1 %}
+This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}, and it is unknown whether it is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
 {% endif %}
 </p>
 
