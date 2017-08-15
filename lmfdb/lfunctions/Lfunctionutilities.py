@@ -7,7 +7,7 @@ from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, Poly
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.base import getDBConnection
-from lmfdb.utils import truncatenumber
+from lmfdb.utils import truncate_number
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -134,33 +134,33 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
         if seriescoefftype == "series" or seriescoefftype == "signed":
             ans += "+"
             ans += "("
-            ans += truncatenumber(rp, precision)
+            ans += truncate_number(rp, precision)
         elif seriescoefftype == "serieshtml":
             ans += " + "
             ans += "("
             if rp > 0:
-                ans += truncatenumber(rp, precision)
+                ans += truncate_number(rp, precision)
             else:
-                ans += "&minus;"+truncatenumber(float(abs(rp)), precision)
+                ans += "&minus;"+truncate_number(float(abs(rp)), precision)
         elif seriescoefftype == "factor":
             ans += "("
-            ans += truncatenumber(rp, precision)
+            ans += truncate_number(rp, precision)
         else:
-            ans += truncatenumber(rp, precision)
+            ans += truncate_number(rp, precision)
         if ip > 0:
             ans += " + "
         if seriescoefftype == "series" or seriescoefftype == "signed":
-            ans += truncatenumber(ip, precision) + " i"
+            ans += truncate_number(ip, precision) + " i"
         elif seriescoefftype == "serieshtml":
             if ip > 0:
-                ans += truncatenumber(ip, precision)
+                ans += truncate_number(ip, precision)
             else:
-                ans += " &minus; "+truncatenumber(float(abs(ip)), precision)
+                ans += " &minus; "+truncate_number(float(abs(ip)), precision)
             ans += "<em>i</em>"
         elif seriescoefftype == "factor":
-            ans += truncatenumber(ip, precision) + "i" + ")"
+            ans += truncate_number(ip, precision) + "i" + ")"
         else:
-            ans += truncatenumber(ip, precision) + "i"
+            ans += truncate_number(ip, precision) + "i"
         if seriescoefftype == "series" or seriescoefftype == "serieshtml" or seriescoefftype == "signed":
             return(ans + ")" + " " + seriesvar(index, seriestype))
         else:
@@ -185,11 +185,11 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return(ans + " + " + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series" or seriescoefftype == "serieshtml":
-                return(" + " + ans + truncatenumber(rp, precision) + "&middot;" + seriesvar(index, seriestype))
+                return(" + " + ans + truncate_number(rp, precision) + "&middot;" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
-                return(ans + "+" + truncatenumber(rp, precision))
+                return(ans + "+" + truncate_number(rp, precision))
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
-                return(ans + truncatenumber(rp, precision))
+                return(ans + truncate_number(rp, precision))
     elif rp < -1 * truncation:
         if float(abs(rp + 1)) < truncation:
             if seriescoefftype == "literal":
@@ -206,13 +206,13 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("-" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
-                return(ans + " - " + truncatenumber(-1*rp, precision) + seriesvar(index, seriestype))
+                return(ans + " - " + truncate_number(-1*rp, precision) + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
-                return(ans + "-" + truncatenumber(-1*rp, precision))
+                return(ans + "-" + truncate_number(-1*rp, precision))
             elif seriescoefftype == "serieshtml":
-                return(ans + " &minus; " + truncatenumber(-1*rp, precision) + "&middot;" +  seriesvar(index, seriestype))
+                return(ans + " &minus; " + truncate_number(-1*rp, precision) + "&middot;" +  seriesvar(index, seriestype))
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
-                return(ans + truncatenumber(rp, precision))
+                return(ans + truncate_number(rp, precision))
 
 # if we get this far, it is pure imaginary
     elif ip > truncation:
@@ -230,13 +230,13 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                   # yes, em is not the right tag, but it is styled with CSS
         else:
             if seriescoefftype == "series":
-                return(ans + truncatenumber(ip, precision) + "i " + seriesvar(index, seriestype))
+                return(ans + truncate_number(ip, precision) + "i " + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
-                return(ans + " + " + truncatenumber(ip, precision) + "<em>i</em> " + "&middot;" + seriesvar(index, seriestype))
+                return(ans + " + " + truncate_number(ip, precision) + "<em>i</em> " + "&middot;" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
-                return(ans + "+" + truncatenumber(ip, precision) + "i")
+                return(ans + "+" + truncate_number(ip, precision) + "i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
-                return(ans + truncatenumber(ip, precision) + "i")
+                return(ans + truncate_number(ip, precision) + "i")
     elif ip < -1 * truncation:
         if float(abs(ip + 1)) < truncation:
             if seriescoefftype == "factor": #assumes that factor is used in math mode
@@ -247,13 +247,13 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                 return("- i" + seriesvar(index, seriestype))
         else:
             if seriescoefftype == "series":
-                return(ans + truncatenumber(ip, precision) + "i" + seriesvar(index, seriestype))
+                return(ans + truncate_number(ip, precision) + "i" + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
-                return(ans + " &minus; " + truncatenumber(float(abs(ip)), precision) + "<em>i</em>" + "&middot;" + seriesvar(index, seriestype))
+                return(ans + " &minus; " + truncate_number(float(abs(ip)), precision) + "<em>i</em>" + "&middot;" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
-                return(ans + truncatenumber(ip, precision) + " i")
+                return(ans + truncate_number(ip, precision) + " i")
             elif seriescoefftype == "literal" or seriescoefftype == "factor":
-                return(ans + truncatenumber(ip, precision) + "i")
+                return(ans + truncate_number(ip, precision) + "i")
 
     else:
         return(latex(coeff) + seriesvar(index, seriestype))
@@ -341,7 +341,7 @@ def lfuncDShtml(L, fmt):
             if(nonzeroterms % numperline == 0):
                 ans = ans + "\n"     # don't need  \cr in the html version
                 nonzeroterms += 1   # This ensures we don t add more than one newline
-        ans = ans + "<span> + &#8943;</span>\n</td></tr>\n</table>\n"
+        ans = ans + "<span class='term'> + &#8943;</span>\n</td></tr>\n</table>\n"
 
     elif fmt == "abstract":
         if L.Ltype() == "riemann":

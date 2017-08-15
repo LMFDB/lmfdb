@@ -8,34 +8,17 @@ from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, enc
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 
-ecnf = None
-ecnfstats = None
-nfdb = None
-IQF_labels = None
-
 def db_ecnf():
-    global ecnf
-    if ecnf is None:
-        ecnf = getDBConnection().elliptic_curves.nfcurves
-    return ecnf
+    return getDBConnection().elliptic_curves.nfcurves
 
 def db_ecnfstats():
-    global ecnfstats
-    if ecnfstats is None:
-        ecnfstats = getDBConnection().elliptic_curves.nfcurves.stats
-    return ecnfstats
+    return getDBConnection().elliptic_curves.nfcurves.stats
 
 def db_nfdb():
-    global nfdb
-    if nfdb is None:
-        nfdb = getDBConnection().numberfields.fields
-    return nfdb
+    return getDBConnection().numberfields.fields
 
 def db_iqf_labels():
-    global IQF_labels
-    if IQF_labels is None:
-        IQF_labels = getDBConnection().elliptic_curves.IQF_labels
-    return IQF_labels
+    return getDBConnection().elliptic_curves.IQF_labels
 
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
@@ -83,12 +66,6 @@ def FIELD(label):
     nf.latex_poly = web_latex(nf.poly())
     return nf
 
-def make_field(label):
-    global field_list
-    if not label in field_list:
-        field_list[label] = FIELD(label)
-    return field_list[label]
-
 def parse_NFelt(K, s):
     r"""
     Returns an element of K defined by the string s.
@@ -99,7 +76,7 @@ def parse_ainvs(K,ainvs):
     return [parse_NFelt(K,ai) for ai in ainvs.split(";")]
 
 def web_ainvs(field_label, ainvs):
-    K = make_field(field_label).K()
+    K = FIELD(field_label).K()
     ainvsinlatex = web_latex_split_on(parse_ainvs(K,ainvs), on=[","])
     ainvsinlatex = ainvsinlatex.replace("\\left[", "\\bigl[")
     ainvsinlatex = ainvsinlatex.replace("\\right]", "\\bigr]")
@@ -271,7 +248,7 @@ class ECNF(object):
         """
         # del dbdata["_id"]
         self.__dict__.update(dbdata)
-        self.field = make_field(self.field_label)
+        self.field = FIELD(self.field_label)
         self.non_surjective_primes = dbdata.get('non-surjective_primes',None)
         self.make_E()
 
@@ -431,12 +408,15 @@ class ECNF(object):
             self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
-        self.qc = "no"
-        try:
-            if self.q_curve:
-                self.qc = "yes"
-        except AttributeError:  # in case the db entry does not have this field set
-            pass
+        self.qc = self.q_curve
+        if self.qc == "?":
+            self.qc = "not determined"
+        elif self.qc == True:
+            self.qc = "yes"
+        elif self.qc == False:
+            self.qc = "no"
+        else: # just in case
+            self.qc = "not determined"
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)
@@ -567,7 +547,8 @@ class ECNF(object):
             self.properties += [('base-change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
         else:
             self.base_change = []  # in case it was False instead of []
-            self.properties += [('Q-curve', self.qc)]
+            self.properties += [('base-change', 'no')]
+        self.properties += [('Q-curve', self.qc)]
 
         r = self.rk
         if r == "?":

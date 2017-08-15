@@ -16,14 +16,13 @@ C['admin'].authenticate('lmfdb','lmfdb')
 #    from sage.all import preparse
 #    # sys.path.append('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf')
 # else:
-import sys
 from sage.all import preparse
 # import sage.misc.preparser
 # from sage.misc.preparser import preparse
 
 from sage.interfaces.magma import magma
 
-from sage.all import ZZ, Rationals, PolynomialRing
+from sage.all import ZZ, QQ, PolynomialRing
 
 from scripts.hmf.check_conjugates import fix_one_label
 from sage.databases.cremona import class_to_int
@@ -44,7 +43,7 @@ magma.eval('nice_idealstr := function(F : Bound := 10000); idealsstr := []; idea
 from lmfdb.number_fields.number_field import make_disc_key
 from lmfdb.hilbert_modular_forms.web_HMF import construct_full_label
 
-P = sage.rings.polynomial.polynomial_ring_constructor.PolynomialRing(sage.rings.rational_field.RationalField(), 3, ['w', 'e', 'x'])
+P = PolynomialRing(QQ, 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
 
 def import_all_data(n, fileprefix=None, ferrors=None, test=True):
@@ -287,7 +286,7 @@ def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
 def repair_fields(D):
     F = hmf_fields.find_one({"label": '2.2.' + str(D) + '.1'})
 
-    P = PolynomialRing(Rationals(), 'w')
+    P = PolynomialRing(QQ, 'w')
     # P is used implicitly in the eval() calls below.  When these are
     # removed, this will not longer be neceesary, but until then the
     # assert statement is for pyflakes.
@@ -331,7 +330,7 @@ def attach_new_label(f):
     print f['label']
     F = hmf_fields.find_one({"label": f['field_label']})
 
-    P = PolynomialRing(Rationals(), 'w')
+    P = PolynomialRing(QQ, 'w')
     # P is used implicitly in the eval() calls below.  When these are
     # removed, this will not longer be neceesary, but until then the
     # assert statement is for pyflakes.
@@ -431,7 +430,7 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
                         except AssertionError:
                             print f['hecke_eigenvalues'][clean_primes.index(pp)]
                             print f
-                            assert false
+                            assert False
                         f['hecke_eigenvalues'][clean_primes.index(pp)] = ap
                     else:
                         print '!!! a_pp not corrected since not many stored !!!'

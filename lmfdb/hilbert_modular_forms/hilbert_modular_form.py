@@ -2,12 +2,11 @@
 
 import pymongo
 
-from lmfdb.base import getDBConnection
 from flask import render_template, url_for, request, redirect, make_response, flash
 
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
-from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary, db_forms, db_search, db_fields
 
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.ecnf.WebEllipticCurve import db_ecnf
@@ -20,10 +19,9 @@ from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, 
 
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
-
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
-    return hilbert_modular_form_by_label( random_object_from_collection( getDBConnection().hmfs.forms ) )
+    return hilbert_modular_form_by_label( random_object_from_collection( db_forms() ) )
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*', '')
@@ -81,8 +79,7 @@ def split_full_label(lab):
 
 def hilbert_modular_form_by_label(lab):
     if isinstance(lab, basestring):
-        C = getDBConnection()
-        res = C.hmfs.forms.search.find_one({'label': lab},{'label':True})
+        res = db_search().find_one({'label': lab},{'label':True})
     else:
         res = lab
         lab = res['label']
@@ -114,13 +111,24 @@ def hilbert_modular_form_search(**args):
         parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
     except ValueError:
         return search_input_error()
-
+        
+    if 'cm' in info:
+        if info['cm'] == 'exclude':
+            query['is_CM'] = 'no'
+        elif info['cm'] == 'only':
+            query['is_CM'] = 'yes'
+                
+    if 'bc' in info:
+        if info['bc'] == 'exclude':
+            query['is_base_change'] = 'no'
+        elif info['bc'] == 'only':
+            query['is_base_change'] = 'yes'
+                     
     count = parse_count(info,100)
     start = parse_start(info)
 
     info['query'] = dict(query)
-    C = getDBConnection()
-    res = C.hmfs.forms.search.find(
+    res = db_search().find(
         query).sort([('deg', pymongo.ASCENDING), ('disc', pymongo.ASCENDING), ('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
     if(start >= nres):
@@ -179,14 +187,13 @@ def render_hmf_webpage_download(**args):
 
 
 def download_hmf_magma(**args):
-    C = getDBConnection()
     label = str(args['label'])
-    f = C.hmfs.forms.find_one({'label': label})
+    f = db_forms().find_one({'label': label})
     if f is None:
         return "No such form"
 
     F = WebNumberField(f['field_label'])
-    F_hmf = C.hmfs.fields.find_one({'label': f['field_label']})
+    F_hmf = db_fields().find_one({'label': f['field_label']})
 
     outstr = 'P<x> := PolynomialRing(Rationals());\n'
     outstr += 'g := P!' + str(F.coeffs()) + ';\n'
@@ -235,14 +242,13 @@ def download_hmf_magma(**args):
 
 
 def download_hmf_sage(**args):
-    C = getDBConnection()
     label = str(args['label'])
-    f = C.hmfs.forms.find_one({'label': label})
+    f = db_forms().find_one({'label': label})
     if f is None:
         return "No such form"
 
     F = WebNumberField(f['field_label'])
-    F_hmf = C.hmfs.fields.find_one({'label': f['field_label']})
+    F_hmf = db_fields().find_one({'label': f['field_label']})
 
     outstr = 'P.<x> = PolynomialRing(QQ)\n'
     outstr += 'g = P(' + str(F.coeffs()) + ')\n'
@@ -276,15 +282,15 @@ def download_hmf_sage(**args):
 
 @hmf_page.route('/<field_label>/holomorphic/<label>')
 def render_hmf_webpage(**args):
-    C = getDBConnection()
     if 'data' in args:
         data = args['data']
         label = data['label']
     else:
         label = str(args['label'])
-        data = C.hmfs.forms.find_one({'label': label})
+        data = db_forms().find_one({'label': label})
     if data is None:
-        return "No such form"
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid Hilbert modular form label. It must be of the form (number field label) - (level label) - (orbit label) separated by dashes, such as 2.2.5.1-31.1-a" % args['label']), "error")
+        return search_input_error()
     info = {}
     try:
         info['count'] = args['count']
@@ -298,7 +304,7 @@ def render_hmf_webpage(**args):
         numeigs = 20
     info['numeigs'] = numeigs
 
-    hmf_field = C.hmfs.fields.find_one({'label': data['field_label']})
+    hmf_field = db_fields().find_one({'label': data['field_label']})
     gen_name = findvar(hmf_field['ideals'])
     nf = WebNumberField(data['field_label'], gen_name=gen_name)
     info['hmf_field'] = hmf_field
@@ -332,7 +338,7 @@ def render_hmf_webpage(**args):
 
     t = "Hilbert Cusp Form %s" % info['label']
 
-    forms_space = C.hmfs.forms.search.find(
+    forms_space = db_search().find(
         {'field_label': data['field_label'], 'level_ideal': data['level_ideal']},{'dimension':True})
     dim_space = 0
     for v in forms_space:

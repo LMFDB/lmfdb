@@ -23,7 +23,7 @@
 <tr>
 <td align=left>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}} length</td>
 <td align=left>{{ KNOWL('lattice.class_number', title='Class number') }}</td>
-<td align=left>{{ KNOWL('lattice.group_order', title='Group order') }}</td>
+<td align=left>{{ KNOWL('lattice.group_order', title='Aut. group order') }}</td>
 </tr>
 
 <tr>
@@ -70,15 +70,19 @@
         <th>{{ KNOWL('lattice.dimension', title='Dimension') }}</th>
         <th>{{ KNOWL('lattice.determinant', title='Determinant') }}</th>
         <th>{{ KNOWL('lattice.level', title='Level')}}</th>
-        <th>{{ KNOWL('lattice.gram', title='Gram Matrix') }}</th>
+        <th>{{ KNOWL('lattice.class_number', title='Class number')}}</th>
+        <th>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}}</th>
+        <th>{{ KNOWL('lattice.group_order', title='Aut. group order') }}</th>
         </tr>
         {% for l in info.lattices %}
             <tr>
-            <td align='left'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
-            <td>{{l.dim}}</td>
-            <td>{{l.det}}</td>
-            <td>{{l.level}}</td>
-            <td>${{l.gram}}$</td>
+            <td align='center'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
+            <td align='center'>{{l.dim}}</td>
+            <td align='center'>{{l.det}}</td>
+            <td align='center'>{{l.level}}</td>
+            <td align='center'>{{l.class_number}}</td>
+            <td align='center'>{{l.min}}</td>
+            <td align='center'>{{l.aut}}</td>
             </tr>
         {% endfor %}
         </table>

@@ -3,7 +3,7 @@ import re
 import os
 import yaml
 from flask import url_for
-import lmfdb.base
+from lmfdb.base import getDBConnection
 from lmfdb.utils import make_logger, web_latex, encode_plot
 from lmfdb.search_parsing import split_list
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
@@ -51,29 +51,14 @@ def class_cremona_label(conductor, iso_class):
 
 logger = make_logger("ec")
 
-ecdb = None
-padicdb = None
-ecdbstats = None
-
 def db_ec():
-    global ecdb
-    if ecdb is None:
-        ec = lmfdb.base.getDBConnection().elliptic_curves
-        ecdb = ec.curves
-    return ecdb
+    return getDBConnection().elliptic_curves.curves
 
 def db_ecstats():
-    global ecdbstats
-    if ecdbstats is None:
-        ec = lmfdb.base.getDBConnection().elliptic_curves
-        ecdbstats = ec.curves.stats
-    return ecdbstats
+    return getDBConnection().elliptic_curves.curves.stats
 
 def padic_db():
-    global padicdb
-    if padicdb is None:
-        padicdb = lmfdb.base.getDBConnection().elliptic_curves.padic_db
-    return padicdb
+    return getDBConnection().elliptic_curves.padic_db
 
 def split_galois_image_code(s):
     """Each code starts with a prime (1-3 digits but we allow for more)
