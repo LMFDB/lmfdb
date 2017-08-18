@@ -369,16 +369,16 @@ def render_hmf_webpage(**args):
 
     info['hecke_polynomial'] = web_latex_split_on_pm(teXify_pol(info['hecke_polynomial']))
 
-    if 'AL_eigenvalues_fixed' in data:
-        if data['AL_eigenvalues_fixed'] == 'done':
-            info['AL_eigs'] = [{'eigenvalue': teXify_pol(al[1]),
-                                'prime_ideal': teXify_pol(al[0]),
-                                'prime_norm': al[0][1:al[0].index(',')]} for al in data['AL_eigenvalues']]
-        else:
-            info['AL_eigs'] = [{'eigenvalue': '?', 'prime_ideal': '?'}]
+    AL_eigs = data['AL_eigenvalues']
+    if not AL_eigs: # empty list
+        if data['level_norm']==1: # OK, no bad primes
+            info['AL_eigs'] = 'none'
+        else:                     # not OK, AL eigs are missing
+            info['AL_eigs'] = 'missing'
     else:
-        info['AL_eigs'] = [{'eigenvalue': '?', 'prime_ideal': '?'}]
-    info['AL_eigs_count'] = len(info['AL_eigs']) != 0
+        info['AL_eigs'] = [{'eigenvalue': teXify_pol(al[1]),
+                            'prime_ideal': teXify_pol(al[0]),
+                            'prime_norm': al[0][1:al[0].index(',')]} for al in data['AL_eigenvalues']]
 
     max_eig_len = max([len(eig['eigenvalue']) for eig in info['eigs']])
     display_eigs = display_eigs or (max_eig_len<=300)
