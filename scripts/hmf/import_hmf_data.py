@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sage
-from sage.misc.preparser import preparse
+from sage.repl import preparse
 from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals
 
@@ -372,3 +372,16 @@ def make_stats():
 # sage: sage: hst_yaml_file = open("lmfdb/hilbert_modular_forms/hst_stats.yaml", 'w')
 # sage: yaml.safe_dump(hst, hst_yaml_file)
 # sage: hst_yaml_file.close()
+
+
+def add_missing_disc_deg_wt(nf):
+    if not all([nf.get('disc', None),
+            nf.get('deg', None),
+            nf.get('parallel_weight', None)]):
+        print("Fixing form {}".format(nf['label']))
+        #print("   keys are {}".format(nf.keys()))
+        deg, r, disc, n = nf['field_label'].split(".")
+        nf['disc'] = int(disc)
+        nf['deg'] = int(deg)
+        nf['parallel_weight'] = 2
+    return nf

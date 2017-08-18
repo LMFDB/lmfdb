@@ -25,12 +25,17 @@ print "getting connection"
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by default
 
-#print "authenticating on the hmfs database"
-#import yaml
-#pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-#username = pw_dict['data']['username']
-#password = pw_dict['data']['password']
-#C['hmfs'].authenticate(username, password) ## read/write on hmfs
+# Uncomment the following lines to authenticate on the hmfs database
+# (necessary to write/delete data).  This requires having the
+# necessary password.yaml file.
+#
+# print "authenticating on the hmfs database"
+# import yaml
+# import os
+# pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+# username = pw_dict['data']['username']
+# password = pw_dict['data']['password']
+# C['hmfs'].authenticate(username, password) ## read/write on hmfs
 
 print "setting hmfs, fields and forms"
 hmfs = C.hmfs
