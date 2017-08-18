@@ -387,9 +387,6 @@ def render_hmf_webpage(**args):
         for eig in info['eigs']:
             if len(eig['eigenvalue']) > 300:
                 eig['eigenvalue'] = '...'
-        for eig in info['AL_eigs']:
-            if len(eig['eigenvalue']) > 300:
-                eig['eigenvalue'] = '...'
 
     info['level_ideal'] = teXify_pol(info['level_ideal'])
 
