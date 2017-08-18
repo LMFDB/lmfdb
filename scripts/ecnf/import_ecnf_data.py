@@ -87,9 +87,8 @@ from lmfdb.utils import web_latex
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
-from lmfdb.ecnf.WebEllipticCurve import ideal_from_string, ideal_to_string, parse_ainvs, parse_point
+from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
 from scripts.ecnf.import_utils import make_curves_line, make_curve_data_line, split, numerify_iso_label, NFelt, get_cm, point_string
-
 
 print "getting connection"
 C= getDBConnection()
@@ -259,7 +258,6 @@ def curves(line, verbose=False):
     cm = data[11]                 # int or '?'
     if cm != '?':
         cm = int(cm)
-    q_curve = (data[12] == '1')   # bool
 
     # Create the field and curve to compute the j-invariant:
     dummy, deg, sig, abs_disc = field_data(field_label)
@@ -274,6 +272,15 @@ def curves(line, verbose=False):
         cm = get_cm(j)
         if cm:
             print "cm=%s for j=%s" % (cm, j)
+
+    q_curve = data[12]   # 0, 1 or ?.  If unknown we'll determine this below.
+    if q_curve in ['0','1']: # already set -- easy
+        q_curve = bool(int(q_curve))
+    else:
+        try:
+            q_curve = is_Q_curve(E)
+        except NotImplementedError:
+            q_curve = '?'
 
     # Here we should check that the conductor of the constructed curve
     # agrees with the input conductor.
@@ -1034,3 +1041,142 @@ def make_IQF_ideal_table(infile, insert=False):
         C['elliptic_curves']['IQF_labels'].insert_many(items)
     else:
         print("No insertion, dummy run")
+
+
+# function to give to rewrite_collection() to fix q_curve flags (only touches quadratic field so far)
+
+def fix1_qcurve_flag(ec, verbose=False):
+    """
+    Update ec structure (from nfcurves collection) with the correct
+    q_curves flag.  For degree >2 at present we only do trivial tests
+    here which do not require any computation.
+    """
+    if ec['q_curve']: # keep old True values
+        return ec
+
+    # Easy sufficient tests in all degrees
+    qc = False
+    if ec['cm']:
+        qc = True
+    elif all(c=='0' for c in ec['jinv'].split(",")[1:]):
+        qc = True
+
+    if qc: # then we have just set it to True
+        if ec['q_curve'] != qc:
+            if verbose:
+                print("{}: changing q_curve flag from {} to {}".format(ec['label'],ec['q_curve'],qc))
+        ec['q_curve'] = qc
+        return ec
+
+    # else if degree != 2 just replace possibly false negatives with '?'
+    if ec['degree'] > 2:
+        qc = '?'
+        # if ec['q_curve'] != qc:
+        #     print("{}: changing q_curve flag from {} to {}".format(ec['label'],ec['q_curve'],qc))
+        ec['q_curve'] = qc
+        return ec
+
+    # else (degree 2 only for now) do the work (knowing that E does
+    # not have CM and j(E) is not in Q)
+
+    K = FIELD(ec['field_label'])
+    sigma = K.K().galois_group()[1]
+    # Compute the Q-curve flag from scratch
+
+    N = ideal_from_string(K.K(),ec['conductor_ideal'])
+    if sigma(N)!=N:
+        qc = False
+    else: # construct and check the curve
+        ainvsK = parse_ainvs(K.K(), ec['ainvs'])
+        E = EllipticCurve(ainvsK)
+        qc = is_Q_curve(E)
+    if ec['q_curve'] != qc:
+        if verbose:
+            print("{}: changing q_curve flag from {} to {}".format(ec['label'],ec['q_curve'],qc))
+    ec['q_curve'] = qc
+    return ec
+
+def is_Q_curve(E):
+    """Test if an elliptic curve is a Q-curve.
+    """
+    jE =  E.j_invariant()
+    if jE in QQ:
+        return True
+    if E.has_cm():
+        return True
+    K = E.base_field()
+    if K.degree()>2:
+        raise NotImplementedError("Only quadratic fields implemented so far")
+    sigma = K.galois_group()[1]
+    N = E.conductor()
+    if N!=sigma(N):
+        return False
+    jEs = sigma(jE)
+    C = E.isogeny_class()
+    # check that the conjugate of j(E) is in the class:
+    return any(E1.j_invariant()==jEs for E1 in C)
+
+def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
+    """Given a (quadratic) field label test all curves E over that field for being Q-curves.
+    """
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_norm'] = {'$gte': int(min_norm)}
+    if max_norm:
+        query['conductor_norm']['$lte'] = int(max_norm)
+    else:
+        max_norm = 'infinity'
+    cursor = nfcurves.find(query)
+    # keep the curves and re-find them, else the cursor times out.
+    curves = [ec['label'] for ec in cursor]
+    ncurves = len(curves)
+    print("Checking {} curves over field {}".format(ncurves,field_label))
+    K = FIELD(field_label)
+    sigma = K.K().galois_group()[1]
+    bad1 = []
+    bad2 = []
+    count = 0
+    for label in curves:
+        count += 1
+        if count%1000==0:
+            print("checked {} curves ({}%)".format(count, 100.0*count/ncurves))
+        ec = nfcurves.find_one({'label':label})
+        assert label == ec['label']
+        method = None
+        # first check that j(E) is rational (no computation needed)
+        jinv = ec['jinv']
+        if all(c=='0' for c in jinv.split(",")[1:]):
+            if verbose: print("{}: j in QQ".format(label))
+            qc = True
+            method = "j in Q"
+        elif ec['cm']:
+            if verbose: print("{}: CM".format(label))
+            qc = True
+            method = "CM"
+        else: # construct and check the conductor
+            if verbose:
+                print("{}: checking conductor".format(label))
+            N = ideal_from_string(K.K(),ec['conductor_ideal'])
+            if sigma(N)!=N:
+                qc = False
+                method = "conductor"
+            else: # construct and check the curve
+                if verbose:
+                    print("{}: checking isogenies".format(label))
+                ainvsK = parse_ainvs(K.K(), ec['ainvs'])
+                E = EllipticCurve(ainvsK)
+                qc = is_Q_curve(E)
+                method = "isogenies"
+        db_qc = ec['q_curve']
+        if qc and not db_qc:
+            print("Curve {} is a Q-curve (using {}) but database thinks not".format(label, method))
+            bad1 += [label]
+        elif db_qc and not qc:
+            print("Curve {} is not a Q-curve (using {}) but database thinks it is".format(label, method))
+            bad2 += [label]
+        else:
+            if verbose:
+                print("Curve {} OK (using {})".format(label, method))
+    print("{} curves in the database are incorrectly labelled as being Q-curves".format(len(bad2)))
+    print("{} curves in the database are incorrectly labelled as NOT being Q-curves".format(len(bad1)))
+    return bad1, bad2
