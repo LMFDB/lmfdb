@@ -195,6 +195,12 @@ def download_hmf_magma(**args):
     F = WebNumberField(f['field_label'])
     F_hmf = db_fields().find_one({'label': f['field_label']})
 
+    # Get hecke_polynomial, hecke_eigenvalues and AL_eigenvalues
+    h = f if 'hecke_polynomial' in f else db_hecke().find_one({'label': label})
+    hecke_pol  = h['hecke_polynomial']
+    hecke_eigs = h['hecke_eigenvalues']
+    AL_eigs    = h['AL_eigenvalues']
+
     outstr = 'P<x> := PolynomialRing(Rationals());\n'
     outstr += 'g := P!' + str(F.coeffs()) + ';\n'
     outstr += 'F<w> := NumberField(g);\n'
@@ -207,18 +213,18 @@ def download_hmf_magma(**args):
     outstr += 'primesArray := [\n' + ','.join([st for st in F_hmf["primes"]]).replace('],[', '],\n[') + '];\n'
     outstr += 'primes := [ideal<ZF | {F!x : x in I}> : I in primesArray];\n\n'
 
-    if f["hecke_polynomial"] != 'x':
-        outstr += 'heckePol := ' + f["hecke_polynomial"] + ';\n'
+    if hecke_pol != 'x':
+        outstr += 'heckePol := ' + hecke_pol + ';\n'
         outstr += 'K<e> := NumberField(heckePol);\n'
     else:
         outstr += 'heckePol := x;\nK := Rationals(); e := 1;\n'
 
-    outstr += '\nheckeEigenvaluesArray := [' + ', '.join([st for st in f["hecke_eigenvalues"]]) + '];'
+    outstr += '\nheckeEigenvaluesArray := [' + ', '.join([st for st in hecke_eigs]) + '];'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
     outstr += 'for i := 1 to #heckeEigenvaluesArray do\n  heckeEigenvalues[primes[i]] := heckeEigenvaluesArray[i];\nend for;\n\n'
 
     outstr += 'ALEigenvalues := AssociativeArray();\n'
-    for s in f["AL_eigenvalues"]:
+    for s in AL_eigs:
         outstr += 'ALEigenvalues[ideal<ZF | {' + s[0][1:-1] + '}>] := ' + s[1] + ';\n'
 
     outstr += '\n// EXAMPLE:\n// pp := Factorization(2*ZF)[1][1];\n// heckeEigenvalues[pp];\n\n'
@@ -247,6 +253,12 @@ def download_hmf_sage(**args):
     if f is None:
         return "No such form"
 
+    # Get hecke_polynomial, hecke_eigenvalues and AL_eigenvalues
+    h = f if 'hecke_polynomial' in f else db_hecke().find_one({'label': label})
+    hecke_pol  = h['hecke_polynomial']
+    hecke_eigs = h['hecke_eigenvalues']
+    AL_eigs    = h['AL_eigenvalues']
+
     F = WebNumberField(f['field_label'])
     F_hmf = db_fields().find_one({'label': f['field_label']})
 
@@ -261,18 +273,18 @@ def download_hmf_sage(**args):
                                                                                       '],\\\n[') + ']\n'
     outstr += 'primes = [ZF.ideal(I) for I in primes_array]\n\n'
 
-    if f["hecke_polynomial"] != 'x':
-        outstr += 'heckePol = ' + f["hecke_polynomial"] + '\n'
+    if hecke_pol != 'x':
+        outstr += 'heckePol = ' + hecke_pol + '\n'
         outstr += 'K.<e> = NumberField(heckePol)\n'
     else:
         outstr += 'heckePol = x\nK = QQ\ne = 1\n'
 
-    outstr += '\nhecke_eigenvalues_array = [' + ', '.join([st for st in f["hecke_eigenvalues"]]) + ']'
+    outstr += '\nhecke_eigenvalues_array = [' + ', '.join([st for st in hecke_eigs]) + ']'
     outstr += '\nhecke_eigenvalues = {}\n'
     outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
 
     outstr += 'AL_eigenvalues = {}\n'
-    for s in f["AL_eigenvalues"]:
+    for s in AL_eigs:
         outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
 
     outstr += '\n# EXAMPLE:\n# pp = ZF.ideal(2).factor()[0][0]\n# hecke_eigenvalues[pp]\n'
@@ -296,13 +308,6 @@ def render_hmf_webpage(**args):
         info['count'] = args['count']
     except KeyError:
         info['count'] = 10
-
-    try:
-        numeigs = request.args['numeigs']
-        numeigs = int(numeigs)
-    except:
-        numeigs = 20
-    info['numeigs'] = numeigs
 
     hmf_field = db_fields().find_one({'label': data['field_label']})
     gen_name = findvar(hmf_field['ideals'])
@@ -346,8 +351,19 @@ def render_hmf_webpage(**args):
 
     info['newspace_dimension'] = dim_space
 
-    eigs = data['hecke_eigenvalues']
+    # Get hecke_polynomial, hecke_eigenvalues and AL_eigenvalues
+    try:
+        numeigs = request.args['numeigs']
+        numeigs = int(numeigs)
+    except:
+        numeigs = 20
+    info['numeigs'] = numeigs
+
+    h = data if 'hecke_polynomial' in data else db_hecke().find_one({'label': label})
+    hecke_pol  = h['hecke_polynomial']
+    eigs       = h['hecke_eigenvalues']
     eigs = eigs[:min(len(eigs), numeigs)]
+    AL_eigs    = h['AL_eigenvalues']
 
     primes = hmf_field['primes']
     n = min(len(eigs), len(primes))
@@ -367,9 +383,8 @@ def render_hmf_webpage(**args):
     if 'numeigs' in request.args:
         display_eigs = True
 
-    info['hecke_polynomial'] = web_latex_split_on_pm(teXify_pol(info['hecke_polynomial']))
+    info['hecke_polynomial'] = web_latex_split_on_pm(teXify_pol(hecke_pol))
 
-    AL_eigs = data['AL_eigenvalues']
     if not AL_eigs: # empty list
         if data['level_norm']==1: # OK, no bad primes
             info['AL_eigs'] = 'none'
