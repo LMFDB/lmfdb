@@ -162,7 +162,6 @@ class WebHMF(object):
 
         data['is_CM'] = '?'
         data['is_base_change'] = '?'
-        data['AL_eigenvalues_fixed'] = None
 
 
     def save_to_db(self):
@@ -178,7 +177,7 @@ class WebHMF(object):
             field = HilbertNumberField(self.dbdata['field_label'])
         agree = True
         for key in self.dbdata.keys():
-            if key in ['is_base_change', 'is_CM', 'AL_eigenvalues_fixed']:
+            if key in ['is_base_change', 'is_CM']:
                 continue
             if key=='hecke_eigenvalues':
                 if self.dbdata[key]!=f.dbdata[key]:
