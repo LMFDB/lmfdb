@@ -18,19 +18,19 @@ def db_fields():
 def db_search():
     hmfs = getDBConnection().hmfs
     if 'forms.search' in hmfs.collection_names():
-        print("Using hmfs.forms.search for searching")
+        #print("Using hmfs.forms.search for searching")
         return hmfs.forms.search
     else:
-        print("Using hmfs.forms for searching")
+        #print("Using hmfs.forms for searching")
         return hmfs.forms
 
 def db_hecke():
     hmfs = getDBConnection().hmfs
     if 'hecke' in hmfs.collection_names():
-        print("Using hmfs.hecke for Hecke field and eigenvalues")
+        #print("Using hmfs.hecke for Hecke field and eigenvalues")
         return hmfs.hecke
     else:
-        print("Using hmfs.forms for Hecke field and eigenvalues")
+        #print("Using hmfs.forms for Hecke field and eigenvalues")
         return hmfs.forms
 
 
