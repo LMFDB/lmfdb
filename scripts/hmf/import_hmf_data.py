@@ -345,7 +345,8 @@ def attach_new_label(f):
         hmf_forms.remove(f)
         print "REMOVED!"
 
-def make_stats():
+# Old function used to make a stats yaml file.
+def make_stats_dict():
     degrees = hmf_fields.distinct('degree')
     stats = {}
     for d in degrees:
@@ -372,6 +373,64 @@ def make_stats():
 # sage: sage: hst_yaml_file = open("lmfdb/hilbert_modular_forms/hst_stats.yaml", 'w')
 # sage: yaml.safe_dump(hst, hst_yaml_file)
 # sage: hst_yaml_file.close()
+
+def make_stats():
+    from data_mgt.utilities.rewrite import update_attribute_stats, update_joint_attribute_stats
+    hmfs = C.hmfs
+    form_stats = hmfs.forms.search.stats
+
+    print("Updating fields stats")
+    fields = hmfs.fields.distinct('label')
+    degrees = hmfs.fields.distinct('degree')
+    print("{} fields in database of degree from {} to {}".format(len(fields),min(degrees),max(degrees)))
+    print("...by degree...")
+    update_attribute_stats(hmfs, 'fields', 'degree')
+    print("...by degree and label...")
+    update_joint_attribute_stats(hmfs, 'fields', ['degree','label'], prefix='bydegree', unflatten=True)
+    print("...by degree and discriminant...")
+    update_joint_attribute_stats(hmfs, 'fields', ['degree','discriminant'], prefix='bydegree', unflatten=True)
+
+    print("Updating forms stats")
+    print("counts by field degree and by dimension...")
+    update_attribute_stats(hmfs, 'forms.search', 'deg')
+    update_attribute_stats(hmfs, 'forms.search', 'dimension')
+
+    print("counts by field degree and by level norm...")
+    entry = {'_id': 'level_norm_by_degree'}
+    degree_data = {}
+    for d in degrees:
+        res = hmfs.forms.search.find({'deg':d})
+        nforms = res.count()
+        Ns = res.distinct('level_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        degree_data[str(d)] = {'nforms':nforms,
+                          'min_norm':min_norm,
+                          'max_norm':max_norm,
+        }
+        print("{}: {}".format(d,degree_data[str(d)]))
+    form_stats.delete_one(entry)
+    entry.update(degree_data)
+    form_stats.insert_one(entry)
+
+    print("counts by field and by level norm...")
+    entry = {'_id': 'level_norm_by_field'}
+    field_data = {}
+    for f in fields:
+        ff = f.replace(".",":") # mongo does not allow "." in key strings
+        res = hmfs.forms.search.find({'field_label': f})
+        nforms = res.count()
+        Ns = res.distinct('level_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        field_data[ff] = {'nforms':nforms,
+                          'min_norm':min_norm,
+                          'max_norm':max_norm,
+        }
+        #print("{}: {}".format(f,field_data[ff]))
+    form_stats.delete_one(entry)
+    entry.update(field_data)
+    form_stats.insert_one(entry)
 
 
 def add_missing_disc_deg_wt(nf):
