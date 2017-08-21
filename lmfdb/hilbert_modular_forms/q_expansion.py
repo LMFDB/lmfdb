@@ -5,6 +5,19 @@ from sage.all import PolynomialRing, Rationals
 from lmfdb.base import getDBConnection
 from lmfdb.hilbert_modular_forms.hmf_stats import db_forms, db_fields
 
+#
+# This script is intended to run Magma on all Hilbert newforms (or all
+# those over one base field), compute a string representing the
+# q-expansion, and store it in the form.  As of August 2017 only one
+# newforms had this field, so apart from testing this has not been
+# run.
+#
+# If this is used in future we will need to decide which collection to
+# store the q-expansions in.
+#
+# This script is intended for offline use and should be moved to the
+# scripts directory.
+
 fields = getDBConnection().numberfields.fields
 
 P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])

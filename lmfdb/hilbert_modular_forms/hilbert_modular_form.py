@@ -6,7 +6,7 @@ from flask import render_template, url_for, request, redirect, make_response, fl
 
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
-from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary, db_forms, db_search, db_fields
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary, db_forms, db_search, db_fields, db_hecke
 
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.ecnf.WebEllipticCurve import db_ecnf
@@ -14,14 +14,14 @@ from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 from lmfdb.WebNumberField import WebNumberField
 
 from markupsafe import Markup
-from lmfdb.utils import to_dict, random_object_from_collection, web_latex_split_on_pm
+from lmfdb.utils import to_dict, random_value_from_collection, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
-    return hilbert_modular_form_by_label( random_object_from_collection( db_forms() ) )
+    return hilbert_modular_form_by_label( random_value_from_collection( db_search(), 'label' ) )
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*', '')

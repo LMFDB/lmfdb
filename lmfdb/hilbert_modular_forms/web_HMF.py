@@ -1,21 +1,18 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import getDBConnection
-from lmfdb.utils import make_logger
+
+# Class created to aid in uploading HMF data from the Magma output data files.
+# Incomplete, and currently not used for real work.
+#
+# In particular this code assumes that all the data for one HMF is in
+# a single collection, which is no longer the case.
 
 from sage.all import QQ, polygen
 
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
+from lmfdb.hilbert_modular_forms.hmf_stats import db_forms
+from lmfdb.utils import make_logger
 
 logger = make_logger("hmf")
-
-def db_hmf_forms():
-    return getDBConnection().hmfs.forms
-
-def db_hmf_fields():
-    return getDBConnection().hmfs.fields
-
-def db_nf_fields():
-    return getDBConnection().numberfields.fields
 
 def construct_full_label(field_label, weight, level_label, label_suffix):
     if all([w==2 for w in weight]):           # Parellel weight 2
@@ -60,7 +57,7 @@ class WebHMF(object):
         Searches for a specific Hilbert newform in the forms
         collection by its label.
         """
-        data = db_hmf_forms().find_one({"label" : label})
+        data = db_forms().find_one({"label" : label})
 
         if data:
             return WebHMF(data)

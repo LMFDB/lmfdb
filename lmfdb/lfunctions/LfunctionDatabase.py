@@ -42,10 +42,15 @@ def getInstanceLdata(label,label_type="url"):
     return Ldata
 
 def getHmfData(label):
-    from lmfdb.hilbert_modular_forms.hmf_stats import db_forms, db_fields
+    from lmfdb.hilbert_modular_forms.hmf_stats import db_fields, db_search, db_hecke
     # these will return None if nothing is found:
-    f = db_forms().find_one({'label': label})
-    F_hmf = db_fields().find_one({'label': f['field_label']})
+    f = db_search().find_one({'label': label})
+    if f:
+        h = db_hecke().find_one({'label': label})
+        f.update(h) # saves having to pass both objects
+        F_hmf = db_fields().find_one({'label': f['field_label']})
+    else:
+        F_hmf = None
     return (f, F_hmf)
 
 def getMaassDb():
