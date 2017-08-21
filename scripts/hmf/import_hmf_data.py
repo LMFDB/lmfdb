@@ -375,20 +375,38 @@ def make_stats_dict():
 # sage: hst_yaml_file.close()
 
 def make_stats():
-    from data_mgt.utilities.rewrite import update_attribute_stats, update_joint_attribute_stats
+    from data_mgt.utilities.rewrite import update_attribute_stats
     hmfs = C.hmfs
     form_stats = hmfs.forms.search.stats
 
     print("Updating fields stats")
     fields = hmfs.fields.distinct('label')
     degrees = hmfs.fields.distinct('degree')
+    field_sort_key = lambda F: int(F.split(".")[2]) # by discriminant
+    fields_by_degree = dict([(d,sorted(hmfs.fields.find({'degree':d}).distinct('label'),key=field_sort_key)) for d in degrees])
     print("{} fields in database of degree from {} to {}".format(len(fields),min(degrees),max(degrees)))
-    print("...by degree...")
-    update_attribute_stats(hmfs, 'fields', 'degree')
-    print("...by degree and label...")
-    update_joint_attribute_stats(hmfs, 'fields', ['degree','label'], prefix='bydegree', unflatten=True)
-    print("...by degree and discriminant...")
-    update_joint_attribute_stats(hmfs, 'fields', ['degree','discriminant'], prefix='bydegree', unflatten=True)
+
+    print("...summary of counts by degree...")
+    entry = {'_id': 'fields_summary'}
+    form_stats.delete_one(entry)
+    field_data = {'max': max(degrees),
+                  'min': min(degrees),
+                  'total': len(fields),
+                  'counts': [[d,hmfs.fields.count({'degree': d})]
+                            for d in degrees]
+    }
+    entry.update(field_data)
+    form_stats.insert_one(entry)
+
+    print("...fields by degree...")
+    entry = {'_id': 'fields_by_degree'}
+    form_stats.delete_one(entry)
+    for d in degrees:
+        entry[str(d)] = {'fields': fields_by_degree[d],
+                         'nfields': len(fields_by_degree[d]),
+                         'maxdisc': max(hmfs.fields.find({'degree':d}).distinct('discriminant'))
+        }
+    form_stats.insert_one(entry)
 
     print("Updating forms stats")
     print("counts by field degree and by dimension...")

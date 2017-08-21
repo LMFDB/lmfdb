@@ -463,7 +463,8 @@ def labels_page():
 @hmf_page.route("/browse/")
 def browse():
     info = {
-        'counts': get_counts()
+        'counts': get_counts(),
+        'stats': get_stats()
     }
     credit = 'John Voight'
     t = 'Hilbert modular forms'

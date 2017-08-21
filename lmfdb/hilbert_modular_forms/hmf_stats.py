@@ -25,10 +25,6 @@ def db_search():
 def db_forms_stats():
     return getDBConnection().hmfs.forms.search.stats
 
-def db_fields_stats():
-    return getDBConnection().hmfs.fields.stats
-
-
 the_HMFstats = None
 
 def get_counts():
@@ -112,40 +108,26 @@ class HMFstats(object):
         counts = {}
 
         formstats = db_forms_stats()
-        fieldstats = db_fields_stats()
 
         nforms = formstats.find_one({'_id':'deg'})['total']
         counts['nforms']  = nforms
         counts['nforms_c']  = comma(nforms)
 
-        degs = fieldstats.find_one({'_id':'degree'})
+        degs = formstats.find_one({'_id':'fields_summary'})
         nfields = degs['total']
         degrees = [x[0] for x in degs['counts']]
         degrees.sort()
         max_deg = max(degrees)
-        counts['degrees'] = [str(d) for d in degrees]
+        counts['degrees'] = degrees = [str(d) for d in degrees]
         counts['nfields'] = nfields
         counts['nfields_c']  = comma(nfields)
         counts['maxdeg'] = max_deg
         counts['max_deg_c'] = comma(max_deg)
 
-        counts['fields_by_degree'] = {}
-        counts['nfields_by_degree'] = {}
-        counts['discs_by_degree'] = {}
-        counts['max_disc_by_degree'] = {}
-        for d in degrees:
-            d = str(d)
-            ff = fieldstats.find_one({'_id':'bydegree/{}/label'.format(d)})
-            ff = [x[0] for x in ff['counts']]
-            ff.sort(key=field_sort_key)
-            counts['fields_by_degree'][d] = ff
-            counts['nfields_by_degree'][d] = len(ff)
-            ff = fieldstats.find_one({'_id':'bydegree/{}/discriminant'.format(d)})
-            ff = [x[0] for x in ff['counts']]
-            ff.sort()
-            counts['discs_by_degree'][d] = ff
-            counts['max_disc_by_degree'][d] = max(ff)
-
+        fields = formstats.find_one({'_id':'fields_by_degree'})
+        counts['fields_by_degree'] = dict([(d,fields[d]['fields']) for d in degrees])
+        counts['nfields_by_degree'] = dict([(d,fields[d]['nfields']) for d in degrees])
+        counts['max_disc_by_degree'] = dict([(d,fields[d]['maxdisc']) for d in degrees])
         self._counts  = counts
         #print("-- finished initializing HMF counts")
 
