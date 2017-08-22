@@ -4,9 +4,10 @@ import pymongo
 
 from flask import render_template, url_for, request, redirect, make_response, flash
 
+from lmfdb.base import getDBConnection
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
-from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary, db_forms, db_search, db_fields, db_hecke
+from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
 
 from lmfdb.ecnf.main import split_class_label
 from lmfdb.ecnf.WebEllipticCurve import db_ecnf
@@ -16,6 +17,45 @@ from lmfdb.WebNumberField import WebNumberField
 from markupsafe import Markup
 from lmfdb.utils import to_dict, random_value_from_collection, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
+
+def db_forms():
+    return getDBConnection().hmfs.forms
+
+def db_fields():
+    return getDBConnection().hmfs.fields
+
+def db_search():
+    return getDBConnection().hmfs.forms.search
+
+def db_hecke():
+    hmfs = getDBConnection().hmfs
+    if 'hecke' in hmfs.collection_names():
+        #print("Using hmfs.hecke for Hecke field and eigenvalues")
+        return hmfs.hecke
+    else:
+        #print("Using hmfs.forms for Hecke field and eigenvalues")
+        return hmfs.forms
+
+def get_hmf(label):
+    """Return a complete HMF, give its label.  Note that the
+    hecke_polynomial, hecke_eigenvalues and AL_eigenvalues may be in a
+    separate collection.  Use of this function hides this
+    implementation detail from the user.
+    """
+    f = db_forms().find_one({'label': label})
+    if f==None:
+        return None
+    if not 'hecke_polynomial' in f:
+        h = db_hecke().find_one({'label': label})
+        if h:
+            f.update(h)
+    return f
+
+def get_hmf_field(label):
+    """Return a field from the HMF fields collection, given its label.
+    Use of this function hides implementation detail from the user.
+    """
+    return db_fields().find_one({'label': label})
 
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
@@ -188,18 +228,16 @@ def render_hmf_webpage_download(**args):
 
 def download_hmf_magma(**args):
     label = str(args['label'])
-    f = db_forms().find_one({'label': label})
+    f = get_hmf(label)
     if f is None:
         return "No such form"
 
     F = WebNumberField(f['field_label'])
-    F_hmf = db_fields().find_one({'label': f['field_label']})
+    F_hmf = get_hmf_field(f['field_label'])
 
-    # Get hecke_polynomial, hecke_eigenvalues and AL_eigenvalues
-    h = f if 'hecke_polynomial' in f else db_hecke().find_one({'label': label})
-    hecke_pol  = h['hecke_polynomial']
-    hecke_eigs = h['hecke_eigenvalues']
-    AL_eigs    = h['AL_eigenvalues']
+    hecke_pol  = f['hecke_polynomial']
+    hecke_eigs = f['hecke_eigenvalues']
+    AL_eigs    = f['AL_eigenvalues']
 
     outstr = 'P<x> := PolynomialRing(Rationals());\n'
     outstr += 'g := P!' + str(F.coeffs()) + ';\n'
@@ -249,18 +287,16 @@ def download_hmf_magma(**args):
 
 def download_hmf_sage(**args):
     label = str(args['label'])
-    f = db_forms().find_one({'label': label})
+    f = get_hmf(label)
     if f is None:
         return "No such form"
 
-    # Get hecke_polynomial, hecke_eigenvalues and AL_eigenvalues
-    h = f if 'hecke_polynomial' in f else db_hecke().find_one({'label': label})
-    hecke_pol  = h['hecke_polynomial']
-    hecke_eigs = h['hecke_eigenvalues']
-    AL_eigs    = h['AL_eigenvalues']
+    hecke_pol  = f['hecke_polynomial']
+    hecke_eigs = f['hecke_eigenvalues']
+    AL_eigs    = f['AL_eigenvalues']
 
     F = WebNumberField(f['field_label'])
-    F_hmf = db_fields().find_one({'label': f['field_label']})
+    F_hmf = get_hmf_field(f['field_label'])
 
     outstr = 'P.<x> = PolynomialRing(QQ)\n'
     outstr += 'g = P(' + str(F.coeffs()) + ')\n'
@@ -299,7 +335,7 @@ def render_hmf_webpage(**args):
         label = data['label']
     else:
         label = str(args['label'])
-        data = db_forms().find_one({'label': label})
+        data = get_hmf(label)
     if data is None:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid Hilbert modular form label. It must be of the form (number field label) - (level label) - (orbit label) separated by dashes, such as 2.2.5.1-31.1-a" % args['label']), "error")
         return search_input_error()
@@ -309,7 +345,7 @@ def render_hmf_webpage(**args):
     except KeyError:
         info['count'] = 10
 
-    hmf_field = db_fields().find_one({'label': data['field_label']})
+    hmf_field = get_hmf_field(data['field_label'])
     gen_name = findvar(hmf_field['ideals'])
     nf = WebNumberField(data['field_label'], gen_name=gen_name)
     info['hmf_field'] = hmf_field
@@ -359,11 +395,10 @@ def render_hmf_webpage(**args):
         numeigs = 20
     info['numeigs'] = numeigs
 
-    h = data if 'hecke_polynomial' in data else db_hecke().find_one({'label': label})
-    hecke_pol  = h['hecke_polynomial']
-    eigs       = h['hecke_eigenvalues']
+    hecke_pol  = data['hecke_polynomial']
+    eigs       = data['hecke_eigenvalues']
     eigs = eigs[:min(len(eigs), numeigs)]
-    AL_eigs    = h['AL_eigenvalues']
+    AL_eigs    = data['AL_eigenvalues']
 
     primes = hmf_field['primes']
     n = min(len(eigs), len(primes))

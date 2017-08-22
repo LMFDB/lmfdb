@@ -13,31 +13,6 @@ def field_sort_key(F):
 
 logger = make_logger("hmf")
 
-def db_forms():
-    return getDBConnection().hmfs.forms
-
-def db_fields():
-    return getDBConnection().hmfs.fields
-
-def db_search():
-    hmfs = getDBConnection().hmfs
-    if 'forms.search' in hmfs.collection_names():
-        #print("Using hmfs.forms.search for searching")
-        return hmfs.forms.search
-    else:
-        #print("Using hmfs.forms for searching")
-        return hmfs.forms
-
-def db_hecke():
-    hmfs = getDBConnection().hmfs
-    if 'hecke' in hmfs.collection_names():
-        #print("Using hmfs.hecke for Hecke field and eigenvalues")
-        return hmfs.hecke
-    else:
-        #print("Using hmfs.forms for Hecke field and eigenvalues")
-        return hmfs.forms
-
-
 def db_forms_stats():
     return getDBConnection().hmfs.forms.search.stats
 
