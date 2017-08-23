@@ -507,7 +507,7 @@ class ECNF(object):
         if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
-            self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
+            self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
 
         if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])

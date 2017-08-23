@@ -9,21 +9,28 @@ def getEllipticCurveData(label):
     curves = connection.elliptic_curves.curves
     return curves.find_one({'lmfdb_label': label})
     
-def getInstanceLdata(label,label_type="url"):
-    db = base.getDBConnection().Lfunctions
+def getInstanceLdata(label, label_type="url"):
+    Lfunctions_db = base.getDBConnection()['Lfunctions']
+    Lfunctions =  Lfunctions_db["Lfunctions"];
+    instances = Lfunctions_db["instances"];
+
+    if label[:13] == "EllipticCurve" and label[:16] != "EllipticCurve/Q/":
+        Lfunctions =  Lfunctions_db["ecqd_Lfunctions"];
+        instances = Lfunctions_db["ecqd_instances"];
+
     try:
         if label_type == "url":
-            Lpointer = db.instances.find_one({'url': label})
+            Lpointer = instances.find_one({'url': label})
             if not Lpointer:
                 return None
             Lhash = Lpointer['Lhash']
-            Ldata = db.Lfunctions.find_one({'Lhash': Lhash})
+            Ldata = Lfunctions.find_one({'Lhash': Lhash})
             # do not ignore this error, if the instances record exists the
             # Lhash should be there and we want to know if it is not
             if not Ldata:
                 raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (label, Lhash))
         elif label_type == "Lhash":
-            Ldata = db.Lfunctions.find_one({'Lhash': label})
+            Ldata = Lfunctions.find_one({'Lhash': label})
         else:
             raise ValueError("Invalid label_type = '%s', should be 'url' or 'Lhash'" % label)
             
@@ -36,8 +43,7 @@ def getInstanceLdata(label,label_type="url"):
             Ldata['values'] = [ central_value ]
         else:
             Ldata['values'] += [ central_value ]
-
-    except ValueError:
+    except ValueError:   
         Ldata = None
     return Ldata
 

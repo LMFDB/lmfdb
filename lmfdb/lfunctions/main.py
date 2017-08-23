@@ -11,7 +11,7 @@ import re
 import sqlite3
 import numpy
 
-from Lfunction import (Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_EMF,
+from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, Lfunction_EC_Q, Lfunction_EMF,
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc)
@@ -160,7 +160,7 @@ def l_function_ec_sym3_browse_page():
 def l_function_genus2_browse_page():
     info = {"bread": get_bread(2, [("Genus 2 curve", url_for('.l_function_genus2_browse_page'))])}
     info["representation"] = ''
-    info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
+    #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
     return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
 
 
@@ -236,6 +236,7 @@ def l_function_dirichlet_page(modulus, number):
 
 
 # L-function of Elliptic curve #################################################
+# Over QQ
 @l_function_page.route("/EllipticCurve/Q/<conductor>/<isogeny>/")
 def l_function_ec_page(conductor, isogeny):
     args = {'conductor': conductor, 'isogeny': isogeny}
@@ -250,6 +251,13 @@ def l_function_ec_page_label(label):
     else:
         errmsg = 'The string %s is not an admissible elliptic curve label' % label
         return render_lfunction_exception(errmsg)
+
+# over a number field
+@l_function_page.route("/EllipticCurve/<field_label>/<conductor_label>/<isogeny_class_label>/")
+def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
+    args = {'field_label': field_label, 'conductor_label': conductor_label, 'isogeny_class_label': isogeny_class_label}
+    return render_single_Lfunction(Lfunction_EC, args, request)
+
 
 # L-function of Cusp form ############################################
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/<label>/<number>/")
@@ -838,13 +846,14 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
     plotrange = 30
     if hasattr(pythonL, 'plotpoints'):
         F = p2sage(pythonL.plotpoints)
+        plotrange = min(plotrange, F[-1][0]) #  F[-1][0] is the highest t-coordinated that we have a value for L
     else:
      # obsolete, because lfunc_data comes from DB?
         L = pythonL.sageLfunction
         if not hasattr(L, "hardy_z_function"):
             return None
         plotStep = .1
-        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurveQ"]:
+        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurveQ", "ellipticcurve"]:
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
     interpolation = spline(F)
@@ -929,7 +938,8 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
         return Lfunction_EC_Q(conductor=arg3, isogeny=arg4)
-
+    elif arg1 == 'EllipticCurve' and arg2 != 'Q':
+        return Lfunction_EC(field_label=arg2, conductor_label=arg3, isogeny_class_label=arg4)
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':  # this has args: one for weight and one for level
         return Lfunction_EMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
 

@@ -364,7 +364,7 @@ def lfuncEPtex(L, fmt):
     """ Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
-    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ"] and fmt == "arithmetic":
+    if L.Ltype() in ["genus2curveQ", "ellipticcurveQ", "ellipticcurve"] and fmt == "arithmetic":
         return lfuncEPhtml(L, fmt)
 
     ans = ""
