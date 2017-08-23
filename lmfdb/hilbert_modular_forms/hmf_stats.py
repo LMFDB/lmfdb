@@ -13,15 +13,6 @@ def field_sort_key(F):
 
 logger = make_logger("hmf")
 
-def db_forms():
-    return getDBConnection().hmfs.forms
-
-def db_fields():
-    return getDBConnection().hmfs.fields
-
-def db_search():
-    return getDBConnection().hmfs.forms.search
-
 def db_forms_stats():
     return getDBConnection().hmfs.forms.search.stats
 
