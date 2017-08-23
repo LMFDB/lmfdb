@@ -97,3 +97,11 @@ class HMFTest(LmfdbTest):
     def test_browse_by_degree(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/browse/2/')
         assert 'Number of newforms' in L.data
+
+    def test_missing_AL(self):
+        L = self.tc.get('/ModularForm/GL2/TotallyReal/3.3.49.1/holomorphic/3.3.49.1-512.1-a')
+        assert 'The Atkin-Lehner eigenvalues for this form are not in the database' in L.data
+
+    def test_level_one_AL(self):
+        L = self.tc.get('ModularForm/GL2/TotallyReal/2.2.173.1/holomorphic/2.2.173.1-1.1-a')
+        assert 'This form has no Atkin-Lehner eigenvalues' in L.data

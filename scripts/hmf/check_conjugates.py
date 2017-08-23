@@ -25,17 +25,24 @@ print "getting connection"
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by default
 
-#print "authenticating on the hmfs database"
-#import yaml
-#pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-#username = pw_dict['data']['username']
-#password = pw_dict['data']['password']
-#C['hmfs'].authenticate(username, password) ## read/write on hmfs
+# Run the following function to authenticate on the hmfs database
+# (necessary to write/delete data).  This requires having the
+# necessary password.yaml file.
+
+def authenticate():
+    print "authenticating on the hmfs database"
+    import yaml
+    import os
+    pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+    username = pw_dict['data']['username']
+    password = pw_dict['data']['password']
+    C['hmfs'].authenticate(username, password) ## read/write on hmfs
 
 print "setting hmfs, fields and forms"
 hmfs = C.hmfs
 fields = hmfs.fields
-forms = hmfs.forms
+forms = hmfs.forms.search
+hecke = hmfs.hecke
 nfcurves = C.elliptic_curves.nfcurves
 
 # Cache of WebNumberField and FieldData objects to avoid re-creation
@@ -106,46 +113,74 @@ def conjform_label(f, ig, cideals):
     short_label = level_label + '-' + f['label_suffix']
     return f['field_label'] + '-' + short_label
 
-def conjform(f, g, ig, cideals, cprimes, F): #ig index of g in auts
+def conjform(f, h, g, ig, cideals, cprimes, F):
+    """
+    f is a 'short' newform from the forms.search collection;
+    h is its hecke data from the hecke collection
+    g is an tuomorphism of the base field, ig it index in auts
+    cideals, cprimes are the lists of conjugated ideals and primes
+    """
     if 'is_base_change' in f and f['is_base_change'][0:3] == 'yes':
         print("This form is a base-change.")
         #return None
         #if the form is a base-change, but not from Q,
         #we should still add its conjugate
+
+    # first we copy / conjugate the short newform f.  The keys which
+    # need to be changed are 'label', 'short_label', 'level_label',
+    # 'level_ideal':
+
+    # first copy all fields (most of which will not be changed):
     fg = copy(f)
 
+    # but this must go:
+    del fg['_id']
+
+    # and these must be changed:
     fg['level_label'] = cideals[(f['level_label'],ig)]
     fg['short_label'] = fg['level_label'] + '-' + fg['label_suffix']
     fg['label'] = fg['field_label'] + '-' + fg['short_label']
-
     fg['level_ideal'] = conjstringideal(F,f['level_ideal'],g)
 
-    if 'AL_eigenvalues' in f:
-        fg['AL_eigenvalues'] = [[conjstringideal(F,x[0],g),x[1]] for x in f['AL_eigenvalues']]
+    # Next we apply the appropriate permutation to the Hecke and
+    # Atkin-Lehner eigenvalues to update the fields
+    # 'hecke_elgenvalues', 'AL_eigenvalues' of the hecke object, as
+    # well as its label.  The remaining key 'hecke_polynomial' is
+    # unchanged.
 
-    H = f['hecke_eigenvalues']
-    Hg = copy(f['hecke_eigenvalues'])
-    fg['hecke_eigenvalues'] = Hg
+    hg = {}
+    hg['label'] = fg['label']
+    hg['hecke_polynomial'] = h['hecke_polynomial']
 
-    attained  = [False for i in range(len(H))]
-    for i in range(len(H)):
-        if cprimes[ig][i] < len(H):
+    if 'AL_eigenvalues' in h:
+        hg['AL_eigenvalues'] = [[conjstringideal(F,x[0],g),x[1]] for x in h['AL_eigenvalues']]
+
+    H = h['hecke_eigenvalues']
+    naP = len(H)
+    Hg = [False for i in range(naP)] # just placeholders
+
+    attained  = [False for i in range(naP)]
+    for i in range(naP):
+        if cprimes[ig][i] < naP:
             attained[cprimes[ig][i]] = True
+
     maxi = 0
-    while maxi < len(H):
+    while maxi < naP:
         if not attained[maxi]:
             break
         maxi += 1
-    if maxi < len(H):
+
+    if maxi < naP:
         print("truncating list of eigenvalues (missing conjugate prime)")
     del Hg[maxi:]
 
-    for i in range(len(H)):
+    for i in range(naP):
         if cprimes[ig][i] < maxi:
             Hg[cprimes[ig][i]] = H[i]
 
-    del fg['_id']
-    return fg
+    hg['hecke_eigenvalues'] = Hg
+
+    return fg, hg
 
 def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, buildform=False):
     if fix:
@@ -177,6 +212,7 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
     F = data['F']
     for f in ftoconj:
         #print("Testing form %s" % f['label'])
+        h = hecke.find_one({'label': f['label']})
         for g in auts:
             ig = auts.index(g)
             fg_label = conjform_label(f, ig, cideals)
@@ -185,11 +221,12 @@ def checkadd_conj(label, min_level_norm=0, max_level_norm=None, fix=False, build
                 print("Testing form %s: conjugate %s not present" % (f['label'], fg_label))
                 countmiss += 1
                 if buildform:
-                    fg = conjform(f, g, ig, cideals, cprimes, F)
+                    fg, hg = conjform(f, h, g, ig, cideals, cprimes, F)
                 if fix:
                     if fg != None: #else: is a lift (self-conjugate), should have been detected
                         print("adding it : "+fg['label'])
                         forms.insert_one(fg)
+                        hecke.insert_one(fg)
                         count += 1
     print("\nMissing "+str(countmiss)+" conjugate forms (possibly counted multiple times if several nontrivial automorphisms).")
     print("Added "+str(count)+" new conjugate forms.")

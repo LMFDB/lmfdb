@@ -166,8 +166,7 @@ def make_curves_line(ec):
                      str(ec['number']),
                      ec['conductor_ideal'],
                      str(ec['conductor_norm'])
-                     ] + [",".join(t) for t in ec['ainvs']
-                          ] + [str(ec['cm']), '?' if ec['base_change']=='?' else str(int(len(ec['base_change']) > 0))]
+                    ]  + ec['ainvs'].split(";") + [str(ec['cm']), '?' if ec['base_change']=='?' else str(int(len(ec['base_change']) > 0))]
     return " ".join(output_fields)
 
 

@@ -86,7 +86,15 @@ div.scrollable {
 
 <h2>  Atkin-Lehner eigenvalues  </h2>
 
-{% if info.AL_eigs_count %} 
+{% if info.AL_eigs=='missing' %}
+<p>
+  The Atkin-Lehner eigenvalues for this form are not in the database.
+</p>
+{% elif info.AL_eigs=='none' %}
+<p>
+  This form has no Atkin-Lehner eigenvalues since the level is \((1)\).
+</p>
+{% else %}
 <p>
 <table class="ntdata" cellpadding=5>
 <tr>
@@ -103,8 +111,6 @@ div.scrollable {
 {% endfor %}
 </table>
 </p>
-{% else %}
-<p>None</P> 
 {% endif %}
 
 
