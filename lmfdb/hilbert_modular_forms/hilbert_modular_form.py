@@ -460,7 +460,8 @@ def labels_page():
 @hmf_page.route("/browse/")
 def browse():
     info = {
-        'counts': get_counts()
+        'counts': get_counts(),
+        'stats': get_stats()
     }
     credit = 'John Voight'
     t = 'Hilbert modular forms'
@@ -472,7 +473,7 @@ def browse():
 def statistics_by_degree(d):
     counts = get_counts()
     info = {}
-    if not d in counts['degrees']:
+    if not str(d) in counts['degrees']:
         if d==1:
             info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('emf.render_elliptic_modular_forms')
         else:
