@@ -160,7 +160,7 @@ def l_function_ec_sym3_browse_page():
 def l_function_genus2_browse_page():
     info = {"bread": get_bread(2, [("Genus 2 curve", url_for('.l_function_genus2_browse_page'))])}
     info["representation"] = ''
-    info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
+    #info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
     return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
 
 
