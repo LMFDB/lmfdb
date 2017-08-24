@@ -202,6 +202,30 @@ def splitcoeff(coeff):
     return answer
 
 
+def truncatenumber(numb, precision):
+    localprecision = precision
+    if numb < 0:
+        localprecision = localprecision + 1
+    truncation = float(10 ** (-1.0*localprecision))
+    if float(abs(numb - 1)) < truncation:
+        return("1")
+    elif float(abs(numb - 2)) < truncation:
+        return("2")
+    elif float(abs(numb - 3)) < truncation:
+        return("3")
+    elif float(abs(numb - 4)) < truncation:
+        return("4")
+    elif float(abs(numb)) < truncation:
+        return("0")
+    elif float(abs(numb + 1)) < truncation:
+        return("-1")
+    elif float(abs(numb + 2)) < truncation:
+        return("-2")
+    elif float(abs(numb - 0.5)) < truncation:
+        return("0.5")
+    elif float(abs(numb + 0.5)) < truncation:
+        return("-0.5")
+    return(str(numb)[0:int(localprecision)])
 
 ################################################################################
 #  display and formatting utilities
@@ -240,43 +264,6 @@ def rgbtohex(rgb):
     g = int(g)
     b = int(b)
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
-
-
-def encode_plot(P):
-    """
-    Convert a plot object to base64-encoded png format.
-
-    The resulting object is a base64-encoded version of the png
-    formatted plot, which can be displayed in web pages with no
-    further intervention.
-    """
-    from StringIO import StringIO
-    from matplotlib.backends.backend_agg import FigureCanvasAgg
-    from base64 import b64encode
-    from urllib import quote
-
-    virtual_file = StringIO()
-    fig = P.matplotlib()
-    fig.set_canvas(FigureCanvasAgg(fig))
-    fig.savefig(virtual_file, format='png')
-    virtual_file.seek(0)
-    return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
-
-
-def image_src(G):
-    return ajax_url(image_callback, G, _ajax_sticky=True)
-
-
-def image_callback(G):
-    P = G.plot()
-    _, filename = tempfile.mkstemp('.png')
-    P.save(filename)
-    data = open(filename).read()
-    os.unlink(filename)
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/png'
-    return response
-
 
 def pol_to_html(p):
     r"""
@@ -502,8 +489,6 @@ def order_values(doc, field, sub_fields=["len", "val"]):
     tmp = doc[field]
     doc[field] = bson.SON([(sub_field, tmp[sub_field]) for sub_field in sub_fields])
     return doc
-
-
 
 ################################################################################
 #  pymongo utilities
@@ -844,7 +829,6 @@ def ajax_more(callback, *arg_list, **kwds):
 def image_src(G):
     return ajax_url(image_callback, G, _ajax_sticky=True)
 
-
 def image_callback(G):
     P = G.plot()
     _, filename = tempfile.mkstemp('.png')
@@ -854,89 +838,6 @@ def image_callback(G):
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
     return response
-
-def len_val_fn(value):
-    """ This creates a SON pair of the type {len:len(value), val:value}, with the len first so lexicographic ordering works.
-        WATCH OUT however as later manipulations of the database are likely to mess up this ordering if not careful.
-        For this, use order_values below.
-        Later we should implement SON_manipulators that insert and save safely.
-
-        Detailed explanation: This is kind of a hack for mongodb:
-        Mongo uses lexicographic(?) ordering on strings, which is not convenient when 
-        strings are used to represent integers (necessary because of large integers).
-        For instance, it would not compare properly a generic 2 character/digit
-        integer and a 10 character/digit one. This means we lose the ability to
-        perform some range queries easily with mongo syntax.
-        The solution we are using is to set up a SON ordered dict for this:
-        If we had one of the field in our document called "Conductor":"342353223525",
-        we replace that with "Conductor_plus":{"len": int(12), "value": "342353223525"}
-        (12 is the length of that string)
-        This SON object is ordered, so the "len" entry comes first.
-        When comparing ordered dicts (=SON), mongo uses a recursive algorithm.
-        At the ordered dict stage it uses lexicographic ordering on the keys.
-        Inside each key,value pair it compares based on the default ordering of the value type.
-        For "Conductor_plus", it will first compare on the length, and if those are equal
-        compare on the strings. 
-    """
-    import bson
-    return bson.SON([("len", len(value)), ("val", value)])
-
-
-def order_values(doc, field, sub_fields=["len", "val"]):
-    """ Retrieving a document then saving it messes up the ordering in SON documents. This allows you to take a document,
-        retrieve a specific field, order it according to the order of sub_fields, and return a document with a SON in place,
-        which can then be saved.
-    """
-    import bson
-    tmp = doc[field]
-    doc[field] = bson.SON([(sub_field, tmp[sub_field]) for sub_field in sub_fields])
-    return doc
-
-def comma(x):
-    """
-    Input is an integer. Output is a string of that integer with commas.
-    CAUTION: this misbehaves if the input is not an integer.
-
-    Example:
-    >>> comma("12345")
-    '12,345'
-    """
-    return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
-
-def coeff_to_poly(c):
-    """
-    Convert a string representation of a polynomial to a sage polynomial.
-
-    Examples:
-    >>> coeff_to_poly("1 - 3x + x^2")
-    x**2 - 3*x + 1
-    >>> coeff_to_poly("1 - 3*x + x**2")
-    x**2 - 3*x + 1
-    """
-    from sage.all import PolynomialRing, QQ
-    return PolynomialRing(QQ, 'x')(c)
-
-def display_multiset(mset, formatter=str, *args):
-    """
-    Input mset is a list of pairs [item, multiplicity]
-    Return a string for display of the multi-set.  The
-    function formatter is a function whose first argument
-    is the item, and *args are the other arguments
-    and is applied to each item.
-
-    Example:
-    >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
-    'a x5, 1 x3, cat x2'
-    """
-    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
-
-def debug():
-    """
-    this triggers the debug environment on purpose. you have to start
-    the server via website.py --debug
-    don't forget to remove the debug() from your code!!!
-    """
-    assert current_app.debug is False, "Don't panic! You're here by request of debug()"
 
 def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None):
     """
@@ -962,50 +863,3 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None):
     virtual_file.seek(0)
     return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
 
-
-def signtocolour(sign):
-    """
-    Assigns an rgb string colour to a complex number based on its argument.
-    """
-    argument = cmath.phase(CC(str(sign)))
-    r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
-    g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
-    b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
-    return("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
-
-def rgbtohex(rgb):
-    """
-    Convergs an rgb string color representation into a hex string color
-    representation. For example, this converts rgb(63,255,100) to #3fff64
-    """
-    r,g,b = rgb[4:-1].split(',')
-    r = int(r)
-    g = int(g)
-    b = int(b)
-    return "#{:02x}{:02x}{:02x}".format(r,g,b)
-
-
-def truncatenumber(numb, precision):
-    localprecision = precision
-    if numb < 0:
-        localprecision = localprecision + 1
-    truncation = float(10 ** (-1.0*localprecision))
-    if float(abs(numb - 1)) < truncation:
-        return("1")
-    elif float(abs(numb - 2)) < truncation:
-        return("2")
-    elif float(abs(numb - 3)) < truncation:
-        return("3")
-    elif float(abs(numb - 4)) < truncation:
-        return("4")
-    elif float(abs(numb)) < truncation:
-        return("0")
-    elif float(abs(numb + 1)) < truncation:
-        return("-1")
-    elif float(abs(numb + 2)) < truncation:
-        return("-2")
-    elif float(abs(numb - 0.5)) < truncation:
-        return("0.5")
-    elif float(abs(numb + 0.5)) < truncation:
-        return("-0.5")
-    return(str(numb)[0:int(localprecision)])

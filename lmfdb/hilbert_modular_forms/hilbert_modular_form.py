@@ -19,7 +19,11 @@ from lmfdb.utils import to_dict, random_value_from_collection, web_latex_split_o
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 def db_forms():
-    return getDBConnection().hmfs.forms
+    hmfs = getDBConnection().hmfs
+    if 'hecke' in hmfs.collection_names():
+        return getDBConnection().hmfs.forms.search
+    else:
+        return getDBConnection().hmfs.forms
 
 def db_fields():
     return getDBConnection().hmfs.fields
@@ -30,10 +34,8 @@ def db_search():
 def db_hecke():
     hmfs = getDBConnection().hmfs
     if 'hecke' in hmfs.collection_names():
-        #print("Using hmfs.hecke for Hecke field and eigenvalues")
         return hmfs.hecke
     else:
-        #print("Using hmfs.forms for Hecke field and eigenvalues")
         return hmfs.forms
 
 def get_hmf(label):
@@ -46,6 +48,7 @@ def get_hmf(label):
     if f==None:
         return None
     if not 'hecke_polynomial' in f:
+        # This will happen if f comes from the 'forms.search' collection
         h = db_hecke().find_one({'label': label})
         if h:
             f.update(h)
