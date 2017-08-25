@@ -43,9 +43,12 @@ def render_web_newform(level, weight, character, label, **kwds):
     info = set_info_for_web_newform(level, weight, character, label, **kwds)
     emf_logger.debug("info={0}".format(info.keys()))
     ## Check if we want to download either file of the function or Fourier coefficients
-    if 'download' in info and 'error' not in info:
+    if 'error' in info:
+        return render_template("emf_web_newform.html", **info), 404
+    elif 'download' in info:
         return send_file(info['tempfile'], as_attachment=True, attachment_filename=info['filename'], add_etags=False)
-    return render_template("emf_web_newform.html", **info)
+    else:
+        return render_template("emf_web_newform.html", **info)
 
 
 def set_info_for_web_newform(level=None, weight=None, character=None, label=None, **kwds):
