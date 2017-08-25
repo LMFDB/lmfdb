@@ -181,6 +181,8 @@ def makeLfromdata(L):
     neg_plot.reverse()
     L.plotpoints = neg_plot[:] + pos_plot[:]
 
+    L.fromDB = True
+
 
 
 
@@ -458,10 +460,8 @@ class Lfunction_EC(Lfunction):
                 raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
 
         # Extract the data 
-        # this perhaps should be a method not an external function
+        # FIXME this perhaps should be a method not an external function
         makeLfromdata(self)
-        # TODO: makeLfromdata should set this to True
-        self.fromDB = True
 
         # Mandatory properties
         self.coefficient_period = 0
@@ -470,8 +470,13 @@ class Lfunction_EC(Lfunction):
         self.residues = []
         self.degree = self.field_degree * 2;
         
-        #FIXME, are these correct?
-        self.langlands = True;
+        #FIXME, is these use somewhere? 
+        if self.field_degree == 1 or (self.field_degree == 2 and self.field_real_signature == 2):
+            self.langlands = True;
+        else:
+            self.langlands = False;
+
+        #FIXME what is this used for?
         self.quasidegree = 1
         
         # Get the data for the corresponding modular form if possible
@@ -479,6 +484,7 @@ class Lfunction_EC(Lfunction):
 
         
         # Compute the # of curves in the isogeny class
+        # FIXME why do we need this?
         self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.long_isogeny_class_label, self.field_label)
 
         # Text for the web page
@@ -496,15 +502,20 @@ class Lfunction_EC(Lfunction):
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
-        #FIXME wrong type
+
+        #FIXME wrong type, what is this used for
         self.info['knowltype'] = "ec.q"
+
         self.info['title'] = "$" + self.texname + "$" + ", " + title_end
         self.info['title_arithmetic'] = "L-function "  + title_end
         self.info['title_analytic'] = "L-function " + title_end
         
+
+        # FIXME Field of the Dirichlet coefficients?
     def ground_field(self):
         return 'Q';
 
+        # FIXME base_field of the EC?
     def base_field(self):
         if self.field_label == "1.1.1.1":
             return 'Q'
@@ -532,7 +543,7 @@ class Lfunction_EC(Lfunction):
                 pass;
 
     def Lkey(self):
-        #FIXME
+        # FIXME what is this used for?
         # If over Q, the lmfdb label determines the curve
         return {"label": self.long_isogeny_class_label}
 
