@@ -54,6 +54,10 @@ class AVHomeTest(LmfdbTest):
         Check that we can change the table range
         """
         self.check_args("/Variety/Abelian/Fq/?table_field_range=32-100&table_dimension_range=2-4",'6408')
+        self.check_args("/Variety/Abelian/Fq/?table_field_range=4..7&table_dimension_range=2..4",'2944')
+        # and that it deals with invalid input
+        self.check_args("/Variety/Abelian/Fq/?table_field_range=2-27&table_dimension_range=1%2C3%2C5",'Error: You cannot use commas in the table ranges.')
+        self.check_args("/Variety/Abelian/Fq/?table_field_range=2-27&table_dimension_range=x",'not a valid input')
 
     def test_search_dimension(self):
         r"""
@@ -185,6 +189,9 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=2&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=no&polarizable=any",'2.3.a_af')
         self.not_check_args("/Variety/Abelian/Fq/?q=3&primitive=any&g=2&simple=any&p_rank=&jacobian=no&angle_ranks=&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'2.3.ae_i')
         self.not_check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=2&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=no&polarizable=any",'2.3.ae_i')
+        # unknowns
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=3&simple=any&primitive=any&jacobian=not_yes&polarizable=yes",'no matches')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=2&g=3&p_rank=0&simple=any&primitive=any&jacobian=not_no&polarizable=any",'3.2.c_c_c')
 
     def test_search_princpol(self):
         r"""
@@ -200,6 +207,11 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=5&g=2&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=no",'2.5.ac_ab')
         self.not_check_args("/Variety/Abelian/Fq/?q=5&primitive=any&g=2&simple=any&p_rank=&jacobian=any&angle_ranks=&polarizable=no&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'2.5.ab_f')
         self.not_check_args("/Variety/Abelian/Fq/?start=0&count=50&q=5&g=2&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=no",'2.5.ab_f')
+        # unknowns
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=17&g=2&simple=any&primitive=any&jacobian=no&polarizable=not_yes",'2.17.ae_ab')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=17&g=2&simple=any&primitive=any&jacobian=no&polarizable=not_no",'2.17.aj_cc')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=3&simple=any&primitive=any&jacobian=no&polarizable=not_no",'3.3.ag_v_abs')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=2&g=3&p_rank=0&simple=any&primitive=any&jacobian=not_no&polarizable=not_no",'3.2.c_e_g')
 
     def test_search_maxnumdisplay(self):
         r"""
@@ -234,3 +246,6 @@ class AVHomeTest(LmfdbTest):
         # initial coefficients and point counts of the abelian variety
         self.check_args("/Variety/Abelian/Fq/?q=&simple=any&g=&p_rank=&newton_polygon=&initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D&curve_point_count=&decomposition=&count=", 'no matches')
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple=any&p_rank=&newton_polygon=&initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D&curve_point_count=&decomposition=", 'no matches')
+        # Combining unknown fields on Jacobian and Principal polarization.
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=3&simple=any&primitive=any&jacobian=no&polarizable=not_no", '3.2.b_ab_af')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=3&simple=any&primitive=any&jacobian=no&polarizable=yes", 'no matches')

@@ -204,7 +204,10 @@ class WebNumberField:
             chash = hashlib.md5(coeffs).hexdigest()
             f = nfdb().find_one({'coeffhash': chash, 'coeffs': coeffs})
             if f is None:
-                return cls('a')  # will initialize data to None
+                # Check if we have a result of the old polredabs
+                f = nfdb().find_one({'oldpolredabscoeffhash': chash, 'oldpolredabscoeffs': coeffs})
+                if f is None:
+                    return cls('a')  # will initialize data to None
             return cls(f['label'], f)
         else:
             raise Exception('wrong type')

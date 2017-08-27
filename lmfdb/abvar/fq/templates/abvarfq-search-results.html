@@ -13,9 +13,9 @@
 <form id='re-search'>
     <input type="hidden" name="start" value="{{info.start}}"/>
     <input type="hidden" name="count" value="{{info.count}}"/>
-    
+
     <table border="0">
-        
+
         <tr>
             <td align=left>{{ KNOWL('ag.base_field',title = "base field") }}</td>
             <td align=left>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
@@ -23,7 +23,7 @@
             <td align=left>{{KNOWL('av.fq.angle_rank',title='angle rank')}}</td>
             <td align=left>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</td>
         </tr>
-        
+
         <tr>
             <td><input type='text' name='q' size=10 value="{{info.q}}" /></td>
             <td><input type='text' name='g' size=10 value="{{info.g}}" /></td>
@@ -31,7 +31,7 @@
             <td><input type='text' name='angle_ranks' size=10 value="{{info.angle_ranks}}" /></td>
             <td><input type='text' name='newton_polygon' size=10 value="{{info.newton_polygon}}" /></td>
         </tr>
-        
+
         <tr>
             <td align=left>{{ KNOWL('av.fq.initial_coefficients',title='initial coefficients')}}</td>
             <td align=left>{{ KNOWL('ag.fq.point_counts',title="points on variety") }}</td>
@@ -39,7 +39,7 @@
             <td align=left>{{ KNOWL('av.decomposition',title="isogeny factors") }}</td>
             <td align=left>{{KNOWL('av.fq.number_field',title='number field')}}</td>
         </tr>
-        
+
         <tr>
             <td><input type='text' name='initial_coefficients' size=10 value="{{info.initial_coefficients}}" /></td>
             <td><input type='text' name='abvar_point_count' size=10 value="{{info.abvar_point_count}}" /></td>
@@ -47,14 +47,14 @@
             <td><input type='text' name='decomposition' size=10 value="{{info.decomposition}}"/></td>
             <td><input type='text' name='number_field' size=10 value="{{info.number_field}}"/></td>
         </tr>
-        
+
         <tr>
             <td align=left>{{ KNOWL('av.simple',title="simple") }}</td>
             <td align=left>{{ KNOWL('ag.primitive',title="primitive") }}</td>
             <td align=left>{{KNOWL('ag.jacobian',title='Jacobian')}}</td>
             <td align=left>{{ KNOWL('av.princ_polarizable', title = 'princ polarizable')}}</td>
         </tr>
-        
+
         <tr>
             <td><select name='simple'>
                 <option value="yes" {% if info.simple == "yes" %}selected{% endif %}>yes</option>
@@ -68,22 +68,26 @@
             </select></td>
             <td><select name='jacobian'>
                 <option value="yes" {% if info.jacobian == "yes" %}selected{% endif %}>yes</option>
+		<option value="not_no" {% if info.jacobian == "not_no" %}selected{% endif %}>yes or unknown</option>
                 <option value="any" {% if info.jacobian == "any" %}selected{% endif %}>unrestricted</option>
+		<option value="not_yes" {% if info.jacobian == "not_yes" %}selected{% endif %}>no or unknown</option>
                 <option value="no" {% if info.jacobian == "no" %}selected{% endif %}>no</option>
             </select></td>
             <td><select name='polarizable'>
                 <option value="yes" {% if info.polarizable == "yes" %}selected{% endif %}>yes</option>
+		<option value="not_no" {% if info.polarizable == "not_no" %}selected{% endif %}>yes or unknown</option>
                 <option value="any" {% if info.polarizable == "any" %}selected{% endif %}>unrestricted</option>
+		<option value="not_yes" {% if info.polarizable == "not_yes" %}selected{% endif %}>no or unknown</option>
                 <option value="no" {% if info.polarizable == "no" %}selected{% endif %}>no</option>
             </select></td>
         </tr>
-        
+
         <tr>
             <td class="button">
                 <button type='submit' value='refine'>Search again</button>
             </td> </tr>
     </table>
-    
+
 </form>
 
 {% if info.err is defined %}
@@ -118,7 +122,7 @@ table td.params {
     {% if info.more > 0 %}
     <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
     {% endif %}
-    
+
 </h2>
 <table>
     <tr>
