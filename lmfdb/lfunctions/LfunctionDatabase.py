@@ -4,48 +4,79 @@ from lmfdb import base
 import pymongo
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 
+def db_lfunctions():
+    return base.getDBConnection().Lfunctions.Lfunctions;
+
+def db_instances():
+    return base.getDBConnection().Lfunctions.instances;
+
+def get_lfunction_by_Lhash(Lhash):
+    Ldata = db_lfunctions().find_one({'Lhash': Lhash})
+    # FIXME after merging dbs
+    if not Ldata:
+        Ldata = base.getDBConnection().Lfunctions.ecqd1_Lfunctions.find_one({'Lhash': Lhash})
+    if not Ldata:
+       return None
+    else:
+       return fix_Ldata(Ldata);
+
+def get_instances_by_Lhash(Lhash):
+    # FIXME after merging dbs
+    return list(db_instances().find({'Lhash': Lhash})) + list(base.getDBConnection().Lfunctions.ecqd1_instances.find({'Lhash': Lhash}));
+
+def get_instance_by_url(url):
+    instance =  db_instances().find_one({'url': url})
+    # FIXME after merging dbs
+    if not instance:
+        instance = base.getDBConnection().Lfunctions.ecqd1_instances.find_one({'url': url})
+    return instance
+
+def get_lfunction_by_url(url):
+#    if url.startswith("EllipticCurve") and not url.startswith("EllipticCurve/Q/"):
+#        Lfunctions =  base.getDBConnection().Lfunctions["ecqd1_Lfunctions"];
+#        instances = base.getDBConnection().Lfunctions["ecqd1_instances"];
+
+    instance = get_instance_by_url(url);
+    if not instance:
+        return None;
+
+    Lhash = instance['Lhash']
+    Ldata =  get_lfunction_by_Lhash(Lhash);
+    if not Ldata:
+        raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (Lhash, url))
+    return Ldata
+
+def fix_Ldata(Ldata):
+    if Ldata['order_of_vanishing'] or 'leading_term' not in Ldata.keys():
+        central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
+    else:
+        central_value = [0.5 + 0.5*Ldata['motivic_weight'], Ldata['leading_term']]
+    if 'values' not in Ldata:
+        Ldata['values'] = [ central_value ]
+    else:
+        Ldata['values'] += [ central_value ]
+    return Ldata
+
+
 def getEllipticCurveData(label):
-    connection = base.getDBConnection()
-    curves = connection.elliptic_curves.curves
-    return curves.find_one({'lmfdb_label': label})
+    from lmfdb.elliptic_curves.web_ec import db_ec
+    return db_ec().find_one({'lmfdb_label': label})
     
+#FIXME this should be deprecated
 def getInstanceLdata(label, label_type="url"):
-    Lfunctions_db = base.getDBConnection()['Lfunctions']
-    Lfunctions =  Lfunctions_db["Lfunctions"];
-    instances = Lfunctions_db["instances"];
-
-    if label[:13] == "EllipticCurve" and label[:16] != "EllipticCurve/Q/":
-        Lfunctions =  Lfunctions_db["ecqd_Lfunctions"];
-        instances = Lfunctions_db["ecqd_instances"];
-
     try:
         if label_type == "url":
-            Lpointer = instances.find_one({'url': label})
-            if not Lpointer:
-                return None
-            Lhash = Lpointer['Lhash']
-            Ldata = Lfunctions.find_one({'Lhash': Lhash})
-            # do not ignore this error, if the instances record exists the
-            # Lhash should be there and we want to know if it is not
-            if not Ldata:
-                raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (label, Lhash))
+            return get_lfunction_by_url(label);
         elif label_type == "Lhash":
-            Ldata = Lfunctions.find_one({'Lhash': label})
+            return get_lfunction_by_Lhash(label);
         else:
             raise ValueError("Invalid label_type = '%s', should be 'url' or 'Lhash'" % label)
-            
-        # Need to change this so it shows the nonvanishing derivative
-        if Ldata['order_of_vanishing'] or 'leading_term' not in Ldata.keys():
-            central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
-        else:
-            central_value = [0.5 + 0.5*Ldata['motivic_weight'],Ldata['leading_term']]
-        if 'values' not in Ldata:
-            Ldata['values'] = [ central_value ]
-        else:
-            Ldata['values'] += [ central_value ]
     except ValueError:   
         Ldata = None
+
     return Ldata
+
+
 
 def getHmfData(label):
     from lmfdb.hilbert_modular_forms.hmf_stats import db_forms, db_fields

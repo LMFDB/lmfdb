@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import flask
-from flask import render_template, url_for, request, make_response
+from flask import render_template, url_for, request, make_response 
 
 from sage.all import plot, srange, spline, line
 
@@ -11,7 +11,7 @@ import re
 import sqlite3
 import numpy
 
-from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, Lfunction_EC_Q, Lfunction_EMF,
+from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunction_EC_Q, 
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc)
@@ -237,17 +237,19 @@ def l_function_dirichlet_page(modulus, number):
 
 # L-function of Elliptic curve #################################################
 # Over QQ
-@l_function_page.route("/EllipticCurve/Q/<conductor>/<isogeny>/")
-def l_function_ec_page(conductor, isogeny):
-    args = {'conductor': conductor, 'isogeny': isogeny}
-    return render_single_Lfunction(Lfunction_EC_Q, args, request)
+@l_function_page.route("/EllipticCurve/Q/<conductor_label>/<isogeny_class_label>/")
+def l_function_ec_page(conductor_label, isogeny_class_label):
+    #args = {'conductor': conductor, 'isogeny': isogeny}
+    #return render_single_Lfunction(Lfunction_EC_Q, args, request)
+    args = {'field_label': "1.1.1.1", 'conductor_label': conductor_label, 'isogeny_class_label': isogeny_class_label}
+    return render_single_Lfunction(Lfunction_EC, args, request)
 
 @l_function_page.route("/EllipticCurve/Q/<label>/")
 def l_function_ec_page_label(label):
     conductor, isogeny = getConductorIsogenyFromLabel(label)
     if conductor and isogeny:
-        return flask.redirect(url_for('.l_function_ec_page', conductor = conductor,
-                                      isogeny = isogeny), 301)
+        return flask.redirect(url_for('.l_function_ec_page', conductor_label = conductor,
+                                      isogeny_class_label = isogeny), 301)
     else:
         errmsg = 'The string %s is not an admissible elliptic curve label' % label
         return render_lfunction_exception(errmsg)
@@ -392,7 +394,7 @@ def render_single_Lfunction(Lclass, args, request):
     try:
         L = Lclass(**args)
         # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
-    except (ValueError,KeyError,TypeError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
+    except ZeroDivisionError as err: #(ValueError,KeyError,TypeError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
         return render_lfunction_exception(err)
     try:
         if temp_args['download'] == 'lcalcfile':
@@ -496,30 +498,118 @@ def set_bread_and_friends(L, request):
         if L.fromDB and not L.selfdual:
             friends.append(('Dual L-function', L.dual_link))
         bread = get_bread(1, [(charname, request.url)])
+    
+    elif L.Ltype() == 'ellipticcurve':
+        def name_and_object_from_url(url):
+            from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
+            from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
+            from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
+            from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db 
+            from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
+            url_split = url.split("/");
+            name = None;
+            obj = False;
 
-    elif L.Ltype() == 'ellipticcurveQ':
-        label = L.label
+            if url_split[0] == "EllipticCurve":
+                if url_split[1] == 'Q':
+                    # EllipticCurve/Q/341641/a
+                    label_isogeny_class = ".".join(url_split[-2:]);
+                    # count doesn't honor limit!
+                    obj = is_ec_isogeny_class_in_db(label_isogeny_class);
+                else:
+                    # EllipticCurve/2.2.140.1/14.1/a
+                    label_isogeny_class =  "-".join(url_split[-3:]);
+                    obj = is_ecnf_isogeny_class_in_db(label_isogeny_class);
+                name = 'Isogeny Class ' + label_isogeny_class;
 
-        #for i in range(1, L.nr_of_curves_in_class + 1):
-        #    friends.append(('Elliptic curve ' + label + str(i), friendlink + '/' + str(i)))
-        if L.modform:
-            origins.append(('Modular form ' + label.replace('.', '.2'), url_for("emf.render_elliptic_modular_forms",
-                                                                                level=L.modform['level'], weight=2,
-                                                                                character=1, label=L.modform['iso'])))
-        else:
-            origins.append(('Modular form ' + label.replace('.', '.2') +'&nbsp;  n/a', ""))
-           
-        origins.append(('Isogeny class ' + label, friendlink))
+            elif url_split[0] == "ModularForm":
+                if url_split[1] == 'GL2':
+                    if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
+                        # ModularForm/GL2/Q/holomorphic/14/2/1/a
+                        full_label = ".".join(url_split[-4:])
+                        name =  'Modular Form ' + full_label;
+                        obj = is_newform_in_db(full_label);
 
-        if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
-            friends.append(
+                    elif  url_split[2] == 'TotallyReal':
+                        # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
+                        label = url_split[-1];
+                        name =  'Hilbert Modular Form ' + label;
+                        obj = is_hmf_in_db(label);
+
+                    elif url_split[2] ==  'ImaginaryQuadratic':
+                        # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
+                        label = '-'.join(url_split[-3:]) 
+                        name = 'Bianchi Modular Form ' + label;
+                        obj = is_bmf_in_db(label);
+            
+            return name, obj
+
+        from LfunctionDatabase import get_instances_by_Lhash
+        for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
+            url = instance['url'];
+            name, obj = name_and_object_from_url(url);
+            if obj is None:
+                name += '&nbsp;  n/a';
+                origins.append((name, ""));
+            else:
+                origins.append((name, url));
+
+        if "," in L.Lhash:
+            for factor_Lhash in  L.Lhash.split(","):
+                for instance in sorted(get_instances_by_Lhash(factor_Lhash), key=lambda elt: elt['url']):
+                    url = instance['url'];
+                    name, obj = name_and_object_from_url(url);
+                    if obj is None:
+                        name += '&nbsp;  n/a';
+                        friends.append((name, ""));
+                    else:
+                        # one could also point directly to the L-function
+                        friends.append((name, url));
+
+        if L.base_field() == 'Q':
+            label = L.label
+            if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
+                friends.append(
                 ('Symmetric square L-function', url_for(".l_function_ec_sym_page_label",
                                                         power='2', label=label)))
-            friends.append(
+                friends.append(
                 ('Symmetric cube L-function', url_for(".l_function_ec_sym_page_label", power='3', label=label)))
-        bread = get_bread(2, [('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                                      (label, url_for('.l_function_ec_page', conductor=L.conductor,
-                                                      isogeny = L.isogeny))])
+                
+            bread = get_bread(2, 
+                    [
+                        ('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                        (label,  
+                            url_for('.l_function_ec_page', 
+                                conductor_label=L.conductor,
+                                isogeny_class_label = L.isogeny_class_label
+                                )
+                         )
+                        ])
+
+            #TODO replace classical modular forms origin by adding an object to the database
+            if L.conductor <= 101:
+                origins.append(
+                        ('Modular form ' + (L.long_isogeny_class_label).replace('.', '.2'),
+                            url_for("emf.render_elliptic_modular_forms",
+                            level=L.conductor, weight=2,
+                            character=1, label=L.isogeny_class_label)
+                            ))
+            else:
+                origins.append(('Modular form ' + (L.long_isogeny_class_label).replace('.', '.2') +'&nbsp;  n/a', ""))
+
+        else:
+            bread = get_bread(
+                    L.degree , 
+                    [
+                        # FIXME there is no .l_function_ecnf_browse_page
+                        ('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                        (L.label, 
+                            url_for('.l_function_ecnf_page', 
+                                field_label = L.field_label, 
+                                conductor_label = L.conductor_label ,
+                                isogeny_class_label = L.long_isogeny_class_label)
+                        )
+                    ])
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
@@ -530,15 +620,16 @@ def set_bread_and_friends(L, request):
         else:
             full_label = str(L.level) + '.' + str(L.weight) + str(L.label)
             
-        friends = [('Modular form ' + full_label, friendlink)]
+        origins = [('Modular form ' + full_label, friendlink)]
         
         if L.ellipticcurve:
-            friends.append(
-                ('EC isogeny class ' + L.ellipticcurve,
+            origins.append(
+                ('Isogeny class ' + L.ellipticcurve,
                  url_for("ec.by_ec_label", label=L.ellipticcurve)))
-            for i in range(1, L.nr_of_curves_in_class + 1):
-                friends.append(('Elliptic curve ' + L.ellipticcurve + str(i),
-                                        url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
+            # DEPRECATED
+            #for i in range(1, L.nr_of_curves_in_class + 1):
+            #    friends.append(('Elliptic curve ' + L.ellipticcurve + str(i),
+            #                            url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
             if not isogeny_class_cm(L.ellipticcurve):
                 friends.append(
                     ('Symmetric square L-function',
@@ -853,7 +944,7 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         if not hasattr(L, "hardy_z_function"):
             return None
         plotStep = .1
-        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurveQ", "ellipticcurve"]:
+        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurve"]:
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
     interpolation = spline(F)
@@ -937,7 +1028,8 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_Dirichlet(charactermodulus=arg3, characternumber=arg4)
 
     elif arg1 == 'EllipticCurve' and arg2 == 'Q':
-        return Lfunction_EC_Q(conductor=arg3, isogeny=arg4)
+        #return Lfunction_EC_Q(conductor=arg3, isogeny=arg4)
+        return Lfunction_EC(field_label="1.1.1.1", conductor_label=arg3, isogeny_class_label=arg4)
     elif arg1 == 'EllipticCurve' and arg2 != 'Q':
         return Lfunction_EC(field_label=arg2, conductor_label=arg3, isogeny_class_label=arg4)
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':  # this has args: one for weight and one for level
@@ -1082,8 +1174,8 @@ def processEllipticCurveNavigation(startCond, endCond):
             s += '<tr>'
 
         counter += 1
-        s += '<td><a href="' + url_for('.l_function_ec_page', conductor=cond,
-                                       isogeny = iso) + '">%s</a></td>\n' % label
+        s += '<td><a href="' + url_for('.l_function_ec_page', conductor_label=cond,
+                                       isogeny_class_label = iso) + '">%s</a></td>\n' % label
 
         if counter == nr_of_columns:
             s += '</tr>\n'

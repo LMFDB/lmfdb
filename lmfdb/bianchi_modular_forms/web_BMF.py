@@ -24,6 +24,9 @@ def db_nf_fields():
 def db_ecnf():
     return getDBConnection().elliptic_curves.nfcurves
 
+def is_bmf_in_db(label):
+    return db_forms().find({"label": label}).limit(1).count(True) > 0
+
 class WebBMF(object):
     """
     Class for an Bianchi Newform

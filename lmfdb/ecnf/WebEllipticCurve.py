@@ -20,6 +20,10 @@ def db_nfdb():
 def db_iqf_labels():
     return getDBConnection().elliptic_curves.IQF_labels
 
+def is_ecnf_isogeny_class_in_db(label_isogeny_class):
+    return db_ecnf().find({"class_label" : label_isogeny_class}).limit(1).count(True) > 0;
+
+
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
 # 1. [N,c,d] with N=norm and [N/d,0;c,d] the HNF

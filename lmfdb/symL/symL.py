@@ -75,7 +75,7 @@ class SymmetricPowerLFunction(SageObject):
         return F.coefficients(sparse=False)
 
     def an_list(self, upperbound=100000):
-        from sage.rings.fast_arith import prime_range
+        #from sage.rings.fast_arith import prime_range # imported but unused
         from lmfdb.utils import an_list
         return an_list(self.eulerFactor, upperbound=upperbound,
                        base_field=sage.rings.all.RationalField())

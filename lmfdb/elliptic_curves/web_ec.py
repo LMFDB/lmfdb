@@ -60,6 +60,9 @@ def db_ecstats():
 def padic_db():
     return getDBConnection().elliptic_curves.padic_db
 
+def is_ec_isogeny_class_in_db(label_isogeny_class):
+    return db_ec().find({"lmfdb_iso" : label_isogeny_class} ).limit(1).count(True) > 0
+
 def split_galois_image_code(s):
     """Each code starts with a prime (1-3 digits but we allow for more)
     followed by an image code or that prime.  This function returns
