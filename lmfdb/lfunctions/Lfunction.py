@@ -80,7 +80,6 @@ def an_from_data(euler_factors,upperbound=30):
 # TODO: Perhaps this should be a method of generic Lfunction class
 def makeLfromdata(L):
     data = L.lfunc_data
-    print data
     
     # Mandatory properties
     L.Lhash = data['Lhash'];
