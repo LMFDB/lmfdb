@@ -15,10 +15,9 @@ def get_lfunction_by_Lhash(Lhash):
     # FIXME after merging dbs
     if not Ldata:
         Ldata = base.getDBConnection().Lfunctions.ecqd1_Lfunctions.find_one({'Lhash': Lhash})
-    if not Ldata:
-       return None
-    else:
-       return fix_Ldata(Ldata);
+    if Ldata is None:
+        raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
+    return fix_Ldata(Ldata);
 
 def get_instances_by_Lhash(Lhash):
     # FIXME after merging dbs
