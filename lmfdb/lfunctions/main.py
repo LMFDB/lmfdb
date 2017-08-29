@@ -509,18 +509,18 @@ def set_bread_and_friends(L, request):
             from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
             url_split = url.split("/");
             name = None;
-            obj = False;
+            obj_exists = False;
 
             if url_split[0] == "EllipticCurve":
                 if url_split[1] == 'Q':
                     # EllipticCurve/Q/341641/a
                     label_isogeny_class = ".".join(url_split[-2:]);
                     # count doesn't honor limit!
-                    obj = is_ec_isogeny_class_in_db(label_isogeny_class);
+                    obj_exists = is_ec_isogeny_class_in_db(label_isogeny_class);
                 else:
                     # EllipticCurve/2.2.140.1/14.1/a
                     label_isogeny_class =  "-".join(url_split[-3:]);
-                    obj = is_ecnf_isogeny_class_in_db(label_isogeny_class);
+                    obj_exists = is_ecnf_isogeny_class_in_db(label_isogeny_class);
                 name = 'Isogeny Class ' + label_isogeny_class;
 
             elif url_split[0] == "ModularForm":
@@ -529,43 +529,42 @@ def set_bread_and_friends(L, request):
                         # ModularForm/GL2/Q/holomorphic/14/2/1/a
                         full_label = ".".join(url_split[-4:])
                         name =  'Modular Form ' + full_label;
-                        obj = is_newform_in_db(full_label);
+                        obj_exists = is_newform_in_db(full_label);
 
                     elif  url_split[2] == 'TotallyReal':
                         # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
                         label = url_split[-1];
                         name =  'Hilbert Modular Form ' + label;
-                        obj = is_hmf_in_db(label);
+                        obj_exists = is_hmf_in_db(label);
 
                     elif url_split[2] ==  'ImaginaryQuadratic':
                         # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
                         label = '-'.join(url_split[-3:]) 
                         name = 'Bianchi Modular Form ' + label;
-                        obj = is_bmf_in_db(label);
+                        obj_exists = is_bmf_in_db(label);
             
-            return name, obj
+            return name, obj_exists
 
         from LfunctionDatabase import get_instances_by_Lhash
         for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
             url = instance['url'];
-            name, obj = name_and_object_from_url(url);
-            if obj is None:
+            name, obj_exists = name_and_object_from_url(url);
+            if obj_exists:
+                origins.append((name, "/"+url));
+            else:
                 name += '&nbsp;  n/a';
                 origins.append((name, ""));
-            else:
-                origins.append((name, url));
 
         if "," in L.Lhash:
             for factor_Lhash in  L.Lhash.split(","):
                 for instance in sorted(get_instances_by_Lhash(factor_Lhash), key=lambda elt: elt['url']):
                     url = instance['url'];
-                    name, obj = name_and_object_from_url(url);
-                    if obj is None:
+                    name, obj_exists = name_and_object_from_url(url);
+                    if obj_exists:
+                        friends.append((name,  "/" + url));
+                    else:
                         name += '&nbsp;  n/a';
                         friends.append((name, ""));
-                    else:
-                        # one could also point directly to the L-function
-                        friends.append((name, url));
 
         if L.base_field() == 'Q':
             label = L.label
