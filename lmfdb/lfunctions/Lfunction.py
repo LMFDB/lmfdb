@@ -490,7 +490,7 @@ class Lfunction_EC(Lfunction):
         isogeny_class_url = "EllipticCurve/%s/%s/%s" % (self.field, self.conductor_label, self.isogeny_class_label,)
         self.lfunc_data = LfunctionDatabase.getInstanceLdata(isogeny_class_url)
         if not self.lfunc_data:
-                raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
+            raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
 
         # Extract the data 
         makeLfromdata(self)
