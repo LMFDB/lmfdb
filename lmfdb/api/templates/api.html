@@ -54,9 +54,8 @@ where the prefix "-" indicates to sort in descending order.
     <li>
     The query <a href='{{ url_for(".api_query", db="numberfields", collection="fields", signature="s2,5", _format="json") }}'>?signature=s2,5&amp;_format=json</a>
     searches for numberfields with the signature <code>[2, 5]</code>
-    stored as a string (prefix "s") <code>"2,5"</code> and givs the result in the JSON format.
-    (Without any prefix, it is handled like a string. Example:
-    <a href='{{ url_for(".api_query", db="hgm", collection="families", gal3="O(5,3)") }}'>hgm/families?gal3=O(5,3)</a>.)
+    stored as a string (prefix "s") <code>"2,5"</code> and gives the result in the JSON format.
+    (The prefix "s" is optional, string is the default encoding for search values.)
     </li>
     <li>
     To search for integers or floats, prefix the value with "i" or "f".
