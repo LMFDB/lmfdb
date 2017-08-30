@@ -533,13 +533,13 @@ def set_bread_and_friends(L, request):
                     elif  url_split[2] == 'TotallyReal':
                         # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
                         label = url_split[-1];
-                        name =  'Hilbert Modular form ' + label;
+                        name =  'Hilbert modular form ' + label;
                         obj_exists = is_hmf_in_db(label);
 
                     elif url_split[2] ==  'ImaginaryQuadratic':
                         # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
                         label = '-'.join(url_split[-3:]) 
-                        name = 'Bianchi Modular form ' + label;
+                        name = 'Bianchi modular form ' + label;
                         obj_exists = is_bmf_in_db(label);
             
             return name, obj_exists

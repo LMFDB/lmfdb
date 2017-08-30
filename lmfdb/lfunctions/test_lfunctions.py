@@ -65,8 +65,8 @@ class LfunctionTest(LmfdbTest):
         assert '0.3599289595' in L.data
         assert 'Isogeny class 2.2.5.1-31.1-a' in L.data 
         assert 'Isogeny class 2.2.5.1-31.2-a' in L.data 
-        assert 'Hilbert Modular form 2.2.5.1-31.1-a' in L.data
-        assert 'Hilbert Modular form 2.2.5.1-31.2-a' in L.data
+        assert 'Hilbert modular form 2.2.5.1-31.1-a' in L.data
+        assert 'Hilbert modular form 2.2.5.1-31.2-a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
         L = self.tc.get('/L/EllipticCurve/2.2.5.1/80.1/a/')
@@ -74,7 +74,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 2.2.5.1-80.1-a' in L.data 
         assert 'Isogeny class 20.a' in L.data 
         assert 'Isogeny class 100.a' in L.data
-        assert 'Hilbert Modular form 2.2.5.1-80.1-a' in L.data
+        assert 'Hilbert modular form 2.2.5.1-80.1-a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
         L = self.tc.get('/L/EllipticCurve/2.0.11.1/256.1/a/')
@@ -82,17 +82,17 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 2.0.11.1-256.1-b' in L.data 
         assert 'Isogeny class 2.2.44.1-16.1-a' in L.data 
         assert 'Isogeny class 2.2.44.1-16.1-c' in L.data 
-        assert 'Hilbert Modular form 2.2.44.1-16.1-a' in L.data 
-        assert 'Hilbert Modular form 2.2.44.1-16.1-c' in L.data
-        assert 'Bianchi Modular form 2.0.11.1-256.1-a' in L.data
-        assert 'Bianchi Modular form 2.0.11.1-256.1-b' in L.data
+        assert 'Hilbert modular form 2.2.44.1-16.1-a' in L.data 
+        assert 'Hilbert modular form 2.2.44.1-16.1-c' in L.data
+        assert 'Bianchi modular form 2.0.11.1-256.1-a' in L.data
+        assert 'Bianchi modular form 2.0.11.1-256.1-b' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
 
         L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/')
         assert '/SatoTateGroup/1.2.' in L.data
         assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.data
-        assert r"Bianchi Modular form 2.0.1879.1-1.0.1-a&nbsp;  n/a" in L.data, L.data
+        assert r"Bianchi modular form 2.0.1879.1-1.0.1-a&nbsp;  n/a" in L.data, L.data
 
 
 
