@@ -521,26 +521,26 @@ def set_bread_and_friends(L, request):
                     # EllipticCurve/2.2.140.1/14.1/a
                     label_isogeny_class =  "-".join(url_split[-3:]);
                     obj_exists = is_ecnf_isogeny_class_in_db(label_isogeny_class);
-                name = 'Isogeny Class ' + label_isogeny_class;
+                name = 'Isogeny class ' + label_isogeny_class;
 
             elif url_split[0] == "ModularForm":
                 if url_split[1] == 'GL2':
                     if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
                         # ModularForm/GL2/Q/holomorphic/14/2/1/a
                         full_label = ".".join(url_split[-4:])
-                        name =  'Modular Form ' + full_label;
+                        name =  'Modular form ' + full_label;
                         obj_exists = is_newform_in_db(full_label);
 
                     elif  url_split[2] == 'TotallyReal':
                         # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
                         label = url_split[-1];
-                        name =  'Hilbert Modular Form ' + label;
+                        name =  'Hilbert Modular form ' + label;
                         obj_exists = is_hmf_in_db(label);
 
                     elif url_split[2] ==  'ImaginaryQuadratic':
                         # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
                         label = '-'.join(url_split[-3:]) 
-                        name = 'Bianchi Modular Form ' + label;
+                        name = 'Bianchi Modular form ' + label;
                         obj_exists = is_bmf_in_db(label);
             
             return name, obj_exists
@@ -566,7 +566,7 @@ def set_bread_and_friends(L, request):
                         name += '&nbsp;  n/a';
                         friends.append((name, ""));
 
-        if L.base_field() == 'Q':
+        if L.base_field() == '1.1.1.1': # i.e., QQ
             label = L.label
             if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
                 friends.append(

@@ -115,7 +115,13 @@ def makeLfromdata(L):
         L.motivic_weight = data['motivic_weight']
     else:
         L.motivic_weight = ''
-    L.st_link = st_link_by_name(L.motivic_weight,L.degree,L.st_group)
+
+    if hasattr(L, 'base_field'):
+        field_degree = int(L.base_field().split('.')[0])
+        L.st_link = st_link_by_name(L.motivic_weight, L.degree // field_degree, L.st_group)
+    else:
+        #this assumes that the base field of the Galois representation is QQ
+        L.st_link = st_link_by_name(L.motivic_weight, L.degree, L.st_group)
     # Convert L.motivic_weight from python 'int' type to sage integer type.
     # This is necessary because later we need to do L.motivic_weight/2
     # when we write Gamma-factors in the arithmetic normalization.
@@ -127,8 +133,20 @@ def makeLfromdata(L):
     if 'dirichlet_coefficients' in data:
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     else:
+        # ask for more, in case many are zero
         L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(
-            data['euler_factors']), L.numcoeff)
+            data['euler_factors']), 2*L.degree*L.numcoeff)
+
+        # get rid of extra coeff
+        count = 0;
+        for i, elt in enumerate(L.dirichlet_coefficients_arithmetic):
+            if elt != 0:
+                count += 1;
+                if count > L.numcoeff:
+                    L.dirichlet_coefficients_arithmetic = \
+                        L.dirichlet_coefficients_arithmetic[:i];
+                    break;
+
     L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
     L.normalize_by = string2number(data['analytic_normalization'])
     for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
@@ -529,10 +547,7 @@ class Lfunction_EC(Lfunction):
 
         # base_field of the EC
     def base_field(self):
-        if self.field_label == "1.1.1.1":
-            return 'Q'
-        else:
-            self.field_label;
+        return self.field_label
 
 # This should be handled through instances database
 #    def get_modular_form(self):
