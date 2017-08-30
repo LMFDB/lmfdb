@@ -562,21 +562,18 @@ class Lfunction_EC(Lfunction):
 #        elif self.field_degree == 2:
 #            # quadratic extension
 #            if self.field_real_signature == 2:
-#                # FIXME find HMF
 #                # if C.hmfs.forms.search.find({ u'label' : label }).count() > 
 #                pass;
 #            elif self.field_real_signature == 0:
-#                # FIXME find BMF
 #                # if C.bmfs.forms.search.find({ u'label' : label }).count() > 0
 #                pass;
 
     def Lkey(self):
-        # FIXME what is this used for?
-        # If over Q, the lmfdb label determines the curve
         return {"label": self.long_isogeny_class_label}
 
 
 
+# DEPRECATED
 #class Lfunction_EC_Q(Lfunction):
 #    """Class representing an elliptic curve L-function
 #    It should be called with a dictionary of the forms:
