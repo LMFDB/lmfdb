@@ -87,3 +87,5 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+'2.0.3.1/44332.1/a/', 'Elliptic curve isogeny class 2.0.3.1-44332.1-a')
         # I don't know why the follwing fails, as the text was copied from the page source:
         #self.check_args(base_url+'2.0.3.1/44332.1/a/', '\( \left(-238 a + 76\right) \)')
+        self.check_args(base_url+'2.0.11.1/256.1/a/', 'no, but is a twist of the base-change of a form over');
+        self.check_args(base_url+'2.0.11.1/256.1/a/', 'Elliptic curve isogeny class 2.0.11.1-256.1-a');
