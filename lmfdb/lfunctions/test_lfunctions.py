@@ -45,7 +45,11 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lec(self):
         L = self.tc.get('/L/EllipticCurve/Q/11/a/')
-        assert '0.2538418609' in L.data and 'Isogeny class 11.a' in L.data and 'Modular form 11.2a' in L.data and '/SatoTateGroup/1.2.' in L.data
+        assert '0.2538418609' in L.data
+        assert 'Isogeny class 11.a' in L.data
+        assert 'Modular form 11.2a' in L.data 
+        assert '/SatoTateGroup/1.2.' in L.data
+
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/11/a/')
         assert '6.362613894713' in L.data
         L = self.tc.get('/L/EllipticCurve/Q/27/a/')
@@ -56,6 +60,42 @@ class LfunctionTest(LmfdbTest):
         assert '9.3643111977' in L.data and 'Isogeny class 379998.d' in L.data and '/SatoTateGroup/1.2.' in L.data
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/379998/d/')
         assert '0.8292065891985' in L.data
+
+        L = self.tc.get('/L/EllipticCurve/2.2.5.1/31.1/a/')
+        assert '0.3599289595' in L.data
+        assert 'Isogeny class 2.2.5.1-31.1-a' in L.data 
+        assert 'Isogeny class 2.2.5.1-31.2-a' in L.data 
+        assert 'Hilbert Modular form 2.2.5.1-31.1-a' in L.data
+        assert 'Hilbert Modular form 2.2.5.1-31.2-a' in L.data
+        assert '/SatoTateGroup/1.2.' in L.data
+
+        L = self.tc.get('/L/EllipticCurve/2.2.5.1/80.1/a/')
+        assert '0.5945775518' in L.data
+        assert 'Isogeny class 2.2.5.1-80.1-a' in L.data 
+        assert 'Isogeny class 20.a' in L.data 
+        assert 'Isogeny class 100.a' in L.data
+        assert 'Hilbert Modular form 2.2.5.1-80.1-a' in L.data
+        assert '/SatoTateGroup/1.2.' in L.data
+
+        L = self.tc.get('/L/EllipticCurve/2.0.11.1/256.1/a/')
+        assert 'Isogeny class 2.0.11.1-256.1-a' in L.data 
+        assert 'Isogeny class 2.0.11.1-256.1-b' in L.data 
+        assert 'Isogeny class 2.2.44.1-16.1-a' in L.data 
+        assert 'Isogeny class 2.2.44.1-16.1-c' in L.data 
+        assert 'Hilbert Modular form 2.2.44.1-16.1-a' in L.data 
+        assert 'Hilbert Modular form 2.2.44.1-16.1-c' in L.data
+        assert 'Bianchi Modular form 2.0.11.1-256.1-a' in L.data
+        assert 'Bianchi Modular form 2.0.11.1-256.1-b' in L.data
+        assert '/SatoTateGroup/1.2.' in L.data
+
+
+        L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/')
+        assert '/SatoTateGroup/1.2.' in L.data
+        assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.data
+        assert r"Bianchi Modular form 2.0.1879.1-1.0.1-a&nbsp;  n/a" in L.data, L.data
+
+
+
 
     def test_Lemf(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/12/1/a/0/')
