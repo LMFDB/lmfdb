@@ -27,14 +27,10 @@ def get_instance_by_url(url):
     instance =  db_instances().find_one({'url': url})
     # FIXME after merging dbs
     if not instance:
-        instance = base.getDBConnection().Lfunctions.ecqd_instances.find_one({'url': url})
+        instance = base.getDBConnection().Lfunctions.ecqd1_instances.find_one({'url': url})
     return instance
 
 def get_lfunction_by_url(url):
-#    if url.startswith("EllipticCurve") and not url.startswith("EllipticCurve/Q/"):
-#        Lfunctions =  base.getDBConnection().Lfunctions["ecqd1_Lfunctions"];
-#        instances = base.getDBConnection().Lfunctions["ecqd1_instances"];
-
     instance = get_instance_by_url(url);
     if not instance:
         return None;
