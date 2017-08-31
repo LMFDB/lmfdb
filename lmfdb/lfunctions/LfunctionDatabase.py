@@ -42,14 +42,12 @@ def getInstanceLdata(label,label_type="url"):
     return Ldata
 
 def getHmfData(label):
-    connection = base.getDBConnection()
-    try:
-        f = connection.hmfs.forms.find_one({'label': label})
-        F_hmf = connection.hmfs.fields.find_one({'label': f['field_label']})
-    except:
-        f = None
-        F_hmf = None
-    return (f, F_hmf)
+    from lmfdb.hilbert_modular_forms.hilbert_modular_form import get_hmf, get_hmf_field
+    # return (None,None) if nothing is found i.e. if for does not exist in the database
+    f = get_hmf(label)
+    if f:
+        return (f, get_hmf_field(f['field_label']))
+    return (None, None)
 
 def getMaassDb():
     # NB although base.getDBConnection().PORT works it gives the

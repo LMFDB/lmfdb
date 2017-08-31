@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sage
-from sage.misc.preparser import preparse
+from sage.repl import preparse
 from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals
 
@@ -345,7 +345,8 @@ def attach_new_label(f):
         hmf_forms.remove(f)
         print "REMOVED!"
 
-def make_stats():
+# Old function used to make a stats yaml file.
+def make_stats_dict():
     degrees = hmf_fields.distinct('degree')
     stats = {}
     for d in degrees:
@@ -372,3 +373,92 @@ def make_stats():
 # sage: sage: hst_yaml_file = open("lmfdb/hilbert_modular_forms/hst_stats.yaml", 'w')
 # sage: yaml.safe_dump(hst, hst_yaml_file)
 # sage: hst_yaml_file.close()
+
+def make_stats():
+    from data_mgt.utilities.rewrite import update_attribute_stats
+    hmfs = C.hmfs
+    form_stats = hmfs.forms.search.stats
+
+    print("Updating fields stats")
+    fields = hmfs.fields.distinct('label')
+    degrees = hmfs.fields.distinct('degree')
+    field_sort_key = lambda F: int(F.split(".")[2]) # by discriminant
+    fields_by_degree = dict([(d,sorted(hmfs.fields.find({'degree':d}).distinct('label'),key=field_sort_key)) for d in degrees])
+    print("{} fields in database of degree from {} to {}".format(len(fields),min(degrees),max(degrees)))
+
+    print("...summary of counts by degree...")
+    entry = {'_id': 'fields_summary'}
+    form_stats.delete_one(entry)
+    field_data = {'max': max(degrees),
+                  'min': min(degrees),
+                  'total': len(fields),
+                  'counts': [[d,hmfs.fields.count({'degree': d})]
+                            for d in degrees]
+    }
+    entry.update(field_data)
+    form_stats.insert_one(entry)
+
+    print("...fields by degree...")
+    entry = {'_id': 'fields_by_degree'}
+    form_stats.delete_one(entry)
+    for d in degrees:
+        entry[str(d)] = {'fields': fields_by_degree[d],
+                         'nfields': len(fields_by_degree[d]),
+                         'maxdisc': max(hmfs.fields.find({'degree':d}).distinct('discriminant'))
+        }
+    form_stats.insert_one(entry)
+
+    print("Updating forms stats")
+    print("counts by field degree and by dimension...")
+    update_attribute_stats(hmfs, 'forms.search', 'deg')
+    update_attribute_stats(hmfs, 'forms.search', 'dimension')
+
+    print("counts by field degree and by level norm...")
+    entry = {'_id': 'level_norm_by_degree'}
+    degree_data = {}
+    for d in degrees:
+        res = hmfs.forms.search.find({'deg':d})
+        nforms = res.count()
+        Ns = res.distinct('level_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        degree_data[str(d)] = {'nforms':nforms,
+                          'min_norm':min_norm,
+                          'max_norm':max_norm,
+        }
+        print("{}: {}".format(d,degree_data[str(d)]))
+    form_stats.delete_one(entry)
+    entry.update(degree_data)
+    form_stats.insert_one(entry)
+
+    print("counts by field and by level norm...")
+    entry = {'_id': 'level_norm_by_field'}
+    field_data = {}
+    for f in fields:
+        ff = f.replace(".",":") # mongo does not allow "." in key strings
+        res = hmfs.forms.search.find({'field_label': f})
+        nforms = res.count()
+        Ns = res.distinct('level_norm')
+        min_norm = min(Ns)
+        max_norm = max(Ns)
+        field_data[ff] = {'nforms':nforms,
+                          'min_norm':min_norm,
+                          'max_norm':max_norm,
+        }
+        #print("{}: {}".format(f,field_data[ff]))
+    form_stats.delete_one(entry)
+    entry.update(field_data)
+    form_stats.insert_one(entry)
+
+
+def add_missing_disc_deg_wt(nf):
+    if not all([nf.get('disc', None),
+            nf.get('deg', None),
+            nf.get('parallel_weight', None)]):
+        print("Fixing form {}".format(nf['label']))
+        #print("   keys are {}".format(nf.keys()))
+        deg, r, disc, n = nf['field_label'].split(".")
+        nf['disc'] = int(disc)
+        nf['deg'] = int(deg)
+        nf['parallel_weight'] = 2
+    return nf

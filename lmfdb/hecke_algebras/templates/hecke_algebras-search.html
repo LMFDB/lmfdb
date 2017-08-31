@@ -1,0 +1,116 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Further refine search </h2>
+<form id='re-search'>
+<input type="hidden" name="start" value="{{info.start}}"/>
+<table border="0">
+<tr>
+<td align=left>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+<td align=left>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
+<td align=left>Number of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</td>
+</tr>
+
+<tr>
+<td align=left><input type='text' name='level' size=10 value="{{info.level}}"></td>
+<td align=left><input type='text' name='weight' size=10 value="{{info.weight}}"></td>
+<td align=left><input type='text' name='num_orbits' size=10 value="{{info.num_orbits}}"></td>
+</tr>
+
+
+
+<tr>
+<td align= left>{{KNOWL('mf.elliptic.hecke-orbit-label', title='Hecke orbit label')}}:</td>
+<td align= left>Mod &#x2113; and &#x2113;-adic:</td>
+</tr>
+<tr>
+<td align=left><input type='text' name='orbit_label' size=10 value="{{info.orbit_label}}"></td>
+<td align=left><input type='text' name='ell' size=10 value="{{info.ell}}"></td>
+</tr>
+
+<tr>&nbsp;</tr>
+<tr>
+<td align=left colspan=2>Maximum number of Hecke Algebras to display</td>
+<td align=left><input type='text' name='count' size=10 value={{info.count}}></td>
+<td><button type='submit' size=10  value='refine'>Search again</button></td>
+</tr>
+</table>
+</form>
+
+{% if info.err is defined %}
+    <h2>Error</h2>
+    <div>
+    <!--  {{ info.err|safe }}-->
+    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
+    </div>
+{% else %}
+    {% if info.report == "no matches" %}
+        <h2> No matches</h2>
+    {% else %}
+        <h2> Results ({{info.report}})
+        {% if info.start > 0 %}
+            <a href="#" class="navlink"
+               onclick="decrease_start_by_count_and_submit_form('re-search');return
+                        false">Previous</A>
+        {% endif %}
+        {% if info.more > 0 %}
+            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
+        {% endif %}
+        </h2>
+        <table>
+        <tr>
+        {% if info.ell %}
+        <th>{{KNOWL('hecke_algebras.orbit_label', title='Orbit label')}}</th>
+        <th>{{ KNOWL('mf.elliptic.level', title='Level') }}</th>
+        <th>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</th>
+        </tr>
+        {% for a in info.hecke_algebras %}
+            <tr>
+            <td align='left'><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage', label=a.label)}}#{{a.index}}">{{a.orbit_label}} </a></td>
+            <td>{{a.level}}</td>
+            <td>{{a.weight}}</td>
+            </tr>
+        {% endfor %}
+
+        {% else %}
+        <th>{{KNOWL('hecke_algebras.label', title='Label')}}</th>
+        <th>{{ KNOWL('mf.elliptic.level', title='Level') }}</th>
+        <th>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</th>
+        <th>Number of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</th>
+        </tr>
+        {% for a in info.hecke_algebras %}
+            <tr>
+            <td align='left'><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage', label=a.label)}}">{{a.label}} </a></td>
+            <td>{{a.level}}</td>
+            <td>{{a.weight}}</td>
+            <td>{{a.num_orbits}}</td>
+            </tr>
+        {% endfor %}
+        {% endif %}        
+        </table>
+        <hr>
+        {% if info.start > 0 %}
+            <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+        {% endif %}
+        {% if info.more > 0 %}
+            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
+        {% endif %}
+        <br>
+
+        <form>
+        Download all search results for
+        <input type="submit" name="submit" value="gp">
+        <input type="submit" name="submit" value="sage">
+        <input type="submit" name="submit" value="magma">
+        <input type="hidden" name="download" value="1"/>
+        <input type="hidden" name="query" value="{{info.query}}"/>
+        </form>
+    {% endif %}
+{% endif %}
+<!--<br>-->
+<!--{% if DEBUG %}-->
+<!--<p class="tex2jax_ignore">  Results for database query {{ info.query }}</p>-->
+
+<!--{% endif %}-->
+
+{% endblock %}

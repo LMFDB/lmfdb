@@ -65,6 +65,21 @@ def hidden_collection(c):
     """
     return c.startswith("test") or c.endswith(".rand") or c.endswith(".stats") or c.endswith(".chunks") or c.endswith(".new") or c.endswith(".old")
 
+def collection_indexed_keys(collection):
+    """
+    input: cursor for the collection
+    output: a set with all the keys indexed
+    """
+    indexed_keys = set({});
+    for name, val in collection.index_information().iteritems():
+        if name != '_id_':
+            #print val['key']
+            for key, _ in val['key']:
+                #print key
+                indexed_keys.add(key)
+    return indexed_keys
+
+
 def get_database_info(show_hidden=False):
     C = base.getDBConnection()
     info = {}
@@ -222,6 +237,14 @@ def api_query(db, collection, id = None):
             # update the query
             q[qkey] = qval
 
+        # assure that one of the keys of the query is indexed
+        # however, this doesn't assure that the query will be fast... 
+        if q != {} and len(set(q.keys()).intersection(collection_indexed_keys(C[db][collection]))) == 0:
+            flash_error("no key in the query %s is indexed.", q)
+            return flask.redirect(url_for(".api_query", db=db, collection=collection))
+
+
+
         # sort = [('fieldname1', ASC/DESC), ...]
         if sortby is not None:
             sort = []
@@ -235,7 +258,12 @@ def api_query(db, collection, id = None):
 
         # executing the query "q" and replacing the _id in the result list
         api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
-        data = list(C[db][collection].find(q, projection = fields, sort=sort).skip(offset).limit(100))
+        from pymongo.errors import ExecutionTimeout
+        try:
+            data = list(C[db][collection].find(q, projection = fields, sort=sort).skip(offset).limit(100).max_time_ms(10000))
+        except ExecutionTimeout:
+            flash_error("Query %s exceeded time limit.", q)
+            return flask.redirect(url_for(".api_query", db=db, collection=collection))
     
     if single_object and not data:
         if format != 'html':

@@ -11,20 +11,24 @@ from lmfdb.base import getDBConnection
 print "getting connection"
 C= getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb')
-print "authenticating on the elliptic_curves database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['elliptic_curves'].authenticate(username, password)
+
+def authenticate():
+    print "authenticating on the elliptic_curves database"
+    import yaml
+    pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
+    username = pw_dict['data']['username']
+    password = pw_dict['data']['password']
+    C['elliptic_curves'].authenticate(username, password)
+
 print "setting nfcurves"
 nfcurves = C.elliptic_curves.nfcurves
 qcurves = C.elliptic_curves.curves
 
 print "setting hmfs, forms, fields"
 hmfs = C.hmfs
-forms = hmfs.forms
+forms = hmfs.forms.search # contains all data except eigenvalues
 fields = hmfs.fields
+hecke = hmfs.hecke        # contains eigenvalues
 
 flabels = fields.distinct('label')
 flab2 = [fld for fld in flabels if '2.2.' in fld]
@@ -409,6 +413,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     for curve_label in labels:
         # We find the forms again since otherwise the cursor might timeout during the loop.
         f = forms.find_one({'label': curve_label})
+        h = hecke.find_one({'label': curve_label})
         ec = nfcurves.find_one({'field_label': field_label, 'class_label': curve_label, 'number': 1})
         if ec:
             if verbose:
@@ -419,7 +424,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
             good_flags = [E.has_good_reduction(P) for P in primes]
             good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
             aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes[:30]]
-            f_aplist = [int(a) for a in f['hecke_eigenvalues'][:40]]
+            f_aplist = [int(a) for a in h['hecke_eigenvalues'][:40]]
             f_aplist = [ap for ap, flag in zip(f_aplist, good_flags) if flag][:30]
             if aplist == f_aplist:
                 nok += 1
@@ -524,9 +529,11 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
     # disagreement: e.g. curve_ap[conductor_label][iso_label] =
     # aplist.
 
+    print("looping through {} forms".format(len(labels)))
     for curve_label in labels:
         # We find the forms again since otherwise the cursor might timeout during the loop.
         f = forms.find_one({'label': curve_label})
+        h = hecke.find_one({'label': curve_label})
         ec = nfcurves.find_one({'field_label': field_label, 'class_label': curve_label, 'number': 1})
         if ec:
             if verbose:
@@ -537,7 +544,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             good_flags = [E.has_good_reduction(P) for P in primes]
             good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
             aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes]
-            f_aplist = [int(a) for a in f['hecke_eigenvalues']]
+            f_aplist = [int(a) for a in h['hecke_eigenvalues']]
             f_aplist = [ap for ap, flag in zip(f_aplist, good_flags) if flag]
             nap = min(len(aplist), len(f_aplist))
             if aplist[:nap] == f_aplist[:nap]:
@@ -599,7 +606,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             sys.stdout.write(L)
 
     bad_p = []
-    if field_label=='4.4.1600.1': bad_p = [7**2,13**2,29**2]
+    #if field_label=='4.4.1600.1': bad_p = [7**2,13**2,29**2]
     if field_label=='4.4.2304.1': bad_p = [19**2,29**2]
     if field_label=='4.4.4225.1': bad_p = [17**2,23**2]
     if field_label=='4.4.7056.1': bad_p = [29**2,31**2]
@@ -610,12 +617,14 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
     if field_label=='4.4.12400.1': bad_p = [23**2]
     if field_label=='4.4.180769.1': bad_p = [23**2]
     if field_label=='6.6.905177.1': bad_p = [2**3]
+    bad_p = []
 
     effort0 = effort
     for nf_label in missing_curves:
         if verbose:
             print("Curve %s is missing from the database..." % nf_label)
         form = forms.find_one({'field_label': field_label, 'short_label': nf_label})
+        h = hecke.find_one({'label': field_label+"-"+nf_label})
         if not form:
             print("... form %s not found!" % nf_label)
         else:
@@ -624,13 +633,13 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
 
             print("Conductor = %s" % form['level_ideal'].replace(" ",""))
             N = K.ideal(form['level_label'])
-            neigs = len(form['hecke_eigenvalues'])
+            neigs = len(h['hecke_eigenvalues'])
             Plist = [P['ideal'] for P in K.primes_iter(neigs)]
             goodP = [(i, P) for i, P in enumerate(Plist)
                      if not P.divides(N)
                      and not P.norm() in bad_p
                      and P.residue_class_degree()==1]
-            aplist = [int(form['hecke_eigenvalues'][i]) for i, P in goodP]
+            aplist = [int(h['hecke_eigenvalues'][i]) for i, P in goodP]
             Plist = [P for i,P in goodP]
             nap = len(Plist)
             neigs0 = min(nap,100)
@@ -680,7 +689,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             ec['conductor_ideal'] = form['level_ideal'].replace(" ","")
             ec['conductor_norm'] = form['level_norm']
             ai = E.ainvs()
-            ec['ainvs'] = [[str(c) for c in list(a)] for a in ai]
+            ec['ainvs'] = ";".join([",".join([str(c) for c in list(a)]) for a in ai])
             ec['cm'] = '?'
             ec['base_change'] = []
             output(make_curves_line(ec) + "\n")

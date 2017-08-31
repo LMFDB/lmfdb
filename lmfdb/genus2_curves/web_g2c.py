@@ -23,10 +23,13 @@ def g2c_db_curves():
 def g2c_db_endomorphisms():
     return getDBConnection().genus2_curves.endomorphisms
 
+def g2c_db_rational_points():
+    return getDBConnection().genus2_curves.ratpts
+
 def g2c_db_lfunction_by_hash(hash):
     return getDBConnection().Lfunctions.Lfunctions.find_one({'Lhash':hash})
 
-# TODO: switch to Lfunctions datbase once all instance data has been moved there (wait until #433 is closed before doing this)
+# TODO: switch to Lfunctions database once all instance data has been moved there (wait until #433 is closed before doing this)
 def g2c_db_lfunction_instances():
     return getDBConnection().genus2_curves.Lfunctions.instances
 
@@ -509,8 +512,8 @@ class WebG2C(object):
         bread -- bread crumbs for home page (conductor, isogeny class id, discriminant, curve id)
         title -- title to display on home page
     """
-    def __init__(self, curve, endo, tama, is_curve=True):
-        self.make_object(curve, endo, tama, is_curve)
+    def __init__(self, curve, endo, tama, ratpts, is_curve=True):
+        self.make_object(curve, endo, tama, ratpts, is_curve)
 
     @staticmethod
     def by_label(label):
@@ -541,10 +544,16 @@ class WebG2C(object):
         tama = g2c_db_tamagawa_numbers().find({"label" : curve['label']}).sort('p', ASCENDING)
         if tama.count() == 0:
             g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
-            raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)        
-        return WebG2C(curve, endo, tama, is_curve=(len(slabel)==4))
+            raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
+        if len(slabel)==4:
+            ratpts = g2c_db_rational_points().find_one({"label" : curve['label']})
+            if not ratpts:
+                g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
+        else:
+            ratpts = {}
+        return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel)==4))
 
-    def make_object(self, curve, endo, tama, is_curve):
+    def make_object(self, curve, endo, tama, ratpts, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
 
         # all information about the curve, its Jacobian, isogeny class, and endomorphisms goes in the data dictionary
@@ -615,6 +624,14 @@ class WebG2C(object):
             	data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + ')'
             	if (i+1 < tama.count()):
             		data['tama'] += ', '
+            if ratpts:
+                if len(ratpts['rat_pts']):
+                    data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(P) + ')') for P in ratpts['rat_pts'])
+                data['rat_pts_v'] =  2 if ratpts['rat_pts_v'] else 1
+                # data['mw_rank'] = ratpts['mw_rank']
+                # data['mw_rank_v'] = ratpts['mw_rank_v']
+            else:
+                data['rat_pts_v'] = 0
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
@@ -742,6 +759,8 @@ class WebG2C(object):
         code['aut'] = {'magma':'AutomorphismGroup(C); IdentifyGroup($1);'}
         code['autQbar'] = {'magma':'AutomorphismGroup(ChangeRing(C,AlgebraicClosure(Rationals()))); IdentifyGroup($1);'}
         code['num_rat_wpts'] = {'magma':'#Roots(HyperellipticPolynomials(SimplifiedModel(C)));'}
+        if ratpts:
+            code['rat_pts'] = {'magma': '[' + ','.join(["C![%s,%s,%s]"%(p[0],p[1],p[2]) for p in ratpts['rat_pts']]) + '];' }
         code['two_selmer'] = {'magma':'TwoSelmerGroup(Jacobian(C)); NumberOfGenerators($1);'}
         code['has_square_sha'] = {'magma':'HasSquareSha(Jacobian(C));'}
         code['locally_solvable'] = {'magma':'f,h:=HyperellipticPolynomials(C); g:=4*f+h^2; HasPointsLocallyEverywhere(g,2) and (#Roots(ChangeRing(g,RealField())) gt 0 or LeadingCoefficient(g) gt 0);'}

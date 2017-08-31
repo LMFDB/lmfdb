@@ -17,6 +17,8 @@ import pages
 assert pages
 import api
 assert api
+import bianchi_modular_forms
+assert bianchi_modular_forms
 import hilbert_modular_forms
 assert hilbert_modular_forms
 import half_integral_weight_forms
@@ -77,6 +79,8 @@ import modlmf
 assert modlmf
 import rep_galois_modl
 assert rep_galois_modl
+import hecke_algebras
+assert hecke_algebras
 
 # Currently uploading is not supported
 # import upload

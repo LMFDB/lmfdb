@@ -29,19 +29,19 @@
 By {{ KNOWL('lattice.dimension', title='Dimension') }}: 
 {% for rnge in info.dim_list %}
 <a href="?dim={{rnge}}">{{rnge}}</a>
-{% endfor %}
+{% endfor %}... <a href="?dim={{info.max_dim}}">{{info.max_dim}}</a>
 </p>
 <p>
 By {{ KNOWL('lattice.determinant', title='Determinant') }}:
 {% for rnge in info.det_list %}
 <a href="?det={{rnge}}">{{rnge}}</a>
-{% endfor %}
+{% endfor %}... <a href="?det=1000000-{{info.max_det}}">1000000-{{info.max_det}}</a>
 </p>
 <p>
 By {{ KNOWL('lattice.class_number', title='Class number') }}: 
 {% for rnge in info.class_number_list %}
 <a href="?class_number={{rnge}}">{{rnge}}</a>
-{% endfor %}
+{% endfor %}... <a href="?class_number={{info.max_cn}}">{{info.max_cn}}</a>
 </p>
 <p>
 Some of our favourite {{ KNOWL('lattice.definition', title='integral lattices') }}:
@@ -103,7 +103,7 @@ Some of our favourite {{ KNOWL('lattice.definition', title='integral lattices') 
 </tr>
 
 <tr>
-<td align= right>{{ KNOWL('lattice.group_order', title='Group order') }}:</td>
+<td align= right>{{ KNOWL('lattice.group_order', title='Automorphism group order') }}:</td>
 <td><input type='text' name='aut' placeholder='2' size=10>
 <td><span class="formexample"> e.g. 696729600</td>
 </tr>
