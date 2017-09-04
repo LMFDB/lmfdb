@@ -107,13 +107,13 @@ class EmfTest(LmfdbTest):
         errors = []
         spaces = getDBConnection().modularforms2.webmodformspace
         wmax = 40; Nmax = 25
-        data = spaces.find({'weight':{'$ge':int(2)},'weight':{'$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'character':int(1),'version':float(version)})
+        data = spaces.find({'weight': {'$ge':int(2), '$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'character':int(1),'version':float(version)})
         print "Checking %d spaces with trivial character of weight w <= %d and level N <= %d"%(data.count(),wmax,Nmax)
         errors = self.check_spaces(data)
         if errors:
             print "Errors occurred for the following labels: ", errors
         wmax = 12; Nmax = 100
-        data = spaces.find({'weight':{'$ge':int(2)},'weight':{'$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'character':int(1),'version':float(version)})
+        data = spaces.find({'weight':{'$ge':int(2), '$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'character':int(1),'version':float(version)})
         print "Checking %d spaces with trivial character of weight w <= %d and level N <= %d"%(data.count(),wmax,Nmax)
         errors = self.check_spaces(data)
         if errors:
@@ -123,13 +123,13 @@ class EmfTest(LmfdbTest):
         errors = []
         spaces = getDBConnection().modularforms2.webmodformspace
         wmax = 10; Nmax = 50
-        data = spaces.find({'weight':{'$ge':int(2)},'weight':{'$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'version':float(version)})
+        data = spaces.find({'weight':{'$ge':int(2), '$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'version':float(version)})
         print "Checking %d spaces of weight w <= %d and level N <= %d"%(data.count(),wmax,Nmax)
         errors = self.check_spaces(data)
         if errors:
             print "Errors occurred for the following labels: ", errors
         wmax = 20; Nmax = 16
-        data = spaces.find({'weight':{'$ge':int(2)},'weight':{'$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'version':float(version)})
+        data = spaces.find({'weight':{'$ge':int(2), '$lt':int(wmax+1)},'level':{'$lt':int(Nmax+1)},'version':float(version)})
         print "Checking %d spaces of weight w <= %d and level N <= %d"%(data.count(),wmax,Nmax)
         errors = self.check_spaces(data)
         if errors:
