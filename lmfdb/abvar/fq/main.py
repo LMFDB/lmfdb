@@ -4,6 +4,7 @@ import time
 import ast
 import StringIO
 import lmfdb.base
+from pymongo import ASCENDING
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger, random_object_from_collection
 from lmfdb.abvar.fq import abvarfq_page
@@ -187,8 +188,10 @@ def abelian_variety_search(**args):
     if start < 0:
         start = 0
 
+
     #res = cursor.sort([]).skip(start).limit(count)
-    res = cursor.skip(start).limit(count)
+    res = cursor.sort([('g', ASCENDING), ('q', ASCENDING), ('label', ASCENDING), ('p_rank', ASCENDING)]).skip(start).limit(count)
+    #res = cursor.skip(start).limit(count)
     res = list(res)
     info['abvars'] = [AbvarFq_isoclass(x) for x in res]
     info['number'] = nres
