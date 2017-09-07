@@ -7,6 +7,7 @@ from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.bianchi_modular_forms.web_BMF import db_forms
 
 def db_ecnf():
     return getDBConnection().elliptic_curves.nfcurves
@@ -520,11 +521,13 @@ class ECNF(object):
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
             self.friends += [('L-function', self.urls['Lfunction'])]
         if imag_quadratic:
-            #self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
             if "CM" in self.label:
                 self.friends += [('Bianchi Modular Form is not cuspidal', '')]
             else:
-                self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+                if db_forms().find_one({'label':self.bmf_label}) != None:
+                    self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+                else:
+                    self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
 
         self.properties = [
             ('Base field', self.field.field_pretty()),
