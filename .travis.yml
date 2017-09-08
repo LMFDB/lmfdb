@@ -63,6 +63,8 @@ before_script:
     # create a list of files and folder where we will run the nosetests
     - ls  lmfdb/*.py  > list
     - ls -d lmfdb/*/ >> list
+    # hack nosetests to run in parallel, this equivalent to have parallel = True in .coveragerc (but nosetests overwrites)
+    - sed -i '217s/False/True/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/config.py
     # how much free ram do we have
     - free -m
     # what is the load on the server
