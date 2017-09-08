@@ -67,7 +67,7 @@ before_script:
     # hack nosetests to run in parallel, otherwise all the processes try to write into the same file
     # this equivalent to have parallel = True in .coveragerc (but nosetests overwrites)
     - sed -i '141s/conf.worker/True/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py 
-    - sed -i '185s/self/#self/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py
+    - sed -i '184s/self/#self/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py
     # disabling the report in nosetests
     - sed -i '190s/self/#self/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py
     # how much free ram do we have
