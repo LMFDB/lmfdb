@@ -29,6 +29,8 @@ install:
     - parallel --version
     # install the latest pyflakes 
     - pip install pyflakes --user
+    # install the latest codecov 
+    - pip install codecov
     - export PATH=${HOME}/.local/bin/:${PATH}
     # install SAGE with GAP already built in
     - export SAGE_VERSION=8.0
@@ -51,6 +53,7 @@ before_script:
     # however, due to the nested calling of sage and then parallel
     # it gets quite tricky.
     - export TESTMATCH='"(?:^|\/)[Tt]est_"'
+    - export COVERAGE='--with-coverage  --cover-package=lmfdb --cover-no-print'
     # create the mongoclient.config to connect to m0
     - sed s/localhost/m0.lmfdb.xyz/ default_mongoclient.config  |  sed s/37010/27017/ >> mongoclient.config
     # This is our external ip address
@@ -72,10 +75,16 @@ script:
     # run nosetests in parallel with the aid of parallel
     # we cannot use the option --processes in nosetests, as MongoDB doesn't support forking
     # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once 
-    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 4 --results nosetests  --progress --verbose -a list ${SAGE_DIR}/local/bin/nosetests -v -s --testmatch=${TESTMATCH}'
+    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 4 --results nosetests  --progress --verbose -a list ${SAGE_DIR}/local/bin/nosetests -v -s --testmatch=${TESTMATCH} ${COVERAGE}'
 
 after_failure:
     # if some process failed, it will be clear in joblog which one failed
     - cat joblog
     # print all the stdout and stderr of nosetests run 
     - find nosetests -type f -exec printf "\n\n filename = %s\n" {} \; -exec cat {} \;
+
+after_success:
+    - ls -a
+    - coverage combine
+    - codecov
+
