@@ -434,7 +434,7 @@ def initLfunction(L, args, request):
     info = L.info                        
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
-    (info['bread'], info['origins'], info['friends'] ) = set_bread_and_friends(L, request)
+    (info['bread'], info['origins'], info['friends'], info['factors'] ) = set_bread_and_friends(L, request)
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
 
@@ -561,10 +561,10 @@ def set_bread_and_friends(L, request):
                     url = instance['url'];
                     name, obj_exists = name_and_object_from_url(url);
                     if obj_exists:
-                        friends.append((name,  "/" + url));
+                        factors.append((name,  "/" + url));
                     else:
                         name += '&nbsp;  n/a';
-                        friends.append((name, ""));
+                        factors.append((name, ""));
 
         if L.base_field() == '1.1.1.1': # i.e., QQ
             label = L.label
@@ -758,7 +758,7 @@ def set_bread_and_friends(L, request):
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
 
-    return (bread, origins, friends)
+    return (bread, origins, friends, factors)
 
 
 def set_zeroslink_and_plotlink(L, args):
