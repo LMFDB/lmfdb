@@ -296,3 +296,31 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
 {% endblock %}
 
+
+{# FIXME: this is copied directly from homepage.html #}
+{% macro rightnavig(title, entries) -%}
+ {% if entries %}
+  <h1 class="properties-header">{{ title }}</h1>
+  <div class="properties-body">
+  <ul>
+      {% for text,url in entries %}
+      {% if url %}
+         <li><a href="{{ url }}">{{ text }}</a></li>
+      {% else %}
+         <li>{{ text|safe }}</li>
+      {% endif %}
+      {% endfor %}
+  </ul>
+</div>
+ {% endif %}
+{%- endmacro %}
+
+{# This block is rendered in the properties box #}
+{% block more_props %}
+
+{# friends is temporary, just for testing #}
+{{ rightnavig("Factors", friends) }}
+{{ rightnavig("Factors", lfactors) }}
+
+
+{% endblock %}
