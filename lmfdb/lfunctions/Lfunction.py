@@ -81,6 +81,7 @@ def makeLfromdata(L):
     data = L.lfunc_data
     
     # Mandatory properties
+    L.Lhash = data['Lhash']
     L.algebraic = data['algebraic']
     L.degree = data['degree']
     L.level = data['conductor']

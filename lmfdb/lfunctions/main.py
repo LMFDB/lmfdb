@@ -468,6 +468,7 @@ def set_bread_and_friends(L, request):
     bread = []
     friends = []
     origins = []
+    factors = []
 
     # Create default friendlink by removing 'L/' and ending '/'
     friendlink = request.url.replace('/L/', '/').replace('/L-function/', '/').replace('/Lfunction/', '/')
