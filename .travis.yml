@@ -1,0 +1,81 @@
+language: sage
+sudo: false
+dist: trusty
+
+addons:
+    apt:
+        packages:
+            # needed for sage
+            - binutils
+            - gcc
+            - g++
+            - gfortran
+            - make
+            - perl
+            - tar
+            - git
+            - openssl
+            - libssl-dev
+            # needed for pyflakes
+            - python-pip
+            # to have mongo shell
+            - mongodb-org-shell
+            # to run nosetests in parallel
+            - parallel
+
+
+install:
+    # assert parallel
+    - parallel --version
+    # install the latest pyflakes 
+    - pip install pyflakes --user
+    - export PATH=${HOME}/.local/bin/:${PATH}
+    # install SAGE with GAP already built in
+    - export SAGE_VERSION=8.0
+    - export SAGE_DIR=${HOME}/SageMath
+    - export SAGE="${SAGE_DIR}/sage"
+    - export SAGE_INSTALL_GCC=no
+    - export MAKE='make -j4'
+    - wget  --no-verbose https://storage.googleapis.com/sage-lmfdb/sage-8.0-Ubuntu_14.04-x86_64.tar.bz2
+    - time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
+    # trigger the patch once script
+    - ${SAGE} --version > patch_once_log 
+    # assert that we have GAP
+    - ${SAGE} -python -c 'from sage.all import gap;G = gap.TransitiveGroup(9, 2); print G'
+    # install LMFDB requirements
+    - ${SAGE} -pip install -r requirements.txt
+
+before_script:
+    # make the testmatch a environment variable
+    # alternatively one could, try to escape the string accordingly
+    # however, due to the nested calling of sage and then parallel
+    # it gets quite tricky.
+    - export TESTMATCH='"(?:^|\/)[Tt]est_"'
+    # create the mongoclient.config to connect to m0
+    - sed s/localhost/m0.lmfdb.xyz/ default_mongoclient.config  |  sed s/37010/27017/ >> mongoclient.config
+    # This is our external ip address
+    - dig TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
+    # assert that m0.lmfdb.xyz accepts our connections
+    - printf "db\nexit" | mongo m0.lmfdb.xyz 
+    # create a list of files and folder where we will run the nosetests
+    - ls  lmfdb/*.py  > list
+    - ls -d lmfdb/*/ >> list
+    # how much free ram do we have
+    - free -m
+    # what is the load on the server
+    - uptime
+    
+
+script:
+    # run pyflakes
+    - pyflakes lmfdb/
+    # run nosetests in parallel with the aid of parallel
+    # we cannot use the option --processes in nosetests, as MongoDB doesn't support forking
+    # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once 
+    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 4 --results nosetests  --progress --verbose -a list ${SAGE_DIR}/local/bin/nosetests -v -s --testmatch=${TESTMATCH}'
+
+after_failure:
+    # if some process failed, it will be clear in joblog which one failed
+    - cat joblog
+    # print all the stdout and stderr of nosetests run 
+    - find nosetests -type f -exec printf "\n\n filename = %s\n" {} \; -exec cat {} \;
