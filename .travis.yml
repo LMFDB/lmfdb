@@ -30,7 +30,7 @@ install:
     # install the latest pyflakes 
     - pip install pyflakes --user
     # install the latest codecov 
-    - pip install codecov
+    - pip install codecov --user
     - export PATH=${HOME}/.local/bin/:${PATH}
     # install SAGE with GAP already built in
     - export SAGE_VERSION=8.0
