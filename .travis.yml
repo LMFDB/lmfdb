@@ -63,9 +63,11 @@ before_script:
     # create a list of files and folder where we will run the nosetests
     - ls  lmfdb/*.py  > list
     - ls -d lmfdb/*/ >> list
+    # TODO: make a patch
     # hack nosetests to run in parallel, otherwise all the processes try to write into the same file
     # this equivalent to have parallel = True in .coveragerc (but nosetests overwrites)
-    - sed -i '141s/conf.worker/True/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py
+    - sed -i '141s/conf.worker/True/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py 
+    - sed -i '185s/self/#self/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py
     # disabling the report in nosetests
     - sed -i '190s/self/#self/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py
     # how much free ram do we have
