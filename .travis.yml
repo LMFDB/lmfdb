@@ -46,6 +46,11 @@ install:
     - ${SAGE} -python -c 'from sage.all import gap;G = gap.TransitiveGroup(9, 2); print G'
     # install LMFDB requirements
     - ${SAGE} -pip install -r requirements.txt
+    # hack nosetests to run in parallel, otherwise all the processes try to write into the same file
+    # this equivalent to have parallel = True in .coveragerc (but nosetests overwrites)
+    # we also disable the coverage report in nosetests
+    - wget https://raw.githubusercontent.com/edgarcosta/binary-pkg/master/patches/cover.py.patch
+    - patch ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py cover.py.patch --verbose
 
 before_script:
     # make the testmatch a environment variable
@@ -63,13 +68,6 @@ before_script:
     # create a list of files and folder where we will run the nosetests
     - ls  lmfdb/*.py  > list
     - ls -d lmfdb/*/ >> list
-    # TODO: make a patch
-    # hack nosetests to run in parallel, otherwise all the processes try to write into the same file
-    # this equivalent to have parallel = True in .coveragerc (but nosetests overwrites)
-    - sed -i '141s/conf.worker/True/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py 
-    - sed -i '184s/self/#self/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py
-    # disabling the report in nosetests
-    - sed -i '190s/self/#self/' ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py
     # how much free ram do we have
     - free -m
     # what is the load on the server
