@@ -312,15 +312,11 @@ def render_bmf_space_webpage(field_label, level_label):
             else:
                 data = data.next()
                 info['label'] = data['label']
-                nf = WebNumberField(field_label)
-                info['base_galois_group'] = nf.galois_string()
+                info['nf'] = nf = WebNumberField(field_label)
                 info['field_label'] = field_label
                 info['pretty_field_label'] = pretty_field_label
                 info['level_label'] = level_label
                 info['level_norm'] = data['level_norm']
-                info['field_degree'] = nf.degree()
-                info['field_classno'] = nf.class_number()
-                info['field_disc'] = str(nf.disc())
                 info['field_poly'] = teXify_pol(str(nf.poly()))
                 info['field_knowl'] = nf_display_knowl(field_label, getDBConnection(), pretty_field_label)
                 w = 'i' if nf.disc()==-4 else 'a'
