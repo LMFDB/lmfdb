@@ -264,6 +264,8 @@ def make_indices():
                         ('dimension',ASCENDING),
                         ('level_norm',ASCENDING)])
     forms.create_index([('field_label',ASCENDING),
+                        ('level_norm',ASCENDING)])
+    forms.create_index([('field_label',ASCENDING),
                         ('level_label',ASCENDING)])
     forms.create_index([('field_label',ASCENDING),
                         ('level_label',ASCENDING),
@@ -274,6 +276,8 @@ def make_indices():
     forms.create_index([('field_label',ASCENDING),
                         ('level_label',ASCENDING),
                         ('CM',ASCENDING),
+                        ('bc',ASCENDING)])
+    forms.create_index([('CM',ASCENDING),
                         ('bc',ASCENDING)])
 
 # function to compare newforms and curves:

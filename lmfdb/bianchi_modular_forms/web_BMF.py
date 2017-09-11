@@ -14,6 +14,9 @@ logger = make_logger("bmf")
 def db_dims():
     return getDBConnection().bmfs.dimensions
 
+def db_dimstats():
+    return getDBConnection().bmfs.dimensions.stats
+
 def db_forms():
     return getDBConnection().bmfs.forms
 

@@ -296,3 +296,9 @@ def make_indices():
                         ('gl2_dims',ASCENDING)])
     dims.create_index([('field_label',ASCENDING),
                         ('sl2_dims',ASCENDING)])
+
+def update_stats():
+    # We don't yet have proper stats info for bmfs.  When we do it will  be created / updated here
+    fields = dims.distinct('field_label')
+    print("fields: {}".format(fields))
+
