@@ -581,6 +581,33 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
             for i, val in enumerate(ispec):
                 key = qfield + '.' + str(i+index_shift)
                 sub_query[key] = parse_range2(val, key, parse_singleton)[1]
+
+            # MongoDB is not aware that all the queries above imply that qfield
+            # must all contain all those elements, we aid MongoDB by explicitly
+            # saying that, and hopefully it will use a multikey index.
+            parsed_values = sub_query.values();
+            # asking for each value to be in the array
+            if parse_singleton is str:
+                all_operand = [val for val in parsed_values if  type(val) == parse_singleton and '-' not in val and ','  not in val ]
+            else:
+                all_operand = [val for val in parsed_values if  type(val) == parse_singleton]
+
+            if len(all_operand) > 0:
+                sub_query[qfield] = {'$all' : all_operand};
+
+
+            # if there are other condition, we can add the first of those
+            # conditions the query, in the hope of reducing the search space
+            elemMatch_operand = [val for val in parsed_values if type(val) != parse_singleton and type(val) is dict];
+            if len(elemMatch_operand) > 0:
+                if qfield in sub_query:
+                    sub_query[qfield]['$elemMatch'] = elemMatch_operand[0];
+                else:
+                    sub_query[qfield] = {'$elemMatch' : elemMatch_operand[0]}
+            # we could add more than one $elemMatch operand, but 
+            # at the moment, the operator $all cannot handle other $ operators 
+            # A workaround would be to wrap everything around with an $and
+            # but that doesn't end up speeding up things. 
         else:
             key = qfield + '.' + str(index_shift)
             sub_query[key] = parse_range2(part, key, parse_singleton)[1]
