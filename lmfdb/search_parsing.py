@@ -590,6 +590,41 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
     else:
         collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
 
+def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_singleton=int):
+    bparts = BRACKETING_RE.split(inp)
+    parts = []
+    for part in bparts:
+        if not part:
+            continue
+        if part[0] == '[':
+            parts.append(part)
+        else:
+            subparts = part.split(',')
+            for subpart in subparts:
+                subpart = subpart.strip()
+                if subpart:
+                    parts.append(subpart)
+    def make_sub_query(part):
+        sub_query = {}
+        if part[0] == '[':
+            ispec = part[1:-1].split(',')
+            if len(ispec) == 1 and first_field is not None:
+                sub_query[first_field] = parse_range2(ispec[0], first_field, parse_singleton)[1]
+            elif '-' in part:
+                raise ValueError("Ranges not supported.")
+            else:
+                sub_query[qfield] = {'$regex':'^' + ' '.join(ispec) + ' '}
+        elif first_field is not None:
+            sub_query[first_field] = parse_range2(part, first_field, parse_singleton)[1]
+        elif '-' in part:
+            raise ValueError("Ranges not supported.")
+        else:
+            sub_query[qfield] = {'$regex':'^' + part + ' '}
+    if len(parts) == 1:
+        query.update(make_sub_query(parts[0]))
+    else:
+        collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
+
 def parse_count(info, default=20):
     try:
         info['count'] = int(info['count'])
