@@ -778,10 +778,11 @@ class Lfunction_HMF(Lfunction):
         self.character= int(args['character'])
         if self.character != 0:
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
-        
-        # Load form (f) from database 
+
+        # Load form (f) from database
         (f, F_hmf) = LfunctionDatabase.getHmfData(self.label)
         if f is None:
+            # NB raising an error is not a good way to handle this on website!
             raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.label)
         try:
             self.weight = int(f['parallel_weight'])
@@ -995,7 +996,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         roots = compute_local_roots_SMF2_scalar_valued(self.field, self.evs, self.weight, self.number)  # compute the roots of the Euler factors
         self.numcoeff = max([a[0] for a in roots])+1  # include a_0 = 0
         # FIX THIS: the function compute_siegel_dirichlet_coefficients is not defined anywhere!
-        self.dirichlet_coefficients = compute_siegel_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
+        #self.dirichlet_coefficients = compute_siegel_dirichlet_series(roots, self.numcoeff)  # these are in the analytic normalization, coeffs from Gamma(ks+lambda)
 
         self.sign = (-1) ** float(self.weight)
         self.checkselfdual()

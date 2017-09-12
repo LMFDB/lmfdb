@@ -2,7 +2,6 @@
 from lmfdb.base import getDBConnection
 from lmfdb.utils import make_logger
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
-from lmfdb.ecnf.WebEllipticCurve import FIELD
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
@@ -14,6 +13,9 @@ logger = make_logger("bmf")
 
 def db_dims():
     return getDBConnection().bmfs.dimensions
+
+def db_dimstats():
+    return getDBConnection().bmfs.dimensions.stats
 
 def db_forms():
     return getDBConnection().bmfs.forms
@@ -61,6 +63,7 @@ class WebBMF(object):
         # the database.  We need to reformat these and compute some
         # further (easy) data about it.
         #
+        from lmfdb.ecnf.WebEllipticCurve import FIELD
         self.field = FIELD(self.field_label)
         pretty_field = field_pretty(self.field_label)
         self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
