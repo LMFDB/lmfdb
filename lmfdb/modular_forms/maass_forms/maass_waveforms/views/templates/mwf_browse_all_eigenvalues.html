@@ -15,10 +15,10 @@ var evTable = $("table#eigenvalues").dataTable(
             "sAjaxSource": "{{url_for('mwf.get_table')}}",
              "fnServerData": function ( sSource, aoData, fnCallback ) {
                     jQuery.ajax( {
-                        "dataType": 'json', 
-                        "type": "POST", 
-                        "url": sSource, 
-                        "data": aoData, 
+                        "dataType": 'json',
+                        "type": "POST",
+                        "url": sSource,
+                        "data": aoData,
                         "success": fnCallback
                     } );
                 },
@@ -46,7 +46,7 @@ var evTable = $("table#eigenvalues").dataTable(
                  "sWidth": "15%", "bSortable":false, "bSearchable": false,"sClass":"alignLeft atkinl","fnRender":"text-align:left"}],
 
     "bSort":true,
-    "iDisplayLength": 15,    
+    "iDisplayLength": 15,
     "iDisplayStart": 0,
     "fnSort":[[1,"asc"],[2,"asc"],[3,"asc"]],
     "oLanguage": {
@@ -57,11 +57,11 @@ var evTable = $("table#eigenvalues").dataTable(
             "sInfoFiltered": "(filtered from _MAX_ total records)",
             "sSearch":"Filter records:",
 
-     }, 
+     },
      "bjQueryUI":true,
      "sPaginationType": "full_numbers",
      "sDom": 'ti<"paging"p><"bottom"lfr><"filterbox"><"clear">',
-     "sScorollX": "500px", 
+     "sScorollX": "500px",
      "bStateSave": false,
      "aLengthMenu": [[15, 25, 50, 100 ,200, -1], [15, 25, 50, 100, 200, "All"]],
      "bAutoWidth": false,
@@ -91,7 +91,7 @@ $('.bottom').css("width","100%")
 $('.bottom').css("text-align","left")
 $('.atkinl').css("width","400px")
 
-evTable.fnDraw(); 
+evTable.fnDraw();
 $('#eigenvalues_length').css("width","50%")
 $('#eigenvalues').css("width","875px")
 $('#eigenvalues_wrapper').css("width","875px")
@@ -133,11 +133,11 @@ table.eigenvalues {clear:both}
 }
 a.paginate_button {
     padding:10px;
- } 
+ }
 a.paginate_active {
     font-weight:bold;
     padding:10px;
- } 
+ }
 </style>
 
 
@@ -146,7 +146,7 @@ a.paginate_active {
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
 
-<div> 
+<div>
 <h2> Error message: </h2>
 
 {{ info.error | safe }}
