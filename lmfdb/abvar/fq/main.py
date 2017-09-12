@@ -8,7 +8,7 @@ from pymongo import ASCENDING
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger, random_object_from_collection
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_list_start, parse_count, parse_start, parse_nf_string
+from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string
 from search_parsing import parse_newton_polygon, parse_abvar_decomp
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
@@ -168,7 +168,7 @@ def abelian_variety_search(**args):
         parse_ints(info,query,'p_rank')
         parse_ints(info,query,'ang_rank')
         parse_newton_polygon(info,query,'newton_polygon',qfield='slps') # TODO
-        parse_string_start(info,query,'initial_coefficients',qfield='poly')
+        parse_string_start(info,query,'initial_coefficients',qfield='poly',initial_segment=["1"])
         parse_string_start(info,query,'abvar_point_count',qfield='A_cnts')
         parse_string_start(info,query,'curve_point_count',qfield='C_cnts',first_field='pt_cnt')
         parse_abvar_decomp(info,query,'decomposition',qfield='decomp',av_stats=AbvarFqStats())
@@ -188,9 +188,7 @@ def abelian_variety_search(**args):
         start = 0
 
 
-    #res = cursor.sort([]).skip(start).limit(count)
-    res = cursor.sort([('g', ASCENDING), ('q', ASCENDING), ('label', ASCENDING), ('p_rank', ASCENDING)]).skip(start).limit(count)
-    #res = cursor.skip(start).limit(count)
+    res = cursor.sort([('sort', ASCENDING)]).skip(start).limit(count)
     res = list(res)
     info['abvars'] = [AbvarFq_isoclass(x) for x in res]
     info['number'] = nres

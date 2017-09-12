@@ -231,7 +231,7 @@ class AbvarFq_isoclass(object):
             return nf_display_knowl(self.nf,C,field_pretty(self.nf))
 
     def display_galois_group(self):
-        if self.gal == "": #the number field was not found in the database
+        if not self.gal or not self.gal['t']: #the number field was not found in the database
             return "The Galois group of this isogeny class is not in the database."
         else:
             C = getDBConnection()

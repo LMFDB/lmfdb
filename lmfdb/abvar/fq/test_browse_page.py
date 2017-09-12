@@ -63,11 +63,11 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that we can search by dimension
         """
-        # check that 2.2.a_a and  2.3.a_a show up in the first 50 results 
+        # check that 2.2.a_a and  2.3.ac_g show up in the first 50 results 
         self.check_args("/Variety/Abelian/Fq/?q=&simple=any&g=2&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=", '2.2.a_a')
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=2&simple=any&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=", '2.3.a_a')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=2&simple=any&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=", '2.3.ac_g')
         #this last one is url only
-        self.check_args("/Variety/Abelian/Fq/2/", '2.3.a_a')
+        self.check_args("/Variety/Abelian/Fq/2/", '2.3.ac_e')
 
     def test_search_basefield(self):
         r"""
@@ -104,8 +104,8 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that we can search by p-rank
         """
-        self.check_args("/Variety/Abelian/Fq/?q=9&primitive=any&g=2&simple=any&p_rank=2&jacobian=any&ang_rank=&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=", '2.9.ab_n')
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=9&g=2&p_rank=2&ang_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any", '2.9.ab_n')
+        self.check_args("/Variety/Abelian/Fq/?q=9&primitive=any&g=2&simple=any&p_rank=2&jacobian=any&ang_rank=&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=", '2.9.ah_ba')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=9&g=2&p_rank=2&ang_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any", '2.9.af_o')
         self.not_check_args("/Variety/Abelian/Fq/?q=9&primitive=any&g=2&simple=any&p_rank=2&jacobian=any&ang_rank=&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'2.9.b_ad')
         self.not_check_args("/Variety/Abelian/Fq/?start=0&count=50&q=9&g=2&p_rank=2&ang_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any",'2.9.b_ad')
 
@@ -115,10 +115,10 @@ class AVHomeTest(LmfdbTest):
         """
         # [0,1] from browse page
         self.check_args("/Variety/Abelian/Fq/?q=&simple=any&g=&p_rank=&newton_polygon=%5B0%2C1%5D&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'1.2.ab')
-        # 1/3 from browse page
-        self.check_args("/Variety/Abelian/Fq/?q=&simple=any&g=&p_rank=&newton_polygon=1%2F3&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'3.2.a_a_ac')
-        # 1/5 from refine search
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple=any&p_rank=&newton_polygon=1%2F5&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=",'5.2.a_a_a_a_ac')
+        # 1/3 from browse page, doesn't currently work
+        self.check_args("/Variety/Abelian/Fq/?q=&simple=any&g=&p_rank=&newton_polygon=1%2F3&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'You cannot specify slopes on their own')
+        # 1/5 from refine search, doesn't currently work
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple=any&p_rank=&newton_polygon=1%2F5&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=",'You cannot specify slopes on their own')
         # slope not a rational number
         self.check_args("/Variety/Abelian/Fq/?q=&simple=any&g=&p_rank=&newton_polygon=t&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'is not a valid input')
         # slopes are not increasing
@@ -136,8 +136,8 @@ class AVHomeTest(LmfdbTest):
         """
         self.check_args("/Variety/Abelian/Fq/?q=&simple=any&g=&p_rank=&newton_polygon=&initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=&curve_point_count=&decomposition=&count=",'4.3.b_ab_d_j')
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple=any&p_rank=&newton_polygon=&initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=&curve_point_count=&decomposition=",'4.3.b_ab_d_j')
-        # there should be only one match
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=%5B3%2C+9%2C+10%2C+87-100%5D&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any", "3.11.d_j_k");
+        # there should be only one match, if ranges were supported
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&p_rank=&angle_ranks=&newton_polygon=&initial_coefficients=%5B3%2C+9%2C+10%2C+87-100%5D&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any", "Ranges not supported");
 
     def test_search_pointcountsav(self):
         r"""
@@ -157,10 +157,10 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that we can search by angle rank
         """
-        self.check_args("/Variety/Abelian/Fq/?q=3&primitive=any&g=4&simple=any&p_rank=&jacobian=any&ang_rank=2&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'4.3.a_a_ae_ad')
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=4&p_rank=&ang_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any",'4.3.a_a_ae_ad')
-        self.not_check_args("/Variety/Abelian/Fq/?q=3&primitive=any&g=4&simple=any&p_rank=&jacobian=any&ang_rank=2&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'4.3.a_ad_a_j')
-        self.not_check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=4&p_rank=&ang_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any",'4.3.a_ad_a_j')
+        self.check_args("/Variety/Abelian/Fq/?q=3&primitive=any&g=4&simple=any&p_rank=&jacobian=any&ang_rank=2&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'4.3.ag_p_au_y')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=4&p_rank=&ang_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any",'4.3.ag_p_au_y')
+        self.not_check_args("/Variety/Abelian/Fq/?q=3&primitive=any&g=4&simple=any&p_rank=&jacobian=any&ang_rank=2&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'4.3.am_co_aii_rr')
+        self.not_check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=4&p_rank=&ang_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any",'4.3.am_co_aii_rr')
 
     def test_search_isogfactor(self):
         r"""
@@ -231,8 +231,8 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=7&g=1&simple=any&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=",'1.7.f')
         self.check_args("/Variety/Abelian/Fq/1/7/", '1.7.af')
         # dimension, base field and p-rank
-        self.check_args("/Variety/Abelian/Fq/?q=9&simple=any&g=2&p_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'2.9.a_n')
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=9&g=2&simple=any&p_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=",'2.9.a_n')
+        self.check_args("/Variety/Abelian/Fq/?q=9&simple=any&g=2&p_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=",'2.9.ad_b')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=9&g=2&simple=any&p_rank=2&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=",'2.9.af_o')
         # dimension, base field and initial coefficients
         self.check_args("/Variety/Abelian/Fq/?q=25&simple=any&g=2&p_rank=&newton_polygon=&initial_coefficients=%5B1%2C-13%5D&abvar_point_count=&curve_point_count=&decomposition=&count=",'2.25.b_an')
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=25&g=2&simple=any&p_rank=&newton_polygon=&initial_coefficients=%5B1%2C-13%5D&abvar_point_count=&curve_point_count=&decomposition=",'2.25.b_an')
@@ -242,7 +242,7 @@ class AVHomeTest(LmfdbTest):
         # dimension, base field and point counts of the curve
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=4&p_rank=&ang_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=%5B0%2C4%2C15%5D&decomposition=&number_field=&simple=any&primitive=any&jacobian=any&polarizable=any",'4.3.ae_f_ad_e')
         # dimension, base field and maximum number to display
-        self.check_args("/Variety/Abelian/Fq/?q=25&simple=any&g=2&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=100", '2.25.ab_abm')
+        self.check_args("/Variety/Abelian/Fq/?q=25&simple=any&g=2&p_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&count=100", '2.25.an_do')
         # p-rank and initial coefficients
         self.check_args("/Variety/Abelian/Fq/?q=&simple=any&g=&p_rank=2&newton_polygon=&initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=&curve_point_count=&decomposition=&count=", '4.3.b_ab_d_j')
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=&simple=any&p_rank=2&newton_polygon=&initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=&curve_point_count=&decomposition=", '4.3.b_ab_d_j')
