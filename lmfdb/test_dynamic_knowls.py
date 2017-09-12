@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 from base import LmfdbTest
-import unittest2
 
 class DynamicKnowlTest(LmfdbTest):
     """
