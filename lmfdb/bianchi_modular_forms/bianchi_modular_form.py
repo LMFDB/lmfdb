@@ -6,7 +6,7 @@ from pymongo import ASCENDING
 from flask import render_template, url_for, request, redirect, flash
 from markupsafe import Markup
 
-from sage.all import latex, Set
+from sage.all import latex
 
 from lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict, random_object_from_collection
@@ -225,21 +225,6 @@ def bmf_field_dim_table(**args):
     query = {}
     query['field_label'] = field_label
     query[gl_or_sl] = {'$exists': True}
-    if level_flag != 'all':
-        # find which weights are present (TODO: get this from a stats collection)
-        wts = list(sum((Set(d.keys()) for d in db_dims().distinct(gl_or_sl)),Set()))
-    if level_flag == 'cusp':
-        # restrict the query to only return levels where at least one
-        # cuspidal dimension is positive:
-        query.update(
-            {'$or':[{gl_or_sl+'.{}.cuspidal_dim'.format(w):{'$gt':0}} for w in wts]}
-        )
-    if level_flag == 'new':
-        # restrict the query to only return levels where at least one
-        # new dimension is positive:
-        query.update(
-            {'$or':[{gl_or_sl+'.{}.new_dim'.format(w):{'$gt':0}} for w in wts]}
-        )
     data = db_dims().find(query)
     data = data.sort([('level_norm', ASCENDING)])
     info['number'] = nres = data.count()
@@ -248,7 +233,17 @@ def bmf_field_dim_table(**args):
     else:
         info['report'] = 'Displaying all %s levels,' % nres
 
-    data = list(data.skip(start).limit(count))
+    # convert data to a list and eliminate levels where all
+    # new/cuspidal dimensions are 0.  (This could be done at the
+    # search stage, but that requires adding new fields to each
+    # record.)
+    def filter(dat, flag):
+        dat1 = dat[gl_or_sl]
+        return any([int(dat1[w][flag])>0 for w in dat1])
+    flag = 'cuspidal_dim' if level_flag=='cusp' else 'new_dim'
+    data = [dat for dat in data if level_flag == 'all' or filter(dat, flag)]
+
+    data = data[start:start+count]
     info['field'] = field_label
     info['field_pretty'] = pretty_field_label
     nf = WebNumberField(field_label)
@@ -282,7 +277,6 @@ def bmf_field_dim_table(**args):
                  'level_norm': dat['level_norm'],
                  'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']) if gl_or_sl=='gl2_dims' else "",
                   'dims': dims[dat['level_label']]} for dat in data]
-    print("Length of dimtable = {}".format(len(dimtable)))
     info['dimtable'] = dimtable
     return render_template("bmf-field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
 
@@ -312,15 +306,11 @@ def render_bmf_space_webpage(field_label, level_label):
             else:
                 data = data.next()
                 info['label'] = data['label']
-                nf = WebNumberField(field_label)
-                info['base_galois_group'] = nf.galois_string()
+                info['nf'] = nf = WebNumberField(field_label)
                 info['field_label'] = field_label
                 info['pretty_field_label'] = pretty_field_label
                 info['level_label'] = level_label
                 info['level_norm'] = data['level_norm']
-                info['field_degree'] = nf.degree()
-                info['field_classno'] = nf.class_number()
-                info['field_disc'] = str(nf.disc())
                 info['field_poly'] = teXify_pol(str(nf.poly()))
                 info['field_knowl'] = nf_display_knowl(field_label, getDBConnection(), pretty_field_label)
                 w = 'i' if nf.disc()==-4 else 'a'

@@ -29,6 +29,17 @@ function show_code(system) {
         </div>
 -->
 
+<div>
+  <h2>  Base field   {{ cl.field.knowl()|safe }} </h2>
+<p>
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ cl.field.generator_name() }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ {{cl.field.latex_poly}}; {{ KNOWL('nf.class_number', 'class number')
+ }} \({{cl.field.class_number()}}\).
+</p>
+    {{ place_code('field') }}
+</div>
 
 <h2>Elliptic curves in class {{cl.short_class_label}} over   {{ cl.field_knowl|safe }}</h2>
 <table>

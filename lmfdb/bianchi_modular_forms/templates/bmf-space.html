@@ -5,7 +5,18 @@
 {{info.err}}
 {% else %}
 
-<h2>  Base Field  {{info.field_knowl | safe}}</h2>
+<div>
+  <h2>  Base field   {{ info.field_knowl|safe }} </h2>
+<p>
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ info.field_gen }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ \({{info.field_poly}}\); {{ KNOWL('nf.class_number', 'class number')
+ }} \({{info.nf.class_number()}}\).
+</p>
+    {{ place_code('field') }}
+</div>
+
 
 
 <h2>  {{ KNOWL('mf.bianchi.level', title='Level')}} {{ info.level_label }}  </h2>

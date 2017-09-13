@@ -29,9 +29,9 @@ var evTable = $("table#eigenvalues").dataTable(
                  {"sWidth": "5%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:right","sType":"numeric"},
                  {"sWidth": "20%", "bSortable": false, "bSearchable":
- false,"sClass": "alignLeft", "fnRender":"text-align:left","minWidth":"200px"}],  
+ false,"sClass": "alignLeft", "fnRender":"text-align:left","minWidth":"200px"}],
     "bSort":false,
-    "iDisplayLength": 15,    
+    "iDisplayLength": 15,
     "iDisplayStart": 0,
     "fnSort":[[1,"asc"],[2,"asc"],[3,"asc"]],
     "oLanguage": {
@@ -45,11 +45,11 @@ var evTable = $("table#eigenvalues").dataTable(
                         "sPrevious": "Previous",
                         "sNext": "Next"
                 }
-     }, 
+     },
      "bjQueryUI":true,
      "sPaginationType": "full_numbers",
      "sDom": 'ti<"paging"p><"bottom"lfr><"filterbox"><>',
-     "sScorollX": "500px", 
+     "sScorollX": "500px",
      "bStateSave": false,
      "aLengthMenu": [[15, 25, 50, 100 ,200, 500, -1], [15, 25, 50, 100, 200, 500, "All"]],
      "bAutoWidth": false,
@@ -58,7 +58,7 @@ var evTable = $("table#eigenvalues").dataTable(
 
 $('.dataTables_filter input').attr("placeholder", "Strings to filter by");
 $('.dataTables_filter input').attr("title", "E.g. 'even 2.' will give all even forms between 2 and 3.");
- 
+
 /* Add filtering box if we don't have a fixed weight*/
 
 {% if wtis1 !='' %}
@@ -73,7 +73,7 @@ $('#eigenvalues_filter').append(s);
 /* Add event listener to the weight filtering */
 $('#weight').change( function() { evTable.fnDraw(); } );
 {% endif %}
-evTable.fnDraw(); 
+evTable.fnDraw();
 $('#eigenvalues_wrapper').css("width","875px")
 
 s='<h1>New Search</h1>';
@@ -103,7 +103,7 @@ $('#newsearchtable').append(s);
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
 
-<div> 
+<div>
 <h2> Error message: </h2>% extends "homepage.html" %}
 
 {{ info.error | safe }}
@@ -122,7 +122,7 @@ $('#newsearchtable').append(s);
 <!--div id="searchresults" -->
 <table class="ntdata pretty" id="eigenvalues">
   <colgroup>
-    <col/> <col/><col/> 
+    <col/> <col/><col/>
     <col align="char" char="."/>
     <col/> <col/><col/> <col/> <col/> <col/>
   </colgroup>
@@ -148,41 +148,41 @@ $('#newsearchtable').append(s);
     {% for r in range(0,nnrows) %}
     {% if data[r] is defined %}
     <tr>
-        <td>            
+        <td>
              {% if data[r].N is defined %} {{ data[r].N}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].k is defined %} {{ data[r].k}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].ch is defined %} {{ data[r].ch | safe }}  {% endif %}
            </td>
-           <td>            
-             {% if data[r].R is defined %} 
-               {% if data[r].url is defined %} 
+           <td>
+             {% if data[r].R is defined %}
+               {% if data[r].url is defined %}
                <a href="{{ data[r].url}}">{{data[r].R}}</a>
                {% else %}
                {{data[r].R}}
                {% endif %}
             {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].symmetry is defined %} {{ data[r].symmetry}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].err is defined %} {{ data[r].err}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].dim is defined %} {{ data[r].dim}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].numc is defined %} {{ data[r].numc}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].fricke is defined %} {{ data[r].fricke}}  {% endif %}
            </td>
 
-           <td>            
+           <td>
              {% if data[r].cuspevs is defined %} {{ data[r].cuspevs}}  {% endif %}
            </td>
     </tr>

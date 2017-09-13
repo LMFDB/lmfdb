@@ -64,8 +64,8 @@ def number_field_data(label):
     C = getDBConnection()
     return flask.Markup(nf_knowl_guts(label, C))
 
-def na_text():
-    return "Not computed"
+#def na_text():
+#    return "Not computed"
 
 
 @app.context_processor
@@ -83,10 +83,10 @@ def global_numberfield_summary():
     init_nf_count()
     return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('number_fields.render_class_group_data'))
 
-def group_display_shortC(C):
-    def gds(nt):
-        return group_display_short(nt['n'], nt['t'], C)
-    return gds
+#def group_display_shortC(C):
+#    def gds(nt):
+#        return group_display_short(nt['n'], nt['t'], C)
+#    return gds
 
 def poly_to_field_label(pol):
     try:
