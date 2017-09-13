@@ -81,7 +81,7 @@ class ECisog_class(object):
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
         self.newform_exists_in_db = is_newform_in_db(self.newform_label)
 
-        self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor = N, isogeny = iso)
+        self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
 
         self.friends =  [('L-function', self.lfunction_link)]
         if not self.CM:
