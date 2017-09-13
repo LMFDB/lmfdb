@@ -29,3 +29,11 @@ class DynamicKnowlTest(LmfdbTest):
     def test_local_field_knowl(self):
         L = self.tc.get('/knowledge/show/lf.field.data?label=2.2.3.4', follow_redirects=True)
         assert 'Residue field degree' in L.data
+
+    def test_galois_module_knowl(self):
+        L = self.tc.get('/knowledge/show/nf.galois_group.gmodule?ind=3&n=6&t=2', follow_redirects=True)
+        assert 'Action' in L.data
+
+    def test_galois_alias_knowl(self):
+        L = self.tc.get('/knowledge/show/nf.galois_group.name', follow_redirects=True)
+        assert '3T2' in L.data
