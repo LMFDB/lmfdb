@@ -304,7 +304,7 @@ def web_latex(x, enclose=True):
         return x
     if enclose == True:
         return "\( %s \)" % latex(x)
-    return "%s" % latex(x)
+    return " %s " % latex(x)
 
 
 def web_latex_ideal_fact(x, enclose=True):

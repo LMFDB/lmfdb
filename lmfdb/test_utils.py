@@ -157,6 +157,9 @@ class UtilsTest(unittest2.TestCase):
         self.assertEqual(web_latex("test string"), "test string")
         self.assertEqual(web_latex(x**23 + 2*x + 1),
                          '\\( x^{23} + 2 \\, x + 1 \\)')
+        self.assertEqual(web_latex(x**23 + 2*x + 1, enclose=False),
+                         ' x^{23} + 2 \\, x + 1 ')
+
 
     def test_web_latex_ideal_fact(self):
         r"""
@@ -169,6 +172,8 @@ class UtilsTest(unittest2.TestCase):
         I = K.ideal(2/(5+a)).factor()
         self.assertEqual(web_latex_ideal_fact(I),
                          '\\( \\left(-a\\right)^{-1} \\)')
+        self.assertEqual(web_latex_ideal_fact(I, enclose=False),
+                         ' \\left(-a\\right)^{-1} ')
 
     def test_web_latex_split_on(self):
         r"""
