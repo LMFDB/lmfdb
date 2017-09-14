@@ -160,7 +160,6 @@ class UtilsTest(unittest2.TestCase):
         self.assertEqual(web_latex(x**23 + 2*x + 1, enclose=False),
                          ' x^{23} + 2 \\, x + 1 ')
 
-
     def test_web_latex_ideal_fact(self):
         r"""
         Checking utility: web_latex_ideal_fact
