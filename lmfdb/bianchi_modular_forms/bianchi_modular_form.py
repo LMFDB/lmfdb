@@ -9,7 +9,7 @@ from markupsafe import Markup
 from sage.all import latex
 
 from lmfdb.base import getDBConnection
-from lmfdb.utils import to_dict, random_object_from_collection
+from lmfdb.utils import to_dict, random_object_from_collection, web_latex_ideal_fact
 from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
@@ -319,7 +319,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['field_gen'] = latex(alpha)
                 I = ideal_from_label(L,level_label)
                 info['level_gen'] = latex(I.gens_reduced()[0])
-                info['level_fact'] = latex(I.factor())
+                info['level_fact'] = web_latex_ideal_fact(I.factor(), enclose=False)
                 dim_data = data['gl2_dims']
                 weights = dim_data.keys()
                 weights.sort(key=lambda w: int(w))
