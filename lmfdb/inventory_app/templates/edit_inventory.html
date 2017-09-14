@@ -1,0 +1,64 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_viewer.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_editor.js') }}"></script>
+<script type="text/javascript">
+    //Create a js object of the fields from server.
+    var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
+    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
+    var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
+    var jsonTypes = {{ type_data|safe }};
+
+</script>
+<script type="text/javascript">
+    //Put in initial text and fit boxes to content
+    function onReady() {
+      console.log( "Ready!" );
+        //Loop over blocks and fill text then fit edit-box height
+        for( var key in mainBlockList.blockList){
+            var block = mainBlockList.blockList[key];
+            $(block.docElementId).val(String(block.text));
+            if( $(block.docElementId).length){
+              $(block.docElementId).height( $(block.docElementId)[0].scrollHeight);
+            }
+        }
+      //Now try fetching a stored list and repopulating
+      retrieveBlockList();
+      createTypePopButtons(mainBlockList, jsonTypes);
+    }
+
+    $( document ).ready(function(){
+      //Fetch content and fill blocklist and DOM
+      $( document ).on("blockListReady", onReady); //What to do when blocklist is prepared
+      fetchAndPopulateData(mainBlockList, populateEditorPage);
+    });
+ 
+    //Store blocklist before a refresh
+    window.onunload = storeBlockList;
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %} Editing  {{db_name}}.{{collection_name}}{% endblock title_block %}
+
+{% block main_body %}
+<div>
+    <p>The following is the current inventory for this collection. </p>
+    <p>The "INFO" and "NOTES" fields show general information for this collection</p>
+    <p>Each normal key contains 3 fields: the value type, description and an example of a typical field. By default the type and example fields are auto-filled from the database. </p>
+    <p>After editing any fields you wish to change, press "Submit" to submit your changes</p>
+</div>
+<div id="specialsDiv">
+
+</div>
+<div id="dataDiv">
+
+</div>
+<div id="buttons">
+        <input type="button" class = "button" value="Submit" onclick="this.blur();submitEdits('{{ url_for('inventory_app.submit_edits') }}')" title="Submit Edits"/>
+        <input type="button" class = "resetbutt" value="Reset" onclick="this.blur();resetEdits()" title="Reset to Original"/>
+        <input type="button" class = "button" value="Export" onclick="this.blur();exportAsJson()" title="Export Edits as JSON"/> <!--This button should auto-download a file containing the diffs -->
+
+</div>
+{% endblock main_body %}
