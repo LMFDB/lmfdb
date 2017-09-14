@@ -1,8 +1,9 @@
 import pymongo
 import json
 from bson.code import Code
-import lmfdb
+import dbtools
 import id_object
+from lmfdb.base import getDBConnection
 
 __version__ = '1.0.0'
 
@@ -63,7 +64,7 @@ def _jsonify_collection_info(coll, dbname = None):
 
     for doc in lst:
         try:
-            rls = lmfdb.get_sample_record(coll, str(doc))
+            rls = dbtools.get_sample_record(coll, str(doc))
             try:
                 typedesc = id_object.get_description(rls[str(doc)])
             except:
@@ -105,7 +106,7 @@ def _jsonify_collection_info(coll, dbname = None):
 def parse_collection_info_to_json(dbname, collname, connection = None):
 
     if connection is None:
-        connection = lmfdb.get_connection()
+        connection = getDBConnection()
 
     dbstring = dbname + '\\' + collname
     coll = connection[dbname][collname]
@@ -134,7 +135,7 @@ def create_user_template(structure_json, dbname, collname, field_subs = ['type',
 def parse_lmfdb_to_json(connection = None, is_good_database = None, is_good_collection = None):
 
     if connection is None:
-        connection = lmfdb.get_connection()
+        connection = getDBConnection()
 
     if is_good_database is None:
         is_good_database = _is_good_database
