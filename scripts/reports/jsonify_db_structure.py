@@ -47,7 +47,7 @@ def _get_db_records(coll):
 def _jsonify_collection_info(coll, dbname = None):
 
     if dbname is None:
-        dbname = collection.name
+        dbname = coll.name
     results = _get_db_records(coll)
 
     json_db_data = {}
