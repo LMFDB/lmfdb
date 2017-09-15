@@ -196,6 +196,7 @@
     {% endif %}
    {{ rightnavig("Origins", origins) }}
    {{ rightnavig("Related objects", friends) }}
+   {% block more_props %}{% endblock %}
    {% if navi %}
        {{ neighbors("Nearby objects", navi) }}
    {% endif %}

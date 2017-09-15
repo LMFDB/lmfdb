@@ -77,7 +77,7 @@ class Lfunction:
 
     def compute_heuristic_zeros(self, step_size = 0.02, upper_bound = 20, lower_bound = None):
      #   if self.Ltype() == "hilbertmodularform":
-        if self.Ltype() not in ["riemann", "maass", "ellipticmodularform", "ellipticcurveQ"]:
+        if self.Ltype() not in ["riemann", "maass", "ellipticmodularform" , "ellipticcurve"]:
             upper_bound = 10
         if self.selfdual:
             lower_bound = lower_bound or - step_size / 2

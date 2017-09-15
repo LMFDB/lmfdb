@@ -8,7 +8,7 @@ from pymongo import ASCENDING
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger, random_object_from_collection
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_list_start, parse_count, parse_start, parse_nf_string
+from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string
 from search_parsing import parse_newton_polygon, parse_abvar_decomp
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
@@ -129,51 +129,50 @@ def abelian_variety_search(**args):
         parse_ints(info,query,'g',name='dimension')
         if 'simple' in info:
             if info['simple'] == 'yes':
-                query['decomposition'] = {'$size' : 1}
-                query['decomposition.0.1'] = 1
+                query['is_simp'] = True
             elif info['simple'] == 'no':
-                query['$or'] = [{'decomposition': {'$not' : {'$size' : 1}}}, {'decomposition.0.1' : {'$gt': 1}}]
+                query['is_simp'] = False
         else:
-            info['simple'] = "any"
+            info['simple'] = 'any'
         if 'primitive' in info:
             if info['primitive'] == 'yes':
-                query['primitive_models'] = {'$size' : 0}
+                query['is_prim'] = True
             elif info['primitive'] == 'no':
-                query['primitive_models'] = {'$not' : {'$size' : 0}}
+                query['is_prim'] = False
         else:
-            info['primitive'] = "any"
+            info['primitive'] = 'any'
         if 'jacobian' in info:
             jac = info['jacobian']
             if jac == 'yes':
-                query['known_jacobian'] = 1
+                query['is_jac'] = 1
             elif jac == 'not_no':
-                query['known_jacobian'] = {'$ne' : -1}
+                query['is_jac'] = {'$ne' : -1}
             elif jac == 'not_yes':
-                query['known_jacobian'] = {'$ne' : 1}
+                query['is_jac'] = {'$ne' : 1}
             elif jac == 'no':
-                query['known_jacobian'] = -1
+                query['is_jac'] = -1
         else:
-            info['jacobian'] = "any"
+            info['jacobian'] = 'any'
         if 'polarizable' in info:
             pol = info['polarizable']
             if pol == 'yes':
-                query['principally_polarizable'] = 1
+                query['is_pp'] = 1
             elif pol == 'not_no':
-                query['principally_polarizable'] = {'$ne' : -1}
+                query['is_pp'] = {'$ne' : -1}
             elif pol == 'not_yes':
-                query['principally_polarizable'] = {'$ne' : 1}
+                query['is_pp'] = {'$ne' : 1}
             elif pol == 'no':
-                query['principally_polarizable'] = -1
+                query['is_pp'] = -1
         else:
-            info['polarizable'] = "any"
+            info['polarizable'] = 'any'
         parse_ints(info,query,'p_rank')
-        parse_ints(info,query,'angle_ranks')
-        parse_newton_polygon(info,query,'newton_polygon',qfield='slopes')
-        parse_list_start(info,query,'initial_coefficients',qfield='polynomial',index_shift=1)
-        parse_list_start(info,query,'abvar_point_count',qfield='A_counts',parse_singleton=str)
-        parse_list_start(info,query,'curve_point_count',qfield='C_counts',parse_singleton=str)
-        parse_abvar_decomp(info,query,'decomposition',av_stats=AbvarFqStats())
-        parse_nf_string(info,query,'number_field')
+        parse_ints(info,query,'ang_rank')
+        parse_newton_polygon(info,query,'newton_polygon',qfield='slps') # TODO
+        parse_string_start(info,query,'initial_coefficients',qfield='poly',initial_segment=["1"])
+        parse_string_start(info,query,'abvar_point_count',qfield='A_cnts')
+        parse_string_start(info,query,'curve_point_count',qfield='C_cnts',first_field='pt_cnt')
+        parse_abvar_decomp(info,query,'decomposition',qfield='decomp',av_stats=AbvarFqStats())
+        parse_nf_string(info,query,'number_field',qfield='nf')
     except ValueError:
         return search_input_error(info, bread)
 
@@ -189,9 +188,7 @@ def abelian_variety_search(**args):
         start = 0
 
 
-    #res = cursor.sort([]).skip(start).limit(count)
-    res = cursor.sort([('g', ASCENDING), ('q', ASCENDING), ('label', ASCENDING), ('p_rank', ASCENDING)]).skip(start).limit(count)
-    #res = cursor.skip(start).limit(count)
+    res = cursor.sort([('sort', ASCENDING)]).skip(start).limit(count)
     res = list(res)
     info['abvars'] = [AbvarFq_isoclass(x) for x in res]
     info['number'] = nres
