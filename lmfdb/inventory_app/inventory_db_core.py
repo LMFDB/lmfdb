@@ -311,7 +311,6 @@ def trim_human_table(inv_db_toplevel, db_id, coll_id):
     for record in human_cursor:
         rec_find = {fields_fields[1]:coll_id, fields_fields[2]: record['name']}
         auto_record = a_db.find_one(rec_find)
-        print record, auto_record
         if auto_record is None:
             invalidated_keys.append({'name':record['name'], 'data':record['data']})
             h_db.remove(record)

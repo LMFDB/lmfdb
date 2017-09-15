@@ -18,7 +18,7 @@ def update_fields(diff, storeRollback=True):
     """
 
     try:
-        got_client = inv.setup_internal_client()
+        got_client = inv.setup_internal_client(editor=True)
         assert(got_client == True)
         db = inv.int_client[inv.get_inv_db_name()]
     except Exception as e:

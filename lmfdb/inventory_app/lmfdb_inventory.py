@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-import json
+import json, yaml
 import logging
 
 #Contains the general data and functions for all inventory handling
@@ -43,7 +43,9 @@ class db_struc:
 #Constant instance of db_struct
 ALL_STRUC = db_struc()
 
-def setup_internal_client(remote=False):
+_auth_as_edit = False
+_auth_on_remote = False
+def setup_internal_client(remote=True, editor=False):
     """Get mongo connection and set int_client to it"""
 
     #Make sure logger is up
@@ -51,23 +53,33 @@ def setup_internal_client(remote=False):
 
     #This is a temporary arrangement, to be replaced with LMFDB connection
     log_dest.info("Creating db client")
-    global int_client
-    if int_client == None:
-        try:
-            if remote:
-                #Attempt to connect to remote LMFDB on 37010
-                int_client=MongoClient('localhost',37010)
-                int_client['admin'].authenticate('lmfdb', 'lmfdb')
-            else:
-                int_client = MongoClient("localhost", 27017)
-#                int_client = MongoClient("localhost", 37010)
-                return(True)
-        except:
-            log_dest.error("Error setting up connection")
-            return(False)
-    else:
-        return(True)
+    global int_client, _auth_as_edit, _auth_on_remote
+    if(int_client and _auth_as_edit == editor and _auth_on_remote == remote):
+	return True
+    try:
+        if remote:
+            #Attempt to connect to remote LMFDB on 37010
+            int_client=MongoClient('localhost',37010)
+        else:
+            int_client = MongoClient("localhost", 27017)
+#           int_client = MongoClient("localhost", 37010)
+            return(True)
+        pw_dict = yaml.load(open("../../../passwords.yaml"))
+        if editor:
+            key = 'data'
+            auth_db = 'inventory'
+        else:
+            key = 'default'
+            auth_db = 'admin'
+        int_client[auth_db].authenticate(pw_dict[key]['username'], pw_dict[key]['password'])
 
+    except Exception as e:
+        log_dest.error("Error setting up connection "+str(e))
+        int_client = None
+        return(False)
+    _auth_as_edit = editor
+    _auth_on_remote = remote
+    return True
 
 #Structure helpers -----------------------------------------------------------------------
 def get_inv_db_name():
@@ -87,16 +99,20 @@ def get_inv_table_names():
 
 def validate_mongodb(db):
     """Validates the db and collection names in db against expected structure"""
+    n_colls = 0
     try:
         if db.name != get_inv_db_name():
             raise KeyError('name')
         colls = db.collection_names()
         tables = get_inv_table_names()
-        if len(colls) != ALL_STRUC.n_colls:
-            raise ValueError('n_colls')
         for coll in colls:
-            if coll not in tables:
+            #Should contain only known tables and maybe some other admin ones. 
+            if coll not in tables and not 'system.' in coll:
                 raise KeyError(coll)
+            elif coll in tables:
+                n_colls += 1
+        if n_colls != ALL_STRUC.n_colls and n_colls != 0:
+            raise ValueError('n_colls')
     except Exception as e:
         return False
     return True
