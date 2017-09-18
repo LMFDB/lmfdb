@@ -35,7 +35,7 @@ A <a href={{url_for('.random_group')}}>random Galois group</a> from the database
 <h2>Find a specific Galois group</h2>
 
 <div>
-<form name="search" method = "get" action="{{search}}">
+<form>
 Search by {{KNOWL('gg.label',title="Galois group label")}}
 <input type="text" name="jump_to" value="" placeholder="8T14"> 
 <button type="submit" value="Find">Find</button>
@@ -45,7 +45,7 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
 
 
 <h2>Search</h2>
-<form name="search" method = "get" action="{{search}}">
+<form id="search" onsubmit="cleanSubmit(this.id)">
         <table class="">
           <tr>
             <td colspan="2" align="center">

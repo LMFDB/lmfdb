@@ -52,7 +52,7 @@ Artin representation: <input type='text' name='natural' size='50' example='3.2e3
 <h2> Search for an Artin representation </h2>
 Enter values into one or more boxes to restrict the search.
 <p></p>
-<form>
+<form id="search" onsubmit="cleanSubmit(this.id)">
   <table>
     <tr>
         <td align="right">{{ KNOWL('artin.dimension',title="Dimension") }}</td>
