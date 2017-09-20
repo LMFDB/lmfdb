@@ -1,0 +1,117 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+The database contains {{ info['total'] }} number fields.
+</div>
+{% set maxdeg = info['maxdeg'] %}
+
+<h2> Distribution by signature </h2>
+{% set ncols = (info['nsig'][maxdeg - 1] | length) %}
+<div>
+<table border="1" style="text-align: right ">
+<tr>
+<th> $n \backslash r_2$
+{% for i in range(0,ncols) %}
+<th> {{i}}
+{% endfor %}
+<th>All
+
+{% for r in info['nsig'] %}
+  <tr>
+    <th> {{ loop.index }}
+    {% for c in r %} 
+      <td> <a href="{{c.query|safe}}">{{ c.cnt }}</a>
+    {% endfor %}
+    {% for i in range(ncols - (r | length)) %}
+      <td>
+    {% endfor %}
+    
+    <td> <a href="{{info['degree'][loop.index0].query|safe}}">{{info['degree'][loop.index0].cnt}}</a>
+  <tr>
+    <td>
+    {% for c in r %} 
+      <td> {{ c.prop }}%
+    {% endfor %}
+    {% for i in range(ncols - (r | length)) %}
+      <td> 
+    {% endfor %}
+    <td> 100%
+{% endfor %}
+</table>
+</div>
+<div>
+There is one row for each degree $n$, and the column is indexed by
+$r_2$, the number of non-real embeddings, so the signature is
+$(n-2r_2, r_2)$.  Percentages for individual entries are taken with
+the degree.
+</div>
+
+<h2> Distribution by Galois group </h2>
+{% set ncols = info['maxt'] %}
+<div>
+<table border="1" style="text-align: right ">
+<tr>
+<th> $n \backslash t$
+{% for i in range(1,ncols) %}
+<th> {{i}}
+{% endfor %}
+<th>All
+
+{% for r in info['nt'] %}
+  <tr>
+    <th> {{ loop.index }}
+    {% for c in r %} 
+      <td> <a href="{{c.query|safe}}">{{ c.cnt }}</a>
+    {% endfor %}
+    {% for i in range(ncols-1 - (r | length)) %}
+      <td>
+    {% endfor %}
+    
+    <td> <a href="{{info['degree'][loop.index0].query|safe}}">{{info['degree'][loop.index0].cnt}}</a>
+  <tr>
+    <td>
+    {% for c in r %} 
+      <td> {{ c.prop }}%
+    {% endfor %}
+    {% for i in range(ncols-1 - (r | length)) %}
+      <td> 
+    {% endfor %}
+    <td> 100%
+    
+{% endfor %}
+</table>
+</div>
+
+<div>
+There is one row for each degree $n$, and the column is indexed by
+$t$, the $t$-number.
+</div>
+<h2> Distribution by class number </h2>
+Class numbers have been computed for {{ has_h }} ({{ has_h_pct }}%) of
+the fields in the database.  Percentages below are based on the number
+of fields for which class numbers have been computed.  Some of these
+class numbers have been computed under the assumption of the Generalized
+Riemann Hypothesis.
+<div>
+<table border="1" style="text-align: right ">
+  <tr>
+      {% for hinfo in info.h %}
+        <th> {{ hinfo.label }}
+      {% endfor %}
+
+  <tr>
+    {% for hinfo in info['h'] %}
+      <td> <a href="{{hinfo.query|safe}}">{{ hinfo.cnt }}</a>
+    {% endfor %}
+    
+  <tr>
+    {% for hinfo in info['h'] %}
+      <td> {{ hinfo.prop }}%
+    {% endfor %}
+    
+</table>
+</div>
+
+
+{% endblock %}
