@@ -1,7 +1,7 @@
 {% extends "base_edit.html" %}
 
 {% block extra_script %}
-<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_viewer.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_editor.js') }}"></script>
 <script type="text/javascript">
     //Create a js object of the fields from server.
@@ -24,6 +24,7 @@
     }
 
     function onReady() {
+      //Function to be called when data arrives
       console.log( "Ready!" );
         //Loop over blocks and fill text
         for( var key in mainBlockList.blockList){

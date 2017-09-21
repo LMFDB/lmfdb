@@ -110,3 +110,21 @@ div.hide{
     border-radius: 2px;
     display: inline-block;
 }
+
+.viewerTable{
+    border: 1px solid black;
+    table-layout: auto;
+}
+.viewerTableHeaders, .viewerTableEls{
+  border: 1px solid black;
+  padding : 5px;
+}
+.viewerTableHeaders {
+  font-weight: bold;
+}
+.viewerTableOdd{
+    background-color : #e8e8e8;
+}
+.viewerTableEven{
+    background-color : #ffffff;
+}

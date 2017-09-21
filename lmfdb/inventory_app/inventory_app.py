@@ -6,17 +6,14 @@ import inventory_helpers as ih
 import sys, os
 from datetime import datetime as dt
 
-#All inventory_app pages are relative to this path
-edit_root = ''
-
 # Initialize the Flask application
-inventory_app = Blueprint('inventory_app', __name__, template_folder='./templates', static_folder='./static', static_url_path = edit_root+'static/')
+inventory_app = Blueprint('inventory_app', __name__, template_folder='./templates', static_folder='./static', static_url_path = 'static/')
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 #Set to info, debug etc
 linv.init_run_log('debug')
 
-@inventory_app.route(edit_root + "style.css")
+@inventory_app.route("style.css")
 def css():
     response = make_response(render_template("inv_style.css"))
     response.headers['Content-type'] = 'text/css'
@@ -28,30 +25,37 @@ def css():
     return response
 
 #The root of edit pages, lists databases having inventory data
-@inventory_app.route(edit_root)
+@inventory_app.route('')
 def show_edit_root():
     return render_template('edit_show_list.html', db_name = None, listing=inventory_viewer.get_edit_list(), bread=[['&#8962;', url_for('inventory_app.show_edit_root')]])
 
 #Edit page per DB, lists collections
-@inventory_app.route(edit_root + '<string:id>/')
+@inventory_app.route('<string:id>/')
 def show_edit_child(id):
     return render_template('edit_show_list.html', db_name=id, listing=inventory_viewer.get_edit_list(id), bread=[['&#8962;', url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
 
+#Viewer page per collection, shows formatted fields
+@inventory_app.route('<string:id>/<string:id2>/')
+def show_inventory(id, id2):
+    bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
+    return render_template('view_inventory.html', db_name=id, collection_name=id2, bread=bread, table_fields=linv.display_field_order(), info_fields=linv.info_field_order(), scanDate='00:00:00')
+
 #Edit page per collection, shows editable fields
-@inventory_app.route(edit_root + '<string:id>/<string:id2>/')
+@inventory_app.route('<string:id>/<string:id2>/edit/')
 #@login_required
 def show_edit_inventory(id, id2):
     bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
     return render_template('edit_inventory.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), bread=bread)
 
 #Edit data source to populate inventory pages
-@inventory_app.route(edit_root + '<string:id>/<string:id2>/data/')
+@inventory_app.route('<string:id>/<string:id2>/edit/data/')
+@inventory_app.route('<string:id>/<string:id2>/data/')
 def fetch_edit_inventory(id, id2):
     results = inventory_viewer.get_inventory_for_display(id+'.'+id2)
     return jsonify(results)
 
 #Page shown after successful edit submission
-@inventory_app.route(edit_root + 'success/')
+@inventory_app.route('success/')
 def edit_success(request=request):
     #Check response for referrer and return redirect page
     #We want to send user back to the parent of the page they got here from
@@ -66,7 +70,7 @@ def edit_success(request=request):
 
 #Page shown after failing edits
 #These failures should only be severe code failures, or possibly collisions
-@inventory_app.route(edit_root + 'failure/', methods=['GET'])
+@inventory_app.route('failure/', methods=['GET'])
 def edit_failure(request=request):
     #Check response for referrer and return redirect page
     #We want to send user back to the page they got here from to retry
@@ -88,7 +92,7 @@ def edit_failure(request=request):
 
 
 #Destination for submission
-@inventory_app.route(edit_root + 'submit', methods=['POST'])
+@inventory_app.route('submit', methods=['POST'])
 #@login_required
 def submit_edits():
     #Do the submission
@@ -100,4 +104,3 @@ def submit_edits():
 
     #Return a redirect to be done on client
     return jsonify({'url':url_for('inventory_app.edit_success'), 'code':302})
-

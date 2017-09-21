@@ -1,122 +1,112 @@
 
-//---------- General block and list handling ---------------------
+//---------- Viewer DOM creation ---------------------------------
 
-function Block(field, key, text, docElementId){
-  //A block is a single editable field
-  //It has the field name (name of field in lmfdb collection)
-  //the key (e.g. description, type etc)
-  //and both the original and new texts, plus an edited flag
-  //Finally it is linked to a DOM element, a textinput, by id string
-  this.fieldname = field;
-  this.key = key;
-  this.text = text;
-  this.newtext = text;
-  this.edited = false;
-  this.docElementId = docElementId;
-  this.special = false;
-}
+function populateViewerPage(blockList, startVisible=true){
+  //Create the HTML elements using the blocklist
+  //We create in two chunks
 
-function BlockList(db, coll){
-	//Construct block list object holding a list of blocks
-  //The keys are the id's of DOM edit fields
-  this.db = db;
-  this.coll = coll;
-  this.blockList = {};
-  this.addBlock = addBlock;
-  this.delBlock = delBlock;
-  this.getBlock = getBlock;
-  this.setSpecialById = setSpecialById;
-  this.getBlockIdsFromPartialID = getBlockIdsFromPartialID;
-}
-function addBlock(field, key, text, docElementId){
-	//Add a block to list
-	var myBlock = new Block(field, key, text, docElementId);
-  this.blockList[docElementId] = myBlock;
-}
+  var specialsDiv = document.getElementById('specialsDiv');
+  var dataDiv = document.getElementById('dataDiv');
+  var specialFields = [];
+  var keys = Object.keys(blockList.blockList).sort();
+  console.log(keys);
+  var uniq_keys = {};
+  for(var i=0; i<keys.length; i++){
+    var str = keys[i];
+    //Strip out field, leaving the 'Box_' bit
+    var head = str.substr(1,str.lastIndexOf('_')-1 );
+    uniq_keys[head] = 0;
+  }
+  fields = Object.keys(uniq_keys);
 
-function delBlock(id){
-	//Delete block from list
-	this.blockList.splice(id, 1);
-}
+  var table_div = document.createElement('div');
+  var table = document.createElement('table');
+  table.class = 'viewerTable';
+  entry_styles = ['table_tag'];
 
-function getBlock(id){
-  //Look up block from ID
-  return this.blockList[id];
-}
-
-function getBlockIdsFromPartialID(id){
-  //Look up block where id matches the beginning
-  blocks =[];
-  if(id[0] != '#') id = '#'+id;
-  for(key in this.blockList){
-    if(key.indexOf(id) != -1){
-      blocks.push(key);
+  var row = createViewerRow(blockList, 'Key', '', header=true)
+  table.appendChild(row);
+  for(var i=0; i < fields.length; i++){
+    row = createViewerRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+'_');
+    if(row){
+      if(i%2 == 0){
+        row.classList.add('viewerTableEven');
+      }else{
+        row.classList.add('viewerTableOdd');
+      }
+      table.appendChild(row);
+    }else{
+      specialFields.push(i);
     }
   }
-  return blocks;
+
+  table_div.appendChild(table);
+  dataDiv.appendChild(table_div);
+
+  createInfoTable(blockList, fields[specialFields[0]], fields[specialFields[1]], specialsDiv);
+
+  $( document ).trigger( "blockListReady");
 }
 
-function setSpecialById(id){
-    //Tag the block with id=id as a special
-    this.getBlock(id).special = true;
-}
+function createViewerRow(blockList, field, id_start, header=false){
 
-//---------- End general block and list handling -----------------
-
-//---------- Helpers for some other block-wise tasks -------------
-
-
-//---------- End helpers for some other block-wise tasks ---------
-
-//---------- General data fetching  ------------------------------
-
-function fetchAndPopulateData(blockList, pageCreator, startVisible=startVisible){
-  //Fetch the json data for this page
-  var current_url = window.location.href;
-  var data_url = current_url + 'data';
-  var XHR = new XMLHttpRequest();
-  XHR.open('GET', data_url);
-  XHR.setRequestHeader('Content-Type', 'text/plain');
-  XHR.blockList = blockList;
-
-  XHR.addEventListener('load', function(event) {
-    //On success return data
-    var data = JSON.parse(XHR.response);
-    populateBlocklist(XHR.blockList, data);
-    pageCreator(XHR.blockList, startVisible=startVisible);
-  });
-
-  // Define what happens in case of error
-  XHR.addEventListener('error', function(event) {
-    console.log("Failed to fetch page data");
-  });
-
-  XHR.send('');
-}
-
-function populateBlocklist(blockList, data){
-  //Fill given blocklist from given data
-  var contents = "";
-  var docElementId = "";
-
-  //Do specials and then do main data
+  var table_row = document.createElement('tr');
+  var table_el = document.createElement('td');
+  var clas = header ? 'viewerTableHeaders' : 'viewerTableEls';
   var special = false;
-  //Data should contain 2 sections, specials and data
-  for(var item  of ['specials', 'data']){
-    if( item == 'specials'){
-      special = true;
+  table_el.innerHTML = field;
+  table_el.classList.add(clas);
+  table_row.appendChild(table_el);
+
+  for(var j=0; j < table_fields.length; j++){
+    var table_el = document.createElement('td');
+    table_el.classList.add(clas);
+    if(header){
+      table_el.innerHTML = capitalise(table_fields[j]);
     }else{
-      special = false;
-    }
-    for(var field in data[item]){
-      contents = data[item][field];
-      for(tag in contents){
-        docElementId = '#Box_'+field+'_'+tag;
-        blockList.addBlock(field, tag, contents[tag], docElementId);
-        if(special) blockList.setSpecialById(docElementId);
+      var block = blockList.getBlock(id_start+table_fields[j]);
+      if(block && ! block.special){
+        table_el.innerHTML = block.text;
+      }else{
+        special = true;
       }
     }
+    table_row.appendChild(table_el);
   }
+  return (special ? null : table_row);
+
 }
 
-//---------- End general data fetching  --------------------------
+function createInfoTable(blockList, info, notes){
+
+  var table = document.createElement('table');
+  for(var j=0; j< info_fields.length; j++){
+    var table_row = document.createElement('tr');
+    var el1 = document.createElement('td');
+    el1.classList.add('viewerTableHeaders');
+    el1.innerHTML = capitalise(info_fields[j]);
+    table_row.appendChild(el1);
+    var el2 = document.createElement('td');
+    el2.classList.add('viewerTableEls');
+    var block = blockList.getBlock('#'+info+'_'+info_fields[j]);
+    if(block) el2.innerHTML = block.text;
+    if(j%2 == 0){
+      table_row.classList.add('viewerTableEven');
+    }else{
+      table_row.classList.add('viewerTableOdd');        
+    }
+
+    table_row.appendChild(el2);
+    table.appendChild(table_row);
+  }
+
+  specialsDiv.appendChild(table);
+
+  var div = document.createElement('div');
+  div.innerHTML = "NOTES: " +blockList.getBlock('#Box_NOTES_description').text;
+  console.log(div.innerHTML);
+  specialsDiv.appendChild(div);
+
+}
+
+//---------- General block and list handling ---------------------

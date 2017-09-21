@@ -262,7 +262,7 @@ function populateEditorPage(blockList, startVisible=startVisible){
       headerDiv = document.createElement('div');
       headerDiv.id = 'Header_'+lastField;
       headerDiv.class = 'header';
-      var butt = createCollapserButt(lastField);
+      var butt = createCollapserButt(lastField, open=startVisible);
       headerDiv.appendChild(butt);
       headerDiv.appendChild(h2);
       if(block.special){
@@ -277,12 +277,6 @@ function populateEditorPage(blockList, startVisible=startVisible){
     if(i+1 >= keys.length || blockList.getBlock(keys[i+1]).fieldname != blockList.getBlock(keys[i]).fieldname){
       //Add block-reset button
       var butt = createResetButt(lastField);
-/*      if(block.special){
-        specialsDiv.appendChild(butt);
-      }else{
-        dataDiv.appendChild(item);
-        dataDiv.appendChild(butt);
-      }*/
       fieldDiv.appendChild(butt);
     }
     if(! startVisible) fieldDiv.classList.add('hide');
@@ -293,14 +287,6 @@ function populateEditorPage(blockList, startVisible=startVisible){
     }
   }
   $( document ).trigger( "blockListReady");
-}
-
-function createKeyTitle(item){
-
-  var h2 = document.createElement('h2');
-  h2.classList.add("content_h2");
-  h2.innerHTML = "Key name: " + item;
-  return h2;
 }
 
 function createItemDiv(item, field, special){
@@ -352,33 +338,6 @@ function createResetButt(field){
 		}
 	})();
   butt.title = "Reset to Original";
-
-  return butt;
-}
-
-function createCollapserButt(field){
-
-  var butt = document.createElement('input');
-  butt.setAttribute('type', 'button');
-  butt.className = "expanderbutt";
-  butt.style='float:inherit;display:inline;';
-  butt.value = "+";
-  butt.onclick = (function() {
-    var box_id = 'Box_'+field;
-		return function() {
-			this.blur();
-      var div = document.getElementById(box_id);
-      if(div.classList.contains('hide')){
-          div.classList.remove('hide');
-          this.value = "-";
-          fitAllToText(box_id);
-      }else{
-        div.classList.add('hide');
-        this.value = "+";
-      }
-		}
-	})();
-  butt.title = "Expand/Collapse Section";
 
   return butt;
 }

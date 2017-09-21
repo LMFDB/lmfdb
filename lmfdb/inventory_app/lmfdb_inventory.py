@@ -22,8 +22,12 @@ STR_INFO = "(INFO)"
 #Value can be used to impose ordering in views
 base_editable_fields = {'type':1, 'description':2, 'example':3}
 #sorted(d, key=d.get) returns keys sorted by values
+def display_field_order():
+    return sorted(base_editable_fields, key=base_editable_fields.get)
 
-info_editable_fields = {'nice_name':1, 'description':2, 'contact':3, 'status':4, 'code':5}
+info_editable_fields = {'nice_name':1, 'description':2, 'contact':4, 'status':3, 'code':5}
+def info_field_order():
+    return sorted(info_editable_fields, key=info_editable_fields.get)
 
 #Object describing DB structure. This is styled after a relational model
 class db_struc:
