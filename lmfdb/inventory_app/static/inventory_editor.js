@@ -16,9 +16,7 @@ function updateBlock(obj){
     }else{
       block.edited = false;
     }
-    if( $(block.docElementId).length){
-        $(block.docElementId).height( $(block.docElementId)[0].scrollHeight);
-    }
+    fitToText(block.docElementId);
 }
 
 function resetEdits(blockid=null){
@@ -128,10 +126,6 @@ function retrieveBlockList(){
         block.newtext = list[prop].newtext;
         $(block.docElementId).val(String(block.newtext));
       }
-      //Re-fit lengths
-      if( $(block.docElementId).length){
-        $(block.docElementId).height( $(block.docElementId)[0].scrollHeight);
-      }
     }
   }
 }
@@ -151,25 +145,17 @@ function saveTextAsFile(textToWrite, filename){
     /* globals destroyClickedElement, Blob*/
         //Create file and offer for "download"
         //Borrowed and slightly adapted from internet postings
+        function destroyClickedElement(event){
+                  document.body.removeChild(event.target);
+              }
         var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
         var downloadLink = document.createElement("a");
         downloadLink.download = filename;
         downloadLink.innerHTML = "Download File";
-        if (window.URL !== null)
-        {
-            // Chrome allows the link to be clicked
-            // without actually adding it to the DOM.
-            downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
-        }
-        else
-        {
-            // Firefox requires the link to be added to the DOM
-            // before it can be clicked.
-            downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
-            downloadLink.onclick = destroyClickedElement;
-            downloadLink.style.display = "none";
-            document.body.appendChild(downloadLink);
-        }
+        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+        downloadLink.onclick = destroyClickedElement;
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
         downloadLink.click();
 }
 
@@ -214,7 +200,7 @@ function submitEdits(dest){
   if(!responseText){
     return;
   }
-  
+
   var XHR = new XMLHttpRequest();
   XHR.open('POST', dest);
   XHR.setRequestHeader('Content-Type', 'text/plain');
@@ -255,14 +241,14 @@ function blockToServer(block){
 
 //---------- Editor DOM creation ---------------------------------
 
-function populateEditorPage(blockList){
+function populateEditorPage(blockList, startVisible=startVisible){
   //Create the HTML elements using the blocklist
   //We create in two chunks
 
   var specialsDiv = document.getElementById('specialsDiv');
   var dataDiv = document.getElementById('dataDiv');
   var lastField = "";
-
+  var fieldDiv;
   var keys = Object.keys(blockList.blockList).sort();
 
   for(var i=0; i < keys.length; i++){
@@ -270,28 +256,40 @@ function populateEditorPage(blockList){
     if(lastField != block.fieldname){
       var h2 = createKeyTitle(block.fieldname);
       lastField = block.fieldname;
+      fieldDiv = document.createElement('div');
+      fieldDiv.id = 'Box_'+lastField;
+      fieldDiv.class = 'collapser';
+      headerDiv = document.createElement('div');
+      headerDiv.id = 'Header_'+lastField;
+      headerDiv.class = 'header';
+      var butt = createCollapserButt(lastField);
+      headerDiv.appendChild(butt);
+      headerDiv.appendChild(h2);
       if(block.special){
-        specialsDiv.appendChild(h2);
+          specialsDiv.appendChild(headerDiv);
       }else{
-        dataDiv.appendChild(h2);
+          dataDiv.appendChild(headerDiv);
       }
     }
     var item = createItemDiv(block.fieldname, block.key, block.special);
-    if(block.special){
-      specialsDiv.appendChild(item);
-    }else{
-      dataDiv.appendChild(item);
-    }
+    fieldDiv.appendChild(item);
 
     if(i+1 >= keys.length || blockList.getBlock(keys[i+1]).fieldname != blockList.getBlock(keys[i]).fieldname){
       //Add block-reset button
       var butt = createResetButt(lastField);
-      if(block.special){
+/*      if(block.special){
         specialsDiv.appendChild(butt);
       }else{
         dataDiv.appendChild(item);
         dataDiv.appendChild(butt);
-      }
+      }*/
+      fieldDiv.appendChild(butt);
+    }
+    if(! startVisible) fieldDiv.classList.add('hide');
+    if(block.special){
+        specialsDiv.appendChild(fieldDiv);
+    }else{
+        dataDiv.appendChild(fieldDiv);
     }
   }
   $( document ).trigger( "blockListReady");
@@ -318,7 +316,7 @@ function createItemDiv(item, field, special){
   div.appendChild(label);
 
   var textBox = document.createElement("textarea");
-  textBox.cols = 50;
+  textBox.cols = 75;
   textBox.rows = 1;
   textBox.id = docElementId;
   textBox.classList.add("edit_input");
@@ -356,6 +354,41 @@ function createResetButt(field){
   butt.title = "Reset to Original";
 
   return butt;
+}
+
+function createCollapserButt(field){
+
+  var butt = document.createElement('input');
+  butt.setAttribute('type', 'button');
+  butt.className = "expanderbutt";
+  butt.style='float:inherit;display:inline;';
+  butt.value = "+";
+  butt.onclick = (function() {
+    var box_id = 'Box_'+field;
+		return function() {
+			this.blur();
+      var div = document.getElementById(box_id);
+      if(div.classList.contains('hide')){
+          div.classList.remove('hide');
+          this.value = "-";
+          fitAllToText(box_id);
+      }else{
+        div.classList.add('hide');
+        this.value = "+";
+      }
+		}
+	})();
+  butt.title = "Expand/Collapse Section";
+
+  return butt;
+}
+
+function fitAllToText(part_id){
+  //Fit all text boxes in the div part_id to their content
+    var blocks = mainBlockList.getBlockIdsFromPartialID(part_id);
+    for (blockid in blocks){
+      fitToText(blockid);
+    }
 }
 
 function toggleTypePopup(box_id, data){
@@ -418,7 +451,7 @@ function createDOMPopButton(box_id, options){
 
   var box = document.getElementById(box_id);
   if(!box) return;
-  
+
   var span = box.parentNode;
 
   //Create button

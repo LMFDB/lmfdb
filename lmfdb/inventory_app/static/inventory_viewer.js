@@ -18,7 +18,7 @@ function Block(field, key, text, docElementId){
 
 function BlockList(db, coll){
 	//Construct block list object holding a list of blocks
-  //The keys are the id's of DOM edit fields 
+  //The keys are the id's of DOM edit fields
   this.db = db;
   this.coll = coll;
   this.blockList = {};
@@ -63,9 +63,14 @@ function setSpecialById(id){
 
 //---------- End general block and list handling -----------------
 
+//---------- Helpers for some other block-wise tasks -------------
+
+
+//---------- End helpers for some other block-wise tasks ---------
+
 //---------- General data fetching  ------------------------------
 
-function fetchAndPopulateData(blockList, pageCreator){
+function fetchAndPopulateData(blockList, pageCreator, startVisible=startVisible){
   //Fetch the json data for this page
   var current_url = window.location.href;
   var data_url = current_url + 'data';
@@ -78,7 +83,7 @@ function fetchAndPopulateData(blockList, pageCreator){
     //On success return data
     var data = JSON.parse(XHR.response);
     populateBlocklist(XHR.blockList, data);
-    pageCreator(XHR.blockList);
+    pageCreator(XHR.blockList, startVisible=startVisible);
   });
 
   // Define what happens in case of error
@@ -115,4 +120,3 @@ function populateBlocklist(blockList, data){
 }
 
 //---------- End general data fetching  --------------------------
-

@@ -13,27 +13,40 @@
 </script>
 <script type="text/javascript">
     //Put in initial text and fit boxes to content
+    var startVisible = false;
+    function fitToText(elementId){
+      //We need to fit boxes to text in several places, so make it a function so we can adjust padding or similar
+      //console.log(elementId, $(elementId).length);
+      if( $(elementId).length){
+        console.log(elementId, $(elementId).height, $(elementId)[0].scrollHeight);
+        $(elementId).height( $(elementId)[0].scrollHeight);
+      }
+    }
+
     function onReady() {
       console.log( "Ready!" );
-        //Loop over blocks and fill text then fit edit-box height
+        //Loop over blocks and fill text
         for( var key in mainBlockList.blockList){
             var block = mainBlockList.blockList[key];
             $(block.docElementId).val(String(block.text));
-            if( $(block.docElementId).length){
-              $(block.docElementId).height( $(block.docElementId)[0].scrollHeight);
-            }
         }
       //Now try fetching a stored list and repopulating
       retrieveBlockList();
+      //Finally, fit boxes to text
+      for( var key in mainBlockList.blockList){
+          var block = mainBlockList.blockList[key];
+          if(startVisible) fitToText(block.docElementId);
+      }
+
       createTypePopButtons(mainBlockList, jsonTypes);
     }
 
     $( document ).ready(function(){
       //Fetch content and fill blocklist and DOM
       $( document ).on("blockListReady", onReady); //What to do when blocklist is prepared
-      fetchAndPopulateData(mainBlockList, populateEditorPage);
+      fetchAndPopulateData(mainBlockList, populateEditorPage, startVisible=startVisible);//Start fetching
     });
- 
+
     //Store blocklist before a refresh
     window.onunload = storeBlockList;
 
@@ -55,6 +68,7 @@
 <div id="dataDiv">
 
 </div>
+<p></p>
 <div id="buttons">
         <input type="button" class = "button" value="Submit" onclick="this.blur();submitEdits('{{ url_for('inventory_app.submit_edits') }}')" title="Submit Edits"/>
         <input type="button" class = "resetbutt" value="Reset" onclick="this.blur();resetEdits()" title="Reset to Original"/>

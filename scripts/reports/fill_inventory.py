@@ -39,16 +39,16 @@ def show_databases():
     else:
         fh = open(file_output, 'w')
     if selected_dbs:
-        fh.write('Single database ' + selected_dbs[0] + ' specified')
+        fh.write('Single database ' + selected_dbs[0] + ' specified\n')
         return
 
     start_lmfdb_connection()
     dbs = jdbs.get_lmfdb_databases()
     fh.write('')
-    fh.write('Known good databases')
-    fh.write('--------------------')
+    fh.write('Known good databases\n')
+    fh.write('--------------------\n')
     for db in dbs:
-        print(db)
+        fh.write(db+'\n')
 
     if file_output: fh.close()
 
@@ -61,15 +61,15 @@ def show_collections():
     else:
         fh = open(file_output, 'w')
     if selected_dbs and selected_collections:
-        fh.write('Single collection ' + selected_collections[0] + ' specified')
+        fh.write('Single collection ' + selected_collections[0] + ' specified\n')
         return
 
     start_lmfdb_connection()
     dbs = selected_dbs
     if not dbs: dbs = jdbs.get_lmfdb_databases()
     colls = jdbs.get_lmfdb_collections(databases = dbs)
-    fh.write('Known good collections')
-    fh.write('--------------------')
+    fh.write('Known good collections\n')
+    fh.write('--------------------\n')
     for db in colls:
         first = True
         for scol in colls[db]:
@@ -81,8 +81,8 @@ def show_collections():
                     pt = True
             if pt and first:
                 first = False
-                fh.write('In database ' + db +':')
-            if pt: fh.write(' ' * 4 + scol)
+                fh.write('In database ' + db +':\n')
+            if pt: fh.write(' ' * 4 + scol + '\n')
     if file_output: fh.close()
 
 def generate_inventory():
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     if args.list_collections: show_collections()
     if args.generate_inventory: generate_inventory()
 
-    if not action: 
+    if not action:
         print('No action specified!')
         parser.print_help()
     else:

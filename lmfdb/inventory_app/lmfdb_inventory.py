@@ -19,7 +19,11 @@ STR_NOTES = "(NOTES)"
 STR_INFO = "(INFO)"
 
 #Fields to edit for normal records. These will always be shown, blank if no data exists
-base_editable_fields = {'type':True, 'description':True, 'example':True}
+#Value can be used to impose ordering in views
+base_editable_fields = {'type':1, 'description':2, 'example':3}
+#sorted(d, key=d.get) returns keys sorted by values
+
+info_editable_fields = {'nice_name':1, 'description':2, 'contact':3, 'status':4, 'code':5}
 
 #Object describing DB structure. This is styled after a relational model
 class db_struc:
@@ -84,7 +88,7 @@ def setup_internal_client(remote=True, editor=False):
 #Structure helpers -----------------------------------------------------------------------
 def get_inv_db_name():
     """ Get name of inventory db"""
-    
+
     return ALL_STRUC.name
 
 def get_inv_table_names():
@@ -106,7 +110,7 @@ def validate_mongodb(db):
         colls = db.collection_names()
         tables = get_inv_table_names()
         for coll in colls:
-            #Should contain only known tables and maybe some other admin ones. 
+            #Should contain only known tables and maybe some other admin ones.
             if coll not in tables and not 'system.' in coll:
                 raise KeyError(coll)
             elif coll in tables:
@@ -135,7 +139,7 @@ def get_type_strings():
         for prefix in pre_qualifier:
             for item in base_types:
                 type_list.append(prefix + item + postfix)
-    
+
     #Manually remove pathological combos
     final_type_list = [item for item in type_list if "string stored as string" not in item]
     return final_type_list
@@ -213,6 +217,3 @@ def init_transac_log(level_name=None):
         log_transac.debug("Set level to "+level_name)
 
 #End logging and runtime helpers----------------------------------------------------------
-
-
-

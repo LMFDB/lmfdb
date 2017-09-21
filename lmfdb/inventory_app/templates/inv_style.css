@@ -15,6 +15,7 @@
   padding: 5px;
   margin: 5px;
   float: right;
+  min-height: 1em;
 }
 .inventory_row > span {
   display: table-cell;
@@ -86,5 +87,26 @@ select {
     color: {{color.a_text}};
     padding: 5px 0 5px 0;
     margin: 15px 0 10px 0;
+    display: inline-block;
 }
 
+div.collapser {
+    display: block;
+}
+div.header {
+    display: block;
+}
+
+div.hide{
+    display: none;
+    /*visibility: hidden;*/
+}
+.expanderbutt {
+    font-size: small;
+    font-family: monospace;
+    margin: 3px;
+    text-align: center;
+    padding: 3px;
+    border-radius: 2px;
+    display: inline-block;
+}
