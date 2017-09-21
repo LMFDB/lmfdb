@@ -8,7 +8,7 @@ from inventory_db_inplace import update_fields
 
 def gen_retrieve_db_listing(db, db_name=None):
     """Retrieve listing for all or given database.
-    
+
     db -- LMFDB connection to inventory db
     db_name -- If absent, get listing of all dbs, if present, get listing of collections in named db
     """
@@ -18,18 +18,20 @@ def gen_retrieve_db_listing(db, db_name=None):
     try:
         table = db[table_name]
         if db_name is None:
-            records = table.distinct(inv.STR_NAME, {})
+            query = {}
+            records = list(table.find(query, {'_id': 0, 'name' : 1, 'nice_name':1}))
+            records = [(rec['name'], rec['nice_name']) for rec in records]
         else:
             _id = table.find_one({inv.STR_NAME:db_name})['_id']
             table = db[coll_name]
             query = {inv.ALL_STRUC.coll_ids[inv.STR_CONTENT][1]:_id}
-            records = list(table.find(query, {'_id': 0, inv.STR_NAME : 1}))
-            records = [rec[inv.STR_NAME] for rec in records]
+            records = list(table.find(query, {'_id': 0, 'name' : 1, 'nice_name':1}))
+            records = [(rec['name'], rec['nice_name']) for rec in records]
     except Exception as e:
         inv.log_dest.error("Something went wrong retrieving db info "+str(e))
         records = None
     if records is not None:
-        return sorted(records, key=lambda s: s.lower())
+        return sorted(records, key=lambda s: s[0].lower())
     else:
         return records
 
@@ -48,7 +50,7 @@ def get_edit_list(db_name=None):
 
 def retrieve_description(db, requested_db, requested_coll):
     """Retrieve inventory for named collection
-    
+
     db -- LMFDB connection to inventory db
     requested_db -- name of database the named collection belongs to
     requested_coll -- name of collection to fetch inventory for
@@ -71,10 +73,10 @@ def retrieve_description(db, requested_db, requested_coll):
 
         collection = db[fields_auto[inv.STR_NAME]]
         descr_auto = collection.find(request)
-        
+
         collection = db[fields_human[inv.STR_NAME]]
         descr_human = collection.find(request)
-        
+
         return {'data':patch_records(descr_auto, descr_human), 'specials': specials}
 
     except Exception as e:
@@ -83,7 +85,7 @@ def retrieve_description(db, requested_db, requested_coll):
 
 def patch_records(first, second):
     """Patch together human and auto generated records.
-    
+
     first, second -- Cursors to patch together, entry by entry. Any not None entries in the second list override those in the first
     """
     try:
@@ -108,7 +110,7 @@ def patch_records(first, second):
 
 def get_inventory_for_display(full_name):
     """ Get inventory description
-    
+
     full_name -- fully qualified name, in form db.coll
     """
 
@@ -131,8 +133,8 @@ def get_inventory_for_display(full_name):
 
 def apply_submitted_edits(response):
     """ Apply edits submitted as a diffs object
-    
-    
+
+
     Can
     """
     try:
@@ -148,7 +150,7 @@ def apply_submitted_edits(response):
     except Exception as e:
         inv.log_dest.error("Error decoding edits "+str(e))
         raise DiffDecodeError(str(e))
-    
+
     try:
         validate_edits(resp_str) #This throws custom exceptions
         resp_str = process_edits(resp_str)
@@ -212,9 +214,9 @@ def process_edits(diff):
             str = ih.transform_examples(str, True)
             inv.log_dest.info(str)
             diffs[index]['content'] = str
-    
+
     return diff
-    
+
 #  Custom exceptions for diff validation
 
 
@@ -287,4 +289,3 @@ else:
     #Setup the edit transactions logger
     #Swap out info for debug etc
     inv.init_transac_log('info')
-

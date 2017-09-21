@@ -29,8 +29,8 @@ info_editable_fields = {'nice_name':1, 'description':2, 'contact':3, 'status':4,
 class db_struc:
     name = 'inventory'
     n_colls = 6
-    db_ids = {STR_NAME : 'DB_ids', STR_CONTENT : ['_id', 'name']}
-    coll_ids = {STR_NAME : 'collection_ids', STR_CONTENT :['_id', 'db_id', 'name', 'NOTES', 'INFO']}
+    db_ids = {STR_NAME : 'DB_ids', STR_CONTENT : ['_id', 'name', 'nice_name']}
+    coll_ids = {STR_NAME : 'collection_ids', STR_CONTENT :['_id', 'db_id', 'name', 'nice_name', 'NOTES', 'INFO']}
     fields_auto = {STR_NAME : 'fields_auto', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
     fields_human = {STR_NAME : 'fields_human', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
     record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'coll_id', 'hash', 'name', 'descrip', 'fields', 'count']}

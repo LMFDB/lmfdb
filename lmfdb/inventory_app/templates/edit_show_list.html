@@ -12,6 +12,6 @@
 
 {% block main_body %}
   {% for item in listing %}
-    <h2 class='link'><a href = './{{item}}'>{{item}}</a></h2>
+    <h2 class='link'><a href = './{{item[0]}}'>{{item[0]}} </a>-- {{item[1]}}</h2>
   {% endfor %}
 {% endblock main_body %}

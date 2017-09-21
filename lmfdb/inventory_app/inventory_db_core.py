@@ -5,8 +5,8 @@ import lmfdb_inventory as inv
 #Table creation routines -------------------------------------------------------------
 
 def get_db_id(inv_db, name):
-    """ Get database id by name 
-    
+    """ Get database id by name
+
     inv_db -- Connection to LMFDB inventory database
     name -- Name of db to retrieve
     """
@@ -30,7 +30,7 @@ def get_db_id(inv_db, name):
 
 def get_coll_id(inv_db, db_id, name):
     """ Get collection id by name.
-    
+
     inv_db -- Connection to LMFDB inventory database
     db_id -- ID of the database this connection is in
     name -- Name of collection to retrieve
@@ -52,8 +52,8 @@ def get_coll_id(inv_db, db_id, name):
         _id = 0
     return {'err':False, 'id':_id, 'exist':(exists_at is not None)}
 
-def set_db(inv_db, name):
-    """ Insert a new DB with given name, or return id if this exists. """
+def set_db(inv_db, name, nice_name):
+    """ Insert a new DB with given name and optional nice name (defaults to equal name), or return id if this exists. """
     try:
         table_name = inv.ALL_STRUC.db_ids[inv.STR_NAME]
         coll = inv_db[table_name]
@@ -69,6 +69,7 @@ def set_db(inv_db, name):
         inv.log_dest.debug("DB exists")
         _id = exists_at['_id']
     else:
+        record[db_fields[2]] = nice_name
         try:
             _id = coll.insert(record)
         except Exception as e:
@@ -77,11 +78,40 @@ def set_db(inv_db, name):
 
     return {'err':False, 'id':_id, 'exist':(exists_at is not None)}
 
+def update_db(inv_db, db_id, name=None, nice_name=None):
+    """"Update DB name or nice_name info by db id"""
+    try:
+        table_name = inv.ALL_STRUC.db_ids[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True, 'id':0, 'exist':False}
+
+    db_fields = inv.ALL_STRUC.db_ids[inv.STR_CONTENT]
+    #Look up by Id
+    record = {db_fields[0]:db_id}
+    exists_at = coll.find_one(record)
+
+    if exists_at is None:
+        inv.log_dest.debug("DB does not exist")
+        return {'err':True, 'id':0, 'exist':False}
+
+    else:
+        rec_set = {}
+        if name is not None:
+            rec_set[db_fields[1]] = name
+        if nice_name is not None:
+            rec_set[db_fields[2]] = nice_name
+        if rec_set:
+            return update_and_check(inv_db[table_name], record, rec_set)
+        else:
+            return {'err':False, 'id':db_id, 'exist':True}
+
 def get_coll(inv_db, db_id, name):
     """Return a collection entry.
-    
+
     inv_db -- Connection to LMFDB inventory database
-    db_id -- ID of db this collection is part of 
+    db_id -- ID of db this collection is part of
     name -- Collection name to return
     """
     try:
@@ -92,7 +122,7 @@ def get_coll(inv_db, db_id, name):
         return {'err':True, 'id':0, 'exist':False, 'data':None}
     coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
     rec_find = {coll_fields[1]:db_id, coll_fields[2]:name}
- 
+
     try:
         data = coll.find_one(rec_find)
         return {'err':False, 'id':data['_id'], 'exist':True, 'data':data}
@@ -100,11 +130,11 @@ def get_coll(inv_db, db_id, name):
         inv.log_dest.error("Error getting data "+str(e))
         return {'err':True, 'id':0, 'exist':True, 'data':None}
 
-def set_coll(inv_db, db_id, name, notes, info):
+def set_coll(inv_db, db_id, name, nice_name, notes, info):
     """Create or update a collection entry.
 
     inv_db -- Connection to LMFDB inventory database
-    db_id -- ID of db this collection is part of 
+    db_id -- ID of db this collection is part of
     name -- Collection name to update
     notes -- The collection's Notes
     info -- The collection's Info
@@ -118,23 +148,55 @@ def set_coll(inv_db, db_id, name, notes, info):
 
     coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
     rec_find = {coll_fields[1]:db_id, coll_fields[2]:name}
+    rec_set = {}
+    if nice_name is not None:
+        rec_set[coll_fields[3]] = nice_name
     if notes is not None:
-        rec_set = {coll_fields[3]:notes}
+        rec_set[coll_fields[4]] = notes
     if info is not None:
-        rec_set[coll_fields[4]] = info
+        rec_set[coll_fields[5]] = info
 
     return upsert_and_check(coll, rec_find, rec_set)
 
-def update_coll(inv_db, db_id, name, item, field, content):
+def update_coll(inv_db, id, name=None, nice_name=None):
     """Update a collection entry. Collection must exist.
 
     inv_db -- Connection to LMFDB inventory database
-    db_id -- ID of db this collection is part of 
+    id -- ID of collection
+
+    Optional args:
+    name -- new name for collection
+    nice_name -- new nice_name for collection
+    """
+
+    try:
+        table_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True, 'id':0, 'exist':False}
+    coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
+    rec_find = {coll_fields[0]:id}
+    rec_set = {}
+    if name is not None:
+        rec_set[coll_fields[2]] = name
+    if nice_name is not None:
+        rec_set[coll_fields[3]] = nice_name
+    if rec_set:
+        return update_and_check(coll, rec_find, rec_set)
+    else:
+        return {'err':False, 'id':id, 'exist':True}
+
+def update_coll_data(inv_db, db_id, name, item, field, content):
+    """Update a collection entry. Collection must exist.
+
+    inv_db -- Connection to LMFDB inventory database
+    db_id -- ID of db this collection is part of
     item -- The collection info this specifies
     field -- The piece of information specified (for example, type, description, example)
     content -- The new value for field
     """
-    
+
     try:
         table_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
         coll = inv_db[table_name]
@@ -196,7 +258,7 @@ def set_field(inv_db, coll_id, name, data, type='auto'):
     return upsert_and_check(coll, rec_find, rec_set)
 
 def update_field(inv_db, coll_id, item, field, content, type='auto'):
-    """ Update an existing field entry. Item must exist 
+    """ Update an existing field entry. Item must exist
 
     inv_db -- LMFDB connection to inventory db
     coll_id -- ID of collection field belongs to
@@ -254,11 +316,11 @@ def set_record(inv_db, coll_id, data, type='auto'):
 
 def upsert_and_check(coll, rec_find, rec_set):
     """Upsert (insert/update) into given coll
-    
+
     coll -- collection to upsert into
     rec_find -- query to identify possibly existing record
     rec_set -- new data to set
-    
+
     """
     #Either insert, or update existing and return results
     try:
@@ -274,11 +336,11 @@ def upsert_and_check(coll, rec_find, rec_set):
 
 def update_and_check(coll, rec_find, rec_set):
     """Update record in given coll
-    
+
     coll -- collection to upsert into
     rec_find -- query to identify existing record
     rec_set -- new data to set
-    
+
     """
 
     try:
@@ -297,7 +359,7 @@ def update_and_check(coll, rec_find, rec_set):
 
 def trim_human_table(inv_db_toplevel, db_id, coll_id):
     """Trims elements from the human-readable table which do not match the canonical structure table
-    
+
     inv_db_toplevel -- connection to LMFDB inventory database (no table)
     db_id -- id of database to strip
     coll_id -- id of collection to strip
@@ -318,5 +380,3 @@ def trim_human_table(inv_db_toplevel, db_id, coll_id):
 
 
 #End table sync --------------------------------------------------------------------------
-
-

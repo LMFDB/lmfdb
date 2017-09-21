@@ -12,7 +12,7 @@ MAX_SZ = 10000
 
 def upload_from_files(db, master_file_name, list_file_name, fresh=False):
     """Upload an entire inventory. CLOBBERS CONTENT
-    
+
         db -- LMFDB connection to inventory database
         master_file_name -- path to report tool database structure file
         list_file_name -- path to file containing list of all additional inventory info files
@@ -31,11 +31,11 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
     for DB_name in structure_dat:
         progress_tracker += 1
         inv.log_dest.info("Uploading " + DB_name+" ("+str(progress_tracker)+" of "+str(n_dbs)+')')
-        _id = invc.set_db(db, DB_name)
+        _id = invc.set_db(db, DB_name, DB_name)
 
         for coll_name in structure_dat[DB_name]:
             inv.log_dest.info("    Uploading collection "+coll_name)
-            invc.set_coll(db, _id['id'], coll_name, '', '')
+            invc.set_coll(db, _id['id'], coll_name, coll_name, '', '')
             orphaned_keys = upload_collection_structure(db, DB_name, coll_name, structure_dat, fresh=fresh)
             if len(orphaned_keys) != 0:
                 with open('Orph_'+DB_name+'_'+coll_name+'.json', 'w') as file:
@@ -58,7 +58,7 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
         coll_name = record_name[1]
         inv.log_dest.info("    Uploading collection "+coll_name)
 
-        upload_collection_description(db, DB_name, coll_name, data)    
+        upload_collection_description(db, DB_name, coll_name, data)
 
 def upload_collection_from_files(db, db_name, coll_name, master_file_name, json_file_name, fresh=False):
     """Freshly upload inventory for a single collection. CLOBBERS CONTENT
@@ -72,7 +72,7 @@ def upload_collection_from_files(db, db_name, coll_name, master_file_name, json_
     """
 
     decoder = json.JSONDecoder()
- 
+
     inv.log_dest.info("Uploading collection structure for "+coll_name)
     structure_data = decoder.decode(read_file(master_file_name))
     orphaned_keys = upload_collection_structure(db, db_name, coll_name, structure_data, fresh=fresh)
@@ -83,7 +83,7 @@ def upload_collection_from_files(db, db_name, coll_name, master_file_name, json_
 
 def upload_collection_description(db, db_name, coll_name, data):
     """Upload the additional description
-    
+
     db -- LMFDB connection to inventory database
     db_name -- Name of database this collection is in
     coll_name -- Name of collection to upload
@@ -100,7 +100,6 @@ def upload_collection_description(db, db_name, coll_name, data):
     except Exception as e:
         inv.log_dest.error("Failed to refresh collection "+str(e))
 
-
     try:
         split_data = extract_specials(data)
 
@@ -109,7 +108,7 @@ def upload_collection_description(db, db_name, coll_name, data):
         inv.log_dest.debug(split_data[inv.STR_NOTES])
         split_data[inv.STR_INFO] = ih.blank_all_empty_fields(split_data[inv.STR_INFO])
         inv.log_dest.debug(split_data[inv.STR_INFO])
-        _c_id = invc.set_coll(db, db_entry['id'], coll_name, split_data[inv.STR_NOTES], split_data[inv.STR_INFO])
+        _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name, split_data[inv.STR_NOTES], split_data[inv.STR_INFO])
 
         for field in split_data['data']:
             if not ih.is_record_name(split_data['data'][field]):
@@ -122,8 +121,8 @@ def upload_collection_description(db, db_name, coll_name, data):
 
 def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=False):
     """Upload the structure description for a single collection
-    
-    Any entered descriptions for keys which still exist are preserved. 
+
+    Any entered descriptions for keys which still exist are preserved.
     Removed or renamed keys will be returned for handling
     db -- LMFDB connection to inventory database
     db_name -- Name of database this collection is in
@@ -143,7 +142,7 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
         _c_id = invc.get_coll_id(db, db_entry['id'], coll_name)
         if not _c_id['exist']:
 	    #Collection doesn't exist, create it
-            _c_id = set_coll(db, db_entry['id'], coll_name, '', '')
+            _c_id = set_coll(db, db_entry['id'], coll_name, coll_name,  '', '')
 	else:
 	    #Delete existing auto-table entries
     	    delete_collection_data(db, _c_id['id'], tbl='auto')
@@ -341,7 +340,7 @@ def fresh_upload_coll(db_name, coll_name, master_file_name, json_file_name):
 
 def recreate_rollback_table(inv_db, sz):
     """Create anew the table for edit rollbacks
-    
+
     Arguments :
     inv_db -- LMFDB db connection to inventory table
     sz -- Max size of the capped table
@@ -382,5 +381,3 @@ if __name__ == "__main__":
                 print('       '+str(item['data']))
             except:
                 pass
-
-
