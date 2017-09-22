@@ -39,10 +39,9 @@ def update_fields(diff, storeRollback=True):
                     change["item"] = change["item"][2:-2] #Trim special fields. TODO this should be done better somehow
                     updated = idc.update_coll_data(db, _id['id'], diff["collection"], change["item"], change["field"], change["content"])
                 elif ih.is_toplevel_field(change["item"]):
-                    inv.log_dest.info('Is top level')
                     #Here we have item == "toplevel", field the relevant field, and change the new value
-                    #if storeRollback:
-                    #    rollback = capture_rollback(db, _id['id'], diff["db"], diff["collection"], change)
+                    if storeRollback:
+                        rollback = capture_rollback(db, _id['id'], diff["db"], diff["collection"], change)
                     #Only nice_name is currently an option
                     if(change["field"] not in ['nice_name']):
                         updated = {'err':True}
@@ -83,23 +82,30 @@ def capture_rollback(inv_db, db_id, db_name, coll_name, change, coll_id = None):
     coll_name -- Name of collection change applies to
     change -- The change to be made, as a diff item ( entry in diff['diffs'])
 
+    coll_id -- Supply if this is a field edit and so coll_id is known
     Roll-backs can be applied using apply_rollback. Their format is a diff, with extra 'post' field storing the state after change, and the live field which should be unset if they are applied
     """
 
     #Fetch the current state
-    if coll_id is None:
+    if coll_id is None and coll_name is not None:
         current_record = idc.get_coll(inv_db, db_id, coll_name)
+    elif coll_id is None:
+        current_record = idc.get_db(inv_db, db_id)
     else:
         current_record = idc.get_field(inv_db, coll_id, change['item'], type = 'human')
 
     #Create a roll-back document
     field = change["field"]
     prior = change.copy()
-    if coll_id is None:
+    if coll_id is None and coll_name is not None:
         if ih.is_special_field(change["item"]):
             prior['content'] = current_record['data'][change["item"][2:-2]][field]
+        elif ih.is_toplevel_field(change['item']):
+            prior['content'] = current_record['data'][field]
         else:
             prior['content'] = current_record['data'][change["item"]][field]
+    elif coll_id is None:
+        prior['content'] = current_record['data'][field]        
     else:
         prior['content'] = current_record['data']['data'][field]
 
