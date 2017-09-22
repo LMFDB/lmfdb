@@ -185,10 +185,8 @@ function exportEdits(){
     return;
   }
 
-  var response = pageId;
-  response.diffs = editedBlocks;
+  var responseText = makeDiff(editedBlocks, {});
 
-  var responseText = JSON.stringify(response);
   console.log(responseText);
   return responseText;
 }
@@ -218,13 +216,6 @@ function submitEdits(dest){
 
   XHR.send(responseText);
 
-}
-
-function ResponseBlock(field, key, text){
-  //Like a Block, but formatted for return to server
-    this.item = field;
-    this.field = key;
-	this.content = text;
 }
 
 function blockToServer(block){

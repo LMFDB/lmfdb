@@ -40,6 +40,16 @@ def is_special_field(name):
     except:
         return False
 
+def is_toplevel_field(name):
+    """ Check for top-level fields, e.g. nice_name"""
+
+    try:
+        if name == "top_level":
+            return True
+        return False
+    except:
+        return False
+
 def is_record_name(item):
     """ Check for record items (document schemas)"""
     try:
@@ -154,5 +164,3 @@ def parse_edit_url(url):
     return {'parent':parent, 'db_name':db_name, 'collection_name':collection_name, 'trail_slash':trail_slash}
 
 # End extra URL and web helpers ----------------------------------------------------------
-
-

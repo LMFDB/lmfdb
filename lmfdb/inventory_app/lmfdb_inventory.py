@@ -72,6 +72,7 @@ def setup_internal_client(remote=True, editor=False):
             int_client = MongoClient("localhost", 27017)
 #           int_client = MongoClient("localhost", 37010)
             return(True)
+        # TODO Update to 'correct' filepath eventually
         pw_dict = yaml.load(open("../../../passwords.yaml"))
         if editor:
             key = 'data'

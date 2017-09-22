@@ -1,6 +1,35 @@
 {% extends "base_edit.html" %}
 
-{% block extra_script %}{% endblock extra_script %}
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
+
+<script type="text/javascript">
+var pageId = {'db':"{{db_name}}", 'collection':null};
+var submittedNice = null;
+
+function promptNiceName(input, element, info){
+  var newName = window.prompt("New Nice Name", input.id);
+  console.log(info, element);
+  if(newName){
+    console.log( new ResponseBlock('top_level', 'nice_name', newName));
+    var diff = makeDiff([new ResponseBlock('top_level', 'nice_name', newName)], info);
+    console.log(newName, diff);
+    var dest = '{{ url_for('inventory_app.submit_edits') }}';
+    var callback = function(){ flashName(element);}
+    submittedNice = newName;
+    genSubmitEdits(dest, diff, {redirect:false, debug:true, refresh:false, call: callback});
+  }
+}
+
+function flashName(item){
+  el = document.getElementById(item);
+  console.log(el.innerHTML);
+  if(submittedNice) el.innerHTML = submittedNice;
+  el.classList.add('strongH2');
+}
+
+</script>
+{% endblock extra_script %}
 
 {% block title_block %}
   {% if db_name is none: %}
@@ -12,6 +41,26 @@
 
 {% block main_body %}
   {% for item in listing %}
-    <h2 class='link'><a href = './{{item[0]}}'>{{item[0]}} </a>-- {{item[1]}}</h2>
+    <h2 class='link'><a href = './{{item[0]}}'>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
+
+    {% if db_name is none %}
+      {% if current_user.is_authenticated() %}
+        <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {db:"{{item[0]}}"})'>
+      {% else %}
+        <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
+      {% endif %}
+
+    {% else %}
+      {% if current_user.is_authenticated() %}
+        <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
+        <a href = './{{item[0]}}/edit/' id=invbutton>Edit Inventory</a>
+      {% else %}
+        <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
+        <input type='button' value ='Edit Inventory' title ='Please login to edit' disabled class=disabledbutton>
+      {% endif %}
+
+    {% endif %}
+
   {% endfor %}
+
 {% endblock main_body %}

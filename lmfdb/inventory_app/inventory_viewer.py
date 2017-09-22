@@ -179,8 +179,9 @@ def validate_edits(diff):
 
     if not isinstance(diff["db"], basestring):
         raise DiffBadType("db")
-    if not isinstance(diff["collection"], basestring):
-        raise DiffBadType("collection")
+    #Collection can be none in case of Db info edits
+#    if not isinstance(diff["collection"], basestring):
+#        raise DiffBadType("collection")
     if isinstance(diff["diffs"], basestring):
         raise DiffBadType("diffs (str)")
 

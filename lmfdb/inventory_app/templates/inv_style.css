@@ -60,7 +60,7 @@
     font-size: small;
     color: #FFFFFF;
     margin: 3px 3px 3px 20px;
-	box-shadow: 1px 0px 1px #0060A9;
+	  box-shadow: 1px 0px 1px #0060A9;
     border-radius: 5px;
     background-color: #FF000D;
     right: 0px;
@@ -127,4 +127,39 @@ div.hide{
 }
 .viewerTableEven{
     background-color : #ffffff;
+}
+
+.disabledbutton{
+    background-color :  {{color.button_background_inactive}}  !important;
+    color : #b3b3b3;
+    border: 2px solid {{color.button_border_inactive}};
+}
+
+a#invbutton{
+
+  -webkit-appearance: button;
+   -moz-appearance: button;
+   appearance: button;
+
+   padding: 3px 6px;
+   border-radius: 4px;
+   -moz-border-radius:4px;
+   -webkit-border-radius:4px;
+   cursor: pointer;
+
+   border: 2px solid {{color.button_border}};
+   font-size: 110%;
+   padding: 3px;
+   border-radius: 5px;
+   -webkit-border-radius: 5px;
+   -moz-border-radius: 5px;
+
+   text-decoration: none;
+   background-color : {{color.light_grey_3}};
+   color : black;
+}
+
+.strongH2{
+  font-size : 120%;
+  color: red !important;
 }

@@ -120,6 +120,70 @@ function populateBlocklist(blockList, data){
 }
 
 //---------- End general data fetching  --------------------------
+//---------- General data descriptions and submit ---------------------------
+function ResponseBlock(field, key, text){
+  //Minimal description of data suitable for Jsonifying
+    this.item = field;
+    this.field = key;
+	this.content = text;
+}
+
+function makeDiff(editedBlocks, ids){
+  //Make a diff from a list of ResponseBlocks
+  //If passing db will always want to pass collection too
+  var response = pageId;
+  console.log(ids.db, ids.collection);
+  console.log(response);
+  if(ids.db) response.db = ids.db;
+  if(ids.collection) response.collection = ids.collection;
+  console.log(response);
+  response.diffs = editedBlocks;
+  return  JSON.stringify(response);
+}
+
+function genSubmitEdits(dest, diff, info){
+
+  if(info.debug) console.log("Submitting");
+  if(!diff) return;
+
+  var XHR = new XMLHttpRequest();
+  XHR.open('POST', dest);
+  XHR.setRequestHeader('Content-Type', 'text/plain');
+
+  if(info.redirect){
+    XHR.addEventListener('load', function(event) {
+      //On success redirect to a success page
+      var response = JSON.parse(XHR.response);
+      window.location.replace(response['url']);
+    });
+  }else if(info.refresh){
+      XHR.addEventListener('load', function(event) {
+      //On success refresh the page
+      var response = JSON.parse(XHR.response);
+      location.reload();
+    });
+  }else if(info.call){
+      XHR.addEventListener('load', function(event) {
+      //On success call given function
+      var response = JSON.parse(XHR.response);
+      info.call();
+    });
+  }else{
+    XHR.addEventListener('load', function(event) {
+      //On success redirect to a success page
+      var response = JSON.parse(XHR.response);
+    });
+  }
+  // Define what happens in case of error
+  XHR.addEventListener('error', function(event) {
+    alert('Error submitting edits. Please try again.');
+  });
+
+  XHR.send(diff);
+}
+
+
+//---------- End general data descriptions ---------------------------
 
 //---------- General page construction --------------------------------
 function createKeyTitle(item){
