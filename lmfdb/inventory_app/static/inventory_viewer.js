@@ -5,6 +5,8 @@ function populateViewerPage(blockList, startVisible=true){
   //Create the HTML elements using the blocklist
   //We create in two chunks
 
+  setScanDate(blockList.date);
+
   var specialsDiv = document.getElementById('specialsDiv');
   var dataDiv = document.getElementById('dataDiv');
   var specialFields = [];
@@ -93,7 +95,7 @@ function createInfoTable(blockList, info, notes){
     if(j%2 == 0){
       table_row.classList.add('viewerTableEven');
     }else{
-      table_row.classList.add('viewerTableOdd');        
+      table_row.classList.add('viewerTableOdd');
     }
 
     table_row.appendChild(el2);

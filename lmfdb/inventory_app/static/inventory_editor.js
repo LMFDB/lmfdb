@@ -236,6 +236,8 @@ function populateEditorPage(blockList, startVisible=startVisible){
   //Create the HTML elements using the blocklist
   //We create in two chunks
 
+  setScanDate(blockList.date);
+
   var specialsDiv = document.getElementById('specialsDiv');
   var dataDiv = document.getElementById('dataDiv');
   var lastField = "";

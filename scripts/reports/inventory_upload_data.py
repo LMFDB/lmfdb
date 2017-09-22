@@ -4,6 +4,7 @@ import lmfdb.inventory_app.inventory_helpers as ih
 import lmfdb.inventory_app.lmfdb_inventory as inv
 import lmfdb.inventory_app.inventory_db_inplace as invip
 import lmfdb.inventory_app.inventory_db_core as invc
+import datetime as dt
 
 #TODO this should log to its own logger
 #Routines to upload data from reports scan into inventory DB
@@ -35,7 +36,14 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
 
         for coll_name in structure_dat[DB_name]:
             inv.log_dest.info("    Uploading collection "+coll_name)
-            invc.set_coll(db, _id['id'], coll_name, coll_name, '', '')
+            coll_entry = invc.set_coll(db, _id['id'], coll_name, coll_name, '', '')
+
+            try:
+                scan_date = dt.datetime.strptime(structure_dat[DB_name][coll_name]['scrape_time'], '%Y-%m-%d %H:%M:%S.%f')
+            except:
+                scan_date = datetime.datetime(min)
+            invc.set_coll_scan_date(db, coll_entry['id'], scan_date)
+
             orphaned_keys = upload_collection_structure(db, DB_name, coll_name, structure_dat, fresh=fresh)
             if len(orphaned_keys) != 0:
                 with open('Orph_'+DB_name+'_'+coll_name+'.json', 'w') as file:
@@ -143,6 +151,12 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
         if not _c_id['exist']:
 	    #Collection doesn't exist, create it
             _c_id = set_coll(db, db_entry['id'], coll_name, coll_name,  '', '')
+        try:
+            scan_date = dt.datetime.strptime(structure_dat[DB_name][coll_name]['scrape_time'], '%Y-%m-%d %H:%M:%S.%f')
+        except:
+            scan_date = datetime.datetime(min)
+        invc.set_coll_scan_date(db, _c_id['id'], scan_date)
+
 	else:
 	    #Delete existing auto-table entries
     	    delete_collection_data(db, _c_id['id'], tbl='auto')
@@ -357,6 +371,7 @@ def recreate_rollback_table(inv_db, sz):
     try:
         inv_db[table_name].drop()
     except:
+        #TODO Do something useful here?
         pass
 
     inv_db.create_collection(table_name, capped=True, size=sz)

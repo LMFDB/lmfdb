@@ -22,6 +22,7 @@ function BlockList(db, coll){
   this.db = db;
   this.coll = coll;
   this.blockList = {};
+  this.date = null;
   this.addBlock = addBlock;
   this.delBlock = delBlock;
   this.getBlock = getBlock;
@@ -98,7 +99,8 @@ function populateBlocklist(blockList, data){
   //Fill given blocklist from given data
   var contents = "";
   var docElementId = "";
-
+  console.log(data);
+  blockList.date = data['scan_date'];
   //Do specials and then do main data
   var special = false;
   //Data should contain 2 sections, specials and data
@@ -225,4 +227,9 @@ function capitalise(str){
 //Capitalise first letter of given string
   return str[0].toUpperCase() + str.slice(1);
 
+}
+
+function setScanDate(date){
+  var el = document.getElementById('scandate');
+  el.innerHTML = date;
 }

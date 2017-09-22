@@ -77,11 +77,11 @@ def retrieve_description(db, requested_db, requested_coll):
         collection = db[fields_human[inv.STR_NAME]]
         descr_human = collection.find(request)
 
-        return {'data':patch_records(descr_auto, descr_human), 'specials': specials}
+        return {'data':patch_records(descr_auto, descr_human), 'specials': specials, 'scan_date':coll_record['scan_date']}
 
     except Exception as e:
         inv.log_dest.error("Error retrieving inventory "+requested_db+'.'+requested_coll+' '+str(e))
-        return {'data':None, 'specials':None}
+        return {'data':None, 'specials':None, 'scan_date':None}
 
 def patch_records(first, second):
     """Patch together human and auto generated records.
@@ -124,7 +124,7 @@ def get_inventory_for_display(full_name):
         return records
 
     try:
-        return {'data':ih.escape_for_display(records['data']), 'specials':ih.escape_for_display(records['specials'])}
+        return {'data':ih.escape_for_display(records['data']), 'specials':ih.escape_for_display(records['specials']), 'scan_date':records['scan_date']}
     except Exception as e:
         inv.log_dest.error("Error decoding inventory object "+ str(e))
         return records

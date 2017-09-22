@@ -1,7 +1,7 @@
 import json
 import inventory_helpers as ih
 import lmfdb_inventory as inv
-
+import datetime as dt
 #Table creation routines -------------------------------------------------------------
 
 def get_db_id(inv_db, name):
@@ -225,6 +225,27 @@ def update_coll_data(inv_db, db_id, name, item, field, content):
     coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
     rec_find = {coll_fields[1]:db_id, coll_fields[2]:name, item+'.'+field:{"$exists":True}}
     rec_set = {item+'.'+field:content}
+
+    return update_and_check(coll, rec_find, rec_set)
+
+def set_coll_scan_date(inv_db, coll_id, scan_date):
+    """Update the last scanned date for given collection"""
+
+    try:
+        table_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True, 'id':0, 'exist':False}
+    try:
+        assert(isinstance(scan_date, dt.datetime))
+    except Exception as e:
+        inv.log_dest.error("Invalid scan_date, expected datetime.datetime "+str(e))
+        return {'err':True, 'id':0, 'exist':False}
+
+    coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
+    rec_find = {coll_fields[0]:coll_id}
+    rec_set = {coll_fields[6]:scan_date}
 
     return update_and_check(coll, rec_find, rec_set)
 
