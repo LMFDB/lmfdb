@@ -52,10 +52,13 @@ def index():
     args = request.args
     if len(args) == 0:
         info = {}
-        fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
-        names = ["\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
-        info['field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(fields,names)]
-        info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(fields,names)]
+        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
+        sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [19,43,67,163,20]]
+        gl2_names = ["\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
+        sl2_names = gl2_names + ["\(\Q(\sqrt{-%s})\)" % d for d in [19,43,67,163,5]]
+        info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
+        info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
+        info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         bc_examples = []
         bc_examples.append(('base-change of a newform with rational coefficients',
                          '2.0.4.1-100.2-a',
