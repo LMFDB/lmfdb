@@ -260,10 +260,13 @@ def upload_to_db(base_path, filename, insert=True):
             for key in data:
                 if key in space:
                     if key in ['gl2_dims', 'sl2_dims']:
+                        print("------------------------------------------------------")
                         print("Before update, space[{}] = {}".format(key,space[key]))
                         print("data[{}] = {}".format(key,data[key]))
                         space[key].update(data[key])
+                        print("------------------------------------------------------")
                         print("After update, space[{}] = {}".format(key,space[key]))
+                        print("------------------------------------------------------")
                     else:
                         if space[key] != data[key]:
                             print("space[{}] = {}".format(key,space[key]))
@@ -275,7 +278,7 @@ def upload_to_db(base_path, filename, insert=True):
 
     vals = data_to_insert.values()
     if insert:
-        print("inserting all data")
+        print("inserting all data ({} items)".format(len(vals)))
         dims.insert_many(vals)
     else:
         count = 0
@@ -296,3 +299,9 @@ def make_indices():
                         ('gl2_dims',ASCENDING)])
     dims.create_index([('field_label',ASCENDING),
                         ('sl2_dims',ASCENDING)])
+
+def update_stats():
+    # We don't yet have proper stats info for bmfs.  When we do it will  be created / updated here
+    fields = dims.distinct('field_label')
+    print("fields: {}".format(fields))
+

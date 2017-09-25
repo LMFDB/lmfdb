@@ -13,6 +13,7 @@ from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.WebNumberField import string2list
 
 from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia, small_group_knowl_guts, WebGaloisGroup
+from lmfdb.galois_groups.main import group_display_shortC
 
 LF_credit = 'J. Jones and D. Roberts'
 
@@ -40,11 +41,6 @@ def display_poly(coeffs):
 
 def format_coeffs(coeffs):
     return pol_to_html(str(coeff_to_poly(string2list(coeffs))))
-
-def group_display_shortC(C):
-    def gds(nt):
-        return group_display_short(nt[0], nt[1], C)
-    return gds
 
 def lf_algebra_knowl_guts(labels, C):
     labs = labels.split(',')
