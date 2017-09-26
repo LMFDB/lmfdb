@@ -652,7 +652,7 @@ def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_sing
         else:
             if '-' in part[1:]:
                 raise ValueError("Ranges not supported.")
-            sub_query[qfield] = {'$regex':'^' + part + ' '}
+            sub_query[qfield] = {'$regex':'^%s %s '%(' '.join(initial_segment), part)}
         return sub_query
     if len(parts) == 1:
         query.update(make_sub_query(parts[0]))
