@@ -18,10 +18,18 @@ Browse {{ KNOWL('mf.bianchi.newform', title='newforms')}} by {{ KNOWL('nf', titl
 
 <p>
 Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf', title='base field')}}:
-{% for f in info.field_list %}
+<ul>
+<li> {{ KNOWL('mf.bianchi.level', title='\(\GL_2\) levels')}} over
+{% for f in info.gl2_field_list %}
 {%-if loop.index > 1 %}, {% endif%}
 <a href={{f.url}}>{{f.name}}</a>
 {%-endfor %}
+<li> {{ KNOWL('mf.bianchi.level', title='\(\SL_2\) levels')}} over
+{% for f in info.sl2_field_list %}
+{%-if loop.index > 1 %}, {% endif%}
+<a href={{f.url}}>{{f.name}}</a>
+{%-endfor %}
+</ul>
 </p>
 
 

@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
 
 class EcnfIsogClassTest(LmfdbTest):
@@ -7,10 +7,11 @@ class EcnfIsogClassTest(LmfdbTest):
     #
     def test_ecnf_isgclass_title(self):
         r"""
-        Check rendering of title name of ECNF isogeny class.
+        Check rendering of title name and base field of ECNF isogeny class.
         """
         L = self.tc.get('/EllipticCurve/2.0.7.1/16.1/CMa/').data
         assert 'Elliptic curves in class 16.1-CMa' in L
+        assert 'minimal polynomial' in L
 
     def test_ecnf_label_in_isgclass(self):
         r"""
