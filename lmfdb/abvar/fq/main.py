@@ -146,9 +146,9 @@ def abelian_variety_search(**args):
             if jac == 'yes':
                 query['is_jac'] = 1
             elif jac == 'not_no':
-                query['is_jac'] = {'$ne' : -1}
+                query['is_jac'] = {'$gt' : -1}
             elif jac == 'not_yes':
-                query['is_jac'] = {'$ne' : 1}
+                query['is_jac'] = {'$lt' : 1}
             elif jac == 'no':
                 query['is_jac'] = -1
         else:
@@ -158,9 +158,9 @@ def abelian_variety_search(**args):
             if pol == 'yes':
                 query['is_pp'] = 1
             elif pol == 'not_no':
-                query['is_pp'] = {'$ne' : -1}
+                query['is_pp'] = {'$gt' : -1}
             elif pol == 'not_yes':
-                query['is_pp'] = {'$ne' : 1}
+                query['is_pp'] = {'$lt' : 1}
             elif pol == 'no':
                 query['is_pp'] = -1
         else:
