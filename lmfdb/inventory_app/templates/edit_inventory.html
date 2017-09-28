@@ -16,9 +16,8 @@
     var startVisible = false;
     function fitToText(elementId){
       //We need to fit boxes to text in several places, so make it a function so we can adjust padding or similar
-      //console.log(elementId, $(elementId).length);
       if( $(elementId).length){
-        console.log(elementId, $(elementId).height, $(elementId)[0].scrollHeight);
+        $(elementId).height($(elementId).css('minHeight'));
         $(elementId).height( $(elementId)[0].scrollHeight);
       }
     }

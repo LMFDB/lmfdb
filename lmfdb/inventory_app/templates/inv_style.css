@@ -12,10 +12,8 @@
 }
 .inventory_row > textarea {
   display: table-cell;
-  padding: 5px;
   margin: 5px;
   float: right;
-  min-height: 1em;
 }
 .inventory_row > span {
   display: table-cell;
@@ -24,7 +22,9 @@
 }
 
 .edit_input {
-  padding-bottom: 0.5em;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  min-height: 30px;
 }
 
 .input_sections {
@@ -160,6 +160,6 @@ a#invbutton{
 }
 
 .strongH2{
-  font-size : 120%;
-  color: red !important;
+  font-size : 110%;
+  color: #003366 !important;
 }
