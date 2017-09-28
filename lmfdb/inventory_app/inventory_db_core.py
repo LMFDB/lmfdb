@@ -149,6 +149,26 @@ def get_coll(inv_db, db_id, name):
         inv.log_dest.error("Error getting data "+str(e))
         return {'err':True, 'id':0, 'exist':True, 'data':None}
 
+def get_coll_by_id(inv_db, id):
+    """Return a collection entry.
+
+    inv_db -- Connection to LMFDB inventory database
+    id -- ID of collection
+    """
+    try:
+        table_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True, 'id':0, 'exist':False, 'data':None}
+
+    try:
+        data = coll.find_one({'_id':id})
+        return {'err':False, 'id':id, 'exist':True, 'data':data}
+    except Exception as e:
+        inv.log_dest.error("Error getting data "+str(e))
+        return {'err':True, 'id':0, 'exist':True, 'data':None}
+
 def set_coll(inv_db, db_id, name, nice_name, notes, info):
     """Create or update a collection entry.
 
@@ -228,7 +248,7 @@ def update_coll_data(inv_db, db_id, name, item, field, content):
 
     return update_and_check(coll, rec_find, rec_set)
 
-def set_coll_scan_date(inv_db, coll_id, scan_date):
+def set_coll_scrape_date(inv_db, coll_id, scrape_date):
     """Update the last scanned date for given collection"""
 
     try:
@@ -238,14 +258,14 @@ def set_coll_scan_date(inv_db, coll_id, scan_date):
         inv.log_dest.error("Error getting collection "+str(e))
         return {'err':True, 'id':0, 'exist':False}
     try:
-        assert(isinstance(scan_date, dt.datetime))
+        assert(isinstance(scrape_date, dt.datetime))
     except Exception as e:
-        inv.log_dest.error("Invalid scan_date, expected datetime.datetime "+str(e))
+        inv.log_dest.error("Invalid scrape_date, expected datetime.datetime "+str(e))
         return {'err':True, 'id':0, 'exist':False}
 
     coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
     rec_find = {coll_fields[0]:coll_id}
-    rec_set = {coll_fields[6]:scan_date}
+    rec_set = {coll_fields[6]:scrape_date}
 
     return update_and_check(coll, rec_find, rec_set)
 
@@ -321,6 +341,50 @@ def update_field(inv_db, coll_id, item, field, content, type='auto'):
 
     return update_and_check(coll, rec_find, rec_set)
 
+def get_record(inv_db, coll_id, hash_str):
+    """ Return a record entry.
+
+    inv_db -- LMFDB connection to inventory db
+    coll_id -- ID of collection field belongs to
+    hash -- The hash of the record to fetch
+    """
+    #record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'coll_id', 'hash', 'name', 'descrip', 'fields', 'count']}
+    try:
+        table_name = inv.ALL_STRUC.record_types[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+ str(e))
+        return {'err':True, 'id':0, 'exist':False}
+    records_fields = inv.ALL_STRUC.record_types[inv.STR_CONTENT]
+    rec_find = {records_fields[1]:coll_id, records_fields[2]:hash_str}
+    try:
+        data = coll.find_one(rec_find)
+        return {'err':False, 'id':data['_id'], 'exist':True, 'data':data}
+    except Exception as e:
+        return {'err':True, 'id':0, 'exist':False, 'data':None}
+
+def get_all_records(inv_db, coll_id):
+    """ Return a list of all records for coll_id.
+
+    inv_db -- LMFDB connection to inventory db
+    coll_id -- ID of collection field belongs to
+    """
+    #record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'coll_id', 'hash', 'name', 'descrip', 'fields', 'count']}
+    try:
+        table_name = inv.ALL_STRUC.record_types[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+ str(e))
+        return {'err':True, 'id':0, 'exist':False}
+    records_fields = inv.ALL_STRUC.record_types[inv.STR_CONTENT]
+    rec_find = {records_fields[1]:coll_id}
+    try:
+        data = list(coll.find(rec_find, {'_id': 0, 'coll_id' : 0}))
+        return {'err':False, 'id':-1, 'exist':True, 'data':data}
+    except Exception as e:
+        inv.log_dest.error("Error getting data "+str(e))
+        return {'err':True, 'id':0, 'exist':True, 'data':None}
+
 def set_record(inv_db, coll_id, data, type='auto'):
     """ Add or update a record entry.
 
@@ -346,13 +410,26 @@ def set_record(inv_db, coll_id, data, type='auto'):
         rec_set = {records_fields[5]:data['schema'], records_fields[6]:data['count']}
         return upsert_and_check(coll, rec_find, rec_set)
     elif type == 'human':
-        #Added data for records is just a "name" field
-        human_data = data['name']
+        #Added data for records is the known hash for lookup, a "name" and "description" field
+        human_data = data
         if 'description' not in human_data:
             human_data['description'] = ''
         rec_find = {records_fields[1]:coll_id, records_fields[2]:data['hash']}
         rec_set = {records_fields[3]:human_data['name'], records_fields[4]:human_data['description']}
         return upsert_and_check(coll, rec_find, rec_set)
+
+def update_record_count(inv_db, record_id, new_count):
+    """Update the count for an existing record, given by record_id"""
+    try:
+        table_name = inv.ALL_STRUC.record_types[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True, 'id':0, 'exist':False}
+    records_fields = inv.ALL_STRUC.record_types[inv.STR_CONTENT]
+    rec_find = {'_id':record_id}
+    rec_set = {records_fields[6]:new_count}
+    return upsert_and_check(coll, rec_find, rec_set)
 
 def upsert_and_check(coll, rec_find, rec_set):
     """Upsert (insert/update) into given coll

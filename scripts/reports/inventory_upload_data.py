@@ -4,7 +4,7 @@ import lmfdb.inventory_app.inventory_helpers as ih
 import lmfdb.inventory_app.lmfdb_inventory as inv
 import lmfdb.inventory_app.inventory_db_inplace as invip
 import lmfdb.inventory_app.inventory_db_core as invc
-import datetime as dt
+import datetime
 
 #TODO this should log to its own logger
 #Routines to upload data from reports scan into inventory DB
@@ -39,10 +39,10 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
             coll_entry = invc.set_coll(db, _id['id'], coll_name, coll_name, '', '')
 
             try:
-                scan_date = dt.datetime.strptime(structure_dat[DB_name][coll_name]['scrape_time'], '%Y-%m-%d %H:%M:%S.%f')
+                scrape_date = dt.datetime.strptime(structure_dat[DB_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
             except:
-                scan_date = datetime.datetime(min)
-            invc.set_coll_scan_date(db, coll_entry['id'], scan_date)
+                scrape_date = datetime.datetime(min)
+            invc.set_coll_scrape_date(db, coll_entry['id'], scrape_date)
 
             orphaned_keys = upload_collection_structure(db, DB_name, coll_name, structure_dat, fresh=fresh)
             if len(orphaned_keys) != 0:
@@ -119,11 +119,13 @@ def upload_collection_description(db, db_name, coll_name, data):
         _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name, split_data[inv.STR_NOTES], split_data[inv.STR_INFO])
 
         for field in split_data['data']:
-            if not ih.is_record_name(split_data['data'][field]):
-                invc.set_field(db, _c_id['id'], field, split_data['data'][field], type='human')
+            dat = split_data['data'][field]
+            if not ih.is_record_name(dat):
                 inv.log_dest.info("            Processing "+field)
+                invc.set_field(db, _c_id['id'], field, dat, type='human')
             else:
-               invc.set_record(db, _c_id['id'], {'hash':field, 'name':split_data['data'][field]}, type='human')
+                inv.log_dest.info("            Processing record "+field)
+                invc.set_record(db, _c_id['id'], {'hash':field, 'name':dat['name'], 'description':dat['description']}, type='human')
     except Exception as e:
         inv.log_dest.error("Failed to refresh collection "+str(e))
 
@@ -150,22 +152,26 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
         _c_id = invc.get_coll_id(db, db_entry['id'], coll_name)
         if not _c_id['exist']:
 	    #Collection doesn't exist, create it
-            _c_id = set_coll(db, db_entry['id'], coll_name, coll_name,  '', '')
-        try:
-            scan_date = dt.datetime.strptime(structure_dat[DB_name][coll_name]['scrape_time'], '%Y-%m-%d %H:%M:%S.%f')
-        except:
-            scan_date = datetime.datetime(min)
-        invc.set_coll_scan_date(db, _c_id['id'], scan_date)
-
-	else:
+            _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name,  '', '')
+        else:
 	    #Delete existing auto-table entries
-    	    delete_collection_data(db, _c_id['id'], tbl='auto')
-
+           delete_collection_data(db, _c_id['id'], tbl='auto')
+        try:
+            scrape_date = dt.datetime.strptime(structure_dat[db_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
+        except:
+            scrape_date = datetime.datetime(min)
+        invc.set_coll_scrape_date(db, _c_id['id'], scrape_date)
         for field in coll_entry['fields']:
             inv.log_dest.info("            Processing "+field)
             invc.set_field(db, _c_id['id'], field, coll_entry['fields'][field])
         for record in coll_entry['records']:
-            invc.set_record(db, _c_id['id'], coll_entry['records'][record])
+            inv.log_dest.info("            Processing "+record)
+            rec_hash = ih.hash_record_schema(coll_entry['records'][record]['schema'])
+            rec_entry = invc.get_record(db, _c_id['id'], rec_hash)
+            if rec_entry['exist']:
+                invc.update_record_count(db, rec_entry['id'], coll_entry['records'][record]['count'])
+            else:
+                invc.set_record(db, _c_id['id'], coll_entry['records'][record])
 
     except Exception as e:
         inv.log_dest.error("Failed to refresh collection "+str(e))

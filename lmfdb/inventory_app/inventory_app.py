@@ -38,7 +38,12 @@ def show_edit_child(id):
 @inventory_app.route('<string:id>/<string:id2>/')
 def show_inventory(id, id2):
     bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
-    return render_template('view_inventory.html', db_name=id, collection_name=id2, bread=bread, table_fields=linv.display_field_order(), info_fields=linv.info_field_order(), scanDate='00:00:00')
+    return render_template('view_inventory.html', db_name=id, collection_name=id2, bread=bread, table_fields=linv.display_field_order(), info_fields=linv.info_field_order())
+
+@inventory_app.route('<string:id>/<string:id2>/records/')
+def show_records(id, id2):
+    bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
+    return render_template('view_records.html', db_name=id, collection_name=id2, bread=bread, record_fields=linv.record_field_order())
 
 #Edit page per collection, shows editable fields
 @inventory_app.route('<string:id>/<string:id2>/edit/')
@@ -52,6 +57,20 @@ def show_edit_inventory(id, id2):
 @inventory_app.route('<string:id>/<string:id2>/data/')
 def fetch_edit_inventory(id, id2):
     results = inventory_viewer.get_inventory_for_display(id+'.'+id2)
+    return jsonify(results)
+
+#Edit page per collection, shows editable fields
+@inventory_app.route('<string:id>/<string:id2>/editrecords/')
+#@login_required
+def show_edit_records(id, id2):
+    bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
+    return render_template('edit_records.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), bread=bread)
+
+#Edit data source to populate inventory pages
+@inventory_app.route('<string:id>/<string:id2>/records/data/')
+@inventory_app.route('<string:id>/<string:id2>/recorddata/')
+def fetch_edit_records(id, id2):
+    results = inventory_viewer.get_records_for_display(id+'.'+id2)
     return jsonify(results)
 
 #Page shown after successful edit submission

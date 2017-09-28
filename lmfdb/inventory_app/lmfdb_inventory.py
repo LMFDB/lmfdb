@@ -29,6 +29,11 @@ info_editable_fields = {'nice_name':1, 'description':2, 'contact':4, 'status':3,
 def info_field_order():
     return sorted(info_editable_fields, key=info_editable_fields.get)
 
+record_editable_fields = {'name':1, 'description':2, 'schema':-3, 'count':-4}
+#Negative denotes NOT editable
+def record_field_order():
+    return sorted(record_editable_fields, key = lambda s : abs(record_editable_fields.get(s)))
+
 #Object describing DB structure. This is styled after a relational model
 class db_struc:
     name = 'inventory'

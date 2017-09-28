@@ -2,6 +2,7 @@
 import json
 import inventory_helpers as ih
 import lmfdb_inventory as inv
+import inventory_db_core as idc
 from inventory_db_inplace import update_fields
 
 #Functions to populate viewer pages
@@ -77,11 +78,11 @@ def retrieve_description(db, requested_db, requested_coll):
         collection = db[fields_human[inv.STR_NAME]]
         descr_human = collection.find(request)
 
-        return {'data':patch_records(descr_auto, descr_human), 'specials': specials, 'scan_date':coll_record['scan_date']}
+        return {'data':patch_records(descr_auto, descr_human), 'specials': specials, 'scrape_date':coll_record['scan_date']}
 
     except Exception as e:
         inv.log_dest.error("Error retrieving inventory "+requested_db+'.'+requested_coll+' '+str(e))
-        return {'data':None, 'specials':None, 'scan_date':None}
+        return {'data':None, 'specials':None, 'scrape_date':None}
 
 def patch_records(first, second):
     """Patch together human and auto generated records.
@@ -108,6 +109,32 @@ def patch_records(first, second):
                 dic_patched[key][field] = ''
     return dic_patched
 
+def retrieve_records(db, requested_db, requested_coll):
+    """Retrieve inventory for named collection
+
+    db -- LMFDB connection to inventory db
+    requested_db -- name of database the named collection belongs to
+    requested_coll -- name of collection to fetch inventory for
+    """
+
+    table_name = inv.ALL_STRUC.db_ids[inv.STR_NAME]
+    coll_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
+    try:
+        db_tab = db[table_name]
+        coll_tab = db[coll_name]
+        _id = db_tab.find_one({inv.STR_NAME:requested_db})['_id']
+        coll_record = coll_tab.find_one({'db_id': _id, inv.STR_NAME:requested_coll})
+        _c_id = coll_record['_id']
+
+        records = idc.get_all_records(db, _c_id)
+        inv.log_dest.info(records)
+        inv.log_dest.info(coll_record)
+        return {'data':records['data'], 'scrape_date':coll_record['scan_date']}
+
+    except Exception as e:
+        inv.log_dest.error("Error retrieving inventory "+requested_db+'.'+requested_coll+' '+str(e))
+        return {'data':None, 'specials':None, 'scrape_date':None}
+
 def get_inventory_for_display(full_name):
     """ Get inventory description
 
@@ -121,13 +148,34 @@ def get_inventory_for_display(full_name):
         records = retrieve_description(db, parts[0], parts[1])
     except Exception as e:
         inv.log_dest.error("Unable to get requested inventory "+ str(e))
-        return records
+        return {'data': None, 'specials': None, 'scrape_date': None}
 
     try:
-        return {'data':ih.escape_for_display(records['data']), 'specials':ih.escape_for_display(records['specials']), 'scan_date':records['scan_date']}
+        return {'data':ih.escape_for_display(records['data']), 'specials':ih.escape_for_display(records['specials']), 'scrape_date':records['scrape_date']}
     except Exception as e:
         inv.log_dest.error("Error decoding inventory object "+ str(e))
-        return records
+        return {'data': None, 'specials': None, 'scrape_date': None}
+
+def get_records_for_display(full_name):
+    """ Get records descriptions
+
+    full_name -- fully qualified name, in form db.coll
+    """
+
+    inv.setup_internal_client()
+    db = inv.int_client[inv.ALL_STRUC.name]
+    parts = ih.get_description_key_parts(full_name)
+    try:
+        records = retrieve_records(db, parts[0], parts[1])
+    except Exception as e:
+        inv.log_dest.error("Unable to get requested inventory "+ str(e))
+        return {'data': None, 'scrape_date': None}
+
+    try:
+        return {'data':records['data'], 'scrape_date' : records['scrape_date']}
+    except Exception as e:
+        inv.log_dest.error("Error decoding inventory object "+ str(e))
+        return {'data': None, 'scrape_date': None}
 
 #Functions to deal with edit submissions -----------------------------------------------------------
 

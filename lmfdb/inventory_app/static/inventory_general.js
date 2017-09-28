@@ -6,14 +6,15 @@ function Block(field, key, text, docElementId){
   //It has the field name (name of field in lmfdb collection)
   //the key (e.g. description, type etc)
   //and both the original and new texts, plus an edited flag
-  //Finally it is linked to a DOM element, a textinput, by id string
+  //Finally it is linked to a DOM element, by id string
   this.fieldname = field;
   this.key = key;
   this.text = text;
   this.newtext = text;
   this.edited = false;
   this.docElementId = docElementId;
-  this.special = false;
+  this.special = false
+  this.editable = true; //Whether field is editable, or not
 }
 
 function BlockList(db, coll){
@@ -62,6 +63,11 @@ function setSpecialById(id){
     this.getBlock(id).special = true;
 }
 
+function setNotEditableById(id){
+    //Tag the block with id=id as a special
+    this.getBlock(id).editable = false;
+}
+
 //---------- End general block and list handling -----------------
 
 //---------- Helpers for some other block-wise tasks -------------
@@ -100,7 +106,8 @@ function populateBlocklist(blockList, data){
   var contents = "";
   var docElementId = "";
   console.log(data);
-  blockList.date = data['scan_date'];
+  blockList.date = data['scrape_date'];
+  console.log(blockList.date);
   //Do specials and then do main data
   var special = false;
   //Data should contain 2 sections, specials and data

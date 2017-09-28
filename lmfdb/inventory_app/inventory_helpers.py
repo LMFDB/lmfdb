@@ -127,10 +127,10 @@ def blank_empty_field(value):
 
 def hash_record_schema(schema_list):
     """Compute the hash of a given record schema"""
-    strl = str(list)
+    sorted_list = sorted(schema_list, key = lambda s: s.lower())
+    strl = str(sorted_list)
     m = hashlib.md5(strl)
     return m.hexdigest()
-
 
 #End LMFDB report tool temporary borrows _________________________________________________
 
