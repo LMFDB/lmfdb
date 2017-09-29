@@ -263,8 +263,7 @@
 
             for(i = 0; item = allInputs[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
             for(i = 0; item = allSelects[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
-            if (!n) { var addInput = document.createElement('input'); addInput.setAttribute('name','all'); addInput.value='1'; }
-            console.log(n)
+            if (!n) { var all = document.createElement('input'); all.type='text'; all.name='all'; all.value='1'; form.appendChild(all); }
         }
         </script>
     {% endblock content_js %}
