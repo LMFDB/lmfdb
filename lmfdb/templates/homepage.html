@@ -259,10 +259,11 @@
             var myForm = document.getElementById(id);
             var allInputs = myForm.getElementsByTagName('input')
             var allSelects = myForm.getElementsByTagName('select')
-            var item, i;
+            var item, i,n;
 
-            for(i = 0; item = allInputs[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '');
-            for(i = 0; item = allSelects[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '');
+            for(i = 0; item = allInputs[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '') else n++;
+            for(i = 0; item = allSelects[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '') else n++;
+            if (!n) { var addInput = document.createElement('input'); addInput.setAttribute('name','all'); addInput.value='1'; }
         }
         </script>
     {% endblock content_js %}
