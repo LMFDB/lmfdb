@@ -132,15 +132,11 @@ def abelian_variety_search(**args):
                 query['is_simp'] = True
             elif info['simple'] == 'no':
                 query['is_simp'] = False
-        else:
-            info['simple'] = 'any'
         if 'primitive' in info:
             if info['primitive'] == 'yes':
                 query['is_prim'] = True
             elif info['primitive'] == 'no':
                 query['is_prim'] = False
-        else:
-            info['primitive'] = 'any'
         if 'jacobian' in info:
             jac = info['jacobian']
             if jac == 'yes':
@@ -151,8 +147,6 @@ def abelian_variety_search(**args):
                 query['is_jac'] = {'$lt' : 1}
             elif jac == 'no':
                 query['is_jac'] = -1
-        else:
-            info['jacobian'] = 'any'
         if 'polarizable' in info:
             pol = info['polarizable']
             if pol == 'yes':
@@ -163,8 +157,6 @@ def abelian_variety_search(**args):
                 query['is_pp'] = {'$lt' : 1}
             elif pol == 'no':
                 query['is_pp'] = -1
-        else:
-            info['polarizable'] = 'any'
         parse_ints(info,query,'p_rank')
         parse_ints(info,query,'ang_rank')
         parse_newton_polygon(info,query,'newton_polygon',qfield='slps') # TODO
