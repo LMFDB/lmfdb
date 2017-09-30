@@ -8,7 +8,7 @@ from pymongo import ASCENDING
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger, random_object_from_collection
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string
+from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string, parse_galgrp
 from search_parsing import parse_newton_polygon, parse_abvar_decomp
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
@@ -165,6 +165,7 @@ def abelian_variety_search(**args):
         parse_string_start(info,query,'curve_point_count',qfield='C_cnts',first_field='pt_cnt')
         parse_abvar_decomp(info,query,'decomposition',qfield='decomp',av_stats=AbvarFqStats())
         parse_nf_string(info,query,'number_field',qfield='nf')
+        parse_galgrp(info,query,qfield='gal')
     except ValueError:
         return search_input_error(info, bread)
 
