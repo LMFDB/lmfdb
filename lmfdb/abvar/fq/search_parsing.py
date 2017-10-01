@@ -60,18 +60,17 @@ def parse_newton_polygon(inp, query, qfield):
             continue
         if not QQ_RE.match(slope):
             raise ValueError("%s is not a rational slope"%slope)
-        extra_slopes.append(slope)
+        #extra_slopes.append(slope)
+        raise ValueError("You cannot specify slopes on their own")
     if len(polygons) + len(extra_slopes) == 1:
         if polygons:
-            for i, slope in enumerate(polygons[0]):
-                key = qfield + '.' + str(i)
-                query[key] = slope
-        else:
+            query[qfield] = {'$regex':'^'+' '.join(polygons[0])}
+        else: # won't occur because of the ValueError("You cannot specify slopes on their own") above
             query[qfield] = extra_slopes[0]
     else:
-        collapse_ors(['$or',([{qfield + '.' + str(i):slope for i, slope in enumerate(poly)}
-                              for poly in polygons] +
-                             [{qfield:slope} for slope in extra_slopes])], query)
+        collapse_ors(['$or',([{qfield:{'$regex':'^'+' '.join(poly)}}
+                              for poly in polygons])], query) # +
+                             #[{qfield:slope} for slope in extra_slopes])], query)
 
 class DecompList(object):
     def __init__(self, pieces, maxdim, external_q, external_g, qfield, OC):

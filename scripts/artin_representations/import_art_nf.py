@@ -11,7 +11,7 @@ mypath = os.path.realpath(__file__)
 while os.path.basename(mypath) != 'lmfdb':
     mypath = os.path.dirname(mypath)
     # now move up one more time...
-mypath = os.path.dirname(mypath)
+#mypath = os.path.dirname(mypath)
 sys.path.append(mypath)
 sys.path.append(mypath+'/data_mgt/utilities')
 

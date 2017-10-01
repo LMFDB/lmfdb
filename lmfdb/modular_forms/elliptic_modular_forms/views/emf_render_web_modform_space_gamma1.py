@@ -24,7 +24,7 @@ from  lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict 
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, EMF_TOP
-from lmfdb.WebCharacter import ConreyCharacter
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 
 

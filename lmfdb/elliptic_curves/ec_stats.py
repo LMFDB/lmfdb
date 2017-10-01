@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from pymongo import DESCENDING
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
-from lmfdb.elliptic_curves.web_ec import db_ec
+from lmfdb.elliptic_curves.web_ec import db_ecstats
 from flask import url_for
 
 def format_percentage(num, denom):
@@ -35,7 +34,7 @@ class ECstats(object):
 
     def __init__(self):
         logger.debug("Constructing an instance of ECstats")
-        self.ecdb = db_ec()
+        self.ecdbstats = db_ecstats()
         self._counts = {}
         self._stats = {}
 
@@ -52,15 +51,16 @@ class ECstats(object):
         if self._counts:
             return
         logger.debug("Computing elliptic curve counts...")
-        ecdb = self.ecdb
+        ecdbstats = self.ecdbstats
         counts = {}
-        ncurves = ecdb.count()
+        rankstats = ecdbstats.find_one({'_id':'rank'})
+        ncurves = rankstats['total']
         counts['ncurves']  = ncurves
         counts['ncurves_c'] = comma(ncurves)
-        nclasses = ecdb.find({'number': 1}).count()
+        nclasses = ecdbstats.find_one({'_id':'class/rank'})['total']
         counts['nclasses'] = nclasses
         counts['nclasses_c'] = comma(nclasses)
-        max_N = ecdb.find().sort('conductor', DESCENDING).limit(1)[0]['conductor']
+        max_N = ecdbstats.find_one({'_id':'conductor'})['max']
         # round up to nearest multiple of 1000
         max_N = 1000*((max_N/1000)+1)
         # NB while we only have the Cremona database, the upper bound
@@ -71,32 +71,42 @@ class ECstats(object):
 
         counts['max_N'] = max_N
         counts['max_N_c'] = comma(max_N)
-        counts['max_rank'] = ecdb.find().sort('rank', DESCENDING).limit(1)[0]['rank']
+        counts['max_rank'] = int(rankstats['max'])
         self._counts  = counts
         logger.debug("... finished computing elliptic curve counts.")
-        #logger.debug("%s" % self._counts)
 
     def init_ecdb_stats(self):
         if self._stats:
             return
         logger.debug("Computing elliptic curve stats...")
-        ecdb = self.ecdb
+        ecdbstats = self.ecdbstats
         counts = self._counts
         stats = {}
         rank_counts = []
+        rdict = dict(ecdbstats.find_one({'_id':'rank'})['counts'])
+        crdict = dict(ecdbstats.find_one({'_id':'class/rank'})['counts'])
         for r in range(counts['max_rank']+1):
-            ncu = ecdb.find({'rank': r}).count()
-            ncl = ecdb.find({'rank': r, 'number': 1}).count()
+            try:
+                ncu = rdict[str(r)]
+                ncl = crdict[str(r)]
+            except KeyError:
+                ncu = rdict[r]
+                ncl = crdict[r]
             prop = format_percentage(ncl,counts['nclasses'])
             rank_counts.append({'r': r, 'ncurves': ncu, 'nclasses': ncl, 'prop': prop})
         stats['rank_counts'] = rank_counts
         tor_counts = []
         tor_counts2 = []
         ncurves = counts['ncurves']
+        tdict = dict(ecdbstats.find_one({'_id':'torsion'})['counts'])
+        tsdict = dict(ecdbstats.find_one({'_id':'torsion_structure'})['counts'])
         for t in  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16]:
-            ncu = ecdb.find({'torsion': t}).count()
+            try:
+                ncu = tdict[t]
+            except KeyError:
+                ncu = tdict[str(t)]
             if t in [4,8,12]: # two possible structures
-                ncyc = ecdb.find({'torsion_structure': [str(t)]}).count()
+                ncyc = tsdict[str(t)]
                 gp = "\(C_{%s}\)"%t
                 prop = format_percentage(ncyc,ncurves)
                 tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncyc, 'prop': prop})
@@ -113,16 +123,25 @@ class ECstats(object):
                 prop = format_percentage(ncu,ncurves)
                 tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
         stats['tor_counts'] = tor_counts+tor_counts2
-        stats['max_sha'] = ecdb.find().sort('sha', DESCENDING).limit(1)[0]['sha']
+
+        shadict = dict(ecdbstats.find_one({'_id':'sha'})['counts'])
+        stats['max_sha'] = max([int(s) for s in shadict])
         sha_counts = []
         from sage.misc.functional import isqrt
+        sha_is_int = True
+        try:
+            nc = shadict[1]
+        except KeyError:
+            sha_is_int = False
         for s in range(1,1+isqrt(stats['max_sha'])):
             s2 = s*s
-            nc = ecdb.find({'sha': s2}).count()
+            if sha_is_int:
+                nc = shadict.get(s2,0)
+            else:
+                nc = shadict.get(str(s2),0)
             if nc:
                 sha_counts.append({'s': s, 'ncurves': nc})
         stats['sha_counts'] = sha_counts
         self._stats = stats
         logger.debug("... finished computing elliptic curve stats.")
-        #logger.debug("%s" % self._stats)
 

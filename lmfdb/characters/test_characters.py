@@ -16,7 +16,7 @@ class WebCharacterTest(LmfdbTest):
       from sage.all import NumberField, var
       x = var('x')
       k = NumberField(x**3-x**2+x+1,'a')
-      modlabel, numlabel = '82.-5a0+1a2', '5.3.3'
+      modlabel, numlabel = '128.1', '1.1'
       mod = WebHecke.label2ideal(k, modlabel)
       assert WebHecke.ideal2label(mod) == modlabel
       num = WebHecke.label2number(numlabel)
@@ -183,16 +183,16 @@ class HeckeCharactersTest(LmfdbTest):
         assert 'C_{5}' in W.data
 
     def test_heckegroup(self):
-        W = self.tc.get('/Character/Hecke/3.1.44.1/4.0')
+        W = self.tc.get('/Character/Hecke/3.1.44.1/4.1')
         assert 'Related objects' in W.data
         assert 'primitive' in W.data
 
     def test_heckechar(self):
-        W = self.tc.get('/Character/Hecke/2.0.4.1/5./2')
+        W = self.tc.get('/Character/Hecke/2.0.4.1/25.2/2')
         assert 'Related objects' in W.data
         assert 'Primitive' in W.data
 
     def test_hecke_calc(self):
-        W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/5./1?val=1-a')
-        assert '(1-a)=i' in W.data
+        W = self.tc.get('/Character/calc-value/Hecke/2.0.4.1/25.2/1?val=13.2')
+        assert '=-i' in W.data
 

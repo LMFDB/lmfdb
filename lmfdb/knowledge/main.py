@@ -153,23 +153,23 @@ def ref_to_link(txt):
         if ref.startswith("href"):
             the_link = re.sub(".*{([^}]+)}{.*", r"\1", ref)
             click_on = re.sub(".*}{([^}]+)}\s*", r"\1", ref)
-            this_link = '{{ LINK_EXT("' + click_on + '","' + the_link + '") }}'
+            this_link = '{{ LINK_EXT("' + click_on + '","' + the_link + '") | safe}}'
         elif ref.startswith("doi"):
             ref = ref.replace(":","")  # could be doi:: or doi: or doi
             the_doi = ref[3:]    # remove the "doi"
-            this_link = '{{ LINK_EXT("' + the_doi + '","http://dx.doi.org/' + the_doi + '") }}'
+            this_link = '{{ LINK_EXT("' + the_doi + '","http://dx.doi.org/' + the_doi + '")| safe }}'
         elif ref.lower().startswith("mr"):
             ref = ref.replace(":","") 
             the_mr = ref[2:]    # remove the "MR"
             this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
             this_link += '"http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1='
-            this_link += the_mr + '") }}'
+            this_link += the_mr + '") | safe}}'
         elif ref.lower().startswith("arxiv"):
             ref = ref.replace(":","")  
             the_arx = ref[5:]    # remove the "arXiv"
             this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
             this_link += '"http://arxiv.org/abs/'
-            this_link += the_arx + '") }}'
+            this_link += the_arx + '")| safe}}'
 
   
         if this_link:

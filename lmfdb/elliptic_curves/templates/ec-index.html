@@ -108,7 +108,7 @@ Please enter a value or leave blank:
     </td>
      <td>
          <select name='include_cm'>
-           <option value="include" selected="yes">include</option>
+           <option value="include" selected>include</option>
            <option value="exclude">exclude</option>
            <option value="only">only</option>
          </select>
@@ -130,10 +130,10 @@ Please enter a value or leave blank:
           {{ KNOWL('ec.q.torsion_subgroup',title="torsion structure") }}
           </td>
           <td>
-          <input type='text' name='torsion_structure' example="[2,4]" size=10 value="{{torsion_structure}}" />
+            {{ tor_struct_search_Q()|safe }}
           </td>
           <td>
-          <span class="formexample"> e.g. [2,4] </span>
+          &nbsp;
           </td>
       </tr>
 
@@ -147,9 +147,8 @@ Please enter a value or leave blank:
           <td>
           <span class="formexample"> e.g. 4 </span>
           </td>
-          {# search by isogeny degree not yet implemented
           <td>
-          {{ KNOWL('ec.isogeny_degree',title="isogeny degree") }}
+          {{ KNOWL('ec.isogeny',title="isogeny degree") }}
           </td>
           <td>
           <input type='text' name='isodeg' example="16" size=10 />
@@ -157,23 +156,14 @@ Please enter a value or leave blank:
           <td>
           <span class="formexample"> e.g. 16 </span>
           </td>
-          #}
       </tr>
 
 <tr>
-{% if info.galois_data_type=='new' %}
 <td align=left>{{KNOWL('ec.maximal_galois_rep', title='maximal primes')}} 
-{% else %}
-<td align=left>{{KNOWL('ec.q.non-surjective_prime', title='surjective primes')}} 
-{% endif %}
    <td><input type='text' name='surj_primes' size=10 example='2,3'></td>
 <td><span class="formexample"> e.g. 2,3</span></td>
 <td align=left>
-{% if info.galois_data_type=='new' %}
 {{KNOWL('ec.maximal_galois_rep', title='non-maximal primes')}} 
-{% else %}
-{{KNOWL('ec.q.non-surjective_prime', title='non-surjective primes')}} 
-{% endif %}
   <select name='surj_quantifier'>
   <option value='include'>include</option>
   <option value='exactly'>exactly</option>

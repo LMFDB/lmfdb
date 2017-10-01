@@ -13,10 +13,6 @@ white-space: pre in order to keep line breaks! #}
 {% endfor %}
 {% endmacro %}
 
-<script type="text/javascript"
-        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
-<script type="text/javascript"
-src="http://code.jquery.com/jquery-latest.min.js"></script>
 {#
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 
@@ -385,10 +381,6 @@ data.twoadic_index }}.
 
     {{ place_code('galrep') }}
 
-{% if data.data.new_galois_data %}
-
-{# ######## code for new Galois data (non-maximal primes) ###### #}
-
 <p>
 The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
 representation')}}
@@ -440,55 +432,12 @@ if \(\left(\frac{ {{data.data.cm_sqf}} }{p}\right)=-1\).
 </p>
 {% endif %} {# CM case #}
 
-{% else %}
-
-{# ######## code for old Galois data (non-surjective primes) ###### #}
 
 
 
-{% if data.data.galois_data %}
-<p>
-{% if data.data.CMD %}
-The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
-representations')}} of an elliptic curve with {{
-KNOWL('ec.complex_multiplication', title='Complex Multiplication') }}
-are non-surjective for all odd primes \( p \).  We only show the image
-for
-primes \( p\le 37 \).
-{% else %}
-The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
-representation')}} is surjective for all primes \( p \) except those
-    listed.
-{% endif %}
-</p>
-<table>
-<tr>
-<th>prime</th>
-<th>{{KNOWL('ec.q.galois_rep_image', title='Image of Galois
-  representation')}}</th>
-</tr>
-{% for pr in data.data.galois_data %}
-<tr>
-<td align=center> \({{pr.p}}\)</td>
-<td align=center>{{pr.image}}</td>
-</tr>
-{% endfor %}
-</table>
-{% else %}
-<p>
-The mod \( p \) {{KNOWL('ec.galois_rep', title='Galois
-representation')}} is surjective for all primes \( p \).
-</p>
-{% endif %}
+    <h2> $p$-adic data </h2>
 
-
-{# ######## end of new/old Galois data split ###### #}
-
-{% endif %}
-
-
-
-    <h2> p-adic data </h2>
+<h3>$p$-adic regulators</h3>
 
     {{ place_code('padicreg') }}
 
@@ -498,7 +447,7 @@ All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
 {% else %}
 {% if data.data.p_adic_data_exists %}
 <p>
-Note: \(p\)-adic data only exists for primes \(p\ge5\) of good ordinary
+Note: \(p\)-adic regulator data only exists for primes \(p\ge5\) of good ordinary
 reduction.
 </p>
         <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p='xxx', rank=data.mw.rank).replace('xxx', "'+this.value+'")}}', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'padic']);}); ">
@@ -517,6 +466,71 @@ No \(p\)-adic data exists for this curve.
 {% endif %}
     </p>
 
+{% if data.iwdata %}
+<h2>{{ KNOWL('ec.iwasawa_invariants', title='Iwasawa invariants') }} </h2>
+<p>
+<table border=1>
+<tr>
+<th>$p$</th>
+{% for pdata in data.data.iwdata %}
+<td>
+{{pdata[0]}}
+</td>
+{% endfor %}
+</tr>
+
+<tr>
+<th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
+{% for pdata in data.data.iwdata %}
+<td>
+{{ KNOWL('ec.q.reduction_type', title=pdata[1]) }}
+</td>
+{% endfor %}
+</tr>
+
+<tr>
+<th>{{ KNOWL('ec.lambda_invariant', title='$\lambda$-invariant(s)')  }} </th>
+{% for pdata in data.data.iwdata %}
+<td>
+{{ pdata[2] }}
+</td>
+{% endfor %}
+</tr>
+
+<tr>
+<th>{{ KNOWL('ec.mu_invariant', title='$\mu$-invariant(s)') }} </th>
+{% for pdata in data.data.iwdata %}
+<td>
+{{ pdata[3] }}
+</td>
+{% endfor %}
+</tr>
+
+</table>
+</p>
+{% if data.iwp0 %}
+<p>
+All Iwasawa $\lambda$ and $\mu$-invariants for primes $p\ge
+{{data.iwp0}}$ of {{KNOWL('ec.good_reduction', title='good reduction')}} are zero.
+</p>
+{% endif %}
+{% if data.data.iw_missing_flag %}
+<p>
+An entry ? indicates that the invariants have not yet been computed.
+</p>
+{% endif %}
+{% if data.data.additive_shown %}
+<p>
+An entry - indicates that the invariants are not computed because the reduction is additive.
+</p>
+{% endif %}
+
+{% else %}
+<p>
+No Iwasawa invariant data is available for this curve.
+</p>
+{% endif %}
+
     <h2> Isogenies </h2>
 {% if data.data.isogeny_degrees != "unknown" %}
 <p>
@@ -525,14 +539,16 @@ This curve has non-trivial cyclic isogenies of degree \(d\) for \(d=\)
 {{ data.data.isogeny_degrees}}.
 <br>
 Its isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
-consists of {{data.class_size}} curves linked by isogenies of degrees
-dividing {{data.class_deg}}.
+consists of {{data.class_size}} curves linked by isogenies of
+{% if data.one_deg %}degree{% else %}degrees dividing{% endif %}
+ {{data.class_deg}}.
 {% else %}
 This curve has no rational isogenies.  Its isogeny class <a href={{ data.class_url }}>{{data.lmfdb_iso}}</a>
     consists of this curve only.
 </p>
 {% endif %}
 {% endif %}
+
 
 
 {#
@@ -562,7 +578,7 @@ $(function() {
 </script>
 
     {% set KNOWL_ID = "ec.q.%s"|format(data['lmfdb_label']) %}
-    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='Additional information') }}</h2>
 
 {% if DEBUG %}
 <hr>

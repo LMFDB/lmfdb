@@ -55,7 +55,7 @@
   {% endif %}
   <tr>
     {% if info.fdeg > 1 %}
-    <td>Field equation:</td>
+    <td>Field polynomial:</td>
     {% set pol = info.field_poly %}
     {% set latex_pol = info.latex(pol) %}
     <td>
@@ -63,10 +63,11 @@
     </td>
     {% endif %}
   </tr>
+  <tr> <td>Field generator:</td><td>$a$</td> </tr>
 </table>
 
 {% if info.explicit_formula_bytes %}
-<h2>{{KNOWL('mf.siegel.explicit_formula',title='Explicit formula')}}</h2>
+<h2>{{KNOWL('mf.siegel.particular',title='Explicit formula')}}</h2>
 {% if not info.explicit_formula %}
 <button id ="toggle1">Show</button>&nbsp;<span id="explicit_formula" style="display: none;"><span style="color:red"><i>&nbsp;&nbsp;Too large to display, please use download button to view</i></span><br></span>({{info.explicit_formula_bytes}} bytes)
 {% else %}

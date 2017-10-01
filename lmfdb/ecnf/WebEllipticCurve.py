@@ -4,24 +4,53 @@ from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
 from lmfdb.base import getDBConnection
-from lmfdb.utils import web_latex, web_latex_ideal_fact, encode_plot
+from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
-
-ecnf = None
-nfdb = None
+from lmfdb.bianchi_modular_forms.web_BMF import db_forms
 
 def db_ecnf():
-    global ecnf
-    if ecnf is None:
-        ecnf = getDBConnection().elliptic_curves.nfcurves
-    return ecnf
+    return getDBConnection().elliptic_curves.nfcurves
+
+def db_ecnfstats():
+    return getDBConnection().elliptic_curves.nfcurves.stats
 
 def db_nfdb():
-    global nfdb
-    if nfdb is None:
-        nfdb = getDBConnection().numberfields.fields
-    return nfdb
+    return getDBConnection().numberfields.fields
+
+def db_iqf_labels():
+    return getDBConnection().elliptic_curves.IQF_labels
+
+def is_ecnf_isogeny_class_in_db(label_isogeny_class):
+    return db_ecnf().find({"class_label" : label_isogeny_class}).limit(1).count(True) > 0;
+
+
+# For backwards compatibility of labels of conductors (ideals) over
+# imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
+# 1. [N,c,d] with N=norm and [N/d,0;c,d] the HNF
+# 2. N.c.d
+# 3. N.i with N=norm and i the index in the standard list of ideals of norm N (per field).
+#
+# Converting 1->2 is trivial and 2->3 is done via a stored lookup
+# table, which contains entries for the five Euclidean imaginary
+# quadratic fields 2.0.d.1 for d in [4,8,3,7,11] and all N<=10000.
+#
+
+def convert_IQF_label(fld, lab):
+    if fld.split(".")[:2] != ['2','0']:
+        return lab
+    newlab = lab
+    if lab[0]=='[':
+        newlab = lab[1:-1].replace(",",".")
+    if len(newlab.split("."))!=3:
+        return newlab
+    data = db_iqf_labels().find_one({'fld':fld, 'old':newlab})
+    if data:
+        newlab = data['new']
+        if newlab!=lab:
+            print("Converted label {} to {} over {}".format(lab, newlab, fld))
+        return newlab
+    return lab
 
 special_names = {'2.0.4.1': 'i',
                  '2.2.5.1': 'phi',
@@ -42,12 +71,6 @@ def FIELD(label):
     nf.latex_poly = web_latex(nf.poly())
     return nf
 
-def make_field(label):
-    global field_list
-    if not label in field_list:
-        field_list[label] = FIELD(label)
-    return field_list[label]
-
 def parse_NFelt(K, s):
     r"""
     Returns an element of K defined by the string s.
@@ -58,8 +81,11 @@ def parse_ainvs(K,ainvs):
     return [parse_NFelt(K,ai) for ai in ainvs.split(";")]
 
 def web_ainvs(field_label, ainvs):
-    K = make_field(field_label).K()
-    return web_latex(parse_ainvs(K,ainvs))
+    K = FIELD(field_label).K()
+    ainvsinlatex = web_latex_split_on(parse_ainvs(K,ainvs), on=[","])
+    ainvsinlatex = ainvsinlatex.replace("\\left[", "\\bigl[")
+    ainvsinlatex = ainvsinlatex.replace("\\right]", "\\bigr]")
+    return ainvsinlatex
 
 from sage.misc.all import latex
 def web_point(P):
@@ -227,7 +253,7 @@ class ECNF(object):
         """
         # del dbdata["_id"]
         self.__dict__.update(dbdata)
-        self.field = make_field(self.field_label)
+        self.field = FIELD(self.field_label)
         self.non_surjective_primes = dbdata.get('non-surjective_primes',None)
         self.make_E()
 
@@ -358,12 +384,6 @@ class ECNF(object):
         self.End = "\(\Z\)"
         if self.cm:
             self.rational_cm = K(self.cm).is_square()
-            self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
-            self.cm_nramp = len(self.cm_ramp)
-            if self.cm_nramp==1:
-                self.cm_ramp = self.cm_ramp[0]
-            else:
-                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
             self.cm_sqf = ZZ(self.cm).squarefree_part()
             self.cm_bool = "yes (\(%s\))" % self.cm
             if self.cm % 4 == 0:
@@ -371,8 +391,20 @@ class ECNF(object):
                 self.End = "\(\Z[\sqrt{%s}]\)" % (d4)
             else:
                 self.End = "\(\Z[(1+\sqrt{%s})/2]\)" % self.cm
-            # The line below will need to change once we have curves over non-quadratic fields
-            # that contain the Hilbert class field of an imaginary quadratic field
+
+        # Galois images in CM case:
+        if self.cm and self.galois_images != '?':
+            self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            self.cm_nramp = len(self.cm_ramp)
+            if self.cm_nramp==1:
+                self.cm_ramp = self.cm_ramp[0]
+            else:
+                self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
+
+        # Sato-Tate:
+        # The lines below will need to change once we have curves over non-quadratic fields
+        # that contain the Hilbert class field of an imaginary quadratic field
+        if self.cm:
             if self.signature == [0,1] and ZZ(-self.abs_disc*self.cm).is_square():
                 self.ST = st_link_by_name(1,2,'U(1)')
             else:
@@ -381,12 +413,15 @@ class ECNF(object):
             self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
-        self.qc = "no"
-        try:
-            if self.q_curve:
-                self.qc = "yes"
-        except AttributeError:  # in case the db entry does not have this field set
-            pass
+        self.qc = self.q_curve
+        if self.qc == "?":
+            self.qc = "not determined"
+        elif self.qc == True:
+            self.qc = "yes"
+        elif self.qc == False:
+            self.qc = "no"
+        else: # just in case
+            self.qc = "not determined"
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)
@@ -454,6 +489,22 @@ class ECNF(object):
         self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=quote(self.conductor_label))
         self.urls['field'] = url_for(".show_ecnf1", nf=self.field_label)
 
+        # Isogeny information
+
+        if self.number==1:
+            isogmat = self.isogeny_matrix
+        else:
+            isogmat = db_ecnf().find_one({'class_label':self.class_label, 'number':1})['isogeny_matrix']
+        self.class_deg = max([max(d) for d in isogmat])
+        self.one_deg = ZZ(self.class_deg).is_prime()
+        self.ncurves = db_ecnf().count({'class_label':self.class_label})
+        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
+        if len(isodegs)<3:
+            self.isogeny_degrees = " and ".join(isodegs)
+        else:
+            self.isogeny_degrees = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
+
+
         sig = self.signature
         totally_real = sig[1] == 0
         imag_quadratic = sig == [0,1]
@@ -461,10 +512,11 @@ class ECNF(object):
         if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
-            self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
+            self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
 
         if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
+            self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
@@ -473,7 +525,13 @@ class ECNF(object):
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
             self.friends += [('L-function', self.urls['Lfunction'])]
         if imag_quadratic:
-            self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+            if "CM" in self.label:
+                self.friends += [('Bianchi Modular Form is not cuspidal', '')]
+            else:
+                if db_forms().find_one({'label':self.bmf_label}) != None:
+                    self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+                else:
+                    self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
 
         self.properties = [
             ('Base field', self.field.field_pretty()),
@@ -496,7 +554,8 @@ class ECNF(object):
             self.properties += [('base-change', 'yes: %s' % ','.join([str(lab) for lab in self.base_change]))]
         else:
             self.base_change = []  # in case it was False instead of []
-            self.properties += [('Q-curve', self.qc)]
+            self.properties += [('base-change', 'no')]
+        self.properties += [('Q-curve', self.qc)]
 
         r = self.rk
         if r == "?":

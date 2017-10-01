@@ -47,13 +47,8 @@ emf_logger.setLevel(int(100))
 def body_class():
     return {'body_class': EMF}
 
-emfdb = None
-
 def db_emf():
-    global emfdb
-    if emfdb is None:
-        emfdb = getDBConnection().modularforms2.webnewforms
-    return emfdb
+    return getDBConnection().modularforms2.webnewforms
 
 #################
 # Top level

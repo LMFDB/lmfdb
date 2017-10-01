@@ -36,10 +36,10 @@
 
 {% if info.dimension > 1 %}
 <div>The Hecke eigenvalue field is $\Q(e)$ where $e$ is a root of the defining polynomial:</div> 
-<div style='overflow-x:auto; overflow-y:hidden'>${{ info.hecke_polynomial }}$ </div>
+<div>{{ info.hecke_polynomial }}</div>
 
-<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True'>Show full eigenvalues</a>
-&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False'>Hide large eigenvalues</a></p>
+<p>&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=True&numeigs={{ info.numeigs }}'>Show full eigenvalues</a>
+&nbsp;&nbsp;<a href='{{ info.label }}?display_eigs=False&numeigs={{ info.numeigs }}'>Hide large eigenvalues</a></p>
 
 {% else %}
 <div>The Hecke eigenvalue field is $\Q$</a>.</div>
@@ -75,6 +75,7 @@ div.scrollable {
 <tr>
 <td>Display number of eigenvalues</td>
 <td><input type='text' name='numeigs' placeholder='20' size=10>
+  <input type="hidden" name="display_eigs" value="{{ info.display_eigs }}">
 </tr>
 <tr>
 <td colspan=3><button type='submit' value='display'>Display</button>
@@ -85,7 +86,15 @@ div.scrollable {
 
 <h2>  Atkin-Lehner eigenvalues  </h2>
 
-{% if info.AL_eigs_count %} 
+{% if info.AL_eigs=='missing' %}
+<p>
+  The Atkin-Lehner eigenvalues for this form are not in the database.
+</p>
+{% elif info.AL_eigs=='none' %}
+<p>
+  This form has no Atkin-Lehner eigenvalues since the level is \((1)\).
+</p>
+{% else %}
 <p>
 <table class="ntdata" cellpadding=5>
 <tr>
@@ -102,8 +111,6 @@ div.scrollable {
 {% endfor %}
 </table>
 </p>
-{% else %}
-<p>None</P> 
 {% endif %}
 
 

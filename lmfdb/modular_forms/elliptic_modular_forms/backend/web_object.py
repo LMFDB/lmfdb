@@ -577,7 +577,7 @@ class WebObject(object):
         C = cls.connect_to_db()
         C.logout()
         # log back in with usual read-only access
-        lmfdb.base._init(lmfdb.base.dbport)
+        lmfdb.base._init(lmfdb.base._mongo_port)
         
 
     def has_updated_from_db(self):

@@ -2,7 +2,7 @@
 from flask import url_for
 import lmfdb.base
 from lmfdb.utils import make_logger, web_latex, encode_plot
-from lmfdb.ecnf.WebEllipticCurve import web_ainvs, db_ecnf
+from lmfdb.ecnf.WebEllipticCurve import web_ainvs, db_ecnf, FIELD
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 import sage.all
 from sage.all import latex, matrix
@@ -82,8 +82,9 @@ class ECNF_isoclass(object):
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
         self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
 
-        self.field = field_pretty(self.field_label)
-        self.field_knowl = nf_display_knowl(self.field_label, lmfdb.base.getDBConnection(), self.field)
+        self.field = FIELD(self.field_label)
+        self.field_name = field_pretty(self.field_label)
+        self.field_knowl = nf_display_knowl(self.field_label, lmfdb.base.getDBConnection(), self.field_name)
         def curve_url(c):
             return url_for(".show_ecnf",
                            nf=c['field_label'],
@@ -107,15 +108,17 @@ class ECNF_isoclass(object):
 
         if imag_quadratic:
             self.bmf_label = "-".join([self.field_label, self.conductor_label, self.iso_label])
+            self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
 
         self.friends = []
         if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
             self.friends += [('L-function', self.urls['Lfunction'])]
         if imag_quadratic:
-            self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+            #self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+            self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
 
-        self.properties = [('Base field', self.field),
+        self.properties = [('Base field', self.field_name),
                            ('Label', self.class_label),
                            (None, self.graph_link),
                            ('Conductor', '%s' % self.conductor_label)

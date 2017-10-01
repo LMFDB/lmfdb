@@ -1,34 +1,18 @@
 # -*- coding: utf-8 -*-
-import lmfdb.base
-from lmfdb.utils import make_logger
+
+# Class created to aid in uploading HMF data from the Magma output data files.
+# Incomplete, and currently not used for real work.
+#
+# In particular this code assumes that all the data for one HMF is in
+# a single collection, which is no longer the case.
 
 from sage.all import QQ, polygen
 
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
+from lmfdb.hilbert_modular_forms.hilbert_modular_form import db_forms
+from lmfdb.utils import make_logger
 
 logger = make_logger("hmf")
-
-hmf_forms = None
-hmf_fields = None
-nf_fields = None
-
-def db_hmf_forms():
-    global hmf_forms
-    if hmf_forms is None:
-        hmf_forms = lmfdb.base.getDBConnection().hmfs.forms
-    return hmf_forms
-
-def db_hmf_fields():
-    global hmf_fields
-    if hmf_fields is None:
-        hmf_fields = lmfdb.base.getDBConnection().hmfs.fields
-    return hmf_fields
-
-def db_nf_fields():
-    global nf_fields
-    if nf_fields is None:
-        nf_fields = lmfdb.base.getDBConnection().numberfields.fields
-    return nf_fields
 
 def construct_full_label(field_label, weight, level_label, label_suffix):
     if all([w==2 for w in weight]):           # Parellel weight 2
@@ -38,6 +22,9 @@ def construct_full_label(field_label, weight, level_label, label_suffix):
     else:                                     # non-parallel weight
         weight_label = str(weight) + '-'
     return ''.join([field_label, '-', weight_label, level_label, '-', label_suffix])
+
+def is_hmf_in_db(label):
+    return db_forms().find({"label": label}).limit(1).count(True) > 0
 
 class WebHMF(object):
     """
@@ -73,7 +60,7 @@ class WebHMF(object):
         Searches for a specific Hilbert newform in the forms
         collection by its label.
         """
-        data = db_hmf_forms().find_one({"label" : label})
+        data = db_forms().find_one({"label" : label})
 
         if data:
             return WebHMF(data)
@@ -175,7 +162,6 @@ class WebHMF(object):
 
         data['is_CM'] = '?'
         data['is_base_change'] = '?'
-        data['AL_eigenvalues_fixed'] = None
 
 
     def save_to_db(self):
@@ -191,7 +177,7 @@ class WebHMF(object):
             field = HilbertNumberField(self.dbdata['field_label'])
         agree = True
         for key in self.dbdata.keys():
-            if key in ['is_base_change', 'is_CM', 'AL_eigenvalues_fixed']:
+            if key in ['is_base_change', 'is_CM']:
                 continue
             if key=='hecke_eigenvalues':
                 if self.dbdata[key]!=f.dbdata[key]:

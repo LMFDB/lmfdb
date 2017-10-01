@@ -1,9 +1,10 @@
 Installation
 ============
 
-* To develop and contribute new code, see below on [Sharing Your
-  Work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#code-development-and-sharing-your-work). If you **only** want to run a copy of the site,
-  move into a new directory and type
+* To develop and contribute new code, see below on
+  [Sharing Your Work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#code-development-and-sharing-your-work).
+  If you **only** want to run a copy of the site, move into a new directory and
+  type
 
   ```
      git clone https://github.com/LMFDB/lmfdb.git lmfdb
@@ -36,6 +37,29 @@ Installation
       # in the 'lmfdb/' directory:
       sage -pip install -r requirements.txt
    ```
+
+  Troubleshooting with packages.
+
+  - If you have not run the site for a while you might get an error
+    with packages like
+    ```
+      ImportError: cannot import name monitoring
+    ```
+    In this case or if you need to upgrade for any reason run
+    ```
+      sage -pip install -r requirements.txt --upgrade
+    ```
+
+  - In case the last step fails due to some missing SSL library,
+    (this may be the case on osX) follow these steps
+    ```
+    sage -i openssl
+    sage -f python2 # takes some time
+    sage -i pyopenssl
+    sage -pip install --upgrade pip
+    sage -pip install -r requirements.txt
+    ```
+
   * [optional] Memcache.  *This step is not at all necessary and can
     safely be ignored!* Memcache speeds up recompilation of python
     modules during development.  Using it requires both installing the
@@ -56,24 +80,30 @@ Installation
 Running
 =======
 
-* You need to connect to the lmfdb database on the machine
-  lmfdb.warwick.ac.uk, using ssh tunelling so that your local
-  machine's port 37010 (where the website code expects the database to
-  be running) maps to the same port number on the database server.
-  For this to work you must first send your public SSH key (as an
-  email attachment preferably) to Harald Schilly, Jonathan Bober or
-  John Cremona who will install it on the database server
-  lmfdb.warwick.ac.uk.  To make life easier, the necessary ssh command
-  is in the lmfdb root directory in the script warwick.sh, so just
-  type
+* A read-only copy of the database is hosted at m0.lmfdb.xyz. This is what is
+  used by default. You can launch the webserver directly like this:
 
   ```
-     ./warwick.sh &
+      sage -python start-lmfdb.py --debug
   ```
 
-  The ampersand here makes this run in the background, so you should
-  not have to run this more than once unless you close the current
-  shell or logout.
+* The effect of the (optional) --debug is that you will be running
+  with the beta flag switched on as at beta.lmfdb.org, and also that
+  if code fails your browser will show useful debugging information.
+  Without `--debug` what you see will be more like www.lmfdb.org.
+
+* Once the server is running, visit http://localhost:37777/
+
+  You should now have a fully functional LMFDB site through this server.
+
+* When running with `--debug`, whenever a python (*.py) file changes
+  the server will reload automatically.  If you save while editing
+  at a point where such a file is not syntactically correct, the
+  server will crash and you will need to `start_lmfdb` again.   Any
+  changes to html files will not cause the server to restart, so
+  you will need to reload the pages in your borowser.  Changes in
+  the yaml files which are read only once at startup will require
+  you to manually stop the server and restart it.
 
 * If you don't have access to this server, you can temporarily start
     your own mongodb server and use it locally.  There is no data
@@ -81,25 +111,14 @@ Running
     installing mongo on your machine):
 
     ```
-       mongod --port 40000 --dbpath [db_directory] --smallfiles
+       mongod --port 37010 --dbpath [db_directory] --smallfiles
     ```
 
-* Now you can launch the webserver like this:
+* You may have to suppress loading of your local python libraries:
+  `sage -python -s start-lmfdb.py`
 
-  ```
-     sage -python start-lmfdb.py --debug
-  ```
-
-  * The effect of the (optional) --debug is that you will be running
-  with the beta flag switched on as at beta.lmfdb.org, and also that
-  if code fails your browser will show useful debugging information.
-  Without `--debug` what you see will be more like www.lmfdb.org.
-
-* Once the server is running, visit http://localhost:37777/
-
-* You may have to suppress loading of your local python libraries: `sage -python -s start-lmfdb.py`
-
-* If you use a local MongoDB instance, specify its port:  `sage  -python start-lmfdb.py --debug --dbport 40000`
+* If you use a local MongoDB instance, specify its port:
+  `sage  -python start-lmfdb.py --debug --dbport 40000`
 
 * If several people are running their own version of the webserver on
     the same machine, they cannot all use port 37777 -- if they try,
@@ -122,14 +141,32 @@ Running
     in your .bashrc file, so that all you have to type to start the
     server is `start_lmfdb`.
 
-* When running with `--debug`, whenever a python (*.py) file changes
-      the server will reload automatically.  If you save while editing
-      at a point where such a file is not syntactically correct, the
-      server will crash and you will need to `start_lmfdb` again.   Any
-      changes to html files will not cause the server to restart, so
-      you will need to reload the pages in your borowser.  Changes in
-      the yaml files which are read only once at startup will require
-      you to manually stop the server and restart it.
+* It is possible to use a different instance of the database. For many uses,
+  using the default configuration (which uses a read-only database
+  on m0.lmfdb.xyz) is sufficient, and this step is not necessary. If you do plan
+  on using a different database instance, it's a good idea to copy
+  `default_mongoclient.config` to `mongoclient.config` and to change the
+  entries in `mongoclient.config` to your access point for the database.
+
+  One possibility is to connect to the lmfdb database on the machine
+  lmfdb.warwick.ac.uk, using ssh tunelling so that your local
+  machine's port 27017 (where the website code expects the database to
+  be running) maps to the same port number on the database server.
+  (Note that in the past, the default port has also been 37010).
+  For this to work you must first send your public SSH key (as an
+  email attachment preferably) to Harald Schilly, Jonathan Bober or
+  John Cremona who will install it on the database server
+  lmfdb.warwick.ac.uk.  To make life easier, the necessary ssh command
+  is in the lmfdb root directory in the script warwick.sh, so just
+  type
+
+  ```
+     ./warwick.sh &
+  ```
+
+  The ampersand here makes this run in the background, so you should
+  not have to run this more than once unless you close the current
+  shell or logout.
 
 Troubleshooting
 ===============
@@ -227,6 +264,8 @@ Code development and sharing your work
      whatever your own development or feature branch is called.
      Others will review your code, and release managers will
      (eventually, if all is well) merge it into the master branch.
+
+
 
 LMFDB On Windows
 ================

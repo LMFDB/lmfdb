@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from flask import url_for
+from collections import Counter
 
-from lmfdb.utils import make_logger
+from lmfdb.utils import make_logger, encode_plot
 
 from lmfdb.base import app, getDBConnection
 
 from sage.misc.cachefunc import cached_function
-from sage.rings.all import Integer
+from sage.rings.all import Integer, QQ, RR
+from sage.plot.all import line, points, circle, Graphics
 
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
@@ -72,20 +74,38 @@ class AbvarFq_isoclass(object):
         self.basechangeinfo = self.basechange_display()
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial,galois=False,vari = 'x')
 
+    @property
     def p(self):
         q = Integer(self.q)
         p, _ = q.is_prime_power(get_data=True)
         return p
 
+    @property
     def r(self):
         q = Integer(self.q)
         _, r = q.is_prime_power(get_data=True)
         return r
 
+    @property
+    def slopes(self):
+        return self.slps.split()
+
+    @property
+    def C_counts(self):
+        return self.C_cnts.split()
+
+    @property
+    def A_counts(self):
+        return self.A_cnts.split()
+
+    @property
+    def polynomial(self):
+        return [int(c) for c in self.poly.split()]
+
     def field(self, q=None):
         if q is None:
-            p = self.p()
-            r = self.r()
+            p = self.p
+            r = self.r
         else:
             p, r = Integer(q).is_prime_power(get_data=True)
         if r == 1:
@@ -93,12 +113,76 @@ class AbvarFq_isoclass(object):
         else:
             return '\F_{' + '{0}^{1}'.format(p,r) + '}'
 
+    def newton_plot(self):
+        S = [QQ(s) for s in self.slopes]
+        C = Counter(S)
+        pts = [(0,0)]
+        x = y = 0
+        for s in sorted(C):
+            c = C[s]
+            x += c
+            y += c*s
+            pts.append((x,y))
+        L = Graphics()
+        L += line([(0,0),(0,y+0.2)],color="grey")
+        for i in range(1,y+1):
+            L += line([(0,i),(0.06,i)],color="grey")
+        for i in range(1,C[0]):
+            L += line([(i,0),(i,0.06)],color="grey")
+        for i in range(len(pts)-1):
+            P = pts[i]
+            Q = pts[i+1]
+            for x in range(P[0],Q[0]+1):
+                L += line([(x,P[1]),(x,P[1] + (x-P[0])*(Q[1]-P[1])/(Q[0]-P[0]))],color="grey")
+            for y in range(P[1],Q[1]):
+                L += line([(P[0] + (y-P[1])*(Q[0]-P[0])/(Q[1]-P[1]),y),(Q[0],y)],color="grey")
+        L += line(pts, thickness = 2)
+        L.axes(False)
+        L.set_aspect_ratio(1)
+        return encode_plot(L, pad=0, pad_inches=0, bbox_inches='tight')
+
+    def circle_plot(self):
+        pts = []
+        pi = RR.pi()
+        for angle in self.angles:
+            angle = RR(angle)*pi
+            c = angle.cos()
+            s = angle.sin()
+            if abs(s) < 0.00000001:
+                pts.append((c,s))
+            else:
+                pts.extend([(c,s),(c,-s)])
+        P = points(pts,size=100) + circle((0,0),1,color='black')
+        P.axes(False)
+        P.set_aspect_ratio(1)
+        return encode_plot(P)
+
+    def _make_jacpol_property(self):
+        ans = []
+        if self.is_pp == 1:
+            ans.append((None, 'Principally polarizable'))
+        elif self.is_pp == -1:
+            ans.append((None, 'Not principally polarizable'))
+        if self.is_jac == 1:
+            ans.append((None, 'Contains a Jacobian'))
+        elif self.is_jac == -1:
+            ans.append((None, 'Does not contain a Jacobian'))
+        return ans
+
+    def properties(self):
+        return [('Label', self.label),
+                ('Base Field', '$%s$'%(self.field(self.q))),
+                ('Dimension', '$%s$'%(self.g)),
+                (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
+                #('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
+                ('$p$-rank', '$%s$'%(self.p_rank))] + self._make_jacpol_property()
+
     # at some point we were going to display the weil_numbers instead of the frobenius angles
     # this is not covered by the tests
     #def weil_numbers(self):
     #    q = self.q
     #    ans = ""
-    #    for angle in self.angle_numbers:
+    #    for angle in self.angles:
     #        if ans != "":
     #            ans += ", "
     #        ans += '\sqrt{' +str(q) + '}' + '\exp(\pm i \pi {0}\ldots)'.format(angle)
@@ -108,21 +192,21 @@ class AbvarFq_isoclass(object):
     def frob_angles(self):
         ans = ''
         eps = 0.00000001
-        for angle in self.angle_numbers:
+        for angle in self.angles:
             if ans != '':
                 ans += ', '
             if abs(angle) > eps and abs(angle - 1) > eps:
-                angle = r'\pm' + str(angle)
+                angle = r'$\pm' + str(angle) + '$'
             else:
-                angle = str(angle)
+                angle = '$' + str(angle) + '$'
             ans += angle
         return ans
 
     def is_simple(self):
-        return len(self.decomposition) == 1 and self.decomposition[0][1] == 1
+        return self.is_simp
 
     def is_primitive(self):
-        return len(self.primitive_models) == 0
+        return self.is_prim
 
     def is_ordinary(self):
         return self.p_rank == self.g
@@ -140,18 +224,18 @@ class AbvarFq_isoclass(object):
         return len(self.C_counts)
 
     def display_number_field(self):
-        if self.number_field == "":
+        if self.nf == "":
             return "The number field of this isogeny class is not in the database."
         else:
             C = getDBConnection()
-            return nf_display_knowl(self.number_field,C,field_pretty(self.number_field))
+            return nf_display_knowl(self.nf,C,field_pretty(self.nf))
 
     def display_galois_group(self):
-        if self.galois_t == "": #the number field was not found in the database
+        if not self.gal or not self.gal['t']: #the number field was not found in the database
             return "The Galois group of this isogeny class is not in the database."
         else:
             C = getDBConnection()
-            return group_display_knowl(self.galois_n,self.galois_t,C)
+            return group_display_knowl(self.gal['n'],self.gal['t'],C)
 
     def decomposition_display_search(self,factors):
         if len(factors) == 1 and factors[0][1] == 1:
@@ -169,7 +253,7 @@ class AbvarFq_isoclass(object):
         return ans
 
     def decomposition_display(self):
-        factors = self.decomposition
+        factors = self.decomp
         if len(factors) == 1 and factors[0][1] == 1:
             return 'simple'
         ans = ''
@@ -183,7 +267,7 @@ class AbvarFq_isoclass(object):
         return ans
 
     def basechange_display(self):
-        models = self.primitive_models
+        models = self.prim_models
         if len(models) == 0:
             return 'primitive'
         ans = '<table class = "ntdata">\n'

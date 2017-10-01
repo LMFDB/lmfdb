@@ -5,7 +5,16 @@
 {% if code and code[item] %}
 {% for L in code[item] %}
 {% if code[item][L] %}
+{# currently there are two uses of multiline code:
+   - either strings containing newlines and ending with a newline
+   - or arrays of lines
+   first convert the first case to the second
+#}
+{% if code[item][L] is string %}
 {% set lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]] %}
+{% else %}
+{% set lines = code[item][L] %}
+{% endif %}
 {% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
 {# keep the line below as is to avoid annoying line breaks #}
 <div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{{prompt}}:&nbsp;{{line}}<br>{% endfor %}</div>
@@ -136,7 +145,11 @@
     <div class="properties-body">
     <ul>
         {% for text,url in entries %}
+        {% if url %}
            <li><a href="{{ url }}">{{ text }}</a></li>
+        {% else %}
+           <li>{{ text|safe }}</li>
+        {% endif %}
         {% endfor %}
     </ul>
   </div>
@@ -156,7 +169,7 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties2 or friends or downloads or learnmore) %}
+{% if (properties2 or origins or friends or downloads or learnmore) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
@@ -181,7 +194,9 @@
       </table>
       </div>
     {% endif %}
+   {{ rightnavig("Origins", origins) }}
    {{ rightnavig("Related objects", friends) }}
+   {% block more_props %}{% endblock %}
    {% if navi %}
        {{ neighbors("Nearby objects", navi) }}
    {% endif %}
@@ -242,12 +257,13 @@
         function cleanSubmit(id)
         {
             var myForm = document.getElementById(id);
-            var allInputs = myForm.getElementsByTagName('input')
-            var allSelects = myForm.getElementsByTagName('select')
-            var item, i;
+            var allInputs = myForm.getElementsByTagName('input');
+            var allSelects = myForm.getElementsByTagName('select');
+            var item, i, n = 0;
 
-            for(i = 0; item = allInputs[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '');
-            for(i = 0; item = allSelects[i]; i++) if(item.getAttribute('name') && !item.value) item.setAttribute('name', '');
+            for(i = 0; item = allInputs[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
+            for(i = 0; item = allSelects[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
+            if (!n) { var all = document.createElement('input'); all.type='text'; all.name='all'; all.value='1'; myForm.appendChild(all); }
         }
         </script>
     {% endblock content_js %}
@@ -256,6 +272,19 @@
     {%- endblock content %}
   </div>
 </div>
+
+{% if DEBUG %}
+<div class="debug">
+<p>
+The template for this page is: {{ self._TemplateReference__context.name }}
+</p>
+{% if calling_function %}
+<p>
+The function which was called for this page is: {{calling_function}}
+</p>
+{% endif %}
+</div>
+{% endif %}
 
 <div id="footer">
     {% if credit -%}

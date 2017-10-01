@@ -95,10 +95,7 @@ def rational_elliptic_curves(err_args=None):
     credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    info['galois_data_type'] = 'old'
-    if 'non-maximal_primes' in db_ec().find_one():
-        info['galois_data_type'] = 'new'
-    return render_template("ec-index.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), **err_args)
+    return render_template("ec-index.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), calling_function = "ec.rational_elliptic_curves", **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -215,10 +212,6 @@ def elliptic_curve_search(info):
         else:
             query['label'] = ''
 
-    info['galois_data_type'] = 'old'
-    if 'non-maximal_primes' in db_ec().find_one():
-        info['galois_data_type'] = 'new'
-
     try:
         parse_rational(info,query,'jinv','j-invariant')
         parse_ints(info,query,'conductor')
@@ -235,22 +228,16 @@ def elliptic_curve_search(info):
             elif info['include_cm'] == 'only':
                 query['cm'] = {'$ne' : 0}
 
-        if info['galois_data_type'] == 'new':
-            parse_primes(info, query, 'surj_primes', name='surjective primes',
-                         qfield='non-maximal_primes', mode='complement')
-        else:
-            parse_primes(info, query, 'surj_primes', name='surjective primes',
-                         qfield='non-surjective_primes', mode='complement')
+        parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
+
+        parse_primes(info, query, 'surj_primes', name='surjective primes',
+                     qfield='non-maximal_primes', mode='complement')
         if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
-        if info['galois_data_type'] == 'new':
-            parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
-                         qfield='non-maximal_primes',mode=mode)
-        else:
-            parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
-                         qfield='non-surjective_primes',mode=mode)
+        parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
+                     qfield='non-maximal_primes',mode=mode)
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)
@@ -319,7 +306,7 @@ def by_triple_label(conductor,iso_label,number):
 # LMFDB or Cremona format, and also whether it is a curve label or an
 # isogeny class label, and calls the appropriate function
 
-@ec_page.route("/<label>")
+@ec_page.route("/<label>/")
 def by_ec_label(label):
     ec_logger.debug(label)
 
@@ -455,6 +442,8 @@ def render_curve_webpage_by_label(label):
 
     if data.twoadic_label:
         credit = credit.replace(' and',',') + ' and Jeremy Rouse'
+    if data.data['iwdata']:
+        credit = credit.replace(' and',',') + ' and Robert Pollack'
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     code = data.code()
@@ -683,3 +672,21 @@ def ec_code(**args):
             code += "\n%s %s: \n" % (Comment[lang],code_names[k])
             code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
     return code
+
+def tor_struct_search_Q(prefill="any"):
+    def fix(t):
+        return t + ' selected = "yes"' if prefill==t else t
+    def cyc(n):
+        return [fix("["+str(n)+"]"), "$C_{{{}}}$".format(n)]
+    def cyc2(m,n):
+        return [fix("[{},{}]".format(m,n)), "$C_{{{}}}\\times C_{{{}}}$".format(m,n)]
+    gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
+    for n in range(2,13):
+        if n!=11:
+            gps.append(cyc(n))
+    for n in range(1,5):
+        gps.append(cyc2(2,2*n))
+    return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
+
+# the following allows the preceding function to be used in any template via {{...}}
+app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
