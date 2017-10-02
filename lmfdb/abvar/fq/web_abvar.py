@@ -17,11 +17,11 @@ def av_display_knowl(label):
 def av_data(label):
     C = getDBConnection()
     abvar = C.abvar.fq_isog.find_one({ 'label' : label })
-    wnf = WebNumberField(abvar['number_field'])
+    wnf = WebNumberField(abvar['nf'])
     inf = '<div>Dimension: ' + str(abvar['g']) + '<br />'
     if not wnf.is_null():
-        inf += 'Number field: ' + nf_display_knowl(abvar['number_field'], C, name = abvar['number_field']) + '<br />'
-        inf += 'Galois group: ' + group_display_knowl(abvar['galois_n'],abvar['galois_t'],C) + '<br />'
+        inf += 'Number field: ' + nf_display_knowl(abvar['nf'], C, name = abvar['nf']) + '<br />'
+        inf += 'Galois group: ' + group_display_knowl(abvar['gal']['n'],abvar['gal']['t'],C) + '<br />'
     inf += '$p$-rank: ' + str(abvar['p_rank']) + '</div>'
     inf += '<div align="right">'
     g, q, iso = split_label(label)

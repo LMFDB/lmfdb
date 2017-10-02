@@ -581,9 +581,78 @@ def parse_list_start(inp, query, qfield, index_shift=0, parse_singleton=int):
             for i, val in enumerate(ispec):
                 key = qfield + '.' + str(i+index_shift)
                 sub_query[key] = parse_range2(val, key, parse_singleton)[1]
+
+            # MongoDB is not aware that all the queries above imply that qfield
+            # must all contain all those elements, we aid MongoDB by explicitly
+            # saying that, and hopefully it will use a multikey index.
+            parsed_values = sub_query.values();
+            # asking for each value to be in the array
+            if parse_singleton is str:
+                all_operand = [val for val in parsed_values if  type(val) == parse_singleton and '-' not in val and ','  not in val ]
+            else:
+                all_operand = [val for val in parsed_values if  type(val) == parse_singleton]
+
+            if len(all_operand) > 0:
+                sub_query[qfield] = {'$all' : all_operand};
+
+
+            # if there are other condition, we can add the first of those
+            # conditions the query, in the hope of reducing the search space
+            elemMatch_operand = [val for val in parsed_values if type(val) != parse_singleton and type(val) is dict];
+            if len(elemMatch_operand) > 0:
+                if qfield in sub_query:
+                    sub_query[qfield]['$elemMatch'] = elemMatch_operand[0];
+                else:
+                    sub_query[qfield] = {'$elemMatch' : elemMatch_operand[0]}
+            # we could add more than one $elemMatch operand, but 
+            # at the moment, the operator $all cannot handle other $ operators 
+            # A workaround would be to wrap everything around with an $and
+            # but that doesn't end up speeding up things. 
         else:
             key = qfield + '.' + str(index_shift)
             sub_query[key] = parse_range2(part, key, parse_singleton)[1]
+        return sub_query
+    if len(parts) == 1:
+        query.update(make_sub_query(parts[0]))
+    else:
+        collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
+
+@search_parser
+def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_singleton=int, initial_segment=[]):
+    bparts = BRACKETING_RE.split(inp)
+    parts = []
+    for part in bparts:
+        if not part:
+            continue
+        if part[0] == '[':
+            parts.append(part)
+        else:
+            subparts = part.split(',')
+            for subpart in subparts:
+                subpart = subpart.strip()
+                if subpart:
+                    parts.append(subpart)
+    def make_sub_query(part):
+        sub_query = {}
+        part = part.strip()
+        if not part:
+            raise ValueError("Every count specified must be nonempty.")
+        if part[0] == '[':
+            ispec = initial_segment + [x.strip() for x in part[1:-1].split(',')]
+            if not all(ispec):
+                raise ValueError("Every count specified must be nonempty.")
+            if len(ispec) == 1 and first_field is not None:
+                sub_query[first_field] = parse_range2(ispec[0], first_field, parse_singleton)[1]
+            else:
+                if any('-' in x[1:] for x in ispec):
+                    raise ValueError("Ranges not supported.")
+                sub_query[qfield] = {'$regex':'^' + ' '.join(ispec) + ' '}
+        elif first_field is not None:
+            sub_query[first_field] = parse_range2(part, first_field, parse_singleton)[1]
+        else:
+            if '-' in part[1:]:
+                raise ValueError("Ranges not supported.")
+            sub_query[qfield] = {'$regex':'^%s %s '%(' '.join(initial_segment), part)}
         return sub_query
     if len(parts) == 1:
         query.update(make_sub_query(parts[0]))

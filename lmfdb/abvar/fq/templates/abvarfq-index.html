@@ -107,7 +107,7 @@ A <a href={{url_for('.random_class')}}>random isogeny class</a> from the databas
 <h2> Search </h2>
 Please enter a value or leave blank:
 <p></p>
-<form>
+<form id='search' onsubmit="cleanSubmit(this.id)">
     <table>
         <tr>
             <td>cardinality  of the {{ KNOWL('ag.base_field',title='base field') }}</td>
@@ -121,7 +121,7 @@ Please enter a value or leave blank:
             <td>
                 <select name='primitive'>
 		    <option value="yes">yes</option>
-                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="" selected>unrestricted</option>
                     <option value="no">no</option>
                 </select>
             </td>
@@ -138,7 +138,7 @@ Please enter a value or leave blank:
             <td>
                 <select name='simple'>
                     <option value="yes">yes</option>
-                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="" selected>unrestricted</option>
                     <option value="no">no</option>
                 </select>
             </td>
@@ -160,7 +160,7 @@ Please enter a value or leave blank:
                 <select name='jacobian'>
                     <option value="yes">yes</option>
 		    <option value="not_no">yes or unknown</option>
-                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="" selected>unrestricted</option>
 		    <option value="not_yes">no or unknown</option>
                     <option value="no">no</option>
                 </select>
@@ -171,7 +171,7 @@ Please enter a value or leave blank:
                 {{ KNOWL('av.fq.angle_rank',title="angle rank") }}
             </td>
             <td>
-                <input type='text' name='angle_ranks' example="3" size=10 value="{{info.angle_ranks}}" />
+                <input type='text' name='ang_rank' example="3" size=10 value="{{info.ang_rank}}" />
             </td>
             <td>
                 <span class="formexample"> e.g. 3 </span>
@@ -183,7 +183,7 @@ Please enter a value or leave blank:
                 <select name='polarizable'>
                     <option value="yes">yes</option>
 		    <option value="not_no">yes or unknown</option>
-                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="" selected>unrestricted</option>
 		    <option value="not_yes">no or unknown</option>
                     <option value="no">no</option>
                 </select>

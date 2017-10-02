@@ -8,9 +8,12 @@ class HomePageTest(LmfdbTest):
         assert text in self.tc.get(path).data
 
     def check_external(self, homepage, path, text):
-        import urllib2
+        import urllib2, ssl
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        context = ssl._create_unverified_context()
+        request = urllib2.Request(path, headers = headers)
         assert path in homepage
-        assert text in urllib2.urlopen(path).read()
+        assert text in urllib2.urlopen(request, context = context).read()
 
     # All tests should pass
     #
