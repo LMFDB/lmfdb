@@ -10,7 +10,7 @@
 
 <h2> Refine search </h2>
 
-<form id='re-search'>
+<form id='re-search' onsubmit="cleanSubmit(this.id)">
     <input type="hidden" name="start" value="{{info.start}}"/>
     <input type="hidden" name="count" value="{{info.count}}"/>
 
@@ -58,25 +58,25 @@
         <tr>
             <td><select name='simple'>
                 <option value="yes" {% if info.simple == "yes" %}selected{% endif %}>yes</option>
-                <option value="any" {% if info.simple == "any" %}selected{% endif %}>unrestricted</option>
+                <option value="" {% if info.simple not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
                 <option value="no" {% if info.simple == "no" %}selected{% endif %}>no</option>
             </select></td>
             <td><select name='primitive'>
                 <option value="yes" {% if info.primitive == "yes" %}selected{% endif %}>yes</option>
-                <option value="any" {% if info.primitive == "any" %}selected{% endif %}>unrestricted</option>
+                <option value="" {% if info.primitive not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
                 <option value="no" {% if info.primitive == "no" %}selected{% endif %}>no</option>
             </select></td>
             <td><select name='jacobian'>
                 <option value="yes" {% if info.jacobian == "yes" %}selected{% endif %}>yes</option>
 		<option value="not_no" {% if info.jacobian == "not_no" %}selected{% endif %}>yes or unknown</option>
-                <option value="any" {% if info.jacobian == "any" %}selected{% endif %}>unrestricted</option>
+                <option value="" {% if info.jacobian not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
 		<option value="not_yes" {% if info.jacobian == "not_yes" %}selected{% endif %}>no or unknown</option>
                 <option value="no" {% if info.jacobian == "no" %}selected{% endif %}>no</option>
             </select></td>
             <td><select name='polarizable'>
                 <option value="yes" {% if info.polarizable == "yes" %}selected{% endif %}>yes</option>
 		<option value="not_no" {% if info.polarizable == "not_no" %}selected{% endif %}>yes or unknown</option>
-                <option value="any" {% if info.polarizable == "any" %}selected{% endif %}>unrestricted</option>
+                <option value="" {% if info.polarizable not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
 		<option value="not_yes" {% if info.polarizable == "not_yes" %}selected{% endif %}>no or unknown</option>
                 <option value="no" {% if info.polarizable == "no" %}selected{% endif %}>no</option>
             </select></td>
