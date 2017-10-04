@@ -26,15 +26,15 @@ table.ntdata a {
               <tr>
                 <td> <select name='parity'>
  {% if info.parity=='1' %}
-                   <option value='0'>All</option>
+                   <option value=''>All</option>
                    <option value='-1'>Odd</option>
                    <option selected='yes' value='1'>Even</option>
  {% elif info.parity=='-1' %}
-                   <option value='0'>All</option>
+                   <option value=''>All</option>
                    <option selected='yes' value='-1'>Odd</option>
                    <option value='1'>Even</option>
  {% else %}
-                   <option selected='yes' value='0'>All</option>
+                   <option selected='yes' value=''>All</option>
                    <option value='-1'>Odd</option>
                    <option value='1'>Even</option>
  {% endif %}
@@ -42,15 +42,15 @@ table.ntdata a {
                 </td>
                 <td> <select name='cyc'>
  {% if info.cyc=='1' %}
-                   <option value='0'>All</option>
+                   <option value=''>All</option>
                    <option selected='yes' value='1'>Yes</option>
                    <option value='-1'>No</option>
  {% elif info.cyc=='-1' %}
-                   <option value='0'>All</option>
+                   <option value=''>All</option>
                    <option value='1'>Yes</option>
                    <option selected='yes' value='-1'>No</option>
  {% else %}
-                   <option selected='yes' value='0'>All</option>
+                   <option selected='yes' value=''>All</option>
                    <option value='1'>Yes</option>
                    <option value='-1'>No</option>
  {% endif %}
@@ -58,15 +58,15 @@ table.ntdata a {
                 </td>
                 <td> <select name='solv'>
  {% if info.solv=='1' %}
-                   <option value='0'>All</option>
+                   <option value=''>All</option>
                    <option selected='yes' value='1'>Yes</option>
                    <option value='-1'>No</option>
  {% elif info.solv=='-1' %}
-                   <option value='0'>All</option>
+                   <option value=''>All</option>
                    <option value='1'>Yes</option>
                    <option selected='yes' value='-1'>No</option>
  {% else %}
-                   <option selected='yes' value='0'>All</option>
+                   <option selected='yes' value=''>All</option>
                    <option value='1'>Yes</option>
                    <option value='-1'>No</option>
  {% endif %}
@@ -74,15 +74,15 @@ table.ntdata a {
                 </td>
                 <td> <select name='prim'>
  {% if info.prim=='1' %}
-                   <option value='0'>All</option>
+                   <option value=''>All</option>
                    <option selected='yes' value='1'>Yes</option>
                    <option value='-1'>No</option>
  {% elif info.prim=='-1' %}
-                   <option value='0'>All</option>
+                   <option value=''>All</option>
                    <option value='1'>Yes</option>
                    <option selected='yes' value='-1'>No</option>
  {% else %}
-                   <option selected='yes' value='0'>All</option>
+                   <option selected='yes' value=''>All</option>
                    <option value='1'>Yes</option>
                    <option value='-1'>No</option>
  {% endif %}

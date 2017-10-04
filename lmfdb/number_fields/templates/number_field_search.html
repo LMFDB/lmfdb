@@ -31,17 +31,17 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
   <option value='exactly'>equal to</option>
   <option value='include'>superset of</option>
 </select>
-{% elif info.ram_quantifier == 'exactly' %}
-<select name = "ram_quantifier">
-  <option value='contained'>subset of</option>
-  <option value='exactly' selected='yes'>equal to</option>
-  <option value='include'>superset of</option>
-</select>
-{% else %}
+{% elif info.ram_quantifier == 'include' %}
 <select name = "ram_quantifier">
   <option value='contained'>subset of</option>
   <option value='exactly' >equal to</option>
   <option value='include' selected='yes'>superset of</option>
+</select>
+{% else %}
+<select name = "ram_quantifier">
+  <option value='contained'>subset of</option>
+  <option value='exactly' selected='yes'>equal to</option>
+  <option value='include'>superset of</option>
 </select>
 {% endif %}
  <td align=left> <input type='text' name='ram_primes' size=5 value="{{info.ram_primes}}"></td>
