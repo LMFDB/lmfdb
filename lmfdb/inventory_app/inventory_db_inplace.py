@@ -23,6 +23,7 @@ def update_fields(diff, storeRollback=True):
         db = inv.int_client[inv.get_inv_db_name()]
     except Exception as e:
         inv.log_dest.error("Error getting Db connection "+ str(e))
+        return
 
     try:
         if diff['collection'] is not None:
@@ -31,8 +32,8 @@ def update_fields(diff, storeRollback=True):
             inv.log_dest.info("Updating descriptions for " + diff["db"])
         _id = idc.get_db_id(db, diff["db"])
         rollback = None
-        for change in diff["diffs"]:
-            try:
+        try:
+            for change in diff["diffs"]:
                 if ih.is_special_field(change["item"]):
                     if storeRollback:
                         rollback = capture_rollback(db, _id['id'], diff["db"], diff["collection"], change)
@@ -48,9 +49,7 @@ def update_fields(diff, storeRollback=True):
                     else:
                         if(diff["collection"]):
                             c_id = idc.get_coll_id(db, _id['id'], diff['collection'])
-                            inv.log_dest.info(c_id)
                             updated = idc.update_coll(db, c_id['id'], nice_name=change["content"])
-                            inv.log_dest.info(updated)
                         else:
                             #Is database nice_name
                             updated = idc.update_db(db, _id['id'], nice_name=change["content"])
@@ -66,9 +65,9 @@ def update_fields(diff, storeRollback=True):
                     if storeRollback:
                         store_rollback(db, rollback)
 
-            except Exception as e:
-                inv.log_dest.error("Error applying diff "+ str(change)+' '+str(e))
-                raise UpdateFailed(str(e))
+        except Exception as e:
+            inv.log_dest.error("Error applying diff "+ str(change)+' '+str(e))
+            raise UpdateFailed(str(e))
 
     except Exception as e:
         inv.log_dest.error("Error updating fields "+ str(e))
@@ -90,7 +89,7 @@ def capture_rollback(inv_db, db_id, db_name, coll_name, change, coll_id = None):
     if coll_id is None and coll_name is not None:
         current_record = idc.get_coll(inv_db, db_id, coll_name)
     elif coll_id is None:
-        current_record = idc.get_db(inv_db, db_id)
+        current_record = idc.get_db(inv_db, db_name)
     else:
         current_record = idc.get_field(inv_db, coll_id, change['item'], type = 'human')
 
@@ -105,7 +104,7 @@ def capture_rollback(inv_db, db_id, db_name, coll_name, change, coll_id = None):
         else:
             prior['content'] = current_record['data'][change["item"]][field]
     elif coll_id is None:
-        prior['content'] = current_record['data'][field]        
+        prior['content'] = current_record['data'][field]
     else:
         prior['content'] = current_record['data']['data'][field]
 

@@ -66,7 +66,7 @@ def get_db(inv_db, name):
     record = {db_fields[1]:name}
     data = coll.find_one(record)
     if data is None:
-        inv.log_dest.error("Error getting db "+str(name)+' ' +str(e))
+        inv.log_dest.error("Error getting db "+str(name))
         return {'err':True, 'id':0, 'exist':False, 'data':None}
 
     return {'err':False, 'id':data['_id'], 'exist':True, 'data':data}
