@@ -569,14 +569,6 @@ def number_field_search(info):
     count = parse_count(info)
     start = parse_start(info)
 
-    if info.get('paging'):
-        try:
-            paging = int(info['paging'])
-            if paging == 0:
-                start = 0
-        except:
-            pass
-
     C = base.getDBConnection()
     # nf_logger.debug(query)
     info['query'] = dict(query)
