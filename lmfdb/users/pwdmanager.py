@@ -4,6 +4,7 @@
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
 # Author: Harald Schilly <harald.schilly@univie.ac.at>
+# Modified : Chris Brady and Heather Ratcliffe
 
 __all__ = ['LmfdbUser', 'user_exists']
 
@@ -46,6 +47,19 @@ def hashpwd(pwd, random_salt=None):
     hashed.update(random_salt)
     hashed.update(fixed_salt)  # fixed salt must come last!
     return hashed.hexdigest()
+
+def bchash(pwd, existing_hash = None):
+    """
+    Generate a bcrypt based password hash. Intended to replace
+    Schilly's original hashing algorithm
+    """
+    try:
+        import bcrypt
+        if not existing_hash:
+            existing_hash = unicode(bcrypt.gensalt())
+        return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8'))
+    except:
+        return None
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
 from flask.ext.login import UserMixin
@@ -146,14 +160,34 @@ class LmfdbUser(UserMixin):
         """
         # from time import time
         # t1 = time()
-        if not 'password' in self._data:
+        if not 'password' in self._data and not 'bcpassword' in self._data:
             logger.warning("no password data in db for '%s'!" % self._uid)
             return False
-        for i in range(rmin, rmax + 1):
-            if self._data['password'] == hashpwd(pwd, str(i)):
-                # log "AUTHENTICATED after %s!!" % (time() - t1)
+        bcpass = self._data.get('bcpassword', None)
+        if bcpass:
+            if bcpass == bchash(pwd, existing_hash = bcpass):
                 self._authenticated = True
-                break
+        else:
+            for i in range(rmin, rmax + 1):
+                if self._data['password'] == hashpwd(pwd, str(i)):
+                    # log "AUTHENTICATED after %s!!" % (time() - t1)
+                    bcpass = bchash(pwd)
+                    if bcpass:
+                        logger.info("user " + self._uid  +  " logged in with old style password, trying to update")
+                        try:
+                            self._data['bcpassword'] = bcpass
+                            get_users().update_one({'_id': self._uid},
+                                               {'$set':{'bcpassword':bcpass}})
+                            logger.info("password update for " + self._uid + " succeeded")
+                        except:
+                            #if you can't update the password then likely someone is using a local install
+                            #log and continue
+                            logger.warning("password update for " + self._uid + " failed!")
+                        self._authenticated = True
+                    else:
+                        logger.warning("user " + self._uid + " logged in with old style password, but update was not possible")
+                        self._authenticated = False
+                    break
         return self._authenticated
 
     def _validate_email(self, email):
@@ -170,7 +204,7 @@ class LmfdbUser(UserMixin):
 def new_user(uid, pwd=None):
     """
     generates a new user, asks for the password interactively,
-    and stores it in the DB.
+    and stores it in the DB. This is now replaced with bcrypt version
     """
     if not pwd:
         from getpass import getpass
@@ -181,9 +215,9 @@ def new_user(uid, pwd=None):
         pwd = pwd_input
     if get_users().find({'_id': uid}).count() > 0:
         raise Exception("ERROR: User %s already exists" % uid)
-    password = hashpwd(pwd)
+    password = bchash(pwd)
     from datetime import datetime
-    data = {'_id': uid, 'password': password, 'created': datetime.utcnow()}
+    data = {'_id': uid, 'bcpassword': password, 'created': datetime.utcnow()}
     # set defaults to empty strings
     for key in LmfdbUser.properties:
         data.update({key: ""})
@@ -193,8 +227,8 @@ def new_user(uid, pwd=None):
 
 
 def change_password(uid, newpwd):
-    p = hashpwd(newpwd)
-    get_users().update({'_id': uid}, {'$set': {'password': p}})
+    p = bchash(newpwd)
+    get_users().update_one({'_id': uid}, {'$set': {'bcpassword': p}})
     logger.info("password for %s changed!" % uid)
 
 
