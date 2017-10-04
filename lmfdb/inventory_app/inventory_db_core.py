@@ -52,6 +52,49 @@ def get_coll_id(inv_db, db_id, name):
         _id = 0
     return {'err':False, 'id':_id, 'exist':(exists_at is not None)}
 
+def get_db_name(inv_db, db_id):
+    """Get db name from db id"""
+    try:
+        table_name = inv.ALL_STRUC.db_ids[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+ str(e))
+        return {'err':True, 'id':0, 'exist':False}
+
+    db_fields = inv.ALL_STRUC.db_ids[inv.STR_CONTENT]
+    record = {db_fields[0]:db_id}
+    #If record exists, just return its ID
+    exists_at = coll.find_one(record)
+    if exists_at is not None:
+        name = exists_at['name']
+    else:
+        name = ''
+    return {'err':False, 'name':name, 'exist':(exists_at is not None)}
+
+def get_coll_name(inv_db, coll_id):
+    """ Get collection name from id.
+
+    inv_db -- Connection to LMFDB inventory database
+    coll_id -- ID of collection to retrieve
+    """
+
+    try:
+        table_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True, 'id':0, 'exist':False}
+
+    coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
+    record = {coll_fields[0]:coll_id}
+    exists_at = coll.find_one(record)
+    if exists_at is not None:
+        name = exists_at['name']
+    else:
+        name = ''
+    return {'err':False, 'name':name, 'exist':(exists_at is not None)}
+
+
 def get_db(inv_db, name):
     """ Get database record by name """
 

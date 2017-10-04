@@ -38,12 +38,6 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
             inv.log_dest.info("    Uploading collection "+coll_name)
             coll_entry = invc.set_coll(db, _id['id'], coll_name, coll_name, '', '')
 
-            try:
-                scrape_date = dt.datetime.strptime(structure_dat[DB_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
-            except:
-                scrape_date = datetime.datetime(min)
-            invc.set_coll_scrape_date(db, coll_entry['id'], scrape_date)
-
             orphaned_keys = upload_collection_structure(db, DB_name, coll_name, structure_dat, fresh=fresh)
             if len(orphaned_keys) != 0:
                 with open('Orph_'+DB_name+'_'+coll_name+'.json', 'w') as file:
@@ -157,15 +151,16 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
 	    #Delete existing auto-table entries
            delete_collection_data(db, _c_id['id'], tbl='auto')
         try:
-            scrape_date = dt.datetime.strptime(structure_dat[db_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
-        except:
-            scrape_date = datetime.datetime(min)
+            scrape_date = datetime.datetime.strptime(structure_dat[db_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
+        except Exception as e:
+            inv.log_dest.info("Scrape date parsing failed "+str(e))
+            scrape_date = datetime.datetime.min
         invc.set_coll_scrape_date(db, _c_id['id'], scrape_date)
         for field in coll_entry['fields']:
             inv.log_dest.info("            Processing "+field)
             invc.set_field(db, _c_id['id'], field, coll_entry['fields'][field])
         for record in coll_entry['records']:
-            inv.log_dest.info("            Processing "+record)
+            inv.log_dest.info("            Processing record "+record)
             rec_hash = ih.hash_record_schema(coll_entry['records'][record]['schema'])
             rec_entry = invc.get_record(db, _c_id['id'], rec_hash)
             if rec_entry['exist']:
