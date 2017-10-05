@@ -172,7 +172,7 @@ def get_records_for_display(full_name):
         return {'data': None, 'scrape_date': None}
 
     try:
-        return {'data':records['data'], 'scrape_date' : records['scrape_date']}
+        return {'data':ih.diff_records(records['data']), 'scrape_date' : records['scrape_date']}
     except Exception as e:
         inv.log_dest.error("Error decoding inventory object "+ str(e))
         return {'data': None, 'scrape_date': None}

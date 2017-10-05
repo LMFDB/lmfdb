@@ -54,9 +54,13 @@ function flashName(item){
       {% if current_user.is_authenticated() %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
         <a href = './{{item[0]}}/edit/' id=invbutton>Edit Inventory</a>
+        <a href = './{{item[0]}}/records/' id=invbutton>View Records</a>
+        <a href = './{{item[0]}}/editrecords/' id=invbutton>Edit Records</a>
       {% else %}
         <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
         <input type='button' value ='Edit Inventory' title ='Please login to edit' disabled class=disabledbutton>
+        <a href = './{{item[0]}}/records/' id=invbutton>View Records</a>
+        <input type='button' value ='Edit Record Types' title ='Please login to edit' disabled class=disabledbutton>
       {% endif %}
 
     {% endif %}

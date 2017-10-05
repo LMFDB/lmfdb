@@ -128,6 +128,16 @@ div.hide{
 .viewerTableEven{
     background-color : #ffffff;
 }
+.viewerTableSpecial{
+    background-color : #ffe8e8;
+}
+.viewerTableSole{}
+.viewerTableSoleOdd{
+    background-color : #ffd699;
+}
+.viewerTableSoleEven{
+    background-color : #ffebcc;
+}
 
 .disabledbutton{
     background-color :  {{color.button_background_inactive}}  !important;

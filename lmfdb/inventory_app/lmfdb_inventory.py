@@ -29,7 +29,7 @@ info_editable_fields = {'nice_name':1, 'description':2, 'contact':4, 'status':3,
 def info_field_order():
     return sorted(info_editable_fields, key=info_editable_fields.get)
 
-record_editable_fields = {'name':1, 'description':2, 'schema':-3, 'count':-4}
+record_editable_fields = {'name':1, 'descrip':2, 'extends': -3, 'schema':-4, 'count':-5}
 #Negative denotes NOT editable
 def record_field_order():
     return sorted(record_editable_fields, key = lambda s : abs(record_editable_fields.get(s)))
@@ -42,7 +42,7 @@ class db_struc:
     coll_ids = {STR_NAME : 'collection_ids', STR_CONTENT :['_id', 'db_id', 'name', 'nice_name', 'NOTES', 'INFO', 'scan_date']}
     fields_auto = {STR_NAME : 'fields_auto', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
     fields_human = {STR_NAME : 'fields_human', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
-    record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'coll_id', 'hash', 'name', 'descrip', 'fields', 'count']}
+    record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'coll_id', 'hash', 'name', 'descrip', 'schema', 'count']}
     rollback_human = {STR_NAME : 'rollback', STR_CONTENT:['_id', 'diff']}
 
     def get_fields(self, which):

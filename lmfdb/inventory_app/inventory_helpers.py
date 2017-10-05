@@ -59,6 +59,18 @@ def is_record_name(item):
     except:
         return False
 
+def make_empty_record(eg):
+    """Take a record and return it, but empty
+    List fields become empty lists, others become None
+    """
+    new = {}
+    for field in eg:
+        if type(eg[field]) ==type([]):
+            new[field] = []
+        else:
+            new[field] = None
+    return new
+
 #End LMFDB reports output helpers -----------------------------------------
 
 #Display helpers ----------------------------------------------------------
@@ -132,6 +144,61 @@ def hash_record_schema(schema_list):
     m = hashlib.md5(strl)
     return m.hexdigest()
 
+
+def diff_records(all_records):
+    """Take record data and calculate diffed schema
+    Adds base record (if exists) to head of list and also
+    sorts list so diffed records are ahead of undiffed.
+    Adapted from lmfdb_reprt_tool (bradyc)
+    """
+    if(len(all_records) == 0):
+        return
+
+    base = None
+    base_len = 0
+    #Select the longest record in the database and cut down from that
+    for doc in all_records:
+        lnl = len(doc['schema'])
+        if lnl > base_len:
+          base_len = lnl
+          base = doc['schema']
+
+    #Calculate diffs for each record
+    diffed = -1
+    for doc in all_records:
+        temp = list(set(base).intersection(doc['schema']))
+        if len(temp) != 0:
+          base = temp
+          doc['diffed'] = True
+          diffed+=1
+        else:
+          doc['diffed'] = False
+    base_hash = hash_record_schema(base)
+
+    diffed_recs = [record for record in all_records if record['diffed']]
+    non_diffed_recs = [record for record in all_records if not record['diffed']]
+    new_records = diffed_recs + non_diffed_recs
+    #base is now the minimal intersection
+    #Create a new field in each record whicj is full schema, as we want to display
+    #diffs in general
+    for doc in new_records:
+        schema = doc['schema']
+        diffed_schema = [val for val in schema if val not in base]
+        if diffed:
+            doc['schema'] = diffed_schema
+            doc['oschema'] = schema
+        else:
+            doc['oschema'] = []
+
+    if base_hash not in [item['hash'] for item in new_records]:
+        print 'Creating dummy base record'
+        record = make_empty_record(all_records[0])
+        record['count'] = -1
+        record['schema'] = base
+        record['hash'] = base_hash
+        all_records.insert(0,record)
+
+    return all_records
 #End LMFDB report tool temporary borrows _________________________________________________
 
 # Extra URL and web helpers --------------------------------------------------------------
