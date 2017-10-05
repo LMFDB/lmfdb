@@ -276,7 +276,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
     <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
 
- {% if plotlink != None %}
+ {% if plotlink %}
     <img src="{{ plotlink|safe }}" >
  {% else %}
     <div>Plot not available.</div>
