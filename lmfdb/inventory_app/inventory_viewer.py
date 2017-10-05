@@ -65,8 +65,9 @@ def retrieve_description(db, requested_db, requested_coll):
         _id = db_tab.find_one({inv.STR_NAME:requested_db})['_id']
         coll_record = coll_tab.find_one({'db_id': _id, inv.STR_NAME:requested_coll})
         _c_id = coll_record['_id']
-        specials = {'INFO': coll_record['INFO'], 'NOTES':coll_record['NOTES']}
-
+        info = coll_record['INFO']
+        info['nice_name'] = coll_record['nice_name']
+        specials = {'INFO': info, 'NOTES':coll_record['NOTES']}
         request = {'coll_id': _c_id}
 
         fields_auto = inv.ALL_STRUC.get_fields('auto')
@@ -255,6 +256,7 @@ def validate_edits(diff):
 
 def process_edits(diff):
 #This has to reverse anything we did to display info
+#We also edit the diff if there's anything to be done
 
     diffs = diff["diffs"]
     for index, diff_item in enumerate(diffs):
@@ -263,6 +265,14 @@ def process_edits(diff):
             str = ih.transform_examples(str, True)
             inv.log_dest.info(str)
             diffs[index]['content'] = str
+
+    #We allow editing of nice_names in two ways, so we patch the diff accordingly here
+    #If current state is {"item":"__INFO__","field":"nice_name"... we want to change __INFO__ to 'top_level'
+    for index, diff_item in enumerate(diffs):
+        if diff_item['item'] == '__INFO__' and diff_item['field'] == 'nice_name':
+            diff_item['item'] = 'top_level'
+            if not ih.is_toplevel_field(diff_item['item']):
+                raise DiffKeyError("Cannot identify top-level state")
 
     return diff
 
