@@ -1,0 +1,41 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+The database currently contains the database... SEE:
+<a href='http://www.lmfdb.org/EllipticCurve/Q/stats'>Elliptic Curves stats page</a>
+as an example
+</div>
+
+<h2> Distribution of rank </h2>
+<div>
+<table border=1>
+<tr>
+<th>Rank</th>
+{%for rc in info.stats.rank_counts %}
+<td>{{rc.r}}</td>
+{% endfor %}
+</tr>
+<tr>
+<th>number of curves</th>
+{%for rc in info.stats.rank_counts %}
+<td>{{rc.ncurves}}</td>
+{% endfor %}
+</tr>
+<tr>
+<th>number of isogeny classes</th>
+{%for rc in info.stats.rank_counts %}
+<td>{{rc.nclasses}}</td>
+{% endfor %}
+</tr>
+<tr>
+<th>proportion</th>
+{%for rc in info.stats.rank_counts %}
+<td>{{rc.prop}}%</td>
+{% endfor %}
+</tr>
+</table>
+</div>
+
+{% endblock %}
+</html>
