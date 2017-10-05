@@ -51,8 +51,9 @@
         <tr>
             <td align=left>{{ KNOWL('av.simple',title="simple") }}</td>
             <td align=left>{{ KNOWL('ag.primitive',title="primitive") }}</td>
-            <td align=left>{{KNOWL('ag.jacobian',title='Jacobian')}}</td>
-            <td align=left>{{ KNOWL('av.princ_polarizable', title = 'princ polarizable')}}</td>
+            <td align=left>{{ KNOWL('ag.jacobian',title="Jacobian") }}</td>
+            <td align=left>{{ KNOWL('av.princ_polarizable',title="princ polarizable") }}</td>
+	    <td align=left>{{ KNOWL('nf.galois_group',title="Galois group") }}</td>
         </tr>
 
         <tr>
@@ -80,6 +81,7 @@
 		<option value="not_yes" {% if info.polarizable == "not_yes" %}selected{% endif %}>no or unknown</option>
                 <option value="no" {% if info.polarizable == "no" %}selected{% endif %}>no</option>
             </select></td>
+	    <td><input type='text' name='galois_group' size=10 value="{{info.galois_group}}"/></td>
         </tr>
 
         <tr>

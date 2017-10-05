@@ -255,6 +255,17 @@ Please enter a value or leave blank:
                 <span class="formexample"> e.g. 4.0.29584.2 or Qzeta8 </span>
             </td>
         </tr>
+	<tr>
+	    <td>
+	        {{KNOWL('nf.galois_group',title='galois group')}}
+	    </td>
+	    <td colspan=3>
+	        <input type='text' name='galois_group' example="4T3" size=40 value="{{info.galois_group}}"/>
+	    </td>
+	    <td>
+	        <span class="formexample"> e.g. C4, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}} </span>
+	    </td>
+	</tr>
         <tr>
             <td colspan=2>Maximum number of isogeny classes to display</td><td> <input type='text' name='count'  size=10 value="{{info.count}}" />
             </td>
