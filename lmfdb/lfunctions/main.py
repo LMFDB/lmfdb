@@ -11,12 +11,15 @@ import re
 import sqlite3
 import numpy
 
+import LfunctionPlot
+import LfunctionDatabase
+
 from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunction_EC_Q, 
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
-                       HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc)
-import LfunctionPlot
-import LfunctionDatabase
+                       HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
+                       Lfunction_from_db)
+from LfunctionDatabase import get_instances_by_Lhash, get_lfunction_by_Lhash
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
 from Lfunctionutilities import p2sage, styleTheSign, getConductorIsogenyFromLabel
 from lmfdb.utils import to_dict
@@ -383,6 +386,13 @@ def l_function_lcalc_page():
     args = {'Ltype': 'lcalcurl', 'url': request.args['url']}
     return render_single_Lfunction(Lfunction_lcalc, args, request)
 
+# L-function by hash ###########################################################
+@l_function_page.route("/lhash/<lhash>")
+@l_function_page.route("/lhash/<lhash>/")
+def l_function_by_hash_page(lhash):
+    args = {'Lhash': lhash}
+    return render_single_Lfunction(Lfunction_from_db, args, request)
+
 
 ################################################################################
 #   Helper functions, individual L-function homepages
@@ -404,7 +414,6 @@ def render_single_Lfunction(Lclass, args, request):
 
     info = initLfunction(L, temp_args, request)
     return render_template('Lfunction.html', **info)
-
 
 def render_lfunction_exception(err):
     try:
@@ -434,7 +443,12 @@ def initLfunction(L, args, request):
     info = L.info                        
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
-    (info['bread'], info['origins'], info['friends'], info['factors'] ) = set_bread_and_friends(L, request)
+
+    #(info['bread'], info['origins'], info['friends'], info['factors'] ) = set_bread_and_friends(L, request)
+    # TODO DLD the Linstances below is temporary, and should be removed, and
+    #      the above line should be restored.
+    (info['bread'], info['origins'], info['friends'], info['factors'], info['Linstances'] ) = set_bread_and_friends(L, request)
+
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
 
@@ -480,6 +494,9 @@ def set_bread_and_friends(L, request):
     origins = []
     factors = []
 
+    #TODO DLD this is to show origins, and should be removed
+    instances = []
+
     # Create default friendlink by removing 'L/' and ending '/'
     friendlink = request.url.replace('/L/', '/').replace('/L-function/', '/').replace('/Lfunction/', '/')
     splitlink = friendlink.rpartition('/')
@@ -501,51 +518,7 @@ def set_bread_and_friends(L, request):
         bread = get_bread(1, [(charname, request.url)])
     
     elif L.Ltype() == 'ellipticcurve':
-        def name_and_object_from_url(url):
-            from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
-            from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
-            from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
-            from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db 
-            from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
-            url_split = url.split("/");
-            name = None;
-            obj_exists = False;
 
-            if url_split[0] == "EllipticCurve":
-                if url_split[1] == 'Q':
-                    # EllipticCurve/Q/341641/a
-                    label_isogeny_class = ".".join(url_split[-2:]);
-                    # count doesn't honor limit!
-                    obj_exists = is_ec_isogeny_class_in_db(label_isogeny_class);
-                else:
-                    # EllipticCurve/2.2.140.1/14.1/a
-                    label_isogeny_class =  "-".join(url_split[-3:]);
-                    obj_exists = is_ecnf_isogeny_class_in_db(label_isogeny_class);
-                name = 'Isogeny class ' + label_isogeny_class;
-
-            elif url_split[0] == "ModularForm":
-                if url_split[1] == 'GL2':
-                    if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
-                        # ModularForm/GL2/Q/holomorphic/14/2/1/a
-                        full_label = ".".join(url_split[-4:])
-                        name =  'Modular form ' + full_label;
-                        obj_exists = is_newform_in_db(full_label);
-
-                    elif  url_split[2] == 'TotallyReal':
-                        # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
-                        label = url_split[-1];
-                        name =  'Hilbert modular form ' + label;
-                        obj_exists = is_hmf_in_db(label);
-
-                    elif url_split[2] ==  'ImaginaryQuadratic':
-                        # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
-                        label = '-'.join(url_split[-3:]) 
-                        name = 'Bianchi modular form ' + label;
-                        obj_exists = is_bmf_in_db(label);
-            
-            return name, obj_exists
-
-        from LfunctionDatabase import get_instances_by_Lhash
         for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
             url = instance['url'];
             name, obj_exists = name_and_object_from_url(url);
@@ -758,7 +731,42 @@ def set_bread_and_friends(L, request):
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
 
-    return (bread, origins, friends, factors)
+    elif L.Ltype() == "general":
+        bread = [('L-functions', url_for('.l_function_top_page'))]
+
+        for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
+            url = instance['url'];
+
+            #TODO DLD this is to show other instances, and should be removed
+            instances.append((str(url), "/L/" + url))
+
+
+            name, obj_exists = name_and_object_from_url(url);
+
+            if not name:
+                name = ""
+
+            if obj_exists:
+                origins.append((name, "/"+url));
+            else:
+                name += '&nbsp;  n/a';
+                origins.append((name, ""));
+
+        if "," in L.Lhash:
+            for factor_Lhash in  L.Lhash.split(","):
+                for instance in sorted(get_instances_by_Lhash(factor_Lhash), key=lambda elt: elt['url']):
+                    url = instance['url'];
+                    name, obj_exists = name_and_object_from_url(url);
+                    if obj_exists:
+                        factors.append((name,  "/" + url));
+                    else:
+                        name += '&nbsp;  n/a';
+                        factors.append((name, ""));
+
+    #return (bread, origins, friends, factors)
+    #TODO DLD 'instances' below is temporary, and the above line should be
+    #     restored when done. Other lines of change are marked with DLD
+    return (bread, origins, friends, factors, instances)
 
 
 def set_zeroslink_and_plotlink(L, args):
@@ -1077,7 +1085,6 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     else:
         return None
 
-
 ################################################################################
 #   Route functions, graphs for browsing L-functions
 ################################################################################
@@ -1291,3 +1298,50 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
     s += '</table>\n'
     return s
 
+
+# TODO This needs to be able to handl any sort of L-function.
+#      There should probably be a more relevant field
+#      in the database, instead of trying to extract this from a URL
+def name_and_object_from_url(url):
+    from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
+    from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
+    from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
+    from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db 
+    from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
+    url_split = url.split("/");
+    name = None;
+    obj_exists = False;
+
+    if url_split[0] == "EllipticCurve":
+        if url_split[1] == 'Q':
+            # EllipticCurve/Q/341641/a
+            label_isogeny_class = ".".join(url_split[-2:]);
+            # count doesn't honor limit!
+            obj_exists = is_ec_isogeny_class_in_db(label_isogeny_class);
+        else:
+            # EllipticCurve/2.2.140.1/14.1/a
+            label_isogeny_class =  "-".join(url_split[-3:]);
+            obj_exists = is_ecnf_isogeny_class_in_db(label_isogeny_class);
+        name = 'Isogeny class ' + label_isogeny_class;
+
+    elif url_split[0] == "ModularForm":
+        if url_split[1] == 'GL2':
+            if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
+                # ModularForm/GL2/Q/holomorphic/14/2/1/a
+                full_label = ".".join(url_split[-4:])
+                name =  'Modular form ' + full_label;
+                obj_exists = is_newform_in_db(full_label);
+
+            elif  url_split[2] == 'TotallyReal':
+                # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
+                label = url_split[-1];
+                name =  'Hilbert modular form ' + label;
+                obj_exists = is_hmf_in_db(label);
+
+            elif url_split[2] ==  'ImaginaryQuadratic':
+                # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
+                label = '-'.join(url_split[-3:]) 
+                name = 'Bianchi modular form ' + label;
+                obj_exists = is_bmf_in_db(label);
+    
+    return name, obj_exists

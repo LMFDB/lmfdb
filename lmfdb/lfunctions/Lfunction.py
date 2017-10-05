@@ -449,6 +449,41 @@ class Lfunction_Dirichlet(Lfunction):
 #############################################################################
 
 
+class Lfunction_from_db(Lfunction):
+    """
+    Construct an L-function using only data from the database.
+    """
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
+        # These are a typeless base, so call Ltype 'general'
+        self._Ltype = "general"
+
+        self.numcoeff = 30
+
+        # TODO this is madeup. The db doesn't store this systematically
+        self.langlands = True
+
+        self.__dict__.update(kwargs)
+        self.lfunc_data = LfunctionDatabase.get_lfunction_by_Lhash(self.Lhash)
+
+        makeLfromdata(self)
+
+        # Set up the basic displays
+        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"
+        self.texname = "L(s)"
+        self.texname_arithmetic = "L(s)"
+        self.texnamecompleted1ms = "\\Lambda(1-s)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
+        self.texnamecompleteds = "\\Lambda(s)"
+
+        # Initiate the dictionary info that contains the data for the webpage
+        self.info = self.general_webpagedata()
+
+
+#############################################################################
+
+
 class Lfunction_EC(Lfunction):
     """Class representing an elliptic curve L-function
      over a number field, possibly QQ.
