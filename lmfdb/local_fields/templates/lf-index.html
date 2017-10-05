@@ -76,7 +76,7 @@ A <a href={{url_for('.random_field')}}>random local number field</a> from the da
 
     <h2>Find a specific local number field</h2>
 
-    <form name="search" method = "get" action="{{search}}">
+    <form>
         <table class="">
 	  <tr>
 	    <td>
@@ -97,7 +97,7 @@ A <a href={{url_for('.random_field')}}>random local number field</a> from the da
 
 
         <h2>Search</h2>
-      <form name="search" method = "get" action="{{search}}">
+      <form id="search"  onsubmit="cleanSubmit(this.id)">
         <table class="">
           <tr align=left>
             <td align=right>
@@ -151,7 +151,7 @@ A <a href={{url_for('.random_field')}}>random local number field</a> from the da
             </td><td><input type="text" name="count" value="{{info.count}}" size="10"></td>
           </tr>
   </table>
-        <button type="submit" name="Submit" value="Search">Search</button>
+        <button type="submit" value="Search">Search</button>
       </form>
 
 
