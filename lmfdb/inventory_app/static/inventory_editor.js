@@ -237,7 +237,7 @@ function populateEditorPage(blockList, startVisible=startVisible){
   //We create in two chunks
 
   setScanDate(blockList.date);
-
+  setNiceTitle(blockList);
   var specialsDiv = document.getElementById('specialsDiv');
   var dataDiv = document.getElementById('dataDiv');
   var lastField = "";

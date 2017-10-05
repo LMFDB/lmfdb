@@ -105,9 +105,7 @@ function populateBlocklist(blockList, data){
   //Fill given blocklist from given data
   var contents = "";
   var docElementId = "";
-  console.log(data);
   blockList.date = data['scrape_date'];
-  console.log(blockList.date);
   //Do specials and then do main data
   var special = false;
   //Data should contain 2 sections, specials and data
@@ -239,4 +237,11 @@ function capitalise(str){
 function setScanDate(date){
   var el = document.getElementById('scandate');
   el.innerHTML = date;
+}
+
+function setNiceTitle(blockList){
+  var el = document.getElementById('nicename');
+  var nameblock = blockList.getBlock('#Box_INFO_nice_name');
+  if(nameblock && el) el.innerHTML = nameblock.text;
+
 }

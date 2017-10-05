@@ -32,6 +32,8 @@ function populateRecordViewerPage(blockList, startVisible=true){
   //We create in two chunks
 
   setScanDate(blockList.date);
+  setNiceTitle(blockList);
+
   var dataDiv = document.getElementById('dataDiv');
 
   var keys = Object.keys(blockList.blockList).sort();

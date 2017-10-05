@@ -6,6 +6,7 @@ function populateViewerPage(blockList, startVisible=true){
   //We create in two chunks
 
   setScanDate(blockList.date);
+  setNiceTitle(blockList);
 
   var specialsDiv = document.getElementById('specialsDiv');
   var dataDiv = document.getElementById('dataDiv');

@@ -27,12 +27,13 @@ def css():
 #The root of edit pages, lists databases having inventory data
 @inventory_app.route('')
 def show_edit_root():
-    return render_template('edit_show_list.html', db_name = None, listing=inventory_viewer.get_edit_list(), bread=[['&#8962;', url_for('inventory_app.show_edit_root')]])
+    return render_template('edit_show_list.html', db_name = None, nice_name=None, listing=inventory_viewer.get_edit_list(), bread=[['&#8962;', url_for('inventory_app.show_edit_root')]])
 
 #Edit page per DB, lists collections
 @inventory_app.route('<string:id>/')
 def show_edit_child(id):
-    return render_template('edit_show_list.html', db_name=id, listing=inventory_viewer.get_edit_list(id), bread=[['&#8962;', url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
+    nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = None)
+    return render_template('edit_show_list.html', db_name=id, nice_name=nice_name, listing=inventory_viewer.get_edit_list(id), bread=[['&#8962;', url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
 
 #Viewer page per collection, shows formatted fields
 @inventory_app.route('<string:id>/<string:id2>/')

@@ -35,7 +35,7 @@ function flashName(item){
   {% if db_name is none: %}
     Available Databases
   {% else: %}
-    Available  Collections in {{db_name}}
+    Available  Collections in <span name='nicename'>{{nice_name}}</span> [{{db_name}}]
   {% endif %}
 {% endblock title_block %}
 
