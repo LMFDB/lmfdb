@@ -116,15 +116,16 @@ class Lfunction:
             info['support'] = ''
 
         info['Ltype'] = self.Ltype()
-        # TODO DLD change back, this is a temporary test
+
         try:
             info['label'] = self.label
         except AttributeError:
-            info['label'] = "DLD"
+            info['label'] = ""
+
         try:
             info['credit'] = self.credit
         except AttributeError:
-            info['credit'] = "DLD"
+            info['credit'] = ""
 
         info['degree'] = int(self.degree)
         info['conductor'] = self.level
