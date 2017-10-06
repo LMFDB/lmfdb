@@ -58,6 +58,13 @@ def is_record_name(item):
         return False
     except:
         return False
+def is_probable_record_hash(name):
+    """ Check whether given name seems to be a record identifiers
+    This is a 32 char alpha-numeric string right now"""
+    try:
+        return len(name) == 32
+    except:
+        return False
 
 def make_empty_record(eg):
     """Take a record and return it, but empty
@@ -133,6 +140,35 @@ def blank_empty_field(value):
     except:
         return value
 
+def empty_null_record_info(records):
+    """Empty null name or description fields in list of records"""
+    try:
+        for item in records:
+            print item
+            item = empty_all_if_null(item)
+    except Exception as e:
+        log_dest.error(e)
+    return records
+
+def empty_all_if_null(obj):
+    """Convert all null strings to empty"""
+    try:
+        for field in obj:
+            obj[field] = empty_if_null(obj[field])
+    except Exception as e:
+        log_dest.error(e)
+    return obj
+
+def empty_if_null(value):
+    """Convert true null into empty string"""
+    try:
+        if value is None:
+            print 'IsNone'
+            return ''
+        else:
+            return value
+    except:
+        return value
 #End display helpers ----------------------------------------------------------
 
 #LMFDB report tool temporary borrows _____________________________________________________

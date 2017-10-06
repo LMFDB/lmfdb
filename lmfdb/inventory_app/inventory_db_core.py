@@ -333,7 +333,8 @@ def get_field(inv_db, coll_id, name, type='auto'):
         data = coll.find_one(rec_find)
         return {'err':False, 'id':data['_id'], 'exist':True, 'data':data}
     except Exception as e:
-        inv.log_dest.error("Error getting data "+str(e))
+        #Unable to get is not a fatal error
+        inv.log_dest.info("Error getting data for "+name+': '+str(e))
         return {'err':True, 'id':0, 'exist':True, 'data':None}
 
 def set_field(inv_db, coll_id, name, data, type='auto'):
@@ -460,6 +461,25 @@ def set_record(inv_db, coll_id, data, type='auto'):
         rec_find = {records_fields[1]:coll_id, records_fields[2]:data['hash']}
         rec_set = {records_fields[3]:ih.null_empty_field(human_data['name']), records_fields[4]:ih.null_empty_field(human_data['description'])}
         return upsert_and_check(coll, rec_find, rec_set)
+
+def update_record_description(inv_db, coll_id, data):
+    """Update the 'human' entered info for a record
+    i.e. the name and description fields"""
+    try:
+        table_name = inv.ALL_STRUC.record_types[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True, 'id':0, 'exist':False}
+
+    records_fields = inv.ALL_STRUC.record_types[inv.STR_CONTENT]
+    #Added data for records is the known hash for lookup, a "name" and "description" field
+    rec_find = {records_fields[1]:coll_id, records_fields[2]:data['hash']}
+    rec_set = {}
+    for field in data:
+        rec_set[field] = data[field]
+    print rec_find, rec_set
+    return upsert_and_check(coll, rec_find, rec_set)
 
 def update_record_count(inv_db, record_id, new_count):
     """Update the count for an existing record, given by record_id"""

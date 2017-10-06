@@ -14,6 +14,7 @@ def update_fields(diff, storeRollback=True):
 
     diff -- should be a fully qualified difference, containing db, collection names and then a list of changes, each being a dict containing the item, the field and the new content. Item corresponds to an entry in an object, field to the piece of information this specifies (for example, type, description, example)
     e.g. {"db":"curve_automorphisms","collection":"passports","diffs":[{"item":"total_label","field":"type","content":"string"}]}
+    If this is a record entry, then the 'item' field will be a record hash.
     storeRollback -- determine whether to store the undiff and diff to allow rollback of the change
     """
 
@@ -57,7 +58,15 @@ def update_fields(diff, storeRollback=True):
                     _c_id = idc.get_coll_id(db, _id['id'], diff["collection"])
                     if storeRollback:
                         rollback = capture_rollback(db, _id['id'], diff["db"], diff["collection"], change, coll_id = _c_id['id'])
-                    updated = idc.update_field(db, _c_id['id'], change["item"], change["field"], change["content"], type="human")
+                    succeeded = False
+                    #if it looks like a record, try treating as one
+                    #If this fails try it as a field
+                    if ih.is_probable_record_hash(change['item']):
+                        updated = idc.update_record_description(db, _c_id['id'], {'hash':change["item"], change["field"]:change["content"]})
+                        if updated['err'] == False:
+                            succeeded = True;
+                    if not succeeded:
+                        updated = idc.update_field(db, _c_id['id'], change["item"], change["field"], change["content"], type="human")
 
                 if updated['err']:
                     raise KeyError("Cannot update, item not present")
@@ -85,17 +94,29 @@ def capture_rollback(inv_db, db_id, db_name, coll_name, change, coll_id = None):
     Roll-backs can be applied using apply_rollback. Their format is a diff, with extra 'post' field storing the state after change, and the live field which should be unset if they are applied
     """
 
+    is_record = False
     #Fetch the current state
     if coll_id is None and coll_name is not None:
         current_record = idc.get_coll(inv_db, db_id, coll_name)
     elif coll_id is None:
         current_record = idc.get_db(inv_db, db_name)
     else:
-        current_record = idc.get_field(inv_db, coll_id, change['item'], type = 'human')
+        try:
+            current_record = idc.get_field(inv_db, coll_id, change['item'], type = 'human')
+            #Try as a field first
+            assert current_record is not None and current_record['err'] is False
+        except:
+            #Now try as a record
+            current_record = idc.get_record(inv_db, coll_id, change['item'])
+            is_record = True
+    if current_record is None:
+        #Should not happen really, but if it does we can't do anything
+        return None
 
     #Create a roll-back document
     field = change["field"]
     prior = change.copy()
+
     if coll_id is None and coll_name is not None:
         if ih.is_special_field(change["item"]):
             prior['content'] = current_record['data'][change["item"][2:-2]][field]
@@ -104,6 +125,8 @@ def capture_rollback(inv_db, db_id, db_name, coll_name, change, coll_id = None):
         else:
             prior['content'] = current_record['data'][change["item"]][field]
     elif coll_id is None:
+        prior['content'] = current_record['data'][field]
+    elif is_record:
         prior['content'] = current_record['data'][field]
     else:
         prior['content'] = current_record['data']['data'][field]

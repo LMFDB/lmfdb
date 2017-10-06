@@ -34,6 +34,9 @@ record_editable_fields = {'name':1, 'descrip':2, 'extends': -3, 'schema':-4, 'co
 def record_field_order():
     return sorted(record_editable_fields, key = lambda s : abs(record_editable_fields.get(s)))
 
+def record_noeditable():
+    return [name for (name, val) in record_editable_fields.items() if val < 0]
+
 #Object describing DB structure. This is styled after a relational model
 class db_struc:
     name = 'inventory'

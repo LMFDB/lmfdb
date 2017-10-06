@@ -119,3 +119,15 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
   return table_row;
 
 }
+
+
+function fillRecordHashMap(data){
+  //Record blocks are numbered for ordering but we want to preserve the hashes linked to a given block for edit submissions
+
+  for(var field in data){
+    contents = data[field];
+    //If this is records, we add entry to the map linking the field to the hash
+    var records = ('hash' in contents && 'oschema' in contents);
+    recordHashMap.set(field, contents['hash']);
+  }
+}

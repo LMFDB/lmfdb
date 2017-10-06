@@ -44,7 +44,8 @@ def show_inventory(id, id2):
 @inventory_app.route('<string:id>/<string:id2>/records/')
 def show_records(id, id2):
     bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
-    return render_template('view_records.html', db_name=id, collection_name=id2, bread=bread, record_fields=linv.record_field_order())
+    nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
+    return render_template('view_records.html', db_name=id, collection_name=id2, bread=bread, record_fields=linv.record_field_order(), nice_name=nice_name)
 
 #Edit page per collection, shows editable fields
 @inventory_app.route('<string:id>/<string:id2>/edit/')
@@ -65,11 +66,12 @@ def fetch_edit_inventory(id, id2):
 #@login_required
 def show_edit_records(id, id2):
     bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
-    return render_template('edit_records.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), bread=bread)
+    nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
+    return render_template('edit_records.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), record_fields=linv.record_field_order(), bread=bread, nice_name =nice_name, record_noedit=linv.record_noeditable())
 
 #Edit data source to populate inventory pages
 @inventory_app.route('<string:id>/<string:id2>/records/data/')
-@inventory_app.route('<string:id>/<string:id2>/recorddata/')
+@inventory_app.route('<string:id>/<string:id2>/editrecords/data/')
 def fetch_edit_records(id, id2):
     results = inventory_viewer.get_records_for_display(id+'.'+id2)
     return jsonify(results)

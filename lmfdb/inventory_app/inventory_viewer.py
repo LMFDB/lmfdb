@@ -143,9 +143,7 @@ def retrieve_records(db, requested_db, requested_coll):
         _c_id = coll_record['_id']
 
         records = idc.get_all_records(db, _c_id)
-        inv.log_dest.info(records)
-        inv.log_dest.info(coll_record)
-        return {'data':records['data'], 'scrape_date':coll_record['scan_date']}
+        return {'data':ih.empty_null_record_info(records['data']), 'scrape_date':coll_record['scan_date']}
 
     except Exception as e:
         inv.log_dest.error("Error retrieving inventory "+requested_db+'.'+requested_coll+' '+str(e))

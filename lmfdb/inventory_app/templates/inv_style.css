@@ -27,6 +27,12 @@
   min-height: 30px;
 }
 
+.locked_input {
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  min-height: 30px;
+  border : none;
+}
 .input_sections {
   display:inline;
 }

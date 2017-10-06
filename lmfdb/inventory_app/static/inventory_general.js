@@ -1,3 +1,4 @@
+var recordHashMap; //Dummy in general, some pages use this
 
 //---------- General block and list handling ---------------------
 
@@ -15,6 +16,7 @@ function Block(field, key, text, docElementId){
   this.docElementId = docElementId;
   this.special = false
   this.editable = true; //Whether field is editable, or not
+  this.record = false;
 }
 
 function BlockList(db, coll){
@@ -28,10 +30,13 @@ function BlockList(db, coll){
   this.delBlock = delBlock;
   this.getBlock = getBlock;
   this.setSpecialById = setSpecialById;
+  this.setRecordById = setRecordById;
   this.getBlockIdsFromPartialID = getBlockIdsFromPartialID;
 }
 function addBlock(field, key, text, docElementId){
 	//Add a block to list
+  console.log(typeof(text), text instanceof Array);
+  if(text instanceof Array) text = text.join('; ');
 	var myBlock = new Block(field, key, text, docElementId);
   this.blockList[docElementId] = myBlock;
 }
@@ -61,6 +66,11 @@ function getBlockIdsFromPartialID(id){
 function setSpecialById(id){
     //Tag the block with id=id as a special
     this.getBlock(id).special = true;
+}
+
+function setRecordById(id){
+    //Tag the block with id=id as a special
+    this.getBlock(id).record = true;
 }
 
 function setNotEditableById(id){
@@ -109,6 +119,7 @@ function populateBlocklist(blockList, data){
   //Do specials and then do main data
   var special = false;
   //Data should contain 2 sections, specials and data
+  var record = false;
   for(var item  of ['specials', 'data']){
     if( item == 'specials'){
       special = true;
@@ -117,13 +128,18 @@ function populateBlocklist(blockList, data){
     }
     for(var field in data[item]){
       contents = data[item][field];
+      record = ('hash' in contents && 'oschema' in contents);
       for(tag in contents){
-        docElementId = '#Box_'+field+'_'+tag;
-        blockList.addBlock(field, tag, contents[tag], docElementId);
+        var fieldname = field;
+        docElementId = '#Box_'+fieldname+'_'+tag;
+        blockList.addBlock(fieldname, tag, contents[tag], docElementId);
         if(special) blockList.setSpecialById(docElementId);
+        if(record) blockList.setRecordById(docElementId);
       }
     }
   }
+  if(recordHashMap) fillRecordHashMap(data['data']);
+
 }
 
 //---------- End general data fetching  --------------------------

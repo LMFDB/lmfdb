@@ -169,7 +169,8 @@ function exportEdits(){
     var block = mainBlockList.blockList[key];
     var blockInPage = document.getElementById(block.docElementId.substr(1, block.docElementId.length));
     //First of these conditions shouldn't occur in current way of producing conflict text
-    if(block.newtext.indexOf(tagString) != -1 || blockInPage.value.indexOf(tagString) != -1){
+    var newtext = (block.newtext ? block.newtext.toString() : '');
+    if(newtext.indexOf(tagString) != -1 || (blockInPage && blockInPage.value.indexOf(tagString) != -1)){
       alert(block.fieldname+'.'+block.key+" seems to contain conflicts\n Please fix these before submitting");
       return;
     }
@@ -224,7 +225,7 @@ function blockToServer(block){
   //Restore the identifiers for a special field. This just has to be distinct. The server can correct its actual form
   var name = block.fieldname;
   if(block.special) name = '__' + name + '__';
-
+  if(block.record && recordHashMap) name = recordHashMap.get(name);
   return new ResponseBlock(name, block.key, block.newtext, block.special);
 }
 
@@ -333,6 +334,14 @@ function createResetButt(field){
   butt.title = "Reset to Original";
 
   return butt;
+}
+
+function fitToText(elementId){
+  //We need to fit boxes to text in several places, so make it a function so we can adjust padding or similar
+  if( $(elementId).length){
+    $(elementId).height($(elementId).css('minHeight'));
+    $(elementId).height( $(elementId)[0].scrollHeight);
+  }
 }
 
 function fitAllToText(part_id){
