@@ -71,7 +71,7 @@ class LmfdbUser(UserMixin):
 
     It is backed by MongoDB.
     """
-    properties = ('full_name', 'email', 'url', 'about')
+    properties = ('full_name', 'url', 'about')
 
     def __init__(self, uid):
         if not isinstance(uid, basestring):
@@ -97,17 +97,6 @@ class LmfdbUser(UserMixin):
     @full_name.setter
     def full_name(self, full_name):
         self._data['full_name'] = full_name
-        self._dirty = True
-
-    @property
-    def email(self):
-        return self._data['email']
-
-    @email.setter
-    def email(self, email):
-        if not self._validate_email(email):
-            raise Exception("Email <%s> is not valid!" % email)
-        self._data['email'] = email
         self._dirty = True
 
     @property
@@ -189,10 +178,6 @@ class LmfdbUser(UserMixin):
                         self._authenticated = False
                     break
         return self._authenticated
-
-    def _validate_email(self, email):
-        """should do a regex match"""
-        return True
 
     def save(self):
         if not self._dirty:
