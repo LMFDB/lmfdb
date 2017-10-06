@@ -8,6 +8,7 @@ from datetime import datetime as dt
 
 # Initialize the Flask application
 inventory_app = Blueprint('inventory_app', __name__, template_folder='./templates', static_folder='./static', static_url_path = 'static/')
+url_pref = '/inventory/'
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 #Set to info, debug etc
@@ -27,23 +28,23 @@ def css():
 #The root of edit pages, lists databases having inventory data
 @inventory_app.route('')
 def show_edit_root():
-    return render_template('edit_show_list.html', db_name = None, nice_name=None, listing=inventory_viewer.get_edit_list(), bread=[['&#8962;', url_for('inventory_app.show_edit_root')]])
+    return render_template('edit_show_list.html', db_name = None, nice_name=None, listing=inventory_viewer.get_edit_list(), bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]])
 
 #Edit page per DB, lists collections
 @inventory_app.route('<string:id>/')
 def show_edit_child(id):
     nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = None)
-    return render_template('edit_show_list.html', db_name=id, nice_name=nice_name, listing=inventory_viewer.get_edit_list(id), bread=[['&#8962;', url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
+    return render_template('edit_show_list.html', db_name=id, nice_name=nice_name, listing=inventory_viewer.get_edit_list(id), bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
 
 #Viewer page per collection, shows formatted fields
 @inventory_app.route('<string:id>/<string:id2>/')
 def show_inventory(id, id2):
-    bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)]]
     return render_template('view_inventory.html', db_name=id, collection_name=id2, bread=bread, table_fields=linv.display_field_order(), info_fields=linv.info_field_order())
 
 @inventory_app.route('<string:id>/<string:id2>/records/')
 def show_records(id, id2):
-    bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['records', url_for('inventory_app.show_records', id=id, id2=id2)]]
     nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
     return render_template('view_records.html', db_name=id, collection_name=id2, bread=bread, record_fields=linv.record_field_order(), nice_name=nice_name)
 
@@ -51,7 +52,7 @@ def show_records(id, id2):
 @inventory_app.route('<string:id>/<string:id2>/edit/')
 #@login_required
 def show_edit_inventory(id, id2):
-    bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
     return render_template('edit_inventory.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), bread=bread)
 
 #Edit data source to populate inventory pages
@@ -62,16 +63,16 @@ def fetch_edit_inventory(id, id2):
     return jsonify(results)
 
 #Edit page per collection, shows editable fields
-@inventory_app.route('<string:id>/<string:id2>/editrecords/')
+@inventory_app.route('<string:id>/<string:id2>/records/edit/')
 #@login_required
 def show_edit_records(id, id2):
-    bread=[['&#8962;', url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['records', url_for('inventory_app.show_records', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_records', id=id, id2=id2)]]
     nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
     return render_template('edit_records.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), record_fields=linv.record_field_order(), bread=bread, nice_name =nice_name, record_noedit=linv.record_noeditable())
 
 #Edit data source to populate inventory pages
 @inventory_app.route('<string:id>/<string:id2>/records/data/')
-@inventory_app.route('<string:id>/<string:id2>/editrecords/data/')
+@inventory_app.route('<string:id>/<string:id2>/records/edit/data/')
 def fetch_edit_records(id, id2):
     results = inventory_viewer.get_records_for_display(id+'.'+id2)
     return jsonify(results)
@@ -87,7 +88,8 @@ def edit_success(request=request):
         new_url = url_for('inventory_app.show_edit_root')
     else:
         new_url = url_info['parent']
-    bread=[['&#8962;', url_for('inventory_app.show_edit_root')]]
+    print url_info, new_url
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
     return render_template('edit_success.html', new_url=new_url, db_name=url_info['db_name'], collection_name=url_info['collection_name'], bread=bread)
 
 #Page shown after failing edits
@@ -108,7 +110,7 @@ def edit_failure(request=request):
     new_url = str(request.referrer)
     url_info = ih.parse_edit_url(new_url)
 
-    bread=[['&#8962;', url_for('inventory_app.show_edit_root')]]
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
     mess = "Error "+str(errcode)+": ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+errstr+" for "+url_info['db_name']+"."+url_info['collection_name']
     return render_template('edit_failure.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 

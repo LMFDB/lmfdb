@@ -35,7 +35,6 @@ function BlockList(db, coll){
 }
 function addBlock(field, key, text, docElementId){
 	//Add a block to list
-  console.log(typeof(text), text instanceof Array);
   if(text instanceof Array) text = text.join('; ');
 	var myBlock = new Block(field, key, text, docElementId);
   this.blockList[docElementId] = myBlock;

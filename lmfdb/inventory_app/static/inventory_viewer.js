@@ -12,7 +12,6 @@ function populateViewerPage(blockList, startVisible=true){
   var dataDiv = document.getElementById('dataDiv');
   var specialFields = [];
   var keys = Object.keys(blockList.blockList).sort();
-  console.log(keys);
   var uniq_keys = {};
   for(var i=0; i<keys.length; i++){
     var str = keys[i];
@@ -107,7 +106,6 @@ function createInfoTable(blockList, info, notes){
 
   var div = document.createElement('div');
   div.innerHTML = "NOTES: " +blockList.getBlock('#Box_NOTES_description').text;
-  console.log(div.innerHTML);
   specialsDiv.appendChild(div);
 
 }

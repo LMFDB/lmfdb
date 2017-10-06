@@ -41,7 +41,7 @@ function flashName(item){
 
 {% block main_body %}
   {% for item in listing %}
-    <h2 class='link'><a href = './{{item[0]}}'>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
+    <h2 class='link'><a href = {{url_for('inventory_app.show_inventory', id=db_name, id2=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
 
     {% if db_name is none %}
       {% if current_user.is_authenticated() %}
@@ -53,13 +53,13 @@ function flashName(item){
     {% else %}
       {% if current_user.is_authenticated() %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
-        <a href = './{{item[0]}}/edit/' id=invbutton>Edit Inventory</a>
-        <a href = './{{item[0]}}/records/' id=invbutton>View Records</a>
-        <a href = './{{item[0]}}/editrecords/' id=invbutton>Edit Records</a>
+        <a href = {{url_for('inventory_app.show_edit_inventory', id=db_name, id2=item[0])}} id=invbutton>Edit Inventory</a>
+        <a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
+        <a href = {{url_for('inventory_app.show_edit_records', id=db_name, id2=item[0])}} id=invbutton>Edit Records</a>
       {% else %}
         <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
         <input type='button' value ='Edit Inventory' title ='Please login to edit' disabled class=disabledbutton>
-        <a href = './{{item[0]}}/records/' id=invbutton>View Records</a>
+        <a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
         <input type='button' value ='Edit Record Types' title ='Please login to edit' disabled class=disabledbutton>
       {% endif %}
 

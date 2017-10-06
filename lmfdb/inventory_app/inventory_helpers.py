@@ -248,6 +248,7 @@ def parse_edit_url(url):
         url = url + '/' #Ensure trailing slash
         trail_slash = False
     parts = urlparse(url)
+    print parts
     #Parts is properly split with path being all directory stuff
     try:
         path_parts = parts.path.split('/')
@@ -260,6 +261,7 @@ def parse_edit_url(url):
 
     parent = None
     try:
+        print path_parts[0:-1]
         parent = '/'.join(path_parts[0:-2])
     except Exception as e:
         log_dest.error(path_parts, e)
