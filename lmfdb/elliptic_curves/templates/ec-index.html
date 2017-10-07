@@ -77,7 +77,7 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 <h2> Search </h2>
 Please enter a value or leave blank:
 <p></p>
-<form>
+<form id='search' onsubmit="cleanSubmit(this.id)">
   <table>
     <tr>
       <td>{{ KNOWL('ec.q.conductor',title = "conductor") }}</td>
