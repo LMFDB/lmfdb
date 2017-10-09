@@ -193,22 +193,52 @@ def class_group_request_error(info, bread):
     t = 'Class Groups of Quadratic Imaginary Fields'
     return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
 
+# Helper for stats page
+# Input is 3 parallel lists
+# li has list of values for a fixed Galois group, each n
+# tots is a list of the total number of fields in each degree n
+# t is the list of t numbers
+def galstatdict(li, tots, t):
+    return [ {'cnt': comma(li[nn]), 
+              'prop': format_percentage(li[nn], tots[nn]),
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&galois_group=%s'%(nn+1,"%dt%d"%(nn+1,t[nn]))} for nn in range(len(li))]
+
 @nf_page.route("/stats")
 def statistics():
     t = 'Global number field statistics'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number field statistics', '')]
     init_nf_count()
     n = statdb().find_one({'_id': 'degree'})['counts']
-    nt = statdb().find_one({'_id': 'nt'})['counts']
     nsig = statdb().find_one({'_id': 'nsig'})['counts']
-    h = statdb().find_one({'_id': 'h_range'})['counts']
+    # Galois groups
+    nt_all = statdb().find_one({'_id': 'nt'})['counts']
+    nt = [nt_all[j] for j in range(7)]
+    # Galois group families
+    cn = galstatdict([u[0] for u in nt_all], n, [1 for u in nt_all])
+    sn = galstatdict([u[max(len(u)-1,0)] for u in nt_all], n, [len(u) for u in nt_all])
+    an = galstatdict([u[max(len(u)-2,0)] for u in nt_all], n, [len(u)-1 for u in nt_all])
+    # t-numbers for D_n
+    dn_tlist = [1,1,2,3,2,3,2,6,3,3,2,12,2,3,2,56,2,13,2,10,5,3,2]
+    dn = galstatdict(statdb().find_one({'_id': 'dn'})['counts'], n, dn_tlist)
 
+    h = statdb().find_one({'_id': 'h_range'})['counts']
     has_h = statdb().find_one({'_id': 'has_h'})['val']
+    hdeg = statdb().find_one({'_id': 'hdeg'})['counts']
+    has_hdeg = statdb().find_one({'_id': 'has_hdeg'})['counts']
+    hdeg = [ [ {'cnt': comma(hdeg[nn][j]), 
+              'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s'%(nn+1,str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))] for nn in range(len(hdeg))]
+
+    has_hdeg = [{'cnt': comma(has_hdeg[nn]),
+                 'prop': format_percentage(has_hdeg[nn], n[nn]),
+                 'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=1-10000000000000'%(nn+1)} for nn in range(len(has_hdeg))]
     maxt = 1+max([len(entry) for entry in nt])
 
     nt = [ [ {'cnt': comma(nt[nn][tt]), 
               'prop': format_percentage(nt[nn][tt], n[nn]),
               'query': url_for(".number_field_render_webpage")+'?degree=%d&galois_group=%s'%(nn+1,"%dt%d"%(nn+1,tt+1))} for tt in range(len(nt[nn]))] for nn in range(len(nt))]
+    # Totals for signature table
+    sigtotals = [ comma(sum([nsig[nn][r2] for nn in range(max(r2*2-1,0),23)])) for r2 in range(12)]
     nsig = [ [ {'cnt': comma(nsig[nn][r2]), 
               'prop': format_percentage(nsig[nn][r2], n[nn]),
               'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
@@ -221,6 +251,14 @@ def statistics():
     h[2]['label'] = '$10<h\leq 10^2$'
     h[0]['query'] = url_for(".number_field_render_webpage")+'?class_number=1'
 
+    # Class number 1 by signature
+    sigclass1 = statdb().find_one({'_id': 'sigclass1'})['counts']
+    sighasclass = statdb().find_one({'_id': 'sighasclass'})['counts']
+    sigclass1 = [ [ {'cnt': comma(sigclass1[nn][r2]), 
+              'prop': format_percentage(sigclass1[nn][r2], sighasclass[nn][r2]) if sighasclass[nn][r2]>0 else 0,
+              'show': sighasclass[nn][r2]>0,
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
+
     n = [ {'cnt': comma(n[nn]),
            'prop': format_percentage(n[nn], nfields),
            'query': url_for(".number_field_render_webpage")+'?degree=%d'%(nn+1)} for nn in range(len(n))]
@@ -228,11 +266,16 @@ def statistics():
     info = {'degree': n,
             'nt': nt,
             'nsig': nsig,
+            'sigtotals': sigtotals,
             'h': h,
-            'has_h': has_h,
+            'has_h': comma(has_h),
             'has_h_pct': format_percentage(has_h, nfields),
+            'hdeg': hdeg,
+            'has_hdeg': has_hdeg,
+            'sigclass1': sigclass1,
             'total': comma(nfields),
             'maxt': maxt,
+            'cn': cn, 'dn': dn, 'an': an, 'sn': sn,
             'maxdeg': max_deg}
     return render_template("nf-statistics.html", info=info, credit=NF_credit, title=t, bread=bread)
 
@@ -616,7 +659,7 @@ def number_field_search(info):
 
     # nf_logger.debug(query)
     info['query'] = dict(query)
-    if 'lucky' in args:
+    if 'lucky' in info:
         one = nfdb().find_one(query)
         if one:
             label = one['label']
