@@ -21,7 +21,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </tr>
 
 <tr><td>
-	       Hyperelliptic curve(s):
+	      {{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:
 </td>
 
   <td> <select name='inc_hyper'>
@@ -43,7 +43,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </td> 
 
 <td >
-	      Cyclic trigonal curve(s):
+	 {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:
 </td>
 
   <td> <select name='inc_cyc_trig'>
@@ -102,8 +102,18 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </tr>
 
 <tr>
+<td align='left' colspan='4'>{{KNOWL('ag.range_for_group_order',title='Range for the group order')}}: <input type='text' name='groupsize' value="{{info.groupsize}}" size='15'>
+</td>
+</tr>
+
+<tr>
 <td align=left colspan="2"> 
 <button type='submit' value='refine'>Search again</button>
+
+
+<td align=left colspan="2">
+<button type='submit' name='download'>Download diplayed results as Magma</button>
+
 </td></tr>
 </table>
 </form>
