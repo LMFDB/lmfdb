@@ -198,7 +198,6 @@ def diff_records(all_records):
         if lnl > base_len:
           base_len = lnl
           base = doc['schema']
-
     #Calculate diffs for each record
     diffed = -1
     for doc in all_records:
@@ -220,19 +219,31 @@ def diff_records(all_records):
     for doc in new_records:
         schema = doc['schema']
         diffed_schema = [val for val in schema if val not in base]
-        if diffed:
+        if doc['diffed'] and len(diffed_schema) > 0:
             doc['schema'] = diffed_schema
             doc['oschema'] = schema
+            doc['base'] = False
+        elif doc['diffed']:
+            #is base record
+            doc['oschema'] =[]
+            base_rec = doc
+            doc['base'] = True
         else:
             doc['oschema'] = []
+            doc['base'] = False
 
     if base_hash not in [item['hash'] for item in new_records]:
         print 'Creating dummy base record'
         record = make_empty_record(all_records[0])
-        record['count'] = -1
+        record['count'] = 0
         record['schema'] = base
         record['hash'] = base_hash
+        record['base'] = True
         all_records.insert(0,record)
+    else:
+        #Move base record to start of list
+        all_records.remove(base_rec)
+        all_records.insert(0, base_rec)
 
     return all_records
 #End LMFDB report tool temporary borrows _________________________________________________

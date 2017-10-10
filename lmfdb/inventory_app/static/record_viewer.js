@@ -16,15 +16,17 @@ function BaseRecord(num, name){
 function unpackBaseRecord(blockList){
 
     for( var block in blockList.blockList){
-        if( block.substr(block.length-5, block.length) == 'count' && blockList.blockList[block].text == '-1'){
-          var part_id = block.substr(1, block.length-7);
+        //Base record has count = -1 if not present, or empty schema, and not oschema, if is present
+        if( block.substr(block.length-4, block.length) == 'base' && blockList.blockList[block].text){
+          var part_id = block.substr(1, block.length-6); //Remove '_base'
           var blocks = blockList.getBlockIdsFromPartialID(part_id);
-          var tmp_name = blockList.blockList['#'+part_id+'_name'].text;
+          var block = blockList.getBlock('#'+part_id+'_name');
+          var tmp_name = block ? block.text: '';
           var tmp_num = part_id.substr(part_id.lastIndexOf('_')+1, part_id.length);
           return new BaseRecord(tmp_num, tmp_name);
         }
     }
-    return new BaseRecord(-1, '');
+    return new BaseRecord(0, '');
 }
 
 function populateRecordViewerPage(blockList, startVisible=true){
@@ -52,7 +54,6 @@ function populateRecordViewerPage(blockList, startVisible=true){
   entry_styles = ['table_tag'];
 
   base_record = unpackBaseRecord(blockList);
-
   var row = createRecordRow(blockList, 'Key', '', base_record, header=true)
   table.appendChild(row);
   for(var i=0; i < fields.length; i++){
@@ -60,7 +61,6 @@ function populateRecordViewerPage(blockList, startVisible=true){
     if(row){
       if(!row.classList.contains('viewerTableSpecial')){
         var clas = 'viewerTable';
-        console.log(row.classList);
         if(row.classList.contains('viewerTableSole')) clas +='Sole';
          clas += (i%2 == 0 ? 'Even':'Odd');
          row.classList.add(clas);
@@ -77,7 +77,7 @@ function populateRecordViewerPage(blockList, startVisible=true){
 }
 
 function createRecordRow(blockList, field, id_start, base_record, header=false){
-
+//field is the set id, in this case sequential numbers, used as record Num
   var table_row = document.createElement('tr');
   var clas = header ? 'viewerTableHeaders' : 'viewerTableEls';
   var table_el = document.createElement('td');
@@ -88,7 +88,7 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
   }
   table_el.classList.add(clas);
   table_row.appendChild(table_el);
-
+  var is_base = (blockList.getBlock(id_start+'base') ? blockList.getBlock(id_start+'base').text : false);
   for(var j=0; j < record_fields.length; j++){
     var table_el = document.createElement('td');
     table_el.classList.add(clas);
@@ -101,21 +101,20 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
       if(record_fields[j] == 'schema' && typeof text == 'object'){
         text = text.join('; ');
       }
-      else if(record_fields[j] == 'count' && text == '-1'){
+      else if(record_fields[j] == 'count' && text == '0'){
         text = 'Dummy Base';
         table_el.title = 'Record does not exist';
         table_row.classList.add('viewerTableSpecial');
-      }else if(record_fields[j] == 'extends' && base_record && blockList.getBlock(id_start+'diffed').text){
+      }else if(record_fields[j] == 'extends' && base_record && blockList.getBlock(id_start+'diffed').text && ! is_base){
         text = base_record.displayname;
       }
-
       if(text) table_el.innerHTML = text;
     }
     table_row.appendChild(table_el);
   }
   //Non-diffed rows flagged as sole
   if( !header && ! blockList.getBlock(id_start+'diffed').text) table_row.classList.add('viewerTableSole');
-
+  if( is_base) table_row.classList.add('viewerTableSpecial');
   return table_row;
 
 }

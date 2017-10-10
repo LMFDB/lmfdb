@@ -54,7 +54,7 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
         record_name = ih.get_description_key(file)
         DB_name = record_name[0]
         if DB_name != last_db:
-            inv.log_dest.info("Uploading " + DB_name+" ("+str(progress_tracker)+" of <"+str(n_dbs)+')')
+            inv.log_dest.info("Uploading " + DB_name+" ("+str(progress_tracker)+" of <="+str(n_dbs)+')')
             last_db = DB_name
             progress_tracker += 1
         coll_name = record_name[1]
