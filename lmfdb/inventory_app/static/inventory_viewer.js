@@ -74,6 +74,7 @@ function createViewerRow(blockList, field, id_start, header=false){
       }
     }
     table_row.appendChild(table_el);
+    if(table_fields[j] == 'type' && block && block.text == "Record cannot be found containing key") table_row.classList.add('viewerTableNoKey');
   }
   return (special ? null : table_row);
 

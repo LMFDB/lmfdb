@@ -144,6 +144,9 @@ div.hide{
 .viewerTableSoleEven{
     background-color : #ffebcc;
 }
+.viewerTableNoKey{
+    background-color : #ccffff;
+}
 
 .disabledbutton{
     background-color :  {{color.button_background_inactive}}  !important;

@@ -107,6 +107,8 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
         table_row.classList.add('viewerTableSpecial');
       }else if(record_fields[j] == 'extends' && base_record && blockList.getBlock(id_start+'diffed').text && ! is_base){
         text = base_record.displayname;
+      }else if(record_fields[j] == 'extends' && is_base){
+        text = '[Is base record]';
       }
       if(text) table_el.innerHTML = text;
     }

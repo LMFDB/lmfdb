@@ -9,18 +9,22 @@ from inventory_db_inplace import update_fields
 def get_nicename(db_name, collection_name):
     """Return the nice_name string for given db/coll pair"""
 
-    inv.setup_internal_client()
-    db = inv.int_client[inv.ALL_STRUC.name]
-    if collection_name:
-        db_id = idc.get_db_id(db, db_name)
-        coll_rec = idc.get_coll(db, db_id['id'], collection_name)
-        nice_name = coll_rec['data']['nice_name']
-    else:
-        db_rec = idc.get_db(db, db_name)
-        print db_rec
-        nice_name = db_rec['data']['nice_name']
-
-    return nice_name
+    try:
+        inv.setup_internal_client()
+        db = inv.int_client[inv.ALL_STRUC.name]
+        if collection_name:
+            db_id = idc.get_db_id(db, db_name)
+            coll_rec = idc.get_coll(db, db_id['id'], collection_name)
+            nice_name = coll_rec['data']['nice_name']
+        else:
+            db_rec = idc.get_db(db, db_name)
+            print db_rec
+            nice_name = db_rec['data']['nice_name']
+        return nice_name
+    except Exception as e:
+        inv.log_dest.error('Failed to get nice name for '+db_name+' '+collection_name+' '+str(e))
+        #Can't return nice name so return None
+        return None
 
 def gen_retrieve_db_listing(db, db_name=None):
     """Retrieve listing for all or given database.
