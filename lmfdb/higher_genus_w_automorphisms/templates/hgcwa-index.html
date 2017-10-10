@@ -12,8 +12,12 @@ text-align:right;
 </style>
 
 <div>
-{{ KNOWL_INC('dq.curve.highergenus.aut.extent') }}
+Currently the database contains all groups G acting as automorphisms of curves X from genus 2 up to genus 15 so that the quotient space X/G is the Riemann sphere (X/G has genus 0).  There are currently 31770 refined passports in the database.
 </div>
+
+<!-- <div>
+{{ KNOWL_INC('dq.curve.highergenus.aut.extent') }}
+</div> -->
 
 
       <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
@@ -77,6 +81,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	<span class="formexample">e.g. [4,2]</span>
       </td>
           </tr>
+
 	  <tr>
             <td align=right>
               {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
@@ -125,7 +130,14 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
                 </td>  <td>
 	<span class="formexample"></span>
 	 </td></tr>
-	  
+	 
+        <tr>
+        <td align=right>
+ {{KNOWL('ag.range_for_group_order',title='Range for the group order')}}:    
+        </td><td><input type="text" name="groupsize" placeholder="2..5"></td>
+        </tr>
+ 
+ 
           <tr>
           <td align=right>
               Maximum number of families to display:
