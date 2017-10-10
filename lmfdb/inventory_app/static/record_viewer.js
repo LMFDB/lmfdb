@@ -1,5 +1,5 @@
 
-var tooltip_dict = {'dummy': 'Record does not exist', 'extends': 'Schema is displayed as diff from this record'}
+var tooltip_dict = {'dummy': 'Record does not exist', 'extends': 'Schema is displayed as diff from numbered record', 'base' : 'This is the base record which others extend'}
 
 function BaseRecord(num, name){
   //Holds the info about the base record for the diffed record types
@@ -103,12 +103,13 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
       }
       else if(record_fields[j] == 'count' && text == '0'){
         text = 'Dummy Base';
-        table_el.title = 'Record does not exist';
+        table_el.title = tooltip_dict['dummy'];
         table_row.classList.add('viewerTableSpecial');
       }else if(record_fields[j] == 'extends' && base_record && blockList.getBlock(id_start+'diffed').text && ! is_base){
         text = base_record.displayname;
       }else if(record_fields[j] == 'extends' && is_base){
         text = '[Is base record]';
+        table_el.title = tooltip_dict['base'];
       }
       if(text) table_el.innerHTML = text;
     }
