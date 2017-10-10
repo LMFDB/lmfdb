@@ -41,9 +41,9 @@ function flashName(item){
 
 {% block main_body %}
   {% for item in listing %}
-    <h2 class='link'><a href = {{url_for('inventory_app.show_inventory', id=db_name, id2=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
 
     {% if db_name is none %}
+      <h2 class='link'><a href = {{url_for('inventory_app.show_edit_child', id=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
       {% if current_user.is_authenticated() %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {db:"{{item[0]}}"})'>
       {% else %}
@@ -51,6 +51,7 @@ function flashName(item){
       {% endif %}
 
     {% else %}
+      <h2 class='link'><a href = {{url_for('inventory_app.show_inventory', id=db_name, id2=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
       {% if current_user.is_authenticated() %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
         <a href = {{url_for('inventory_app.show_edit_inventory', id=db_name, id2=item[0])}} id=invbutton>Edit Inventory</a>
