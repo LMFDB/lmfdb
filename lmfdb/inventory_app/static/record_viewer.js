@@ -20,9 +20,9 @@ function unpackBaseRecord(blockList){
         if( block.substr(block.length-4, block.length) == 'base' && blockList.blockList[block].text){
           var part_id = block.substr(1, block.length-6); //Remove '_base'
           var blocks = blockList.getBlockIdsFromPartialID(part_id);
-          var block = blockList.getBlock('#'+part_id+'_name');
+          var block = blockList.getBlock('#'+part_id+id_delimiter+'name');
           var tmp_name = block ? block.text: '';
-          var tmp_num = part_id.substr(part_id.lastIndexOf('_')+1, part_id.length);
+          var tmp_num = part_id.substr(part_id.lastIndexOf(id_delimiter)+1, part_id.length);
           return new BaseRecord(tmp_num, tmp_name);
         }
     }
@@ -38,16 +38,8 @@ function populateRecordViewerPage(blockList, startVisible=true){
 
   var dataDiv = document.getElementById('dataDiv');
 
-  var keys = Object.keys(blockList.blockList).sort();
-  var uniq_keys = {};
-  for(var i=0; i<keys.length; i++){
-    var str = keys[i];
-    //Strip out field, leaving the 'Box_' bit
-    var head = str.substr(1,str.lastIndexOf('_')-1 );
-    uniq_keys[head] = 0;
-  }
-  fields = Object.keys(uniq_keys);
-
+  var fields = getBoxTitles(blockList);
+  
   var table_div = document.createElement('div');
   var table = document.createElement('table');
   table.class = 'viewerTable';
@@ -57,7 +49,7 @@ function populateRecordViewerPage(blockList, startVisible=true){
   var row = createRecordRow(blockList, 'Key', '', base_record, header=true)
   table.appendChild(row);
   for(var i=0; i < fields.length; i++){
-    row = createRecordRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+'_', base_record);
+    row = createRecordRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+id_delimiter, base_record);
     if(row){
       if(!row.classList.contains('viewerTableSpecial')){
         var clas = 'viewerTable';

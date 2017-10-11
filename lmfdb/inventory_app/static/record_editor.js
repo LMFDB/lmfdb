@@ -15,17 +15,8 @@ function populateRecordEditorPage(blockList, startVisible=true){
   var dataDiv = document.getElementById('dataDiv');
   var lastField = "";
   var fieldDiv;
-  var keys = Object.keys(blockList.blockList).sort();
+  var fields = getBoxTitles(blockList);
 
-
-  var uniq_keys = {};
-  for(var i=0; i<keys.length; i++){
-    var str = keys[i];
-    //Strip out field, leaving the 'Box_' bit
-    var head = str.substr(1,str.lastIndexOf('_')-1 );
-    uniq_keys[head] = 0;
-  }
-  fields = Object.keys(uniq_keys);
   var cnter = 1;
   for(var i=0; i<fields.length; i++){
     var block = blockList.getBlock('#'+fields[i]+'_count');
@@ -36,10 +27,10 @@ function populateRecordEditorPage(blockList, startVisible=true){
     cnter++;
 
     fieldDiv = document.createElement('div');
-    fieldDiv.id = 'Box_'+lastField;
+    fieldDiv.id = 'Box'+id_delimiter+lastField;
     fieldDiv.class = 'collapser';
     headerDiv = document.createElement('div');
-    headerDiv.id = 'Header_'+lastField;
+    headerDiv.id = 'Header'+id_delimiter+lastField;
     headerDiv.class = 'header';
     var butt = createCollapserButt(lastField, open=startVisible);
     headerDiv.appendChild(butt);
@@ -50,7 +41,7 @@ function populateRecordEditorPage(blockList, startVisible=true){
       var label = record_fields[j];
       //Show entire schema here
       if(record_fields[j] == 'schema') label = 'oschema';
-      var id = fields[i] +'_'+label;
+      var id = fields[i] +id_delimiter+label;
       var block = blockList.getBlock('#'+id);
       if(block && isEditable(record_fields[j])){
         var item = createRecordDiv(block.fieldname, block.key);
@@ -78,7 +69,7 @@ function createRecordTitle(item){
 
 function createRecordDiv(item, field){
 
-  var docElementId = 'Box_'+item+'_'+field;
+  var docElementId = 'Box'+id_delimiter+item+id_delimiter+field;
 
   var div = document.createElement("div");
   div.id = item;
@@ -106,7 +97,7 @@ function createRecordDiv(item, field){
 }
 function createRecordLockedDiv(item, field, special){
 
-  var docElementId = 'Box_'+item+'_'+field;
+  var docElementId = 'Box'+id_delimiter+item+id_delimiter+field;
 
   var div = document.createElement("div");
   div.id = item;

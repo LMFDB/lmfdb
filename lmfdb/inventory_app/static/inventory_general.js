@@ -1,5 +1,6 @@
 var recordHashMap; //Dummy in general, some pages use this
 
+var id_delimiter = ':'; //Character(s) used to join sections of ids
 //---------- General block and list handling ---------------------
 
 function Block(field, key, text, docElementId){
@@ -81,6 +82,19 @@ function setNotEditableById(id){
 
 //---------- Helpers for some other block-wise tasks -------------
 
+function getBoxTitles(blockList){
+  //Returns all the unique box names. Assumes name is all the bit before the final
+  var keys = Object.keys(blockList.blockList).sort();
+  var uniq_keys = {};
+  for(var i=0; i<keys.length; i++){
+    var str = keys[i];
+    //Strip out field, leaving the 'Box_' bit
+    var head = str.substr(1,str.lastIndexOf(id_delimiter)-1 );
+    uniq_keys[head] = 0;
+  }
+  var fields = Object.keys(uniq_keys);
+  return fields;
+}
 
 //---------- End helpers for some other block-wise tasks ---------
 
@@ -130,7 +144,7 @@ function populateBlocklist(blockList, data){
       record = ('hash' in contents && 'oschema' in contents);
       for(tag in contents){
         var fieldname = field;
-        docElementId = '#Box_'+fieldname+'_'+tag;
+        docElementId = '#Box'+id_delimiter+fieldname+id_delimiter+tag;
         blockList.addBlock(fieldname, tag, contents[tag], docElementId);
         if(special) blockList.setSpecialById(docElementId);
         if(record) blockList.setRecordById(docElementId);
@@ -224,7 +238,7 @@ function createCollapserButt(field, open=true){
   butt.style='float:inherit;display:inline;';
   butt.value = open ? "-" : "+";
   butt.onclick = (function() {
-    var box_id = 'Box_'+field;
+    var box_id = 'Box'+id_delimiter+field;
 		return function() {
 			this.blur();
       var div = document.getElementById(box_id);
@@ -256,7 +270,13 @@ function setScanDate(date){
 
 function setNiceTitle(blockList){
   var el = document.getElementById('nicename');
-  var nameblock = blockList.getBlock('#Box_INFO_nice_name');
+  var nameblock = blockList.getBlock('#Box'+id_delimiter+'INFO'+id_delimiter+'nice_name');
   if(nameblock && el) el.innerHTML = nameblock.text;
+
+}
+
+function escape_jq( myid ) {
+
+    return myid.replace( /(:|\.|\[|\]|,|=|@)/g, "\\$1" );
 
 }

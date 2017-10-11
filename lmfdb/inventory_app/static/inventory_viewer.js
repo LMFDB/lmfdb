@@ -11,15 +11,8 @@ function populateViewerPage(blockList, startVisible=true){
   var specialsDiv = document.getElementById('specialsDiv');
   var dataDiv = document.getElementById('dataDiv');
   var specialFields = [];
-  var keys = Object.keys(blockList.blockList).sort();
-  var uniq_keys = {};
-  for(var i=0; i<keys.length; i++){
-    var str = keys[i];
-    //Strip out field, leaving the 'Box_' bit
-    var head = str.substr(1,str.lastIndexOf('_')-1 );
-    uniq_keys[head] = 0;
-  }
-  fields = Object.keys(uniq_keys);
+
+  var fields = getBoxTitles(blockList);
 
   var table_div = document.createElement('div');
   var table = document.createElement('table');
@@ -29,7 +22,7 @@ function populateViewerPage(blockList, startVisible=true){
   var row = createViewerRow(blockList, 'Key', '', header=true)
   table.appendChild(row);
   for(var i=0; i < fields.length; i++){
-    row = createViewerRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+'_');
+    row = createViewerRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+id_delimiter);
     if(row){
       if(i%2 == 0){
         row.classList.add('viewerTableEven');
@@ -91,7 +84,7 @@ function createInfoTable(blockList, info, notes){
     table_row.appendChild(el1);
     var el2 = document.createElement('td');
     el2.classList.add('viewerTableEls');
-    var block = blockList.getBlock('#'+info+'_'+info_fields[j]);
+    var block = blockList.getBlock('#'+info+id_delimiter+info_fields[j]);
     if(block) el2.innerHTML = block.text;
     if(j%2 == 0){
       table_row.classList.add('viewerTableEven');
@@ -106,7 +99,7 @@ function createInfoTable(blockList, info, notes){
   specialsDiv.appendChild(table);
 
   var div = document.createElement('div');
-  div.innerHTML = "NOTES: " +blockList.getBlock('#Box_NOTES_description').text;
+  div.innerHTML = "NOTES: " +blockList.getBlock('#Box'+id_delimiter+'NOTES'+id_delimiter+'description').text;
   specialsDiv.appendChild(div);
 
 }

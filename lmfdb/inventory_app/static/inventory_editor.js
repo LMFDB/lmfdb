@@ -27,25 +27,19 @@ function resetEdits(blockid=null){
     var blockIds = mainBlockList.getBlockIdsFromPartialID(blockid);
     for(id of blockIds){
       var block = mainBlockList.getBlock(id);
-        block.newtext = block.text;
-        block.edited = false;
-        $(block.docElementId).val(block.newtext);
-        //Re-fit lengths
-        if( $(block.docElementId).length){
-          $(block.docElementId).height( $(block.docElementId)[0].scrollHeight);
-        }
+      block.newtext = block.text;
+      block.edited = false;
+      $(escape_jq(block.docElementId)).val(block.newtext);
+      fitToText(block.docElementId);
     }
+
   }else{
     //Clean up everything and remove any stored list
       for( var key in mainBlockList.blockList){
         var block = mainBlockList.blockList[key];
         block.newtext = block.text;
         block.edited = false;
-        $(block.docElementId).val(block.newtext);
-        //Re-fit lengths
-        if( $(block.docElementId).length){
-          $(block.docElementId).height( $(block.docElementId)[0].scrollHeight);
-        }
+        fitToText(block.docElementId);
       }
       console.log("Removing "+'list'+pageKey);
       myStore.removeItem('list'+pageKey);
@@ -112,19 +106,19 @@ function retrieveBlockList(){
     var block;
     for(prop in list){
       block = mainBlockList.getBlock(prop);
-      if(list[prop].edited && list[prop].text != block.text && list[prop].newtext != block.text ){
+      if(list[prop].edited && block && list[prop].text != block.text && list[prop].newtext != block.text ){
         console.log("Field changed on server!");
         //If our changes match the new server text then we don't need to submit an edit
         if(list[prop].newtext != block.text){
             block.edited = list[prop].edited;
             var tmpStr = tagString+"New server text"+tagStringClose+": "+block.text + '\n'+tagString+'Your text'+tagStringClose+': ' + list[prop].newtext;
             block.newtext = list[prop].newtext;
-            $(block.docElementId).val(String(tmpStr));
+            $(escape_jq(block.docElementId)).val(String(tmpStr));
         }
       }else if(list[prop].edited){
         block.edited = list[prop].edited;
         block.newtext = list[prop].newtext;
-        $(block.docElementId).val(String(block.newtext));
+        $(escape_jq(block.docElementId)).val(String(block.newtext));
       }
     }
   }
@@ -285,7 +279,7 @@ function populateEditorPage(blockList, startVisible=startVisible){
 
 function createItemDiv(item, field, special){
 
-  var docElementId = 'Box_'+item+'_'+field;
+  var docElementId = 'Box'+id_delimiter+item+id_delimiter+field;
 
   var div = document.createElement("div");
   div.id = item;
@@ -324,11 +318,9 @@ function createResetButt(field){
   butt.style='float:inherit;display:inline;';
   butt.value = "Reset block";
   butt.onclick = (function() {
-    var box_id = 'Box_'+field;
 		return function() {
 			this.blur();
-      console.log(box_id);
-      resetEdits(box_id);
+      resetEdits(field);
 		}
 	})();
   butt.title = "Reset to Original";
@@ -338,9 +330,10 @@ function createResetButt(field){
 
 function fitToText(elementId){
   //We need to fit boxes to text in several places, so make it a function so we can adjust padding or similar
-  if( $(elementId).length){
-    $(elementId).height($(elementId).css('minHeight'));
-    $(elementId).height( $(elementId)[0].scrollHeight);
+  var jq_elementId = escape_jq(elementId);
+  if( $(jq_elementId).length){
+    $(jq_elementId).height($(jq_elementId).css('minHeight'));
+    $(jq_elementId).height( $(jq_elementId)[0].scrollHeight);
   }
 }
 
@@ -400,7 +393,7 @@ function toggleTypePopup(box_id, data){
 function createTypePopButtons(blocklist, options){
 
   for(var key in blocklist.blockList){
-    var parts = key.split('_');
+    var parts = key.split(id_delimiter);
     if(parts[parts.length - 1] == 'type'){
       createDOMPopButton(key.substr(1, key.length), options);
     }

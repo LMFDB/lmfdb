@@ -28,7 +28,7 @@
         //Loop over blocks and fill text
         for( var key in mainBlockList.blockList){
             var block = mainBlockList.blockList[key];
-            $(block.docElementId).val(String(block.text));
+            $(escape_jq(block.docElementId)).val(String(block.text));
         }
       //Now try fetching a stored list and repopulating
       retrieveBlockList();
