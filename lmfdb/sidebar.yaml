@@ -169,20 +169,17 @@
            status: future
          - title: Shimura varieties
            status: future
-           colspan: onecolumn 
+           colspan: onecolumn
          - title: Higher
            status: future
      - title: ""
        style: rotate
-       status: beta_rotated
        part2:
          - title: "Abelian Varieties:"
-           status: beta
            part3:
               - title: $/\F_{q}$
                 url_for: "abvarfq.abelian_varieties"
-                status: beta
-                colspan: onecolumn 
+                colspan: onecolumn
 
 5Fields:
    type: simple
