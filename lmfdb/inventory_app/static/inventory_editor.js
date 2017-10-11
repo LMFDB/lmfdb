@@ -189,8 +189,10 @@ function exportEdits(){
 function submitEdits(dest){
 
   console.log("Submitting");
+  showSubmitInProgress();
   var responseText = exportEdits();
   if(!responseText){
+    resetSubmitInProgress();
     return;
   }
 
@@ -221,6 +223,26 @@ function blockToServer(block){
   if(block.special) name = '__' + name + '__';
   if(block.record && recordHashMap) name = recordHashMap.get(name);
   return new ResponseBlock(name, block.key, block.newtext, block.special);
+}
+
+function showSubmitInProgress(){
+  //Make some change to page to show that submission is procededing
+  //This might be nice as changing the submmit button to a spinner?
+  //For now we hide it and put in 'Submitting...'
+  var el = document.getElementById('SubmitButton');
+  el.classList.add('hide');
+  el = document.getElementById('SubmitDummy');
+  el.innerHTML = 'Submitting ...';
+}
+
+function resetSubmitInProgress(){
+  //Make some change to page to show that submission is procededing
+  //This might be nice as changing the submmit button to a spinner?
+  //For now we hide it and put in 'Submitting...'
+  var el = document.getElementById('SubmitButton');
+  el.classList.remove('hide');
+  el = document.getElementById('SubmitDummy');
+  el.classList.add('hide');
 }
 
 //---------- End editor submission and export handling -----------

@@ -64,7 +64,9 @@
 </div>
 <p></p>
 <div id="buttons">
+      <span id='SubmitButton'>
         <input type="button" class = "button" value="Submit" onclick="this.blur();submitEdits('{{ url_for('inventory_app.submit_edits') }}')" title="Submit Edits"/>
+      </span><span id='SubmitDummy'></span>
         <input type="button" class = "resetbutt" value="Reset" onclick="this.blur();resetEdits()" title="Reset to Original"/>
         <input type="button" class = "button" value="Export" onclick="this.blur();exportAsJson()" title="Export Edits as JSON"/> <!--This button should auto-download a file containing the diffs -->
 

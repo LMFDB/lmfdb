@@ -103,7 +103,7 @@ div.header {
     display: block;
 }
 
-div.hide{
+div.hide, span.hide{
     display: none;
     /*visibility: hidden;*/
 }
