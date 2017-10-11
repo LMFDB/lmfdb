@@ -237,42 +237,50 @@ function populateEditorPage(blockList, startVisible=startVisible){
   var dataDiv = document.getElementById('dataDiv');
   var lastField = "";
   var fieldDiv;
-  var keys = Object.keys(blockList.blockList).sort();
 
-  for(var i=0; i < keys.length; i++){
-    var block = blockList.getBlock(keys[i]);
-    if(lastField != block.fieldname){
-      var h2 = createKeyTitle(block.fieldname);
-      lastField = block.fieldname;
-      fieldDiv = document.createElement('div');
-      fieldDiv.id = 'Box_'+lastField;
-      fieldDiv.class = 'collapser';
-      headerDiv = document.createElement('div');
-      headerDiv.id = 'Header_'+lastField;
-      headerDiv.class = 'header';
-      var butt = createCollapserButt(lastField, open=startVisible);
-      headerDiv.appendChild(butt);
-      headerDiv.appendChild(h2);
-      if(block.special){
-          specialsDiv.appendChild(headerDiv);
-      }else{
-          dataDiv.appendChild(headerDiv);
-      }
-    }
-    var item = createItemDiv(block.fieldname, block.key, block.special);
-    fieldDiv.appendChild(item);
+  var fields = getBoxTitles(blockList);
 
-    if(i+1 >= keys.length || blockList.getBlock(keys[i+1]).fieldname != blockList.getBlock(keys[i]).fieldname){
-      //Add block-reset button
-      var butt = createResetButt(lastField);
-      fieldDiv.appendChild(butt);
-    }
-    if(! startVisible) fieldDiv.classList.add('hide');
-    if(block.special){
-        specialsDiv.appendChild(fieldDiv);
+  for(var i=0; i < fields.length; i++){
+
+    var id = fields[i].substr(fields[i].indexOf(id_delimiter)+1, fields[i].length);
+
+    var h2 = createKeyTitle(id);
+    fieldDiv = document.createElement('div');
+    fieldDiv.id = 'Box'+id_delimiter+fields[i];
+    fieldDiv.class = 'collapser';
+    headerDiv = document.createElement('div');
+    headerDiv.id = 'Header'+id_delimiter+fields[i];
+    headerDiv.class = 'header';
+    var butt = createCollapserButt(fields[i], open=startVisible);
+    headerDiv.appendChild(butt);
+    headerDiv.appendChild(h2);
+
+    var blocks = blockList.getBlockIdsFromPartialID('#'+fields[i]);
+    var eg_block = blockList.getBlock(blocks[0]);
+
+    if(eg_block.special){
+        specialsDiv.appendChild(headerDiv);
     }else{
-        dataDiv.appendChild(fieldDiv);
+        dataDiv.appendChild(headerDiv);
     }
+
+    for(blockId in blocks){
+
+      var block = blockList.getBlock(blocks[blockId]);
+      if(!block) continue;
+      var item = createItemDiv(block.fieldname, block.key, block.special);
+      fieldDiv.appendChild(item);
+    }
+      //Add block-reset button
+      var butt = createResetButt(fields[i]);
+      fieldDiv.appendChild(butt);
+      if(! startVisible) fieldDiv.classList.add('hide');
+      if(block.special){
+          specialsDiv.appendChild(fieldDiv);
+      }else{
+          dataDiv.appendChild(fieldDiv);
+      }
+
   }
   $( document ).trigger( "blockListReady");
 }

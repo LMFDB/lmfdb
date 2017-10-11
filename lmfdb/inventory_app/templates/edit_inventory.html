@@ -9,18 +9,12 @@
     var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
     var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
     var jsonTypes = {{ type_data|safe }};
+    var table_fields = {{table_fields | safe}};
 
 </script>
 <script type="text/javascript">
     //Put in initial text and fit boxes to content
     var startVisible = false;
-    function fitToText(elementId){
-      //We need to fit boxes to text in several places, so make it a function so we can adjust padding or similar
-      if( $(elementId).length){
-        $(elementId).height($(elementId).css('minHeight'));
-        $(elementId).height( $(elementId)[0].scrollHeight);
-      }
-    }
 
     function onReady() {
       //Function to be called when data arrives
