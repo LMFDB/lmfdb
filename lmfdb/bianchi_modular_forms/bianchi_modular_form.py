@@ -162,6 +162,8 @@ def bianchi_modular_form_search(**args):
         v_clean['field_label'] = v['field_label']
         v_clean['short_label'] = v['short_label']
         v_clean['level_label'] = v['level_label']
+        v_clean['level_norm']  = v['level_norm']
+        v_clean['level_number'] = v['level_label'].split(".")[1]
         v_clean['label_suffix'] = v['label_suffix']
         v_clean['label'] = v['label']
         v_clean['level_ideal'] = teXify_pol(v['level_ideal'])
@@ -172,6 +174,7 @@ def bianchi_modular_form_search(**args):
         v_clean['cm'] = cm_info(v['CM'])
         res_clean.append(v_clean)
 
+    res_clean.sort(key=lambda x: [int(x['level_norm']), int(x['level_number']), x['label_suffix']])
     info['forms'] = res_clean
     info['count'] = count
     info['start'] = start
@@ -270,6 +273,7 @@ def bmf_field_dim_table(**args):
     info['start'] = start
     info['more'] = int(start + count < nres)
 
+    data.sort(key = lambda x: [int(y) for y in x['level_label'].split(".")])
     dims = {}
     for dat in data:
         dims[dat['level_label']] = d = {}
