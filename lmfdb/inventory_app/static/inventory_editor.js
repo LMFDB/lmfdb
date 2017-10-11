@@ -349,7 +349,7 @@ function fitAllToText(part_id){
   //Fit all text boxes in the div part_id to their content
     var blocks = mainBlockList.getBlockIdsFromPartialID(part_id);
     for (blockid in blocks){
-      fitToText(blockid);
+      fitToText(blocks[blockid]);
     }
 }
 
