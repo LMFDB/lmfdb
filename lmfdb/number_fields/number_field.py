@@ -193,7 +193,7 @@ def class_group_request_error(info, bread):
 
 @nf_page.route("/")
 def number_field_render_webpage():
-    args = request.args
+    args = to_dict(request.args)
     sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
         1 + (d // 2))] for d in range(1, 7)], []) + sum([[[d, 0]] for d in range(7, 11)], [])
     sig_list = sig_list[:10]
@@ -216,7 +216,7 @@ def number_field_render_webpage():
         info['learnmore'] = [(Completename, url_for(".render_discriminants_page")), ('How data was computed', url_for(".how_computed_page")), ('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
         return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
     else:
-        return number_field_search(**args)
+        return number_field_search(args)
 
 @nf_page.route("/random")
 def random_nfglobal():
@@ -517,16 +517,11 @@ def make_disc_key(D):
         D1 = int(Dz.log(10))
     return s, '%03d%s' % (D1, str(Dz))
 
-def number_field_search(**args):
-    info = to_dict(args)
+def number_field_search(info):
 
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Global Number Field search results'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search results', ' ')]
-
-    # for k in info.keys():
-    #  nf_logger.debug(str(k) + ' ---> ' + str(info[k]))
-    # nf_logger.debug('******************* '+ str(info['search']))
 
     if 'natural' in info:
         query = {'label_orig': info['natural']}
@@ -574,18 +569,10 @@ def number_field_search(**args):
     count = parse_count(info)
     start = parse_start(info)
 
-    if info.get('paging'):
-        try:
-            paging = int(info['paging'])
-            if paging == 0:
-                start = 0
-        except:
-            pass
-
     C = base.getDBConnection()
     # nf_logger.debug(query)
     info['query'] = dict(query)
-    if 'lucky' in args:
+    if 'lucky' in info:
         one = C.numberfields.fields.find_one(query)
         if one:
             label = one['label']
