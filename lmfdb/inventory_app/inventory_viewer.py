@@ -233,9 +233,11 @@ def validate_edits(diff):
     #          for change in diff["diffs"]:
     try:
         tmp = diff["db"]
+        assert(tmp is not None)
         tmp = diff["collection"]
+        assert(tmp is not None)
         tmp = diff["diffs"]
-        assert(tmp)
+        assert(tmp is not None)
     except KeyError as e:
         raise DiffKeyError(e.message)
     except TypeError as e:
@@ -263,9 +265,11 @@ def validate_edits(diff):
     try:
         for diff_item in diffs :
             a = diff_item['item']
+            assert(a is not None)
             a = diff_item['field']
+            assert(a is not None)
             a = diff_item['content']
-            assert(a)
+            assert(a is not None)
     except (TypeError, KeyError) as e:
         raise DiffBadType("diffs (triplet errors)"+e.message)
     except Exception as e:
