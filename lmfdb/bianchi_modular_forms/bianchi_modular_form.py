@@ -92,7 +92,12 @@ def bianchi_modular_form_search(**args):
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info:
         # The Label button has been pressed.
-        return bianchi_modular_form_by_label(info['label'])
+        label = info['label']
+        dat = label.split("-")
+        if len(dat)==2: # assume field & level, display space
+            return render_bmf_space_webpage(dat[0], dat[1])
+        else: # assume single newform label; will display an error if invalid
+            return bianchi_modular_form_by_label(label)
 
     query = {}
     for field in ['field_label', 'weight', 'level_norm', 'dimension']:
