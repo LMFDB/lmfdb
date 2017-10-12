@@ -89,5 +89,13 @@ class NumberFieldTest(LmfdbTest):
         L = self.tc.get('/NumberField/junk')
         assert 'Error' in L.data # error mesage
 
+    def test_random_field(self):
+        L = self.tc.get('/NumberField/random', follow_redirects=True)
+        assert 'Discriminant' in L.data 
+
+    def test_statistics(self):
+        L = self.tc.get('/NumberField/stats', follow_redirects=True)
+        assert 'Class number' in L.data 
+
 
 
