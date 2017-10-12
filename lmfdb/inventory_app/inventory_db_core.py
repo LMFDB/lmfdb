@@ -586,3 +586,59 @@ def complete_human_table(inv_db_toplevel, db_id, coll_id):
             updated = set_field(inv_db_toplevel, coll_id, record['name'], rec_set, type='human')
 
 #End table sync --------------------------------------------------------------------------
+#Assorted helper access functions --------------------------------------------------------
+
+def count_colls(inv_db, db_id):
+    """Count collections with given db_id
+    """
+
+    try:
+        table_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return -1
+    coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
+    rec_find = {coll_fields[1]:db_id}
+
+    try:
+        return coll.count(rec_find)
+    except Exception as e:
+        inv.log_dest.error("Error getting data "+str(e))
+        return -1
+
+def get_all_colls(inv_db, db_id):
+    """Fetch all collections with given db_id
+    """
+
+    try:
+        table_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return []
+    coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
+    rec_find = {coll_fields[1]:db_id}
+
+    try:
+        data = coll.find(rec_find)
+        return list(data)
+    except Exception as e:
+        inv.log_dest.error("Error getting data "+str(e))
+        return []
+
+def count_records_and_types(inv_db, coll_id):
+    """ Count the number of record types in given collection
+    """
+
+    try:
+        tbl = inv.ALL_STRUC.record_types[inv.STR_NAME]
+        recs = list(inv_db[tbl].find({'coll_id': coll_id}))
+        n_types = len(recs)
+        print recs
+        n_rec = sum([rec['count'] for rec in recs])
+        return (n_rec, n_types)
+    except Exception as e:
+        inv.log_dest.error("Error getting counts "+str(e))
+        return (-1, -1)
+#End assorted helper access functions ----------------------------------------------------
