@@ -81,12 +81,13 @@ def retrieve_description(db, requested_db, requested_coll):
     try:
         db_tab = db[table_name]
         coll_tab = db[coll_name]
-        _id = db_tab.find_one({inv.STR_NAME:requested_db})['_id']
-        coll_record = coll_tab.find_one({'db_id': _id, inv.STR_NAME:requested_coll})
-        _c_id = coll_record['_id']
-        info = coll_record['INFO']
-        info['nice_name'] = coll_record['nice_name']
-        specials = {'INFO': info, 'NOTES':coll_record['NOTES']}
+        _id = idc.get_db(db, requested_db)['id']
+        coll_record = idc.get_coll(db, _id, requested_coll)
+        _c_id = coll_record['id']
+        info = coll_record['data']['INFO']
+
+        info['nice_name'] = coll_record['data']['nice_name']
+        specials = {'INFO': info, 'NOTES':coll_record['data']['NOTES']}
         request = {'coll_id': _c_id}
 
         fields_auto = inv.ALL_STRUC.get_fields('auto')
