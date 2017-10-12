@@ -196,13 +196,41 @@ def get_records_for_display(full_name):
         inv.log_dest.error("Error decoding inventory object "+ str(e))
         return {'data': None, 'scrape_date': None}
 
+def collate_collection_info(db_name):
+    """Fetches and collates viewable info for collections in named db
+    """
+    inv.setup_internal_client()
+    db = inv.int_client[inv.ALL_STRUC.name]
+    db_info = idc.get_db(db, db_name)
+    if not db_info['exist']:
+        return
+    colls_info = idc.get_all_colls(inv_db, db_info['id'])
+
+    for coll in colls_info:
+        rec_info = idc.count_records_and_types(inv_db, coll['_id'])
+        coll['records'] = rec_info
+
+    return colls_info
+
 #Functions to deal with edit submissions -----------------------------------------------------------
 
+def apply_edits(diff):
+    """ Apply edits as a diff
+    Use for applying edits from exports etc. Copy is explicitly made
+    Note there is also apply_rollback for rollbacks
+    """
+    diff_to_apply = copy.deepcopy(diff)
+    try:
+        validate_edits(diff_to_apply) #This throws custom exceptions
+        diff_to_apply = process_edits(diff_to_apply)
+        update_fields(diff_to_apply)
+    except Exception as e:
+        inv.log_dest.error("Error in edit validation or apply "+str(e))
+        raise e
+
+
 def apply_submitted_edits(response):
-    """ Apply edits submitted as a diffs object
-
-
-    Can
+    """ Apply edits submitted as a diffs object via web, i.e member of response obj
     """
     try:
         inv.log_transac.info(str(response.referrer)+' : '+str(response.data))
