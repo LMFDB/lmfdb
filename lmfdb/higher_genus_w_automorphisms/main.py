@@ -141,11 +141,34 @@ def random_passport():
     label = random_value_from_collection(C.curve_automorphisms.passports,'passport_label')
     return redirect(url_for(".by_passport_label", passport_label=label))
 
+# TODO Move to proper location
+def get_hgcwa_stats():
+    # TODO REPLACE WITH SINGLE INSTANCE
+    C = base.getDBConnection()
+    hgcwa_stats = C.curve_automorphisms.passports.stats
+    stats = {}
+
+    # Populate simple data
+    stats['genus'] = hgcwa_stats.find_one({'_id':'genus'})
+    stats['dim'] = hgcwa_stats.find_one({'_id':'dim'})
+    stats['r'] = hgcwa_stats.find_one({'_id':'r'})
+
+    # Get unique group counts
+    stats['groups_by_genus'] = []
+    groups_by_genus = hgcwa_stats.find({'_id':{'$regex':'^bygroup/'}})
+    for genus in groups_by_genus:
+        num = int(re.search(r'\d+', genus['_id']).group())
+        count = len(genus['counts'])
+        stats['groups_by_genus'].append([num, count])
+    stats['groups_by_genus'].sort()
+
+    return stats
+
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
     info = {
-        'counts': 100,
-        'stats': {},
+        'counts' : 0,
+        'stats': get_hgcwa_stats(),
     }
     credit = '???'
     title = 'Higher Genus Curves with Automorphisms: statistics'
