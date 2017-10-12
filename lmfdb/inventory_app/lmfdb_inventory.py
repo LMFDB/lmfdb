@@ -56,6 +56,17 @@ class db_struc:
         else:
             return None
 
+    def get_table(self, which):
+        if which =='auto':
+            return self.fields_auto
+        elif which == 'human':
+            return self.fields_human
+        elif which == 'records':
+            return self.record_types
+        else:
+            return None
+
+
 #Constant instance of db_struct
 ALL_STRUC = db_struc()
 

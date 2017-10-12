@@ -558,5 +558,31 @@ def trim_human_table(inv_db_toplevel, db_id, coll_id):
             h_db.remove(record)
     return invalidated_keys
 
+def complete_human_table(inv_db_toplevel, db_id, coll_id):
+    """Add missing entries into human-readable table. 'Missing' means anything
+    present in the auto-generated data but not in the human, AND adds keys present only in the
+    human data in also (currently, description)
+
+    inv_db_toplevel -- connection to LMFDB inventory database (no table)
+    db_id -- id of database to strip
+    coll_id -- id of collection to strip
+    """
+    h_db = inv_db_toplevel[inv.ALL_STRUC.fields_human[inv.STR_NAME]]
+    a_db = inv_db_toplevel[inv.ALL_STRUC.fields_auto[inv.STR_NAME]]
+    fields_fields = inv.ALL_STRUC.get_fields('human')[inv.STR_CONTENT]
+    rec_find = {fields_fields[1]:coll_id}
+    auto_cursor = a_db.find(rec_find)
+    for record in auto_cursor:
+        rec_find = {fields_fields[1]:coll_id, fields_fields[2]: record['name']}
+        human_record = h_db.find_one(rec_find)
+        rec_set = {}
+        for field in inv.base_editable_fields:
+            try:
+                a = human_record[field]
+            except:
+                rec_set[field] = None
+        if rec_set:
+            #Creates if absent, else updates with missing fields
+            updated = set_field(inv_db_toplevel, coll_id, record['name'], rec_set, type='human')
 
 #End table sync --------------------------------------------------------------------------

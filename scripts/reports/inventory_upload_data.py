@@ -37,8 +37,6 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
 
         for coll_name in structure_dat[DB_name]:
             inv.log_dest.info("    Uploading collection "+coll_name)
-            coll_entry = invc.set_coll(db, _id['id'], coll_name, coll_name, '', '')
-
             orphaned_keys = upload_collection_structure(db, DB_name, coll_name, structure_dat, fresh=fresh)
             if len(orphaned_keys) != 0:
                 with open('Orph_'+DB_name+'_'+coll_name+'.json', 'w') as file:
@@ -82,15 +80,18 @@ def upload_collection_from_files(db, db_name, coll_name, master_file_name, json_
 
     inv.log_dest.info("Uploading collection description for "+coll_name)
     data = decoder.decode(read_file(json_file_name))
-    upload_collection_description(db, db_name, coll_name, data)
+    upload_collection_description(db, db_name, coll_name, data, fresh=fresh)
 
-def upload_collection_description(db, db_name, coll_name, data):
+def upload_collection_description(db, db_name, coll_name, data, fresh=False):
     """Upload the additional description
 
     db -- LMFDB connection to inventory database
     db_name -- Name of database this collection is in
     coll_name -- Name of collection to upload
     data -- additional data as json object for this collection
+    fresh -- whether to delete existing info (otherwise extra description will be added, overwriting if required, but anything absent from new info will not be clobbered
+
+    Note this only uploads actual data. All mandatory fields should have been filled by the structure upload
     """
 
     try:
@@ -105,14 +106,24 @@ def upload_collection_description(db, db_name, coll_name, data):
 
     try:
         split_data = extract_specials(data)
-
         #Insert the notes and info fields into the collection
-        split_data[inv.STR_NOTES] = ih.blank_all_empty_fields(split_data[inv.STR_NOTES])
-        inv.log_dest.debug(split_data[inv.STR_NOTES])
-        split_data[inv.STR_INFO] = ih.blank_all_empty_fields(split_data[inv.STR_INFO])
-        inv.log_dest.debug(split_data[inv.STR_INFO])
-        _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name, split_data[inv.STR_NOTES], split_data[inv.STR_INFO])
+        try:
+            notes_data = split_data[inv.STR_NOTES]
+            notes_data = ih.blank_all_empty_fields(notes_data)
+            inv.log_dest.debug(notes_data)
+        except:
+            notes_data = None
+        try:
+            info_data = split_data[inv.STR_INFO]
+            info_data = ih.blank_all_empty_fields(info_data)
+            inv.log_dest.debug(info_data)
+        except:
+            info_data = None
+        _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name, notes_data, info_data)
+    except Exception as e:
+        inv.log_dest.error("Failed to refresh collection info "+str(e))
 
+    try:
         for field in split_data['data']:
             dat = split_data['data'][field]
             if not ih.is_record_name(dat):
@@ -131,6 +142,7 @@ def upload_collection_description(db, db_name, coll_name, data):
                 except:
                     pass
                 invc.set_record(db, _c_id['id'], rec_set, type='human')
+
     except Exception as e:
         inv.log_dest.error("Failed to refresh collection "+str(e))
 
@@ -139,11 +151,18 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
 
     Any entered descriptions for keys which still exist are preserved.
     Removed or renamed keys will be returned for handling
+    Collection is entry is created if it doesn't exist,
+    in which case Notes and Info are filled with dummies
     db -- LMFDB connection to inventory database
-    db_name -- Name of database this collection is in
+    db_name -- Name of database this collection is in (MUST exist)
     coll_name -- Name of collection to upload
     structure_dat -- lmfdb db structure as json object
     """
+
+
+    dummy_info = {} #Dummy per collection info, containing basic fields we want included
+    for field in inv.info_editable_fields:
+        dummy_info[field] = None
 
     try:
         coll_entry = structure_dat[db_name][coll_name]
@@ -157,9 +176,9 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
         _c_id = invc.get_coll_id(db, db_entry['id'], coll_name)
         if not _c_id['exist']:
 	    #Collection doesn't exist, create it
-            _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name,  '', '')
+            _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name,  {'description':None}, dummy_info)
         else:
-	    #Delete existing auto-table entries
+	    #Delete existing auto-table entries (no collection => no entries)
            delete_collection_data(db, _c_id['id'], tbl='auto')
         try:
             scrape_date = datetime.datetime.strptime(structure_dat[db_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
@@ -167,6 +186,11 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
             inv.log_dest.info("Scrape date parsing failed "+str(e))
             scrape_date = datetime.datetime.min
         invc.set_coll_scrape_date(db, _c_id['id'], scrape_date)
+
+    except Exception as e:
+        inv.log_dest.error("Failed to refresh collection (db, coll or scrape data) "+str(e))
+
+    try:
         for field in coll_entry['fields']:
             inv.log_dest.info("            Processing "+field)
             invc.set_field(db, _c_id['id'], field, coll_entry['fields'][field])
@@ -180,7 +204,9 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
                 invc.set_record(db, _c_id['id'], coll_entry['records'][record])
 
     except Exception as e:
-        inv.log_dest.error("Failed to refresh collection "+str(e))
+        inv.log_dest.error("Failed to refresh collection entries "+str(e))
+
+
 
     orphaned_keys = []
     if not fresh:
@@ -188,7 +214,14 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
 	    #Trim any human table keys which are now redundant
             orphaned_keys = invc.trim_human_table(db, db_entry['id'], _c_id['id'])
         except Exception as e:
-            inv.log_dest.error("Failed to refresh collection "+str(e))
+            inv.log_dest.error("Failed trimming table "+str(e))
+    else:
+        #Ensure everything mandatory is present in human table
+        try:
+            invc.complete_human_table(db, db_entry['id'], _c_id['id'])
+        except Exception as e:
+            inv.log_dest.error("Failed padding table "+str(e))
+
     return orphaned_keys
 
 def extract_specials(coll_entry):
@@ -287,13 +320,15 @@ def delete_all_tables(db):
         except Exception as e:
             inv.log_dest.error("Error deleting "+ tbl + ' ' +str(e))
 
-def delete_collection_data(inv_db, coll_id, tbl='auto'):
+def delete_collection_data(inv_db, coll_id, tbl):
     """Clean out the data for given collection id
-      Removes all entries for coll_id in auto or human table
+      Removes all entries for coll_id in auto, human or records
     """
     try:
-        fields_tbl = inv.ALL_STRUC.get_fields(tbl)[inv.STR_NAME]
-        fields_fields = inv.ALL_STRUC.get_fields(tbl)[inv.STR_CONTENT]
+        table_dat = inv.ALL_STRUC.get_table(tbl)
+        fields_tbl = table_dat[inv.STR_NAME]
+        fields_fields = table_dat[inv.STR_CONTENT]
+
         rec_find = {fields_fields[1]:coll_id}
         inv_db[fields_tbl].remove(rec_find)
     except Exception as e:
@@ -316,6 +351,7 @@ def delete_by_collection(inv_db, db_name, coll_name):
     #Remove fields entries matching _c_id
     delete_collection_data(inv_db, _c_id['id'], tbl='auto')
     delete_collection_data(inv_db, _c_id['id'], tbl='human')
+    delete_collection_data(inv_db, _c_id['id'], tbl='records')
 
     try:
         inv_db[inv.ALL_STRUC.coll_ids[inv.STR_NAME]].remove({'_id':_c_id['id']})
