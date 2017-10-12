@@ -32,7 +32,6 @@
       <div class="bread">
         {% if bread %}
           <a href="{{bread[0][1]}}">&#8962;</a>
-{# there's a house symbol &#x1f3e0; but it does not work on all browsers#}
           {% for b in bread[1:] -%}
             &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
           {% endfor %}
@@ -47,7 +46,7 @@
           {% endif %}
           {% if user_is_authenticated -%}
             &middot;
-            <a href="{{ url_for('users.info') }}">{{ username }}</a> 
+            <a href="{{ url_for('users.info') }}">{{ username }}</a>
             &middot;
             <a href="{{ url_for('users.logout') }}">Logout</a>
           {%- else -%}
@@ -72,7 +71,7 @@
 <div id="title"><span id="title-content">{% block title_block -%}{%- endblock title_block %}</span></div>
 </div>
 </div>
-<div id="main">
+<div id="inv_main">
   <div id="content">
     {% block main_body -%}{%- endblock main_body %}
   </div>
@@ -109,4 +108,3 @@
 
 
 </html>
-

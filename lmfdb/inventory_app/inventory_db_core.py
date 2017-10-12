@@ -545,8 +545,8 @@ def trim_human_table(inv_db_toplevel, db_id, coll_id):
     coll_id -- id of collection to strip
     """
     invalidated_keys = []
-    h_db = inv_db_toplevel[inv.ALL_STRUC.fields_auto[inv.STR_NAME]]
-    a_db = inv_db_toplevel[inv.ALL_STRUC.fields_human[inv.STR_NAME]]
+    a_db = inv_db_toplevel[inv.ALL_STRUC.fields_auto[inv.STR_NAME]]
+    h_db = inv_db_toplevel[inv.ALL_STRUC.fields_human[inv.STR_NAME]]
     fields_fields = inv.ALL_STRUC.get_fields('human')[inv.STR_CONTENT]
     rec_find = {fields_fields[1]:coll_id}
     human_cursor = h_db.find(rec_find)

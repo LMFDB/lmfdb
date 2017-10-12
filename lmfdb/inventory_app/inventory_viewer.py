@@ -98,7 +98,7 @@ def retrieve_description(db, requested_db, requested_coll):
         collection = db[fields_human[inv.STR_NAME]]
         descr_human = collection.find(request)
 
-        return {'data':patch_records(descr_auto, descr_human), 'specials': specials, 'scrape_date':coll_record['scan_date']}
+        return {'data':patch_records(descr_auto, descr_human), 'specials': specials, 'scrape_date':coll_record['data']['scan_date']}
 
     except Exception as e:
         inv.log_dest.error("Error retrieving inventory "+requested_db+'.'+requested_coll+' '+str(e))
