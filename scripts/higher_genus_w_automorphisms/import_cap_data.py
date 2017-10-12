@@ -14,3 +14,4 @@ cap = C.curve_automorphisms
 # Basic counts for these attributes:
 print("Colelcting statistics on genus, dim, and r attributes.")
 update_attribute_stats(cap, 'passports', ['genus', 'dim', 'r'])
+update_joint_attribute_stats (cap, 'passports', ['genus','group'], prefix='bygroup', unflatten=True)
