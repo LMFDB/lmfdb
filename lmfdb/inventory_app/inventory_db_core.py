@@ -460,7 +460,8 @@ def set_record(inv_db, coll_id, data, type='auto'):
             human_data['description'] = ''
         rec_find = {records_fields[1]:coll_id, records_fields[2]:data['hash']}
         rec_set = {records_fields[3]:ih.null_empty_field(human_data['name']), records_fields[4]:ih.null_empty_field(human_data['description'])}
-        return upsert_and_check(coll, rec_find, rec_set)
+        #Should add human info IFF records exists
+        return update_and_check(coll, rec_find, rec_set)
 
 def update_record_description(inv_db, coll_id, data):
     """Update the 'human' entered info for a record
@@ -635,7 +636,6 @@ def count_records_and_types(inv_db, coll_id):
         tbl = inv.ALL_STRUC.record_types[inv.STR_NAME]
         recs = list(inv_db[tbl].find({'coll_id': coll_id}))
         n_types = len(recs)
-        print recs
         n_rec = sum([rec['count'] for rec in recs])
         return (n_rec, n_types)
     except Exception as e:
