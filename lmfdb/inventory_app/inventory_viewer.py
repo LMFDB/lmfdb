@@ -4,6 +4,7 @@ import inventory_helpers as ih
 import lmfdb_inventory as inv
 import inventory_db_core as idc
 from inventory_db_inplace import update_fields
+from copy import deepcopy
 
 #Functions to populate viewer pages
 def get_nicename(db_name, collection_name):
@@ -219,7 +220,7 @@ def apply_edits(diff):
     Use for applying edits from exports etc. Copy is explicitly made
     Note there is also apply_rollback for rollbacks
     """
-    diff_to_apply = copy.deepcopy(diff)
+    diff_to_apply = deepcopy(diff)
     try:
         validate_edits(diff_to_apply) #This throws custom exceptions
         diff_to_apply = process_edits(diff_to_apply)
