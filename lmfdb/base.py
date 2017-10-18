@@ -256,14 +256,6 @@ def nl2br(s):
     return s.replace('\n', '<br>\n')
 
 
-@app.template_filter('obfuscate_email')
-def obfuscate_email(email):
-    """
-    obfuscating the email
-    TODO: doesn't work yet
-    """
-    return u"%s…@…%s" % (email[:2], email[-2:])
-
 
 @app.template_filter('urlencode')
 def urlencode(kwargs):

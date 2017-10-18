@@ -21,6 +21,7 @@ from lmfdb.utils import (
     to_dict,
     truncate_number,
     comma,
+    format_percentage,
     signtocolour,
     rgbtohex,
     pol_to_html,
@@ -118,6 +119,13 @@ class UtilsTest(unittest2.TestCase):
         """
         self.assertEqual(comma(123), "123")
         self.assertEqual(comma(123456789), "123,456,789")
+
+    def test_format_percentage(self):
+        r"""
+        Checking utility: format_percentage
+        """
+        self.assertEqual(format_percentage(12,31), '     38.71')
+        self.assertEqual(format_percentage(12,37), '     32.43')
 
     def test_signtocolour(self):
         r"""

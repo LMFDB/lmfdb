@@ -59,7 +59,7 @@
 <h2> Search </h2>
 Please enter a value or leave blank:
 <p></p>
-<form>
+<form id='search' onsubmit="cleanSubmit(this.id)">
   <table>
     <tr>
      <td align=right>base {{ KNOWL('nf',title = "number field") }}</td>
