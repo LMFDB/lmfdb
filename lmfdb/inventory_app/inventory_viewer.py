@@ -47,7 +47,7 @@ def gen_retrieve_db_listing(db, db_name=None):
             table = db[coll_name]
             query = {inv.ALL_STRUC.coll_ids[inv.STR_CONTENT][1]:_id}
             records = list(table.find(query, {'_id': 1, 'name' : 1, 'nice_name':1}))
-            records = [(rec['name'], rec['nice_name'], idc.count_records_and_types(db, rec['_id'])) for rec in records]
+            records = [(rec['name'], rec['nice_name'], idc.count_records_and_types(db, rec['_id'], as_string=True)) for rec in records]
     except Exception as e:
         inv.log_dest.error("Something went wrong retrieving db info "+str(e))
         records = None

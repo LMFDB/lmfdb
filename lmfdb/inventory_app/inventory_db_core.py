@@ -2,6 +2,8 @@ import json
 import inventory_helpers as ih
 import lmfdb_inventory as inv
 import datetime as dt
+from lmfdb.utils import comma
+
 #Table creation routines -------------------------------------------------------------
 
 def get_db_id(inv_db, name):
@@ -628,17 +630,20 @@ def get_all_colls(inv_db, db_id):
         inv.log_dest.error("Error getting data "+str(e))
         return []
 
-def count_records_and_types(inv_db, coll_id):
-    """ Count the number of record types in given collection
+def count_records_and_types(inv_db, coll_id, as_string=False):
+    """ Count the number of record types in given collection.
+    If as_string is true, return a formatted string pair rather than a pair of ints
     """
-
+    counts = (-1, -1)
     try:
         tbl = inv.ALL_STRUC.record_types[inv.STR_NAME]
         recs = list(inv_db[tbl].find({'coll_id': coll_id}))
         n_types = len(recs)
         n_rec = sum([rec['count'] for rec in recs])
-        return (n_rec, n_types)
+        counts = (n_rec, n_types)
     except Exception as e:
         inv.log_dest.error("Error getting counts "+str(e))
-        return (-1, -1)
+    if as_string:
+        counts = (comma(counts[0]), comma(counts[1]))
+    return counts
 #End assorted helper access functions ----------------------------------------------------
