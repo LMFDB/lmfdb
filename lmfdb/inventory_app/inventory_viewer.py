@@ -265,12 +265,12 @@ def validate_edits(diff):
         tmp = diff["db"]
         assert(tmp is not None)
         tmp = diff["collection"]
-        assert(tmp is not None)
+        #Collection can be null in some edge cases
         tmp = diff["diffs"]
         assert(tmp is not None)
     except KeyError as e:
         raise DiffKeyError(e.message)
-    except TypeError as e:
+    except (AssertionError, TypeError) as e:
         raise DiffBadType(e.message)
     except Exception as e:
         raise DiffUnknownError(e.message)
