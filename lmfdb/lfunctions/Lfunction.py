@@ -338,9 +338,6 @@ class RiemannZeta(Lfunction):
         # Generate a function to do computations
         self.sageLfunction = lc.Lfunction_Zeta()
 
-    def Lkey(self):
-        return {}
-
 #############################################################################
 
 
@@ -440,10 +437,6 @@ class Lfunction_Dirichlet(Lfunction):
         self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" +
                                  ", " + title_end)
         self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
-
-    def Lkey(self):
-        return {"charactermodulus": self.charactermodulus,
-                "characternumber": self.characternumber}
 
 
 #############################################################################
@@ -568,11 +561,6 @@ class Lfunction_EC(Lfunction):
 #                # if C.bmfs.forms.search.find({ u'label' : label }).count() > 0
 #                pass;
 
-    def Lkey(self):
-        return {"label": self.long_isogeny_class_label}
-
-
-
 # DEPRECATED
 #class Lfunction_EC_Q(Lfunction):
 #    """Class representing an elliptic curve L-function
@@ -642,11 +630,6 @@ class Lfunction_EC(Lfunction):
 #
 #    def ground_field(self):
 #        return "Q"
-#
-#    def Lkey(self):
-#        # If over Q, the lmfdb label determines the curve
-#        return {"label": self.label}
-#
 
 #############################################################################
 
@@ -768,9 +751,6 @@ class Lfunction_EMF(Lfunction):
         self.info['title'] = ("$L(s,f)$, where $f$ is a holomorphic cusp form " +
             "with weight %s, level %s, and %s" % (
             self.weight, self.level, characterName))
-
-    def Lkey(self):
-        return {"weight": self.weight, "level": self.level}
 
     def original_object(self):
         return self.MF
@@ -904,9 +884,6 @@ class Lfunction_Maass(Lfunction):
         self.info['knowltype'] = "mf.maass"
         self.info['title'] = ("$L(s,f)$, where $f$ is a Maass cusp form with "
                       + "level %s" % (self.level)) + title_end
-
-    def Lkey(self):
-        return {"dbid": self.dbid}
 
 #############################################################################
 
@@ -1066,9 +1043,6 @@ class Lfunction_HMF(Lfunction):
         else:
             self.info['title'] += ", and trivial character"
 
-    def Lkey(self):
-        return {"label", self.label}
-
     def original_object(self):
         return self.f
 
@@ -1177,9 +1151,6 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.info['title'] = ("$L(s,F)$, " + "where $F$ is a scalar-valued Siegel " +
                       "modular form of weight " + str(self.weight) + ".")
 
-    def Lkey(self):
-        return {"weight": self.weight, "orbit": self.orbit}
-
     def original_object(self):
         return self.S
 
@@ -1243,10 +1214,6 @@ class Lfunction_genus2_Q(Lfunction):
         self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" + ", " +
                                  title_end)
         self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
-
-    def Lkey(self):
-        return {"label", self.label}
-
 
 
 #############################################################################
@@ -1367,9 +1334,6 @@ class DedekindZeta(Lfunction):
         self.info['label'] = self.label
         self.info['title'] = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
 
-    def Lkey(self):
-        return {"label": self.label}
-
     def original_object(self):
         return self.NF
 
@@ -1449,9 +1413,6 @@ class ArtinLfunction(Lfunction):
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "artin"
         self.info['title'] = ("L-function for Artin representation " + str(self.label))
-
-    def Lkey(self):
-        return {"label": self.label}
 
     def original_object(self):
         return self.artin
@@ -1533,9 +1494,6 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "hgm"
         self.info['title'] = ("L-function for the hypergeometric motive with label "+self.label)
-
-    def Lkey(self):
-        return {"label":self.label}
 
     def original_object(self):
         return self.motive
@@ -1644,10 +1602,6 @@ class SymmetricPowerLfunction(Lfunction):
                       % (ordinal(self.m), self.m, self.label))
 
 
-    def Lkey(self):
-        return {"power": self.power, "underlying_type": self.underlying_type,
-                "field": self.field}
-
     def original_object(self):
         return self.S
 
@@ -1719,9 +1673,6 @@ class Lfunction_lcalc(Lfunction):
 
         logger.debug("Start generating Sage L")
         generateSageLfunction(self)
-
-    def Lkey(self):
-        return {"filecontents": self.filecontents}
 
 #############################################################################
 
@@ -1801,11 +1752,6 @@ class TensorProductLfunction(Lfunction):
         generateSageLfunction(self)
 
         constructor_logger(self, args)
-
-    def Lkey(self):
-        return {"ellipticcurvelabel": self.Elabel,
-                "charactermodulus": self.charactermodulus,
-                "characternumber": self.characternumber}
 
 #############################################################################
 
