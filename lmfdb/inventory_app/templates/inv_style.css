@@ -22,9 +22,9 @@
 }
 
 .edit_input {
-  padding-top: 0.2em;
-  padding-bottom: 0.2em;
-  min-height: 30px;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  min-height: 1.8em;
 }
 
 .locked_input {

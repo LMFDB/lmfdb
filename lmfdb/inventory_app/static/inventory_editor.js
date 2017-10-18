@@ -265,15 +265,14 @@ function populateEditorPage(blockList, startVisible=startVisible){
   for(var i=0; i < fields.length; i++){
 
     var id = fields[i].substr(fields[i].indexOf(id_delimiter)+1, fields[i].length);
-
     var h2 = createKeyTitle(id);
     fieldDiv = document.createElement('div');
-    fieldDiv.id = 'Box'+id_delimiter+fields[i];
+    fieldDiv.id = fields[i];
     fieldDiv.class = 'collapser';
     headerDiv = document.createElement('div');
-    headerDiv.id = 'Header'+id_delimiter+fields[i];
+    headerDiv.id = 'Header'+id_delimiter+id;
     headerDiv.class = 'header';
-    var butt = createCollapserButt(fields[i], open=startVisible);
+    var butt = createCollapserButt(id, open=startVisible);
     headerDiv.appendChild(butt);
     headerDiv.appendChild(h2);
 
@@ -363,7 +362,8 @@ function fitToText(elementId){
   var jq_elementId = escape_jq(elementId);
   if( $(jq_elementId).length){
     $(jq_elementId).height($(jq_elementId).css('minHeight'));
-    $(jq_elementId).height( $(jq_elementId)[0].scrollHeight);
+    $(jq_elementId).height( $(jq_elementId)[0].scrollHeight + 5);
+    //Hardcoded extra padding. Is unwielddy to calculate interior padding every fit. If font-sizes might be changed etc, then amend
   }
 }
 
