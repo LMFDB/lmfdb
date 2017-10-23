@@ -141,6 +141,20 @@ def random_passport():
     label = random_value_from_collection(C.curve_automorphisms.passports,'passport_label')
     return redirect(url_for(".by_passport_label", passport_label=label))
 
+
+
+#############################################
+#  Stats page functions                     #
+#############################################
+
+def find_max_group_order(counts):
+    orders = []
+    for count in counts:
+        group = count[0]
+        order = int(re.search(r'\[(\d+)', group).group(1))
+        orders.append(order)
+    return max(orders)
+
 # TODO Move to proper location
 def get_hgcwa_stats():
     # TODO REPLACE WITH SINGLE INSTANCE
@@ -151,15 +165,15 @@ def get_hgcwa_stats():
     # Populate simple data
     stats['genus'] = hgcwa_stats.find_one({'_id':'genus'})
     stats['dim'] = hgcwa_stats.find_one({'_id':'dim'})
-    stats['r'] = hgcwa_stats.find_one({'_id':'r'})
 
     # Get unique group counts
     stats['groups_by_genus'] = []
     groups_by_genus = hgcwa_stats.find({'_id':{'$regex':'^bygroup/'}})
     for genus in groups_by_genus:
-        num = int(re.search(r'\d+', genus['_id']).group())
+        genus_num = int(re.search(r'\d+', genus['_id']).group())
         count = len(genus['counts'])
-        stats['groups_by_genus'].append([num, count])
+        max_order = find_max_group_order(genus['counts'])
+        stats['groups_by_genus'].append([genus_num, count, max_order])
     stats['groups_by_genus'].sort()
 
     return stats
@@ -174,6 +188,11 @@ def statistics():
     title = 'Higher Genus Curves with Automorphisms: statistics'
     bread = get_bread([('statistics', ' ')])
     return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, bread=bread)
+
+
+#############################################
+#  End Stats page functions                 #
+#############################################
 
 @higher_genus_w_automorphisms_page.route("/<label>")
 def by_label(label):
