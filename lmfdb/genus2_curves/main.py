@@ -9,7 +9,7 @@ from operator import mul
 from flask import render_template, url_for, request, redirect, send_file, abort
 from sage.all import ZZ
 
-from lmfdb.utils import to_dict, comma, random_value_from_collection, attribute_value_counts, flash_error
+from lmfdb.utils import to_dict, comma, format_percentage, random_value_from_collection, attribute_value_counts, flash_error
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, g2c_db_curves, g2c_db_isogeny_classes_count, list_to_min_eqn, st0_group_name
@@ -370,9 +370,6 @@ stats_attribute_list = [
     {'name':'st_group','top_title':'Sato-Tate groups','row_title':'Sato-Tate groups','knowl':'g2c.st_group', 'format':st_group_format},
     {'name':'torsion_order','top_title':'torsion subgroup orders','row_title':'torsion order','knowl':'g2c.torsion_order','avg':True},
 ]
-
-def format_percentage(num, denom):
-    return "%10.2f"%((100.0*num)/denom)
 
 class G2C_stats(object):
     """

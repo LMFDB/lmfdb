@@ -1,0 +1,277 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+The database contains {{ info['total'] }} number fields.
+</div>
+{% set maxdeg = info['maxdeg'] %}
+
+<h2> Distribution by signature </h2>
+{% set ncols = (info['nsig'][maxdeg - 1] | length) %}
+<div>
+There is one row for each degree $n$, and the column is indexed by
+$r_2$, the number of non-real embeddings, so the signature is
+$(n-2r_2, r_2)$.  Percentages for individual entries are taken with
+the degree.  Percentages for the column All give the proportion of
+fields of a given degree among all fields in the database.
+</div>
+<div>
+<table border="1" style="text-align: right ">
+<tr>
+<th> $n \backslash r_2$
+{% for i in range(0,ncols) %}
+<th> {{i}}
+{% endfor %}
+<th>All
+
+{% for r in info['nsig'] %}
+  <tr>
+    <th> {{ loop.index }}
+    {% for c in r %} 
+      <td> <a href="{{c.query|safe}}">{{ c.cnt }}</a>
+    {% endfor %}
+    {% for i in range(ncols - (r | length)) %}
+      <td>
+    {% endfor %}
+    
+    <td> <a href="{{info['degree'][loop.index0].query|safe}}">{{info['degree'][loop.index0].cnt}}</a>
+  <tr>
+    <td>
+    {% for c in r %} 
+      <td> {{ c.prop }}%
+    {% endfor %}
+    {% for i in range(ncols - (r | length)) %}
+      <td> 
+    {% endfor %}
+    <td> {{info['degree'][loop.index0].prop}}%
+{% endfor %}
+<tr><th>Total
+  {% for t in info['sigtotals'] %}
+    <td> {{ t }}
+  {% endfor %}
+</table>
+</div>
+
+<h2> Distribution by Galois group </h2>
+{% set ncols = info['maxt'] %}
+
+<div>
+For each degree $3\leq n\leq 7$, we give the breakdown of fields in the
+database by Galois group.  Columns are indexed by
+$t$, the {{KNOWL('gg.tnumber', title='$t$-number')}}.  
+Degrees $1$ and $2$ are omitted because there is only one possible 
+Galois group for each.
+Percentages show the proportions are with respect to the number of fields
+in the database of that degree.
+</div>
+<div>
+<table border="1" style="text-align: right ">
+<tr>
+<th> $n \backslash t$
+{% for i in range(1,17) %}
+<th> {{i}}
+{% endfor %}
+<th>All
+
+{% for i in range(2, 7) %}
+  {% set r = info['nt'][i] %}
+  <tr>
+    <th> {{ i+1 }}
+    {% for c in r %} 
+      <td> <a href="{{c.query|safe}}">{{ c.cnt }}</a>
+    {% endfor %}
+    {% for i in range(ncols-1 - (r | length)) %}
+      <td>
+    {% endfor %}
+    
+    <td> <a href="{{info['degree'][i].query|safe}}">{{info['degree'][i].cnt}}</a>
+  <tr>
+    <td>
+    {% for c in r %} 
+      <td> {{ c.prop }}%
+    {% endfor %}
+    {% for i in range(ncols-1 - (r | length)) %}
+      <td> 
+    {% endfor %}
+    <td> 
+    
+{% endfor %}
+</table>
+</div>
+
+<p>
+<div>
+Four families of groups have a representative which appears as a Galois
+group in every degree $n$, $C_n$, the cyclic group of order $n$, $D_n$, the
+dihedral group of order $2n$, $A_n$, the alternating group on $n$ letters,
+and $S_n$, the symmetric group on $n$ letters.
+Percentages are based on the number of fields in the database of the degree.
+</div>
+<div>
+<table border="1" style="text-align: right ">
+<tr>
+<th> $n$
+{% for i in range(3,24) %}
+<th> {{i}}
+{% endfor %}
+<tr><th> $C_n$
+{% for i in range(2,23) %}
+  {% if i == 2 %}
+    <td> $=A_3$
+  {% else %}
+    <td> <a href="{{info['cn'][i]['query']|safe}}">{{ info['cn'][i]['cnt'] }}</a>
+  {% endif %}
+{% endfor %}
+<tr><th> 
+{% for i in range(2,23) %}
+  {% if i == 2 %}
+    <td>
+  {% else %}
+    <td> {{ info['cn'][i]['prop'] }}%
+  {% endif %}
+{% endfor %}
+<tr><th> $D_n$
+{% for i in range(2,23) %}
+  {% if i == 2 %}
+    <td> $=S_3$
+  {% else %}
+    <td> <a href="{{info['dn'][i]['query']|safe}}">{{ info['dn'][i]['cnt'] }}</a>
+  {% endif %}
+{% endfor %}
+<tr><th> 
+{% for i in range(2,23) %}
+  {% if i == 2 %}
+    <td>
+  {% else %}
+    <td> {{ info['dn'][i]['prop'] }}%
+  {% endif %}
+{% endfor %}
+<tr><th> $A_n$
+{% for i in range(2,23) %}
+  <td> <a href="{{info['an'][i]['query']|safe}}">{{ info['an'][i]['cnt'] }}</a>
+{% endfor %}
+<tr><th> 
+{% for i in range(2,23) %}
+  <td> {{ info['an'][i]['prop'] }}%
+{% endfor %}
+<tr><th> $S_n$
+{% for i in range(2,23) %}
+  <td> <a href="{{info['cn'][i]['query']|safe}}">{{ info['sn'][i]['cnt'] }}</a>
+{% endfor %}
+<tr><th> 
+{% for i in range(2,23) %}
+  <td> {{ info['sn'][i]['prop'] }}%
+{% endfor %}
+</table>
+</div>
+
+<h2> Distribution by class number </h2>
+<div>
+Class numbers have been computed for {{ info.has_h_pct }}% of
+the fields in the database.  Some of these
+class numbers have been computed under the assumption of the Generalized
+Riemann Hypothesis.
+</div>
+<p>
+<div>
+For main table entries, the percentage is out of fields of that degree
+for which we have computed the class number.  For row totals, the percentage
+is the number of fields of that degree for which we have computed the class
+number divided by the total number of fields of that degree.  For column
+totals, percentages are based on the total number of fields for which we
+have computed the class number.  Finally, the lower right corner gives the
+percentage of fields in the database for which we have computed the class
+number.
+</div>
+
+<div>
+<table border="1" style="text-align: right ">
+  <tr>
+    <th> $n$
+      {% for hinfo in info.h %}
+        <th> {{ hinfo.label }}
+      {% endfor %}
+        <th> Total
+  {% for j in range(1, 23) %}
+    {% set r = info.hdeg %}
+    <tr>
+      <th> ${{j+1}}$
+      {% for hinfo in r[j] %}
+        <td>
+          {% if hinfo.cnt != '0' %}
+           <a href="{{ hinfo.query|safe}}">{{ hinfo.cnt }}</a>
+          {% endif %}
+      {% endfor %}
+      <td> <a href="{{ info.has_hdeg[j].query|safe}}">{{ info.has_hdeg[j].cnt }}</a>
+    <tr>
+      <th> 
+      {% for hinfo in r[j] %}
+        <td> 
+          {% if hinfo.cnt != '0' %}
+            {{ hinfo.prop }}%
+          {% endif %}
+      {% endfor %}
+      <td> {{ info.has_hdeg[j].prop }}%
+  {% endfor %}
+
+  <tr> <th> Total
+    {% for hinfo in info['h'] %}
+      <td> <a href="{{hinfo.query|safe}}">{{ hinfo.cnt }}</a>
+    {% endfor %}
+    <td> {{ info.has_h }} 
+    
+  <tr> <th>
+    {% for hinfo in info['h'] %}
+      <td> {{ hinfo.prop }}%
+    {% endfor %}
+    <td>
+    {{ info.has_h_pct }}%
+    
+</table>
+</div>
+<h2> Distribution of class number one fields by signature </h2>
+<div>
+A number field has class number one if and only if its ring of integers
+is a unique factorization domain.
+</div>
+<div>
+The table below has one row for each degree $n$, and the columns are
+indexed by $r_2$, as above.
+Percentages for individual entries are with respect
+to all fields in the database with that signature for which we have
+computed the class number.  An entry is not shown if we have not computed
+the class number for any fields with that combination of degree and signature.
+</div>
+
+<div>
+{% set ncols = (info['nsig'][maxdeg - 1] | length) %}
+<table border="1" style="text-align: right ">
+<tr>
+<th> $n \backslash r_2$
+{% for i in range(0,ncols) %}
+<th> {{i}}
+{% endfor %}
+
+{% for r in info['sigclass1'] %}
+  <tr>
+    <th> {{ loop.index }}
+    {% for c in r %} 
+      <td> {% if c.show %} <a href="{{c.query|safe}}">{{ c.cnt }}</a> {% endif %}
+    {% endfor %}
+    {% for i in range(ncols - (r | length)) %}
+      <td>
+    {% endfor %}
+    
+  <tr>
+    <td>
+    {% for c in r %} 
+      <td> {% if c.show %} {{ c.prop }}% {% endif %}
+    {% endfor %}
+    {% for i in range(ncols - (r | length)) %}
+      <td> 
+    {% endfor %}
+{% endfor %}
+</table>
+</div>
+
+{% endblock %}
