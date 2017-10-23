@@ -243,6 +243,10 @@ def comma(x):
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
 
 
+def format_percentage(num, denom):
+    return "%10.2f"%((100.0*num)/denom)
+
+
 def signtocolour(sign):
     """
     Assigns an rgb string colour to a complex number based on its argument.

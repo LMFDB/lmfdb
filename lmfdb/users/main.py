@@ -246,7 +246,6 @@ def register_token(token):
             return flask.redirect(url_for(".register_new"))
 
         full_name = request.form['full_name']
-        email = request.form['email']
         next = request.form["next"]
 
         if pwdmanager.user_exists(name):
@@ -255,7 +254,6 @@ def register_token(token):
 
         newuser = pwdmanager.new_user(name, pw1)
         newuser.full_name = full_name
-        newuser.email = email
         newuser.save()
         login_user(newuser, remember=True)
         flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)

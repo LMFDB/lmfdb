@@ -29,10 +29,6 @@ class Lfunction:
                 if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
                     self.selfdual = False
 
-    def Lkey(self):
-        # Lkey should be a dictionary
-        raise KeyError("not all L-function implement the Lkey scheme atm")
-
     def compute_kappa_lambda_Q_from_mu_nu(self):
         """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
         """
