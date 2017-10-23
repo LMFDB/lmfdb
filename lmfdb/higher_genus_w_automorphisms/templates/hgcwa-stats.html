@@ -2,7 +2,7 @@
 {% block content %}
 
 <div>
-  The database currently contains the database... SEE:
+  The database currently contains... SEE:
   <a href='http://www.lmfdb.org/EllipticCurve/Q/stats'>Elliptic Curves stats page</a>
   as an example
 </div>
@@ -17,15 +17,21 @@
       {% endfor %}
     </tr>
     <tr>
-      <th>number of curves</th>
+      <th>number of generating vectors</th>
       {% for genus in info.stats.genus.counts %}
       <td>{{genus[1]}}</td>
       {% endfor %}
     </tr>
     <tr>
       <th>unique groups</th>
-      {% for gen in info.stats.groups_by_genus %}
-      <td>{{gen[1]}}</td>
+      {% for genus in info.stats.groups_by_genus %}
+      <td>{{genus[1]}}</td>
+      {% endfor %}
+    </tr>
+    <tr>
+      <th>maximum group order</th>
+      {% for genus in info.stats.groups_by_genus %}
+      <td>{{genus[2]}}</td>
       {% endfor %}
     </tr>
   </table>
