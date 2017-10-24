@@ -9,7 +9,7 @@ ASC = pymongo.ASCENDING
 import yaml
 import os
 from lmfdb import base
-from flask import render_template, request, url_for, make_response, redirect
+from flask import render_template, request, url_for, make_response, redirect, abort
 from lmfdb.utils import to_dict, random_value_from_collection, flash_error
 from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_input, parse_bracketed_posints, parse_gap_id
 
@@ -146,8 +146,7 @@ def random_passport():
 #############################################
 #  Stats page functions                     #
 #############################################
-
-def find_max_group_order(counts):
+def max_group_order(counts):
     orders = []
     for count in counts:
         group = count[0]
@@ -172,7 +171,7 @@ def get_hgcwa_stats():
     for genus in groups_by_genus:
         genus_num = int(re.search(r'\d+', genus['_id']).group())
         count = len(genus['counts'])
-        max_order = find_max_group_order(genus['counts'])
+        max_order = max_group_order(genus['counts'])
         stats['groups_by_genus'].append([genus_num, count, max_order])
     stats['groups_by_genus'].sort()
 
@@ -181,14 +180,32 @@ def get_hgcwa_stats():
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
     info = {
-        'counts' : 0,
         'stats': get_hgcwa_stats(),
     }
-    credit = '???'
     title = 'Higher Genus Curves with Automorphisms: statistics'
-    bread = get_bread([('statistics', ' ')])
+    bread = get_bread([('stats', ' ')])
     return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, bread=bread)
 
+@higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
+def groups_per_genus(genus):
+    # TODO REPLACE WITH SINGLE INSTANCE
+    C = base.getDBConnection()
+    hgcwa_stats = C.curve_automorphisms.passports.stats
+
+    group_stats = hgcwa_stats.find_one({'_id':'bygroup/' + genus + '/group'})
+
+    # Redirect to 404 if statistic is not found
+    if not group_stats:
+        return abort(404, 'Group statistics for curves of genus %s not found in database.' % genus)
+
+    info = {
+        'genus' : genus,
+        'groups': group_stats['counts'],
+    }
+
+    title = 'Higher Genus Curves with Automorphisms: groups per genus'
+    bread = get_bread([('stats', url_for('.statistics')), ('Groups per genus', ' '), (str(genus), ' ')])
+    return render_template("hgcwa-stats-groups-per-genus.html", info=info, credit=credit, title=title, bread=bread)
 
 #############################################
 #  End Stats page functions                 #
