@@ -146,6 +146,9 @@ def random_passport():
 #############################################
 #  Stats page functions                     #
 #############################################
+
+# TODO Add number of distinct families per genus to stats page
+
 def max_group_order(counts):
     orders = []
     for count in counts:
@@ -167,7 +170,7 @@ def get_hgcwa_stats():
 
     # Get unique group counts
     stats['groups_by_genus'] = []
-    groups_by_genus = hgcwa_stats.find({'_id':{'$regex':'^bygroup/'}})
+    groups_by_genus = hgcwa_stats.find({'_id':{'$regex':'^bygenus/'}})
     for genus in groups_by_genus:
         genus_num = int(re.search(r'\d+', genus['_id']).group())
         count = len(genus['counts'])
@@ -192,7 +195,7 @@ def groups_per_genus(genus):
     C = base.getDBConnection()
     hgcwa_stats = C.curve_automorphisms.passports.stats
 
-    group_stats = hgcwa_stats.find_one({'_id':'bygroup/' + genus + '/group'})
+    group_stats = hgcwa_stats.find_one({'_id':'bygenus/' + genus + '/group'})
 
     # Redirect to 404 if statistic is not found
     if not group_stats:
