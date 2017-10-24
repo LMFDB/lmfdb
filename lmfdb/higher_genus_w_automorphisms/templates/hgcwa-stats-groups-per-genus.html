@@ -1,0 +1,26 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Distribution of groups in curves of genus {{info.genus}} </h2>
+<div>
+  <table border=1 cellpadding=5 class="ntdata">
+    <thead>
+      <tr>
+        <th>Group</th>
+        <th>Number of generating vectors</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for group in info.groups %}
+      <tr>
+        <td>{{group[0]}}</td>
+        <td align="center">
+          <a href={{url_for('.index', genus=info.genus, group=group[0])}}>{{group[1]}}</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
