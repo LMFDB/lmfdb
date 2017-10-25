@@ -11,12 +11,21 @@
 <td align=left> 
 {{KNOWL('ag.curve.genus',title='Genus')}}:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
 </td>
-<td align=left> 
-Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
 
 <td align=left> 
 {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
 <td align=left> <input type="text" name="signature" size="15" value="{{info.signature}}" >
+
+</tr>
+
+<tr align=left>
+<td align=left> 
+Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
+
+<td align=left> 
+{{KNOWL('curve.highergenus.aut.grouporder',title='Group Order(s)')}}:
+<td align=left> <input type="text" name="groupsize" size="15" value="{{info.groupsize}}" >
+</td>
 
 </tr>
 
@@ -102,17 +111,12 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </tr>
 
 <tr>
-<td align='left' colspan='4'>{{KNOWL('ag.range_for_group_order',title='Range for the group order')}}: <input type='text' name='groupsize' value="{{info.groupsize}}" size='15'>
-</td>
-</tr>
-
-<tr>
 <td align=left colspan="2"> 
 <button type='submit' value='refine'>Search again</button>
 
 
 <td align=left colspan="2">
-<button type='submit' name='download'>Download diplayed results as Magma</button>
+<button type='submit' name='download'>Download Magma code for displayed results.</button>
 
 </td></tr>
 </table>
