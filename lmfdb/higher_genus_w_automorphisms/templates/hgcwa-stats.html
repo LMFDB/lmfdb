@@ -1,6 +1,17 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<!-- For centering data -->
+<style>
+table.ntdata th.center {
+  text-align: center;
+}
+
+table.ntdata td {
+  text-align: center;
+}
+</style>
+
 <div>
   The database currently contains... SEE:
   <a href='http://www.lmfdb.org/EllipticCurve/Q/stats'>Elliptic Curves stats page</a>
@@ -9,71 +20,73 @@
 
 <h2> Distribution of genus </h2>
 <div>
-  <table border=1 cellpadding=5>
-    <tr>
-      <th>Genus</th>
-      {% for genus in info.stats.genus %}
-      <td align='center'>{{genus.genus_num}}</td>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th>families</th>
-      {% for genus in info.stats.genus %}
-      <td align='center'>{{genus.families}}</td>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th>refined passports</th>
-      {% for genus in info.stats.genus %}
-      <td align='center'>{{genus.refined_passports}}</td>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th>generating vectors (num entries per genus)</th>
-      {% for count in info.stats.genus_summary.counts %}
-      <td align='center'>{{count[1]}}</td>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th>generating vectors (distinct total_label)</th>
-      {% for genus in info.stats.genus %}
-      <td align='center'>
-        {{genus.gen_vectors}}
-      </td>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th>unique groups</th>
-      {% for genus in info.stats.genus %}
-      <td align='center'>
-        <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.groups[0]}}</a>
-      </td>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th>maximum group order</th>
-      {% for genus in info.stats.genus %}
-      <td align='center'>{{genus.groups[1]}}</td>
-      {% endfor %}
-    </tr>
+  <table border=1 cellpadding=5 class="ntdata">
+    <thead>
+      <tr>
+        <th>Genus</th>
+        {% for genus in info.stats.genus %}
+        <th class="center">{{genus.genus_num}}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>families</th>
+        {% for genus in info.stats.genus %}
+        <td>{{genus.families}}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <th>refined passports</th>
+        {% for genus in info.stats.genus %}
+        <td>{{genus.refined_passports}}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <th>generating vectors</th>
+        {% for genus in info.stats.genus %}
+        <td>
+          {{genus.gen_vectors}}
+        </td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <th>unique groups</th>
+        {% for genus in info.stats.genus %}
+        <td>
+          <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.groups[0]}}</a>
+        </td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <th>maximum group order</th>
+        {% for genus in info.stats.genus %}
+        <td>{{genus.groups[1]}}</td>
+        {% endfor %}
+      </tr>
+    </tbody>
   </table>
 </div>
 
 <h2> Distribution of dimension </h2>
 <div>
-  <table border=1 cellpadding=5>
-    <tr>
-      <th>Dimension</th>
-      {% for dim in info.stats.dim_summary.counts %}
-      <td align='center'>{{dim[0]}}</td>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th>generating vectors (num entries per dim)</th>
-      {% for dim in info.stats.dim_summary.counts %}
-      <td align='center'>{{dim[1]}}</td>
-      {% endfor %}
-    </tr>
+  <table border=1 cellpadding=5 class="ntdata">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        {% for dim in info.stats.dim_summary.counts %}
+        <th class="center">{{dim[0]}}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>generating vectors (num entries per dim)</th>
+        {% for dim in info.stats.dim_summary.counts %}
+        <td>{{dim[1]}}</td>
+        {% endfor %}
+      </tr>
+    </tbody>
   </table>
 </div>
 

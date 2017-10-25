@@ -165,11 +165,11 @@ def get_hgcwa_stats():
     stats = {}
 
     # Populate simple data
-    stats['genus_summary'] = hgcwa_stats.find_one({'_id':'genus'})
     stats['dim_summary'] = hgcwa_stats.find_one({'_id':'dim'})
 
     # An iterable list of distinct curve genera
-    genus_list = [ count[0] for count in stats['genus_summary']['counts'] ]
+    genus_summary = hgcwa_stats.find_one({'_id':'genus'})
+    genus_list = [ count[0] for count in genus_summary['counts'] ]
     genus_list.sort()
 
     # Get unique joint genus stats
@@ -216,7 +216,7 @@ def statistics():
     bread = get_bread([('statistics', ' ')])
     return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, bread=bread)
 
-@higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
+@higher_genus_w_automorphisms_page.route("/stats/GroupsPerGenus/<genus>")
 def groups_per_genus(genus):
     # TODO REPLACE WITH SINGLE INSTANCE
     C = base.getDBConnection()
