@@ -228,9 +228,15 @@ def groups_per_genus(genus):
     if not group_stats:
         return abort(404, 'Group statistics for curves of genus %s not found in database.' % genus)
 
+    # Sort groups by order
+    groups = group_stats['counts']
+    #TODO may be better to just store the sorted array
+    pattern = re.compile(r'\[(\d+)')
+    groups = sorted(groups, key=lambda count: int(pattern.search(count[0]).group(1)))
+
     info = {
         'genus' : genus,
-        'groups': group_stats['counts'],
+        'groups': groups,
     }
 
     title = 'Higher Genus Curves with Automorphisms: groups per genus'
