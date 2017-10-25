@@ -85,14 +85,15 @@ def setup_internal_client(remote=True, editor=False):
 	return True
     try:
         if remote:
-            #Attempt to connect to remote LMFDB on 37010
-            int_client=MongoClient('localhost',37010)
+            #Attempt to connect to LMFDB
+            from lmfdb.base import getDBConnection
+            int_client=getDBConnection()
         else:
             int_client = MongoClient("localhost", 27017)
 #           int_client = MongoClient("localhost", 37010)
             return(True)
         # TODO Update to 'correct' filepath eventually
-        pw_dict = yaml.load(open("../../../passwords.yaml"))
+        pw_dict = yaml.load(open("passwords.yaml"))
         if editor:
             key = 'data'
             auth_db = 'inventory'
