@@ -165,18 +165,45 @@ def get_hgcwa_stats():
     stats = {}
 
     # Populate simple data
-    stats['genus'] = hgcwa_stats.find_one({'_id':'genus'})
-    stats['dim'] = hgcwa_stats.find_one({'_id':'dim'})
+    stats['genus_summary'] = hgcwa_stats.find_one({'_id':'genus'})
+    stats['dim_summary'] = hgcwa_stats.find_one({'_id':'dim'})
 
-    # Get unique group counts
-    stats['groups_by_genus'] = []
-    groups_by_genus = hgcwa_stats.find({'_id':{'$regex':'^bygenus/'}})
-    for genus in groups_by_genus:
-        genus_num = int(re.search(r'\d+', genus['_id']).group())
-        count = len(genus['counts'])
-        max_order = max_group_order(genus['counts'])
-        stats['groups_by_genus'].append([genus_num, count, max_order])
-    stats['groups_by_genus'].sort()
+    # An iterable list of distinct curve genera
+    genus_list = [ count[0] for count in stats['genus_summary']['counts'] ]
+    genus_list.sort()
+
+    # Get unique joint genus stats
+    stats['genus'] = []
+
+    for genus in genus_list:
+        genus_stats = {}
+        genus_stats['genus_num'] = genus
+        genus_str = str(genus)
+
+        # Get group data
+        groups = hgcwa_stats.find_one({'_id':'bygenus/' + genus_str + '/group'})
+        group_count = len(groups['counts'])
+        group_max_order = max_group_order(groups['counts'])
+        genus_stats['groups'] = [group_count, group_max_order]
+
+        # Get family data
+        families = hgcwa_stats.find_one({'_id':'bygenus/' + genus_str + '/label'})
+        family_count = len(families['counts'])
+        genus_stats['families'] = family_count
+
+        # Get refined passport data
+        rps = hgcwa_stats.find_one({'_id':'bygenus/' + genus_str + '/passport_label'})
+        rp_count = len(rps['counts'])
+        genus_stats['refined_passports'] = rp_count
+
+        # TODO May be redundant, see genus data
+        # Get generating vector data
+        gvs = hgcwa_stats.find_one({'_id':'bygenus/' + genus_str + '/total_label'})
+        gv_count = len(gvs['counts'])
+        genus_stats['gen_vectors'] = gv_count
+
+        # Keep genus data sorted
+        stats['genus'].append(genus_stats)
 
     return stats
 
