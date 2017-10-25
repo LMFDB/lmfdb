@@ -317,7 +317,8 @@ def add_mul(expr):
         two_vars = (is_value(prev) and is_value(cur))
         var_expr = (is_value(prev) and cur == '(')
         expr_var = (prev == ')' and is_value(cur))
-        mult_between = two_vars or var_expr or expr_var
+        two_expr = (prev == ')' and cur == '(')
+        mult_between = two_vars or var_expr or expr_var or two_expr
 
         if mult_between:
             result += "*"
@@ -333,14 +334,13 @@ def build_mongo_expr(expression):
     return expression
 
 def variable_range_query(query_parameter, query_range):
-    if query_parameter not in query_variables:
-        return
+    # Support -- and .. as range
+    query_range = query_range.replace("--", "..")
 
     # put a $ before every variable, makes later part easier
     processed_query_range = add_mul(query_range)
     for qvar in query_variables:
         processed_query_range = processed_query_range.replace(qvar, '$' + qvar)
-
     
     raw_parts = query_range.split('..')
     parts = processed_query_range.split('..')
@@ -377,8 +377,16 @@ def variable_range_query(query_parameter, query_range):
             return (None, mongo_expr)
         else:
             return (raw_parts[0], err)
+    elif len(parts) == 1:
+        expr = parts[0]
+        err = is_valid_expr(raw_parts[0])
+        if err == None:
+            mongo_expr = query_variables[query_parameter] + ' == (' + build_mongo_expr(expr) + ')'
+            return (None, mongo_expr)
+        else:
+            return(raw_parts[0], err)
     else:
-        return ("", "You must specify the group size range in the format Min..Max")
+        return ("", "You must either specify a group size or range in the format Min..Max")
 
 
 def higher_genus_w_automorphisms_search(**args):
@@ -437,6 +445,7 @@ def higher_genus_w_automorphisms_search(**args):
             query['$where'] = result 
         else:
             flash_error('<font face="Courier New"> Parse error on group size range <br />' + err + '<br />' + result + '</font>')
+            query['$where'] = "false" 
 
     res = C.curve_automorphisms.passports.find(query).sort([(
          'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
