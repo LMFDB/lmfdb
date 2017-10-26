@@ -13,6 +13,7 @@
     var record_fields = {{record_fields | safe}};
     var record_noedit = {{record_noedit | safe}};
     recordHashMap = new Map();//Dummy value which is not null means to fill this
+    var submitDest = "{{ url_for('inventory_app.submit_edits') }}";
 
 </script>
 <script type="text/javascript">

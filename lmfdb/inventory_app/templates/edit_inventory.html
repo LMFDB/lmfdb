@@ -10,7 +10,7 @@
     var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
     var jsonTypes = {{ type_data|safe }};
     var table_fields = {{table_fields | safe}};
-
+    var submitDest = "{{ url_for('inventory_app.submit_edits') }}";
 </script>
 <script type="text/javascript">
     //Put in initial text and fit boxes to content

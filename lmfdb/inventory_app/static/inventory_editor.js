@@ -153,8 +153,10 @@ function saveTextAsFile(textToWrite, filename){
         downloadLink.click();
 }
 
-function exportEdits(){
-  //Collect all edited blocks and jsonify
+function exportEdits(field){
+  //Collect edited blocks and jsonify
+  //If field is null, then all blocks are checked
+  //Otherwise only those beginning with 'field'
   var editedBlocks = [];
   var returnableBlock;
   var anyEdits = false;
@@ -168,9 +170,9 @@ function exportEdits(){
       alert(block.fieldname+'.'+block.key+" seems to contain conflicts\n Please fix these before submitting");
       return;
     }
-    if(block.edited){
+    if(block.edited &&
+      (!field || (block.fieldname.substr(0, field.length-4) == field.substr(4,field.length) ))){
       returnableBlock = blockToServer(block);
-      console.log(returnableBlock);
       editedBlocks.push(returnableBlock);
       anyEdits = true;
     }
@@ -182,7 +184,6 @@ function exportEdits(){
 
   var responseText = makeDiff(editedBlocks, {});
 
-  console.log(responseText);
   return responseText;
 }
 
@@ -215,6 +216,36 @@ function submitEdits(dest){
 
 }
 
+function submitBlockEdits(dest, field){
+
+  showSubmitInProgress();
+  var responseText = exportEdits(field);
+  if(!responseText){
+    resetSubmitInProgress();
+    return;
+  }
+
+  var XHR = new XMLHttpRequest();
+  XHR.open('POST', dest);
+  XHR.setRequestHeader('Content-Type', 'text/plain');
+
+  XHR.addEventListener('load', function(event) {
+    //On success, reset screen
+    var response = JSON.parse(XHR.response);
+    resetSubmitInProgress();
+    if(!response.success) alert('Error submitting edits. Please try again.');
+  });
+
+  // Define what happens in case of error
+  XHR.addEventListener('error', function(event) {
+    resetSubmitInProgress();
+    alert('Error submitting edits. Please try again.');
+  });
+
+  XHR.send(responseText);
+
+}
+
 function blockToServer(block){
   //Take a Block and return a ResponseBlock
 
@@ -233,6 +264,12 @@ function showSubmitInProgress(){
   el.classList.add('hide');
   el = document.getElementById('SubmitDummy');
   el.innerHTML = 'Submitting ...';
+
+  $("input[type='button'][id*=submit").each(function() {
+      this.disabled = true;
+      this.classList.add('disabledbutton');
+  });
+
 }
 
 function resetSubmitInProgress(){
@@ -243,6 +280,11 @@ function resetSubmitInProgress(){
   el.classList.remove('hide');
   el = document.getElementById('SubmitDummy');
   el.classList.add('hide');
+
+  $("input[type='button'][id*=submit").each(function() {
+      this.disabled = false;
+      this.classList.remove('disabledbutton');
+  });
 }
 
 //---------- End editor submission and export handling -----------
@@ -294,6 +336,8 @@ function populateEditorPage(blockList, startVisible=startVisible){
     }
       //Add block-reset button
       var butt = createResetButt(fields[i]);
+      fieldDiv.appendChild(butt);
+      butt = createBlockSubmitButt(fields[i]);
       fieldDiv.appendChild(butt);
       if(! startVisible) fieldDiv.classList.add('hide');
       if(block.special){
@@ -353,6 +397,25 @@ function createResetButt(field){
 		}
 	})();
   butt.title = "Reset to Original";
+
+  return butt;
+}
+
+function createBlockSubmitButt(field){
+
+  var butt = document.createElement('input');
+  butt.setAttribute('type', 'button');
+  butt.className = "submitbutt";
+  butt.id = 'submit';
+  butt.style='float:inherit;display:inline;';
+  butt.value = "Submit block";
+  butt.onclick = (function() {
+		return function() {
+			this.blur();
+      submitBlockEdits(submitDest, field);
+		}
+	})();
+  butt.title = "Submit Block";
 
   return butt;
 }

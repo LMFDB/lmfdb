@@ -124,7 +124,7 @@ def submit_edits():
         inventory_viewer.apply_submitted_edits(request)
     except Exception as e:
         #apply_submitted_edits only throws for serious code errors
-        return jsonify({'url':url_for('inventory_app.edit_failure', code=e.errcode), 'code':302})
+        return jsonify({'url':url_for('inventory_app.edit_failure', code=e.errcode), 'code':302, 'success':False})
 
     #Return a redirect to be done on client
-    return jsonify({'url':url_for('inventory_app.edit_success'), 'code':302})
+    return jsonify({'url':url_for('inventory_app.edit_success'), 'code':302, 'success':True})
