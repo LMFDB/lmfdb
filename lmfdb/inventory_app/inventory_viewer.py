@@ -205,11 +205,11 @@ def collate_collection_info(db_name):
     db_info = idc.get_db(db, db_name)
     if not db_info['exist']:
         return
-    colls_info = idc.get_all_colls(inv_db, db_info['id'])
+    colls_info = idc.get_all_colls(db, db_info['id'])
 
     for coll in colls_info:
-        rec_info = idc.count_records_and_types(inv_db, coll['_id'])
-        coll['records'] = rec_info
+        rec_info = idc.count_records_and_types(db, coll['_id'])
+        coll['records'] = comma(rec_info)
 
     return colls_info
 
