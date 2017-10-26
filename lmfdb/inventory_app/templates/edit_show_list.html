@@ -40,8 +40,9 @@ function flashName(item){
 {% endblock title_block %}
 
 {% block main_body %}
+  <div class='listing'>
   {% for item in listing %}
-
+  <div class='unbreaking'>
     {% if db_name is none %}
       <h2 class='link'><a href = {{url_for('inventory_app.show_edit_child', id=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
       Contains {{item[2]}} collections</br>
@@ -67,7 +68,7 @@ function flashName(item){
       {% endif %}
 
     {% endif %}
-
+  </div>
   {% endfor %}
-
+</div>
 {% endblock main_body %}

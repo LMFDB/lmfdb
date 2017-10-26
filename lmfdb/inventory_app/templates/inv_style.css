@@ -195,3 +195,21 @@ h2.link{
   font-size : 110%;
   color: #003366 !important;
 }
+
+.listing{
+
+  column-count : 2;
+
+}
+
+h2
+{
+    font-family: sans-serif;
+    text-decoration: none;
+    font-size: 120%;
+    text-align: left;
+    font-weight: bold;
+    color: {{color.a_text}};
+    padding: 5px 0 5px 0;
+    margin: 15px 0 10px 0;
+}
