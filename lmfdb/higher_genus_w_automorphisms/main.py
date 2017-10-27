@@ -305,11 +305,11 @@ def add_group_order_range(mongo_query, expr, db):
             elif left_err != None:
                 mongo_query["$or"] = [{"genus": {"$lte": 0}}]
                 #print "\n\nleft error\n\n"
-                return (raw_parts[0], left_half_err)
+                return (raw_parts[0], left_err)
             else:
                 mongo_query["$or"] = [{"genus": {"$lte": 0}}]
                 #print "\n\nright error\n\n"
-                return (raw_parts[1], right_half_err)
+                return (raw_parts[1], right_err)
 
         mongo_query["$or"] = mongo_expr 
         return (None, None)
