@@ -19,12 +19,12 @@
 </tr>
 
 <tr align=left>
-<td align=left> 
-Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
 
 <td align=left> 
 {{KNOWL('curve.highergenus.aut.grouporder',title='Group Order(s)')}}:
 <td align=left> <input type="text" name="groupsize" size="15" value="{{info.groupsize}}" >
+<td align=left> 
+Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
 </td>
 
 </tr>
@@ -115,10 +115,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 <button type='submit' value='refine'>Search again</button>
 
 
-<td align=left colspan="2">
-<button type='submit' name='download'>Download Magma code for displayed results.</button>
-
-</td></tr>
+</tr>
 </table>
 </form>
 
@@ -138,6 +135,22 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
      {% endif %}
 </h2>
+
+{% if info.fields|length > 0 %}
+<form>
+<tr>
+<td align=left colspan="2">
+<button type='submit' name='download_magma'>Download Magma for results.</button>
+</td>
+</tr>
+
+<tr>
+<td align=left colspan="2">
+<button type='submit' name='download_gap'>Download GAP code for results.</button>
+</td>
+</tr>
+</form>
+{% endif %}
 
 {% if info.number > 0 %}
 
