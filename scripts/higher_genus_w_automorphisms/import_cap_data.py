@@ -2,7 +2,7 @@
 # the command
 # %runfile scripts/higher_genus_w_automorphisms/import_cap_data.py
 
-import lmfdb
+import lmfdb, re
 from pymongo import MongoClient
 from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
 
@@ -18,6 +18,7 @@ update_attribute_stats(cap, 'passports', ['genus', 'dim'])
 # Collect joint statistics
 print("Collecting statistics on unique families, refined passports, and generating vectors per genus.")
 update_joint_attribute_stats (cap, 'passports', ['genus','group'], prefix='bygenus', unflatten=True)
+# update_joint_attribute_stats (cap, 'passports', ['genus','group_order'], prefix='bygenus', unflatten=True)
 # Number of families per genus
 update_joint_attribute_stats (cap, 'passports', ['genus','label'], prefix='bygenus', unflatten=True)
 # Number of refined passports per genus
@@ -27,3 +28,14 @@ update_joint_attribute_stats (cap, 'passports', ['genus','passport_label'], pref
 # TODO May be redundant, already calculated in genus counts
 # Number of generating vectors per genus
 update_joint_attribute_stats (cap, 'passports', ['genus','total_label'], prefix='bygenus', unflatten=True)
+
+#############################################
+#  Sort bygenus group counts by group order #
+#############################################
+
+for entry in cap.passports.stats.find({'_id' : {'$regex':'^bygenus/\d+/group$'}}):
+    groups = entry['counts']
+    entry['counts'] = sorted(groups, key=lambda count: map(int, re.findall("\d+", count[0])))
+    cap.passports.stats.save(entry)
+
+C.close()
