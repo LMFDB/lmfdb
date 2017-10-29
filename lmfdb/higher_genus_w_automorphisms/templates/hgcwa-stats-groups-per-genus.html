@@ -1,12 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<style>
-table.ntdata td {
-  text-align: center;
-}
-</style>
-
 <h2> Distribution of groups in curves of genus {{info.genus}} </h2>
 <div>
   <table border=1 cellpadding=5 class="ntdata">
@@ -19,9 +13,9 @@ table.ntdata td {
     <tbody>
       {% for group in info.groups %}
       <tr>
-        <td>{{group[0]}}</td>
-        <td>
-          <a href={{url_for('.index', genus=info.genus, group=group[0])}}>{{group[1]}}</a>
+        <td><a href={{url_for('.index', genus=info.genus, group=group[0])}}>{{group[0]}}</a></td>
+        <td align="center">
+          {{group[1]}}
         </td>
       </tr>
       {% endfor %}
