@@ -13,19 +13,17 @@ cap = C.curve_automorphisms
 
 # Basic counts for these attributes:
 print("Collecting statistics on genus and dim attributes...")
-update_attribute_stats(cap, 'passports', ['genus', 'dim'])
+update_attribute_stats(cap, 'passports', ['genus', 'dim', 'passport_label', 'total_label'])
 
 # Collect joint statistics
 print("Collecting statistics on unique families, refined passports, and generating vectors per genus.")
 update_joint_attribute_stats (cap, 'passports', ['genus','group'], prefix='bygenus', unflatten=True)
+# TODO the group stats already provides this info, although it requires parsing the group string
 # update_joint_attribute_stats (cap, 'passports', ['genus','group_order'], prefix='bygenus', unflatten=True)
 # Number of families per genus
 update_joint_attribute_stats (cap, 'passports', ['genus','label'], prefix='bygenus', unflatten=True)
 # Number of refined passports per genus
 update_joint_attribute_stats (cap, 'passports', ['genus','passport_label'], prefix='bygenus', unflatten=True)
-
-
-# TODO May be redundant, already calculated in genus counts
 # Number of generating vectors per genus
 update_joint_attribute_stats (cap, 'passports', ['genus','total_label'], prefix='bygenus', unflatten=True)
 
