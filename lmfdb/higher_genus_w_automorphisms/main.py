@@ -16,6 +16,7 @@ from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_inp
 from sage.all import Permutation
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.sato_tate_groups.main import sg_pretty
+from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats, db_hgcwa_stats
 
 
 # Determining what kind of label
@@ -157,54 +158,6 @@ def max_group_order(counts):
     return max(orders)
 
 # TODO Move to proper location
-def get_hgcwa_stats():
-    # TODO REPLACE WITH SINGLE INSTANCE
-    C = base.getDBConnection()
-    hgcwa_stats = C.curve_automorphisms.passports.stats
-    stats = {}
-
-    # Populate simple data
-    stats['genus_summary'] = hgcwa_stats.find_one({'_id':'genus'})
-    stats['dim_summary'] = hgcwa_stats.find_one({'_id':'dim'})
-
-    # An iterable list of distinct curve genera
-    genus_list = [ count[0] for count in stats['genus_summary']['counts'] ]
-    genus_list.sort()
-
-    # Get unique joint genus stats
-    stats['genus'] = []
-
-    for genus in genus_list:
-        genus_stats = {}
-        genus_stats['genus_num'] = genus
-        genus_str = str(genus)
-
-        # Get group data
-        groups = hgcwa_stats.find_one({'_id':'bygenus/' + genus_str + '/group'})
-        group_count = len(groups['counts'])
-        group_max_order = max_group_order(groups['counts'])
-        genus_stats['groups'] = [group_count, group_max_order]
-
-        # Get family data
-        families = hgcwa_stats.find_one({'_id':'bygenus/' + genus_str + '/label'})
-        family_count = len(families['counts'])
-        genus_stats['families'] = family_count
-
-        # Get refined passport data
-        rps = hgcwa_stats.find_one({'_id':'bygenus/' + genus_str + '/passport_label'})
-        rp_count = len(rps['counts'])
-        genus_stats['refined_passports'] = rp_count
-
-        # TODO May be redundant, see genus data
-        # Get generating vector data
-        gvs = hgcwa_stats.find_one({'_id':'bygenus/' + genus_str + '/total_label'})
-        gv_count = len(gvs['counts'])
-        genus_stats['gen_vectors'] = gv_count
-
-        # Keep genus data sorted
-        stats['genus'].append(genus_stats)
-
-    return stats
 
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
@@ -217,11 +170,7 @@ def statistics():
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):
-    # TODO REPLACE WITH SINGLE INSTANCE
-    C = base.getDBConnection()
-    hgcwa_stats = C.curve_automorphisms.passports.stats
-
-    group_stats = hgcwa_stats.find_one({'_id':'bygenus/' + genus + '/group'})
+    group_stats = db_hgcwa_stats().find_one({'_id':'bygenus/' + genus + '/group'})
 
     # Redirect to 404 if statistic is not found
     if not group_stats:
