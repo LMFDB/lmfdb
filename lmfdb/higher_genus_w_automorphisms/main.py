@@ -188,14 +188,6 @@ def by_label(label):
 def by_passport_label(label):
     return render_passport({'passport_label': label})
 
-# IMPORTANT: There cannot be any instances of the character "$" in this dictionary
-query_variables = {
-    'g': '(this.genus)',
-    'G': '(parseInt(this.group.split(",")[0].split("[")[1]))',
-    #'d': '(this.dim)',
-    #'n': '(this.ndim)'
-}
-
 cur_expr = None
 cur_index = 0
 
@@ -236,100 +228,84 @@ def expr_expect_char(char):
         return None
 
 def read_num():
+    num = ""
     c = expr_peekc()
     while c != None and c.isdigit():
+        num += c
         expr_getc()
         c = expr_peekc()
+    return int(num)
 
-def expect_var(variables):
+def expect_var(vars):
     #print "var"
     c = expr_peekc()
     is_valid_var = False
-    for var in variables:
+    for var in vars.keys():
         if var == c:
             is_valid_var = True
             break
 
     if is_valid_var:
-        expr_getc()
-        return None
+        var = expr_getc()
+        return (None, vars[var])
     else:
-        return expr_error("'" + c + "' is not a recognized variable")
+        return (expr_error("'" + c + "' is not a recognized variable"), None)
 
-def expect_factor():
+def expect_factor(vars):
     #print "factor"
+
     c = expr_peekc()
     if c == None:
-        return expr_error("expected factor here")
+        return (expr_error("expected factor here"), None)
     elif c.isdigit():
-        read_num()
-        return None
+        return (None, read_num())
     elif is_letter(c):
-        return expect_var(query_variables.keys())
+        err, result = expect_var(vars)
+        return err, result
     elif c == '(':
         expr_getc()
-        err = expect_expr()
-        if err != None: return err
+        err, result = expect_expr(vars)
+        if err != None: return (err, None)
         err = expr_expect_char(')')
-        return err
+        if err != None: return (err, None)
+        else: return (None, result)
     else:
-        return expr_error("'" + c + "' unexpected symbol")
+        return (expr_error("'" + c + "' unexpected symbol"), None)
 
-def expect_term():
+def expect_term(vars):
     #print "term"
-    err = expect_factor()
-    if err != None: return err
+    err, result = expect_factor(vars)
+    if err != None: return (err, None)
 
     c = expr_peekc()
     while c != None and (c.isdigit() or is_letter(c) or c == '('):
-        err = expect_factor()
-        if err != None: return err
+        err, factor_result = expect_factor(vars)
+        if err != None: return (err, None)
+        result *= factor_result
         c = expr_peekc()
-    return None
 
-def expect_expr():
+    return (None, result)
+
+def expect_expr(vars):
     #print "expr"
-    err = expect_term()
-    if err != None: return err
+    err, result = expect_term(vars)
+    if err != None: return (err, None)
 
     c = expr_peekc()
     while c == "+" or c == "-":
         expr_getc()
-        err = expect_term()
-        if err != None: return err
+        err, term_result = expect_term(vars)
+        if err != None: return (err, None)
+        result += term_result
         c = expr_peekc()
 
-    return None
+    return (None, result)
 
-def is_valid_expr(expr):
+def evaluate_expr(expr, vars):
     global cur_expr, cur_index
     cur_expr = expr
     cur_index = 0
-    result = expect_expr()
-    if result == None:
-        if expr_peekc() != None:
-            return expr_error("unexpected symbol")
-    return result
-
-def get_token(expr, i):
-    j = i
-    if i < len(expr):
-        if expr[i].isdigit():
-            while i < len(expr) and expr[i].isdigit():
-                i += 1
-            return expr[j:i], i
-        else:
-            i += 1
-            return expr[j], i
-    else: return None, i
-
-def is_number(string):
-    result = True
-    for x in string:
-        if not x.isdigit():
-            result = False
-            break
-    return result
+    err, result = expect_expr(vars)
 
 def is_value(token):
     return is_number(token) or is_letter(token)
@@ -355,15 +331,13 @@ def add_mul(expr):
         prev = cur
     return result
 
-# Convert pretty expression to something mongo can understand
-def build_mongo_expr(expression):
-    for qvar in query_variables:
-        expression = expression.replace('$' + qvar, query_variables[qvar])
-    return expression
+    return (err, result)
 
-def variable_range_query(query_parameter, query_range):
+def add_group_order_range(mongo_query, expr, db):
     # Support -- and .. as range
-    query_range = query_range.replace("--", "..")
+    query_range = expr.replace("--", "..")
+    raw_parts = expr.split('..')
+    raw_parts = filter(lambda x: x != '', raw_parts)
 
     # put a $ before every variable, makes later part easier
     processed_query_range = add_mul(query_range)
@@ -394,25 +368,25 @@ def variable_range_query(query_parameter, query_range):
             return (raw_parts[1], right_half_err)
     elif len(parts) == 1 and query_range.find('..') != -1:
         condition = ""
-        expr = parts[0]
-        if processed_query_range.index("..") == 0:
-            condition = "<="
+
+        if query_range.find('..') != -1:
+            if query_range.index("..") == 0:
+                condition = "$lte"
+            else:
+                condition = "$gte"
         else:
-            condition = ">="
-        err = is_valid_expr(raw_parts[0])
-        if err == None:
-            mongo_expr = query_variables[query_parameter] + ' ' + condition + ' (' + build_mongo_expr(expr) + ')'
-            return (None, mongo_expr)
-        else:
-            return (raw_parts[0], err)
-    elif len(parts) == 1:
-        expr = parts[0]
-        err = is_valid_expr(raw_parts[0])
-        if err == None:
-            mongo_expr = query_variables[query_parameter] + ' == (' + build_mongo_expr(expr) + ')'
-            return (None, mongo_expr)
-        else:
-            return(raw_parts[0], err)
+            condition = "$eq"
+
+        for cur_genus in range(min_genus, max_genus + 1):
+            err, value   = evaluate_expr(raw_parts[0], {'g': cur_genus})
+            if err == None:
+                mongo_expr = []
+                mongo_expr.append({"group_order": {condition: value}, "genus": {"$eq": cur_genus}})
+                mongo_query["$or"] = mongo_expr
+                return (None, None)
+            else:
+                mongo_query["$or"] = [{"genus": {"$lte": 0}}]
+                return (raw_parts[0], err)
     else:
         return ("", "You must either specify a group size or range in the format Min..Max")
 
@@ -487,14 +461,17 @@ def higher_genus_w_automorphisms_search(**args):
         start = 0
 
 
-    code = ""
-    download_code = 'download' in info
-
     L = [ ]
     first_download_entry = True
     for field in res:
         field['signature'] = ast.literal_eval(field['signature'])
         L.append(field)
+
+    code = ""
+    download_code = 'download' in info
+    first_download_entry = True
+    for field in L:
+        field['signature'] = ast.literal_eval(field['signature'])
         if download_code:
             if first_download_entry:
                 code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:])
@@ -502,14 +479,63 @@ def higher_genus_w_automorphisms_search(**args):
                 code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
             first_download_entry = False
 
+
+
+
     if 'download' in info:
         response = make_response(code)
         response.headers['Content-type'] = 'text/plain'
         return response
+    """
+
+    res = C.curve_automorphisms.passports.find(query).sort([(
+         'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
+        ('cc'[0],pymongo.ASCENDING)])
+
+    if 'download_magma' in info:
+        code = ""
+        first_download_entry = True
+        for field in res:
+            print field['group']
+            if first_download_entry:
+                code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:])
+            else:
+                code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
+            first_download_entry = False
+        response = make_response(code)
+        response.headers['Content-type'] = 'text/plain'
+        return response
+    elif 'download_gap' in info:
+        code = ""
+        first_download_entry = True
+        for field in res:
+            print field['group']
+            if first_download_entry:
+                code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='gap').split('\n')[1:])
+            else:
+                code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
+            first_download_entry = False
+        response = make_response(code)
+        response.headers['Content-type'] = 'text/plain'
+        return response
+
+    nres = res.count()
+    res = res.skip(start).limit(count)
+
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
+
+    L = [ ]
+    for field in res:
+        field['signature'] = ast.literal_eval(field['signature'])
+        L.append(field)
 
     info['fields'] = L
     info['number'] = nres
     info['group_display'] = sg_pretty
+    info['show_downloads'] = len(L) > 0
 
     info['sign_display'] = sign_display
     info['start'] = start

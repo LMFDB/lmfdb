@@ -16,9 +16,9 @@ table,td {
 
   <table>
       <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
-   <!-- {% if info.specialname %} -->
+   {% if info.specialname %}
    <tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr>
-   <!-- {% endif %} -->
+   {% endif %}
 <tr>
   <td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td>
   <td>{{info.gpid}}</td></tr>
