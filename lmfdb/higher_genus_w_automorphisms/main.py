@@ -167,8 +167,8 @@ def groups_per_genus(genus):
         'groups': groups,
     }
 
-    title = 'Higher Genus Curves with Automorphisms: groups per genus'
-    bread = get_bread([('statistics', url_for('.statistics')), ('Groups per genus', ' '), (str(genus), ' ')])
+    title = 'Higher Genus Curves with Automorphisms: genus ' + genus + ' group statistics'
+    bread = get_bread([('statistics', url_for('.statistics')), ('Groups per genus', url_for('.statistics')), (str(genus), ' ')])
     return render_template("hgcwa-stats-groups-per-genus.html", info=info, credit=credit, title=title, bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/<label>")
@@ -354,7 +354,6 @@ def render_family(args):
                                title=title, bread=bread, info=info,
                                properties2=prop2, friends=friends,
                                learnmore=learnmore, downloads=downloads, credit=credit)
-
 
 def render_passport(args):
     info = {}

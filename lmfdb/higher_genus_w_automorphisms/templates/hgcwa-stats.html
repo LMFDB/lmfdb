@@ -23,32 +23,34 @@ table.ntdata td {
   </p>
 </div>
 
-<h2> Distribution of genus </h2>
+<h2> Distribution by genus </h2>
 <div>
   <table border=1 cellpadding=5 class="ntdata">
     <thead>
       <tr>
         <th>Genus</th>
         {% for genus in info.stats.genus_detail %}
-        <th class="center">{{genus.genus_num}}</th>
+        <th class="center">
+          <a href={{ url_for('.index', genus=genus.genus_num)}}>{{genus.genus_num}}</a>
+        </th>
         {% endfor %}
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>families</th>
+        <th>distinct families</th>
         {% for genus in info.stats.genus_detail %}
         <td>{{genus.families}}</td>
         {% endfor %}
       </tr>
       <tr>
-        <th>refined passports</th>
+        <th>distinct refined passports</th>
         {% for genus in info.stats.genus_detail %}
         <td>{{genus.refined_passports}}</td>
         {% endfor %}
       </tr>
       <tr>
-        <th>generating vectors</th>
+        <th>distinct generating vectors</th>
         {% for genus in info.stats.genus_detail %}
         <td>
           {{genus.gen_vectors}}
@@ -73,7 +75,7 @@ table.ntdata td {
   </table>
 </div>
 
-<h2> Distribution of dimension </h2>
+<h2> Distribution by dimension </h2>
 <div>
   <table border=1 cellpadding=5 class="ntdata">
     <thead>
