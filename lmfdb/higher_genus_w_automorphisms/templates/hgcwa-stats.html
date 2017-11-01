@@ -13,9 +13,14 @@ table.ntdata td {
 </style>
 
 <div>
-  The database currently contains... SEE:
-  <a href='http://www.lmfdb.org/EllipticCurve/Q/stats'>Elliptic Curves stats page</a>
-  as an example
+  <p>
+    Currently the database contains all groups G acting as automorphisms of
+    curves  X from genus {{info.stats.genus.min}} up to genus
+    {{info.stats.genus.max}} so that the quotient space X/G is the Riemann
+    sphere (X/G has genus 0). There are {{info.stats.refined_passports.unique}}
+    distinct refined passports in the database. The number of distinct
+    generating vectors is {{info.stats.generating_vectors.unique}}.
+  </p>
 </div>
 
 <h2> Distribution of genus </h2>
@@ -24,7 +29,7 @@ table.ntdata td {
     <thead>
       <tr>
         <th>Genus</th>
-        {% for genus in info.stats.genus %}
+        {% for genus in info.stats.genus_detail %}
         <th class="center">{{genus.genus_num}}</th>
         {% endfor %}
       </tr>
@@ -32,19 +37,19 @@ table.ntdata td {
     <tbody>
       <tr>
         <th>families</th>
-        {% for genus in info.stats.genus %}
+        {% for genus in info.stats.genus_detail %}
         <td>{{genus.families}}</td>
         {% endfor %}
       </tr>
       <tr>
         <th>refined passports</th>
-        {% for genus in info.stats.genus %}
+        {% for genus in info.stats.genus_detail %}
         <td>{{genus.refined_passports}}</td>
         {% endfor %}
       </tr>
       <tr>
         <th>generating vectors</th>
-        {% for genus in info.stats.genus %}
+        {% for genus in info.stats.genus_detail %}
         <td>
           {{genus.gen_vectors}}
         </td>
@@ -52,7 +57,7 @@ table.ntdata td {
       </tr>
       <tr>
         <th>unique groups</th>
-        {% for genus in info.stats.genus %}
+        {% for genus in info.stats.genus_detail %}
         <td>
           <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.groups[0]}}</a>
         </td>
@@ -60,7 +65,7 @@ table.ntdata td {
       </tr>
       <tr>
         <th>maximum group order</th>
-        {% for genus in info.stats.genus %}
+        {% for genus in info.stats.genus_detail %}
         <td>{{genus.groups[1]}}</td>
         {% endfor %}
       </tr>
@@ -74,7 +79,7 @@ table.ntdata td {
     <thead>
       <tr>
         <th>Dimension</th>
-        {% for dim in info.stats.dim_summary.counts %}
+        {% for dim in info.stats.dim.counts %}
         <th class="center">{{dim[0]}}</th>
         {% endfor %}
       </tr>
@@ -82,7 +87,7 @@ table.ntdata td {
     <tbody>
       <tr>
         <th>generating vectors (num entries per dim)</th>
-        {% for dim in info.stats.dim_summary.counts %}
+        {% for dim in info.stats.dim.counts %}
         <td>{{dim[1]}}</td>
         {% endfor %}
       </tr>

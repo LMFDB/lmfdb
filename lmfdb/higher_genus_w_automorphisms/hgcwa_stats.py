@@ -46,15 +46,20 @@ class HGCWAstats(object):
         stats = {}
 
         # Populate simple data
-        stats['genus_summary'] = db.find_one({'_id':'genus'})
-        stats['dim_summary'] = db.find_one({'_id':'dim'})
+        stats['genus'] = db.find_one({'_id':'genus'})
+        stats['dim'] = db.find_one({'_id':'dim'})
+        stats['refined_passports'] = db.find_one({'_id':'passport_label'})
+        stats['generating_vectors'] = db.find_one({'_id':'total_label'})
+
+        stats['refined_passports']['unique'] = len(stats['refined_passports']['counts'])
+        stats['generating_vectors']['unique'] = len(stats['generating_vectors']['counts'])
 
         # An iterable list of distinct curve genera
-        genus_list = [ count[0] for count in stats['genus_summary']['counts'] ]
+        genus_list = [ count[0] for count in stats['genus']['counts'] ]
         genus_list.sort()
 
         # Get unique joint genus stats
-        stats['genus'] = []
+        stats['genus_detail'] = []
 
         for genus in genus_list:
             genus_stats = {}
@@ -84,6 +89,6 @@ class HGCWAstats(object):
             genus_stats['gen_vectors'] = gv_count
 
             # Keep genus data sorted
-            stats['genus'].append(genus_stats)
+            stats['genus_detail'].append(genus_stats)
 
         return stats
