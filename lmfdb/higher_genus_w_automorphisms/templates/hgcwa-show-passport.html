@@ -7,7 +7,7 @@
 <style>
 table,td {
   border-right:solid 30px transparent;
-} 
+}
 </style>
 
 
@@ -15,10 +15,10 @@ table,td {
 <p><h2> Family Information</h2>
 
   <table>
-      <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>    
-   {% if info.specialname %}
+      <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
+   <!-- {% if info.specialname %} -->
    <tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr>
-   {% endif %}
+   <!-- {% endif %} -->
 <tr>
   <td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td>
   <td>{{info.gpid}}</td></tr>
@@ -29,7 +29,7 @@ table,td {
 
 <p>  {% if info.fullauto  %}
 The full automorphism group for this family is ${{info.fullauto}}$ with signature ${{info.signH}}$.
-    {% endif %} 
+    {% endif %}
 </p>
 
 
@@ -44,12 +44,12 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
   <p><h2>Other Data</h2>
     <table>
         <tr><td>Dimension of the corresponding {{KNOWL('ag.shimura_variety',title='Shimura variety')}}:</td><td>{{ info.Ndim}}</td></tr>
-      {% if info.ishyp %}     
+      {% if info.ishyp %}
       <tr><td>{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:</td><td>{{info.ishyp}}</td></tr>
       {% if info.hypinv  %}
        <tr><td>Hyperelliptic involution:</td> <td>{{info.hypinv}}</td></tr>
        {% endif %}  {% endif %}
-      {% if info.iscyctrig %}     
+      {% if info.iscyctrig %}
       <tr><td> {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:</td><td>{{info.iscyctrig}}</td></tr>
       {% if info.cinv  %}
        <tr><td>Trigonal automorphism:</td> <td>{{info.cinv}}</td></tr>
@@ -66,7 +66,7 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 	  {% endfor %} </table> <br>
      {% endif %}
   </p>
-  
+
 
 
 
@@ -78,7 +78,7 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
   {% else %}
   Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
-  
+
   {% endif %}
 </p>
 
@@ -87,7 +87,7 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
    {{cdata[0]}}
      <table>{% for perm in cdata[3] %}
 	  <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-	  {% endfor %} </table> <br>   
+	  {% endfor %} </table> <br>
   {% endfor %}
  </p>
 
@@ -108,5 +108,5 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 
 
-  
+
 {% endblock %}
