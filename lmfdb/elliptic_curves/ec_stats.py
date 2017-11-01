@@ -144,4 +144,3 @@ class ECstats(object):
         stats['sha_counts'] = sha_counts
         self._stats = stats
         logger.debug("... finished computing elliptic curve stats.")
-
