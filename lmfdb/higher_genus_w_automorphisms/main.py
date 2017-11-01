@@ -16,7 +16,7 @@ from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_inp
 from sage.all import Permutation
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.sato_tate_groups.main import sg_pretty
-from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats, db_hgcwa_stats
+from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats_object, db_hgcwa_stats
 
 
 # Determining what kind of label
@@ -142,27 +142,10 @@ def random_passport():
     label = random_value_from_collection(C.curve_automorphisms.passports,'passport_label')
     return redirect(url_for(".by_passport_label", passport_label=label))
 
-
-#############################################
-#  Stats page functions                     #
-#############################################
-
-# TODO Add number of distinct families per genus to stats page
-
-def max_group_order(counts):
-    orders = []
-    for count in counts:
-        group = count[0]
-        order = int(re.search(r'\[(\d+)', group).group(1))
-        orders.append(order)
-    return max(orders)
-
-# TODO Move to proper location
-
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
     info = {
-        'stats': get_hgcwa_stats(),
+        'stats': get_stats_object().stats(),
     }
     title = 'Higher Genus Curves with Automorphisms: statistics'
     bread = get_bread([('statistics', ' ')])
@@ -187,10 +170,6 @@ def groups_per_genus(genus):
     title = 'Higher Genus Curves with Automorphisms: groups per genus'
     bread = get_bread([('statistics', url_for('.statistics')), ('Groups per genus', ' '), (str(genus), ' ')])
     return render_template("hgcwa-stats-groups-per-genus.html", info=info, credit=credit, title=title, bread=bread)
-
-#############################################
-#  End Stats page functions                 #
-#############################################
 
 @higher_genus_w_automorphisms_page.route("/<label>")
 def by_label(label):
