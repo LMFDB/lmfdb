@@ -2,13 +2,14 @@
 # the command
 # %runfile scripts/higher_genus_w_automorphisms/import_cap_data.py
 
-import lmfdb, re
+import re
+from lmfdb.base import getDBConnection
 from pymongo import MongoClient
 from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
 
 
 # Get database connection
-C = MongoClient('localhost', 37010)
+C = getDBConnection()
 cap = C.curve_automorphisms
 
 # Basic counts for these attributes:
