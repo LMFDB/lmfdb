@@ -398,4 +398,4 @@ if __name__ == "__main__":
 else:
     #Setup the edit transactions logger
     #Swap out info for debug etc
-    inv.init_transac_log('info')
+    inv.init_transac_log(level_name='warning')

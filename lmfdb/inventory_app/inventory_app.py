@@ -12,7 +12,7 @@ url_pref = '/inventory/'
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 #Set to info, debug etc
-linv.init_run_log('debug')
+linv.init_run_log(level_name='warning')
 
 @inventory_app.route("style.css")
 def css():

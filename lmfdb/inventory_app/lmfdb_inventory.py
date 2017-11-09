@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 import json, yaml
-import logging
+import logging, logging.handlers
 
 #Contains the general data and functions for all inventory handling
 
@@ -74,9 +74,6 @@ _auth_as_edit = False
 _auth_on_remote = False
 def setup_internal_client(remote=True, editor=False):
     """Get mongo connection and set int_client to it"""
-
-    #Make sure logger is up
-    init_run_log()
 
     #This is a temporary arrangement, to be replaced with LMFDB connection
     log_dest.info("Creating db client")
@@ -215,8 +212,8 @@ def init_run_log(level_name=None):
         log_dest.addHandler(log_file_handler)
 
     if level_name:
-        #Print the level change in debug mode
-        log_dest.debug("Set level to "+level_name)
+        #Print the level change in warning or above mode
+        log_dest.warning("Set level to "+level_name)
 
 
 def init_transac_log(level_name=None):
@@ -231,7 +228,8 @@ def init_transac_log(level_name=None):
 
     #Add handler only if not already present
     if not len(log_transac.handlers):
-        log_file_handler = logging.FileHandler(TR_LOG_FILE_NAME)
+        #log_file_handler = logging.FileHandler(TR_LOG_FILE_NAME)
+        log_file_handler = logging.handlers.RotatingFileHandler(TR_LOG_FILE_NAME, maxBytes=1024, backupCount=2)
         formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(levelname)s | %(message)s ")
         log_file_handler.setFormatter(formatter)
         log_transac.addHandler(log_file_handler)
