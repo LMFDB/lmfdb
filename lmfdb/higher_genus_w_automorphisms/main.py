@@ -287,7 +287,7 @@ def evaluate_expr(expr, vars):
 
 def add_group_order_range(mongo_query, expr, db):
     # Support -- and .. as range
-    query_range = expr.replace("-", "..")
+    query_range = expr.replace("--", "..")
     raw_parts = expr.split('..')
     raw_parts = filter(lambda x: x != '', raw_parts)    
 
