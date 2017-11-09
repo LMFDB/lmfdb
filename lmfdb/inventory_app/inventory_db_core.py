@@ -497,6 +497,56 @@ def update_record_count(inv_db, record_id, new_count):
     rec_set = {records_fields[6]:new_count}
     return upsert_and_check(coll, rec_find, rec_set)
 
+def add_index(inv_db, coll_id, index_data):
+    """Add an index entry for given coll_id"""
+    #indexes = {STR_NAME : 'indexes', STR_CONTENT :['_id', 'name', 'coll_id', 'keys']}
+    try:
+        table_name = inv.ALL_STRUC.indexes[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True, 'id':0, 'exist':False}
+    indexes_fields = inv.ALL_STRUC.indexes[inv.STR_CONTENT]
+    record = {indexes_fields[1]:index_data['name']}
+    #If record exists, just return its ID
+    exists_at = coll.find_one(record)
+    if exists_at is not None:
+        inv.log_dest.debug("Index exists")
+        _id = exists_at['_id']
+    else:
+        record[indexes_fields[2]] = coll_id
+        record[indexes_fields[3]] = index_data['keys']
+        try:
+            _id = coll.insert(record)
+        except Exception as e:
+            inv.log_dest.error("Error inserting new index" +str(e))
+            return {'err':True, 'id':0, 'exist':False}
+
+    return {'err':False, 'id':_id, 'exist':(exists_at is not None)}
+
+def get_all_indices(inv_db, coll_id):
+    """ Return a list of all indices for coll_id.
+
+    inv_db -- LMFDB connection to inventory db
+    coll_id -- ID of collection field belongs to
+    """
+    #indexes = {STR_NAME : 'indexes', STR_CONTENT :['_id', 'name', 'coll_id', 'keys']}
+
+    try:
+        table_name = inv.ALL_STRUC.indexes[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+ str(e))
+        return {'err':True, 'id':0, 'exist':False}
+    indexes_fields = inv.ALL_STRUC.indexes[inv.STR_CONTENT]
+    rec_find = {indexes_fields[2]:coll_id}
+    try:
+        data = list(coll.find(rec_find, {'_id': 0, 'coll_id' : 0}))
+        return {'err':False, 'id':-1, 'exist':True, 'data':data}
+    except Exception as e:
+        inv.log_dest.error("Error getting data "+str(e))
+        return {'err':True, 'id':0, 'exist':True, 'data':None}
+
 def upsert_and_check(coll, rec_find, rec_set):
     """Upsert (insert/update) into given coll
 
@@ -534,7 +584,6 @@ def update_and_check(coll, rec_find, rec_set):
         inv.log_dest.error("Error updating record"+ str(e)) #TODO this is the wrong message
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':True}
-
 
 #End table creation routines -------------------------------------------------------------
 
