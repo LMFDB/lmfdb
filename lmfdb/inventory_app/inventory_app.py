@@ -50,7 +50,7 @@ def show_records(id, id2):
 
 #Edit page per collection, shows editable fields
 @inventory_app.route('<string:id>/<string:id2>/edit/')
-#@login_required
+@login_required
 def show_edit_inventory(id, id2):
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
     return render_template('edit_inventory.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), bread=bread, table_fields=linv.display_field_order())
@@ -64,7 +64,7 @@ def fetch_edit_inventory(id, id2):
 
 #Edit page per collection, shows editable fields
 @inventory_app.route('<string:id>/<string:id2>/records/edit/')
-#@login_required
+@login_required
 def show_edit_records(id, id2):
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['records', url_for('inventory_app.show_records', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_records', id=id, id2=id2)]]
     nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
@@ -117,7 +117,7 @@ def edit_failure(request=request):
 
 #Destination for submission
 @inventory_app.route('submit', methods=['POST'])
-#@login_required
+@login_required
 def submit_edits():
     #Do the submission
     try:
