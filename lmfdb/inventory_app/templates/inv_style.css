@@ -201,6 +201,12 @@ h2.link{
   column-count : 2;
 
 }
+.unbreaking{
+  -webkit-column-break-inside: avoid; /* Chrome, Safari */
+   page-break-inside: avoid;           /* Theoretically FF 20+ */
+   break-inside: avoid-column;         /* IE 11 */
+   display:table;
+}
 
 h2
 {
