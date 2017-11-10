@@ -7,12 +7,18 @@ table.number_table td
 {
 text-align:right;
 }
-
-
 </style>
 
 <div>
-Currently the database contains all groups G acting as automorphisms of curves X from genus 2 up to genus 15 so that the quotient space X/G is the Riemann sphere (X/G has genus 0).  There are 31770 distinct {{KNOWL('dq.curve.highergenus.aut.refinedpassports',title='refined passports')}} in the database. The number of distinct {{KNOWL('dq.curve.highergenus.aut.generatingvectors',title='generating vectors')}} is 334,886.
+  <p>
+    Currently the database contains all groups G acting as automorphisms of
+    curves  X from genus {{info.stats.genus.min}} up to genus
+    {{info.stats.genus.max}} so that the quotient space X/G is the Riemann
+    sphere (X/G has genus 0). There are {{info.stats.refined_passports.unique}}
+    distinct {{KNOWL('dq.curve.highergenus.aut.refinedpassports',title='refined passports')}} in the database. The number of distinct
+    {{KNOWL('dq.curve.highergenus.aut.generatingvectors',title='generating vectors')}} is {{info.stats.generating_vectors.unique}}.
+    Here are some <a href={{ url_for('.statistics') }}>further statistics</a>.
+  </p>
 </div>
 
 <!-- <div>
@@ -31,7 +37,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 <p>{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curves')}}: by genus:
 {% for gen in info.genus_list %}
 <a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>
-{% endfor %} 
+{% endfor %}
 </p>
 
 
@@ -73,7 +79,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
       </td>
           </tr>
 
-          
+
 	  <tr>
             <td align=right>
               {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
@@ -84,7 +90,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 
         <tr>
             <td align=right>
- {{KNOWL('curve.highergenus.aut.grouporder',title='Group Order(s)')}}:    
+ {{KNOWL('curve.highergenus.aut.grouporder',title='Group Order(s)')}}:
             </td><td><input type="text" name="groupsize" placeholder="2..5"></td>
             <td><span class="formexample">e.g. 12, or a range like 10..20, or you may include the variable g for genus like 84(g-1)</span></td>
         </tr>
@@ -110,7 +116,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>
                     <option value='only'>only</option>
-                 
+
                   </select>
                 </td>  <td>
 	<span class="formexample"></span>
@@ -122,7 +128,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>
                     <option value='only'>only</option>
-                 
+
                   </select>
                 </td>  <td>
 	<span class="formexample"></span>
@@ -134,12 +140,12 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>
                     <option value='only'>only</option>
-                 
+
                   </select>
                 </td>  <td>
 	<span class="formexample"></span>
-	 </td></tr> 
- 
+	 </td></tr>
+
           <tr>
           <td align=right>
               Maximum number of families to display:
@@ -148,6 +154,6 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
   </table>
         <button type="submit" name="Submit" value="Search">Search</button>
       </form>
-   
+
 
 {% endblock %}

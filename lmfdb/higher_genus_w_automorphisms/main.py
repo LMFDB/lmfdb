@@ -127,7 +127,9 @@ def index():
     C = base.getDBConnection()
     genus_max = C.curve_automorphisms.passports.find().sort('genus', pymongo.DESCENDING).limit(1)[0]['genus']  + 1
     genus_list = range(2,genus_max)
-    info = {'count': 20,'genus_list': genus_list}
+    info = {'count': 20,
+            'genus_list': genus_list,
+            'stats': get_stats_object().stats(),}
 
 
     learnmore = [('Source of the data', url_for(".how_computed_page")),

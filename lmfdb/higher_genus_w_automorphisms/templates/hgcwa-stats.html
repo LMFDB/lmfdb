@@ -18,8 +18,8 @@ table.ntdata td {
     curves  X from genus {{info.stats.genus.min}} up to genus
     {{info.stats.genus.max}} so that the quotient space X/G is the Riemann
     sphere (X/G has genus 0). There are {{info.stats.refined_passports.unique}}
-    distinct refined passports in the database. The number of distinct
-    generating vectors is {{info.stats.generating_vectors.unique}}.
+    distinct {{KNOWL('dq.curve.highergenus.aut.refinedpassports',title='refined passports')}} in the database. The number of distinct
+    {{KNOWL('dq.curve.highergenus.aut.generatingvectors',title='generating vectors')}} is {{info.stats.generating_vectors.unique}}.
   </p>
 </div>
 
@@ -68,7 +68,9 @@ table.ntdata td {
       <tr>
         <th>maximum group order</th>
         {% for genus in info.stats.genus_detail %}
-        <td>{{genus.groups[1]}}</td>
+        <td>
+          <a href={{ url_for('.index', genus=genus.genus_num, groupsize=genus.groups[1])}}>{{genus.groups[1]}}</a>
+        </td>
         {% endfor %}
       </tr>
     </tbody>
