@@ -1,7 +1,10 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<!-- For centering data -->
+{% set max_cols = 10 %}
+{% set genus_detail = info.stats.genus_detail %}
+{% set dim_counts = info.stats.dim.counts %}
+
 <style>
 table.ntdata th.center {
   text-align: center;
@@ -23,13 +26,14 @@ table.ntdata td {
   </p>
 </div>
 
+{% for i in range(0, genus_detail | length, max_cols) %}
 <h2> Distribution by genus </h2>
 <div>
   <table border=1 cellpadding=5 class="ntdata">
     <thead>
       <tr>
         <th>Genus</th>
-        {% for genus in info.stats.genus_detail %}
+        {% for genus in genus_detail[i:i+max_cols] %}
         <th class="center">
           <a href={{ url_for('.index', genus=genus.genus_num)}}>{{genus.genus_num}}</a>
         </th>
@@ -39,19 +43,19 @@ table.ntdata td {
     <tbody>
       <tr>
         <th>distinct families</th>
-        {% for genus in info.stats.genus_detail %}
+        {% for genus in genus_detail[i:i+max_cols] %}
         <td>{{genus.families}}</td>
         {% endfor %}
       </tr>
       <tr>
         <th>distinct refined passports</th>
-        {% for genus in info.stats.genus_detail %}
+        {% for genus in genus_detail[i:i+max_cols] %}
         <td>{{genus.refined_passports}}</td>
         {% endfor %}
       </tr>
       <tr>
         <th>distinct generating vectors</th>
-        {% for genus in info.stats.genus_detail %}
+        {% for genus in genus_detail[i:i+max_cols] %}
         <td>
           {{genus.gen_vectors}}
         </td>
@@ -59,7 +63,7 @@ table.ntdata td {
       </tr>
       <tr>
         <th>unique groups</th>
-        {% for genus in info.stats.genus_detail %}
+        {% for genus in genus_detail[i:i+max_cols] %}
         <td>
           <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.groups[0]}}</a>
         </td>
@@ -67,7 +71,7 @@ table.ntdata td {
       </tr>
       <tr>
         <th>maximum group order</th>
-        {% for genus in info.stats.genus_detail %}
+        {% for genus in genus_detail[i:i+max_cols] %}
         <td>
           <a href={{ url_for('.index', genus=genus.genus_num, groupsize=genus.groups[1])}}>{{genus.groups[1]}}</a>
         </td>
@@ -76,14 +80,16 @@ table.ntdata td {
     </tbody>
   </table>
 </div>
+{% endfor %}
 
+{% for i in range(0, dim_counts | length, max_cols) %}
 <h2> Distribution by dimension </h2>
 <div>
   <table border=1 cellpadding=5 class="ntdata">
     <thead>
       <tr>
         <th>Dimension</th>
-        {% for dim in info.stats.dim.counts %}
+        {% for dim in dim_counts[i:i+max_cols] %}
         <th class="center">{{dim[0]}}</th>
         {% endfor %}
       </tr>
@@ -91,12 +97,13 @@ table.ntdata td {
     <tbody>
       <tr>
         <th>generating vectors</th>
-        {% for dim in info.stats.dim.counts %}
+        {% for dim in dim_counts[i:i+max_cols] %}
         <td>{{dim[1]}}</td>
         {% endfor %}
       </tr>
     </tbody>
   </table>
 </div>
+{% endfor %}
 
 {% endblock %}
