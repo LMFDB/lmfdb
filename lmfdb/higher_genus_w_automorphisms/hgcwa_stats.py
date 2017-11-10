@@ -36,6 +36,7 @@ class HGCWAstats(object):
         self._counts = {}
         self._stats = self.compute_stats()
 
+    #TODO provide getter for subset of stats (e.g. for top matter)
     def stats(self):
         return self._stats
 

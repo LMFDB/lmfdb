@@ -6,16 +6,18 @@
   <table border=1 cellpadding=5 class="ntdata">
     <thead>
       <tr>
-        <th>Group</th>
+        <th>Isomorphism class</th>
+        <th>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group')}}</th>
         <th>Distinct generating vectors</th>
       </tr>
     </thead>
     <tbody>
-      {% for group in info.groups %}
+      {% for i in range(0, info.groups | length) %}
       <tr>
-        <td><a href={{url_for('.index', genus=info.genus, group=group[0])}}>{{group[0]}}</a></td>
+        <td>{{info.iso_classes[i]}}</td>
+        <td><a href={{url_for('.index', genus=info.genus, group=info.groups[i][0])}}>{{info.groups[i][0]}}</a></td>
         <td align="center">
-          {{group[1]}}
+          {{info.groups[i][1]}}
         </td>
       </tr>
       {% endfor %}

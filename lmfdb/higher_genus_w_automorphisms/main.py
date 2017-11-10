@@ -165,9 +165,17 @@ def groups_per_genus(genus):
     # Groups are stored in sorted order
     groups = group_stats['counts']
 
+    # Create isomorphism classes
+    hgcwa_group = re.compile(r'\[(\d+),(\d+)\]')
+    iso_classes = []
+
+    for group in groups:
+        iso_classes.append(sg_pretty(re.sub(hgcwa_group, r'\1.\2', group[0])))
+
     info = {
         'genus' : genus,
         'groups': groups,
+        'iso_classes' : iso_classes
     }
 
     title = 'Higher Genus Curves with Automorphisms: genus ' + genus + ' group statistics'
