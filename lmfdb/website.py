@@ -145,6 +145,11 @@ def robots_txt():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
+    # not running on www.lmfdb.org
+    else:
+        fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "default_robots.txt")
+        if os.path.exists(fn):
+            return open(fn).read()
     return "User-agent: *\nDisallow: / \n"
 
 @app.route("/style.css")
