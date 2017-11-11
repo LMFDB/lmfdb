@@ -291,8 +291,12 @@ def add_group_order_range(mongo_query, expr, db):
     raw_parts = expr.split('..')
     raw_parts = filter(lambda x: x != '', raw_parts)    
 
-    min_genus = db.curve_automorphisms.passports.find().sort([("group_order", 1)]).limit(1)[0]["genus"]
-    max_genus = db.curve_automorphisms.passports.find().sort([("group_order", -1)]).limit(1)[0]["genus"]
+    # these don't work
+    #min_genus = db.curve_automorphisms.passports.find().sort([("group_order", 1)]).limit(1)[0]["genus"]
+    #max_genus = db.curve_automorphisms.passports.find().sort([("group_order", -1)]).limit(1)[0]["genus"]
+    
+    min_genus = 1
+    max_genus = db.curve_automorphisms.passports.find().sort('genus', pymongo.DESCENDING).limit(1)[0]['genus']
 
     if len(raw_parts) == 2:
         mongo_expr = []
@@ -324,16 +328,17 @@ def add_group_order_range(mongo_query, expr, db):
         else:
             condition = "$eq"
 
+        mongo_expr = []
         for cur_genus in range(min_genus, max_genus + 1):
-            err, value   = evaluate_expr(raw_parts[0], {'g': cur_genus})
+            err, value = evaluate_expr(raw_parts[0], {'g': cur_genus})
             if err == None:
-                mongo_expr = []
                 mongo_expr.append({"group_order": {condition: value}, "genus": {"$eq": cur_genus}})
-                mongo_query["$or"] = mongo_expr 
-                return (None, None)
             else:
                 mongo_query["$or"] = [{"genus": {"$lte": 0}}]
                 return (raw_parts[0], err) 
+
+        mongo_query["$or"] = mongo_expr 
+        return (None, None)
     else:
         return ("", "You must either specify a group size or range in the format Min..Max")
 
@@ -434,11 +439,24 @@ def higher_genus_w_automorphisms_search(**args):
          'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
         ('cc'[0],pymongo.ASCENDING)])
 
+    nres = res.count()
+    res = res.skip(start).limit(count)
+
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
+
+    L = [ ]    
+    for field in res:
+        field['signature'] = ast.literal_eval(field['signature'])    
+        L.append(field)
+    
     if 'download_magma' in info:
         code = ""    
         first_download_entry = True
-        for field in res:
-            print field['group']
+        for field in L:
+            #print field
             if first_download_entry:
                 code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:])
             else:
@@ -450,7 +468,7 @@ def higher_genus_w_automorphisms_search(**args):
     elif 'download_gap' in info:
         code = ""    
         first_download_entry = True
-        for field in res:
+        for field in L:
             print field['group']
             if first_download_entry:
                 code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='gap').split('\n')[1:])
@@ -460,20 +478,7 @@ def higher_genus_w_automorphisms_search(**args):
         response = make_response(code)
         response.headers['Content-type'] = 'text/plain'
         return response
-
-    nres = res.count()
-    res = res.skip(start).limit(count)
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
         
-    L = [ ]    
-    for field in res:
-        field['signature'] = ast.literal_eval(field['signature'])    
-        L.append(field)
-
     info['fields'] = L    
     info['number'] = nres
     info['group_display'] = sg_pretty
