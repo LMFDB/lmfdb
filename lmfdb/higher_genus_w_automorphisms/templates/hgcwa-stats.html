@@ -3,7 +3,7 @@
 
 {% set max_cols = 10 %}
 {% set genus_detail = info.stats.genus_detail %}
-{% set dim_counts = info.stats.dim.counts %}
+{% set dim_detail = info.stats.dim_detail %}
 
 <style>
 table.ntdata th.center {
@@ -20,9 +20,9 @@ table.ntdata td {
     Currently the database contains all groups G acting as automorphisms of
     curves  X from genus {{info.stats.genus.min}} up to genus
     {{info.stats.genus.max}} so that the quotient space X/G is the Riemann
-    sphere (X/G has genus 0). There are {{info.stats.refined_passports.unique}}
+    sphere (X/G has genus 0). There are {{info.stats.refined_passports.distinct}}
     distinct {{KNOWL('dq.curve.highergenus.aut.refinedpassports',title='refined passports')}} in the database. The number of distinct
-    {{KNOWL('dq.curve.highergenus.aut.generatingvectors',title='generating vectors')}} is {{info.stats.generating_vectors.unique}}.
+    {{KNOWL('dq.curve.highergenus.aut.generatingvectors',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
   </p>
 </div>
 
@@ -82,23 +82,23 @@ table.ntdata td {
 </div>
 {% endfor %}
 
-{% for i in range(0, dim_counts | length, max_cols) %}
+{% for i in range(0, dim_detail | length, max_cols) %}
 <h2> Distribution by dimension </h2>
 <div>
   <table border=1 cellpadding=5 class="ntdata">
     <thead>
       <tr>
         <th>Dimension</th>
-        {% for dim in dim_counts[i:i+max_cols] %}
-        <th class="center">{{dim[0]}}</th>
+        {% for dim in dim_detail[i:i+max_cols] %}
+        <th class="center">{{dim.dim_num}}</th>
         {% endfor %}
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>generating vectors</th>
-        {% for dim in dim_counts[i:i+max_cols] %}
-        <td>{{dim[1]}}</td>
+        <th>distinct generating vectors</th>
+        {% for dim in dim_detail[i:i+max_cols] %}
+        <td>{{dim.gen_vectors}}</td>
         {% endfor %}
       </tr>
     </tbody>
