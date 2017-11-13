@@ -317,29 +317,9 @@ def evaluate_expr(expr, vars):
     cur_index = 0
     err, result = expect_expr(vars)
 
-def is_value(token):
-    return is_number(token) or is_letter(token)
-
-def add_mul(expr):
-    result = ""
-    i = 0
-    prev, i = get_token(expr, i)
-    result += prev
-    while prev != None:
-        cur, i = get_token(expr, i)
-        if cur == None: break
-        two_vars = (is_value(prev) and is_value(cur))
-        var_expr = (is_value(prev) and cur == '(')
-        expr_var = (prev == ')' and is_value(cur))
-        two_expr = (prev == ')' and cur == '(')
-        mult_between = two_vars or var_expr or expr_var or two_expr
-
-        if mult_between:
-            result += "*"
-
-        result += cur
-        prev = cur
-    return result
+    if err == None:
+        if expr_peekc() != None:
+            return (expr_error("unexpected symbol"), None)
 
     return (err, result)
 
@@ -347,36 +327,31 @@ def add_group_order_range(mongo_query, expr, db):
     # Support -- and .. as range
     query_range = expr.replace("--", "..")
     raw_parts = expr.split('..')
-    raw_parts = filter(lambda x: x != '', raw_parts)
+    raw_parts = filter(lambda x: x != '', raw_parts)    
 
-    # put a $ before every variable, makes later part easier
-    processed_query_range = add_mul(query_range)
-    for qvar in query_variables:
-        processed_query_range = processed_query_range.replace(qvar, '$' + qvar)
+    min_genus = db.curve_automorphisms.passports.find().sort([("group_order", 1)]).limit(1)[0]["genus"]
+    max_genus = db.curve_automorphisms.passports.find().sort([("group_order", -1)]).limit(1)[0]["genus"]
 
-    raw_parts = query_range.split('..')
-    parts = processed_query_range.split('..')
+    if len(raw_parts) == 2:
+        mongo_expr = []
 
-    raw_parts = filter(lambda x: x != '', raw_parts)
-    parts = filter(lambda x: x != '', parts)
+        for cur_genus in range(min_genus, max_genus + 1):
+            left_err, left_value   = evaluate_expr(raw_parts[0], {'g': cur_genus})
+            right_err, right_value = evaluate_expr(raw_parts[1], {'g': cur_genus})
+            if left_err == None and right_err == None:
+                mongo_expr.append({"group_order": {"$gte": left_value, "$lte" : right_value}, "genus": cur_genus})
+            elif left_err != None:
+                mongo_query["$or"] = [{"genus": {"$lte": 0}}]
+                #print "\n\nleft error\n\n"
+                return (raw_parts[0], left_err)
+            else:
+                mongo_query["$or"] = [{"genus": {"$lte": 0}}]
+                #print "\n\nright error\n\n"
+                return (raw_parts[1], right_err)
 
-    if len(parts) == 2:
-        # This is a well formed range query
-        left_half_err = is_valid_expr(raw_parts[0])
-        right_half_err = is_valid_expr(raw_parts[1])
-
-        if left_half_err == None and right_half_err == None:
-            left_expr = query_variables[query_parameter] + ' >= (' + build_mongo_expr(parts[0]) + ')'
-            right_expr = query_variables[query_parameter] + ' <= (' + build_mongo_expr(parts[1]) + ')'
-            mongo_expr = '(' + left_expr + ') && (' + right_expr + ')'
-            return (None, mongo_expr)
-        elif left_half_err != None:
-            #print "\n\n",left_half_err,"\n\n"
-            return (raw_parts[0], left_half_err)
-        else:
-            #print "\n\n",right_half_err,"\n\n"
-            return (raw_parts[1], right_half_err)
-    elif len(parts) == 1 and query_range.find('..') != -1:
+        mongo_query["$or"] = mongo_expr
+        return (None, None)
+    elif len(raw_parts) == 1:
         condition = ""
 
         if query_range.find('..') != -1:
@@ -451,14 +426,10 @@ def higher_genus_w_automorphisms_search(**args):
     start = parse_start(info)
 
     if 'groupsize' in info and info['groupsize'] != '':
-        err, result = variable_range_query('G', info['groupsize'])
-        if err == None:
-            #print "\n\n", result, "\n\n"
-            query['$where'] = result
-        else:
-            flash_error('<font face="Courier New"> Parse error on group size range <br />' + err + '<br />' + result + '</font>')
-            query['$where'] = "false"
-
+        err, result = add_group_order_range(query, info['groupsize'], C)
+        if err != None:
+            flash_error('Parse error on group order field. <font face="Courier New"><br />Given: ' + err + '<br />-------' + result + '</font>')
+    """
     res = C.curve_automorphisms.passports.find(query).sort([(
          'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
         ('cc'[0],pymongo.ASCENDING)])
@@ -472,7 +443,6 @@ def higher_genus_w_automorphisms_search(**args):
 
 
     L = [ ]
-    first_download_entry = True
     for field in res:
         field['signature'] = ast.literal_eval(field['signature'])
         L.append(field)
@@ -497,6 +467,50 @@ def higher_genus_w_automorphisms_search(**args):
         response.headers['Content-type'] = 'text/plain'
         return response
     """
+
+    res = C.curve_automorphisms.passports.find(query).sort([(
+         'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
+        ('cc'[0],pymongo.ASCENDING)])
+
+    if 'download_magma' in info:
+        code = ""
+        first_download_entry = True
+        for field in res:
+            print field['group']
+            if first_download_entry:
+                code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:])
+            else:
+                code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
+            first_download_entry = False
+        response = make_response(code)
+        response.headers['Content-type'] = 'text/plain'
+        return response
+    elif 'download_gap' in info:
+        code = ""
+        first_download_entry = True
+        for field in res:
+            print field['group']
+            if first_download_entry:
+                code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='gap').split('\n')[1:])
+            else:
+                code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
+            first_download_entry = False
+        response = make_response(code)
+        response.headers['Content-type'] = 'text/plain'
+        return response
+
+    nres = res.count()
+    res = res.skip(start).limit(count)
+
+    if(start >= nres):
+        start -= (1 + (start - nres) / count) * count
+    if(start < 0):
+        start = 0
+
+    L = [ ]
+    for field in res:
+        field['signature'] = ast.literal_eval(field['signature'])
+        L.append(field)
 
     res = C.curve_automorphisms.passports.find(query).sort([(
          'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
