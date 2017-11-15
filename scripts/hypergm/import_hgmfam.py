@@ -25,8 +25,7 @@ saving = True
 
 count = 0
 
-hgm.drop()
-#time.sleep(3)
+#hgm.drop()
 
 # New game plan:
 #    - make a list of python dictionaries
