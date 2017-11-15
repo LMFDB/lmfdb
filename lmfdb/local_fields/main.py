@@ -8,7 +8,7 @@ from lmfdb.base import app, getDBConnection
 from flask import render_template, request, url_for, redirect
 from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, random_object_from_collection, display_multiset
 from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input, parse_rats
-from sage.all import PolynomialRing, QQ, RR, gp
+from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.WebNumberField import string2list
 
