@@ -54,14 +54,15 @@ function promptStatus(input, element, info){
 }
 
 function updateStatus(newStatus, info){
-    console.log(newStatus, info);
+    if(newStatus == 'ops' && !window.confirm("Ops collections are not displayed. Are you sure you wish to set this status?")){
+      return;
+    }
     var diff = makeDiff([new ResponseBlock('top_level', 'status', newStatus)], info);
-    console.log(newStatus, diff);
     var dest = '{{ url_for('inventory_app.submit_edits') }}';
 //    var callback = function(){ flashName(element);}
       var callback = null;
 //    submittedNice = newName;
-    genSubmitEdits(dest, diff, {redirect:false, debug:true, refresh:false, call: callback});
+    genSubmitEdits(dest, diff, {redirect:false, debug:true, refresh:true, call: callback});  
 }
 
 </script>
@@ -78,7 +79,8 @@ function updateStatus(newStatus, info){
 {% block main_body %}
   <div id='dialog'></div>
   <div class='listing'>
-  {% for item in listing %}
+  <!-- Omit ops dbs  Note if you set one to 'ops' and refresh it will be GONE!! This is why there's a confirmation dialog-->
+  {% for item in listing if (db_name is none or item[3] != 'ops') %}
   <div class='unbreaking'>
     {% if db_name is none %}
       <h2 class='link'><a href = {{url_for('inventory_app.show_edit_child', id=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
@@ -90,7 +92,8 @@ function updateStatus(newStatus, info){
       {% endif %}
 
     {% else %}
-      <h2 class='link'><a href = {{url_for('inventory_app.show_inventory', id=db_name, id2=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
+      <h2 class='link'><a href = {{url_for('inventory_app.show_inventory', id=db_name, id2=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span>
+         <span class='status'>{{item[3]}}</span></h2>
       Contains {{item[2][0]}} records of {{item[2][1]}} types </br>
       {% if current_user.is_authenticated() %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>

@@ -176,7 +176,15 @@ def status_to_code(status):
         return coll_status.keys()[list(coll_status.values()).index(status)]
     except:
         return -1
+
+def code_to_status(status):
+    try:
+        return coll_status[status]
+    except:
+        return ''
+
 #End display helpers ----------------------------------------------------------
+
 
 #LMFDB report tool temporary borrows _____________________________________________________
 

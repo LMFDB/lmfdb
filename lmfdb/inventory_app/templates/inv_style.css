@@ -96,6 +96,13 @@ select {
     display: inline-block;
 }
 
+.status{
+    color: black !important;
+    font-style: italic;
+    font-weight: normal;
+    background-color: lightgrey;
+}
+
 div.collapser {
     display: block;
 }
