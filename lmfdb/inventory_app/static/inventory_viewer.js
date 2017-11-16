@@ -1,3 +1,4 @@
+/*jshint esversion: 6 */
 
 //---------- Viewer DOM creation ---------------------------------
 
@@ -19,7 +20,7 @@ function populateViewerPage(blockList, startVisible=true){
   table.class = 'viewerTable';
   entry_styles = ['table_tag'];
 
-  var row = createViewerRow(blockList, 'Key', '', header=true)
+  var row = createViewerRow(blockList, 'Key', '', header=true);
   table.appendChild(row);
   for(var i=0; i < fields.length; i++){
     row = createViewerRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+id_delimiter);
@@ -52,14 +53,14 @@ function createViewerRow(blockList, field, id_start, header=false){
   table_el.innerHTML = field;
   table_el.classList.add(clas);
   table_row.appendChild(table_el);
-
+  var block;
   for(var j=0; j < table_fields.length; j++){
-    var table_el = document.createElement('td');
+    table_el = document.createElement('td');
     table_el.classList.add(clas);
     if(header){
       table_el.innerHTML = capitalise(table_fields[j]);
     }else{
-      var block = blockList.getBlock(id_start+table_fields[j]);
+      block = blockList.getBlock(id_start+table_fields[j]);
       if(block && ! block.special){
         table_el.innerHTML = block.text;
       }else{

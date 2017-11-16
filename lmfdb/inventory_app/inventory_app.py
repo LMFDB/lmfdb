@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, url_for, make_response, jsonify, Blueprint
-from flask_login import login_required, LoginManager, UserMixin, login_user
+from flask import render_template, request, url_for, make_response, jsonify, Blueprint
+from flask_login import login_required
 import inventory_viewer
 import lmfdb_inventory as linv
 import inventory_helpers as ih

@@ -1,4 +1,3 @@
-import json
 import inventory_helpers as ih
 import lmfdb_inventory as inv
 import inventory_db_core as idc
@@ -163,6 +162,7 @@ def store_rollback(inv_db, rollback_diff):
     record = {fields[1]:rollback_diff}
     try:
         _id = coll.insert(record)
+        return {'err':False, 'id':_id}
     except Exception as e:
         inv.log_dest.error("Error inserting new record" +str(e))
         return {'err':True, 'id':0}
@@ -179,7 +179,7 @@ def set_rollback_dead(inv_db, rollback_doc):
     id = rollback_doc['_id']
     diff = rollback_doc.copy()
     diff['diff']['live'] = False
-    response = rollback_coll.find_and_modify(query={'_id':id}, update={"$set":diff}, upsert=False, full_response=True)
+    rollback_coll.find_and_modify(query={'_id':id}, update={"$set":diff}, upsert=False, full_response=True)
 
 
 def apply_rollback(inv_db, rollback_doc):

@@ -1,3 +1,4 @@
+/*jshint esversion: 6 */
 var recordHashMap; //Dummy in general, some pages use this
 
 var id_delimiter = ':'; //Character(s) used to join sections of ids
@@ -15,7 +16,7 @@ function Block(field, key, text, docElementId){
   this.newtext = text;
   this.edited = false;
   this.docElementId = docElementId;
-  this.special = false
+  this.special = false;
   this.editable = true; //Whether field is editable, or not
   this.record = false;
 }
@@ -55,7 +56,7 @@ function getBlockIdsFromPartialID(id){
   //Look up block where id matches the beginning
   blocks =[];
   if(id[0] != '#') id = '#'+id;
-  for(key in this.blockList){
+  for(var key in this.blockList){
     if(key.indexOf(id) != -1){
       blocks.push(key);
     }
@@ -100,7 +101,7 @@ function getBoxTitles(blockList){
 
 //---------- General data fetching  ------------------------------
 
-function fetchAndPopulateData(blockList, pageCreator, startVisible=startVisible){
+function fetchAndPopulateData(blockList, pageCreator, startVisible=true){
   //Fetch the json data for this page
   var current_url = window.location.href;
   var data_url = current_url + 'data';
@@ -128,7 +129,7 @@ function populateBlocklist(blockList, data){
   //Fill given blocklist from given data
   var contents = "";
   var docElementId = "";
-  blockList.date = data['scrape_date'];
+  blockList.date = data.scrape_date;
   //Do specials and then do main data
   var special = false;
   //Data should contain 2 sections, specials and data
@@ -142,7 +143,7 @@ function populateBlocklist(blockList, data){
     for(var field in data[item]){
       contents = data[item][field];
       record = ('hash' in contents && 'oschema' in contents);
-      for(tag in contents){
+      for(var tag in contents){
         var fieldname = field;
         docElementId = '#Box'+id_delimiter+fieldname+id_delimiter+tag;
         blockList.addBlock(fieldname, tag, contents[tag], docElementId);
@@ -151,7 +152,7 @@ function populateBlocklist(blockList, data){
       }
     }
   }
-  if(recordHashMap) fillRecordHashMap(data['data']);
+  if(recordHashMap) fillRecordHashMap(data.data);
 
 }
 
@@ -190,7 +191,7 @@ function genSubmitEdits(dest, diff, info){
     XHR.addEventListener('load', function(event) {
       //On success redirect to a success page
       var response = JSON.parse(XHR.response);
-      window.location.replace(response['url']);
+      window.location.replace(response.url);
     });
   }else if(info.refresh){
       XHR.addEventListener('load', function(event) {
@@ -250,7 +251,7 @@ function createCollapserButt(field, open=true){
         div.classList.add('hide');
         this.value = "+";
       }
-		}
+		};
 	})();
   butt.title = "Expand/Collapse Section";
 

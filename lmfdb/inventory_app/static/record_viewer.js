@@ -1,5 +1,6 @@
 
-var tooltip_dict = {'dummy': 'Record does not exist', 'extends': 'Schema is displayed as diff from numbered record', 'base' : 'This is the base record which others extend'}
+/*jshint esversion: 6 */
+var tooltip_dict = {'dummy': 'Record does not exist', 'extends': 'Schema is displayed as diff from numbered record', 'base' : 'This is the base record which others extend'};
 
 function BaseRecord(num, name){
   //Holds the info about the base record for the diffed record types
@@ -20,8 +21,8 @@ function unpackBaseRecord(blockList){
         if( block.substr(block.length-4, block.length) == 'base' && blockList.blockList[block].text){
           var part_id = block.substr(1, block.length-6); //Remove '_base'
           var blocks = blockList.getBlockIdsFromPartialID(part_id);
-          var block = blockList.getBlock('#'+part_id+id_delimiter+'name');
-          var tmp_name = block ? block.text: '';
+          var blockCont = blockList.getBlock('#'+part_id+id_delimiter+'name');
+          var tmp_name = blockCont ? blockCont.text: '';
           var tmp_num = part_id.substr(part_id.lastIndexOf(id_delimiter)+1, part_id.length);
           return new BaseRecord(tmp_num, tmp_name);
         }
@@ -39,14 +40,14 @@ function populateRecordViewerPage(blockList, startVisible=true){
   var dataDiv = document.getElementById('dataDiv');
 
   var fields = getBoxTitles(blockList);
-  
+
   var table_div = document.createElement('div');
   var table = document.createElement('table');
   table.class = 'viewerTable';
   entry_styles = ['table_tag'];
 
   base_record = unpackBaseRecord(blockList);
-  var row = createRecordRow(blockList, 'Key', '', base_record, header=true)
+  var row = createRecordRow(blockList, 'Key', '', base_record, header=true);
   table.appendChild(row);
   for(var i=0; i < fields.length; i++){
     row = createRecordRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+id_delimiter, base_record);
@@ -82,7 +83,7 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
   table_row.appendChild(table_el);
   var is_base = (blockList.getBlock(id_start+'base') ? blockList.getBlock(id_start+'base').text : false);
   for(var j=0; j < record_fields.length; j++){
-    var table_el = document.createElement('td');
+    table_el = document.createElement('td');
     table_el.classList.add(clas);
     if(header){
       table_el.innerHTML = capitalise(record_fields[j]);
@@ -95,13 +96,13 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
       }
       else if(record_fields[j] == 'count' && text == '0'){
         text = 'Dummy Base';
-        table_el.title = tooltip_dict['dummy'];
+        table_el.title = tooltip_dict.dummy;
         table_row.classList.add('viewerTableSpecial');
       }else if(record_fields[j] == 'extends' && base_record && blockList.getBlock(id_start+'diffed').text && ! is_base){
         text = base_record.displayname;
       }else if(record_fields[j] == 'extends' && is_base){
         text = '[Is base record]';
-        table_el.title = tooltip_dict['base'];
+        table_el.title = tooltip_dict.base;
       }
       if(text) table_el.innerHTML = text;
     }
@@ -122,6 +123,6 @@ function fillRecordHashMap(data){
     contents = data[field];
     //If this is records, we add entry to the map linking the field to the hash
     var records = ('hash' in contents && 'oschema' in contents);
-    recordHashMap.set(field, contents['hash']);
+    recordHashMap.set(field, contents.hash);
   }
 }

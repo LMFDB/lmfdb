@@ -1,4 +1,3 @@
-import json
 import inventory_helpers as ih
 import lmfdb_inventory as inv
 import datetime as dt
@@ -652,11 +651,12 @@ def complete_human_table(inv_db_toplevel, db_id, coll_id):
         for field in inv.base_editable_fields:
             try:
                 a = human_record[field]
+                assert(a)
             except:
                 rec_set[field] = None
         if rec_set:
             #Creates if absent, else updates with missing fields
-            updated = set_field(inv_db_toplevel, coll_id, record['name'], rec_set, type='human')
+            set_field(inv_db_toplevel, coll_id, record['name'], rec_set, type='human')
 
 #End table sync --------------------------------------------------------------------------
 #Assorted helper access functions --------------------------------------------------------

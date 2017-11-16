@@ -1,5 +1,7 @@
 
-var tooltip_dict = {'keys': '-1: descending, 1: ascending, 2d: using 2d ordering'}
+/*jshint esversion: 6 */
+
+var tooltip_dict = {'keys': '-1: descending, 1: ascending, 2d: using 2d ordering'};
 
 
 function populateIndexViewerPage(blockList, startVisible=true){
@@ -19,7 +21,7 @@ function populateIndexViewerPage(blockList, startVisible=true){
   table.class = 'viewerTable';
   entry_styles = ['table_tag'];
 
-  var row = createIndexRow(blockList, 'Key', '', header=true)
+  var row = createIndexRow(blockList, 'Key', '', header=true);
   table.appendChild(row);
   for(var i=0; i < fields.length; i++){
     row = createIndexRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+id_delimiter);
@@ -54,7 +56,7 @@ function createIndexRow(blockList, field, id_start, header=false){
   table_el.classList.add(clas);
   table_row.appendChild(table_el);
   for(var j=0; j < index_fields.length; j++){
-    var table_el = document.createElement('td');
+    table_el = document.createElement('td');
     table_el.classList.add(clas);
     if(header){
       table_el.innerHTML = capitalise(index_fields[j]);
@@ -73,7 +75,7 @@ function createIndexRow(blockList, field, id_start, header=false){
 
 function sortTitles(array){
 
-  n_array = array.map((a) => a.substr(4, a.length)/1).sort(function(a,b){return a - b});
+  n_array = array.map((a) => a.substr(4, a.length)/1).sort(function(a,b){return a - b;});
   array = n_array.map((a) => 'Box'+id_delimiter+a);
   return array;
 }

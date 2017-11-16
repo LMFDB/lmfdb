@@ -147,7 +147,8 @@ def validate_mongodb(db):
                 n_colls += 1
         if n_colls != ALL_STRUC.n_colls and n_colls != 0:
             raise ValueError('n_colls')
-    except Exception as e:
+    except:
+        # Exception as e:
         return False
     return True
 

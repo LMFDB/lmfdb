@@ -1,4 +1,4 @@
-
+/*jshint esversion: 6 */
 function isDisplayed(name){
   return record_fields.indexOf(name) != -1;
 }
@@ -42,16 +42,17 @@ function populateRecordEditorPage(blockList, startVisible=true){
       //Show entire schema here
       if(record_fields[j] == 'schema') label = 'oschema';
       var id = fields[i] +id_delimiter+label;
-      var block = blockList.getBlock('#'+id);
+      block = blockList.getBlock('#'+id);
+      var item;
       if(block && isEditable(record_fields[j])){
-        var item = createRecordDiv(block.fieldname, block.key);
+        item = createRecordDiv(block.fieldname, block.key);
         fieldDiv.appendChild(item);
       }else if (block){
-        var item = createRecordLockedDiv(block.fieldname, block.key);
+        item = createRecordLockedDiv(block.fieldname, block.key);
         fieldDiv.appendChild(item);
       }
     }
-    var butt = createResetButt(lastField);
+    butt = createResetButt(lastField);
     fieldDiv.appendChild(butt);
     if(! startVisible) fieldDiv.classList.add('hide');
     dataDiv.appendChild(fieldDiv);
@@ -87,7 +88,7 @@ function createRecordDiv(item, field){
   textBox.oninput = (function() {
 		return function() {
 			updateBlock(this);
-		}
+		};
 	})();
 
   var span = document.createElement('span');

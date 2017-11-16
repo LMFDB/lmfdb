@@ -5,6 +5,7 @@ import lmfdb_inventory as inv
 import inventory_db_core as idc
 from inventory_db_inplace import update_fields
 from copy import deepcopy
+from lmfdb.utils import comma
 
 #Functions to populate viewer pages
 def get_nicename(db_name, collection_name):
@@ -77,11 +78,7 @@ def retrieve_description(db, requested_db, requested_coll):
     requested_coll -- name of collection to fetch inventory for
     """
 
-    table_name = inv.ALL_STRUC.db_ids[inv.STR_NAME]
-    coll_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
     try:
-        db_tab = db[table_name]
-        coll_tab = db[coll_name]
         _id = idc.get_db(db, requested_db)['id']
         coll_record = idc.get_coll(db, _id, requested_coll)
         _c_id = coll_record['id']

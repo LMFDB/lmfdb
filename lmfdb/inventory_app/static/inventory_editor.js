@@ -1,3 +1,4 @@
+/*jshint esversion: 6 */
 /* globals blockList */
 
 var myStore = localStorage;
@@ -23,10 +24,11 @@ function resetEdits(blockid=null){
   //Reset input fields to orginal values
   //Changes blocklist and DOM fields
   //If block is provided, only that id is reset, otherwise all are
+  var block;
   if(blockid){
     var blockIds = mainBlockList.getBlockIdsFromPartialID(blockid);
-    for(id of blockIds){
-      var block = mainBlockList.getBlock(id);
+    for(var id of blockIds){
+      block = mainBlockList.getBlock(id);
       block.newtext = block.text;
       block.edited = false;
       $(escape_jq(block.docElementId)).val(block.newtext);
@@ -36,7 +38,7 @@ function resetEdits(blockid=null){
   }else{
     //Clean up everything and remove any stored list
       for( var key in mainBlockList.blockList){
-        var block = mainBlockList.blockList[key];
+        block = mainBlockList.blockList[key];
         block.newtext = block.text;
         block.edited = false;
         fitToText(block.docElementId);
@@ -85,8 +87,8 @@ function retrieveBlockList(){
   if (listAsJson && mainBlockList){
     var parsedData = JSON.parse(listAsJson);
     var anyEdits = false;
-    for (block in parsedData[1]){
-      if(parsedData[1][block]['edited']){
+    for (var block in parsedData[1]){
+      if(parsedData[1][block].edited){
         anyEdits = true;
         break;
       }
@@ -103,8 +105,7 @@ function retrieveBlockList(){
     var list = parsedData[1];
     //We have a new mainBlockList, but the text will be wrong because it's been reset from the server
     //However, if the server has delivered new text for this field we want to say so
-    var block;
-    for(prop in list){
+    for(var prop in list){
       block = mainBlockList.getBlock(prop);
       if(list[prop].edited && block && list[prop].text != block.text && list[prop].newtext != block.text ){
         console.log("Field changed on server!");
@@ -204,7 +205,7 @@ function submitEdits(dest){
   XHR.addEventListener('load', function(event) {
     //On success redirect to a success page
     var response = JSON.parse(XHR.response);
-    window.location.replace(response['url']);
+    window.location.replace(response.url);
   });
 
   // Define what happens in case of error
@@ -291,7 +292,7 @@ function resetSubmitInProgress(){
 
 //---------- Editor DOM creation ---------------------------------
 
-function populateEditorPage(blockList, startVisible=startVisible){
+function populateEditorPage(blockList, startVisible=true){
   //Create the HTML elements using the blocklist
   //We create in two chunks
 
@@ -326,16 +327,15 @@ function populateEditorPage(blockList, startVisible=startVisible){
     }else{
         dataDiv.appendChild(headerDiv);
     }
-
-    for(blockId in blocks){
-
-      var block = blockList.getBlock(blocks[blockId]);
+    var block;
+    for(var blockId in blocks){
+      block = blockList.getBlock(blocks[blockId]);
       if(!block) continue;
       var item = createItemDiv(block.fieldname, block.key, block.special);
       fieldDiv.appendChild(item);
     }
       //Add block-reset button
-      var butt = createResetButt(fields[i]);
+      butt = createResetButt(fields[i]);
       fieldDiv.appendChild(butt);
       butt = createBlockSubmitButt(fields[i]);
       fieldDiv.appendChild(butt);
@@ -370,7 +370,7 @@ function createItemDiv(item, field, special){
   textBox.oninput = (function() {
 		return function() {
 			updateBlock(this);
-		}
+		};
 	})();
 
   if(special){
@@ -394,7 +394,7 @@ function createResetButt(field){
 		return function() {
 			this.blur();
       resetEdits(field);
-		}
+		};
 	})();
   butt.title = "Reset to Original";
 
@@ -413,7 +413,7 @@ function createBlockSubmitButt(field){
 		return function() {
 			this.blur();
       submitBlockEdits(submitDest, field);
-		}
+		};
 	})();
   butt.title = "Submit Block";
 
@@ -433,7 +433,7 @@ function fitToText(elementId){
 function fitAllToText(part_id){
   //Fit all text boxes in the div part_id to their content
     var blocks = mainBlockList.getBlockIdsFromPartialID(part_id);
-    for (blockid in blocks){
+    for (var blockid in blocks){
       fitToText(blocks[blockid]);
     }
 }
@@ -445,13 +445,14 @@ function toggleTypePopup(box_id, data){
   if(!box) return;
 
   has_selectors = (document.getElementsByName(box_id + "_drop")).length > 0;
+  var div;
   if(has_selectors){
-    var div = document.getElementById(box_id+'_drop');
+    div = document.getElementById(box_id+'_drop');
     div.remove();
     return;
   }
   //Create popup containing selector
-  var div = document.createElement("div");
+  div = document.createElement("div");
   div.class = "popup";
   div.id = box_id+'_drop';
 
@@ -462,7 +463,7 @@ function toggleTypePopup(box_id, data){
       var that = selector;
       return function(){
           fillFromDrop(that, box_in);
-      }
+      };
   })();
   var current_selection = box.value;
 
@@ -517,7 +518,7 @@ function createDOMPopButton(box_id, options){
       var options_in = options;
       return function(){
           toggleTypePopup(box_id_in, options_in);
-      }
+      };
   })();
 
   span.appendChild(butt);
