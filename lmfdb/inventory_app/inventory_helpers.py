@@ -4,6 +4,7 @@ import hashlib
 from urlparse import urlparse
 from logging import getLogger
 from lmfdb_inventory import LOG_ID as LOG_ID
+from lmfdb_inventory import coll_status as coll_status
 
 #Log for db actions
 log_dest = getLogger(LOG_ID)
@@ -169,6 +170,12 @@ def empty_if_null(value):
             return value
     except:
         return value
+
+def status_to_code(status):
+    try:
+        return coll_status.keys()[list(coll_status.values()).index(status)]
+    except:
+        return -1
 #End display helpers ----------------------------------------------------------
 
 #LMFDB report tool temporary borrows _____________________________________________________

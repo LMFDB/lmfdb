@@ -176,7 +176,7 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
         _c_id = invc.get_coll_id(db, db_entry['id'], coll_name)
         if not _c_id['exist']:
 	    #Collection doesn't exist, create it
-            _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name,  {'description':None}, dummy_info)
+            _c_id = invc.set_coll(db, db_entry['id'], coll_name, coll_name,  {'description':None}, dummy_info, 0)
         else:
 	    #Delete existing auto-table entries (no collection => no entries)
            delete_collection_data(db, _c_id['id'], tbl='auto')

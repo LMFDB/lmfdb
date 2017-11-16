@@ -214,7 +214,7 @@ def get_coll_by_id(inv_db, id):
         inv.log_dest.error("Error getting data "+str(e))
         return {'err':True, 'id':0, 'exist':True, 'data':None}
 
-def set_coll(inv_db, db_id, name, nice_name, notes, info):
+def set_coll(inv_db, db_id, name, nice_name, notes, info, status):
     """Create or update a collection entry.
 
     inv_db -- Connection to LMFDB inventory database
@@ -222,6 +222,7 @@ def set_coll(inv_db, db_id, name, nice_name, notes, info):
     name -- Collection name to update
     notes -- The collection's Notes
     info -- The collection's Info
+    status -- Collection's status code
     """
     try:
         table_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
@@ -239,10 +240,12 @@ def set_coll(inv_db, db_id, name, nice_name, notes, info):
         rec_set[coll_fields[4]] = notes
     if info is not None:
         rec_set[coll_fields[5]] = info
+    if status is not None:
+        rec_set[coll_fields[7]] = status
 
     return upsert_and_check(coll, rec_find, rec_set)
 
-def update_coll(inv_db, id, name=None, nice_name=None):
+def update_coll(inv_db, id, name=None, nice_name=None, status=None):
     """Update a collection entry. Collection must exist.
 
     inv_db -- Connection to LMFDB inventory database
@@ -266,6 +269,8 @@ def update_coll(inv_db, id, name=None, nice_name=None):
         rec_set[coll_fields[2]] = name
     if nice_name is not None:
         rec_set[coll_fields[3]] = nice_name
+    if status is not None:
+        rec_set[coll_fields[7]] = status
     if rec_set:
         return update_and_check(coll, rec_find, rec_set)
     else:
@@ -311,6 +316,22 @@ def set_coll_scrape_date(inv_db, coll_id, scrape_date):
     coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
     rec_find = {coll_fields[0]:coll_id}
     rec_set = {coll_fields[6]:scrape_date}
+
+    return update_and_check(coll, rec_find, rec_set)
+
+def set_coll_status(inv_db, coll_id, status):
+    """Update the status code for given collection"""
+
+    try:
+        table_name = inv.ALL_STRUC.coll_ids[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True, 'id':0, 'exist':False}
+
+    coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
+    rec_find = {coll_fields[0]:coll_id}
+    rec_set = {coll_fields[7]:status}
 
     return update_and_check(coll, rec_find, rec_set)
 

@@ -45,12 +45,18 @@ def update_fields(diff, storeRollback=True):
                     if storeRollback:
                         rollback = capture_rollback(db, _id['id'], diff["db"], diff["collection"], change)
                     #Only nice_name is currently an option
-                    if(change["field"] not in ['nice_name']):
+                    if(change["field"] not in ['nice_name', 'status']):
                         updated = {'err':True}
                     else:
                         if(diff["collection"]):
+                            if(change['field']) == 'nice_name':
+                                new_nice = change['content']
+                                new_stat = None
+                            else:
+                                new_nice = None
+                                new_stat = ih.status_to_code(change['content'])
                             c_id = idc.get_coll_id(db, _id['id'], diff['collection'])
-                            updated = idc.update_coll(db, c_id['id'], nice_name=change["content"])
+                            updated = idc.update_coll(db, c_id['id'], nice_name=new_nice, status=new_stat)
                         else:
                             #Is database nice_name
                             updated = idc.update_db(db, _id['id'], nice_name=change["content"])

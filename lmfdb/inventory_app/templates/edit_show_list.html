@@ -28,6 +28,42 @@ function flashName(item){
   el.classList.add('strongH2');
 }
 
+function promptStatus(input, element, info){
+  $("#dialog").data('info', info);
+  $("#dialog").dialog({
+      buttons: {
+          live: function() {
+              updateStatus('live', $(this).data('info'));
+              $(this).dialog("close");
+          },
+          ops: function() {
+              updateStatus('ops', $(this).data('info'));
+              $(this).dialog("close");
+          },
+          beta: function() {
+              updateStatus('beta', $(this).data('info'));
+              $(this).dialog("close");
+          },
+          old: function() {
+              updateStatus('old', $(this).data('info'));
+              $(this).dialog("close");
+          }
+      },
+      width: "400px"
+  });
+}
+
+function updateStatus(newStatus, info){
+    console.log(newStatus, info);
+    var diff = makeDiff([new ResponseBlock('top_level', 'status', newStatus)], info);
+    console.log(newStatus, diff);
+    var dest = '{{ url_for('inventory_app.submit_edits') }}';
+//    var callback = function(){ flashName(element);}
+      var callback = null;
+//    submittedNice = newName;
+    genSubmitEdits(dest, diff, {redirect:false, debug:true, refresh:false, call: callback});
+}
+
 </script>
 {% endblock extra_script %}
 
@@ -40,6 +76,7 @@ function flashName(item){
 {% endblock title_block %}
 
 {% block main_body %}
+  <div id='dialog'></div>
   <div class='listing'>
   {% for item in listing %}
   <div class='unbreaking'>
@@ -57,12 +94,15 @@ function flashName(item){
       Contains {{item[2][0]}} records of {{item[2][1]}} types </br>
       {% if current_user.is_authenticated() %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
+        <input type='button' id = '{{item[1]}}' value ='Edit Status' onclick='promptStatus(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
         <a href = {{url_for('inventory_app.show_edit_inventory', id=db_name, id2=item[0])}} id=invbutton>Edit Inventory</a>
+        </br></br>
         <a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
         <a href = {{url_for('inventory_app.show_edit_records', id=db_name, id2=item[0])}} id=invbutton>Edit Records</a>
         <a href = {{url_for('inventory_app.show_indices', id=db_name, id2=item[0])}} id=invbutton>View Indices</a>
       {% else %}
         <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
+        <input type='button' value ='Edit Status' title ='Please login to edit' disabled class=disabledbutton>
         <input type='button' value ='Edit Inventory' title ='Please login to edit' disabled class=disabledbutton>
         <a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
         <input type='button' value ='Edit Record Types' title ='Please login to edit' disabled class=disabledbutton>

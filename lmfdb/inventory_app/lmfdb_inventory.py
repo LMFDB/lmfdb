@@ -42,12 +42,15 @@ index_fields = {'name':-1, 'keys':-2}
 def index_field_order():
     return sorted(index_fields, key = lambda s : abs(index_fields.get(s)))
 
+coll_status = {0: 'live', 1:'ops', 2:'beta', 4: 'old'}
+#Live is normal. Ops includes any stats, rand etc. Beta is beta status, not yet on prod
+#Old means deprecated. Probably want to show only live and beta, and flag beta
 #Object describing DB structure. This is styled after a relational model
 class db_struc:
     name = 'inventory'
     n_colls = 7
     db_ids = {STR_NAME : 'DB_ids', STR_CONTENT : ['_id', 'name', 'nice_name']}
-    coll_ids = {STR_NAME : 'collection_ids', STR_CONTENT :['_id', 'db_id', 'name', 'nice_name', 'NOTES', 'INFO', 'scan_date']}
+    coll_ids = {STR_NAME : 'collection_ids', STR_CONTENT :['_id', 'db_id', 'name', 'nice_name', 'NOTES', 'INFO', 'scan_date', 'status']}
     fields_auto = {STR_NAME : 'fields_auto', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
     fields_human = {STR_NAME : 'fields_human', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
     record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'coll_id', 'hash', 'name', 'descrip', 'schema', 'count']}
