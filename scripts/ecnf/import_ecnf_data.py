@@ -686,12 +686,16 @@ def make_isoclass_line(ec):
 #  2. 'degree'
 #  3. 'number'
 #  4. 'label'
-#  5. ('field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number')
+#  5. 'class_label'
+#  6. 'base_change'
+#  7. 'isogeny_degrees'
+#  8. 'torsion_order'
+#  9. ('field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number')
 #
 ##############
 
 def make_indices():
-    for x in ['field_label', 'degree', 'number', 'label']:
+    for x in ['field_label', 'degree', 'number', 'label', 'base_change', 'isogeny_degrees', 'class_label', 'torsion_order']:
         nfcurves.create_index(x)
     nfcurves.create_index([(x,pymongo.ASCENDING) for x in ['field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']])
 
