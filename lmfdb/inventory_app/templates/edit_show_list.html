@@ -60,11 +60,13 @@ function flashName(item){
         <a href = {{url_for('inventory_app.show_edit_inventory', id=db_name, id2=item[0])}} id=invbutton>Edit Inventory</a>
         <a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
         <a href = {{url_for('inventory_app.show_edit_records', id=db_name, id2=item[0])}} id=invbutton>Edit Records</a>
+        <a href = {{url_for('inventory_app.show_indices', id=db_name, id2=item[0])}} id=invbutton>View Indices</a>
       {% else %}
         <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
         <input type='button' value ='Edit Inventory' title ='Please login to edit' disabled class=disabledbutton>
         <a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
         <input type='button' value ='Edit Record Types' title ='Please login to edit' disabled class=disabledbutton>
+        <a href = {{url_for('inventory_app.show_indices', id=db_name, id2=item[0])}} id=invbutton>View Indices</a>
       {% endif %}
 
     {% endif %}

@@ -250,16 +250,12 @@ def upload_collection_indices(db, db_name, coll_name, structure_dat):
     try:
         db_info = invc.get_db(db, db_name)
         coll_info = invc.get_coll(db, db_info['id'], coll_name)
-        print db_info
-        print coll_info
     except Exception as e:
         inv.log_dest.error("Failed to get db or coll id "+str(e))
         return {'err':True, 'mess':'Failed to get db or coll'} #Probably should rethrow
     try:
         data = structure_dat[db_name][coll_name]['indices']
-        print data
         err = upload_indices(db, coll_info['id'], data)
-        print err
     except Exception as e:
         inv.log_dest.error("Failed to upload index "+str(e))
         return {'err':True, 'mess':'Failed to upload'}
