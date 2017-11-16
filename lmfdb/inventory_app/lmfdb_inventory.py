@@ -4,10 +4,10 @@ import logging, logging.handlers
 
 #Contains the general data and functions for all inventory handling
 
-__version__ = '0.0.0'
+__version__ = '0.1.0'
 
 #Email contact for app errors
-email_contact = 'null@nowhere.com'
+email_contact = 'h.ratcliffe@warwick.ac.uk'
 
 #DB client
 int_client = None
