@@ -7,8 +7,8 @@ import pymongo
 from lmfdb.base import app, getDBConnection
 from flask import render_template, request, url_for, redirect
 from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, random_object_from_collection, display_multiset
-from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input
-from sage.all import PolynomialRing, QQ
+from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input, parse_rats
+from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.WebNumberField import string2list
 
@@ -116,6 +116,19 @@ def format_subfields(subdata, p):
         return ''
     return display_multiset(subdata, format_lfield, p)
 
+# Encode string for rational into our special format
+def ratproc(inp):
+    if '.' in inp:
+        inp = RR(inp)
+    qs = QQ(inp)
+    sstring = str(qs*1.)
+    sstring += '0'*14
+    if qs < 10:
+        sstring = '0'+sstring
+    sstring = sstring[0:12]
+    sstring += str(qs)
+    return sstring
+
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
@@ -148,6 +161,7 @@ def local_field_search(**args):
         parse_ints(info,query,'n',name='Degree')
         parse_ints(info,query,'c',name='Discriminant exponent c')
         parse_ints(info,query,'e',name='Ramification index e')
+        parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
     except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)
