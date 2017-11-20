@@ -352,8 +352,9 @@ def parse_primes(inp, query, qfield, mode=None, to_string=False):
         raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False):
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False, listprocess=None):
     if process is None: process = lambda x: x
+    if listprocess is None: listprocess = lambda x: x
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
         (exactlength is not None and inp.count(',') != exactlength - 1) or
@@ -376,23 +377,29 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
     else:
         if inp == '[]': # fixes bug in the code below (split never returns an empty list)
-            query[qfield] = []
+            if split:
+                query[qfield] = []
+            else:
+                query[qfield] = ''
             return
+        L = [int(a) for a in inp[1:-1].split(',')]
+        L = listprocess(L)
         if check_divisibility == 'decreasing':
             # Check that each entry divides the previous
-            L = [int(a) for a in inp[1:-1].split(',')]
+            #L = [int(a) for a in inp[1:-1].split(',')]
             for i in range(len(L)-1):
                 if L[i] % L[i+1] != 0:
                     raise ValueError("Each entry must divide the previous, such as [4,2].")
         elif check_divisibility == 'increasing':
             # Check that each entry divides the previous
-            L = [int(a) for a in inp[1:-1].split(',')]
+            # L = [int(a) for a in inp[1:-1].split(',')]
             for i in range(len(L)-1):
                 if L[i+1] % L[i] != 0:
                     raise ValueError("Each entry must divide the next, such as [2,4].")
         if split:
-            query[qfield] = [process(int(a)) for a in inp[1:-1].split(',')]
+            query[qfield] = [process(a) for a in L]
         else:
+            inp = '[%s]'%','.join([str(process(a)) for a in L])
             query[qfield] = inp if keepbrackets else inp[1:-1]
 
 def parse_gap_id(info, query, field='group', name='group', qfield='group'):

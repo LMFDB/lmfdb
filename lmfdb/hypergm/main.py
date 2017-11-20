@@ -5,29 +5,123 @@
 import re
 import pymongo
 ASC = pymongo.ASCENDING
-from lmfdb import base
+from lmfdb.base import getDBConnection
 from flask import render_template, request, url_for
 from lmfdb.utils import to_dict, image_callback
-from lmfdb.search_parsing import parse_range2, clean_input, split_list
-from sage.all import ZZ, QQ, latex, gp
+from lmfdb.search_parsing import clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted
+from lmfdb.transitive_group import small_group_display_knowl
+from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
+from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing
 from lmfdb.hypergm import hypergm_page
 
-HGM_credit = 'D. Roberts'
+HGM_credit = 'D. Roberts and M. Watkins'
+
+def learnmore_list():
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Hypergeometric motive labels', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+
+# Database access
+def db():
+    return getDBConnection()
+
+def motivedb():
+    return db().hgm.newmotives
+    return db().hgm.motives
+
+def familydb():
+    return db().hgm.newfamilies
+    return db().hgm.families
+
+def list2string(li):
+    return ','.join([str(x) for x in li])
+
+GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
+
+def dogapthing(m1):
+    mnew = str(m1[2])
+    mnew = mnew.replace(' ','')
+    if GAP_ID_RE.match(mnew):
+        mnew = mnew[1:-1]
+        two = mnew.split(',')
+        two = [int(j) for j in two]
+        try:
+            m1[2] = small_group_display_knowl(two[0],two[1],db())
+        except TypeError:
+            m1[2] = 'Gap[%d,%d]' % (two[0],two[1])
+    else:
+        m1[2] = '$%s$'% m1[2]
+    return m1
+
+def getgroup(m1,ell):
+    pind = {2: 0,3:1,5:2,7:3,11:4,13:5}
+    if len(m1[3][2])==0:
+        return [m1[2], m1[0]]
+    myA = list2string(m1[3][0])
+    myB = list2string(m1[3][1])
+    if len(myA)==0 and len(myB)==0:
+        return [small_group_display_knowl(1,1,db()), 1]
+    newthing = familydb().find_one({'A': myA, 'B': myB})
+    if newthing is None:
+        return ['??', 1]
+    newthing = newthing['mono'][pind[ell]]
+    newthing[1] = dogapthing(newthing[1])
+    return [newthing[1][2], newthing[1][0]]
 
 # Helper functions
 
 # A and B are lists, tn and td are num/den for t
 def ab_label(A,B):
-    return "A" + ".".join(map(str,A)) + "_B" + ".".join(map(str,B))
+    abl = "A%s_B%s"%(A,B)
+    return abl.replace(',','.')
     
-def make_abt_label(A,B,tn,td):
+def string2list(li):
+    if li=='':
+        return []
+    return [int(a) for a in li.split(',')]
+
+def list2Cnstring(li):
+    l2 = [a for a in li if a>1]
+    if l2 == []:
+        return 'C_1'
+    fa = [ZZ(a).factor() for a in l2]
+    eds = []
+    for b in fa:
+        for pp in b:
+            eds.append([pp[0],pp[1]])
+    eds.sort()
+    l2 = ['C_{%d}'% (a[0]**a[1]) for a in eds]
+    return (r'\times ').join(l2)
+
+def showlist(li):
+    if len(li)==0:
+        return r'[\ ]'
+    return li
+
+def splitint(a,p):
+    if a==1:
+        return ' '
+    j = valuation(a,p)
+    if j==0:
+        return str(a)
+    a = a/p**j
+    if a==1:
+        return latex(ZZ(p**j).factor())
+    return str(a)+r'\cdot'+latex(ZZ(p**j).factor())
+
+
+def make_abt_label(A,B,t):
     AB_str = ab_label(A,B)
-    t = QQ( "%d/%d" % (tn, td))
+    t = QQ(t)
     t_str = "_t%s.%s" % (t.numerator(), t.denominator())
     return AB_str + t_str
 
 def make_t_label(t):
-    tsage = QQ("%d/%d" % (t[0], t[1]))
+    tsage = QQ(t)
     return "t%s.%s" % (tsage.numerator(), tsage.denominator())
 
 def get_bread(breads=[]):
@@ -36,11 +130,8 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-def display_t(tn, td):
-    t = QQ("%d/%d" % (tn, td))
-    if t.denominator() == 1:
-        return str(t.numerator())
-    return "%s/%s" % (t.numerator(), t.denominator())
+def display_t(t):
+    return str(QQ(t))
 
 # For displaying factored conductors
 def factorint(inp):
@@ -104,23 +195,13 @@ def poly_with_factored_coeffs(c, p):
         out = out[1:]
     return out
 
-# Assume values have already been stripped of alphabetic
-# characters and *'s inserted for multiplication
-def myZZ(val):
-    return int(ZZ(gp(val)))
-
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
-IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
-PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
-
-
 @hypergm_page.route("/")
 def index():
     bread = get_bread()
     if len(request.args) != 0:
         return hgm_search(**request.args)
     info = {'count': 20}
-    return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=bread, credit=HGM_credit, info=info)
+    return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=bread, credit=HGM_credit, info=info, learnmore=learnmore_list())
 
 
 
@@ -162,24 +243,9 @@ def by_family_label(label):
 def by_label(label, t):
     return render_hgm_webpage({'label': label+'_'+t})
 
-# FIXME: delete or fix this code
-# Apparently obsolete code that causes a server error if executed
-#@hypergm_page.route("/search", methods=["GET", "POST"])
-#def search():
-#    if request.method == "GET":
-#        val = request.args.get("val", "no value")
-#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-#        return render_template("hgm-search.html", title="Hypergeometric Motive Search", bread=bread, val=val)
-#    elif request.method == "POST":
-#        return "ERROR: we always do http get to explicitly display the search parameters"
-#    else:
-#        return flask.abort(404)
-    
-
 def hgm_search(**args):
     info = to_dict(args)
     bread = get_bread([("Search results", '')])
-    C = base.getDBConnection()
     query = {}
     if 'jump_to' in info:
         return render_hgm_webpage({'label': info['jump_to']})
@@ -189,76 +255,22 @@ def hgm_search(**args):
         family_search = True
 
     # generic, irreducible not in DB yet
-    for param in ['A', 'B', 'hodge', 'a2', 'b2', 'a3', 'b3', 'a5', 'b5', 'a7', 'b7']:
-        if info.get(param):
-            info[param] = clean_input(info[param])
-            if IF_RE.match(info[param]):
-                query[param] = split_list(info[param])
-                query[param].sort()
-            else:
-                name = param
-                if name == 'hodge':
-                    name = 'Hodge vector'
-                info['err'] = 'Error parsing input for %s.  It needs to be a list of integers in square brackets, such as [2,3] or [1,1,1]' % name
-                return search_input_error(info, bread)
 
-    if info.get('t') and not family_search:
-        info['t'] = clean_input(info['t'])
-        try:
-            tsage = QQ(str(info['t']))
-            tlist = [int(tsage.numerator()), int(tsage.denominator())]
-            query['t'] = tlist
-        except:
-            info['err'] = 'Error parsing input for t.  It needs to be a rational number, such as 2/3 or -3'
-
-    # sign can only be 1, -1, +1
-    if info.get('sign') and not family_search:
-        sign = info['sign']
-        sign = re.sub(r'\s','',sign)
-        sign = clean_input(sign)
-        if sign == '+1':
-            sign = '1'
-        if not (sign == '1' or sign == '-1'):
-            info['err'] = 'Error parsing input %s for sign.  It needs to be 1 or -1' % sign
-            return search_input_error(info, bread)
-        query['sign'] = int(sign)
-
-
-    for param in ['degree','weight','conductor']:
-        # We don't look at conductor in family searches
-        if info.get(param) and not (param=='conductor' and family_search):
-            if param=='conductor':
-                cond = info['conductor']
-                try:
-                    cond = re.sub(r'(\d)\s+(\d)', r'\1 * \2', cond) # implicit multiplication of numbers
-                    cond = cond.replace(r'..', r'-') # all ranges use -
-                    cond = re.sub(r'[a..zA..Z]', '', cond)
-                    cond = clean_input(cond)
-                    tmp = parse_range2(cond, 'cond', myZZ)
-                except:
-                    info['err'] = 'Error parsing input for conductor.  It needs to be an integer (e.g., 8), a range of integers (e.g. 10-100), or a list of such (e.g., 5,7,8,10-100).  Integers may be given in factored form (e.g. 2^5 3^2) %s' % cond
-                    return search_input_error(info, bread)
-            else: # not conductor
-                info[param] = clean_input(info[param])
-                ran = info[param]
-                ran = ran.replace(r'..', r'-')
-                if LIST_RE.match(ran):
-                    tmp = parse_range2(ran, param)
-                else:
-                    names = {'weight': 'weight', 'degree': 'degree'}
-                    info['err'] = 'Error parsing input for the %s.  It needs to be an integer (such as 5), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 2,3,8 or 3-5, 7, 8-11).' % names[param]
-                    return search_input_error(info, bread)
-            # work around syntax for $or
-            # we have to foil out multiple or conditions
-            if tmp[0] == '$or' and '$or' in query:
-                newors = []
-                for y in tmp[1]:
-                    oldors = [dict.copy(x) for x in query['$or']]
-                    for x in oldors:
-                        x.update(y)
-                    newors.extend(oldors)
-                tmp[1] = newors
-            query[tmp[0]] = tmp[1]
+    try:
+        parse_ints(info, query, 'degree')
+        parse_ints(info, query, 'weight')
+        parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector',split=False)
+        parse_restricted(info, query, 'sign', allowed=['+1',1,-1], process=int)
+        for param in ['A', 'B', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7',
+            'Au2', 'Bu2', 'Au3', 'Bu3', 'Au5', 'Bu5', 'Au7', 'Bu7']:
+            parse_bracketed_posints(info, query, param, split=False,
+                listprocess=lambda a: sorted(a, reverse=True))
+        if not family_search:
+            parse_ints(info, query, 'conductor')
+            parse_rational(info, query, 't')
+            parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
+    except ValueError:
+        return search_input_error(info, bread)
 
     #print query
     count_default = 20
@@ -291,9 +303,10 @@ def hgm_search(**args):
 
     # logger.debug(query)
     if family_search:
-        res = C.hgm.families.find(query).sort([('label', pymongo.ASCENDING)])
+        #query['leader'] = '1'
+        res = familydb().find(query).sort([('label', pymongo.ASCENDING)])
     else:
-        res = C.hgm.motives.find(query).sort([('cond', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
+        res = motivedb().find(query).sort([('cond', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -320,9 +333,9 @@ def hgm_search(**args):
     info['factorint'] = factorint
 
     if family_search:
-        return render_template("hgm-search.html", info=info, title="Hypergeometric Family over $\Q$ Search Result", bread=bread, credit=HGM_credit)
+        return render_template("hgm-search.html", info=info, title="Hypergeometric Family over $\Q$ Search Result", bread=bread, credit=HGM_credit, learnmore=learnmore_list())
     else:
-        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit)
+        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit, learnmore=learnmore_list())
 
 
 def render_hgm_webpage(args):
@@ -330,8 +343,7 @@ def render_hgm_webpage(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        C = base.getDBConnection()
-        data = C.hgm.motives.find_one({'label': label})
+        data = motivedb().find_one({'label': label})
         if data is None:
             bread = get_bread([("Search error", url_for('.search'))])
             info['err'] = "Motive " + label + " was not found in the database."
@@ -340,17 +352,37 @@ def render_hgm_webpage(args):
         title = 'Hypergeometric Motive:' + label
         A = data['A']
         B = data['B']
-        tn,td = data['t']
-        t = latex(QQ(str(tn)+'/'+str(td)))
+        myfam = familydb().find_one({'A': A, 'B': B})
+        if myfam is None:
+            det = 'data not computed'
+        else:
+            det = myfam['det']
+            det = [det[0],str(det[1])]
+            d1 = det[1]
+            d1 = re.sub(r'\s','', d1)
+            d1 = re.sub(r'(.)\(', r'\1*(', d1)
+            R = PolynomialRing(ZZ, 't')
+            if det[1]=='':
+                d2 = R(1)
+            else:
+                d2 = R(d1)
+            det = d2(QQ(data['t']))*det[0]
+        t = latex(QQ(data['t']))
+        typee = 'Orthogonal'
+        if (data['weight'] % 2) == 1 and (data['degree'] % 2) == 0:
+            typee = 'Symplectic'
         primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
         locinfo = data['locinfo']
         for j in range(len(locinfo)):
             locinfo[j] = [primes[j]] + locinfo[j]
-            locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
-        hodge = data['hodge']
+            #locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
+            locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='x')
+        hodge = string2list(data['hodge'])
+        famhodge = string2list(data['famhodge'])
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
             ('Weight',  '\(%s\)' % data['weight']),
+            ('Hodge vector',  '\(%s\)' % hodge),
             ('Conductor', '\(%s\)' % data['cond']),
         ]
         # Now add factorization of conductor
@@ -367,12 +399,15 @@ def render_hgm_webpage(args):
                     'sign': data['sign'],
                     'sig': data['sig'],
                     'hodge': hodge,
+                    'famhodge': famhodge,
                     'cond': data['cond'],
                     'req': data['req'],
+                    'lcms': data['lcms'],
+                    'type': typee,
+                    'det': det,
                     'locinfo': locinfo
                     })
         AB_data, t_data = data["label"].split("_t")
-        #AB_data = data["label"].split("_t")[0]
         friends = [("Motive family "+AB_data.replace("_"," "), url_for(".by_family_label", label = AB_data))]
         friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t'+t_data)))
 #        if rffriend != '':
@@ -380,38 +415,70 @@ def render_hgm_webpage(args):
 
 
         bread = get_bread([(label, ' ')])
-        return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
+        return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
 
 def render_hgm_family_webpage(args):
     data = None
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        C = base.getDBConnection()
-        data = C.hgm.families.find_one({'label': label})
+        data = familydb().find_one({'label': label})
         if data is None:
             bread = get_bread([("Search error", url_for('.search'))])
             info['err'] = "Family of hypergeometric motives " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
         title = 'Hypergeometric Motive Family:' + label
-        A = data['A']
-        B = data['B']
-        hodge = data['hodge']
+        A = string2list(data['A'])
+        B = string2list(data['B'])
+        hodge = data['famhodge']
+        mydet = data['det']
+        detexp = QQ(data['weight']*data['degree'])
+        detexp = -detexp/2
+        mydet = r'\Q(%s)\otimes\Q(\sqrt{'%str(detexp)
+        if int(data['det'][0]) != 1:
+            mydet += str(data['det'][0])
+        if len(data['det'][1])>0:
+            mydet += data['det'][1]
+        if int(data['det'][0]) == 1 and len(data['det'][1])==0:
+            mydet += '1'
+        mydet += '})'
+        bezoutmat = matrix(data['bezout'])
+        bezoutdet = bezoutmat.det()
+        bezoutmat = latex(bezoutmat)
+        snf = string2list(data['snf'])
+        snf = list2Cnstring(snf)
+        typee = 'Orthogonal'
+        if (data['weight'] % 2) == 1 and (data['degree'] % 2) == 0:
+            typee = 'Symplectic'
+        ppart = [[2, [string2list(u) for u in [data['A2'],data['B2'],data['C2']]]],
+            [3, [string2list(u) for u in [data['A3'],data['B3'],data['C3']]]],
+            [5, [string2list(u) for u in [data['A5'],data['B5'],data['C5']]]],
+            [7, [string2list(u) for u in [data['A7'],data['B7'],data['C7']]]]]
         prop2 = [
             ('Degree', '\(%s\)' % data['degree']),
             ('Weight',  '\(%s\)' % data['weight'])
         ]
+        mono = [[m[0], dogapthing(m[1]), 
+          getgroup(m[1],m[0]),
+          latex(ZZ(m[1][0]).factor())] for m in data['mono']]
+        mono = [[m[0], m[1], m[2][0], splitint(m[1][0]/m[2][1],m[0]), m[3]] for m in mono]
         info.update({
                     'A': A,
                     'B': B,
                     'degree': data['degree'],
                     'weight': data['weight'],
                     'hodge': hodge,
-                    'gal2': data['gal2'],
-                    'gal3': data['gal3'],
-                    'gal5': data['gal5'],
-                    'gal7': data['gal7'],
+                    'det': mydet,
+                    'snf': snf,
+                    'bezoutmat': bezoutmat,
+                    'bezoutdet': bezoutdet,
+                    'mono': mono,
+                    'imprim': data['imprim'],
+                    'ppart': ppart,
+                    'type': typee,
+                    'junk': small_group_display_knowl(18,2,db()),
+                    'showlist': showlist
                     })
         friends = [('Motives in the family', url_for('hypergm.index')+"?A=%s&B=%s" % (str(A), str(B)))]
 #        if unramfriend != '':
@@ -423,7 +490,7 @@ def render_hgm_family_webpage(args):
         info.update({"plotlinear": url_for(".hgm_family_linear_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
         info.update({"plotconstant": url_for(".hgm_family_constant_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
         bread = get_bread([(label, ' ')])
-        return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
+        return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
 
 
 def show_slopes(sl):
@@ -431,6 +498,30 @@ def show_slopes(sl):
         return "None"
     return(sl)
 
-
 def search_input_error(info, bread):
     return render_template("hgm-search.html", info=info, title='Motive Search Input Error', bread=bread)
+
+@hypergm_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of hypergeometric motive data over $\Q$'
+    bread = get_bread(('Completeness',''))
+    return render_template("single.html", kid='dq.hgm.extent',
+           credit=HGM_credit, title=t, bread=bread, 
+           learnmore=learnmore_list_remove('Completeness'))
+
+@hypergm_page.route("/Source")
+def how_computed_page():
+    t = 'Source of hypergeometric motive data over $\Q$'
+    bread = get_bread(('Source',''))
+    return render_template("single.html", kid='dq.hgm.source',
+           credit=HGM_credit, title=t, bread=bread, 
+           learnmore=learnmore_list_remove('Source'))
+
+@hypergm_page.route("/Labels")
+def labels_page():
+    t = 'Labels for hypergeometric motives over $\Q$'
+    bread = get_bread(('Labels',''))
+    return render_template("single.html", kid='hgm.field.label',
+           credit=HGM_credit, title=t, bread=bread, 
+           learnmore=learnmore_list_remove('labels'))
+
