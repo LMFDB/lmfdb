@@ -52,7 +52,7 @@ def update_joint_unique_count(db, coll, primary_attribute, secondary_attribute, 
       update_joint_unique_count(db, 'passports', 'dim', 'total_label', prefix='by')
     add the entry
       {'_id'  :'bydim/total_label',
-       unique : [[1,5],[2,7]]}
+       unique : {'1':5, '2':7} }
     to db[coll.stats].
     '''
     pa = str(primary_attribute)
