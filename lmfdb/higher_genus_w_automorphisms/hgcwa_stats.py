@@ -38,6 +38,8 @@ class HGCWAstats(object):
 
     #TODO provide getter for subset of stats (e.g. for top matter)
     def stats(self):
+        if not self._stats:
+            self._stats = self.compute_stats()
         return self._stats
 
     def compute_stats(self):
@@ -60,6 +62,10 @@ class HGCWAstats(object):
         genus_list = [ count[0] for count in stats['genus']['counts'] ]
         genus_list.sort()
 
+        genus_family_counts = db.find_one({'_id':'bygenus/label'})
+        genus_rp_counts = db.find_one({'_id':'bygenus/passport_label'})
+        genus_gv_counts = db.find_one({'_id':'bygenus/total_label'})
+
         # Get unique joint genus stats
         stats['genus_detail'] = []
 
@@ -74,21 +80,10 @@ class HGCWAstats(object):
             group_max_order = max_group_order(groups['counts'])
             genus_stats['groups'] = [group_count, group_max_order]
 
-            # Get family data
-            families = db.find_one({'_id':'bygenus/' + genus_str + '/label'})
-            family_count = len(families['counts'])
-            genus_stats['families'] = family_count
-
-            # Get refined passport data
-            rps = db.find_one({'_id':'bygenus/' + genus_str + '/passport_label'})
-            rp_count = len(rps['counts'])
-            genus_stats['refined_passports'] = rp_count
-
-            # TODO May be redundant, see genus data
-            # Get generating vector data
-            gvs = db.find_one({'_id':'bygenus/' + genus_str + '/total_label'})
-            gv_count = len(gvs['counts'])
-            genus_stats['gen_vectors'] = gv_count
+            # Get family, refined passport and generating vector data
+            genus_stats['families'] = genus_family_counts['distinct'][genus_str]
+            genus_stats['refined_passports'] = genus_rp_counts['distinct'][genus_str]
+            genus_stats['gen_vectors'] = genus_gv_counts['distinct'][genus_str]
 
             # Keep genus data sorted
             stats['genus_detail'].append(genus_stats)
@@ -97,9 +92,11 @@ class HGCWAstats(object):
         # Collect dimension joint statistics #
         ######################################
 
-        # An iterable list of distinct curve dimensions
+        # An iterable list of distinct curve genera
         dim_list = [ count[0] for count in stats['dim']['counts'] ]
         dim_list.sort()
+
+        dim_gv_counts = db.find_one({'_id':'bydim/total_label'})
 
         # Get unique joint genus stats
         stats['dim_detail'] = []
@@ -109,12 +106,9 @@ class HGCWAstats(object):
             dim_stats['dim_num'] = dim
             dim_str = str(dim)
 
-            # Get generating vector data
-            gvs = db.find_one({'_id':'bydim/' + dim_str + '/total_label'})
-            gv_count = len(gvs['counts'])
-            dim_stats['gen_vectors'] = gv_count
+            dim_stats['gen_vectors'] = dim_gv_counts['distinct'][dim_str]
 
-            # Keep genus data sorted
+            # Keep dimension data sorted
             stats['dim_detail'].append(dim_stats)
 
         return stats
