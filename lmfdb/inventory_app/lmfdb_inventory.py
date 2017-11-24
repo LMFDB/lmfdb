@@ -7,7 +7,7 @@ import logging, logging.handlers
 __version__ = '0.1.0'
 
 #Email contact for app errors
-email_contact = 'h.ratcliffe@warwick.ac.uk'
+email_contact = 'rse@warwick.ac.uk'
 
 #DB client
 int_client = None
