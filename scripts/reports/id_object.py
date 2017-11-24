@@ -31,7 +31,6 @@ def is_same_type(object1, object2, strict=True):
 
 def is_collection(object):
 
-    same_type = False
     subtype = None
     if type(object) is list:
         for el in object:
@@ -91,7 +90,7 @@ def is_base_type(object):
     if type(object) is datetime.datetime or \
        type(object) is datetime.time or \
        type(object) is datetime.date:
-        bv = bv | type_datetime
+        bv = bv | datetime_type
         return bv
 
     try:

@@ -1,5 +1,3 @@
-import pymongo
-import json
 from bson.code import Code
 import dbtools
 import id_object

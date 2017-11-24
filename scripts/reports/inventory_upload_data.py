@@ -2,7 +2,6 @@
 import json
 import lmfdb.inventory_app.inventory_helpers as ih
 import lmfdb.inventory_app.lmfdb_inventory as inv
-import lmfdb.inventory_app.inventory_db_inplace as invip
 import lmfdb.inventory_app.inventory_db_core as invc
 import datetime
 
@@ -33,7 +32,7 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
     for DB_name in structure_dat:
         progress_tracker += 1
         inv.log_dest.info("Uploading " + DB_name+" ("+str(progress_tracker)+" of "+str(n_dbs)+')')
-        _id = invc.set_db(db, DB_name, DB_name)
+        invc.set_db(db, DB_name, DB_name)
 
         for coll_name in structure_dat[DB_name]:
             inv.log_dest.info("    Uploading collection "+coll_name)
@@ -76,8 +75,11 @@ def upload_collection_from_files(db, db_name, coll_name, master_file_name, json_
 
     inv.log_dest.info("Uploading collection structure for "+coll_name)
     structure_data = decoder.decode(read_file(master_file_name))
-    orphaned_keys = upload_collection_structure(db, db_name, coll_name, structure_data, fresh=fresh)
-
+    
+    #Do we need to keep the orphans?
+    #orphaned_keys = upload_collection_structure(db, db_name, coll_name, structure_data, fresh=fresh)
+    upload_collection_structure(db, db_name, coll_name, structure_data, fresh=fresh)
+    
     inv.log_dest.info("Uploading collection description for "+coll_name)
     data = decoder.decode(read_file(json_file_name))
     upload_collection_description(db, db_name, coll_name, data, fresh=fresh)
@@ -255,7 +257,9 @@ def upload_collection_indices(db, db_name, coll_name, structure_dat):
         return {'err':True, 'mess':'Failed to get db or coll'} #Probably should rethrow
     try:
         data = structure_dat[db_name][coll_name]['indices']
-        err = upload_indices(db, coll_info['id'], data)
+        #err = upload_indices(db, coll_info['id'], data)
+        upload_indices(db, coll_info['id'], data)
+        # TODO rethrow if err
     except Exception as e:
         inv.log_dest.error("Failed to upload index "+str(e))
         return {'err':True, 'mess':'Failed to upload'}
@@ -437,10 +441,10 @@ def recreate_rollback_table(inv_db, sz):
     except Exception as e:
         inv.log_dest.error("Error getting collection "+str(e))
         return {'err':True, 'id':0}
-    fields = inv.ALL_STRUC.rollback_human[inv.STR_CONTENT]
+    #fields = inv.ALL_STRUC.rollback_human[inv.STR_CONTENT]
 
     try:
-        inv_db[table_name].drop()
+        coll.drop()
     except:
         #TODO Do something useful here?
         pass

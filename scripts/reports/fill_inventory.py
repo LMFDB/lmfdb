@@ -10,12 +10,14 @@ selected_dbs = None
 selected_collections = None
 action = False
 file_output = None
+jdbs = None  #This is not a global, this fixes pyflakes problem in start_lmfdb_connection
 
 def start_lmfdb_connection():
+
     scriptdir = os.path.join('.',os.path.dirname(__file__))
     up2 = os.path.abspath(os.path.join(scriptdir,os.pardir,os.pardir))
     sys.path.insert(0, up2)
-    save_std_err = None
+    save_stderr = None
     if not debug:
         try:
             save_stderr = sys.stderr
@@ -23,6 +25,11 @@ def start_lmfdb_connection():
         except:
            #This is only for neatness, so no worries if it fails
             pass
+
+    #Trick pyflakes because it lacks name ignoring and can't detect the global
+    global jdbs
+    del globals()['jdbs']
+
     globals()['jdbs'] = importlib.import_module('jsonify_db_structure')
     if not debug:
         try:
