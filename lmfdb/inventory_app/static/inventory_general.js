@@ -112,14 +112,25 @@ function fetchAndPopulateData(blockList, pageCreator, startVisible=true){
 
   XHR.addEventListener('load', function(event) {
     //On success return data
-    var data = JSON.parse(XHR.response);
-    populateBlocklist(XHR.blockList, data);
-    pageCreator(XHR.blockList, startVisible=startVisible);
+    console.log(XHR.response);
+	var data = JSON.parse(XHR.response);
+	console.log(data, jQuery.isEmptyObject(data));
+    if(jQuery.isEmptyObject(data)){
+	    div = document.getElementById('dataDiv');
+    	div.innerHTML = "<span class='err_text'>Failed to fetch page data. This is most likely due to a connection or authentication failure with the LMFDB backend.<p>Please check you  have an open tunnel (e.g. using warwick.sh) and have a passwords.yaml file in lmfdb root containing the appropriate passwords, or reload the page to try again.</p></span>";
+    
+    }else{
+	    populateBlocklist(XHR.blockList, data);
+    	pageCreator(XHR.blockList, startVisible=startVisible);
+    }
   });
 
   // Define what happens in case of error
   XHR.addEventListener('error', function(event) {
     console.log("Failed to fetch page data");
+    div = document.getElementById('dataDiv');
+    div.class = 'err_text';
+    div.innerHTML = "Failed to fetch page data. This is most likely due to a connection or authentication failure with the LMFDB backend.<p>Please check you  have an open tunnel (e.g. using warwick.sh) and have a passwords.yaml file in lmfdb root containing the appropriate passwords, or reload the page to try again.</p>";
   });
 
   XHR.send('');

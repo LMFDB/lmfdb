@@ -28,13 +28,37 @@ def css():
 #The root of edit pages, lists databases having inventory data
 @inventory_app.route('')
 def show_edit_root():
-    return render_template('edit_show_list.html', db_name = None, nice_name=None, listing=inventory_viewer.get_edit_list(), bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]])
+    try:
+        listing = inventory_viewer.get_edit_list()
+    except ih.ConnectOrAuthFail as e:
+        linv.log_dest.error("Returning auth fail page")
+
+        new_url = str(request.referrer)
+        url_info = ih.parse_edit_url(new_url)
+
+        bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
+
+    return render_template('edit_show_list.html', db_name = None, nice_name=None, listing=listing, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]])
 
 #Edit page per DB, lists collections
 @inventory_app.route('<string:id>/')
 def show_edit_child(id):
-    nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = None)
-    return render_template('edit_show_list.html', db_name=id, nice_name=nice_name, listing=inventory_viewer.get_edit_list(id), bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
+    try:
+        nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = None)
+        listing = inventory_viewer.get_edit_list(id)
+    except ih.ConnectOrAuthFail as e:
+        linv.log_dest.error("Returning auth fail page")
+
+        new_url = str(request.referrer)
+        url_info = ih.parse_edit_url(new_url)
+
+        bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
+
+    return render_template('edit_show_list.html', db_name=id, nice_name=nice_name, listing=listing, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
 
 #Viewer page per collection, shows formatted fields
 @inventory_app.route('<string:id>/<string:id2>/')
@@ -45,13 +69,34 @@ def show_inventory(id, id2):
 @inventory_app.route('<string:id>/<string:id2>/records/')
 def show_records(id, id2):
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['records', url_for('inventory_app.show_records', id=id, id2=id2)]]
-    nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
+
+    try:
+        nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
+    except ih.ConnectOrAuthFail as e:
+        linv.log_dest.error("Returning auth fail page")
+
+        new_url = str(request.referrer)
+        url_info = ih.parse_edit_url(new_url)
+
+        bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
     return render_template('view_records.html', db_name=id, collection_name=id2, bread=bread, record_fields=linv.record_field_order(), nice_name=nice_name)
 
 @inventory_app.route('<string:id>/<string:id2>/indices/')
 def show_indices(id, id2):
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['indices', url_for('inventory_app.show_indices', id=id, id2=id2)]]
-    nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
+    try:
+        nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
+    except ih.ConnectOrAuthFail as e:
+        linv.log_dest.error("Returning auth fail page")
+
+        new_url = str(request.referrer)
+        url_info = ih.parse_edit_url(new_url)
+
+        bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
     return render_template('view_indices.html', db_name=id, collection_name=id2, bread=bread, nice_name=nice_name, index_fields=linv.index_field_order())
 
 #Edit page per collection, shows editable fields
@@ -65,7 +110,11 @@ def show_edit_inventory(id, id2):
 @inventory_app.route('<string:id>/<string:id2>/edit/data/')
 @inventory_app.route('<string:id>/<string:id2>/data/')
 def fetch_edit_inventory(id, id2):
-    results = inventory_viewer.get_inventory_for_display(id+'.'+id2)
+    try:
+        results = inventory_viewer.get_inventory_for_display(id+'.'+id2)
+    except ih.ConnectOrAuthFail as e:
+        linv.log_dest.error("Returning auth fail page")
+        return "{}"
     return jsonify(results)
 
 #Edit page per collection, shows editable fields
@@ -80,13 +129,21 @@ def show_edit_records(id, id2):
 @inventory_app.route('<string:id>/<string:id2>/records/data/')
 @inventory_app.route('<string:id>/<string:id2>/records/edit/data/')
 def fetch_edit_records(id, id2):
-    results = inventory_viewer.get_records_for_display(id+'.'+id2)
+    try:
+        results = inventory_viewer.get_records_for_display(id+'.'+id2)
+    except ih.ConnectOrAuthFail as e:
+        linv.log_dest.error("Returning auth fail page")
+        return "{}"
     return jsonify(results)
 
 #Data source to populate inventory pages
 @inventory_app.route('<string:id>/<string:id2>/indices/data/')
 def fetch_indices(id, id2):
-    results = inventory_viewer.get_indices_for_display(id+'.'+id2)
+    try:
+        results = inventory_viewer.get_indices_for_display(id+'.'+id2)
+    except ih.ConnectOrAuthFail as e:
+        linv.log_dest.error("Returning auth fail page")
+        return "{}"
     return jsonify(results)
 
 #Page shown after successful edit submission

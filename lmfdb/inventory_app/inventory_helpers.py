@@ -294,3 +294,14 @@ def parse_edit_url(url):
     return {'parent':parent, 'db_name':db_name, 'collection_name':collection_name, 'trail_slash':trail_slash}
 
 # End extra URL and web helpers ----------------------------------------------------------
+
+# Exceptions understood by web-front end
+#Most bugs the front end can do little more than a ``something went wrong'' and diagnosis must be done backend.
+#These are the exceptions to that principle
+class ConnectOrAuthFail(Exception):
+    """Raise for failure to connect or auth i.e. int_client in invalid state"""
+    def __init__(self, message):
+        mess = "Failed to connect to db"
+        super(Exception, self).__init__(mess)
+
+#  End exceptions understood by web-front end --------------------------------------------

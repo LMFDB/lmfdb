@@ -226,3 +226,9 @@ h2
     padding: 5px 0 5px 0;
     margin: 15px 0 10px 0;
 }
+
+.err_text{
+    color: red;
+    font-size:120%;
+    font-weight: bold;
+}

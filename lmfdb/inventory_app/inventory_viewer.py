@@ -7,6 +7,7 @@ from inventory_db_inplace import update_fields
 from copy import deepcopy
 from lmfdb.utils import comma
 
+
 #Functions to populate viewer pages
 def get_nicename(db_name, collection_name):
     """Return the nice_name string for given db/coll pair"""
@@ -14,6 +15,10 @@ def get_nicename(db_name, collection_name):
     try:
         inv.setup_internal_client()
         db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception as e:
+        raise ih.ConnectOrAuthFail("")
+        return None
+    try:
         if collection_name:
             db_id = idc.get_db_id(db, db_name)
             coll_rec = idc.get_coll(db, db_id['id'], collection_name)
@@ -33,6 +38,8 @@ def gen_retrieve_db_listing(db, db_name=None):
 
     db -- LMFDB connection to inventory db
     db_name -- If absent, get listing of all dbs, if present, get listing of collections in named db
+    
+    NB connection must have been setup and checked!
     """
 
     table_name = inv.ALL_STRUC.db_ids[inv.STR_NAME]
@@ -61,7 +68,12 @@ def retrieve_db_listing(db_name=None):
     """Retrieve listing for all or given database."""
 
     inv.setup_internal_client()
-    db = inv.int_client[inv.ALL_STRUC.name]
+    try:
+        db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception as e:
+        raise ih.ConnectOrAuthFail("")
+        return None
+
     return gen_retrieve_db_listing(db, db_name)
 
 def get_edit_list(db_name=None):
@@ -181,11 +193,15 @@ def get_inventory_for_display(full_name):
 
     full_name -- fully qualified name, in form db.coll
     """
-
-    inv.setup_internal_client()
-    db = inv.int_client[inv.ALL_STRUC.name]
-    parts = ih.get_description_key_parts(full_name)
     try:
+        inv.setup_internal_client()
+        db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception as e:
+        raise ih.ConnectOrAuthFail("")
+        return None
+
+    try:
+        parts = ih.get_description_key_parts(full_name)
         records = retrieve_description(db, parts[0], parts[1])
     except Exception as e:
         inv.log_dest.error("Unable to get requested inventory "+ str(e))
@@ -202,11 +218,15 @@ def get_records_for_display(full_name):
 
     full_name -- fully qualified name, in form db.coll
     """
-
-    inv.setup_internal_client()
-    db = inv.int_client[inv.ALL_STRUC.name]
-    parts = ih.get_description_key_parts(full_name)
     try:
+        inv.setup_internal_client()
+        db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception as e:
+        raise ih.ConnectOrAuthFail("")
+        return None
+
+    try:
+        parts = ih.get_description_key_parts(full_name)
         records = retrieve_records(db, parts[0], parts[1])
     except Exception as e:
         inv.log_dest.error("Unable to get requested inventory "+ str(e))
@@ -223,11 +243,15 @@ def get_indices_for_display(full_name):
 
     full_name -- fully qualified name, in form db.coll
     """
-
-    inv.setup_internal_client()
-    db = inv.int_client[inv.ALL_STRUC.name]
-    parts = ih.get_description_key_parts(full_name)
     try:
+        inv.setup_internal_client()
+        db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception as e:
+        raise ih.ConnectOrAuthFail("")
+        return None
+    
+    try:
+        parts = ih.get_description_key_parts(full_name)
         records = retrieve_indices(db, parts[0], parts[1])
     except Exception as e:
         inv.log_dest.error("Unable to get requested inventory "+ str(e))
@@ -242,8 +266,13 @@ def get_indices_for_display(full_name):
 def collate_collection_info(db_name):
     """Fetches and collates viewable info for collections in named db
     """
-    inv.setup_internal_client()
-    db = inv.int_client[inv.ALL_STRUC.name]
+    try:
+        inv.setup_internal_client()
+        db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception as e:
+        raise ih.ConnectOrAuthFail("")
+        return None
+
     db_info = idc.get_db(db, db_name)
     if not db_info['exist']:
         return
