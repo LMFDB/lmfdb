@@ -34,7 +34,6 @@ def show_edit_root():
         linv.log_dest.error("Returning auth fail page")
 
         new_url = str(request.referrer)
-        url_info = ih.parse_edit_url(new_url)
 
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
@@ -52,7 +51,6 @@ def show_edit_child(id):
         linv.log_dest.error("Returning auth fail page")
 
         new_url = str(request.referrer)
-        url_info = ih.parse_edit_url(new_url)
 
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
@@ -76,7 +74,6 @@ def show_records(id, id2):
         linv.log_dest.error("Returning auth fail page")
 
         new_url = str(request.referrer)
-        url_info = ih.parse_edit_url(new_url)
 
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
@@ -92,7 +89,6 @@ def show_indices(id, id2):
         linv.log_dest.error("Returning auth fail page")
 
         new_url = str(request.referrer)
-        url_info = ih.parse_edit_url(new_url)
 
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
@@ -112,7 +108,7 @@ def show_edit_inventory(id, id2):
 def fetch_edit_inventory(id, id2):
     try:
         results = inventory_viewer.get_inventory_for_display(id+'.'+id2)
-    except ih.ConnectOrAuthFail as e:
+    except ih.ConnectOrAuthFail:
         linv.log_dest.error("Returning auth fail page")
         return "{}"
     return jsonify(results)
@@ -131,7 +127,7 @@ def show_edit_records(id, id2):
 def fetch_edit_records(id, id2):
     try:
         results = inventory_viewer.get_records_for_display(id+'.'+id2)
-    except ih.ConnectOrAuthFail as e:
+    except ih.ConnectOrAuthFail:
         linv.log_dest.error("Returning auth fail page")
         return "{}"
     return jsonify(results)
@@ -141,7 +137,7 @@ def fetch_edit_records(id, id2):
 def fetch_indices(id, id2):
     try:
         results = inventory_viewer.get_indices_for_display(id+'.'+id2)
-    except ih.ConnectOrAuthFail as e:
+    except ih.ConnectOrAuthFail:
         linv.log_dest.error("Returning auth fail page")
         return "{}"
     return jsonify(results)

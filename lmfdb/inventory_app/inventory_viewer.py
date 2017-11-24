@@ -70,7 +70,7 @@ def retrieve_db_listing(db_name=None):
     inv.setup_internal_client()
     try:
         db = inv.int_client[inv.ALL_STRUC.name]
-    except Exception as e:
+    except Exception:
         raise ih.ConnectOrAuthFail("")
         return None
 
@@ -269,7 +269,7 @@ def collate_collection_info(db_name):
     try:
         inv.setup_internal_client()
         db = inv.int_client[inv.ALL_STRUC.name]
-    except Exception as e:
+    except Exception:
         raise ih.ConnectOrAuthFail("")
         return None
 
