@@ -51,7 +51,7 @@ def show_databases():
 
     start_lmfdb_connection()
     dbs = jdbs.get_lmfdb_databases()
-    fh.write('')
+    fh.write('\n')
     fh.write('Known good databases\n')
     fh.write('--------------------\n')
     for db in dbs:
@@ -128,6 +128,5 @@ if __name__ == '__main__':
 
     if not action:
         print('No action specified!')
-        parser.print_help()
     else:
         if file_output: print('Run complete. All primary output written to file ' + file_output)

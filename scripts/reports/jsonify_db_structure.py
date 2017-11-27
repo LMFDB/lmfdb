@@ -2,6 +2,7 @@ from bson.code import Code
 import dbtools
 import id_object
 from lmfdb.base import getDBConnection
+import datetime
 
 __version__ = '1.0.0'
 
@@ -20,7 +21,7 @@ def _is_good_collection(dbname, name):
 def merge_dicts(d1, d2):
     for key, value2 in d2.items():
         if key in d1:
-            if type(value2) is dict: 
+            if type(value2) is dict:
                 merge_dicts(d1[key], value2)
         else:
             d1[key] = value2
@@ -118,6 +119,7 @@ def parse_collection_info_to_json(dbname, collname, connection = None):
     coll = connection[dbname][collname]
     json_raw = _jsonify_collection_info(coll, dbstring)
     json_wrap = {dbname:{collname:json_raw}}
+    json_wrap[dbname][collname]['scrape_date'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
     return json_wrap
 
 def create_user_template(structure_json, dbname, collname, field_subs = ['type',' example', 'description'],
@@ -137,8 +139,8 @@ def create_user_template(structure_json, dbname, collname, field_subs = ['type',
         result_json['(NOTES)'][el] = ""
     return result_json
 
-def parse_lmfdb_to_json(collections = None, databases = None, connection = None, 
-                        is_good_database = _is_good_database, 
+def parse_lmfdb_to_json(collections = None, databases = None, connection = None,
+                        is_good_database = _is_good_database,
                         is_good_collection = _is_good_collection):
 
     if connection is None:
