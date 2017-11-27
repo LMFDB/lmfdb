@@ -268,7 +268,10 @@ def expect_expr(vars):
         expr_getc()
         err, term_result = expect_term(vars)
         if err != None: return (err, None)
-        result += term_result
+        if c == "+":
+            result += term_result
+        elif c == "-":
+            result -= term_result
         c = expr_peekc()
 
     return (None, result)
@@ -453,12 +456,12 @@ def higher_genus_w_automorphisms_search(**args):
         L.append(field)
     
     if 'download_magma' in info:
-        code = ""    
+        code = "// MAGMA CODE FOR SEACH RESULTS\n\n"    
         first_download_entry = True
         for field in L:
             #print field
             if first_download_entry:
-                code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:])
+                code += ('\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:])).replace(", and generate data which is the same for all entries", "")
             else:
                 code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
             first_download_entry = False
@@ -466,14 +469,14 @@ def higher_genus_w_automorphisms_search(**args):
         response.headers['Content-type'] = 'text/plain'
         return response
     elif 'download_gap' in info:
-        code = ""    
+        code = "# GAP CODE FOR SEARCH RESULTS\n\n" 
         first_download_entry = True
         for field in L:
             print field['group']
             if first_download_entry:
-                code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='gap').split('\n')[1:])
+                code += ('\n'.join(hgcwa_code(label=field['passport_label'], download_type='gap').split('\n')[1:])).replace("# Generate data which is the same for all entries.\n", "")
             else:
-                code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
+                code += hgcwa_code(label=field['passport_label'], download_type='gap').split('result_record:=[];')[1]
             first_download_entry = False
         response = make_response(code)
         response.headers['Content-type'] = 'text/plain'
