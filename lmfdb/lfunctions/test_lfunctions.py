@@ -282,7 +282,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Elliptic' in L.data
 
     def test_Lhgm(self):
-        L = self.tc.get('/L/Motive/Hypergeometric/Q/A2_B1/t-2.3') # To be moved eventually
+        L = self.tc.get('/L/Motive/Hypergeometric/Q/A2.1_B4/t-1.1')
         assert 'Graph' in L.data
 
     def test_Lgenus2(self):
@@ -330,8 +330,8 @@ class LfunctionTest(LmfdbTest):
         assert 'OK' in str(L)
 
     def test_LHGMZeros(self):
-        L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')
-        assert '4.307350233' in L.data
+        L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A1.1.1.1_B2.2.2.2/t-1.1/')
+        assert '4.497732273' in L.data
 
 
     #------------------------------------------------------

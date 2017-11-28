@@ -3,7 +3,7 @@
 # Author: John Jones
 
 import re
-from flask import render_template, url_for
+from flask import render_template, url_for, redirect, request
 
 from lmfdb.motives import motive_page
 
@@ -30,8 +30,11 @@ def index():
 @motive_page.route("/Hypergeometric")
 @motive_page.route("/Hypergeometric/")
 def index2():
-    bread = get_bread([('Hypergeometric', url_for('.index2'))])
-    info = {}
-    friends=[('Hypergeometric over $\Q$', url_for("hypergm.index"))]
-    return render_template("hypergeometric-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info, friends=friends)
+    return redirect(url_for("hypergm.index", **request.args))
+
+    # For later when we have other hypergeometric motives
+    #bread = get_bread([('Hypergeometric', url_for('.index2'))])
+    #info = {}
+    #friends=[('Hypergeometric over $\Q$', url_for("hypergm.index"))]
+    #return render_template("hypergeometric-index.html", title="Hypergeometric Motives", bread=bread, credit=HGM_credit, info=info, friends=friends)
 
