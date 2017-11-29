@@ -625,11 +625,6 @@ class GaloisRepresentation( Lfunction):
     def Ltype(self):
         return "galoisrepresentation"
 
-    # does not have keys in the previous sense really.
-    def Lkey(self):
-        return {"galoisrepresentation":self.title}
-
-
 #########################
 # This is copied from Mark Watkin's code:
 
