@@ -7,7 +7,10 @@ SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
+# Single non-negative rational, allowing decimals, used in parse_range2rat
+QQ_DEC_RE = re.compile(r'^\d+((\.\d+)|(/\d+))?$')
 LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
+LIST_RAT_RE = re.compile(r'^((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-((\d+((\.\d+)|(/\d+))?))?))(,((\d+((\.\d+)|(/\d+))?)|((\d+((\.\d+)|(/\d+))?)-(\d+((\.\d+)|(/\d+))?)?)))*$')
 SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 ## RE from number_field.py
 #LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$'
@@ -178,6 +181,29 @@ def parse_range2(arg, key, parse_singleton=int):
     else:
         return [key, parse_singleton(arg)]
 
+# Like parse_range2, but to deal with strings which could be rational numbers
+# process is a function to apply to arguments after they have been parsed
+def parse_range2rat(arg, key, process):
+    if type(arg) == str:
+        arg = arg.replace(' ', '')
+    if QQ_DEC_RE.match(arg):
+        return [key, process(arg)]
+    if ',' in arg:
+        tmp = [parse_range2rat(a, key, process) for a in arg.split(',')]
+        tmp = [{a[0]: a[1]} for a in tmp]
+        return ['$or', tmp]
+    elif '-' in arg[1:]:
+        ix = arg.index('-', 1)
+        start, end = arg[:ix], arg[ix + 1:]
+        q = {}
+        if start:
+            q['$gte'] = process(start)
+        if end:
+            q['$lte'] = process(end)
+        return [key, q]
+    else:
+        return [key, process(arg)]
+
 # We parse into a list of singletons and pairs, like [[-5,-2], 10, 11, [16,100]]
 # If split0, we split ranges [-a,b] that cross 0 into [-a, -1], [1, b]
 def parse_range3(arg, name, split0 = False):
@@ -279,6 +305,14 @@ def parse_signed_ints(inp, query, qfield, parse_one=None):
     else:
         raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_rats(inp, query, qfield, process=None):
+    if process is None: process = lambda x: x
+    if LIST_RAT_RE.match(inp):
+        collapse_ors(parse_range2rat(inp, qfield, process), query)
+    else:
+        raise ValueError("It needs to be a non-negative rational number (such as 4/3), a range of non-negative rational numbers (such as 2-5/2 or 2.5..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_primes(inp, query, qfield, mode=None, to_string=False):
     format_ok = LIST_POSINT_RE.match(inp)
@@ -318,8 +352,9 @@ def parse_primes(inp, query, qfield, mode=None, to_string=False):
         raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False):
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False, listprocess=None):
     if process is None: process = lambda x: x
+    if listprocess is None: listprocess = lambda x: x
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
         (exactlength is not None and inp.count(',') != exactlength - 1) or
@@ -342,23 +377,29 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
         raise ValueError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
     else:
         if inp == '[]': # fixes bug in the code below (split never returns an empty list)
-            query[qfield] = []
+            if split:
+                query[qfield] = []
+            else:
+                query[qfield] = ''
             return
+        L = [int(a) for a in inp[1:-1].split(',')]
+        L = listprocess(L)
         if check_divisibility == 'decreasing':
             # Check that each entry divides the previous
-            L = [int(a) for a in inp[1:-1].split(',')]
+            #L = [int(a) for a in inp[1:-1].split(',')]
             for i in range(len(L)-1):
                 if L[i] % L[i+1] != 0:
                     raise ValueError("Each entry must divide the previous, such as [4,2].")
         elif check_divisibility == 'increasing':
             # Check that each entry divides the previous
-            L = [int(a) for a in inp[1:-1].split(',')]
+            # L = [int(a) for a in inp[1:-1].split(',')]
             for i in range(len(L)-1):
                 if L[i+1] % L[i] != 0:
                     raise ValueError("Each entry must divide the next, such as [2,4].")
         if split:
-            query[qfield] = [process(int(a)) for a in inp[1:-1].split(',')]
+            query[qfield] = [process(a) for a in L]
         else:
+            inp = '[%s]'%','.join([str(process(a)) for a in L])
             query[qfield] = inp if keepbrackets else inp[1:-1]
 
 def parse_gap_id(info, query, field='group', name='group', qfield='group'):
