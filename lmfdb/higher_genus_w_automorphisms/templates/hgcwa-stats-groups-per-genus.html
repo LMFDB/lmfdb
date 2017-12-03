@@ -14,7 +14,7 @@
     <tbody>
       {% for i in range(0, info.groups | length) %}
       <tr>
-        <td>{{info.iso_classes[i]}}</td>
+        <td>${{info.iso_classes[i]}}$</td>
         <td><a href={{url_for('.index', genus=info.genus, group=info.groups[i][0])}}>{{info.groups[i][0]}}</a></td>
         <td align="center">
           {{info.groups[i][1]}}

@@ -94,19 +94,22 @@ class HGCWAstats(object):
 
         # An iterable list of distinct curve genera
         dim_list = [ count[0] for count in stats['dim']['counts'] ]
-        dim_list.sort()
+        dim_max = max(dim_list)
 
         dim_gv_counts = db.find_one({'_id':'bydim/total_label'})
 
         # Get unique joint genus stats
         stats['dim_detail'] = []
 
-        for dim in dim_list:
+        for dim in range(0, dim_max+1):
             dim_stats = {}
             dim_stats['dim_num'] = dim
             dim_str = str(dim)
 
-            dim_stats['gen_vectors'] = dim_gv_counts['distinct'][dim_str]
+            try:
+                dim_stats['gen_vectors'] = dim_gv_counts['distinct'][dim_str]
+            except KeyError:
+                dim_stats['gen_vectors'] = 0
 
             # Keep dimension data sorted
             stats['dim_detail'].append(dim_stats)

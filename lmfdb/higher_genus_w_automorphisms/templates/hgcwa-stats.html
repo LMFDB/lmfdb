@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% set max_cols = 10 %}
+{% set max_cols = 15 %}
 {% set genus_detail = info.stats.genus_detail %}
 {% set dim_detail = info.stats.dim_detail %}
 
@@ -26,8 +26,8 @@ table.ntdata td {
   </p>
 </div>
 
-{% for i in range(0, genus_detail | length, max_cols) %}
 <h2> Distribution by genus </h2>
+{% for i in range(0, genus_detail | length, max_cols) %}
 <div>
   <table border=1 cellpadding=5 class="ntdata">
     <thead>
@@ -82,8 +82,8 @@ table.ntdata td {
 </div>
 {% endfor %}
 
-{% for i in range(0, dim_detail | length, max_cols) %}
 <h2> Distribution by dimension </h2>
+{% for i in range(0, dim_detail | length, max_cols) %}
 <div>
   <table border=1 cellpadding=5 class="ntdata">
     <thead>
