@@ -494,50 +494,6 @@ def higher_genus_w_automorphisms_search(**args):
         L.append(field)
 
     if 'download_magma' in info:
-        code = ""
-        first_download_entry = True
-        for field in res:
-            print field['group']
-            if first_download_entry:
-                code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:])
-            else:
-                code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
-            first_download_entry = False
-        response = make_response(code)
-        response.headers['Content-type'] = 'text/plain'
-        return response
-    elif 'download_gap' in info:
-        code = ""
-        first_download_entry = True
-        for field in res:
-            print field['group']
-            if first_download_entry:
-                code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='gap').split('\n')[1:])
-            else:
-                code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
-            first_download_entry = False
-        response = make_response(code)
-        response.headers['Content-type'] = 'text/plain'
-        return response
-
-    nres = res.count()
-    res = res.skip(start).limit(count)
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    L = [ ]
-    for field in res:
-        field['signature'] = ast.literal_eval(field['signature'])
-        L.append(field)
-
-    res = C.curve_automorphisms.passports.find(query).sort([(
-         'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
-        ('cc'[0],pymongo.ASCENDING)])
-
-    if 'download_magma' in info:
         code = "// MAGMA CODE FOR SEACH RESULTS\n\n"
         first_download_entry = True
         for field in L:
@@ -665,6 +621,7 @@ def render_family(args):
                                title=title, bread=bread, info=info,
                                properties2=prop2, friends=friends,
                                learnmore=learnmore, downloads=downloads, credit=credit)
+
 
 def render_passport(args):
     info = {}
