@@ -2,17 +2,17 @@
 
 {% block content %}
 
-<form id="re-search">
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="paging" value="0"/>
 <table border="0">
 
 <tr>
-<td align=left> 
+<td align=left>
 {{KNOWL('ag.curve.genus',title='Genus')}}:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
 </td>
 
-<td align=left> 
+<td align=left>
 {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
 <td align=left> <input type="text" name="signature" size="15" value="{{info.signature}}" >
 
@@ -20,11 +20,11 @@
 
 <tr align=left>
 
-<td align=left> 
+<td align=left>
 {{KNOWL('curve.highergenus.aut.grouporder',title='Group Order(s)')}}:
 <td align=left> <input type="text" name="groupsize" size="15" value="{{info.groupsize}}" >
-<td align=left> 
-Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
+<td align=left>
+Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" >
 </td>
 
 </tr>
@@ -49,7 +49,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
            <option value="only">only</option>
 {% endif %}
 {% endif %}
-</td> 
+</td>
 
 <td >
 	 {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:
@@ -71,7 +71,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
            <option value="only">only</option>
 {% endif %}
 {% endif %}
-</td> 
+</td>
 
 
 <td>
@@ -94,24 +94,24 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
            <option value="only">only</option>
 {% endif %}
 {% endif %}
-</td> 
-  
-  
+</td>
+
+
 </tr>
 
 <tr>
 
- <td align=left> 
+ <td align=left>
 {{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
 <td align=left> <input type="text" name="dim" size="5" value="{{info.dim}}" > </td>
 
-  
+
 <td align='left' colspan='4'>Maximum number of families to display: <input type='text' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
 
 <tr>
-<td align=left colspan="4"> 
+<td align=left colspan="4">
 <button type='submit' value='refine'>Search again</button>
 
 

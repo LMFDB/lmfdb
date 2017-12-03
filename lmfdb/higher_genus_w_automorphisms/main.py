@@ -632,7 +632,7 @@ def render_passport(args):
 
         dataz = C.curve_automorphisms.passports.find({'passport_label': label})
         if dataz.count() is 0:
-            bread = get_bread([("Search error", url_for('.search'))])
+            bread = get_bread([("Search error", url_for('.index'))])
             flash_error( "No refined passport with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         data=dataz[0]
