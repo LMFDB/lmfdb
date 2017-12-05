@@ -257,15 +257,12 @@ def eqn_list_to_curve_plot(L,rat_pts):
     ymax=max([R[3] for R in plotzones])
     for P in rat_pts:
     	(x,y,z)=eval(P.replace(':',','))
-        dbg.append([x,y,z]);
      	z=ZZ(z)
      	if z: # Do not attempt to plot points at infinity
       		x=ZZ(x)/z
       		y=ZZ(y)/z**3
       		if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
        			plot += point((x,y),color='red',size=40,zorder=2)
-                        #dbg.append([x/z,y/z])
-    #return text(str(dbg[8])+str(dbg[9]),(0,1),fontsize=15)
     return plot
 
 ###############################################################################
