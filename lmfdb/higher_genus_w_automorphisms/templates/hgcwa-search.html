@@ -2,7 +2,9 @@
 
 {% block content %}
 
-<form id="re-search" onsubmit="cleanSubmit(this.id)">
+{% include "hgcwa-clean-submit.html" %}
+
+<form id="re-search" onsubmit="cleanSubmitHGCWA(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="paging" value="0"/>
 <table border="0">
@@ -33,7 +35,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 	      {{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:
 </td>
 
-  <td> <select name='inc_hyper'>
+  <td> <select id='inc_hyper' name='inc_hyper'>
 {% if info.inc_hyper == "only" %}
            <option value="include">include</option>
            <option value="exclude">exclude</option>
@@ -55,7 +57,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 	 {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:
 </td>
 
-  <td> <select name='inc_cyc_trig'>
+  <td> <select id='inc_cyc_trig' name='inc_cyc_trig'>
 {% if info.inc_cyc_trig == "only" %}
            <option value="include">include</option>
            <option value="exclude">exclude</option>
@@ -78,7 +80,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 	      Full automorphism group:
 </td>
 
-  <td> <select name='inc_full'>
+  <td> <select id='inc_full' name='inc_full'>
 {% if info.inc_full == "only" %}
            <option value="include">include</option>
            <option value="exclude">exclude</option>
@@ -106,7 +108,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 <td align=left> <input type="text" name="dim" size="5" value="{{info.dim}}" > </td>
 
 
-<td align='left' colspan='4'>Maximum number of families to display: <input type='text' name='count' value="{{info.count}}" size='10'>
+<td align='left' colspan='4'>Maximum number of families to display: <input type='text' id='count' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
 
