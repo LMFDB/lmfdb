@@ -17,7 +17,7 @@ text-align:right;
     sphere (X/G has genus 0). There are {{info.stats.refined_passports.distinct}}
     distinct {{KNOWL('dq.curve.highergenus.aut.refinedpassports',title='refined passports')}} in the database. The number of distinct
     {{KNOWL('dq.curve.highergenus.aut.generatingvectors',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
-    Here are some <a href={{ url_for('.statistics') }}>further statistics</a>.
+    Here are some <a href="{{url_for('.statistics')}}">further statistics</a>.
   </p>
 </div>
 
@@ -67,7 +67,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 
 
         <h2>Search</h2>
-      <form id="re-search" name="search" method = "get" action="{{search}}" onsubmit="cleanSubmit(this.id)">
+      <form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
         <table class="">
           <tr align=left>
             <td align=right>
@@ -152,7 +152,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
             </td><td><input type="text" name="count" value="20" size="10"></td>
           </tr>
   </table>
-        <button type="submit" name="Submit" value="Search">Search</button>
+        <button type='submit' value='search'>Search</button>
       </form>
 
 
