@@ -65,12 +65,12 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 </p>
 
 
-<p>A  <a href={{url_for('.random_passport')}}>random refined passport</a> from the database.</p>
+<p>A  <a href="{{url_for('.random_passport')}}">random refined passport</a> from the database.</p>
 
 
     <h2>Find specific automorphisms of higher genus curves</h2>
 
-    <form name="search" method = "get" action="{{search}}">
+    <form name="search" method = "get" action="{{url_for('.index')}}">
         <table class="">
 	  <tr>
 	    <td>
