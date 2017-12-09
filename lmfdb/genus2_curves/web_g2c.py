@@ -689,7 +689,7 @@ class WebG2C(object):
         self.properties = properties = [('Label', data['label'])]
         if is_curve:
             self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn']))
-            plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
+            plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
             properties += [
                 (None, plot_link),
                 ('Conductor',str(data['cond'])),
