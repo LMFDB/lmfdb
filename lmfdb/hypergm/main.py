@@ -30,12 +30,12 @@ def db():
     return getDBConnection()
 
 def motivedb():
-    return db().hgm.newmotives
     return db().hgm.motives
+    return db().hgm.newmotives
 
 def familydb():
-    return db().hgm.newfamilies
     return db().hgm.families
+    return db().hgm.newfamilies
 
 def list2string(li):
     return ','.join([str(x) for x in li])
@@ -247,6 +247,8 @@ def hgm_search(**args):
     info = to_dict(args)
     bread = get_bread([("Search results", '')])
     query = {}
+    queryab = {}
+    queryabrev = {}
     if 'jump_to' in info:
         return render_hgm_webpage({'label': info['jump_to']})
 
@@ -263,8 +265,9 @@ def hgm_search(**args):
         parse_restricted(info, query, 'sign', allowed=['+1',1,-1], process=int)
         for param in ['A', 'B', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7',
             'Au2', 'Bu2', 'Au3', 'Bu3', 'Au5', 'Bu5', 'Au7', 'Bu7']:
-            parse_bracketed_posints(info, query, param, split=False,
+            parse_bracketed_posints(info, queryab, param, split=False,
                 listprocess=lambda a: sorted(a, reverse=True))
+        # Make a version to search reversed way
         if not family_search:
             parse_ints(info, query, 'conductor')
             parse_rational(info, query, 't')
@@ -272,7 +275,14 @@ def hgm_search(**args):
     except ValueError:
         return search_input_error(info, bread)
 
-    #print query
+    # Now combine the parts of the query if there are A,B parts
+    if queryab != {}:
+        for k in queryab.keys():
+            queryabrev[k+'rev'] = queryab[k]
+        queryab.update(query)
+        queryabrev.update(query)
+        query = {'$or':[queryab, queryabrev]}
+    print query
     count_default = 20
     if info.get('count'):
         try:
@@ -459,9 +469,10 @@ def render_hgm_family_webpage(args):
             ('Degree', '\(%s\)' % data['degree']),
             ('Weight',  '\(%s\)' % data['weight'])
         ]
+        mono = [m for m in data['mono'] if m[1] != 0]
         mono = [[m[0], dogapthing(m[1]), 
           getgroup(m[1],m[0]),
-          latex(ZZ(m[1][0]).factor())] for m in data['mono']]
+          latex(ZZ(m[1][0]).factor())] for m in mono]
         mono = [[m[0], m[1], m[2][0], splitint(m[1][0]/m[2][1],m[0]), m[3]] for m in mono]
         info.update({
                     'A': A,
