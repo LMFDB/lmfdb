@@ -191,7 +191,6 @@ def expr_peekc():
     return result
 
 def expr_expect_char(char):
-    #print "char"
     actual_char = expr_getc()
     
     if actual_char != char:
@@ -209,7 +208,6 @@ def read_num():
     return int(num)
 
 def expect_var(vars):
-    #print "var"
     c = expr_peekc()
     is_valid_var = False
     for var in vars.keys():
@@ -224,8 +222,6 @@ def expect_var(vars):
         return (expr_error("'" + c + "' is not a recognized variable"), None)
 
 def expect_factor(vars):
-    #print "factor"
-
     c = expr_peekc()
     if c == None:
         return (expr_error("expected factor here"), None)
@@ -245,7 +241,6 @@ def expect_factor(vars):
         return (expr_error("'" + c + "' unexpected symbol"), None)
 
 def expect_term(vars):
-    #print "term"
     err, result = expect_factor(vars)
     if err != None: return (err, None)
     
@@ -259,7 +254,6 @@ def expect_term(vars):
     return (None, result)
 
 def expect_expr(vars):
-    #print "expr"
     err, result = expect_term(vars)
     if err != None: return (err, None)
     
@@ -293,15 +287,19 @@ def add_group_order_range(mongo_query, expr, db):
     query_range = expr.replace("--", "..")
     raw_parts = expr.split('..')
     raw_parts = filter(lambda x: x != '', raw_parts)    
-
-    # these don't work
-    #min_genus = db.curve_automorphisms.passports.find().sort([("group_order", 1)]).limit(1)[0]["genus"]
-    #max_genus = db.curve_automorphisms.passports.find().sort([("group_order", -1)]).limit(1)[0]["genus"]
-    
     min_genus = 1
     max_genus = db.curve_automorphisms.passports.find().sort('genus', pymongo.DESCENDING).limit(1)[0]['genus']
 
-    if len(raw_parts) == 2:
+    # when given A-B and A,B are integers treat A-B as a range not subtraction.
+    special_case_parts = expr.split('-')
+    #is_special_case_range = special_case_parts[0].isdigit() and special_case_parts[1].isdigit()
+    is_special_case_range = len(special_case_parts) == 2 and special_case_parts[0].isdigit() and special_case_parts[1].isdigit()
+    
+    if is_special_case_range:
+        mongo_query["group_order"] = {"$gte": int(special_case_parts[0]), "$lte": int(special_case_parts[1])}
+        return (None, None)
+
+    elif len(raw_parts) == 2:
         mongo_expr = []
 
         for cur_genus in range(min_genus, max_genus + 1):
@@ -311,11 +309,9 @@ def add_group_order_range(mongo_query, expr, db):
                 mongo_expr.append({"group_order": {"$gte": left_value, "$lte" : right_value}, "genus": cur_genus})
             elif left_err != None:
                 mongo_query["$or"] = [{"genus": {"$lte": 0}}]
-                #print "\n\nleft error\n\n"
                 return (raw_parts[0], left_err)
             else:
                 mongo_query["$or"] = [{"genus": {"$lte": 0}}]
-                #print "\n\nright error\n\n"
                 return (raw_parts[1], right_err)
 
         mongo_query["$or"] = mongo_expr 
@@ -399,45 +395,7 @@ def higher_genus_w_automorphisms_search(**args):
         err, result = add_group_order_range(query, info['groupsize'], C)
         if err != None:
             flash_error('Parse error on group order field. <font face="Courier New"><br />Given: ' + err + '<br />-------' + result + '</font>')
-    """
-    res = C.curve_automorphisms.passports.find(query).sort([(
-         'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
-        ('cc'[0],pymongo.ASCENDING)])
-    nres = res.count()
-    res = res.skip(start).limit(count)
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-
-    L = [ ]
-    for field in res:
-        field['signature'] = ast.literal_eval(field['signature'])    
-        L.append(field)
-
-    code = ""
-    download_code = 'download' in info
-    first_download_entry = True
-    for field in L:
-        field['signature'] = ast.literal_eval(field['signature'])    
-        if download_code:
-            if first_download_entry:
-                code += '\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:])
-            else:
-                code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
-            first_download_entry = False
-
-    
-    
-
-    if 'download' in info:
-        response = make_response(code)
-        response.headers['Content-type'] = 'text/plain'
-        return response
-    """
-
+   
     res = C.curve_automorphisms.passports.find(query).sort([(
          'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
         ('cc'[0],pymongo.ASCENDING)])
@@ -459,11 +417,12 @@ def higher_genus_w_automorphisms_search(**args):
         code = "// MAGMA CODE FOR SEACH RESULTS\n\n"    
         first_download_entry = True
         for field in L:
-            #print field
             if first_download_entry:
-                code += ('\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:])).replace(", and generate data which is the same for all entries", "")
+                code += ('\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:]))
             else:
                 code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
+
+            code = code.replace(", and generate data which is the same for all entries", "")
             first_download_entry = False
         response = make_response(code)
         response.headers['Content-type'] = 'text/plain'
@@ -473,10 +432,12 @@ def higher_genus_w_automorphisms_search(**args):
         first_download_entry = True
         for field in L:
             print field['group']
+            
             if first_download_entry:
-                code += ('\n'.join(hgcwa_code(label=field['passport_label'], download_type='gap').split('\n')[1:])).replace("# Generate data which is the same for all entries.\n", "")
+                code += ('\n'.join(hgcwa_code(label=field['passport_label'], download_type='gap').split('\n')[1:]))
             else:
                 code += hgcwa_code(label=field['passport_label'], download_type='gap').split('result_record:=[];')[1]
+            code = code.replace("# Generate data which is the same for all entries.\n", "")                
             first_download_entry = False
         response = make_response(code)
         response.headers['Content-type'] = 'text/plain'
