@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Higher Genus Curves
-# Author: Jen Paulhus (copied from John Jones Local Fields)
+# Authors: Jen Paulhus, Alexander Martin, David Neill Asanza
+# (initial code copied from John Jones Local Fields)
 
 import re
 import pymongo
