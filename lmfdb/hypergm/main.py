@@ -302,7 +302,7 @@ def hgm_search(info):
             parse_ints(info, query, 'conductor')
             parse_rational(info, query, 't')
             parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
-    except ValueError as err:
+    except ValueError:
         if family_search:
             return render_template("hgm-search.html", info=info, title="Hypergeometric Family over $\Q$ Search Result", bread=bread, credit=HGM_credit, learnmore=learnmore_list())
         return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit, learnmore=learnmore_list())
