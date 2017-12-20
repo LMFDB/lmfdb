@@ -60,7 +60,7 @@ before_script:
     - export TESTMATCH='"(?:^|\/)[Tt]est_"'
     - export COVERAGE='--with-coverage  --cover-package=lmfdb'
     # assert that m0.lmfdb.xyz accepts our connections
-    - printf "db\nexit" | mongo m0.lmfdb.xyz 
+    # - printf "db\nexit" | mongo m0.lmfdb.xyz 
     # create a list of files and folder where we will run the nosetests
     - ls  lmfdb/*.py  > list
     - ls -d lmfdb/*/ >> list
