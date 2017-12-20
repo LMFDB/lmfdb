@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Higher Genus Curves
-# Authors: Jen Paulhus, Alexander Martin, David Neill Asanza
+# Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
 
 import re
