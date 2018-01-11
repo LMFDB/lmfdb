@@ -9,7 +9,7 @@ from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
-from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, real, sqrt, var, expand, nth_prime
+from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, point, real, sqrt, var, expand, nth_prime
 from sage.plot.text import text
 from flask import url_for
 
@@ -211,7 +211,7 @@ def inflate_interval(a,b,x=1.5):
     d *= x
     return (c-d,c+d)
 
-def eqn_list_to_curve_plot(L):
+def eqn_list_to_curve_plot(L,rat_pts):
     xpoly_rng = PolynomialRing(QQ,'x')
     poly_tup = [xpoly_rng(tup) for tup in L]
     f = poly_tup[0]
@@ -250,9 +250,20 @@ def eqn_list_to_curve_plot(L):
         plotzones.append((c,d,m,M))
     x = var('x')
     y = var('y')
-    return sum(implicit_plot(y**2 + y*h(x) - f(x), (x,R[0],R[1]),
-        (y,R[2],R[3]), aspect_ratio='automatic', plot_points=500) for R in
-        plotzones)
+    plot=sum(implicit_plot(y**2 + y*h(x) - f(x), (x,R[0],R[1]),(y,R[2],R[3]), aspect_ratio='automatic', plot_points=500, zorder=1) for R in plotzones)
+    xmin=min([R[0] for R in plotzones])
+    xmax=max([R[1] for R in plotzones])
+    ymin=min([R[2] for R in plotzones])
+    ymax=max([R[3] for R in plotzones])
+    for P in rat_pts:
+    	(x,y,z)=eval(P.replace(':',','))
+     	z=ZZ(z)
+     	if z: # Do not attempt to plot points at infinity
+      		x=ZZ(x)/z
+      		y=ZZ(y)/z**3
+      		if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
+       			plot += point((x,y),color='red',size=40,zorder=2)
+    return plot
 
 ###############################################################################
 # Name conversions for the Sato-Tate and real endomorphism algebras
@@ -688,7 +699,7 @@ class WebG2C(object):
         # Properties
         self.properties = properties = [('Label', data['label'])]
         if is_curve:
-            self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn']))
+            self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn'], data['rat_pts'].split(',') if 'rat_pts' in data else []))
             plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
             properties += [
                 (None, plot_link),
