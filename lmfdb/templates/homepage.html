@@ -194,12 +194,11 @@
       </table>
       </div>
     {% endif %}
+
    {{ rightnavig("Origins", origins) }}
-
-   {# TODO DLD Instances below should be removed when done#}
    {{ rightnavig("Instances", Linstances) }}
-
    {{ rightnavig("Related objects", friends) }}
+
    {% block more_props %}{% endblock %}
    {% if navi %}
        {{ neighbors("Nearby objects", navi) }}

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import flask
-from flask import render_template, url_for, request, make_response 
+from flask import render_template, url_for, request, make_response
 
 from sage.all import plot, srange, spline, line
 
@@ -14,7 +14,7 @@ import numpy
 import LfunctionPlot
 import LfunctionDatabase
 
-from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunction_EC_Q, 
+from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunction_EC_Q,
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
@@ -440,13 +440,10 @@ def render_lcalcfile(L, url):
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
-    info = L.info                        
+    info = L.info
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
 
-    #(info['bread'], info['origins'], info['friends'], info['factors'] ) = set_bread_and_friends(L, request)
-    # TODO DLD the Linstances below is temporary, and should be removed, and
-    #      the above line should be restored.
     (info['bread'], info['origins'], info['friends'], info['factors'], info['Linstances'] ) = set_bread_and_friends(L, request)
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
@@ -493,8 +490,6 @@ def set_bread_and_friends(L, request):
     friends = []
     origins = []
     factors = []
-
-    #TODO DLD this is to show origins, and should be removed
     instances = []
 
     # Create default friendlink by removing 'L/' and ending '/'
@@ -516,7 +511,7 @@ def set_bread_and_friends(L, request):
         if L.fromDB and not L.selfdual:
             friends.append(('Dual L-function', L.dual_link))
         bread = get_bread(1, [(charname, request.url)])
-    
+
     elif L.Ltype() == 'ellipticcurve':
 
         for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
@@ -547,12 +542,12 @@ def set_bread_and_friends(L, request):
                                                         power='2', label=label)))
                 friends.append(
                 ('Symmetric cube L-function', url_for(".l_function_ec_sym_page_label", power='3', label=label)))
-                
-            bread = get_bread(2, 
+
+            bread = get_bread(2,
                     [
                         ('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                        (label,  
-                            url_for('.l_function_ec_page', 
+                        (label,
+                            url_for('.l_function_ec_page',
                                 conductor_label=L.conductor,
                                 isogeny_class_label = L.isogeny_class_label
                                 )
@@ -572,13 +567,13 @@ def set_bread_and_friends(L, request):
 
         else:
             bread = get_bread(
-                    L.degree , 
+                    L.degree ,
                     [
                         # FIXME there is no .l_function_ecnf_browse_page
                         ('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                        (L.label, 
-                            url_for('.l_function_ecnf_page', 
-                                field_label = L.field_label, 
+                        (L.label,
+                            url_for('.l_function_ecnf_page',
+                                field_label = L.field_label,
                                 conductor_label = L.conductor_label ,
                                 isogeny_class_label = L.long_isogeny_class_label)
                         )
@@ -592,9 +587,9 @@ def set_bread_and_friends(L, request):
                                 str(L.label) )
         else:
             full_label = str(L.level) + '.' + str(L.weight) + str(L.label)
-            
+
         origins = [('Modular form ' + full_label, friendlink)]
-        
+
         if L.ellipticcurve:
             origins.append(
                 ('Isogeny class ' + L.ellipticcurve,
@@ -625,7 +620,7 @@ def set_bread_and_friends(L, request):
         else:
             if L.fromDB and not L.selfdual:
                 friends = [('Dual L-function', L.dual_link)]
-                
+
             bread = get_bread(L.degree,
                                       [('Maass Form', url_for('.l_function_maass_gln_browse_page',
                                                               degree='degree' + str(L.degree))),
@@ -676,12 +671,12 @@ def set_bread_and_friends(L, request):
         # because we have a scheme for the L-functions themselves
         newlink = friendlink.rpartition('t')
         friendlink = newlink[0]+'/t'+newlink[2]
-        friends = [('Hypergeometric motive ', friendlink)] 
+        friends = [('Hypergeometric motive ', friendlink)]
         if L.degree <= 4:
             bread = get_bread(L.degree, [(L.label, request.url)])
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
-                                                             
+
 
     elif L.Ltype() == 'SymmetricPower':
         def ordinal(n):
@@ -737,7 +732,6 @@ def set_bread_and_friends(L, request):
         for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
             url = instance['url'];
 
-            #TODO DLD this is to show other instances, and should be removed
             instances.append((str(url), "/L/" + url))
 
 
@@ -763,9 +757,6 @@ def set_bread_and_friends(L, request):
                         name += '&nbsp;  n/a';
                         factors.append((name, ""));
 
-    #return (bread, origins, friends, factors)
-    #TODO DLD 'instances' below is temporary, and the above line should be
-    #     restored when done. Other lines of change are marked with DLD
     return (bread, origins, friends, factors, instances)
 
 
@@ -787,7 +778,7 @@ def set_zeroslink_and_plotlink(L, args):
         zeroslink = ''
         plotlink = ''
 
-    return (zeroslink, plotlink)    
+    return (zeroslink, plotlink)
 
 
 def set_navi(L):
@@ -959,7 +950,7 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
     F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
     p = line(F_interp)
 #    p = line(F)    # temporary hack while the correct interpolation is being implemented
-    
+
     styleLfunctionPlot(p, 10)
     fn = tempfile.mktemp(suffix=".png")
     p.save(filename=fn)
@@ -981,7 +972,7 @@ def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg
         L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
     except Exception as err:
         return render_lfunction_exception(err)
-        
+
     if not L:
         return flask.abort(404)
     if hasattr(L,"lfunc_data"):
@@ -998,7 +989,7 @@ def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg
     # Handle cases where zeros are not available
     if isinstance(website_zeros, str):
         return website_zeros
-    
+
     positiveZeros = []
     negativeZeros = []
 
@@ -1306,7 +1297,7 @@ def name_and_object_from_url(url):
     from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
     from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
     from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
-    from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db 
+    from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
     from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
     url_split = url.split("/");
     name = None;
@@ -1340,8 +1331,8 @@ def name_and_object_from_url(url):
 
             elif url_split[2] ==  'ImaginaryQuadratic':
                 # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
-                label = '-'.join(url_split[-3:]) 
+                label = '-'.join(url_split[-3:])
                 name = 'Bianchi modular form ' + label;
                 obj_exists = is_bmf_in_db(label);
-    
+
     return name, obj_exists
