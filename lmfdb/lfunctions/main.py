@@ -774,6 +774,12 @@ def set_zeroslink_and_plotlink(L, args):
     else:
         zeroslink = ''
         plotlink = ''
+    # davidlowryduda 17/01/2018
+    # 'general' L-functions are generated from lhashes directly from the db, and refer to other L-functions.
+    # This does not fit into the current setup of plotting based on URLs, so we ignore them for now.
+    if L.Ltype() == 'general':
+        zeroslink = ''
+        plotlink = ''
 
     return (zeroslink, plotlink)
 
