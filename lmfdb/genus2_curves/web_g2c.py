@@ -699,8 +699,6 @@ class WebG2C(object):
         # Properties
         self.properties = properties = [('Label', data['label'])]
         if is_curve:
-            self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn']))
-            plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
             self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn'], data['rat_pts'].split(',') if 'rat_pts' in data else []))
             plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
 
