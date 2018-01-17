@@ -3,7 +3,7 @@
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
 
-
+import StringIO
 import re
 import pymongo
 import ast
@@ -11,7 +11,7 @@ ASC = pymongo.ASCENDING
 import yaml
 import os
 from lmfdb import base
-from flask import render_template, request, url_for, make_response, redirect
+from flask import render_template, request, url_for, redirect, send_file
 from lmfdb.utils import to_dict, random_value_from_collection, flash_error
 from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_input, parse_bracketed_posints, parse_gap_id
 
@@ -414,37 +414,13 @@ def higher_genus_w_automorphisms_search(**args):
     for field in res:
         field['signature'] = ast.literal_eval(field['signature'])    
         L.append(field)
-    
-    if 'download_magma' in info:
-        code = "// MAGMA CODE FOR SEACH RESULTS\n\n"    
-        first_download_entry = True
-        for field in L:
-            if first_download_entry:
-                code += ('\n'.join(hgcwa_code(label=field['passport_label'], download_type='magma').split('\n')[1:]))
-            else:
-                code += hgcwa_code(label=field['passport_label'], download_type='magma').split('result_record:=[];')[1]
 
-            code = code.replace(", and generate data which is the same for all entries", "")
-            first_download_entry = False
-        response = make_response(code)
-        response.headers['Content-type'] = 'text/plain'
-        return response
+    if 'download_magma' in info:
+        return hgcwa_code_download_search(L,'magma')  #OR RES??????
+
     elif 'download_gap' in info:
-        code = "# GAP CODE FOR SEARCH RESULTS\n\n" 
-        first_download_entry = True
-        for field in L:
-            print field['group']
-            
-            if first_download_entry:
-                code += ('\n'.join(hgcwa_code(label=field['passport_label'], download_type='gap').split('\n')[1:]))
-            else:
-                code += hgcwa_code(label=field['passport_label'], download_type='gap').split('result_record:=[];')[1]
-            code = code.replace("# Generate data which is the same for all entries.\n", "")                
-            first_download_entry = False
-        response = make_response(code)
-        response.headers['Content-type'] = 'text/plain'
-        return response
-        
+        return hgcwa_code_download_search(L,'gap')  #OR L??????
+
     info['fields'] = L    
     info['number'] = nres
     info['group_display'] = sg_pretty
@@ -751,12 +727,6 @@ def how_computed_page():
 _curdir = os.path.dirname(os.path.abspath(__file__))
 code_list =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
 
-@higher_genus_w_automorphisms_page.route("/<label>/download/<download_type>")
-def hgcwa_code_download(**args):
-    response = make_response(hgcwa_code(**args))
-    response.headers['Content-type'] = 'text/plain'
-    return response
-
 
 same_for_all =  ['signature', 'genus']
 other_same_for_all = [ 'r', 'g0', 'dim','sym']
@@ -765,16 +735,20 @@ depends_on_action = ['gen_vectors']
 
 Fullname = {'magma': 'Magma', 'gap': 'GAP'}
 Comment = {'magma': '//', 'gap': '#'}
+FileSuffix= {'magma': '.m', 'gap': '.g'} 
 
-def hgcwa_code(**args):
+@higher_genus_w_automorphisms_page.route("/<label>/download/<download_type>")
+def hgcwa_code_download(**args):
     import time
     label = args['label']
     C = base.getDBConnection()
     lang = args['download_type']
-    code = "%s %s code for the lmfdb family of higher genus curves %s\n" % (Comment[lang],Fullname[lang],label)
-    code +="%s The results are stored in a list of records called 'result_record'\n\n" % (Comment[lang]) 
+    s = Comment[lang]
+    filename= 'HigherGenusData' + str(label) + FileSuffix[lang] 
+    code = s + " " + Fullname[lang]+  " code for the lmfdb family of higher genus curves " + str(label) + '\n'  
+    code += s + " The results are stored in a list of records called 'data'\n\n" 
     code +=code_list['top_matter'][lang] + '\n' +'\n'
-    code +="result_record:=[];" + '\n' +'\n'
+    code +="data:=[];" + '\n' +'\n'
 
 
     if label_is_one_passport(label):
@@ -782,8 +756,8 @@ def hgcwa_code(**args):
 
     elif label_is_one_family(label):
         data = C.curve_automorphisms.passports.find({"label" : label})
-
-    code += Comment[lang] + code_list['gp_comment'][lang] +'\n'
+    
+    code += s + code_list['gp_comment'][lang] +'\n'
     code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
 
     if lang == 'magma':
@@ -798,7 +772,7 @@ def hgcwa_code(**args):
     code += '\n'
 
     # create formatting templates to be filled in with each record in data
-    startstr = Comment[lang] + ' Here we add an action to result_record.\n'
+    startstr = s + ' Here we add an action to data.\n'
     stdfmt = ''
     for k in depends_on_action:
         stdfmt += code_list[k][lang] + '{' + k + '}'+ ';\n'
@@ -833,4 +807,93 @@ def hgcwa_code(**args):
     lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
     code += '\n'.join(lines)
     print "%s seconds for %d bytes" %(time.time() - start,len(code))
-    return code
+    strIO = StringIO.StringIO()
+    strIO.write(code)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
+
+
+
+#JEN TEST FUNCTION
+@higher_genus_w_automorphisms_page.route("/download/<download_type>")
+#def hgcwa_code_download_search(**args):
+def hgcwa_code_download_search(res,download_type):
+    import time
+#    label = args['label']
+    C = base.getDBConnection()
+    lang = download_type
+    s = Comment[lang]
+    filename= 'HigherGenusSearch' + FileSuffix[lang] 
+    code = s + " " + Fullname[lang]+  " CODE FOR SEACH RESULTS" + '\n' + '\n'
+    code += s + " The results are stored in a list of records called 'data'\n\n" 
+    code +=code_list['top_matter'][lang] + '\n' +'\n'
+    code +="data:=[];" + '\n' +'\n'
+
+    label_list=[]
+    for field in res:
+        label=field['label']
+        if  label not in label_list:
+            label_list.append(label)
+            
+            data = C.curve_automorphisms.passports.find({"label" : label})
+            code += s + code_list['search_result_gp_comment'][lang] +'\n'
+            code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
+
+            if lang == 'magma':
+                code += code_list['group_construct'][lang] + '\n'
+
+
+            for k in same_for_all:
+                code += code_list[k][lang] + str(data[0][k])+ ';\n'
+        
+            for k in other_same_for_all:
+                code += code_list[k][lang] + '\n'
+
+            code += '\n'
+
+            # create formatting templates to be filled in with each record in data
+            startstr = s + ' Here we add an action to data.\n'
+            stdfmt = ''
+            for k in depends_on_action:
+                stdfmt += code_list[k][lang] + '{' + k + '}'+ ';\n'
+
+            if lang == 'magma':
+                stdfmt += code_list['con'][lang] + '{con}' + ';\n' 
+         
+            stdfmt += code_list['gen_gp'][lang]+ '\n'
+            stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
+            stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
+    
+            # extended formatting template for when signH is present
+            signHfmt = stdfmt
+            signHfmt += code_list['full_auto'][lang] + '{full_auto}' + ';\n'
+            signHfmt += code_list['full_sign'][lang] + '{signH}' + ';\n'        
+            signHfmt += code_list['add_to_total_full'][lang] + '\n'
+
+            # additional info for hyperelliptic cases
+            hypfmt = code_list['hyp'][lang] + code_list['tr'][lang] + ';\n'
+            hypfmt += code_list['hyp_inv'][lang] + '{hyp_involution}' + code_list['hyp_inv_last'][lang]
+            hypfmt += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
+            hypfmt += code_list['add_to_total_hyp'][lang] + '\n'
+            cyctrigfmt = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
+            cyctrigfmt += code_list['cyc'][lang] + code_list['tr'][lang] + ';\n'
+            cyctrigfmt += code_list['cyc_auto'][lang] + '{cinv}' + code_list['hyp_inv_last'][lang]
+            cyctrigfmt += code_list['add_to_total_cyc_trig'][lang] + '\n'
+            nhypcycstr = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
+            nhypcycstr += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
+            nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
+    
+            start = time.time()
+            lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
+            code += '\n'.join(lines)
+
+
+            code +='\n'
+
+    print "%s seconds for %d bytes" %(time.time() - start,len(code))
+    strIO = StringIO.StringIO()
+    strIO.write(code)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+

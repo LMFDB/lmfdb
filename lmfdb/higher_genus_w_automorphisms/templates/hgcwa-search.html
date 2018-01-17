@@ -111,14 +111,15 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </tr>
 
 <tr>
-<td align=left colspan="4"> 
+<td align=left> 
 <button type='submit' value='refine'>Search again</button>
+</td>
 
-
-
+<td align=left colspan="3">
 {% if info.fields|length > 0 %}
-<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Download Magma code for the displayed result(s)</button>
-<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Download GAP code for the displayed result(s)</button>
+Download displayed results for 
+<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
+<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
 {% endif %}
 
 </td>

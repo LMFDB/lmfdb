@@ -30,7 +30,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_magma_download(self):
         L = self.tc.get('/HigherGenus/C/Aut/5.32-27.0.2-2-2-4.1/download/magma')
-        assert '// Here we add an action to result_record.' in L.data
+        assert '// Here we add an action to data.' in L.data
 
     def test_full_auto_links(self):
         L = self.tc.get('/HigherGenus/C/Aut/4.9-1.0.9-9-9.1')
