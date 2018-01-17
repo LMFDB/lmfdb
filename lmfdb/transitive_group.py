@@ -175,7 +175,7 @@ def tryknowl(n, t):
 def group_display_short(n, t, C):
     label = base_label(n, t)
     group = C.transitivegroups.groups.find_one({'label': label})
-    if group['pretty']:
+    if group is not None and group['pretty']:
         return group['pretty']
     return "%dT%d"%(n,t)
     #name = group['name']
@@ -193,6 +193,9 @@ def group_display_pretty(n, t, C):
 def group_display_knowl(n, t, C, name=None):
     if not name:
         name = group_display_short(n, t, C)
+    group = C.transitivegroups.groups.find_one({'label': base_label(n, t)})
+    if group is None:
+        return name
     return '<a title = "' + name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
 
 

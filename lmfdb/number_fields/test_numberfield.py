@@ -12,8 +12,8 @@ class NumberFieldTest(LmfdbTest):
         assert '\chi_{1}' in L.data
 
     def test_hard_degree10(self):
-        L = self.tc.get('/NumberField/10.10.1107649855354064.1')
-        assert '10T36' in L.data
+        #L = self.tc.get('/NumberField/10.10.1107649855354064.1')
+        #assert '10T36' in L.data
         L = self.tc.get('/NumberField/10.10.138420300533025695415730492558689.1')
         assert '10T38' in L.data
 
