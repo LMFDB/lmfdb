@@ -453,8 +453,10 @@ class Lfunction_from_db(Lfunction):
 
         self.numcoeff = 30
 
-        # TODO this is madeup. The db doesn't store this systematically
-        self.langlands = True
+        # this controls data on the Euler product, but is not stored
+        # systematically in the database. Default to False until this
+        # is retrievable from the database.
+        self.langlands = False
 
         self.__dict__.update(kwargs)
         self.lfunc_data = LfunctionDatabase.get_lfunction_by_Lhash(self.Lhash)
