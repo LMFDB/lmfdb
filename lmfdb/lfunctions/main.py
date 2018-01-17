@@ -731,10 +731,7 @@ def set_bread_and_friends(L, request):
 
         for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
             url = instance['url'];
-
             instances.append((str(url), "/L/" + url))
-
-
             name, obj_exists = name_and_object_from_url(url);
 
             if not name:

@@ -129,7 +129,7 @@ def makeLfromdata(L):
     if 'credit' in data.keys():
         L.credit = data['credit']
 
-    # Dirichlet coeffcients
+    # Dirichlet coefficients
     if 'dirichlet_coefficients' in data:
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     else:
@@ -472,6 +472,15 @@ class Lfunction_from_db(Lfunction):
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
+
+        title_end = (
+                " of degree {degree}, weight {weight},"
+                " and conductor {conductor}"
+                ).format(degree=self.degree, weight=self.motivic_weight,
+                        conductor=self.level)
+
+        self.info['title_arithmetic'] = ("L-function" + title_end)
+        self.info['title_analytic'] = ("L-function" + title_end)
 
 
 #############################################################################
