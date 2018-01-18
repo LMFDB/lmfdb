@@ -143,7 +143,17 @@
 
 </tr>
 
-<tr><td class="button"><button type='submit' value='refine' style="width: 110px">Search again</button></td></tr>
+<tr>
+<td class="button"><button type='submit' value='refine' style="width: 110px">Search again</button></td>
+<td align=left colspan="-2">
+Download all search results for&nbsp;
+<button type="submit" name="language" value="gp">Pari/GP</button>&nbsp;
+<button type="submit" name="language" value="sage">SageMath</button>&nbsp;
+<button type="submit" name="language" value="magma">Magma</button>&nbsp;
+<input type="hidden" name="download" value="1"/>
+<input type="hidden" name="query" value="{{info.query}}"/>
+</td>
+</tr>
 
 </table>
 </form>
