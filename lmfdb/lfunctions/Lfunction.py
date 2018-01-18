@@ -444,13 +444,16 @@ class Lfunction_Dirichlet(Lfunction):
 
 class Lfunction_from_db(Lfunction):
     """
-    Construct an L-function using only data from the database.
+    Class representing a general L-function, to be retrieved from the database
+    based on its lhash.
+
+    Compulsory parameters: Lhash
     """
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
-        # These are a typeless base, so call Ltype 'general'
+        validate_required_args('Unable to construct L-function from lhash.',
+                               kwargs, 'Lhash')
         self._Ltype = "general"
-
         self.numcoeff = 30
 
         # this controls data on the Euler product, but is not stored
@@ -463,7 +466,6 @@ class Lfunction_from_db(Lfunction):
 
         makeLfromdata(self)
 
-        # Set up the basic displays
         self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"
         self.texname = "L(s)"
         self.texname_arithmetic = "L(s)"
@@ -471,18 +473,15 @@ class Lfunction_from_db(Lfunction):
         self.texnamecompleteds_arithmetic = "\\Lambda(s)"
         self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
         self.texnamecompleteds = "\\Lambda(s)"
-
-        # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
-
         title_end = (
                 " of degree {degree}, weight {weight},"
                 " and conductor {conductor}"
                 ).format(degree=self.degree, weight=self.motivic_weight,
                         conductor=self.level)
-
         self.info['title_arithmetic'] = ("L-function" + title_end)
         self.info['title_analytic'] = ("L-function" + title_end)
+        self.credit = ''
 
 
 #############################################################################
