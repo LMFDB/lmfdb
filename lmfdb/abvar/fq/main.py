@@ -8,7 +8,7 @@ from pymongo import ASCENDING
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger, random_object_from_collection
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string
+from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string, parse_galgrp
 from search_parsing import parse_newton_polygon, parse_abvar_decomp
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
@@ -132,39 +132,31 @@ def abelian_variety_search(**args):
                 query['is_simp'] = True
             elif info['simple'] == 'no':
                 query['is_simp'] = False
-        else:
-            info['simple'] = 'any'
         if 'primitive' in info:
             if info['primitive'] == 'yes':
                 query['is_prim'] = True
             elif info['primitive'] == 'no':
                 query['is_prim'] = False
-        else:
-            info['primitive'] = 'any'
         if 'jacobian' in info:
             jac = info['jacobian']
             if jac == 'yes':
                 query['is_jac'] = 1
             elif jac == 'not_no':
-                query['is_jac'] = {'$ne' : -1}
+                query['is_jac'] = {'$gt' : -1}
             elif jac == 'not_yes':
-                query['is_jac'] = {'$ne' : 1}
+                query['is_jac'] = {'$lt' : 1}
             elif jac == 'no':
                 query['is_jac'] = -1
-        else:
-            info['jacobian'] = 'any'
         if 'polarizable' in info:
             pol = info['polarizable']
             if pol == 'yes':
                 query['is_pp'] = 1
             elif pol == 'not_no':
-                query['is_pp'] = {'$ne' : -1}
+                query['is_pp'] = {'$gt' : -1}
             elif pol == 'not_yes':
-                query['is_pp'] = {'$ne' : 1}
+                query['is_pp'] = {'$lt' : 1}
             elif pol == 'no':
                 query['is_pp'] = -1
-        else:
-            info['polarizable'] = 'any'
         parse_ints(info,query,'p_rank')
         parse_ints(info,query,'ang_rank')
         parse_newton_polygon(info,query,'newton_polygon',qfield='slps') # TODO
@@ -173,6 +165,7 @@ def abelian_variety_search(**args):
         parse_string_start(info,query,'curve_point_count',qfield='C_cnts',first_field='pt_cnt')
         parse_abvar_decomp(info,query,'decomposition',qfield='decomp',av_stats=AbvarFqStats())
         parse_nf_string(info,query,'number_field',qfield='nf')
+        parse_galgrp(info,query,qfield='gal')
     except ValueError:
         return search_input_error(info, bread)
 

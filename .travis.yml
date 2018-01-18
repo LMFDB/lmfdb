@@ -59,12 +59,8 @@ before_script:
     # it gets quite tricky.
     - export TESTMATCH='"(?:^|\/)[Tt]est_"'
     - export COVERAGE='--with-coverage  --cover-package=lmfdb'
-    # create the mongoclient.config to connect to m0
-    - sed s/localhost/m0.lmfdb.xyz/ default_mongoclient.config  |  sed s/37010/27017/ >> mongoclient.config
-    # This is our external ip address
-    - dig TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
     # assert that m0.lmfdb.xyz accepts our connections
-    - printf "db\nexit" | mongo m0.lmfdb.xyz 
+    # - printf "db\nexit" | mongo m0.lmfdb.xyz 
     # create a list of files and folder where we will run the nosetests
     - ls  lmfdb/*.py  > list
     - ls -d lmfdb/*/ >> list

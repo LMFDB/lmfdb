@@ -991,3 +991,14 @@ def update_stats(verbose=True):
     if verbose:
         print("Adding sha counts by rank")
     update_joint_attribute_stats(ec, 'curves', ['rank','sha'], prefix='byrank', unflatten=True)
+
+def update_torsion_growth_stats(verbose=True):
+    # torsion growth:
+    if verbose:
+        print("Torsion growth stats")
+    #curvesnew = C.elliptic_curves.curves.new
+    curvesnew = curves
+    tor_gro_degs = curvesnew.distinct('tor_degs')
+    tor_gro_degs.sort()
+    tor_gro_counts = dict([(str(d),curvesnew.count({'tor_degs': d})) for d in tor_gro_degs])
+    curves.stats.insert_one({'_id':'torsion_growth', 'degrees': tor_gro_degs, 'counts': tor_gro_counts})

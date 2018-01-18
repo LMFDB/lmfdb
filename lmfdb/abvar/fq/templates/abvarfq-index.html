@@ -107,7 +107,7 @@ A <a href={{url_for('.random_class')}}>random isogeny class</a> from the databas
 <h2> Search </h2>
 Please enter a value or leave blank:
 <p></p>
-<form>
+<form id='search' onsubmit="cleanSubmit(this.id)">
     <table>
         <tr>
             <td>cardinality  of the {{ KNOWL('ag.base_field',title='base field') }}</td>
@@ -121,7 +121,7 @@ Please enter a value or leave blank:
             <td>
                 <select name='primitive'>
 		    <option value="yes">yes</option>
-                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="" selected>unrestricted</option>
                     <option value="no">no</option>
                 </select>
             </td>
@@ -138,7 +138,7 @@ Please enter a value or leave blank:
             <td>
                 <select name='simple'>
                     <option value="yes">yes</option>
-                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="" selected>unrestricted</option>
                     <option value="no">no</option>
                 </select>
             </td>
@@ -160,7 +160,7 @@ Please enter a value or leave blank:
                 <select name='jacobian'>
                     <option value="yes">yes</option>
 		    <option value="not_no">yes or unknown</option>
-                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="" selected>unrestricted</option>
 		    <option value="not_yes">no or unknown</option>
                     <option value="no">no</option>
                 </select>
@@ -183,7 +183,7 @@ Please enter a value or leave blank:
                 <select name='polarizable'>
                     <option value="yes">yes</option>
 		    <option value="not_no">yes or unknown</option>
-                    <option value="any" selected="yes">unrestricted</option>
+                    <option value="" selected>unrestricted</option>
 		    <option value="not_yes">no or unknown</option>
                     <option value="no">no</option>
                 </select>
@@ -255,6 +255,17 @@ Please enter a value or leave blank:
                 <span class="formexample"> e.g. 4.0.29584.2 or Qzeta8 </span>
             </td>
         </tr>
+	<tr>
+	    <td>
+	        {{KNOWL('nf.galois_group',title='galois group')}}
+	    </td>
+	    <td colspan=3>
+	        <input type='text' name='galois_group' example="4T3" size=40 value="{{info.galois_group}}"/>
+	    </td>
+	    <td>
+	        <span class="formexample"> e.g. C4, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}} </span>
+	    </td>
+	</tr>
         <tr>
             <td colspan=2>Maximum number of isogeny classes to display</td><td> <input type='text' name='count'  size=10 value="{{info.count}}" />
             </td>

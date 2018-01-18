@@ -12,22 +12,15 @@ def db_instances():
 
 def get_lfunction_by_Lhash(Lhash):
     Ldata = db_lfunctions().find_one({'Lhash': Lhash})
-    # FIXME after merging dbs
-    if not Ldata:
-        Ldata = base.getDBConnection().Lfunctions.ecqd1_Lfunctions.find_one({'Lhash': Lhash})
     if Ldata is None:
         raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
     return fix_Ldata(Ldata);
 
 def get_instances_by_Lhash(Lhash):
-    # FIXME after merging dbs
-    return list(db_instances().find({'Lhash': Lhash})) + list(base.getDBConnection().Lfunctions.ecqd1_instances.find({'Lhash': Lhash}));
+    return list(db_instances().find({'Lhash': Lhash})) 
 
 def get_instance_by_url(url):
     instance =  db_instances().find_one({'url': url})
-    # FIXME after merging dbs
-    if not instance:
-        instance = base.getDBConnection().Lfunctions.ecqd1_instances.find_one({'url': url})
     return instance
 
 def get_lfunction_by_url(url):
@@ -93,5 +86,5 @@ def getMaassDb():
     
 def getHgmData(label):
     connection = base.getDBConnection()
-    return connection.hgm.motives.find_one({'label': label})
+    return connection.hgm.newmotives.find_one({'label': label})
     

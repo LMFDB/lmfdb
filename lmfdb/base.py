@@ -117,11 +117,11 @@ def makeDBConnection():
         #read something from the db    
         #and check from where was it read
         if pymongo.version_tuple[0] >= 3:
-            cursor = _mongo_C.userdb.users.find({},{'_id':True}).limit(-1)
+            cursor = _mongo_C.knowledge.knowls.find({},{'_id':True}).limit(-1)
             list(cursor)
             logging.info("MongoClient conection is reading from: %s" % (cursor.address,));
         elif _mongo_kwargs.get("replicaset",None) is not None:
-            cursor = _mongo_C.userdb.users.find({},{'_id':True}).limit(-1)
+            cursor = _mongo_C.knowledge.knowls.find({},{'_id':True}).limit(-1)
             list(cursor)
             logging.info("MongoReplicaSetClient connection is reading from: %s" % (cursor.conn_id,));
         else:
@@ -255,14 +255,6 @@ def fmtdatetime(value, format='%Y-%m-%d %H:%M:%S'):
 def nl2br(s):
     return s.replace('\n', '<br>\n')
 
-
-@app.template_filter('obfuscate_email')
-def obfuscate_email(email):
-    """
-    obfuscating the email
-    TODO: doesn't work yet
-    """
-    return u"%s…@…%s" % (email[:2], email[-2:])
 
 
 @app.template_filter('urlencode')

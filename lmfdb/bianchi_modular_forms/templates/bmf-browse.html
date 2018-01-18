@@ -18,21 +18,30 @@ Browse {{ KNOWL('mf.bianchi.newform', title='newforms')}} by {{ KNOWL('nf', titl
 
 <p>
 Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf', title='base field')}}:
-{% for f in info.field_list %}
+<ul>
+<li> {{ KNOWL('mf.bianchi.level', title='\(\GL_2\) levels')}} over
+{% for f in info.gl2_field_list %}
 {%-if loop.index > 1 %}, {% endif%}
 <a href={{f.url}}>{{f.name}}</a>
 {%-endfor %}
+<li> {{ KNOWL('mf.bianchi.level', title='\(\SL_2\) levels')}} over
+{% for f in info.sl2_field_list %}
+{%-if loop.index > 1 %}, {% endif%}
+<a href={{f.url}}>{{f.name}}</a>
+{%-endfor %}
+</ul>
 </p>
 
 
 
 
-<h2> Find a specific form by  {{ KNOWL('mf.bianchi.labels', title='label')}} </h2>
+<h2> Find a specific form or space by  {{ KNOWL('mf.bianchi.labels', title='label')}} </h2>
 
 <form>
 <input type='text' name='label' placeholder='2.0.4.1-65.2-a'>
 <button type='submit'>Label</button>
-<br><span class="formexample">e.g. 2.0.4.1-65.2-a </span>
+<br><span class="formexample">e.g. 2.0.4.1-65.2-a (single form) or
+  2.0.4.1-65.2 (space of forms at a level)</span>
 </form>
 
 <h4>Examples of  {{ KNOWL('mf.bianchi.base_change', title='base change')}} forms</h4>

@@ -216,6 +216,12 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=3&simple=any&primitive=any&jacobian=no&polarizable=not_no",'3.3.ag_v_abs')
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=2&g=3&p_rank=0&simple=any&primitive=any&jacobian=not_no&polarizable=not_no",'3.2.c_e_g')
 
+    def test_search_galois(self):
+        self.check_args("/Variety/Abelian/Fq/?galois_group=4T3",'2.4.ab_f')
+        self.check_args("/Variety/Abelian/Fq/?q=9&galois_group=4T3",'2.9.af_u')
+        self.check_args("/Variety/Abelian/Fq/?galois_group=8T12",'4.2.b_b_e_f')
+        self.check_args("/Variety/Abelian/Fq/?p_rank=0&galois_group=C4",'2.64.i_cm')
+
     def test_search_maxnumdisplay(self):
         r"""
         Check that we can restrict how many classes get displayed

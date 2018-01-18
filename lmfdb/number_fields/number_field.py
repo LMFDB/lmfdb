@@ -4,7 +4,6 @@ import pymongo
 ASC = pymongo.ASCENDING
 import time, os
 import flask
-import lmfdb.base as base
 from lmfdb.base import app, getDBConnection
 from flask import render_template, request, url_for, redirect, send_file, flash
 import StringIO
@@ -18,12 +17,11 @@ import re
 
 assert nf_logger
 
-#import sage.all
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
 
 from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, group_knowl_guts, group_cclasses_knowl_guts, group_character_table_knowl_guts, aliastable
 
-from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, random_object_from_collection, web_latex_split_on_pm
+from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, random_object_from_collection, web_latex_split_on_pm
 from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
@@ -36,33 +34,38 @@ nfields = None
 max_deg = None
 init_nf_flag = False
 
+def db():
+    return getDBConnection()
+
+def nfdb():
+    return db().numberfields.fields
+
+def statdb():
+    return db().numberfields.stats
+
 # For imaginary quadratic field class group data
 class_group_data_directory = os.path.expanduser('~/data/class_numbers')
 
 def init_nf_count():
     global nfields, init_nf_flag, max_deg
     if not init_nf_flag:
-        nfdb = base.getDBConnection().numberfields.fields
-        nfields = nfdb.count()
-        max_deg = nfdb.find().sort('degree', pymongo.DESCENDING).limit(1)[0]['degree']
+        fields = nfdb()
+        nfields = fields.find().count()
+        max_deg = fields.find().sort('degree', pymongo.DESCENDING).limit(1)[0]['degree']
         init_nf_flag = True
 
 
 def galois_group_data(n, t):
-    C = getDBConnection()
-    return flask.Markup(group_knowl_guts(n, t, C))
+    return flask.Markup(group_knowl_guts(n, t, db()))
 
 def group_cclasses_data(n, t):
-    C = getDBConnection()
-    return flask.Markup(group_cclasses_knowl_guts(n, t, C))
+    return flask.Markup(group_cclasses_knowl_guts(n, t, db()))
 
 def group_character_table_data(n, t):
-    C = getDBConnection()
-    return flask.Markup(group_character_table_knowl_guts(n, t, C))
+    return flask.Markup(group_character_table_knowl_guts(n, t, db()))
 
 def number_field_data(label):
-    C = getDBConnection()
-    return flask.Markup(nf_knowl_guts(label, C))
+    return flask.Markup(nf_knowl_guts(label, db()))
 
 #def na_text():
 #    return "Not computed"
@@ -81,7 +84,7 @@ def ctx_number_fields():
 
 def global_numberfield_summary():
     init_nf_count()
-    return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('number_fields.render_class_group_data'))
+    return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  Here are some <a href="%s">further statistics</a>.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('number_fields.statistics'), url_for('number_fields.render_class_group_data'))
 
 #def group_display_shortC(C):
 #    def gds(nt):
@@ -125,7 +128,7 @@ def render_groups_page():
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")) ]
     t = 'Galois group labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois group labels', ' ')]
-    C = base.getDBConnection()
+    C = db()
     return render_template("galois_groups.html", al=aliastable(C), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 
@@ -190,10 +193,95 @@ def class_group_request_error(info, bread):
     t = 'Class Groups of Quadratic Imaginary Fields'
     return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
 
+# Helper for stats page
+# Input is 3 parallel lists
+# li has list of values for a fixed Galois group, each n
+# tots is a list of the total number of fields in each degree n
+# t is the list of t numbers
+def galstatdict(li, tots, t):
+    return [ {'cnt': comma(li[nn]), 
+              'prop': format_percentage(li[nn], tots[nn]),
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&galois_group=%s'%(nn+1,"%dt%d"%(nn+1,t[nn]))} for nn in range(len(li))]
+
+@nf_page.route("/stats")
+def statistics():
+    t = 'Global number field statistics'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number field statistics', '')]
+    init_nf_count()
+    n = statdb().find_one({'_id': 'degree'})['counts']
+    nsig = statdb().find_one({'_id': 'nsig'})['counts']
+    # Galois groups
+    nt_all = statdb().find_one({'_id': 'nt'})['counts']
+    nt = [nt_all[j] for j in range(7)]
+    # Galois group families
+    cn = galstatdict([u[0] for u in nt_all], n, [1 for u in nt_all])
+    sn = galstatdict([u[max(len(u)-1,0)] for u in nt_all], n, [len(u) for u in nt_all])
+    an = galstatdict([u[max(len(u)-2,0)] for u in nt_all], n, [len(u)-1 for u in nt_all])
+    # t-numbers for D_n
+    dn_tlist = [1,1,2,3,2,3,2,6,3,3,2,12,2,3,2,56,2,13,2,10,5,3,2]
+    dn = galstatdict(statdb().find_one({'_id': 'dn'})['counts'], n, dn_tlist)
+
+    h = statdb().find_one({'_id': 'h_range'})['counts']
+    has_h = statdb().find_one({'_id': 'has_h'})['val']
+    hdeg = statdb().find_one({'_id': 'hdeg'})['counts']
+    has_hdeg = statdb().find_one({'_id': 'has_hdeg'})['counts']
+    hdeg = [ [ {'cnt': comma(hdeg[nn][j]), 
+              'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s'%(nn+1,str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))] for nn in range(len(hdeg))]
+
+    has_hdeg = [{'cnt': comma(has_hdeg[nn]),
+                 'prop': format_percentage(has_hdeg[nn], n[nn]),
+                 'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=1-10000000000000'%(nn+1)} for nn in range(len(has_hdeg))]
+    maxt = 1+max([len(entry) for entry in nt])
+
+    nt = [ [ {'cnt': comma(nt[nn][tt]), 
+              'prop': format_percentage(nt[nn][tt], n[nn]),
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&galois_group=%s'%(nn+1,"%dt%d"%(nn+1,tt+1))} for tt in range(len(nt[nn]))] for nn in range(len(nt))]
+    # Totals for signature table
+    sigtotals = [ comma(sum([nsig[nn][r2] for nn in range(max(r2*2-1,0),23)])) for r2 in range(12)]
+    nsig = [ [ {'cnt': comma(nsig[nn][r2]), 
+              'prop': format_percentage(nsig[nn][r2], n[nn]),
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
+    h = [ {'cnt': comma(h[j]),
+           'prop': format_percentage(h[j], has_h),
+           'label': '$10^{'+str(j-1)+'}<h\leq 10^{'+str(j)+'}$',
+           'query': url_for(".number_field_render_webpage")+'?class_number=%s'%(str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))]
+    h[0]['label'] = '$h=1$'
+    h[1]['label'] = '$1<h\leq 10$'
+    h[2]['label'] = '$10<h\leq 10^2$'
+    h[0]['query'] = url_for(".number_field_render_webpage")+'?class_number=1'
+
+    # Class number 1 by signature
+    sigclass1 = statdb().find_one({'_id': 'sigclass1'})['counts']
+    sighasclass = statdb().find_one({'_id': 'sighasclass'})['counts']
+    sigclass1 = [ [ {'cnt': comma(sigclass1[nn][r2]), 
+              'prop': format_percentage(sigclass1[nn][r2], sighasclass[nn][r2]) if sighasclass[nn][r2]>0 else 0,
+              'show': sighasclass[nn][r2]>0,
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
+
+    n = [ {'cnt': comma(n[nn]),
+           'prop': format_percentage(n[nn], nfields),
+           'query': url_for(".number_field_render_webpage")+'?degree=%d'%(nn+1)} for nn in range(len(n))]
+
+    info = {'degree': n,
+            'nt': nt,
+            'nsig': nsig,
+            'sigtotals': sigtotals,
+            'h': h,
+            'has_h': comma(has_h),
+            'has_h_pct': format_percentage(has_h, nfields),
+            'hdeg': hdeg,
+            'has_hdeg': has_hdeg,
+            'sigclass1': sigclass1,
+            'total': comma(nfields),
+            'maxt': maxt,
+            'cn': cn, 'dn': dn, 'an': an, 'sn': sn,
+            'maxdeg': max_deg}
+    return render_template("nf-statistics.html", info=info, credit=NF_credit, title=t, bread=bread)
 
 @nf_page.route("/")
 def number_field_render_webpage():
-    args = request.args
+    args = to_dict(request.args)
     sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
         1 + (d // 2))] for d in range(1, 7)], []) + sum([[[d, 0]] for d in range(7, 11)], [])
     sig_list = sig_list[:10]
@@ -216,11 +304,11 @@ def number_field_render_webpage():
         info['learnmore'] = [(Completename, url_for(".render_discriminants_page")), ('How data was computed', url_for(".how_computed_page")), ('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
         return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
     else:
-        return number_field_search(**args)
+        return number_field_search(args)
 
 @nf_page.route("/random")
 def random_nfglobal():
-    label = random_object_from_collection( getDBConnection().numberfields.fields )['label']
+    label = random_object_from_collection( nfdb() )['label']
     #This version leaves the word 'random' in the URL:
     #return render_field_webpage({'label': label})
     #This version uses the number field's own URL:
@@ -252,7 +340,7 @@ def string2list(s):
 
 def render_field_webpage(args):
     data = None
-    C = base.getDBConnection()
+    C = db()
     info = {}
     bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
 
@@ -517,16 +605,11 @@ def make_disc_key(D):
         D1 = int(Dz.log(10))
     return s, '%03d%s' % (D1, str(Dz))
 
-def number_field_search(**args):
-    info = to_dict(args)
+def number_field_search(info):
 
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Global Number Field search results'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search results', ' ')]
-
-    # for k in info.keys():
-    #  nf_logger.debug(str(k) + ' ---> ' + str(info[k]))
-    # nf_logger.debug('******************* '+ str(info['search']))
 
     if 'natural' in info:
         query = {'label_orig': info['natural']}
@@ -574,24 +657,15 @@ def number_field_search(**args):
     count = parse_count(info)
     start = parse_start(info)
 
-    if info.get('paging'):
-        try:
-            paging = int(info['paging'])
-            if paging == 0:
-                start = 0
-        except:
-            pass
-
-    C = base.getDBConnection()
     # nf_logger.debug(query)
     info['query'] = dict(query)
-    if 'lucky' in args:
-        one = C.numberfields.fields.find_one(query)
+    if 'lucky' in info:
+        one = nfdb().find_one(query)
         if one:
             label = one['label']
             return redirect(url_for(".by_label", label=clean_input(label)))
 
-    fields = C.numberfields.fields
+    fields = nfdb()
 
     res = fields.find(query)
     res = res.sort([('degree', ASC), ('disc_abs_key', ASC),('disc_sign', ASC)])

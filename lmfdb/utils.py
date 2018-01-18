@@ -243,6 +243,10 @@ def comma(x):
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
 
 
+def format_percentage(num, denom):
+    return "%10.2f"%((100.0*num)/denom)
+
+
 def signtocolour(sign):
     """
     Assigns an rgb string colour to a complex number based on its argument.
@@ -286,9 +290,11 @@ def pol_to_html(p):
 #  latex/mathjax utilities
 ################################################################################
 
-def web_latex(x):
+def web_latex(x, enclose=True):
     """
-    Convert input to latex string unless it's a string or unicode.
+    Convert input to latex string unless it's a string or unicode. The key word
+    argument `enclose` indicates whether to surround the string with
+    `\(` and `\)` to make it a mathjax equation.
 
     Note:
     if input is a factored ideal, use web_latex_ideal_fact instead.
@@ -300,13 +306,16 @@ def web_latex(x):
     """
     if isinstance(x, (str, unicode)):
         return x
-    else:
+    if enclose == True:
         return "\( %s \)" % latex(x)
+    return " %s " % latex(x)
 
 
-def web_latex_ideal_fact(x):
+def web_latex_ideal_fact(x, enclose=True):
     """
-    Convert input factored ideal to latex string.
+    Convert input factored ideal to latex string.  The key word argument
+    `enclose` indicates whether to surround the string with `\(` and
+    `\)` to make it a mathjax equation.
 
     sage puts many parentheses around latex representations of factored ideals.
     This function removes excessive parentheses.
@@ -321,7 +330,7 @@ def web_latex_ideal_fact(x):
     >>> web_latex_ideal_fact(I)
     '\\( \\left(-a\\right)^{-1} \\)'
     """
-    y = web_latex(x)
+    y = web_latex(x, enclose=enclose)
     y = y.replace("(\\left(","\\left(")
     y = y.replace("\\right))","\\right)")
     return y

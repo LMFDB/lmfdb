@@ -98,7 +98,7 @@ from base import app, set_logfocus, get_logfocus, _init
 from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
 import sage
 
-DEFAULT_DB_PORT = 37010
+DEFAULT_DB_PORT = 27017
 LMFDB_SAGE_VERSION = '7.1'
 
 def timestamp():
@@ -145,6 +145,11 @@ map(root_static_file, ['favicon.ico'])
 def robots_txt():
     if "www.lmfdb.org".lower() in request.url_root.lower():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "robots.txt")
+        if os.path.exists(fn):
+            return open(fn).read()
+    # not running on www.lmfdb.org
+    else:
+        fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "default_robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
     return "User-agent: *\nDisallow: / \n"
@@ -202,10 +207,10 @@ Usage: %s [OPTION]...
   -m, --mongo-client=FILE   config file for connecting to MongoDB (default is "mongoclient.config")
       --logfocus=NAME       name of a logger to focus on
       --debug               enable debug mode
-      --dbport=NUM          bind the MongoDB to the given port (default base.DEFAULT_DB_PORT)
+      --dbport=NUM          bind the MongoDB to the given port (default %d)
       --dbmon=NAME          monitor MongoDB commands to the specified database (use NAME=* to monitor everything, NAME=~DB to monitor all but DB)
       --help                show this help
-""" % sys.argv[0]
+""" % (sys.argv[0], DEFAULT_DB_PORT)
 
 def get_configuration():
 
@@ -214,7 +219,7 @@ def get_configuration():
     logging_options = {"logfile": "flasklog"}
 
     # default options to pass to the MongoClient
-    mongo_client_options = {"port": DEFAULT_DB_PORT, "host": "localhost", "replicaset": None, "read_preference": ReadPreference.NEAREST};
+    mongo_client_options = {"port": DEFAULT_DB_PORT, "host": "m0.lmfdb.xyz", "replicaset": None, "read_preference": ReadPreference.NEAREST};
     read_preference_classes = {"PRIMARY": ReadPreference.PRIMARY, "PRIMARY_PREFERRED": ReadPreference.PRIMARY_PREFERRED , "SECONDARY": ReadPreference.SECONDARY, "SECONDARY_PREFERRED": ReadPreference.SECONDARY_PREFERRED, "NEAREST": ReadPreference.NEAREST };
     
     #setups the default mongo_client_config_filename

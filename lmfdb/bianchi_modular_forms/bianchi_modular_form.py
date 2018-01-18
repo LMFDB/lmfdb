@@ -9,7 +9,7 @@ from markupsafe import Markup
 from sage.all import latex
 
 from lmfdb.base import getDBConnection
-from lmfdb.utils import to_dict, random_object_from_collection
+from lmfdb.utils import to_dict, random_object_from_collection, web_latex_ideal_fact
 from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
@@ -52,10 +52,13 @@ def index():
     args = request.args
     if len(args) == 0:
         info = {}
-        fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
-        names = ["\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
-        info['field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(fields,names)]
-        info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(fields,names)]
+        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,7,11]]
+        sl2_fields = gl2_fields + ["2.0.{}.1".format(d) for d in [19,43,67,163,20]]
+        gl2_names = ["\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,7,11]]
+        sl2_names = gl2_names + ["\(\Q(\sqrt{-%s})\)" % d for d in [19,43,67,163,5]]
+        info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
+        info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
+        info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         bc_examples = []
         bc_examples.append(('base-change of a newform with rational coefficients',
                          '2.0.4.1-100.2-a',
@@ -89,7 +92,12 @@ def bianchi_modular_form_search(**args):
     info = to_dict(args)  # what has been entered in the search boxes
     if 'label' in info:
         # The Label button has been pressed.
-        return bianchi_modular_form_by_label(info['label'])
+        label = info['label']
+        dat = label.split("-")
+        if len(dat)==2: # assume field & level, display space
+            return render_bmf_space_webpage(dat[0], dat[1])
+        else: # assume single newform label; will display an error if invalid
+            return bianchi_modular_form_by_label(label)
 
     query = {}
     for field in ['field_label', 'weight', 'level_norm', 'dimension']:
@@ -154,6 +162,8 @@ def bianchi_modular_form_search(**args):
         v_clean['field_label'] = v['field_label']
         v_clean['short_label'] = v['short_label']
         v_clean['level_label'] = v['level_label']
+        v_clean['level_norm']  = v['level_norm']
+        v_clean['level_number'] = v['level_label'].split(".")[1]
         v_clean['label_suffix'] = v['label_suffix']
         v_clean['label'] = v['label']
         v_clean['level_ideal'] = teXify_pol(v['level_ideal'])
@@ -164,6 +174,7 @@ def bianchi_modular_form_search(**args):
         v_clean['cm'] = cm_info(v['CM'])
         res_clean.append(v_clean)
 
+    res_clean.sort(key=lambda x: [int(x['level_norm']), int(x['level_number']), x['label_suffix']])
     info['forms'] = res_clean
     info['count'] = count
     info['start'] = start
@@ -262,6 +273,7 @@ def bmf_field_dim_table(**args):
     info['start'] = start
     info['more'] = int(start + count < nres)
 
+    data.sort(key = lambda x: [int(y) for y in x['level_label'].split(".")])
     dims = {}
     for dat in data:
         dims[dat['level_label']] = d = {}
@@ -319,7 +331,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['field_gen'] = latex(alpha)
                 I = ideal_from_label(L,level_label)
                 info['level_gen'] = latex(I.gens_reduced()[0])
-                info['level_fact'] = latex(I.factor())
+                info['level_fact'] = web_latex_ideal_fact(I.factor(), enclose=False)
                 dim_data = data['gl2_dims']
                 weights = dim_data.keys()
                 weights.sort(key=lambda w: int(w))

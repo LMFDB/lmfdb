@@ -21,6 +21,7 @@ from lmfdb.utils import (
     to_dict,
     truncate_number,
     comma,
+    format_percentage,
     signtocolour,
     rgbtohex,
     pol_to_html,
@@ -119,6 +120,13 @@ class UtilsTest(unittest2.TestCase):
         self.assertEqual(comma(123), "123")
         self.assertEqual(comma(123456789), "123,456,789")
 
+    def test_format_percentage(self):
+        r"""
+        Checking utility: format_percentage
+        """
+        self.assertEqual(format_percentage(12,31), '     38.71')
+        self.assertEqual(format_percentage(12,37), '     32.43')
+
     def test_signtocolour(self):
         r"""
         Checking utility: signtocolour
@@ -157,6 +165,8 @@ class UtilsTest(unittest2.TestCase):
         self.assertEqual(web_latex("test string"), "test string")
         self.assertEqual(web_latex(x**23 + 2*x + 1),
                          '\\( x^{23} + 2 \\, x + 1 \\)')
+        self.assertEqual(web_latex(x**23 + 2*x + 1, enclose=False),
+                         ' x^{23} + 2 \\, x + 1 ')
 
     def test_web_latex_ideal_fact(self):
         r"""
@@ -169,6 +179,8 @@ class UtilsTest(unittest2.TestCase):
         I = K.ideal(2/(5+a)).factor()
         self.assertEqual(web_latex_ideal_fact(I),
                          '\\( \\left(-a\\right)^{-1} \\)')
+        self.assertEqual(web_latex_ideal_fact(I, enclose=False),
+                         ' \\left(-a\\right)^{-1} ')
 
     def test_web_latex_split_on(self):
         r"""
