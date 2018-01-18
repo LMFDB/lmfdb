@@ -482,6 +482,7 @@ class Lfunction_from_db(Lfunction):
         self.info['title_arithmetic'] = ("L-function" + title_end)
         self.info['title_analytic'] = ("L-function" + title_end)
         self.credit = ''
+        self.label = ''
 
 
 #############################################################################
