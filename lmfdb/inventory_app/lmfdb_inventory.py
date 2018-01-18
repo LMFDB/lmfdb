@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-import json, yaml
+import json
 import logging, logging.handlers
 
 #Contains the general data and functions for all inventory handling
