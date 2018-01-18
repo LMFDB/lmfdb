@@ -84,7 +84,7 @@ def setup_internal_client(remote=True, editor=False):
     """Get mongo connection and set int_client to it"""
 
     #This is a temporary arrangement, to be replaced with LMFDB connection
-    log_dest.info("Creating db client")
+    log_dest.info("Getting db client")
     global int_client, _auth_as_edit, _auth_on_remote
     if(int_client and _auth_as_edit == editor and _auth_on_remote == remote):
 	return True
@@ -93,19 +93,24 @@ def setup_internal_client(remote=True, editor=False):
             #Attempt to connect to LMFDB
             from lmfdb.base import getDBConnection
             int_client=getDBConnection()
+            return True
         else:
             int_client = MongoClient("localhost", 27017)
 #           int_client = MongoClient("localhost", 37010)
-            return(True)
-        # TODO Update to 'correct' filepath eventually
-        pw_dict = yaml.load(open("passwords.yaml"))
-        if editor:
-            key = 'data'
-            auth_db = 'inventory'
-        else:
-            key = 'default'
-            auth_db = 'admin'
-        int_client[auth_db].authenticate(pw_dict[key]['username'], pw_dict[key]['password'])
+            return True
+
+#       Below was old way of doing auth. To be removed when working
+#        pw_dict = yaml.load(open("passwords.yaml"))
+        #if editor:
+        #    key = 'data'
+        #    auth_db = 'inventory'
+        #else:
+        #    key = 'default'
+        #    auth_db = 'admin'
+#        auth_db = 'inventory'
+#        int_client[auth_db].authenticate(pw_dict[key]['username'], pw_dict[key]['password'])
+#        int_client[auth_db].authenticate(pw_dict['webserver']['username'], pw_dict['webserver']['password'])
+#        int_client[auth_db].authenticate(pw_dict['data']['username'], pw_dict['data']['password'])
 
     except Exception as e:
         log_dest.error("Error setting up connection "+str(e))

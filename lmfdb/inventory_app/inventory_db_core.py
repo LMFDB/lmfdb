@@ -583,7 +583,7 @@ def upsert_and_check(coll, rec_find, rec_set):
         elif 'value' in result:
             _id = result['value']['_id']
     except Exception as e:
-        inv.log_dest.error("Error inserting new record"+ str(e)) #TODO this is the wrong message
+        inv.log_dest.error("Error inserting new record "+ str(e)) #TODO this is the wrong message
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':(not 'upserted' in result['lastErrorObject'])}
 
@@ -601,7 +601,7 @@ def update_and_check(coll, rec_find, rec_set):
         _id = result['value']['_id']
     except Exception as e:
         print e
-        inv.log_dest.error("Error updating record"+ str(e)) #TODO this is the wrong message
+        inv.log_dest.error("Error updating record "+ str(e)) #TODO this is the wrong message
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':True}
 
