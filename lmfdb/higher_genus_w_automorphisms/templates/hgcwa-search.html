@@ -187,6 +187,15 @@ Download displayed results for
      {% endif %}
 
 
+{% if info.fields|length > 0 %}
+  <form>
+Download displayed results for 
+<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
+<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
+</form>
+{% endif %}
+
+
 {% endif %}
 
 {% endif %}
