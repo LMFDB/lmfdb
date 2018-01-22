@@ -12,8 +12,12 @@ text-align:right;
 </style>
 
 <div>
-{{ KNOWL_INC('dq.curve.highergenus.aut.extent') }}
+Currently the database contains all groups G acting as automorphisms of curves X from genus 2 up to genus 15 so that the quotient space X/G is the Riemann sphere (X/G has genus 0).  There are 31770 distinct {{KNOWL('dq.curve.highergenus.aut.refinedpassports',title='refined passports')}} in the database. The number of distinct {{KNOWL('dq.curve.highergenus.aut.generatingvectors',title='generating vectors')}} is 334,886.
 </div>
+
+<!-- <div>
+{{ KNOWL_INC('dq.curve.highergenus.aut.extent') }}
+</div> -->
 
 
       <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
@@ -69,14 +73,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
       </td>
           </tr>
 
-          <tr>
-            <td align=right>
-	      Group:
-            </td><td><input type="text" name="group" value="" placeholder="[4,2]"></td>
-      <td>
-	<span class="formexample">e.g. [4,2]</span>
-      </td>
-          </tr>
+          
 	  <tr>
             <td align=right>
               {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
@@ -84,6 +81,23 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
       <td>
 	<span class="formexample">e.g. [0,2,3,3,6] or [0;2,3,8]</span>
 	  </td> </tr>
+
+        <tr>
+            <td align=right>
+ {{KNOWL('curve.highergenus.aut.grouporder',title='Group Order(s)')}}:    
+            </td><td><input type="text" name="groupsize" placeholder="2..5"></td>
+            <td><span class="formexample">e.g. 12, or a range like 10..20, or you may include the variable g for genus like 84(g-1)</span></td>
+        </tr>
+
+        <tr>
+            <td align=right>
+	      Group:
+            </td><td><input type="text" name="group" value="" placeholder="[4,2]"></td>
+      <td>
+	<span class="formexample">e.g. [4,2]</span>
+      </td>
+          </tr>
+
 	 <tr><td align=right>
               {{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
             </td><td><input type="integer" name="dim" value="" placeholder="1"></td>
@@ -124,8 +138,8 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
                   </select>
                 </td>  <td>
 	<span class="formexample"></span>
-	 </td></tr>
-	  
+	 </td></tr> 
+ 
           <tr>
           <td align=right>
               Maximum number of families to display:

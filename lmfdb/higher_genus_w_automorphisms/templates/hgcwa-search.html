@@ -11,12 +11,21 @@
 <td align=left> 
 {{KNOWL('ag.curve.genus',title='Genus')}}:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
 </td>
-<td align=left> 
-Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
 
 <td align=left> 
 {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
 <td align=left> <input type="text" name="signature" size="15" value="{{info.signature}}" >
+
+</tr>
+
+<tr align=left>
+
+<td align=left> 
+{{KNOWL('curve.highergenus.aut.grouporder',title='Group Order(s)')}}:
+<td align=left> <input type="text" name="groupsize" size="15" value="{{info.groupsize}}" >
+<td align=left> 
+Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
+</td>
 
 </tr>
 
@@ -102,9 +111,20 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </tr>
 
 <tr>
-<td align=left colspan="2"> 
+<td align=left> 
 <button type='submit' value='refine'>Search again</button>
-</td></tr>
+</td>
+
+<td align=left colspan="3">
+{% if info.fields|length > 0 %}
+Download displayed results for 
+<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
+<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
+{% endif %}
+
+</td>
+</tr>
+
 </table>
 </form>
 
@@ -124,6 +144,7 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
      {% endif %}
 </h2>
+
 
 {% if info.number > 0 %}
 
@@ -164,6 +185,15 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
      {% if info.start +info.count  < info.number %}
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
      {% endif %}
+
+
+{% if info.fields|length > 0 %}
+  <form>
+Download displayed results for 
+<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
+<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
+</form>
+{% endif %}
 
 
 {% endif %}
