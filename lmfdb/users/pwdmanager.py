@@ -59,6 +59,7 @@ def bchash(pwd, existing_hash = None):
             existing_hash = unicode(bcrypt.gensalt())
         return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8'))
     except:
+        logger.warning("Failed to return bchash, perhaps bcrypt is not installed");
         return None
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
