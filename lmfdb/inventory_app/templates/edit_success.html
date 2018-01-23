@@ -1,0 +1,20 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+  <script type="text/javascript">
+    //Create a js object of the fields from server.
+    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
+    var myStore = sessionStorage;
+    myStore.removeItem('list'+pageKey);
+  </script>
+  <meta http-equiv="refresh" content="2; {{new_url}}" />
+
+{% endblock extra_script %}
+
+{% block title_block %}
+  Submitted edits sucessfully
+{% endblock title_block %}
+
+{% block main_body %}
+    Redirecting in 2 seconds to {{new_url}}
+{% endblock main_body %}
