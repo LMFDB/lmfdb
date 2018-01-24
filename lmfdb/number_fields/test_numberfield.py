@@ -12,8 +12,8 @@ class NumberFieldTest(LmfdbTest):
         assert '\chi_{1}' in L.data
 
     def test_hard_degree10(self):
-        L = self.tc.get('/NumberField/10.10.1107649855354064.1')
-        assert '10T36' in L.data
+        #L = self.tc.get('/NumberField/10.10.1107649855354064.1')
+        #assert '10T36' in L.data
         L = self.tc.get('/NumberField/10.10.138420300533025695415730492558689.1')
         assert '10T38' in L.data
 
@@ -30,7 +30,7 @@ class NumberFieldTest(LmfdbTest):
         assert '275' in L.data # conductor
 
     def test_stuff_not_computed(self):
-        L = self.tc.get('/NumberField/23.1.459177995857290463522143518056811108.1', follow_redirects=True)
+        L = self.tc.get('/NumberField/23.23.931347256889446325436632107655346061164193665348344821578377438399536607931200329.1', follow_redirects=True)
         assert 'Not computed' in L.data
 
     def test_search_poly_mean2parser(self):
@@ -51,11 +51,11 @@ class NumberFieldTest(LmfdbTest):
 
     def test_url_label(self):
         L = self.tc.get('/NumberField/2.2.5.1')
-        assert '0.481211825059603' in L.data # regulator
+        assert '0.481211825' in L.data # regulator
 
     def test_url_naturallabel(self):
         L = self.tc.get('/NumberField/Qsqrt5', follow_redirects=True)
-        assert '0.481211825059603' in L.data # regulator
+        assert '0.481211825' in L.data # regulator
 
     def test_arith_equiv(self):
         L = self.tc.get('/NumberField/7.3.6431296.1', follow_redirects=True)
@@ -88,6 +88,14 @@ class NumberFieldTest(LmfdbTest):
     def test_url_bad(self):
         L = self.tc.get('/NumberField/junk')
         assert 'Error' in L.data # error mesage
+
+    def test_random_field(self):
+        L = self.tc.get('/NumberField/random', follow_redirects=True)
+        assert 'Discriminant' in L.data 
+
+    def test_statistics(self):
+        L = self.tc.get('/NumberField/stats', follow_redirects=True)
+        assert 'Class number' in L.data 
 
 
 

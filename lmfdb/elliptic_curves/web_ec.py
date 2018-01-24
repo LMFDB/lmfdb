@@ -4,10 +4,14 @@ import os
 import yaml
 from flask import url_for
 from lmfdb.base import getDBConnection
-from lmfdb.utils import make_logger, web_latex, encode_plot
+from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
 from lmfdb.search_parsing import split_list
+#from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.WebNumberField import nf_display_knowl, string2list
+
 from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
 ROUSE_URL_PREFIX = "http://users.wfu.edu/rouseja/2adic/" # Needs to be changed whenever J. Rouse and D. Zureick-Brown move their data
@@ -226,7 +230,6 @@ class WebEC(object):
 
         # otherwise fall back to computing it from the curve
         except AttributeError:
-            print("Falling back to constructing E")
             self.E = EllipticCurve(data['ainvs'])
             data['equation'] = web_latex(self.E)
             data['disc'] = D = self.E.discriminant()
@@ -426,6 +429,52 @@ class WebEC(object):
         bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         bsd['tamagawa_product'] = prod(tamagawa_numbers)
 
+        # Torsion growth data
+
+        data['torsion_growth_data_exists'] = False
+        try:
+            tg = self.tor_gro
+            data['torsion_growth_data_exists'] = True
+            data['tgx'] = tgextra = []
+            # find all base-changes of this curve in the database, if any
+            bcs = [res['label'] for res in  getDBConnection().elliptic_curves.nfcurves.find({'base_change': self.lmfdb_label}, projection={'label': True, '_id': False})]
+            bcfs = [lab.split("-")[0] for lab in bcs]
+            for F, T in tg.items():
+                tg1 = {}
+                tg1['bc'] = "Not in database"
+                if ":" in F:
+                    F = F.replace(":",".")
+                    field_data = nf_display_knowl(F, getDBConnection(), field_pretty(F))
+                    deg = int(F.split(".")[0])
+                    bcc = [x for x,y in zip(bcs, bcfs) if y==F]
+                    if bcc:
+                        from lmfdb.ecnf.main import split_full_label
+                        F, NN, I, C = split_full_label(bcc[0])
+                        tg1['bc'] = bcc[0]
+                        tg1['bc_url'] = url_for('ecnf.show_ecnf', nf=F, conductor_label=NN, class_label=I, number=C)
+                else:
+                    field_data = web_latex_split_on_pm(coeff_to_poly(string2list(F)))
+                    deg = F.count(",")
+                tg1['d'] = deg
+                tg1['f'] = field_data
+                tg1['t'] = '\(' + ' \\times '.join(['\Z/{}\Z'.format(n) for n in T.split(",")]) + '\)'
+                tg1['m'] = 0
+                tgextra.append(tg1)
+
+            tgextra.sort(key = lambda x: x['d'])
+            data['ntgx'] = len(tgextra)
+            lastd = 1
+            for tg in tgextra:
+                d = tg['d']
+                if d!=lastd:
+                    tg['m'] = len([x for x in tgextra if x['d']==d])
+                    lastd = d
+            data['tg_maxd'] = max(db_ecstats().find_one({'_id': 'torsion_growth'})['degrees'])
+
+        except AttributeError:
+            pass # we have no torsion growth data
+
+
         data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
         data['newform_label'] = self.newform_label = newform_label(cond,2,1,iso)
         self.newform_link = url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso)
@@ -458,7 +507,7 @@ class WebEC(object):
         except AttributeError:
             self.plot = encode_plot(EllipticCurve(data['ainvs']).plot())
 
-        self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
+        self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         self.properties = [('Label', self.lmfdb_label),
                            (None, self.plot_link),
                            ('Conductor', '\(%s\)' % data['conductor']),

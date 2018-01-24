@@ -81,6 +81,8 @@ import rep_galois_modl
 assert rep_galois_modl
 import hecke_algebras
 assert hecke_algebras
+from inventory_app.inventory_app import inventory_app
+assert inventory_app
 
 # Currently uploading is not supported
 # import upload
@@ -143,6 +145,11 @@ map(root_static_file, ['favicon.ico'])
 def robots_txt():
     if "www.lmfdb.org".lower() in request.url_root.lower():
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "robots.txt")
+        if os.path.exists(fn):
+            return open(fn).read()
+    # not running on www.lmfdb.org
+    else:
+        fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "default_robots.txt")
         if os.path.exists(fn):
             return open(fn).read()
     return "User-agent: *\nDisallow: / \n"

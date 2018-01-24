@@ -113,14 +113,14 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 </tr>
 
 <tr>
-<td align=left colspan="4">
 <button type='submit' value='refine'>Search again</button>
+</td>
 
-
-
+<td align=left colspan="3">
 {% if info.fields|length > 0 %}
-<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Download Magma for results.</button>
-<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Download GAP code for results.</button>
+Download displayed results for 
+<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
+<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
 {% endif %}
 
 </td>
@@ -186,6 +186,15 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
      {% if info.start +info.count  < info.number %}
 <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
      {% endif %}
+
+
+{% if info.fields|length > 0 %}
+  <form>
+Download displayed results for 
+<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
+<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
+</form>
+{% endif %}
 
 
 {% endif %}

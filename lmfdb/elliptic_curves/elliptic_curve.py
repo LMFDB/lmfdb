@@ -23,6 +23,13 @@ from sage.all import ZZ, QQ, EllipticCurve
 q = ZZ['x'].gen()
 
 #########################
+#   Data credit
+#########################
+
+def ec_credit():
+    return 'John Cremona, Enrique  Gonz&aacute;lez Jim&eacute;nez, Robert Pollack, Jeremy Rouse, Andrew Sutherland and others: see <a href={}>here</a> for details'.format(url_for(".how_computed_page"))
+
+#########################
 #   Utility functions
 #########################
 
@@ -92,10 +99,10 @@ def rational_elliptic_curves(err_args=None):
         'counts': counts,
         'stats_url': url_for(".statistics")
     }
-    credit = 'John Cremona and Andrew Sutherland'
+    #credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("ec-index.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), calling_function = "ec.rational_elliptic_curves", **err_args)
+    return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), calling_function = "ec.rational_elliptic_curves", **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -118,12 +125,12 @@ def statistics():
         'counts': get_stats().counts(),
         'stats': get_stats().stats(),
     }
-    credit = 'John Cremona'
+    #credit = 'John Cremona'
     t = 'Elliptic curves over $\Q$: statistics'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
              ('statistics', ' ')]
-    return render_template("ec-stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
+    return render_template("ec-stats.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list())
 
 
 @ec_page.route("/<int:conductor>/")
@@ -277,12 +284,12 @@ def elliptic_curve_search(info):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-    credit = 'John Cremona'
-    if 'non-surjective_primes' in query or 'non-maximal_primes' in query:
-        credit += ' and Andrew Sutherland'
+    #credit = 'John Cremona'
+    #if 'non-surjective_primes' in query or 'non-maximal_primes' in query:
+    #    credit += ' and Andrew Sutherland'
 
     t = info.get('title','Elliptic Curves search results')
-    return render_template("ec-search-results.html", info=info, credit=credit, bread=bread, title=t)
+    return render_template("ec-search-results.html", info=info, credit=ec_credit(), bread=bread, title=t)
 
 
 def search_input_error(info, bread):
@@ -369,7 +376,7 @@ def by_weierstrass(eqn):
     return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
 
 def render_isogeny_class(iso_class):
-    credit = 'John Cremona'
+    #credit = 'John Cremona'
     class_data = ECisog_class.by_label(iso_class)
     if class_data == "Invalid label":
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=False)
@@ -382,7 +389,7 @@ def render_isogeny_class(iso_class):
                            info=class_data,
                            code=class_data.code,
                            bread=class_data.bread,
-                           credit=credit,
+                           credit=ec_credit(),
                            title=class_data.title,
                            friends=class_data.friends,
                            downloads=class_data.downloads,
@@ -429,7 +436,7 @@ def plot_ec(label):
 
 
 def render_curve_webpage_by_label(label):
-    credit = 'John Cremona and Andrew Sutherland'
+    #credit = 'John Cremona and Andrew Sutherland'
     data = WebEC.by_label(label)
     if data == "Invalid label":
         return elliptic_curve_jump_error(label, {}, wellformed_label=False)
@@ -440,17 +447,17 @@ def render_curve_webpage_by_label(label):
     except AttributeError:
         return elliptic_curve_jump_error(label, {}, wellformed_label=False)
 
-    if data.twoadic_label:
-        credit = credit.replace(' and',',') + ' and Jeremy Rouse'
-    if data.data['iwdata']:
-        credit = credit.replace(' and',',') + ' and Robert Pollack'
+    # if data.twoadic_label:
+    #     credit = credit.replace(' and',',') + ' and Jeremy Rouse'
+    # if data.data['iwdata']:
+    #     credit = credit.replace(' and',',') + ' and Robert Pollack'
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     return render_template("ec-curve.html",
                            properties2=data.properties,
-                           credit=credit,
+                           credit=ec_credit(),
                            data=data,
                            # set default show names but actually code snippets are filled in only when needed
                            code=code,
@@ -605,9 +612,9 @@ def completeness_page():
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Completeness', '')]
-    credit = 'John Cremona'
+    #credit = 'John Cremona'
     return render_template("single.html", kid='dq.ec.extent',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @ec_page.route("/Source")
 def how_computed_page():
@@ -615,9 +622,9 @@ def how_computed_page():
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Source', '')]
-    credit = 'John Cremona'
+    #credit = 'John Cremona'
     return render_template("single.html", kid='dq.ec.source',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Labels")
 def labels_page():
@@ -625,9 +632,9 @@ def labels_page():
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Labels', '')]
-    credit = 'John Cremona'
+    #credit = 'John Cremona'
     return render_template("single.html", kid='ec.q.lmfdb_label',
-                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 @ec_page.route('/<conductor>/<iso>/<number>/download/<download_type>')
 def ec_code_download(**args):

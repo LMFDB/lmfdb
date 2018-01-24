@@ -34,7 +34,7 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 
 {% if info.jacobian_decomp %}
-  <table><tr><td>{{KNOWL('ag.jacobian',title='Jacobian variety')}} decomposition:</td><td>${{info.jacobian_decomp}}$</td></tr>
+  <table><tr><td>{{KNOWL('ag.jacobian',title='Jacobian variety')}} (partial) decomposition:</td><td>${{info.jacobian_decomp}}$</td></tr>
     <tr><td >Corresponding character(s):</td><td> {{info.corrChar}}</td></tr>
   </table>
  {% endif %}
@@ -60,7 +60,7 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
   <p>
     {% if info.eqns %}
-    <table><tr><td>Equations(s) of curve(s) in this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}:</td></tr></table>
+    <table><tr><td>Equation(s) of curve(s) in this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}:</td></tr></table>
        <table>{% for eqn in info.eqns %}
 	  <tr><td> &nbsp; </td><td>${{eqn}}$</td></tr>
 	  {% endfor %} </table> <br>
