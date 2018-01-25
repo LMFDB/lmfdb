@@ -540,7 +540,7 @@ class ECNF(object):
         # Plot
         if K.signature()[0]:
             self.plot = encode_plot(EC_nf_plot(K,self.ainvs, self.field.generator_name()))
-            self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
+            self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
             self.properties += [(None, self.plot_link)]
 
         self.properties += [

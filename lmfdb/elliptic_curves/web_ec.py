@@ -507,7 +507,7 @@ class WebEC(object):
         except AttributeError:
             self.plot = encode_plot(EllipticCurve(data['ainvs']).plot())
 
-        self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
+        self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         self.properties = [('Label', self.lmfdb_label),
                            (None, self.plot_link),
                            ('Conductor', '\(%s\)' % data['conductor']),
