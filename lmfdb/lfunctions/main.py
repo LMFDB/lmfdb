@@ -774,13 +774,6 @@ def set_zeroslink_and_plotlink(L, args):
     else:
         zeroslink = ''
         plotlink = ''
-    # davidlowryduda 17/01/2018
-    # 'general' L-functions are generated from lhashes directly from the db, and refer to other L-functions.
-    # This does not fit into the current setup of plotting based on URLs, so we ignore them for now.
-    if L.Ltype() == 'general':
-        zeroslink = ''
-        plotlink = ''
-
     return (zeroslink, plotlink)
 
 
@@ -1034,6 +1027,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC(field_label="1.1.1.1", conductor_label=arg3, isogeny_class_label=arg4)
     elif arg1 == 'EllipticCurve' and arg2 != 'Q':
         return Lfunction_EC(field_label=arg2, conductor_label=arg3, isogeny_class_label=arg4)
+
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':  # this has args: one for weight and one for level
         return Lfunction_EMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
 
@@ -1075,6 +1069,9 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
 
     elif arg1 == 'Lcalcurl':
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
+
+    elif arg1 == 'lhash':
+        return Lfunction_from_db(Lhash=str(arg2))
 
     else:
         return None
