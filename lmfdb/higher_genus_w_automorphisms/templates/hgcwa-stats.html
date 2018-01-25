@@ -48,13 +48,13 @@ table.ntdata td {
         {% endfor %}
       </tr>
       <tr>
-        <th>distinct refined passports</th>
+        <th>distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}}</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>{{genus.refined_passports}}</td>
         {% endfor %}
       </tr>
       <tr>
-        <th>distinct generating vectors</th>
+        <th>distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
           {{genus.gen_vectors}}
@@ -82,6 +82,9 @@ table.ntdata td {
 </div>
 {% endfor %}
 
+<br>
+
+
 <h2> Distribution by dimension </h2>
 {% for i in range(0, dim_detail | length, max_cols) %}
 <div>
@@ -96,7 +99,7 @@ table.ntdata td {
     </thead>
     <tbody>
       <tr>
-        <th>distinct generating vectors</th>
+        <th>distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
         {% for dim in dim_detail[i:i+max_cols] %}
         <td>{{dim.gen_vectors}}</td>
         {% endfor %}

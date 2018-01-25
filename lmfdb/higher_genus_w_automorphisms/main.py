@@ -152,7 +152,7 @@ def statistics():
     info = {
         'stats': get_stats_object().stats(),
     }
-    title = 'Higher Genus Curves with Automorphisms: statistics'
+    title = 'Families of Higher Genus Curves with Automorphisms: statistics'
     bread = get_bread([('statistics', ' ')])
     return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, bread=bread)
 
@@ -180,8 +180,8 @@ def groups_per_genus(genus):
         'iso_classes' : iso_classes
     }
 
-    title = 'Higher Genus Curves with Automorphisms: genus ' + genus + ' group statistics'
-    bread = get_bread([('statistics', url_for('.statistics')), ('Groups per genus', url_for('.statistics')), (str(genus), ' ')])
+    title = 'Families of Higher Genus Curves with Automorphisms: genus ' + genus + ' group statistics'
+    bread = get_bread([('statistics', url_for('.statistics')), ('Groups per Genus', url_for('.statistics')), (str(genus), ' ')])
     return render_template("hgcwa-stats-groups-per-genus.html", info=info, credit=credit, title=title, bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/<label>")
@@ -384,7 +384,7 @@ def add_group_order_range(mongo_query, expr, db):
 
 def higher_genus_w_automorphisms_search(**args):
     info = to_dict(args)
-    bread = get_bread([("Search results",'')])
+    bread = get_bread([("Search Results",'')])
     C = base.getDBConnection()
     query = {}
     if 'jump_to' in info:
@@ -570,7 +570,7 @@ def render_passport(args):
 
         dataz = C.curve_automorphisms.passports.find({'passport_label': label})
         if dataz.count() is 0:
-            bread = get_bread([("Search error", url_for('.index'))])
+            bread = get_bread([("Search Error", url_for('.index'))])
             flash_error( "No refined passport with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         data=dataz[0]
