@@ -104,10 +104,11 @@ class ECNF_isoclass(object):
         if totally_real:
             self.hmf_label = "-".join([self.field_label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field_label, label=self.hmf_label)
-            if sig[0] > 2:
-                self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
-            else:
+            if sig[0] <= 2:
                 self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            elif self.abs_disc ** 2 * self.conductor_norm < 40000:
+                # we shouldn't trust the Lfun computed on the fly for large conductor
+                self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
 
         if imag_quadratic:
             self.bmf_label = "-".join([self.field_label, self.conductor_label, self.iso_label])
@@ -117,11 +118,16 @@ class ECNF_isoclass(object):
         self.friends = []
         if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
-            self.friends += [('L-function', self.urls['Lfunction'])]
+
         if imag_quadratic:
             #self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
             self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+
+        if 'Lfunction' in self.urls:
             self.friends += [('L-function', self.urls['Lfunction'])]
+        else:
+            self.friends += [('L-function not available', "")]
+
 
         self.properties = [('Base field', self.field_name),
                            ('Label', self.class_label),
