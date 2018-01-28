@@ -627,6 +627,24 @@ class Lfunction_EC(Lfunction):
                 lorigins.append((name, ""));
         return lorigins
 
+    @property
+    def factors(self):
+        lfactors = []
+        if "," in self.Lhash:
+            for factor_Lhash in  self.Lhash.split(","):
+                for instance in sorted(LfunctionDatabase
+                                       .get_instances_by_Lhash(factor_Lhash),
+                                       key=lambda elt: elt['url']):
+                    url = instance['url']
+                    name, obj_exists = name_and_object_from_url(url)
+                    if obj_exists:
+                        lfactors.append((name,  "/" + url))
+                    else:
+                        name += '&nbsp;  n/a';
+                        lfactors.append((name, ""))
+        return lfactors
+
+
     def _set_knowltype(self):
         if self.field_degree == 1:
             self.info['knowltype'] = "ec.q"
@@ -699,23 +717,6 @@ class Lfunction_EC(Lfunction):
 #    @property
 #    def bread(self):
 #        return [('L-functions', url_for('.l_function_top_page'))]
-#
-#    @property
-#    def factors(self):
-#        lfactors = []
-#        if "," in self.Lhash:
-#            for factor_Lhash in  self.Lhash.split(","):
-#                for instance in sorted(LfunctionDatabase
-#                                       .get_instances_by_Lhash(factor_Lhash),
-#                                       key=lambda elt: elt['url']):
-#                    url = instance['url']
-#                    name, obj_exists = name_and_object_from_url(url)
-#                    if obj_exists:
-#                        lfactors.append((name,  "/" + url))
-#                    else:
-#                        name += '&nbsp;  n/a';
-#                        lfactors.append((name, ""))
-#        return lfactors
 #
 #    @property
 #    def instances(self):
