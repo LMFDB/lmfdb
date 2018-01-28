@@ -730,30 +730,8 @@ def set_bread_and_friends(L, request):
     elif L.Ltype() == "general":
         bread = L.bread
         factors = L.factors
-
-################################################################################
-        #davidlowryduda: removing this portion
-        for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
-            url = instance['url'];
-            instances.append((str(url), "/L/" + url))
-            name, obj_exists = name_and_object_from_url(url);
-
-            if not name:
-                name = ""
-
-            if obj_exists:
-                origins.append((name, "/"+url));
-            else:
-                name += '&nbsp;  n/a';
-                origins.append((name, ""));
-        logger.info("Previous: {}".format(origins))
-################################################################################
         origins = L.origins
-        logger.info("New     : {}".format(origins))
-
-        logger.info("Previous: {}".format(instances))
         instances = L.instances
-        logger.info("New     : {}".format(instances))
 
     return (bread, origins, friends, factors, instances)
 
