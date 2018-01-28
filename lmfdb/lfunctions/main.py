@@ -19,6 +19,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunct
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
                        Lfunction_from_db)
+from lmfdb.lfunctions import logger
 from LfunctionDatabase import get_instances_by_Lhash
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
 from Lfunctionutilities import p2sage, styleTheSign, getConductorIsogenyFromLabel
@@ -727,7 +728,13 @@ def set_bread_and_friends(L, request):
             bread = [('L-functions', url_for('.l_function_top_page'))]
 
     elif L.Ltype() == "general":
+################################################################################
+        #davidlowryduda: removing this segment
         bread = [('L-functions', url_for('.l_function_top_page'))]
+        logger.info("previous bread was: {} ".format(bread))
+################################################################################
+        bread = L.bread
+        logger.info("new bread         : {} ".format(bread))
 
         for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
             url = instance['url'];
@@ -743,6 +750,8 @@ def set_bread_and_friends(L, request):
                 name += '&nbsp;  n/a';
                 origins.append((name, ""));
 
+################################################################################
+        #davidlowryduda: removing this segment
         if "," in L.Lhash:
             for factor_Lhash in  L.Lhash.split(","):
                 for instance in sorted(get_instances_by_Lhash(factor_Lhash), key=lambda elt: elt['url']):
@@ -753,6 +762,12 @@ def set_bread_and_friends(L, request):
                     else:
                         name += '&nbsp;  n/a';
                         factors.append((name, ""));
+
+        logger.info("Previous factors were: {}".format(factors))
+################################################################################
+        factors = L.factors
+        logger.info("new factors are      : {}".format(factors))
+
 
     return (bread, origins, friends, factors, instances)
 
