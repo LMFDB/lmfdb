@@ -524,6 +524,10 @@ class Lfunction_from_db(Lfunction):
                 lorigins.append((name, ""))
         return lorigins
 
+    @property
+    def friends(self):
+        return []
+
     def _set_title(self):
         '''
         If `charactermodulus` and `characternumber` are defined, make a title

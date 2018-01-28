@@ -729,8 +729,9 @@ def set_bread_and_friends(L, request):
 
     elif L.Ltype() == "general":
         bread = L.bread
-        factors = L.factors
         origins = L.origins
+        friends = L.friends
+        factors = L.factors
         instances = L.instances
 
     return (bread, origins, friends, factors, instances)
