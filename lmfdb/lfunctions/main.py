@@ -728,14 +728,11 @@ def set_bread_and_friends(L, request):
             bread = [('L-functions', url_for('.l_function_top_page'))]
 
     elif L.Ltype() == "general":
-################################################################################
-        #davidlowryduda: removing this segment
-        bread = [('L-functions', url_for('.l_function_top_page'))]
-        logger.info("previous bread was: {} ".format(bread))
-################################################################################
         bread = L.bread
-        logger.info("new bread         : {} ".format(bread))
+        factors = L.factors
 
+################################################################################
+        #davidlowryduda: removing this portion
         for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
             url = instance['url'];
             instances.append((str(url), "/L/" + url))
@@ -749,25 +746,14 @@ def set_bread_and_friends(L, request):
             else:
                 name += '&nbsp;  n/a';
                 origins.append((name, ""));
-
+        logger.info("Previous: {}".format(origins))
 ################################################################################
-        #davidlowryduda: removing this segment
-        if "," in L.Lhash:
-            for factor_Lhash in  L.Lhash.split(","):
-                for instance in sorted(get_instances_by_Lhash(factor_Lhash), key=lambda elt: elt['url']):
-                    url = instance['url'];
-                    name, obj_exists = name_and_object_from_url(url);
-                    if obj_exists:
-                        factors.append((name,  "/" + url));
-                    else:
-                        name += '&nbsp;  n/a';
-                        factors.append((name, ""));
+        origins = L.origins
+        logger.info("New     : {}".format(origins))
 
-        logger.info("Previous factors were: {}".format(factors))
-################################################################################
-        factors = L.factors
-        logger.info("new factors are      : {}".format(factors))
-
+        logger.info("Previous: {}".format(instances))
+        instances = L.instances
+        logger.info("New     : {}".format(instances))
 
     return (bread, origins, friends, factors, instances)
 

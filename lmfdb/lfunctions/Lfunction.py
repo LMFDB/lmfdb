@@ -485,10 +485,10 @@ class Lfunction_from_db(Lfunction):
     def factors(self):
         lfactors = []
         if "," in self.Lhash:
-            for factor_Lhash in  L.Lhash.split(","):
+            for factor_Lhash in  self.Lhash.split(","):
                 for instance in sorted(LfunctionDatabase
-                            .get_instances_by_Lhash(factor_Lhash),
-                            key=lambda elt: elt['url']):
+                                       .get_instances_by_Lhash(factor_Lhash),
+                                       key=lambda elt: elt['url']):
                     url = instance['url']
                     name, obj_exists = name_and_object_from_url(url)
                     if obj_exists:
@@ -497,6 +497,32 @@ class Lfunction_from_db(Lfunction):
                         name += '&nbsp;  n/a';
                         lfactors.append((name, ""))
         return lfactors
+
+    @property
+    def instances(self):
+        linstances = []
+        for instance in sorted(LfunctionDatabase
+                               .get_instances_by_Lhash(self.Lhash),
+                               key=lambda elt: elt['url']):
+            url = instance['url']
+            linstances.append((str(url), "/L/" + url))
+        return linstances
+
+    @property
+    def origins(self):
+        lorigins = []
+        for instance in sorted(LfunctionDatabase
+                               .get_instances_by_Lhash(self.Lhash),
+                               key=lambda elt: elt['url']):
+            name, obj_exists = name_and_object_from_url(instance['url'])
+            if not name:
+                name = ""
+            if obj_exists:
+                lorigins.append((name, "/"+instance['url']))
+            else:
+                name += '&nbsp;  n/a';
+                lorigins.append((name, ""))
+        return lorigins
 
     def _set_title(self):
         '''
@@ -1857,6 +1883,7 @@ class TensorProductLfunction(Lfunction):
 # This is implemented in lmfdb.tensor_products.galois_reps instead.
 
 
+#davidlowryduda: this is nonsensely copied from main.py for now
 def name_and_object_from_url(url):
     from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
     from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
