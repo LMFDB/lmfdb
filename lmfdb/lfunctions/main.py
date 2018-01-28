@@ -1270,8 +1270,3 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 
     s += '</table>\n'
     return s
-
-
-# TODO This needs to be able to handl any sort of L-function.
-#      There should probably be a more relevant field
-#      in the database, instead of trying to extract this from a URL
