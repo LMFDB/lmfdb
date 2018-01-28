@@ -517,9 +517,7 @@ def set_bread_and_friends(L, request):
 
     elif L.Ltype() == 'ellipticcurve':
 
-        #davidlowryduda logging
-        logger.info(L.__dict__.keys())
-
+        # davidlowryduda
         for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
             url = instance['url'];
             name, obj_exists = name_and_object_from_url(url);
@@ -528,6 +526,11 @@ def set_bread_and_friends(L, request):
             else:
                 name += '&nbsp;  n/a';
                 origins.append((name, ""));
+        # davidlowryduda
+
+        logger.info(origins)
+        origins = L.origins
+        logger.info(origins)
 
         if "," in L.Lhash:
             for factor_Lhash in  L.Lhash.split(","):

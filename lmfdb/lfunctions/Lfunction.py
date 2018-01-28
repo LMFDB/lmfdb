@@ -511,7 +511,7 @@ class Lfunction_from_db(Lfunction):
                                key=lambda elt: elt['url']):
             name, obj_exists = name_and_object_from_url(instance['url'])
             if not name:
-                name = ""
+                name = ''
             if obj_exists:
                 lorigins.append((name, "/"+instance['url']))
             else:
@@ -609,6 +609,23 @@ class Lfunction_EC(Lfunction):
         self._set_title()
         self.credit = ''
         self._set_knowltype()
+
+    @property
+    def origins(self):
+        lorigins = []
+        for instance in sorted(LfunctionDatabase
+                               .get_instances_by_Lhash(self.Lhash),
+                               key=lambda elt: elt['url']):
+            url = instance['url'];
+            name, obj_exists = name_and_object_from_url(url);
+            if not name:
+                name = ''
+            if obj_exists:
+                lorigins.append((name, "/"+url));
+            else:
+                name += '&nbsp;  n/a';
+                lorigins.append((name, ""));
+        return lorigins
 
     def _set_knowltype(self):
         if self.field_degree == 1:
@@ -709,22 +726,6 @@ class Lfunction_EC(Lfunction):
 #            url = instance['url']
 #            linstances.append((str(url), "/L/" + url))
 #        return linstances
-#
-#    @property
-#    def origins(self):
-#        lorigins = []
-#        for instance in sorted(LfunctionDatabase
-#                               .get_instances_by_Lhash(self.Lhash),
-#                               key=lambda elt: elt['url']):
-#            name, obj_exists = name_and_object_from_url(instance['url'])
-#            if not name:
-#                name = ""
-#            if obj_exists:
-#                lorigins.append((name, "/"+instance['url']))
-#            else:
-#                name += '&nbsp;  n/a';
-#                lorigins.append((name, ""))
-#        return lorigins
 #
 #    @property
 #    def friends(self):
