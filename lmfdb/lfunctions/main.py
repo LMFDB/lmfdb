@@ -20,11 +20,9 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunct
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
                        Lfunction_from_db)
 from lmfdb.lfunctions import logger
-from LfunctionDatabase import get_instances_by_Lhash
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
 from Lfunctionutilities import (p2sage, styleTheSign,
-                                getConductorIsogenyFromLabel,
-                                name_and_object_from_url)
+                                getConductorIsogenyFromLabel)
 from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page
@@ -518,23 +516,9 @@ def set_bread_and_friends(L, request):
     elif L.Ltype() == 'ellipticcurve':
 
         origins = L.origins
-
-        #davidlowryduda
-        if "," in L.Lhash:
-            for factor_Lhash in  L.Lhash.split(","):
-                for instance in sorted(get_instances_by_Lhash(factor_Lhash), key=lambda elt: elt['url']):
-                    url = instance['url'];
-                    name, obj_exists = name_and_object_from_url(url);
-                    if obj_exists:
-                        factors.append((name,  "/" + url));
-                    else:
-                        name += '&nbsp;  n/a';
-                        factors.append((name, ""));
-        #davidlowryduda
-        logger.info(factors)
         factors = L.factors
-        logger.info(factors)
 
+        # davidlowryduda
         if L.base_field() == '1.1.1.1': # i.e., QQ
             label = L.label
             if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
@@ -579,6 +563,11 @@ def set_bread_and_friends(L, request):
                                 isogeny_class_label = L.long_isogeny_class_label)
                         )
                     ])
+
+        logger.info("bread: {}".format(bread == L.bread))
+        logger.info("friends: {}".format(friends== L.friends))
+        # davidlowryduda
+
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding

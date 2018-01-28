@@ -15,7 +15,7 @@ from Lfunctionutilities import (p2sage, string2number,
                                 compute_local_roots_SMF2_scalar_valued,
                                 signOfEmfLfunction,
                                 name_and_object_from_url)
-from LfunctionComp import EC_from_modform #modform_from_EC
+from LfunctionComp import EC_from_modform, isogeny_class_cm
 
 import LfunctionDatabase
 import LfunctionLcalc
@@ -611,6 +611,43 @@ class Lfunction_EC(Lfunction):
         self._set_knowltype()
 
     @property
+    def bread(self):
+        if self.base_field() == '1.1.1.1': #i.e. QQ
+            lbread = get_bread(2,
+                    [
+                      ('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                      (self.label, url_for('.l_function_ec_page',
+                              conductor_label=self.conductor,
+                              isogeny_class_label = self.isogeny_class_label))
+                    ])
+        else:
+            lbread = get_bread(self.degree,
+                [
+                    # FIXME there is no .l_function_ecnf_browse_page
+                    ('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                    (self.label,
+                     url_for('.l_function_ecnf_page',
+                            field_label = self.field_label,
+                            conductor_label = self.conductor_label,
+                            isogeny_class_label = self.long_isogeny_class_label))
+                ])
+        return lbread
+
+
+    @property
+    def friends(self):
+        lfriends = []
+        if self.base_field() == '1.1.1.1': #i.e. QQ
+            if not isogeny_class_cm(self.label): # only show symmetric powers for non-CM curves
+                lfriends.append(('Symmetric square L-function',
+                                url_for(".l_function_ec_sym_page_label",
+                                    power='2', label=self.label)))
+                lfriends.append(('Symmetric cube L-function',
+                                url_for(".l_function_ec_sym_page_label",
+                                    power='3', label=self.label)))
+        return lfriends
+
+    @property
     def origins(self):
         lorigins = []
         for instance in sorted(LfunctionDatabase
@@ -625,6 +662,17 @@ class Lfunction_EC(Lfunction):
             else:
                 name += '&nbsp;  n/a';
                 lorigins.append((name, ""));
+        if self.base_field() == '1.1.1.1': #i.e. QQ
+            if self.conductor <= 101:
+                lorigins.append(
+                   ('Modular form ' + (self.long_isogeny_class_label).replace('.', '.2'),
+                       url_for("emf.render_elliptic_modular_forms",
+                       level=self.conductor, weight=2,
+                       character=1, label=self.isogeny_class_label)
+                   ))
+            else:
+                lorigins.append(('Modular form ' + (self.long_isogeny_class_label)
+                                .replace('.', '.2') +'&nbsp;  n/a', ""))
         return lorigins
 
     @property
@@ -1922,3 +1970,14 @@ class TensorProductLfunction(Lfunction):
         generateSageLfunction(self)
 
         constructor_logger(self, args)
+
+# davidlowryduda, silly copied from main.py
+def get_bread(degree, breads=[]):
+    ''' Returns the two top levels of bread crumbs plus the ones supplied in breads.
+    '''
+    bc = [('L-functions', url_for('.l_function_top_page')),
+          ('Degree ' + str(degree), url_for('.l_function_degree_page', degree='degree' + str(degree)))]
+    for b in breads:
+        bc.append(b)
+    return bc
+
