@@ -581,17 +581,8 @@ class Lfunction_EC(Lfunction):
         self.__dict__.update(kwargs)
         self.numcoeff = 30
 
-        # parse the labels
-        self.field_degree, self.field_real_signature, self.field_absdisc, self.field_index  = map(int, self.field_label.split("."))
-        field_signature = [ self.field_real_signature, (self.field_degree - self.field_real_signature) // 2]
-
-        self.ec_conductor_norm  = int(self.conductor_label.split(".")[0])
-
-
-        self.conductor = self.ec_conductor_norm * (self.field_absdisc ** self.field_degree)
-
-        # Load data from the database
-        self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
+        # Set field, conductor, isogeny information from labels
+        self._parse_labels()
 
         # I'm not sure what this is used for
         if self.field_degree == 1:
@@ -639,6 +630,19 @@ class Lfunction_EC(Lfunction):
             self.info['knowltype'] = "ec.q"
         else:
             self.info['knowltype'] = "ec.nf"
+
+    def _parse_labels(self):
+        """Set field, conductor, isogeny information from labels."""
+        (self.field_degree,
+            self.field_real_signature,
+            self.field_absdisc,
+            self.field_index)  = map(int, self.field_label.split("."))
+        field_signature = [self.field_real_signature,
+                (self.field_degree - self.field_real_signature) // 2]
+        self.ec_conductor_norm  = int(self.conductor_label.split(".")[0])
+        self.conductor = self.ec_conductor_norm * (self.field_absdisc ** self.field_degree)
+        self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
+        return
 
 
     def _set_title(self):
