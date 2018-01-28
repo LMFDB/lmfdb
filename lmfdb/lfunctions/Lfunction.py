@@ -465,14 +465,8 @@ class Lfunction_from_db(Lfunction):
         self.__dict__.update(kwargs)
         self.lfunc_data = LfunctionDatabase.get_lfunction_by_Lhash(self.Lhash)
         makeLfromdata(self)
-        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"
-        self.texname = "L(s)"
-        self.texname_arithmetic = "L(s)"
-        self.texnamecompleted1ms = "\\Lambda(1-s)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
-        self.texnamecompleteds = "\\Lambda(s)"
         self.info = self.general_webpagedata()
+        self._set_web_displaynames()
         self._set_title()
         self.credit = ''
         self.label = ''
@@ -550,11 +544,19 @@ class Lfunction_from_db(Lfunction):
                     " and conductor {conductor}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
                             conductor=self.level)
-
         self.info['title_arithmetic'] = ("L-function" + title_end)
         self.info['title_analytic'] = ("L-function" + title_end)
+        return
 
-
+    def _set_web_displaynames(self):
+        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"
+        self.texname = "L(s)"
+        self.texname_arithmetic = "L(s)"
+        self.texnamecompleted1ms = "\\Lambda(1-s)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
+        self.texnamecompleteds = "\\Lambda(s)"
+        return
 
 
 #############################################################################
@@ -764,11 +766,10 @@ class Lfunction_EMF(Lfunction):
     def __init__(self, **args):
         constructor_logger(self, args)
 
-        # Check for compulsory arguments
-        validate_required_args ('Unable to construct elliptic modular form L-function.',
-                                args, 'weight','level','character','label','number')
-        validate_integer_args ('Unable to construct elliptic modular form L-function.',
-                               args, 'weight','level','character','number')
+        validate_required_args('Unable to construct elliptic modular form L-function.',
+                               args, 'weight','level','character','label','number')
+        validate_integer_args('Unable to construct elliptic modular form L-function.',
+                              args, 'weight','level','character','number')
 
         self._Ltype = "ellipticmodularform"
 
