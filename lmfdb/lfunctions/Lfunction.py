@@ -576,26 +576,22 @@ class Lfunction_EC(Lfunction):
                                kwargs, 'field_label', 'conductor_label', 'isogeny_class_label')
 
         self._Ltype = "ellipticcurve"
+        self.numcoeff = 30
 
         # Put the arguments into the object dictionary
         self.__dict__.update(kwargs)
-        self.numcoeff = 30
 
         # Set field, conductor, isogeny information from labels
         self._parse_labels()
 
+        # davidlowryduda: Test to see if this can be removed
         # I'm not sure what this is used for
         if self.field_degree == 1:
             self.label = self.long_isogeny_class_label;
         if self.field_degree != 1:
             self.label = self.field_label + "." + self.long_isogeny_class_label;
 
-        self.field = "Q" if self.field_degree == 1 else self.field_label;
-        isogeny_class_url = "EllipticCurve/%s/%s/%s" % (self.field, self.conductor_label, self.isogeny_class_label,)
-        self.lfunc_data = LfunctionDatabase.getInstanceLdata(isogeny_class_url)
-        if not self.lfunc_data:
-            raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
-
+        self._retrieve_lfunc_data_from_db()
         # Extract the data
         makeLfromdata(self)
 
@@ -605,31 +601,39 @@ class Lfunction_EC(Lfunction):
         self.poles = []
         self.residues = []
         self.degree = self.field_degree * 2;
+        self.langlands = self.is_langlands()
 
-        if self.field_degree == 1 or (self.field_degree == 2 and self.field_real_signature == 2):
-            self.langlands = True;
-        else:
-            self.langlands = False;
-
-        # number of actual Gamma functions
-        self.quasidegree = sum( field_signature );
-
-        ## Get the data for the corresponding modular form if possible
-        #self.get_modular_form();
-
+        # Set up webpage data
         self._set_web_displaynames()
-
-        # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
-
         self._set_title()
         self.credit = ''
+        self._set_knowltype()
 
-        # the /
+    def _set_knowltype(self):
         if self.field_degree == 1:
             self.info['knowltype'] = "ec.q"
         else:
             self.info['knowltype'] = "ec.nf"
+        return
+
+    def is_langlands(self):
+        if self.field_degree == 1 or (self.field_degree == 2 and self.field_real_signature == 2):
+            return True
+        return False
+
+    def _retrieve_lfunc_data_from_db(self):
+        isogeny_class_url = "EllipticCurve/%s/%s/%s" % (self.field,
+                                                        self.conductor_label,
+                                                        self.isogeny_class_label)
+        self.lfunc_data = LfunctionDatabase.getInstanceLdata(isogeny_class_url)
+        if not self.lfunc_data:
+            raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
+        return
+
+    @property
+    def field(self):
+        return "Q" if self.field_degree == 1 else self.field_label
 
     def _parse_labels(self):
         """Set field, conductor, isogeny information from labels."""
@@ -639,6 +643,8 @@ class Lfunction_EC(Lfunction):
             self.field_index)  = map(int, self.field_label.split("."))
         field_signature = [self.field_real_signature,
                 (self.field_degree - self.field_real_signature) // 2]
+        # number of actual Gamma functions
+        self.quasidegree = sum( field_signature )
         self.ec_conductor_norm  = int(self.conductor_label.split(".")[0])
         self.conductor = self.ec_conductor_norm * (self.field_absdisc ** self.field_degree)
         self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
