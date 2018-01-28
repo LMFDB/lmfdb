@@ -570,20 +570,19 @@ class Lfunction_EC(Lfunction):
 
     dict = { 'field_label': <field_label>, 'conductor_label': <conductor_label>, 'isogeny_class_label': <isogeny_class_label> }
     """
-    def __init__(self, **args):
-        constructor_logger(self, args)
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
         validate_required_args('Unable to construct elliptic curve L-function.',
-                               args, 'field_label', 'conductor_label', 'isogeny_class_label')
+                               kwargs, 'field_label', 'conductor_label', 'isogeny_class_label')
 
         self._Ltype = "ellipticcurve"
 
-
         # Put the arguments into the object dictionary
-        self.__dict__.update(args)
+        self.__dict__.update(kwargs)
         self.numcoeff = 30
 
         # parse the labels
-        self.field_degree, self.field_real_signature, self.field_absdisc, self.field_index  = map(int, self.field_label.split("."));
+        self.field_degree, self.field_real_signature, self.field_absdisc, self.field_index  = map(int, self.field_label.split("."))
         field_signature = [ self.field_real_signature, (self.field_degree - self.field_real_signature) // 2]
 
         self.ec_conductor_norm  = int(self.conductor_label.split(".")[0])
@@ -627,21 +626,13 @@ class Lfunction_EC(Lfunction):
         ## Get the data for the corresponding modular form if possible
         #self.get_modular_form();
 
-        # Text for the web page
-        self.texname = "L(s)"  # "L(s,E)"
-        self.htmlname = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>s,E</em>)"
-        self.texname_arithmetic = "L(s)"  # "L(E,s)"
-        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>E,s</em>)"
-        self.texnamecompleteds = "\\Lambda(s)"  # "\\Lambda(s,E)"
-        self.texnamecompleted1ms = "\\Lambda(1-s)"  # "\\Lambda(1-s,E)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"  # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-        #title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
-        title_end = " of degree %d, weight 1, conductor %d, and trivial character" % (self.degree, self.conductor,)
-        self.credit = ''
+        self._set_web_displaynames()
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
+
+        self._set_title()
+        self.credit = ''
 
         # the /
         if self.field_degree == 1:
@@ -650,37 +641,84 @@ class Lfunction_EC(Lfunction):
             self.info['knowltype'] = "ec.nf"
 
 
+    def _set_title(self):
+        title_end = (" of degree %d, weight 1, conductor %d,"
+                     " and trivial character" % (self.degree, self.conductor))
         self.info['title'] = "$" + self.texname + "$" + ", " + title_end
         self.info['title_arithmetic'] = "L-function "  + title_end
         self.info['title_analytic'] = "L-function " + title_end
+        return
 
+    def _set_web_displaynames(self):
+        self.texname = "L(s)"  # "L(s,E)"
+        self.htmlname = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>s,E</em>)"
+        self.texname_arithmetic = "L(s)"  # "L(E,s)"
+        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>E,s</em>)"
+        self.texnamecompleteds = "\\Lambda(s)"  # "\\Lambda(s,E)"
+        self.texnamecompleted1ms = "\\Lambda(1-s)"  # "\\Lambda(1-s,E)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
+        # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
+        return
 
-        # Field of the Dirichlet coefficients
     def ground_field(self):
+        """Field of the Dirichlet coefficients"""
         return 'Q';
 
-        # base_field of the EC
     def base_field(self):
+        """base_field of the EC"""
         return self.field_label
 
-# This should be handled through instances database
-#    def get_modular_form(self):
-#        # Get the data for the corresponding modular form if possible
-#        # In the future we should perhaps have derived classes that overwrite this function
-#        self.modform = False;
-#        if self.field_degree == 1:
-#            # EC over QQ
-#            modform_translation_limit = 101
-#            if self.level <= modform_translation_limit:
-#                self.modform = modform_from_EC(self.long_isogeny_class_label)
-#        elif self.field_degree == 2:
-#            # quadratic extension
-#            if self.field_real_signature == 2:
-#                # if C.hmfs.forms.search.find({ u'label' : label }).count() >
-#                pass;
-#            elif self.field_real_signature == 0:
-#                # if C.bmfs.forms.search.find({ u'label' : label }).count() > 0
-#                pass;
+#    @property
+#    def bread(self):
+#        return [('L-functions', url_for('.l_function_top_page'))]
+#
+#    @property
+#    def factors(self):
+#        lfactors = []
+#        if "," in self.Lhash:
+#            for factor_Lhash in  self.Lhash.split(","):
+#                for instance in sorted(LfunctionDatabase
+#                                       .get_instances_by_Lhash(factor_Lhash),
+#                                       key=lambda elt: elt['url']):
+#                    url = instance['url']
+#                    name, obj_exists = name_and_object_from_url(url)
+#                    if obj_exists:
+#                        lfactors.append((name,  "/" + url))
+#                    else:
+#                        name += '&nbsp;  n/a';
+#                        lfactors.append((name, ""))
+#        return lfactors
+#
+#    @property
+#    def instances(self):
+#        linstances = []
+#        for instance in sorted(LfunctionDatabase
+#                               .get_instances_by_Lhash(self.Lhash),
+#                               key=lambda elt: elt['url']):
+#            url = instance['url']
+#            linstances.append((str(url), "/L/" + url))
+#        return linstances
+#
+#    @property
+#    def origins(self):
+#        lorigins = []
+#        for instance in sorted(LfunctionDatabase
+#                               .get_instances_by_Lhash(self.Lhash),
+#                               key=lambda elt: elt['url']):
+#            name, obj_exists = name_and_object_from_url(instance['url'])
+#            if not name:
+#                name = ""
+#            if obj_exists:
+#                lorigins.append((name, "/"+instance['url']))
+#            else:
+#                name += '&nbsp;  n/a';
+#                lorigins.append((name, ""))
+#        return lorigins
+#
+#    @property
+#    def friends(self):
+#        return []
 
 # DEPRECATED
 #class Lfunction_EC_Q(Lfunction):
