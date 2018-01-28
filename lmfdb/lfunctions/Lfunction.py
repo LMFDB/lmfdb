@@ -13,7 +13,8 @@ from flask import url_for
 
 from Lfunctionutilities import (p2sage, string2number,
                                 compute_local_roots_SMF2_scalar_valued,
-                                signOfEmfLfunction)
+                                signOfEmfLfunction,
+                                name_and_object_from_url)
 from LfunctionComp import EC_from_modform #modform_from_EC
 
 import LfunctionDatabase
@@ -465,8 +466,8 @@ class Lfunction_from_db(Lfunction):
         self.__dict__.update(kwargs)
         self.lfunc_data = LfunctionDatabase.get_lfunction_by_Lhash(self.Lhash)
         makeLfromdata(self)
-        self.info = self.general_webpagedata()
         self._set_web_displaynames()
+        self.info = self.general_webpagedata()
         self._set_title()
         self.credit = ''
         self.label = ''
@@ -1871,64 +1872,3 @@ class TensorProductLfunction(Lfunction):
         generateSageLfunction(self)
 
         constructor_logger(self, args)
-
-#############################################################################
-
-
-# class GaloisRepresentationLfunction(Lfunction, GaloisRepresentation):
-#    """
-#    Class representing the L-function of a general galois representation
-#    This is mainly used for twisting two such constructed from other
-#    classes above.
-#
-#    Most of the values are inherited from GaloisRepresentation, where
-#    things are done a bit more systematic.
-#    """
-#
-# This is implemented in lmfdb.tensor_products.galois_reps instead.
-
-
-#davidlowryduda: this is nonsensely copied from main.py for now
-def name_and_object_from_url(url):
-    from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
-    from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
-    from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
-    from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
-    from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
-    url_split = url.split("/");
-    name = None;
-    obj_exists = False;
-
-    if url_split[0] == "EllipticCurve":
-        if url_split[1] == 'Q':
-            # EllipticCurve/Q/341641/a
-            label_isogeny_class = ".".join(url_split[-2:]);
-            # count doesn't honor limit!
-            obj_exists = is_ec_isogeny_class_in_db(label_isogeny_class);
-        else:
-            # EllipticCurve/2.2.140.1/14.1/a
-            label_isogeny_class =  "-".join(url_split[-3:]);
-            obj_exists = is_ecnf_isogeny_class_in_db(label_isogeny_class);
-        name = 'Isogeny class ' + label_isogeny_class;
-
-    elif url_split[0] == "ModularForm":
-        if url_split[1] == 'GL2':
-            if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
-                # ModularForm/GL2/Q/holomorphic/14/2/1/a
-                full_label = ".".join(url_split[-4:])
-                name =  'Modular form ' + full_label;
-                obj_exists = is_newform_in_db(full_label);
-
-            elif  url_split[2] == 'TotallyReal':
-                # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
-                label = url_split[-1];
-                name =  'Hilbert modular form ' + label;
-                obj_exists = is_hmf_in_db(label);
-
-            elif url_split[2] ==  'ImaginaryQuadratic':
-                # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
-                label = '-'.join(url_split[-3:])
-                name = 'Bianchi modular form ' + label;
-                obj_exists = is_bmf_in_db(label);
-
-    return name, obj_exists

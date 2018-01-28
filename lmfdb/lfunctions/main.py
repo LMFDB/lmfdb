@@ -22,7 +22,9 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunct
 from lmfdb.lfunctions import logger
 from LfunctionDatabase import get_instances_by_Lhash
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
-from Lfunctionutilities import p2sage, styleTheSign, getConductorIsogenyFromLabel
+from Lfunctionutilities import (p2sage, styleTheSign,
+                                getConductorIsogenyFromLabel,
+                                name_and_object_from_url)
 from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page
@@ -1273,46 +1275,3 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 # TODO This needs to be able to handl any sort of L-function.
 #      There should probably be a more relevant field
 #      in the database, instead of trying to extract this from a URL
-def name_and_object_from_url(url):
-    from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
-    from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
-    from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
-    from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
-    from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
-    url_split = url.split("/");
-    name = None;
-    obj_exists = False;
-
-    if url_split[0] == "EllipticCurve":
-        if url_split[1] == 'Q':
-            # EllipticCurve/Q/341641/a
-            label_isogeny_class = ".".join(url_split[-2:]);
-            # count doesn't honor limit!
-            obj_exists = is_ec_isogeny_class_in_db(label_isogeny_class);
-        else:
-            # EllipticCurve/2.2.140.1/14.1/a
-            label_isogeny_class =  "-".join(url_split[-3:]);
-            obj_exists = is_ecnf_isogeny_class_in_db(label_isogeny_class);
-        name = 'Isogeny class ' + label_isogeny_class;
-
-    elif url_split[0] == "ModularForm":
-        if url_split[1] == 'GL2':
-            if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
-                # ModularForm/GL2/Q/holomorphic/14/2/1/a
-                full_label = ".".join(url_split[-4:])
-                name =  'Modular form ' + full_label;
-                obj_exists = is_newform_in_db(full_label);
-
-            elif  url_split[2] == 'TotallyReal':
-                # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
-                label = url_split[-1];
-                name =  'Hilbert modular form ' + label;
-                obj_exists = is_hmf_in_db(label);
-
-            elif url_split[2] ==  'ImaginaryQuadratic':
-                # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
-                label = '-'.join(url_split[-3:])
-                name = 'Bianchi modular form ' + label;
-                obj_exists = is_bmf_in_db(label);
-
-    return name, obj_exists
