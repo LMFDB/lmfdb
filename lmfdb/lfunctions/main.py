@@ -21,7 +21,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunct
                        Lfunction_from_db)
 from lmfdb.lfunctions import logger
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
-from Lfunctionutilities import (p2sage, styleTheSign,
+from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
                                 getConductorIsogenyFromLabel)
 from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
@@ -204,17 +204,6 @@ def set_info_for_start_page():
     info['learnmore'] = [('History of L-functions', url_for('.l_function_history'))]
 
     return info
-
-
-def get_bread(degree, breads=[]):
-    ''' Returns the two top levels of bread crumbs plus the ones supplied in breads.
-    '''
-    bc = [('L-functions', url_for('.l_function_top_page')),
-          ('Degree ' + str(degree), url_for('.l_function_degree_page', degree='degree' + str(degree)))]
-    for b in breads:
-        bc.append(b)
-    return bc
-
 
 ################################################################################
 #   Route functions, individual L-function homepages
@@ -514,60 +503,11 @@ def set_bread_and_friends(L, request):
         bread = get_bread(1, [(charname, request.url)])
 
     elif L.Ltype() == 'ellipticcurve':
-
+        bread = L.bread
         origins = L.origins
+        friends = L.friends
         factors = L.factors
-
-        # davidlowryduda
-        if L.base_field() == '1.1.1.1': # i.e., QQ
-            label = L.label
-            if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
-                friends.append(
-                ('Symmetric square L-function', url_for(".l_function_ec_sym_page_label",
-                                                        power='2', label=label)))
-                friends.append(
-                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page_label", power='3', label=label)))
-
-            bread = get_bread(2,
-                    [
-                        ('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                        (label,
-                            url_for('.l_function_ec_page',
-                                conductor_label=L.conductor,
-                                isogeny_class_label = L.isogeny_class_label
-                                )
-                         )
-                        ])
-
-            #TODO replace classical modular forms origin by adding an object to the database
-            if L.conductor <= 101:
-                origins.append(
-                        ('Modular form ' + (L.long_isogeny_class_label).replace('.', '.2'),
-                            url_for("emf.render_elliptic_modular_forms",
-                            level=L.conductor, weight=2,
-                            character=1, label=L.isogeny_class_label)
-                            ))
-            else:
-                origins.append(('Modular form ' + (L.long_isogeny_class_label).replace('.', '.2') +'&nbsp;  n/a', ""))
-
-        else:
-            bread = get_bread(
-                    L.degree ,
-                    [
-                        # FIXME there is no .l_function_ecnf_browse_page
-                        ('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                        (L.label,
-                            url_for('.l_function_ecnf_page',
-                                field_label = L.field_label,
-                                conductor_label = L.conductor_label ,
-                                isogeny_class_label = L.long_isogeny_class_label)
-                        )
-                    ])
-
-        logger.info("bread: {}".format(bread == L.bread))
-        logger.info("friends: {}".format(friends== L.friends))
-        # davidlowryduda
-
+        instances = L.instances
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding

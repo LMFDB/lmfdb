@@ -11,7 +11,7 @@ import re
 
 from flask import url_for
 
-from Lfunctionutilities import (p2sage, string2number,
+from Lfunctionutilities import (p2sage, string2number, get_bread,
                                 compute_local_roots_SMF2_scalar_valued,
                                 signOfEmfLfunction,
                                 name_and_object_from_url)
@@ -564,17 +564,19 @@ class Lfunction_from_db(Lfunction):
 
 
 class Lfunction_EC(Lfunction):
-    """Class representing an elliptic curve L-function
-     over a number field, possibly QQ.
+    """
+    Class representing an elliptic curve L-function
+    over a number field, possibly QQ.
     It should be called with a dictionary of the forms:
 
-    dict = { 'field_label': <field_label>, 'conductor_label': <conductor_label>, 'isogeny_class_label': <isogeny_class_label> }
+    dict = { 'field_label': <field_label>, 'conductor_label': <conductor_label>,
+             'isogeny_class_label': <isogeny_class_label> }
     """
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
         validate_required_args('Unable to construct elliptic curve L-function.',
-                               kwargs, 'field_label', 'conductor_label', 'isogeny_class_label')
-
+                               kwargs, 'field_label', 'conductor_label',
+                               'isogeny_class_label')
         self._Ltype = "ellipticcurve"
         self.numcoeff = 30
 
@@ -583,13 +585,6 @@ class Lfunction_EC(Lfunction):
 
         # Set field, conductor, isogeny information from labels
         self._parse_labels()
-
-        # davidlowryduda: Test to see if this can be removed
-        # I'm not sure what this is used for
-        if self.field_degree == 1:
-            self.label = self.long_isogeny_class_label;
-        if self.field_degree != 1:
-            self.label = self.field_label + "." + self.long_isogeny_class_label;
 
         self._retrieve_lfunc_data_from_db()
         # Extract the data
@@ -603,15 +598,33 @@ class Lfunction_EC(Lfunction):
         self.degree = self.field_degree * 2;
         self.langlands = self.is_langlands()
 
-        # Set up webpage data
+        self.initialize_webpage_data()
+
+    def base_field(self):
+        """base_field of the EC"""
+        return self.field_label
+
+    def ground_field(self):
+        """Field of the Dirichlet coefficients"""
+        return 'Q'
+
+    def initialize_webpage_data(self):
         self._set_web_displaynames()
         self.info = self.general_webpagedata()
         self._set_title()
         self.credit = ''
         self._set_knowltype()
+        return
+
+    def is_langlands(self):
+        if self.field_degree == 1 or \
+                (self.field_degree == 2 and self.field_real_signature == 2):
+            return True
+        return False
 
     @property
     def bread(self):
+        """breadcrumbs for webpage"""
         if self.base_field() == '1.1.1.1': #i.e. QQ
             lbread = get_bread(2,
                     [
@@ -633,12 +646,38 @@ class Lfunction_EC(Lfunction):
                 ])
         return lbread
 
+    @property
+    def factors(self):
+        """
+        If L-function factors as a product of other L-functions, this is a list
+        of those factors. Otherwise, this is an empty list.
+        """
+        lfactors = []
+        if "," in self.Lhash:
+            for factor_Lhash in  self.Lhash.split(","):
+                for instance in sorted(LfunctionDatabase
+                                       .get_instances_by_Lhash(factor_Lhash),
+                                       key=lambda elt: elt['url']):
+                    url = instance['url']
+                    name, obj_exists = name_and_object_from_url(url)
+                    if obj_exists:
+                        lfactors.append((name,  "/" + url))
+                    else:
+                        name += '&nbsp;  n/a';
+                        lfactors.append((name, ""))
+        return lfactors
+
+    @property
+    def field(self):
+        return "Q" if self.field_degree == 1 else self.field_label
 
     @property
     def friends(self):
+        """The 'friends' to show on webpage."""
         lfriends = []
         if self.base_field() == '1.1.1.1': #i.e. QQ
-            if not isogeny_class_cm(self.label): # only show symmetric powers for non-CM curves
+            # only show symmetric powers for non-CM curves
+            if not isogeny_class_cm(self.label):
                 lfriends.append(('Symmetric square L-function',
                                 url_for(".l_function_ec_sym_page_label",
                                     power='2', label=self.label)))
@@ -646,6 +685,20 @@ class Lfunction_EC(Lfunction):
                                 url_for(".l_function_ec_sym_page_label",
                                     power='3', label=self.label)))
         return lfriends
+
+    @property
+    def instances(self):
+        # Currently elliptic curve L-fns don't track other instances of the
+        # L-fn, but the website expects this property to exist.
+        return []
+
+    @property
+    def label(self):
+        if self.field_degree == 1:
+            llabel = self.long_isogeny_class_label
+        else:
+            llabel = self.field_label + "." + self.long_isogeny_class_label
+        return llabel
 
     @property
     def origins(self):
@@ -663,6 +716,7 @@ class Lfunction_EC(Lfunction):
                 name += '&nbsp;  n/a';
                 lorigins.append((name, ""));
         if self.base_field() == '1.1.1.1': #i.e. QQ
+            #TODO replace classical modular forms origin by adding an object to the database
             if self.conductor <= 101:
                 lorigins.append(
                    ('Modular form ' + (self.long_isogeny_class_label).replace('.', '.2'),
@@ -674,49 +728,6 @@ class Lfunction_EC(Lfunction):
                 lorigins.append(('Modular form ' + (self.long_isogeny_class_label)
                                 .replace('.', '.2') +'&nbsp;  n/a', ""))
         return lorigins
-
-    @property
-    def factors(self):
-        lfactors = []
-        if "," in self.Lhash:
-            for factor_Lhash in  self.Lhash.split(","):
-                for instance in sorted(LfunctionDatabase
-                                       .get_instances_by_Lhash(factor_Lhash),
-                                       key=lambda elt: elt['url']):
-                    url = instance['url']
-                    name, obj_exists = name_and_object_from_url(url)
-                    if obj_exists:
-                        lfactors.append((name,  "/" + url))
-                    else:
-                        name += '&nbsp;  n/a';
-                        lfactors.append((name, ""))
-        return lfactors
-
-
-    def _set_knowltype(self):
-        if self.field_degree == 1:
-            self.info['knowltype'] = "ec.q"
-        else:
-            self.info['knowltype'] = "ec.nf"
-        return
-
-    def is_langlands(self):
-        if self.field_degree == 1 or (self.field_degree == 2 and self.field_real_signature == 2):
-            return True
-        return False
-
-    def _retrieve_lfunc_data_from_db(self):
-        isogeny_class_url = "EllipticCurve/%s/%s/%s" % (self.field,
-                                                        self.conductor_label,
-                                                        self.isogeny_class_label)
-        self.lfunc_data = LfunctionDatabase.getInstanceLdata(isogeny_class_url)
-        if not self.lfunc_data:
-            raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
-        return
-
-    @property
-    def field(self):
-        return "Q" if self.field_degree == 1 else self.field_label
 
     def _parse_labels(self):
         """Set field, conductor, isogeny information from labels."""
@@ -733,6 +744,22 @@ class Lfunction_EC(Lfunction):
         self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
         return
 
+
+    def _retrieve_lfunc_data_from_db(self):
+        isogeny_class_url = "EllipticCurve/%s/%s/%s" % (self.field,
+                                                        self.conductor_label,
+                                                        self.isogeny_class_label)
+        self.lfunc_data = LfunctionDatabase.getInstanceLdata(isogeny_class_url)
+        if not self.lfunc_data:
+            raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
+        return
+
+    def _set_knowltype(self):
+        if self.field_degree == 1:
+            self.info['knowltype'] = "ec.q"
+        else:
+            self.info['knowltype'] = "ec.nf"
+        return
 
     def _set_title(self):
         title_end = (" of degree %d, weight 1, conductor %d,"
@@ -754,103 +781,6 @@ class Lfunction_EC(Lfunction):
         # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
         return
 
-    def ground_field(self):
-        """Field of the Dirichlet coefficients"""
-        return 'Q';
-
-    def base_field(self):
-        """base_field of the EC"""
-        return self.field_label
-
-#    @property
-#    def bread(self):
-#        return [('L-functions', url_for('.l_function_top_page'))]
-#
-#    @property
-#    def instances(self):
-#        linstances = []
-#        for instance in sorted(LfunctionDatabase
-#                               .get_instances_by_Lhash(self.Lhash),
-#                               key=lambda elt: elt['url']):
-#            url = instance['url']
-#            linstances.append((str(url), "/L/" + url))
-#        return linstances
-#
-#    @property
-#    def friends(self):
-#        return []
-
-# DEPRECATED
-#class Lfunction_EC_Q(Lfunction):
-#    """Class representing an elliptic curve L-function
-#    It should be called with a dictionary of the forms:
-#
-#    dict = { 'conductor': ..., 'isogeny':  }
-#    """
-#
-#    def __init__(self, **args):
-#        constructor_logger(self, args)
-#        validate_required_args('Unable to construct elliptic curve L-function.',
-#                               args, 'conductor', 'isogeny')
-#
-#        self._Ltype = "ellipticcurveQ"
-#
-#        # Put the arguments into the object dictionary
-#        self.__dict__.update(args)
-#        self.numcoeff = 30
-#
-#        # Load data from the database
-#        self.label = self.conductor + '.' + self.isogeny
-#        label_slash = self.conductor + '/' + self.isogeny
-#        db_label = "EllipticCurve/Q/" + label_slash
-#        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
-#        if not self.lfunc_data:
-#                raise KeyError('No L-function instance data for "%s" was found in the database.' % db_label)
-#
-#        # Extract the data
-#        makeLfromdata(self)
-#        self.fromDB = True
-#
-#        # Mandatory properties
-#        self.coefficient_period = 0
-#        self.coefficient_type = 2
-#        self.poles = []
-#        self.residues = []
-#        self.langlands = True
-#        self.quasidegree = 1
-#
-#        # Specific properties
-#        # Get the data for the corresponding modular form if possible
-#        modform_translation_limit = 101
-#        if self.level <= modform_translation_limit:
-#            self.modform = modform_from_EC(self.label)
-#        else:
-#            self.modform = False
-#
-#        # Text for the web page
-#        self.texname = "L(s)"  # "L(s,E)"
-#        self.htmlname = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>s,E</em>)"
-#        self.texname_arithmetic = "L(s)"  # "L(E,s)"
-#        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>E,s</em>)"
-#        self.texnamecompleteds = "\\Lambda(s)"  # "\\Lambda(s,E)"
-#        self.texnamecompleted1ms = "\\Lambda(1-s)"  # "\\Lambda(1-s,E)"
-#        self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
-#        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"  # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-#        #title_end = "where $E$ is an elliptic curve in isogeny class %s" % self.label
-#        title_end = " of degree 2, weight 1, conductor %s, and trivial character" % self.conductor
-#        self.credit = ''
-#
-#        # Initiate the dictionary info that contains the data for the webpage
-#        self.info = self.general_webpagedata()
-#        self.info['knowltype'] = "ec.q"
-#        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-#        self.info['title_arithmetic'] = "L-function "  + title_end
-#        self.info['title_analytic'] = "L-function " + title_end
-#
-#    def ground_field(self):
-#        return "Q"
-
-#############################################################################
 
 class Lfunction_EMF(Lfunction):
     """Class representing an elliptic modular form L-function
@@ -1970,14 +1900,3 @@ class TensorProductLfunction(Lfunction):
         generateSageLfunction(self)
 
         constructor_logger(self, args)
-
-# davidlowryduda, silly copied from main.py
-def get_bread(degree, breads=[]):
-    ''' Returns the two top levels of bread crumbs plus the ones supplied in breads.
-    '''
-    bc = [('L-functions', url_for('.l_function_top_page')),
-          ('Degree ' + str(degree), url_for('.l_function_degree_page', degree='degree' + str(degree)))]
-    for b in breads:
-        bc.append(b)
-    return bc
-

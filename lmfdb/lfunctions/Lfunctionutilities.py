@@ -903,6 +903,10 @@ def getConductorIsogenyFromLabel(label):
     except:
         return None, None
 
+#######################################################################
+# Functions for interacting with web structure
+#######################################################################
+
 # TODO This needs to be able to handle any sort of L-function.
 # There should probably be a more relevant field
 # in the database, instead of trying to extract this from a URL
@@ -943,3 +947,14 @@ def name_and_object_from_url(url):
                 name = 'Bianchi modular form ' + label;
                 obj_exists = is_bmf_in_db(label);
     return name, obj_exists
+
+def get_bread(degree, breads=[]):
+    """
+    Returns the two top levels of bread crumbs plus the ones supplied in breads.
+    """
+    breadcrumb = [('L-functions', url_for('.l_function_top_page')),
+          ('Degree ' + str(degree),
+           url_for('.l_function_degree_page', degree='degree' + str(degree)))]
+    for b in breads:
+        breadcrumb.append(b)
+    return breadcrumb
