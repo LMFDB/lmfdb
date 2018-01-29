@@ -2,6 +2,7 @@
 
 import re
 from lmfdb.lfunctions import logger
+from flask import url_for
 import math
 from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
