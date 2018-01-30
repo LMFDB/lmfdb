@@ -40,7 +40,7 @@ Zp_key = lambda a: a.list(start_val=0)
 # always start with the p^0 coefficient.
 
 def padded_list(c,k):
-    a = c.list(start_val=0)
+    a = list(c.expansion(start_val=0))
     return a[:k] + [ZZ(0)]* (k-len(a))
 
 def ZpX_key(k):
