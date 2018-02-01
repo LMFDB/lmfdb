@@ -491,13 +491,7 @@ class ECNF(object):
 
         # Isogeny information
 
-        if self.number==1:
-            isogmat = self.isogeny_matrix
-        else:
-            isogmat = db_ecnf().find_one({'class_label':self.class_label, 'number':1})['isogeny_matrix']
-        self.class_deg = max([max(d) for d in isogmat])
         self.one_deg = ZZ(self.class_deg).is_prime()
-        self.ncurves = db_ecnf().count({'class_label':self.class_label})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
             self.isogeny_degrees = " and ".join(isodegs)

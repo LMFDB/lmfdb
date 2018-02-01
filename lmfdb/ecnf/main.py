@@ -319,7 +319,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
         info = {'query':{}, 'err':'No elliptic curve isogeny class in the database has label %s.' % label}
         return search_input_error(info, bread)
     title = "Elliptic Curve isogeny class %s over Number Field %s" % (full_class_label, cl.field_name)
-    bread.append((cl.field, url_for(".show_ecnf1", nf=nf_label)))
+    bread.append((cl.field_name, url_for(".show_ecnf1", nf=nf_label)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
     bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=quote(conductor_label), class_label=class_label)))
     return render_template("ecnf-isoclass.html",
