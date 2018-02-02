@@ -323,7 +323,7 @@ def download_search(info):
     s += '\\\n'
     res = db().find(ast.literal_eval(info["query"]))
     for f in res:
-        poly = R([int(c) for c in f['polynomial']])
+        poly = R([int(c) for c in f['poly'].split(" ")])
         s += str(poly) + ',\\\n'
     s = s[:-3]
     s += ']\n'
