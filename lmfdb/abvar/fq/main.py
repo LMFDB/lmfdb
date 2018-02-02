@@ -334,11 +334,7 @@ def download_search(info):
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
-    return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     mimetype='text/plain',
-                     add_etags='false')
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():
