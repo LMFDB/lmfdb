@@ -8,7 +8,6 @@ class AVTest(LmfdbTest):
     def not_check_args(self, path, text):
         assert not(text in self.tc.get(path, follow_redirects=True).data)
 
-
     # All tests should pass
     def test_polynomial(self):
         r"""
@@ -116,3 +115,11 @@ class AVTest(LmfdbTest):
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
         assert r"$\pm0.15043295046$, $\pm0.544835058382$" in page
+
+    def test_av_download(self):
+        r"""
+        Test downloading on search results page.
+        """
+        response = self.tc.get('Variety/Abelian/Fq/5/2/?Submit=sage&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D')
+        self.assertTrue('Below is a list' in response.data)
+        self.assertTrue('32*x^10' in response.data)
