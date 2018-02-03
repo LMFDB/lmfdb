@@ -119,13 +119,13 @@ def makeDBConnection():
         if pymongo.version_tuple[0] >= 3:
             cursor = _mongo_C.knowledge.knowls.find({},{'_id':True}).limit(-1)
             list(cursor)
-            logging.info("MongoClient conection is reading from: %s" % (cursor.address,));
+            logging.info("MongoClient connection is reading from: %s" % (cursor.address,));
         elif _mongo_kwargs.get("replicaset",None) is not None:
             cursor = _mongo_C.knowledge.knowls.find({},{'_id':True}).limit(-1)
             list(cursor)
             logging.info("MongoReplicaSetClient connection is reading from: %s" % (cursor.conn_id,));
         else:
-            logging.info("MongoClient conection is reading from: %s" % (_mongo_C.host,));
+            logging.info("MongoClient connection is reading from: %s" % (_mongo_C.host,));
     except Exception as err:
         logging.info("connection attempt failed: %s", err)
         _mongo_C = None
