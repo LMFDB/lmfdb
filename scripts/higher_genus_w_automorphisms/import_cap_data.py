@@ -4,7 +4,6 @@
 
 import re
 from lmfdb.base import getDBConnection
-from pymongo import MongoClient
 from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
 
 
