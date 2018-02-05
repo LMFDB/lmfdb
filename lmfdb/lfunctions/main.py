@@ -19,7 +19,6 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunct
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
                        Lfunction_from_db)
-from lmfdb.lfunctions import logger
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
                                 getConductorIsogenyFromLabel)
