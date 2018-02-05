@@ -323,7 +323,7 @@ def download_search(info):
     s += '\\\n'
     res = db().find(ast.literal_eval(info["query"]))
     for f in res:
-        poly = R([int(c) for c in f['polynomial']])
+        poly = R([int(c) for c in f['poly'].split(" ")])
         s += str(poly) + ',\\\n'
     s = s[:-3]
     s += ']\n'
@@ -334,9 +334,7 @@ def download_search(info):
     strIO = StringIO.StringIO()
     strIO.write(s)
     strIO.seek(0)
-    return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():
