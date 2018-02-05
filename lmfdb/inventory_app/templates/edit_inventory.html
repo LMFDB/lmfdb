@@ -3,6 +3,7 @@
 {% block extra_script %}
 <script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_editor.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_uploader.js') }}"></script>
 <script type="text/javascript">
     //Create a js object of the fields from server.
     var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
@@ -69,6 +70,8 @@
       </span><span id='SubmitDummy'></span>
         <input type="button" class = "resetbutt" value="Reset" onclick="this.blur();resetEdits()" title="Reset to Original"/>
         <input type="button" class = "button" value="Export" onclick="this.blur();exportAsJson()" title="Export Edits as JSON"/> <!--This button should auto-download a file containing the diffs -->
+        <input type="button" class = "button" value="Import" onclick="this.blur();importJson()" title="Import Edits from JSON"/> <!--This button should auto-download a file containing the diffs -->
 
 </div>
+<div id="fileDropper"></div>
 {% endblock main_body %}
