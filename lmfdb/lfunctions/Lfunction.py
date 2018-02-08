@@ -637,7 +637,7 @@ class Lfunction_EC(Lfunction):
             lbread = get_bread(self.degree,
                 [
                     # FIXME there is no .l_function_ecnf_browse_page
-                    ('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                    #('Elliptic curve', url_for('.l_function_ec_browse_page')),
                     (self.label,
                      url_for('.l_function_ecnf_page',
                             field_label = self.field_label,
