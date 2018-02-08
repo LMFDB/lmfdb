@@ -491,13 +491,7 @@ class ECNF(object):
 
         # Isogeny information
 
-        if self.number==1:
-            isogmat = self.isogeny_matrix
-        else:
-            isogmat = db_ecnf().find_one({'class_label':self.class_label, 'number':1})['isogeny_matrix']
-        self.class_deg = max([max(d) for d in isogmat])
         self.one_deg = ZZ(self.class_deg).is_prime()
-        self.ncurves = db_ecnf().count({'class_label':self.class_label})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
             self.isogeny_degrees = " and ".join(isodegs)
@@ -512,18 +506,23 @@ class ECNF(object):
         if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
-            self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            if sig[0] <= 2:
+                self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            elif self.abs_disc ** 2 * self.conductor_norm < 70000:
+                # we shouldn't trust the Lfun computed on the fly for large conductor
+                self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
 
         if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
+            self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=rename_j(j)))]
         if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
-            self.friends += [('L-function', self.urls['Lfunction'])]
+
         if imag_quadratic:
             if "CM" in self.label:
                 self.friends += [('Bianchi Modular Form is not cuspidal', '')]
@@ -533,6 +532,11 @@ class ECNF(object):
                 else:
                     self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
 
+        if 'Lfunction' in self.urls:
+            self.friends += [('L-function', self.urls['Lfunction'])]
+        else:
+            self.friends += [('L-function not available', "")]
+
         self.properties = [
             ('Base field', self.field.field_pretty()),
             ('Label', self.label)]
@@ -540,7 +544,7 @@ class ECNF(object):
         # Plot
         if K.signature()[0]:
             self.plot = encode_plot(EC_nf_plot(K,self.ainvs, self.field.generator_name()))
-            self.plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
+            self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
             self.properties += [(None, self.plot_link)]
 
         self.properties += [

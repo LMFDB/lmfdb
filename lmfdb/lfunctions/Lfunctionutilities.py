@@ -403,6 +403,9 @@ def lfuncEPtex(L, fmt):
                         "} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
             else:
                 ans += "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
+        elif L.Ltype() == "general":
+            return ("For information concerning the Euler product, see other "
+                    "instances of this L-function.")
 
         else:
             return("No information is available about the Euler product.")

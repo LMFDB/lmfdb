@@ -129,7 +129,7 @@ def makeLfromdata(L):
     if 'credit' in data.keys():
         L.credit = data['credit']
 
-    # Dirichlet coeffcients
+    # Dirichlet coefficients
     if 'dirichlet_coefficients' in data:
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     else:
@@ -338,9 +338,6 @@ class RiemannZeta(Lfunction):
         # Generate a function to do computations
         self.sageLfunction = lc.Lfunction_Zeta()
 
-    def Lkey(self):
-        return {}
-
 #############################################################################
 
 
@@ -441,9 +438,71 @@ class Lfunction_Dirichlet(Lfunction):
                                  ", " + title_end)
         self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
 
-    def Lkey(self):
-        return {"charactermodulus": self.charactermodulus,
-                "characternumber": self.characternumber}
+
+#############################################################################
+
+
+class Lfunction_from_db(Lfunction):
+    """
+    Class representing a general L-function, to be retrieved from the database
+    based on its lhash.
+
+    Compulsory parameters: Lhash
+    """
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
+        validate_required_args('Unable to construct L-function from lhash.',
+                               kwargs, 'Lhash')
+        self._Ltype = "general"
+        self.numcoeff = 30
+
+        # this controls data on the Euler product, but is not stored
+        # systematically in the database. Default to False until this
+        # is retrievable from the database.
+        self.langlands = False
+
+        self.__dict__.update(kwargs)
+        self.lfunc_data = LfunctionDatabase.get_lfunction_by_Lhash(self.Lhash)
+        makeLfromdata(self)
+        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"
+        self.texname = "L(s)"
+        self.texname_arithmetic = "L(s)"
+        self.texnamecompleted1ms = "\\Lambda(1-s)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
+        self.texnamecompleteds = "\\Lambda(s)"
+        self.info = self.general_webpagedata()
+        self._set_title()
+        self.credit = ''
+        self.label = ''
+
+    def _set_title(self):
+        '''
+        If `charactermodulus` and `characternumber` are defined, make a title
+        which includes the character. Otherwise, make a title without character.
+        '''
+        try:
+            chilatex = ("$\chi_{" + str(self.charactermodulus) +
+                        "} (" + str(self.characternumber) +", \cdot )$")
+        except KeyError:
+            chilatex = ''
+        if chilatex:
+            title_end = (
+                    " of degree {degree}, weight {weight},"
+                    " conductor {conductor}, and character {character}"
+                    ).format(degree=self.degree, weight=self.motivic_weight,
+                            conductor=self.level, character=chilatex)
+        else:
+            title_end = (
+                    " of degree {degree}, weight {weight},"
+                    " and conductor {conductor}"
+                    ).format(degree=self.degree, weight=self.motivic_weight,
+                            conductor=self.level)
+
+        self.info['title_arithmetic'] = ("L-function" + title_end)
+        self.info['title_analytic'] = ("L-function" + title_end)
+
+
 
 
 #############################################################################
@@ -568,11 +627,6 @@ class Lfunction_EC(Lfunction):
 #                # if C.bmfs.forms.search.find({ u'label' : label }).count() > 0
 #                pass;
 
-    def Lkey(self):
-        return {"label": self.long_isogeny_class_label}
-
-
-
 # DEPRECATED
 #class Lfunction_EC_Q(Lfunction):
 #    """Class representing an elliptic curve L-function
@@ -642,11 +696,6 @@ class Lfunction_EC(Lfunction):
 #
 #    def ground_field(self):
 #        return "Q"
-#
-#    def Lkey(self):
-#        # If over Q, the lmfdb label determines the curve
-#        return {"label": self.label}
-#
 
 #############################################################################
 
@@ -768,9 +817,6 @@ class Lfunction_EMF(Lfunction):
         self.info['title'] = ("$L(s,f)$, where $f$ is a holomorphic cusp form " +
             "with weight %s, level %s, and %s" % (
             self.weight, self.level, characterName))
-
-    def Lkey(self):
-        return {"weight": self.weight, "level": self.level}
 
     def original_object(self):
         return self.MF
@@ -904,9 +950,6 @@ class Lfunction_Maass(Lfunction):
         self.info['knowltype'] = "mf.maass"
         self.info['title'] = ("$L(s,f)$, where $f$ is a Maass cusp form with "
                       + "level %s" % (self.level)) + title_end
-
-    def Lkey(self):
-        return {"dbid": self.dbid}
 
 #############################################################################
 
@@ -1066,9 +1109,6 @@ class Lfunction_HMF(Lfunction):
         else:
             self.info['title'] += ", and trivial character"
 
-    def Lkey(self):
-        return {"label", self.label}
-
     def original_object(self):
         return self.f
 
@@ -1177,9 +1217,6 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.info['title'] = ("$L(s,F)$, " + "where $F$ is a scalar-valued Siegel " +
                       "modular form of weight " + str(self.weight) + ".")
 
-    def Lkey(self):
-        return {"weight": self.weight, "orbit": self.orbit}
-
     def original_object(self):
         return self.S
 
@@ -1243,10 +1280,6 @@ class Lfunction_genus2_Q(Lfunction):
         self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" + ", " +
                                  title_end)
         self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
-
-    def Lkey(self):
-        return {"label", self.label}
-
 
 
 #############################################################################
@@ -1367,9 +1400,6 @@ class DedekindZeta(Lfunction):
         self.info['label'] = self.label
         self.info['title'] = "Dedekind zeta-function: $\\zeta_K(s)$, where $K$ is the number field with defining polynomial %s" %  web_latex(self.NF.defining_polynomial())
 
-    def Lkey(self):
-        return {"label": self.label}
-
     def original_object(self):
         return self.NF
 
@@ -1449,9 +1479,6 @@ class ArtinLfunction(Lfunction):
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "artin"
         self.info['title'] = ("L-function for Artin representation " + str(self.label))
-
-    def Lkey(self):
-        return {"label": self.label}
 
     def original_object(self):
         return self.artin
@@ -1533,9 +1560,6 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "hgm"
         self.info['title'] = ("L-function for the hypergeometric motive with label "+self.label)
-
-    def Lkey(self):
-        return {"label":self.label}
 
     def original_object(self):
         return self.motive
@@ -1644,10 +1668,6 @@ class SymmetricPowerLfunction(Lfunction):
                       % (ordinal(self.m), self.m, self.label))
 
 
-    def Lkey(self):
-        return {"power": self.power, "underlying_type": self.underlying_type,
-                "field": self.field}
-
     def original_object(self):
         return self.S
 
@@ -1719,9 +1739,6 @@ class Lfunction_lcalc(Lfunction):
 
         logger.debug("Start generating Sage L")
         generateSageLfunction(self)
-
-    def Lkey(self):
-        return {"filecontents": self.filecontents}
 
 #############################################################################
 
@@ -1801,11 +1818,6 @@ class TensorProductLfunction(Lfunction):
         generateSageLfunction(self)
 
         constructor_logger(self, args)
-
-    def Lkey(self):
-        return {"ellipticcurvelabel": self.Elabel,
-                "charactermodulus": self.charactermodulus,
-                "characternumber": self.characternumber}
 
 #############################################################################
 

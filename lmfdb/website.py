@@ -81,6 +81,8 @@ import rep_galois_modl
 assert rep_galois_modl
 import hecke_algebras
 assert hecke_algebras
+from inventory_app.inventory_app import inventory_app
+assert inventory_app
 
 # Currently uploading is not supported
 # import upload

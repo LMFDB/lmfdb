@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Higher Genus Curves
-# Author: Jen Paulhus (copied from John Jones Local Fields)
+# Authors: Jen Paulhus, Lex Martin, David Neill Asanza
+# (initial code copied from John Jones Local Fields)
 
+import StringIO
 import re
 import pymongo
 import ast
@@ -9,7 +11,7 @@ ASC = pymongo.ASCENDING
 import yaml
 import os
 from lmfdb import base
-from flask import render_template, request, url_for, make_response, redirect
+from flask import render_template, request, url_for, redirect, send_file
 from lmfdb.utils import to_dict, random_value_from_collection, flash_error
 from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_input, parse_bracketed_posints, parse_gap_id
 
@@ -130,7 +132,8 @@ def index():
     
 
     learnmore = [('Source of the data', url_for(".how_computed_page")),
-                ('Labeling convention', url_for(".labels_page"))]
+                ('Labeling convention', url_for(".labels_page")),
+                ('Completeness of the data', url_for(".completeness_page"))]
     
     return render_template("hgcwa-index.html", title="Families of Higher Genus Curves with Automorphisms", bread=bread, credit=credit, info=info, learnmore=learnmore)
 
@@ -158,6 +161,187 @@ def by_label(label):
 @higher_genus_w_automorphisms_page.route("/<passport_label>")
 def by_passport_label(label):
     return render_passport({'passport_label': label})
+
+cur_expr = None
+cur_index = 0
+
+def is_letter(char):
+    return (ord(char) >= ord('a') and ord(char) <= ord('z')) or (ord(char) >= ord('A') and ord(char) <= ord('Z'))
+
+def expr_error(err):
+    expr_getc()
+    err_msg = ('-' * max(cur_index - 1, 0))
+    err_msg_lst = list(err_msg)
+    err_msg = "".join(err_msg_lst)
+    err_msg += "^ " + err
+    return err_msg
+
+def expr_getc():
+    global cur_expr, cur_index
+    while cur_index < len(cur_expr):
+        result = cur_expr[cur_index]
+        cur_index += 1
+        if result != ' ':
+            return result
+    else:
+        return None
+    
+def expr_peekc():
+    global cur_index
+    result = expr_getc()
+    if result != None: cur_index -= 1
+    return result
+
+def expr_expect_char(char):
+    actual_char = expr_getc()
+    
+    if actual_char != char:
+        return expr_error("expected '" + char +"' here")
+    else:
+        return None
+
+def read_num():
+    num = ""
+    c = expr_peekc()
+    while c != None and c.isdigit():
+        num += c
+        expr_getc()
+        c = expr_peekc()
+    return int(num)
+
+def expect_var(vars):
+    c = expr_peekc()
+    is_valid_var = False
+    for var in vars.keys():
+        if var == c:
+            is_valid_var = True
+            break
+
+    if is_valid_var:
+        var = expr_getc()
+        return (None, vars[var])
+    else:
+        return (expr_error("'" + c + "' is not a recognized variable"), None)
+
+def expect_factor(vars):
+    c = expr_peekc()
+    if c == None:
+        return (expr_error("expected factor here"), None)
+    elif c.isdigit():
+        return (None, read_num())
+    elif is_letter(c):
+        err, result = expect_var(vars)
+        return err, result
+    elif c == '(':
+        expr_getc()
+        err, result = expect_expr(vars)
+        if err != None: return (err, None)
+        err = expr_expect_char(')')
+        if err != None: return (err, None)
+        else: return (None, result)
+    else:
+        return (expr_error("'" + c + "' unexpected symbol"), None)
+
+def expect_term(vars):
+    err, result = expect_factor(vars)
+    if err != None: return (err, None)
+    
+    c = expr_peekc()
+    while c != None and (c.isdigit() or is_letter(c) or c == '('):
+        err, factor_result = expect_factor(vars)
+        if err != None: return (err, None)
+        result *= factor_result
+        c = expr_peekc()
+
+    return (None, result)
+
+def expect_expr(vars):
+    err, result = expect_term(vars)
+    if err != None: return (err, None)
+    
+    c = expr_peekc()
+    while c == "+" or c == "-":
+        expr_getc()
+        err, term_result = expect_term(vars)
+        if err != None: return (err, None)
+        if c == "+":
+            result += term_result
+        elif c == "-":
+            result -= term_result
+        c = expr_peekc()
+
+    return (None, result)
+
+def evaluate_expr(expr, vars):
+    global cur_expr, cur_index
+    cur_expr = expr
+    cur_index = 0
+    err, result = expect_expr(vars)
+
+    if err == None:
+        if expr_peekc() != None:
+            return (expr_error("unexpected symbol"), None)
+
+    return (err, result)
+
+def add_group_order_range(mongo_query, expr, db):
+    # Support -- and .. as range
+    query_range = expr.replace("--", "..")
+    raw_parts = expr.split('..')
+    raw_parts = filter(lambda x: x != '', raw_parts)    
+    min_genus = 1
+    max_genus = db.curve_automorphisms.passports.find().sort('genus', pymongo.DESCENDING).limit(1)[0]['genus']
+
+    # when given A-B and A,B are integers treat A-B as a range not subtraction.
+    special_case_parts = expr.split('-')
+    #is_special_case_range = special_case_parts[0].isdigit() and special_case_parts[1].isdigit()
+    is_special_case_range = len(special_case_parts) == 2 and special_case_parts[0].isdigit() and special_case_parts[1].isdigit()
+    
+    if is_special_case_range:
+        mongo_query["group_order"] = {"$gte": int(special_case_parts[0]), "$lte": int(special_case_parts[1])}
+        return (None, None)
+
+    elif len(raw_parts) == 2:
+        mongo_expr = []
+
+        for cur_genus in range(min_genus, max_genus + 1):
+            left_err, left_value   = evaluate_expr(raw_parts[0], {'g': cur_genus})
+            right_err, right_value = evaluate_expr(raw_parts[1], {'g': cur_genus})
+            if left_err == None and right_err == None:
+                mongo_expr.append({"group_order": {"$gte": left_value, "$lte" : right_value}, "genus": cur_genus})
+            elif left_err != None:
+                mongo_query["$or"] = [{"genus": {"$lte": 0}}]
+                return (raw_parts[0], left_err)
+            else:
+                mongo_query["$or"] = [{"genus": {"$lte": 0}}]
+                return (raw_parts[1], right_err)
+
+        mongo_query["$or"] = mongo_expr 
+        return (None, None)
+    elif len(raw_parts) == 1:
+        condition = ""
+
+        if query_range.find('..') != -1:
+            if query_range.index("..") == 0:
+                condition = "$lte"
+            else:
+                condition = "$gte"
+        else:
+            condition = "$eq"
+
+        mongo_expr = []
+        for cur_genus in range(min_genus, max_genus + 1):
+            err, value = evaluate_expr(raw_parts[0], {'g': cur_genus})
+            if err == None:
+                mongo_expr.append({"group_order": {condition: value}, "genus": {"$eq": cur_genus}})
+            else:
+                mongo_query["$or"] = [{"genus": {"$lte": 0}}]
+                return (raw_parts[0], err) 
+
+        mongo_query["$or"] = mongo_expr 
+        return (None, None)
+    else:
+        return ("", "You must either specify a group size or range in the format Min..Max")
 
 
 def higher_genus_w_automorphisms_search(**args):
@@ -209,9 +393,15 @@ def higher_genus_w_automorphisms_search(**args):
     count = parse_count(info)
     start = parse_start(info)
 
+    if 'groupsize' in info and info['groupsize'] != '':
+        err, result = add_group_order_range(query, info['groupsize'], C)
+        if err != None:
+            flash_error('Parse error on group order field. <font face="Courier New"><br />Given: ' + err + '<br />-------' + result + '</font>')
+   
     res = C.curve_automorphisms.passports.find(query).sort([(
          'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
         ('cc'[0],pymongo.ASCENDING)])
+
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -220,15 +410,21 @@ def higher_genus_w_automorphisms_search(**args):
     if(start < 0):
         start = 0
 
-        
     L = [ ]    
     for field in res:
         field['signature'] = ast.literal_eval(field['signature'])    
         L.append(field)
-        
+
+    if 'download_magma' in info:
+        return hgcwa_code_download_search(L,'magma')  #OR RES??????
+
+    elif 'download_gap' in info:
+        return hgcwa_code_download_search(L,'gap')  #OR L??????
+
     info['fields'] = L    
     info['number'] = nres
     info['group_display'] = sg_pretty
+    info['show_downloads'] = len(L) > 0
 
     info['sign_display'] = sign_display
     info['start'] = start
@@ -531,12 +727,6 @@ def how_computed_page():
 _curdir = os.path.dirname(os.path.abspath(__file__))
 code_list =  yaml.load(open(os.path.join(_curdir, "code.yaml")))
 
-@higher_genus_w_automorphisms_page.route("/<label>/download/<download_type>")
-def hgcwa_code_download(**args):
-    response = make_response(hgcwa_code(**args))
-    response.headers['Content-type'] = 'text/plain'
-    return response
-
 
 same_for_all =  ['signature', 'genus']
 other_same_for_all = [ 'r', 'g0', 'dim','sym']
@@ -545,16 +735,20 @@ depends_on_action = ['gen_vectors']
 
 Fullname = {'magma': 'Magma', 'gap': 'GAP'}
 Comment = {'magma': '//', 'gap': '#'}
+FileSuffix= {'magma': '.m', 'gap': '.g'} 
 
-def hgcwa_code(**args):
+@higher_genus_w_automorphisms_page.route("/<label>/download/<download_type>")
+def hgcwa_code_download(**args):
     import time
     label = args['label']
     C = base.getDBConnection()
     lang = args['download_type']
-    code = "%s %s code for the lmfdb family of higher genus curves %s\n" % (Comment[lang],Fullname[lang],label)
-    code +="%s The results are stored in a list of records called 'result_record'\n\n" % (Comment[lang]) 
+    s = Comment[lang]
+    filename= 'HigherGenusData' + str(label) + FileSuffix[lang] 
+    code = s + " " + Fullname[lang]+  " code for the lmfdb family of higher genus curves " + str(label) + '\n'  
+    code += s + " The results are stored in a list of records called 'data'\n\n" 
     code +=code_list['top_matter'][lang] + '\n' +'\n'
-    code +="result_record:=[];" + '\n' +'\n'
+    code +="data:=[];" + '\n' +'\n'
 
 
     if label_is_one_passport(label):
@@ -562,8 +756,8 @@ def hgcwa_code(**args):
 
     elif label_is_one_family(label):
         data = C.curve_automorphisms.passports.find({"label" : label})
-
-    code += Comment[lang] + code_list['gp_comment'][lang] +'\n'
+    
+    code += s + code_list['gp_comment'][lang] +'\n'
     code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
 
     if lang == 'magma':
@@ -578,7 +772,7 @@ def hgcwa_code(**args):
     code += '\n'
 
     # create formatting templates to be filled in with each record in data
-    startstr = Comment[lang] + ' Here we add an action to result_record.\n'
+    startstr = s + ' Here we add an action to data.\n'
     stdfmt = ''
     for k in depends_on_action:
         stdfmt += code_list[k][lang] + '{' + k + '}'+ ';\n'
@@ -613,4 +807,93 @@ def hgcwa_code(**args):
     lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
     code += '\n'.join(lines)
     print "%s seconds for %d bytes" %(time.time() - start,len(code))
-    return code
+    strIO = StringIO.StringIO()
+    strIO.write(code)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
+
+
+
+#JEN TEST FUNCTION
+@higher_genus_w_automorphisms_page.route("/download/<download_type>")
+#def hgcwa_code_download_search(**args):
+def hgcwa_code_download_search(res,download_type):
+    import time
+#    label = args['label']
+    C = base.getDBConnection()
+    lang = download_type
+    s = Comment[lang]
+    filename= 'HigherGenusSearch' + FileSuffix[lang] 
+    code = s + " " + Fullname[lang]+  " CODE FOR SEACH RESULTS" + '\n' + '\n'
+    code += s + " The results are stored in a list of records called 'data'\n\n" 
+    code +=code_list['top_matter'][lang] + '\n' +'\n'
+    code +="data:=[];" + '\n' +'\n'
+
+    label_list=[]
+    for field in res:
+        label=field['label']
+        if  label not in label_list:
+            label_list.append(label)
+            
+            data = C.curve_automorphisms.passports.find({"label" : label})
+            code += s + code_list['search_result_gp_comment'][lang] +'\n'
+            code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
+
+            if lang == 'magma':
+                code += code_list['group_construct'][lang] + '\n'
+
+
+            for k in same_for_all:
+                code += code_list[k][lang] + str(data[0][k])+ ';\n'
+        
+            for k in other_same_for_all:
+                code += code_list[k][lang] + '\n'
+
+            code += '\n'
+
+            # create formatting templates to be filled in with each record in data
+            startstr = s + ' Here we add an action to data.\n'
+            stdfmt = ''
+            for k in depends_on_action:
+                stdfmt += code_list[k][lang] + '{' + k + '}'+ ';\n'
+
+            if lang == 'magma':
+                stdfmt += code_list['con'][lang] + '{con}' + ';\n' 
+         
+            stdfmt += code_list['gen_gp'][lang]+ '\n'
+            stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
+            stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
+    
+            # extended formatting template for when signH is present
+            signHfmt = stdfmt
+            signHfmt += code_list['full_auto'][lang] + '{full_auto}' + ';\n'
+            signHfmt += code_list['full_sign'][lang] + '{signH}' + ';\n'        
+            signHfmt += code_list['add_to_total_full'][lang] + '\n'
+
+            # additional info for hyperelliptic cases
+            hypfmt = code_list['hyp'][lang] + code_list['tr'][lang] + ';\n'
+            hypfmt += code_list['hyp_inv'][lang] + '{hyp_involution}' + code_list['hyp_inv_last'][lang]
+            hypfmt += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
+            hypfmt += code_list['add_to_total_hyp'][lang] + '\n'
+            cyctrigfmt = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
+            cyctrigfmt += code_list['cyc'][lang] + code_list['tr'][lang] + ';\n'
+            cyctrigfmt += code_list['cyc_auto'][lang] + '{cinv}' + code_list['hyp_inv_last'][lang]
+            cyctrigfmt += code_list['add_to_total_cyc_trig'][lang] + '\n'
+            nhypcycstr = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
+            nhypcycstr += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
+            nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
+    
+            start = time.time()
+            lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
+            code += '\n'.join(lines)
+
+
+            code +='\n'
+
+    print "%s seconds for %d bytes" %(time.time() - start,len(code))
+    strIO = StringIO.StringIO()
+    strIO.write(code)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+

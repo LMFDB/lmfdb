@@ -88,3 +88,10 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/26569/a/1')
         assert '\(-1 \cdot 163^{9} \)' in L.data
 
+    def test_torsion_growth(self):
+        """
+        Test for torsion growth data
+        """
+        L = self.tc.get('/EllipticCurve/Q/392/c/1')
+        assert ' is strictly larger than ' in L.data
+        assert '<a href=/EllipticCurve/3.3.49.1/512.1/e/3>3.3.49.1-512.1-e3</a>' in L.data

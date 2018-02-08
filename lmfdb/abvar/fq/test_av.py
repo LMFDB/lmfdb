@@ -8,7 +8,6 @@ class AVTest(LmfdbTest):
     def not_check_args(self, path, text):
         assert not(text in self.tc.get(path, follow_redirects=True).data)
 
-
     # All tests should pass
     def test_polynomial(self):
         r"""
@@ -91,7 +90,8 @@ class AVTest(LmfdbTest):
         Check that the plot of the Newton polygon is included and computed correctly
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
-        # The following is part of the base64 encoded image of the Newton polygon for this isogeny class.
+        # The following is part of the base64 encoded image of the Newton
+        # polygon for this isogeny class.
         assert "4S8eKLeWaDFgkQAKBLwgPyECAAQFeEB%2BQlQACALggPKIMA" in page
 
     def test_circle_plot(self):
@@ -99,7 +99,8 @@ class AVTest(LmfdbTest):
         Check that the plot showing the roots of the Weil polynomial displays correctly
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
-        # The following is part of the base64 encoded image of the circle plot for this isogeny class.
+        # The following is part of the base64 encoded image of the circle plot
+        # for this isogeny class.
         assert "gMA4O7CwsJ06NAhDqLDaVBAYEkcQAcA4EccRIezo" in page
 
     def test_property_box(self):
@@ -116,3 +117,17 @@ class AVTest(LmfdbTest):
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
         assert r"$\pm0.15043295046$, $\pm0.544835058382$" in page
+
+    def test_av_download(self):
+        r"""
+        Test downloading on search results page.
+        """
+        response = self.tc.get('Variety/Abelian/Fq/5/2/?Submit=sage&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D')
+        self.assertTrue('Below is a list' in response.data)
+        self.assertTrue('32*x^10' in response.data)
+        response = self.tc.get('Variety/Abelian/Fq/5/2/?Submit=gp&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D')
+        self.assertTrue('Below is a list' in response.data)
+        self.assertTrue('32*x^10' in response.data)
+        response = self.tc.get('Variety/Abelian/Fq/5/2/?Submit=magma&download=1&query=%7B%27q%27%3A+2%2C+%27g%27%3A+5%7D')
+        self.assertTrue('Below is a list' in response.data)
+        self.assertTrue('32*x^10' in response.data)
