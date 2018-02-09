@@ -196,7 +196,6 @@ def render_curve_webpage(label):
                            learnmore=learnmore_list(),
                            title=g2c.title,
                            friends=g2c.friends)
-                           #downloads=g2c.downloads)
 
 def render_isogeny_class_webpage(label):
     try:
@@ -211,7 +210,6 @@ def render_isogeny_class_webpage(label):
                            learnmore=learnmore_list(),
                            title=g2c.title,
                            friends=g2c.friends)
-                           #downloads=class_data.downloads)
 
 def url_for_curve_label(label):
     slabel = label.split(".")
@@ -248,7 +246,7 @@ def genus2_curve_search(info):
                     errmsg = "%s is not a valid genus 2 curve or isogeny class label"
         flash_error (errmsg, jump)
         return redirect(url_for(".index"))
-    if info.get('download','').strip() == '1':
+    if info.get('download','').strip():
         return download_search(info)
 
     info["st_group_list"] = st_group_list
@@ -458,7 +456,7 @@ download_make_data_comment = {
         'text':''}
 
 def download_search(info):
-    lang = info.get('language','text').strip()
+    lang = info.get('download','text').strip()
     filename = 'genus2_curves' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
     # reissue query here
