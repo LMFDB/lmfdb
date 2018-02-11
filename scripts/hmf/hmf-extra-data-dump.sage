@@ -31,7 +31,7 @@ for Flabel in fieldlabels:
         vars = {'w':K.0}
         degree = Flabel.split('.')[0]
         assert degree == str(K.degree())
-        res = forms.search.find(query).sort([('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)])
+        res = forms.find(query).sort([('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)])
         res_labels = [f['label'] for f in res]
         assert len(res_labels) > 0
         for flabel in res_labels:
