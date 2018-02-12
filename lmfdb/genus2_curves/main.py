@@ -456,7 +456,7 @@ download_make_data_comment = {
         'text':''}
 
 def download_search(info):
-    lang = info.get('download','text').strip()
+    lang = info.get('language','text').strip()
     filename = 'genus2_curves' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
     # reissue query here
