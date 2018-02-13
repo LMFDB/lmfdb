@@ -33,12 +33,12 @@ install:
     - pip install codecov --user
     - export PATH=${HOME}/.local/bin/:${PATH}
     # install SAGE with GAP already built in
-    - export SAGE_VERSION=8.0
+    - export SAGE_VERSION=8.1
     - export SAGE_DIR=${HOME}/SageMath
     - export SAGE="${SAGE_DIR}/sage"
     - export SAGE_INSTALL_GCC=no
     - export MAKE='make -j4'
-    - wget  --no-verbose https://storage.googleapis.com/sage-lmfdb/sage-8.0-Ubuntu_14.04-x86_64.tar.bz2
+    - wget  --no-verbose https://storage.googleapis.com/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
     - time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
     # trigger the patch once script
     - ${SAGE} --version > patch_once_log 
