@@ -39,7 +39,8 @@ install:
     - export SAGE_INSTALL_GCC=no
     - export MAKE='make -j4'
     - wget  --no-verbose https://storage.googleapis.com/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
-    - time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
+    # travis_wait extends the default 10 minute timeout to 30 minutes 
+    - travis_wait 30 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
     # trigger the patch once script
     - ${SAGE} --version > patch_once_log 
     # assert that we have GAP
