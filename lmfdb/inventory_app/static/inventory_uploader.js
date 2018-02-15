@@ -12,15 +12,28 @@ function importJson(){
     e.preventDefault();
   },false);
 
+  //Disable import div expander button
+  var butt = document.getElementById("importbutt");
+  butt.className = "disabledbutton";
+  butt.disabled = true;
+
   var div = document.getElementById("fileDropper");
-  div.innerHTML = "<hr> Drag a file here, or type/paste into the box and click continue.<br>";
+  div.innerHTML = "<hr> Drag a file below the line above to import it, or type/paste into the box and click Go.<br>";
 
   var uploadText = document.createElement("textarea");
+  uploadText.id = "UploadBox";
+  uploadText.className = "upload_box";
   div.appendChild(uploadText);
 
   var contButton = document.createElement("button");
-  contButton.title = "Continue";
-  contButton.innerHTML = "Continue";
+  contButton.title = "Import text into page";
+  contButton.innerHTML = "Go";
+  contButton.onclick = (function() {
+		return function() {
+      var box = document.getElementById("UploadBox");
+      parseAndUpload("Box", box.value);
+		};
+	   })();
 
   div.appendChild(contButton);
 
@@ -33,7 +46,6 @@ function importJson(){
     e.stopPropagation();
     e.preventDefault();
     var files = e.dataTransfer.files;
-    console.log(files);
     var reader = new FileReader();
     var myFile = files[0];
     reader.onload = function(e2){
@@ -47,8 +59,47 @@ function importJson(){
 }
 
 function parseAndUpload(name, content){
+  //We're not going to check db/coll names explicitly, just that uploaded data
+  //matches to expected block names. In particular, we warn if file contains "too many"
+  //unknown keys, but offer to proceed with known ones
 
-  identifyJsonAndChain(content);
+  if(!content) return;
+  var dataObj = identifyJsonAndChain(content);
+  //Now we know what format our data is in, and how to get to the actual data
+  //DataObj has a fmt and a data field. Data contains parsed but not altered data
+  //fmt contains a dict in form { fmt : 0, depth : 1, maxDepth : 4, chain: []};
+
+  var data = dataObj.data;
+
+  //Unpack the actual data using the info in fmt
+  console.log(dataObj.fmt.chain);
+  for(var item of dataObj.fmt.chain){
+    console.log(item, data);
+    data = data[item];
+  }
+  console.log(data, dataObj.fmt);
+
+  //Get keys from page and file and find overlap
+  var keysInFile = extractKeys(dataObj);
+  var keysInPage = getBoxKeys(mainBlockList);
+  var sharedKeys = keysInFile.filter(function (el){
+          return keysInPage.indexOf(el) !== -1;
+        });
+  var unknownKeys = keysInFile.filter(function (el){
+          return keysInPage.indexOf(el) === -1;
+        });
+
+  var cont = false;
+  if(sharedKeys.length === 0){
+    alert("No recognized keys in file, aborting upload.");
+  }else if(unknownKeys.length > 0){
+    cont = confirm("Found unrecognized keys: "+unknownKeys.join(';')+" ignore and continue?");
+  }else{
+    cont = true;
+  }
+  if( !cont) return;
+
+  uploadItemsToPage(sharedKeys, data, dataObj.fmt.fmt);
 
 }
 
@@ -62,25 +113,23 @@ function identifyJsonAndChain(text){
   var fmtInfo = { fmt : 0, depth : 1, maxDepth : 4, chain: []};
   var textAsJson = JSON.parse(text);
 //  textAsJson = {"a": "nothing", "one" : {"three": "ab", "two": textAsJson}};
-  textAsJson = {"mykey":textAsJson[0].data}
-  console.log(textAsJson);
+//  textAsJson = {a: {b: textAsJson}};
+  //textAsJson = {"mykey":textAsJson[0].data}
   fmtInfo = checkAtLevel(textAsJson, fmtInfo);
-  console.log(fmtInfo, fmtInfo.chain, fmtInfo.fmt !=0);
-  var data = textAsJson;
-  for(item in fmtInfo.chain){
-    data = data[item];
-  }
-  console.log(data);
+  //Chain runs deep to shallow, want to address from start to end
+  fmtInfo.chain.reverse();
+  return {fmt: fmtInfo, data : textAsJson};
 }
 
 function checkAtLevel(textAsJson, fmtInfo){
-  console.log(fmtInfo);
+  //console.log(fmtInfo, textAsJson);
   var currText = textAsJson;
   if(fmtInfo.fmt == 0 && fmtInfo.depth < fmtInfo.maxDepth && currText){
     if(currText.db == pageId.db && currText.collection == pageId.collection && currText.diffs){
       fmtInfo.fmt = 1;
-    }
-    else if(currText.name && currText.data){
+    }else if(currText.name && currText.data){
+      fmtInfo.fmt = 2;
+    }else if(currText instanceof Array && currText.length > 0 && currText[0].name && currText[0].data){
       fmtInfo.fmt = 2;
     }else{
       var keys = [];
@@ -112,4 +161,78 @@ function checkAtLevel(textAsJson, fmtInfo){
   }else{
     return fmtInfo;
   }
+}
+
+function extractKeys(dataObj){
+  //Extract the key names according to actual format
+
+  var data = dataObj.data;
+  var thing, key, ind;
+  for(var item of dataObj.fmt.chain){
+    data = data[item];
+  }
+
+  var keys = [];
+  if(dataObj.fmt.fmt == 1){
+    //Keys are all the things under the "item" key for each dict in list
+    data = data.diffs;
+    for(thing of data){
+      keys.push(thing.item);
+    }
+  }else if(dataObj.fmt.fmt == 2){
+    for(thing of data){
+      keys.push(thing.name);
+    }
+  }else if(dataObj.fmt.fmt == 3){
+    keys = Object.keys(data);
+  }
+
+  return keys;
+
+}
+
+function uploadItemsToPage(keys, data, fmt){
+  //Fill the boxes named by keys from data, assuming format is fmt type
+  //Fmt type 1 means {item:, field, content}
+  //Others are both name:{type, description, example}
+  //Keys should contain any keys wished to include, they MUST be valid page keys, but need not exist in data
+
+  if(fmt === 1){
+    for(var item of data.diffs){
+      if(keys.indexOf(item.item) !== -1){
+        var blockName = createBoxName(item.item, item.field);
+        var block = mainBlockList.getBlock(blockName);
+        updateBoxAndBlock(block, item.content);
+      }
+    }
+  }else if(fmt === 2 || fmt === 3){
+    for(var item of data){
+      if(keys.indexOf(item.name) !== -1){
+        for(var key of table_fields){
+          var blockName = createBoxName(item.name, key);
+          var block = mainBlockList.getBlock(blockName);
+          updateBoxAndBlock(block, item.data[key]);
+        }
+      }
+    }
+  }else{
+    console.log("Format unknown or zero");
+  }
+
+}
+
+function updateBoxAndBlock(block, content){
+    //Handle updates page and block with content
+
+    //If content is null, do nothing. To blank a field, set to empty string
+    if(!content && content !=="") return;
+
+    block.newtext = content;
+    if(block.newtext != block.text){
+      block.edited = true;
+    }else{
+      block.edited = false;
+    }
+    $(escape_jq(block.docElementId)).val(content);
+    fitToText(block.docElementId);
 }

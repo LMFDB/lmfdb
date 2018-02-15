@@ -97,6 +97,21 @@ function getBoxTitles(blockList){
   return fields;
 }
 
+function getBoxKeys(blockList){
+  //Returns all the unique field names. Assumes name is all the bit between BOX and final
+  var keys = Object.keys(blockList.blockList).sort();
+  var uniq_keys = {};
+  for(var i=0; i<keys.length; i++){
+    var str = keys[i];
+    //Strip out field, leaving the 'Box_' bit
+    var head = str.substring(str.indexOf(id_delimiter)+1,str.lastIndexOf(id_delimiter) );
+    uniq_keys[head] = 0;
+  }
+  var fields = Object.keys(uniq_keys);
+  return fields;
+}
+
+
 //---------- End helpers for some other block-wise tasks ---------
 
 //---------- General data fetching  ------------------------------
@@ -118,7 +133,7 @@ function fetchAndPopulateData(blockList, pageCreator, startVisible=true){
     if(jQuery.isEmptyObject(data)){
 	    div = document.getElementById('dataDiv');
     	div.innerHTML = "<span class='err_text'>Failed to fetch page data. This is most likely due to a connection or authentication failure with the LMFDB backend.<p>Please check you  have an open tunnel (e.g. using warwick.sh) and have a passwords.yaml file in lmfdb root containing the appropriate passwords, or reload the page to try again.</p></span>";
-    
+
     }else{
 	    populateBlocklist(XHR.blockList, data);
     	pageCreator(XHR.blockList, startVisible=startVisible);
@@ -272,7 +287,10 @@ function createCollapserButt(field, open=true){
 function capitalise(str){
 //Capitalise first letter of given string
   return str[0].toUpperCase() + str.slice(1);
+}
 
+function createBoxName(item, field){
+  return "#Box"+id_delimiter+item+id_delimiter+field;
 }
 
 function setScanDate(date){

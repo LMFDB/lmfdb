@@ -70,8 +70,8 @@
       </span><span id='SubmitDummy'></span>
         <input type="button" class = "resetbutt" value="Reset" onclick="this.blur();resetEdits()" title="Reset to Original"/>
         <input type="button" class = "button" value="Export" onclick="this.blur();exportAsJson()" title="Export Edits as JSON"/> <!--This button should auto-download a file containing the diffs -->
-        <input type="button" class = "button" value="Import" onclick="this.blur();importJson()" title="Import Edits from JSON"/> <!--This button should auto-download a file containing the diffs -->
+        <input type="button" class = "button" id="importbutt" value="Import" onclick="this.blur();importJson()" title="Import Edits from JSON"/> <!--This button should auto-download a file containing the diffs -->
 
 </div>
-<div id="fileDropper"></div>
+<div id="fileDropper" class="upload_div"></div>
 {% endblock main_body %}
