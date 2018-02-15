@@ -245,3 +245,12 @@ h2
   padding: 5px 5px 3em 5px;
 
 }
+
+.scrape_button {
+  min-width: 50px;
+  padding: none;
+  margin-left:2px;
+  height: 2em;
+  vertical-align: middle;
+  float:left;
+}

@@ -1,0 +1,35 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='scraper.js') }}"></script>
+
+<script type="text/javascript">
+  var progress = {{progress}};
+
+  function showSummary(){
+
+    var div = document.getElementById('summaryDiv');
+    div.innerHTML = 'DONE!!';
+  }
+
+  $( document ).ready(function(){
+    //Fetch content and fill blocklist and DOM
+    if(progress == 100) showSummary();
+  });
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %}
+  Inventory Rescrape
+{% endblock title_block %}
+
+{% block main_body %}
+<div>
+  Spinner goes here
+  <br>
+  Scrape progress at {{progress}} %
+</div>
+<div id='summaryDiv'>
+</div>
+{% endblock main_body %}

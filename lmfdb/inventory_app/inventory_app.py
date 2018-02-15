@@ -1,6 +1,7 @@
 from flask import render_template, request, url_for, make_response, jsonify, Blueprint
 from flask_login import login_required
 import inventory_viewer
+import inventory_live_data
 import lmfdb_inventory as linv
 import inventory_helpers as ih
 import sys, os
@@ -40,6 +41,15 @@ def show_edit_root():
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 
     return render_template('edit_show_list.html', db_name = None, nice_name=None, listing=listing, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]])
+
+@inventory_app.route('livedata')
+def generate_live_listing():
+    try:
+        results = inventory_live_data.get_db_lists()
+    except ih.ConnectOrAuthFail:
+        linv.log_dest.error("Returning auth fail page")
+        return "{}"
+    return jsonify(results)
 
 #Edit page per DB, lists collections
 @inventory_app.route('<string:id>/')
@@ -193,3 +203,43 @@ def submit_edits():
 
     #Return a redirect to be done on client
     return jsonify({'url':url_for('inventory_app.edit_success'), 'code':302, 'success':True})
+
+#Functions for rescraping etc
+@inventory_app.route('rescrape/')
+@login_required
+def show_rescrape_page():
+    try:
+        listing = inventory_live_data.get_db_lists()
+    except ih.ConnectOrAuthFail as e:
+        linv.log_dest.error("Returning auth fail page")
+
+        new_url = str(request.referrer)
+
+        bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_rescrape_page')]]
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
+
+    return render_template('scrape_main.html', listing=listing, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_rescrape_page')]])
+
+@inventory_app.route('rescrape/progress/<string:uid>/')
+@login_required
+def show_rescrape_poll(uid):
+    try:
+        progress = inventory_live_data.get_progress(uid)
+    except ih.ConnectOrAuthFail as e:
+        linv.log_dest.error("Returning auth fail page")
+
+        new_url = str(request.referrer)
+
+        bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_rescrape_poll', uid=uid)]]
+        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
+        return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
+
+    return render_template('scrape_progress.html', progress=progress, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_rescrape_poll', uid=uid)]])
+
+@inventory_app.route('rescrape/submit', methods=['POST'])
+@login_required
+def submit_rescrape_request():
+    uid = inventory_live_data.get_uid()
+    inventory_live_data.trigger_scrape(request.data.db, request.data.coll)
+    return jsonify({'url':url_for('inventory_app.show_rescrape_poll'), 'uid':uid})
