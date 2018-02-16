@@ -235,11 +235,19 @@ def show_rescrape_poll(uid):
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 
-    return render_template('scrape_progress.html', progress=progress, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_rescrape_poll', uid=uid)]])
+    return render_template('scrape_progress.html', uid=uid, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_rescrape_poll', uid=uid)]])
+
+@inventory_app.route('rescrape/progress/<string:uid>/monitor/')
+@login_required
+def fetch_progress_data(uid):
+    try:
+        progress = inventory_live_data.get_progress(uid)
+    except ih.ConnectOrAuthFail as e:
+        progress = {'n_colls':0, 'curr_coll':0, 'progress_in_current':0}
+    return jsonify(progress)
 
 @inventory_app.route('rescrape/submit', methods=['POST'])
 @login_required
 def submit_rescrape_request():
-    uid = inventory_live_data.get_uid()
-    inventory_live_data.trigger_scrape(request.data.db, request.data.coll)
-    return jsonify({'url':url_for('inventory_app.show_rescrape_poll'), 'uid':uid})
+    uid = inventory_live_data.trigger_scrape(request.data)
+    return jsonify({'url':url_for('inventory_app.show_rescrape_poll', uid=uid), 'uid':uid})

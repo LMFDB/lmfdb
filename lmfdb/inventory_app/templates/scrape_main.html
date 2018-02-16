@@ -5,6 +5,7 @@
 
 <script type="text/javascript">
 
+  var scrapeDest = "{{ url_for('inventory_app.submit_rescrape_request') }}";
 
 </script>
 {% endblock extra_script %}
@@ -16,7 +17,6 @@
 {% block main_body %}
   <div id='dialog'></div>
   <div class = 'listing'>
-  <!-- Omit ops dbs  Note if you set one to 'ops' and refresh it will be GONE!! This is why there's a confirmation dialog-->
   {% for item in listing %}
   <div class = 'unbreaking'>
     <h2>{{item}}</h2>

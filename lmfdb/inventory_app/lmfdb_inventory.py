@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-import json
+import json, yaml
 import logging, logging.handlers
 
 #Contains the general data and functions for all inventory handling
@@ -48,7 +48,7 @@ coll_status = {0: 'live', 1:'ops', 2:'beta', 4: 'old'}
 #Object describing DB structure. This is styled after a relational model
 class db_struc:
     name = 'inventory'
-    n_colls = 7
+    n_colls = 8
     db_ids = {STR_NAME : 'DB_ids', STR_CONTENT : ['_id', 'name', 'nice_name']}
     coll_ids = {STR_NAME : 'collection_ids', STR_CONTENT :['_id', 'db_id', 'name', 'nice_name', 'NOTES', 'INFO', 'scan_date', 'status']}
     fields_auto = {STR_NAME : 'fields_auto', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
@@ -56,6 +56,7 @@ class db_struc:
     record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'coll_id', 'hash', 'name', 'descrip', 'schema', 'count']}
     rollback_human = {STR_NAME : 'rollback', STR_CONTENT:['_id', 'diff']}
     indexes = {STR_NAME : 'indexes', STR_CONTENT :['_id', 'name', 'coll_id', 'keys']}
+    ops = {STR_NAME : 'ops', STR_CONTENT:[]} #Ops has no fixed format
     def get_fields(self, which):
         if which =='auto':
             return self.fields_auto
@@ -80,7 +81,7 @@ ALL_STRUC = db_struc()
 
 _auth_as_edit = False
 _auth_on_remote = False
-def setup_internal_client(remote=True, editor=False):
+def setup_internal_client(remote=False, editor=False):
     """Get mongo connection and set int_client to it"""
 
     #This is a temporary arrangement, to be replaced with LMFDB connection
@@ -93,24 +94,24 @@ def setup_internal_client(remote=True, editor=False):
             #Attempt to connect to LMFDB
             from lmfdb.base import getDBConnection
             int_client=getDBConnection()
-            return True
+#            return True
         else:
-            int_client = MongoClient("localhost", 27017)
-#           int_client = MongoClient("localhost", 37010)
-            return True
+#            int_client = MongoClient("localhost", 27017)
+            int_client = MongoClient("localhost", 37010)
+#            return True
 
 #       Below was old way of doing auth. To be removed when working
-#        pw_dict = yaml.load(open("passwords.yaml"))
+        pw_dict = yaml.load(open("passwords.yaml"))
         #if editor:
         #    key = 'data'
         #    auth_db = 'inventory'
         #else:
         #    key = 'default'
         #    auth_db = 'admin'
-#        auth_db = 'inventory'
+        auth_db = 'inventory'
 #        int_client[auth_db].authenticate(pw_dict[key]['username'], pw_dict[key]['password'])
 #        int_client[auth_db].authenticate(pw_dict['webserver']['username'], pw_dict['webserver']['password'])
-#        int_client[auth_db].authenticate(pw_dict['data']['username'], pw_dict['data']['password'])
+        int_client[auth_db].authenticate(pw_dict['data']['username'], pw_dict['data']['password'])
 
     except Exception as e:
         log_dest.error("Error setting up connection "+str(e))
@@ -228,7 +229,6 @@ def init_run_log(level_name=None):
     if level_name:
         #Print the level change in warning or above mode
         log_dest.warning("Set level to "+level_name)
-
 
 def init_transac_log(level_name=None):
     """ Initialise logger for db transactions """
