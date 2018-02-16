@@ -102,7 +102,7 @@ def generate_inventory():
 
     start_lmfdb_connection()
     connection = jdbs.getDBConnection()
-    result = jdbs.parse_lmfdb_to_json(collections = selected_collections, 
+    result = jdbs.parse_lmfdb_to_json(collections = selected_collections,
         databases = selected_dbs, connection = connection)
 
     if file_output:

@@ -9,7 +9,7 @@ def scrape_worker(db, coll, uuid, connection):
     date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
     invdb =  connection['inventory']
     for el in coll:
-        data = jdbs. parse_collection_info_to_json(db, el, 
+        data = jdbs.parse_collection_info_to_json(db, el,
             connection = connection, date = date)
         iud.upload_collection_structure(invdb, db, el, data)
         iud.upload_collection_indices(invdb, db, el, data)

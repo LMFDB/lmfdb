@@ -195,8 +195,8 @@ def parse_lmfdb_to_json(collections = None, databases = None, connection = None,
                         for el in progress['inprog']:
                             if 'progress' in el.keys():
                                 if el['ns'] == db + "." + coll:
-                                    print("Scanning " + db + "." + coll + " " + 
-                                        unicode(int(el['progress']['done'])) + 
+                                    print("Scanning " + db + "." + coll + " " +
+                                        unicode(int(el['progress']['done'])) +
                                         "\\" + unicode(int(el['progress']['total'])))
                         time.sleep(5)
                     
