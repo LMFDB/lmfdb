@@ -3,6 +3,9 @@ import dbtools
 import id_object
 from lmfdb.base import getDBConnection
 import datetime
+import threading
+import bson
+import time
 
 __version__ = '1.0.0'
 
@@ -110,7 +113,7 @@ def _jsonify_collection_info(coll, dbname = None):
 
     return json_db_data
 
-def parse_collection_info_to_json(dbname, collname, connection = None):
+def parse_collection_info_to_json(dbname, collname, connection = None, retval = None, date = None):
 
     if connection is None:
         connection = getDBConnection()
@@ -119,7 +122,10 @@ def parse_collection_info_to_json(dbname, collname, connection = None):
     coll = connection[dbname][collname]
     json_raw = _jsonify_collection_info(coll, dbstring)
     json_wrap = {dbname:{collname:json_raw}}
-    json_wrap[dbname][collname]['scrape_date'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    if not date:
+        date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    json_wrap[dbname][collname]['scrape_date'] = date
+    if retval is not None: retval['data'] = json_wrap
     return json_wrap
 
 def create_user_template(structure_json, dbname, collname, field_subs = ['type',' example', 'description'],
@@ -138,6 +144,7 @@ def create_user_template(structure_json, dbname, collname, field_subs = ['type',
     for el in note_subs:
         result_json['(NOTES)'][el] = ""
     return result_json
+
 
 def parse_lmfdb_to_json(collections = None, databases = None, connection = None,
                         is_good_database = _is_good_database,
@@ -174,11 +181,26 @@ def parse_lmfdb_to_json(collections = None, databases = None, connection = None,
 
     db_struct = {}
     for db in collections:
+        print('Running ' + db)
         if is_good_database(db):
             for coll in collections[db]:
+                print('Parsing ' + coll)
                 if is_good_collection(db, coll):
-                    merge_dicts(db_struct,parse_collection_info_to_json\
-                                        (db, coll, connection = connection))
+                    mydict={}
+                    mythread = threading.Thread(target = parse_collection_info_to_json, args = [db, coll, connection, mydict])
+                    mythread.start()
+                    while mythread.isAlive():
+                        u=bson.son.SON({"$ownOps":1,"currentOp":1})
+                        progress = connection['admin'].command(u)
+                        for el in progress['inprog']:
+                            if 'progress' in el.keys():
+                                if el['ns'] == db + "." + coll:
+                                    print("Scanning " + db + "." + coll + " " + 
+                                        unicode(int(el['progress']['done'])) + 
+                                        "\\" + unicode(int(el['progress']['total'])))
+                        time.sleep(5)
+                    
+                    merge_dicts(db_struct, mydict['data'])
     return db_struct
 
 def get_lmfdb_databases(connection = None, is_good_database = _is_good_database):
