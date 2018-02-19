@@ -2,15 +2,23 @@ import scripts.reports.jsonify_db_structure as jdbs
 import scripts.reports.inventory_upload_data as iud
 from lmfdb.base import getDBConnection
 import threading
-import datetime
+import bson
+
+def get_scrape_progress(db, coll, connection):
+    u=bson.son.SON({"$ownOps":1,"currentOp":1})
+    progress = connection['admin'].command(u)
+    for el in progress['inprog']:
+        if 'progress' in el.keys():
+            if el['ns'] == db + "." + coll:
+                return int(el['progress']['done']), int(el['progress']['total'])
+    return -1, -1
 
 def scrape_worker(db, coll, uuid, connection):
 
-    date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
     invdb =  connection['inventory']
     for el in coll:
         data = jdbs.parse_collection_info_to_json(db, el,
-            connection = connection, date = date)
+            connection = connection)
         iud.upload_collection_structure(invdb, db, el, data)
         iud.upload_collection_indices(invdb, db, el, data)
 
