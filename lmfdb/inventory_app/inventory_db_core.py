@@ -117,6 +117,7 @@ def get_db(inv_db, name):
 
 def set_db(inv_db, name, nice_name):
     """ Insert a new DB with given name and optional nice name (defaults to equal name), or return id if this exists. """
+#TODO make nice_name parameter optional
     try:
         table_name = inv.ALL_STRUC.db_ids[inv.STR_NAME]
         coll = inv_db[table_name]
@@ -253,6 +254,7 @@ def update_coll(inv_db, id, name=None, nice_name=None, status=None):
     Optional args:
     name -- new name for collection
     nice_name -- new nice_name for collection
+    status -- status code
     """
 
     try:
@@ -527,7 +529,7 @@ def add_index(inv_db, coll_id, index_data):
         inv.log_dest.error("Error getting collection "+str(e))
         return {'err':True, 'id':0, 'exist':False}
     indexes_fields = inv.ALL_STRUC.indexes[inv.STR_CONTENT]
-    record = {indexes_fields[1]:index_data['name']}
+    record = {indexes_fields[1]:index_data['name'], indexes_fields[2]:coll_id}
     #If record exists, just return its ID
     exists_at = coll.find_one(record)
     if exists_at is not None:

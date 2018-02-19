@@ -58,6 +58,28 @@ function getProgress(){
 
 function isComplete(progress){
 
-  if(progress['curr_coll'] == progress['n_colls'] && progress['progress_in_current'] >= 100) return true;
+//  if(progress['curr_coll'] == progress['n_colls'] && progress['progress_in_current'] >= 100) return true;
+  if(progress['progress_in_current'] >= 100) return true;
   return false;
+}
+
+function showSummary(){
+
+  var div = document.getElementById('spinner');
+  div.classList.add('hidden');
+
+  div = document.getElementById('summaryDiv');
+
+  var span = document.createElement('span');
+  span.innerHTML='DONE!</br>';
+  div.appendChild(span);
+  span = document.createElement('span');
+  span.innerHTML = 'The following keys were removed:</br>';
+  div.appendChild(span);
+
+  span = document.createElement('span');
+  span.innerHTML = 'Download this data...:</br>';
+  div.appendChild(span);
+
+
 }
