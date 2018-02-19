@@ -75,11 +75,11 @@ def upload_collection_from_files(db, db_name, coll_name, master_file_name, json_
 
     inv.log_dest.info("Uploading collection structure for "+coll_name)
     structure_data = decoder.decode(read_file(master_file_name))
-    
+
     #Do we need to keep the orphans?
     #orphaned_keys = upload_collection_structure(db, db_name, coll_name, structure_data, fresh=fresh)
     upload_collection_structure(db, db_name, coll_name, structure_data, fresh=fresh)
-    
+
     inv.log_dest.info("Uploading collection description for "+coll_name)
     data = decoder.decode(read_file(json_file_name))
     upload_collection_description(db, db_name, coll_name, data, fresh=fresh)
@@ -148,6 +148,32 @@ def upload_collection_description(db, db_name, coll_name, data, fresh=False):
     except Exception as e:
         inv.log_dest.error("Failed to refresh collection "+str(e))
 
+def upload_all_structure(db, structure_dat):
+    """Upload an everything from a structure json document
+
+        db -- LMFDB connection to inventory database
+        structure_dat -- JSON document containing all db/collections to upload
+    """
+
+    inv.log_dest.info("_____________________________________________________________________________________________")
+    inv.log_dest.info("Processing structure data")
+    n_dbs = len(structure_dat.keys())
+    progress_tracker = 0
+
+    for DB_name in structure_dat:
+        progress_tracker += 1
+        inv.log_dest.info("Uploading " + DB_name+" ("+str(progress_tracker)+" of "+str(n_dbs)+')')
+        invc.set_db(db, DB_name, DB_name)
+
+        for coll_name in structure_dat[DB_name]:
+            inv.log_dest.info("    Uploading collection "+coll_name)
+            orphaned_keys = upload_collection_structure(db, DB_name, coll_name, structure_dat, fresh=False)
+            if len(orphaned_keys) != 0:
+                with open('Orph_'+DB_name+'_'+coll_name+'.json', 'w') as file:
+                    file.write(json.dumps(orphaned_keys))
+                    inv.log_dest.info("          Orphans written to Orph_"+ DB_name+'_'+coll_name+'.json')
+
+
 def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=False):
     """Upload the structure description for a single collection
 
@@ -205,10 +231,11 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
             else:
                 invc.set_record(db, _c_id['id'], coll_entry['records'][record])
 
+        inv.log_dest.info("            Processing indices")
+        upload_indices(db, _c_id['id'], coll_entry['indices'])
+
     except Exception as e:
         inv.log_dest.error("Failed to refresh collection entries "+str(e))
-
-
 
     orphaned_keys = []
     if not fresh:
@@ -248,7 +275,7 @@ def extract_specials(coll_entry):
 
 def upload_collection_indices(db, db_name, coll_name, structure_dat):
     """Extract index data and upload"""
-    print db_name, coll_name
+
     try:
         db_info = invc.get_db(db, db_name)
         coll_info = invc.get_coll(db, db_info['id'], coll_name)
@@ -450,6 +477,13 @@ def recreate_rollback_table(inv_db, sz):
         pass
 
     inv_db.create_collection(table_name, capped=True, size=sz)
+
+#-----Orphan handling Functions --------------
+
+def summarise_orphans(orphan_data):
+
+    return orphan_data
+
 
 if __name__ == "__main__":
 

@@ -42,9 +42,10 @@ index_fields = {'name':-1, 'keys':-2}
 def index_field_order():
     return sorted(index_fields, key = lambda s : abs(index_fields.get(s)))
 
-coll_status = {0: 'live', 1:'ops', 2:'beta', 4: 'old'}
+coll_status = {0: 'live', 1:'ops', 2:'beta', 4: 'old', 5:'gone'}
 #Live is normal. Ops includes any stats, rand etc. Beta is beta status, not yet on prod
 #Old means deprecated. Probably want to show only live and beta, and flag beta
+#Gone means a collection in inventory which is no longer in live data
 #Object describing DB structure. This is styled after a relational model
 class db_struc:
     name = 'inventory'

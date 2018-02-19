@@ -2,6 +2,7 @@
 from scripts.reports.jsonify_db_structure import get_lmfdb_collections as glc
 import json
 import inventory_helpers as ih
+import inventory_viewer as iv
 import lmfdb_inventory as inv
 import inventory_db_core as idc
 import uuid
@@ -11,6 +12,8 @@ import datetime
 def get_db_lists():
     """Get list of all available DBs and Collections"""
     return glc()
+
+#Scraping helpers and main functions
 
 def get_uid():
     """Get a uid for a scrape process"""
@@ -170,3 +173,58 @@ def update_scrape_progress(db, coll, uid, complete=None, running=None):
     except Exception as e:
         inv.log_dest.error("Error updating progress "+ str(e))
         return False
+
+#Other live DB functions
+
+def check_for_gone(lmfdb, db_name, coll_name):
+    """Check for a collection db_name.coll_name in live db"""
+
+    try:
+        db = lmfdb[db_name]
+        coll = db[coll_name]
+        results = list(coll.find())
+        return results == []
+    except:
+        pass
+    return False
+
+def mark_all_gone(main_db):
+    """Set status of all removed collections to gone"""
+
+    inv_db = main_db[inv.get_inv_db_name()]
+    dbs = iv.gen_retrieve_db_listing(inv_db)
+    all_colls = get_db_lists()
+
+    gone_code = ih.status_to_code('gone')
+    for db in dbs:
+        try:
+            cc = all_colls[db[0]]
+        except:
+            continue
+        colls = iv.gen_retrieve_db_listing(inv_db, db[0])
+        db_id = idc.get_db_id(inv_db, db[0])
+        for coll in colls:
+            gone = not (coll[0] in all_colls[db[0]])
+            if gone:
+                coll_id = idc.get_coll_id(inv_db, db_id['id'], coll[0])
+                coll_id = idc.get_coll_id(inv_db, db_id['id'], coll[0])
+                idc.update_coll(inv_db, coll_id['id'], status=gone_code)
+
+def remove_all_gone():
+    """Remove inventory data for 'gone' collections"""
+    pass
+
+def update_gone_lists():
+    """Remove any collections that are flagged as gone, THEN check for any others that are gone
+
+    Call twice in succession to completely get rid of any gone collection data
+    """
+    try:
+        got_client = inv.setup_internal_client(editor=True)
+        assert(got_client == True)
+        main_db = inv.int_client
+    except Exception as e:
+        inv.log_dest.error("Error getting Db connection "+ str(e))
+        return False
+
+    mark_all_gone(main_db)
