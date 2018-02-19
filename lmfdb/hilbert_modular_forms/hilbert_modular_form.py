@@ -20,16 +20,13 @@ from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, 
 
 def db_forms():
     hmfs = getDBConnection().hmfs
-    if 'hecke' in hmfs.collection_names():
-        return getDBConnection().hmfs.forms.search
+    if 'forms' in hmfs.collection_names():
+        return hmfs.forms
     else:
-        return getDBConnection().hmfs.forms
+        return hmfs.forms.search
 
 def db_fields():
     return getDBConnection().hmfs.fields
-
-def db_search():
-    return getDBConnection().hmfs.forms.search
 
 def db_hecke():
     hmfs = getDBConnection().hmfs
@@ -64,7 +61,7 @@ hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A 
 
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
-    return hilbert_modular_form_by_label( random_value_from_collection( db_search(), 'label' ) )
+    return hilbert_modular_form_by_label( random_value_from_collection( db_forms(), 'label' ) )
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*', '')
@@ -122,7 +119,7 @@ def split_full_label(lab):
 
 def hilbert_modular_form_by_label(lab):
     if isinstance(lab, basestring):
-        res = db_search().find_one({'label': lab},{'label':True})
+        res = db_forms().find_one({'label': lab},{'label':True})
     else:
         res = lab
         lab = res['label']
@@ -171,7 +168,7 @@ def hilbert_modular_form_search(**args):
     start = parse_start(info)
 
     info['query'] = dict(query)
-    res = db_search().find(
+    res = db_forms().find(
         query).sort([('deg', pymongo.ASCENDING), ('disc', pymongo.ASCENDING), ('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
     nres = res.count()
     if(start >= nres):
@@ -382,7 +379,7 @@ def render_hmf_webpage(**args):
 
     t = "Hilbert Cusp Form %s" % info['label']
 
-    forms_space = db_search().find(
+    forms_space = db_forms().find(
         {'field_label': data['field_label'], 'level_ideal': data['level_ideal']},{'dimension':True})
     dim_space = 0
     for v in forms_space:
