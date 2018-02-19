@@ -10,18 +10,21 @@ import time
 __version__ = '1.0.0'
 
 def _is_good_database(name):
+    """ Function to test if a database is one to scan """
     bad=['admin','test','contrib','local','userdb','upload', 'inventory']
     if name in bad:
       return False
     return True
 
 def _is_good_collection(dbname, name):
+    """ Function to test if a collection should be scanned """
     if '.' in name:
       return False
     return True
 
 
 def merge_dicts(d1, d2):
+    """ Merge two dictionaries into one """
     for key, value2 in d2.items():
         if key in d1:
             if type(value2) is dict:
@@ -30,6 +33,9 @@ def merge_dicts(d1, d2):
             d1[key] = value2
 
 def _get_db_records(coll):
+
+   """ Routine to execute the MapReduce operation on a specified collection 
+       object """
 
     mapper = Code("""
                   function() {
@@ -55,6 +61,9 @@ def _get_db_records(coll):
     return results
 
 def _jsonify_collection_info(coll, dbname = None):
+
+    """Private function to turn information about one collection into base 
+       JSON """
 
     if dbname is None:
         dbname = coll.name
@@ -115,6 +124,8 @@ def _jsonify_collection_info(coll, dbname = None):
 
 def parse_collection_info_to_json(dbname, collname, connection = None, retval = None, date = None):
 
+    """ Front end routine to create JSON information about a collection """
+
     if connection is None:
         connection = getDBConnection()
 
@@ -128,8 +139,10 @@ def parse_collection_info_to_json(dbname, collname, connection = None, retval = 
     if retval is not None: retval['data'] = json_wrap
     return json_wrap
 
-def create_user_template(structure_json, dbname, collname, field_subs = ['type',' example', 'description'],
+def create_user_template(structure_json, dbname, collname, field_subs = ['tiype',' example', 'description'],
                          info_subs = ['description', 'status','contact','code'], note_subs = ['description']):
+
+   """Legacy routine to create blank user specified data JSON"""
 
     result_json = {}
     substr = structure_json[dbname][collname]
@@ -149,6 +162,8 @@ def create_user_template(structure_json, dbname, collname, field_subs = ['type',
 def parse_lmfdb_to_json(collections = None, databases = None, connection = None,
                         is_good_database = _is_good_database,
                         is_good_collection = _is_good_collection):
+
+    """Legacy routine to scan any specified chunk of LMFDB to JSON"""
 
     if connection is None:
         connection = getDBConnection()
@@ -204,6 +219,8 @@ def parse_lmfdb_to_json(collections = None, databases = None, connection = None,
     return db_struct
 
 def get_lmfdb_databases(connection = None, is_good_database = _is_good_database):
+    """ Routine to get list of available databases """
+
     if connection is None:
         connection = getDBConnection()
     el = []
@@ -215,6 +232,9 @@ def get_lmfdb_databases(connection = None, is_good_database = _is_good_database)
 
 def get_lmfdb_collections(connection = None, databases = None, is_good_database =
                           _is_good_database, is_good_collection = _is_good_collection):
+
+    """Routine to get a dictionary with keys of all databases and member lists
+       of collections in that database"""
 
     if connection is None:
         connection = getDBConnection()
