@@ -27,9 +27,9 @@ addons:
 install:
     # assert parallel
     - parallel --version
-    # install the latest pyflakes 
+    # install the latest pyflakes
     - pip install pyflakes --user
-    # install the latest codecov 
+    # install the latest codecov
     - pip install codecov --user
     - export PATH=${HOME}/.local/bin/:${PATH}
     # install SAGE with GAP already built in
@@ -39,9 +39,10 @@ install:
     - export SAGE_INSTALL_GCC=no
     - export MAKE='make -j4'
     - wget  --no-verbose https://storage.googleapis.com/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
-    - time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
+    # travis_wait extends the default 10 minute timeout to 30 minutes
+    - travis_wait 30 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
     # trigger the patch once script
-    - ${SAGE} --version > patch_once_log 
+    - ${SAGE} --version > patch_once_log
     # assert that we have GAP
     - ${SAGE} -python -c 'from sage.all import gap;G = gap.TransitiveGroup(9, 2); print G'
     # install LMFDB requirements
@@ -60,7 +61,7 @@ before_script:
     - export TESTMATCH='"(?:^|\/)[Tt]est_"'
     - export COVERAGE='--with-coverage  --cover-package=lmfdb'
     # assert that m0.lmfdb.xyz accepts our connections
-    # - printf "db\nexit" | mongo m0.lmfdb.xyz 
+    - nc -vz  m0.lmfdb.xyz 27017
     # create a list of files and folder where we will run the nosetests
     - ls  lmfdb/*.py  > list
     - ls -d lmfdb/*/ >> list
@@ -68,20 +69,19 @@ before_script:
     - free -m
     # what is the load on the server
     - uptime
-    
 
 script:
     # run pyflakes
     - pyflakes lmfdb/
     # run nosetests in parallel with the aid of parallel
     # we cannot use the option --processes in nosetests, as MongoDB doesn't support forking
-    # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once 
+    # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once
     - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 4 --results nosetests  --progress --verbose -a list ${SAGE_DIR}/local/bin/nosetests -v -s --testmatch=${TESTMATCH} ${COVERAGE}'
 
 after_failure:
     # if some process failed, it will be clear in joblog which one failed
     - cat joblog
-    # print all the stdout and stderr of nosetests run 
+    # print all the stdout and stderr of nosetests run
     - find nosetests -type f -exec printf "\n\n filename = %s\n" {} \; -exec cat {} \;
 
 after_success:
