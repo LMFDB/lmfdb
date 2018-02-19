@@ -1,0 +1,43 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='scraper.js') }}"></script>
+
+<script type="text/javascript">
+  var uid = "{{uid}}";
+
+  function showSummary(){
+
+    var div = document.getElementById('summaryDiv');
+    div.innerHTML = 'DONE!!';
+  }
+
+  function showProgress(progress){
+    var span = document.getElementById('progressSpan');
+    console.log(progress);
+    span.innerHTML = progress['progress_in_current']+"% done on collection "+progress['curr_coll']+" of "+progress['n_colls'];
+
+    if(isComplete(progress)) showSummary();
+  }
+
+  $( document ).ready(function(){
+    //Fetch content and fill blocklist and DOM
+    getProgress();
+  });
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %}
+  Inventory Rescrape
+{% endblock title_block %}
+
+{% block main_body %}
+<div>
+  Spinner goes here
+  <br>
+  <span id='progressSpan'></span>
+</div>
+<div id='summaryDiv'>
+</div>
+{% endblock main_body %}

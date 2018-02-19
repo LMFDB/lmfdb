@@ -7,7 +7,6 @@ from inventory_db_inplace import update_fields
 from copy import deepcopy
 from lmfdb.utils import comma
 
-
 #Functions to populate viewer pages
 def get_nicename(db_name, collection_name):
     """Return the nice_name string for given db/coll pair"""
@@ -38,7 +37,7 @@ def gen_retrieve_db_listing(db, db_name=None):
 
     db -- LMFDB connection to inventory db
     db_name -- If absent, get listing of all dbs, if present, get listing of collections in named db
-    
+
     NB connection must have been setup and checked!
     """
 
@@ -249,7 +248,7 @@ def get_indices_for_display(full_name):
     except Exception as e:
         raise ih.ConnectOrAuthFail("")
         return None
-    
+
     try:
         parts = ih.get_description_key_parts(full_name)
         records = retrieve_indices(db, parts[0], parts[1])

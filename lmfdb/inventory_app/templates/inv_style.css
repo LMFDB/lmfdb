@@ -232,3 +232,25 @@ h2
     font-size:120%;
     font-weight: bold;
 }
+
+.upload_box
+{
+    min-width : 40em;
+    min-height : 12em;
+    display : block;
+    margin : 0 0 1em 0;
+}
+.upload_div
+{
+  padding: 5px 5px 3em 5px;
+
+}
+
+.scrape_button {
+  min-width: 50px;
+  padding: none;
+  margin-left:2px;
+  height: 2em;
+  vertical-align: middle;
+  float:left;
+}
