@@ -161,7 +161,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T'):
             this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
             this_number_field = NumberField(this_poly, "a")
             this_gal = this_number_field.galois_group(type='pari')
-            this_t_number = this_gal.group()._pari_()[2].sage()
+            this_t_number = this_gal.group().__pari__()[2].sage()
             gal_list.append([this_degree, this_t_number])
         vcf = v[0].list()
         started = False
@@ -700,7 +700,8 @@ class WebG2C(object):
         self.properties = properties = [('Label', data['label'])]
         if is_curve:
             self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn'], data['rat_pts'].split(',') if 'rat_pts' in data else []))
-            plot_link = '<img src="%s" width="200" height="150"/>' % self.plot
+            plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
+
             properties += [
                 (None, plot_link),
                 ('Conductor',str(data['cond'])),

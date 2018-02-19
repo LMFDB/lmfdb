@@ -129,7 +129,7 @@ def makeLfromdata(L):
     if 'credit' in data.keys():
         L.credit = data['credit']
 
-    # Dirichlet coeffcients
+    # Dirichlet coefficients
     if 'dirichlet_coefficients' in data:
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     else:
@@ -437,6 +437,72 @@ class Lfunction_Dirichlet(Lfunction):
         self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" +
                                  ", " + title_end)
         self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
+
+
+#############################################################################
+
+
+class Lfunction_from_db(Lfunction):
+    """
+    Class representing a general L-function, to be retrieved from the database
+    based on its lhash.
+
+    Compulsory parameters: Lhash
+    """
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
+        validate_required_args('Unable to construct L-function from lhash.',
+                               kwargs, 'Lhash')
+        self._Ltype = "general"
+        self.numcoeff = 30
+
+        # this controls data on the Euler product, but is not stored
+        # systematically in the database. Default to False until this
+        # is retrievable from the database.
+        self.langlands = False
+
+        self.__dict__.update(kwargs)
+        self.lfunc_data = LfunctionDatabase.get_lfunction_by_Lhash(self.Lhash)
+        makeLfromdata(self)
+        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"
+        self.texname = "L(s)"
+        self.texname_arithmetic = "L(s)"
+        self.texnamecompleted1ms = "\\Lambda(1-s)"
+        self.texnamecompleteds_arithmetic = "\\Lambda(s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
+        self.texnamecompleteds = "\\Lambda(s)"
+        self.info = self.general_webpagedata()
+        self._set_title()
+        self.credit = ''
+        self.label = ''
+
+    def _set_title(self):
+        '''
+        If `charactermodulus` and `characternumber` are defined, make a title
+        which includes the character. Otherwise, make a title without character.
+        '''
+        try:
+            chilatex = ("$\chi_{" + str(self.charactermodulus) +
+                        "} (" + str(self.characternumber) +", \cdot )$")
+        except KeyError:
+            chilatex = ''
+        if chilatex:
+            title_end = (
+                    " of degree {degree}, weight {weight},"
+                    " conductor {conductor}, and character {character}"
+                    ).format(degree=self.degree, weight=self.motivic_weight,
+                            conductor=self.level, character=chilatex)
+        else:
+            title_end = (
+                    " of degree {degree}, weight {weight},"
+                    " and conductor {conductor}"
+                    ).format(degree=self.degree, weight=self.motivic_weight,
+                            conductor=self.level)
+
+        self.info['title_arithmetic'] = ("L-function" + title_end)
+        self.info['title_analytic'] = ("L-function" + title_end)
+
+
 
 
 #############################################################################

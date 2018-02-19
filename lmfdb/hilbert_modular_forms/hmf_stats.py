@@ -14,7 +14,11 @@ def field_sort_key(F):
 logger = make_logger("hmf")
 
 def db_forms_stats():
-    return getDBConnection().hmfs.forms.search.stats
+    hmfs = getDBConnection().hmfs
+    if 'forms.stats' in hmfs.collection_names():
+        return hmfs.forms.stats
+    else:
+        return hmfs.forms.search.stats
 
 the_HMFstats = None
 
