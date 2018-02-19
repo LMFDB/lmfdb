@@ -6,12 +6,6 @@
 <script type="text/javascript">
   var uid = "{{uid}}";
 
-  function showSummary(){
-
-    var div = document.getElementById('summaryDiv');
-    div.innerHTML = 'DONE!!';
-  }
-
   function showProgress(progress){
     var span = document.getElementById('progressSpan');
     console.log(progress);
@@ -34,8 +28,10 @@
 
 {% block main_body %}
 <div>
-  Spinner goes here
-  <br>
+  <div id='spinner'>
+  <img src="{{url_for('inventory_app.static', filename='spinner.gif')}}" width=100>
+  </div>
+  <br></br>
   <span id='progressSpan'></span>
 </div>
 <div id='summaryDiv'>

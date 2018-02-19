@@ -117,6 +117,7 @@ def get_db(inv_db, name):
 
 def set_db(inv_db, name, nice_name):
     """ Insert a new DB with given name and optional nice name (defaults to equal name), or return id if this exists. """
+#TODO make nice_name parameter optional
     try:
         table_name = inv.ALL_STRUC.db_ids[inv.STR_NAME]
         coll = inv_db[table_name]

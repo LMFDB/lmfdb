@@ -8,6 +8,19 @@ import inventory_db_core as idc
 import uuid
 import datetime
 
+ops_sz = 2000000
+null_uid = '00000000-0000-0000-0000-000000000000'
+
+#Deal with ops collection
+
+def empty_ops(inv_db):
+
+    try:
+        inv_db['ops'].drop()
+        inv_db.create_collection('ops', capped=True, size=ops_sz)
+    except:
+        pass
+
 #Function to get list a list of all available db/collections
 def get_db_lists():
     """Get list of all available DBs and Collections"""
@@ -29,7 +42,7 @@ def trigger_scrape(data):
     if(cont):
         return uid
     else:
-        return "0"
+        return uuid.UUID(null_uid)
 
 def get_progress(uid):
     """Get progress of scrape with uid"""
@@ -52,15 +65,21 @@ def get_progress(uid):
         if item['running'] : curr_item = item
 
     if curr_item:
-        prog_in_curr = get_progress_from_db(uid, idc.get_db_name(inv_db, curr_item['db']), idc.get_coll_name(inv_db, curr_item['coll']))
+        prog_in_curr = get_progress_from_db(inv_db, uid, curr_item['db'], curr_item['coll'])
     else:
         prog_in_curr = 0
 
     return {'n_colls':n_scrapes, 'curr_coll':curr_coll, 'progress_in_current':prog_in_curr}
 
-def get_progress_from_db(uid, db, coll):
+def get_progress_from_db(inv_db, uid, db_id, coll_id):
     """Query db to see state of current scrape"""
 
+#    scrapes = inv_db['ops'].find({'uid':uuid.UUID(uid), 'db':db_id, 'coll':coll_id})
+#    now = datetime.datetime.now()
+#    for item in scrapes:
+#        if (now - item['time']).total_seconds() > 5:
+#            return 100
+    #diff = now -
     return 40
 
 def register_scrape(db, coll, uid):
@@ -85,13 +104,14 @@ def register_scrape(db, coll, uid):
                 ok = check_and_insert_scrape_record(inv_db, db_id, coll_id, uid) and ok
         else:
             coll_id = idc.get_coll_id(inv_db, db_id, coll)
+            coll_id = coll_id['id']
             ok = check_and_insert_scrape_record(inv_db, db_id, coll_id, uid) and ok
 
     except Exception as e:
         #Either failed to connect etc, or are already scraping
         return False
 
-    return True
+    return ok
 
 def check_if_scraping(inv_db, record):
 
@@ -126,7 +146,7 @@ def check_and_insert_scrape_record(inv_db, db_id, coll_id, uid):
     is_scraping = check_if_scraping(inv_db, record) or check_if_scraping_queued(inv_db, record)
     if is_scraping : return False
 
-    time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    time = datetime.datetime.now()
     record = {'db':db_id, 'coll':coll_id, 'uid':uid, 'time':time, 'running':False, 'complete':False}
     #Db and collection ids. UID for scrape process. Time triggered. If this COLL is being scraped. If this coll hass been done
     insert_scrape_record(inv_db, record)
@@ -146,7 +166,7 @@ def update_scrape_progress_helper(inv_db, db_id, coll_id, uid, complete=None, ru
     try:
         rec_find = {'db':db_id, 'coll':coll_id, 'uid':uid}
         rec_set = {}
-        if new_prog:
+        if complete:
             rec_set['complete'] = complete
         if running:
             rec_set['running'] = running
@@ -228,3 +248,19 @@ def update_gone_lists():
         return False
 
     mark_all_gone(main_db)
+
+#Other scraping result handling
+
+def store_orphans(inv_db, db_id, coll_id, uid, orphan_document):
+    """Store orphan info into ops table"""
+    try:
+        record = {'db':db_id, 'coll':coll_id, 'uid':uuid.UUID(uid), 'orphans':orphan_document}
+        inv_db['ops'].insert_one(record)
+    except Exception as e:
+        inv.log_dest.error('Store failed with '+str(e))
+        db_name = idc.get_db_name(inv_db, db_id)
+        coll_name = idc.get_coll_name(inv_db, coll_id)
+        filename = 'Orph_'+db_name['name']+'_'+coll_name['name']+'.json'
+        with open(filename, 'w') as file:
+            file.write(json.dumps(orphan_document))
+        inv.log_dest.error('Failed to store orphans, wrote to file '+filename)
