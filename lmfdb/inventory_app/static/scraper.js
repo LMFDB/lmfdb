@@ -39,6 +39,10 @@ function sendRescanRequest(info, dest){
   XHR.send(responseText);
 }
 
+function startProgressMeter(){
+  getProgress();
+}
+
 function getProgress(){
 
   var current_url = window.location.href;
@@ -50,18 +54,32 @@ function getProgress(){
   XHR.addEventListener('load', function(event) {
     //On success fill in progress
     var data = JSON.parse(XHR.response);
+    checkCompletion(data);
+    tickMeter(data);
     showProgress(data);
   });
 
   XHR.send('');
 }
 
+function tickMeter(progress){
+  //Queue next progress check if needed
+  if(isComplete(progress)) return;
+
+  waitTime = waitTime * 2;
+  if(waitTime >= maxWait) waitTime = maxWait;
+  setTimeout(getProgress, waitTime*1000);
+}
+
+function checkCompletion(progress){
+
+   if(isComplete(progress)) addSummary();
+}
+
 function showProgress(progress){
   var span = document.getElementById('progressSpan');
   console.log(progress);
   span.innerHTML = progress['progress_in_current']+"% done on collection "+progress['curr_coll']+" of "+progress['n_colls'];
-
-  if(isComplete(progress)) addSummary();
 }
 
 function isComplete(progress){
