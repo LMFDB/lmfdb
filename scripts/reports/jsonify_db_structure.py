@@ -34,7 +34,7 @@ def merge_dicts(d1, d2):
 
 def _get_db_records(coll):
 
-   """ Routine to execute the MapReduce operation on a specified collection 
+    """ Routine to execute the MapReduce operation on a specified collection 
        object """
 
     mapper = Code("""
@@ -142,7 +142,7 @@ def parse_collection_info_to_json(dbname, collname, connection = None, retval = 
 def create_user_template(structure_json, dbname, collname, field_subs = ['tiype',' example', 'description'],
                          info_subs = ['description', 'status','contact','code'], note_subs = ['description']):
 
-   """Legacy routine to create blank user specified data JSON"""
+    """Legacy routine to create blank user specified data JSON"""
 
     result_json = {}
     substr = structure_json[dbname][collname]
