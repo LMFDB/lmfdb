@@ -5,6 +5,8 @@ import inventory_helpers as ih
 import inventory_viewer as iv
 import lmfdb_inventory as inv
 import inventory_db_core as idc
+from scrape_helpers import *
+from scrape_frontend import scrape_and_upload_threaded as sut
 import uuid
 import datetime
 
@@ -37,9 +39,14 @@ def trigger_scrape(data):
 
     data = json.loads(data)
     uid = get_uid()
-    cont = register_scrape(data['data']['db'], data['data']['coll'], uid)
-    #Spawn scraper somehow here, as long as cont is True
+    db = data['data']['db']
+    coll = data['data']['coll']
+
+    #null_all_scrapes(db, coll)
+    cont = register_scrape(db, coll, uid)
+    coll_list = [coll]
     if(cont):
+        sut(db, coll_list, uid)
         return uid
     else:
         return uuid.UUID(null_uid)
@@ -67,132 +74,25 @@ def get_progress(uid):
     if curr_item:
         prog_in_curr = get_progress_from_db(inv_db, uid, curr_item['db'], curr_item['coll'])
     else:
-        prog_in_curr = 0
+        #Nothing running, so return
+        prog_in_curr = 100 * (curr_coll == n_scrapes)
 
     return {'n_colls':n_scrapes, 'curr_coll':curr_coll, 'progress_in_current':prog_in_curr}
 
 def get_progress_from_db(inv_db, uid, db_id, coll_id):
     """Query db to see state of current scrape"""
 
-#    scrapes = inv_db['ops'].find({'uid':uuid.UUID(uid), 'db':db_id, 'coll':coll_id})
+    scrapes = inv_db['ops'].find({'uid':uuid.UUID(uid), 'db':db_id, 'coll':coll_id})
 #    now = datetime.datetime.now()
-#    for item in scrapes:
+    curr = 0
+    n = 0
+    for item in scrapes:
+        if item['complete'] : curr = curr + 1
+        n = n + 1
 #        if (now - item['time']).total_seconds() > 5:
 #            return 100
     #diff = now -
-    return 40
-
-def register_scrape(db, coll, uid):
-    """Create a suitable inventory entry for the scrape"""
-
-    try:
-        got_client = inv.setup_internal_client(editor=True)
-        assert(got_client == True)
-        inv_db = inv.int_client[inv.get_inv_db_name()]
-    except Exception as e:
-        inv.log_dest.error("Error getting Db connection "+ str(e))
-        return False
-    try:
-        db_id = idc.get_db_id(inv_db, db)
-        db_id = db_id['id']
-        ok = True
-
-        if not coll:
-            all_colls = idc.get_all_colls(inv_db, db_id)
-            for coll in all_colls:
-                coll_id = coll['_id']
-                ok = check_and_insert_scrape_record(inv_db, db_id, coll_id, uid) and ok
-        else:
-            coll_id = idc.get_coll_id(inv_db, db_id, coll)
-            coll_id = coll_id['id']
-            ok = check_and_insert_scrape_record(inv_db, db_id, coll_id, uid) and ok
-
-    except Exception as e:
-        #Either failed to connect etc, or are already scraping
-        return False
-
-    return ok
-
-def check_if_scraping(inv_db, record):
-
-    coll = inv_db['ops']
-    record['running'] = True
-    result = coll.find_one(record)
-
-    return result is not None
-
-def check_if_scraping_queued(inv_db, record):
-
-    coll = inv_db['ops']
-    record['running'] = False
-    record['complete'] = False
-    result = coll.find_one(record)
-
-    return result is not None
-
-def check_if_scraping_done(inv_db, record):
-
-    coll = inv_db['ops']
-    record['running'] = False
-    record['complete'] = True
-    result = coll.find_one(record)
-
-    return result is not None
-
-def check_and_insert_scrape_record(inv_db, db_id, coll_id, uid):
-
-    record = {'db':db_id, 'coll':coll_id}
-    #Is this either scraping or queued
-    is_scraping = check_if_scraping(inv_db, record) or check_if_scraping_queued(inv_db, record)
-    if is_scraping : return False
-
-    time = datetime.datetime.now()
-    record = {'db':db_id, 'coll':coll_id, 'uid':uid, 'time':time, 'running':False, 'complete':False}
-    #Db and collection ids. UID for scrape process. Time triggered. If this COLL is being scraped. If this coll hass been done
-    insert_scrape_record(inv_db, record)
-    return True
-
-def insert_scrape_record(inv_db, record):
-    """Insert the scraped record"""
-
-    coll = inv_db['ops']
-    result = coll.insert_one(record)
-    return result
-
-def update_scrape_progress_helper(inv_db, db_id, coll_id, uid, complete=None, running=None):
-    """Update the stored progress value
-    If running is provided, then set it.
-    """
-    try:
-        rec_find = {'db':db_id, 'coll':coll_id, 'uid':uid}
-        rec_set = {}
-        if complete:
-            rec_set['complete'] = complete
-        if running:
-            rec_set['running'] = running
-        if rec_set:
-            inv_db['ops'].find_one_and_update(rec_find, {"$set":rec_set})
-    except:
-        pass
-
-def update_scrape_progress(db, coll, uid, complete=None, running=None):
-    """Update progress of scrape from db/coll names and uid """
-
-    try:
-        got_client = inv.setup_internal_client(editor=True)
-        assert(got_client == True)
-        inv_db = inv.int_client[inv.get_inv_db_name()]
-    except Exception as e:
-        inv.log_dest.error("Error getting Db connection "+ str(e))
-        return False
-
-    try:
-        db_id = idc.get_db_id(inv_db, db)
-        coll_id = idc.get_coll_id(inv_db, db_id, coll)
-        update_scrape_progress_helper(inv_db, db_id, coll_id, uid, complete=complete, running=running)
-    except Exception as e:
-        inv.log_dest.error("Error updating progress "+ str(e))
-        return False
+    return 100 * (n == curr)
 
 #Other live DB functions
 

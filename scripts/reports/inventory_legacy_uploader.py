@@ -3,7 +3,7 @@ import lmfdb.inventory_app.inventory_helpers as ih
 import lmfdb.inventory_app.lmfdb_inventory as inv
 import lmfdb.inventory_app.inventory_db_core as invc
 import datetime
-from scripts.reports.inventory_upload_data import *
+from lmfdb.inventory_app.inventory_upload_data import *
 
 def upload_all_structure(db, structure_dat):
     """Upload an everything from a structure json document

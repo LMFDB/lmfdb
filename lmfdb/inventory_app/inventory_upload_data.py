@@ -1,8 +1,8 @@
 
 import json
-import lmfdb.inventory_app.inventory_helpers as ih
-import lmfdb.inventory_app.lmfdb_inventory as inv
-import lmfdb.inventory_app.inventory_db_core as invc
+import inventory_helpers as ih
+import lmfdb_inventory as inv
+import inventory_db_core as invc
 import datetime
 
 #TODO this should log to its own logger
@@ -25,7 +25,8 @@ def upload_scraped_data(structure_data, uid):
         inv.log_dest.error("Error getting Db connection "+ str(e))
         return False
 
-    upload_scraped_inventory(inv_db, structure_data, uid)
+    inv.log_dest.warning('In upload with '+str(uid))
+    #upload_scraped_inventory(inv_db, structure_data, uid)
 
 def upload_scraped_inventory(db, structure_dat, uid):
     """Upload a json structure document and store any oprhans

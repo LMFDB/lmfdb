@@ -1,7 +1,7 @@
 import scripts.reports.jsonify_db_structure as jdbs
-import scripts.reports.inventory_upload_data as iud
+import inventory_upload_data as iud
 from lmfdb.base import getDBConnection
-from lmfdb.inventory_app.inventory_live_data import update_scrape_progress
+from scrape_helpers import update_scrape_progress
 import threading
 import bson
 
@@ -31,7 +31,7 @@ def scrape_worker(db, coll, uuid, connection):
        coll - List of collection names as strings to scan. Must be list even
               if only scanning one collection
        uuid - String containing UUID associated with scrape operation
-       connection - MongoDB connection object. Passed through from 
+       connection - MongoDB connection object. Passed through from
                     scrape_and_upload_threaded
     """
 
