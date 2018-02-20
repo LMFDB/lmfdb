@@ -40,9 +40,13 @@ def authenticate():
 
 print "setting hmfs, fields and forms"
 hmfs = C.hmfs
+# forms (used to be forms.search) contains all data except eigenvalues
+if 'forms' in hmfs.collection_names():
+    forms = hmfs.forms
+else:
+    forms = hmfs.forms.search
 fields = hmfs.fields
-forms = hmfs.forms.search
-hecke = hmfs.hecke
+hecke = hmfs.hecke        # contains eigenvalues
 nfcurves = C.elliptic_curves.nfcurves
 
 # Cache of WebNumberField and FieldData objects to avoid re-creation
@@ -115,7 +119,7 @@ def conjform_label(f, ig, cideals):
 
 def conjform(f, h, g, ig, cideals, cprimes, F):
     """
-    f is a 'short' newform from the forms.search collection;
+    f is a 'short' newform from the forms collection;
     h is its hecke data from the hecke collection
     g is an tuomorphism of the base field, ig it index in auts
     cideals, cprimes are the lists of conjugated ideals and primes
