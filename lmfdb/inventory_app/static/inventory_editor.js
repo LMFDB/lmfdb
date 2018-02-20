@@ -136,24 +136,6 @@ function exportAsJson(){
 
 }
 
-function saveTextAsFile(textToWrite, filename){
-    /* globals destroyClickedElement, Blob*/
-        //Create file and offer for "download"
-        //Borrowed and slightly adapted from internet postings
-        function destroyClickedElement(event){
-                  document.body.removeChild(event.target);
-              }
-        var textFileAsBlob = new Blob([textToWrite], {type:'text/plain'});
-        var downloadLink = document.createElement("a");
-        downloadLink.download = filename;
-        downloadLink.innerHTML = "Download File";
-        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
-        downloadLink.onclick = destroyClickedElement;
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-}
-
 function exportEdits(field){
   //Collect edited blocks and jsonify
   //If field is null, then all blocks are checked

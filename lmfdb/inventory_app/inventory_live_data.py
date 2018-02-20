@@ -130,7 +130,6 @@ def mark_all_gone(main_db):
             gone = not (coll[0] in all_colls[db[0]])
             if gone:
                 coll_id = idc.get_coll_id(inv_db, db_id['id'], coll[0])
-                coll_id = idc.get_coll_id(inv_db, db_id['id'], coll[0])
                 idc.update_coll(inv_db, coll_id['id'], status=gone_code)
 
 def remove_all_gone():
@@ -167,3 +166,54 @@ def store_orphans(inv_db, db_id, coll_id, uid, orphan_document):
         with open(filename, 'w') as file:
             file.write(json.dumps(orphan_document))
         inv.log_dest.error('Failed to store orphans, wrote to file '+filename)
+
+def collate_orphans_by_uid(uid):
+    """Fetch all orphans with given uid and return summary"""
+
+    try:
+        got_client = inv.setup_internal_client(editor=True)
+        assert(got_client == True)
+        inv_db = inv.int_client[inv.get_inv_db_name()]
+    except Exception as e:
+        inv.log_dest.error("Error getting Db connection "+ str(e))
+        return False
+    #All orphans records for this uid
+    record = {'uid':uuid.UUID(uid), 'orphans':{"$exists":True}}
+    records = inv_db['ops'].find(record)
+    orph_data = {}
+    db_name = ''
+    try:
+        db_name = idc.get_db_name(inv_db, records[0]['db'])['name']
+    except:
+        pass
+
+    orph_data['db'] = db_name
+    orph_data['gone'] = {}
+    orph_data['orphan'] = {}
+    for entry in records:
+        coll = idc.get_coll_name(inv_db, entry['coll'])['name']
+        orph_tmp = split_orphans(entry)
+        orph_data['gone'][coll] = orph_tmp['gone']
+        orph_data['orphan'][coll] = orph_tmp['orphan']
+
+    return orph_data
+
+def split_orphans(entry):
+    just_gone = []
+    gone_w_data = []
+    items = entry['orphans']
+    for item in items:
+        if check_orphan_empty(item):
+            just_gone.append(item['name'])
+        else:
+            gone_w_data.append(item)
+
+    return {'gone':just_gone, 'orphan':gone_w_data}
+
+def check_orphan_empty(entry):
+    """Check whether is empty"""
+
+    empty = True
+    for item in entry['data']:
+        empty = empty and (entry['data'][item] is None)
+    return empty

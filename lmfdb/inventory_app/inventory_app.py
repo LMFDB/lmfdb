@@ -246,6 +246,15 @@ def fetch_progress_data(uid):
         progress = {'n_colls':0, 'curr_coll':0, 'progress_in_current':0}
     return jsonify(progress)
 
+@inventory_app.route('rescrape/progress/<string:uid>/complete/')
+@login_required
+def fetch_summary_data(uid):
+    try:
+        data = inventory_live_data.collate_orphans_by_uid(uid)
+    except ih.ConnectOrAuthFail as e:
+        data = {}
+    return jsonify(data)
+
 @inventory_app.route('rescrape/submit', methods=['POST'])
 @login_required
 def submit_rescrape_request():

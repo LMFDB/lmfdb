@@ -1,6 +1,7 @@
 {% extends "base_edit.html" %}
 
 {% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('inventory_app.static', filename='scraper.js') }}"></script>
 
 <script type="text/javascript">
@@ -11,7 +12,7 @@
     console.log(progress);
     span.innerHTML = progress['progress_in_current']+"% done on collection "+progress['curr_coll']+" of "+progress['n_colls'];
 
-    if(isComplete(progress)) showSummary();
+    if(isComplete(progress)) addSummary();
   }
 
   $( document ).ready(function(){
@@ -27,7 +28,7 @@
 {% endblock title_block %}
 
 {% block main_body %}
-<div>
+<div id = 'meter'>
   <div id='spinner'>
   <img src="{{url_for('inventory_app.static', filename='spinner.gif')}}" width=100>
   </div>

@@ -310,3 +310,23 @@ function escape_jq( myid ) {
     return myid.replace( /(:|\.|\[|\]|,|=|@)/g, "\\$1" );
 
 }
+
+function saveTextAsFile(textToWrite, filename, type_in){
+    /* globals destroyClickedElement, Blob*/
+    //Create file and offer for "download"
+    //Borrowed and slightly adapted from internet postings
+    function destroyClickedElement(event){
+              document.body.removeChild(event.target);
+          }
+    if(typeof type_in == "undefined") type_in = 'text/plain';
+
+    var textFileAsBlob = new Blob([textToWrite], {type:type_in});
+    var downloadLink = document.createElement("a");
+    downloadLink.download = filename;
+    downloadLink.innerHTML = "Download File";
+    downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+    downloadLink.onclick = destroyClickedElement;
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+}
