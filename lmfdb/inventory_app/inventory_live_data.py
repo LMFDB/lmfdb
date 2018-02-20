@@ -185,16 +185,31 @@ def collate_orphans_by_uid(uid):
     try:
         db_name = idc.get_db_name(inv_db, records[0]['db'])['name']
     except:
-        pass
+        record = {'uid':uuid.UUID(uid)}
+        tmp_record = inv_db['ops'].find_one(record)
+        try:
+            db_name = idc.get_db_name(inv_db, tmp_record['db'])['name']
+        except:
+            pass
 
     orph_data['db'] = db_name
-    orph_data['gone'] = {}
-    orph_data['orphan'] = {}
+    tmp_gone = {}
+    tmp_orph = {}
     for entry in records:
         coll = idc.get_coll_name(inv_db, entry['coll'])['name']
         orph_tmp = split_orphans(entry)
-        orph_data['gone'][coll] = orph_tmp['gone']
-        orph_data['orphan'][coll] = orph_tmp['orphan']
+        tmp_gone[coll] = orph_tmp['gone']
+        tmp_orph[coll] = orph_tmp['orphan']
+
+    if tmp_gone != {}:
+        orph_data['gone'] = tmp_gone
+    else:
+        orph_data['gone'] = None
+
+    if tmp_orph != {}: 
+        orph_data['orphan'] = tmp_orph
+    else:
+        orph_data['orphan'] = None
 
     return orph_data
 

@@ -7,14 +7,6 @@
 <script type="text/javascript">
   var uid = "{{uid}}";
 
-  function showProgress(progress){
-    var span = document.getElementById('progressSpan');
-    console.log(progress);
-    span.innerHTML = progress['progress_in_current']+"% done on collection "+progress['curr_coll']+" of "+progress['n_colls'];
-
-    if(isComplete(progress)) addSummary();
-  }
-
   $( document ).ready(function(){
     //Fetch content and fill blocklist and DOM
     getProgress();

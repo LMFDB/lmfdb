@@ -56,6 +56,14 @@ function getProgress(){
   XHR.send('');
 }
 
+function showProgress(progress){
+  var span = document.getElementById('progressSpan');
+  console.log(progress);
+  span.innerHTML = progress['progress_in_current']+"% done on collection "+progress['curr_coll']+" of "+progress['n_colls'];
+
+  if(isComplete(progress)) addSummary();
+}
+
 function isComplete(progress){
 
 //  if(progress['curr_coll'] == progress['n_colls'] && progress['progress_in_current'] >= 100) return true;
@@ -103,23 +111,27 @@ function fillSummary(data){
       }
       innerDiv.appendChild(keyDiv);
     }
+    div.appendChild(innerDiv);
   }
-  var butt = document.createElement('button');
-  butt.innerHTML = "Download All Data";
-  butt.title = "Download all invalidated key data as json";
-  var filename = 'Orphan_keys_'+data.db+'.json';
-  butt.onclick = (function() {
-    filename = filename;
-    data = JSON.stringify(data.orphan, null, 4);
-    return function() {
-      this.blur();
-      saveTextAsFile(data, filename, 'application/json');
-    };
-  })();
-  innerDiv.appendChild(butt);
-
-  div.appendChild(innerDiv);
-
+  if(! data.gone && !data.orphan){
+    var tmpDiv = document.createElement('div');
+    tmpDiv.innerHTML = "Nothing to report";
+    div.appendChild(tmpDiv);
+  }else{
+    var butt = document.createElement('button');
+    butt.innerHTML = "Download All Data";
+    butt.title = "Download all invalidated key data as json";
+    var filename = 'Orphan_keys_'+data.db+'.json';
+    butt.onclick = (function() {
+      filename = filename;
+      data = JSON.stringify(data.orphan, null, 4);
+      return function() {
+        this.blur();
+        saveTextAsFile(data, filename, 'application/json');
+      };
+    })();
+    div.appendChild(butt);
+  }
 }
 
 function fetchScrapeSummaryData(){
