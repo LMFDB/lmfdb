@@ -41,10 +41,16 @@ def trigger_scrape(data):
     uid = get_uid()
     db = data['data']['db']
     coll = data['data']['coll']
-
-    #null_all_scrapes(db, coll)
-    cont = register_scrape(db, coll, uid)
-    coll_list = [coll]
+    cont = True
+    if not coll:
+        all_colls = glc(databases=db)
+        inv.log_dest.warning(db+' '+str( all_colls))
+        coll_list = all_colls[db]
+        for each_coll in coll_list:
+            cont = cont and register_scrape(db, each_coll, uid)
+    else:
+        cont = register_scrape(db, coll, uid)
+        coll_list = [coll]
     if(cont):
         sut(db, coll_list, uid)
         return uid
