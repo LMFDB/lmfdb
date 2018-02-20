@@ -6,9 +6,11 @@ import inventory_viewer as iv
 import lmfdb_inventory as inv
 import inventory_db_core as idc
 from scrape_helpers import *
-from scrape_frontend import scrape_and_upload_threaded as sut
+import scrape_frontend as sf
 import uuid
 import datetime
+from lmfdb.base import getDBConnection
+
 
 ops_sz = 2000000
 null_uid = '00000000-0000-0000-0000-000000000000'
@@ -52,7 +54,7 @@ def trigger_scrape(data):
         cont = register_scrape(db, coll, uid)
         coll_list = [coll]
     if(cont):
-        sut(db, coll_list, uid)
+        sf.scrape_and_upload_threaded(db, coll_list, uid)
         return uid
     else:
         return uuid.UUID(null_uid)
@@ -88,17 +90,12 @@ def get_progress(uid):
 def get_progress_from_db(inv_db, uid, db_id, coll_id):
     """Query db to see state of current scrape"""
 
-    scrapes = inv_db['ops'].find({'uid':uuid.UUID(uid), 'db':db_id, 'coll':coll_id})
-#    now = datetime.datetime.now()
-    curr = 0
-    n = 0
-    for item in scrapes:
-        if item['complete'] : curr = curr + 1
-        n = n + 1
-#        if (now - item['time']).total_seconds() > 5:
-#            return 100
-    #diff = now -
-    return 100 * (n == curr)
+    db_name = idc.get_db_name(inv_db, db_id)['name']
+    coll_name = idc.get_coll_name(inv_db, coll_id)['name']
+    live_progress = sf.get_scrape_progress(db_name, coll_name, getDBConnection())
+    percent = (live_progress[0] *100)/live_progress[1]
+
+    return percent
 
 #Other live DB functions
 

@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import json, yaml
 import logging, logging.handlers
+from lmfdb.base import getDBConnection
 
 #Contains the general data and functions for all inventory handling
 
@@ -93,7 +94,6 @@ def setup_internal_client(remote=False, editor=False):
     try:
         if remote:
             #Attempt to connect to LMFDB
-            from lmfdb.base import getDBConnection
             int_client=getDBConnection()
 #            return True
         else:
