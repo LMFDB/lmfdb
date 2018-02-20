@@ -44,12 +44,12 @@ def is_same_type(object1, object2, strict=True):
 
 def is_collection(object):
 
-""" Function to test if an object is a collection of some type
+    """ Function to test if an object is a collection of some type
     object - object to test type of
 
     If object is a container then a test is made of the types in the collection
     returns type code for object if object is collection. This will include the
-    bitmask values for generic collection, the type of the collection 
+    bitmask values for generic collection, the type of the collection
     (although this is not currently used) and the type code of the underlying
     contents of the container.
 
@@ -155,7 +155,7 @@ def is_string(object):
     return False
 
 def is_string_of(object):
-    """ Test for an object being an encoded string 
+    """ Test for an object being an encoded string
         (comma separated list etc.)"""
 
     splits=object.split(',')
