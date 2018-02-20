@@ -26,7 +26,7 @@ def upload_scraped_data(structure_data, uid):
         return False
 
     inv.log_dest.warning('In upload with '+str(uid))
-    #upload_scraped_inventory(inv_db, structure_data, uid)
+    upload_scraped_inventory(inv_db, structure_data, uid)
 
 def upload_scraped_inventory(db, structure_dat, uid):
     """Upload a json structure document and store any oprhans

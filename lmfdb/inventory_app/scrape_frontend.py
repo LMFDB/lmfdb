@@ -41,7 +41,6 @@ def scrape_worker(db, coll, uuid, connection):
         data = jdbs.parse_collection_info_to_json(db, el,
             connection = connection)
         iud.upload_scraped_data(data, uuid)
-        # Put upload code here
         update_scrape_progress(db, el, uuid, running = False, complete = True)
 
 def scrape_and_upload_threaded(db, coll, uuid, connection = None):
