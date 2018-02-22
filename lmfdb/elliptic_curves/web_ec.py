@@ -105,6 +105,23 @@ def parse_points(s):
     """
     return [parse_point(P) for P in s]
 
+def parse_ainvs(ai):
+    r""" converts a-invariants as stored in the database to a list of ints.
+    This will work whether the data is stored as a list of strings
+    (the old way), e.g. ['0','0','0','0','1'] or as a single list
+    e.g. '[0,0,0,0,1]' with or without the brackets.
+    """
+    if '[' in ai: # strip the brackets
+        ai = ai[1:-1]
+    if ',' in ai: # it's a single string so split it on commas
+        ai = ai.split(',')
+    return [int(a) for a in ai]
+
+def EC_ainvs(E):
+    """ Return the a-invariants of a Sage elliptic curve in the correct format for the database.
+    """
+    return str(list(E.ainvs())).replace(' ','')
+
 class WebEC(object):
     """
     Class for an elliptic curve over Q
@@ -165,10 +182,7 @@ class WebEC(object):
         # is still included.
 
         data = self.data = {}
-        try:
-            data['ainvs'] = [int(c) for c in self.xainvs[1:-1].split(',')]
-        except AttributeError:
-            data['ainvs'] = [int(ai) for ai in self.ainvs]
+        data['ainvs'] = parse_ainvs(self.xainvs)
         data['conductor'] = N = ZZ(self.conductor)
         data['j_invariant'] = QQ(str(self.jinv))
         data['j_inv_factor'] = latex(0)
@@ -180,13 +194,13 @@ class WebEC(object):
         mw['rank'] = self.rank
         mw['int_points'] = ''
         if self.xintcoords:
-            a1, a2, a3, a4, a6 = [ZZ(a) for a in data['ainvs']]
+            a1, a2, a3, a4, a6 = data['ainvs']
             def lift_x(x):
                 f = ((x + a2) * x + a4) * x + a6
                 b = (a1*x + a3)
                 d = (b*b + 4*f).sqrt()
                 return (x, (-b+d)/2)
-            mw['int_points'] = ', '.join(web_latex(lift_x(x)) for x in self.xintcoords)
+            mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
 
         mw['generators'] = ''
         mw['heights'] = []

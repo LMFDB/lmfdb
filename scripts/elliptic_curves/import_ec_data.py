@@ -766,6 +766,7 @@ def make_extra_data(label,number,ainvs,gens):
                            'ord_disc':int(ld.discriminant_valuation()),
                            'ord_den_j':int(max(0,-(E.j_invariant().valuation(ld.prime().gen())))),
                            'red':int(ld.bad_reduction_type()),
+                           'rootno':int(E.root_number(ld.prime().gen())),
                            'kod':web_latex(ld.kodaira_symbol()).replace('$',''),
                            'cp':int(ld.tamagawa_number())}
                           for ld in E.local_data()]
@@ -849,6 +850,22 @@ def add_extra_data1(C):
 
     """
     C.update(make_extra_data(C['label'],C['number'],C['ainvs'],C['gens']))
+    return C
+
+def tidy_ecdb(C):
+    """A rewrite function for tidying up the curves collection, Feb 2018.
+    """
+    # 1. delete the old redundant 'ainvs' field (we now use 'xainvs'
+    C.pop('ainvs')
+    #
+    # 2. add local root number if missing
+    ld = C['local_data']
+    if not 'rootno' in ld[0]:
+        E = EllipticCurve([int(ai) for ai in C['xainvs'][1:-1].split(",")])
+        for i, ldp in enumerate(ld):
+            ldp['rootno'] = E.root_number(ZZ(ldp['p']))
+            ld[i] = ldp
+        C['local_data'] = ld
     return C
 
 def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=100000):
