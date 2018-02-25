@@ -36,11 +36,11 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'special_value': (float) special value of r'th derivative of L-function (divided by r!), e.g.1.490882041449698
    - 'real_period': (float) real period, e.g. 0.3727205103624245
    - 'degree': (int) degree of modular parametrization, e.g. 1984
-   - 'non-surjective_primes': (list of ints) primes p for which the
-      mod p Galois representation is not surjective, e.g. [5]
-   - 'galois_images': (list of strings) Sutherland codes for the
+   - 'non-maximal_primes': (list of ints) primes p for which the
+      mod p Galois representation is not maximal, e.g. [5]
+   - 'mod-p_images': (list of strings) Sutherland codes for the
       images of the mod p Galois representations for the primes in
-      'non-surjective_primes' e.g. ['5B']
+      'non-maximal_primes' e.g. ['5B']
    - '2adic_index': (int) the index of the 2-adic representation in
       GL(2,Z2) (or 0 for CM curves, which have infinite index)
    - '2adic_log_level': (int) the smallest n such that the image
@@ -55,7 +55,6 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'isogeny_degrees': (list of ints) degrees of cyclic isogenies from this curve
    - 'class_size': (int) size of isogeny class
    - 'class_deg': (int) max (=lcm) of isogeny degrees in the class
-   - 'sha_an': (float) analytic order of sha (approximate unless r=0)
    - 'sha': (int) analytic order of sha (rounded value of sha_an)
    - 'sha_primes': (list of ints) primes dividing sha
    - 'torsion_primes': (list of ints) primes dividing torsion
@@ -344,11 +343,10 @@ def split_galois_image_code(s):
 
 def galrep(line, new_format=True):
     r""" Parses one line from a galrep file.  Returns the label and a
-    dict containing two fields: 'non-surjective_primes', a list of
+    dict containing two fields: 'non-maximal_primes', a list of
     primes p for which the Galois representation modulo p is not
-    surjective (cut off at p=37 for CM curves for which this would
-    otherwise contain all primes), 'galois_images', a list of strings
-    encoding the image when not surjective, following Sutherland's
+    maximal, 'mod-p_images', a list of strings
+    encoding the image when not maximal, following Sutherland's
     coding scheme for subgroups of GL(2,p).  Note that these codes
     start with a 1 or 2 digit prime followed a letter in
     ['B','C','N','S'].
@@ -677,7 +675,7 @@ def add_isogs_to_one(c):
 def readallgalreps(base_path, f):
     r""" Returns a dictionary whose keys are Cremona labels of individual
     curves, and whose values are a dictionary with the keys
-    'non-surjective_primes' and 'galois_images'
+    'non-maximal_primes' and 'mod-p_images'
 
     This function reads one new-format galrep file.
     """
@@ -855,15 +853,17 @@ def add_extra_data1(C):
 def tidy_ecdb(C):
     """A rewrite function for tidying up the curves collection, Feb 2018.
     """
+    if C['conductor']<380000:
+        return C
     # 1. delete the old redundant 'ainvs' field (we now use 'xainvs'
-    C.pop('ainvs')
+    #C.pop('ainvs')
     #
     # 2. add local root number if missing
     ld = C['local_data']
     if not 'rootno' in ld[0]:
         E = EllipticCurve([int(ai) for ai in C['xainvs'][1:-1].split(",")])
         for i, ldp in enumerate(ld):
-            ldp['rootno'] = E.root_number(ZZ(ldp['p']))
+            ldp['rootno'] = int(E.root_number(ZZ(ldp['p'])))
             ld[i] = ldp
         C['local_data'] = ld
     return C
@@ -887,7 +887,7 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=10000
                       'iso_nlabel': int_type,
                       'number': int_type,
                       'lmfdb_number': int_type,
-                      'ainvs': list_type, # of strings
+                      'ainvs': list_type, # of strings [REDUNDANT]
                       'jinv': str_type,
                       'cm': int_type,
                       'rank': int_type,
@@ -901,9 +901,9 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=10000
                       'special_value': float_type,
                       'real_period': float_type,
                       'degree': int_type,
-                      'non-surjective_primes': list_type, # of ints
+                      'non-surjective_primes': list_type, # of ints [REDUNDANT]
                       'non-maximal_primes': list_type, # of ints
-                      'galois_images': list_type, # of strings
+                      'galois_images': list_type, # of strings [REDUNDANT]
                       'mod-p_images': list_type, # of strings
                       '2adic_index': int_type,
                       '2adic_log_level': int_type,

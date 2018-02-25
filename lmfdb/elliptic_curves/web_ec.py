@@ -136,7 +136,6 @@ class WebEC(object):
         self.__dict__.update(dbdata)
         # Next lines because the hyphens make trouble
         self.xintcoords = split_list(dbdata['x-coordinates_of_integral_points'])
-        self.non_surjective_primes = dbdata['non-surjective_primes']
         self.non_maximal_primes = dbdata['non-maximal_primes']
         self.mod_p_images = dbdata['mod-p_images']
 
@@ -190,126 +189,34 @@ class WebEC(object):
             data['j_inv_factor'] = latex(data['j_invariant'].factor())
         data['j_inv_str'] = unicode(str(data['j_invariant']))
         data['j_inv_latex'] = web_latex(data['j_invariant'])
-        mw = self.mw = {}
-        mw['rank'] = self.rank
-        mw['int_points'] = ''
-        if self.xintcoords:
-            a1, a2, a3, a4, a6 = data['ainvs']
-            def lift_x(x):
-                f = ((x + a2) * x + a4) * x + a6
-                b = (a1*x + a3)
-                d = (b*b + 4*f).sqrt()
-                return (x, (-b+d)/2)
-            mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
 
-        mw['generators'] = ''
-        mw['heights'] = []
-        if self.gens:
-            mw['generators'] = [web_latex(tuple(P)) for P in parse_points(self.gens)]
+        # extract data about MW rank, generators, heights and torsion:
+        self.make_mw()
 
-        mw['tor_order'] = self.torsion
-        tor_struct = [int(c) for c in self.torsion_structure]
-        if mw['tor_order'] == 1:
-            mw['tor_struct'] = '\mathrm{Trivial}'
-            mw['tor_gens'] = ''
-        else:
-            mw['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
-            mw['tor_gens'] = ', '.join(web_latex(tuple(P)) for P in parse_points(self.torsion_generators))
+        # get more data from the database entry
 
-        # try to get all the data we need from the database entry (now in self)
+        data['equation'] = self.equation
+        local_data = self.local_data
+        D = self.signD * prod([ld['p']**ld['ord_disc'] for ld in local_data])
+        data['disc'] = D
+        Nfac = Factorization([(ZZ(ld['p']),ld['ord_cond']) for ld in local_data])
+        Dfac = Factorization([(ZZ(ld['p']),ld['ord_disc']) for ld in local_data], unit=ZZ(self.signD))
+
+        data['minq_D'] = minqD = self.min_quad_twist['disc']
+        minq_label = self.min_quad_twist['label']
+        data['minq_label'] = db_ec().find_one({'label':minq_label}, ['lmfdb_label'])['lmfdb_label']
+        data['minq_info'] = '(itself)' if minqD==1 else '(by %s)' % minqD
         try:
-            data['equation'] = self.equation
-            local_data = self.local_data
-            D = self.signD * prod([ld['p']**ld['ord_disc'] for ld in local_data])
-            data['disc'] = D
-            Nfac = Factorization([(ZZ(ld['p']),ld['ord_cond']) for ld in local_data])
-            Dfac = Factorization([(ZZ(ld['p']),ld['ord_disc']) for ld in local_data], unit=ZZ(self.signD))
-
-            data['minq_D'] = minqD = self.min_quad_twist['disc']
-            minq_label = self.min_quad_twist['label']
-            data['minq_label'] = db_ec().find_one({'label':minq_label}, ['lmfdb_label'])['lmfdb_label']
-            data['minq_info'] = '(itself)' if minqD==1 else '(by %s)' % minqD
-            try:
-                data['degree'] = self.degree
-            except AttributeError:
-                data['degree']  =0 # invalid, but will be displayed nicely
-            mw['heights'] = self.heights
-            if self.number == 1:
-                data['an'] = self.anlist
-                data['ap'] = self.aplist
-            else:
-                r = db_ec().find_one({'lmfdb_iso':self.lmfdb_iso, 'number':1}, ['anlist','aplist'])
-                data['an'] = r['anlist']
-                data['ap'] = r['aplist']
-
-        # otherwise fall back to computing it from the curve
+            data['degree'] = self.degree
         except AttributeError:
-            self.E = EllipticCurve(data['ainvs'])
-            data['equation'] = web_latex(self.E)
-            data['disc'] = D = self.E.discriminant()
-            Nfac = N.factor()
-            Dfac = D.factor()
-            bad_primes = [p for p,e in Nfac]
-            try:
-                data['degree'] = self.degree
-            except AttributeError:
-                try:
-                    data['degree'] = self.E.modular_degree()
-                except RuntimeError:
-                    data['degree'] = 0  # invalid, but will be displayed nicely
-            minq, minqD = self.E.minimal_quadratic_twist()
-            data['minq_D'] = minqD
-            if minqD == 1:
-                data['minq_label'] = self.lmfdb_label
-                data['minq_info'] = '(itself)'
-            else:
-                # This relies on the minimal twist being in the
-                # database, which is true when the database only
-                # contains the Cremona database.  It would be a good
-                # idea if, when the database is extended, we ensured
-                # that for any curve included, all twists of smaller
-                # conductor are also included.
-                minq_ainvs = [str(c) for c in minq.ainvs()]
-                data['minq_label'] = db_ec().find_one({'jinv':str(self.E.j_invariant()),
-                                                       'ainvs': minq_ainvs},['lmfdb_label'])['lmfdb_label']
-                data['minq_info'] = '(by %s)' % minqD
-
-            if self.gens:
-                self.generators = [self.E(g) for g in parse_points(self.gens)]
-                mw['heights'] = [P.height() for P in self.generators]
-
-            data['an'] = self.E.anlist(20,python_ints=True)
-            data['ap'] = self.E.aplist(100,python_ints=True)
-            self.local_data = local_data = []
-            for p in bad_primes:
-                ld = self.E.local_data(p, algorithm="generic")
-                local_data_p = {}
-                local_data_p['p'] = p
-                local_data_p['cp'] = ld.tamagawa_number()
-                local_data_p['kod'] = web_latex(ld.kodaira_symbol()).replace('$', '')
-                local_data_p['red'] = ld.bad_reduction_type()
-                rootno = -ld.bad_reduction_type()
-                if rootno==0:
-                    rootno = self.E.root_number(p)
-                local_data_p['rootno'] = rootno
-                local_data_p['ord_cond'] = ld.conductor_valuation()
-                local_data_p['ord_disc'] = ld.discriminant_valuation()
-                local_data_p['ord_den_j'] = max(0,-self.E.j_invariant().valuation(p))
-                local_data.append(local_data_p)
-
-        # If we got the data from the database, the root numbers may
-        # not have been stored there, so we have to compute them.  If
-        # there are additive primes this means constructing the curve.
-        for ld in self.local_data:
-            if not 'rootno' in ld:
-                rootno = -ld['red']
-                if rootno==0:
-                    try:
-                        E = self.E
-                    except AttributeError:
-                        self.E = E = EllipticCurve(data['ainvs'])
-                    rootno = E.root_number(ld['p'])
-                ld['rootno'] = rootno
+            data['degree']  =0 # invalid, but will be displayed nicely
+        if self.number == 1:
+            data['an'] = self.anlist
+            data['ap'] = self.aplist
+        else:
+            r = db_ec().find_one({'lmfdb_iso':self.lmfdb_iso, 'number':1}, ['anlist','aplist'])
+            data['an'] = r['anlist']
+            data['ap'] = r['aplist']
 
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
 
@@ -328,7 +235,7 @@ class WebEC(object):
         data['CM'] = "no"
         data['EndE'] = "\(\Z\)"
         if self.cm:
-            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
+            data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_maximal_primes]
             data['cm_nramp'] = len(data['cm_ramp'])
             if data['cm_nramp']==1:
                 data['cm_ramp'] = data['cm_ramp'][0]
@@ -365,20 +272,8 @@ class WebEC(object):
             data['twoadic_gen_matrices'] = ','.join([latex(Matrix(2,2,M)) for M in self.twoadic_gens])
             data['twoadic_rouse_url'] = ROUSE_URL_PREFIX + self.twoadic_label + ".html"
 
-        # Leading term of L-function & BSD data
-        bsd = self.bsd = {}
-        r = self.rank
-        if r >= 2:
-            bsd['lder_name'] = "L^{(%s)}(E,1)/%s!" % (r,r)
-        elif r:
-            bsd['lder_name'] = "L'(E,1)"
-        else:
-            bsd['lder_name'] = "L(E,1)"
-
-        bsd['reg'] = self.regulator
-        bsd['omega'] = self.real_period
-        bsd['sha'] = int(0.1+self.sha_an)
-        bsd['lder'] = self.special_value
+        # Leading term of L-function & other BSD data
+        self.make_bsd()
 
         # Optimality (the optimal curve in the class is the curve
         # whose Cremona label ends in '1' except for '990h' which was
@@ -397,8 +292,8 @@ class WebEC(object):
         data['iwdata'] = []
         try:
             pp = [int(p) for p in self.iwdata]
-            badp = [l['p'] for l in self.local_data]
-            rtypes = [l['red'] for l in self.local_data]
+            badp = [l['p'] for l in local_data]
+            rtypes = [l['red'] for l in local_data]
             data['iw_missing_flag'] = False # flags that there is at least one "?" in the table
             data['additive_shown'] = False # flags that there is at least one additive prime in table
             for p in sorted(pp):
@@ -436,12 +331,6 @@ class WebEC(object):
         except AttributeError:
             # For curves with no Iwasawa data
             pass
-
-        tamagawa_numbers = [ZZ(ld['cp']) for ld in local_data]
-        cp_fac = [cp.factor() for cp in tamagawa_numbers]
-        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
-        bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
-        bsd['tamagawa_product'] = prod(tamagawa_numbers)
 
         # Torsion growth data
 
@@ -528,8 +417,8 @@ class WebEC(object):
                            ('Discriminant', '\(%s\)' % data['disc']),
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
-                           ('Rank', '\(%s\)' % mw['rank']),
-                           ('Torsion Structure', '\(%s\)' % mw['tor_struct'])
+                           ('Rank', '\(%s\)' % self.mw['rank']),
+                           ('Torsion Structure', '\(%s\)' % self.mw['tor_struct'])
                            ]
 
         self.title = "Elliptic Curve %s (Cremona label %s)" % (self.lmfdb_label, self.label)
@@ -539,6 +428,56 @@ class WebEC(object):
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
+
+    def make_mw(self):
+        mw = self.mw = {}
+        mw['rank'] = self.rank
+        mw['int_points'] = ''
+        if self.xintcoords:
+            a1, a2, a3, a4, a6 = parse_ainvs(self.xainvs)
+            def lift_x(x):
+                f = ((x + a2) * x + a4) * x + a6
+                b = (a1*x + a3)
+                d = (b*b + 4*f).sqrt()
+                return (x, (-b+d)/2)
+            mw['int_points'] = ', '.join(web_latex(lift_x(ZZ(x))) for x in self.xintcoords)
+
+        mw['generators'] = ''
+        mw['heights'] = []
+        if self.gens:
+            mw['generators'] = [web_latex(tuple(P)) for P in parse_points(self.gens)]
+            mw['heights'] = self.heights
+
+        mw['tor_order'] = self.torsion
+        tor_struct = [int(c) for c in self.torsion_structure]
+        if mw['tor_order'] == 1:
+            mw['tor_struct'] = '\mathrm{Trivial}'
+            mw['tor_gens'] = ''
+        else:
+            mw['tor_struct'] = ' \\times '.join(['\Z/{%s}\Z' % n for n in tor_struct])
+            mw['tor_gens'] = ', '.join(web_latex(tuple(P)) for P in parse_points(self.torsion_generators))
+
+    def make_bsd(self):
+        bsd = self.bsd = {}
+        r = self.rank
+        if r >= 2:
+            bsd['lder_name'] = "L^{(%s)}(E,1)/%s!" % (r,r)
+        elif r:
+            bsd['lder_name'] = "L'(E,1)"
+        else:
+            bsd['lder_name'] = "L(E,1)"
+
+        bsd['reg'] = self.regulator
+        bsd['omega'] = self.real_period
+        bsd['sha'] = self.sha
+        bsd['lder'] = self.special_value
+
+        tamagawa_numbers = [ZZ(_ld['cp']) for _ld in self.local_data]
+        cp_fac = [cp.factor() for cp in tamagawa_numbers]
+        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+        bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
+        bsd['tamagawa_product'] = prod(tamagawa_numbers)
+
 
     def code(self):
         if self._code == None:

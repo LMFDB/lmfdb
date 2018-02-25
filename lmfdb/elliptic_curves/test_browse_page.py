@@ -36,8 +36,13 @@ class HomePageTest(LmfdbTest):
         Check that the link to a random curve works.
         """
         homepage = self.tc.get("/EllipticCurve/Q/").data
-        self.check(homepage, "/EllipticCurve/Q/random",
-                   'Minimal Weierstrass equation')
+        import sys
+        for i in range(100000):
+            if i%100==0:
+                sys.stdout.write(".{}".format(i))
+                sys.stdout.flush()
+            self.check(homepage, "/EllipticCurve/Q/random",
+                       'Minimal Weierstrass equation')
 
     #
     # Browsing links
