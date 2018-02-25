@@ -6,7 +6,6 @@ from flask import url_for
 from lmfdb.base import getDBConnection
 from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
 from lmfdb.search_parsing import split_list
-#from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
@@ -289,94 +288,13 @@ class WebEC(object):
         if data['Gamma0optimal']:
             data['p_adic_data_exists'] = (padic_db().find({'lmfdb_iso': self.lmfdb_iso}).count()) > 0
 
-        data['iwdata'] = []
-        try:
-            pp = [int(p) for p in self.iwdata]
-            badp = [l['p'] for l in local_data]
-            rtypes = [l['red'] for l in local_data]
-            data['iw_missing_flag'] = False # flags that there is at least one "?" in the table
-            data['additive_shown'] = False # flags that there is at least one additive prime in table
-            for p in sorted(pp):
-                rtype = ""
-                if p in badp:
-                    red = rtypes[badp.index(p)]
-                    # Additive primes are excluded from the table
-                    # if red==0:
-                    #    continue
-                    #rtype = ["nsmult","add", "smult"][1+red]
-                    rtype = ["nonsplit","add", "split"][1+red]
-                p = str(p)
-                pdata = self.iwdata[p]
-                if isinstance(pdata, type(u'?')):
-                    if not rtype:
-                        rtype = "ordinary" if pdata=="o?" else "ss"
-                    if rtype == "add":
-                        data['iwdata'] += [[p,rtype,"-","-"]]
-                        data['additive_shown'] = True
-                    else:
-                        data['iwdata'] += [[p,rtype,"?","?"]]
-                        data['iw_missing_flag'] = True
-                else:
-                    if len(pdata)==2:
-                        if not rtype:
-                            rtype = "ordinary"
-                        lambdas = str(pdata[0])
-                        mus = str(pdata[1])
-                    else:
-                        rtype = "ss"
-                        lambdas = ",".join([str(pdata[0]), str(pdata[1])])
-                        mus = str(pdata[2])
-                        mus = ",".join([mus,mus])
-                    data['iwdata'] += [[p,rtype,lambdas,mus]]
-        except AttributeError:
-            # For curves with no Iwasawa data
-            pass
+        # Iwasawa data (where present)
 
-        # Torsion growth data
+        self.make_iwasawa()
 
-        data['torsion_growth_data_exists'] = False
-        try:
-            tg = self.tor_gro
-            data['torsion_growth_data_exists'] = True
-            data['tgx'] = tgextra = []
-            # find all base-changes of this curve in the database, if any
-            bcs = [res['label'] for res in  getDBConnection().elliptic_curves.nfcurves.find({'base_change': self.lmfdb_label}, projection={'label': True, '_id': False})]
-            bcfs = [lab.split("-")[0] for lab in bcs]
-            for F, T in tg.items():
-                tg1 = {}
-                tg1['bc'] = "Not in database"
-                if ":" in F:
-                    F = F.replace(":",".")
-                    field_data = nf_display_knowl(F, getDBConnection(), field_pretty(F))
-                    deg = int(F.split(".")[0])
-                    bcc = [x for x,y in zip(bcs, bcfs) if y==F]
-                    if bcc:
-                        from lmfdb.ecnf.main import split_full_label
-                        F, NN, I, C = split_full_label(bcc[0])
-                        tg1['bc'] = bcc[0]
-                        tg1['bc_url'] = url_for('ecnf.show_ecnf', nf=F, conductor_label=NN, class_label=I, number=C)
-                else:
-                    field_data = web_latex_split_on_pm(coeff_to_poly(string2list(F)))
-                    deg = F.count(",")
-                tg1['d'] = deg
-                tg1['f'] = field_data
-                tg1['t'] = '\(' + ' \\times '.join(['\Z/{}\Z'.format(n) for n in T.split(",")]) + '\)'
-                tg1['m'] = 0
-                tgextra.append(tg1)
+        # Torsion growth data (where present)
 
-            tgextra.sort(key = lambda x: x['d'])
-            data['ntgx'] = len(tgextra)
-            lastd = 1
-            for tg in tgextra:
-                d = tg['d']
-                if d!=lastd:
-                    tg['m'] = len([x for x in tgextra if x['d']==d])
-                    lastd = d
-            data['tg_maxd'] = max(db_ecstats().find_one({'_id': 'torsion_growth'})['degrees'])
-
-        except AttributeError:
-            pass # we have no torsion growth data
-
+        self.make_torsion_growth()
 
         data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
         data['newform_label'] = self.newform_label = newform_label(cond,2,1,iso)
@@ -477,6 +395,102 @@ class WebEC(object):
         cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
         bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         bsd['tamagawa_product'] = prod(tamagawa_numbers)
+
+    def make_iwasawa(self):
+        try:
+            iwdata = self.iwdata
+        except AttributeError: # For curves with no Iwasawa data
+            return
+        iw = self.iw = {}
+        try:
+            iw['p0'] = self.iwp0
+        except AttributeError:
+            iw['p0'] = None
+        iw['data'] = []
+        pp = [int(p) for p in iwdata]
+        badp = [l['p'] for l in self.local_data]
+        rtypes = [l['red'] for l in self.local_data]
+        iw['missing_flag'] = False # flags that there is at least one "?" in the table
+        iw['additive_shown'] = False # flags that there is at least one additive prime in table
+        for p in sorted(pp):
+            rtype = ""
+            if p in badp:
+                red = rtypes[badp.index(p)]
+                # Additive primes are excluded from the table
+                # if red==0:
+                #    continue
+                #rtype = ["nsmult","add", "smult"][1+red]
+                rtype = ["nonsplit","add", "split"][1+red]
+            p = str(p)
+            pdata = self.iwdata[p]
+            if isinstance(pdata, type(u'?')):
+                if not rtype:
+                    rtype = "ordinary" if pdata=="o?" else "ss"
+                if rtype == "add":
+                    iw['data'] += [[p,rtype,"-","-"]]
+                    iw['additive_shown'] = True
+                else:
+                    iw['data'] += [[p,rtype,"?","?"]]
+                    iw['missing_flag'] = True
+            else:
+                if len(pdata)==2:
+                    if not rtype:
+                        rtype = "ordinary"
+                    lambdas = str(pdata[0])
+                    mus = str(pdata[1])
+                else:
+                    rtype = "ss"
+                    lambdas = ",".join([str(pdata[0]), str(pdata[1])])
+                    mus = str(pdata[2])
+                    mus = ",".join([mus,mus])
+                iw['data'] += [[p,rtype,lambdas,mus]]
+
+    def make_torsion_growth(self):
+        try:
+            tor_gro = self.tor_gro
+            self.torsion_growth_data_exists = True
+        except AttributeError:
+            self.torsion_growth_data_exists = False
+            return
+
+        self.tg = tg = {}
+        tg['data'] = tgextra = []
+        # find all base-changes of this curve in the database, if any
+        from lmfdb.ecnf.WebEllipticCurve import db_ecnf
+        bcs = [res['label'] for res in  db_ecnf().find({'base_change': self.lmfdb_label}, projection={'label': True, '_id': False})]
+        bcfs = [lab.split("-")[0] for lab in bcs]
+        for F, T in tor_gro.items():
+            tg1 = {}
+            tg1['bc'] = "Not in database"
+            if ":" in F:
+                F = F.replace(":",".")
+                field_data = nf_display_knowl(F, getDBConnection(), field_pretty(F))
+                deg = int(F.split(".")[0])
+                bcc = [x for x,y in zip(bcs, bcfs) if y==F]
+                if bcc:
+                    from lmfdb.ecnf.main import split_full_label
+                    F, NN, I, C = split_full_label(bcc[0])
+                    tg1['bc'] = bcc[0]
+                    tg1['bc_url'] = url_for('ecnf.show_ecnf', nf=F, conductor_label=NN, class_label=I, number=C)
+            else:
+                field_data = web_latex_split_on_pm(coeff_to_poly(string2list(F)))
+                deg = F.count(",")
+            tg1['d'] = deg
+            tg1['f'] = field_data
+            tg1['t'] = '\(' + ' \\times '.join(['\Z/{}\Z'.format(n) for n in T.split(",")]) + '\)'
+            tg1['m'] = 0
+            tgextra.append(tg1)
+
+        tgextra.sort(key = lambda x: x['d'])
+        tg['n'] = len(tgextra)
+        lastd = 1
+        for tg1 in tgextra:
+            d = tg1['d']
+            if d!=lastd:
+                tg1['m'] = len([x for x in tgextra if x['d']==d])
+                lastd = d
+        tg['maxd'] = max(db_ecstats().find_one({'_id': 'torsion_growth'})['degrees'])
+
 
 
     def code(self):

@@ -472,7 +472,7 @@ No \(p\)-adic data exists for this curve.
 <table border=1>
 <tr>
 <th>$p$</th>
-{% for pdata in data.data.iwdata %}
+{% for pdata in data.iw.data %}
 <td>
 {{pdata[0]}}
 </td>
@@ -481,7 +481,7 @@ No \(p\)-adic data exists for this curve.
 
 <tr>
 <th>{{KNOWL('ec.q.reduction_type', title='Reduction type')}}</th>
-{% for pdata in data.data.iwdata %}
+{% for pdata in data.iw.data %}
 <td>
 {{ KNOWL('ec.q.reduction_type', title=pdata[1]) }}
 </td>
@@ -490,7 +490,7 @@ No \(p\)-adic data exists for this curve.
 
 <tr>
 <th>{{ KNOWL('ec.lambda_invariant', title='$\lambda$-invariant(s)')  }} </th>
-{% for pdata in data.data.iwdata %}
+{% for pdata in data.iw.data %}
 <td>
 {{ pdata[2] }}
 </td>
@@ -499,7 +499,7 @@ No \(p\)-adic data exists for this curve.
 
 <tr>
 <th>{{ KNOWL('ec.mu_invariant', title='$\mu$-invariant(s)') }} </th>
-{% for pdata in data.data.iwdata %}
+{% for pdata in data.iw.data %}
 <td>
 {{ pdata[3] }}
 </td>
@@ -508,18 +508,18 @@ No \(p\)-adic data exists for this curve.
 
 </table>
 </p>
-{% if data.iwp0 %}
+{% if data.iw.p0 %}
 <p>
 All Iwasawa $\lambda$ and $\mu$-invariants for primes $p\ge
-{{data.iwp0}}$ of {{KNOWL('ec.good_reduction', title='good reduction')}} are zero.
+{{data.iw.p0}}$ of {{KNOWL('ec.good_reduction', title='good reduction')}} are zero.
 </p>
 {% endif %}
-{% if data.data.iw_missing_flag %}
+{% if data.iw.missing_flag %}
 <p>
 An entry ? indicates that the invariants have not yet been computed.
 </p>
 {% endif %}
-{% if data.data.additive_shown %}
+{% if data.iw.additive_shown %}
 <p>
 An entry - indicates that the invariants are not computed because the reduction is additive.
 </p>
@@ -549,12 +549,12 @@ This curve has no rational isogenies.  Its isogeny class <a href={{ data.class_u
 {% endif %}
 {% endif %}
 
-{% if data.data.torsion_growth_data_exists %}
+{% if data.torsion_growth_data_exists %}
 
 <h2>{{KNOWL('ec.q.torsion_growth', title='Growth of torsion')}} in number fields</h2>
 <p>
-{% if data.data.ntgx==1 %}
-The only number field $K$ of degree up to {{data.data.tg_maxd}} such that
+{% if data.tg==1 %}
+The only number field $K$ of degree up to {{data.tg.maxd}} such that
 $E(K)_{\rm tors}$ is strictly larger than $E(\Q)_{\rm tors}$
 {% if data.mw.tor_order==1 %} (which is trivial)
 {% else %}
@@ -562,7 +562,7 @@ $\cong {{data.mw.tor_struct}}$
 {% endif %}
 is the following:
 {% else %}
-The number fields $K$ of degree up to {{data.data.tg_maxd}} such that
+The number fields $K$ of degree up to {{data.tg.maxd}} such that
 $E(K)_{\rm tors}$ is strictly larger than $E(\Q)_{\rm tors}$
 {% if data.mw.tor_order==1 %} (which is trivial)
 {% else %}
@@ -579,7 +579,7 @@ are as follows:
 <th>$E(K)_{\rm tors}$
 <th>Base-change curve
 </tr>
-{% for tgd in data.data.tgx %}
+{% for tgd in data.tg.data %}
 <tr>
 {% if tgd.m !=0 %}
 <td align=center rowspan={{tgd.m}}>
