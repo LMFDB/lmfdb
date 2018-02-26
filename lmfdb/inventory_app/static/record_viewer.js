@@ -150,8 +150,8 @@ function sortTable(n) {
     switching = false;
     rows = table.getElementsByTagName("TR");
     /* Loop through all table rows (except the
-    first, which contains table headers): */
-    for (i = 1; i < (rows.length - 1); i++) {
+    first two, which contains table headers and dummy row): */
+    for (i = 2; i < (rows.length - 1); i++) {
       // Start by saying there should be no switching:
       shouldSwitch = false;
       /* Get the two elements you want to compare,
