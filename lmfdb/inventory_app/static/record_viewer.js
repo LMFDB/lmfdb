@@ -1,6 +1,6 @@
 /*jshint esversion: 6 */
 var tooltip_dict = {'dummy': 'Record does not exist', 'extends': 'Schema is displayed as diff from numbered record', 'base' : 'This is the base record which others extend'};
-var vals_to_sort = ['count'];
+var vals_to_sort = ['count']; // and ID, which is done automatically
 
 function BaseRecord(num, name){
   //Holds the info about the base record for the diffed record types
@@ -43,14 +43,23 @@ function populateRecordViewerPage(blockList, startVisible=true){
 
   var table_div = document.createElement('div');
   var table = document.createElement('table');
-  table.class = 'viewerTable';
+  //table.class = 'viewerTable';
+  table.classList.add('tablesorter');
   table.id = 'viewerTable';
   entry_styles = ['table_tag'];
+  var table_head = document.createElement('thead');
 
   base_record = unpackBaseRecord(blockList);
   var row = createRecordRow(blockList, 'Key', '', base_record, header=true);
-  table.appendChild(row);
-  for(var i=0; i < fields.length; i++){
+  table_head.appendChild(row);
+
+  var row0 = createRecordRow(blockList, fields[0].substr(4, fields[0].length), '#'+fields[0]+id_delimiter, base_record);
+  table_head.appendChild(row0);
+
+  table.appendChild(table_head);
+
+  var table_body = document.createElement('tbody');
+  for(var i=1; i < fields.length; i++){
     row = createRecordRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+id_delimiter, base_record);
     if(row){
       if(!row.classList.contains('viewerTableSpecial')){
@@ -59,9 +68,10 @@ function populateRecordViewerPage(blockList, startVisible=true){
          clas += (i%2 == 0 ? 'Even':'Odd');
          row.classList.add(clas);
       }
-      table.appendChild(row);
+      table_body.appendChild(row);
     }
   }
+  table.appendChild(table_body);
 
   table_div.appendChild(table);
   dataDiv.appendChild(table_div);
@@ -77,7 +87,7 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
   if(header){
     var table_el = document.createElement('th');
     table_el.innerHTML = 'Record Num';
-    table_el.onclick = function() {sortTable(0) };
+    //table_el.onclick = function() {sortTable(0) }; //DLD TODO remove
   }else{
     var table_el = document.createElement('td');
     table_el.innerHTML = field;
@@ -96,7 +106,8 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
       table_el.innerHTML = capitalise(record_fields[j]);
       if(record_fields[j] in tooltip_dict) table_el.title = tooltip_dict[record_fields[j]];
       if(vals_to_sort.includes(record_fields[j])){
-        table_el.onclick = function() { sortTable(j) };
+        // DLD TODO remove
+        //table_el.onclick = function() { sortTable(j) };
       }
     }else{
       var block = blockList.getBlock(id_start+record_fields[j]);
@@ -149,8 +160,8 @@ function sortTable(n) {
     // Start by saying: no switching is done:
     switching = false;
     rows = table.getElementsByTagName("TR");
-    /* Loop through all table rows (except the
-    first two, which contains table headers and dummy row): */
+    /* Loop through all table rows (except the first two,
+     * which contains table headers and the dummy row): */
     for (i = 2; i < (rows.length - 1); i++) {
       // Start by saying there should be no switching:
       shouldSwitch = false;

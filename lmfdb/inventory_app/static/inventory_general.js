@@ -122,6 +122,7 @@ function fetchAndPopulateData(blockList, pageCreator, startVisible=true){
     }else{
 	    populateBlocklist(XHR.blockList, data);
     	pageCreator(XHR.blockList, startVisible=startVisible);
+      $( document ).trigger("dataPopulated");
     }
   });
 
