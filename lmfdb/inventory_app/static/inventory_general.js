@@ -85,7 +85,7 @@ function setNotEditableById(id){
 
 function getBoxTitles(blockList){
   //Returns all the unique box names. Assumes name is all the bit before the final
-  var keys = Object.keys(blockList.blockList).sort();
+  var keys = Object.keys(blockList.blockList);
   var uniq_keys = {};
   for(var i=0; i<keys.length; i++){
     var str = keys[i];
@@ -122,6 +122,7 @@ function fetchAndPopulateData(blockList, pageCreator, startVisible=true){
     }else{
 	    populateBlocklist(XHR.blockList, data);
     	pageCreator(XHR.blockList, startVisible=startVisible);
+      $( document ).trigger("dataPopulated");
     }
   });
 
