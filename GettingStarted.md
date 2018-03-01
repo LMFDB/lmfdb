@@ -118,7 +118,7 @@ Running
   `sage -python -s start-lmfdb.py`
 
 * If you use a local MongoDB instance, specify its port:
-  `sage  -python start-lmfdb.py --debug --dbport 40000`
+  `sage  -python start-lmfdb.py --debug --mongo-port 40000 --mongo-host localhost`
 
 * If several people are running their own version of the webserver on
     the same machine, they cannot all use port 37777 -- if they try,

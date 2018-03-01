@@ -53,11 +53,14 @@ function getBlock(id){
 }
 
 function getBlockIdsFromPartialID(id){
-  //Look up block where id matches the beginning
+  //Look up block where id matches the Prefix and id part
+  //Block names are Prefix, demimiter, id, delimiter, suffix
   blocks =[];
   if(id[0] != '#') id = '#'+id;
   for(var key in this.blockList){
-    if(key.indexOf(id) != -1){
+    var key_secs = key.split(id_delimiter);
+    var new_key = key_secs.slice(0,2).join(id_delimiter);
+    if(new_key === id){
       blocks.push(key);
     }
   }
@@ -85,7 +88,7 @@ function setNotEditableById(id){
 
 function getBoxTitles(blockList){
   //Returns all the unique box names. Assumes name is all the bit before the final
-  var keys = Object.keys(blockList.blockList).sort();
+  var keys = Object.keys(blockList.blockList);
   var uniq_keys = {};
   for(var i=0; i<keys.length; i++){
     var str = keys[i];
@@ -122,6 +125,7 @@ function fetchAndPopulateData(blockList, pageCreator, startVisible=true){
     }else{
 	    populateBlocklist(XHR.blockList, data);
     	pageCreator(XHR.blockList, startVisible=startVisible);
+      $( document ).trigger("dataPopulated");
     }
   });
 

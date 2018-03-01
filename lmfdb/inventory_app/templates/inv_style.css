@@ -124,25 +124,32 @@ div.hide, span.hide{
     display: inline-block;
 }
 
-.viewerTable{
+#viewerTable{
     border: 1px solid black;
     table-layout: auto;
+    font-size: 110%;
 }
 .viewerTableHeaders, .viewerTableEls{
   border: 1px solid black;
+}
+.viewerTableHeaders td, .viewerTableEls td{
   padding : 5px;
 }
-.viewerTableHeaders {
+.tablesorter .viewerTableHeaders {
   font-weight: bold;
+  font-size: 110%;
 }
-.viewerTableOdd{
+table.tablesorter tbody td{
+  background-color: unset;
+}
+table.tablesorter tr:nth-child(2n+2){
     background-color : #e8e8e8;
 }
-.viewerTableEven{
+table.tablesorter tr:nth-child(2n+1){
     background-color : #ffffff;
 }
 .viewerTableSpecial{
-    background-color : #ffe8e8;
+    background-color : #ffe8e8 !important;
 }
 .viewerTableSole{}
 .viewerTableSoleOdd{

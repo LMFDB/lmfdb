@@ -146,7 +146,7 @@ def empty_null_record_info(records):
     """Empty null name or description fields in list of records"""
     try:
         for item in records:
-            print item
+            #print item
             item = empty_all_if_null(item)
     except Exception as e:
         log_dest.error(e)
