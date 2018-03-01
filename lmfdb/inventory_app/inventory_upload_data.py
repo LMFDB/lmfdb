@@ -102,7 +102,7 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
             inv.log_dest.info("            Processing "+field)
             invc.set_field(db, _c_id['id'], field, coll_entry['fields'][field])
         for record in coll_entry['records']:
-            inv.log_dest.info("            Processing record "+record)
+            inv.log_dest.info("            Processing record "+str(record))
             invc.set_record(db, _c_id['id'], coll_entry['records'][record])
         #Cleanup any records which no longer exist
         orph_records = invc.cleanup_records(db, _c_id['id'], coll_entry['records'])
