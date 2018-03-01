@@ -226,15 +226,6 @@ def show_rescrape_page():
 def show_rescrape_poll(uid):
 
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], ['rescrape', url_for('inventory_app.show_rescrape_page')], ['progress', url_for('inventory_app.show_rescrape_poll', uid=uid)]]
-    try:
-        progress = inventory_live_data.get_progress(uid)
-    except ih.ConnectOrAuthFail as e:
-        linv.log_dest.error("Returning auth fail page")
-
-        new_url = str(request.referrer)
-
-        mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
-        return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 
     return render_template('scrape_progress.html', uid=uid, bread=bread)
 

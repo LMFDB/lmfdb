@@ -80,7 +80,12 @@ def get_progress(uid):
         if item['running'] : curr_item = item
 
     if curr_item:
-        prog_in_curr = get_progress_from_db(inv_db, uid, curr_item['db'], curr_item['coll'])
+        try:
+            prog_in_curr = get_progress_from_db(inv_db, uid, curr_item['db'], curr_item['coll'])
+        except Exception as e:
+            #Web front or user can't do anything about errors here. If process
+            # is failing, will become evident later
+            prog_in_curr = 0
     else:
         #Nothing running, so return
         prog_in_curr = 100 * (curr_coll == n_scrapes)
@@ -92,7 +97,11 @@ def get_progress_from_db(inv_db, uid, db_id, coll_id):
 
     db_name = idc.get_db_name(inv_db, db_id)['name']
     coll_name = idc.get_coll_name(inv_db, coll_id)['name']
-    live_progress = sf.get_scrape_progress(db_name, coll_name, getDBConnection())
+    try:
+        live_progress = sf.get_scrape_progress(db_name, coll_name, getDBConnection())
+    except Exception as e:
+        inv.log_dest.warning(e)
+        raise e
     percent = (live_progress[0] *100)/live_progress[1]
 
     return percent
@@ -206,7 +215,7 @@ def collate_orphans_by_uid(uid):
     else:
         orph_data['gone'] = None
 
-    if tmp_orph != {}: 
+    if tmp_orph != {}:
         orph_data['orphan'] = tmp_orph
     else:
         orph_data['orphan'] = None
