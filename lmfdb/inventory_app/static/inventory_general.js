@@ -53,11 +53,14 @@ function getBlock(id){
 }
 
 function getBlockIdsFromPartialID(id){
-  //Look up block where id matches the beginning
+  //Look up block where id matches the Prefix and id part
+  //Block names are Prefix, demimiter, id, delimiter, suffix
   blocks =[];
   if(id[0] != '#') id = '#'+id;
   for(var key in this.blockList){
-    if(key.indexOf(id) != -1){
+    var key_secs = key.split(id_delimiter);
+    var new_key = key_secs.slice(0,2).join(id_delimiter);
+    if(new_key === id){
       blocks.push(key);
     }
   }
