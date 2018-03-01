@@ -20,20 +20,14 @@ from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, 
 
 def db_forms():
     hmfs = getDBConnection().hmfs
-    if 'forms' in hmfs.collection_names():
-        return hmfs.forms
-    else:
-        return hmfs.forms.search
+    return hmfs.forms
 
 def db_fields():
     return getDBConnection().hmfs.fields
 
 def db_hecke():
     hmfs = getDBConnection().hmfs
-    if 'hecke' in hmfs.collection_names():
-        return hmfs.hecke
-    else:
-        return hmfs.forms
+    return hmfs.hecke
 
 def get_hmf(label):
     """Return a complete HMF, give its label.  Note that the
@@ -45,7 +39,7 @@ def get_hmf(label):
     if f==None:
         return None
     if not 'hecke_polynomial' in f:
-        # This will happen if f comes from the 'forms.search' collection
+        # Hecke data now stored in separate hecke collection:
         h = db_hecke().find_one({'label': label})
         if h:
             f.update(h)

@@ -15,10 +15,7 @@ logger = make_logger("hmf")
 
 def db_forms_stats():
     hmfs = getDBConnection().hmfs
-    if 'forms.stats' in hmfs.collection_names():
-        return hmfs.forms.stats
-    else:
-        return hmfs.forms.search.stats
+    return hmfs.forms.stats
 
 the_HMFstats = None
 
