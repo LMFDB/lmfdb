@@ -242,6 +242,8 @@ def get_configuration():
                                            "debug",
                                            "help", 
                                            "mongo-client=",
+                                           "mongo-port=",
+                                           "mongo-host=",
                                             # undocumented, see below
                                             "enable-reloader", "disable-reloader",
                                             "enable-debugger", "disable-debugger",
@@ -280,6 +282,11 @@ def get_configuration():
                 else:
                     sys.stderr.write("%s doesn't exist\n" % arg);
                     sys.exit(2);
+            elif opt == "--mongo-port":
+                mongo_client_options['port'] = int(arg)
+            elif opt == "--mongo-host":
+                mongo_client_options['host'] = arg
+
 
             # undocumented: the following allow changing the defaults for
             # these options to werkzeug (they both default to False unless
