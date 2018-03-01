@@ -128,6 +128,7 @@ div.hide, span.hide{
     border: 1px solid black;
     table-layout: auto;
     font-size: 110%;
+    width: 0px; /* unsets global CSS  width */
 }
 .viewerTableHeaders, .viewerTableEls{
   border: 1px solid black;
