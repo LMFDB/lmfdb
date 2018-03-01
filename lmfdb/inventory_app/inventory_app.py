@@ -221,6 +221,12 @@ def show_rescrape_page():
 
     return render_template('scrape_main.html', listing=listing, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_rescrape_page')]])
 
+@inventory_app.route('live/')
+@login_required
+def show_live_list():
+    listing = inventory_live_data.get_db_lists()
+    return jsonify(listing)
+
 @inventory_app.route('rescrape/progress/<string:uid>/')
 @login_required
 def show_rescrape_poll(uid):
