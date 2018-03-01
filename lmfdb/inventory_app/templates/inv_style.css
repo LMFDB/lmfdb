@@ -131,17 +131,18 @@ div.hide, span.hide{
     width: 0px; /* unsets global CSS  width */
 }
 .viewerTableHeaders, .viewerTableEls{
-  border: 1px solid black;
+    border: 1px solid black;
+    padding-left: 4px;
 }
 .viewerTableHeaders td, .viewerTableEls td{
-  padding : 5px;
+    padding : 5px;
 }
 .tablesorter .viewerTableHeaders {
-  font-weight: bold;
-  font-size: 110%;
+    font-weight: bold;
+    font-size: 110%;
 }
 table.tablesorter tbody td{
-  background-color: unset;
+    background-color: unset;
 }
 table.tablesorter tr:nth-child(2n+2){
     background-color : #e8e8e8;
