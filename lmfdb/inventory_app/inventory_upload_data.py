@@ -103,12 +103,9 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
             invc.set_field(db, _c_id['id'], field, coll_entry['fields'][field])
         for record in coll_entry['records']:
             inv.log_dest.info("            Processing record "+record)
-            rec_hash = ih.hash_record_schema(coll_entry['records'][record]['schema'])
-            rec_entry = invc.get_record(db, _c_id['id'], rec_hash)
-            if rec_entry['exist']:
-                invc.update_record_count(db, rec_entry['id'], coll_entry['records'][record]['count'])
-            else:
-                invc.set_record(db, _c_id['id'], coll_entry['records'][record])
+            invc.set_record(db, _c_id['id'], coll_entry['records'][record])
+        #Cleanup any records which no longer exist
+        orph_records = invc.cleanup_records(db, _c_id['id'], coll_entry['records'])
 
         inv.log_dest.info("            Processing indices")
         upload_indices(db, _c_id['id'], coll_entry['indices'])
