@@ -227,6 +227,12 @@ h2
     margin: 15px 0 10px 0;
 }
 
+.important{
+  color: red;
+  font-size:120%;
+  font-style:italic;
+}
+
 .err_text{
     color: red;
     font-size:120%;

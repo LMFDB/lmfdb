@@ -3,16 +3,20 @@ function rescanAll(db){
 
   var info = {'db':db, 'coll':null};
   console.log(info);
-  sendRescanRequest(info, scrapeDest);
-
+  cont = confirm('This action may take some time. Are you sure?');
+  if(cont){
+    sendRescanRequest(info, scrapeDest);
+  }
 }
 
 function rescan(db, coll){
 
   var info = {'db':db, 'coll':coll};
   console.log(info);
-  sendRescanRequest(info, scrapeDest);
-
+  cont = confirm('This action may take some time. Are you sure?');
+  if(cont){
+    sendRescanRequest(info, scrapeDest);
+  }
 }
 
 function sendRescanRequest(info, dest){
