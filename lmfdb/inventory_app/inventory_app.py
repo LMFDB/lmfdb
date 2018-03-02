@@ -2,6 +2,7 @@ from flask import render_template, request, url_for, make_response, jsonify, Blu
 from flask_login import login_required
 import inventory_viewer
 import inventory_live_data
+import inventory_control
 import lmfdb_inventory as linv
 import inventory_helpers as ih
 import sys, os
@@ -191,7 +192,7 @@ def edit_failure(request=request):
 
 
 #Destination for submission
-@inventory_app.route('submit', methods=['POST'])
+@inventory_app.route('submit/', methods=['POST'])
 @login_required
 def submit_edits():
     #Do the submission
@@ -204,7 +205,7 @@ def submit_edits():
     #Return a redirect to be done on client
     return jsonify({'url':url_for('inventory_app.edit_success'), 'code':302, 'success':True})
 
-#Functions for rescraping etc
+#Functions for rescraping etc -----------------------------------
 @inventory_app.route('rescrape/')
 @login_required
 def show_rescrape_page():
@@ -258,3 +259,16 @@ def fetch_summary_data(uid):
 def submit_rescrape_request():
     scrape_info = inventory_live_data.trigger_scrape(request.data)
     return jsonify({'url':url_for('inventory_app.show_rescrape_poll', uid=scrape_info['uid']), 'uid':scrape_info['uid'], 'locks':scrape_info['locks']})
+
+# Control panel functions and endpoints ---------------------------------------
+@inventory_app.route('controlpanel')
+@login_required
+def show_panel():
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_panel')], ['control panel']]
+    return render_template('control_panel.html', bread=bread)
+
+@inventory_app.route('controlpanel/trigger', methods=['POST'])
+@login_required
+def trigger_control_functions():
+    outcome = inventory_control.act(request.data)
+    return jsonify(outcome)
