@@ -27,6 +27,8 @@ def css():
         response.headers['Cache-Control'] = 'public, max-age=600'
     return response
 
+#------ Listing pages -----------------------------------
+
 #The root of edit pages, lists databases having inventory data
 @inventory_app.route('')
 def show_edit_root():
@@ -43,16 +45,7 @@ def show_edit_root():
 
     return render_template('edit_show_list.html', db_name = None, nice_name=None, listing=listing, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]])
 
-@inventory_app.route('livedata')
-def generate_live_listing():
-    try:
-        results = inventory_live_data.get_db_lists()
-    except ih.ConnectOrAuthFail:
-        linv.log_dest.error("Returning auth fail page")
-        return "{}"
-    return jsonify(results)
-
-#Edit page per DB, lists collections
+#Page per DB, lists collections
 @inventory_app.route('<string:id>/')
 def show_edit_child(id):
     try:
@@ -69,28 +62,29 @@ def show_edit_child(id):
 
     return render_template('edit_show_list.html', db_name=id, nice_name=nice_name, listing=listing, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
 
+#-------- Viewer pages -----------------------------------
+
 #Viewer page per collection, shows formatted fields
 @inventory_app.route('<string:id>/<string:id2>/')
 def show_inventory(id, id2):
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)]]
     return render_template('view_inventory.html', db_name=id, collection_name=id2, bread=bread, table_fields=linv.display_field_order(), info_fields=linv.info_field_order())
 
+#Viewer page for records
 @inventory_app.route('<string:id>/<string:id2>/records/')
 def show_records(id, id2):
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['records', url_for('inventory_app.show_records', id=id, id2=id2)]]
-
     try:
         nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
     except ih.ConnectOrAuthFail as e:
         linv.log_dest.error("Returning auth fail page")
-
         new_url = str(request.referrer)
-
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
     return render_template('view_records.html', db_name=id, collection_name=id2, bread=bread, record_fields=linv.record_field_order(), nice_name=nice_name)
 
+#Viewer page for indices
 @inventory_app.route('<string:id>/<string:id2>/indices/')
 def show_indices(id, id2):
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['indices', url_for('inventory_app.show_indices', id=id, id2=id2)]]
@@ -106,14 +100,36 @@ def show_indices(id, id2):
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
     return render_template('view_indices.html', db_name=id, collection_name=id2, bread=bread, nice_name=nice_name, index_fields=linv.index_field_order())
 
-#Edit page per collection, shows editable fields
+#-------- Editing pages ----------------------------------------
+
+#Inventory dit page per collection
 @inventory_app.route('<string:id>/<string:id2>/edit/')
 @login_required
 def show_edit_inventory(id, id2):
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
     return render_template('edit_inventory.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), bread=bread, table_fields=linv.display_field_order())
 
-#Edit data source to populate inventory pages
+#Record edit page per collection
+@inventory_app.route('<string:id>/<string:id2>/records/edit/')
+@login_required
+def show_edit_records(id, id2):
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['records', url_for('inventory_app.show_records', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_records', id=id, id2=id2)]]
+    nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
+    return render_template('edit_records.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), record_fields=linv.record_field_order(), bread=bread, nice_name =nice_name, record_noedit=linv.record_noeditable())
+
+#-------- Data sources (json returns) ----------------------------------------
+
+#Live (direct from LMFDB) list of database/collection names
+@inventory_app.route('live/')
+def generate_live_listing():
+    try:
+        results = inventory_live_data.get_db_lists()
+    except ih.ConnectOrAuthFail:
+        linv.log_dest.error("Connection failure, returning no data")
+        return "{}"
+    return jsonify(results)
+
+#Data source to populate inventory pages
 @inventory_app.route('<string:id>/<string:id2>/edit/data/')
 @inventory_app.route('<string:id>/<string:id2>/data/')
 def fetch_edit_inventory(id, id2):
@@ -124,15 +140,7 @@ def fetch_edit_inventory(id, id2):
         return "{}"
     return jsonify(results)
 
-#Edit page per collection, shows editable fields
-@inventory_app.route('<string:id>/<string:id2>/records/edit/')
-@login_required
-def show_edit_records(id, id2):
-    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['records', url_for('inventory_app.show_records', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_records', id=id, id2=id2)]]
-    nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
-    return render_template('edit_records.html', db_name=id, collection_name=id2, type_data=linv.get_type_strings_as_json(), record_fields=linv.record_field_order(), bread=bread, nice_name =nice_name, record_noedit=linv.record_noeditable())
-
-#Data source to populate inventory pages
+#Data source to populate records pages
 @inventory_app.route('<string:id>/<string:id2>/records/data/')
 @inventory_app.route('<string:id>/<string:id2>/records/edit/data/')
 def fetch_edit_records(id, id2):
@@ -143,7 +151,7 @@ def fetch_edit_records(id, id2):
         return "{}"
     return jsonify(results)
 
-#Data source to populate inventory pages
+#Data source to populate indices pages
 @inventory_app.route('<string:id>/<string:id2>/indices/data/')
 def fetch_indices(id, id2):
     try:
@@ -152,6 +160,8 @@ def fetch_indices(id, id2):
         linv.log_dest.error("Returning auth fail page")
         return "{}"
     return jsonify(results)
+
+#-------- Submit and result pages ----------------------------------------
 
 #Page shown after successful edit submission
 @inventory_app.route('success/')
@@ -190,8 +200,7 @@ def edit_failure(request=request):
     mess = "Error "+str(errcode)+": ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+errstr+" for "+url_info['db_name']+"."+url_info['collection_name']
     return render_template('edit_failure.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 
-
-#Destination for submission
+#Destination for edit submissions
 @inventory_app.route('submit/', methods=['POST'])
 @login_required
 def submit_edits():
@@ -205,37 +214,32 @@ def submit_edits():
     #Return a redirect to be done on client
     return jsonify({'url':url_for('inventory_app.edit_success'), 'code':302, 'success':True})
 
-#Functions for rescraping etc -----------------------------------
+# ---Functions for rescraping etc -----------------------------------
 @inventory_app.route('rescrape/')
 @login_required
 def show_rescrape_page():
+
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], ['rescrape', url_for('inventory_app.show_rescrape_page')]]
     try:
         listing = inventory_live_data.get_db_lists()
     except ih.ConnectOrAuthFail as e:
         linv.log_dest.error("Returning auth fail page")
-
         new_url = str(request.referrer)
-
-        bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_rescrape_page')]]
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)
 
-    return render_template('scrape_main.html', listing=listing, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_rescrape_page')]])
+    return render_template('scrape_main.html', listing=listing, bread=bread)
 
-@inventory_app.route('live/')
-@login_required
-def show_live_list():
-    listing = inventory_live_data.get_db_lists()
-    return jsonify(listing)
-
+#++++++++ Rescrape progress display and monitoring +++++++++++++++
+#Show progress page for uid
 @inventory_app.route('rescrape/progress/<string:uid>/')
 @login_required
 def show_rescrape_poll(uid):
 
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], ['rescrape', url_for('inventory_app.show_rescrape_page')], ['progress', url_for('inventory_app.show_rescrape_poll', uid=uid)]]
-
     return render_template('scrape_progress.html', uid=uid, bread=bread)
 
+#Progress data source
 @inventory_app.route('rescrape/progress/<string:uid>/monitor/')
 @login_required
 def fetch_progress_data(uid):
@@ -245,6 +249,7 @@ def fetch_progress_data(uid):
         progress = {'n_colls':0, 'curr_coll':0, 'progress_in_current':0}
     return jsonify(progress)
 
+#Progress data source on completion
 @inventory_app.route('rescrape/progress/<string:uid>/complete/')
 @login_required
 def fetch_summary_data(uid):
@@ -254,6 +259,7 @@ def fetch_summary_data(uid):
         data = {}
     return jsonify(data)
 
+#++++++++ Rescrape subission +++++++++++++++
 @inventory_app.route('rescrape/submit', methods=['POST'])
 @login_required
 def submit_rescrape_request():
@@ -264,7 +270,7 @@ def submit_rescrape_request():
 @inventory_app.route('controlpanel')
 @login_required
 def show_panel():
-    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_panel')], ['control panel']]
+    bread=[['&#8962;', url_for('index')],[url_pref.strip('/'),  url_for('inventory_app.show_edit_root')], ['control panel', url_for('inventory_app.show_panel')]]
     return render_template('control_panel.html', bread=bread)
 
 @inventory_app.route('controlpanel/trigger', methods=['POST'])
