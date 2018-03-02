@@ -1,7 +1,6 @@
 from scripts.reports.jsonify_db_structure import get_lmfdb_collections as glc
 import json
 import inventory_helpers as ih
-import inventory_viewer as iv
 import lmfdb_inventory as inv
 import inventory_db_core as idc
 import uuid
@@ -27,6 +26,15 @@ def check_scrapes_on(spec):
         if spec['coll']:
             coll_id = idc.get_coll_id(inv_db, db_id['id'], spec['coll'])
             spec_ids['coll'] = coll_id['id']
+        result = check_if_scraping(inv_db, spec_ids) or check_if_scraping_queued(inv_db, spec_ids)
+        return result
+    except Exception as e:
+        return False
+
+def check_scrapes_by_coll_id(inv_db, coll_id):
+    """Check for scrapes queued or in progress for coll_id"""
+    try:
+        spec_ids = {'coll':coll_id}
         result = check_if_scraping(inv_db, spec_ids) or check_if_scraping_queued(inv_db, spec_ids)
         return result
     except Exception as e:

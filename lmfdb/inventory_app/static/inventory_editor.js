@@ -187,12 +187,19 @@ function submitEdits(dest){
   XHR.addEventListener('load', function(event) {
     //On success redirect to a success page
     var response = JSON.parse(XHR.response);
-    window.location.replace(response.url);
+    if(!response.success){
+      alert('Error submitting edits. '+response.fail+ ' Please try again.');
+      resetSubmitInProgress();
+    }else{
+      window.location.replace(response.url);
+    }
   });
 
   // Define what happens in case of error
   XHR.addEventListener('error', function(event) {
-    alert('Error submitting edits. Please try again.');
+    var response = JSON.parse(XHR.response);
+    alert('Error submitting edits. '+response.fail+ ' Please try again.');
+    resetSubmitInProgress();
   });
 
   XHR.send(responseText);
@@ -215,14 +222,17 @@ function submitBlockEdits(dest, field){
   XHR.addEventListener('load', function(event) {
     //On success, reset screen
     var response = JSON.parse(XHR.response);
+    if(!response.success){
+      alert('Error submitting edits. '+response.fail+ ' Please try again.');
+    }
     resetSubmitInProgress();
-    if(!response.success) alert('Error submitting edits. Please try again.');
   });
 
   // Define what happens in case of error
   XHR.addEventListener('error', function(event) {
+    var response = JSON.parse(XHR.response);
     resetSubmitInProgress();
-    alert('Error submitting edits. Please try again.');
+    alert('Error submitting edits. '+response.fail+ ' Please try again.');
   });
 
   XHR.send(responseText);

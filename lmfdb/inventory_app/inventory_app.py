@@ -207,9 +207,11 @@ def submit_edits():
     #Do the submission
     try:
         inventory_viewer.apply_submitted_edits(request)
+    except inventory_viewer.EditLockError as e:
+        return jsonify({'url':url_for('inventory_app.edit_failure', code=e.errcode), 'code':400, 'success':False, 'fail':'Collection is locked'})
     except Exception as e:
         #apply_submitted_edits only throws for serious code errors
-        return jsonify({'url':url_for('inventory_app.edit_failure', code=e.errcode), 'code':302, 'success':False})
+        return jsonify({'url':url_for('inventory_app.edit_failure', code=e.errcode), 'code':302, 'success':False, 'fail':'Unknown Error'})
 
     #Return a redirect to be done on client
     return jsonify({'url':url_for('inventory_app.edit_success'), 'code':302, 'success':True})

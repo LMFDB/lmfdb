@@ -4,6 +4,7 @@ import inventory_helpers as ih
 import lmfdb_inventory as inv
 import inventory_db_core as idc
 from inventory_db_inplace import update_fields
+from scrape_helpers import check_scrapes_by_coll_id
 from copy import deepcopy
 from lmfdb.utils import comma
 
@@ -54,7 +55,7 @@ def gen_retrieve_db_listing(db, db_name=None):
             table = db[coll_name]
             query = {inv.ALL_STRUC.coll_ids[inv.STR_CONTENT][1]:_id}
             records = list(table.find(query, {'_id': 1, 'name' : 1, 'nice_name':1, 'status':1}))
-            records = [(rec['name'], rec['nice_name'], idc.count_records_and_types(db, rec['_id'], as_string=True), ih.code_to_status(rec['status'])) for rec in records]
+            records = [(rec['name'], rec['nice_name'], idc.count_records_and_types(db, rec['_id'], as_string=True), ih.code_to_status(rec['status']), check_locked(db, rec['_id'])) for rec in records]
     except Exception as e:
         inv.log_dest.error("Something went wrong retrieving db info "+str(e))
         records = None
@@ -301,7 +302,7 @@ def apply_edits(diff):
 
 
 def apply_submitted_edits(response):
-    """ Apply edits submitted as a diffs object via web, i.e member of response obj
+    """ Attempt to apply edits submitted as a diffs object via web, i.e member of response obj
     """
     try:
         inv.log_transac.info(str(response.referrer)+' : '+str(response.data))
@@ -318,10 +319,12 @@ def apply_submitted_edits(response):
         raise DiffDecodeError(str(e))
 
     try:
+        check_locks(resp_str) # Throws custom error if locked
         validate_edits(resp_str) #This throws custom exceptions
         resp_str = process_edits(resp_str)
         update_fields(resp_str)
     except Exception as e:
+        #Log and re-raise
         inv.log_dest.error("Error in edit validation "+str(e))
         raise e
 
@@ -397,8 +400,30 @@ def process_edits(diff):
 
     return diff
 
-#  Custom exceptions for diff validation
+# Check for locks oncoll before applying
+def check_locked(inv_db, coll_id):
+    return check_scrapes_by_coll_id(inv_db, coll_id)
 
+def check_locks(resp):
+    """Check if request pertains to locked coll"""
+    inv.setup_internal_client()
+    try:
+        db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception:
+        raise ih.ConnectOrAuthFail("")
+
+    try:
+        db_name = resp['db']
+        coll_name = resp['collection']
+        db_id = idc.get_db_id(db, db_name)
+        coll_id = idc.get_coll_id(db, db_id['id'], coll_name)
+        if check_locked(db, coll_id['id']):
+            raise EditLockError('Collection locked')
+    except Exception as e:
+        inv.log_dest.error("Error in locking "+str(e))
+        raise e
+
+#  Custom exceptions for diff validation ++++++++++++++++++++++++++++++++++
 
 class DiffKeyError(KeyError):
     """Raise in place of KeyError for edit diffs"""
@@ -428,14 +453,21 @@ class DiffCollideError(RuntimeError):
         mess = "Edits collided "+message
         super(RuntimeError, self).__init__(mess)
 
+class EditLockError(RuntimeError):
+    """Use when editing is locked"""
+    errcode = 16
+    def __init__(self, message):
+        mess = message
+        super(RuntimeError, self).__init__(mess)
+
 class DiffUnknownError(RuntimeError):
     """Raise for errors not otherwise specified"""
-    errcode = 16
+    errcode = 32
     def __init__(self, message):
         mess = "Unknown error "+message
         super(RuntimeError, self).__init__(mess)
 
-err_registry = {1:DiffKeyError(" "), 2:DiffBadType(""), 4:DiffDecodeError(""), 8:DiffCollideError(""), 16:DiffUnknownError("")}
+err_registry = {1:DiffKeyError(" "), 2:DiffBadType(""), 4:DiffDecodeError(""), 8:DiffCollideError(""), 16:EditLockError(""), 32:DiffUnknownError("")}
 
 #   End custom exceptions for diff validation
 
