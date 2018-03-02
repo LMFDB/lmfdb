@@ -9,6 +9,32 @@ from copy import deepcopy
 from lmfdb.utils import comma
 
 #Functions to populate viewer pages
+
+def is_valid_db(db_name):
+
+    return is_valid_db_collection(db_name, None)
+
+def is_valid_db_collection(db_name, collection_name):
+    """Check if db and collection name (if not None) exist"""
+    try:
+        inv.setup_internal_client()
+        db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception as e:
+        raise ih.ConnectOrAuthFail("")
+        return False
+    try:
+        db_id = idc.get_db_id(db, db_name)
+        if not db_id['exist']:
+            return False
+        if collection_name:
+            coll_id = idc.get_coll_id(db, db_id['id'], collection_name)
+            if not coll_id['exist']:
+                return False
+    except Exception as e:
+        inv.log_dest.error('Failed checking existence of '+db_name+' '+collection_name+' '+str(e))
+        return False
+    return True
+
 def get_nicename(db_name, collection_name):
     """Return the nice_name string for given db/coll pair"""
 
