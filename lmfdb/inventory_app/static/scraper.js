@@ -24,16 +24,22 @@ function sendRescanRequest(info, dest){
   XHR.setRequestHeader('Content-Type', 'text/plain');
 
   XHR.addEventListener('load', function(event) {
-    //On success redirect to a success page
+    //On successful response, either redirect to success page or
+    //show lock message
     console.log(XHR.response);
     var response = JSON.parse(XHR.response);
-    console.log(response);
-    window.location.href=response.url;
+    if(response.locks){
+      alert('Scraping already in progress on (some of) requested collection(s). Try again later.');
+    }else if(response.err){
+      alert('Error submitting request. Please try again.');
+    }else{
+      window.location.href=response.url;
+    }
   });
 
   // Define what happens in case of error
   XHR.addEventListener('error', function(event) {
-    alert('Error submitting edits. Please try again.');
+    alert('Error submitting request. Please try again.');
   });
 
   XHR.send(responseText);

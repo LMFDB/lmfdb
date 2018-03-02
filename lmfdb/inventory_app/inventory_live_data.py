@@ -40,24 +40,30 @@ def trigger_scrape(data):
     """Start the rescrape process. In particular, get a uuid for it, register it, and spawn actual scrape"""
 
     data = json.loads(data)
-    uid = get_uid()
     db = data['data']['db']
     coll = data['data']['coll']
     cont = True
+    inprog = False
+
+    uid = get_uid()
     if not coll:
         all_colls = glc(databases=db)
         inv.log_dest.warning(db+' '+str( all_colls))
         coll_list = all_colls[db]
         for each_coll in coll_list:
-            cont = cont and register_scrape(db, each_coll, uid)
+            tmp = register_scrape(db, each_coll, uid)
+            cont = cont and not tmp['err'] and not tmp['inprog']
+            inprog = inprog and tmpp['inprog']
     else:
-        cont = register_scrape(db, coll, uid)
+        tmp = register_scrape(db, coll, uid)
+        cont = not tmp['err'] and not tmp['inprog']
+        inprog = tmp['inprog']
         coll_list = [coll]
     if(cont):
         sf.scrape_and_upload_threaded(db, coll_list, uid)
-        return uid
+        return {'uid':uid, 'locks':None, 'err':False}
     else:
-        return uuid.UUID(null_uid)
+        return {'uid':uuid.UUID(null_uid), 'locks':inprog, 'err':cont}
 
 def get_progress(uid):
     """Get progress of scrape with uid"""
@@ -71,7 +77,7 @@ def get_progress(uid):
         return False
 
     scrapes = inv_db['ops'].find({'uid':uuid.UUID(uid), 'running':{"$exists":True}})
-    #Assume all ops records with correct uid and containing 'progress' are relevant
+    #Assume all ops records with correct uid and containing 'running' are relevant
     n_scrapes = scrapes.count()
     curr_coll = 0
     curr_item = None

@@ -256,5 +256,5 @@ def fetch_summary_data(uid):
 @inventory_app.route('rescrape/submit', methods=['POST'])
 @login_required
 def submit_rescrape_request():
-    uid = inventory_live_data.trigger_scrape(request.data)
-    return jsonify({'url':url_for('inventory_app.show_rescrape_poll', uid=uid), 'uid':uid})
+    scrape_info = inventory_live_data.trigger_scrape(request.data)
+    return jsonify({'url':url_for('inventory_app.show_rescrape_poll', uid=scrape_info['uid']), 'uid':scrape_info['uid'], 'locks':scrape_info['locks']})
