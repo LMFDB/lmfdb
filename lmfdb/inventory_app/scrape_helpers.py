@@ -56,12 +56,13 @@ def register_scrape(db, coll, uid):
             coll_id = idc.get_coll_id(inv_db, db_id, coll)
             inv.log_dest.warning(str(coll_id))
             coll_id = coll_id['id']
-            tmp = check_and_insert_scrape_record(inv_db, db_id, coll_id, uid)['ok']
+            tmp = check_and_insert_scrape_record(inv_db, db_id, coll_id, uid)
             inprog = tmp['inprog'] and inprog
             had_err = tmp['err'] and had_err
 
     except Exception as e:
         #Either failed to connect etc, or are already scraping
+        inv.log_dest.warning('Error resistering scrape '+str(e))
         return {'err':True, 'inprog':False}
 
     return {'err':had_err, 'inprog':inprog}
@@ -117,41 +118,6 @@ def insert_scrape_record(inv_db, record):
     coll = inv_db['ops']
     result = coll.insert_one(record)
     return result
-
-def update_scrape_progress_helper(inv_db, db_id, coll_id, uid, complete=None, running=None):
-    """Update the stored progress value
-    If running is provided, then set it.
-    """
-    try:
-        rec_find = {'db':db_id, 'coll':coll_id, 'uid':uid}
-        rec_set = {}
-        if complete is not None:
-            rec_set['complete'] = complete
-        if running is not None:
-            rec_set['running'] = running
-        if rec_set:
-            inv_db['ops'].find_one_and_update(rec_find, {"$set":rec_set})
-    except:
-        pass
-
-def update_scrape_progress(db, coll, uid, complete=None, running=None):
-    """Update progress of scrape from db/coll names and uid """
-
-    try:
-        got_client = inv.setup_internal_client(editor=True)
-        assert(got_client == True)
-        inv_db = inv.int_client[inv.get_inv_db_name()]
-    except Exception as e:
-        inv.log_dest.error("Error getting Db connection "+ str(e))
-        return False
-
-    try:
-        db_id = idc.get_db_id(inv_db, db)
-        coll_id = idc.get_coll_id(inv_db, db_id['id'], coll)
-        update_scrape_progress_helper(inv_db, db_id['id'], coll_id['id'], uid, complete=complete, running=running)
-    except Exception as e:
-        inv.log_dest.error("Error updating progress "+ str(e))
-        return False
 
 def null_all_scrapes(db, coll):
     """Update all scrapes on db.coll to be 'complete' """
