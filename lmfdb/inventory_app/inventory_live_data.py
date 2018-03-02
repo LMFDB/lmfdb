@@ -143,18 +143,19 @@ def mark_all_gone(main_db):
         db_id = idc.get_db_id(inv_db, db[0])
         for coll in colls:
             gone = not (coll[0] in all_colls[db[0]])
-            if gone:
+            #Only mark if isn't already
+            mark = gone and coll[3] != 'gone'
+            if mark:
                 coll_id = idc.get_coll_id(inv_db, db_id['id'], coll[0])
                 idc.update_coll(inv_db, coll_id['id'], status=gone_code)
+                inv.log_dest.info(str(db) +'.'+str(coll) +' is now gone')
 
-def remove_all_gone():
+def remove_all_gone(inv_db):
     """Remove inventory data for 'gone' collections"""
     pass
 
-def update_gone_lists():
-    """Remove any collections that are flagged as gone, THEN check for any others that are gone
-
-    Call twice in succession to completely get rid of any gone collection data
+def update_gone_list():
+    """Check for any colections that are gone and mark
     """
     try:
         got_client = inv.setup_internal_client(editor=True)
@@ -165,6 +166,21 @@ def update_gone_lists():
         return False
 
     mark_all_gone(main_db)
+    return True
+
+def remove_gone_collections():
+    """Remove any collections marked as gone
+    """
+    try:
+        got_client = inv.setup_internal_client(editor=True)
+        assert(got_client == True)
+        inv_db = inv.int_client[inv.get_inv_db_name()]
+    except Exception as e:
+        inv.log_dest.error("Error getting Db connection "+ str(e))
+        return False
+
+    remove_all_gone(inv_db)
+    return True
 
 #Other scraping result handling
 
