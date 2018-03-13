@@ -4,6 +4,7 @@ import inventory_helpers as ih
 import lmfdb_inventory as inv
 import inventory_db_core as idc
 from inventory_db_inplace import update_fields
+from inventory_live_data import get_lockout_state
 from scrape_helpers import check_scrapes_by_coll_id
 from copy import deepcopy
 from lmfdb.utils import comma
@@ -431,13 +432,16 @@ def check_locked(inv_db, coll_id):
     return check_scrapes_by_coll_id(inv_db, coll_id)
 
 def check_locks(resp):
-    """Check if request pertains to locked coll"""
+    """Check if request pertains to locked coll
+    or editing is locked globally
+    """
     inv.setup_internal_client()
     try:
         db = inv.int_client[inv.ALL_STRUC.name]
     except Exception:
         raise ih.ConnectOrAuthFail("")
-
+    if get_lockout_state():
+        raise EditLockError('Global Edit Lock')
     try:
         db_name = resp['db']
         coll_name = resp['collection']

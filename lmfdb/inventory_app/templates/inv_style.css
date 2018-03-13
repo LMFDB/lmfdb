@@ -189,6 +189,11 @@ h2.link{
   /* Link styled headings for names */
 }
 
+h1.warn{
+  color : red !important;
+  font-size : 200% !important;
+}
+
 #inv_main{
 
   float: left;

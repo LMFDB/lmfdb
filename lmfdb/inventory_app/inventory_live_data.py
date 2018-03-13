@@ -280,3 +280,42 @@ def check_orphan_empty(entry):
     for item in entry['data']:
         empty = empty and (entry['data'][item] is None)
     return empty
+
+def set_lockout_state(state):
+    """Swap state of lockout. If record exists, toggle, else create"""
+    try:
+        got_client = inv.setup_internal_client(editor=True)
+        assert(got_client == True)
+        inv_db = inv.int_client[inv.get_inv_db_name()]
+    except Exception as e:
+        inv.log_dest.error("Error getting Db connection "+ str(e))
+        return True
+    try:
+        assert(state == True or state == False)
+        rec_find = {'lockout':{"$exists":True}}
+        rec_set = {'lockout':state}
+        res = idc.upsert_and_check(inv_db['ops'], rec_find, rec_set)
+    except:
+        inv.log_dest.error('Failed to set lockout state')
+    if res['err']:
+        inv.log_dest.error('Failed to set lockout state')
+
+def get_lockout_state():
+    """Get lockout status"""
+    try:
+        got_client = inv.setup_internal_client(editor=True)
+        assert(got_client == True)
+        inv_db = inv.int_client[inv.get_inv_db_name()]
+    except Exception as e:
+        inv.log_dest.error("Error getting Db connection "+ str(e))
+        return True
+
+    try:
+        rec_find = {'lockout':{"$exists":True}}
+        res = inv_db['ops'].find_one(rec_find)
+    except:
+        pass
+    if res is None:
+        return False
+    else:
+        return res['lockout']

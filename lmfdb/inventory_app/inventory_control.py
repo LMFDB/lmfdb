@@ -30,8 +30,16 @@ def act(request):
         data = ild.collate_orphans()
         reply = 'Downloading Data'
         result = True
+    elif action == 'lock_edit':
+        ild.set_lockout_state(True)
+        reply = 'Editing Locked'
+        result = True
+    elif action == 'unlock_edit':
+        ild.set_lockout_state(False)
+        reply = 'Editing Unlocked'
+        result = True
     else:
-        return {'err':True, 'reply':'Requsted action not understood', 'data':data}
+        return {'err':True, 'reply':'Requested action not understood', 'data':data}
 
     if reply is None:
         if result:
