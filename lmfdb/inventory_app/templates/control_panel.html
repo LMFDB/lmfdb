@@ -9,9 +9,10 @@ var dest = '{{ url_for('inventory_app.trigger_control_functions') }}';
 
 function sendControlRequest(action){
 
-  conf = verifyProceed(action);
+  var conf = verifyProceed(action);
   if(conf){
-    sendToServer(action);
+    var callback = getCallback(action);
+    sendToServer(action, callback);
   }
 }
 
@@ -20,18 +21,28 @@ function verifyProceed(action){
   //ONLY put things here that are cheap and/or frequent and
   //you don't want to annoy user with too many dialogs
 
-  var noConf = ['mark_gone'];
-
-  if(action in noConf){
+  var noConf = ['mark_gone', 'download_orphans'];
+  if(noConf.indexOf(action) != -1){
     return true;
   }else{
     conf = confirm('This action may take some time or alter inventory data. Are you sure?' );
-    console.log(conf)
     return conf;
   }
 }
+function saveJSON(data){
+  console.log(data);
+  saveTextAsFile(JSON.stringify(data), 'ExportedData.json');
+}
+function getCallback(action){
 
-function sendToServer(action){
+  var doDownload = ['download_orphans'];
+  if(doDownload.indexOf(action) != -1){
+    return saveJSON;
+  }
+  return null;
+}
+
+function sendToServer(action, callback=null){
 
   var info = {'action':action};
   var responseText = JSON.stringify(info);
@@ -42,6 +53,8 @@ function sendToServer(action){
   XHR.addEventListener('load', function(event) {
     //On response alert with answer
     var response = JSON.parse(XHR.response);
+    console.log(response, response.data, callback);
+    if(callback) callback(response.data);
     if(response.err){
       alert('An error occurred processing request. '+response.reply);
     }else{
@@ -73,6 +86,8 @@ Inventory Control Panel
         <input type='button' id = 'cleangone' title = 'Check which collections are marked gone and remove' value ='Cleanup Removed Collections' onclick='sendControlRequest("clean_gone")'>
       <h2>Inventory Rescraping Control</h2>
         <input type='button' id = 'cleanscrape' title = 'Cancel expired failed scrape processes' value ='Cleanup Scraping' onclick='sendControlRequest("clean_scrapes")'>
+      </p>
+        <input type='button' id = 'downloadorph' title = 'Download all orphaned key data as json' value ='Download Orphan Data' onclick='sendControlRequest("download_orphans")'>
       {% else %}
       <h2>General Inventory Control</h2>
         <input type='button' value ='Mark Collections Gone' title ='Please login for controls' disabled class=disabledbutton>
@@ -80,6 +95,8 @@ Inventory Control Panel
         <input type='button' value ='Cleanup Removed Collections' title ='Please login for controls' disabled class=disabledbutton>
       <h2>Inventory Rescraping Control</h2>
         <input type='button' value ='Cleanup Scraping' title ='Please login for controls' disabled class=disabledbutton>
+      </p>
+        <input type='button' value ='Download Orphan Data' title ='Please login for controls' disabled class=disabledbutton>
       {% endif %}
 
   </div>

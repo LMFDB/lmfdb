@@ -223,26 +223,38 @@ def collate_orphans_by_uid(uid):
         except:
             pass
 
-    orph_data['db'] = db_name
-    tmp_gone = {}
-    tmp_orph = {}
+    orph_data[db_name] = {}
     for entry in records:
         coll = idc.get_coll_name(inv_db, entry['coll'])['name']
-        orph_tmp = split_orphans(entry)
-        tmp_gone[coll] = orph_tmp['gone']
-        tmp_orph[coll] = orph_tmp['orphan']
-
-    if tmp_gone != {}:
-        orph_data['gone'] = tmp_gone
-    else:
-        orph_data['gone'] = None
-
-    if tmp_orph != {}:
-        orph_data['orphan'] = tmp_orph
-    else:
-        orph_data['orphan'] = None
+        orph_data[db_name][coll] = split_orphans(entry)
 
     return orph_data
+
+def collate_orphans():
+    """Fetch all orphans and return summary"""
+
+    try:
+        got_client = inv.setup_internal_client(editor=True)
+        assert(got_client == True)
+        inv_db = inv.int_client[inv.get_inv_db_name()]
+    except Exception as e:
+        inv.log_dest.error("Error getting Db connection "+ str(e))
+        return False
+    #All orphans records
+    record = {'orphans':{"$exists":True}}
+    records = inv_db['ops'].find(record)
+    orph_data = {}
+
+    for entry in records:
+        print entry['uid']
+        db_name = idc.get_db_name(inv_db, entry['db'])['name']
+        orph_data[db_name] = {}
+        coll = idc.get_coll_name(inv_db, entry['coll'])['name']
+        orph_tmp = split_orphans(entry)
+        orph_data[db_name][coll] = orph_tmp
+
+    return orph_data
+
 
 def split_orphans(entry):
     just_gone = []
@@ -253,6 +265,11 @@ def split_orphans(entry):
             just_gone.append(item['name'])
         else:
             gone_w_data.append(item)
+
+    if just_gone == []:
+         just_gone = None
+    if gone_w_data == []:
+        gone_w_data = None
 
     return {'gone':just_gone, 'orphan':gone_w_data}
 

@@ -12,10 +12,11 @@ def act(request):
     """
     request = json.loads(request)
     print request
-    action =request['action']
+    action = request['action']
     #action = request['action']
     result = None
     reply = None
+    data = None
     if action == 'mark_gone':
         result = ild.update_gone_list()
     elif action == 'clean_gone':
@@ -25,8 +26,12 @@ def act(request):
     elif action == 'clean_scrapes':
         result = False
         reply = 'Action TBA'
+    elif action == 'download_orphans':
+        data = ild.collate_orphans()
+        reply = 'Downloading Data'
+        result = True
     else:
-        return {'err':True, 'reply':'Requsted action not understood'}
+        return {'err':True, 'reply':'Requsted action not understood', 'data':data}
 
     if reply is None:
         if result:
@@ -34,4 +39,4 @@ def act(request):
         else:
             reply = 'Unknown error occurred'
 
-    return {'err': not result, 'reply':reply}
+    return {'err': not result, 'reply':reply, 'data':data}
