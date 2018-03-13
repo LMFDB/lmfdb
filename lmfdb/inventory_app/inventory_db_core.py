@@ -593,7 +593,7 @@ def upsert_and_check(coll, rec_find, rec_set):
         elif 'value' in result:
             _id = result['value']['_id']
     except Exception as e:
-        inv.log_dest.error("Error inserting new record "+ str(e)) #TODO this is the wrong message
+        inv.log_dest.error("Error inserting new record "+ str(e))
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':(not 'upserted' in result['lastErrorObject'])}
 
@@ -611,7 +611,7 @@ def update_and_check(coll, rec_find, rec_set):
         _id = result['value']['_id']
     except Exception as e:
         print e
-        inv.log_dest.error("Error updating record "+ str(e)) #TODO this is the wrong message
+        inv.log_dest.error("Error updating record "+str(rec_find)+' '+ str(e))
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':True}
 
@@ -657,14 +657,21 @@ def complete_human_table(inv_db_toplevel, db_id, coll_id):
     for record in auto_cursor:
         rec_find = {fields_fields[1]:coll_id, fields_fields[2]: record['name']}
         human_record = h_db.find_one(rec_find)
-        rec_set = {}
+        #Should never be two records with same coll-id and name
+        alter = False
         for field in inv.base_editable_fields:
             try:
-                a = human_record[field]
-                assert(a)
+                rec_set = human_record['data']
+            except:
+                rec_set = {}
+            try:
+                a = human_record['data'][field]
+                assert(a or not a) #Use a for Pyflakes, but we don't care what is is
             except:
                 rec_set[field] = None
-        if rec_set:
+                alter = True
+        #Rec_set is now original data plus any missing base_editable_fields
+        if alter:
             #Creates if absent, else updates with missing fields
             set_field(inv_db_toplevel, coll_id, record['name'], rec_set, type='human')
 

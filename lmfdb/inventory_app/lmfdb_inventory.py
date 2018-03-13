@@ -90,7 +90,7 @@ def setup_internal_client(remote=False, editor=False):
     log_dest.info("Getting db client")
     global int_client, _auth_as_edit, _auth_on_remote
     if(int_client and _auth_as_edit == editor and _auth_on_remote == remote):
-	return True
+        return True
     try:
         if remote:
             #Attempt to connect to LMFDB
