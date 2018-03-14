@@ -120,12 +120,12 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
             orphaned_keys = invc.trim_human_table(db, db_entry['id'], _c_id['id'])
         except Exception as e:
             inv.log_dest.error("Failed trimming table "+str(e))
-    else:
-        #Ensure everything mandatory is present in human table
-        try:
-            invc.complete_human_table(db, db_entry['id'], _c_id['id'])
-        except Exception as e:
-            inv.log_dest.error("Failed padding table "+str(e))
+
+    #Ensure everything mandatory is present in human table
+    try:
+        invc.complete_human_table(db, db_entry['id'], _c_id['id'])
+    except Exception as e:
+        inv.log_dest.error("Failed padding table "+str(e))
 
     return orphaned_keys
 
