@@ -292,12 +292,9 @@ def set_lockout_state(state):
         return True
     try:
         assert(state == True or state == False)
-        rec_find = {'lockout':{"$exists":True}}
         rec_set = {'lockout':state}
-        res = idc.upsert_and_check(inv_db['ops'], rec_find, rec_set)
+        res = inv_db['ops'].insert_one(rec_set)
     except:
-        inv.log_dest.error('Failed to set lockout state')
-    if res['err']:
         inv.log_dest.error('Failed to set lockout state')
 
 def get_lockout_state():
@@ -312,10 +309,10 @@ def get_lockout_state():
 
     try:
         rec_find = {'lockout':{"$exists":True}}
-        res = inv_db['ops'].find_one(rec_find)
+        res = inv_db['ops'].find(rec_find).sort('_id', -1).limit(1)
     except:
         pass
     if res is None:
         return False
     else:
-        return res['lockout']
+        return res[0]['lockout']
