@@ -82,7 +82,7 @@ def show_inventory(id, id2):
         valid = inventory_viewer.is_valid_db_collection(id, id2)
         if not valid:
             raise BadNameError('')
-    except BadNameError as e:
+    except BadNameError:
         return render_template('edit_bad_name.html', db_name=id, coll_name=id2, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)]])
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)]]
     return render_template('view_inventory.html', db_name=id, collection_name=id2, bread=bread, table_fields=linv.display_field_order(), info_fields=linv.info_field_order())
@@ -138,7 +138,7 @@ def show_edit_inventory(id, id2):
         if not valid:
             raise BadNameError('')
         locked = inventory_live_data.get_lockout_state()
-    except BadNameError as e:
+    except BadNameError:
         return render_template('edit_bad_name.html', db_name=id, coll_name=id2, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]])
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_inventory', id=id, id2=id2)]]
     if locked:
@@ -155,7 +155,7 @@ def show_edit_records(id, id2):
         if not valid:
             raise BadNameError('')
         locked = inventory_live_data.get_lockout_state()
-    except BadNameError as e:
+    except BadNameError:
         return render_template('edit_bad_name.html', db_name=id, coll_name=id2, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_edit_records', id=id, id2=id2)]])
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')], [id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_inventory', id=id, id2=id2)], ['records', url_for('inventory_app.show_records', id=id, id2=id2)], ['edit', url_for('inventory_app.show_edit_records', id=id, id2=id2)]]
     nice_name = inventory_viewer.get_nicename(db_name = id, collection_name = id2)
@@ -297,7 +297,7 @@ def show_rescrape_poll(uid):
 def fetch_progress_data(uid):
     try:
         progress = inventory_live_data.get_progress(uid)
-    except ih.ConnectOrAuthFail as e:
+    except ih.ConnectOrAuthFail:
         progress = {'n_colls':0, 'curr_coll':0, 'progress_in_current':0}
     return jsonify(progress)
 
@@ -307,7 +307,7 @@ def fetch_progress_data(uid):
 def fetch_summary_data(uid):
     try:
         data = inventory_live_data.collate_orphans_by_uid(uid)
-    except ih.ConnectOrAuthFail as e:
+    except ih.ConnectOrAuthFail:
         data = {}
     return jsonify(data)
 

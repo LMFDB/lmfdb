@@ -1,8 +1,6 @@
-
-import json
-import inventory_helpers as ih
 import lmfdb_inventory as inv
 import inventory_db_core as invc
+import inventory_live_data as ild
 import datetime
 
 #TODO this should log to its own logger
@@ -49,9 +47,9 @@ def upload_scraped_inventory(db, structure_dat, uid):
             inv.log_dest.info("    Uploading collection "+coll_name)
             orphaned_keys = upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=False)
             if len(orphaned_keys) != 0:
-                db_id = idc.get_db_id(db, db_name)
-                coll_id = idc.get_coll_id(db, db_id['id'], coll_name)
-                store_orphans(db, db_id['id'], coll_id['id'], uid, orphan_document)
+                db_id = invc.get_db_id(db, db_name)
+                coll_id = invc.get_coll_id(db, db_id['id'], coll_name)
+                ild.store_orphans(db, db_id['id'], coll_id['id'], uid, orphaned_keys)
 
 def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=False):
     """Upload the structure description for a single collection
@@ -105,7 +103,7 @@ def upload_collection_structure(db, db_name, coll_name, structure_dat, fresh=Fal
             inv.log_dest.info("            Processing record "+str(record))
             invc.set_record(db, _c_id['id'], coll_entry['records'][record])
         #Cleanup any records which no longer exist
-        orph_records = invc.cleanup_records(db, _c_id['id'], coll_entry['records'])
+        invc.cleanup_records(db, _c_id['id'], coll_entry['records'])
 
         inv.log_dest.info("            Processing indices")
         upload_indices(db, _c_id['id'], coll_entry['indices'])

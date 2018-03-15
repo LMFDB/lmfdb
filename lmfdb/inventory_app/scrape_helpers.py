@@ -1,10 +1,7 @@
-from scripts.reports.jsonify_db_structure import get_lmfdb_collections as glc
-import json
-import inventory_helpers as ih
 import lmfdb_inventory as inv
 import inventory_db_core as idc
-import uuid
 import datetime
+from lmfdb.base import getDBConnection
 from scrape_frontend import get_scrape_progress
 
 #Max time before scrape is considered to have failed
@@ -37,7 +34,7 @@ def check_scrapes_by_coll_id(inv_db, coll_id):
         spec_ids = {'coll':coll_id}
         result = check_if_scraping(inv_db, spec_ids) or check_if_scraping_queued(inv_db, spec_ids)
         return result
-    except Exception as e:
+    except:
         return False
 
 def register_scrape(db, coll, uid):
@@ -117,7 +114,7 @@ def check_and_insert_scrape_record(inv_db, db_id, coll_id, uid):
     record = {'db':db_id, 'coll':coll_id, 'uid':uid, 'time':time, 'running':False, 'complete':False}
     #Db and collection ids. UID for scrape process. Time triggered. If this COLL is being scraped. If this coll hass been done
     try:
-        inserted = insert_scrape_record(inv_db, record)
+        insert_scrape_record(inv_db, record)
         result = {'err':False, 'inprog':False, 'ok':True}
     except Exception as e:
         inv.log_dest.warning('Failed to insert scrape '+str(e))
@@ -213,7 +210,7 @@ def check_scrapes_running(inv_db, scrape_list):
             if prog == (-1, -1):
                 new_list.append(item)
         except Exception as e:
-            log_dest.warning('Failed to get progress '+db_name+' '+coll_name+' '+str(e))
+            inv.log_dest.warning('Failed to get progress '+db_name+' '+coll_name+' '+str(e))
     return new_list
 
 def null_scrapes_by_list(inv_db, scrape_list):

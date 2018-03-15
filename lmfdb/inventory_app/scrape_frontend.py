@@ -35,7 +35,6 @@ def scrape_worker(db, coll, uuid, connection):
                     scrape_and_upload_threaded
     """
 
-    invdb =  connection['inventory']
     for el in coll:
         update_scrape_progress(db, el, uuid, running = True)
         data = jdbs.parse_collection_info_to_json(db, el,

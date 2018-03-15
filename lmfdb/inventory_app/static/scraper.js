@@ -1,3 +1,4 @@
+/*jshint esversion: 6 */
 
 function rescanAll(db){
 
@@ -89,13 +90,13 @@ function checkCompletion(progress){
 function showProgress(progress){
   var span = document.getElementById('progressSpan');
   console.log(progress);
-  span.innerHTML = progress['progress_in_current']+"% done on collection "+progress['curr_coll']+" of "+progress['n_colls'];
+  span.innerHTML = progress.progress_in_current+"% done on collection "+progress.curr_coll+" of "+progress.n_colls;
 }
 
 function isComplete(progress){
 
 //  if(progress['curr_coll'] == progress['n_colls'] && progress['progress_in_current'] >= 100) return true;
-  if(progress['progress_in_current'] >= 100) return true;
+  if(progress.progress_in_current >= 100) return true;
   return false;
 }
 
@@ -117,25 +118,25 @@ function fillSummary(data){
   h2.innerHTML = 'Scan of database <b>' + db + '</b> complete</br>';
   div.appendChild(h2);
 
+  var key, keyDiv;
   for(var coll in data.orphan){
     var innerDiv = document.createElement('div');
     h2 = document.createElement('h2');
     h2.innerHTML = 'Collection ' + coll + ':</br>';
     innerDiv.appendChild(h2);
-
     if(data.gone[coll] == {}){
-      var keyDiv = document.createElement('div');
+      keyDiv = document.createElement('div');
       keyDiv.innerHTML = 'The following keys were removed:</br>';
-      for(var key of data.gone[coll]){
+      for(key of data.gone[coll]){
         keyDiv.innerHTML = keyDiv.innerHTML + key +'</br>';
       }
       innerDiv.appendChild(keyDiv);
     }
 
     if(data.orphan[coll]){
-      var keyDiv = document.createElement('div');
+      keyDiv = document.createElement('div');
       keyDiv.innerHTML = 'The following keys were removed and had data:</br>';
-      for(var key of data.orphan[coll]){
+      for(key of data.orphan[coll]){
         keyDiv.innerHTML = keyDiv.innerHTML + key.name + '</br>';
       }
       innerDiv.appendChild(keyDiv);

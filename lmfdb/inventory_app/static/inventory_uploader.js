@@ -1,4 +1,4 @@
-
+/*jshint esversion: 6 */
 
 function importJson(){
   //Upload either by file drag-and-drop below the line, or typing/pasting text into the input and clicking the continue button
@@ -52,7 +52,7 @@ function importJson(){
       var fileContent = e2.target.result;
       var name = myFile.name;
       parseAndUpload(name, fileContent);
-    }
+    };
     reader.readAsText(myFile);
   });
 
@@ -133,12 +133,13 @@ function checkAtLevel(textAsJson, fmtInfo){
       fmtInfo.fmt = 2;
     }else{
       var keys = [];
+      var key;
       try{
         keys = Object.keys(currText);
         if(typeof currText === "string" || currText instanceof String) keys = [];
       }catch(error){
       }
-      for(var key of keys){
+      for(key of keys){
         //Is vital that these are triple-equals (or double not eq) because we distinguish absent from present-but-null
         if(currText[key] && currText[key].type !== undefined && currText[key].example !== undefined && currText[key].description !== undefined){
           fmtInfo.fmt = 3;
@@ -147,7 +148,7 @@ function checkAtLevel(textAsJson, fmtInfo){
       }
       if(fmtInfo.fmt == 0){
         fmtInfo.depth += 1;
-        for(var key of keys){
+        for(key of keys){
           if(fmtInfo.fmt == 0) fmtInfo = checkAtLevel(currText[key], fmtInfo);
           if(fmtInfo.fmt != 0){
             fmtInfo.chain.push(key);
@@ -196,21 +197,21 @@ function uploadItemsToPage(keys, data, fmt){
   //Fmt type 1 means {item:, field, content}
   //Others are both name:{type, description, example}
   //Keys should contain any keys wished to include, they MUST be valid page keys, but need not exist in data
-
+  var item, blockName, block;
   if(fmt === 1){
-    for(var item of data.diffs){
+    for(item of data.diffs){
       if(keys.indexOf(item.item) !== -1){
-        var blockName = createBoxName(item.item, item.field);
-        var block = mainBlockList.getBlock(blockName);
+        blockName = createBoxName(item.item, item.field);
+        block = mainBlockList.getBlock(blockName);
         updateBoxAndBlock(block, item.content);
       }
     }
   }else if(fmt === 2 || fmt === 3){
-    for(var item of data){
+    for(item of data){
       if(keys.indexOf(item.name) !== -1){
         for(var key of table_fields){
-          var blockName = createBoxName(item.name, key);
-          var block = mainBlockList.getBlock(blockName);
+          blockName = createBoxName(item.name, key);
+          block = mainBlockList.getBlock(blockName);
           updateBoxAndBlock(block, item.data[key]);
         }
       }

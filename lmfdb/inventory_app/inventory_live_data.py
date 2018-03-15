@@ -1,14 +1,12 @@
-
 from scripts.reports.jsonify_db_structure import get_lmfdb_collections as glc
 import json
 import inventory_helpers as ih
 import inventory_viewer as iv
 import lmfdb_inventory as inv
 import inventory_db_core as idc
-from scrape_helpers import *
+from scrape_helpers import register_scrape
 import scrape_frontend as sf
 import uuid
-import datetime
 from lmfdb.base import getDBConnection
 
 
@@ -53,7 +51,7 @@ def trigger_scrape(data):
         for each_coll in coll_list:
             tmp = register_scrape(db, each_coll, uid)
             cont = cont and not tmp['err'] and not tmp['inprog']
-            inprog = inprog and tmpp['inprog']
+            inprog = inprog and tmp['inprog']
     else:
         tmp = register_scrape(db, coll, uid)
         cont = not tmp['err'] and not tmp['inprog']
@@ -135,10 +133,6 @@ def mark_all_gone(main_db):
 
     gone_code = ih.status_to_code('gone')
     for db in dbs:
-        try:
-            cc = all_colls[db[0]]
-        except:
-            continue
         colls = iv.gen_retrieve_db_listing(inv_db, db[0])
         db_id = idc.get_db_id(inv_db, db[0])
         for coll in colls:
@@ -293,7 +287,7 @@ def set_lockout_state(state):
     try:
         assert(state == True or state == False)
         rec_set = {'lockout':state}
-        res = inv_db['ops'].insert_one(rec_set)
+        inv_db['ops'].insert_one(rec_set)
     except:
         inv.log_dest.error('Failed to set lockout state')
 

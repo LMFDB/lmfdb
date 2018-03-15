@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 function sendControlRequest(action){
 
   var conf = verifyProceed(action);
