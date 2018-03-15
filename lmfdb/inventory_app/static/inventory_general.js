@@ -115,6 +115,34 @@ function getBoxKeys(blockList){
 //---------- End helpers for some other block-wise tasks ---------
 
 //---------- General data fetching  ------------------------------
+function fetchAndDownloadData(pageType){
+  //Fetch the json data for this page and trigger download
+  var current_url = window.location.href;
+  var data_url = current_url + 'data';
+  var XHR = new XMLHttpRequest();
+  XHR.open('GET', data_url);
+  XHR.setRequestHeader('Content-Type', 'text/plain');
+
+  XHR.addEventListener('load', function(event) {
+    //On success return data
+    console.log(XHR.response);
+	  var data = JSON.parse(XHR.response);
+    if(! jQuery.isEmptyObject(data)){
+      var filename = pageKey.replace('.', '_') +'_'+ pageType+'_download.json';
+      saveTextAsFile(XHR.response, filename, 'text/json');
+    }else{
+      alert("No data to download");
+    }
+  });
+
+  // Define what happens in case of error
+  XHR.addEventListener('error', function(event) {
+    console.log("Failed to fetch data for download");
+    alert("Failed to fetch data for download");
+  });
+
+  XHR.send('');
+}
 
 function fetchAndPopulateData(blockList, pageCreator, startVisible=true){
   //Fetch the json data for this page
