@@ -5,6 +5,7 @@ ASC = pymongo.ASCENDING
 import time, os
 import flask
 from lmfdb.base import app, getDBConnection
+from lmfdb.db_backend import MongoBackend, PostgresBackend
 from flask import render_template, request, url_for, redirect, send_file, flash
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
@@ -33,10 +34,16 @@ FIELD_LABEL_RE = re.compile(r'^\d+\.\d+\.(\d+(e\d+)?(t\d+(e\d+)?)*)\.\d+$')
 nfields = None
 max_deg = None
 init_nf_flag = False
+backend = None
 
 def db():
     return getDBConnection()
 
+def _nfdb():
+    global backend
+    if backend is None:
+        backend = PostgresBackend('number_fields', ('label', 'coeffs', 'coeffhash', 'degree', 'signature', 'disc_abs', 'disc_sign', 'ramps', 'galois', 'class_number', 'class_group', 'used_grh', 'oldpolredabscoeffs', 'oldpolredabscoeffhash'), ('coeffstr', 'r1', 'r2', 'zk', 'reduced', 'units', 'reg', 'subs', 'unitsGmodule', 'res'), [('degree', 1), ('disc_abs_key', 1),('disc_sign', 1)])
+    return backend
 def nfdb():
     return db().numberfields.fields
 
@@ -49,11 +56,10 @@ class_group_data_directory = os.path.expanduser('~/data/class_numbers')
 def init_nf_count():
     global nfields, init_nf_flag, max_deg
     if not init_nf_flag:
-        fields = nfdb()
-        nfields = fields.find().count()
-        max_deg = fields.find().sort('degree', pymongo.DESCENDING).limit(1)[0]['degree']
+        fields = _nfdb()
+        nfields = fields.count()
+        max_deg = fields.max('degree')
         init_nf_flag = True
-
 
 def galois_group_data(n, t):
     return flask.Markup(group_knowl_guts(n, t, db()))
@@ -308,7 +314,7 @@ def number_field_render_webpage():
 
 @nf_page.route("/random")
 def random_nfglobal():
-    label = random_object_from_collection( nfdb() )['label']
+    label = _nfdb().random()
     #This version leaves the word 'random' in the URL:
     #return render_field_webpage({'label': label})
     #This version uses the number field's own URL:
@@ -655,26 +661,21 @@ def number_field_search(info):
     except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)
+    if 'download' in info and info['download'] != '0':
+        count = None
     start = parse_start(info)
 
     # nf_logger.debug(query)
     info['query'] = dict(query)
+    fields = _nfdb()
     if 'lucky' in info:
-        one = nfdb().find_one(query)
-        if one:
-            label = one['label']
+        label = fields.lucky(query)
+        if label:
             return redirect(url_for(".by_label", label=clean_input(label)))
 
-    fields = nfdb()
-
-    res = fields.find(query)
-    res = res.sort([('degree', ASC), ('disc_abs_key', ASC),('disc_sign', ASC)])
-
-    if 'download' in info and info['download'] != '0':
+    nres, res = fields.search_results(query, count, start)
+    if count is None:
         return download_search(info, res)
-
-    nres = res.count()
-    res = res.skip(start).limit(count)
 
     if(start >= nres):
         start -= (1 + (start - nres) / count) * count
