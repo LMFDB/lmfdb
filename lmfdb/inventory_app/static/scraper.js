@@ -113,7 +113,8 @@ function fillSummary(data){
   var div = document.getElementById('summaryDiv');
 
   var h2 = document.createElement('h2');
-  h2.innerHTML = 'Scan of database <b>' + data.db + '</b> complete</br>';
+  var db = Object.keys(data)[0];
+  h2.innerHTML = 'Scan of database <b>' + db + '</b> complete</br>';
   div.appendChild(h2);
 
   for(var coll in data.orphan){
