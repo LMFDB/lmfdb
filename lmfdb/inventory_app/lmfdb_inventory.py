@@ -1,11 +1,11 @@
 from pymongo import MongoClient
-import json, yaml
+import json
 import logging, logging.handlers
 from lmfdb.base import getDBConnection
 
 #Contains the general data and functions for all inventory handling
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 #Email contact for app errors
 email_contact = 'rse@warwick.ac.uk'
@@ -83,7 +83,7 @@ ALL_STRUC = db_struc()
 
 _auth_as_edit = False
 _auth_on_remote = False
-def setup_internal_client(remote=False, editor=False):
+def setup_internal_client(remote=True, editor=False):
     """Get mongo connection and set int_client to it"""
 
     #This is a temporary arrangement, to be replaced with LMFDB connection
@@ -95,24 +95,22 @@ def setup_internal_client(remote=False, editor=False):
         if remote:
             #Attempt to connect to LMFDB
             int_client=getDBConnection()
-#            return True
         else:
-#            int_client = MongoClient("localhost", 27017)
+            #Use local tunnel (for debugging)
             int_client = MongoClient("localhost", 37010)
-#            return True
 
 #       Below was old way of doing auth. To be removed when working
-        pw_dict = yaml.load(open("passwords.yaml"))
+#        pw_dict = yaml.load(open("passwords.yaml"))
         #if editor:
         #    key = 'data'
         #    auth_db = 'inventory'
         #else:
         #    key = 'default'
         #    auth_db = 'admin'
-        auth_db = 'inventory'
+#        auth_db = 'inventory'
 #        int_client[auth_db].authenticate(pw_dict[key]['username'], pw_dict[key]['password'])
 #        int_client[auth_db].authenticate(pw_dict['webserver']['username'], pw_dict['webserver']['password'])
-        int_client[auth_db].authenticate(pw_dict['data']['username'], pw_dict['data']['password'])
+#        int_client[auth_db].authenticate(pw_dict['data']['username'], pw_dict['data']['password'])
 
     except Exception as e:
         log_dest.error("Error setting up connection "+str(e))
