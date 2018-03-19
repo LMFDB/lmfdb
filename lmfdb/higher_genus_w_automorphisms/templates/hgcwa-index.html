@@ -17,8 +17,8 @@ text-align:right;
     curves  X from genus {{info.stats.genus.min}} up to genus
     {{info.stats.genus.max}} so that the quotient space X/G is the Riemann
     sphere (X/G has genus 0). There are {{info.stats.refined_passports.distinct}}
-    distinct {{KNOWL('dq.curve.highergenus.aut.refinedpassports',title='refined passports')}} in the database. The number of distinct
-    {{KNOWL('dq.curve.highergenus.aut.generatingvectors',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
+    distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} in the database. The number of distinct
+    {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
     Here are some <a href="{{url_for('.statistics')}}">further statistics</a>.
   </p>
 </div>
@@ -92,7 +92,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 
         <tr>
             <td align=right>
- {{KNOWL('curve.highergenus.aut.grouporder',title='Group Order(s)')}}:
+ {{KNOWL('group.order',title='Group Order(s)')}}:
             </td><td><input type="text" name="groupsize" placeholder="2..5"></td>
             <td><span class="formexample">e.g. 12, or a range like 10..20, or you may include the variable g for genus like 84(g-1)</span></td>
         </tr>

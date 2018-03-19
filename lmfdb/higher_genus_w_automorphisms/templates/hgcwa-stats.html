@@ -21,8 +21,8 @@ table.ntdata td {
     curves  X from genus {{info.stats.genus.min}} up to genus
     {{info.stats.genus.max}} so that the quotient space X/G is the Riemann
     sphere (X/G has genus 0). There are {{info.stats.refined_passports.distinct}}
-    distinct {{KNOWL('dq.curve.highergenus.aut.refinedpassports',title='refined passports')}} in the database. The number of distinct
-    {{KNOWL('dq.curve.highergenus.aut.generatingvectors',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
+    distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} in the database. The number of distinct
+    {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
   </p>
 </div>
 
@@ -48,13 +48,13 @@ table.ntdata td {
         {% endfor %}
       </tr>
       <tr>
-        <th>distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}}</th>
+        <th>distinct refined passports</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>{{genus.refined_passports}}</td>
         {% endfor %}
       </tr>
       <tr>
-        <th>distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
+        <th>distinct generating vectors</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
           {{genus.gen_vectors}}
@@ -99,7 +99,7 @@ table.ntdata td {
     </thead>
     <tbody>
       <tr>
-        <th>distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
+        <th>distinct generating vectors</th>
         {% for dim in dim_detail[i:i+max_cols] %}
         <td>{{dim.gen_vectors}}</td>
         {% endfor %}
