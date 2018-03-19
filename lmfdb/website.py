@@ -207,7 +207,8 @@ Usage: %s [OPTION]...
   -m, --mongo-client=FILE   config file for connecting to MongoDB (default is "mongoclient.config")
       --logfocus=NAME       name of a logger to focus on
       --debug               enable debug mode
-      --dbport=NUM          bind the MongoDB to the given port (default %d)
+      --mongo-port=NUM      bind the MongoDB to the given port (default %d)
+      --mongo-host=hostname bind the MongoDB to a given hostname
       --dbmon=NAME          monitor MongoDB commands to the specified database (use NAME=* to monitor everything, NAME=~DB to monitor all but DB)
       --help                show this help
 """ % (sys.argv[0], DEFAULT_DB_PORT)
@@ -235,13 +236,14 @@ def get_configuration():
                                        [
                                            "port=",
                                            "host=", 
-                                           "dbport=", 
                                            "log=", 
                                            "logfocus=", 
                                            "dbmon=",
                                            "debug",
                                            "help", 
                                            "mongo-client=",
+                                           "mongo-port=",
+                                           "mongo-host=",
                                             # undocumented, see below
                                             "enable-reloader", "disable-reloader",
                                             "enable-debugger", "disable-debugger",
@@ -266,8 +268,6 @@ def get_configuration():
             #FIXME logfile isn't used
             elif opt in ("-l", "--log"):
                 logging_options["logfile"] = arg
-            elif opt in ("--dbport"):
-                mongo_client_options["port"] = int(arg)
             elif opt in ("--dbmon"):
                 mongo_client_options["dbmon"] = arg
             elif opt == "--debug":
@@ -280,6 +280,11 @@ def get_configuration():
                 else:
                     sys.stderr.write("%s doesn't exist\n" % arg);
                     sys.exit(2);
+            elif opt == "--mongo-port":
+                mongo_client_options['port'] = int(arg)
+            elif opt == "--mongo-host":
+                mongo_client_options['host'] = arg
+
 
             # undocumented: the following allow changing the defaults for
             # these options to werkzeug (they both default to False unless

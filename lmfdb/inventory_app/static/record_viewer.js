@@ -1,4 +1,3 @@
-
 /*jshint esversion: 6 */
 var tooltip_dict = {'dummy': 'Record does not exist', 'extends': 'Schema is displayed as diff from numbered record', 'base' : 'This is the base record which others extend'};
 
@@ -43,13 +42,23 @@ function populateRecordViewerPage(blockList, startVisible=true){
 
   var table_div = document.createElement('div');
   var table = document.createElement('table');
-  table.class = 'viewerTable';
+  //table.class = 'viewerTable';
+  table.classList.add('tablesorter');
+  table.id = 'viewerTable';
   entry_styles = ['table_tag'];
+  var table_head = document.createElement('thead');
 
   base_record = unpackBaseRecord(blockList);
   var row = createRecordRow(blockList, 'Key', '', base_record, header=true);
-  table.appendChild(row);
-  for(var i=0; i < fields.length; i++){
+  table_head.appendChild(row);
+
+  var row0 = createRecordRow(blockList, fields[0].substr(4, fields[0].length), '#'+fields[0]+id_delimiter, base_record);
+  table_head.appendChild(row0);
+
+  table.appendChild(table_head);
+
+  var table_body = document.createElement('tbody');
+  for(var i=1; i < fields.length; i++){
     row = createRecordRow(blockList, fields[i].substr(4, fields[i].length), '#'+fields[i]+id_delimiter, base_record);
     if(row){
       if(!row.classList.contains('viewerTableSpecial')){
@@ -58,9 +67,10 @@ function populateRecordViewerPage(blockList, startVisible=true){
          clas += (i%2 == 0 ? 'Even':'Odd');
          row.classList.add(clas);
       }
-      table.appendChild(row);
+      table_body.appendChild(row);
     }
   }
+  table.appendChild(table_body);
 
   table_div.appendChild(table);
   dataDiv.appendChild(table_div);
@@ -73,17 +83,22 @@ function createRecordRow(blockList, field, id_start, base_record, header=false){
 //field is the set id, in this case sequential numbers, used as record Num
   var table_row = document.createElement('tr');
   var clas = header ? 'viewerTableHeaders' : 'viewerTableEls';
-  var table_el = document.createElement('td');
   if(header){
+    var table_el = document.createElement('th');
     table_el.innerHTML = 'Record Num';
   }else{
+    var table_el = document.createElement('td');
     table_el.innerHTML = field;
   }
   table_el.classList.add(clas);
   table_row.appendChild(table_el);
   var is_base = (blockList.getBlock(id_start+'base') ? blockList.getBlock(id_start+'base').text : false);
   for(var j=0; j < record_fields.length; j++){
-    table_el = document.createElement('td');
+    if(header){
+      table_el = document.createElement('th');
+    }else{
+      table_el = document.createElement('td');
+    }
     table_el.classList.add(clas);
     if(header){
       table_el.innerHTML = capitalise(record_fields[j]);

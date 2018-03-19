@@ -4,8 +4,7 @@ import lmfdb.base
 from lmfdb.utils import make_logger, web_latex, encode_plot
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, db_ecnf, FIELD
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
-import sage.all
-from sage.all import latex, matrix
+from sage.all import latex, Matrix, ZZ, Infinity
 
 logger = make_logger("ecnf")
 
@@ -64,23 +63,24 @@ class ECNF_isoclass(object):
         try:
             self.rk_bnds = "%s...%s" % tuple(self.db_curves[0]['rank_bounds'])
         except KeyError:
-            self.rank_bounds = [0, sage.rings.infinity.Infinity]
+            self.rank_bounds = [0, Infinity]
             self.rk_bnds = "not recorded"
 
 
-        # Extract the isogeny degree matrix from the database if possible, else create it
-        if hasattr(self, 'isogeny_matrix'):
-            from sage.matrix.all import Matrix
-            self.isogeny_matrix = Matrix(self.isogeny_matrix)
-        else:
-            self.isogeny_matrix = make_iso_matrix(self.db_curves)
+        # Extract the isogeny degree matrix from the database
+        if not hasattr(self, 'isogeny_matrix'):
+            # this would happen if the class is initiated with a curve
+            # which is not #1 in its class:
+            self.isogeny_matrix = self.db_curves[0].isogeny_matrix
+        self.isogeny_matrix = Matrix(self.isogeny_matrix)
+        self.one_deg = ZZ(self.class_deg).is_prime()
 
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
         P = self.graph.plot(edge_labels=True)
         self.graph_img = encode_plot(P)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
-        self.isogeny_matrix_str = latex(matrix(self.isogeny_matrix))
+        self.isogeny_matrix_str = latex(Matrix(self.isogeny_matrix))
 
         self.field = FIELD(self.field_label)
         self.field_name = field_pretty(self.field_label)
@@ -104,19 +104,30 @@ class ECNF_isoclass(object):
         if totally_real:
             self.hmf_label = "-".join([self.field_label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field_label, label=self.hmf_label)
-            self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
+            if sig[0] <= 2:
+                self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            elif self.abs_disc ** 2 * self.conductor_norm < 40000:
+                # we shouldn't trust the Lfun computed on the fly for large conductor
+                self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
 
         if imag_quadratic:
             self.bmf_label = "-".join([self.field_label, self.conductor_label, self.iso_label])
             self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
+            self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
 
         self.friends = []
         if totally_real:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
-            self.friends += [('L-function', self.urls['Lfunction'])]
+
         if imag_quadratic:
             #self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
             self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+
+        if 'Lfunction' in self.urls:
+            self.friends += [('L-function', self.urls['Lfunction'])]
+        else:
+            self.friends += [('L-function not available', "")]
+
 
         self.properties = [('Base field', self.field_name),
                            ('Label', self.class_label),

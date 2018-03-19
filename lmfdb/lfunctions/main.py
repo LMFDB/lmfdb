@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import flask
-from flask import render_template, url_for, request, make_response 
+from flask import render_template, url_for, request, make_response
 
 from sage.all import plot, srange, spline, line
 
@@ -11,14 +11,17 @@ import re
 import sqlite3
 import numpy
 
-from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunction_EC_Q, 
-                       Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
-                       RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
-                       HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc)
 import LfunctionPlot
 import LfunctionDatabase
+
+from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunction_EC_Q,
+                       Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
+                       RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
+                       HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
+                       Lfunction_from_db)
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
-from Lfunctionutilities import p2sage, styleTheSign, getConductorIsogenyFromLabel
+from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
+                                getConductorIsogenyFromLabel)
 from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page
@@ -201,17 +204,6 @@ def set_info_for_start_page():
 
     return info
 
-
-def get_bread(degree, breads=[]):
-    ''' Returns the two top levels of bread crumbs plus the ones supplied in breads.
-    '''
-    bc = [('L-functions', url_for('.l_function_top_page')),
-          ('Degree ' + str(degree), url_for('.l_function_degree_page', degree='degree' + str(degree)))]
-    for b in breads:
-        bc.append(b)
-    return bc
-
-
 ################################################################################
 #   Route functions, individual L-function homepages
 ################################################################################
@@ -383,6 +375,13 @@ def l_function_lcalc_page():
     args = {'Ltype': 'lcalcurl', 'url': request.args['url']}
     return render_single_Lfunction(Lfunction_lcalc, args, request)
 
+# L-function by hash ###########################################################
+@l_function_page.route("/lhash/<lhash>")
+@l_function_page.route("/lhash/<lhash>/")
+def l_function_by_hash_page(lhash):
+    args = {'Lhash': lhash}
+    return render_single_Lfunction(Lfunction_from_db, args, request)
+
 
 ################################################################################
 #   Helper functions, individual L-function homepages
@@ -404,7 +403,6 @@ def render_single_Lfunction(Lclass, args, request):
 
     info = initLfunction(L, temp_args, request)
     return render_template('Lfunction.html', **info)
-
 
 def render_lfunction_exception(err):
     try:
@@ -431,10 +429,12 @@ def render_lcalcfile(L, url):
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
-    info = L.info                        
+    info = L.info
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
-    (info['bread'], info['origins'], info['friends'], info['factors'] ) = set_bread_and_friends(L, request)
+
+    (info['bread'], info['origins'], info['friends'], info['factors'], info['Linstances'] ) = set_bread_and_friends(L, request)
+
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
 
@@ -479,6 +479,7 @@ def set_bread_and_friends(L, request):
     friends = []
     origins = []
     factors = []
+    instances = []
 
     # Create default friendlink by removing 'L/' and ending '/'
     friendlink = request.url.replace('/L/', '/').replace('/L-function/', '/').replace('/Lfunction/', '/')
@@ -499,117 +500,13 @@ def set_bread_and_friends(L, request):
         if L.fromDB and not L.selfdual:
             friends.append(('Dual L-function', L.dual_link))
         bread = get_bread(1, [(charname, request.url)])
-    
+
     elif L.Ltype() == 'ellipticcurve':
-        def name_and_object_from_url(url):
-            from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
-            from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
-            from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
-            from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db 
-            from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
-            url_split = url.split("/");
-            name = None;
-            obj_exists = False;
-
-            if url_split[0] == "EllipticCurve":
-                if url_split[1] == 'Q':
-                    # EllipticCurve/Q/341641/a
-                    label_isogeny_class = ".".join(url_split[-2:]);
-                    # count doesn't honor limit!
-                    obj_exists = is_ec_isogeny_class_in_db(label_isogeny_class);
-                else:
-                    # EllipticCurve/2.2.140.1/14.1/a
-                    label_isogeny_class =  "-".join(url_split[-3:]);
-                    obj_exists = is_ecnf_isogeny_class_in_db(label_isogeny_class);
-                name = 'Isogeny class ' + label_isogeny_class;
-
-            elif url_split[0] == "ModularForm":
-                if url_split[1] == 'GL2':
-                    if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
-                        # ModularForm/GL2/Q/holomorphic/14/2/1/a
-                        full_label = ".".join(url_split[-4:])
-                        name =  'Modular form ' + full_label;
-                        obj_exists = is_newform_in_db(full_label);
-
-                    elif  url_split[2] == 'TotallyReal':
-                        # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
-                        label = url_split[-1];
-                        name =  'Hilbert modular form ' + label;
-                        obj_exists = is_hmf_in_db(label);
-
-                    elif url_split[2] ==  'ImaginaryQuadratic':
-                        # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
-                        label = '-'.join(url_split[-3:]) 
-                        name = 'Bianchi modular form ' + label;
-                        obj_exists = is_bmf_in_db(label);
-            
-            return name, obj_exists
-
-        from LfunctionDatabase import get_instances_by_Lhash
-        for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
-            url = instance['url'];
-            name, obj_exists = name_and_object_from_url(url);
-            if obj_exists:
-                origins.append((name, "/"+url));
-            else:
-                name += '&nbsp;  n/a';
-                origins.append((name, ""));
-
-        if "," in L.Lhash:
-            for factor_Lhash in  L.Lhash.split(","):
-                for instance in sorted(get_instances_by_Lhash(factor_Lhash), key=lambda elt: elt['url']):
-                    url = instance['url'];
-                    name, obj_exists = name_and_object_from_url(url);
-                    if obj_exists:
-                        factors.append((name,  "/" + url));
-                    else:
-                        name += '&nbsp;  n/a';
-                        factors.append((name, ""));
-
-        if L.base_field() == '1.1.1.1': # i.e., QQ
-            label = L.label
-            if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
-                friends.append(
-                ('Symmetric square L-function', url_for(".l_function_ec_sym_page_label",
-                                                        power='2', label=label)))
-                friends.append(
-                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page_label", power='3', label=label)))
-                
-            bread = get_bread(2, 
-                    [
-                        ('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                        (label,  
-                            url_for('.l_function_ec_page', 
-                                conductor_label=L.conductor,
-                                isogeny_class_label = L.isogeny_class_label
-                                )
-                         )
-                        ])
-
-            #TODO replace classical modular forms origin by adding an object to the database
-            if L.conductor <= 101:
-                origins.append(
-                        ('Modular form ' + (L.long_isogeny_class_label).replace('.', '.2'),
-                            url_for("emf.render_elliptic_modular_forms",
-                            level=L.conductor, weight=2,
-                            character=1, label=L.isogeny_class_label)
-                            ))
-            else:
-                origins.append(('Modular form ' + (L.long_isogeny_class_label).replace('.', '.2') +'&nbsp;  n/a', ""))
-
-        else:
-            bread = get_bread(
-                    L.degree , 
-                    [
-                        # FIXME there is no .l_function_ecnf_browse_page
-                        ('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                        (L.label, 
-                            url_for('.l_function_ecnf_page', 
-                                field_label = L.field_label, 
-                                conductor_label = L.conductor_label ,
-                                isogeny_class_label = L.long_isogeny_class_label)
-                        )
-                    ])
+        bread = L.bread
+        origins = L.origins
+        friends = L.friends
+        factors = L.factors
+        instances = L.instances
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
@@ -619,9 +516,9 @@ def set_bread_and_friends(L, request):
                                 str(L.label) )
         else:
             full_label = str(L.level) + '.' + str(L.weight) + str(L.label)
-            
+
         origins = [('Modular form ' + full_label, friendlink)]
-        
+
         if L.ellipticcurve:
             origins.append(
                 ('Isogeny class ' + L.ellipticcurve,
@@ -652,7 +549,7 @@ def set_bread_and_friends(L, request):
         else:
             if L.fromDB and not L.selfdual:
                 friends = [('Dual L-function', L.dual_link)]
-                
+
             bread = get_bread(L.degree,
                                       [('Maass Form', url_for('.l_function_maass_gln_browse_page',
                                                               degree='degree' + str(L.degree))),
@@ -703,12 +600,12 @@ def set_bread_and_friends(L, request):
         # because we have a scheme for the L-functions themselves
         newlink = friendlink.rpartition('t')
         friendlink = newlink[0]+'/t'+newlink[2]
-        friends = [('Hypergeometric motive ', friendlink)] 
+        friends = [('Hypergeometric motive ', friendlink)]
         if L.degree <= 4:
             bread = get_bread(L.degree, [(L.label, request.url)])
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
-                                                             
+
 
     elif L.Ltype() == 'SymmetricPower':
         def ordinal(n):
@@ -758,7 +655,14 @@ def set_bread_and_friends(L, request):
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
 
-    return (bread, origins, friends, factors)
+    elif L.Ltype() == "general":
+        bread = L.bread
+        origins = L.origins
+        friends = L.friends
+        factors = L.factors
+        instances = L.instances
+
+    return (bread, origins, friends, factors, instances)
 
 
 def set_zeroslink_and_plotlink(L, args):
@@ -778,8 +682,7 @@ def set_zeroslink_and_plotlink(L, args):
     else:
         zeroslink = ''
         plotlink = ''
-
-    return (zeroslink, plotlink)    
+    return (zeroslink, plotlink)
 
 
 def set_navi(L):
@@ -951,7 +854,7 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
     F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
     p = line(F_interp)
 #    p = line(F)    # temporary hack while the correct interpolation is being implemented
-    
+
     styleLfunctionPlot(p, 10)
     fn = tempfile.mktemp(suffix=".png")
     p.save(filename=fn)
@@ -973,7 +876,7 @@ def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg
         L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
     except Exception as err:
         return render_lfunction_exception(err)
-        
+
     if not L:
         return flask.abort(404)
     if hasattr(L,"lfunc_data"):
@@ -990,7 +893,7 @@ def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg
     # Handle cases where zeros are not available
     if isinstance(website_zeros, str):
         return website_zeros
-    
+
     positiveZeros = []
     negativeZeros = []
 
@@ -1032,6 +935,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC(field_label="1.1.1.1", conductor_label=arg3, isogeny_class_label=arg4)
     elif arg1 == 'EllipticCurve' and arg2 != 'Q':
         return Lfunction_EC(field_label=arg2, conductor_label=arg3, isogeny_class_label=arg4)
+
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':  # this has args: one for weight and one for level
         return Lfunction_EMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
 
@@ -1074,9 +978,11 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     elif arg1 == 'Lcalcurl':
         return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
 
+    elif arg1 == 'lhash':
+        return Lfunction_from_db(Lhash=str(arg2))
+
     else:
         return None
-
 
 ################################################################################
 #   Route functions, graphs for browsing L-functions
@@ -1290,4 +1196,3 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 
     s += '</table>\n'
     return s
-

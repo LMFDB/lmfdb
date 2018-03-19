@@ -45,10 +45,12 @@
          {% endif %}
       </div>
       <div class="topright">
+{# search box does not work (see Issue #2389)
           <form method="GET" action="{{ url_for('search') }}" id="search-topright">
             <input type="text" placeholder="search ..." name="q" size="13" />
           </form>
-          {% if user_is_admin -%}
+#}
+         {% if user_is_admin -%}
             &middot;
             <a href="{{ url_for('users.register') }}">RT</a>
           {% endif %}
@@ -194,8 +196,11 @@
       </table>
       </div>
     {% endif %}
+
    {{ rightnavig("Origins", origins) }}
+   {{ rightnavig("Instances", Linstances) }}
    {{ rightnavig("Related objects", friends) }}
+
    {% block more_props %}{% endblock %}
    {% if navi %}
        {{ neighbors("Nearby objects", navi) }}

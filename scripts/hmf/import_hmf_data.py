@@ -14,9 +14,13 @@ import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
 username = pw_dict['data']['username']
 password = pw_dict['data']['password']
-C['hmfs'].authenticate(username, password)
-hmf_forms = C.hmfs.forms
-hmf_fields = C.hmfs.fields
+hmfs = C.hmfs
+hmfs.authenticate(username, password)
+hmf_forms = hmfs.forms
+hmf_stats = hmfs.forms.stats
+print("Setting hmf_forms to {} and hmf_stats to {}".format('hmfs.forms','hmfs.forms.stats'))
+
+hmf_fields = hmfs.fields
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 fields = C.numberfields.fields
 
@@ -376,48 +380,46 @@ def make_stats_dict():
 
 def make_stats():
     from data_mgt.utilities.rewrite import update_attribute_stats
-    hmfs = C.hmfs
-    form_stats = hmfs.forms.search.stats
 
     print("Updating fields stats")
-    fields = hmfs.fields.distinct('label')
-    degrees = hmfs.fields.distinct('degree')
+    fields = hmf_fields.distinct('label')
+    degrees = hmf_fields.distinct('degree')
     field_sort_key = lambda F: int(F.split(".")[2]) # by discriminant
-    fields_by_degree = dict([(d,sorted(hmfs.fields.find({'degree':d}).distinct('label'),key=field_sort_key)) for d in degrees])
+    fields_by_degree = dict([(d,sorted(hmf_fields.find({'degree':d}).distinct('label'),key=field_sort_key)) for d in degrees])
     print("{} fields in database of degree from {} to {}".format(len(fields),min(degrees),max(degrees)))
 
     print("...summary of counts by degree...")
     entry = {'_id': 'fields_summary'}
-    form_stats.delete_one(entry)
+    hmf_stats.delete_one(entry)
     field_data = {'max': max(degrees),
                   'min': min(degrees),
                   'total': len(fields),
-                  'counts': [[d,hmfs.fields.count({'degree': d})]
+                  'counts': [[d,hmf_fields.count({'degree': d})]
                             for d in degrees]
     }
     entry.update(field_data)
-    form_stats.insert_one(entry)
+    hmf_stats.insert_one(entry)
 
     print("...fields by degree...")
     entry = {'_id': 'fields_by_degree'}
-    form_stats.delete_one(entry)
+    hmf_stats.delete_one(entry)
     for d in degrees:
         entry[str(d)] = {'fields': fields_by_degree[d],
                          'nfields': len(fields_by_degree[d]),
-                         'maxdisc': max(hmfs.fields.find({'degree':d}).distinct('discriminant'))
+                         'maxdisc': max(hmf_fields.find({'degree':d}).distinct('discriminant'))
         }
-    form_stats.insert_one(entry)
+    hmf_stats.insert_one(entry)
 
     print("Updating forms stats")
     print("counts by field degree and by dimension...")
-    update_attribute_stats(hmfs, 'forms.search', 'deg')
-    update_attribute_stats(hmfs, 'forms.search', 'dimension')
+    update_attribute_stats(hmfs, 'forms', 'deg')
+    update_attribute_stats(hmfs, 'forms', 'dimension')
 
     print("counts by field degree and by level norm...")
     entry = {'_id': 'level_norm_by_degree'}
     degree_data = {}
     for d in degrees:
-        res = hmfs.forms.search.find({'deg':d})
+        res = hmf_forms.find({'deg':d})
         nforms = res.count()
         Ns = res.distinct('level_norm')
         min_norm = min(Ns)
@@ -427,16 +429,16 @@ def make_stats():
                           'max_norm':max_norm,
         }
         print("{}: {}".format(d,degree_data[str(d)]))
-    form_stats.delete_one(entry)
+    hmf_stats.delete_one(entry)
     entry.update(degree_data)
-    form_stats.insert_one(entry)
+    hmf_stats.insert_one(entry)
 
     print("counts by field and by level norm...")
     entry = {'_id': 'level_norm_by_field'}
     field_data = {}
     for f in fields:
         ff = f.replace(".",":") # mongo does not allow "." in key strings
-        res = hmfs.forms.search.find({'field_label': f})
+        res = hmf_forms.find({'field_label': f})
         nforms = res.count()
         Ns = res.distinct('level_norm')
         min_norm = min(Ns)
@@ -446,9 +448,9 @@ def make_stats():
                           'max_norm':max_norm,
         }
         #print("{}: {}".format(f,field_data[ff]))
-    form_stats.delete_one(entry)
+    hmf_stats.delete_one(entry)
     entry.update(field_data)
-    form_stats.insert_one(entry)
+    hmf_stats.insert_one(entry)
 
 
 def add_missing_disc_deg_wt(nf):

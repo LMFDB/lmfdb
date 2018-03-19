@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb.utils import make_logger, web_latex, encode_plot
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, db_ec
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, parse_ainvs, db_ec
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
@@ -62,7 +62,7 @@ class ECisog_class(object):
         # in one case which is labeled differently in the Cremona tables
         for c in self.curves:
             c['optimal'] = (c['number']==(3 if self.label == '990h' else 1))
-            c['ai'] = [int(a) for a in c['ainvs']]
+            c['ai'] = parse_ainvs(c['xainvs'])
             c['url'] = url_for(".by_triple_label", conductor=N, iso_label=iso, number=c['lmfdb_number'])
 
         from sage.matrix.all import Matrix

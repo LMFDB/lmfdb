@@ -3,6 +3,7 @@
 {% block extra_script %}
 <script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('inventory_app.static', filename='record_viewer.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.tablesorter.js') }}"></script>
 <script type="text/javascript">
     //Create a js object of the fields from server.
     var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
@@ -18,10 +19,15 @@
       console.log( "Ready!" );
     }
 
+    function readyTablesorter(){
+          $("#viewerTable").tablesorter();
+    }
+
     $( document ).ready(function(){
       //Fetch content and fill blocklist and DOM
       $( document ).on("blockListReady", onReady); //What to do when blocklist is prepared
       fetchAndPopulateData(mainBlockList, populateRecordViewerPage, startVisible=true);//Start fetching
+      $( document ).on("dataPopulated", readyTablesorter);
     });
 
 </script>
