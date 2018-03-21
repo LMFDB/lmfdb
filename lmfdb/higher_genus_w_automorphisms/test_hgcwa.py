@@ -34,9 +34,19 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_full_auto_links(self):
         L = self.tc.get('/HigherGenus/C/Aut/4.9-1.0.9-9-9.1')
-        assert 'Full automorphism 4.18-2.0.2-9-18' in L.data
-        
+        assert 'Full automorphism 4.18-2.0.2-9-18' in L.data        
         
     def test_index_page(self):
         L = self.tc.get('/HigherGenus/C/Aut/')
         assert 'Find specific automorphisms of higher genus curves' in L.data
+
+    def test_stats_page(self):
+        L = self.tc.get('/HigherGenus/C/Aut/stats')
+        assert 'unique groups' in L.data
+
+
+    def test_unique_groups_pages(self):
+        L = self.tc.get('/HigherGenus/C/Aut/stats/groups_per_genus/5')
+        assert 'Distribution of groups in curves of genus 5' in L.data
+
+        
