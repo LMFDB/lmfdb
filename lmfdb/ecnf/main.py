@@ -11,7 +11,7 @@ ASC = pymongo.ASCENDING
 from operator import mul
 from urllib import quote, unquote
 from lmfdb.base import  getDBConnection, app
-from flask import render_template, request, url_for, redirect, flash, send_file
+from flask import render_template, request, url_for, redirect, flash, send_file, make_response
 from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.ecnf import ecnf_page
@@ -366,6 +366,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            #        properties = ec.properties,
                            properties2=ec.properties,
                            friends=ec.friends,
+                           downloads=ec.downloads,
                            info=info,
                            learnmore=learnmore_list())
 
@@ -688,3 +689,72 @@ def tor_struct_search_nf(prefill="any"):
 
 # the following allows the preceding function to be used in any template via {{...}}
 app.jinja_env.globals.update(tor_struct_search_nf=tor_struct_search_nf)
+
+@ecnf_page.route("/download_all/<nf>/<conductor_label>/<class_label>/<number>")
+def download_ECNF_all(nf,conductor_label,class_label,number):
+    conductor_label = unquote(conductor_label)
+    conductor_label = convert_IQF_label(nf,conductor_label)
+    try:
+        nf_label = nf_string_to_label(nf)
+    except ValueError:
+        return search_input_error()
+    label = "".join(["-".join([nf_label, conductor_label, class_label]), number])
+    data = db_ecnf().find_one({'label':label}, {'_id':False})
+    if data is None:
+        return search_input_error()
+
+    import json
+    response = make_response(json.dumps(data))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@ecnf_page.route('/<nf>/<conductor_label>/<class_label>/<number>/download/<download_type>')
+def ecnf_code_download(**args):
+    response = make_response(ecnf_code(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
+                     'disc', 'disc_norm', 'jinv', 'cm', 'rank', 'ntors',
+                     'gens', 'reg', 'tors', 'torgens', 'localdata']
+
+code_names = {'field': 'Define the base number field',
+              'curve': 'Define the curve',
+              'is_min': 'Test whether it is a global minimal model',
+              'cond': 'Compute the conductor',
+              'cond_norm': 'Compute the norm of the conductor',
+              'disc': 'Compute the discriminant',
+              'disc_norm': 'Compute the norm of the discriminant',
+              'jinv': 'Compute the j-invariant',
+              'cm': 'Test for Complex Multiplication',
+              'rank': 'Compute the Mordell-Weil rank',
+              'ntors': 'Compute the order of the torsion subgroup',
+              'gens': 'Compute the generators (of infinite order)',
+              'reg': 'Compute the regulator',
+              'tors': 'Compute the torsion subgroup',
+              'torgens': 'Compute the generators of the torsion subgroup',
+              'localdata': 'Compute the local reduction data at primes of bad reduction'
+}
+
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+
+def ecnf_code(**args):
+    label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
+    E = ECNF.by_label(label)
+    Ecode = E.code()
+    lang = args['download_type']
+    code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
+    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
+    if lang=='gp':
+        lang = 'pari'
+    if lang=='sage':
+        code += "\nx = polygen(QQ)\n"
+    elif lang=='magma':
+        code += "\nQx<x> := PolynomialRing(RationalField());\n"
+    for k in sorted_code_names:
+        if lang in Ecode[k]:
+            code += "\n{} {}: \n".format(Comment[lang],code_names[k])
+            code += Ecode[k][lang] + ('\n' if not '\n' in Ecode[k][lang] else '')
+    return code
+

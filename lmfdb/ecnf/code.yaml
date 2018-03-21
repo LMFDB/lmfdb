@@ -93,4 +93,4 @@ localdata:
   sage:
     E.local_data()
   magma:
-    LocalInformation(E)
+    LocalInformation(E);
