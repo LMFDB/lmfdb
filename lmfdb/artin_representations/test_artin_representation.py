@@ -15,7 +15,7 @@ class ArtinRepTest(LmfdbTest):
         assert '2898947' in L.data # prime divisor of one of the conductors in the result
 
     def test_display_page(self):
-        #L = self.tc.get('/ArtinRepresentation/4/3655/1/')
+        L = self.tc.get('/ArtinRepresentation/4/3655/1/')
         L = self.tc.get('/ArtinRepresentation/4.5_17_43.8t44.1c1')
         assert ('Odd' in L.data)
 
