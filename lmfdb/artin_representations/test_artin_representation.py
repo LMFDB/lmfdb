@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
-import unittest2
+#import unittest2
 
 class ArtinRepTest(LmfdbTest):
 
