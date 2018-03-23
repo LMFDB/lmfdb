@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
-import unittest2
+#import unittest2
 
 class ArtinRepTest(LmfdbTest):
 
@@ -20,7 +20,6 @@ class ArtinRepTest(LmfdbTest):
         assert ('Odd' in L.data)
 
     # big degree fields ok
-    @unittest2.skip("This Artin representation has gone missing")
     def test_big_degree(self):
         L = self.tc.get('/ArtinRepresentation/2.1951e2.120.1c1')
         assert '24T201' in L.data # Galois group
