@@ -106,15 +106,19 @@ def makeDBConnection():
 
         logging.info("_mongo_C.nodes = %s" %  (_mongo_C.nodes,) )
         logging.info("_mongo_C.read_preference = %s" %  (_mongo_C.read_preference,) )
-
+        logging.info("_mongo_C.is_primary = %s" %  (_mongo_C.is_primary,) )
         try:
-            _mongo_C["admin"].authenticate(_mongo_user, _mongo_pass)
-            if _mongo_user == "webserver":
-                logging.info("authentication: partial read-write access enabled")
+            if _mongo_C.is_primary:
+                _mongo_C["admin"].authenticate(_mongo_user, _mongo_pass);
+                if _mongo_user == "webserver":
+                    logging.info("authentication: partial read-write access enabled");
+            else:
+                logging.info("authentication: not connected to the primary server -- fallback to read-only access");
+                _mongo_C["admin"].authenticate("lmfdb", "lmfdb");
         except pymongo.errors.PyMongoError as err:
             logging.error("authentication: FAILED -- aborting")
             raise err
-        #read something from the db    
+        #read something from the db
         #and check from where was it read
         if pymongo.version_tuple[0] >= 3:
             cursor = _mongo_C.knowledge.knowls.find({},{'_id':True}).limit(-1)
