@@ -31,7 +31,7 @@ def get_db_lists():
 #Scraping helpers and main functions
 
 def get_uid():
-    """Get a uid for a scrape process"""
+    """Create a new uid for a scrape process"""
     return uuid.uuid4()
 
 def trigger_scrape(data):
@@ -74,6 +74,8 @@ def get_progress(uid):
         inv.log_dest.error("Error getting Db connection "+ str(e))
         return False
 
+    #NOTE what follows _is_ vulnerable to races but
+    # this will only affect the progress meter, and should be rare
     scrapes = inv_db['ops'].find({'uid':uuid.UUID(uid), 'running':{"$exists":True}})
     #Assume all ops records with correct uid and containing 'running' are relevant
     n_scrapes = scrapes.count()
@@ -91,23 +93,30 @@ def get_progress(uid):
             # is failing, will become evident later
             prog_in_curr = 0
     else:
-        #Nothing running, so return
+        #Nothing running. If not yet started, prog=0. If done prog=100.
         prog_in_curr = 100 * (curr_coll == n_scrapes)
 
     return {'n_colls':n_scrapes, 'curr_coll':curr_coll, 'progress_in_current':prog_in_curr}
 
 def get_progress_from_db(inv_db, uid, db_id, coll_id):
-    """Query db to see state of current scrape"""
+    """Query db to see state of current scrape
+
+    NOTE: this function assumed that when it is called there was a running
+    process on db.coll, so if there no longer is, it must have finished
+    """
 
     db_name = idc.get_db_name(inv_db, db_id)['name']
     coll_name = idc.get_coll_name(inv_db, coll_id)['name']
     try:
         live_progress = sf.get_scrape_progress(db_name, coll_name, getDBConnection())
+        #Cheat here: we'll cap running to 99% and the last 1% is left for upload time
+        #If no running record found, this assumes it completed before
+        #we managed to check it, hence 99%
+        percent = (live_progress[0] *99)/live_progress[1]
     except Exception as e:
         inv.log_dest.warning(e)
+        percent = 0
         raise e
-    percent = (live_progress[0] *100)/live_progress[1]
-
     return percent
 
 #Other live DB functions
