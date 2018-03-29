@@ -18,7 +18,7 @@ def get_scrape_progress(db, coll, connection):
        returns tuple containing (number of records scanned, total number of records)
     """
     u=bson.son.SON({"$ownOps":1,"currentOp":1})
-    progress = connection['admin'].command(u)
+    progress = connection['admin'].current_op(u)
     for el in progress['inprog']:
         if 'progress' in el.keys():
             if el['ns'] == db + "." + coll:
