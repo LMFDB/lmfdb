@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+# -*- coding: utf8 -*-
 
 import StringIO
 from ast import literal_eval
@@ -459,7 +460,7 @@ def download_search(info):
     lang = info.get('download','text').strip()
     filename = 'genus2_curves' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
-    print info
+    return literal_eval(info.get('query'))
     # reissue query here
     try:
         res = g2c_db_curves().find(literal_eval(info.get('query','{}')),{'_id':False,'eqn':True})
