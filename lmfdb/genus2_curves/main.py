@@ -467,7 +467,7 @@ def download_search(info):
         return "Unable to parse query: %s"%err
     c = download_comment_prefix[lang]
     s =  '\n'
-    s += c + literal_eval(info.get('query'))
+    s += c + info.get('query')
     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
     s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), res.count())
     s += c + ' Below is a list called data. Each entry has the form:\n'
