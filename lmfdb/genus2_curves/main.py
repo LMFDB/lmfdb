@@ -459,6 +459,7 @@ def download_search(info):
     lang = info.get('download','text').strip()
     filename = 'genus2_curves' + download_file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
+    print info
     # reissue query here
     try:
         res = g2c_db_curves().find(literal_eval(info.get('query','{}')),{'_id':False,'eqn':True})
