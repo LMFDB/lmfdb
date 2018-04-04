@@ -3,7 +3,6 @@ import inventory_upload_data as iud
 from lmfdb.base import getDBConnection
 from scrape_progress_update import update_scrape_progress
 import threading
-import bson
 
 def get_scrape_progress(db, coll, connection):
     """Routine to query database on state of MapReduce on a given db
