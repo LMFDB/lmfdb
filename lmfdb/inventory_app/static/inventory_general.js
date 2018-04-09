@@ -100,9 +100,52 @@ function getBoxTitles(blockList){
   return fields;
 }
 
+function getBoxKeys(blockList){
+  //Returns all the unique field names. Assumes name is all the bit between BOX and final
+  var keys = Object.keys(blockList.blockList).sort();
+  var uniq_keys = {};
+  for(var i=0; i<keys.length; i++){
+    var str = keys[i];
+    //Strip out field, leaving the 'Box_' bit
+    var head = str.substring(str.indexOf(id_delimiter)+1,str.lastIndexOf(id_delimiter) );
+    uniq_keys[head] = 0;
+  }
+  var fields = Object.keys(uniq_keys);
+  return fields;
+}
+
+
 //---------- End helpers for some other block-wise tasks ---------
 
 //---------- General data fetching  ------------------------------
+function fetchAndDownloadData(pageType){
+  //Fetch the json data for this page and trigger download
+  var current_url = window.location.href;
+  var data_url = current_url + 'data';
+  var XHR = new XMLHttpRequest();
+  XHR.open('GET', data_url);
+  XHR.setRequestHeader('Content-Type', 'text/plain');
+
+  XHR.addEventListener('load', function(event) {
+    //On success return data
+    console.log(XHR.response);
+	  var data = JSON.parse(XHR.response);
+    if(! jQuery.isEmptyObject(data)){
+      var filename = pageKey.replace('.', '_') +'_'+ pageType+'_download.json';
+      saveTextAsFile(XHR.response, filename, 'text/json');
+    }else{
+      alert("No data to download");
+    }
+  });
+
+  // Define what happens in case of error
+  XHR.addEventListener('error', function(event) {
+    console.log("Failed to fetch data for download");
+    alert("Failed to fetch data for download");
+  });
+
+  XHR.send('');
+}
 
 function fetchAndPopulateData(blockList, pageCreator, startVisible=true){
   //Fetch the json data for this page
@@ -121,7 +164,7 @@ function fetchAndPopulateData(blockList, pageCreator, startVisible=true){
     if(jQuery.isEmptyObject(data)){
 	    div = document.getElementById('dataDiv');
     	div.innerHTML = "<span class='err_text'>Failed to fetch page data. This is most likely due to a connection or authentication failure with the LMFDB backend.<p>Please check you  have an open tunnel (e.g. using warwick.sh) and have a passwords.yaml file in lmfdb root containing the appropriate passwords, or reload the page to try again.</p></span>";
-    
+
     }else{
 	    populateBlocklist(XHR.blockList, data);
     	pageCreator(XHR.blockList, startVisible=startVisible);
@@ -276,7 +319,10 @@ function createCollapserButt(field, open=true){
 function capitalise(str){
 //Capitalise first letter of given string
   return str[0].toUpperCase() + str.slice(1);
+}
 
+function createBoxName(item, field){
+  return "#Box"+id_delimiter+item+id_delimiter+field;
 }
 
 function setScanDate(date){
@@ -295,4 +341,24 @@ function escape_jq( myid ) {
 
     return myid.replace( /(:|\.|\[|\]|,|=|@)/g, "\\$1" );
 
+}
+
+function saveTextAsFile(textToWrite, filename, type_in){
+    /* globals destroyClickedElement, Blob*/
+    //Create file and offer for "download"
+    //Borrowed and slightly adapted from internet postings
+    function destroyClickedElement(event){
+              document.body.removeChild(event.target);
+          }
+    if(typeof type_in == "undefined") type_in = 'text/plain';
+
+    var textFileAsBlob = new Blob([textToWrite], {type:type_in});
+    var downloadLink = document.createElement("a");
+    downloadLink.download = filename;
+    downloadLink.innerHTML = "Download File";
+    downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+    downloadLink.onclick = destroyClickedElement;
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
 }
