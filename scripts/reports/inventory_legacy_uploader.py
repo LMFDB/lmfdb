@@ -2,8 +2,7 @@ import json
 import lmfdb.inventory_app.inventory_helpers as ih
 import lmfdb.inventory_app.lmfdb_inventory as inv
 import lmfdb.inventory_app.inventory_db_core as invc
-import datetime
-from lmfdb.inventory_app.inventory_upload_data import *
+from lmfdb.inventory_app.inventory_upload_data import (upload_collection_structure, extract_specials, delete_all_tables, recreate_rollback_table, MAX_SZ, delete_by_collection)
 
 def upload_all_structure(db, structure_dat):
     """Upload an everything from a structure json document
