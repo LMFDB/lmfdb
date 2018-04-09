@@ -62,7 +62,7 @@ function updateStatus(newStatus, info){
 //    var callback = function(){ flashName(element);}
       var callback = null;
 //    submittedNice = newName;
-    genSubmitEdits(dest, diff, {redirect:false, debug:true, refresh:true, call: callback});  
+    genSubmitEdits(dest, diff, {redirect:false, debug:true, refresh:true, call: callback});
 }
 
 </script>
@@ -78,6 +78,9 @@ function updateStatus(newStatus, info){
 
 {% block main_body %}
   <div id='dialog'></div>
+  {% if lockout %}
+    <h1 class='warn'> Editing functions are not available at this time </h1>
+  {% endif %}
   <div class='listing'>
   <!-- Omit ops dbs  Note if you set one to 'ops' and refresh it will be GONE!! This is why there's a confirmation dialog-->
   {% for item in listing if (db_name is none or item[3] != 'ops') %}
@@ -85,7 +88,7 @@ function updateStatus(newStatus, info){
     {% if db_name is none %}
       <h2 class='link'><a href = {{url_for('inventory_app.show_edit_child', id=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
       Contains {{item[2]}} collections</br>
-      {% if current_user.is_authenticated() %}
+      {% if current_user.is_authenticated() and not lockout %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {db:"{{item[0]}}"})'>
       {% else %}
         <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
@@ -95,7 +98,7 @@ function updateStatus(newStatus, info){
       <h2 class='link'><a href = {{url_for('inventory_app.show_inventory', id=db_name, id2=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span>
          <span class='status'>{{item[3]}}</span></h2>
       Contains {{item[2][0]}} records of {{item[2][1]}} types </br>
-      {% if current_user.is_authenticated() %}
+      {% if current_user.is_authenticated() and not lockout and not item[4] %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
         <input type='button' id = '{{item[1]}}' value ='Edit Status' onclick='promptStatus(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
         <a href = {{url_for('inventory_app.show_edit_inventory', id=db_name, id2=item[0])}} id=invbutton>Edit Inventory</a>
@@ -103,6 +106,13 @@ function updateStatus(newStatus, info){
         <a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
         <a href = {{url_for('inventory_app.show_edit_records', id=db_name, id2=item[0])}} id=invbutton>Edit Records</a>
         <a href = {{url_for('inventory_app.show_indices', id=db_name, id2=item[0])}} id=invbutton>View Indices</a>
+      {% elif current_user.is_authenticated() and not lockout %}
+          <input type='button' value ='Edit Nice Name' title ='Scraping in progress, please wait' disabled class=disabledbutton>
+          <input type='button' value ='Edit Status' title ='Scraping in progress, please wait' disabled class=disabledbutton>
+          <input type='button' value ='Edit Inventory' title ='Scraping in progress, please wait' disabled class=disabledbutton>
+          <a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
+          <input type='button' value ='Edit Record Types' title ='Scraping in progress, please wait' disabled class=disabledbutton>
+          <a href = {{url_for('inventory_app.show_indices', id=db_name, id2=item[0])}} id=invbutton>View Indices</a>
       {% else %}
         <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
         <input type='button' value ='Edit Status' title ='Please login to edit' disabled class=disabledbutton>

@@ -16,6 +16,19 @@ import datetime
 
 def is_same_type(object1, object2, strict=True):
 
+    """ Function to test if two object types are the same
+        and return the type if needed
+
+        object1 - First object type to compare
+        object2 - Second object type to compare
+        strict - optional parameter. If true then different
+                 numerical types like int and float are different.
+                 If false then different numerical types are compared
+                 as a generic numeric type
+
+        returns type of objects if they are the same
+        raises TypeError if not """
+
     if object1 == object2:
         return object1
     if object1 == python_other or object2 == python_other:
@@ -30,6 +43,17 @@ def is_same_type(object1, object2, strict=True):
     raise TypeError
 
 def is_collection(object):
+
+    """ Function to test if an object is a collection of some type
+    object - object to test type of
+
+    If object is a container then a test is made of the types in the collection
+    returns type code for object if object is collection. This will include the
+    bitmask values for generic collection, the type of the collection
+    (although this is not currently used) and the type code of the underlying
+    contents of the container.
+
+    Raises TypeError if object is not a container type """
 
     subtype = None
     if type(object) is list:
@@ -81,6 +105,14 @@ def is_collection(object):
 
 def is_base_type(object):
 
+    """Function to test if an object is of a primitive type
+       object - object to test type of
+       Tests if object is bool, float, int, datetime or string
+
+       Returns bitmask code for found type
+       Raises TypeError if object is not a base type
+    """
+
     bv = null_type
     if type(object) is bool:
         bv = bv | numeric_type
@@ -111,12 +143,20 @@ def is_base_type(object):
     raise TypeError
 
 def is_string(object):
+    """ Helper function to test for an object being either a primitive
+        or unicode string.
+
+        object - Object to test
+        returns True or False """
+
     to = type(object)
     if to is str or to is unicode:
         return True
     return False
 
 def is_string_of(object):
+    """ Test for an object being an encoded string
+        (comma separated list etc.)"""
 
     splits=object.split(',')
     if splits[0] is object:
@@ -142,6 +182,8 @@ def is_string_of(object):
     return string_type | comma_separated_list | sub_type
 
 def get_object_id(object):
+    """Get type ID code for an object"""
+
     try:
         rv = is_base_type(object)
     except TypeError:
@@ -152,6 +194,8 @@ def get_object_id(object):
     return rv
 
 def get_description(object):
+    """Get a string description of object"""
+
     rstring=''
     otype = get_object_id(object)
     if otype == python_other:
