@@ -74,9 +74,9 @@ $(function() {
     <td>{{ c }}</td>
     <td>
       {% for k in ks %}
-        <div title="{{k.title|striptags}} [{{k._id}}]" kid="{{k._id}}">
-          <span>{{ k._id }}</span>
-          <a href="{{ url_for('.show', ID=k._id) }}" >{{ k.title|safe }}</a>
+        <div title="{{k.title|striptags}} [{{k.id}}]" kid="{{k.id}}">
+          <span>{{ k.id }}</span>
+          <a href="{{ url_for('.show', ID=k.id) }}" >{{ k.title|safe }}</a>
         </div>
       {% endfor %}
      </td>

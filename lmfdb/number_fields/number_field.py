@@ -5,11 +5,10 @@ ASC = pymongo.ASCENDING
 import time, os
 import flask
 from lmfdb.base import app, getDBConnection
-from lmfdb.db_backend import MongoBackend, PostgresBackend
 from flask import render_template, request, url_for, redirect, send_file, flash
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
-from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex
+from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex, nfdb
 from lmfdb.local_fields.main import show_slope_content
 
 from markupsafe import Markup
@@ -36,19 +35,8 @@ max_deg = None
 init_nf_flag = False
 backend = None
 
-def db():
-    return getDBConnection()
-
-def _nfdb():
-    global backend
-    if backend is None:
-        backend = PostgresBackend('number_fields', ('label', 'coeffs', 'coeffhash', 'degree', 'signature', 'disc_abs', 'disc_sign', 'ramps', 'galois', 'class_number', 'class_group', 'used_grh', 'oldpolredabscoeffs', 'oldpolredabscoeffhash'), ('coeffstr', 'r1', 'r2', 'zk', 'reduced', 'units', 'reg', 'subs', 'unitsGmodule', 'res'), [('degree', 1), ('disc_abs_key', 1),('disc_sign', 1)])
-    return backend
-def nfdb():
-    return db().numberfields.fields
-
 def statdb():
-    return db().numberfields.stats
+    return getDBConnection().numberfields.stats
 
 # For imaginary quadratic field class group data
 class_group_data_directory = os.path.expanduser('~/data/class_numbers')
@@ -56,22 +44,22 @@ class_group_data_directory = os.path.expanduser('~/data/class_numbers')
 def init_nf_count():
     global nfields, init_nf_flag, max_deg
     if not init_nf_flag:
-        fields = _nfdb()
+        fields = nfdb()
         nfields = fields.count()
         max_deg = fields.max('degree')
         init_nf_flag = True
 
 def galois_group_data(n, t):
-    return flask.Markup(group_knowl_guts(n, t, db()))
+    return flask.Markup(group_knowl_guts(n, t))
 
 def group_cclasses_data(n, t):
-    return flask.Markup(group_cclasses_knowl_guts(n, t, db()))
+    return flask.Markup(group_cclasses_knowl_guts(n, t))
 
 def group_character_table_data(n, t):
-    return flask.Markup(group_character_table_knowl_guts(n, t, db()))
+    return flask.Markup(group_character_table_knowl_guts(n, t))
 
 def number_field_data(label):
-    return flask.Markup(nf_knowl_guts(label, db()))
+    return flask.Markup(nf_knowl_guts(label))
 
 #def na_text():
 #    return "Not computed"
@@ -92,25 +80,12 @@ def global_numberfield_summary():
     init_nf_count()
     return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  Here are some <a href="%s">further statistics</a>.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('number_fields.statistics'), url_for('number_fields.render_class_group_data'))
 
-#def group_display_shortC(C):
-#    def gds(nt):
-#        return group_display_short(nt['n'], nt['t'], C)
-#    return gds
-
 def poly_to_field_label(pol):
     try:
         wnf = WebNumberField.from_polynomial(pol)
         return wnf.get_label()
     except:
         return None
-    #coeffs = list2string([int(c) for c in pol.coeffs()])
-    #d = int(pol.degree())
-    #query = {'coeffs': coeffs}
-    #C = base.getDBConnection()
-    #one = C.numberfields.fields.find_one(query)
-    #if one:
-    #    return one['label']
-    #return None
 
 @app.route("/NF")
 @app.route("/NF/")
@@ -134,8 +109,7 @@ def render_groups_page():
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")) ]
     t = 'Galois group labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois group labels', ' ')]
-    C = db()
-    return render_template("galois_groups.html", al=aliastable(C), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+    return render_template("galois_groups.html", al=aliastable(), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 
 @nf_page.route("/FieldLabels")
@@ -314,7 +288,7 @@ def number_field_render_webpage():
 
 @nf_page.route("/random")
 def random_nfglobal():
-    label = _nfdb().random()
+    label = nfdb().random()
     #This version leaves the word 'random' in the URL:
     #return render_field_webpage({'label': label})
     #This version uses the number field's own URL:
@@ -345,8 +319,10 @@ def string2list(s):
 
 
 def render_field_webpage(args):
+    from sage.misc.misc import cputime
+    cpt0 = cputime()
+    t0 = time.time()
     data = None
-    C = db()
     info = {}
     bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
 
@@ -381,9 +357,9 @@ def render_field_webpage(args):
             factored_conductor = factor_base_factor(data['conductor'], ram_primes)
             factored_conductor = factor_base_factorization_latex(factored_conductor)
             data['conductor'] = "\(%s=%s\)" % (str(data['conductor']), factored_conductor)
-    data['galois_group'] = group_display_knowl(n, t, C)
-    data['cclasses'] = cclasses_display_knowl(n, t, C)
-    data['character_table'] = character_table_display_knowl(n, t, C)
+    data['galois_group'] = group_display_knowl(n, t)
+    data['cclasses'] = cclasses_display_knowl(n, t)
+    data['character_table'] = character_table_display_knowl(n, t)
     data['class_group'] = nf.class_group()
     data['class_group_invs'] = nf.class_group_invariants()
     data['signature'] = nf.signature()
@@ -398,8 +374,8 @@ def render_field_webpage(args):
     data['frob_data'], data['seeram'] = frobs(nf)
     # Bad prime information
     npr = len(ram_primes)
-    ramified_algebras_data = nf.ramified_algebras_data()
-    if isinstance(ramified_algebras_data,str):
+    #ramified_algebras_data = nf.ramified_algebras_data()
+    if True: #isinstance(ramified_algebras_data,str):
         loc_alg = ''
     else:
         # [label, latex, e, f, c, gal]
@@ -427,7 +403,7 @@ def render_field_webpage(args):
     ram_primes = str(ram_primes)[1:-1]
     if ram_primes == '':
         ram_primes = r'\textrm{None}'
-    data['phrase'] = group_phrase(n, t, C)
+    data['phrase'] = group_phrase(n, t)
     zk = nf.zk()
     Ra = PolynomialRing(QQ, 'a')
     zk = [latex(Ra(x)) for x in zk]
@@ -551,22 +527,24 @@ def render_field_webpage(args):
                    ('Ramified ' + primes + '', '$%s$' % ram_primes),
                    ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
-                   ('Galois Group', group_display_short(data['degree'], t, C))
+                   ('Galois Group', group_display_short(data['degree'], t))
                    ]
-    from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
-    try:
-        info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
-        v = nf.factor_perm_repn(info["tim_number_field"])
-        def dopow(m):
-            if m==0: return ''
-            if m==1: return '*'
-            return '*<sup>%d</sup>'% m
+    #from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
+    #try:
+    #    info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
+    #    v = nf.factor_perm_repn(info["tim_number_field"])
+    #    def dopow(m):
+    #        if m==0: return ''
+    #        if m==1: return '*'
+    #        return '*<sup>%d</sup>'% m
 
-        info["mydecomp"] = [dopow(x) for x in v]
-    except AttributeError:
-        pass
-#    del info['_id']
-    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info)
+    #    info["mydecomp"] = [dopow(x) for x in v]
+    #except AttributeError:
+    #    pass
+    T = render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info)
+    nf_logger.info("Total walltime (nf %s): %ss"%(label, time.time() - t0))
+    nf_logger.info("Total cputime (nf %s): %ss"%(label, cputime(cpt0)))
+    return T
 
 
 def format_coeffs2(coeffs):
@@ -641,23 +619,20 @@ def number_field_search(info):
 
     query = {}
     try:
-        parse_galgrp(info,query, qfield='galois')
         parse_ints(info,query,'degree')
-        parse_bracketed_posints(info,query,'signature',split=False,exactlength=2)
-        parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs_key'),parse_one=make_disc_key)
+        parse_galgrp(info,query, qfield=('degree', 'galt'))
+        parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
+        parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
         parse_ints(info,query,'class_number')
-        parse_bracketed_posints(info,query,'class_group',split=False,check_divisibility='increasing')
-        parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',mode='complement',to_string=True)
+        parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
+        parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',prefix='ram',cutoff=100,radical='disc_rad',mode='complement')
         # modes are now contained (in), exactly, include
         if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
-            mode = 'append'
-            parse_primes(info,query,'ram_primes','ramified primes','ramps',mode,to_string=True)
+            parse_primes(info,query,'ram_primes','ramified primes','ramps',prefix='ram',cutoff=100,radical='disc_rad',mode='append')
         elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
-            parse_primes(info,query,'ram_primes','ramified primes','ramps_all','subsets',to_string=False)
-            pass # build list
+            parse_primes(info,query,'ram_primes','ramified primes','ramps',prefix='ram',cutoff=100,radical='disc_rad',mode='subsets')
         else:
-            mode = 'liststring'
-            parse_primes(info,query,'ram_primes','ramified primes','ramps_all',mode)
+            parse_primes(info,query,'ram_primes','ramified primes','ramps',prefix='ram',cutoff=100,radical='disc_rad',mode='exact')
     except ValueError:
         return search_input_error(info, bread)
     count = parse_count(info)
@@ -667,13 +642,17 @@ def number_field_search(info):
 
     # nf_logger.debug(query)
     info['query'] = dict(query)
-    fields = _nfdb()
+    fields = nfdb()
     if 'lucky' in info:
         label = fields.lucky(query)
         if label:
             return redirect(url_for(".by_label", label=clean_input(label)))
 
-    nres, res = fields.search_results(query, count, start)
+    if 'result_count' in info:
+        nres = fields.count(query)
+        return flask.jsonify({"nres":str(nres)})
+
+    res, nres, exact_count = fields.search_results(query, count, start)
     if count is None:
         return download_search(info, res)
 
@@ -685,13 +664,20 @@ def number_field_search(info):
     info['fields'] = res
     info['number'] = nres
     info['start'] = start
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
+    info['count'] = count
+    info['upper_count'] = min(nres, start + count) # min is annoying in jinja
+    info['exact_count'] = exact_count
+    #if nres == 1:
+    #    info['report'] = 'unique match'
+    #else:
+    #    if nres > count or start != 0:
+    #        if exact_count:
+    #            result_count = str(nres)
+    #        else:
+    #            result_count = '<a href="#" title="Get exact count" onclick="get_count_of_results(%s); return false;">about %s</a>'%(js_query, nres)
+    #        info['report'] = 'displaying matches {0}-{1} of <div id="result-count">{2}</div>'.format(start + 1, min(nres, start + count), result_count)
+    #    else:
+    #        info['report'] = 'displaying all %s matches' % nres
 
     info['wnf'] = WebNumberField.from_data
     return render_template("number_field_search.html", info=info, title=t, bread=bread)

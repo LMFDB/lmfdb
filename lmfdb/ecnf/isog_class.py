@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-import lmfdb.base
 from lmfdb.utils import make_logger, web_latex, encode_plot
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, db_ecnf, FIELD
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
@@ -84,7 +83,7 @@ class ECNF_isoclass(object):
 
         self.field = FIELD(self.field_label)
         self.field_name = field_pretty(self.field_label)
-        self.field_knowl = nf_display_knowl(self.field_label, lmfdb.base.getDBConnection(), self.field_name)
+        self.field_knowl = nf_display_knowl(self.field_label, self.field_name)
         def curve_url(c):
             return url_for(".show_ecnf",
                            nf=c['field_label'],

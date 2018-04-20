@@ -21,7 +21,7 @@ def av_data(label):
     inf = '<div>Dimension: ' + str(abvar['g']) + '<br />'
     if not wnf.is_null():
         inf += 'Number field: ' + nf_display_knowl(abvar['nf'], C, name = abvar['nf']) + '<br />'
-        inf += 'Galois group: ' + group_display_knowl(abvar['gal']['n'],abvar['gal']['t'],C) + '<br />'
+        inf += 'Galois group: ' + group_display_knowl(abvar['gal']['n'],abvar['gal']['t']) + '<br />'
     inf += '$p$-rank: ' + str(abvar['p_rank']) + '</div>'
     inf += '<div align="right">'
     g, q, iso = split_label(label)

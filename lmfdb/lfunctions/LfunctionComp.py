@@ -14,15 +14,15 @@ def isogeny_class_table(Nmin, Nmax):
     query = {'number': 1, 'conductor': {'$lte': Nmax, '$gte': Nmin}}
 
     # Get all the curves and sort them according to conductor
-    cursor = db_ec().find(query,{'_id':False,'conductor':True,'lfmdb_label':True,'lmfdb_iso':True})
-    res = cursor.sort([('conductor', ASCENDING), ('lmfdb_label', ASCENDING)])
+    res, _, _ = db_ec().search_results(query)
 
-    iso_list = [E['lmfdb_iso'].split('.') for E in res]
+    i = db_ec()._search_cols.index('lmfdb_iso')
+    iso_list = [E[i].split('.') for E in res]
 
     return iso_list
     
 def isogeny_class_cm(label):
-    return db_ec().find_one({'lmfdb_iso':label},{'_id':False,'cm':True})['cm']
+    return db_ec().lucky({'lmfdb_iso':label},data_level=1)['cm']
 
 def EC_from_modform(level, iso):
     ''' The inverse to modform_from_EC

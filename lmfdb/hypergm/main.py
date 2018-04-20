@@ -50,7 +50,7 @@ def dogapthing(m1):
         two = mnew.split(',')
         two = [int(j) for j in two]
         try:
-            m1[2] = small_group_display_knowl(two[0],two[1],db())
+            m1[2] = small_group_display_knowl(two[0],two[1])
         except TypeError:
             m1[2] = 'Gap[%d,%d]' % (two[0],two[1])
     else:
@@ -64,7 +64,7 @@ def getgroup(m1,ell):
     myA = list2string(m1[3][0])
     myB = list2string(m1[3][1])
     if len(myA)==0 and len(myB)==0:
-        return [small_group_display_knowl(1,1,db()), 1]
+        return [small_group_display_knowl(1,1), 1]
     newthing = familydb().find_one({'A': myA, 'B': myB})
     if newthing is None:
         return ['??', 1]
@@ -477,7 +477,7 @@ def render_hgm_family_webpage(args):
                     'imprim': data['imprim'],
                     'ppart': ppart,
                     'type': typee,
-                    'junk': small_group_display_knowl(18,2,db()),
+                    'junk': small_group_display_knowl(18,2),
                     'showlist': showlist
                     })
         friends = [('Motives in the family', url_for('hypergm.index')+"?A=%s&B=%s" % (str(A), str(B)))]

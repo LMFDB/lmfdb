@@ -51,10 +51,10 @@ fi
 echo "Using Sage command $SAGE_COMMAND"
 
 if [[ -n $WHAT ]]; then
-   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $WHAT $COVER'"
+   eval "$SAGE_COMMAND -sh -c 'python -m nose $ARGS $WHAT $COVER'"
 else
    cd lmfdb
-   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $COVER'"
+   eval "$SAGE_COMMAND -sh -c 'python -m nose $ARGS $COVER'"
 fi
 
 if [[ $PYFLAKES_ERRCNT > 0 ]]; then

@@ -227,15 +227,13 @@ class AbvarFq_isoclass(object):
         if self.nf == "":
             return "The number field of this isogeny class is not in the database."
         else:
-            C = getDBConnection()
-            return nf_display_knowl(self.nf,C,field_pretty(self.nf))
+            return nf_display_knowl(self.nf,field_pretty(self.nf))
 
     def display_galois_group(self):
         if not self.gal or not self.gal['t']: #the number field was not found in the database
             return "The Galois group of this isogeny class is not in the database."
         else:
-            C = getDBConnection()
-            return group_display_knowl(self.gal['n'],self.gal['t'],C)
+            return group_display_knowl(self.gal['n'],self.gal['t'])
 
     def decomposition_display_search(self,factors):
         if len(factors) == 1 and factors[0][1] == 1:

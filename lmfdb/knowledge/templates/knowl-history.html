@@ -16,8 +16,8 @@
   <tr>
    <td>{{ h.time|fmtdatetime }}</td>
    <td>{{ h.who }}</td>
-   <td><a href="{{url_for('.show', ID=h['_id'])}}">
-     {% if h.title -%}{{ h.title|safe }}{%- else -%}{{ h['_id'] }}{%- endif %}</a></td>
+   <td><a href="{{url_for('.show', ID=h['id'])}}">
+     {% if h.title -%}{{ h.title|safe }}{%- else -%}{{ h['id'] }}{%- endif %}</a></td>
   </tr>
   {% endfor %}
  </table>

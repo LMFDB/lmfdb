@@ -20,10 +20,11 @@ FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 
 from flask import flash
-from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
+from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing, prod, prime_range
 from sage.misc.decorators import decorator_keywords
 
 from markupsafe import Markup
+from collections import defaultdict
 
 class SearchParser(object):
     def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield):
@@ -262,8 +263,12 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
         raise ValueError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_element_of(inp, query, qfield, parse_singleton=int):
+    query[qfield] = {'$contains': [parse_singleton(inp)]}
+
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_signed_ints(inp, query, qfield, parse_one=None):
-    if parse_one is None: parse_one = lambda x: (x.sign(), x.abs())
+    if parse_one is None: parse_one = lambda x: (int(x.sign()), int(x.abs()))
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
         parsed = parse_range3(inp, qfield, split0 = True)
@@ -314,47 +319,84 @@ def parse_rats(inp, query, qfield, process=None):
         raise ValueError("It needs to be a non-negative rational number (such as 4/3), a range of non-negative rational numbers (such as 2-5/2 or 2.5..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_primes(inp, query, qfield, mode=None, to_string=False):
+def parse_primes(inp, query, qfield, mode=None, to_string=False, prefix=None, cutoff=100, radical=None):
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(',')]
         primes = sorted(primes)
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if format_ok:
-        if to_string:
-            primes = [str(p) for p in primes]
-        if mode == 'complement':
-            query[qfield] = {"$nin": primes}
-        elif mode == 'liststring':
-            primes = [str(p) for p in primes]
-            query[qfield] = ",".join(primes)
-        elif mode == 'subsets':
-            # need all subsets of the list of primes 
-            powerset = [[]]
-            for p in primes:
-                powerset.extend([a+[p] for a in powerset])
-            # now set up a big $or clause
-            powerset = [','.join([str(p) for p in a]) for a in powerset]
-            powerset = [{qfield: a} for a in powerset]
-            collapse_ors(['$or', powerset], query)
-        elif mode == 'exact':
-            query[qfield] = sorted(primes)
-        elif mode == "append":
-            if qfield not in query:
-                query[qfield] = {}
-            if "$all" in query[qfield]:
-                query[qfield]["$all"].extend(primes)
+        if prefix is not None: # new style parsing
+            small_primes = [p for p in primes if p < cutoff]
+            big_primes = [p for p in primes if p >= cutoff]
+            if mode == 'complement':
+                #for p in small_primes:
+                #    query[prefix + str(p)] = False
+                #if big_primes:
+                #    query[qfield] = {'$notcontains': big_primes}
+                query[qfield] = {'$notcontains': primes}
+            elif mode == 'exact':
+                query[radical] = prod(primes)
+            elif mode == 'subsets':
+                query[qfield] = {'$containedin': primes}
+                ##if big_primes:
+                ##    pass
+                ##else:
+                ##    allfield = 'all' + prefix + 'small'
+                ##    query[allfield] = True
+                ##    for p in prime_range(cutoff):
+                ##        if p not in small_primes:
+                ##            query[prefix + str(p)] = False
+            elif mode == 'append':
+                if qfield in query:
+                    query[qfield]['$contains'] = primes
+                else:
+                    query[qfield] = {'$contains': primes}
+                #for p in small_primes:
+                #    key = prefix + str(p)
+                #    if key in query:
+                #        raise ValueError("Contradictory requirements for %s."%p)
+                #    query[key] = True
+                #if big_primes:
+                #    if qfield in query:
+                #        query[qfield]['$contains'] = big_primes
+                #    else:
+                #        query[qfield] = {'$contains': big_primes}
             else:
-                query[qfield]["$all"] = primes
+                raise ValueError("Unrecognized mode: programming error in LMFDB code")
         else:
-            raise ValueError("Unrecognized mode: programming error in LMFDB code")
+            if to_string:
+                primes = [str(p) for p in primes]
+            if mode == 'complement':
+                query[qfield] = {"$nin": primes}
+            elif mode == 'liststring':
+                primes = [str(p) for p in primes]
+                query[qfield] = ",".join(primes)
+            elif mode == 'subsets':
+                # need all subsets of the list of primes 
+                powerset = [[]]
+                for p in primes:
+                    powerset.extend([a+[p] for a in powerset])
+                # now set up a big $or clause
+                powerset = [','.join([str(p) for p in a]) for a in powerset]
+                powerset = [{qfield: a} for a in powerset]
+                collapse_ors(['$or', powerset], query)
+            elif mode == 'exact':
+                query[qfield] = sorted(primes)
+            elif mode == "append":
+                if qfield not in query:
+                    query[qfield] = {}
+                if "$all" in query[qfield]:
+                    query[qfield]["$all"].extend(primes)
+                else:
+                    query[qfield]["$all"] = primes
+            else:
+                raise ValueError("Unrecognized mode: programming error in LMFDB code")
     else:
         raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False, listprocess=None):
-    if process is None: process = lambda x: x
-    if listprocess is None: listprocess = lambda x: x
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False, extractor=None):
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
         (exactlength is not None and inp.count(',') != exactlength - 1) or
@@ -383,7 +425,6 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
                 query[qfield] = ''
             return
         L = [int(a) for a in inp[1:-1].split(',')]
-        L = listprocess(L)
         if check_divisibility == 'decreasing':
             # Check that each entry divides the previous
             #L = [int(a) for a in inp[1:-1].split(',')]
@@ -396,10 +437,17 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             for i in range(len(L)-1):
                 if L[i+1] % L[i] != 0:
                     raise ValueError("Each entry must divide the next, such as [2,4].")
-        if split:
-            query[qfield] = [process(a) for a in L]
+        if process is not None:
+            L = [process(a) for a in L]
+        if extractor is not None:
+            for qf, v in zip(qfield, extractor(L)):
+                if qf in query and query[qf] != v:
+                    raise ValueError("Inconsistent specification of %s: %s vs %s"%(qf, query[qf], v))
+                query[qf] = v
+        elif split:
+            query[qfield] = L
         else:
-            inp = '[%s]'%','.join([str(process(a)) for a in L])
+            inp = '[%s]'%','.join([str(a) for a in L])
             query[qfield] = inp if keepbrackets else inp[1:-1]
 
 def parse_gap_id(info, query, field='group', name='group', qfield='group'):
@@ -409,13 +457,42 @@ def parse_gap_id(info, query, field='group', name='group', qfield='group'):
 def parse_galgrp(inp, query, qfield, use_bson=True):
     from lmfdb.transitive_group import complete_group_codes
     from lmfdb.transitive_group import make_galois_pair as _make_galois_pair
-    make_galois_pair = _make_galois_pair if use_bson else lambda x,y: [x,y]
     try:
         gcs = complete_group_codes(inp)
-        if len(gcs) == 1:
-            query[qfield] = make_galois_pair(gcs[0][0], gcs[0][1])
-        elif len(gcs) > 1:
-            query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
+        if isinstance(qfield, tuple): # temporary until everything is switched over to new Galois formatting.
+            nfield, tfield = qfield
+            if nfield in query:
+                gcs = [t for n,t in gcs if n == query[nfield]]
+                if len(gcs) == 0:
+                    raise ValueError("Degree inconsistent with Galois group.")
+                elif len(gcs) == 1:
+                    query[tfield] = gcs[0]
+                else:
+                    query[tfield] = {'$in': gcs}
+            else:
+                gcsdict = defaultdict(list)
+                for n,t in gcs:
+                    gcsdict[n].append(t)
+                if len(gcsdict) == 1:
+                    query[nfield] = n # left over from the loop
+                    if len(gcs) == 1:
+                        query[tfield] = t # left over from the loop
+                    else:
+                        query[tfield] = {'$in': gcsdict[n]}
+                else:
+                    options = []
+                    for n, T in gcsdict.iteritems():
+                        if len(T) == 1:
+                            options.append({nfield: n, tfield: T[0]})
+                        else:
+                            options.append({nfield: n, tfield: {'$in': T}})
+                    collapse_ors(['$or', options], query)
+        else:
+            make_galois_pair = _make_galois_pair if use_bson else lambda x,y: [x,y]
+            if len(gcs) == 1:
+                query[qfield] = make_galois_pair(gcs[0][0], gcs[0][1])
+            elif len(gcs) > 1:
+                query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
     except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
 
@@ -529,23 +606,23 @@ def parse_hmf_weight(inp, query, qfield):
             raise ValueError("It must be either an integer (parallel weight) or a comma separated list of integers, such as 2 or 2,4,6.")
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
-def parse_bool(inp, query, qfield, minus_one_to_zero=False):
-    if inp == "True":
+def parse_bool(inp, query, qfield, blank=[]):
+    if inp in blank:
+        return
+    if inp in ["True", "1"]:
         query[qfield] = True
-    elif inp == "False":
+    elif inp in ["False", "-1", "0"]:
         query[qfield] = False
-    elif inp == "1":
-        query[qfield] = 1
-    elif inp == "-1":
-        query[qfield] = 0 if minus_one_to_zero else -1
-    elif inp == "0":
+    elif inp == "Any":
         # On the Galois groups page, these indicate "All"
         pass
     else:
         raise ValueError("It must be True or False.")
 
 @search_parser
-def parse_restricted(inp, query, qfield, allowed, process=None):
+def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
+    if inp in blank:
+        return
     if process is None: process = lambda x: x
     allowed = [str(a) for a in allowed]
     if inp not in allowed:

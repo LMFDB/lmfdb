@@ -8,7 +8,6 @@ from markupsafe import Markup
 
 from sage.all import latex
 
-from lmfdb.base import getDBConnection
 from lmfdb.utils import to_dict, random_object_from_collection, web_latex_ideal_fact
 from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
@@ -324,7 +323,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['level_label'] = level_label
                 info['level_norm'] = data['level_norm']
                 info['field_poly'] = teXify_pol(str(nf.poly()))
-                info['field_knowl'] = nf_display_knowl(field_label, getDBConnection(), pretty_field_label)
+                info['field_knowl'] = nf_display_knowl(field_label, pretty_field_label)
                 w = 'i' if nf.disc()==-4 else 'a'
                 L = nf.K().change_names(w)
                 alpha = L.gen()

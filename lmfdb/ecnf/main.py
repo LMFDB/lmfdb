@@ -10,7 +10,7 @@ import pymongo
 ASC = pymongo.ASCENDING
 from operator import mul
 from urllib import quote, unquote
-from lmfdb.base import  getDBConnection, app
+from lmfdb.base import app
 from flask import render_template, request, url_for, redirect, flash, send_file
 from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
@@ -456,7 +456,7 @@ def elliptic_curve_search(info):
     res = list(res)
     for e in res:
         e['numb'] = str(e['number'])
-        e['field_knowl'] = nf_display_knowl(e['field_label'], getDBConnection(), field_pretty(e['field_label']))
+        e['field_knowl'] = nf_display_knowl(e['field_label'], field_pretty(e['field_label']))
 
     info['curves'] = res  # [ECNF(e) for e in res]
     info['number'] = nres

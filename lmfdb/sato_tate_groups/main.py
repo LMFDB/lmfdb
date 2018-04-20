@@ -5,8 +5,9 @@ from pymongo import ASCENDING
 from flask import render_template, url_for, redirect, request
 from lmfdb.sato_tate_groups import st_page
 from lmfdb.utils import to_dict, random_object_from_collection, encode_plot, flash_error
-from lmfdb.base import getDBConnection
 from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash, clean_input
+from lmfdb.transitive_group import sgdb
+from lmfdb.db_backend import PostgresBackend
 
 from sage.all import ZZ, cos, sin, pi, list_plot, circle
 
@@ -41,24 +42,19 @@ st0_dict = {
 # Database connection
 ###############################################################################
 
-the_stdb = None
-
+stbackend = None
 def stdb():
-    global the_stdb
-    if the_stdb is None:
-        the_stdb = getDBConnection().sato_tate_groups
-    return the_stdb
+    global stbackend
+    if stbackend is None:
+        stbackend = PostgresBackend(('st_groups', None, None), ('label', 'weight', 'degree', 'components', 'component_group', 'identity_component', 'name', 'pretty', 'real_dimension', 'rational', 'trace_zero_density', 'subgroups', 'supgroups', 'gens', 'counts', 'moments', 'trace_histogram'), (), [('weight', 1), ('degree', 1), ('real_dimension', 1), ('identity_component', 1), ('name', 1)], ('subgroups', 'supgroups', 'gens', 'counts', 'moments'))
+    return stbackend
 
-# centralize db access here so that we can switch collection names when needed
-# stdb() should not be called elsewhere
-def st_groups():
-    return stdb().st_groups
-
-def st0_groups():
-    return stdb().st0_groups
-
-def small_groups():
-    return stdb().small_groups
+st0backend = None
+def st0db():
+    global st0backend
+    if st0backend is None:
+        st0backend = PostgresBackend(('st0_groups', None, None), ('label', 'degree', 'real_dimension', 'name', 'pretty', 'description'), (), [('name', 1)])
+    return st0backend
 
 ###############################################################################
 # Utility functions
@@ -78,7 +74,7 @@ def string_matrix(m):
 def st_link(label):
     if re.match(MU_LABEL_RE, label):
         return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mu(%s)'%label.split('.')[2])
-    data = st_groups().find_one({'label':label})
+    data = stdb().lookup(label)
     if not data:
         return label
     return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), data['pretty'])
@@ -98,7 +94,7 @@ def st0_pretty(st0_name):
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
-    data = small_groups().find_one({'label':sg_label})
+    data = sgdb().lookup(sg_label)
     if data and 'pretty' in data:
         return data['pretty']
     return sg_label
@@ -151,8 +147,8 @@ def index():
 
 @st_page.route('/random')
 def random():
-    data = random_object_from_collection(st_groups())
-    return redirect(url_for('.by_label', label=data['label']), 307)
+    label = stdb().random()
+    return redirect(url_for('.by_label', label=label), 307)
 
 @st_page.route('/<label>')
 def by_label(label):
@@ -179,18 +175,17 @@ def search_by_label(label):
     if re.match(MU_LABEL_NAME_RE, label):
         return redirect(url_for('.by_label',label='0.1.'+label.split('(')[1].split(')')[0]), 301)
     # check for general labels of the form w.d.name
-    data = {}
     if re.match(ST_LABEL_NAME_RE,label):
         slabel = label.split('.')
         try:
-            data = st_groups().find_one({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]},{'_id':False,'label':True})
+            label = stdb().lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, data_level=0)
         except ValueError:
-            data = {}
-    if not data:
+            label = None
+    if label is None:
         flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
         return redirect(url_for(".index"))
     else:
-        return redirect(url_for('.by_label', label=data['label']), 301)
+        return redirect(url_for('.by_label', label=label), 301)
 
 def search(**args):
     """ query processing for Sato-Tate groups -- returns rendered results page """
@@ -243,11 +238,12 @@ def search(**args):
 
     # Now lookup other (rational) ST groups in database
     if nres != INFINITY:
-        cursor = st_groups().find(query)
         start2 = start - nres if start > nres else 0
-        nres += cursor.count()
+        res, rational_count, exact_count = stdb().search_results(query, max(count - len(results), 0), start2)
+        nres += rational_count
+        if not exact_count: # should never happen since there are only 55 records
+            raise RuntimeError
         if start < nres and len(results) < count:
-            res = cursor.sort([('weight',ASCENDING), ('degree', ASCENDING), ('real_dimension', ASCENDING), ('identity_component', ASCENDING), ('name', ASCENDING)]).skip(start2).limit(count-len(results))
             for v in res:
                 v_clean = {}
                 v_clean['label'] = v['label']
@@ -342,7 +338,7 @@ def render_by_label(label):
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
-    data = st_groups().find_one({'label': label})
+    data = stdb().lookup(label)
     info = {}
     if data is None:
         flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
@@ -352,13 +348,13 @@ def render_by_label(label):
     info['ambient'] = st_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
     info['rational']=boolean_name(info.get('rational',True))
-    st0 = st0_groups().find_one({'name':data['identity_component']})
+    st0 = st0db().lucky({'name':data['identity_component']}, data_level=2)
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
     info['st0_name']=st0['pretty']
     info['st0_description']=st0['description']
-    G = small_groups().find_one({'label':data['component_group']})
+    G = sgdb().lookup(data['component_group'])
     if not G:
         flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
         return redirect(url_for(".index"))

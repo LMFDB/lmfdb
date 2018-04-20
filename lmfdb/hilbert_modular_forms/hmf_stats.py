@@ -135,7 +135,7 @@ class HMFstats(object):
             ff = F.replace(".",":")
             return {'nforms': field_data[ff]['nforms'],
                     'maxnorm': field_data[ff]['max_norm'],
-                    'field_knowl': nf_display_knowl(F, getDBConnection(), F),
+                    'field_knowl': nf_display_knowl(F, F),
                     'forms': url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
             }
         for d in self._counts['degrees']:

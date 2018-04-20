@@ -2,7 +2,7 @@ import re
 import string
 import bson
 
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import PostgresBackend
 
 from sage.all import ZZ, gap
 
@@ -10,33 +10,44 @@ from lmfdb.utils import list_to_latex_matrix, display_multiset
 
 MAX_GROUP_DEGREE = 23
 
-def db():
-    return getDBConnection()
-
+tgbackend = None
 def tgdb():
-    return db().transitivegroups.groups
+    global tgbackend
+    if tgbackend is None:
+        tgbackend = PostgresBackend(('transitivegroups', None, None), ('n', 't', 'label', 'name', 'pretty', 'size', 'arith_equiv', 'auts', 'parity', 'ab', 'cyc', 'prim', 'solv', 'repns', 'resolve', 'subs', 'moddecompuniq'), (), [('n', 1), ('t', 1)], ('repns', 'resolve', 'subs', 'moddecompuniq'))
+    return tgbackend
 
+sgbackend = None
 def sgdb():
-    return db().sato_tate_groups.small_groups
+    global sgbackend
+    if sgbackend is None:
+        sgbackend = PostgresBackend(('smallgroups', None, None), ('size', 'exponent', 'label', 'name', 'pretty', 'abelian', 'cyclic', 'perfect', 'simple', 'solvable', 'abelian_quotient', 'center', 'derived_group', 'clases', 'maximal_subgroups', 'normal_subgroups'), (), [('label', 1)], ('clases', 'maximal_subgroups', 'normal_subgroups'))
+    return sgbackend
 
-def small_group_display_knowl(n, k, C, name=None):
+gmbackend = None
+def gmdb():
+    global gmbackend
+    if gmbackend is None:
+        gmbackend = PostgresBackend(('gmodules', None, None), ('n', 't', 'index', 'name', 'dim', 'complete', 'gens'), (), [('n', 1), ('t', 1), ('index', 1)], ('gens',))
+    return gmbackend
+
+def small_group_display_knowl(n, k, name=None):
     if not name:
-        group = C.sato_tate_groups.small_groups.find_one({'label': '%d.%d'%(n,k)})
+        group = sgdb().lookup('%s.%s'%(n,k))
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + name + '</a>'
 
-def small_group_label_display_knowl(label, C, name=None):
+def small_group_label_display_knowl(label, name=None):
     if not name:
-        group = C.sato_tate_groups.small_groups.find_one({'label': label})
+        group = sgdb().lookup(label)
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
 
-def small_group_knowl_guts(gapid, C):
+def small_group_knowl_guts(gapid):
     parts = gapid.split('.')
     n = int(parts[0])
     k = int(parts[1])
-    group = C.sato_tate_groups.small_groups.find_one({'label': str(gapid)})
-    #group = C.sato_tate_groups.small_groups.find_one()
+    group = sgdb().lookup(str(gapid))
     inf = "Group $%s$"%str(group['pretty'])
     inf += '&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  '
     inf += ('' if group['cyclic'] else 'not')+' cyclic, '
@@ -47,11 +58,11 @@ def small_group_knowl_guts(gapid, C):
     inf += '<br>Exponent: '+str(group['exponent'])
     inf += '<br>Perfect: '+str(group['perfect'])
     inf += '<br>Simple: '+str(group['simple'])
-    inf += '<br>Normal subgroups: '+display_multiset(group['normal_subgroups'],small_group_label_display_knowl, C)
-    inf += '<br>Maximal subgroups: '+display_multiset(group['maximal_subgroups'], small_group_label_display_knowl, C)
-    inf += '<br>Center: '+small_group_label_display_knowl(group['center'],C)
-    inf += '<br>Derived subgroup: '+small_group_label_display_knowl(group['derived_group'],C)
-    inf += '<br>Abelianization: '+small_group_label_display_knowl(group['abelian_quotient'],C)
+    inf += '<br>Normal subgroups: '+display_multiset(group['normal_subgroups'],small_group_label_display_knowl)
+    inf += '<br>Maximal subgroups: '+display_multiset(group['maximal_subgroups'], small_group_label_display_knowl)
+    inf += '<br>Center: '+small_group_label_display_knowl(group['center'])
+    inf += '<br>Derived subgroup: '+small_group_label_display_knowl(group['derived_group'])
+    inf += '<br>Abelianization: '+small_group_label_display_knowl(group['abelian_quotient'])
     inf += '<br>Conjugacy class information: <table style="text-align: center;"><tr><th>Element Order<th>Size<th>Multiplicity'
     for row in group['clases']:
         inf += '<tr><td>%d<td>%d<td>%d'%(row[0],row[1],row[2])
@@ -81,7 +92,7 @@ class WebGaloisGroup:
         return cls(data['label'], data)
 
     def _get_dbdata(self):
-        return tgdb().find_one({'label': self.label})
+        return tgdb().lookup(self.label)
 
     def n(self):
         return self._data['n']
@@ -100,7 +111,7 @@ class WebGaloisGroup:
         return 0
 
     def order(self):
-        return int(self._data['order'])
+        return int(self._data['size'])
 
     def display_short(self):
         if self._data['pretty']:
@@ -168,56 +179,57 @@ def trylink(n, t):
 
 def tryknowl(n, t):
     if n <= MAX_GROUP_DEGREE:
-        return group_display_knowl(n, t, db(), '%dT%d' % (n, t))
+        return group_display_knowl(n, t, '%dT%d' % (n, t))
     return '%dT%d' % (n, t)
 
 
-def group_display_short(n, t, C):
+def group_display_short(n, t):
     label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
+    group = tgdb().lookup(label)
     if group is not None and group['pretty']:
         return group['pretty']
     return "%dT%d"%(n,t)
-    #name = group['name']
-    #name = name.replace('=', ' = ')
-    #return name
 
 # Returns the empty string if there is no pretty name
-def group_display_pretty(n, t, C):
+def group_display_pretty(n, t):
     label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
+    group = tgdb().lookup(label)
     if group['pretty']:
         return group['pretty']
     return ""
 
-def group_display_knowl(n, t, C, name=None):
+def group_display_knowl(n, t, name=None):
+    label = base_label(n, t)
+    group = tgdb().lookup(label)
     if not name:
-        name = group_display_short(n, t, C)
-    group = C.transitivegroups.groups.find_one({'label': base_label(n, t)})
+        if group is not None and group['pretty']:
+            name = group['pretty']
+        else:
+            name = "%dT%d"%(n,t)
     if group is None:
         return name
     return '<a title = "' + name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
 
 
-def galois_module_knowl(n, t, index, C):
-    data = C.transitivegroups.Gmodules.find_one({'n': n, 't': t, 'index': index})
+def galois_module_knowl(n, t, index):
+    data = gmdb().lucky({'n': n, 't': t, 'index': index}, data_level=1)
     if data is None:
         return 'Error'
     name = data['name']
     return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
 
 
-def cclasses_display_knowl(n, t, C, name=None):
+def cclasses_display_knowl(n, t, name=None):
     if not name:
         name = 'Conjugacy class representatives for '
-        name += group_display_short(n, t, C)
+        name += group_display_short(n, t)
     return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
 
 
-def character_table_display_knowl(n, t, C, name=None):
+def character_table_display_knowl(n, t, name=None):
     if not name:
         name = 'Character table for '
-        name += group_display_short(n, t, C)
+        name += group_display_short(n, t)
     return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
 
 ## For storage in the database by other modules
@@ -227,9 +239,9 @@ def make_galois_pair(n, t):
     return bson.SON([('n', n), ('t', t)])
 
 
-def group_phrase(n, t, C):
+def group_phrase(n, t):
     label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
+    group = tgdb().lookup(label)
     inf = ''
     if group['cyc'] == 1:
         inf += "A cyclic"
@@ -240,14 +252,14 @@ def group_phrase(n, t, C):
     else:
         inf += "A non-solvable"
     inf += ' group of order '
-    inf += str(group['order'])
+    inf += str(group['size'])
     return(inf)
 
 
-def group_display_long(n, t, C):
+def group_display_long(n, t):
     label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
-    inf = "Group %sT%s, order %s, parity %s" % (group['n'], group['t'], group['order'], group['parity'])
+    group = tgdb().lookup(label)
+    inf = "Group %sT%s, order %s, parity %s" % (group['n'], group['t'], group['size'], group['parity'])
     if group['cyc'] == 1:
         inf += ", cyclic"
     elif group['ab'] == 1:
@@ -267,11 +279,11 @@ def group_display_long(n, t, C):
     return group['name'] + inf
 
 
-def group_knowl_guts(n, t, C):
+def group_knowl_guts(n, t):
     label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
+    group = tgdb().lookup(label)
     inf = "Transitive group " + str(group['n']) + "T" + str(group['t'])
-    inf += ", order " + str(group['order'])
+    inf += ", order " + str(group['size'])
     inf += ", parity " + str(group['parity'])
     if group['cyc'] == 1:
         inf += ", cyclic"
@@ -294,10 +306,10 @@ def group_knowl_guts(n, t, C):
     rest += '</blockquote></div>'
 
     rest += '<div><h3>Subfields</h3><blockquote>'
-    rest += subfield_display(C, n, group['subs'])
+    rest += subfield_display(n, group['subs'])
     rest += '</blockquote></div>'
     rest += '<div><h3>Other low-degree representations</h3><blockquote>'
-    rest += otherrep_display(n, t, C, group['repns'])
+    rest += otherrep_display(n, t, group['repns'])
     rest += '</blockquote></div>'
     rest += '<div align="right">'
     rest += '<a href="/GaloisGroup/%s">%sT%s home page</a>' % (label, str(n), str(t))
@@ -308,9 +320,9 @@ def group_knowl_guts(n, t, C):
     return inf + rest
 
 
-def group_cclasses_knowl_guts(n, t, C):
+def group_cclasses_knowl_guts(n, t):
     label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
+    group = tgdb().lookup(label)
     gname = group['name']
     if group['pretty']:
         gname = group['pretty']
@@ -324,9 +336,9 @@ def group_cclasses_knowl_guts(n, t, C):
     return rest
 
 
-def group_character_table_knowl_guts(n, t, C):
+def group_character_table_knowl_guts(n, t):
     label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
+    group = tgdb().lookup(label)
     gname = group['name']
     gname = gname.replace('=', ' = ')
     if group['pretty']:
@@ -341,13 +353,13 @@ def group_character_table_knowl_guts(n, t, C):
     return(inf)
 
 
-def galois_module_knowl_guts(n, t, index, C):
-    mymod = C.transitivegroups.Gmodules.find_one({'n': int(n), 't': int(t), 'index': int(index)})
+def galois_module_knowl_guts(n, t, index):
+    mymod = gmdb().lucky({'n': int(n), 't': int(t), 'index': int(index)}, data_level=1)
     if mymod is None:
         return 'Database call failed'
     name = mymod['name']
     out = "$\\Z[G]$ module %s with $G=$ " % str(name)
-    out += group_display_knowl(n, t, C)
+    out += group_display_knowl(n, t)
     out += " = %sT%s " %(n, t)
     out += "<blockquote>"
     out += "Dimension: %s" % str(mymod['dim'])
@@ -361,7 +373,7 @@ def galois_module_knowl_guts(n, t, index, C):
     return out
 
 
-def subfield_display(C, n, subs):
+def subfield_display(n, subs):
     if n == 1:
         return 'Degree 1 - None'
     degs = ZZ(str(n)).divisors()[1:-1]
@@ -375,7 +387,7 @@ def subfield_display(C, n, subs):
         if substrs[k[0]] != '':
             substrs[k[0]] += ', '
         if k[0] <= MAX_GROUP_DEGREE:
-            substrs[k[0]] += group_display_knowl(k[0], k[1], C)
+            substrs[k[0]] += group_display_knowl(k[0], k[1])
         else:
             substrs[k[0]] += str(k[0]) + 'T' + str(k[1])
     for deg in degs:
@@ -386,7 +398,7 @@ def subfield_display(C, n, subs):
     return ans
 
 
-def otherrep_display(n, t, C, reps):
+def otherrep_display(n, t, reps):
     reps = [(j[0], j[1]) for j in reps]
     me = (n, t)
     difreps = list(set(reps))
@@ -402,7 +414,7 @@ def otherrep_display(n, t, C, reps):
             start = chr(ord(start) + 1)
         if cnt == 1:
             if k[0] <= MAX_GROUP_DEGREE:
-                ans += group_display_knowl(k[0], k[1], C, name)
+                ans += group_display_knowl(k[0], k[1], name)
             else:
                 ans += name
             if k == me:
@@ -412,7 +424,7 @@ def otherrep_display(n, t, C, reps):
                 if j > 0:
                     ans += ', '
                 if k[0] <= MAX_GROUP_DEGREE:
-                    ans += "%s%s" % (group_display_knowl(k[0], k[1], C, name), start)
+                    ans += "%s%s" % (group_display_knowl(k[0], k[1], name), start)
                 else:
                     ans += "%s%s" % (name, start)
                 start = chr(ord(start) + 1)
@@ -422,7 +434,7 @@ def otherrep_display(n, t, C, reps):
     return ans
 
 
-def resolve_display(C, resolves):
+def resolve_display(resolves):
     ans = ''
     old_deg = -1
     for j in resolves:
@@ -438,7 +450,7 @@ def resolve_display(C, resolves):
         k = j[1]
         name = str(k[0]) + 'T' + str(k[1])
         if k[0] <= MAX_GROUP_DEGREE:
-            ans += group_display_knowl(k[0], k[1], C, name)
+            ans += group_display_knowl(k[0], k[1], name)
         else:
             if k[1] == -1:
                 name = '%dT?' % k[0]
@@ -449,12 +461,12 @@ def resolve_display(C, resolves):
         ans = 'None'
     return ans
 
-def group_display_inertia(code, C):
+def group_display_inertia(code):
     if str(code[0]) == "t":
-        return group_display_knowl(code[1][0], code[1][1], C)
+        return group_display_knowl(code[1][0], code[1][1])
     if code[1] == [1,1]:
         return "Trivial"
-    ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1],C)
+    ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1])
     return ans
 
 def conjclasses(g, n):
@@ -519,13 +531,13 @@ def generators(n, t):
     return gens
 
 
-def aliastable(C):
+def aliastable():
     akeys = aliases.keys()
     akeys.sort(key=lambda x: aliases[x][0][0] * 10000 + aliases[x][0][1])
     ans = '<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
     ans += '<tbody>'
     for j in akeys:
-        name = group_display_short(aliases[j][0][0], aliases[j][0][1], C)
+        name = group_display_short(aliases[j][0][0], aliases[j][0][1])
         ntlist = aliases[j]
         #ntlist = filter(lambda x: x[0] < 12, ntlist)
         ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]

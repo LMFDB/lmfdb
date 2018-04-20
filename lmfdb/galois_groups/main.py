@@ -4,11 +4,10 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
-from lmfdb import base
 from lmfdb.base import app
-from flask import render_template, request, url_for, redirect
+from flask import render_template, request, url_for, redirect, jsonify
 from lmfdb.utils import to_dict, list_to_latex_matrix, random_object_from_collection
-from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start
+from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start, parse_restricted
 import re
 import bson
 from lmfdb.galois_groups import galois_groups_page, logger
@@ -22,9 +21,9 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, tgdb, gmdb
 
-from lmfdb.WebNumberField import modules2string
+from lmfdb.WebNumberField import modules2string, nfdb
 
 GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
 
@@ -49,35 +48,20 @@ def int_reps_are_complete(intreps):
             return r['complete']
     return -1
 
-def galois_group_data(n, t):
-    C = base.getDBConnection()
-    return group_knowl_guts(n, t, C)
-
-
-def group_alias_table():
-    C = base.getDBConnection()
-    return aliastable(C)
-
-
-def galois_module_data(n, t, index):
-    C = base.getDBConnection()
-    return galois_module_knowl_guts(n, t, index, C)
-
-
 @app.context_processor
 def ctx_galois_groups():
-    return {'group_alias_table': group_alias_table,
-            'galois_module_data': galois_module_data}
+    return {'group_alias_table': aliastable,
+            'galois_module_data': galois_module_knowl_guts}
 
 
-def group_display_shortC(C):
+def group_display_shortC():
     def gds(nt):
-        return group_display_short(nt[0], nt[1], C)
+        return group_display_short(nt[0], nt[1])
     return gds
 
-def group_display_prettyC(C):
+def group_display_prettyC():
     def gds(nt):
-        return group_display_pretty(nt[0], nt[1], C)
+        return group_display_pretty(nt[0], nt[1])
     return gds
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
@@ -122,7 +106,6 @@ def galois_group_search(**args):
     if info.get('jump_to'):
         return redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)
     bread = get_bread([("Search results", ' ')])
-    C = base.getDBConnection()
     query = {}
 
     def includes_composite(s):
@@ -143,8 +126,9 @@ def galois_group_search(**args):
     try:
         parse_ints(info,query,'n','degree')
         parse_ints(info,query,'t')
-        for param in ('cyc', 'solv', 'prim', 'parity'):
-            parse_bool(info,query,param,minus_one_to_zero=(param != 'parity'))
+        for param in ('cyc', 'solv', 'prim'):
+            parse_bool(info,query,param,blank=['0','Any'])
+        parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
         degree_str = prep_ranges(info.get('n'))
         info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
     except ValueError as err:
@@ -153,10 +137,11 @@ def galois_group_search(**args):
 
     count = parse_count(info, 50)
     start = parse_start(info)
+    if 'result_count' in info:
+        nres = tgdb().count(query)
+        return jsonify({"nres":str(nres)})
 
-    res = C.transitivegroups.groups.find(query).sort([('n', pymongo.ASCENDING), ('t', pymongo.ASCENDING)])
-    nres = res.count()
-    res = res.skip(start).limit(count)
+    res, nres, exact_count = tgdb().search_results(query, limit=count, offset=start)
 
     if(start >= nres):
         start -= (1 + (start - nres) / count) * count
@@ -164,12 +149,15 @@ def galois_group_search(**args):
         start = 0
 
     info['groups'] = res
-    info['group_display'] = group_display_prettyC(C)
+    info['group_display'] = group_display_prettyC()
     info['report'] = "found %s groups" % nres
     info['yesno'] = yesno
     info['wgg'] = WebGaloisGroup.from_data
     info['start'] = start
     info['number'] = nres
+    info['count'] = count
+    info['upper_count'] = min(nres, start + count) # min is annoying in jinja
+    info['exact_count'] = exact_count
     if nres == 1:
         info['report'] = 'unique match'
     else:
@@ -193,8 +181,7 @@ def render_group_webpage(args):
     if 'label' in args:
         label = clean_input(args['label'])
         label = label.replace('t', 'T')
-        C = base.getDBConnection()
-        data = C.transitivegroups.groups.find_one({'label': label})
+        data = tgdb().lookup(label)
         if data is None:
             bread = get_bread([("Search error", ' ')])
             info['err'] = "Group " + label + " was not found in the database."
@@ -206,7 +193,7 @@ def render_group_webpage(args):
         n = data['n']
         t = data['t']
         data['yesno'] = yesno
-        order = data['order']
+        order = data['size']
         data['orderfac'] = latex(ZZ(order).factor())
         orderfac = latex(ZZ(order).factor())
         data['ordermsg'] = "$%s=%s$" % (order, latex(orderfac))
@@ -229,8 +216,8 @@ def render_group_webpage(args):
         data['chartable'] = ctable
         data['parity'] = "$%s$" % data['parity']
         data['cclasses'] = conjclasses(G, n)
-        data['subinfo'] = subfield_display(C, n, data['subs'])
-        data['resolve'] = resolve_display(C, data['resolve'])
+        data['subinfo'] = subfield_display(n, data['subs'])
+        data['resolve'] = resolve_display(data['resolve'])
         data['otherreps'] = wgg.otherrep_list()
         ae = wgg.arith_equivalent()
         if ae>0:
@@ -242,11 +229,9 @@ def render_group_webpage(args):
             data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
         if len(data['otherreps']) == 0:
             data['otherreps']="There is no other low degree representation."
-        query={'galois': bson.SON([('n', n), ('t', t)])}
-        C = base.getDBConnection()
-        intreps = C.transitivegroups.Gmodules.find({'n': n, 't': t}).sort('index', pymongo.ASCENDING)
-        # turn cursor into a list
-        intreps = [z for z in intreps]
+        intreps, _, _ = gmdb().search_results({'n': n, 't': t})
+        # turn cursor into a list of dictionaries
+        intreps = [{k:v for k,v in zip(gmdb()._search_cols, z)} for z in intreps]
         if len(intreps) > 0:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
@@ -264,7 +249,7 @@ def render_group_webpage(args):
                 #print data['isoms']
 
         friends = []
-        one = C.numberfields.fields.find_one(query)
+        one = nfdb().lucky({'degree': n, 'galt': t})
         if one:
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) )) 
         prop2 = [('Label', label),
@@ -276,7 +261,7 @@ def render_group_webpage(args):
             ('Primitive', yesno(data['prim'])),
             ('$p$-group', yesno(pgroup)),
         ]
-        pretty = group_display_pretty(n,t,C)
+        pretty = group_display_pretty(n,t)
         if len(pretty)>0:
             prop2.extend([('Group:', pretty)])
             info['pretty_name'] = pretty
@@ -293,7 +278,7 @@ def search_input_error(info, bread):
 
 @galois_groups_page.route("/random")
 def random_group():
-    label = random_object_from_collection(base.getDBConnection().transitivegroups.groups)['label']
+    label = tgdb().random()
     return redirect(url_for(".by_label", label=label), 307)
 
 @galois_groups_page.route("/Completeness")

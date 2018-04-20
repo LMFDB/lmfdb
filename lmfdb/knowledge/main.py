@@ -19,7 +19,7 @@ from lmfdb.base import app
 from datetime import datetime
 from flask import render_template, render_template_string, request, url_for, make_response
 from flask.ext.login import login_required, current_user
-from knowl import Knowl, knowl_title, get_history, knowl_exists
+from knowl import Knowl, knowl_db, knowl_title, knowl_exists
 from lmfdb.users import admin_required, housekeeping
 import markdown
 from lmfdb.knowledge import logger
@@ -295,7 +295,7 @@ def test():
 @knowledge_page.route("/edit/<ID>")
 @login_required
 def edit(ID):
-    from pymongo.errors import OperationFailure 
+    from psycopg2 import DatabaseError
     if not allowed_knowl_id.match(ID):
         flask.flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
@@ -303,25 +303,21 @@ def edit(ID):
         return flask.redirect(url_for(".index"))
     knowl = Knowl(ID)
 
-    from knowl import is_locked, set_locked
-    lock = False
+    lock = None
     if request.args.get("lock", "") != 'ignore':
         try:
-            lock = is_locked(knowl.id)
-        except OperationFailure as e:
+            lock = knowl_db().is_locked(knowl.id)
+        except DatabaseError as e:
             logger.info("Oops, failed to get the lock. Error: %s" %e)
-            pass;
-    # lock, if either lock is false or (lock is active), current user is editing again
     author_edits = lock and lock['who'] == current_user.get_id()
     logger.debug(author_edits)
-    if not lock or author_edits:
-        try:
-            set_locked(knowl, current_user.get_id())
-        except OperationFailure as e:
-            logger.info("Oops, failed to set the lock. Error: %s" %e)
-            pass;
     if author_edits:
-        lock = False
+        lock = None
+    if not lock:
+        try:
+            knowl_db().set_locked(knowl, current_user.get_id())
+        except DatabaseError as e:
+            logger.info("Oops, failed to set the lock. Error: %s" %e)
 
     b = get_bread([("Edit '%s'" % ID, url_for('.edit', ID=ID))])
     return render_template("knowl-edit.html",
@@ -357,7 +353,7 @@ def raw(ID):
 
 @knowledge_page.route("/history")
 def history():
-    h_items = get_history()
+    h_items = knowl_db().get_history()
     bread = get_bread([("History", url_for('.history'))])
     return render_template("knowl-history.html",
                            title="Knowledge History",
@@ -400,8 +396,7 @@ def save_form():
     k.quality = request.form['quality']
     k.timestamp = datetime.now()
     k.save(who=current_user.get_id())
-    from knowl import save_history
-    save_history(k, current_user.get_id())
+    knowl_db().save_history(k, current_user.get_id())
     return flask.redirect(url_for(".show", ID=ID))
 
 
@@ -516,101 +511,26 @@ def cleanup():
     reindexes knowls, also the list of categories. prunes history.
     this is an internal task just for admins!
     """
-    from knowl import refresh_knowl_categories, extract_cat, make_keywords, get_knowls
-    cats = refresh_knowl_categories()
-    knowls = get_knowls()
-    q_knowls = knowls.find({}, ['content', 'title'])
-    for k in q_knowls:
-        kid = k['_id']
-        cat = extract_cat(kid)
-        search_keywords = make_keywords(k['content'], kid, k['title'])
-        knowls.update({'_id': kid},
-                      {"$set": {
-                       'cat': cat,
-                       '_keywords': search_keywords
-                       }})
-
-    hcount = 0
-    # max allowed history length
-    max_h = 50
-    q_knowls = knowls.find({'history': {'$exists': True}}, ['history'])
-    for k in q_knowls:
-        if len(k['history']) <= max_h:
-            continue
-        hcount += 1
-        knowls.update({'_id': k['_id']}, {'$set': {'history': k['history'][-max_h:]}})
-
-    return "categories: %s <br/>reindexed %s knowls<br/>pruned %s histories" % (cats, q_knowls.count(), hcount)
+    cats, reindex_count, prune_count = knowl_db().cleanup()
+    return "categories: %s <br/>reindexed %s knowls<br/>pruned %s histories" % (cats, reindex_count, prune_count)
 
 
 @knowledge_page.route("/")
 def index():
-    # bypassing the Knowl objects to speed things up
-    from knowl import get_knowls
-# See issue #1169    
-#    try:
-#        get_knowls().ensure_index('_keywords')
-#        get_knowls().ensure_index('cat')
-#    except pymongo.errors.OperationFailure:
-#        pass
-
     cur_cat = request.args.get("category", "")
 
-    qualities = []
-    defaults = "filter" not in request.args
     filtermode = "filter" in request.args
-    searchmode = "search" in request.args
-    categorymode = "category" in request.args
-
     from knowl import knowl_qualities
-    # TODO wrap this into a loop:
-    reviewed = request.args.get("reviewed", "") == "on" or defaults
-    ok = request.args.get("ok", "") == "on" or defaults
-    beta = request.args.get("beta", "") == "on" or defaults
+    filters = [request.args.get(quality, "") == "on" or not filtermode for quality in knowl_qualities]
 
-    if reviewed:
-        qualities.append("reviewed")
-    if ok:
-        qualities.append("ok")
-    if beta:
-        qualities.append("beta")
-
-    s_query = {}
-
-    if filtermode:
-        quality_q = {'$in': qualities}
-        s_query['quality'] = quality_q
-
-    keyword = request.args.get("search", "").lower()
-    if searchmode and keyword:
-        keywords = filter(lambda _: len(_) >= 3, keyword.split(" "))
-        # logger.debug("keywords: %s" % keywords)
-        keyword_q = {'_keywords': {"$all": keywords}}
-        s_query.update(keyword_q)
-
-    if categorymode:
-        s_query.update({'cat': cur_cat})  # { "$regex" : r"^%s\..+" % cur_cat }
-
-    logger.debug("search query: %s" % s_query)
-    knowls = get_knowls().find(s_query, ['title'])
+    search = request.args.get("search", "")
+    knowls = knowl_db().search(cur_cat, filters, search.lower())
 
     def first_char(k):
         t = k['title']
-        if len(t) == 0:
-            return "?"
-        if t[0] not in string.ascii_letters:
+        if len(t) == 0 or t[0] not in string.ascii_letters:
             return "?"
         return t[0].upper()
-
-    # way to additionally narrow down the search
-    # def incl(knwl):
-    #   if keyword in knwl['_id'].lower():   return True
-    #   if keyword in knwl['title'].lower(): return True
-    #   return False
-    # if keyword: knowls = filter(incl, knowls)
-
-    from knowl import get_categories
-    cats = get_categories()
 
     def knowl_sort_key(knowl):
         '''sort knowls, special chars at the end'''
@@ -628,10 +548,10 @@ def index():
                            bread=get_bread(),
                            knowls=knowls,
                            search=keyword,
-                           searchbox=searchbox(request.args.get("search", ""), searchmode),
+                           searchbox=searchbox(search, bool(search)),
                            knowl_qualities=knowl_qualities,
-                           searchmode=searchmode,
-                           filters=(beta, ok, reviewed),
-                           categories = cats,
+                           searchmode=bool(search),
+                           filters=tuple(filters),
+                           categories = knowl_db().get_categories(),
                            cur_cat = cur_cat,
-                           categorymode = categorymode)
+                           categorymode = bool(cur_cat))

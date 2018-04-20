@@ -48,7 +48,7 @@ def fix_Ldata(Ldata):
 
 def getEllipticCurveData(label):
     from lmfdb.elliptic_curves.web_ec import db_ec
-    return db_ec().find_one({'lmfdb_label': label})
+    return db_ec().lucky({'lmfdb_label': label}, data_level=2)
     
 #FIXME this should be deprecated
 def getInstanceLdata(label, label_type="url"):

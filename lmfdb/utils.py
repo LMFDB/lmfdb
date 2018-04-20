@@ -871,4 +871,3 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None):
     fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches)
     virtual_file.seek(0)
     return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
-

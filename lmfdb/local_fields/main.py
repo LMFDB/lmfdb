@@ -57,7 +57,7 @@ def lf_algebra_knowl_guts(labels, C):
         ans += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>'%(l,l)
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
-        ans += group_display_knowl(f['gal'][0],f['gal'][1],db())
+        ans += group_display_knowl(f['gal'][0],f['gal'][1])
         ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
@@ -73,7 +73,7 @@ def lf_knowl_guts(label, C):
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
-    ans += 'Galois group $G$: %s<br>' % group_display_knowl(GG[0], GG[1], C)
+    ans += 'Galois group $G$: %s<br>' % group_display_knowl(GG[0], GG[1])
     ans += '<div align="right">'
     ans += '<a href="%s">%s home page</a>' % (str(url_for("local_fields.by_label", label=label)),label)
     ans += '</div>'
@@ -91,13 +91,10 @@ def lf_display_knowl(label, C):
 def local_algebra_display_knowl(labels, C):
     return '<a title = "%s [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels=%s">%s</a>' % (labels, labels, labels)
 
-def small_group_data(label):
-    return small_group_knowl_guts(label, db())
-
 @app.context_processor
 def ctx_local_fields():
     return {'local_field_data': local_field_data,
-            'small_group_data': small_group_data,
+            'small_group_data': small_group_knowl_guts,
             'local_algebra_data': local_algebra_data}
 
 # Utilities for subfield display
@@ -180,7 +177,7 @@ def local_field_search(**args):
 
     info['fields'] = res
     info['number'] = nres
-    info['group_display'] = group_display_shortC(db())
+    info['group_display'] = group_display_shortC()
     info['display_poly'] = format_coeffs
     info['slopedisp'] = show_slope_content
     info['start'] = start
@@ -227,7 +224,7 @@ def render_field_webpage(args):
             ('e', '\(%s\)' % e),
             ('f', '\(%s\)' % f),
             ('c', '\(%s\)' % cc),
-            ('Galois group', group_display_short(gn, gt, db())),
+            ('Galois group', group_display_short(gn, gt)),
         ]
         Pt = PolynomialRing(QQ, 't')
         Pyt = PolynomialRing(Pt, 'y')
@@ -267,9 +264,9 @@ def render_field_webpage(args):
                     'rf': printquad(data['rf'], p),
                     'hw': data['hw'],
                     'slopes': show_slopes(data['slopes']),
-                    'gal': group_display_knowl(gn, gt, db()),
+                    'gal': group_display_knowl(gn, gt),
                     'gt': gt,
-                    'inertia': group_display_inertia(data['inertia'], db()),
+                    'inertia': group_display_inertia(data['inertia']),
                     'unram': web_latex(unramp),
                     'eisen': web_latex(eisenp),
                     'gms': data['gms'],

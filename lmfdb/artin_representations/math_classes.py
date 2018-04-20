@@ -353,16 +353,15 @@ class ArtinRepresentation(object):
         from lmfdb.WebNumberField import nf_display_knowl
         nfgg = self.number_field_galois_group()
         if nfgg.url_for():
-            return nf_display_knowl(nfgg.label(), getDBConnection(), nfgg.polredabshtml())
+            return nf_display_knowl(nfgg.label(), nfgg.polredabshtml())
         else:
             return nfgg.polredabshtml()
 
     def group(self):
-        return group_display_short(self._data['Galois_nt'][0],self._data['Galois_nt'][1], getDBConnection())
+        return group_display_short(self._data['Galois_nt'][0],self._data['Galois_nt'][1])
 
     def pretty_galois_knowl(self):
-        C = getDBConnection()
-        return group_display_knowl(self._data['Galois_nt'][0],self._data['Galois_nt'][1],C)
+        return group_display_knowl(self._data['Galois_nt'][0],self._data['Galois_nt'][1])
 
     def __str__(self):
         try:
@@ -616,6 +615,8 @@ class NumberFieldGaloisGroup(object):
         if len(x) == 0:
             # Just passing named arguments
             self._data = data_dict["data"]
+        elif isinstance(x[0], list) and x[0] and isinstance(x[0][0],int): # hack while in between mongo and postgres
+            self._data = self.__class__.collection().find_and_convert_one({'Polynomial':','.join(str(c) for c in x[0])})
         else:
 	    # Assume we got coeffstring
             self._data = self.__class__.collection().find_and_convert_one({'Polynomial':str(x[0])})

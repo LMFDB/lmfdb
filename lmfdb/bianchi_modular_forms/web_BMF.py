@@ -69,7 +69,7 @@ class WebBMF(object):
         from lmfdb.ecnf.WebEllipticCurve import FIELD
         self.field = FIELD(self.field_label)
         pretty_field = field_pretty(self.field_label)
-        self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
+        self.field_knowl = nf_display_knowl(self.field_label, pretty_field)
         try:
             dims = db_dims().find_one({'field_label':self.field_label, 'level_label':self.level_label})['gl2_dims']
             self.newspace_dimension = dims[str(self.weight)]['new_dim']

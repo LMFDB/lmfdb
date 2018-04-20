@@ -85,7 +85,14 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
   Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
 </div>
 {% else %}
-<h2> Results: ({{info.report}})</h2>
+<h2> Results: ({% if info.number==1 -%}
+  unique match
+  {% elif info.number <= info.count and info.start == 0 -%}
+    displaying all {{ info.number }} matches
+  {% elif info.exact_count -%}
+    displaying matches {{ info.start + 1 }}-{{ info.upper_count }} of {{ info.number }}
+  {% else -%}
+    displaying matches {{ info.start + 1 }}-{{ info.upper_count }} of <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">at least {{ info.number }}</a></span>{% endif %})</h2>
 
 {% if info.number > 0 %}
 <table border=1 cellpadding=5 class="ntdata" id="fieldTab"`>

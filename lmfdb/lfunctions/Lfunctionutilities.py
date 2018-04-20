@@ -481,12 +481,12 @@ def lfuncEPhtml(L,fmt):
                 if this_gal_group[0]==[0,0]:
                     pass   # do nothing, because the local faco is 1
                 elif this_gal_group[0]==[1,1]:
-                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$')
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],'$C_1$')
                 else:
-                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1])
                 for j in range(1,len(thispolygal[1])):
                     eptable += "$\\times$"
-                    eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                    eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1])
                 eptable += "</td>"
             eptable += "</tr>\n"
 
@@ -506,15 +506,15 @@ def lfuncEPhtml(L,fmt):
         if L.degree > 2:
             eptable += "<td class='galois'>"
             this_gal_group = thispolygal[1]
-            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1])
             for j in range(1,len(thispolygal[1])):
                 eptable += "$\\times$"
-                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1])
             eptable += "</td>"
         eptable += "</tr>\n"
 
 
-#        eptable += "<td>" + group_display_knowl(4,1,C) + "</td>"
+#        eptable += "<td>" + group_display_knowl(4,1) + "</td>"
 #        eptable += "</tr>\n"
         goodorbad = ""
         firsttime = ""
@@ -528,10 +528,10 @@ def lfuncEPhtml(L,fmt):
         if L.degree > 2:
             this_gal_group = thispolygal[1]
             eptable += "<td class='galois'>"
-            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1])
             for j in range(1,len(thispolygal[1])):
                 eptable += "$\\times$"
-                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1])
             eptable += "</td>"
 
         eptable += "</tr>\n"
