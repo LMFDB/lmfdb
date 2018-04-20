@@ -615,7 +615,7 @@ def number_field_search(info):
         query = {'label_orig': info['natural']}
         try:
             parse_nf_string(info,query,'natural',name="Label",qfield='label')
-            return redirect(url_for(".by_label", label= clean_input(query['label_orig'])))
+            return redirect(url_for(".by_label", label=query['label']))
         except ValueError:
             query['err'] = info['err']
             return search_input_error(query, bread)
