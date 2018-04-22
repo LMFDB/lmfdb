@@ -512,7 +512,7 @@ def search_cursor_timeout_decorator(cursor, skip, limit):
             - skip value to pass to cursor (after cursor.count())
             - limit value to pass to cursor (after cursor.count())
     OUTPUT:
-            If the query doesn't time out returns the number of results + the cursor
+            If the query doesn't time out returns the tuple (cursor.count(), cursor.skip(skip).limit(limit))
             If the query times out, raises a ValueError
     """
 
