@@ -509,10 +509,8 @@ def search_cursor_timeout_decorator(cursor, skip, limit):
     r"""
     INPUT:
             - pymongo cursor
-            - skip value to pass to cursor (after counting)
-            - limit value to pass to cursor (after counting)
-            - endpoint argument for url_for to raise an error
-            - extra values for url_for
+            - skip value to pass to cursor (after cursor.count())
+            - limit value to pass to cursor (after cursor.count())
     OUTPUT:
             If the query doesn't time out returns the number of results + the cursor
             If the query times out, raises a ValueError
