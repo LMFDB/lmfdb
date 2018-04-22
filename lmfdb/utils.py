@@ -23,7 +23,7 @@ from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
 
-from lmfdb.base import app
+from lmfdb.base import app, ctx_proc_userdata
 
 ################################################################################
 #   number utilities
@@ -502,6 +502,43 @@ def order_values(doc, field, sub_fields=["len", "val"]):
 ################################################################################
 #  pymongo utilities
 ################################################################################
+
+from pymongo.errors import ExecutionTimeout
+
+def search_cursor_timeout_decorator(cursor, skip, limit):
+    r"""
+    INPUT:
+            - pymongo cursor
+            - skip value to pass to cursor (after counting)
+            - limit value to pass to cursor (after counting)
+            - endpoint argument for url_for to raise an error
+            - extra values for url_for
+    OUTPUT:
+            If the query doesn't time out returns the number of results + the cursor
+            If the query times out, raises a ValueError
+    """
+
+
+    ctx = ctx_proc_userdata()
+    print ctx
+
+    if ctx['BETA']:
+        # 60 seconds should be plenty for beta and development
+        timeout = 60000;
+    else:
+        # 27 seconds timeout, hopefully enough to avoid google's timeout of 30s
+        timeout = 27000;
+
+    cursor = cursor.max_time_ms(timeout)
+    try:
+        ncursor = cursor.count()
+        cursor = cursor.skip(skip).limit(limit)
+    except ExecutionTimeout:
+        flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage']);
+        raise ValueError;
+
+    return ncursor, cursor
+
 
 def random_object_from_collection(collection):
     """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
