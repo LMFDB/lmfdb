@@ -198,7 +198,7 @@ in the field of complex numbers. The values are shown in the table below.
           <th>Eigenvalue
         </tr>
       </thead>
-      <tbody>
+      <tbody
         {% for Q,c,ev in atkinlehner %}
         <tr>
           <th> {{Q}} </th>
@@ -216,18 +216,18 @@ in the field of complex numbers. The values are shown in the table below.
 <h2>Download Fourier coefficients</h2>
 <form name="get_coefficients" method="post"  action="{{url_for('.get_downloads',level=level,weight=weight,character=character,label=label)}}">
   <input type="hidden" name="download" value="coefficients"/>
-  Get / compute  <input type="text" size="10" name="number" value="10"/> 
+  Get / compute  <input type="text" size="10" name="number" value="10"/>
   coefficients in the following format:
   <ul>
-    <li> 
+    <li>
       <label><input type=radio name="format" checked value="q_expansion_one_line" onclick="return selectCFormat(event)"> q-expansion (on one line)</label>
     </li>
-    <li> 
+    <li>
       <label><input type=radio name="format" checked value="q_expansion_table" onclick="return selectCFormat(event)"> q-expansion (table)</label>
     </li>
     <li>
       <label><input type=radio name="format" value="embeddings" onclick="return selectCFormat(event)"> Complex embeddings </label>
-      with <input type="text" size="10" name="prec" value="15"> digits precision.     
+      with <input type="text" size="10" name="prec" value="15"> digits precision.
     </li>
   </ul>
 {#  <input type="button" name="Submit" value="Get coefficients"> #}
@@ -243,10 +243,10 @@ in the field of complex numbers. The values are shown in the table below.
   <input type="hidden" name="label" value="{{label }}">
   <input type="submit" name="Submit" value="Download" Onclick="document.download.submit()">
 </form>
-<div class="formexample"> 
+<div class="formexample">
   Note: In order to use this data file you currently need to download
-  and import the entire lmfdb from: 
-<a href="http://code.google.com/p/lmfdb/">lmfdb at google code</a>. 
+  and import the entire LMFDB from:
+<a href="https://github.com/LMFDB/lmfdb/">LMFDB at GitHub</a>.
 {#
 <form name="download_file" method="post"  action="{{url_for('.render_elliptic_modular_forms')}}">
   Note: In order to use this data file you currently need to download
