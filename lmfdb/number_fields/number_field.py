@@ -674,21 +674,19 @@ def number_field_search(info):
     if 'download' in info and info['download'] != '0':
         return download_search(info, res)
 
+    # equivalent to
+    # nres = res.count()
+    #if(start >= nres):
+    #    start -= (1 + (start - nres) / count) * count
+    #if(start < 0):
+    #    start = 0
+    # res = res.skip(start).limit(count)
     try:
-        # equivalent to
-        # nres = res.count()
-        # res = res.skip(start).limit(count)
-        nres, res = search_cursor_timeout_decorator(res, start, count);
-    except ValueError:
-        info['err'] = ''
-        return search_input_error(info, bread);
+        start, nres, res = search_cursor_timeout_decorator(res, start, count);
+    except ValueError as err:
+        info['err'] = err;
+        return search_input_error(info, bread)
 
-
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
 
     info['fields'] = res
     info['number'] = nres

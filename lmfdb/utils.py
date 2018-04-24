@@ -511,14 +511,14 @@ def search_cursor_timeout_decorator(cursor, skip, limit):
             - pymongo cursor
             - skip value to pass to cursor (after cursor.count())
             - limit value to pass to cursor (after cursor.count())
+
     OUTPUT:
-            If the query doesn't time out returns the tuple (cursor.count(), cursor.skip(skip).limit(limit))
-            If the query times out, raises a ValueError
+            If the query doesn't time out returns the tuple (skip, cursor.count(), cursor.skip(skip).limit(limit))
+            If the query times out, it raises a ValueError
     """
 
 
     ctx = ctx_proc_userdata()
-    print ctx
 
     if ctx['BETA']:
         # 60 seconds should be plenty for beta and development
@@ -530,12 +530,19 @@ def search_cursor_timeout_decorator(cursor, skip, limit):
     cursor = cursor.max_time_ms(timeout)
     try:
         ncursor = cursor.count()
-        cursor = cursor.skip(skip).limit(limit)
-    except ExecutionTimeout:
-        flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage']);
-        raise ValueError;
 
-    return ncursor, cursor
+        # adjusts skip if necessary
+        if(skip >= ncursor):
+            skip -= (1 + (skip - ncursor) / limit) * limit
+        if(skip < 0):
+            skip = 0
+
+        cursor = cursor.skip(skip).limit(limit)
+    except ExecutionTimeout as err:
+        flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage']);
+        raise ValueError(err)
+
+    return skip, ncursor, cursor
 
 
 def random_object_from_collection(collection):
