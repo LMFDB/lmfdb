@@ -1,0 +1,107 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+<style>
+#outerdiv {
+  width:100%;
+  height:500px;
+  overflow:hidden;
+  position:relative;
+}
+
+#iframe1 {
+  position:absolute;
+  left:-210px;
+  width:100%;
+  height:500px;
+}
+
+#iframe2 {
+  position:absolute;
+  left:-210px;
+  width:100%;
+  height:500px;
+}
+</style>
+
+<p>Please browse to an object in each of the two frames below, then click the tensor product button at the bottom:</p>
+<div id='outerdiv'>
+  <iframe id='iframe1' src={{ type1 }}></iframe>
+</div>
+</br>
+
+<div id='outerdiv'>
+  <iframe id='iframe2' src={{ type2 }}></iframe>
+</div>
+</br>
+
+<form action={{url_for('.show')}}>
+  <input id='obj1input' type='hidden' name='obj1'>
+  <input id='obj2input' type='hidden' name='obj2'>
+  Once both frames have loaded, you can <button id='submitbutton'>Tensor these</button>
+</form></br>
+
+Modular forms require a choice of embedding, which for now is defaulted to the first embedding.  In any case the tensor product page may take a while to load whilst the zeros are computed.
+<script type='text/javascript'>
+function getNiceLabelFromURL(loc)  {
+
+  if (loc.href.indexOf('EllipticCurve')!=-1) {
+    if (loc.href.indexOf('label=')!=-1) {
+      // seems that ell curve has been referenced by a label, extract it
+      var base = 'EllipticCurve/Q/'
+      var endLab = loc.href.split('label=')[1].split('&')[0];
+      return base.concat(endLab);
+    }
+    else {
+      // at time of writing, it seems that if label is not passed as an argument then we must have a link of the form EllipticCure/Q/<label> already
+      var base = 'EllipticCurve/Q/';
+      var endLab = loc.href.split(base)[1]; // to remove http and hostname
+      return base.concat(endLab);
+    }
+  }
+
+  else if (loc.href.indexOf('Character/Dirichlet')!=-1) {
+    // seems that it's only possible to reference Dirichlet character as  
+    var base = 'Character/Dirichlet/'; 
+    var endLab = loc.href.split(base)[1]; // to remote http and hostname
+    return base.concat(endLab);
+  }
+ 
+  else if (loc.href.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
+    var base = 'ModularForm/GL2/Q/holomorphic/';
+    var endLab = loc.href.split(base)[1];
+    return base.concat(endLab);
+  }
+
+  else if (loc.href.indexOf('ArtinRepresentation')!=-1) {
+    var base = 'ArtinRepresentation/';
+    var endLab = loc.href.split(base)[1];
+    return base.concat(endLab);
+  }
+}
+
+document.getElementById('submitbutton').onclick = function() {
+  var loc1 = document.getElementById('iframe1').contentWindow.location;
+  var loc2 = document.getElementById('iframe2').contentWindow.location;
+    
+  var lab1 = getNiceLabelFromURL(loc1);
+  var lab2 = getNiceLabelFromURL(loc2);
+
+  if (lab1.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
+    document.getElementById('obj1input').value = lab1.concat('0');
+  }
+  else {
+    document.getElementById('obj1input').value = lab1;
+  } 
+  if (lab2.indexOf('ModularForm/GL2/Q/holomorphic')!=-1) {
+    document.getElementById('obj2input').value = lab2.concat('0'); 
+  }
+  else {
+    document.getElementById('obj2input').value = lab2; 
+  }    
+}
+
+</script>
+
+ 
+{% endblock content %}

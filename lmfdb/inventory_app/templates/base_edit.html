@@ -1,0 +1,110 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>LMFDB inventory editor</title>
+    <link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('inventory_app.css') }}" rel="stylesheet" type="text/css" />
+
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.watermark.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.plugins.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-ui-1.8.14.custom.min.js') }}"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='jquery-ui-1.8.14.custom.css') }}" type="text/css"/>
+    {% block extra_script -%}{%- endblock extra_script %}
+
+  </head>
+<body>
+<div id="header">
+    <div id="logo"><a href="/">
+{% if BETA %}
+    <img src="{{ url_for('static', filename='images/lmfdb-logo-beta.png') }}" />
+{% else %}
+    <img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" />
+{% endif %}
+</a></div>
+     <div class="right">
+      <div class="bread">
+        {% if bread %}
+          <a href="{{bread[0][1]}}">&#8962;</a>
+          {% for b in bread[1:] -%}
+            &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
+          {% endfor %}
+         {% else %}
+          <a href="/">&#8962;</a>
+         {% endif %}
+      </div>
+      <div class="topright">
+          {% if user_is_admin -%}
+            &middot;
+            <a href="{{ url_for('users.register') }}">RT</a>
+          {% endif %}
+          {% if user_is_authenticated -%}
+            &middot;
+            <a href="{{ url_for('users.info') }}">{{ username }}</a>
+            &middot;
+            <a href="{{ url_for('users.logout') }}">Logout</a>
+          {%- else -%}
+            {# <a href="{{ url_for('users.register_new') }}">Register</a>
+            &middot; #}
+            {% if BETA %}
+            &middot;
+            <a href="{{ url_for('users.info') }}">Login</a>
+            {% endif %}
+          {%- endif %}
+          <br/>
+<!--
+          <span id="communication-wrapper">
+            <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
+            <span id="communication"></span>
+          </span>
+-->
+      </div>
+      <div class="undertopright">
+      </div>
+
+<div id="title"><span id="title-content">{% block title_block -%}{%- endblock title_block %}</span></div>
+</div>
+</div>
+<div id="inv_main">
+  <div id="content">
+    {% block main_body -%}{%- endblock main_body %}
+  </div>
+</div>
+
+<div id="footer">
+    {% if credit -%}
+      Data computed by {{ credit|safe }}.<br />
+    {%- endif %}
+
+    {% if support -%}
+      {{ support|safe }}<br/>
+    {%- else -%}
+        <h4>{{shortthanks|safe}}</h4>
+<br />
+    {%- endif %}
+    <div>
+      <a href="{{ url_for('contact') }}">Contact</a>
+      &middot;
+      <a href="{{ url_for('citation') }}">Citation</a>
+      &middot;
+      <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
+      &middot;
+      <a href="{{ url_for('management_board') }}">Management Board</a>
+      {# <a href="{{ 'about' }}">About</a> #}
+      &middot;
+      {{ current_source|safe }}
+      &middot;
+      {{ latest_changeset|safe }}
+      &middot;
+      {{ sage_version|safe }}
+    </div>
+</div>
+
+
+</html>

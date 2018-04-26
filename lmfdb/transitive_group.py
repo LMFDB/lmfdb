@@ -1,19 +1,62 @@
 import re
-import pymongo
 import string
 import bson
 
-from lmfdb.base import app, getDBConnection
-from flask import Flask, session, g, render_template, url_for, request, redirect
+from lmfdb.base import getDBConnection
 
-import sage.all
-from sage.all import ZZ, latex, AbelianGroup, pari, gap
+from sage.all import ZZ, gap
 
-from lmfdb.utils import ajax_more, image_src, web_latex, to_dict, parse_range
-
-from pymongo.connection import Connection
+from lmfdb.utils import list_to_latex_matrix, display_multiset
 
 MAX_GROUP_DEGREE = 23
+
+def db():
+    return getDBConnection()
+
+def tgdb():
+    return db().transitivegroups.groups
+
+def sgdb():
+    return db().sato_tate_groups.small_groups
+
+def small_group_display_knowl(n, k, C, name=None):
+    if not name:
+        group = C.sato_tate_groups.small_groups.find_one({'label': '%d.%d'%(n,k)})
+        name = '$%s$'%group['pretty']
+    return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + name + '</a>'
+
+def small_group_label_display_knowl(label, C, name=None):
+    if not name:
+        group = C.sato_tate_groups.small_groups.find_one({'label': label})
+        name = '$%s$'%group['pretty']
+    return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
+
+def small_group_knowl_guts(gapid, C):
+    parts = gapid.split('.')
+    n = int(parts[0])
+    k = int(parts[1])
+    group = C.sato_tate_groups.small_groups.find_one({'label': str(gapid)})
+    #group = C.sato_tate_groups.small_groups.find_one()
+    inf = "Group $%s$"%str(group['pretty'])
+    inf += '&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  '
+    inf += ('' if group['cyclic'] else 'not')+' cyclic, '
+    inf += ('' if group['abelian'] else 'non-')+'abelian, '
+    inf += ('' if group['solvable'] else 'not')+' solvable'
+    inf += '<p>Order: '+str(n)
+    inf += '<br>Gap small group number: '+str(k)
+    inf += '<br>Exponent: '+str(group['exponent'])
+    inf += '<br>Perfect: '+str(group['perfect'])
+    inf += '<br>Simple: '+str(group['simple'])
+    inf += '<br>Normal subgroups: '+display_multiset(group['normal_subgroups'],small_group_label_display_knowl, C)
+    inf += '<br>Maximal subgroups: '+display_multiset(group['maximal_subgroups'], small_group_label_display_knowl, C)
+    inf += '<br>Center: '+small_group_label_display_knowl(group['center'],C)
+    inf += '<br>Derived subgroup: '+small_group_label_display_knowl(group['derived_group'],C)
+    inf += '<br>Abelianization: '+small_group_label_display_knowl(group['abelian_quotient'],C)
+    inf += '<br>Conjugacy class information: <table style="text-align: center;"><tr><th>Element Order<th>Size<th>Multiplicity'
+    for row in group['clases']:
+        inf += '<tr><td>%d<td>%d<td>%d'%(row[0],row[1],row[2])
+    inf += '</table>'
+    return inf
 
 ############  Galois group object
 
@@ -38,8 +81,7 @@ class WebGaloisGroup:
         return cls(data['label'], data)
 
     def _get_dbdata(self):
-        tgdb = getDBConnection().transitivegroups.groups
-        return tgdb.find_one({'label': self.label})
+        return tgdb().find_one({'label': self.label})
 
     def n(self):
         return self._data['n']
@@ -52,8 +94,13 @@ class WebGaloisGroup:
             return True
         return False
 
+    def arith_equivalent(self):
+        if 'arith_equiv' in self._data:
+          return self._data['arith_equiv']
+        return 0
+
     def order(self):
-        return self._data['order']
+        return int(self._data['order'])
 
     def display_short(self):
         if self._data['pretty']:
@@ -95,7 +142,6 @@ class WebGaloisGroup:
 
 ############  Misc Functions
 
-
 def base_label(n, t):
     return str(n) + "T" + str(t)
 
@@ -122,23 +168,43 @@ def trylink(n, t):
 
 def tryknowl(n, t):
     if n <= MAX_GROUP_DEGREE:
-        C = getDBConnection()
-        return group_display_knowl(n, t, C, '%dT%d' % (n, t))
+        return group_display_knowl(n, t, db(), '%dT%d' % (n, t))
     return '%dT%d' % (n, t)
 
 
 def group_display_short(n, t, C):
     label = base_label(n, t)
     group = C.transitivegroups.groups.find_one({'label': label})
+    if group is not None and group['pretty']:
+        return group['pretty']
+    return "%dT%d"%(n,t)
+    #name = group['name']
+    #name = name.replace('=', ' = ')
+    #return name
+
+# Returns the empty string if there is no pretty name
+def group_display_pretty(n, t, C):
+    label = base_label(n, t)
+    group = C.transitivegroups.groups.find_one({'label': label})
     if group['pretty']:
         return group['pretty']
-    return group['name']
-
+    return ""
 
 def group_display_knowl(n, t, C, name=None):
     if not name:
         name = group_display_short(n, t, C)
+    group = C.transitivegroups.groups.find_one({'label': base_label(n, t)})
+    if group is None:
+        return name
     return '<a title = "' + name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+
+
+def galois_module_knowl(n, t, index, C):
+    data = C.transitivegroups.Gmodules.find_one({'n': n, 't': t, 'index': index})
+    if data is None:
+        return 'Error'
+    name = data['name']
+    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
 
 
 def cclasses_display_knowl(n, t, C, name=None):
@@ -187,7 +253,7 @@ def group_display_long(n, t, C):
     elif group['ab'] == 1:
         inf += ", abelian"
     elif group['solv'] == 1:
-        inf += ", non-abelian solvable"
+        inf += ", non-abelian, solvable"
     else:
         inf += ", non-solvable"
     if group['prim'] == 1:
@@ -219,8 +285,10 @@ def group_knowl_guts(n, t, C):
         inf += ", primitive"
     else:
         inf += ", imprimitive"
+    inf += '<div>'
+    inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
+    inf += '%s</div>'%(group['name'])
 
-    inf = "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  " + inf + ""
     rest = '<div><h3>Generators</h3><blockquote>'
     rest += generators(n, t)
     rest += '</blockquote></div>'
@@ -236,8 +304,8 @@ def group_knowl_guts(n, t, C):
     rest += '</div>'
 
     if group['pretty']:
-        return group['pretty'] + inf + rest
-    return group['name'] + inf + rest
+        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
+    return inf + rest
 
 
 def group_cclasses_knowl_guts(n, t, C):
@@ -246,18 +314,21 @@ def group_cclasses_knowl_guts(n, t, C):
     gname = group['name']
     if group['pretty']:
         gname = group['pretty']
+    else:
+        gname = gname.replace('=', ' = ')
     rest = '<div>Conjugacy class representatives for '
     rest += gname
     rest += '<blockquote>'
     rest += cclasses(n, t)
     rest += '</blockquote></div>'
-    return(rest)
+    return rest
 
 
 def group_character_table_knowl_guts(n, t, C):
     label = base_label(n, t)
     group = C.transitivegroups.groups.find_one({'label': label})
     gname = group['name']
+    gname = gname.replace('=', ' = ')
     if group['pretty']:
         gname = group['pretty']
     inf = '<div>Character table for '
@@ -268,6 +339,26 @@ def group_character_table_knowl_guts(n, t, C):
     inf += '</pre>'
     inf += '</blockquote></div>'
     return(inf)
+
+
+def galois_module_knowl_guts(n, t, index, C):
+    mymod = C.transitivegroups.Gmodules.find_one({'n': int(n), 't': int(t), 'index': int(index)})
+    if mymod is None:
+        return 'Database call failed'
+    name = mymod['name']
+    out = "$\\Z[G]$ module %s with $G=$ " % str(name)
+    out += group_display_knowl(n, t, C)
+    out += " = %sT%s " %(n, t)
+    out += "<blockquote>"
+    out += "Dimension: %s" % str(mymod['dim'])
+    out += r"<br>Action: $$\begin{align*}"
+    for g in mymod['gens']:
+        matg = list_to_latex_matrix(g[1])
+        out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
+    out = out[:-2]
+    out += r"\end{align*}$$"
+    out += "</blockquote>"
+    return out
 
 
 def subfield_display(C, n, subs):
@@ -358,23 +449,13 @@ def resolve_display(C, resolves):
         ans = 'None'
     return ans
 
-
 def group_display_inertia(code, C):
-    if str(code[1]) == "t":
-        return group_display_knowl(code[2][0], code[2][1], C)
-    ans = "Intransitive group isomorphic to "
-    if len(code[2]) > 1:
-        ans += group_display_short(code[2][0], code[2][1], C)
-        return ans
-    ans += code[3]
+    if str(code[0]) == "t":
+        return group_display_knowl(code[1][0], code[1][1], C)
+    if code[1] == [1,1]:
+        return "Trivial"
+    ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1],C)
     return ans
-
-    label = base_label(n, t)
-    group = C.transitivegroups.groups.find_one({'label': label})
-    if group['pretty']:
-        return group['pretty']
-    return group['name']
-
 
 def conjclasses(g, n):
     gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
@@ -421,8 +502,7 @@ def chartable(n, t):
         G = gap.SmallGroup(n, t)
     else:
         G = gap.TransitiveGroup(n, t)
-    CT = G.CharacterTable()
-    ctable = gap.eval("Display(%s)" % CT.name())
+    ctable = str(G.CharacterTable().Display())
     ctable = re.sub("^.*\n", '', ctable)
     ctable = re.sub("^.*\n", '', ctable)
     return ctable
@@ -490,79 +570,108 @@ def complete_group_codes(codes):
 
 aliases = {}
 
+# Do all cyclic groups as once
+for j in range(1,24):
+    aliases['C'+str(j)] = [(j,1)]
+
 aliases['S1'] = [(1, 1)]
-aliases['C1'] = [(1, 1)]
 aliases['A1'] = [(1, 1)]
 aliases['A2'] = [(1, 1)]
 aliases['S2'] = [(2, 1)]
-aliases['C2'] = [(2, 1)]
 aliases['D1'] = [(2, 1)]
 aliases['A3'] = [(3, 1)]
-aliases['C3'] = [(3, 1)]
 aliases['S3'] = [(3, 2), (6, 2)]
 aliases['D3'] = [(3, 2), (6, 2)]
-aliases['C4'] = [(4, 1)]
 aliases['V4'] = [(4, 2)]
 aliases['D2'] = [(4, 2)]
 aliases['D4'] = [(4, 3), (8, 4)]
 aliases['C2XC2'] = [(4, 2)]
 aliases['A4'] = [(4, 4), (6, 4), (12, 4)]
 aliases['S4'] = [(4, 5), (6, 7), (6, 8), (8, 14), (12, 8), (12, 9)]
-aliases['C5'] = [(5, 1)]
 aliases['D5'] = [(5, 2), (10, 2)]
 aliases['F5'] = [(5, 3), (10, 4)]
 aliases['A5'] = [(5, 4), (6, 12), (10, 7), (12, 33)]
 aliases['S5'] = [(5, 5), (6, 14), (10, 12), (10, 13), (12, 74)]
-aliases['C6'] = [(6, 1)]
 aliases['D6'] = [(6, 3), (12, 3)]
 aliases['PSL(2,5)'] = aliases['A5']
 aliases['PGL(2,5)'] = aliases['S5']
 aliases['A6'] = [(6, 15), (10, 26)]
 aliases['S6'] = [(6, 16), (10, 32), (12, 183), (12, 183)]
-aliases['C7'] = [(7, 1)]
-aliases['D7'] = [(7, 2)]
-aliases['F7'] = [(7, 4)]
+aliases['D7'] = [(7, 2),(14, 2)]
+aliases['F7'] = [(7, 4),(14,4),(21,4)]
 aliases['GL(3,2)'] = [(7, 5), (8, 37)]
 aliases['A7'] = [(7, 6)]
 aliases['S7'] = [(7, 7)]
-aliases['C8'] = [(8, 1)]
 aliases['C4XC2'] = [(8, 2)]
+aliases['C2XC4'] = [(8, 2)]
 aliases['C2XC2XC2'] = [(8, 3)]
 aliases['Q8'] = [(8, 5)]
-aliases['D8'] = [(8, 6)]
+aliases['D8'] = [(8, 6),(16,7)]
 aliases['SL(2,3)'] = [(8, 12)]
 aliases['GL(2,3)'] = [(8, 23)]
 aliases['PSL(2,7)'] = aliases['GL(3,2)']
 aliases['PGL(2,7)'] = [(8, 43)]
 aliases['A8'] = [(8, 49)]
 aliases['S8'] = [(8, 50)]
-aliases['C9'] = [(9, 1)]
 aliases['C3XC3'] = [(9, 2)]
 aliases['D9'] = [(9, 3)]
 aliases['S3XC3'] = [(6, 5), (9, 4)]
+aliases['C3XS3'] = [(6, 5), (9, 4)]
 aliases['S3XS3'] = [(6, 9), (9, 8), (12, 16)]
 aliases['M9'] = [(9, 14), (12, 47)]
 aliases['PSL(2,8)'] = [(9, 27)]
 aliases['A9'] = [(9, 33)]
 aliases['S9'] = [(9, 34)]
-aliases['C10'] = [(10, 1)]
 aliases['D10'] = [(10, 3)]
 aliases['PSL(2,9)'] = aliases['A6']
 aliases['PGL(2,9)'] = [(10, 30), (12, 182)]
 aliases['M10'] = [(10, 31), (12, 181)]
 aliases['A10'] = [(10, 44)]
 aliases['S10'] = [(10, 45)]
-aliases['C11'] = [(11, 1)]
-aliases['D11'] = [(11, 2)]
-aliases['F11'] = [(11, 4)]
+aliases['D11'] = [(11, 2),(22,2)]
+aliases['F11'] = [(11, 4),(22,4)]
 aliases['PSL(2,11)'] = [(11, 5), (12, 272)]
 aliases['M11'] = [(11, 6)]
 aliases['A11'] = [(11, 7)]
 aliases['S11'] = [(11, 8)]
-aliases['C12'] = [(12, 1)]
 aliases['C6XC2'] = [(12, 2)]
-aliases['C13'] = [(13, 1)]
-aliases['C14'] = [(14, 1)]
-aliases['D7'] = [(14, 2)]
+aliases['C2XC6'] = [(12, 2)]
+aliases['A12'] = [(12, 300)]
+aliases['S12'] = [(12, 301)]
+aliases['D13'] = [(13, 2)]
+aliases['F13'] = [(13, 6)]
+aliases['A13'] = [(13, 8)]
+aliases['S13'] = [(13, 9)]
 aliases['D14'] = [(14, 3)]
-aliases['C15'] = [(15, 1)]
+aliases['PGL(2,13)'] = [(14, 39)]
+aliases['A14'] = [(14, 62)]
+aliases['S14'] = [(14, 63)]
+aliases['A15'] = [(15, 103)]
+aliases['S15'] = [(15, 104)]
+aliases['Q16'] = [(16, 14)]
+aliases['A16'] = [(16, 1953)]
+aliases['S16'] = [(16, 1954)]
+aliases['D17'] = [(17, 2)]
+aliases['F17'] = [(17, 5)]
+aliases['PSL(2,17)'] = [(17, 6)]
+aliases['A17'] = [(17, 9)]
+aliases['S17'] = [(17, 10)]
+aliases['PGL(2,17)'] = [(18, 468)]
+aliases['A18'] = [(18, 982)]
+aliases['S18'] = [(18, 983)]
+aliases['A19'] = [(19, 7)]
+aliases['S19'] = [(19, 8)]
+aliases['PGL(2,19)'] = [(20, 362)]
+aliases['A20'] = [(20, 1116)]
+aliases['S20'] = [(20, 1117)]
+aliases['A21'] = [(21, 163)]
+aliases['S21'] = [(21, 164)]
+aliases['D22'] = [(22, 3)]
+aliases['A22'] = [(22, 58)]
+aliases['S22'] = [(22, 59)]
+aliases['D23'] = [(23, 2)]
+aliases['F23'] = [(23, 3)]
+aliases['M23'] = [(23, 5)]
+aliases['A23'] = [(23, 6)]
+aliases['S23'] = [(23, 7)]
+

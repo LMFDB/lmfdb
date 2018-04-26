@@ -1,0 +1,35 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.error %}
+
+<p>
+{{ info.error | safe }}
+</p>
+
+{% else %}
+
+<div>
+
+<p>
+{{ info.degree_stats | safe }}
+</p>
+
+<table>
+<tr><th>Field<th>Number of newforms<th>Maximum level norm</tr>
+{% for F in info.stats.fields %}
+{% set dat = info.stats.counts[F] %}
+<tr>
+<td>{{dat['field_knowl'] | safe}}
+<td align='right'><a href={{dat['forms']}}>{{dat['nforms']}}</a>
+<td align='right'>{{dat['maxnorm']}}
+</tr>
+{% endfor %}
+</table>
+
+</div>
+
+{% endif %}
+
+{% endblock %}
+</html>

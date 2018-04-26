@@ -2,29 +2,27 @@
 # testing users blueprint
 from lmfdb.base import LmfdbTest
 from main import login_page
-from flask import url_for
-
-from pwdmanager import LmfdbUser, LmfdbAnonymousUser, new_user
-
+import unittest2
 
 class UsersTestCase(LmfdbTest):
     def setUp(self):
         LmfdbTest.setUp(self)
         self.users = self.C.userdb.users
-        self.users.remove("$test_user")
-        self.test_user = new_user("$test_user", "testpw")
+        # With authentication we can no longer add a test user during the test
+        # self.users.remove("$test_user")
+        # self.test_user = new_user("$test_user", "testpw")
 
-        self.tc.post('/users/login', data=dict(
-            name='$test_user',
-            password='testpw'
-        ))
+        # self.tc.post('/users/login', data=dict(
+        #     name='$test_user',
+        #     password='testpw'
+        # ))
 
     def tearDown(self):
-        self.users.remove("$test_user")
+        pass # self.users.remove("$test_user")
 
     ### helpers
-    def get_me(self):
-        return self.users.find_one({'_id': '$test_user'})
+    def get_me(self, id='$test_user'):
+        return self.users.find_one({'_id': id})
 
     ### test methods
     def test_1(self):
@@ -34,13 +32,17 @@ class UsersTestCase(LmfdbTest):
         self.assertTrue(login_page.name == "users")
 
     def test_user_db(self):
-        me = self.get_me()
+        me = self.get_me('cremona') # any valid user id will do!
         assert me is not None
 
+    @unittest2.skip("skipping since no longer possible to insert test user during test")
     def test_myself(self):
-        return
         p = self.tc.get("/users/myself")
         assert '$test_user' in p.data
+
+    def test_user(self, id='cremona'):
+        p = self.tc.get("/users/profile/%s" % id)
+        assert id in p.data
 
     def test_info(self):
         return

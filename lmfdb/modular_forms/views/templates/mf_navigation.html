@@ -21,7 +21,8 @@ mathematical physics.
 <p>
 Below you can browse classes of modular forms currently in the LMFDB.
 </div>
-<p>
+
+  <p>
 <a href="{{ url_for('emf.render_elliptic_modular_forms')
          }}">Holomorphic Cusp Forms</a> (on \(\GL(2)\) over \(\Q\))
 </p>
@@ -29,6 +30,11 @@ Below you can browse classes of modular forms currently in the LMFDB.
 <a href="{{ url_for('hmf.hilbert_modular_form_render_webpage')
          }}">Hilbert Modular Forms</a> (on \(\GL(2)\) over totally real fields)
 </p>
+
+<p><a href="{{ url_for('bmf.index') }}">Bianchi Modular Forms</a> (on
+   \(\GL(2)\)  over Euclidean imaginary quadratic fields)
+</p>
+
 <p>
 <a href="{{ url_for('mwf.render_maass_waveforms') }}">Maass Forms on \(\GL(2,\Q) \)</a>
 </p>
@@ -37,9 +43,8 @@ Below you can browse classes of modular forms currently in the LMFDB.
 <a href="{{ url_for('mwfp.render_picard_maass_forms') }}">Maass Forms on the Picard group \(\SL(2,\Z[i])\)</a>
 </p>
 {% endif %}
-<p><a href="{{ url_for('ModularForm_GSp4_Q_top_level') }}">Siegel Modular Forms</a> 
+<p><a href="{{ url_for('smf.index') }}">Siegel Modular Forms</a> 
 </p>
 
-</ul>
 
 {% endblock content %}

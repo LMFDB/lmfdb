@@ -1,0 +1,66 @@
+Revides format of data in files which are imported
+==========================================
+
+The first three lines define the field and related data.  Each
+subsequent line defines a single newform.  We could use separate files
+for the field information and newforms information, in which case I
+would want each newform line to contain some identifier for the field
+(label or coeffs), since I would like to file's content to be
+self-contained and not to rely on the filename itself.
+
+line 1: COEFFS <int-list>
+
+        e.g. COEFFS [-1,-1,1]
+
+        list of integer coefficients of minimal polynomial, no
+        embedded spaces, starting with the constant term and ending
+        with a 1 since monic.
+
+line 2: PRIMES <ideal-triple-list>
+
+        where ideal-triple := [int,int,<int-list>]
+
+        where the first entry is the norm, the second the least positive
+        integer, and the third is the list of coefficients of a second
+        generator of the ideal with respect to the power basis.  This
+        defines the fixed ordering of the prime ideals, which will be
+        by order of norm but the order of primes of the same norm will
+        be fixed by this list.  Norms up to 1000.
+
+line 3: LEVELS <ideal-triple-list>
+
+        As for PRIMES but for all integral ideals.  Norms up to ?
+
+lines 4ff: each contains one newform, the format is either short (for
+rational eigenvalues) or long (for non-rational)
+
+Short form: 4 space-separated fields per line, with no embedded spaces:
+
+      level-label level label aplist
+
+      where:
+           @ level-label is norm.index (e.g. 31.1)
+           @ level is a triple as in LEVELS
+           @ label is a string of 1 or more lower case letters
+                      representing positive integsr in base 26
+           @ aplist is a list of integers, one for each prime in the
+                      PRIMES list (in that order, but not necessarily
+                      as many primes).
+
+Long form (for non-rational newforms)
+
+     level-label level label hcoeffs aplist
+
+
+     where: @ level-label, level , label are as before;
+
+            @ hcoeffs is a listof the coeffs of the polynomial
+                      defining the Hecke eigenvalue field
+
+            @ aplist is a list of rational-lists, each giving the
+                      coefficients of one Hecke eigenvalue with
+                      respect to a power basis for the Hecke
+                      eigenvalue field.
+
+
+

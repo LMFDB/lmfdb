@@ -1,0 +1,147 @@
+---
+first_zero: 6.4222353306131
+Lfunction_texname: $L(s,f)$
+muRRR: [16.4031247402,0.17112189172831]
+deltaRRR: [0,0,0]
+level: 1
+character: 1.1
+analytic_conductor: 3.010101010101
+epsilon: 1
+url: L/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.4216864/
+object_url:
+object_name: $\SL(3,\Z)$ Maass form
+self_dual: false
+arithmetic: false
+---
+first_zero: 5.11568332881512
+Lfunction_texname: $\zeta_K(s)$
+nuRC: 0
+muRC: 0
+deltaRC: $0$
+level: 23
+character: $\left(\frac{-23}{\cdot}\right)$
+analytic_conductor: 
+epsilon: 1
+url: L/NumberField/3.1.23.1/
+object_url: NumberField/3.1.23.1
+object_name: global number field
+self_dual: true
+arithmetic: true
+---
+first_zero: 3.8992814947713
+Lfunction_texname: $L(s,E_{11},\sym^2)$
+deltaRC: $0$
+nuRC: 1
+muRC: 0
+level: 121
+character: 1.1
+analytic_conductor: 0.010101010101
+epsilon: 1
+url: L/SymmetricPower/2/EllipticCurve/Q/11.a/
+object_url:
+object_name: $\Sym^2$ of an <a href="/EllipticCurve/Q/11/a/2">elliptic curve</a>
+self_dual: true
+arithmetic: true
+---
+first_zero: 3.19363569581669
+Lfunction_texname: $L(s,\rho)$
+muRRR: [0,0]
+deltaRRR: [0,1,1]
+level: 229
+character: $\left(\frac{229}{\cdot}\right)$
+analytic_conductor:
+epsilon: 1
+url: L/ArtinRepresentation/3.229.4t5.1c1
+object_url: ArtinRepresentation/3.229.4t5.1c1
+object_name: Artin representation
+self_dual: true
+arithmetic: true
+---
+first_zero: 2.65766936863219
+Lfunction_texname: $L(s,f)$
+muRRR: [8.23979,2.64122]
+deltaRRR: [0,0,0]
+level: 4
+character: 1.1
+analytic_conductor: 
+epsilon: 1
+url: L/ModularForm/GL3/Q/Maass/4/1/8.239796_2.641226/1.066042 +/
+object_url:
+object_name: $\GL(3)$ Maass form
+self_dual: false
+arithmetic: false
+---
+first_zero: 2.53210244121030
+Lfunction_texname: $L(s,f)$
+muRRR: [9.63244,1.37406]
+deltaRRR: [0,0,0]
+level: 4
+character: 1.1
+analytic_conductor:
+epsilon: e(1/3)
+url: L/ModularForm/GL3/Q/Maass/4/1/9.632444_1.374060/0.15012282/
+object_url:
+object_name: $\GL(3)$ Maass form
+self_dual: false
+arithmetic: false
+---
+first_zero: 2.15869389194547
+Lfunction_texname: $L(s,E_{37.a},\sym^2)$
+nuRC: 1
+muRC: 0
+deltaRC: $0$
+level: 1369
+character: 1.1
+analytic_conductor: 
+epsilon: 1
+url: L/SymmetricPower/2/EllipticCurve/Q/37.a/
+object_url:
+object_name: $\Sym^2$ of an <a href="/EllipticCurve/Q/37.a1">elliptic curve</a>
+self_dual: true
+arithmetic: true
+---
+first_zero: 1.07683314174049
+Lfunction_texname: $L(s,E_{389.a},\sym^2)$
+nuRC: 1
+muRC: 0
+deltaRC: $0$
+level: 151321
+character: 1.1
+analytic_conductor: 
+epsilon: 1
+url: L/SymmetricPower/2/EllipticCurve/Q/389.a/
+object_url:
+object_name: $\Sym^2$ of an <a href="/EllipticCurve/Q/389.a1">elliptic curve</a>
+self_dual: true
+arithmetic: true
+---
+first_zero: 0.933723469852848
+Lfunction_texname: $L(s,f)$
+muRRR: [8.95466,2.93659]
+deltaRRR: [0,0,0]
+level: 4
+character: 1.1
+analytic_conductor: 
+epsilon: e(2/3)
+url: L/ModularForm/GL3/Q/Maass/4/1/8.954662_2.936591/0.36025530/
+object_url:
+object_name: $\GL(3)$ Maass form
+self_dual: false
+arithmetic: false
+---
+
+XXXXXXXXXX
+
+first_zero: 1.36848157011749
+Lfunction_texname: $L(s,\rho)$
+muRRR: [0,0]
+deltaRRR: [0,0,1]
+level: 28625
+character: $\chi_{1145}(228,\cdot)$
+analytic_conductor:
+epsilon: e(0.76431)
+url: TensorProducts/
+object_name: tensor product of an <a href="/ArtinRepresentation/3.229.4t5.1c1">Artin representation</a> and a <a href="/Character/Dirichlet/5/2">Dirichlet character</a>
+self_dual: false
+arithmetic: true
+---

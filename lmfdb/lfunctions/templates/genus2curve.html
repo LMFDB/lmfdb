@@ -1,0 +1,22 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<p>
+    The L-function $L(s,A)= \sum a_n n^{-s}$ of an abelian surface of
+    {{ KNOWL('genus2.conductor', title='conductor')}} $N$ has an 
+    {{ KNOWL('lfunction.euler_product', title='Euler product')}}
+    of the form
+    \[
+    L(s,E)=\prod_p\prod_{j=1}^4\left(1-\alpha_{j,p} p^{-s}\right)^{-1}
+    \]
+    and satisfies the {{ KNOWL('lfunction.functional_equation', title='functional equation')}}
+    \[
+    \Lambda(s,A)= N^{s/2}\Gamma_{\mathbb C}(s+1/2)^2\cdot L(s,A)= \varepsilon\Lambda(1-s,A),
+    \]
+    where the <a title="Sign of the functional equation [lfunction.sign]" knowl="lfunction.sign" kwargs="">sign</a> \(\varepsilon\) is equal to either \(+1\) or \(-1\).
+</div>
+</p>
+
+{{contents[0]|safe}}
+
+{% endblock %}

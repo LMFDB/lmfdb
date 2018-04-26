@@ -1,28 +1,15 @@
-import flask
-from flask import render_template, url_for, request, render_template_string
-# import bson
-# import base
-# from base import app
-# from  modular_forms.maass_forms.picard import MWFP,mwfp,mwfp_logger
-# logger = mwfp_logger
-# from  modular_forms.maass_forms.maass_waveform import MWFTable
-# import modular_forms.maass_forms
-# from modular_forms.maass_forms.picard.backend.mwfp_utils import *
-from lmfdb.modular_forms.maass_forms.picard.backend.mwfp_classes import *
-# import jinja2
-from flask import Blueprint
+# -*- coding: utf-8 -*-
 
+from flask import render_template, url_for, request
+from lmfdb.modular_forms.maass_forms.picard import mwfp, mwfp_logger, mwfp_dbname
+from lmfdb.modular_forms.maass_forms.picard.backend.mwfp_classes import PicardFormTable, PicardDataTable
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import connect_db
 
-# app.register_blueprint(mwfp, url_prefix="/ModularForm/GL2/C/Maass")
+# see main mwfp blueprint for details
 
-# app.register_blueprint(mwfp, url_prefix="/ModularForm/GL2/C/Maass")
-
-# see main mwf blueprint for details
 @mwfp.context_processor
 def body_class():
     return {'body_class': 'mwfp'}
-
-#@base.app.route("/ModularForm/GL2/C/Maass/")
 
 
 @mwfp.route("/", methods=['GET', 'POST'])
@@ -35,7 +22,7 @@ def render_picard_maass_forms():
         return render_picard_test()
     if docid is not None:
         return render_picard_maass_forms_get_one(docid)
-    ds = [(_['_id'], _['ev']) for _ in htp.find(fields=['ev'], sort=[('ev', 1)])]
+    ds = [(_['_id'], _['ev']) for _ in htp.find({}, ['ev'], sort=[('ev', 1)])]
     data = None
     # TT= MaassformsPicardDisplay(mwfp_dbname,collection='all',skip=[0],limit=[10],keys=['Eigenvalue'])
     # TT.set_table_browsing()

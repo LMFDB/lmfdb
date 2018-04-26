@@ -1,11 +1,11 @@
 import flask
 import lmfdb.utils
-from flask import render_template, request
+from flask import render_template, request, url_for
 
 ZetaZeros = flask.Blueprint("zeta zeros", __name__, template_folder="templates")
 logger = lmfdb.utils.make_logger(ZetaZeros)
 
-from platt_zeros import *
+from platt_zeros import zeros_starting_at_N, zeros_starting_at_t
 
 
 @ZetaZeros.route("/")
@@ -16,7 +16,29 @@ def zetazeros():
     if limit > 1000:
         return list_zeros(N=N, t=t, limit=limit)
     else:
-        return render_template('zeta.html', N=N, t=t, limit=limit, title="Zeros of $\zeta(s)$", bread=[('Zeros of $\zeta(s)$', ' '), ])
+        title = "Zeros of $\zeta(s)$"
+        bread = [("L-functions", url_for("l_functions.l_function_top_page")),
+                 ('Zeros of $\zeta(s)$', ' ')]
+        learnmore = [("Completeness of this data",url_for(".extent") ),("How data was computed", url_for(".howcomputed"))]
+        return render_template('zeta.html', N=N, t=t, limit=limit, title=title, bread=bread, learnmore=learnmore)
+
+
+@ZetaZeros.route("/Extent")
+def extent ():
+    t = 'Extent of data for Riemann zeta zeros'
+    bread = [("L-functions", url_for("l_functions.l_function_top_page")),
+             ("Zeros of $\zeta(s)$", url_for(".zetazeros")),('Extent', ' ')]
+    return render_template('single.html', title=t, bread=bread, kid = "dq.zeros.zeta.extent")
+
+
+@ZetaZeros.route("/HowComputed")
+def howcomputed ():
+    t = 'How the Riemann zeta zeros were computed'
+    bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros")),
+             ('How they were computed', ' ')]
+    return render_template('single.html', title=t, bread=bread, kid = "dq.zeros.zeta.howcomputed")
+
+
 
 
 @ZetaZeros.route("/list")
@@ -46,9 +68,9 @@ def list_zeros(N=None,
 
     if limit > 100000:
         # limit = 100000
-        return """hello downloader. you hurt the server :(
-                  get the data here: http://www.lmfdb.org/data/zeros/zeta/ --
-                  code how to read it is here: http://code.google.com/p/lmfdb/source/browse/#hg%2Fzeros%2Fzeta"""
+        #
+        bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros"))]
+        return render_template('single.html', title="Too many zeros", bread=bread, kid = "dq.zeros.zeta.toomany")
 
     if N is not None:
         zeros = zeros_starting_at_N(N, limit)

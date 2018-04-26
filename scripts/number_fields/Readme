@@ -1,0 +1,23 @@
+The import script can be run by
+
+  sage -python import_nf_data.py list of files to import
+
+Each file should consist of a single list of fields.  The format is
+described in the import script.  The file prep.gp can be used with
+pari to generate a file in the correct format.  In gp,
+
+\r prep.gp
+all = doall([list of polynomials])
+write("myoutputfile", all)
+
+Then myoutputfile can be imported as above.  The gp script will only
+work for polynomials of degree <12 because pari can only compute Galois
+groups in this range.
+
+...
+
+After renaming database to fields, 
+
+  create_random_object_index(nf, "fields")
+
+after loading jj.py

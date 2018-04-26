@@ -8,7 +8,8 @@ ASC = pymongo.ASCENDING
 import flask
 from functools import wraps
 from lmfdb.base import app, getDBConnection
-from flask import render_template, request, abort, Blueprint, url_for, make_response
+from bson.son import SON
+from flask import render_template, request, Blueprint, url_for, make_response
 from flask.ext.login import login_required, login_user, current_user, logout_user
 
 login_page = Blueprint("users", __name__, template_folder='templates')
@@ -24,11 +25,7 @@ login_manager = LoginManager()
 import pwdmanager
 from pwdmanager import LmfdbUser, LmfdbAnonymousUser
 
-# TODO update this url, needed for the user login token
-base_url = "http://www.l-functions.org"
-# TODO: Not sure this should be changed from l-functions -> lmfdb, because
-# I don't really understand how this is used. Paul
-
+base_url = "http://beta.lmfdb.org"
 
 @login_manager.user_loader
 def load_user(userid):
@@ -54,8 +51,13 @@ def ctx_proc_userdata():
     userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
     userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
     userdata['user_is_authenticated'] = current_user.is_authenticated()
+    try:
+        roles = getDBConnection()['admin'].command(SON({"connectionStatus":int(1)}))
+        userdata['user_can_write'] = 'readWrite' in [el['role'] for el in roles['authInfo']['authenticatedUserRoles'] if el['db']=='inventory']
+    except:
+        userdata['user_can_write'] = False
     userdata['user_is_admin'] = current_user.is_admin()
-    userdata['get_username'] = get_username
+    userdata['get_username'] = get_username # this is a function
     return userdata
 
 # blueprint specific definition of the body_class variable
@@ -85,12 +87,17 @@ def base_bread():
 @login_required
 def list():
     import pwdmanager
+    COLS = 5
     users = pwdmanager.get_user_list()
-    # trying to be smart and sorting by last name
-    users = sorted(users, key=lambda x: x[1].split(" ")[-1].lower())
+    # attempt to sort by last name
+    users = sorted(users, key=lambda x: x[1].strip().split(" ")[-1].lower())
+    if len(users)%COLS:
+        users += [{} for i in range(COLS-len(users)%COLS)]
+    n = len(users)/COLS
+    user_rows = zip(*[users[i*n:(i+1)*n] for i in range(COLS)])
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
-                           users=users, bread=bread)
+                           user_rows=user_rows, bread=bread)
 
 
 @login_page.route("/myself")
@@ -120,22 +127,20 @@ def set_info():
 @login_page.route("/profile/<userid>")
 @login_required
 def profile(userid):
-    getDBConnection().knowledge.knowls.ensure_index('title')
+    # See issue #1169
+    #try:
+    #    getDBConnection().knowledge.knowls.ensure_index('title')
+    #except pymongo.errors.OperationFailure:
+    #    pass
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
-    userknowls = getDBConnection(
-    ).knowledge.knowls.find({'authors': userid}, fields=['title']).sort([('title', ASC)])
-    userfiles = getDBConnection(
-    ).upload.fs.files.find({'metadata.uploader_id': userid, 'metadata.status': 'approved'})
-    userfilesmod = getDBConnection(
-    ).upload.fs.files.find({'metadata.uploader_id': userid, 'metadata.status': 'unmoderated'})
+    userknowls = getDBConnection().knowledge.knowls.find({'authors': userid}, ['title']).sort([('title', ASC)])
     return render_template("user-detail.html", user=user,
-                           title="%s" % user.name, bread=bread, userknowls=userknowls, userfiles=userfiles, userfilesmod=userfilesmod)
+                           title="%s" % user.name, bread=bread, userknowls=userknowls)
 
 
 @login_page.route("/login", methods=["POST"])
 def login(**kwargs):
-    bread = base_bread() + [('Login', url_for('.login'))]
     # login and validate the user …
     # remember = True sets a cookie to remmeber the user
     name = request.form["name"]
@@ -247,7 +252,6 @@ def register_token(token):
             return flask.redirect(url_for(".register_new"))
 
         full_name = request.form['full_name']
-        email = request.form['email']
         next = request.form["next"]
 
         if pwdmanager.user_exists(name):
@@ -256,7 +260,6 @@ def register_token(token):
 
         newuser = pwdmanager.new_user(name, pw1)
         newuser.full_name = full_name
-        newuser.email = email
         newuser.save()
         login_user(newuser, remember=True)
         flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
@@ -289,7 +292,6 @@ def change_password():
 @login_page.route("/logout")
 @login_required
 def logout():
-    bread = base_bread() + [('Login', url_for('.logout'))]
     logout_user()
     flask.flash("You are logged out now. Have a nice day!")
     return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'))

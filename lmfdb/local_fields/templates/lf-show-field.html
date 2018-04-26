@@ -22,15 +22,37 @@ table,td {
   <p>
     <table>
       <tr><td>Base field:</td> <td>$\Q_{ {{info.p}} }$</td></tr>
-      <tr><td>Degree $d$ :</td> <td>${{info.n}}$</td></tr>
-      <tr><td>Ramification exponent $e$ :</td> <td>${{info.e}}$</td></tr>
-      <tr><td>Residue field degree $f$ :</td> <td>${{info.f}}$</td></tr>
-      <tr><td>Discriminant exponent $c$ :</td> <td>${{info.c}}$</td></tr>
-      <tr><td>Discriminant root field:</td> <td>{{info.rf}}</td></tr>
-      <tr><td>Root number:</td> <td>{{info.hw}}</td></tr>
-      <tr><td> $|\textrm{Aut}(K/\Q_{ {{info.p}} })|$:</td> <td>${{info.aut}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.degree', title='Degree') }} $d$ :</td> <td>${{info.n}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.ramification_index', title='Ramification exponent') }} $e$ :</td> <td>${{info.e}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.residue_field_degree', title='Residue field degree') }} $f$ :</td> <td>${{info.f}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.discriminant_exponent', title='Discriminant exponent') }} $c$ :</td> <td>${{info.c}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.discriminant_root_field', title='Discriminant root field') }}:</td> <td>{{info.rf}}</td></tr>
+      <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>
+      <tr><td> $|{{ info.autstring|safe }}(K/\Q_{ {{info.p}} })|$:</td> <td>${{info.aut}}$</td></tr>
+      <tr><td colspan="2">{{info.galphrase}}</td></tr>
     </table>
   </p>
+
+        <p><h2> {{ KNOWL('lf.intermediate_fields', title='Intermediate fields') }}</h2>
+        <p>
+        {% if info.subfields=='' %}
+        <table>
+          <tr><td>
+            The extension is primitive: there are no intermediate fields 
+            between this field and $\Q_{ {{info.p}} }$.
+          </td></tr>
+        </table>
+        {% else %}
+        <table>
+          <tr><td>
+            {{ info.subfields | safe }}
+          </td></tr>
+        </table>
+        <p>
+        Fields in the database are given up to isomorphism.  Isomorphic 
+        intermediate fields are shown with their multiplicities.
+        {% endif %}
+
 
   <p><h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
     <table>
@@ -45,7 +67,8 @@ table,td {
       <tr><td>Unramified degree:</td><td>${{info.u}}$</td></tr>
       <tr><td>Tame degree:</td><td>${{info.t}}$</td></tr>
       <tr><td>Wild slopes:</td><td>{{info.slopes}}</td></tr>
-      <tr><td>GMS:</td><td>${{info.gms}}$</td></tr>
+      <tr><td>Galois Mean Slope:</td><td>${{info.gms}}$</td></tr>
+      <tr><td>Galois Splitting Model:</td><td>{{info.gsm}}</td></tr>
     </table>
   </p>
 

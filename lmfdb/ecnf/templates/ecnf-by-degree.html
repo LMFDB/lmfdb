@@ -1,0 +1,43 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.error %}
+
+<p>
+{{ info.error }}
+</p>
+
+{% else %}
+
+<div>
+{{ info.summary|safe }}
+</div>
+
+
+{% set stats = info.sig_stats %}
+
+{% for sigdat in stats %}
+{% set sig = sigdat.0 %}
+{% set sig_counts = sigdat.1 %}
+{% set field_counts = sigdat.2 %}
+<h3><a href="{{url_for('ecnf.statistics_by_signature',d=info.degree,
+             r=sig.split(",")[0])}}">Signature ({{sig}})</a>:
+{{sig_counts.ncurves}} curves in
+{{sig_counts.nclasses}} isogeny classes, conductor norm &le;
+{{sig_counts.max_norm}}
+ </h3>
+<table>
+<tr><th> Field <th> Number of curves <th> Number of isogeny classes <th> Maximum conductor norm </tr>
+{% for fdat in field_counts %}
+{% set f = fdat.0 %}
+{% set f_counts = fdat.1 %}
+<tr><td> <a href="{{url_for('ecnf.show_ecnf1',nf=f)}}">{{f}}</a> <td> {{f_counts.ncurves}} <td> {{f_counts.nclasses}} <td> {{f_counts.max_norm}} </tr>
+{% endfor %}
+</table>
+
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}
+</html>

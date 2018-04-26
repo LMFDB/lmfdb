@@ -1,0 +1,38 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.error %}
+
+<p>
+{{ info.error }}
+</p>
+
+{% else %}
+
+<div>
+{{ info.summary|safe }}
+</div>
+
+
+{% set stats = info.sig_stats %}
+
+{% if stats %}
+<h2>Number of curves and maximum conductor norm for fields of
+  signature ({{info.sig}})</h2>
+<table>
+<tr><th> Field <th> Number of curves <th> Number of isogeny classes <th> Maximum conductor norm </tr>
+{% for fdat in stats %}
+{% set f = fdat.0 %}
+{% set f_counts = fdat.1 %}
+<tr><td> <a href="{{url_for('ecnf.show_ecnf1',nf=f)}}">{{f}}</a> <td> {{f_counts.ncurves}} <td> {{f_counts.nclasses}} <td> {{f_counts.max_norm}} </tr>
+{% endfor %}
+</table>
+
+{% else %}
+The database does not contain any elliptic curves defined over fields
+of signature ({{s}}).
+{% endif %}
+{% endif %}
+
+{% endblock %}
+</html>

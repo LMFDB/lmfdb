@@ -1,0 +1,189 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div>
+{{ KNOWL_INC('dq.ecnf.extent') }}
+</div>
+
+<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} defined over:
+{# {{KNOWL('nf',title = "number fields")}} #}
+</h2>
+
+<p>
+<ul>
+{% for types in data.fields %}
+<li>
+{{types[0]}}:
+{% for label,f in types[1] %}
+{% if loop.index0 %},{% endif %}
+ <a href="{{f[0]}}">{{f[1]}}</a>
+{% endfor %}
+</li>
+{% endfor %}
+<li><a href={{url_for('ecnf.browse')}}>All available fields</a>
+</ul>
+</p>
+
+<h3> Browse {{ KNOWL('ec',title='elliptic curves')}} by degree of base
+  {{KNOWL('nf',title = "number field")}}:
+{% for d in data.degrees-%}
+{%-if loop.index0-%}, {% endif %}
+<a href={{url_for('ecnf.statistics_by_degree', d=d)}}>{{d}}</a>
+{%-endfor-%}
+</h3>
+
+<p>
+<h3>Curves with interesting properties:</h3>
+<ul>
+{% for item in data.highlights %}
+<li><a href="{{item[1]}}">{{item[0]}}</a></li>
+{% endfor %}
+</ul>
+</p>
+
+<h3>A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the database</h3>
+
+<h2> Find a specific curve by label</h2>
+<form>
+<input type='text' name='label' size=25 example="2.2.5.1-31.1-a1">
+<button type='submit' name='jump' value='label' >label</button>
+<br><span class="formexample">e.g. 2.2.5.1-31.1-a1</span>
+{% if err_msg %}
+<br>
+<span class="errmsg">{{err_msg}}</span>
+{% endif %}
+</form>
+
+
+<h2> Search </h2>
+Please enter a value or leave blank:
+<p></p>
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  <table>
+    <tr>
+     <td align=right>base {{ KNOWL('nf',title = "number field") }}</td>
+     <td>
+     <input type='text' name='field' example="2.2.5.1" size=10 value="{{field_label}}" />
+     </td>
+     <td><span class="formexample"> e.g. 2.2.5.1 or Qsqrt5</span></td>
+  <td align=right>{{ KNOWL('ec.base_change',title="base change") }}
+  curves</td>
+  <td>
+         <select name='include_base_change'>
+           <option value="off">exclude</option>
+           <option value="on" selected>include</option>
+         </select>
+  </td>
+  <td align=right>{{ KNOWL('ec.q_curve',title="Q_curves") }} </td>
+  <td>
+         <select name='include_Q_curves'>
+           <option value="include" selected>include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+         </select>
+  </td>
+    </tr>
+
+   <tr>
+     <td align=right>{{ KNOWL('ec.conductor',title = "conductor") }} norm</td>
+     <td>
+     <input type='text' name='conductor_norm' example="31" size=10 value="{{conductor_norm}}" />
+     </td>
+     <td><span class="formexample"> e.g. 31 or 1-100</span></td>
+
+  <td align=right>{{ KNOWL('ec.isogeny',title="isogenous") }}
+  curves</td>
+  <td>
+         <select name='include_isogenous'>
+           <option value="off">exclude</option>
+           <option value="on" selected>include</option>
+         </select>
+  </td>
+     <td align=right>{{ KNOWL('ec.complex_multiplication',title =
+     "CM") }}  curves </td>
+     <td>
+         <select name='include_cm'>
+           <option value="include" selected>include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+         </select>
+     </td>
+ </tr>
+
+    <tr>
+          <td align=right>
+          {{ KNOWL('ec.j_invariant', title="j-invariant") }}
+          </td>
+          <td colspan=2>
+          <input type='text' name='jinv' example="105474/49 + a*34213/49" size=18 value="{{jinv}}" />
+          </td>
+          <td colspan=2>
+          <span class="formexample">
+          e.g. 105474/49 + a*34213/49 over 2.0.7.1</span>
+          </td>
+
+          <td align=right>&nbsp; </td>
+          <td align=right>&nbsp; </td>
+          <td align=right>&nbsp; </td>
+      </tr>
+
+    <tr>
+          <td align=right>
+          {{ KNOWL('ec.torsion_order',title="torsion order") }}
+          </td>
+          <td>
+          <input type='text' name='torsion' example="2" size=5 value="{{torsion}}" />
+          </td>
+          <td>
+          <span class="formexample"> e.g. 2 </span>
+          </td>
+
+          <td align=right>
+          {{ KNOWL('ec.torsion_subgroup', title="torsion structure") }}
+          </td>
+          <td>
+            {{ tor_struct_search_nf()| safe }}
+          </td>
+          <td>
+          &nbsp;
+          </td>
+
+      </tr>
+    <tr>
+      <td colspan=3>&nbsp;</td>
+      <td align=right>
+        {{ KNOWL('ec.isogeny',title="isogeny degree") }}
+      </td>
+      <td>
+        <input type='text' name='isodeg' example="16" size=5 />
+      </td>
+      <td>
+        <span class="formexample"> e.g. 16 </span>
+      </td>
+    </tr>
+ <tr>
+  <td align=right>Maximum number of curves to display</td>
+  <td>
+  <input type='text' name='count'  example='10' size=10 value="{{count}}" />
+  </td>
+ </tr>
+
+  </table>
+<p></p>
+<td><button type='submit' value='Search'>Search</button></td>
+<p></p>
+</form>
+
+
+
+
+{% if DEBUG %}
+<hr>
+<div>
+Raw field data: {{ data.fields }}
+</div>
+{% endif %}
+
+
+{% endblock %}

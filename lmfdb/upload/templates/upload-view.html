@@ -1,5 +1,5 @@
 {% extends "homepage.html" %}
-
+{% import 'color.css' as color %}
 {% block content %}
 
 <style>
@@ -12,17 +12,17 @@
     background-image: url("/static/images/pencil.png");
     background-repeat: no-repeat;
     padding-left: 14px;
-    background-color: #fffff4;
+    background-color: {{color.yellow_white}};
   }
   *.editable:hover {
-    background-color: #ffffcc;
+    background-color: {{color.yellow_white_2}};
   }
   textarea.editable {
     border: 1px solid lightgray;
     text-decoration:none;
     width:98%;
     font-family: monospace;
-    background-color: #fffff4;
+    background-color: {{color.yellow_white}};
     background-image: url("/static/images/pencil.png");
     background-repeat: no-repeat;
     padding-left: 14px;

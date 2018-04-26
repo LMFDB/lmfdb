@@ -4,7 +4,6 @@
 # copyright harald schilly <harald.schilly@gmail.com>
 # license apach 2.0
 
-from pymongo import *
 from bson import Code
 from random import random
 import base

@@ -1,6 +1,9 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from mwf_utils import *
+from lmfdb.utils import truncate_number
+from mwf_utils import mwf_logger
+from sage.all import Gamma0, CC
 import bson
+
 
 
 class MaassFormTable(MFDataTable):
@@ -101,7 +104,7 @@ class WebMaassForm(object):
         if not isinstance(maassid, (bson.objectid.ObjectId, str)):
             ids = db.find_Maass_form_id(id=maassid)
             if len(ids) == 0:
-                return
+                raise KeyError("maassid %s not found in database"%maassid)
             mwf_logger.debug("maassid is not an objectid! {0}".format(maassid))
             maassid = ids[0]
         self._maassid = bson.objectid.ObjectId(maassid)
@@ -109,7 +112,7 @@ class WebMaassForm(object):
         ff = db.get_Maass_forms(id=self._maassid)
         # print "ff=",ff
         if len(ff) == 0:
-            return
+            raise KeyError("massid %s not found in database"%maassid)
         f = ff[0]
 
         # print "f here=",f
@@ -144,8 +147,11 @@ class WebMaassForm(object):
         if self._get_coeffs:
             self.coeffs = f.get('Coefficient', [0, 1, 0, 0, 0])
 
+            if self.coeffs != [0,1,0,0,0]:
+                self.num_coeff = len(self.coeffs)
+
             if self._get_dirichlet_c_only:
-                # if self.coeffs<>[0,1,0,0,0]:
+                # if self.coeffs!=[0,1,0,0,0]:
                 if len(self.coeffs) == 1:
                     self.coeffs = self.coeffs[0]
             else:
@@ -192,7 +198,7 @@ class WebMaassForm(object):
                         n2 = len(self.coeffs.get(j, {}).keys())
                         mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j, n2))
                         if n2 != nc:
-                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())=".format(nc, n2))
+                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())={1}".format(nc, n2))
 
         self.nc = 1  # len(self.coeffs.keys())
         if not self._get_dirichlet_c_only:
@@ -253,13 +259,40 @@ class WebMaassForm(object):
             return "odd"
         elif self.symmetry == 0:
             return "even"
-        else:
-            return "undefined"
+        else:          return "undefined"
 
-    def set_table(self, fnr=-1, cusp=0):
+    def download_text(self):
+        r"""
+        Returns a string with all relevant data suitable for
+        download
+        """
+        ans = 'Level = ' + str(self.level) + '\n'
+        ans += 'Eigenvalue = ' + str(self.R) + '\n'
+        ans += 'Symmetry = "' + self.even_odd() + '"\n'
+        ans += 'Weight = ' + str(self.weight) + '\n'
+        ans += 'Character = ' + str(self.character) + '\n'
+        ans += 'Precision = ' + self.precision() + '\n'
+        ans += 'Fricke_Eigenvalue = ' + str(self.fricke()) + '\n'
+        ans += 'Atkin_Lehner_Eigenvalues = "' + self.atkinlehner() + '"\n'
+        ans += 'Coefficients = ' + str(self.coeffs) + '\n'
+        return ans
+
+    def has_plot(self):
+        return self._db.maassform_has_plot(self._maassid)
+
+    def next_maassform_id(self):
+        return self._db.get_next_maassform_id(self.level, self.character,
+                                              self.weight, self.R, self._maassid)
+
+    def prev_maassform_id(self):
+        return self._db.get_prev_maassform_id(self.level, self.character,
+                                              self.weight, self.R, self._maassid)
+
+    def set_table(self, fnr=-1, cusp=0, prec=9):
         r"""
         Setup a table with coefficients for function nr. fnr in self,
-        at cusp nr. cusp
+        at cusp nr. cusp. If the real or imaginary parts are less than
+        1e-`prec`, then set them to zero.
         """
         table = {'nrows': self.num_coeff}
         if fnr < 0:
@@ -282,18 +315,18 @@ class WebMaassForm(object):
                         c = None
                         try:
                             c = self.coeffs[k][cusp].get(n, None)
-                        except KeyError, IndexError:
+                        except (KeyError, IndexError):
                             mwf_logger.critical(
                                 "Got coefficient in wrong format for id={0}".format(self._maassid))
                         # mwf_logger.debug("{0},{1}".format(k,c))
                         if c is not None:
                             realnumc += 1
-                            row.append(pretty_coeff(c))
+                            row.append(pretty_coeff(c, prec=prec))
                     else:
                         for j in range(self.dim):
-                            c = ((self.coeffs.get(j, {})).get(0, None)).get(n, None)
+                            c = ((self.coeffs.get(j, {})).get(0, {})).get(n, None)
                             if c is not None:
-                                row.append(pretty_coeff(c))
+                                row.append(pretty_coeff(c, prec=prec))
                                 realnumc += 1
                 table['data'].append(row)
         else:
@@ -306,6 +339,7 @@ class WebMaassForm(object):
                 row = [n]
                 if self.dim == 1:
                     for k in range(table['ncols']):
+                        #cpositive and cnegative
                         cp = self.coeffs.get(n, 0)
                         cn = self.coeffs.get(-n, 0)
                         row.append((cp, cn))
@@ -328,7 +362,10 @@ class WebMaassForm(object):
 import sage
 
 
-def pretty_coeff(c, digits=10):
+def pretty_coeff(c, digits=10, prec=9):
+    '''
+    Format the complex coefficient `c` for display on the website.
+    '''
     if isinstance(c, complex):
         x = c.real
         y = c.imag
@@ -338,41 +375,39 @@ def pretty_coeff(c, digits=10):
     else:
         x = c
         y = 0
-    # if y==0:
-    #    x = round(x,digits)
-    #    return x
-    ##
+
+    x_trunc = float(truncate_number(x, precision=prec))
+    y_trunc = float(truncate_number(y, precision=prec))
+    xs = format_num(x_trunc, digits=digits)
+    ys = format_num(y_trunc, digits=digits)
+
+    if xs == '0' and ys == '0':
+        return '&nbsp;0'
+    if ys == '0':
+        return xs
+    if xs == '0':
+        return ys + 'i'
+
+    return xs + ' + ' + ys + 'i'
+
+
+def format_num(x, digits=10):
+    '''
+    Format real number x for website display.
+    '''
+    if x == 0:
+        return '0'
     d2 = digits
     d1 = digits + 1
-
-    # print "d,d1,d2=",digits,d1,d2
-    # print "x0=",x
     if abs(x) < 10.0 ** -digits:
         if x > 0:
-            xs = "+{0:<2.1g}".format(float(x))
+            xs = '{0:<2.1g}'.format(float(x))
         else:
-            xs = "{0:<3.1g}".format(float(x))
+            xs = '{0:<3.1g}'.format(float(x))
     else:
         x = round(x, digits)
         if x > 0:
-            xs = "&nbsp;{x:<{width}.{digs}}".format(width=d2, digs=d2, x=float(x))
+            xs = '&nbsp;{x:<{width}.{digs}}'.format(width=d2, digs=d2, x=float(x))
         elif x < 0:
-            xs = "{x:<{width}.{digs}}".format(width=d2, digs=d1, x=float(x))
-        # x = round(x,digits)
-        # y = round(y,digits)
-    if y == 0:
-        return xs
-    # print "x1=",xs
-    if abs(y) < 10.0 ** -digits:
-        if y > 0:
-            ys = "+{0:<2.1e}".format(float(y))
-        else:
-            ys = "{0:<3.1e}".format(float(y))
-    else:
-        y = round(y, digits)
-        if y > 0:
-            ys = "+{y:<{width}.0{digs}}".format(width=d2, digs=d2, y=y)
-        elif y < 0:
-            ys = "{y:<{width}.0{digs}}".format(width=d2, digs=d1, y=y)
-
-    return xs + ys + "i"
+            xs = '{x:<{width}.{digs}}'.format(width=d2, digs=d1, x=float(x))
+    return xs

@@ -1,4 +1,5 @@
 {% extends 'homepage.html' %}
+{% import 'color.css' as color %}
 {% block content %}  
 
 <h1>Register</h1>
@@ -15,13 +16,11 @@
         <td><input id="pw2" name="password2" type="password" /></td></tr>
     <tr><td class="forminfo">Matching?</td>
         <td class="forminfo" id="pwstatus">empty</td></tr>
-    <tr><td colspan="2" class="forminfo" style="color: red;">Don't use your usual password due to security concerns!</td></tr>
+    <tr><td colspan="2" class="forminfo" style="color: {{color.red}};">Don't use your usual password due to security concerns!</td></tr>
     <tr><td colspan="2" class="spacing" /></tr>
     <tr><td>Full Name:</td>
         <td><input name="full_name" size="30" /></td></tr>
     <tr><td></td><td class="forminfo">Visible to others, you can change it later.</td></tr>
-    <tr><td>E-Mail:</td>
-        <td><input name="email" size="30" /></td></tr>
     <tr><td colspan="2" class="spacing" /></tr>
     <tr><td/><td>
          <button name="submit" type="submit">Register</button>

@@ -8,18 +8,27 @@ signature ---> 7,0 (string)
 coeffs ---> 1163,-1433,-3988,1348,217,-84,-1,1 (string)
 ramps ---> [u'197'] (list of strings)
 galois ---> {u't': 1, u'n': 7} (bson.SON object)
+subs ---> [['1,0,1', 2], ['6,-2,1,0,1', 1]]
+
+Subs gives subfield information as a list of [field, multiplicity] where the 
+field is given by the coefficients of a defining polynomial of
+the subfield having been run through polredabs.  The polynomials
+in the example above are x^2+1 and x^4+x^2-2*x+6 where there
+are two subfields isomorphic to x^2+1.  If subs is not present,
+then there are no subs.
 
 Optional fields:
 ---------------
 class_number ---> 1 (int)
-class_group ---> 3  (string)
+class_group ---> 3  (string, can be blank of class_number=1)
 units ---> (string)
 reg ---> 3.2345 (float)
 used_grh ---> True (boolean)
+reduced ---> 0 or 1 (0 if the polynomial is not polredabs'ed)
 
 Deprecated fields:
 -----------------
-None
+subfields ---> [[[1, 0, 1], 2], [[6, -2, 1, 0, 1], 1]]
 
 disc_abs_key is a string produced as the second component of
 

@@ -2,11 +2,12 @@
 
 {% block content %}
 <div class="announce">
- {{ content|safe }}
-Please report it <a href="{{ feedbackpage }}" target=_blank>here</a>.
+<indent>
+{{ content|safe }}
+You may report this problem <a href="{{ feedbackpage }}" target=_blank>here</a>.
 </div>
-<div align="center">
-<input type=button value="Back" onClick="history.go(-1)">
+<div>
+<input type=button value="Return to previous page" onClick="history.go(-1)">
 </div>
 {% endblock %}
 

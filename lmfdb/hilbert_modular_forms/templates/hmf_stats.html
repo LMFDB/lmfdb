@@ -1,0 +1,22 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+{{ KNOWL_INC('dq.mf.hilbert.extent') }}
+</div>
+
+<h3>Browse by field degree:</h3>
+<ul>
+{% for d in info.counts.degrees %}
+<li>
+  {{ info.stats[d].nforms }} forms with levels of norm up to
+  {{ info.stats[d].maxnorm }}, over
+  <a href={{url_for('hmf.statistics_by_degree', d=d)}}>
+{{ info.counts.nfields_by_degree[d] }} fields</a> of degree {{d}}, of
+discriminants up to {{ info.counts.max_disc_by_degree[d] }}
+</li>
+{% endfor %}
+</ul>
+
+{% endblock %}
+</html>

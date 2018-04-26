@@ -1,0 +1,115 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+{{ KNOWL_INC('dq.mf.bianchi.extent') }}
+</div>
+
+<h2> Browse {{ KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi
+  modular forms') }} </h2>
+
+<p>
+Browse {{ KNOWL('mf.bianchi.newform', title='newforms')}} by {{ KNOWL('nf', title='base field')}}:
+{% for f in info.field_forms %}
+{%-if loop.index > 1 %}, {% endif%}
+<a href={{f.url}}>{{f.name}}</a>
+{%-endfor %}
+</p>
+
+<p>
+Browse {{ KNOWL('mf.bianchi.spaces', title='newform spaces')}} by  {{ KNOWL('nf', title='base field')}}:
+<ul>
+<li> {{ KNOWL('mf.bianchi.level', title='\(\GL_2\) levels')}} over
+{% for f in info.gl2_field_list %}
+{%-if loop.index > 1 %}, {% endif%}
+<a href={{f.url}}>{{f.name}}</a>
+{%-endfor %}
+<li> {{ KNOWL('mf.bianchi.level', title='\(\SL_2\) levels')}} over
+{% for f in info.sl2_field_list %}
+{%-if loop.index > 1 %}, {% endif%}
+<a href={{f.url}}>{{f.name}}</a>
+{%-endfor %}
+</ul>
+</p>
+
+
+
+
+<h2> Find a specific form or space by  {{ KNOWL('mf.bianchi.labels', title='label')}} </h2>
+
+<form>
+<input type='text' name='label' placeholder='2.0.4.1-65.2-a'>
+<button type='submit'>Label</button>
+<br><span class="formexample">e.g. 2.0.4.1-65.2-a (single form) or
+  2.0.4.1-65.2 (space of forms at a level)</span>
+</form>
+
+<h4>Examples of  {{ KNOWL('mf.bianchi.base_change', title='base change')}} forms</h4>
+<ul>
+  {% for ex in bc_examples %}
+  <li>{{ex[0]}}: <a href={{ex[2]}}>{{ex[1]}}</a> {{ex[3]}}</li>
+  {% endfor %}
+</ul>
+
+<p>A <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a> from the database</p>
+
+
+<h2> Search </h2>
+
+<form>
+<table>
+<tr>
+<td> {{ KNOWL('nf', title='base field')}}</td> 
+<td><input type='text' name='field_label' placeholder='2.0.4.1' size=10>
+<td colspan=4><span class="formexample"> either a field label, e.g. 2.0.4.1 for
+    \(\mathbb{Q}(\sqrt{-1})\), or a nickname, e.g. Qsqrt-1 </span></td>
+</tr>
+<tr>
+<td>{{ KNOWL('mf.bianchi.level', title='level') }} norm</td>
+<td><input type='text' name='level_norm' placeholder='1' size=10>
+<td><span class="formexample"> e.g. 1 or 1-100</td>
+<td>{{ KNOWL('mf.bianchi.newform', title='dimension') }}</td>
+<td><input type='text' name='dimension' placeholder='1' size=3>
+<td><span class="formexample"> e.g. 1 or 2</td>
+</tr>
+<tr>
+<td>{{ KNOWL('mf.bianchi.sign', title='sign') }}</td>
+<td>       <select name='sfe'>
+           <option value="any" selected>any</option>
+           <option value="+1">+1</option>
+           <option value="-1">-1</option>
+         </select>
+<td>&nbsp;</td>
+<td>{{ KNOWL('mf.bianchi.base_change',title="base change") }}
+  forms</td>
+  <td>
+         <select name='include_base_change'>
+           <option value="off">exclude</option>
+           <option value="on" selected="yes">include</option>
+         </select>
+  </td>
+   <td>
+    {{ KNOWL('mf.bianchi.cm',title="CM") }}
+    </td>
+     <td>
+         <select name='include_cm'>
+           <option value="include" selected="yes">include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+         </select>
+     </td>
+    </tr>
+<tr>
+<td>Maximum number</td>
+<td><input type='text' name='count' value=50 size=10></td>
+<td><span class="formexample"> &nbsp;</td>
+</tr>
+<tr>
+<td colspan=3><button type='submit' value='Search'>Search</button>
+</td>
+</tr>
+</table>
+</form>
+
+
+{% endblock %}

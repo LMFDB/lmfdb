@@ -1,0 +1,49 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='record_viewer.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.tablesorter.js') }}"></script>
+<script type="text/javascript">
+    //Create a js object of the fields from server.
+    var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
+    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
+    var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
+    var record_fields = {{record_fields | safe}};
+
+</script>
+<script type="text/javascript">
+    //Put in initial text and fit boxes to content
+
+    function onReady() {
+      console.log( "Ready!" );
+    }
+
+    function readyTablesorter(){
+          $("#viewerTable").tablesorter();
+    }
+
+    $( document ).ready(function(){
+      //Fetch content and fill blocklist and DOM
+      $( document ).on("blockListReady", onReady); //What to do when blocklist is prepared
+      fetchAndPopulateData(mainBlockList, populateRecordViewerPage, startVisible=true);//Start fetching
+      $( document ).on("dataPopulated", readyTablesorter);
+    });
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %} Showing <span id=nicename>{{nice_name}}</span> [{{db_name}}.{{collection_name}}]{% endblock title_block %}
+
+{% block main_body %}
+<div>
+    <p>The following is the list of all types of record in this collection (last refreshed on <span id=scandate></span>) </p>
+    <p>Each record entry is contains optional name and descriptions of what this record represents, and the set of keys it contains. Where possible, the
+      key sets are displayed as differences from a common base record, which is highlighted in pink. The base record may not exist in the database, in which case it is marked as a 'dummy.
+      Records which have no overlap with the base are coloured orange.
+</div>
+<div id = 'dataDiv'>
+</div>
+<p></p>
+<input type="button" class = "button" id="downloadbutt" value="Download Data" onclick="this.blur();fetchAndDownloadData('records')" title="Download Page Data"/>
+{% endblock main_body %}

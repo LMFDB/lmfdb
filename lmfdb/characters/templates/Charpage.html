@@ -1,32 +1,7 @@
-{% macro addcode(entries,tag) -%}
-   {% if entries %}
-   {% for lang,code in entries %}
-   <{{tag}} class='{{lang}} nodisplay code'>
-   {{ code|nl2br|safe }}
-   </{{tag}}>
-   {% endfor %}
-   {% endif %}
-{%- endmacro %}
-
 {% extends 'homepage.html' %}
+{% import 'color.css' as color %}
 
 {% block content %}
-
-<script>
-var cur_system = null;
-function show_code(system) {
-   {% for lang in codelangs %}
-   $('.{{lang}}').hide();
-   {% endfor %}
-    if (cur_system == null) {
-      $('.'+system).show();
-      cur_system = system;
-    } else {
-      $('.'+system).hide();
-      cur_system = null;
-    }
-}
-</script>
 
 <style>
 .output {
@@ -64,24 +39,15 @@ table.values th {
 table.values td.odd,
 table.values td:nth-child(odd),
 table.values td:first-child {
- background: white;
+ background: {{color.chi_table_background_off}};
 }
 
 table.values td.even,
 table.values td:nth-child(even) {
- background: #EFE;
+ background: {{color.chi_table_background}};
 }
 </style>
 
-   {% if codelangs %}
-        <div align="right">
-            <font size="3">Show commands for:</font>
-            {% for lang in codelangs %}
-            <a onclick="show_code('{{lang}}'); return false" href='#'>{{lang}}</a>
-            {% endfor %}
-        </div>
-   {% endif %}
- 
    {% block description %}
 
    {% endblock %}

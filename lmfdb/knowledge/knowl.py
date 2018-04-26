@@ -10,14 +10,7 @@ DSC = pymongo.DESCENDING
 
 def get_knowls():
     _C = getDBConnection()
-    knowls = _C.knowledge.knowls
-    knowls.ensure_index('authors')
-    # _keywords is used for the full text search
-    knowls.ensure_index('title')
-    knowls.ensure_index('cat')
-    knowls.ensure_index('_keywords')
-    return knowls
-
+    return _C.knowledge.knowls
 
 def get_meta():
     """
@@ -42,7 +35,6 @@ def save_history(knowl, who):
     TODO also calculate a diff with python's difflib and store it here.
     """
     history = getDBConnection().knowledge.history
-    history.ensure_index("time")
     h_item = {'_id': knowl.id,
               'title': knowl.title,
               'time': datetime.utcnow(),
@@ -62,14 +54,17 @@ def get_history(limit=25):
 def is_locked(knowlid, delta_min=10):
     """
     returns a lock (as True), if there has been a lock in the last @delta_min minutes; else False.
-    attention, it discardes all locks prior to @delta_min!
+    attention, it discards all locks prior to @delta_min!
     """
     from datetime import datetime, timedelta
     now = datetime.utcnow()
     tdelta = timedelta(minutes=delta_min)
     time = now - tdelta
     history = getDBConnection().knowledge.history
+    #try:
     history.remove({'state': 'locked', 'time': {'$lt': time}})
+    #except:
+    #    return None 
     # search for both: either locked OR has been saved in the last 10 min
     lock = history.find_one({'_id': knowlid, 'time': {'$gte': time}})
     return lock or False
@@ -80,7 +75,6 @@ def set_locked(knowl, who):
     when a knowl is edited, a lock is created. who is the user id.
     """
     history = getDBConnection().knowledge.history
-    history.ensure_index("time")
     lock_item = {'_id': knowl.id,
                  'title': knowl.title,
                  'time': datetime.utcnow(),
@@ -90,7 +84,7 @@ def set_locked(knowl, who):
 
 
 def get_knowl(ID, fields={"history": 0, "_keywords": 0}):
-    return get_knowls().find_one({'_id': ID}, fields=fields)
+    return get_knowls().find_one({'_id': ID}, fields)
 
 
 def knowl_title(kid):
@@ -98,7 +92,7 @@ def knowl_title(kid):
     just the title, used in the knowls in the templates for the pages.
     returns None, if knowl does not exist.
     """
-    k = get_knowl(kid, fields=['title'])
+    k = get_knowl(kid, ['title'])
     return k['title'] if k else None
 
 
@@ -106,7 +100,7 @@ def knowl_exists(kid):
     """
     checks, if the given knowl with ID=@kid exists
     """
-    return get_knowl(kid, fields={}) is not None
+    return get_knowl(kid) is not None
 
 
 def extract_cat(kid):
@@ -127,7 +121,7 @@ def refresh_knowl_categories():
     knowl should be a simple set union with the existing list of categories
     """
     # assumes that all actual knowls have a title field
-    cats = set((extract_cat(_['_id']) for _ in get_knowls().find(fields=[])))
+    cats = set((extract_cat(_['_id']) for _ in get_knowls().find({},[])))
     # set the categories list in the categories document in the 'meta' collection
     get_meta().save({'_id': CAT_ID, 'categories': sorted(cats)})
     return str(cats)
@@ -150,8 +144,8 @@ def get_categories():
 def get_knowls_by_category(cat):
     """searching for IDs that start with cat and continue with a dot + at least one char"""
     # TODO later on search for the knowl field 'cat'
-    # return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, fields=['title'])
-    return get_knowls().find({'cat': cat}, fields=['title'])
+    # return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, ['title'])
+    return get_knowls().find({'cat': cat}, ['title'])
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -257,7 +251,7 @@ class Knowl(object):
         a = []
         if len(a_query) > 0:
             users = getDBConnection().userdb.users
-            a = users.find({"$or": a_query}, fields=["full_name"])
+            a = users.find({"$or": a_query}, ["full_name"])
         return a
 
     @property
@@ -326,7 +320,7 @@ class Knowl(object):
         the given fields.
         """
         if not self._title or not self._content:
-            data = get_knowl(self._id, fields=fields)
+            data = get_knowl(self._id, fields)
             if data:
                 self._title = data['title']
                 self._content = data['content']

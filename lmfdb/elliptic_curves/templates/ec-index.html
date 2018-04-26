@@ -1,0 +1,209 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+{#
+<div>
+An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title="smooth")}} projective {{KNOWL("ag.curve",title="curve")}} of {{KNOWL("ag.curve.genus",title="genus")}} 1 with a rational basepoint $O$. 
+</div>
+#}
+<style type="text/css">
+.error_message {
+   padding: 4px;
+   color: {{color.red}};
+   font-size: 120%;
+   font-weight: bold;
+   margin: 20px;
+}
+</style>
+{% if err_msg %}
+<p class="error_message">
+{{err_msg}}
+</p>
+<p>
+  <input type=button value="Search again" onClick="history.go(-1)">
+</p>
+
+{% else %}
+<div>
+{{ KNOWL_INC('dq.ec.extent') }}
+</div>
+
+<h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over $\Q$</h2>
+
+<p>
+By {{ KNOWL('ec.q.conductor',title = "conductor")}}:
+{% for rnge in info.conductor_list %}
+<a href="?conductor={{rnge}}">{{rnge}}</a>
+{% endfor %}
+</p>
+<p>
+By {{ KNOWL('ec.q.rank', title="rank")}}:
+{% for r in info.rank_list: %}
+<a href="?rank={{r}}">{{r}}</a>
+{% endfor %}
+</p>
+<p>
+By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
+{% for t in info.torsion_list: %}
+<a href="?torsion={{t}}">{{t}}</a>
+{% endfor %}
+</p>
+<p>
+{#
+<a href={{url_for('.todays_curve')}}>Elliptic curve of the day</a>
+<br>
+#}
+A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the database
+</p>
+
+
+<h2> Find a specific curve or {{
+  KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients or 
+  {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }} </h2>
+{% if err_msg %}
+<form action={{url_for('ec.rational_elliptic_curves')}}>
+{% else %}
+<form>
+{% endif %}
+<input type='text' name='label' size=25 example="11.a2">
+<button type='submit' name='jump' value='curve or isogeny class label'
+        >curve, label or isogeny class label</button>
+<br><span class="formexample">e.g. 11.a2 or 389.a or Cremona:11a1 or 
+[0,1,1,-2,0] or [-3024, 46224]
+</span>
+</form>
+
+<h2> Search </h2>
+Please enter a value or leave blank:
+<p></p>
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  <table>
+    <tr>
+      <td>{{ KNOWL('ec.q.conductor',title = "conductor") }}</td>
+     <td>
+       <input type='text' name='conductor' example="389" size=10 value="{{conductor}}" />
+     </td>
+     <td><span class="formexample"> e.g. 389 or 100-200</span></td>
+
+      <td>{{ KNOWL('ec.q.j_invariant',title = "j-invariant") }}</td>
+     <td>
+       <input type='text' name='jinv' example=1728 size=10 value="{{jinv}}" />
+     </td>
+     <td><span class="formexample"> e.g. 1728 or -4096/11</span></td>
+    </tr>
+
+
+   <tr>
+   <td>
+    {{ KNOWL('ec.q.rank',title="rank") }}
+    </td>
+           <td>
+           <input type='text' name='rank' example="0" size=10 value="{{rank}}" />
+           </td>
+           <td><span class="formexample"> e.g. 0 </span>
+           </td>
+   <td>
+    {{ KNOWL('ec.complex_multiplication',title="CM") }}
+    </td>
+     <td>
+         <select name='include_cm'>
+           <option value="include" selected>include</option>
+           <option value="exclude">exclude</option>
+           <option value="only">only</option>
+         </select>
+     </td>
+    </tr>
+
+    <tr>
+          <td>
+          {{ KNOWL('ec.q.torsion_order',title="torsion order") }}
+          </td>
+          <td>
+          <input type='text' name='torsion' example="2" size=10 value="{{torsion}}" />
+          </td>
+          <td>
+          <span class="formexample"> e.g. 2 </span>
+          </td>
+
+          <td>
+          {{ KNOWL('ec.q.torsion_subgroup',title="torsion structure") }}
+          </td>
+          <td>
+            {{ tor_struct_search_Q()|safe }}
+          </td>
+          <td>
+          &nbsp;
+          </td>
+      </tr>
+
+    <tr>
+          <td>
+          {{ KNOWL('ec.q.analytic_sha_order',title="analytic order of &#1064;") }}
+          </td>
+          <td>
+          <input type='text' name='sha' example="4" size=10 />
+          </td>
+          <td>
+          <span class="formexample"> e.g. 4 </span>
+          </td>
+          <td>
+          {{ KNOWL('ec.isogeny',title="isogeny degree") }}
+          </td>
+          <td>
+          <input type='text' name='isodeg' example="16" size=10 />
+          </td>
+          <td>
+          <span class="formexample"> e.g. 16 </span>
+          </td>
+      </tr>
+
+<tr>
+<td align=left>{{KNOWL('ec.maximal_galois_rep', title='maximal primes')}} 
+   <td><input type='text' name='surj_primes' size=10 example='2,3'></td>
+<td><span class="formexample"> e.g. 2,3</span></td>
+<td align=left>
+{{KNOWL('ec.maximal_galois_rep', title='non-maximal primes')}} 
+  <select name='surj_quantifier'>
+  <option value='include'>include</option>
+  <option value='exactly'>exactly</option>
+  </select>
+</td>
+<td><input type='text' name='nonsurj_primes' size=10 example='2,3'></td>
+<td><span class="formexample"> e.g. 2,3</span></td>
+</tr>
+
+
+    <tr>
+      <td>{{ KNOWL('ec.q.optimal',title="Optimal only") }}</td>
+      <td>
+         <select name='optimal'>
+{% if optimal=='on' %}
+           <option value="">No</option>
+           <option value="on" selected="yes">Yes</option>
+{% else %}
+           <option value="">No</option>
+           <option value="on">Yes</option>
+{% endif %}
+         </select>
+      </td>
+
+
+    </tr>
+
+<tr>
+<td align=left colspan=4>Maximum number of curves to display <input type='text' name='count' value={{count}} size=10 />
+</td>
+</tr>
+
+
+  </table>
+<p></p>
+<td><button type='submit' value='Search'>Search</button></td>
+
+</form>
+
+{% endif %}
+
+
+{% endblock %}

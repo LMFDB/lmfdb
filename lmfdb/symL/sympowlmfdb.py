@@ -48,7 +48,6 @@ ACKNOWLEDGEMENT (from sympow readme):
 ########################################################################
 
 import os
-import weakref
 
 from sage.structure.sage_object import SageObject
 from sage.misc.all import pager, verbose
@@ -164,7 +163,7 @@ class SympowLMFDB(SageObject):
         bad_primes_l = [i for i in vv if re.match(r'sp %d: Euler' % n, i)]
 
         bad_primes = [(sage.rings.all.Integer(i.split()[5]),
-                      R(i.split()[7]).coeffs()) for i in bad_primes_l]
+                       R(i.split()[7]).coefficients(sparse=False)) for i in bad_primes_l]
 
         cond_rootn_string = [i for i in vv if re.search('conductor', i)].pop()
         cond_rootn_string = cond_rootn_string.replace(',', ' ')

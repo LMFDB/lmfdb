@@ -1,6 +1,12 @@
 {% extends "homepage.html" %}
 {% block content %}
 
+{% if level > 0 %}
+{% set level_search = level %}
+{% else %}
+{% set level_search = level_range %}
+{% endif %}
+
 <script src="{{ url_for('static', filename='jquery.column.min.js')}}" type="text/javascript" charset="utf-8"></script>
  <script src="{{ url_for('mwf.static', filename='maass_scripts.js')}}" type="text/javascript" charset="utf-8"></script>
  <script type="text/javascript" charset="utf-8">
@@ -17,15 +23,15 @@ var evTable = $("table#eigenvalues").dataTable(
                  {"sWidth": "5%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "5%", "bSortable": false, "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "20%", "bSortable": true,  "bSearchable": true, "sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric"},
-                 {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
+                 {"sWidth": "10%", "bSortable": false, "bSearchable": true,"sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left","sType":"numeric"},
                  {"sWidth": "5%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "5%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:left"},
                  {"sWidth": "10%", "bSortable": false, "bSearchable": false,"sClass": "alignLeft","fnRender":"text-align:right","sType":"numeric"},
                  {"sWidth": "20%", "bSortable": false, "bSearchable":
- false,"sClass": "alignLeft", "fnRender":"text-align:left","minWidth":"200px"}],  
-    "bSort":true,
-    "iDisplayLength": 15,    
+ false,"sClass": "alignLeft", "fnRender":"text-align:left","minWidth":"200px"}],
+    "bSort":false,
+    "iDisplayLength": 15,
     "iDisplayStart": 0,
     "fnSort":[[1,"asc"],[2,"asc"],[3,"asc"]],
     "oLanguage": {
@@ -34,21 +40,24 @@ var evTable = $("table#eigenvalues").dataTable(
             "sInfo": "Displaying _START_ to _END_ of _TOTAL_ eigenvalues",
             "sInfoEmpty": "Showing 0 to 0 of 0 records",
             "sInfoFiltered": "(filtered from _MAX_ total eigenvalues)",
-            "sSearch":"Filter records:",
+            "sSearch":"Filter by the first five columns:",
             "oPaginate": {
                         "sPrevious": "Previous",
                         "sNext": "Next"
                 }
-     }, 
+     },
      "bjQueryUI":true,
      "sPaginationType": "full_numbers",
      "sDom": 'ti<"paging"p><"bottom"lfr><"filterbox"><>',
-     "sScorollX": "500px", 
+     "sScorollX": "500px",
      "bStateSave": false,
-     "aLengthMenu": [[15, 25, 50, 100 ,200, -1], [15, 25, 50, 100, 200, "All"]],
+     "aLengthMenu": [[15, 25, 50, 100 ,200, 500, -1], [15, 25, 50, 100, 200, 500, "All"]],
      "bAutoWidth": false,
      "oSearch": { "sSearch": "", "bRegex": false, "bSmart": true },
  });
+
+$('.dataTables_filter input').attr("placeholder", "Strings to filter by");
+$('.dataTables_filter input').attr("title", "E.g. 'even 2.' will give all even forms between 2 and 3.");
 
 /* Add filtering box if we don't have a fixed weight*/
 
@@ -64,36 +73,24 @@ $('#eigenvalues_filter').append(s);
 /* Add event listener to the weight filtering */
 $('#weight').change( function() { evTable.fnDraw(); } );
 {% endif %}
-evTable.fnDraw(); 
-$('#eigenvalues_length').css("width","50%")
-$('#eigenvalues').css("width","875px")
+evTable.fnDraw();
 $('#eigenvalues_wrapper').css("width","875px")
-$('#eigenvalues_paginate').css("width","75%")
-$('#eigenvalues_paginate').css("text-align","left")
-$('.paging_full_numbers').css('width','400px')
-$('#eigenvalues_first').css('padding','10px')
-$('#eigenvalues_last').css('padding','10px')
-$('#eigenvalues_next').css('padding','10px')
-$('#eigenvalues_previous').css('padding','10px')
 
-s='<div id="newsearch" class="newsearch"></div>';
+s='<h1>New Search</h1>';
 $('#content').append(s);
-/* $('#content').append($("knowl"));*/
-s='<h2>New Search</h2>';
-$('#newsearch').append(s);;
 s='<form name="search" method = "post" action="{{url_for('.render_maass_waveforms')}}" id="newsearchform" ></form>';
-$('#newsearch').append(s);
+$('#content').append(s);
 s='<input type="hidden" name="search" value="true">';
 $('#newsearchform').append(s);
 s='<table id="newsearchtable"></table>';
 $('#newsearchform').append(s);
-s='<tr><td>Level in range:</td><td><input type="text" name="level_range" value="" placeholder="1..10"></td></tr>';
+s='<tr><td>Level in range:</td><td><input type="text" name="level_range" value="{{level_search}}" placeholder="1..10"></td></tr>';
 $('#newsearchtable').append(s);
-s='<tr><td>R in range:</td><td><input type="text" name="ev_range" value="" placeholder="9.5..10"></td></tr>';
+s='<tr><td>R in range:</td><td><input type="text" name="ev_range" value="{{ev_range}}" placeholder="9.5..10"></td></tr>';
 $('#newsearchtable').append(s);
 s='<tr><td>Weight:</td><td><input type="text" name="weight" value="" placeholder="0"><span class="formexample">(leave blank for weight 0)</span></td></tr>';
 $('#newsearchtable').append(s);
-s='<tr><td>Character:</td><td><input type="text" name="character" value="" placeholder="0"><span class="formexample">(0 means trivial character, leave blank for all characters)</span></td></tr>';
+s='<tr><td>Character:</td><td><input type="text" name="character" value="" placeholder="1"><span class="formexample">(1 means trivial character, leave blank for all characters)</span></td></tr>';
 $('#newsearchtable').append(s);
 s='<tr><td colspan="2"><input type="submit" name="Submit" value="Search"></td> </tr>';
 $('#newsearchtable').append(s);
@@ -101,29 +98,18 @@ $('#newsearchtable').append(s);
  });
 
 </script>
-<style type="text/css">
-
-a.paginate_button {
-    padding:10px;
- } 
-a.paginate_active {
-    font-weight:bold;
-    padding:10px;
- } 
-</style>
-
 
 {% if info.error is defined %}
 
 <h1>There was an error in meeting your previous request. Please change parameters.</h1>
 
-<div> 
+<div>
 <h2> Error message: </h2>% extends "homepage.html" %}
 
 {{ info.error | safe }}
 </div>
 {% endif %}
-<h1>{{info.title}}</h1>
+
 
 
 {% if evs is defined %}
@@ -132,11 +118,11 @@ a.paginate_active {
 {% set ncols = table.ncols %}
 {% set data = table.data %}
 
-<h2>Eigenvalues</h2>
+<h1>Eigenvalues</h1>
 <!--div id="searchresults" -->
 <table class="ntdata pretty" id="eigenvalues">
   <colgroup>
-    <col/> <col/><col/> 
+    <col/> <col/><col/>
     <col align="char" char="."/>
     <col/> <col/><col/> <col/> <col/> <col/>
   </colgroup>
@@ -162,41 +148,41 @@ a.paginate_active {
     {% for r in range(0,nnrows) %}
     {% if data[r] is defined %}
     <tr>
-        <td>            
+        <td>
              {% if data[r].N is defined %} {{ data[r].N}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].k is defined %} {{ data[r].k}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].ch is defined %} {{ data[r].ch | safe }}  {% endif %}
            </td>
-           <td>            
-             {% if data[r].R is defined %} 
-               {% if data[r].url is defined %} 
+           <td>
+             {% if data[r].R is defined %}
+               {% if data[r].url is defined %}
                <a href="{{ data[r].url}}">{{data[r].R}}</a>
                {% else %}
                {{data[r].R}}
                {% endif %}
             {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].symmetry is defined %} {{ data[r].symmetry}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].err is defined %} {{ data[r].err}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].dim is defined %} {{ data[r].dim}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].numc is defined %} {{ data[r].numc}}  {% endif %}
            </td>
-           <td>            
+           <td>
              {% if data[r].fricke is defined %} {{ data[r].fricke}}  {% endif %}
            </td>
 
-           <td>            
+           <td>
              {% if data[r].cuspevs is defined %} {{ data[r].cuspevs}}  {% endif %}
            </td>
     </tr>

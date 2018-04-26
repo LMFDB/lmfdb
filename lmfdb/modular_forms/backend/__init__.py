@@ -1,4 +1,6 @@
-# from mf_utils import ModularFormDisplay
-from mf_classes import MFDataTable
+# -*- coding: utf-8 -*-
+
 import mf_classes
+assert mf_classes
 import mf_utils
+assert mf_utils

@@ -3,7 +3,7 @@ from flask import render_template, request, url_for
 import sqlite3
 import os
 
-from sage.all import RealField, RealIntervalField, ZZ, gamma
+from sage.all import RealField, RealIntervalField, ZZ
 
 RR = RealField(63)
 

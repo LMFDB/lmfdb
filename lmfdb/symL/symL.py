@@ -3,6 +3,7 @@ r"""
 AUTHORS:
 
 - Rishikesh, Mark Watkins 2012
+- David Lowry-Duda 2017
 """
 
 ########################################################################
@@ -13,17 +14,11 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 ########################################################################
 
-import os
-import weakref
 
 from sage.structure.sage_object import SageObject
-from sage.misc.all import pager, verbose
 import sage.rings.all
 
-
-from sage.schemes.elliptic_curves.constructor import EllipticCurve
-
-from sage.rings.arith import binomial
+from sage.all import binomial
 from sympowlmfdb import sympowlmfdb
 
 
@@ -77,41 +72,16 @@ class SymmetricPowerLFunction(SageObject):
         if m % 2 == 0:
             F = F * (1 - p ** (m // 2) * x)
 
-        return F.coeffs()
+        return F.coefficients(sparse=False)
 
     def an_list(self, upperbound=100000):
-        from sage.rings.fast_arith import prime_range
-        PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', 30)
-        x = PP('x')
-        prime_l = prime_range(upperbound)
-        result = upperbound * [1]
-
-        for p in prime_l:
-            euler_factor = (1 / (PP(self.eulerFactor(p)))).padded_list()
-
-            if len(euler_factor) == 1:
-                for j in range(1 + upperbound // p):
-                    result[j * p - 1] = 0
-                continue
-
-            k = 1
-            while True:
-                if p ** k > upperbound:
-                    break
-                for j in range(1 + upperbound // (p ** k)):
-                    if j % p == 0:
-                        continue
-                    result[j * p ** k - 1] *= euler_factor[k]
-
-                k += 1
-
-        return result
+        #from sage.rings.fast_arith import prime_range # imported but unused
+        from lmfdb.utils import an_list
+        return an_list(self.eulerFactor, upperbound=upperbound,
+                       base_field=sage.rings.all.RationalField())
 
     def _construct_L(self, upperbound=10000):
-        """
-        Construct L function
-
-        """
+        """Construct L function"""
         try:
             return self._L
         except AttributeError:
@@ -204,11 +174,8 @@ def symmetricEulerFactor(E, m, p):
 
 
 def symmetricPowerLfunction(E, n):
-    """
-    gives lcalc version of symmetric power L function
-    """
+    """gives lcalc version of symmetric power L function"""
+    bad_primes, conductor, root_number = sympowlmfdb.local_data(E, n)
 
-    bad_primes, conductor, root_number = sympow.local_data(E, n)
-
-
+#What is the point of this last line?
 sympowlmfdb
