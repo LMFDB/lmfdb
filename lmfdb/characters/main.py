@@ -339,7 +339,7 @@ def dirichlet_group_table(**args):
         char_number_list = [int(a) for a in char_number_list.split(',')]
         info['poly'] = request.args.get("poly", '???')
     else:
-        return render_template("404.html", message='grouptable needs char_number_list argument')
+        return flask.abort(404, 'grouptable needs char_number_list argument')
     h, c = get_group_table(modulus, char_number_list)
     info['headers'] = h
     info['contents'] = c
