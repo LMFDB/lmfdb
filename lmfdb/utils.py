@@ -517,17 +517,8 @@ def search_cursor_timeout_decorator(cursor, skip, limit):
             If the query times out, it raises a ValueError
     """
 
-
-    ctx = ctx_proc_userdata()
-
-    if ctx['BETA']:
-        # 60 seconds should be plenty for beta and development
-        timeout = 60000;
-    else:
-        # 27 seconds timeout, hopefully enough to avoid google's timeout of 30s
-        timeout = 27000;
-
-    cursor = cursor.max_time_ms(timeout)
+    # 25 seconds, timeout, hopefully enough to avoid google's and gunicorn's timeout of 30s
+    cursor = cursor.max_time_ms(25000)
     try:
         ncursor = cursor.count()
 
@@ -539,6 +530,7 @@ def search_cursor_timeout_decorator(cursor, skip, limit):
 
         cursor = cursor.skip(skip).limit(limit)
     except ExecutionTimeout as err:
+        ctx = ctx_proc_userdata()
         flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage']);
         raise ValueError(err)
 
