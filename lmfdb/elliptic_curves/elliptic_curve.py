@@ -10,7 +10,7 @@ import tempfile
 import os
 import StringIO
 
-from lmfdb.utils import web_latex, to_dict, web_latex_split_on_pm, random_object_from_collection
+from lmfdb.utils import web_latex, to_dict, web_latex_split_on_pm, random_object_from_collection, search_cursor_timeout_decorator
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -244,14 +244,23 @@ def elliptic_curve_search(info):
         query['number'] = 1
 
     info['query'] = query
-    cursor = db_ec().find(query)
-    nres = cursor.count()
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-    res = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING),
-                       ('lmfdb_number', ASCENDING)]).skip(start).limit(count)
+    cursor = db_ec().find(query);
+    cursor = cursor.sort([('conductor', ASCENDING), ('iso_nlabel', ASCENDING),
+                       ('lmfdb_number', ASCENDING)]);
+    # equivalent to
+    # cursor = res
+    # nres = res.count()
+    # if(start >= nres):
+    #     start -= (1 + (start - nres) / count) * count
+    # if(start < 0):
+    #    start = 0
+    # res = res.skip(start).limit(count)
+    try:
+        start, nres, res = search_cursor_timeout_decorator(cursor, start, count);
+    except ValueError as err:
+        info['err'] = err;
+        return search_input_error(info, bread)
+
     info['curves'] = res
     info['curve_url'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
@@ -260,7 +269,6 @@ def elliptic_curve_search(info):
     info['count'] = count
     info['more'] = int(start + count < nres)
 
-    
     if nres == 1:
         info['report'] = 'unique match'
     elif nres == 2: 
