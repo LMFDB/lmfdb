@@ -87,13 +87,13 @@ class HomePageTest(LmfdbTest):
         """
         self.check_args("/EllipticCurve/Q/?conductor=100-200&jinv=&rank=&torsion=&torsion_structure=&sha=&surj_primes=&surj_quantifier=include&nonsurj_primes=&optimal=&count=100",
                         '[0, -1, 1, -887, -10143]')
-        self.check_args("/EllipticCurve/Q/?conductor=&jinv=&rank=0&torsion=2&torsion_structure=&sha=4&surj_primes=&surj_quantifier=include&nonsurj_primes=&optimal=&count=100",
+        self.check_args_with_timeout("/EllipticCurve/Q/?conductor=&jinv=&rank=0&torsion=2&torsion_structure=&sha=4&surj_primes=&surj_quantifier=include&nonsurj_primes=&optimal=&count=100",
                         '[0, -1, 0, -10560, -414180]')
         self.check_args("/EllipticCurve/Q/?conductor=&jinv=-4096%2F11&rank=&torsion=&torsion_structure=&sha=&surj_primes=&surj_quantifier=include&nonsurj_primes=&optimal=&count=100",
                         '169136.i3')
         self.check_args("/EllipticCurve/Q/?conductor=&jinv=&rank=&torsion=&torsion_structure=%5B2%2C4%5D&sha=&surj_primes=&surj_quantifier=include&nonsurj_primes=&optimal=&count=100",
                         '[0, 1, 0, -1664, -9804]')
-        self.check_args("/EllipticCurve/Q/?conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&surj_primes=&surj_quantifier=include&nonsurj_primes=2%2C3&optimal=&count=100",
+        self.check_args_with_timeout("/EllipticCurve/Q/?conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&surj_primes=&surj_quantifier=include&nonsurj_primes=2%2C3&optimal=&count=100",
                         '[1, -1, 1, -24575, 1488935]')
-        self.check_args("/EllipticCurve/Q/?conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=5&optimal=on&count=100",
+        self.check_args_with_timeout("/EllipticCurve/Q/?conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=5&optimal=on&count=100",
                         '[1, -1, 0, -1575, 751869]')
