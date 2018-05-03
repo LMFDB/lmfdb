@@ -9,6 +9,12 @@ class HomePageTest(LmfdbTest):
     def check_args(self, path, text):
         assert text in self.tc.get(path, follow_redirects=True).data
 
+
+    def check_args_with_timeout(self, path, text):
+        timeout_error = 'The search query took longer than expected!'
+        data = self.tc.get(path, follow_redirects=True).data
+        assert (text in data) or (timeout_error in data)
+
     # All tests should pass
     #
     # The page itself
