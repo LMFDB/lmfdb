@@ -11,6 +11,7 @@ selected_collections = None
 action = False
 file_output = None
 jdbs = None  #This is not a global, this fixes pyflakes problem in start_lmfdb_connection
+iud = None
 
 def start_lmfdb_connection():
 
@@ -28,9 +29,12 @@ def start_lmfdb_connection():
 
     #Trick pyflakes because it lacks name ignoring and can't detect the global
     global jdbs
+    global iud
     del globals()['jdbs']
+    del globals()['iud']
 
     globals()['jdbs'] = importlib.import_module('jsonify_db_structure')
+    globals()['iud'] = importlib.import_module('inventory_upload_data')
     if not debug:
         try:
             sys.stderr = save_stderr
@@ -95,15 +99,22 @@ def show_collections():
 def generate_inventory():
     global action
     action = True
-    if not file_output:
-        fh = sys.stdout
-    else:
-        fh = open(file_output, 'w')
 
     start_lmfdb_connection()
-    result = jdbs.parse_lmfdb_to_json(collections = selected_collections, databases = selected_dbs)
-    fh.write(json.dumps(result, indent=4, sort_keys = True))
-    if file_output: fh.close()
+    connection = jdbs.getDBConnection()
+    result = jdbs.parse_lmfdb_to_json(collections = selected_collections,
+        databases = selected_dbs, connection = connection)
+
+    if file_output:
+        fh = open(file_output, 'w')
+        fh.write(json.dumps(result, indent=4, sort_keys = True))
+        fh.close()
+    else:
+        invdb = connection['inventory']
+        for db in result:
+          for coll in result[db]:
+              iud.upload_collection_structure(invdb, db, coll, result)
+              iud.upload_collection_indices(invdb, db, coll, result)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

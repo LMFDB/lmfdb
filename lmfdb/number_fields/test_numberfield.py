@@ -12,8 +12,8 @@ class NumberFieldTest(LmfdbTest):
         assert '\chi_{1}' in L.data
 
     def test_hard_degree10(self):
-        #L = self.tc.get('/NumberField/10.10.1107649855354064.1')
-        #assert '10T36' in L.data
+        L = self.tc.get('/NumberField/10.10.1107649855354064.1')
+        assert '10T36' in L.data
         L = self.tc.get('/NumberField/10.10.138420300533025695415730492558689.1')
         assert '10T38' in L.data
 
@@ -96,6 +96,14 @@ class NumberFieldTest(LmfdbTest):
     def test_statistics(self):
         L = self.tc.get('/NumberField/stats', follow_redirects=True)
         assert 'Class number' in L.data 
+
+    def test_signature_search(self):
+        L = self.tc.get('/NumberField/?start=0&signature=%5B0%2C3%5D&count=100', follow_redirects=True)
+        assert '6.0.61131.1' in L.data
+
+        L = self.tc.get('/NumberField/?start=0&signature=%5B3%2C2%5D&count=100', follow_redirects=True)
+        assert '7.3.1420409.1' in L.data
+
 
 
 

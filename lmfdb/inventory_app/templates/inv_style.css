@@ -124,25 +124,34 @@ div.hide, span.hide{
     display: inline-block;
 }
 
-.viewerTable{
+#viewerTable{
     border: 1px solid black;
     table-layout: auto;
+    font-size: 110%;
+    width: 0px; /* unsets global CSS  width */
 }
 .viewerTableHeaders, .viewerTableEls{
-  border: 1px solid black;
-  padding : 5px;
+    border: 1px solid black;
+    padding-left: 4px;
 }
-.viewerTableHeaders {
-  font-weight: bold;
+.viewerTableHeaders td, .viewerTableEls td{
+    padding : 5px;
 }
-.viewerTableOdd{
+.tablesorter .viewerTableHeaders {
+    font-weight: bold;
+    font-size: 110%;
+}
+table.tablesorter tbody td{
+    background-color: unset;
+}
+table.tablesorter tr:nth-child(2n+2){
     background-color : #e8e8e8;
 }
-.viewerTableEven{
+table.tablesorter tr:nth-child(2n+1){
     background-color : #ffffff;
 }
 .viewerTableSpecial{
-    background-color : #ffe8e8;
+    background-color : #ffe8e8 !important;
 }
 .viewerTableSole{}
 .viewerTableSoleOdd{
@@ -189,6 +198,11 @@ h2.link{
   /* Link styled headings for names */
 }
 
+h1.warn{
+  color : red !important;
+  font-size : 200% !important;
+}
+
 #inv_main{
 
   float: left;
@@ -227,8 +241,36 @@ h2
     margin: 15px 0 10px 0;
 }
 
+.important{
+  color: red;
+  font-size:120%;
+  font-style:italic;
+}
+
 .err_text{
     color: red;
     font-size:120%;
     font-weight: bold;
+}
+
+.upload_box
+{
+    min-width : 40em;
+    min-height : 12em;
+    display : block;
+    margin : 0 0 1em 0;
+}
+.upload_div
+{
+  padding: 5px 5px 3em 5px;
+
+}
+
+.scrape_button {
+  min-width: 50px;
+  padding: none;
+  margin-left:2px;
+  height: 2em;
+  vertical-align: middle;
+  float:left;
 }

@@ -1,10 +1,11 @@
 from pymongo import MongoClient
 import json
 import logging, logging.handlers
+from lmfdb.base import getDBConnection
 
 #Contains the general data and functions for all inventory handling
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 #Email contact for app errors
 email_contact = 'rse@warwick.ac.uk'
@@ -42,13 +43,14 @@ index_fields = {'name':-1, 'keys':-2}
 def index_field_order():
     return sorted(index_fields, key = lambda s : abs(index_fields.get(s)))
 
-coll_status = {0: 'live', 1:'ops', 2:'beta', 4: 'old'}
+coll_status = {0: 'live', 1:'ops', 2:'beta', 4: 'old', 5:'gone'}
 #Live is normal. Ops includes any stats, rand etc. Beta is beta status, not yet on prod
 #Old means deprecated. Probably want to show only live and beta, and flag beta
+#Gone means a collection in inventory which is no longer in live data
 #Object describing DB structure. This is styled after a relational model
 class db_struc:
     name = 'inventory'
-    n_colls = 7
+    n_colls = 8
     db_ids = {STR_NAME : 'DB_ids', STR_CONTENT : ['_id', 'name', 'nice_name']}
     coll_ids = {STR_NAME : 'collection_ids', STR_CONTENT :['_id', 'db_id', 'name', 'nice_name', 'NOTES', 'INFO', 'scan_date', 'status']}
     fields_auto = {STR_NAME : 'fields_auto', STR_CONTENT : ['_id', 'coll_id', 'name', 'data']}
@@ -56,6 +58,7 @@ class db_struc:
     record_types = {STR_NAME : 'records', STR_CONTENT :['_id', 'coll_id', 'hash', 'name', 'descrip', 'schema', 'count']}
     rollback_human = {STR_NAME : 'rollback', STR_CONTENT:['_id', 'diff']}
     indexes = {STR_NAME : 'indexes', STR_CONTENT :['_id', 'name', 'coll_id', 'keys']}
+    ops = {STR_NAME : 'ops', STR_CONTENT:[]} #Ops has no fixed format
     def get_fields(self, which):
         if which =='auto':
             return self.fields_auto
@@ -87,17 +90,14 @@ def setup_internal_client(remote=True, editor=False):
     log_dest.info("Getting db client")
     global int_client, _auth_as_edit, _auth_on_remote
     if(int_client and _auth_as_edit == editor and _auth_on_remote == remote):
-	return True
+        return True
     try:
         if remote:
             #Attempt to connect to LMFDB
-            from lmfdb.base import getDBConnection
             int_client=getDBConnection()
-            return True
         else:
-            int_client = MongoClient("localhost", 27017)
-#           int_client = MongoClient("localhost", 37010)
-            return True
+            #Use local tunnel (for debugging)
+            int_client = MongoClient("localhost", 37010)
 
 #       Below was old way of doing auth. To be removed when working
 #        pw_dict = yaml.load(open("passwords.yaml"))
@@ -228,7 +228,6 @@ def init_run_log(level_name=None):
     if level_name:
         #Print the level change in warning or above mode
         log_dest.warning("Set level to "+level_name)
-
 
 def init_transac_log(level_name=None):
     """ Initialise logger for db transactions """

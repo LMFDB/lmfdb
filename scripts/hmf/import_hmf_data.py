@@ -16,14 +16,9 @@ username = pw_dict['data']['username']
 password = pw_dict['data']['password']
 hmfs = C.hmfs
 hmfs.authenticate(username, password)
-if 'forms' in hmfs.collection_names():
-    hmf_forms = hmfs.forms
-    hmf_stats = hmfs.forms.stats
-    print("Setting hmf_forms to {} and hmf_stats to {}".format('hmfs.forms','hmfs.forms.stats'))
-else:
-    hmf_forms = hmfs.forms.search
-    hmf_stats = hmfs.forms.search.stats
-    print("Setting hmf_forms to {} and hmf_stats to {}".format('hmfs.forms.search','hmfs.forms.search.stats'))
+hmf_forms = hmfs.forms
+hmf_stats = hmfs.forms.stats
+print("Setting hmf_forms to {} and hmf_stats to {}".format('hmfs.forms','hmfs.forms.stats'))
 
 hmf_fields = hmfs.fields
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only

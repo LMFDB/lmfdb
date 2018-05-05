@@ -19,9 +19,9 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunct
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
                        Lfunction_from_db)
-from LfunctionDatabase import get_instances_by_Lhash
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
-from Lfunctionutilities import p2sage, styleTheSign, getConductorIsogenyFromLabel
+from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
+                                getConductorIsogenyFromLabel)
 from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page
@@ -203,17 +203,6 @@ def set_info_for_start_page():
     info['learnmore'] = [('History of L-functions', url_for('.l_function_history'))]
 
     return info
-
-
-def get_bread(degree, breads=[]):
-    ''' Returns the two top levels of bread crumbs plus the ones supplied in breads.
-    '''
-    bc = [('L-functions', url_for('.l_function_top_page')),
-          ('Degree ' + str(degree), url_for('.l_function_degree_page', degree='degree' + str(degree)))]
-    for b in breads:
-        bc.append(b)
-    return bc
-
 
 ################################################################################
 #   Route functions, individual L-function homepages
@@ -513,71 +502,11 @@ def set_bread_and_friends(L, request):
         bread = get_bread(1, [(charname, request.url)])
 
     elif L.Ltype() == 'ellipticcurve':
-
-        for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
-            url = instance['url'];
-            name, obj_exists = name_and_object_from_url(url);
-            if obj_exists:
-                origins.append((name, "/"+url));
-            else:
-                name += '&nbsp;  n/a';
-                origins.append((name, ""));
-
-        if "," in L.Lhash:
-            for factor_Lhash in  L.Lhash.split(","):
-                for instance in sorted(get_instances_by_Lhash(factor_Lhash), key=lambda elt: elt['url']):
-                    url = instance['url'];
-                    name, obj_exists = name_and_object_from_url(url);
-                    if obj_exists:
-                        factors.append((name,  "/" + url));
-                    else:
-                        name += '&nbsp;  n/a';
-                        factors.append((name, ""));
-
-        if L.base_field() == '1.1.1.1': # i.e., QQ
-            label = L.label
-            if not isogeny_class_cm(label): # only show symmetric powers for non-CM curves
-                friends.append(
-                ('Symmetric square L-function', url_for(".l_function_ec_sym_page_label",
-                                                        power='2', label=label)))
-                friends.append(
-                ('Symmetric cube L-function', url_for(".l_function_ec_sym_page_label", power='3', label=label)))
-
-            bread = get_bread(2,
-                    [
-                        ('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                        (label,
-                            url_for('.l_function_ec_page',
-                                conductor_label=L.conductor,
-                                isogeny_class_label = L.isogeny_class_label
-                                )
-                         )
-                        ])
-
-            #TODO replace classical modular forms origin by adding an object to the database
-            if L.conductor <= 101:
-                origins.append(
-                        ('Modular form ' + (L.long_isogeny_class_label).replace('.', '.2'),
-                            url_for("emf.render_elliptic_modular_forms",
-                            level=L.conductor, weight=2,
-                            character=1, label=L.isogeny_class_label)
-                            ))
-            else:
-                origins.append(('Modular form ' + (L.long_isogeny_class_label).replace('.', '.2') +'&nbsp;  n/a', ""))
-
-        else:
-            bread = get_bread(
-                    L.degree ,
-                    [
-                        # FIXME there is no .l_function_ecnf_browse_page
-                        ('Elliptic curve', url_for('.l_function_ec_browse_page')),
-                        (L.label,
-                            url_for('.l_function_ecnf_page',
-                                field_label = L.field_label,
-                                conductor_label = L.conductor_label ,
-                                isogeny_class_label = L.long_isogeny_class_label)
-                        )
-                    ])
+        bread = L.bread
+        origins = L.origins
+        friends = L.friends
+        factors = L.factors
+        instances = L.instances
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
@@ -727,32 +656,11 @@ def set_bread_and_friends(L, request):
             bread = [('L-functions', url_for('.l_function_top_page'))]
 
     elif L.Ltype() == "general":
-        bread = [('L-functions', url_for('.l_function_top_page'))]
-
-        for instance in sorted(get_instances_by_Lhash(L.Lhash), key=lambda elt: elt['url']):
-            url = instance['url'];
-            instances.append((str(url), "/L/" + url))
-            name, obj_exists = name_and_object_from_url(url);
-
-            if not name:
-                name = ""
-
-            if obj_exists:
-                origins.append((name, "/"+url));
-            else:
-                name += '&nbsp;  n/a';
-                origins.append((name, ""));
-
-        if "," in L.Lhash:
-            for factor_Lhash in  L.Lhash.split(","):
-                for instance in sorted(get_instances_by_Lhash(factor_Lhash), key=lambda elt: elt['url']):
-                    url = instance['url'];
-                    name, obj_exists = name_and_object_from_url(url);
-                    if obj_exists:
-                        factors.append((name,  "/" + url));
-                    else:
-                        name += '&nbsp;  n/a';
-                        factors.append((name, ""));
+        bread = L.bread
+        origins = L.origins
+        friends = L.friends
+        factors = L.factors
+        instances = L.instances
 
     return (bread, origins, friends, factors, instances)
 
@@ -1288,51 +1196,3 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 
     s += '</table>\n'
     return s
-
-
-# TODO This needs to be able to handl any sort of L-function.
-#      There should probably be a more relevant field
-#      in the database, instead of trying to extract this from a URL
-def name_and_object_from_url(url):
-    from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
-    from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
-    from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
-    from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
-    from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
-    url_split = url.split("/");
-    name = None;
-    obj_exists = False;
-
-    if url_split[0] == "EllipticCurve":
-        if url_split[1] == 'Q':
-            # EllipticCurve/Q/341641/a
-            label_isogeny_class = ".".join(url_split[-2:]);
-            # count doesn't honor limit!
-            obj_exists = is_ec_isogeny_class_in_db(label_isogeny_class);
-        else:
-            # EllipticCurve/2.2.140.1/14.1/a
-            label_isogeny_class =  "-".join(url_split[-3:]);
-            obj_exists = is_ecnf_isogeny_class_in_db(label_isogeny_class);
-        name = 'Isogeny class ' + label_isogeny_class;
-
-    elif url_split[0] == "ModularForm":
-        if url_split[1] == 'GL2':
-            if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
-                # ModularForm/GL2/Q/holomorphic/14/2/1/a
-                full_label = ".".join(url_split[-4:])
-                name =  'Modular form ' + full_label;
-                obj_exists = is_newform_in_db(full_label);
-
-            elif  url_split[2] == 'TotallyReal':
-                # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
-                label = url_split[-1];
-                name =  'Hilbert modular form ' + label;
-                obj_exists = is_hmf_in_db(label);
-
-            elif url_split[2] ==  'ImaginaryQuadratic':
-                # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
-                label = '-'.join(url_split[-3:])
-                name = 'Bianchi modular form ' + label;
-                obj_exists = is_bmf_in_db(label);
-
-    return name, obj_exists

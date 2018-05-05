@@ -1,0 +1,34 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_general.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='scraper.js') }}"></script>
+
+<script type="text/javascript">
+  var uid = "{{uid}}";
+  var waitTime = 1; //Check progress every n seconds, doubling each time
+  var maxWait = 32; //Max wait between checks
+
+  $( document ).ready(function(){
+    //Fetch content and fill blocklist and DOM
+    startProgressMeter();
+  });
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %}
+  Inventory Rescrape
+{% endblock title_block %}
+
+{% block main_body %}
+<div id = 'meter'>
+  <div id='spinner'>
+  <img src="{{url_for('inventory_app.static', filename='spinner.gif')}}" width=100>
+  </div>
+  <br></br>
+  <span id='progressSpan'></span>
+</div>
+<div id='summaryDiv'>
+</div>
+{% endblock main_body %}

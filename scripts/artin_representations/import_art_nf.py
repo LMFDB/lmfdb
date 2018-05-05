@@ -1,3 +1,4 @@
+#!/usr/local/bin/sage -python
 import sys, time, os
 assert time
 import bson

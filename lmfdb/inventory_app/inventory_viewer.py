@@ -4,11 +4,38 @@ import inventory_helpers as ih
 import lmfdb_inventory as inv
 import inventory_db_core as idc
 from inventory_db_inplace import update_fields
+from inventory_live_data import get_lockout_state
+from scrape_helpers import check_scrapes_by_coll_id
 from copy import deepcopy
 from lmfdb.utils import comma
 
-
 #Functions to populate viewer pages
+
+def is_valid_db(db_name):
+
+    return is_valid_db_collection(db_name, None)
+
+def is_valid_db_collection(db_name, collection_name):
+    """Check if db and collection name (if not None) exist"""
+    try:
+        inv.setup_internal_client()
+        db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception as e:
+        raise ih.ConnectOrAuthFail("")
+        return False
+    try:
+        db_id = idc.get_db_id(db, db_name)
+        if not db_id['exist']:
+            return False
+        if collection_name:
+            coll_id = idc.get_coll_id(db, db_id['id'], collection_name)
+            if not coll_id['exist']:
+                return False
+    except Exception as e:
+        inv.log_dest.error('Failed checking existence of '+db_name+' '+collection_name+' '+str(e))
+        return False
+    return True
+
 def get_nicename(db_name, collection_name):
     """Return the nice_name string for given db/coll pair"""
 
@@ -38,7 +65,7 @@ def gen_retrieve_db_listing(db, db_name=None):
 
     db -- LMFDB connection to inventory db
     db_name -- If absent, get listing of all dbs, if present, get listing of collections in named db
-    
+
     NB connection must have been setup and checked!
     """
 
@@ -55,7 +82,7 @@ def gen_retrieve_db_listing(db, db_name=None):
             table = db[coll_name]
             query = {inv.ALL_STRUC.coll_ids[inv.STR_CONTENT][1]:_id}
             records = list(table.find(query, {'_id': 1, 'name' : 1, 'nice_name':1, 'status':1}))
-            records = [(rec['name'], rec['nice_name'], idc.count_records_and_types(db, rec['_id'], as_string=True), ih.code_to_status(rec['status'])) for rec in records]
+            records = [(rec['name'], rec['nice_name'], idc.count_records_and_types(db, rec['_id'], as_string=True), ih.code_to_status(rec['status']), check_locked(db, rec['_id'])) for rec in records]
     except Exception as e:
         inv.log_dest.error("Something went wrong retrieving db info "+str(e))
         records = None
@@ -249,7 +276,7 @@ def get_indices_for_display(full_name):
     except Exception as e:
         raise ih.ConnectOrAuthFail("")
         return None
-    
+
     try:
         parts = ih.get_description_key_parts(full_name)
         records = retrieve_indices(db, parts[0], parts[1])
@@ -302,7 +329,7 @@ def apply_edits(diff):
 
 
 def apply_submitted_edits(response):
-    """ Apply edits submitted as a diffs object via web, i.e member of response obj
+    """ Attempt to apply edits submitted as a diffs object via web, i.e member of response obj
     """
     try:
         inv.log_transac.info(str(response.referrer)+' : '+str(response.data))
@@ -319,10 +346,12 @@ def apply_submitted_edits(response):
         raise DiffDecodeError(str(e))
 
     try:
+        check_locks(resp_str) # Throws custom error if locked
         validate_edits(resp_str) #This throws custom exceptions
         resp_str = process_edits(resp_str)
         update_fields(resp_str)
     except Exception as e:
+        #Log and re-raise
         inv.log_dest.error("Error in edit validation "+str(e))
         raise e
 
@@ -398,8 +427,33 @@ def process_edits(diff):
 
     return diff
 
-#  Custom exceptions for diff validation
+# Check for locks oncoll before applying
+def check_locked(inv_db, coll_id):
+    return check_scrapes_by_coll_id(inv_db, coll_id)
 
+def check_locks(resp):
+    """Check if request pertains to locked coll
+    or editing is locked globally
+    """
+    inv.setup_internal_client()
+    try:
+        db = inv.int_client[inv.ALL_STRUC.name]
+    except Exception:
+        raise ih.ConnectOrAuthFail("")
+    if get_lockout_state():
+        raise EditLockError('Global Edit Lock')
+    try:
+        db_name = resp['db']
+        coll_name = resp['collection']
+        db_id = idc.get_db_id(db, db_name)
+        coll_id = idc.get_coll_id(db, db_id['id'], coll_name)
+        if check_locked(db, coll_id['id']):
+            raise EditLockError('Collection locked')
+    except Exception as e:
+        inv.log_dest.error("Error in locking "+str(e))
+        raise e
+
+#  Custom exceptions for diff validation ++++++++++++++++++++++++++++++++++
 
 class DiffKeyError(KeyError):
     """Raise in place of KeyError for edit diffs"""
@@ -429,14 +483,21 @@ class DiffCollideError(RuntimeError):
         mess = "Edits collided "+message
         super(RuntimeError, self).__init__(mess)
 
+class EditLockError(RuntimeError):
+    """Use when editing is locked"""
+    errcode = 16
+    def __init__(self, message):
+        mess = message
+        super(RuntimeError, self).__init__(mess)
+
 class DiffUnknownError(RuntimeError):
     """Raise for errors not otherwise specified"""
-    errcode = 16
+    errcode = 32
     def __init__(self, message):
         mess = "Unknown error "+message
         super(RuntimeError, self).__init__(mess)
 
-err_registry = {1:DiffKeyError(" "), 2:DiffBadType(""), 4:DiffDecodeError(""), 8:DiffCollideError(""), 16:DiffUnknownError("")}
+err_registry = {1:DiffKeyError(" "), 2:DiffBadType(""), 4:DiffDecodeError(""), 8:DiffCollideError(""), 16:EditLockError(""), 32:DiffUnknownError("")}
 
 #   End custom exceptions for diff validation
 
