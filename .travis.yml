@@ -76,7 +76,7 @@ script:
     # run nosetests in parallel with the aid of parallel
     # we cannot use the option --processes in nosetests, as MongoDB doesn't support forking
     # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once
-    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 4 --results nosetests  --progress --verbose -a list ${SAGE_DIR}/local/bin/nosetests -v -s --testmatch=${TESTMATCH} ${COVERAGE}'
+    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 3 --results nosetests  --progress --verbose -a list ${SAGE_DIR}/local/bin/nosetests -v -s --testmatch=${TESTMATCH} ${COVERAGE}'
 
 after_failure:
     # if some process failed, it will be clear in joblog which one failed

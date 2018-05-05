@@ -11,6 +11,7 @@ from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex
 from lmfdb.local_fields.main import show_slope_content
 
+
 from markupsafe import Markup
 
 import re
@@ -21,7 +22,7 @@ from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
 
 from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, group_knowl_guts, group_cclasses_knowl_guts, group_character_table_knowl_guts, aliastable
 
-from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, random_object_from_collection, web_latex_split_on_pm
+from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, random_object_from_collection, web_latex_split_on_pm, search_cursor_timeout_decorator
 from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
@@ -673,13 +674,19 @@ def number_field_search(info):
     if 'download' in info and info['download'] != '0':
         return download_search(info, res)
 
-    nres = res.count()
-    res = res.skip(start).limit(count)
+    # equivalent to
+    # nres = res.count()
+    #if(start >= nres):
+    #    start -= (1 + (start - nres) / count) * count
+    #if(start < 0):
+    #    start = 0
+    # res = res.skip(start).limit(count)
+    try:
+        start, nres, res = search_cursor_timeout_decorator(res, start, count);
+    except ValueError as err:
+        info['err'] = err;
+        return search_input_error(info, bread)
 
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
 
     info['fields'] = res
     info['number'] = nres
