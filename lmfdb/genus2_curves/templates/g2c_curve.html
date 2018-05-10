@@ -280,14 +280,16 @@ function show_invs(invstyle) {
 
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
-<table>
-    <tr>
-        <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.st_group_link|safe}}</td>
-    </tr>
-    <tr>
-        <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\) </td>
-    </tr>
-</table>
+<p>
+    <table>
+        <tr>
+            <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.st_group_link|safe}}</td>
+        </tr>
+        <tr>
+            <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\) </td>
+        </tr>
+    </table>
+</p>
 
 <h3 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition') }} </h3>
 
