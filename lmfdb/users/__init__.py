@@ -20,7 +20,6 @@ login_manager.init_app(app)
 app.register_blueprint(login_page, url_prefix="/users")
 
 users_logger = make_logger("users", hl=True)
-users_logger.info("Initializing Artin representations blueprint")
 
 if StrictVersion(FLASK_LOGIN_VERSION) < StrictVersion(FLASK_LOGIN_LIMIT):
     users_logger.warning("DEPRECATION-WARNING: flask-login is older than version {version}. "
