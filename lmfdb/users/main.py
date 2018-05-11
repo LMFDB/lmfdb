@@ -48,9 +48,9 @@ def get_username(uid):
 @app.context_processor
 def ctx_proc_userdata():
     userdata = {}
-    userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
-    userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
-    userdata['user_is_authenticated'] = current_user.is_authenticated()
+    userdata['userid'] = 'anon' if current_user.is_anonymous else current_user._uid
+    userdata['username'] = 'Anonymous' if current_user.is_anonymous else current_user.name
+    userdata['user_is_authenticated'] = current_user.is_authenticated
     try:
         roles = getDBConnection()['admin'].command(SON({"connectionStatus":int(1)}))
         userdata['user_can_write'] = 'readWrite' in [el['role'] for el in roles['authInfo']['authenticatedUserRoles'] if el['db']=='inventory']
