@@ -18,7 +18,6 @@ from markupsafe import Markup
 from lmfdb.utils import to_dict, random_value_from_collection, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
-from . import hmf_logger
 
 def db_forms():
     hmfs = getDBConnection().hmfs
@@ -94,7 +93,6 @@ def add_space_if_positive(texified_pol):
     >>> add_space_if_positive('-1')
     '-1'
     """
-    hmf_logger.info("texified_pol is {}.".format(texified_pol))
     if texified_pol[0] == '-':
         return texified_pol
     return "\phantom{-}" + texified_pol
@@ -416,7 +414,6 @@ def render_hmf_webpage(**args):
     info['eigs'] = [{'eigenvalue': add_space_if_positive(teXify_pol(eigs[i])),
                      'prime_ideal': teXify_pol(primes[i]),
                      'prime_norm': primes[i][1:primes[i].index(',')]} for i in range(n)]
-    hmf_logger.info("\n".join(k['eigenvalue'] for k in info['eigs'][:10]))
 
     try:
         display_eigs = request.args['display_eigs']
