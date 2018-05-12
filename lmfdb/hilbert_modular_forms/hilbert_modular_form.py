@@ -18,6 +18,7 @@ from markupsafe import Markup
 from lmfdb.utils import to_dict, random_value_from_collection, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
+
 def db_forms():
     hmfs = getDBConnection().hmfs
     return hmfs.forms
@@ -81,6 +82,20 @@ def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing poly
 
     return o_str
 
+def add_space_if_positive(texified_pol):
+    """
+    Add a space if texified_pol is positive to match alignment of positive and
+    negative coefficients.
+
+    Examples:
+    >>> add_space_if_positive('1')
+    '\phantom{-}1'
+    >>> add_space_if_positive('-1')
+    '-1'
+    """
+    if texified_pol[0] == '-':
+        return texified_pol
+    return "\phantom{-}" + texified_pol
 
 @hmf_page.route("/")
 def hilbert_modular_form_render_webpage():
@@ -145,19 +160,19 @@ def hilbert_modular_form_search(**args):
         parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
     except ValueError:
         return search_input_error()
-        
+
     if 'cm' in info:
         if info['cm'] == 'exclude':
             query['is_CM'] = 'no'
         elif info['cm'] == 'only':
             query['is_CM'] = 'yes'
-                
+
     if 'bc' in info:
         if info['bc'] == 'exclude':
             query['is_base_change'] = 'no'
         elif info['bc'] == 'only':
             query['is_base_change'] = 'yes'
-                     
+
     count = parse_count(info,100)
     start = parse_start(info)
 
@@ -396,7 +411,7 @@ def render_hmf_webpage(**args):
 
     primes = hmf_field['primes']
     n = min(len(eigs), len(primes))
-    info['eigs'] = [{'eigenvalue': teXify_pol(eigs[i]),
+    info['eigs'] = [{'eigenvalue': add_space_if_positive(teXify_pol(eigs[i])),
                      'prime_ideal': teXify_pol(primes[i]),
                      'prime_norm': primes[i][1:primes[i].index(',')]} for i in range(n)]
 
