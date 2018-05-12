@@ -12,7 +12,12 @@ __all__ = ['LmfdbUser', 'user_exists']
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
 from lmfdb import base
-from main import logger
+from main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
+from distutils.version import StrictVersion
+
+# Read about flask-login if you are unfamiliar with this UserMixin/Login
+from flask.ext.login import UserMixin
+
 
 def get_users():
     return base.getDBConnection().userdb.users
@@ -61,10 +66,6 @@ def bchash(pwd, existing_hash = None):
     except:
         logger.warning("Failed to return bchash, perhaps bcrypt is not installed");
         return None
-
-# Read about flask-login if you are unfamiliar with this UserMixin/Login
-from flask.ext.login import UserMixin
-
 
 class LmfdbUser(UserMixin):
     """
@@ -137,7 +138,9 @@ class LmfdbUser(UserMixin):
 
     def is_anonymous(self):
         """required by flask-login user class"""
-        return not self.is_authenticated()
+        if StrictVersion(FLASK_LOGIN_VERSION) < StrictVersion(FLASK_LOGIN_LIMIT):
+            return not self.is_authenticated()
+        return not self.is_authenticated
 
     def is_admin(self):
         """true, iff has attribute admin set to True"""
