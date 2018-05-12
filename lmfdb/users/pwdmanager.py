@@ -17,6 +17,7 @@ from distutils.version import StrictVersion
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
 from flask.ext.login import UserMixin
+from flask.ext.login import AnonymousUserMixin
 
 
 def get_users():
@@ -237,9 +238,6 @@ def get_user_list():
         ret.append((e['_id'], name))
     return ret
 
-from flask.ext.login import AnonymousUserMixin
-
-
 class LmfdbAnonymousUser(AnonymousUserMixin):
     """
     The sole purpose of this Anonymous User is the 'is_admin' method
@@ -250,6 +248,12 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
 
     def name(self):
         return "Anonymous"
+
+    # For versions of flask_login earlier than 0.3.0,
+    # AnonymousUserMixin.is_anonymous() is callable. For later versions, it's a
+    # property. To match the behavior of LmfdbUser, we make it callable always.
+    def is_anonymous(self):
+        return True
 
 if __name__ == "__main__":
     print "Usage:"
