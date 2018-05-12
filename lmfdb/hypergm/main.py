@@ -299,7 +299,7 @@ def hgm_search(info):
                 listprocess=lambda a: sorted(a, reverse=True))
         # Make a version to search reversed way
         if not family_search:
-            parse_ints(info, query, 'conductor')
+            parse_ints(info, query, 'conductor', 'Conductor' , 'cond')
             parse_rational(info, query, 't')
             parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
     except ValueError:
