@@ -17,7 +17,7 @@ Inventory Control Panel
   <div id='dialog'></div>
   <div class='listing'>
   <div class='unbreaking'>
-      {% if current_user.is_authenticated() %}
+      {% if user_is_authenticated %}
       <h2>General Inventory Control</h2>
         <input type='button' id = 'markgone' title = 'Check which collections are gone and mark' value ='Mark Collections Gone' onclick='sendControlRequest("mark_gone")'>
         </p>
