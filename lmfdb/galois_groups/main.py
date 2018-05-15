@@ -143,6 +143,7 @@ def galois_group_search(**args):
     try:
         parse_ints(info,query,'n','degree')
         parse_ints(info,query,'t')
+        parse_ints(info,query,'order')
         for param in ('cyc', 'solv', 'prim', 'parity'):
             parse_bool(info,query,param,minus_one_to_zero=(param != 'parity'))
         degree_str = prep_ranges(info.get('n'))
@@ -153,6 +154,9 @@ def galois_group_search(**args):
 
     count = parse_count(info, 50)
     start = parse_start(info)
+    print ''
+    print str(query)
+    print ''
 
     res = C.transitivegroups.groups.find(query).sort([('n', pymongo.ASCENDING), ('t', pymongo.ASCENDING)])
     nres = res.count()
