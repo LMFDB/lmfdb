@@ -68,12 +68,16 @@ class db_struc:
             return None
 
     def get_table(self, which):
+        """Get table content from name
+        """
         if which =='auto':
             return self.fields_auto
         elif which == 'human':
             return self.fields_human
         elif which == 'records':
             return self.record_types
+        elif which == 'indices' or which == 'indexes':
+            return self.indexes
         else:
             return None
 

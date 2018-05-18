@@ -7,10 +7,9 @@ Initial version (Bristol March 2016)
 import os.path
 import os
 
-from lmfdb.website import DEFAULT_DB_PORT as dbport
-from pymongo.mongo_client import MongoClient
+from lmfdb.base import getDBConnection
 print "getting connection"
-C= MongoClient(port=dbport)
+C= getDBConnection()
 print "authenticating on the knowledge database"
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
@@ -72,5 +71,24 @@ Non-existing reference to ag.good_reduction in knowl g2c.lfunction
 Non-existing reference to hgm.tame in knowl hgm.conductor
 Non-existing reference to lfunction.normalization in knowl lfunction.central_value
 Non-existing reference to mf.elliptic.hecke_operator in knowl mf.elliptic.coefficient_field
+Non-existing reference to test.nonexisting in knowl test.text
+
+Run on 2018-05-10:
+
+
+Non-existing reference to doc.LMFDB.database in knowl doc.lmfdb.contextualize
+Non-existing reference to lfunction.rh.proof in knowl doc.knowl.guidelines
+Non-existing reference to lfunction.rh.proof in knowl doc.knowl.guidelines
+Non-existing reference to lfunction.rh.proof in knowl doc.knowl.guidelines
+Non-existing reference to mf.modular symbols in knowl hecke-algebra.defintion
+Non-existing reference to mf.modular symbols in knowl hecke_algebra.definition
+Non-existing reference to lattice.automorphism_group in knowl lattice.group_order
+Non-existing reference to mf.siegel.weight in knowl mf.siegel.family.sp8z
+Non-existing reference to mf.siegel.ikeda in knowl mf.siegel.family.sp8z
+Non-existing reference to mf.siegel.miyawaki in knowl mf.siegel.family.sp8z
+Non-existing reference to mf.siegel.weight in knowl mf.siegel.family.kp
+Non-existing reference to mf.siegel.nonlift in knowl mf.siegel.family.kp
+Non-existing reference to mf.siegel.pluriharmonic in knowl mf.siegel.family.gamma0_3
+Non-existing reference to mf.siegel.pluriharmonic in knowl mf.siegel.family.gamma0_3_psi_3
 Non-existing reference to test.nonexisting in knowl test.text
 """

@@ -709,6 +709,10 @@ table.ntdata tr.line {
     border-bottom: 1px dotted {{color.table_ntdata_border_bottom}};
 }
 
+table.right_align_table td {
+  text-align: right;
+}
+
 /* TODO: where? */
 div.literature {
     margin-top: 10px;
