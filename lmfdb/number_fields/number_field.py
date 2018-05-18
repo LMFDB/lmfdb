@@ -148,7 +148,9 @@ def render_discriminants_page():
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Completeness of Global Number Field Data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), (Completename, ' ')]
-    return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+    return render_template("single.html", kid='dq.nf.completeness', 
+        credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+
 
 @nf_page.route("/QuadraticImaginaryClassGroups")
 def render_class_group_data():

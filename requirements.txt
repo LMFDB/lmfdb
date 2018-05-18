@@ -1,6 +1,6 @@
 flask
 flask-cache
-flask-login==0.2.11
+flask-login
 flask-markdown
 pymongo
 pyyaml

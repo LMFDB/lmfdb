@@ -86,5 +86,5 @@ def getMaassDb():
     
 def getHgmData(label):
     connection = base.getDBConnection()
-    return connection.hgm.newmotives.find_one({'label': label})
+    return connection.hgm.motives.find_one({'label': label})
     
