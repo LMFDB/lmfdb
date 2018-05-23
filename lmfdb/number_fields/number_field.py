@@ -142,7 +142,6 @@ def render_labels_page():
     info = {}
     info['learnmore'] = [(Completename, url_for(".render_discriminants_page")),
                          ('How data was computed', url_for(".how_computed_page")),
-                         ('Global number field labels', url_for(".render_labels_page")),
                          ('Galois group labels', url_for(".render_groups_page")),
                          ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Labels for Global Number Fields'
