@@ -60,7 +60,7 @@ def get_bread(breads=[]):
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Labels for integral lattices', url_for(".labels_page")),
+            ('Integral lattice labels', url_for(".labels_page")),
             ('History of lattices', url_for(".history_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -364,7 +364,7 @@ def how_computed_page():
 
 @lattice_page.route("/Labels")
 def labels_page():
-    t = 'Label of an integral lattice'
+    t = 'Labels for integral lattices'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Labels', '')]
     credit = lattice_credit

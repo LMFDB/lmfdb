@@ -269,7 +269,7 @@ def by_label(label, t):
 
 def hgm_search(info):
     #info = to_dict(args)
-    bread = get_bread([("Search results", '')])
+    bread = get_bread([("Search Results", '')])
     query = {}
     queryab = {}
     queryabrev = {}
@@ -299,7 +299,7 @@ def hgm_search(info):
                 listprocess=lambda a: sorted(a, reverse=True))
         # Make a version to search reversed way
         if not family_search:
-            parse_ints(info, query, 'conductor', 'Conductor' , 'cond')
+            parse_ints(info, query, 'conductor', 'Conductor', 'cond')
             parse_rational(info, query, 't')
             parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
     except ValueError:
@@ -534,7 +534,7 @@ def show_slopes(sl):
 @hypergm_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of hypergeometric motive data over $\Q$'
-    bread = get_bread(('Completeness',''))
+    bread = get_bread(('Completeness', ''))
     return render_template("single.html", kid='dq.hgm.extent',
            credit=HGM_credit, title=t, bread=bread, 
            learnmore=learnmore_list_remove('Completeness'))
@@ -542,7 +542,7 @@ def completeness_page():
 @hypergm_page.route("/Source")
 def how_computed_page():
     t = 'Source of hypergeometric motive data over $\Q$'
-    bread = get_bread(('Source',''))
+    bread = get_bread(('Source', ''))
     return render_template("single.html", kid='dq.hgm.source',
            credit=HGM_credit, title=t, bread=bread, 
            learnmore=learnmore_list_remove('Source'))
@@ -550,7 +550,7 @@ def how_computed_page():
 @hypergm_page.route("/Labels")
 def labels_page():
     t = 'Labels for hypergeometric motives over $\Q$'
-    bread = get_bread(('Labels',''))
+    bread = get_bread(('Labels', ''))
     return render_template("single.html", kid='hgm.field.label',
            credit=HGM_credit, title=t, bread=bread, 
            learnmore=learnmore_list_remove('labels'))

@@ -331,7 +331,7 @@ def genus2_curve_search(info):
     info["count"] = count
     info["more"] = int(start+count<nres)
     
-    title = info.get('title','Genus 2 Curve search results')
+    title = info.get('title','Genus 2 Curve Search Results')
     credit = credit_string
     
     return render_template("g2c_search_results.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
