@@ -93,7 +93,7 @@ def rational_elliptic_curves(err_args=None):
     #credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list(), calling_function = "ec.rational_elliptic_curves", **err_args)
+    return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), calling_function = "ec.rational_elliptic_curves", **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -117,10 +117,10 @@ def statistics():
         'stats': get_stats().stats(),
     }
     #credit = 'John Cremona'
-    t = 'Elliptic curves over $\Q$: Statistics'
+    t = 'Elliptic curves over $\Q$: statistics'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
-             ('Statistics', ' ')]
+             ('statistics', ' ')]
     return render_template("ec-stats.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list())
 
 
@@ -279,7 +279,7 @@ def elliptic_curve_search(info):
         else:
             info['report'] = 'displaying all %s matches' % nres
 
-    t = info.get('title','Elliptic Curves Search Results')
+    t = info.get('title','Elliptic Curves search results')
     return render_template("ec-search-results.html", info=info, credit=ec_credit(), bread=bread, title=t)
 
 

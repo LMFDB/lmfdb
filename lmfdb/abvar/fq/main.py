@@ -46,7 +46,7 @@ def ECFq_redirect():
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Abelian Variety labels', url_for(".labels_page"))]
+            ('Labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -352,7 +352,7 @@ def how_computed_page():
 
 @abvarfq_page.route("/Labels")
 def labels_page():
-    t = 'Labels for isogeny classes of Abelian Varieties'
+    t = 'Labels for isogeny classes of abelian varieties'
     bread = get_bread(('Labels', '.'))
     return render_template("single.html", kid='av.fq.lmfdb_label',
                            credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))

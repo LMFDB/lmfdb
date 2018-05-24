@@ -27,7 +27,7 @@ def learn(current = None):
     if current != 'extent':
         r.append( ('Extent of the data', url_for(".extent_page")) )
     if current != 'labels':
-        r.append( ('Dirichlet character labels', url_for(".labels_page")) )
+        r.append( ('Labels for Dirichlet characters', url_for(".labels_page")) )
     return r
 
 ###############################################################################
@@ -111,10 +111,9 @@ def render_DirichletNavigation():
             info['err'] = str(err)
             return render_template("CharacterNavigate.html" if "search" in args else "character_search_results.html" , **info)
         info['info'] = search.results()
-        info['title'] = 'Dirichlet Character Search Results'
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('Search Results', '') ]
+                         ('search results', '') ]
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
     else:
@@ -124,7 +123,7 @@ def render_DirichletNavigation():
 @characters_page.route("/Labels")
 def labels_page():
     info = {}
-    info['title'] = 'Labels for Dirichlet characters'
+    info['title'] = 'Dirichlet character labels'
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Labels', '') ]
     info['learnmore'] = learn('labels')
@@ -133,7 +132,7 @@ def labels_page():
 @characters_page.route("/Source")
 def how_computed_page():
     info = {}
-    info['title'] = 'Source of the Dirichlet character data'
+    info['title'] = 'Source of Dirichlet characters'
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Source', '') ]
     info['learnmore'] = learn('source')
@@ -142,7 +141,7 @@ def how_computed_page():
 @characters_page.route("/Extent")
 def extent_page():
     info = {}
-    info['title'] = 'Extent of the Dirichlet character data'
+    info['title'] = 'Extent of Dirichlet characters data'
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Extent', '') ]
     info['learnmore'] = learn('extent')
@@ -259,8 +258,6 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
 
     if number_field == None:
         info = WebHeckeExamples(**args).to_dict()
-        #info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-        #             ('Hecke', url_for(".render_Heckewebpage"))]
         return render_template('Hecke.html', **info)
     else:
         WNF = WebNumberField(number_field)
@@ -272,9 +269,6 @@ def render_Heckewebpage(number_field=None, modulus=None, number=None):
             info = WebHeckeFamily(**args).to_dict()
         except (ValueError,KeyError,TypeError) as err:
             return flask.abort(404,err.args)
-        #info['bread'] = [('Characters', url_for(".render_characterNavigation")),
-        #                ('Hecke', url_for(".render_Heckewebpage")),
-        #                 ('Number Field %s'%number_field, url_for(".render_Heckewebpage", number_field=number_field))]
         return render_template('CharFamily.html', **info)
     elif number == None:
         try:
