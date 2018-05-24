@@ -214,13 +214,13 @@ def hilbert_modular_form_search(**args):
     t = 'Hilbert Modular Form search results'
 
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms',
-        url_for(".hilbert_modular_form_render_webpage")), ('Search results', ' ')]
+        url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
     properties = []
     return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info = None, bread = None):
     if info is None: info = {'err':''}
-    if bread is None: bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('Search results', ' ')]
+    if bread is None: bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
     return render_template("hilbert_modular_form_search.html", info=info, title="Hilbert Modular Form Search Error", bread=bread)
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
@@ -524,8 +524,8 @@ def browse():
     }
     credit = 'John Voight'
     t = 'Hilbert modular forms'
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert modular forms', url_for("hmf.hilbert_modular_form_render_webpage")),
-             ('browse', ' ')]
+    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
+             ('Browse', ' ')]
     return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 @hmf_page.route("/browse/<int:d>/")
