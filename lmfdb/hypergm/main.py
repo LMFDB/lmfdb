@@ -269,7 +269,7 @@ def by_label(label, t):
 
 def hgm_search(info):
     #info = to_dict(args)
-    bread = get_bread([("Search results", '')])
+    bread = get_bread([("Search Results", '')])
     query = {}
     queryab = {}
     queryabrev = {}

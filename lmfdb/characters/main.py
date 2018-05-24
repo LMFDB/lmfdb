@@ -113,7 +113,7 @@ def render_DirichletNavigation():
         info['info'] = search.results()
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('search results', '') ]
+                         ('Search Results', '') ]
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
     else:

@@ -120,7 +120,7 @@ def statistics():
     t = 'Elliptic curves over $\Q$: statistics'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
-             ('statistics', ' ')]
+             ('Statistics', ' ')]
     return render_template("ec-stats.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list())
 
 

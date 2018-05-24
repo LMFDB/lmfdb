@@ -274,8 +274,8 @@ def show_ecnf1(nf):
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
             return redirect (url_for(".index", **request.args), 307)
-        info['title'] += ' search results'
-        info['bread'].append(('search results',''))
+        info['title'] += ' Search Results'
+        info['bread'].append(('Search Results',''))
     info['field'] = nf_label
     return elliptic_curve_search(info)
 
@@ -296,8 +296,8 @@ def show_ecnf_conductor(nf, conductor_label):
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
             return redirect (url_for(".index", **request.args), 307)
-        info['title'] += ' search results'
-        info['bread'].append(('search results',''))
+        info['title'] += ' Search Results'
+        info['bread'].append(('Search Results',''))
     info['field'] = nf_label
     info['conductor_label'] = conductor_label
     info['conductor_norm'] = conductor_norm
@@ -492,7 +492,7 @@ def browse():
     credit = 'John Cremona'
     t = 'Elliptic curves over number fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('browse', ' ')]
+             ('Browse', ' ')]
     return render_template("ecnf-stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/browse/<int:d>/")
@@ -537,7 +537,7 @@ def statistics_by_degree(d):
         t = 'Elliptic curves over number fields of degree {}'.format(d)
 
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-              ('degree %s' % d,' ')]
+              ('Degree %s' % d,' ')]
     return render_template("ecnf-by-degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/browse/<int:d>/<int:r>/")
@@ -587,8 +587,8 @@ def statistics_by_signature(d,r):
     else:
         t = 'Elliptic curves over number fields of degree %s, signature (%s)' % (d,info['sig'])
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-              ('degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
-              ('signature (%s)' % info['sig'],' ')]
+              ('Degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
+              ('Signature (%s)' % info['sig'],' ')]
     return render_template("ecnf-by-signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 
