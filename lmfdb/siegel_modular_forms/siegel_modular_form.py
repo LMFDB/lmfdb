@@ -40,7 +40,7 @@ def download_sample(name):
 @smf_page.route('/')
 def index():
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
-             ('Siegel modular forms', url_for('.index'))]
+             ('Siegel Modular Forms', url_for('.index'))]
     if len(request.args) > 0:
         if 'download' in request.args:
             return download_sample(request.args.get('download'))
@@ -56,7 +56,7 @@ def random_sample():
 @smf_page.route('/<label>/')
 def by_label(label):
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
-             ('Siegel modular forms', url_for('.index'))]
+             ('Siegel Modular Forms', url_for('.index'))]
     slabel = label.split('.')
     family = get_smf_family (slabel[0])
     if family:
@@ -74,7 +74,7 @@ def by_label(label):
 @smf_page.route('/Sp4Z_j/<int:k>/<int:j>/')
 def Sp4Z_j_space(k,j):
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
-             ('Siegel modular forms', url_for('.index')),
+             ('Siegel Modular Forms', url_for('.index')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
              ('$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
     if j%2:
@@ -118,7 +118,7 @@ def Sp4Z_2_space(k):
 @smf_page.route('/Sp4Z_j/')
 def Sp4Z_j():
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
-             ('Siegel modular forms', url_for('.index')),
+             ('Siegel Modular Forms', url_for('.index')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
     info={'args':request.args}
     try:
@@ -210,7 +210,7 @@ def render_search_results_page(args, bread):
         info['error'] = True
     if not info.get('error'):
         info['results'] = sample.Samples(query)
-    bread.append( ('search results', ''))
+    bread.append(('Search Results', ''))
     return render_template( "ModularForm_GSp4_Q_search_results.html", title='Siegel modular forms search results', bread=bread, info=info)
 
 def render_dimension_table_page(args, bread):
@@ -232,7 +232,7 @@ def render_dimension_table_page(args, bread):
             flash_error("$j$ = %s should not be specified for the selected space %s", info['args']['j'], '$'+family.latex_name+'$')
         else:
             build_dimension_table (info, family, info['args'])
-    bread.append(('dimensions', 'dimensions'))
+    bread.append(('Dimensions', 'dimensions'))
     return render_template("ModularForm_GSp4_Q_dimensions.html", title='Siegel modular forms dimension tables', bread=bread, info=info)
 
 def render_sample_page(family, sam, args, bread):
