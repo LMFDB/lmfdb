@@ -26,7 +26,7 @@ from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, f
 from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
-Completename = 'Completeness of this data'
+Completename = 'Completeness of the data'
 dnc = 'data not computed'
 
 FIELD_LABEL_RE = re.compile(r'^\d+\.\d+\.(\d+(e\d+)?(t\d+(e\d+)?)*)\.\d+$')
@@ -136,18 +136,15 @@ def render_groups_page():
 @nf_page.route("/FieldLabels")
 def render_labels_page():
     info = {}
-<<<<<<< HEAD
     info['learnmore'] = [(Completename, url_for(".render_discriminants_page")),
                          ('How data was computed', url_for(".how_computed_page")),
                          ('Galois group labels', url_for(".render_groups_page")),
                          ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Labels for Global Number Fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
-=======
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Number field labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number field labels', '')]
->>>>>>> e2747846b78fb29f2c15650cd4b04dd0ff6cf1b8
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 
@@ -361,7 +358,7 @@ def render_field_webpage(args):
     nf = WebNumberField(label)
     data = {}
     if nf.is_null():
-        bread.append(('Search results', ' '))
+        bread.append(('Search Results', ' '))
         info['err'] = 'There is no field with label %s in the database' % label
         info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
         return search_input_error(info, bread)
@@ -600,7 +597,7 @@ def by_label(label):
         return render_field_webpage({'label': nf_string_to_label(label)})
     except ValueError as err:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (label,err)), "error")
-        bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search results', ' ')]
+        bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
         return search_input_error({'err':''}, bread)
 
 # input is a sage int
@@ -621,7 +618,7 @@ def number_field_search(info):
 
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Global Number Field search results'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search results', ' ')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
 
     if 'natural' in info:
         query = {'label_orig': info['natural']}

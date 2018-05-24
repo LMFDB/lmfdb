@@ -121,7 +121,7 @@ def galois_group_search(**args):
     info = to_dict(args)
     if info.get('jump_to'):
         return redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)
-    bread = get_bread([("Search results", ' ')])
+    bread = get_bread([("Search Results", ' ')])
     C = base.getDBConnection()
     query = {}
 
