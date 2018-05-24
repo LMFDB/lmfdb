@@ -40,7 +40,7 @@ def render_picard_maass_forms_get_one(docid):
     PT.set_table(name='browsing')
     info = dict()
     title = "Maass form on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)"
-    bread = [('Modular forms', url_for('mf.modular_form_main_page'))]
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page'))]
     info['title'] = title
     info['bread'] = bread
     info['table'] = PT.table()
