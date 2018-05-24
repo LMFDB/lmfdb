@@ -211,7 +211,7 @@ def render_search_results_page(args, bread):
     if not info.get('error'):
         info['results'] = sample.Samples(query)
     bread.append(('Search Results', ''))
-    return render_template( "ModularForm_GSp4_Q_search_results.html", title='Siegel modular forms search results', bread=bread, info=info)
+    return render_template( "ModularForm_GSp4_Q_search_results.html", title='Siegel Modular Forms Search Results', bread=bread, info=info)
 
 def render_dimension_table_page(args, bread):
     fams = get_smf_families()

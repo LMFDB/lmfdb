@@ -211,7 +211,7 @@ def hilbert_modular_form_search(**args):
 
     info['forms'] = res_clean
 
-    t = 'Hilbert Modular Form search results'
+    t = 'Hilbert Modular Form Search Results'
 
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms',
         url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
@@ -523,7 +523,7 @@ def browse():
         'stats': get_stats()
     }
     credit = 'John Voight'
-    t = 'Hilbert modular forms'
+    t = 'Hilbert Modular Forms'
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
              ('Browse', ' ')]
     return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
@@ -546,23 +546,23 @@ def statistics_by_degree(d):
 
     credit = 'John Cremona'
     if d==2:
-        t = 'Hilbert modular forms over real quadratic number fields'
+        t = 'Hilbert Modular Forms over Real Quadratic Number Fields'
     elif d==3:
-        t = 'Hilbert modular forms over totally real cubic number fields'
+        t = 'Hilbert Modular Forms over Totally Real Cubic Number Fields'
     elif d==4:
-        t = 'Hilbert modular forms over totally real quartic number fields'
+        t = 'Hilbert Modular Forms over Totally Real Quartic Number Fields'
     elif d==5:
-        t = 'Hilbert modular forms over totally real quintic number fields'
+        t = 'Hilbert Modular Forms over Totally Real Quintic Number Fields'
     elif d==6:
-        t = 'Hilbert modular forms over totally real sextic number fields'
+        t = 'Hilbert Modular Forms over Totally Real Sextic Number Fields'
     else:
-        t = 'Hilbert modular forms over totally real fields of degree %s' % d
+        t = 'Hilbert Modular Forms over Totally Real Fields of Degree %s' % d
 
-    bread = [('Hilbert modular forms', url_for("hmf.hilbert_modular_form_render_webpage")),
-              ('degree %s' % d,' ')]
+    bread = [('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
+              ('Degree %s' % d,' ')]
 
     if d=='bad':
-        t = 'Hilbert modular forms'
+        t = 'Hilbert Modular Forms'
         bread = bread[:-1]
 
     return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove("Completeness"))
