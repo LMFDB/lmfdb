@@ -152,8 +152,8 @@ def statistics():
     info = {
         'stats': get_stats_object().stats(),
     }
-    title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
-    bread = get_bread([('Statistics', ' ')])
+    title = 'Families of Higher Genus Curves with Automorphisms: statistics'
+    bread = get_bread([('statistics', ' ')])
     return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
@@ -181,7 +181,7 @@ def groups_per_genus(genus):
     }
 
     title = 'Families of Higher Genus Curves with Automorphisms: genus ' + genus + ' group statistics'
-    bread = get_bread([('Statistics', url_for('.statistics')), ('Groups per Genus', url_for('.statistics')), (str(genus), ' ')])
+    bread = get_bread([('statistics', url_for('.statistics')), ('Groups per Genus', url_for('.statistics')), (str(genus), ' ')])
     return render_template("hgcwa-stats-groups-per-genus.html", info=info, credit=credit, title=title, bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/<label>")
