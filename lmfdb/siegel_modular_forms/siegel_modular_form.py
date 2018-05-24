@@ -193,7 +193,7 @@ def render_family_page(family, args, bread):
     if family.computes_dimensions():
         build_dimension_table (info, family, args)
     bread.append(('$'+family.latex_name+'$', ''))
-    return render_template("ModularForm_GSp4_Q_family.html", title='Siegel modular forms on $'+family.latex_name+'$', bread=bread, info=info)
+    return render_template("ModularForm_GSp4_Q_family.html", title='Siegel modular forms for $'+family.latex_name+'$', bread=bread, info=info)
 
 def render_search_results_page(args, bread):
     if args.get("table"):
