@@ -98,7 +98,7 @@ def index():
         return galois_group_search(**request.args)
     info = {'count': 50}
     info['degree_list'] = range(16)[2:]
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+    learnmore = [#('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Galois group labels', url_for(".labels_page"))]
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore)
@@ -298,7 +298,7 @@ def random_group():
 
 @galois_groups_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Galois group data'
+    t = 'Completeness of Galois group data'
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Galois group labels', url_for(".labels_page"))]

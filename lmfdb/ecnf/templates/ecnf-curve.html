@@ -30,6 +30,10 @@
   </style>
 #}
 
+    {% set KNOWL_ID = "ec.%s"|format(ec['label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+
 <div>
   <h2>  Base field   {{ ec.field.knowl()|safe }} </h2>
 <p>
@@ -419,6 +423,9 @@ It has not yet been determined whether or not it is a  {{KNOWL('ec.q_curve', '\(
 {% endif %}
 {% endif %}
 </div>
+
+    {% set KNOWL_ID = "ec.%s"|format(ec['label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='Additional information') }}</h2>
 
 {% if DEBUG %}
 <hr>

@@ -122,7 +122,7 @@ def random_curve():
 def statistics():
     info = { 'counts': g2cstats().counts(), 'stats': g2cstats().stats() }
     title = 'Genus 2 curves over $\Q$: statistics'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('statistics', ' '))
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Statistics', ' '))
     return render_template("g2c_stats.html", info=info, credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 ###############################################################################
@@ -331,7 +331,7 @@ def genus2_curve_search(info):
     info["count"] = count
     info["more"] = int(start+count<nres)
     
-    title = info.get('title','Genus 2 Curve Search Results')
+    title = info.get('title','Genus 2 Curve search results')
     credit = credit_string
     
     return render_template("g2c_search_results.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)

@@ -152,7 +152,7 @@ def statistics():
     info = {
         'stats': get_stats_object().stats(),
     }
-    title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
+    title = 'Families of Higher Genus Curves with Automorphisms: statistics'
     bread = get_bread([('Statistics', ' ')])
     return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, bread=bread)
 

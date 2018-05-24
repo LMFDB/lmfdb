@@ -45,7 +45,7 @@ def index():
     args = request.args
     bread = get_bread()
     if len(args) == 0:
-        learnmore = [('Completeness of the data', url_for(".completeness_page")),
+        learnmore = [#('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Artin representations labels', url_for(".labels_page"))]
         return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore)
@@ -65,7 +65,7 @@ def artin_representation_search(**args):
             return search_input_error({'err':''}, bread)
         return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
-    title = 'Artin Representation Search Results'
+    title = 'Artin representation search results'
     bread = [('Artin Representations', url_for(".index")), ('Search Results', ' ')]
     sign_code = 0
     query = {'Hide': 0}
@@ -223,7 +223,7 @@ def random_representation():
 
 @artin_representations_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Artin representation data'
+    t = 'Completeness of Artin representation data'
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Artin representation labels', url_for(".labels_page"))]
@@ -241,7 +241,7 @@ def labels_page():
 
 @artin_representations_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Artin representation data'
+    t = 'Source of Artin representation data'
     bread = get_bread([("Source", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 #('Source of the data', url_for(".how_computed_page")),
