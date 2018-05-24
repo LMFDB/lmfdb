@@ -424,7 +424,7 @@ def how_computed_page():
 
 @hecke_algebras_page.route("/Labels")
 def labels_page():
-    t = 'Label of Hecke Algebras'
+    t = 'Labels for Hecke Algebras'
     bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")),
              ('Labels', '')]
     credit = hecke_algebras_credit

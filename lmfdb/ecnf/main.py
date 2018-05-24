@@ -115,7 +115,8 @@ ecnf_credit = "John Cremona, Alyson Deines, Steve Donelly, Paul Gunnells, Warren
 
 
 def get_bread(*breads):
-    bc = [("Elliptic Curves", url_for(".index"))]
+    bc = [("Elliptic Curves", url_for(".index")),
+          ('Number Fields', url_for("ecnf.index")),]
     map(bc.append, breads)
     return bc
 
@@ -132,6 +133,7 @@ def learnmore_list_remove(matchstring):
 def completeness_page():
     t = 'Completeness of the elliptic curve data over number fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('Number Fields', url_for("ecnf.index")),
              ('Completeness', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.ecnf.extent',
@@ -142,6 +144,7 @@ def completeness_page():
 def how_computed_page():
     t = 'Source of the elliptic curve data over number fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('Number Fields', url_for("ecnf.index")),
              ('Source', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.ecnf.source',
@@ -151,6 +154,7 @@ def how_computed_page():
 def labels_page():
     t = 'Labels for elliptic curves over number fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('Number Fields', url_for("ecnf.index")),
              ('Labels', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='ec.curve_label',
@@ -252,7 +256,7 @@ def index():
     return render_template("ecnf-index.html",
                            title="Elliptic Curves over Number Fields",
                            data=data,
-                           bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/random")
 def random_curve():
@@ -269,13 +273,15 @@ def show_ecnf1(nf):
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args)
     info['title'] = 'Elliptic Curves over %s' % nf_pretty
-    info['bread'] = [('Elliptic Curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf))]
+    info['bread'] = [('Elliptic Curves', url_for(".index")),
+                     ('Number Fields', url_for("ecnf.index")),
+                     (nf_pretty, url_for(".show_ecnf1", nf=nf))]
     if len(request.args) > 0:
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
             return redirect (url_for(".index", **request.args), 307)
-        info['title'] += ' search results'
-        info['bread'].append(('search results',''))
+        info['title'] += ' Search Results'
+        info['bread'].append(('Search Results',''))
     info['field'] = nf_label
     return elliptic_curve_search(info)
 
@@ -290,14 +296,17 @@ def show_ecnf_conductor(nf, conductor_label):
         return search_input_error()
     info = to_dict(request.args)
     info['title'] = 'Elliptic Curves over %s of conductor %s' % (nf_pretty, conductor_label)
-    info['bread'] = [('Elliptic Curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
+    info['bread'] = [('Elliptic Curves', url_for(".index")),
+                      ('Number Fields', url_for("ecnf.index")),
+                     (nf_pretty, url_for(".show_ecnf1", nf=nf)),
+                     (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
     if len(request.args) > 0:
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
             return redirect (url_for(".index", **request.args), 307)
-        info['title'] += ' search results'
-        info['bread'].append(('search results',''))
+        info['title'] += ' Search Results'
+        info['bread'].append(('Search Results',''))
     info['field'] = nf_label
     info['conductor_label'] = conductor_label
     info['conductor_norm'] = conductor_norm
@@ -314,7 +323,8 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     label = "-".join([nf_label, conductor_label, class_label])
     full_class_label = "-".join([conductor_label, class_label])
     cl = ECNF_isoclass.by_label(label)
-    bread = [("Elliptic Curves", url_for(".index"))]
+    bread = [("Elliptic Curves", url_for(".index"))
+              ('Number Fields', url_for("ecnf.index"))]
     if not isinstance(cl, ECNF_isoclass):
         info = {'query':{}, 'err':'No elliptic curve isogeny class in the database has label %s.' % label}
         return search_input_error(info, bread)
@@ -342,7 +352,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
         return search_input_error()
     label = "".join(["-".join([nf_label, conductor_label, class_label]), number])
     ec = ECNF.by_label(label)
-    bread = [("Elliptic Curves", url_for(".index"))]
+    bread = [("Elliptic Curves", url_for(".index"))
+              ('Number Fields', url_for("ecnf.index")),]
     if not ec:
         info = {'query':{}}
         info['err'] = 'No elliptic curve in the database has label %s.' % label
@@ -379,7 +390,8 @@ def elliptic_curve_search(info):
     if not 'query' in info:
         info['query'] = {}
     
-    bread = info.get('bread',[('Elliptic Curves', url_for(".index")), ('Search Results', '.')])
+    bread = info.get('bread',[('Elliptic Curves', url_for(".index")),
+                               ('Number Fields', url_for("ecnf.index")),('Search Results', '.')])
     if 'jump' in info:
         label = info.get('label', '').replace(" ", "")
         # This label should be a full isogeny class label or a full
@@ -473,13 +485,13 @@ def elliptic_curve_search(info):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-    t = info.get('title','Elliptic Curve search results')
+    t = info.get('title','Elliptic Curve Search Results')
     return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
 
 
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
-    if bread is None: bread = [('Elliptic Curves', url_for(".index")), ('Search Results', '.')]
+    if bread is None: bread = [('Elliptic Curves', url_for(".index")), ('Number Fields', url_for("ecnf.index")), ('Search Results', '.')]
     return render_template("ecnf-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread)
 
 
@@ -492,7 +504,8 @@ def browse():
     credit = 'John Cremona'
     t = 'Elliptic curves over number fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-             ('browse', ' ')]
+              ('Number Fields', url_for("ecnf.index")),
+             ('Browse', ' ')]
     return render_template("ecnf-stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/browse/<int:d>/")
@@ -537,7 +550,8 @@ def statistics_by_degree(d):
         t = 'Elliptic curves over number fields of degree {}'.format(d)
 
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-              ('degree %s' % d,' ')]
+              ('Number Fields', url_for("ecnf.index")),
+              ('Degree %s' % d,' ')]
     return render_template("ecnf-by-degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/browse/<int:d>/<int:r>/")
@@ -587,8 +601,9 @@ def statistics_by_signature(d,r):
     else:
         t = 'Elliptic curves over number fields of degree %s, signature (%s)' % (d,info['sig'])
     bread = [('Elliptic Curves', url_for("ecnf.index")),
-              ('degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
-              ('signature (%s)' % info['sig'],' ')]
+              ('Number Fields', url_for("ecnf.index")),
+              ('Degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
+              ('Signature (%s)' % info['sig'],' ')]
     return render_template("ecnf-by-signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
 
