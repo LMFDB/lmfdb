@@ -198,13 +198,13 @@ def lattice_search(**args):
 
     info['lattices'] = res_clean
 
-    t = 'Integral Lattices Search Results'
+    t = 'Integral Lattice Search Results'
     bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
     properties = []
     return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info, bread=None):
-    t = 'Integral Lattices Search Error'
+    t = 'Integral Lattice Search Error'
     if bread is None:
         bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
     return render_template("lattice-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
@@ -218,7 +218,7 @@ def render_lattice_webpage(**args):
             return redirect(url_for('.render_lattice_webpage', label=lab), 301)
         data = lattice_db().find_one({'$or':[{'label': lab }, {'name': lab }]})
     if data is None:
-        t = "Integral Lattices Search Error"
+        t = "Integral Lattice Search Error"
         bread = [('Lattices', url_for(".lattice_render_webpage"))]
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral lattice in the database." % (lab)),"error")
         return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
@@ -346,7 +346,7 @@ def theta_display(label, number):
 #data quality pages
 @lattice_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the integral lattice data'
+    t = 'Completeness of the Integral Lattice Data'
     bread = [('Lattices', url_for(".lattice_render_webpage")),
              ('Completeness', '')]
     credit = lattice_credit
@@ -355,7 +355,7 @@ def completeness_page():
 
 @lattice_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the integral lattice data'
+    t = 'Source of the Integral Lattice Data'
     bread = [('Lattices', url_for(".lattice_render_webpage")),
              ('Source', '')]
     credit = lattice_credit
@@ -364,7 +364,7 @@ def how_computed_page():
 
 @lattice_page.route("/Labels")
 def labels_page():
-    t = 'Label of an integral lattice'
+    t = 'Label of an Integral Lattice'
     bread = [('Lattices', url_for(".lattice_render_webpage")),
              ('Labels', '')]
     credit = lattice_credit
@@ -373,7 +373,7 @@ def labels_page():
 
 @lattice_page.route("/History")
 def history_page():
-    t = 'A brief history of lattices'
+    t = 'A Brief History of Lattices'
     bread = [('Lattices', url_for(".lattice_render_webpage")),
              ('History', '')]
     credit = lattice_credit

@@ -91,7 +91,7 @@ def rational_elliptic_curves(err_args=None):
         'stats_url': url_for(".statistics")
     }
     #credit = 'John Cremona and Andrew Sutherland'
-    t = 'Elliptic curves over $\Q$'
+    t = 'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), calling_function = "ec.rational_elliptic_curves", **err_args)
 
@@ -117,7 +117,7 @@ def statistics():
         'stats': get_stats().stats(),
     }
     #credit = 'John Cremona'
-    t = 'Elliptic curves over $\Q$: statistics'
+    t = 'Elliptic Curves over $\Q$: Statistics'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
              ('Statistics', ' ')]
@@ -128,13 +128,13 @@ def statistics():
 def by_conductor(conductor):
     info = to_dict(request.args)
     info['bread'] = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', url_for(".rational_elliptic_curves")), ('%s' % conductor, url_for(".by_conductor", conductor=conductor))]
-    info['title'] = 'Elliptic Curves over $\Q$ of conductor %s' % conductor
+    info['title'] = 'Elliptic Curves over $\Q$ of Conductor %s' % conductor
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
-        info['title'] += ' search results'
-        info['bread'].append(('search results',''))
+        info['title'] += ' Search Results'
+        info['bread'].append(('Search Results',''))
     info['conductor'] = conductor
     return elliptic_curve_search(info)
 
@@ -279,7 +279,7 @@ def elliptic_curve_search(info):
         else:
             info['report'] = 'displaying all %s matches' % nres
 
-    t = info.get('title','Elliptic Curves search results')
+    t = info.get('title','Elliptic Curves Search Results')
     return render_template("ec-search-results.html", info=info, credit=ec_credit(), bread=bread, title=t)
 
 
@@ -552,7 +552,7 @@ def download_search(info):
 
 @ec_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the elliptic curve data over $\Q$'
+    t = 'Completeness of the Elliptic Curve Data over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Completeness', '')]
@@ -561,7 +561,7 @@ def completeness_page():
 
 @ec_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the elliptic curve data over $\Q$'
+    t = 'Source of the Elliptic Curve Data over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Source', '')]
@@ -570,7 +570,7 @@ def how_computed_page():
 
 @ec_page.route("/Labels")
 def labels_page():
-    t = 'Labels for elliptic curves over $\Q$'
+    t = 'Labels for Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Labels', '')]
