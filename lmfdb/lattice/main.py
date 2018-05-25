@@ -84,7 +84,7 @@ def lattice_render_webpage():
         info = {'dim_list': dim_list,'class_number_list': class_number_list,'det_list': det_list, 'name_list': name_list}
         credit = lattice_credit
         t = 'Integral Lattices'
-        bread = [('Lattices', url_for(".lattice_render_webpage"))]
+        bread = [('Lattice', url_for(".lattice_render_webpage"))]
         info['summary'] = lattice_summary()
         info['max_cn']=maxs[0]
         info['max_dim']=maxs[1]
@@ -374,7 +374,7 @@ def labels_page():
 @lattice_page.route("/History")
 def history_page():
     t = 'A brief history of lattices'
-    bread = [('Lattices', url_for(".lattice_render_webpage")),
+    bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('History', '')]
     credit = lattice_credit
     return render_template("single.html", kid='lattice.history',

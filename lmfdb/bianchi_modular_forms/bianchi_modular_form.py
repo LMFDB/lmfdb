@@ -183,7 +183,7 @@ def bianchi_modular_form_search(**args):
     t = 'Bianchi modular form search results'
 
     bread = [('Bianchi Modular Forms', url_for(".index")), (
-        'Search results', ' ')]
+        'Search Results', ' ')]
     properties = []
     return render_template("bmf-search_results.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
