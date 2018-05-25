@@ -118,7 +118,7 @@ def how_computed_page():
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), 
         ('Galois group labels', url_for(".render_groups_page")), 
         (Completename, url_for(".render_discriminants_page")) ]
-    t = 'How Global Number Field Data was Computed'
+    t = 'How Number Field Data was Computed'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('How Data was Computed', ' ')]
     return render_template("single.html", kid='dq.nf.howcomputed', 
         credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
@@ -143,8 +143,8 @@ def render_labels_page():
     t = 'Labels for Global Number Fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    #t = 'Global Number Field Labels'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Global Number Field Labels', '')]
+    t = 'Number Field Labels'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Labels', '')]
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 
@@ -153,7 +153,7 @@ def render_discriminants_page():
     info = {}
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Completeness of Global Number Field Data'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), (Completename, ' ')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
     return render_template("single.html", kid='dq.nf.completeness', 
         credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
