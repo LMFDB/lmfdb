@@ -133,7 +133,8 @@ def by_conductor(conductor):
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
-        info['title'] += ' Search Results'
+
+        info['title'] += ' search results'
         info['bread'].append(('Search Results',''))
     info['conductor'] = conductor
     return elliptic_curve_search(info)
