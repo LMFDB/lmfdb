@@ -119,7 +119,7 @@ def how_computed_page():
         ('Galois group labels', url_for(".render_groups_page")), 
         (Completename, url_for(".render_discriminants_page")) ]
     t = 'How Number Field Data was Computed'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('How Data was Computed', ' ')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Source', ' ')]
     return render_template("single.html", kid='dq.nf.howcomputed', 
         credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
