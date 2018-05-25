@@ -305,7 +305,10 @@ class Knowl(object):
         Example: KNOWL('algebra.dirichlet_series') should be replaced
         with "Dirichlet Series" and nothing else.
         """
-        return self._title
+        title = self._title
+        if self._quality=='beta':
+            title += " (beta status)"
+        return title
 
     @title.setter
     def title(self, title):
