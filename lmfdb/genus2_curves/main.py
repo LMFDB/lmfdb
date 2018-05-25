@@ -109,7 +109,7 @@ def index_Q():
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
-    title = 'Genus 2 curves over $\Q$'
+    title = 'Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '))
     return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
@@ -121,7 +121,7 @@ def random_curve():
 @g2c_page.route("/Q/stats")
 def statistics():
     info = { 'counts': g2cstats().counts(), 'stats': g2cstats().stats() }
-    title = 'Genus 2 curves over $\Q$: statistics'
+    title = 'Genus 2 Curves over $\Q$: Statistics'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Statistics', ' '))
     return render_template("g2c_stats.html", info=info, credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
@@ -140,8 +140,8 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
     clabel = str(cond)+"."+alpha
     # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
     if not g2c_db_curves().find_one({'class':clabel},{'_id':True}):
-        return abort(404, 'Genus 2 isogeny class %s not found in database.'%clabel)
-    data['title'] = 'Genus 2 curves in isogeny class %s of discriminant %s' % (clabel,disc)
+        return abort(404, 'Genus 2 Isogeny Class %s not Found in Database.'%clabel)
+    data['title'] = 'Genus 2 Curves in Isogeny Class %s of Discriminant %s' % (clabel,disc)
     data['bread'] = [('Genus 2 Curves', url_for(".index")),
         ('$\Q$', url_for(".index_Q")),
         ('%s' % cond, url_for(".by_conductor", cond=cond)),
@@ -152,8 +152,8 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
         if ('cond' in request.args and request.args['cond'] != str(cond)) or \
            ('abs_disc' in request.args and request.args['abs_disc'] != str(disc)):
             return redirect (url_for(".index", **request.args), 307)
-        data['title'] += ' search results'
-        data['bread'].append(('search results',''))
+        data['title'] += ' Search Results'
+        data['bread'].append(('Search Results',''))
     data['cond'] = cond
     data['class'] = clabel
     data['abs_disc'] = disc
@@ -166,14 +166,14 @@ def by_url_isogeny_class_label(cond, alpha):
 @g2c_page.route("/Q/<int:cond>/")
 def by_conductor(cond):
     data = to_dict(request.args)
-    data['title'] = 'Genus 2 curves of conductor %s' % cond
+    data['title'] = 'Genus 2 Curves of Conductor %s' % cond
     data['bread'] = [('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('%s' % cond, url_for(".by_conductor", cond=cond))]
     if len(request.args) > 0:
         # if conductor changed, fall back to a general search
         if 'cond' in request.args and request.args['cond'] != str(cond):
             return redirect (url_for(".index", **request.args), 307)
-        data['title'] += ' search results'
-        data['bread'].append(('search results',''))
+        data['title'] += ' Search Results'
+        data['bread'].append(('Search Results',''))
     data['cond'] = cond
     return genus2_curve_search(data)
 
@@ -331,7 +331,7 @@ def genus2_curve_search(info):
     info["count"] = count
     info["more"] = int(start+count<nres)
     
-    title = info.get('title','Genus 2 Curve search results')
+    title = info.get('title','Genus 2 Curve Search Results')
     credit = credit_string
     
     return render_template("g2c_search_results.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
@@ -488,21 +488,21 @@ def download_search(info):
 
 @g2c_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of genus 2 curve data over $\Q$'
+    t = 'Completeness of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Completeness',''))
     return render_template("single.html", kid='dq.g2c.extent',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @g2c_page.route("/Source")
 def how_computed_page():
-    t = 'Source of genus 2 curve data over $\Q$'
+    t = 'Source of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Source',''))
     return render_template("single.html", kid='dq.g2c.source',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @g2c_page.route("/Labels")
 def labels_page():
-    t = 'Labels for genus 2 curves over $\Q$'
+    t = 'Labels for Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Labels',''))
     return render_template("single.html", kid='g2c.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
