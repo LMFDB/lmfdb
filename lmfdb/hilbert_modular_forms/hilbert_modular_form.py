@@ -494,7 +494,7 @@ def learnmore_list_remove(matchstring):
 #data quality pages
 @hmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Hilbert Modular Forms data'
+    t = 'Completeness of the Hilbert Modular Forms Data'
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Completeness', '')]
     return render_template("single.html", kid='dq.mf.hilbert.extent',
@@ -502,7 +502,7 @@ def completeness_page():
 
 @hmf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Hilbert Modular Forms data'
+    t = 'Source of the Hilbert Modular Forms Data'
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Source', '')]
     return render_template("single.html", kid='dq.mf.hilbert.source',

@@ -422,7 +422,7 @@ def completeness_page():
 
 @bmf_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Bianchi newforms'
+    t = 'Labels for Bianchi Newforms'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Bianchi Modular Forms', url_for(".index")),
              ('Labels', '')]
