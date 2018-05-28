@@ -161,7 +161,7 @@ def l_function_ec_sym3_browse_page():
 # L-function of genus 2 curves browsing page ##############################################
 @l_function_page.route("/degree4/Genus2Curve/")
 def l_function_genus2_browse_page():
-    info = {"bread": get_bread(2, [("Genus 2 curve", url_for('.l_function_genus2_browse_page'))])}
+    info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
     info["representation"] = ''
     #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
     return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
@@ -536,7 +536,7 @@ def set_bread_and_friends(L, request):
                     ('Symmetric cube L-function',
                      url_for(".l_function_ec_sym_page_label", power='3',
                              label=L.ellipticcurve)))
-        bread = get_bread(2, [('Cusp form', url_for('.l_function_cuspform_browse_page')),
+        bread = get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page')),
                                       (full_label, request.url)])
 
     elif L.Ltype() == 'maass':

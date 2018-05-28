@@ -52,7 +52,7 @@ def my_latex(s):
 #breadcrumbs and links for data quality entries
 
 def get_bread(breads=[]):
-    bc = [("Lattices", url_for(".index"))]
+    bc = [("Lattice", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -227,7 +227,7 @@ def render_lattice_webpage(**args):
 
     info['friends'] = []
 
-    bread = [('Lattices', url_for(".lattice_render_webpage")), ('%s' % data['label'], ' ')]
+    bread = [('Lattice', url_for(".lattice_render_webpage")), ('%s' % data['label'], ' ')]
     credit = lattice_credit
     f = lattice_db().find_one({'dim': data['dim'],'det': data['det'],'level': data['level'],'gram': data['gram'],'minimum': data['minimum'],'class_number': data['class_number'],'aut': data[ 'aut'],'name': data['name']})
     info['dim']= int(f['dim'])
@@ -347,7 +347,7 @@ def theta_display(label, number):
 @lattice_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the integral lattice data'
-    bread = [('Lattices', url_for(".lattice_render_webpage")),
+    bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Completeness', '')]
     credit = lattice_credit
     return render_template("single.html", kid='dq.lattice.completeness',
@@ -356,7 +356,7 @@ def completeness_page():
 @lattice_page.route("/Source")
 def how_computed_page():
     t = 'Source of the integral lattice data'
-    bread = [('Lattices', url_for(".lattice_render_webpage")),
+    bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Source', '')]
     credit = lattice_credit
     return render_template("single.html", kid='dq.lattice.source',
@@ -365,7 +365,7 @@ def how_computed_page():
 @lattice_page.route("/Labels")
 def labels_page():
     t = 'Label of an integral lattice'
-    bread = [('Lattices', url_for(".lattice_render_webpage")),
+    bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Labels', '')]
     credit = lattice_credit
     return render_template("single.html", kid='lattice.label',

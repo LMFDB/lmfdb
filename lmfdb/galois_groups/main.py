@@ -196,7 +196,7 @@ def render_group_webpage(args):
         C = base.getDBConnection()
         data = C.transitivegroups.groups.find_one({'label': label})
         if data is None:
-            bread = get_bread([("Search error", ' ')])
+            bread = get_bread([("Search Error", ' ')])
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
