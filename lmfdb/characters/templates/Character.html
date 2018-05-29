@@ -205,6 +205,13 @@ function gauss_handler(evt) {
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
      });
 }
+function gauss_default_call() {
+  var val = "" + {{gauss_default}};
+  $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val, function() {
+    {# tell mathjx to render the output #}
+    MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
+  });
+}
 function jacobi_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-jacobi-input").val();
@@ -212,9 +219,15 @@ function jacobi_handler(evt) {
      function() {
        {# tell mathjx to render the output #}
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
-     });
+   });
 }
-
+function jacobi_default_call() {
+  var val = "" + {{jacobi_default}};
+  $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus, number=number) }}" + "?val=" + val, function() {
+    {# tell mathjx to render the output #}
+    MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
+  });
+}
 function kloosterman_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-kloosterman-input").val();
@@ -223,6 +236,13 @@ function kloosterman_handler(evt) {
        {# tell mathjx to render the output #}
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);
      });
+}
+function kloosterman_default_call() {
+  var val = "" + {{ kloosterman_default_a }} + "," + {{ kloosterman_default_b }};
+  $("#calc-kloosterman-output").load("{{ url_character(type=type, calc='kloosterman', modulus=modulus,number=number) }}" + "?val=" + val, function() {
+    {# tell mathjx to render the output #}
+    MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);
+  });
 }
         {% endif %}
 
@@ -297,8 +317,11 @@ $(function() {
         {% endif %}
 
 });
+{% if type=='Dirichlet' and values %}
+  window.onload = gauss_default_call();
+  window.onload = jacobi_default_call();
+  window.onload = kloosterman_default_call();
+{% endif %}
 </script>
 
-
 {% endblock %}
-
