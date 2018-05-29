@@ -2,7 +2,7 @@
 {% set limit = 30 %}
 
 {% block description %}
- 
+
         {{ place_code('init') }}
 
         {# Kronecker symbol #}
@@ -27,10 +27,10 @@
             <a href="{{ url_character(
                 type = type,
                 number_field = nflabel,
-                modulus = condlabel, 
-                number  = indlabel)}}"> 
+                modulus = condlabel,
+                number  = indlabel)}}">
                 {{inducing}}
-            </a>  {% if symbol %}  = {{ symbol }} {% endif %}	
+            </a>  {% if symbol %}  = {{ symbol }} {% endif %}
             </p>
         {% endif %}
 
@@ -66,7 +66,7 @@
         </div>
 
         {% set value_default = 2 %}
-        <form> value  at&nbsp; 
+        <form> value  at&nbsp;
             <input id="calc-value-input" size=10 placeholder={{value_default}}>
             <button id="calc-value-go"> Compute </button>
             <span class="formexample"> e.g. {{value_default}} </span>
@@ -172,7 +172,7 @@
         </h2>
         {{ place_code('kloosterman') }}
         {% set kloosterman_default_a = 1 %}
-        {% set kloosterman_default_b = 2 %} 
+        {% set kloosterman_default_b = 2 %}
         <form> \(K(a,b,\chi_{ {{modulus}} }({{number}},&middot;)) \;\) at \(\; a,b = \)
             <input id="calc-kloosterman-input" size=10 placeholder={{kloosterman_default_a}},{{kloosterman_default_b}}>
             <button id="calc-kloosterman-go"> Compute </button>
@@ -189,7 +189,7 @@
 function value_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-value-input").val();
-    $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val, 
+    $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val,
      function() {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-value-output"]);
@@ -199,7 +199,7 @@ function value_handler(evt) {
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
-    $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val, 
+    $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val,
      function() {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
@@ -231,7 +231,7 @@ $(function() {
         {% if type=='Dirichlet' %}
     $("#calc-gauss-go").click(function(e) {gauss_handler(e)});
     $("#calc-jacobi-go").click(function(e) {jacobi_handler(e)});
-    $("#calc-kloosterman-go").click(function(e) {gauss_handler(e)});
+    $("#calc-kloosterman-go").click(function(e) {kloosterman_handler(e)});
         {% endif %}
     $("#calc-value-input").keypress(function(e) {
         if (e.which == 13) value_handler(e);
@@ -281,7 +281,7 @@ $(function() {
       var b = $("#slider-kloosterman-b").slider("value");
       $( "#calc-kloosterman-input" ).val(""+a+","+b);
       kloosterman_handler(event);
-    }; 
+    };
 
     $( "#slider-kloosterman-a" ).slider({ value: {{kloosterman_default_a}}, min: 0, max: 2*{{modulus}}, step: 1,
       change: function( event, ui ) {
