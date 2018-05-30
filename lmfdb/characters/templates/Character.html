@@ -133,7 +133,7 @@
 
         {# sums #}
 
-        {% if type=='Dirichlet' and values %}
+        {% if type=='Dirichlet' and charsums %}
 
         {# Gauss sum #}
 
@@ -195,7 +195,7 @@ function value_handler(evt) {
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-value-output"]);
      });
 }
-        {% if type=='Dirichlet' and values %}
+        {% if type=='Dirichlet' and charsums %}
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
