@@ -154,6 +154,7 @@ def extent_page():
 @characters_page.route("/Dirichlet/<modulus>/")
 @characters_page.route("/Dirichlet/<modulus>/<number>")
 def render_Dirichletwebpage(modulus=None, number=None):
+
     if modulus == None:
         return render_DirichletNavigation()
     modulus = modulus.replace(' ','')
@@ -174,6 +175,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if modulus > 10**20:
         flash_error ("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
         return redirect(url_for(".render_Dirichletwebpage"))
+
         
     
     if number == None:
@@ -214,7 +216,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
 
 @characters_page.route('/Dirichlet/random')
 def random_Dirichletwebpage():
-    modulus = randint(1,99999)
+    modulus = randint(1,9999)
     number = randint(1,modulus-1)
     while gcd(modulus,number) > 1:
         number = randint(1,modulus-1)
