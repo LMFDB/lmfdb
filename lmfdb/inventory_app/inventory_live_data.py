@@ -301,7 +301,7 @@ def set_lockout_state(state):
         inv.log_dest.error('Failed to set lockout state')
 
 def get_lockout_state():
-    """Get lockout status"""
+    """Get global lockout status"""
     try:
         got_client = inv.setup_internal_client(editor=True)
         assert(got_client == True)
@@ -312,6 +312,7 @@ def get_lockout_state():
 
     try:
         rec_find = {'lockout':{"$exists":True}}
+        #Get latest lockout record
         res = inv_db['ops'].find(rec_find).sort('_id', -1).limit(1)
     except:
         pass
