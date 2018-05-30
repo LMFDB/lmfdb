@@ -133,7 +133,7 @@
 
         {# sums #}
 
-        {% if type=='Dirichlet' and values %}
+        {% if type=='Dirichlet' and charsums %}
 
         {# Gauss sum #}
 
@@ -147,7 +147,7 @@
             <button id="calc-gauss-go"> Compute </button>
             <span class="formexample"> e.g. {{gauss_default}} </span>
         </form>
-        <div class="output"><span id="calc-gauss-output"></span></div>
+        <div class="output"><span id="calc-gauss-output">{{ charsums.gauss_default | safe }}</span></div>
 
         {# Jacobi sum #}
 
@@ -161,7 +161,7 @@
             <button id="calc-jacobi-go"> Compute </button>
             <span class="formexample"> e.g. 1</span>
         </form>
-        <div class="output"><span id="calc-jacobi-output"></span></div>
+        <div class="output"><span id="calc-jacobi-output">{{ charsums.jacobi_default | safe }}</span></div>
 
         {# Kloosterman sum #}
 
@@ -178,7 +178,7 @@
             <table style="width: 95%;">
             </table>
         </form>
-        <div class="output"><span id="calc-kloosterman-output"></span></div>
+        <div class="output"><span id="calc-kloosterman-output">{{ charsums.kloosterman_default | safe }}</span></div>
         {% endif %}
 
 <script type="text/javascript">
@@ -191,7 +191,7 @@ function value_handler(evt) {
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-value-output"]);
      });
 }
-        {% if type=='Dirichlet' and values %}
+        {% if type=='Dirichlet' and charsums %}
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
@@ -200,13 +200,6 @@ function gauss_handler(evt) {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
      });
-}
-function gauss_default_call() {
-  var val = "" + {{gauss_default}};
-  $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val, function() {
-    {# tell mathjx to render the output #}
-    MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
-  });
 }
 function jacobi_handler(evt) {
    evt.preventDefault();
@@ -217,13 +210,6 @@ function jacobi_handler(evt) {
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
    });
 }
-function jacobi_default_call() {
-  var val = "" + {{jacobi_default}};
-  $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus, number=number) }}" + "?val=" + val, function() {
-    {# tell mathjx to render the output #}
-    MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
-  });
-}
 function kloosterman_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-kloosterman-input").val();
@@ -232,13 +218,6 @@ function kloosterman_handler(evt) {
        {# tell mathjx to render the output #}
        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);
      });
-}
-function kloosterman_default_call() {
-  var val = "" + {{ kloosterman_default_a }} + "," + {{ kloosterman_default_b }};
-  $("#calc-kloosterman-output").load("{{ url_character(type=type, calc='kloosterman', modulus=modulus,number=number) }}" + "?val=" + val, function() {
-    {# tell mathjx to render the output #}
-    MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);
-  });
 }
         {% endif %}
 
@@ -267,12 +246,6 @@ $(function() {
     });
 {% endif %}
 });
-
-{% if type=='Dirichlet' and values %}
-  window.onload = gauss_default_call();
-  window.onload = jacobi_default_call();
-  window.onload = kloosterman_default_call();
-{% endif %}
 </script>
 
 {% endblock %}

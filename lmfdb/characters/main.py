@@ -44,7 +44,7 @@ def render_characterNavigation():
 
 def render_DirichletNavigation():
     args = to_dict(request.args)
-    
+
     info = {'args':args}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
                       ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
@@ -174,8 +174,8 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if modulus > 10**20:
         flash_error ("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
         return redirect(url_for(".render_Dirichletwebpage"))
-        
-    
+
+
     if number == None:
         if modulus < 100000:
             info = WebDirichletGroup(**args).to_dict()
@@ -214,10 +214,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
 
 @characters_page.route('/Dirichlet/random')
 def random_Dirichletwebpage():
-    modulus = randint(1,99999)
-    number = randint(1,modulus-1)
-    while gcd(modulus,number) > 1:
-        number = randint(1,modulus-1)
+    modulus = randint(1, 9999)
+    number = randint(1, modulus-1)
+    while gcd(modulus, number) > 1:
+        number = randint(1, modulus-1)
     return redirect(url_for('.render_Dirichletwebpage', modulus=str(modulus), number=str(number)))
 
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
