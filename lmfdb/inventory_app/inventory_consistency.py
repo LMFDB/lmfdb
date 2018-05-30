@@ -1,13 +1,9 @@
 
-import json
 from bson import SON
-import inventory_helpers as ih
 import lmfdb_inventory as inv
-import inventory_db_core as idc
-from inventory_db_inplace import update_fields
 from inventory_live_data import get_lockout_state
 import inventory_helpers as ih
-from scrape_helpers import check_scrapes_on, get_completed_scrapes, get_live_scrapes_older_than
+from scrape_helpers import get_completed_scrapes, get_live_scrapes_older_than
 import datetime
 import threading
 
@@ -18,7 +14,7 @@ def get_latest_report():
         got_client = inv.setup_internal_client(editor=True, remote=False)
         assert(got_client == True)
         idb = inv.int_client
-        inv_db = inv.int_client[inv.get_inv_db_name()]
+        inv_db = idb[inv.get_inv_db_name()]
     except Exception as e:
         inv.log_dest.error("Error getting Db connection "+ str(e))
         return False
@@ -99,6 +95,7 @@ def report_fields_tables(inv_db, colls):
                 for key in inv.base_editable_fields:
                     try:
                         name=field['data'][key]
+                        assert(name or not name)
                     except:
                         key_list.append((field, key))
         if len(key_list) > 0 : bad_items.append((item['name'], item['_id'], key_list))
