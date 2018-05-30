@@ -945,7 +945,12 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def charsums(self):
-        return self.modulus < 1000
+        if self.modulus < 1000:
+            return { 'gauss': self.gauss_sum(2),
+                     'jacobi': self.jacobi_sum(1),
+                     'kloosterman': self.kloosterman_sum('1,2') }
+        else:
+            return None
 
     def gauss_sum(self, val):
         val = int(val)
