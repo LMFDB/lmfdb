@@ -243,7 +243,6 @@ def render_group_webpage(args):
             data['gapid'] = "No gap id's for groups of this order"
         else:
             data['gapid'] = small_group_display_knowl(int(data['order']),int(data['gapid']),C, str([int(data['order']),int(data['gapid'])]))
-            #data['gapid'] = '$'+str([int(data['order']), data['gapid']])+'$'
         data['otherreps'] = wgg.otherrep_list()
         ae = wgg.arith_equivalent()
         if ae>0:
