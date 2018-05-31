@@ -20,8 +20,10 @@ def sgdb():
     return db().sato_tate_groups.small_groups
 
 def small_group_display_knowl(n, k, C, name=None):
+    group = C.sato_tate_groups.small_groups.find_one({'label': '%d.%d'%(n,k)})
+    if group is None:
+        return '$[%d, %d]$'%(n,k)
     if not name:
-        group = C.sato_tate_groups.small_groups.find_one({'label': '%d.%d'%(n,k)})
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + name + '</a>'
 
