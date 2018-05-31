@@ -103,19 +103,6 @@ def index():
                 ('Galois group labels', url_for(".labels_page"))]
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore)
 
-# FIXME: delete or fix this code
-# Apparently obsolete code that causes a server error if executed
-# @galois_groups_page.route("/search", methods=["GET", "POST"])
-# def search():
-#    if request.method == "GET":
-#        val = request.args.get("val", "no value")
-#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-#        return render_template("gg-search.html", title="Galois Group Search", bread=bread, val=val)
-#    elif request.method == "POST":
-#        return "ERROR: we always do http get to explicitly display the search parameters"
-#    else:
-#        return flask.abort(404)
-
 # For the search order-parsing
 def make_order_key(order):
     order1 = int(ZZ(order).log(10))
@@ -240,7 +227,7 @@ def render_group_webpage(args):
         data['subinfo'] = subfield_display(C, n, data['subs'])
         data['resolve'] = resolve_display(C, data['resolve'])
         if data['gapid'] == 0:
-            data['gapid'] = "No gap id's for groups of this order"
+            data['gapid'] = "Data not available"
         else:
             data['gapid'] = small_group_display_knowl(int(data['order']),int(data['gapid']),C, str([int(data['order']),int(data['gapid'])]))
         data['otherreps'] = wgg.otherrep_list()
