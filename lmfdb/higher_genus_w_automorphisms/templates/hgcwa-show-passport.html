@@ -3,6 +3,11 @@
 <!-- in templates -->
 
 {% block content %}
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
 
 <style>
 table,td {
@@ -84,11 +89,55 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
  <p>{% for cdata in info.genvects %}
    {{cdata[0]}}
-     <table>{% for perm in cdata[3] %}
-	  <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-	  {% endfor %} </table> <br>
-  {% endfor %}
+   <table>{% for perm in cdata[3] %}
+     <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+     {% endfor %} </table> <br>
+   {% endfor %}
  </p>
+<!--
+<div class="container">
+  <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#collapse">Full</button>
+  <div id="collapse" class="collapse">
+    Hello
+  </div>
+</div>
+-->
+<!--
+<script>
+$(document).ready(function(){
+    $(".btn-primary").click(function(){
+        $(".collapse").collapse('toggle');
+    });
+    $(".btn-primary").click(function(){
+        $(".collapse").collapse('toggle');
+    });
+});  
+</script>
+-->
+
+<!--
+<div class="container">
+  <ul class="nav nav-tabs">
+    <li class="active"><a data-toggle="tab" data-target="#a">Full</a></li>
+    <li><a data-toggle="tab" data-target="#b">Less</a></li>
+  </ul>
+  
+  <div class="tab-content">
+    <div id="a" class="tab-pane fade in active">
+      <p>{% for cdata in info.genvects %}
+        {{cdata[0]}}
+        <table>{% for perm in cdata[3] %}
+          <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+          {% endfor %} </table> <br>
+        {% endfor %}
+      </p>
+    </div>
+    <div id="b" class="tab-pane fade">
+      rgfhfghfgjnhgnghnhg
+    </div>
+  </div>
+</div>
+-->
 
  <p>
   {% if info.numb >= 2 %}
