@@ -4,10 +4,6 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
 <style>
 table,td {
   border-right:solid 30px transparent;
@@ -92,31 +88,6 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
    {% endfor %}
  </p>
 
- <!-- Toggle button
-<div>
-
-  <button data-toggle="pill" href="#Full">Full</button>
-  <button data-toggle="pill" href="#Less">Less</button>
-  
-  <div class="tab-content">
-    <div id="Full" class="tab-pane fade in active">
-      Something full
-      <p>{% for cdata in info.genvects %}
-        {{cdata[0]}}
-        <table>{% for perm in cdata[3] %}
-          <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-          {% endfor %} </table> <br>
-        {% endfor %}
-      </p>
-    </div>
-    <div id="Less" class="tab-pane fade">
-      Something less
-    </div>
-  </div>
-  
-</div>
--->
-
  <p>
   {% if info.numb >= 2 %}
  <form>
@@ -130,9 +101,59 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
     </tr>
   </table>
 </form>
-{% endif %} </p>
+ {% endif %} </p>
 
+ 
+<style>
+.tab button {
+transition: 0.3s;
+}
 
+.tab button.active {
+    background-color: #efe;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    animation: fadeEffect 1s;
+}
+
+/* Fade in tabs */
+@keyframes fadeEffect {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+</style>
+
+<div class="tab">
+  <button class="tablinks" onclick="openData(event, 'Full')">Full</button>
+  <button class="tablinks" onclick="openData(event, 'Less')">Less</button>
+</div>
+
+<div id="Full" class="tabcontent">
+  <p>Full data.</p>
+</div>
+
+<div id="Less" class="tabcontent">
+  <p>Less data.</p> 
+</div>
+
+<script>
+function openData(evt, dataType) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(dataType).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+</script>
 
 
 {% endblock %}
