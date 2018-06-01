@@ -3,11 +3,10 @@
 <!-- in templates -->
 
 {% block content %}
-<head>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-</head>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
 <style>
 table,td {
@@ -76,7 +75,6 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 
 <h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating Vector(s)')}}</h2>
-
 <p>
   {% if info.numb == 1 %}
   Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
@@ -85,7 +83,6 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
   Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
 
   {% endif %}
-</p>
 
  <p>{% for cdata in info.genvects %}
    {{cdata[0]}}
@@ -94,36 +91,16 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
      {% endfor %} </table> <br>
    {% endfor %}
  </p>
-<!--
-<div class="container">
-  <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#collapse">Full</button>
-  <div id="collapse" class="collapse">
-    Hello
-  </div>
-</div>
--->
-<!--
-<script>
-$(document).ready(function(){
-    $(".btn-primary").click(function(){
-        $(".collapse").collapse('toggle');
-    });
-    $(".btn-primary").click(function(){
-        $(".collapse").collapse('toggle');
-    });
-});  
-</script>
--->
 
-<!--
-<div class="container">
-  <ul class="nav nav-tabs">
-    <li class="active"><a data-toggle="tab" data-target="#a">Full</a></li>
-    <li><a data-toggle="tab" data-target="#b">Less</a></li>
-  </ul>
+ <!-- Toggle button
+<div>
+
+  <button data-toggle="pill" href="#Full">Full</button>
+  <button data-toggle="pill" href="#Less">Less</button>
   
   <div class="tab-content">
-    <div id="a" class="tab-pane fade in active">
+    <div id="Full" class="tab-pane fade in active">
+      Something full
       <p>{% for cdata in info.genvects %}
         {{cdata[0]}}
         <table>{% for perm in cdata[3] %}
@@ -132,10 +109,11 @@ $(document).ready(function(){
         {% endfor %}
       </p>
     </div>
-    <div id="b" class="tab-pane fade">
-      rgfhfghfgjnhgnghnhg
+    <div id="Less" class="tab-pane fade">
+      Something less
     </div>
   </div>
+  
 </div>
 -->
 
