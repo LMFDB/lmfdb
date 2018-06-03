@@ -7,9 +7,9 @@ from scrape_frontend import get_scrape_progress
 #Max time before scrape is considered to have failed
 DEFAULT_MAX_TIME = 6
 
-def check_scrapes_on(spec):
+def check_scrapes_on(spec=None):
     """If collection given, check for scrapes in progress or
-    queued on it. If only db, check all collections in it"""
+    queued on it. If only db, check all collections in it. If spec is None, check everything"""
     try:
         got_client = inv.setup_internal_client(editor=True)
         assert(got_client == True)
@@ -18,11 +18,13 @@ def check_scrapes_on(spec):
         inv.log_dest.error("Error getting Db connection "+ str(e))
         return False
     try:
-        db_id = idc.get_db_id(inv_db, spec['db'])
-        spec_ids = {'db':db_id['id']}
-        if spec['coll']:
-            coll_id = idc.get_coll_id(inv_db, db_id['id'], spec['coll'])
-            spec_ids['coll'] = coll_id['id']
+        spec_ids = {}
+        if spec is not None:
+            db_id = idc.get_db_id(inv_db, spec['db'])
+            spec_ids = {'db':db_id['id']}
+            if spec['coll']:
+                coll_id = idc.get_coll_id(inv_db, db_id['id'], spec['coll'])
+                spec_ids['coll'] = coll_id['id']
         result = check_if_scraping(inv_db, spec_ids) or check_if_scraping_queued(inv_db, spec_ids)
         return result
     except Exception as e:
@@ -170,7 +172,7 @@ def null_old_scrapes(time=DEFAULT_MAX_TIME):
     null_scrapes_by_list(inv_db, new_lst)
     return {'err':False, 'found':len(new_lst)}
 
-def get_live_scrapes_older_than(inv_db, min_hours_old, db_id=None, coll_id=None):
+def get_live_scrapes_older_than(inv_db, min_hours_old=DEFAULT_MAX_TIME, db_id=None, coll_id=None):
     """Get all scrapes that are not marked complete and are at least min_hour_old
 
     Generally we expect scrapes to take only a few hours so an entire DB scrape should
@@ -223,3 +225,17 @@ def null_scrapes_by_list(inv_db, scrape_list):
             table.update_one({'_id':item['_id']}, {"$set": {'running':False, 'complete':True}}, upsert=False)
     except Exception as e:
         inv.log_dest.warning('Failed to nullify scrapes '+str(e))
+
+def get_completed_scrapes(inv_db, n_days=7):
+    """Get successfully completed scrapes from the last n days
+    """
+
+    try:
+        start = datetime.datetime.now() - datetime.timedelta(days=n_days)
+        #Currently this is enough to identify scrape records
+        rec_test = {'time':{"$gt":start}, 'complete':True}
+        curs = inv_db['ops'].find(rec_test)
+        return list(curs)
+    except Exception as e:
+        inv.log_dest.warning('Failed to get completed scrapes '+str(e))
+        return []
