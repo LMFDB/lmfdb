@@ -110,10 +110,13 @@ transition: 0.3s;
 }
 
 .tab button.active {
-    background-color: #efe;
+    background-color: #efe; <!-- col_main_ll -->
 }
 
-/* Style the tab content */
+.tab button:hover {
+    background-color: #bfb; <!-- col_main_l -->
+}
+
 .tabcontent {
     display: none;
     animation: fadeEffect 1s;
@@ -125,10 +128,10 @@ transition: 0.3s;
     to {opacity: 1;}
 }
 </style>
-
+<!-- add in style.css -->
 <div class="tab">
-  <button class="tablinks" onclick="openData(event, 'Full')">Full</button>
-  <button class="tablinks" onclick="openData(event, 'Less')">Less</button>
+  <button type="select" class="tablinks" onclick="openData(event, 'Full')" id="defaultOpen">Full</button> 
+  <button type="submit" class="tablinks" onclick="openData(event, 'Less')">Less</button>
 </div>
 
 <div id="Full" class="tabcontent">
@@ -153,6 +156,8 @@ function openData(evt, dataType) {
     document.getElementById(dataType).style.display = "block";
     evt.currentTarget.className += " active";
 }
+
+document.getElementById("defaultOpen").click();
 </script>
 
 
