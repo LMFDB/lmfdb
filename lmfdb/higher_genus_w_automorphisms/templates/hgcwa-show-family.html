@@ -41,7 +41,7 @@ table,td {
 
 
 <p> <h2> Conjugacy Class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined Passports')}} </h2>
-
+<!--
 <table>
   <tr>
      <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
@@ -56,7 +56,84 @@ table,td {
 </tr>
 {% endfor %}
 </table>
-  
+-->
+<style>
+.tab button {
+transition: 0.3s;
+}
+
+.tab button.active {
+    background-color: #efe; <!-- col_main_ll -->
+}
+
+.tab button:hover {
+    background-color: #bfb; <!-- col_main_l -->
+}
+
+.tabcontent {
+    display: none;
+    animation: fadeEffect 1s;
+}
+
+/* Fade in tabs */
+@keyframes fadeEffect {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+</style>
+<!-- add in style.css -->
+<div class="tab">
+  <button type="select" class="tablinks" onclick="openData(event, 'Full')" id="defaultOpen">Full</button> 
+  <button type="submit" class="tablinks" onclick="openData(event, 'Less')">Less</button>
+</div>
+
+<div id="Full" class="tabcontent">
+  <table>
+    <tr>
+      <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+      <th>Lists of Conjugacy Classes</th>
+      
+    </tr>
+    
+    {% for itm in info.passport %}
+    <tr>
+      <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
+      <td class="center">{{itm[0]}}</td>
+
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div id="Less" class="tabcontent">
+  <p>{% for topo_rep in info.topological %}
+    {{topo_rep[0]}}
+    <table> {{topo_rep[1]}}
+      <table>{% for perm in topo_rep[2] %}
+        <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+        {% endfor %} </table> <br>
+    </table>
+    {% endfor %}
+  </p>
+</div>
+
+<script>
+function openData(evt, dataType) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(dataType).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+document.getElementById("defaultOpen").click();
+</script>
 
 </p>
 

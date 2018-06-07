@@ -70,7 +70,9 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 
 
-<h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating Vector(s)')}}</h2>
+<h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating
+  Vector(s)')}}</h2>
+<!--
 <p>
   {% if info.numb == 1 %}
   Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
@@ -102,7 +104,7 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
   </table>
 </form>
  {% endif %} </p>
-
+-->
  
 <style>
 .tab button {
@@ -135,11 +137,47 @@ transition: 0.3s;
 </div>
 
 <div id="Full" class="tabcontent">
-  <p>Full data.</p>
+  <p>
+  {% if info.numb == 1 %}
+  Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+
+  {% else %}
+  Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+
+  {% endif %}
+
+ <p>{% for cdata in info.genvects %}
+   {{cdata[0]}}
+   <table>{% for perm in cdata[3] %}
+     <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+     {% endfor %} </table> <br>
+   {% endfor %}
+ </p>
+
+ <p>
+  {% if info.numb >= 2 %}
+ <form>
+  <table>
+    <tr>
+      <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
+      <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
+    </tr>
+    <tr>
+      <td colspan=3><button type='submit' value='display'>Display</button></td>
+    </tr>
+  </table>
+</form>
+ {% endif %} </p>
 </div>
 
 <div id="Less" class="tabcontent">
-  <p>Less data.</p> 
+ <p>{% for braid_rep in info.braid %}
+   {{braid_rep[0]}}
+   <table>{% for perm in braid_rep[1] %}
+     <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+     {% endfor %} </table> <br>
+   {% endfor %}
+ </p>
 </div>
 
 <script>
