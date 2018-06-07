@@ -535,14 +535,10 @@ def render_family(args):
             #Generate topological representatives
             topo_rep = C.curve_automorphisms.passports.find({'_id': dat['topological']})
             x1=[] #A list of permutations of generating vectors of topo_rep
-            if topo_rep not in x5:
-                x2.append(topo_rep)
-            Lbraid.append([urlstrng, total_label,x5])
-
             for topo_rep_perm in topo_rep['gen_vectors']:
                 x1.append(sep.join(split_perm(Permutation(topo_rep_perm).cycle_string())))
-            if [topo_rep['passport_label'], topo_rep['total_label'], x1] not in Lbraid:
-                Lbraid.append([topo_rep['passport_label'], topo_rep['total_label'], x1])
+            if [topo_rep['passport_label'], topo_rep['total_label'], x1] not in Ltopo:
+                Ltopo.append([topo_rep['passport_label'], topo_rep['total_label'], x1])
 
         info.update({'passport': Lall})
 
