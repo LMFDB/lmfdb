@@ -522,6 +522,7 @@ def render_family(args):
 
         Lcc=[]
         Lall=[]
+        Ltopo=[]
         i=1
         for dat in dataz:
             if ast.literal_eval(dat['con']) not in Lcc:
@@ -531,8 +532,22 @@ def render_family(args):
                              urlstrng])
                 i=i+1
 
+            #Generate topological representatives
+            topo_rep = C.curve_automorphisms.passports.find({'_id': dat['topological']})
+            x1=[] #A list of permutations of generating vectors of topo_rep
+            if topo_rep not in x5:
+                x2.append(topo_rep)
+            Lbraid.append([urlstrng, total_label,x5])
+
+            for topo_rep_perm in topo_rep['gen_vectors']:
+                x1.append(sep.join(split_perm(Permutation(topo_rep_perm).cycle_string())))
+            if [topo_rep['passport_label'], topo_rep['total_label'], x1] not in Lbraid:
+                Lbraid.append([topo_rep['passport_label'], topo_rep['total_label'], x1])
+
         info.update({'passport': Lall})
 
+        #Add topological equivalence to info
+        info.update({'topological': Ltopo})
 
         g2List = ['[2,1]','[4,2]','[8,3]','[10,2]','[12,4]','[24,8]','[48,29]']
         if g  == 2 and data['group'] in g2List:
@@ -540,7 +555,6 @@ def render_family(args):
             friends = [("Genus 2 Curves over $\Q$", g2url ) ]
         else:
             friends = [ ]
-
 
         br_g, br_gp, br_sign = split_family_label(label)
 
@@ -594,7 +608,7 @@ def render_passport(args):
             numgenvecs = int(numgenvecs)
         except:
             numgenvecs = 20
-        info['numgenvecs']=numgenvecs
+               ['numgenvecs']=numgenvecs
 
         title = 'One Refined Passport of Genus ' + str(g) + ' with Automorphism Group $' + pretty_group +'$'
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
@@ -620,6 +634,8 @@ def render_passport(args):
         Ldata=[]
         HypColumn = False
         Lfriends=[]
+        Lbraid=[]
+        # Each data will have a 'braid' field, which can be the same for multiple data
         for i in range (0, min(numgenvecs,numb)):
             dat= dataz[i]
             x1=dat['total_label']
@@ -639,16 +655,26 @@ def render_passport(args):
             x4=[]
             for perm in dat['gen_vectors']:
                 cycperm=Permutation(perm).cycle_string()
-
                 x4.append(sep.join(split_perm(cycperm)))
 
             Ldata.append([x1,x2,x3,x4])
 
+            #Generate braid representatives
+            braid_rep = C.curve_automorphisms.passports.find({'_id': dat['braid']})
+            x5=[] #A list of permutations of generating vectors of braid_rep
+
+            for braid_rep_perm in braid_rep['gen_vectors']:
+                x5.append(sep.join(split_perm(Permutation(braid_rep_perm).cycle_string())))
+            if [braid_rep['total_label'],x5] not in Lbraid:
+                Lbraid.append([braid_rep['total_label'],x5])
 
 
         info.update({'genvects': Ldata, 'HypColumn' : HypColumn})
 
         info.update({'passport_cc': cc_display(ast.literal_eval(data['con']))})
+
+        #Add braid equivalence into info
+        info.update({'braid': Lbraid})
 
         if 'eqn' in data:
             info.update({'eqns': data['eqn']})
@@ -694,7 +720,6 @@ def render_passport(args):
                          'signH':sign_display(ast.literal_eval(data['signH'])),
                          'higgenlabel' : data['full_label'] })
 
-
         urlstrng,br_g, br_gp, br_sign, refined_p = split_passport_label(label)
 
 
@@ -704,7 +729,6 @@ def render_passport(args):
 
         else:
             friends = [("Family containing this refined passport",  urlstrng) ]
-
 
         bread_sign = label_to_breadcrumbs(br_sign)
         bread_gp = label_to_breadcrumbs(br_gp)
