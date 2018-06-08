@@ -278,11 +278,7 @@ function show_invs(invstyle) {
 </p>
 <h3 class="inline"> {{ KNOWL('g2c.torsion', title='Torsion') }}: </h3>\({{data.torsion_subgroup}}\)
 
-<div>
-<table  style="margin:0;" >
-<tr><td> {{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}:</td><td> {{data.two_torsion_field_knowl|safe}}</td></tr>
-</table>
-</div>
+<table style="float:right;"><tr><td>{{data.two_torsion_field_knowl|safe}}</td></tr></table> <h3 class="inline">  {{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: </h3>
 
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
