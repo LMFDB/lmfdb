@@ -2,7 +2,8 @@
 # This Blueprint is about Higher Genus Curves
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
-
+from pymongo.mongo_client import MongoClient
+from bson import ObjectId
 import StringIO
 import re
 import pymongo
@@ -482,7 +483,7 @@ def render_family(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        C = base.getDBConnection()
+        C = MongoClient(port=int(27017))
         dataz = C.curve_automorphisms.passports.find({'label': label})
         if dataz.count() is 0:
             flash_error( "No Family with Label %s was Found in the Database.", label)
@@ -533,12 +534,15 @@ def render_family(args):
                 i=i+1
 
             #Generate topological representatives
-            topo_rep = C.curve_automorphisms.passports.find({'_id': dat['topological']})
+            topo_rep = C.curve_automorphisms.passports.find({'_id': ObjectId(dat['topological'])})
+            print topo_rep
             x1=[] #A list of permutations of generating vectors of topo_rep
-            for topo_rep_perm in topo_rep['gen_vectors']:
-                x1.append(sep.join(split_perm(Permutation(topo_rep_perm).cycle_string())))
-            if [topo_rep['passport_label'], topo_rep['total_label'], x1] not in Ltopo:
-                Ltopo.append([topo_rep['passport_label'], topo_rep['total_label'], x1])
+
+            for topo_rep_vector in topo_rep:
+                for topo_rep_perm in topo_rep_vector['gen_vectors']:
+                    x1.append(sep.join(split_perm(Permutation(topo_rep_perm).cycle_string())))
+                if [topo_rep_vector['passport_label'], topo_rep_vector['total_label'], x1] not in Ltopo:
+                    Ltopo.append([topo_rep_vector['passport_label'], topo_rep_vector['total_label'], x1])
 
         info.update({'passport': Lall})
 
@@ -576,7 +580,7 @@ def render_passport(args):
     if 'passport_label' in args:
         label =clean_input(args['passport_label'])
 
-        C = base.getDBConnection()
+        C = MongoClient(port=int(27017))
 
         dataz = C.curve_automorphisms.passports.find({'passport_label': label})
         if dataz.count() is 0:
@@ -604,7 +608,7 @@ def render_passport(args):
             numgenvecs = int(numgenvecs)
         except:
             numgenvecs = 20
-               ['numgenvecs']=numgenvecs
+        info['numgenvecs']=numgenvecs
 
         title = 'One Refined Passport of Genus ' + str(g) + ' with Automorphism Group $' + pretty_group +'$'
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
@@ -656,13 +660,13 @@ def render_passport(args):
             Ldata.append([x1,x2,x3,x4])
 
             #Generate braid representatives
-            braid_rep = C.curve_automorphisms.passports.find({'_id': dat['braid']})
+            braid_rep = C.curve_automorphisms.passports.find({'_id': ObjectId("dat['braid']")})
             x5=[] #A list of permutations of generating vectors of braid_rep
-
-            for braid_rep_perm in braid_rep['gen_vectors']:
-                x5.append(sep.join(split_perm(Permutation(braid_rep_perm).cycle_string())))
-            if [braid_rep['total_label'],x5] not in Lbraid:
-                Lbraid.append([braid_rep['total_label'],x5])
+            for braid_rep_vector in braid_rep:
+                for braid_rep_perm in braid_rep_vector['gen_vectors']:
+                    x5.append(sep.join(split_perm(Permutation(braid_rep_perm).cycle_string())))
+                if [braid_rep_vector['total_label'],x5] not in Lbraid:
+                    Lbraid.append([braid_rep_vector['total_label'],x5])
 
 
         info.update({'genvects': Ldata, 'HypColumn' : HypColumn})
