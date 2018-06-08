@@ -646,7 +646,7 @@ class WebG2C(object):
             else:
                 data['rat_pts_v'] = 0
             if curve['two_torsion_field'][0]:
-                data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'], getDBConnection(), field_pretty(curve['two_torsion_field']))
+                data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], getDBConnection(), field_pretty(curve['two_torsion_field'][0]))
             else:
                 t = curve['two_torsion_field']
                 data['two_torsion_field_knowl'] = """splitting field of \(%s\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1],getDBConnection()))
