@@ -270,15 +270,17 @@ function show_invs(invstyle) {
 <p>
 {{place_code('tamagawa')}}
 </p>
-<h3 class="inline"> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: </h3>
-{{data.tama}}
+<h3 class="inline"> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: </h3>{{data.tama}}
 
 <p>
 {{place_code('torsion_subgroup')}}
 </p>
 <h3 class="inline"> {{ KNOWL('g2c.torsion', title='Torsion') }}: </h3>\({{data.torsion_subgroup}}\)
 
-<table style="float:right;"><tr><td>{{data.two_torsion_field_knowl|safe}}</td></tr></table> <h3 class="inline">  {{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: </h3>
+<p>
+{{place_code('two_torsion_field')}}
+</p>
+<h3 class="inline">  {{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: </h3><table><tr><td>{{data.two_torsion_field_knowl|safe}}</td></tr></table>
 
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
