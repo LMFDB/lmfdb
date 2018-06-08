@@ -94,9 +94,12 @@ def render_DirichletNavigation():
         if re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', label):
             slabel = label.split('.')
             m,n = int(slabel[0]), int(slabel[1])
-            if n < m and gcd(m,n) == 1:
+            if m==n==1 or n < m and gcd(m,n) == 1:
                 return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
-        flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q.", label)
+        if re.match(r'^[1-9][0-9]*$', label):
+            return redirect(url_for(".render_Dirichletwebpage", modulus=label), 301)
+
+        flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", label)
         return render_template('CharacterNavigate.html', **info)
         #FIXME, delete line below?
         #return redirect(url_for(".render_Dirichletwebpage"), 301)
@@ -113,7 +116,7 @@ def render_DirichletNavigation():
         info['info'] = search.results()
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
-                         ('search results', '') ]
+                         ('Search Results', '') ]
         info['credit'] = 'SageMath'
         return render_template("character_search_results.html", **info)
     else:
