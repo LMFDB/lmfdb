@@ -82,7 +82,7 @@ script:
 after_failure:
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
     # print the logs with the string 'ERROR:'
-    - grep 'ERROR:' -r nosetests -l | xargs -n 1 -I % sh -c '\''echo ERROR in filename = %; cat %'\''
+    - grep 'ERROR:' -r nosetests -l | xargs -n 1 -I % sh -c 'echo ERROR in filename = %; cat %'
 
 after_success:
     - ls -a
