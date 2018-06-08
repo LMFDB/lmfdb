@@ -643,7 +643,7 @@ class WebG2C(object):
                 # data['mw_rank_v'] = ratpts['mw_rank_v']
             else:
                 data['rat_pts_v'] = 0
-            data['two_torsion_field_knowl'] = nf_display_knowl (data['two_torsion_field'], getDBConnection(), field_pretty(data['two_torsion_field'])
+            data['two_torsion_field_knowl'] = nf_display_knowl (data['two_torsion_field'], getDBConnection(), field_pretty(data['two_torsion_field']))
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
