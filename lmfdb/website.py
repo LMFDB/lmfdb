@@ -247,7 +247,7 @@ def get_configuration():
                                             # undocumented, see below
                                             "enable-reloader", "disable-reloader",
                                             "enable-debugger", "disable-debugger",
-                                            "enable-profiler"
+                                            "enable-profiler",
                                             # not currently used
                                             "threading"
                                         ]

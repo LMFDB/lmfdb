@@ -61,12 +61,12 @@ def artin_representation_search(**args):
             label = parse_artin_label(label)
         except ValueError as err:
             flash(Markup("Error: %s" % (err)), "error")
-            bread = get_bread([('Search results','')])
+            bread = get_bread([('Search Results','')])
             return search_input_error({'err':''}, bread)
         return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
     title = 'Artin representation search results'
-    bread = [('Artin representation', url_for(".index")), ('Search results', ' ')]
+    bread = [('Artin Representations', url_for(".index")), ('Search Results', ' ')]
     sign_code = 0
     query = {'Hide': 0}
     try:
