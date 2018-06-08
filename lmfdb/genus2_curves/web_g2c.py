@@ -7,6 +7,7 @@ from lmfdb.utils import web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, point, real, sqrt, var, expand, nth_prime
@@ -257,7 +258,7 @@ def eqn_list_to_curve_plot(L,rat_pts):
     ymax=max([R[3] for R in plotzones])
     for P in rat_pts:
     	(x,y,z)=eval(P.replace(':',','))
-     	z=ZZ(z)
+        z=ZZ(z)
      	if z: # Do not attempt to plot points at infinity
       		x=ZZ(x)/z
       		y=ZZ(y)/z**3
@@ -643,6 +644,8 @@ class WebG2C(object):
                 # data['mw_rank_v'] = ratpts['mw_rank_v']
             else:
                 data['rat_pts_v'] = 0
+            data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'], getDBConnection(), field_pretty(curve['two_torsion_field']))
+            # data['two_torsion_field_knowl'] = "<a href=%s>%s</a>" % (url_for("number_fields.by_label",label=curve['two_torsion_field']),field_pretty(curve['two_torsion_field']))
         else:
             # invariants specific to isogeny class
             curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
