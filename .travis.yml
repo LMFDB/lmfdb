@@ -60,8 +60,7 @@ before_script:
     # it gets quite tricky.
     - export TESTMATCH='"(?:^|\/)[Tt]est_"'
     - export COVERAGE='--with-coverage  --cover-package=lmfdb'
-    - alias errorlog='grep \"ERROR:\" -r nosetests -l | xargs -n 1 -I % sh -c '\''echo ERROR in filename = %; cat %'\'''
-    - alias lmfdbnosetests='${SAGE_DIR}/local/bin/nosetests --verbosity=3 -s --testmatch=${TESTMATCH} ${COVERAGE}'
+    - export lmfdbnosetests='${SAGE_DIR}/local/bin/nosetests --verbosity=3 -s --testmatch=${TESTMATCH} ${COVERAGE}'
     # assert that m0.lmfdb.xyz accepts our connections
     - nc -vz  m0.lmfdb.xyz 27017
     # create a list of files and folder where we will run the nosetests
@@ -79,12 +78,12 @@ script:
     # run nosetests in parallel with the aid of parallel
     # we cannot use the option --processes in nosetests, as MongoDB doesn't support forking
     # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once
-    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 3 --results nosetests  --group --progress --verbose -a list lmfdbnosetests'
+    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 3 --results nosetests  --group --progress --verbose -a list ${lmfdbnosetests}'
 
 after_failure:
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
     # print the logs with the string 'ERROR:'
-    - errorlog
+    - grep \"ERROR:\" -r nosetests -l | xargs -n 1 -I % sh -c '\''echo ERROR in filename = %; cat %'\''
 
 after_success:
     - ls -a
