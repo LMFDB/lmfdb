@@ -6,7 +6,7 @@ from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
-from lmfdb.number_fields.number_field import field_pretty nf_display_knowl
+from lmfdb.number_fields.number_field import field_pretty, nf_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, point, real, sqrt, var, expand, nth_prime
