@@ -14,5 +14,12 @@
   {% endfor %}
   </ul>
 </div>
+<div style="margin-top: 30px;">
+  <strong>Knowl status:</strong>
+  <ul>
+    <li>Review status: {{ k.quality }}
+    <li>Last edited by {{k.last_author()}} on {{ k._timestamp }}
+  </ul>
+</div>
 
 {% endblock %}
