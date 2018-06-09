@@ -49,7 +49,11 @@ $(function() {
 <tr>
  <td></td>
  <td>
-  <form method="POST" action="{{ url_for('.index', category=cur_cat, filtered='True') }}">
+ {% if categorymode %}
+   <form method="POST" action="{{ url_for('.index', category=cur_cat, filtered='True') }}">
+ {% else %}
+   <form method="POST" action="{{ url_for('.index', filtered='True') }}">
+ {% endif %}
     Quality:&nbsp;
     {% for kq in knowl_qualities -%}
      <label for="{{ kq }}">{{ kq|capitalize }}</label>:
