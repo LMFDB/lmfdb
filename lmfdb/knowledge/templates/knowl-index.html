@@ -50,10 +50,11 @@ $(function() {
  <td></td>
  <td>
   <form method="POST" action="{{ url_for('.index', category=cur_cat, filtered='True') }}">
-    Quality:
+    Quality:&nbsp;
     {% for kq in knowl_qualities -%}
+     <label for="{{ kq }}">{{ kq|capitalize }}</label>:
      <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
-        <label for="{{ kq }}">{{ kq|capitalize }}</label>
+     &nbsp;&nbsp;
     {%- endfor %}
     <button type="submit" name="filter">Filter</button>
    </form>
