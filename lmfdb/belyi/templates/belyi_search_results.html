@@ -8,139 +8,15 @@
 <input type="hidden" name="count" value="{{info.count}}"/>
 
 <table>
-<td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
-<td>{{ KNOWL('g2c.abs_discriminant', title='discriminant')}}</td>
-<td>{{ KNOWL('g2c.num_rat_pts', title='rational points') }}</td>
-<td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrass') }}</td>
-<td>{{ KNOWL('g2c.torsion', title='torsion')}}</td>
-<td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
-<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
-<td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
+<td>{{ KNOWL('belyi.group', title='group') }}</td>
+<td>{{ KNOWL('belyi.abc', title='abc') }}</td>
+<td>{{ KNOWL('belyi.g', title='genus') }}</td>
 </tr>
 
 <tr>
-<td><input type='text' name='cond' placeholder='169' style="width: 100px" value="{{info.cond}}"></td>
-<td><input type='text' name='abs_disc' placeholder='169' style="width: 100px" value="{{info.abs_disc}}"></td>
-<td><input type='text' name='num_rat_pts' placeholder='1'  style="width: 100px" value="{{info.num_rat_pts}}">
-<td><input type='text' name='num_rat_wpts' placeholder='1'  style="width: 100px" value="{{info.num_rat_wpts}}">
-<td><input type='text' name='torsion' placeholder='[2,2,2]'  style="width: 100px" value="{{info.torsion}}">
-<td><input type='text' name='torsion_order' placeholder='2'  style="width: 100px" value="{{info.torsion_order}}">
-<td><input type='text' name='two_selmer_rank' placeholder='1'  style="width: 100px" value="{{info.two_selmer_rank}}">
-<td><input type='text' name='analytic_rank' placeholder='1'  style="width: 100px" value="{{info.analytic_rank}}">
-</tr>
-
-<tr>
-<td>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</td>
-<td>{{ KNOWL('g2c.st_group', title='\(\mathrm{ST}\)') }}</td>
-<td>{{ KNOWL('g2c.st_group_identity_component', title='\(\mathrm{ST}^0\)') }}</td>
-<td>{{ KNOWL('g2c.aut_grp', title='\(\mathrm{Aut}(X)\)') }}</td>
-<td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
-<td>{{ KNOWL('g2c.locally_solvable',   title='locally solvable') }}</td>
-<td>{{ KNOWL('g2c.has_square_sha',   title='square &#1064;*') }}</td>
-<td>{{ KNOWL('ag.geom_simple', title='$\\overline{\\mathbb Q}$-simple') }}</td>
-</tr>
-
-<tr>
-<td><select name='is_gl2_type' style="width: 110px">
-  <option ></option>
-{% if info.is_gl2_type == 'True' %}
-  <option value="True" selected>True</option>
-{% else %}
-  <option value="True">True</option>
-{% endif %}
-{% if info.is_gl2_type == 'False' %}
-  <option value="False" selected>False</option>
-{% else %}
-  <option value="False">False</option>
-{% endif %}
-</select></td>
-
-<td><select name='st_group' style="width: 110px" >
-    <option ></option>
-    {% for G in info.st_group_list %}
-        {% if  G == info.st_group %}
-            <option value='{{G}}' selected>{{info.st_group_dict[G]}}</option>
-        {% else %}
-            <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
-        {% endif %}
-    {% endfor %}
-</select></td>
-
-<td><select name='real_geom_end_alg' style="width: 110px">
-    <option ></option>
-    {% for G in info.real_geom_end_alg_list %}
-        {% if G == info.real_geom_end_alg %}
-            <option value='{{G}}' selected>{{info.real_geom_end_alg_to_ST0_dict[G]}}</option>
-        {% else %}
-            <option value='{{G}}'>{{info.real_geom_end_alg_to_ST0_dict[G]}}</option>
-        {% endif %}
-    {% endfor %}
-</select></td>
-
-<td><select name='aut_grp_id' style="width: 110px">
-    <option ></option>
-    {% for G in info.aut_grp_list %}
-        {% if G == info.aut_grp_id %}
-            <option value='{{G}}' selected>{{info.aut_grp_dict[G]}}</option>
-        {% else %}
-            <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
-        {% endif %}
-    {% endfor %}
-</select></td>
-
-<td><select name='geom_aut_grp_id' style="width: 110px">
-    <option ></option>
-    {% for G in info.geom_aut_grp_list %}
-        {% if G == info.geom_aut_grp_id %}
-            <option value='{{G}}' selected>{{info.geom_aut_grp_dict[G]}}</option>
-        {% else %}
-            <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
-        {% endif %}
-    {% endfor %}
-</select></td>
-
-<td><select name='locally_solvable' style="width: 110px">
-  <option ></option>
-{% if info.locally_solvable == 'True' %}
-  <option value="True" selected>True</option>
-{% else %}
-  <option value="True">True</option>
-{% endif %}
-{% if info.locally_solvable == 'False' %}
-  <option value="False" selected>False</option>
-{% else %}
-  <option value="False">False</option>
-{% endif %}
-</select></td>
-
-<td><select name='has_square_sha' style="width: 110px">
-  <option ></option>
-{% if info.has_square_sha == 'True' %}
-  <option value="True" selected>True</option>
-{% else %}
-  <option value="True">True</option>
-{% endif %}
-{% if info.has_square_sha == 'False' %}
-  <option value="False" selected>False</option>
-{% else %}
-  <option value="False">False</option>
-{% endif %}
-</select></td>
-
-<td><select name='is_simple_geom' width="110" style="width: 110px">
-  <option ></option>
-{% if info.is_simple_geom == 'True' %}
-  <option value="True" selected>True</option>
-{% else %}
-  <option value="True">True</option>
-{% endif %}
-{% if info.is_simple_geom == 'False' %}
-  <option value="False" selected>False</option>
-{% else %}
-  <option value="False">False</option>
-{% endif %}
-</select></td>
-
+<td><input type='text' name='group' placeholder='4T5' style="width: 100px" value="{{info.group}}"></td>
+<td><input type='text' name='abc' placeholder='[4,4,3]' style="width: 100px" value="{{info.abc}}"></td>
+<td><input type='text' name='g' placeholder='1' style="width: 100px" value="{{info.g}}"></td>
 </tr>
 
 <tr style="height:50px">
@@ -170,23 +46,15 @@ Download all search results for&nbsp;
 
 <table class="ntdata">
 <tr>
-    <th>{{ KNOWL('g2c.label', title='Label') }}</th>
-    <th>{{ KNOWL('g2c.isogeny_class', title='Class') }}</th>
-    <th>{{ KNOWL('g2c.equation', title='Equation') }}</th>
-    <th>{{ KNOWL('g2c.st_group', title='Sato-Tate') }}</th>
-    <th>{{ KNOWL('ag.geom_simple', title='\(\overline{\Q}\)-simple') }}</th>
-    <th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)') }}</th>
-    <th>{{ KNOWL('g2c.analytic_rank', title='Rank*') }}</th>
+    <th>{{ KNOWL('belyi.label', title='Label') }}</th>
+    <th>{{ KNOWL('belyi.group', title='Group') }}</th>
+    <th>{{ KNOWL('belyi.g', title='Genus') }}</th>
 </tr>
-{% for curve in info.curves: %}
+{% for galmap in info.galmaps: %}
 <tr>
-    <td> <a href = "{{info.curve_url(curve.label)}}"> {{curve.label}} </a> </td>
-    <td> <a href = "{{info.class_url(curve.class)}}"> {{curve.class}} </a> </td>
-    <td> \({{curve.equation_formatted}}\) </td>
-    <td align=center> {{curve.st_group_link|safe}} </td>
-    <td align=center> {{('&#x2713;' if curve.is_simple_geom else '')|safe}} </td>
-    <td align=center> {{('&#x2713;' if curve.is_gl2_type else '')|safe}} </td>
-    <td align=center> {{curve.analytic_rank}} </td>
+    <td> <a href = "{{info.galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
+    <td align=center> {{galmap.group}} </td>
+    <td align=center> {{galmap.g}} </td>
 </tr>
 {% endfor %}
 </table>
