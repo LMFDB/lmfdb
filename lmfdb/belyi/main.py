@@ -21,227 +21,127 @@ credit_string = "Edgar Costa, Michael Musty, Sam Schiavone, Jeroen Sijsling, Joh
 # global database connection and stats objects
 ###############################################################################
 
-the_g2cstats = None
-def g2cstats():
-    global the_g2cstats
-    if the_g2cstats is None:
-        the_g2cstats = G2C_stats()
-    return the_g2cstats
+the_belyistats = None
+def belyistats():
+    global the_belyistats
+    if the_belyistats is None:
+        the_belyistats = belyi_stats()
+    return the_belyistats
 
 ###############################################################################
 # List and dictionaries needed routing and searching
 ###############################################################################
 
-# lists determine display order in drop down lists, dictionary key is the
-# database entry, dictionary value is the display value
-st_group_list = ['J(C_2)', 'J(C_4)', 'J(C_6)', 'J(D_2)', 'J(D_3)', 'J(D_4)',
-        'J(D_6)', 'J(T)', 'J(O)', 'C_{2,1}', 'C_{6,1}', 'D_{2,1}', 'D_{3,2}',
-        'D_{4,1}', 'D_{4,2}', 'D_{6,1}', 'D_{6,2}', 'O_1', 'E_1', 'E_2', 'E_3',
-        'E_4', 'E_6', 'J(E_1)', 'J(E_2)', 'J(E_3)', 'J(E_4)', 'J(E_6)',
-        'F_{a,b}', 'F_{ac}', 'N(G_{1,3})', 'G_{3,3}', 'N(G_{3,3})', 'USp(4)']
-st_group_dict = {a:a for a in st_group_list}
 
-# End_QQbar tensored with RR determines ST0 (which is the search parameter):
-real_geom_end_alg_list = ['M_2(C)', 'M_2(R)', 'C x C', 'C x R', 'R x R', 'R']
-real_geom_end_alg_to_ST0_dict = {
-        'M_2(C)':'U(1)',
-        'M_2(R)':'SU(2)',
-        'C x C':'U(1) x U(1)',
-        'C x R':'U(1) x SU(2)',
-        'R x R':'SU(2) x SU(2)',
-        'R':'USp(4)'
-        }
-
-aut_grp_list = ['[2,1]', '[4,1]', '[4,2]', '[6,2]', '[8,3]', '[12,4]']
-aut_grp_dict = {
-        '[2,1]':'C_2',
-        '[4,1]':'C_4',
-        '[4,2]':'V_4',
-        '[6,2]':'C_6',
-        '[8,3]':'D_4',
-        '[12,4]':'D_6'
-        }
-
-geom_aut_grp_list = ['[2,1]', '[4,2]', '[8,3]', '[10,2]', '[12,4]', '[24,8]', '[48,29]']
-geom_aut_grp_dict = {
-        '[2,1]':'C_2',
-        '[4,2]':'V_4',
-        '[8,3]':'D_4',
-        '[10,2]':'C_{10}',
-        '[12,4]':'D_6',
-        '[24,8]':'2D_6',
-        '[48,29]':'\\tilde{S}_4'}
 
 ###############################################################################
-# Routing for top level, random_curve,  and stats
+# Routing for top level, random_curve, and stats
 ###############################################################################
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Genus 2 curve labels', url_for(".labels_page"))]
+            ('Belyi labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
-@g2c_page.route("/")
+@belyi_page.route("/")
 def index():
-    return redirect(url_for(".index_Q", **request.args))
-
-@g2c_page.route("/Q/")
-def index_Q():
     if len(request.args) > 0:
-        return genus2_curve_search(to_dict(request.args))
-    info = {'counts' : g2cstats().counts()}
+        return belyi_search(to_dict(request.args))
+    info = {'counts' : belyistats().counts()}
     info["stats_url"] = url_for(".statistics")
-    info["curve_url"] =  lambda label: url_for_curve_label(label)
-    curve_labels = ('169.a.169.1', '1116.a.214272.1', '11664.a.11664.1', '1369.a.50653.1', '15360.f.983040.2')
-    info["curve_list"] = [ {'label':label,'url':url_for_curve_label(label)} for label in curve_labels ]
-    info["conductor_list"] = ('1-499', '500-999', '1000-99999','100000-1000000')
-    info["discriminant_list"] = ('1-499', '500-999', '1000-99999','100000-1000000')
-    info["st_group_list"] = st_group_list
-    info["st_group_dict"] = st_group_dict
-    info["real_geom_end_alg_list"] = real_geom_end_alg_list
-    info["real_geom_end_alg_to_ST0_dict"] = real_geom_end_alg_to_ST0_dict
-    info["aut_grp_list"] = aut_grp_list
-    info["aut_grp_dict"] = aut_grp_dict
-    info["geom_aut_grp_list"] = geom_aut_grp_list
-    info["geom_aut_grp_dict"] = geom_aut_grp_dict
-    title = 'Genus 2 curves over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '))
-    return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
+    info["belyi_galmap_url"] =  lambda label: url_for_belyi_galmap_label(label)
+    belyi_galmap_labels = ('4T5-[4,4,3]-4-4-31-g1-a','5T4-[5,3,3]-5-311-311-g0-a','9T34-[14,4,4]-72-42111-4221-g0-a')
+    info["belyi_galmap_list"] = [ {'label':label,'url':url_for_belyi_galmap_label(label)} for label in curve_labels ]
+    info["degree_list"] = ('1-6', '7-8', '9-10','10-100')
+    title = 'Belyi maps'
+    bread = (('Belyi Maps', url_for(".index")))
+    return render_template("belyi_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
-@g2c_page.route("/Q/random")
-def random_curve():
-    label = random_value_from_collection(g2c_db_curves(), 'label')
-    return redirect(url_for_curve_label(label), 307)
+@belyi_page.route("/random")
+def random_belyi_galmap():
+    label = random_value_from_collection(belyi_db_galmaps(), 'label')
+    return redirect(url_for_belyi_galmap_label(label), 307)
 
-@g2c_page.route("/Q/stats")
+@belyi_page.route("/stats")
 def statistics():
-    info = { 'counts': g2cstats().counts(), 'stats': g2cstats().stats() }
-    title = 'Genus 2 curves over $\Q$: statistics'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Statistics', ' '))
-    return render_template("g2c_stats.html", info=info, credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
+    info = { 'counts': belyistats().counts(), 'stats': belyistats().stats() }
+    title = 'Belyi maps: statistics'
+    bread = (('Belyi Maps', url_for(".index")), ('Statistics', ' '))
+    return render_template("belyi_stats.html", info=info, credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 ###############################################################################
 # Curve and isogeny class pages
 ###############################################################################
 
-@g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/<int:num>")
-def by_url_curve_label(cond, alpha, disc, num):
-    label = str(cond)+"."+alpha+"."+str(disc)+"."+str(num)
-    return render_curve_webpage(label)
+@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>")
+def by_url_belyi_galmap_label(group, abc, sigma0, sigma1, sigmaoo, g, letnum):
+    label = group+"-"+abc+"-"+sigma0+"-"+sigma1+"-"+sigmaoo+"-"+g+"-"+letnum
+    return render_belyi_galmap_webpage(label)
 
-@g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/")
-def by_url_isogeny_class_discriminant(cond, alpha, disc):
-    data = to_dict(request.args)
-    clabel = str(cond)+"."+alpha
-    # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
-    if not g2c_db_curves().find_one({'class':clabel},{'_id':True}):
-        return abort(404, 'Genus 2 isogeny class %s not found in database.'%clabel)
-    data['title'] = 'Genus 2 curves in isogeny class %s of discriminant %s' % (clabel,disc)
-    data['bread'] = [('Genus 2 Curves', url_for(".index")),
-        ('$\Q$', url_for(".index_Q")),
-        ('%s' % cond, url_for(".by_conductor", cond=cond)),
-        ('%s' % alpha, url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha)),
-        ('%s' % disc, url_for(".by_url_isogeny_class_discriminant", cond=cond, alpha=alpha, disc=disc))]
-    if len(request.args) > 0:
-        # if conductor or discriminant changed, fall back to a general search
-        if ('cond' in request.args and request.args['cond'] != str(cond)) or \
-           ('abs_disc' in request.args and request.args['abs_disc'] != str(disc)):
-            return redirect (url_for(".index", **request.args), 307)
-        data['title'] += ' search results'
-        data['bread'].append(('search results',''))
-    data['cond'] = cond
-    data['class'] = clabel
-    data['abs_disc'] = disc
-    return genus2_curve_search(data)
+@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>")
+def by_url_belyi_passport_label:
+    label = group+"-"+abc+"-"+sigma0+"-"+sigma1+"-"+sigmaoo+"-"+g
+    return render_belyi_passport_webpage(label)
 
-@g2c_page.route("/Q/<int:cond>/<alpha>/")
-def by_url_isogeny_class_label(cond, alpha):
-    return render_isogeny_class_webpage(str(cond)+"."+alpha)
-
-@g2c_page.route("/Q/<int:cond>/")
-def by_conductor(cond):
-    data = to_dict(request.args)
-    data['title'] = 'Genus 2 curves of conductor %s' % cond
-    data['bread'] = [('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('%s' % cond, url_for(".by_conductor", cond=cond))]
-    if len(request.args) > 0:
-        # if conductor changed, fall back to a general search
-        if 'cond' in request.args and request.args['cond'] != str(cond):
-            return redirect (url_for(".index", **request.args), 307)
-        data['title'] += ' search results'
-        data['bread'].append(('search results',''))
-    data['cond'] = cond
-    return genus2_curve_search(data)
-
-@g2c_page.route("/Q/<label>")
-def by_label(label):
-    # handles curve, isogeny class, and Lhash labels
-    return genus2_curve_search({'jump':label})
-
-def render_curve_webpage(label):
+def render_belyi_galmap_webpage(label):
     try:
-        g2c = WebG2C.by_label(label)
+        belyi_galmap = WebBelyiGalMap.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
-    return render_template("g2c_curve.html",
-                           properties2=g2c.properties,
+    return render_template("belyi_galmap.html",
+                           properties2=belyi_galmap.properties,
                            credit=credit_string,
-                           info={'aut_grp_dict':aut_grp_dict,'geom_aut_grp_dict':geom_aut_grp_dict},
-                           data=g2c.data,
-                           code=g2c.code,
-                           bread=g2c.bread,
+                           info={},
+                           data=belyi_galmap.data,
+                           code=belyi_galmap.code,
+                           bread=belyi_galmap.bread,
                            learnmore=learnmore_list(),
-                           title=g2c.title,
-                           friends=g2c.friends)
+                           title=belyi_galmap.title,
+                           friends=belyi_galmap.friends)
 
 def render_isogeny_class_webpage(label):
     try:
-        g2c = WebG2C.by_label(label)
+        belyi_passport = WebBelyiPassport.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
-    return render_template("g2c_isogeny_class.html",
-                           properties2=g2c.properties,
+    return render_template("belyi_passport.html",
+                           properties2=belyi_passport.properties,
                            credit=credit_string,
-                           data=g2c.data,
-                           bread=g2c.bread,
+                           data=belyi_passport.data,
+                           bread=belyi_passport.bread,
                            learnmore=learnmore_list(),
-                           title=g2c.title,
-                           friends=g2c.friends)
+                           title=belyi_passport.title,
+                           friends=belyi_passport.friends)
 
-def url_for_curve_label(label):
+def url_for_belyi_galmap_label(label):
+    slabel = label.split("-")
+    return url_for(".by_url_belyi_galmap_label", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4], g=slabel[5], letnum=slabel[6])
+
+@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>")
+
+def url_for_belyi_passport_label(label):
     slabel = label.split(".")
-    return url_for(".by_url_curve_label", cond=slabel[0], alpha=slabel[1], disc=slabel[2], num=slabel[3])
+    return url_for(".by_url_belyi_passport_label", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4], g=slabel[5])
 
-def url_for_isogeny_class_label(label):
-    slabel = label.split(".")
-    return url_for(".by_url_isogeny_class_label", cond=slabel[0], alpha=slabel[1])
-
-def class_from_curve_label(label):
-    return '.'.join(label.split(".")[:2])
+def belyi_passport_from_belyi_galmap_label(label):
+    return '.'.join(label.split(".")[:-1])
 
 ################################################################################
 # Searching
 ################################################################################
 
-def genus2_curve_search(info):
+def belyi_search(info):
     if 'jump' in info:
         jump = info["jump"].strip()
-        if re.match(r'^\d+\.[a-z]+\.\d+\.\d+$',jump):
-            return redirect(url_for_curve_label(jump), 301)
+        if re.match(r'^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+[a-z]+$', jump):
+            return redirect(url_for_belyi_galmap_label(jump), 301)
         else:
-            if re.match(r'^\d+\.[a-z]+$', jump):
-                return redirect(url_for_isogeny_class_label(jump), 301)
-            else:
-                # Handle direct Lhash input
-                if re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
-                    c = g2c_db_curves().find_one({'Lhash': jump[1:].strip()})
-                    if c:
-                        return redirect(url_for_isogeny_class_label(c["class"]), 301)
-                    else:
-                        errmsg = "hash %s not found"
+            if re.match(r'^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d$', jump):
+                return redirect(url_for_belyi_passport_label(jump), 301)
                 else:
                     errmsg = "%s is not a valid genus 2 curve or isogeny class label"
         flash_error (errmsg, jump)

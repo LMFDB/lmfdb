@@ -3,15 +3,15 @@ from lmfdb.base import app
 from lmfdb.utils import make_logger
 from flask import Blueprint
 
-g2c_page = Blueprint("g2c", __name__, template_folder='templates',
+belyi_page = Blueprint("belyi", __name__, template_folder='templates',
         static_folder="static")
-g2c_logger = make_logger(g2c_page)
+belyi_logger = make_logger(belyi_page)
 
-@g2c_page.context_processor
+@belyi_page.context_processor
 def body_class():
-    return {'body_class': 'g2c'}
+    return {'body_class': 'belyi'}
 
 import main
 assert main # silence pyflakes
 
-app.register_blueprint(g2c_page, url_prefix="/Genus2Curve")
+app.register_blueprint(belyi_page, url_prefix="/Belyi")
