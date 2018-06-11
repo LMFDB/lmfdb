@@ -20,7 +20,7 @@ def makeDBconnection_write():
     #_Cwrite = pymongo.MongoClient("localhost:37010");
     _Cwrite = pymongo.MongoClient("belyi.lmfdb.xyz:27017");
     #_Cwrite.admin.authenticate("lmfdb","lmfdb")
-    path = os.path.join(os.getcwd(), "passwords.yaml")
+    path = os.path.join(os.getcwd(), "../../passwords.yaml")
     import yaml
     pw_dict = yaml.load(path)
     try:
