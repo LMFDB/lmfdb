@@ -20,15 +20,13 @@ div.properties-body table tr td.label { vertical-align: top; }
 {% set KNOWL_ID = "belyi.%s"|format(data['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
-<p> Degree: {{data.deg}} </p>
-<p> Group: {{data.group}} </p>
-<p> Automorphism group: {{data.aut_group}} </p>
-<p> Geomtype: {{data.geomtype}} </p>
-<p> ABC: {{data.abc}} </p>
-<p> Lambdas: {{data.lambdas}} </p>
-<p> Genus: {{data.g}} </p>
-<p> Max degree of base field: {{data.maxdegbf}} </p>
-<p> Passport size: {{data.pass_size}} </p>
-<p> Number of orbits: {{data.num_orbits}} </p>
+<h2> {{ KNOWL('belyi.label', title='Passport label') }} </h2>
+{{data.plabel}}
+
+<p> Triples: {{data.triples}} </p>
+<p> Base field: {{data.base_field}} </p>
+<p> Embeddings: {{data.embeddings}} </p>
+<p> Curve: {{data.curve}} </p>
+<p> Map: {{data.map}} </p>
 
 {% endblock %}
