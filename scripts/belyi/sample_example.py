@@ -5,6 +5,7 @@ belyidb = Cw['belyi']
 passports = belyidb['passports']
 galmaps = belyidb['galmaps']
 
+# sample passport
 sample_pass = {
     'plabel':'sample-6T15-[5,5,5]-51-51-51-g1',
     'deg' : 6,
@@ -18,6 +19,8 @@ sample_pass = {
     'pass_size' : 8,
     'num_orbits' : 3
               };
+
+# sample galmap
 sample_galmap = {
     'label':'sample-6T15-[5,5,5]-51-51-51-g1-a',
     'plabel' : '6T15-[5,5,5]-51-51-51-g1',
