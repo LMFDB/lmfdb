@@ -281,4 +281,11 @@
        url_for: "knowledge.index"
        type: knowl
 
+9Inv:
+   type: single
+   heading:
+       title: Inventory
+       url_for: "inventory_app.show_edit_root"
+       type: knowl
+
 ...
