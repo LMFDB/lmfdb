@@ -142,55 +142,30 @@ def belyi_search(info):
         else:
             if re.match(r'^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d$', jump):
                 return redirect(url_for_belyi_passport_label(jump), 301)
-                else:
-                    errmsg = "%s is not a valid genus 2 curve or isogeny class label"
+            else:
+                errmsg = "%s is not a valid Belyi map or passport label"
         flash_error (errmsg, jump)
         return redirect(url_for(".index"))
-    if info.get('download','').strip():
-        return download_search(info)
+#     if info.get('download','').strip():
+#         return download_search(info)
 
-    info["st_group_list"] = st_group_list
-    info["st_group_dict"] = st_group_dict
-    info["real_geom_end_alg_list"] = real_geom_end_alg_list
-    info["real_geom_end_alg_to_ST0_dict"] = real_geom_end_alg_to_ST0_dict
-    info["aut_grp_list"] = aut_grp_list
-    info["aut_grp_dict"] = aut_grp_dict
-    info["geom_aut_grp_list"] = geom_aut_grp_list
-    info["geom_aut_grp_dict"] = geom_aut_grp_dict
-    bread = info.get('bread',(('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Search Results', '.')))
+    bread = info.get('bread',(('Belyi Maps', url_for(".index")), ('Search Results', '.')))
 
     query = {}
     try:
-        parse_ints(info,query,'abs_disc','absolute discriminant')
-        parse_bool(info,query,'is_gl2_type','is of GL2-type')
-        parse_bool(info,query,'has_square_sha','has square Sha')
-        parse_bool(info,query,'locally_solvable','is locally solvable')
-        parse_bool(info,query,'is_simple_geom','is geometrically simple')
-        parse_ints(info,query,'cond','conductor')
-        parse_ints(info,query,'num_rat_pts','rational points')
-        parse_ints(info,query,'num_rat_wpts','rational Weierstrass points')
-        parse_bracketed_posints(info, query, 'torsion', 'torsion structure', maxlength=4,check_divisibility="increasing")
-        parse_ints(info,query,'torsion_order','torsion order')
-        if 'torsion' in query and not 'torsion_order' in query:
-            query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion']],1)
-        if 'torsion' in query:
-            query['torsion_subgroup'] = str(query['torsion']).replace(" ","")
-            query.pop('torsion') # search using string key, not array of ints
-        parse_ints(info,query,'two_selmer_rank','2-Selmer rank')
-        parse_ints(info,query,'analytic_rank','analytic rank')
-        # G2 invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
-        if 'g20' in info and 'g21' in info and 'g22' in info:
-            query['g2_inv'] = "['%s','%s','%s']"%(info['g20'], info['g21'], info['g22'])
-        if 'class' in info:
-            query['class'] = info['class']
-        for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id'):
-            if info.get(fld): query[fld] = info[fld]
+        if 'group' in query:
+            info['group'] = query['group']
+        parse_bracketed_posints(info, query, 'abc', 'a, b, c', maxlength=3)
+        parse_ints(info,query,'g','genus')
+        # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
+        # (See examples in genus 2)
     except ValueError as err:
         info['err'] = str(err)
-        return render_template("g2c_search_results.html", info=info, title='Genus 2 Curves Search Input Error', bread=bread, credit=credit_string)
+        return render_template("belyi_search_results.html", info=info, title='Belyi Maps Search Input Error', bread=bread, credit=credit_string)
+
     # Database query happens here
     info["query"] = query # save query for reuse in download_search
-    cursor = g2c_db_curves().find(query, {'_id':False, 'label':True, 'eqn':True, 'st_group':True, 'is_gl2_type':True, 'is_simple_geom':True, 'analytic_rank':True})
+    cursor = belyi_db_galmaps().find(query, {'_id':False, 'label':True, 'group':True, 'abc':True, 'g':True})
 
     count = parse_count(info, 50)
     start = parse_start(info)
@@ -200,7 +175,7 @@ def belyi_search(info):
     if(start < 0):
         start = 0
 
-    res = cursor.sort([("cond", ASCENDING), ("class", ASCENDING),  ("disc_key", ASCENDING),  ("label", ASCENDING)]).skip(start).limit(count)
+    res = cursor.sort([("deg", ASCENDING), ("group_num", ASCENDING), ("g", ASCENDING),  ("label", ASCENDING)]).skip(start).limit(count)
     nres = res.count()
 
     if nres == 1:
@@ -215,25 +190,20 @@ def belyi_search(info):
     for v in res:
         v_clean = {}
         v_clean["label"] = v["label"]
-        v_clean["class"] = class_from_curve_label(v["label"])
-        v_clean["is_gl2_type"] = v["is_gl2_type"] 
-        v_clean["is_simple_geom"] = v["is_simple_geom"] 
-        v_clean["equation_formatted"] = list_to_min_eqn(literal_eval(v["eqn"]))
-        v_clean["st_group_link"] = st_link_by_name(1,4,v['st_group'])
-        v_clean["analytic_rank"] = v["analytic_rank"]
+        v_clean["group"] = belyi_group_from_galmap_label(v["label"])
+        v_clean["g"] = belyi_g_from_galmap_label(v["label"])
         res_clean.append(v_clean)
 
-    info["curves"] = res_clean
-    info["curve_url"] = lambda label: url_for_curve_label(label)
-    info["class_url"] = lambda label: url_for_isogeny_class_label(label)
+    info["belyi_galmaps"] = res_clean
+    info["belyi_galmap_url"] = lambda label: url_for_belyi_galmap_label(label)
     info["start"] = start
     info["count"] = count
     info["more"] = int(start+count<nres)
     
-    title = info.get('title','Genus 2 Curve search results')
+    title = info.get('title','Belyi map search results')
     credit = credit_string
     
-    return render_template("g2c_search_results.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
+    return render_template("belyi_search_results.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
 
 ################################################################################
 # Statistics
@@ -242,36 +212,13 @@ def belyi_search(info):
 def boolean_format(value):
     return 'True' if value else 'False'
 
-def aut_grp_format(id):
-    return "\("+aut_grp_dict[id]+"\)"
-
-def geom_aut_grp_format(id):
-    return "\("+geom_aut_grp_dict[id]+"\)"
-
-def st0_group_format(name):
-    return "\("+st0_group_name(name)+"\)"
-
-def st_group_format(name):
-    return st_link_by_name(1,4,name)
-
 stats_attribute_list = [
-    {'name':'num_rat_pts','top_title':'rational points','row_title':'rational points','knowl':'g2c.num_rat_pts','avg':True},
-    {'name':'num_rat_wpts','top_title':'rational Weierstrass points','row_title':'Weierstrass points','knowl':'g2c.num_rat_wpts','avg':True},
-    {'name':'aut_grp_id','top_title':'$\mathrm{Aut}(X)$','row_title':'automorphism group','knowl':'g2c.aut_grp','format':aut_grp_format},
-    {'name':'geom_aut_grp_id','top_title':'$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$','row_title':'automorphism group','knowl':'g2c.geom_aut_grp','format':geom_aut_grp_format},
-    {'name':'analytic_rank','top_title':'analytic ranks','row_title':'analytic rank','knowl':'g2c.analytic_rank','avg':True},
-    {'name':'two_selmer_rank','top_title':'2-Selmer ranks','row_title':'2-Selmer rank','knowl':'g2c.two_selmer_rank','avg':True},
-    {'name':'has_square_sha','top_title':'squareness of &#1064;','row_title':'has square Sha','knowl':'g2c.has_square_sha', 'format':boolean_format},
-    {'name':'locally_solvable','top_title':'local solvability','row_title':'locally solvable','knowl':'g2c.locally_solvable', 'format':boolean_format},
-    {'name':'is_gl2_type','top_title':'$\mathrm{GL}_2$-type','row_title':'is of GL2-type','knowl':'g2c.gl2type', 'format':boolean_format},
-    {'name':'real_geom_end_alg','top_title':'Sato-Tate group identity components','row_title':'identity component','knowl':'g2c.st_group_identity_component', 'format':st0_group_format},
-    {'name':'st_group','top_title':'Sato-Tate groups','row_title':'Sato-Tate groups','knowl':'g2c.st_group', 'format':st_group_format},
-    {'name':'torsion_order','top_title':'torsion subgroup orders','row_title':'torsion order','knowl':'g2c.torsion_order','avg':True},
+    {'name':'size','top_title':'Galois orbit size','row_title':'size','knowl':'belyi.galmap.size','avg':True}
 ]
 
-class G2C_stats(object):
+class belyi_stats(object):
     """
-    Class for creating and displaying statistics for genus 2 curves over Q
+    Class for creating and displaying statistics for Belyi maps
     """
 
     def __init__(self):
@@ -279,29 +226,30 @@ class G2C_stats(object):
         self._stats = {}
 
     def counts(self):
-        self.init_g2c_count()
+        self.init_belyi_count()
         return self._counts
 
     def stats(self):
-        self.init_g2c_count()
-        self.init_g2c_stats()
+        self.init_belyi_count()
+        self.init_belyi_stats()
         return self._stats
 
-    def init_g2c_count(self):
+    def init_belyi_count(self):
         if self._counts:
             return
-        curves = g2c_db_curves()
+        galmaps = belyi_db_galmaps()
         counts = {}
-        ncurves = curves.count()
-        counts['ncurves']  = ncurves
-        counts['ncurves_c'] = comma(ncurves)
-        nclasses = g2c_db_isogeny_classes_count()
-        counts['nclasses'] = nclasses
-        counts['nclasses_c'] = comma(nclasses)
-        max_D = curves.find().sort('abs_disc', DESCENDING).limit(1)[0]['abs_disc']
-        counts['max_D'] = max_D
-        counts['max_D_c'] = comma(max_D)
-        self._counts  = counts
+        ngalmaps = galmaps.count()
+        counts['ngalmaps']  = ngalmaps
+        counts['ngalmaps_c'] = comma(ngalmaps)
+        passports = belyi_db_passports()
+        npassports = passports.count()
+        counts['npassports'] = npassports
+        counts['npassports_c'] = comma(npassports)
+        max_deg = galmaps.find().sort('deg', DESCENDING).limit(1)[0]['deg']
+        counts['max_deg'] = max_deg
+        counts['max_deg_c'] = comma(max_deg)
+        self._counts = counts
 
     def init_g2c_stats(self):
         if self._stats:
@@ -338,70 +286,81 @@ class G2C_stats(object):
         stats["distributions"] = dists
         self._stats = stats
 
-download_languages = ['magma', 'sage', 'gp', 'text']
-download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
-download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
-download_assignment_end = {'magma':'];','sage':']','gp':']}','text':']'}
-download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
-download_make_data = {
-'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
-'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
-'gp':'make_data()=[apply(Polrev,c)|c<-data];\n\n',
-'text':''
-}
-download_make_data_comment = {
-        'magma': 'To create a list of curves, type "curves:= make_data();"',
-        'sage':'To create a list of curves, type "curves = make_data()"',
-        'gp':'To create a list of curves [f,h], type "curves = make_data()"',
-        'text':''}
-
-def download_search(info):
-    lang = info.get('download','text').strip()
-    filename = 'genus2_curves' + download_file_suffix[lang]
-    mydate = time.strftime("%d %B %Y")
-    # reissue query here
-    try:
-        res = g2c_db_curves().find(literal_eval(info.get('query','{}')),{'_id':False,'eqn':True})
-    except Exception as err:
-        return "Unable to parse query: %s"%err
-    c = download_comment_prefix[lang]
-    s =  '\n'
-    s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
-    s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), res.count())
-    s += c + ' Below is a list called data. Each entry has the form:\n'
-    s += c + '   [[f coeffs],[h coeffs]]\n'
-    s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
-    s += c + '\n'
-    s += c + ' ' + download_make_data_comment[lang] + '\n'
-    s += '\n'
-    s += download_assignment_start[lang] + '\\\n'
-    s += str(',\n'.join([str(r['eqn']) for r in res])) # list of curve equations
-    s += download_assignment_end[lang]
-    s += '\n\n'
-    s += download_make_data[lang]
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 
-@g2c_page.route("/Completeness")
+
+
+
+
+
+
+
+
+
+# download_languages = ['magma', 'sage', 'gp', 'text']
+# download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
+# download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
+# download_assignment_end = {'magma':'];','sage':']','gp':']}','text':']'}
+# download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
+# download_make_data = {
+# 'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
+# 'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
+# 'gp':'make_data()=[apply(Polrev,c)|c<-data];\n\n',
+# 'text':''
+# }
+# download_make_data_comment = {
+#         'magma': 'To create a list of curves, type "curves:= make_data();"',
+#         'sage':'To create a list of curves, type "curves = make_data()"',
+#         'gp':'To create a list of curves [f,h], type "curves = make_data()"',
+#         'text':''}
+# 
+# def download_search(info):
+#     lang = info.get('download','text').strip()
+#     filename = 'genus2_curves' + download_file_suffix[lang]
+#     mydate = time.strftime("%d %B %Y")
+#     # reissue query here
+#     try:
+#         res = g2c_db_curves().find(literal_eval(info.get('query','{}')),{'_id':False,'eqn':True})
+#     except Exception as err:
+#         return "Unable to parse query: %s"%err
+#     c = download_comment_prefix[lang]
+#     s =  '\n'
+#     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
+#     s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), res.count())
+#     s += c + ' Below is a list called data. Each entry has the form:\n'
+#     s += c + '   [[f coeffs],[h coeffs]]\n'
+#     s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
+#     s += c + '\n'
+#     s += c + ' ' + download_make_data_comment[lang] + '\n'
+#     s += '\n'
+#     s += download_assignment_start[lang] + '\\\n'
+#     s += str(',\n'.join([str(r['eqn']) for r in res])) # list of curve equations
+#     s += download_assignment_end[lang]
+#     s += '\n\n'
+#     s += download_make_data[lang]
+#     strIO = StringIO.StringIO()
+#     strIO.write(s)
+#     strIO.seek(0)
+#     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
+
+@belyi_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of genus 2 curve data over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Completeness',''))
-    return render_template("single.html", kid='dq.g2c.extent',
+    t = 'Completeness of Belyi map data'
+    bread = (('Belyi Maps', url_for(".index")), ('Completeness',''))
+    return render_template("single.html", kid='dq.belyi.extent',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
-@g2c_page.route("/Source")
+@belyi_page.route("/Source")
 def how_computed_page():
-    t = 'Source of genus 2 curve data over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Source',''))
-    return render_template("single.html", kid='dq.g2c.source',
+    t = 'Source of Belyi map data'
+    bread = (('Belyi Maps', url_for(".index")), ('Source',''))
+    return render_template("single.html", kid='dq.belyi.source',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
-@g2c_page.route("/Labels")
+@belyi_page.route("/Labels")
 def labels_page():
-    t = 'Labels for genus 2 curves over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Labels',''))
-    return render_template("single.html", kid='g2c.label',
+    t = 'Labels for Belyi maps'
+    bread = (('Belyi Maps', url_for(".index")), ('Labels',''))
+    return render_template("single.html", kid='belyi.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
