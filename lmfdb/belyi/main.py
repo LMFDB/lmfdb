@@ -13,7 +13,7 @@ from sage.all import ZZ
 from lmfdb.utils import to_dict, comma, format_percentage, random_value_from_collection, attribute_value_counts, flash_error
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.belyi import belyi_page
-from lmfdb.belyi.web_belyi import WebBelyi, belyi_db_curves, belyi_db_passports_count, 
+from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport, belyi_db_curves, belyi_db_passports_count, 
 
 credit_string = "Edgar Costa, Michael Musty, Sam Schiavone, Jeroen Sijsling, John Voight."
 
@@ -89,7 +89,7 @@ def by_url_belyi_passport_label:
 
 def render_belyi_galmap_webpage(label):
     try:
-        belyi_galmap = WebBelyiGalMap.by_label(label)
+        belyi_galmap = WebBelyiGalmap.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404,err.args)
     return render_template("belyi_galmap.html",
@@ -103,7 +103,7 @@ def render_belyi_galmap_webpage(label):
                            title=belyi_galmap.title,
                            friends=belyi_galmap.friends)
 
-def render_isogeny_class_webpage(label):
+def render_belyi_passport_webpage(label):
     try:
         belyi_passport = WebBelyiPassport.by_label(label)
     except (KeyError,ValueError) as err:
