@@ -1,5 +1,4 @@
 # -*- coding: utf8 -*-
-# -*- coding: utf8 -*-
 
 import StringIO
 from ast import literal_eval
@@ -9,6 +8,7 @@ from pymongo import ASCENDING, DESCENDING
 from operator import mul
 from flask import render_template, url_for, request, redirect, send_file, abort
 from sage.all import ZZ
+from sage.misc.cachefunc import cached_function
 
 from lmfdb.utils import to_dict, comma, format_percentage, random_value_from_collection, attribute_value_counts, flash_error
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
@@ -31,6 +31,10 @@ def belyistats():
 ###############################################################################
 # List and dictionaries needed routing and searching
 ###############################################################################
+
+geometry_types_dict = {'H':'Hyperbolic', 'S':'Spherical', 'E':'Euclidian'}
+geometry_types_list = geometry_types_dict.keys();
+
 
 
 
@@ -59,6 +63,11 @@ def index():
     info["degree_list"] = ('1-6', '7-8', '9-10','10-100')
     title = 'Belyi maps'
     bread = (('Belyi Maps', url_for(".index")))
+
+    #search options
+    info['geometry_types_list'] = geometry_types_list;
+    info['geometry_types_dict'] = geometry_types_dict;
+
     return render_template("belyi_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
 @belyi_page.route("/random")
@@ -128,11 +137,56 @@ def url_for_belyi_passport_label(label):
 def belyi_passport_from_belyi_galmap_label(label):
     return '-'.join(label.split("-")[:-1])
 
-def belyi_group_from_galmap_label(label):
-    return label.split("-")[0]
 
-def belyi_g_from_galmap_label(label):
-    return label.split("-")[-2][1:]
+#either a passport label or a galmap label
+@cached_function
+def break_label(label):
+    """
+    >>> break_label("4T5-[4,4,3]-4-4-31-g1-a")
+    "4T5", [4,4,3], [[4],[4],[3,1]], 1, "a"
+    >>> break_label("4T5-[4,4,3]-4-4-31-g1")
+    "4T5", [4,4,3], [[4],[4],[3,1]], 1, None
+    >>> break_label("12T5-[4,4,3]-10,4-11,1-31-g1")
+    "12T5", [4,4,3], [[10,4],[11,1],[3,1]], 1, None
+    """
+    splitlabel = label.split("-");
+    if len(splitlabel) == 6:
+        group, abc, l0, l1, l2, genus = splitlabel;
+        gal = None
+    elif len(splitlabel) == 7:
+        group, abc, l0, l1, l2, genus, gal = splitlabel;
+    else:
+        raise ValueError("the label must have 5 or 6 dashes");
+
+    abc = map(int, abc[1:-1].split(","));
+    lambdas = [l0, l1, l2];
+    for i, elt in lambdas:
+        if "," in elt:
+            elt = map(int, elt.split(","));
+        else:
+            elt = map(int, list(elt));
+    genus = int(genus[1:]);
+    return group, abc, lambdas, genus, gal;
+
+
+def belyi_group_from_label(label):
+    return break_label(label)[0];
+
+def belyi_degree_from_label(label):
+    return int(break_label(label)[0].split("T")[0]);
+
+def belyi_abc_from_label(label):
+    return break_label(label)[1];
+
+def belyi_lambdas_from_label(label):
+    return break_label(label)[2];
+
+def belyi_genus_from_label(label):
+    return break_label(label)[3];
+
+def belyi_orbit_from_label(label):
+    return break_label(label)[-1];
+
 
 
 ################################################################################
@@ -154,23 +208,32 @@ def belyi_search(info):
 #     if info.get('download','').strip():
 #         return download_search(info)
 
+    #search options
+    info['geometry_types_list'] = geometry_types_list;
+    info['geometry_types_dict'] = geometry_types_dict;
+
     bread = info.get('bread',(('Belyi Maps', url_for(".index")), ('Search Results', '.')))
 
     query = {}
     try:
         if 'group' in query:
             info['group'] = query['group']
+        #FIXME search every possible permutation
         parse_bracketed_posints(info, query, 'abc', 'a, b, c', maxlength=3)
-        parse_ints(info,query,'g','genus')
+        parse_ints(info, query, 'g','g')
+        parse_ints(info, query, 'deg', 'deg')
+        parse_ints(info, query, 'orbit_size', 'orbit_size')
         # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
-        # (See examples in genus 2)
+        for fld in ['geomtype']:
+            if info.get(fld):
+                query[fld] = info[fld]
     except ValueError as err:
         info['err'] = str(err)
         return render_template("belyi_search_results.html", info=info, title='Belyi Maps Search Input Error', bread=bread, credit=credit_string)
 
     # Database query happens here
     info["query"] = query # save query for reuse in download_search
-    cursor = belyi_db_galmaps().find(query, {'_id':False, 'label':True, 'group':True, 'abc':True, 'g':True})
+    cursor = belyi_db_galmaps().find(query, {'_id':False, 'label':True, 'group': True, 'abc':True, 'g':True, 'deg':True, 'geomtype' : True, 'orbit_size' : True})
 
     count = parse_count(info, 50)
     start = parse_start(info)
@@ -193,10 +256,12 @@ def belyi_search(info):
     res_clean = []
 
     for v in res:
+        print v
         v_clean = {}
-        v_clean["label"] = v["label"]
-        v_clean["group"] = belyi_group_from_galmap_label(v["label"])
-        v_clean["g"] = belyi_g_from_galmap_label(v["label"])
+        for key in ('label', 'group', 'deg', 'g','orbit_size' ):
+            v_clean[key] = v[key]
+        v_clean['geomtype'] = geometry_types_dict[v['geomtype']];
+        # clean some other stuff
         res_clean.append(v_clean)
 
     info["belyi_galmaps"] = res_clean
@@ -204,10 +269,10 @@ def belyi_search(info):
     info["start"] = start
     info["count"] = count
     info["more"] = int(start+count<nres)
-    
+
     title = info.get('title','Belyi map search results')
     credit = credit_string
-    
+
     return render_template("belyi_search_results.html", info=info, credit=credit,learnmore=learnmore_list(), bread=bread, title=title)
 
 ################################################################################
@@ -256,10 +321,11 @@ class belyi_stats(object):
         counts['max_deg_c'] = comma(max_deg)
         self._counts = counts
 
-    def init_g2c_stats(self):
+    def init_belyi_stats(self):
         if self._stats:
             return
-        curves = g2c_db_curves()
+        #curves = belyi_db_curves()
+        curves = None
         counts = self._counts
         total = counts["ncurves"]
         stats = {}
