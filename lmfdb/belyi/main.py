@@ -13,7 +13,7 @@ from sage.all import ZZ
 from lmfdb.utils import to_dict, comma, format_percentage, random_value_from_collection, attribute_value_counts, flash_error
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.belyi import belyi_page
-from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport, belyi_db_curves, belyi_db_passports_count, 
+from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport, belyi_db_galmaps, belyi_db_passports
 
 credit_string = "Edgar Costa, Michael Musty, Sam Schiavone, Jeroen Sijsling, John Voight."
 
@@ -55,7 +55,7 @@ def index():
     info["stats_url"] = url_for(".statistics")
     info["belyi_galmap_url"] =  lambda label: url_for_belyi_galmap_label(label)
     belyi_galmap_labels = ('4T5-[4,4,3]-4-4-31-g1-a','5T4-[5,3,3]-5-311-311-g0-a','9T34-[14,4,4]-72-42111-4221-g0-a')
-    info["belyi_galmap_list"] = [ {'label':label,'url':url_for_belyi_galmap_label(label)} for label in curve_labels ]
+    info["belyi_galmap_list"] = [ {'label':label,'url':url_for_belyi_galmap_label(label)} for label in belyi_galmap_labels ]
     info["degree_list"] = ('1-6', '7-8', '9-10','10-100')
     title = 'Belyi maps'
     bread = (('Belyi Maps', url_for(".index")))
@@ -83,7 +83,7 @@ def by_url_belyi_galmap_label(group, abc, sigma0, sigma1, sigmaoo, g, letnum):
     return render_belyi_galmap_webpage(label)
 
 @belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>")
-def by_url_belyi_passport_label:
+def by_url_belyi_passport_label(group, abc, sigma0, sigma1, sigmaoo, g):
     label = group+"-"+abc+"-"+sigma0+"-"+sigma1+"-"+sigmaoo+"-"+g
     return render_belyi_passport_webpage(label)
 
@@ -121,10 +121,8 @@ def url_for_belyi_galmap_label(label):
     slabel = label.split("-")
     return url_for(".by_url_belyi_galmap_label", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4], g=slabel[5], letnum=slabel[6])
 
-@belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>")
-
 def url_for_belyi_passport_label(label):
-    slabel = label.split(".")
+    slabel = label.split("-")
     return url_for(".by_url_belyi_passport_label", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4], g=slabel[5])
 
 def belyi_passport_from_belyi_galmap_label(label):
@@ -246,7 +244,7 @@ class belyi_stats(object):
         npassports = passports.count()
         counts['npassports'] = npassports
         counts['npassports_c'] = comma(npassports)
-        max_deg = galmaps.find().sort('deg', DESCENDING).limit(1)[0]['deg']
+        max_deg = passports.find().sort('deg', DESCENDING).limit(1)[0]['deg']
         counts['max_deg'] = max_deg
         counts['max_deg_c'] = comma(max_deg)
         self._counts = counts

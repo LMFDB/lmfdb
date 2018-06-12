@@ -11,6 +11,8 @@ from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, imp
 from sage.plot.text import text
 from flask import url_for
 
+
+
 ###############################################################################
 # Database connection -- all access to mongo db should happen here
 ###############################################################################
@@ -26,7 +28,6 @@ def belyi_db_passports():
 # Pretty print functions
 ###############################################################################
 
-from lmfdb.genus2_curves.web_g2c import bool_pretty, intlist_to_poly, strlist_to_nfelt, list_to_min_eqn, zfactor, ring_pretty, QpName
 
 
 ###############################################################################
@@ -45,7 +46,7 @@ class WebBelyiGalmap(object):
         title -- title to display on home page
     """
     def __init__(self, galmap):
-        self.make_object(galmap)
+        self.make_galmap_object(galmap)
 
     @staticmethod
     def by_label(label):
@@ -59,7 +60,7 @@ class WebBelyiGalmap(object):
             if len(slabel) == 6:
                 galmap = belyi_db_galmaps().find_one({"plabel" : label})
             elif len(slabel) == 7:
-                galmap = belyi_db_galmaps().find_one({"plabel" : label})
+                galmap = belyi_db_galmaps().find_one({"label" : label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
         except AttributeError:
@@ -71,8 +72,9 @@ class WebBelyiGalmap(object):
                 raise KeyError("Belyi map %s not found in database." % label)
         return WebBelyiGalmap(galmap)
 
-    def make_object(galmap):
+    def make_galmap_object(self, galmap):
         from lmfdb.belyi.main import url_for_belyi_galmap_label
+        from lmfdb.belyi.main import url_for_belyi_passport_label
 
         # all information about the map goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
@@ -127,7 +129,7 @@ class WebBelyiPassport(object):
         title -- title to display on home page
     """
     def __init__(self, passport):
-        self.make_object(passport)
+        self.make_passport_object(passport)
 
     @staticmethod
     def by_label(label):
@@ -147,9 +149,7 @@ class WebBelyiPassport(object):
             raise KeyError("Passport %s not found in database." % label)
         return WebBelyiPassport(passport)
 
-    def make_object(passport):
-        from lmfdb.belyi.main import url_for_belyi_passport_label
-
+    def make_passport_object(self, passport):
         # all information about the map goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
