@@ -203,6 +203,7 @@ class WebBelyiPassport(object):
         return WebBelyiPassport(passport)
 
     def make_passport_object(self, passport):
+        from lmfdb.belyi.main import url_for_belyi_galmap_label
         # all information about the map goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
@@ -228,8 +229,9 @@ class WebBelyiPassport(object):
         for galmap in galmaps_for_plabel:
             F = WebNumberField.from_coeffs(galmap['base_field'])
             galmapdatum = [galmap['label'].split('-')[-1], 
+                           url_for_belyi_galmap_label(galmap['label']), 
                            galmap['orbit_size'], 
-                           belyi_base_field(galmap['base_field']),
+                           belyi_base_field(galmap),
                            galmap['triples'][0]]
             galmapdata.append(galmapdatum)
         data['galmapdata'] = galmapdata
