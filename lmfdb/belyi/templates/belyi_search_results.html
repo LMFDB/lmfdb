@@ -50,9 +50,9 @@ Download all search results for&nbsp;
     <th>{{ KNOWL('belyi.group', title='Group') }}</th>
     <th>{{ KNOWL('belyi.g', title='Genus') }}</th>
 </tr>
-{% for galmap in info.galmaps: %}
+{% for galmap in info.belyi_galmaps: %}
 <tr>
-    <td> <a href = "{{info.galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
+    <td> <a href = "{{info.belyi_galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
     <td align=center> {{galmap.group}} </td>
     <td align=center> {{galmap.g}} </td>
 </tr>
