@@ -50,5 +50,5 @@ for elt in galmaps.find():
     print("############")
     print("############")
 
-passports.delete_one({'label':'sample-6T15-[5,5,5]-51-51-51-g1'})
+# passports.delete_one({'plabel':'sample-6T15-[5,5,5]-51-51-51-g1'})
 passports.find().count()
