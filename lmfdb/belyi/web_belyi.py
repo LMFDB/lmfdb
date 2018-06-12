@@ -143,29 +143,28 @@ class WebBelyiGalmap(object):
         # all information about the map goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
-
-        data['label'] = galmap['label']
+        # the stuff that does not need to be polished
+        for elt in ('label', 'plabel', 'triples', 'orbit_size', 'g', 'abc', 'embeddings'):
+            data[elt] = galmap[elt]
         slabel = data['label'].split("-")
-        data['plabel'] = galmap['plabel']
-        data['triples'] = galmap['triples']
+        data['isogeny_label'] = slabel[-1];
         data['isQQ'] = False
         F = belyi_base_field(galmap)
         if F.poly().degree()==1:
             data['isQQ'] = True 
         F.latex_poly = web_latex(F.poly())
         data['base_field'] = F
-        data['embeddings'] = galmap['embeddings']
         crv_str = galmap['curve']
         if crv_str=='PP1':
             data['curve'] = '\mathbb{P}^1'
         else:
             data['curve'] = make_curve_latex(crv_str)
+
         data['map'] = make_map_latex(galmap['map'])
-        data['orbit_size'] = galmap['orbit_size']
-        data['g'] = galmap['g']
         data['embeddings_and_triples'] = []
         for i in range(0,len(data['triples'])):
             data['embeddings_and_triples'].append([data['embeddings'][i], data['triples'][i]])
+        data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
 
         # Properties
         self.properties = properties = [('Label', data['label'])]
@@ -176,16 +175,42 @@ class WebBelyiGalmap(object):
         self.friends = friends = [('Passport', url_for_belyi_passport_label(galmap['plabel']))]
 
         # Breadcrumbs
+        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data['plabel'].split("-");
+        lambdasstr = '%s-%s-%s' % (sigma0, sigma1, sigmaoo);
+        lambdasgstr = lambdasstr + "-" + gstr;
         self.bread = bread = [
-             ('Belyi Maps', url_for(".index")),
-#              ('%s' % slabel[0], url_for(".by_group", group=slabel[0])),
-#              ('%s' % slabel[1], url_for(".by_abc", group=slabel[0], abc=slabel[1])),
-#              ('%s' % slabel[2], url_for(".by_sigma0", group=slabel[0], abc=slabel[1], sigma0=slabel[2])),
-#              ('%s' % slabel[3], url_for(".by_sigma1", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3])),
-#              ('%s' % slabel[4], url_for(".by_sigmaoo", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4])),
-#              ('%s' % slabel[5], url_for(".by_url_belyi_passport_label", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4], g=slabel[5])),
-#              ('%s' % slabel[6], url_for(".by_url_belyi_galmap_label", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4], g=slabel[5], letnum=slabel[6]))
-             ]
+                ('Belyi Maps', url_for(".index")),
+                (groupstr,
+                    url_for(".by_url_belyi_search_group",
+                        group=groupstr
+                        )
+                    ),
+                (abcstr,
+                    url_for(".by_url_belyi_search_group_triple",
+                        group=groupstr,
+                        abc=abcstr
+                        )
+                    ),
+                (lambdasgstr,
+                    url_for(".by_url_belyi_passport_label",
+                        group=groupstr,
+                        abc=abcstr,
+                        sigma0=sigma0,
+                        sigma1=sigma1,
+                        sigmaoo=sigmaoo,
+                        g = gstr )
+                    ),
+                (data['isogeny_label'],
+                    url_for(".by_url_belyi_galmap_label",
+                        group=groupstr,
+                        abc=abcstr,
+                        sigma0=sigma0,
+                        sigma1=sigma1,
+                        sigmaoo=sigmaoo,
+                        g = gstr,
+                        letnum = data['isogeny_label'])
+                    ),
+                ];
 
         # Title
         self.title = "Belyi map " + data['label']
@@ -232,20 +257,16 @@ class WebBelyiPassport(object):
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
 
-        data['plabel'] = passport['plabel']
+        for elt in ('plabel', 'abc', 'num_orbits', 'g', 'abc', 'deg', 'maxdegbf'):
+            data[elt] = passport[elt]
+
         slabel = data['plabel'].split("-")
 
-        data['deg'] = passport['deg']
         nt = passport['group'].split('T')
         data['group'] = group_display_knowl(nt[0],nt[1],getDBConnection())
 
         data['geomtype'] = geomtypelet_to_geomtypename_dict[passport['geomtype']]
-        data['abc'] = passport['abc']
         data['lambdas'] = [str(c)[1:-1] for c in passport['lambdas']]
-        data['g'] = passport['g']
-        data['maxdegbf'] = passport['maxdegbf']
-        data['pass_size'] = passport['pass_size']
-        data['num_orbits'] = passport['num_orbits']
 
         # Permutation triples
         galmaps_for_plabel = belyi_db_galmaps().find({"plabel" : passport['plabel']}).sort([('label_index', ASCENDING)])
@@ -274,16 +295,33 @@ class WebBelyiPassport(object):
         self.friends = friends = []
 
         # Breadcrumbs
+
+        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data['plabel'].split("-");
+        lambdasstr = '%s-%s-%s' % (sigma0, sigma1, sigmaoo);
+        lambdasgstr = lambdasstr + "-" + gstr;
         self.bread = bread = [
-             ('Belyi Maps', url_for(".index")),
-#              ('%s' % slabel[0], url_for(".by_group", group=slabel[0])),
-#              ('%s' % slabel[1], url_for(".by_abc", group=slabel[0], abc=slabel[1])),
-#              ('%s' % slabel[2], url_for(".by_sigma0", group=slabel[0], abc=slabel[1], sigma0=slabel[2])),
-#              ('%s' % slabel[3], url_for(".by_sigma1", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3])),
-#              ('%s' % slabel[4], url_for(".by_sigmaoo", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4])),
-#              ('%s' % slabel[5], url_for(".by_url_belyi_passport_label", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4], g=slabel[5])),
-#              ('%s' % slabel[6], url_for(".by_url_belyi_galmap_label", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4], g=slabel[5], letnum=slabel[6]))
-             ]
+                ('Belyi Maps', url_for(".index")),
+                (groupstr,
+                    url_for(".by_url_belyi_search_group",
+                        group=groupstr
+                        )
+                    ),
+                (abcstr,
+                    url_for(".by_url_belyi_search_group_triple",
+                        group=groupstr,
+                        abc=abcstr
+                        )
+                    ),
+                (lambdasgstr,
+                    url_for(".by_url_belyi_passport_label",
+                        group=groupstr,
+                        abc=abcstr,
+                        sigma0=sigma0,
+                        sigma1=sigma1,
+                        sigmaoo=sigmaoo,
+                        g = gstr )
+                    )
+                ];
 
         # Title
         self.title = "Passport " + data['plabel']
