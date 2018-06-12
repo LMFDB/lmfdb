@@ -1,5 +1,7 @@
-R = PolynomialRing(QQ, 3, 'nu,x,y')
+R0 = PolynomialRing(QQ,'nu')
+R = PolynomialRing(R0,2,'x,y')
 F = FractionField(R)
+latex(F(map_str))
 
 R.<x,y,nu> = PolynomialRing(QQ, 3)
 F = FractionField(R)
