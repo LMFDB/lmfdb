@@ -149,16 +149,10 @@ class WebBelyiGalmap(object):
         data['plabel'] = galmap['plabel']
         data['triples'] = galmap['triples']
         data['isQQ'] = False
-#        fld_coeffs = galmap['base_field']
-#        if fld_coeffs==[-1,1]:
-#            fld_coeffs = [0,1]
-#            data['isQQ'] = True 
-#        F = WebNumberField.from_coeffs(fld_coeffs)
         F = belyi_base_field(galmap)
         if F.poly().degree()==1:
             data['isQQ'] = True 
         F.latex_poly = web_latex(F.poly())
-#        data['base_field'] = galmap['base_field']
         data['base_field'] = F
         data['embeddings'] = galmap['embeddings']
         crv_str = galmap['curve']
@@ -167,9 +161,11 @@ class WebBelyiGalmap(object):
         else:
             data['curve'] = make_curve_latex(crv_str)
         data['map'] = make_map_latex(galmap['map'])
-#        data['map'] = galmap['map']
         data['orbit_size'] = galmap['orbit_size']
         data['g'] = galmap['g']
+        data['embeddings_and_triples'] = []
+        for i in range(0,len(data['triples'])):
+            data['embeddings_and_triples'].append([data['embeddings'][i], data['triples'][i]])
 
         # Properties
         self.properties = properties = [('Label', data['label'])]
