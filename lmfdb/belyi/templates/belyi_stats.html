@@ -2,8 +2,8 @@
 {% block content %}
 
 <div>
-The database currently contains {{info.counts.ncurves_c}} genus 2 curves in {{info.counts.nclasses_c}} isogeny classes,
-with {{ KNOWL('g2c.abs_discriminant',title = "absolute discriminant")}} at most {{info.counts.max_D_c}}.
+The database currently contains {{info.counts.ngalmaps_c}} Galois orbits of Belyi maps in {{info.counts.npassports_c}} passports,
+with {{ KNOWL('belyi.deg', title = "degree")}} at most {{info.counts.max_deg_c}}.
 </div>
 
 {% for d in info.stats.distributions %}
