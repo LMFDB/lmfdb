@@ -222,22 +222,29 @@ def belyi_search(info):
         if query.get('abc_list'):
             if len(query['abc_list']) == 3:
                 a, b, c = sorted(query['abc_list'])
-                query['a_sorted'] = query['abc_list'][0];
-                query['b_sorted'] = query['abc_list'][1];
-                query['c_sorted'] = query['abc_list'][2];
+                query['a_s'] = query['abc_list'][0];
+                query['b_s'] = query['abc_list'][1];
+                query['c_s'] = query['abc_list'][2];
             elif len(query['abc_list']) == 2:
                 a, b = sorted(query['abc_list']);
                 sub_query = [];
-                sub_query.append({'$and' : {'a_sorted': a, 'b_sorted': b} });
-                sub_query.append({'$and' : {'b_sorted': a, 'c_sorted': b} });
+                sub_query.append( {'a_s': a, 'b_s': b} );
+                sub_query.append( {'b_s': a, 'c_s': b} );
                 query['$or'] = sub_query;
             elif len(query['abc_list']) == 1:
                 a = query['abc_list'][0];
-                query['$or'] = {'a_sorted': a, 'b_sorted': a, 'c_sorted': a};
+                query['$or'] = [{'a_s': a}, {'b_s': a}, {'c_s': a}];
             query.pop('abc_list');
+            print query
 
 
-        parse_ints(info, query, 'abc');
+        # a naive hack
+        if info.get('abc'):
+            for elt in ['a_s', 'b_s', 'c_s']:
+                info_hack = {};
+                info_hack[elt] = info['abc'];
+                parse_ints(info_hack, query, elt);
+
         parse_ints(info, query, 'g','g')
         parse_ints(info, query, 'deg', 'deg')
         parse_ints(info, query, 'orbit_size', 'orbit_size')
