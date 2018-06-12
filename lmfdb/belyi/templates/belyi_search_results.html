@@ -8,16 +8,18 @@
 <input type="hidden" name="count" value="{{info.count}}"/>
 
 <table>
-<td>{{ KNOWL('belyi.group', title='group') }}</td>
-<td>{{ KNOWL('belyi.abc', title='abc') }}</td>
-<td>{{ KNOWL('belyi.g', title='genus') }}</td>
-</tr>
+  <td>{{ KNOWL('belyi.group', title='group') }}</td>
+  <td>{{ KNOWL('belyi.abc', title='abc') }}</td>
+  <td>{{ KNOWL('belyi.g', title='genus') }}</td>
+  <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
+  </tr>
 
-<tr>
-<td><input type='text' name='group' placeholder='4T5' style="width: 100px" value="{{info.group}}"></td>
-<td><input type='text' name='abc' placeholder='[4,4,3]' style="width: 100px" value="{{info.abc}}"></td>
-<td><input type='text' name='g' placeholder='1' style="width: 100px" value="{{info.g}}"></td>
-</tr>
+  <tr>
+    <td><input type='text' name='group' placeholder='4T5' style="width: 100px" value="{{info.group}}"></td>
+    <td><input type='text' name='abc' placeholder='[4,4,3]' style="width: 100px" value="{{info.abc}}"></td>
+    <td><input type='text' name='genus' placeholder='1' style="width: 100px" value="{{info.g}}"></td>
+    <td><input type='text' name='degree' placeholder='1' size=10>
+  </tr>
 
 <tr style="height:50px">
 <td class="button"><button type='submit' value='refine' style="width: 110px">Search again</button></td>
@@ -47,14 +49,16 @@ Download all search results for&nbsp;
 <table class="ntdata">
 <tr>
     <th>{{ KNOWL('belyi.label', title='Label') }}</th>
+    <th>{{ KNOWL('belyi.degree', title='Degree') }}</th>
     <th>{{ KNOWL('belyi.group', title='Group') }}</th>
     <th>{{ KNOWL('belyi.g', title='Genus') }}</th>
 </tr>
 {% for galmap in info.belyi_galmaps: %}
 <tr>
     <td> <a href = "{{info.belyi_galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
+    <td align=center> {{galmap.degree}} </td>
     <td align=center> {{galmap.group}} </td>
-    <td align=center> {{galmap.g}} </td>
+    <td align=center> {{galmap.genus}} </td>
 </tr>
 {% endfor %}
 </table>
