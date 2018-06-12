@@ -89,6 +89,7 @@ class WebBelyiGalmap(object):
         data['embeddings'] = galmap['embeddings']
         data['curve'] = galmap['curve']
         data['map'] = galmap['map']
+        data['orbit_size'] = galmap['orbit_size']
 
         # Properties
         self.properties = properties = [('Label', data['label'])]

@@ -11,7 +11,7 @@ sample_pass = {
     'deg' : 6,
     'group' : '6T15',
     'aut_group' : [[ 3, 6, 5, 2, 1, 4 ],[ 5, 4, 1, 6, 2, 3 ]],
-    'geomtype' : 'hyperbolic',
+    'geomtype' : 'Hyperbolic',
     'abc' : [5,5,5],
     'lambdas' : [[5,1], [5,1], [5,1]],
     'g' : 1,
@@ -51,5 +51,5 @@ for elt in galmaps.find():
     print("############")
     print("############")
 
-# passports.delete_one({'plabel':'sample-6T15-[5,5,5]-51-51-51-g1'})
+# passports.delete_one({'plabel':'6T15-[5,5,5]-51-51-51-g1'})
 passports.find().count()
