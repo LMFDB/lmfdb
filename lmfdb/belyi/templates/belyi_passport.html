@@ -43,10 +43,10 @@
       <thead><tr><td>Label</td><td>Orbit size</td><td>Base field</td><td>Representative triple</td></tr></thead>
       <tbody>
         {% for g in data.galmapdata %}
-           <tr><td>{{g[0]}}</td>
-           <td>${{g[1]}}$</td>
-           <td>{{g[2].knowl()|safe}}</td>
-           <td>{{g[3]}}</td>
+           <tr><td><a href="{{g[1]|safe}}">{{g[0]}}</a></td>
+           <td>${{g[2]}}$</td>
+           <td>{{g[3].knowl()|safe}}</td>
+           <td>{{g[4]}}</td>
            </tr>
         {% endfor %}
       </tbody>
