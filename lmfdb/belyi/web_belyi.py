@@ -30,6 +30,7 @@ geomtypelet_to_geomtypename_dict = {'H':'hyperbolic','E':'Euclidean','S':'spheri
 
 def make_curve_latex(crv_str):
     from sage.all import PolynomialRing, FractionField
+    # FIXME: Get rid of nu when map is defined over QQ
     R0 = PolynomialRing(QQ,'nu')
     R = PolynomialRing(R0,2,'x,y')
     F = FractionField(R)
@@ -40,7 +41,8 @@ def make_curve_latex(crv_str):
     return eqn_str
 
 def make_map_latex(map_str):
-    from sage.all import PolynomialRing, FractionField
+    from sage.all import PolynomialRing, FractionField, gcd
+    # FIXME: Get rid of nu when map is defined over QQ
     R0 = PolynomialRing(QQ,'nu')
     R = PolynomialRing(R0,2,'x,y')
     F = FractionField(R)
@@ -50,13 +52,32 @@ def make_map_latex(map_str):
     c_num = num.denominator()
     c_den = den.denominator()
     lc = c_den/c_num
+    # rescale coeffs to make them integral. then try to factor out gcds
+    # numerator
+    num_new = c_num*num
+    num_cs = num_new.coefficients()
+    num_cs_ZZ = []
+    for el in num_cs:
+        num_cs_ZZ = num_cs_ZZ + el.coefficients()
+    num_gcd = gcd(num_cs_ZZ)
+    # denominator
+    den_new = c_den*den
+    den_cs = den_new.coefficients()
+    den_cs_ZZ = []
+    for el in den_cs:
+        den_cs_ZZ = den_cs_ZZ + el.coefficients()
+    den_gcd = gcd(den_cs_ZZ)
+    lc = lc*(num_gcd/den_gcd)
+    num_new = num_new/num_gcd
+    den_new = den_new/den_gcd
+    # make strings for lc, num, and den
+    num_str = latex(num_new)
+    den_str = latex(den_new)
     if lc==1:
         lc_str=""
     else:
         lc_str = latex(lc)
-    num_str = latex(c_num*num)
-    den_str = latex(c_den*den)
-    if c_den*den==1:
+    if den_new==1:
         if lc ==1:
             phi_str = num_str
         else:
