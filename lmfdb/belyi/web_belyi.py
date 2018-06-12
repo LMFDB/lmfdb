@@ -161,6 +161,9 @@ class WebBelyiGalmap(object):
             data['curve'] = make_curve_latex(crv_str)
 
         data['map'] = make_map_latex(galmap['map'])
+        data['embeddings_and_triples'] = []
+        for i in range(0,len(data['triples'])):
+            data['embeddings_and_triples'].append([data['embeddings'][i], data['triples'][i]])
         data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
 
         # Properties
