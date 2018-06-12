@@ -1,31 +1,57 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 {% block content %}
-
-<!--New table class to avoid spacing in LaTeX-links -->
-<style type="text/css">
-table.g2 a {
-  padding: 0;
-}
-
-<style>
-.toggle {margin-top:5px; margin-left:20px;}
-div.properties-body table tr td.label { vertical-align: top; }
-#content > h2.subhead { color:{{color.black}};}
-</style>
 
 {% set KNOWL_ID = "belyi.%s"|format(data['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
-<p> Degree (a positive integer): {{data.deg}} </p>
-<p> Group: {{data.group}} </p>
-<p> Automorphism group: {{data.aut_group}} </p>
-<p> Geomtype: {{data.geomtype}} </p>
-<p> ABC: {{data.abc}} </p>
-<p> Lambdas: {{data.lambdas}} </p>
-<p> Genus: {{data.g}} </p>
-<p> Max degree of base field: {{data.maxdegbf}} </p>
-<p> Passport size: {{data.pass_size}} </p>
-<p> Number of orbits: {{data.num_orbits}} </p>
+<p><h2>Basic properties</h2>
+  <table>
+  <tr><td>{{ KNOWL('belyi.deg', title="Degree") }}:<td>&nbsp;&nbsp;<td>${{data.deg}}$<td></tr>
+  <tr><td>{{ KNOWL('belyi.group', title="Monodromy group") }}:<td>&nbsp;&nbsp;<td>{{data.group | safe}}<td></tr>
+  </table>
+</p>
 
+<p><h2>Generators</h2>
+
+  <table class="ntdata">
+      <thead><tr><td>Order</td><td>Partition</td></tr></thead>
+      <tbody>
+        {% for i in [0,1,2] %}
+           <tr><td>${{data.abc[i]}}$</td>
+              <td>${{data.lambdas[i]}}$</td>
+           </tr>
+        {% endfor %}
+      </tbody>
+      </table>
+
+</p>
+
+<p><h2>Geometric data</h2>
+  <table>
+  <tr><td>{{ KNOWL('belyi.genus', title="Genus") }}:<td>&nbsp;&nbsp;<td>${{data.g}}$<td></tr>
+  <tr><td>{{ KNOWL('belyi.geomtype', title="Geometry type") }}:<td>&nbsp;&nbsp;<td>{{data.geomtype}}<td></tr>
+  </table>
+</p>
+
+<p><h2>Galois orbits</h2>
+  <table>
+  <tr><td>{{ KNOWL('belyi.pass_size', title="Passport size") }}:<td>&nbsp;&nbsp;<td>${{data.pass_size}}$<td></tr>
+  <tr><td>{{ KNOWL('belyi.num_orbits', title="Number of Galois orbits") }}:<td>&nbsp;&nbsp;<td>${{data.num_orbits}}$<td></tr>
+  </table>
+
+  <table class="ntdata">
+      <thead><tr><td>Label</td><td>Orbit size</td><td>Base field</td><td>Representative triple</td></tr></thead>
+      <tbody>
+        {% for g in data.galmapdata %}
+           <tr><td>{{g[0]}}</td>
+           <td>${{g[1]}}$</td>
+           <td>{{g[2].knowl()|safe}}</td>
+           <td>{{g[3]}}</td>
+           </tr>
+        {% endfor %}
+      </tbody>
+      </table>
+  
+</p>
+  
 {% endblock %}
