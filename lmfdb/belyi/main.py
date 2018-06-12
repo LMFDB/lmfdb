@@ -32,7 +32,7 @@ def belyistats():
 # List and dictionaries needed routing and searching
 ###############################################################################
 
-geometry_types_dict = {'H':'Hyperbolic', 'S':'Spherical', 'E':'Euclidian'}
+from web_belyi import geomtypelet_to_geomtypename_dict as geometry_types_dict
 geometry_types_list = geometry_types_dict.keys();
 
 
