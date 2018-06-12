@@ -5,12 +5,11 @@ from ast import literal_eval
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.WebNumberField import nf_display_knowl
+from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
 from lmfdb.transitive_group import group_display_knowl
 from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, point, real, sqrt, var, expand, nth_prime
 from sage.plot.text import text
 from flask import url_for
-
 
 
 ###############################################################################
@@ -85,7 +84,9 @@ class WebBelyiGalmap(object):
         data['plabel'] = galmap['plabel']
 
         data['triples'] = galmap['triples']
-        data['base_field'] = galmap['base_field']
+        F = WebNumberField.from_coeffs(galmap['base_field'])
+#        data['base_field'] = galmap['base_field']
+        data['base_field'] = F
         data['embeddings'] = galmap['embeddings']
         data['curve'] = galmap['curve']
         data['map'] = galmap['map']
