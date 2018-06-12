@@ -46,23 +46,33 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
         <td><span class="formexample"> e.g. [4,4,3]</td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.g', title='genus') }}</td>
-      <td><input type='text' name='genus' placeholder='1' size=10>
+      <td>{{ KNOWL('belyi.genus', title='genus') }}</td>
+      <td><input type='text' name='g' placeholder='1' size=10>
         <td><span class="formexample"> e.g. 1, 0-2 </span></td>
     </tr>
     <tr>
       <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
-      <td><input type='text' name='degree' placeholder='1' size=10>
+      <td><input type='text' name='deg' placeholder='1' size=10>
         <td><span class="formexample"> e.g. 3, 5-6 </span></td>
     </tr>
     <tr>
-      <td>Maximum number of Belyi maps to display</td>
-      <td><input type='text' name='count' value=50 size=10></td>
-      <td><span class="formexample"> &nbsp;</td>
+      <td>{{ KNOWL('belyi.geometry_type', title='geometry type') }}</td>
+      <td><select name='geomtype' width="107" style="width: 107px">
+          <option ></option>
+          {% for G in info.geometry_types_list %}
+          <option value='{{G}}'>{{info.geometry_types_dict[G]}}</option>
+          {% endfor %}
+        </select>
+      </td>
     </tr>
-    <tr>
-      <td><button type='submit' value='Search'>Search</button></td>
-    </tr>
+      <tr>
+        <td>Maximum number of Belyi maps to display</td>
+        <td><input type='text' name='count' value=50 size=10></td>
+        <td><span class="formexample"> &nbsp;</td>
+      </tr>
+      <tr>
+        <td><button type='submit' value='Search'>Search</button></td>
+      </tr>
   </table>
 
 </form>

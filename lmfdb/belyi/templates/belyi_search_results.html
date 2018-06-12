@@ -12,13 +12,25 @@
   <td>{{ KNOWL('belyi.abc', title='abc') }}</td>
   <td>{{ KNOWL('belyi.g', title='genus') }}</td>
   <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
+<td>{{ KNOWL('belyi.geometry_type', title='geometry type') }}</td>
   </tr>
 
   <tr>
     <td><input type='text' name='group' placeholder='4T5' style="width: 100px" value="{{info.group}}"></td>
     <td><input type='text' name='abc' placeholder='[4,4,3]' style="width: 100px" value="{{info.abc}}"></td>
-    <td><input type='text' name='genus' placeholder='1' style="width: 100px" value="{{info.g}}"></td>
-    <td><input type='text' name='degree' placeholder='1' size=10>
+    <td><input type='text' name='g' placeholder='1' style="width: 100px" value="{{info.g}}"></td>
+    <td><input type='text' name='deg' placeholder='1' style="width: 100px" value="{{info.deg}}"></td>
+    <td><select name='geomtype' width="100" style="width: 100px" value="{{info.geomtype}}" >
+        <option ></option>
+        {% for G in info.geometry_types_list %}
+          {% if G == info.geomtype %}
+            <option value='{{G}}' selected>{{info.geometry_types_dict[G]}}</option>
+          {% else %}
+            <option value='{{G}}'>{{info.geometry_types_dict[G]}}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </td>
   </tr>
 
 <tr style="height:50px">
@@ -51,14 +63,15 @@ Download all search results for&nbsp;
     <th>{{ KNOWL('belyi.label', title='Label') }}</th>
     <th>{{ KNOWL('belyi.degree', title='Degree') }}</th>
     <th>{{ KNOWL('belyi.group', title='Group') }}</th>
-    <th>{{ KNOWL('belyi.g', title='Genus') }}</th>
+    <th>{{ KNOWL('belyi.genus', title='Genus') }}</th>
 </tr>
 {% for galmap in info.belyi_galmaps: %}
 <tr>
     <td> <a href = "{{info.belyi_galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
-    <td align=center> {{galmap.degree}} </td>
+    <td align=center> {{galmap.deg}} </td>
     <td align=center> {{galmap.group}} </td>
-    <td align=center> {{galmap.genus}} </td>
+    <td align=center> {{galmap.g}}</td>
+    <td align=center> {{galmap.geomtype}} </td>
 </tr>
 {% endfor %}
 </table>
