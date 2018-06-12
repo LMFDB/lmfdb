@@ -172,11 +172,9 @@ class WebBelyiGalmap(object):
         self.friends = friends = [('Passport', url_for_belyi_passport_label(galmap['plabel']))]
 
         # Breadcrumbs
-        groupstr = str(galmap['group']);
-        lambdasstr = '%s-%s-%s' % tuple(data['lambdas']);
-        gstr = "g%d" % data['g'];
+        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data['plabel'].split("-");
+        lambdasstr = '%s-%s-%s' % (sigma0, sigma1, sigmaoo);
         lambdasgstr = lambdasstr + "-" + gstr;
-        abcstr = str(data['abc']).replace(' ','');
         self.bread = bread = [
                 ('Belyi Maps', url_for(".index")),
                 (groupstr,
@@ -194,18 +192,18 @@ class WebBelyiGalmap(object):
                     url_for(".by_url_belyi_passport_label",
                         group=groupstr,
                         abc=abcstr,
-                        sigma0=data['lambdas'][0],
-                        sigma1=data['lambdas'][1],
-                        sigmaoo=data['lambdas'][2],
+                        sigma0=sigma0,
+                        sigma1=sigma1,
+                        sigmaoo=sigmaoo,
                         g = gstr )
                     ),
                 (data['isogeny_label'],
                     url_for(".by_url_belyi_galmap_label",
                         group=groupstr,
                         abc=abcstr,
-                        sigma0=data['lambdas'][0],
-                        sigma1=data['lambdas'][1],
-                        sigmaoo=data['lambdas'][2],
+                        sigma0=sigma0,
+                        sigma1=sigma1,
+                        sigmaoo=sigmaoo,
                         g = gstr,
                         letnum = data['isogeny_label'])
                     ),
@@ -294,11 +292,10 @@ class WebBelyiPassport(object):
         self.friends = friends = []
 
         # Breadcrumbs
-        groupstr = str(passport['group']);
-        lambdasstr = '%s-%s-%s' % tuple(data['lambdas']);
-        gstr = "g%d" % data['g'];
+
+        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data['plabel'].split("-");
+        lambdasstr = '%s-%s-%s' % (sigma0, sigma1, sigmaoo);
         lambdasgstr = lambdasstr + "-" + gstr;
-        abcstr = str(data['abc']).replace(' ','');
         self.bread = bread = [
                 ('Belyi Maps', url_for(".index")),
                 (groupstr,
@@ -316,9 +313,9 @@ class WebBelyiPassport(object):
                     url_for(".by_url_belyi_passport_label",
                         group=groupstr,
                         abc=abcstr,
-                        sigma0=data['lambdas'][0],
-                        sigma1=data['lambdas'][1],
-                        sigmaoo=data['lambdas'][2],
+                        sigma0=sigma0,
+                        sigma1=sigma1,
+                        sigmaoo=sigmaoo,
                         g = gstr )
                     )
                 ];
