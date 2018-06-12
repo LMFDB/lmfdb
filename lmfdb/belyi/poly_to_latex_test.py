@@ -6,3 +6,4 @@ lhs_str = sides[0]
 rhs_str = sides[1]
 lhs = latex(lhs_str)
 rhs = latex(rhs_str)
+# blah, blah, blah
