@@ -56,7 +56,13 @@ def make_map_latex(map_str):
         lc_str = latex(lc)
     num_str = latex(c_num*num)
     den_str = latex(c_den*den)
-    phi_str = lc_str+"\\frac{"+num_str+"}"+"{"+den_str+"}"
+    if c_den*den==1:
+        if lc ==1:
+            phi_str = num_str
+        else:
+            phi_str = lc_str+"("+num_str+")"
+    else:
+        phi_str = lc_str+"\\frac{"+num_str+"}"+"{"+den_str+"}"
     return phi_str
 
 ###############################################################################
@@ -142,6 +148,7 @@ class WebBelyiGalmap(object):
         data['map'] = make_map_latex(galmap['map'])
 #        data['map'] = galmap['map']
         data['orbit_size'] = galmap['orbit_size']
+        data['g'] = galmap['g']
 
         # Properties
         self.properties = properties = [('Label', data['label'])]
