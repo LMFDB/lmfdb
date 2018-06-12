@@ -89,7 +89,9 @@ class WebBelyiGalmap(object):
 #        data['base_field'] = galmap['base_field']
         data['base_field'] = F
         data['embeddings'] = galmap['embeddings']
-        data['curve'] = galmap['curve']
+        X = web_latex(galmap['curve'])
+        data['curve'] = X
+#        data['curve'] = galmap['curve']
         data['map'] = galmap['map']
         data['orbit_size'] = galmap['orbit_size']
 
