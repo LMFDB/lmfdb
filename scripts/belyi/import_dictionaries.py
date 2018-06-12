@@ -5,6 +5,8 @@ belyidb = Cw['belyi']
 passports = belyidb['passports']
 galmaps = belyidb['galmaps']
 
+
+
 # import the raw data
 # import ola
 exec(open("raw_data.py").read())
@@ -19,3 +21,4 @@ for i in range(0,len(ola)):
         galmaps.insert_one(ola[i][1][j])
 
 passports.find().count()
+galmaps.find().count()
