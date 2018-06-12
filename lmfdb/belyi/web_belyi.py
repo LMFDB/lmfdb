@@ -85,6 +85,7 @@ class WebBelyiGalmap(object):
 
         data['triples'] = galmap['triples']
         F = WebNumberField.from_coeffs(galmap['base_field'])
+        F.latex_poly = web_latex(F.poly())
 #        data['base_field'] = galmap['base_field']
         data['base_field'] = F
         data['embeddings'] = galmap['embeddings']
