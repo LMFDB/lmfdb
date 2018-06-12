@@ -28,6 +28,37 @@ def belyi_db_passports():
 
 geomtypelet_to_geomtypename_dict = {'H':'hyperbolic','E':'Euclidean','S':'spherical'}
 
+def make_curve_latex(crv_str):
+    from sage.all import PolynomialRing, FractionField
+    R0 = PolynomialRing(QQ,'nu')
+    R = PolynomialRing(R0,2,'x,y')
+    F = FractionField(R)
+    sides = crv_str.split("=")
+    lhs = latex(F(sides[0]))
+    rhs = latex(F(sides[1]))
+    eqn_str = lhs + '=' + rhs
+    return eqn_str
+
+def make_map_latex(map_str):
+    from sage.all import PolynomialRing, FractionField
+    R0 = PolynomialRing(QQ,'nu')
+    R = PolynomialRing(R0,2,'x,y')
+    F = FractionField(R)
+    phi = F(map_str)
+    num = phi.numerator()
+    den = phi.denominator()
+    c_num = num.denominator()
+    c_den = den.denominator()
+    lc = c_den/c_num
+    if lc==1:
+        lc_str=""
+    else:
+        lc_str = latex(lc)
+    num_str = latex(c_num*num)
+    den_str = latex(c_den*den)
+    phi_str = lc_str+"\\frac{"+num_str+"}"+"{"+den_str+"}"
+    return phi_str
+
 ###############################################################################
 # Belyi map class definitions
 ###############################################################################
@@ -70,6 +101,7 @@ class WebBelyiGalmap(object):
                 raise KeyError("Belyi map %s not found in database." % label)
         return WebBelyiGalmap(galmap)
 
+
     def make_galmap_object(self, galmap):
         from lmfdb.belyi.main import url_for_belyi_galmap_label
         from lmfdb.belyi.main import url_for_belyi_passport_label
@@ -83,13 +115,22 @@ class WebBelyiGalmap(object):
         data['plabel'] = galmap['plabel']
 
         data['triples'] = galmap['triples']
-        F = WebNumberField.from_coeffs(galmap['base_field'])
+        
+        fld_coeffs = galmap['base_field']
+        if fld_coeffs==[-1,1]:
+            fld_coeffs = [0,1]
+        F = WebNumberField.from_coeffs(fld_coeffs)
         F.latex_poly = web_latex(F.poly())
 #        data['base_field'] = galmap['base_field']
         data['base_field'] = F
         data['embeddings'] = galmap['embeddings']
-        data['curve'] = galmap['curve']
-        data['map'] = galmap['map']
+        crv_str = galmap['curve']
+        if crv_str=='PP1':
+            data['curve'] = '\mathbb{P}^1'
+        else:
+            data['curve'] = make_curve_latex(crv_str)
+        data['map'] = make_map_latex(galmap['map'])
+#        data['map'] = galmap['map']
         data['orbit_size'] = galmap['orbit_size']
 
         # Properties
