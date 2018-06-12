@@ -10,7 +10,8 @@
 <table>
   <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
   <td>{{ KNOWL('belyi.group', title='group') }}</td>
-  <td>{{ KNOWL('belyi.abc', title='abc') }}</td>
+  <td>{{ KNOWL('belyi.orders', title='orders') }}</td>
+  <td>{{ KNOWL('belyi.abc', title='abc triples') }}</td>
   <td>{{ KNOWL('belyi.genus', title='genus') }}</td>
   <td>{{ KNOWL('belyi.orbit_size', title='orbit size') }}</td>
   <td>{{ KNOWL('belyi.geometry_type', title='geometry type') }}</td>
@@ -19,7 +20,8 @@
   <tr>
     <td><input type='text' name='deg' placeholder='4' style="width: 100px" value="{{info.deg}}"></td>
     <td><input type='text' name='group' placeholder='4T5' style="width: 100px" value="{{info.group}}"></td>
-    <td><input type='text' name='abc' placeholder='[4,4,3]' style="width: 100px" value="{{info.abc}}"></td>
+    <td><input type='text' name='abc' placeholder='5' style="width: 100px" value="{{info.abc}}"></td>
+    <td><input type='text' name='abc_list' placeholder='[4,4,3]' style="width: 100px" value="{{info.abc_list}}"></td>
     <td><input type='text' name='g' placeholder='1' style="width: 100px" value="{{info.g}}"></td>
     <td><input type='text' name='orbit_size' placeholder='2' style="width: 100px" value="{{info.orbit_size}}"></td>
     <td><select name='geomtype' width="100" style="width: 100px" value="{{info.geomtype}}" >
@@ -96,6 +98,14 @@ Download all search results for&nbsp;
 <button type="submit" name="download" value="magma">Magma</button>&nbsp;
 </form>
 
+{% endif %}
+
+<!-- Debugging! -->
+{% if DEBUG %}
+<hr>
+<div>
+Query was: {{info.query}}
+</div>
 {% endif %}
 
 {% endblock %}

@@ -19,3 +19,4 @@ for i in range(0,len(ola)):
         galmaps.insert_one(ola[i][1][j])
 
 passports.find().count()
+galmaps.find().count()
