@@ -1,9 +1,6 @@
 {% extends 'homepage.html' %}
 {% import 'color.css' as color %}
 {% block content %}
-<style>
-<div.ratpts>span { white-space: nowrap; font-family: serif; }
-</style>
 
 <!--New table class to avoid spacing in LaTeX-links -->
 <style type="text/css">
@@ -20,7 +17,7 @@ div.properties-body table tr td.label { vertical-align: top; }
 {% set KNOWL_ID = "belyi.%s"|format(data['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
-<p> Degree: {{data.deg}} </p>
+<p> Degree (a positive integer): {{data.deg}} </p>
 <p> Group: {{data.group}} </p>
 <p> Automorphism group: {{data.aut_group}} </p>
 <p> Geomtype: {{data.geomtype}} </p>
