@@ -96,6 +96,38 @@ def by_url_belyi_passport_label(group, abc, sigma0, sigma1, sigmaoo, g):
     label = group+"-"+abc+"-"+sigma0+"-"+sigma1+"-"+sigmaoo+"-"+g
     return render_belyi_passport_webpage(label)
 
+@belyi_page.route("/<group>/")
+def by_url_belyi_search_group(group):
+    #FIXME add breads
+    info = to_dict(request.args)
+    info['title'] = 'Belyi maps with group %s' % group;
+    info['bread'] = [('Belyi Maps', url_for(".index")), ('%s' % group, url_for(".by_url_belyi_search_group", group=group))];
+    if len(request.args) > 0:
+        # if conductor changed, fall back to a general search
+        if 'group' in request.args and request.args['group'] != str(group):
+            return redirect (url_for(".index", **request.args), 307)
+        info['title'] += ' search results'
+        info['bread'].append(('search results',''))
+        #FIXME add breads
+    info['group'] = group;
+    return belyi_search(info);
+
+@belyi_page.route("/<group>/<abc>/")
+def by_url_belyi_search_group_triple(group, abc):
+    #FIXME add breads
+    info = to_dict(request.args)
+    info['title'] = 'Belyi maps with group %s and orders %s' % (group, abc)
+    info['bread'] = [('Belyi Maps', url_for(".index")), ('%s' % group, url_for(".by_url_belyi_search_group", group=group)), ('%s' % abc, url_for(".by_url_belyi_search_group_triple", group=group, abc=abc)) ];
+    if len(request.args) > 0:
+        # if conductor changed, fall back to a general search
+        if 'group' in request.args and (request.args['group'] != str(group) or request.args['abc_list'] != str(abc)):
+            return redirect (url_for(".index", **request.args), 307)
+        info['title'] += ' search results'
+        info['bread'].append(('search results',''))
+    info['group'] = group;
+    info['abc_list'] = abc;
+    return belyi_search(info);
+
 def render_belyi_galmap_webpage(label):
     try:
         belyi_galmap = WebBelyiGalmap.by_label(label)
@@ -249,7 +281,7 @@ def belyi_search(info):
         parse_ints(info, query, 'deg', 'deg')
         parse_ints(info, query, 'orbit_size', 'orbit_size')
         # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
-        for fld in ['geomtype']:
+        for fld in ['geomtype','group']:
             if info.get(fld):
                 query[fld] = info[fld]
     except ValueError as err:
