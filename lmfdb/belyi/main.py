@@ -283,7 +283,8 @@ def boolean_format(value):
     return 'True' if value else 'False'
 
 stats_attribute_list = [
-    {'name':'size','top_title':'Galois orbit size','row_title':'size','knowl':'belyi.galmap.size','avg':True}
+    {'name':'orbit_size','top_title':'Galois orbit size','row_title':'size','knowl':'belyi.orbit_size','avg':True},
+    {'name':'g','top_title':'Genus','row_title':'genus','knowl':'belyi.genus','avg':True}
 ]
 
 class belyi_stats(object):
@@ -324,15 +325,14 @@ class belyi_stats(object):
     def init_belyi_stats(self):
         if self._stats:
             return
-        #curves = belyi_db_curves()
-        curves = None
+        galmaps = belyi_db_galmaps()
         counts = self._counts
-        total = counts["ncurves"]
+        total = counts["ngalmaps"]
         stats = {}
         dists = []
         # TODO use aggregate $group to speed this up and/or just store these counts in the database
         for attr in stats_attribute_list:
-            counts = attribute_value_counts(curves, attr['name'])
+            counts = attribute_value_counts(galmaps, attr['name'])
             counts = [c for c in counts if c[0] != None]
             if len(counts) == 0:
                 continue
@@ -345,14 +345,14 @@ class belyi_stats(object):
                 if 'avg' in attr and attr['avg'] and (type(value) == int or type(value) == float):
                     avg += n*value
                 value_string = attr['format'](value) if 'format' in attr else value
-                vcounts.append({'value': value_string, 'curves': n, 'query':url_for(".index_Q")+'?'+attr['name']+'='+str(value),'proportion': prop})
+                vcounts.append({'value': value_string, 'curves': n, 'query':url_for(".index")+'?'+attr['name']+'='+str(value),'proportion': prop})
                 if len(vcounts) == 10:
                     rows.append(vcounts)
                     vcounts = []
             if len(vcounts):
                 rows.append(vcounts)
             if 'avg' in attr and attr['avg']:
-                vcounts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%(float(avg)/total), 'curves':total, 'query':url_for(".index_Q") +'?'+attr['name'],'proportion':format_percentage(1,1)})
+                vcounts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%(float(avg)/total), 'galmaps':total, 'query':url_for(".index") +'?'+attr['name'],'proportion':format_percentage(1,1)})
             dists.append({'attribute':attr,'rows':rows})
         stats["distributions"] = dists
         self._stats = stats
