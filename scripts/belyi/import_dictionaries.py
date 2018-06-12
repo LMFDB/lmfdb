@@ -5,8 +5,6 @@ belyidb = Cw['belyi']
 passports = belyidb['passports']
 galmaps = belyidb['galmaps']
 
-
-
 # import the raw data
 # import ola
 exec(open("raw_data.py").read())
