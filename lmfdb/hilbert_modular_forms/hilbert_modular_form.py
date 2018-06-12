@@ -524,6 +524,7 @@ def browse():
     }
     credit = 'John Voight'
     t = 'Hilbert Modular Forms'
+
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
              ('Browse', ' ')]
     return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())

@@ -22,7 +22,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
 
 from lmfdb.WebNumberField import modules2string
 
@@ -103,19 +103,10 @@ def index():
                 ('Galois group labels', url_for(".labels_page"))]
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore)
 
-# FIXME: delete or fix this code
-# Apparently obsolete code that causes a server error if executed
-# @galois_groups_page.route("/search", methods=["GET", "POST"])
-# def search():
-#    if request.method == "GET":
-#        val = request.args.get("val", "no value")
-#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-#        return render_template("gg-search.html", title="Galois Group Search", bread=bread, val=val)
-#    elif request.method == "POST":
-#        return "ERROR: we always do http get to explicitly display the search parameters"
-#    else:
-#        return flask.abort(404)
-
+# For the search order-parsing
+def make_order_key(order):
+    order1 = int(ZZ(order).log(10))
+    return '%03d%s'%(order1,str(order))
 
 def galois_group_search(**args):
     info = to_dict(args)
@@ -143,6 +134,7 @@ def galois_group_search(**args):
     try:
         parse_ints(info,query,'n','degree')
         parse_ints(info,query,'t')
+        parse_ints(info,query,'order', qfield='orderkey', parse_singleton=make_order_key)
         for param in ('cyc', 'solv', 'prim', 'parity'):
             parse_bool(info,query,param,minus_one_to_zero=(param != 'parity'))
         degree_str = prep_ranges(info.get('n'))
@@ -154,7 +146,10 @@ def galois_group_search(**args):
     count = parse_count(info, 50)
     start = parse_start(info)
 
-    res = C.transitivegroups.groups.find(query).sort([('n', pymongo.ASCENDING), ('t', pymongo.ASCENDING)])
+    if 'orderkey' in query and not ('n' in query):
+        res = C.transitivegroups.groups.find(query).sort([('orderkey', pymongo.ASCENDING), ('gapid', pymongo.ASCENDING), ('n', pymongo.ASCENDING), ('t', pymongo.ASCENDING)])
+    else:
+        res = C.transitivegroups.groups.find(query).sort([('n', pymongo.ASCENDING), ('t', pymongo.ASCENDING)])
     nres = res.count()
     res = res.skip(start).limit(count)
 
@@ -196,7 +191,7 @@ def render_group_webpage(args):
         C = base.getDBConnection()
         data = C.transitivegroups.groups.find_one({'label': label})
         if data is None:
-            bread = get_bread([("Search error", ' ')])
+            bread = get_bread([("Search Error", ' ')])
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
@@ -231,6 +226,10 @@ def render_group_webpage(args):
         data['cclasses'] = conjclasses(G, n)
         data['subinfo'] = subfield_display(C, n, data['subs'])
         data['resolve'] = resolve_display(C, data['resolve'])
+        if data['gapid'] == 0:
+            data['gapid'] = "Data not available"
+        else:
+            data['gapid'] = small_group_display_knowl(int(data['order']),int(data['gapid']),C, str([int(data['order']),int(data['gapid'])]))
         data['otherreps'] = wgg.otherrep_list()
         ae = wgg.arith_equivalent()
         if ae>0:

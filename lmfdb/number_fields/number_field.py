@@ -119,7 +119,7 @@ def how_computed_page():
         ('Galois group labels', url_for(".render_groups_page")), 
         (Completename, url_for(".render_discriminants_page")) ]
     t = 'How Number Field Data was Computed'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois group labels', ' ')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Source', ' ')]
     return render_template("single.html", kid='dq.nf.howcomputed', 
         credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
@@ -128,7 +128,7 @@ def render_groups_page():
     info = {}
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")) ]
     t = 'Galois group labels'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois group labels', ' ')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois Group Labels', ' ')]
     C = db()
     return render_template("galois_groups.html", al=aliastable(C), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
@@ -144,7 +144,7 @@ def render_labels_page():
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Number field labels'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number field labels', '')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Global Number Field Labels', '')]
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 
@@ -153,7 +153,7 @@ def render_discriminants_page():
     info = {}
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Completeness of Global Number Field Data'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), (Completename, ' ')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
     return render_template("single.html", kid='dq.nf.completeness', 
         credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 

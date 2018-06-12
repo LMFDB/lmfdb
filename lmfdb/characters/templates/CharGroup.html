@@ -28,10 +28,13 @@
 <table>
   <tr> <td colspan="3"> {{ place_code('order') }} </td> </tr>
   <tr> <td>{{KNOWL('character.dirichlet.group.order',title='Order')}}</td> <td>=</td> <td>{{ order }}</td> </tr>
+{% if order > 1 %}
   <tr> <td colspan="3"> {{ place_code('struct') }} </td> </tr>
   <tr> <td>{{KNOWL('character.dirichlet.group.structure',title='Structure')}}</td> <td>=</td> <td>{{ structure }}</td> </tr>
   <tr> <td colspan="3"> {{ place_code('gen') }} </td> </tr>
   <tr> <td>{{KNOWL('character.dirichlet.group.generators',title='Generators')}}</td> <td>=</td> <td>{{ generators | safe }}</td> </tr>
+{% endif %}
+
 </table>
 
 {% if contents %}

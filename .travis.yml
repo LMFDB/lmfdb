@@ -72,17 +72,18 @@ before_script:
 
 script:
     # run pyflakes
-    - pyflakes lmfdb/
+    - pyflakes lmfdb/ > pyflakeslog
+    - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
     # run nosetests in parallel with the aid of parallel
     # we cannot use the option --processes in nosetests, as MongoDB doesn't support forking
     # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once
-    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 3 --results nosetests  --progress --verbose -a list ${SAGE_DIR}/local/bin/nosetests -v -s --testmatch=${TESTMATCH} ${COVERAGE}'
+    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 3 --results nosetests  --group --progress --verbose -a list ${SAGE_DIR}/local/bin/nosetests --verbosity=3 -s --testmatch=${TESTMATCH} ${COVERAGE}'
 
 after_failure:
-    # if some process failed, it will be clear in joblog which one failed
-    - cat joblog
-    # print all the stdout and stderr of nosetests run
-    - find nosetests -type f -exec printf "\n\n filename = %s\n" {} \; -exec cat {} \;
+    - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
+    # print the logs with failed tests
+    - grep 'FAILED' -r nosetests -l > greplog ; cat greplog
+    - parallel -a greplog echo ERROR in filename = '{}' \; cat '{}' \; echo \;
 
 after_success:
     - ls -a
