@@ -222,6 +222,7 @@ def belyi_search(info):
         parse_bracketed_posints(info, query, 'abc', 'a, b, c', maxlength=3)
         parse_ints(info, query, 'g','g')
         parse_ints(info, query, 'deg', 'deg')
+        parse_ints(info, query, 'orbit_size', 'orbit_size')
         # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
         for fld in ['geomtype']:
             if info.get(fld):
@@ -231,9 +232,8 @@ def belyi_search(info):
         return render_template("belyi_search_results.html", info=info, title='Belyi Maps Search Input Error', bread=bread, credit=credit_string)
 
     # Database query happens here
-    print query
     info["query"] = query # save query for reuse in download_search
-    cursor = belyi_db_galmaps().find(query, {'_id':False, 'label':True, 'group': True, 'abc':True, 'g':True, 'deg':True, 'geomtype' : True})
+    cursor = belyi_db_galmaps().find(query, {'_id':False, 'label':True, 'group': True, 'abc':True, 'g':True, 'deg':True, 'geomtype' : True, 'orbit_size' : True})
 
     count = parse_count(info, 50)
     start = parse_start(info)
@@ -258,8 +258,9 @@ def belyi_search(info):
     for v in res:
         print v
         v_clean = {}
-        for key in ('label', 'group', 'deg', 'g', 'geomtype'):
+        for key in ('label', 'group', 'deg', 'g','orbit_size' ):
             v_clean[key] = v[key]
+        v_clean['geomtype'] = geometry_types_dict[v['geomtype']];
         # clean some other stuff
         res_clean.append(v_clean)
 

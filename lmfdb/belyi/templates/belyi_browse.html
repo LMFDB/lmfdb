@@ -36,6 +36,11 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
 <form id='search' onsubmit="cleanSubmit(this.id)">
   <table>
     <tr>
+      <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
+      <td><input type='text' name='deg' placeholder='5' size=10>
+        <td><span class="formexample"> e.g. 4, 5-6 </span></td>
+    </tr>
+    <tr>
       <td>{{ KNOWL('belyi.group', title='group') }}</td>
       <td><input type='text' name='group' placeholder='4T5' size=10>
         <td><span class="formexample"> e.g. 4T5 </span></td>
@@ -51,9 +56,9 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
         <td><span class="formexample"> e.g. 1, 0-2 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
-      <td><input type='text' name='deg' placeholder='1' size=10>
-        <td><span class="formexample"> e.g. 3, 5-6 </span></td>
+      <td>{{ KNOWL('belyi.orbit_size', title='orbit_size') }}</td>
+      <td><input type='text' name='orbit_size' placeholder='2' size=10>
+        <td><span class="formexample"> e.g. 2, 5-6 </span></td>
     </tr>
     <tr>
       <td>{{ KNOWL('belyi.geometry_type', title='geometry type') }}</td>
@@ -65,14 +70,14 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
         </select>
       </td>
     </tr>
-      <tr>
-        <td>Maximum number of Belyi maps to display</td>
-        <td><input type='text' name='count' value=50 size=10></td>
-        <td><span class="formexample"> &nbsp;</td>
-      </tr>
-      <tr>
-        <td><button type='submit' value='Search'>Search</button></td>
-      </tr>
+    <tr>
+      <td>Maximum number of Belyi maps to display</td>
+      <td><input type='text' name='count' value=50 size=10></td>
+      <td><span class="formexample"> &nbsp;</td>
+    </tr>
+    <tr>
+      <td><button type='submit' value='Search'>Search</button></td>
+    </tr>
   </table>
 
 </form>

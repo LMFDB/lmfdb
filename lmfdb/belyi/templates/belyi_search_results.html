@@ -8,18 +8,20 @@
 <input type="hidden" name="count" value="{{info.count}}"/>
 
 <table>
+  <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
   <td>{{ KNOWL('belyi.group', title='group') }}</td>
   <td>{{ KNOWL('belyi.abc', title='abc') }}</td>
-  <td>{{ KNOWL('belyi.g', title='genus') }}</td>
-  <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
-<td>{{ KNOWL('belyi.geometry_type', title='geometry type') }}</td>
+  <td>{{ KNOWL('belyi.genus', title='genus') }}</td>
+  <td>{{ KNOWL('belyi.orbit_size', title='orbit size') }}</td>
+  <td>{{ KNOWL('belyi.geometry_type', title='geometry type') }}</td>
   </tr>
 
   <tr>
+    <td><input type='text' name='deg' placeholder='4' style="width: 100px" value="{{info.deg}}"></td>
     <td><input type='text' name='group' placeholder='4T5' style="width: 100px" value="{{info.group}}"></td>
     <td><input type='text' name='abc' placeholder='[4,4,3]' style="width: 100px" value="{{info.abc}}"></td>
     <td><input type='text' name='g' placeholder='1' style="width: 100px" value="{{info.g}}"></td>
-    <td><input type='text' name='deg' placeholder='1' style="width: 100px" value="{{info.deg}}"></td>
+    <td><input type='text' name='orbit_size' placeholder='2' style="width: 100px" value="{{info.orbit_size}}"></td>
     <td><select name='geomtype' width="100" style="width: 100px" value="{{info.geomtype}}" >
         <option ></option>
         {% for G in info.geometry_types_list %}
@@ -64,6 +66,8 @@ Download all search results for&nbsp;
     <th>{{ KNOWL('belyi.degree', title='Degree') }}</th>
     <th>{{ KNOWL('belyi.group', title='Group') }}</th>
     <th>{{ KNOWL('belyi.genus', title='Genus') }}</th>
+    <th>{{ KNOWL('belyi.orbit_size', title='Orbit Size') }}</th>
+    <th>{{ KNOWL('belyi.geometry_type', title='Geometry Type') }}</th>
 </tr>
 {% for galmap in info.belyi_galmaps: %}
 <tr>
@@ -71,6 +75,7 @@ Download all search results for&nbsp;
     <td align=center> {{galmap.deg}} </td>
     <td align=center> {{galmap.group}} </td>
     <td align=center> {{galmap.g}}</td>
+    <td align=center> {{galmap.orbit_size}} </td>
     <td align=center> {{galmap.geomtype}} </td>
 </tr>
 {% endfor %}
