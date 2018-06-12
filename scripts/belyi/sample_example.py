@@ -34,6 +34,7 @@ sample_galmap = {
     'group' : '6T15',
     'geomtype' : 'H',
     'abc' : [5,5,5],
+    'abc_sorted' : [5,5,5],
     'lambdas' : [[5,1], [5,1], [5,1]],
     'g' : 1
 };
