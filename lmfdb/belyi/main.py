@@ -15,7 +15,7 @@ from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints
 from lmfdb.belyi import belyi_page
 from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport, belyi_db_galmaps, belyi_db_passports
 
-credit_string = "Edgar Costa, Michael Musty, Sam Schiavone, Jeroen Sijsling, John Voight."
+credit_string = "Edgar Costa, Michael Musty, Sam Schiavone, John Voight."
 
 ###############################################################################
 # global database connection and stats objects
@@ -126,7 +126,14 @@ def url_for_belyi_passport_label(label):
     return url_for(".by_url_belyi_passport_label", group=slabel[0], abc=slabel[1], sigma0=slabel[2], sigma1=slabel[3], sigmaoo=slabel[4], g=slabel[5])
 
 def belyi_passport_from_belyi_galmap_label(label):
-    return '.'.join(label.split(".")[:-1])
+    return '-'.join(label.split("-")[:-1])
+
+def belyi_group_from_galmap_label(label):
+    return label.split("-")[0]
+
+def belyi_g_from_galmap_label(label):
+    return label.split("-")[-2][1:]
+
 
 ################################################################################
 # Searching
