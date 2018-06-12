@@ -34,31 +34,36 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
 
 <h2> Search </h2>
 <form id='search' onsubmit="cleanSubmit(this.id)">
-<table>
-<tr>
-<td>{{ KNOWL('belyi.group', title='group') }}</td>
-<td><input type='text' name='group' placeholder='4T5' size=10>
-<td><span class="formexample"> e.g. 4T5 </span></td>
-</tr>
-<tr>
-<td>{{ KNOWL('belyi.abc', title='orders') }}</td>
-<td><input type='text' name='abc' placeholder='[4,4,3]' size=10>
-<td><span class="formexample"> e.g. [4,4,3]</td>
-</tr>
-<tr>
-<td>{{ KNOWL('belyi.g', title='genus') }}</td>
-<td><input type='text' name='g' placeholder='1' size=10>
-<td><span class="formexample"> e.g. 1, 0-2 </span></td>
-</tr>
-<tr>
-<td>Maximum number of Belyi maps to display</td>
-<td><input type='text' name='count' value=50 size=10></td>
-<td><span class="formexample"> &nbsp;</td>
-</tr>
-<tr>
-<td><button type='submit' value='Search'>Search</button></td>
-</tr>
-</table>
+  <table>
+    <tr>
+      <td>{{ KNOWL('belyi.group', title='group') }}</td>
+      <td><input type='text' name='group' placeholder='4T5' size=10>
+        <td><span class="formexample"> e.g. 4T5 </span></td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('belyi.abc', title='orders') }}</td>
+      <td><input type='text' name='abc' placeholder='[4,4,3]' size=10>
+        <td><span class="formexample"> e.g. [4,4,3]</td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('belyi.g', title='genus') }}</td>
+      <td><input type='text' name='genus' placeholder='1' size=10>
+        <td><span class="formexample"> e.g. 1, 0-2 </span></td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
+      <td><input type='text' name='degree' placeholder='1' size=10>
+        <td><span class="formexample"> e.g. 3, 5-6 </span></td>
+    </tr>
+    <tr>
+      <td>Maximum number of Belyi maps to display</td>
+      <td><input type='text' name='count' value=50 size=10></td>
+      <td><span class="formexample"> &nbsp;</td>
+    </tr>
+    <tr>
+      <td><button type='submit' value='Search'>Search</button></td>
+    </tr>
+  </table>
 
 </form>
 
