@@ -254,9 +254,9 @@ def belyi_search(info):
         if query.get('abc_list'):
             if len(query['abc_list']) == 3:
                 a, b, c = sorted(query['abc_list'])
-                query['a_s'] = query['abc_list'][0];
-                query['b_s'] = query['abc_list'][1];
-                query['c_s'] = query['abc_list'][2];
+                query['a_s'] = a;
+                query['b_s'] = b;
+                query['c_s'] = c;
             elif len(query['abc_list']) == 2:
                 a, b = sorted(query['abc_list']);
                 sub_query = [];
