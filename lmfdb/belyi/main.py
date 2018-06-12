@@ -1,5 +1,4 @@
 # -*- coding: utf8 -*-
-# -*- coding: utf8 -*-
 
 import StringIO
 from ast import literal_eval
