@@ -11,7 +11,6 @@ from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, imp
 from sage.plot.text import text
 from flask import url_for
 
-
 ###############################################################################
 # Database connection -- all access to mongo db should happen here
 ###############################################################################
@@ -27,11 +26,49 @@ def belyi_db_passports():
 # Pretty print functions
 ###############################################################################
 
+geomtypelet_to_geomtypename_dict = {'H':'hyperbolic','E':'Euclidean','S':'spherical'}
 
+def make_curve_latex(crv_str):
+    from sage.all import PolynomialRing, FractionField
+    R0 = PolynomialRing(QQ,'nu')
+    R = PolynomialRing(R0,2,'x,y')
+    F = FractionField(R)
+    sides = crv_str.split("=")
+    lhs = latex(F(sides[0]))
+    rhs = latex(F(sides[1]))
+    eqn_str = lhs + '=' + rhs
+    return eqn_str
+
+def make_map_latex(map_str):
+    from sage.all import PolynomialRing, FractionField
+    R0 = PolynomialRing(QQ,'nu')
+    R = PolynomialRing(R0,2,'x,y')
+    F = FractionField(R)
+    phi = F(map_str)
+    num = phi.numerator()
+    den = phi.denominator()
+    c_num = num.denominator()
+    c_den = den.denominator()
+    lc = c_den/c_num
+    if lc==1:
+        lc_str=""
+    else:
+        lc_str = latex(lc)
+    num_str = latex(c_num*num)
+    den_str = latex(c_den*den)
+    phi_str = lc_str+"\\frac{"+num_str+"}"+"{"+den_str+"}"
+    return phi_str
 
 ###############################################################################
 # Belyi map class definitions
 ###############################################################################
+
+def belyi_base_field(galmap):
+    fld_coeffs = galmap['base_field']
+    if fld_coeffs==[-1,1]:
+        fld_coeffs = [0,1]
+    F = WebNumberField.from_coeffs(fld_coeffs)
+    return F
 
 class WebBelyiGalmap(object):
     """
@@ -71,6 +108,7 @@ class WebBelyiGalmap(object):
                 raise KeyError("Belyi map %s not found in database." % label)
         return WebBelyiGalmap(galmap)
 
+
     def make_galmap_object(self, galmap):
         from lmfdb.belyi.main import url_for_belyi_galmap_label
         from lmfdb.belyi.main import url_for_belyi_passport_label
@@ -82,15 +120,27 @@ class WebBelyiGalmap(object):
         data['label'] = galmap['label']
         slabel = data['label'].split("-")
         data['plabel'] = galmap['plabel']
-
         data['triples'] = galmap['triples']
-        F = WebNumberField.from_coeffs(galmap['base_field'])
+        data['isQQ'] = False
+#        fld_coeffs = galmap['base_field']
+#        if fld_coeffs==[-1,1]:
+#            fld_coeffs = [0,1]
+#            data['isQQ'] = True 
+#        F = WebNumberField.from_coeffs(fld_coeffs)
+        F = belyi_base_field(galmap)
+        if F.poly().degree()==1:
+            data['isQQ'] = True 
         F.latex_poly = web_latex(F.poly())
 #        data['base_field'] = galmap['base_field']
         data['base_field'] = F
         data['embeddings'] = galmap['embeddings']
-        data['curve'] = galmap['curve']
-        data['map'] = galmap['map']
+        crv_str = galmap['curve']
+        if crv_str=='PP1':
+            data['curve'] = '\mathbb{P}^1'
+        else:
+            data['curve'] = make_curve_latex(crv_str)
+        data['map'] = make_map_latex(galmap['map'])
+#        data['map'] = galmap['map']
         data['orbit_size'] = galmap['orbit_size']
 
         # Properties
@@ -161,20 +211,38 @@ class WebBelyiPassport(object):
         slabel = data['plabel'].split("-")
 
         data['deg'] = passport['deg']
-        data['group'] = passport['group']
-        data['aut_group'] = passport['aut_group']
-        data['geomtype'] = passport['geomtype']
+        nt = passport['group'].split('T')
+        data['group'] = group_display_knowl(nt[0],nt[1],getDBConnection())
+
+        data['geomtype'] = geomtypelet_to_geomtypename_dict[passport['geomtype']]
         data['abc'] = passport['abc']
-        data['lambdas'] = passport['lambdas']
+        data['lambdas'] = [str(c)[1:-1] for c in passport['lambdas']]
         data['g'] = passport['g']
         data['maxdegbf'] = passport['maxdegbf']
         data['pass_size'] = passport['pass_size']
         data['num_orbits'] = passport['num_orbits']
 
+        # Permutation triples
+        galmaps_for_plabel = belyi_db_galmaps().find({"plabel" : passport['plabel']}).sort([('label_index', ASCENDING)])
+        galmapdata = [] 
+        for galmap in galmaps_for_plabel:
+            F = WebNumberField.from_coeffs(galmap['base_field'])
+            galmapdatum = [galmap['label'].split('-')[-1], 
+                           galmap['orbit_size'], 
+                           belyi_base_field(galmap['base_field']),
+                           galmap['triples'][0]]
+            galmapdata.append(galmapdatum)
+        data['galmapdata'] = galmapdata
+
         # Properties
-        self.properties = properties = [('Label', data['plabel'])]
-        properties += [
+        properties = [('Label', passport['plabel']),
+            ('Group', str(passport['group'])),
+            ('Orders', str(passport['abc'])), 
+            ('Genus', str(passport['g'])),
+            ('Size', str(passport['pass_size'])),
+            ('Galois orbits', str(passport['num_orbits']))
             ]
+        self.properties = properties
 
         # Friends
         self.friends = friends = []

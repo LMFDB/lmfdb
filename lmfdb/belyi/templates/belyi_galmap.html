@@ -1,6 +1,7 @@
 {% extends 'homepage.html' %}
 {% import 'color.css' as color %}
 {% block content %}
+
 <style>
 <div.ratpts>span { white-space: nowrap; font-family: serif; }
 </style>
@@ -19,23 +20,25 @@ div.properties-body table tr td.label { vertical-align: top; }
 
 {% set KNOWL_ID = "belyi.%s"|format(data['label']) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
+<!-- FIXME: extra space at top -->
 <h2>Galois data</h2>
   <p>
     <table>
-    <tr><td>{{ KNOWL('belyi.base_field', title='Base field') }}<td> {{ data.base_field.knowl()|safe }};
-       {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{
-       KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
-       {{ data.base_field.latex_poly }}.
-       <!-- FIXME: minimal polynomial not displaying... :( -->
+    <tr><td>{{ KNOWL('belyi.base_field', title='Base field') }}<td> {{ data.base_field.knowl()|safe }}
+      {% if not data['isQQ'] %}
+       ; {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+        {{ data.base_field.latex_poly }}.
+      {% endif %}
     </tr>
     <tr><td> {{ KNOWL('belyi.orbit_size', title='Orbit size') }}<td> {{ data.orbit_size}} </tr>
     </table>
   </p>
 
-<h2>Equations</h2>
-  <p> Curve: {{data.curve}} </p>
-  <p> Map: {{data.map}} </p>
+<h2>Curve</h2>
+  <p> \(\displaystyle {{data.curve}}\) </p>
+
+<h2>Map</h2>
+  <p> \(\displaystyle {{data.map}}\) </p>
 
 <h2>Passport properties</h2>
 
