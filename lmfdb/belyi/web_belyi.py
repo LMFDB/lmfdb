@@ -229,7 +229,7 @@ class WebBelyiPassport(object):
             F = WebNumberField.from_coeffs(galmap['base_field'])
             galmapdatum = [galmap['label'].split('-')[-1], 
                            galmap['orbit_size'], 
-                           F, # belyi_base_field(galmap['base_field']),
+                           belyi_base_field(galmap['base_field']),
                            galmap['triples'][0]]
             galmapdata.append(galmapdatum)
         data['galmapdata'] = galmapdata
