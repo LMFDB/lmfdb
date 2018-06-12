@@ -32,6 +32,10 @@ def belyistats():
 # List and dictionaries needed routing and searching
 ###############################################################################
 
+geometry_types_dict = {'H':'Hyperbolic', 'S':'Spherical', 'E':'Euclidian'}
+geometry_types_list = geometry_types_dict.keys();
+
+
 
 
 ###############################################################################
@@ -59,6 +63,11 @@ def index():
     info["degree_list"] = ('1-6', '7-8', '9-10','10-100')
     title = 'Belyi maps'
     bread = (('Belyi Maps', url_for(".index")))
+
+    #search options
+    info['geometry_types_list'] = geometry_types_list;
+    info['geometry_types_dict'] = geometry_types_dict;
+
     return render_template("belyi_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
 @belyi_page.route("/random")
@@ -178,6 +187,8 @@ def belyi_genus_from_label(label):
 def belyi_orbit_from_label(label):
     return break_label(label)[-1];
 
+
+
 ################################################################################
 # Searching
 ################################################################################
@@ -197,24 +208,32 @@ def belyi_search(info):
 #     if info.get('download','').strip():
 #         return download_search(info)
 
+    #search options
+    info['geometry_types_list'] = geometry_types_list;
+    info['geometry_types_dict'] = geometry_types_dict;
+
     bread = info.get('bread',(('Belyi Maps', url_for(".index")), ('Search Results', '.')))
 
     query = {}
     try:
         if 'group' in query:
             info['group'] = query['group']
+        #FIXME search every possible permutation
         parse_bracketed_posints(info, query, 'abc', 'a, b, c', maxlength=3)
-        parse_ints(info, query, 'g','genus')
-        parse_ints(info, query, 'deg', 'degree')
+        parse_ints(info, query, 'g','g')
+        parse_ints(info, query, 'deg', 'deg')
         # invariants and drop-list items don't require parsing -- they are all strings (supplied by us, not the user)
-        # (See examples in genus 2)
+        for fld in ['geomtype']:
+            if info.get(fld):
+                query[fld] = info[fld]
     except ValueError as err:
         info['err'] = str(err)
         return render_template("belyi_search_results.html", info=info, title='Belyi Maps Search Input Error', bread=bread, credit=credit_string)
 
     # Database query happens here
+    print query
     info["query"] = query # save query for reuse in download_search
-    cursor = belyi_db_galmaps().find(query, {'_id':False, 'label':True, 'group':True, 'abc':True, 'g':True})
+    cursor = belyi_db_galmaps().find(query, {'_id':False, 'label':True, 'group': True, 'abc':True, 'g':True, 'deg':True, 'geomtype' : True})
 
     count = parse_count(info, 50)
     start = parse_start(info)
@@ -237,11 +256,11 @@ def belyi_search(info):
     res_clean = []
 
     for v in res:
+        print v
         v_clean = {}
-        v_clean["label"] = v["label"]
-        v_clean["group"] = belyi_group_from_label(v["label"])
-        v_clean["degree"] = belyi_degree_from_label(v["label"])
-        v_clean["genus"] = belyi_genus_from_label(v["label"])
+        for key in ('label', 'group', 'deg', 'g', 'geomtype'):
+            v_clean[key] = v[key]
+        # clean some other stuff
         res_clean.append(v_clean)
 
     info["belyi_galmaps"] = res_clean
