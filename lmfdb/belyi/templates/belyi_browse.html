@@ -46,8 +46,13 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
         <td><span class="formexample"> e.g. 4T5 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.abc', title='orders') }}</td>
-      <td><input type='text' name='abc' placeholder='[4,4,3]' size=10>
+      <td>{{ KNOWL('belyi.orders', title='orders') }}</td>
+      <td><input type='text' name='abc' placeholder='5' size=10>
+        <td><span class="formexample"> e.g. 4, 5-6 </td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('belyi.abc', title='abc triples') }}</td>
+      <td><input type='text' name='abc_list' placeholder='[4,4,3]' size=10>
         <td><span class="formexample"> e.g. [4,4,3]</td>
     </tr>
     <tr>
@@ -56,7 +61,7 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
         <td><span class="formexample"> e.g. 1, 0-2 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('belyi.orbit_size', title='orbit_size') }}</td>
+      <td>{{ KNOWL('belyi.orbit_size', title='orbit size') }}</td>
       <td><input type='text' name='orbit_size' placeholder='2' size=10>
         <td><span class="formexample"> e.g. 2, 5-6 </span></td>
     </tr>

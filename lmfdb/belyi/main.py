@@ -218,8 +218,26 @@ def belyi_search(info):
     try:
         if 'group' in query:
             info['group'] = query['group']
-        #FIXME search every possible permutation
-        parse_bracketed_posints(info, query, 'abc', 'a, b, c', maxlength=3)
+        parse_bracketed_posints(info, query, 'abc_list', 'a, b, c', maxlength=3)
+        if query.get('abc_list'):
+            if len(query['abc_list']) == 3:
+                a, b, c = sorted(query['abc_list'])
+                query['a_sorted'] = query['abc_list'][0];
+                query['b_sorted'] = query['abc_list'][1];
+                query['c_sorted'] = query['abc_list'][2];
+            elif len(query['abc_list']) == 2:
+                a, b = sorted(query['abc_list']);
+                sub_query = [];
+                sub_query.append({'$and' : {'a_sorted': a, 'b_sorted': b} });
+                sub_query.append({'$and' : {'b_sorted': a, 'c_sorted': b} });
+                query['$or'] = sub_query;
+            elif len(query['abc_list']) == 1:
+                a = query['abc_list'][0];
+                query['$or'] = {'a_sorted': a, 'b_sorted': a, 'c_sorted': a};
+            query.pop('abc_list');
+
+
+        parse_ints(info, query, 'abc');
         parse_ints(info, query, 'g','g')
         parse_ints(info, query, 'deg', 'deg')
         parse_ints(info, query, 'orbit_size', 'orbit_size')
@@ -256,12 +274,10 @@ def belyi_search(info):
     res_clean = []
 
     for v in res:
-        print v
         v_clean = {}
         for key in ('label', 'group', 'deg', 'g','orbit_size' ):
             v_clean[key] = v[key]
         v_clean['geomtype'] = geometry_types_dict[v['geomtype']];
-        # clean some other stuff
         res_clean.append(v_clean)
 
     info["belyi_galmaps"] = res_clean
