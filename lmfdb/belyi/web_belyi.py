@@ -27,7 +27,10 @@ geomtypelet_to_geomtypename_dict = {'H':'hyperbolic','E':'Euclidean','S':'spheri
 
 def make_curve_latex(crv_str):
     # FIXME: Get rid of nu when map is defined over QQ
-    R0 = PolynomialRing(QQ,'nu')
+    if "nu" not in crv_str:
+        R0 = QQ
+    else:
+        R0 = PolynomialRing(QQ,'nu')
     R = PolynomialRing(R0,2,'x,y')
     F = FractionField(R)
     sides = crv_str.split("=")
@@ -38,7 +41,10 @@ def make_curve_latex(crv_str):
 
 def make_map_latex(map_str):
     # FIXME: Get rid of nu when map is defined over QQ
-    R0 = PolynomialRing(QQ,'nu')
+    if "nu" not in map_str:
+        R0 = QQ
+    else:
+        R0 = PolynomialRing(QQ,'nu')
     R = PolynomialRing(R0,2,'x,y')
     F = FractionField(R)
     phi = F(map_str)
@@ -51,16 +57,22 @@ def make_map_latex(map_str):
     # numerator
     num_new = c_num*num
     num_cs = num_new.coefficients()
-    num_cs_ZZ = []
-    for el in num_cs:
-        num_cs_ZZ = num_cs_ZZ + el.coefficients()
+    if R0 == QQ:
+        num_cs_ZZ = num_cs
+    else:
+        num_cs_ZZ = []
+        for el in num_cs:
+            num_cs_ZZ = num_cs_ZZ + el.coefficients()
     num_gcd = gcd(num_cs_ZZ)
     # denominator
     den_new = c_den*den
     den_cs = den_new.coefficients()
-    den_cs_ZZ = []
-    for el in den_cs:
-        den_cs_ZZ = den_cs_ZZ + el.coefficients()
+    if R0 == QQ:
+        den_cs_ZZ = den_cs
+    else:
+        den_cs_ZZ = []
+        for el in den_cs:
+            den_cs_ZZ = den_cs_ZZ + el.coefficients()
     den_gcd = gcd(den_cs_ZZ)
     lc = lc*(num_gcd/den_gcd)
     num_new = num_new/num_gcd
