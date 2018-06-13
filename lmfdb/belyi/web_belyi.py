@@ -144,10 +144,15 @@ class WebBelyiGalmap(object):
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
         # the stuff that does not need to be polished
-        for elt in ('label', 'plabel', 'triples', 'orbit_size', 'g', 'abc', 'embeddings'):
+        for elt in ('label', 'plabel', 'triples_cyc', 'orbit_size', 'g', 'abc', 'embeddings', 'deg'):
             data[elt] = galmap[elt]
-        slabel = data['label'].split("-")
-        data['isogeny_label'] = slabel[-1];
+
+        nt = galmap['group'].split('T')
+        data['group'] = group_display_knowl(nt[0],nt[1],getDBConnection())
+
+        data['geomtype'] = geomtypelet_to_geomtypename_dict[galmap['geomtype']]
+        data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
+
         data['isQQ'] = False
         F = belyi_base_field(galmap)
         if F.poly().degree()==1:
@@ -162,8 +167,9 @@ class WebBelyiGalmap(object):
 
         data['map'] = make_map_latex(galmap['map'])
         data['embeddings_and_triples'] = []
-        for i in range(0,len(data['triples'])):
-            data['embeddings_and_triples'].append([data['embeddings'][i], data['triples'][i]])
+        for i in range(0,len(data['triples_cyc'])):
+            triple_cyc = data['triples_cyc'][i]
+            data['embeddings_and_triples'].append([data['embeddings'][i], triple_cyc[0], triple_cyc[1], triple_cyc[2]])
         data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
 
         # Properties
@@ -179,7 +185,7 @@ class WebBelyiGalmap(object):
         self.friends = friends = [('Passport', url_for_belyi_passport_label(galmap['plabel']))]
 
         # Breadcrumbs
-        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data['plabel'].split("-");
+        groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data['label'].split("-");
         lambdasstr = '%s-%s-%s' % (sigma0, sigma1, sigmaoo);
         lambdasgstr = lambdasstr + "-" + gstr;
         self.bread = bread = [
@@ -204,7 +210,7 @@ class WebBelyiGalmap(object):
                         sigmaoo=sigmaoo,
                         g = gstr )
                     ),
-                (data['isogeny_label'],
+                (letnum,
                     url_for(".by_url_belyi_galmap_label",
                         group=groupstr,
                         abc=abcstr,
@@ -212,7 +218,7 @@ class WebBelyiGalmap(object):
                         sigma1=sigma1,
                         sigmaoo=sigmaoo,
                         g = gstr,
-                        letnum = data['isogeny_label'])
+                        letnum = letnum)
                     ),
                 ];
 
@@ -264,8 +270,6 @@ class WebBelyiPassport(object):
         for elt in ('plabel', 'abc', 'num_orbits', 'g', 'abc', 'deg', 'maxdegbf'):
             data[elt] = passport[elt]
 
-        slabel = data['plabel'].split("-")
-
         nt = passport['group'].split('T')
         data['group'] = group_display_knowl(nt[0],nt[1],getDBConnection())
 
@@ -282,7 +286,7 @@ class WebBelyiPassport(object):
                            url_for_belyi_galmap_label(galmap['label']), 
                            galmap['orbit_size'], 
                            belyi_base_field(galmap),
-                           galmap['triples'][0]]
+                           galmap['triples_cyc'][0][0], galmap['triples_cyc'][0][1], galmap['triples_cyc'][0][2]]
             galmapdata.append(galmapdatum)
         data['galmapdata'] = galmapdata
 
