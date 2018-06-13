@@ -35,8 +35,8 @@
 
 <p><h2>Galois orbits</h2>
   <table>
-  <tr><td>{{ KNOWL('belyi.pass_size', title="Passport size") }}:<td>&nbsp;&nbsp;<td>${{data.pass_size}}$<td></tr>
-  <tr><td>{{ KNOWL('belyi.num_orbits', title="Number of Galois orbits") }}:<td>&nbsp;&nbsp;<td>${{data.num_orbits}}$<td></tr>
+  <tr><td>{{ KNOWL('belyi.pass_size', title="Passport size") }}:<td>&nbsp;&nbsp;<td>${{data.pass_size}}$</tr>
+  <tr><td>{{ KNOWL('belyi.num_orbits', title="Number of Galois orbits") }}:<td>&nbsp;&nbsp;<td>${{data.num_orbits}}$</tr>
   </table>
 
   <table class="ntdata">
@@ -46,11 +46,11 @@
            <tr><td><a href="{{g[1]|safe}}">{{g[0]}}</a></td>
            <td>${{g[2]}}$</td>
            <td>{{g[3].knowl()|safe}}</td>
-           <td>{{g[4]}}</td>
+           <td>${{g[4]}},{{g[5]}},{{g[6]}}$</td>
            </tr>
         {% endfor %}
       </tbody>
-      </table>
+  </table>
   
 </p>
   
