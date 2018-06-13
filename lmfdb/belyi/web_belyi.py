@@ -185,7 +185,7 @@ class WebBelyiGalmap(object):
         if data['isQQ']:
             for i in range(0,len(data['triples_cyc'])):
                 triple_cyc = data['triples_cyc'][i]
-                data['embeddings_and_triples'].append(["-", triple_cyc[0], triple_cyc[1], triple_cyc[2]])
+                data['embeddings_and_triples'].append(["\\text{not applicable (over $\mathbb{Q}$)}", triple_cyc[0], triple_cyc[1], triple_cyc[2]])
         else:
             for i in range(0,len(data['triples_cyc'])):
                 triple_cyc = data['triples_cyc'][i]
