@@ -7,7 +7,6 @@ from lmfdb.WebNumberField import  WebNumberField
 from lmfdb.transitive_group import group_display_knowl
 from sage.all import gcd, latex, QQ, FractionField, PolynomialRing
 from flask import url_for
-from lmfdb.belyi.main import url_for_belyi_passport_label
 
 ###############################################################################
 # Database connection -- all access to mongo db should happen here
@@ -133,6 +132,7 @@ class WebBelyiGalmap(object):
 
 
     def make_galmap_object(self, galmap):
+        from lmfdb.belyi.main import url_for_belyi_passport_label
 
         # all information about the map goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
