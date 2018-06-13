@@ -3,7 +3,8 @@ R = PolynomialRing(R0,2,'x,y')
 F = FractionField(R)
 latex(F(map_str))
 
-R.<x,y,nu> = PolynomialRing(QQ, 3)
+R = PolynomialRing(QQ, 3, "x,y,nu")
+x,y,nu = R.gens()
 F = FractionField(R)
 crv_str = sample_galmap['curve']
 sides = crv_str.split("=")
@@ -11,7 +12,8 @@ lhs = latex(F(sides[0]))
 rhs = latex(F(sides[1]))
 eqn_str = lhs + '=' + rhs
 
-R.<x,y,nu> = PolynomialRing(QQ, 3)
+R = PolynomialRing(QQ, 3, "x,y,nu")
+x,y,nu = R.gens()
 F = FractionField(R)
 crv_str = sample_galmap['curve']
 sides = crv_str.split("=")
