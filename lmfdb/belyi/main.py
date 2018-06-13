@@ -237,8 +237,8 @@ def belyi_search(info):
                 errmsg = "%s is not a valid Belyi map or passport label"
         flash_error (errmsg, jump)
         return redirect(url_for(".index"))
-#     if info.get('download','').strip():
-#         return download_search(info)
+    if info.get('download','').strip():
+        return download_search(info)
 
     #search options
     info['geometry_types_list'] = geometry_types_list;
@@ -418,57 +418,70 @@ class belyi_stats(object):
 
 
 
+def download_search(info):
+    download_languages = ['magma', 'sage', 'gp', 'text']
+    download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
+    download_assignment_defn = {'magma':':=','sage':' = ','gp':' = ' ,'text':'='}
+    delim_start = {'magma':'[*','sage':'[','gp':'[','text':' ['}
+    delim_end = {'magma':'*]','sage':']','gp':']','text':' ]'}
+    start_and_end = {'magma':['[*','*];'],'sage':['[','];'],'gp':['{[',']}'],'text':['[','];']}
+    file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
+    lang = info.get('download','text').strip()
+    filename = 'belyi_maps' + file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    start = delim_start[lang];
+    end = delim_end[lang];
+    # reissue query here
+    try:
+        res = belyi_db_galmaps().find(
+                literal_eval(info.get('query','{}')),
+                {'_id':False,'label':True, 'triples': True}
+                )
+    except Exception as err:
+        return "Unable to parse query: %s"%err
+    # list of labels and triples
+
+    def coerce_triples(triples):
+        deg = len(triples[0][0]);
+        if lang == 'sage':
+            return '[' +',\n'.join(["map(SymmetricGroup(%d), %s)" % (deg, s) for s in triples]) + ']'
+        elif lang == "magma":
+            return '[' + ',\n'.join([
+                '[' +
+                ',\n'.join( ["Sym(%d) ! %s" % (deg, t) for t in s])
+                + ']'
+                for s in triples
+                ]) + ']';
+
+            return '[' +',\n'.join(["Sym(%d) ! %s" % (deg, s) for s in triples]) + ']'
+        else:
+            return str(triples)
 
 
-
-
-
-
-# download_languages = ['magma', 'sage', 'gp', 'text']
-# download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
-# download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
-# download_assignment_end = {'magma':'];','sage':']','gp':']}','text':']'}
-# download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
-# download_make_data = {
-# 'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
-# 'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
-# 'gp':'make_data()=[apply(Polrev,c)|c<-data];\n\n',
-# 'text':''
-# }
-# download_make_data_comment = {
-#         'magma': 'To create a list of curves, type "curves:= make_data();"',
-#         'sage':'To create a list of curves, type "curves = make_data()"',
-#         'gp':'To create a list of curves [f,h], type "curves = make_data()"',
-#         'text':''}
-# 
-# def download_search(info):
-#     lang = info.get('download','text').strip()
-#     filename = 'genus2_curves' + download_file_suffix[lang]
-#     mydate = time.strftime("%d %B %Y")
-#     # reissue query here
-#     try:
-#         res = g2c_db_curves().find(literal_eval(info.get('query','{}')),{'_id':False,'eqn':True})
-#     except Exception as err:
-#         return "Unable to parse query: %s"%err
-#     c = download_comment_prefix[lang]
-#     s =  '\n'
-#     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
-#     s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), res.count())
-#     s += c + ' Below is a list called data. Each entry has the form:\n'
-#     s += c + '   [[f coeffs],[h coeffs]]\n'
-#     s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
-#     s += c + '\n'
-#     s += c + ' ' + download_make_data_comment[lang] + '\n'
-#     s += '\n'
-#     s += download_assignment_start[lang] + '\\\n'
-#     s += str(',\n'.join([str(r['eqn']) for r in res])) # list of curve equations
-#     s += download_assignment_end[lang]
-#     s += '\n\n'
-#     s += download_make_data[lang]
-#     strIO = StringIO.StringIO()
-#     strIO.write(s)
-#     strIO.seek(0)
-#     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+    res_list = [
+            start +
+            str(r['label']).__repr__().replace("'","\"") +
+            ", " + coerce_triples(r['triples']) +
+            end
+            for r in res
+            ]
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    s += c + ' Belye maps downloaded from the LMFDB, downloaded on %s.\n'% mydate
+    s += c + ' Query "%s" returned %d maps.\n\n' %(str(info.get('query')), res.count())
+    s += c + ' Below is a list called data. Each entry has the form:\n'
+    s += c + '   [label, permutation_triples]\n'
+    s += c + ' where the permutation triples are in one line notation\n'
+    s += c + '\n'
+    s += '\n'
+    s += 'data ' + download_assignment_defn[lang] + start_and_end[lang][0] + '\\\n'
+    s += str(',\n'.join(res_list))
+    s += start_and_end[lang][1];
+    s += '\n\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 
 @belyi_page.route("/Completeness")
