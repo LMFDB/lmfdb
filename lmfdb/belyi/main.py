@@ -58,7 +58,7 @@ def index():
     info = {'counts' : belyistats().counts()}
     info["stats_url"] = url_for(".statistics")
     info["belyi_galmap_url"] =  lambda label: url_for_belyi_galmap_label(label)
-    belyi_galmap_labels = ('4T5-[4,4,3]-4-4-31-g1-a','5T4-[5,3,3]-5-311-311-g0-a','9T34-[14,4,4]-72-42111-4221-g0-a')
+    belyi_galmap_labels = ('4T5-[4,4,3]-4-4-31-g1-a','5T4-[5,3,3]-5-311-311-g0-a')
     info["belyi_galmap_list"] = [ {'label':label,'url':url_for_belyi_galmap_label(label)} for label in belyi_galmap_labels ]
     info["degree_list"] = ('1-6', '7-8', '9-10','10-100')
     title = 'Belyi maps'

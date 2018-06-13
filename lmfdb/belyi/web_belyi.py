@@ -267,6 +267,7 @@ class WebBelyiPassport(object):
 
         data['geomtype'] = geomtypelet_to_geomtypename_dict[passport['geomtype']]
         data['lambdas'] = [str(c)[1:-1] for c in passport['lambdas']]
+        data['pass_size'] = passport['pass_size']
 
         # Permutation triples
         galmaps_for_plabel = belyi_db_galmaps().find({"plabel" : passport['plabel']}).sort([('label_index', ASCENDING)])
