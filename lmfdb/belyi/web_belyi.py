@@ -167,9 +167,16 @@ class WebBelyiGalmap(object):
 
         data['map'] = make_map_latex(galmap['map'])
         data['embeddings_and_triples'] = []
-        for i in range(0,len(data['triples_cyc'])):
-            triple_cyc = data['triples_cyc'][i]
-            data['embeddings_and_triples'].append([data['embeddings'][i], triple_cyc[0], triple_cyc[1], triple_cyc[2]])
+        if data['isQQ']:
+            for i in range(0,len(data['triples_cyc'])):
+                triple_cyc = data['triples_cyc'][i]
+                data['embeddings_and_triples'].append(["-", triple_cyc[0], triple_cyc[1], triple_cyc[2]])
+        else:
+            for i in range(0,len(data['triples_cyc'])):
+                triple_cyc = data['triples_cyc'][i]
+                data['embeddings_and_triples'].append([data['embeddings'][i], triple_cyc[0], triple_cyc[1], triple_cyc[2]])
+
+
         data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
 
         # Properties
