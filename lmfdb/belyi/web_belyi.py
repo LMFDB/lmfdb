@@ -167,9 +167,13 @@ class WebBelyiGalmap(object):
         data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
 
         # Properties
-        self.properties = properties = [('Label', data['label'])]
-        properties += [
-            ]
+        properties = [('Label', galmap['label']),
+            ('Group', str(galmap['group'])),
+            ('Orders', str(galmap['abc'])), 
+            ('Genus', str(galmap['g'])),
+            ('Size', str(galmap['orbit_size'])),
+        ]
+        self.properties = properties
 
         # Friends
         self.friends = friends = [('Passport', url_for_belyi_passport_label(galmap['plabel']))]
