@@ -1,4 +1,7 @@
 import db
+import os, sys, inspect
+import subprocess
+
 Cw = db.getDBconnection_write();
 
 belyidb = Cw['belyi']
@@ -22,7 +25,6 @@ print passports.find().count()
 print galmaps.find().count()
 
 
-import os, sys, inspect
 filename = inspect.getframeinfo(inspect.currentframe())[0];
 folder = os.path.dirname(os.path.abspath(filename));
 sys.path.append(os.path.join(folder, "../../"));
