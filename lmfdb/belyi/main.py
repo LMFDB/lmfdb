@@ -61,7 +61,7 @@ def index():
     belyi_galmap_labels = ('4T5-[4,4,3]-4-4-31-g1-a','5T4-[5,3,3]-5-311-311-g0-a')
     info["belyi_galmap_list"] = [ {'label':label,'url':url_for_belyi_galmap_label(label)} for label in belyi_galmap_labels ]
     info["degree_list"] = ('1-6', '7-8', '9-10','10-100')
-    title = 'Belyi maps'
+    info['title'] = title =  'Belyi maps'
     info['bread'] = bread = [('Belyi Maps', url_for(".index"))]
 
     #search options

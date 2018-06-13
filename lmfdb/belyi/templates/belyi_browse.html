@@ -87,4 +87,12 @@ A <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a> from the data
 
 </form>
 
+<!-- Debugging! -->
+{% if DEBUG %}
+<hr>
+<div>
+Info was: {{info}}
+</div>
+{% endif %}
+
 {% endblock %}
