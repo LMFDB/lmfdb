@@ -32,12 +32,16 @@ div.properties-body table tr td.label { vertical-align: top; }
 
 <h2>{{ KNOWL('belyi.base_field', title='Base field')}}</h2>
   <p>
-{{ data.base_field.knowl()|safe }}
+    {% if data['in_LMFDB'] %}
+      {{ data.base_field.knowl()|safe }}
       {% if not data['isQQ'] %}
        ; {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
         {{ data.base_field.latex_poly }}.
       {% endif %}
-</p>
+    {% else %}
+      \(\mathbb{Q}(\nu)\); {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }} ${{ data.base_field }}$.
+    {% endif %}
+  </p>
 </h2>
 
 <p><h2>Generators</h2>
