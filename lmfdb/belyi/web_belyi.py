@@ -159,11 +159,18 @@ class WebBelyiGalmap(object):
         data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
 
         data['isQQ'] = False
+        data['in_LMFDB'] = False
         F = belyi_base_field(galmap)
-        if F.poly().degree()==1:
-            data['isQQ'] = True 
-        F.latex_poly = web_latex(F.poly())
-        data['base_field'] = F
+        if F._data == None:
+            fld_coeffs = galmap['base_field']
+            pol = PolynomialRing(QQ, 'x')(fld_coeffs)
+            data['base_field'] = latex(pol)
+        else:
+            data['in_LMFDB'] = True 
+            if F.poly().degree()==1:
+                data['isQQ'] = True 
+            F.latex_poly = web_latex(F.poly())
+            data['base_field'] = F
         crv_str = galmap['curve']
         if crv_str=='PP1':
             data['curve'] = '\mathbb{P}^1'
