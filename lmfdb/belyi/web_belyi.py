@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from pymongo import ASCENDING
-from ast import literal_eval
 from lmfdb.base import getDBConnection
-from lmfdb.utils import web_latex, encode_plot
-from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
+from lmfdb.utils import web_latex
+from lmfdb.WebNumberField import  WebNumberField
 from lmfdb.transitive_group import group_display_knowl
-from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, point, real, sqrt, var, expand, nth_prime
-from sage.plot.text import text
+from sage.all import gcd, latex, QQ, FractionField, PolynomialRing
 from flask import url_for
+from lmfdb.belyi.main import url_for_belyi_passport_label
 
 ###############################################################################
 # Database connection -- all access to mongo db should happen here
@@ -29,7 +27,6 @@ def belyi_db_passports():
 geomtypelet_to_geomtypename_dict = {'H':'hyperbolic','E':'Euclidean','S':'spherical'}
 
 def make_curve_latex(crv_str):
-    from sage.all import PolynomialRing, FractionField
     # FIXME: Get rid of nu when map is defined over QQ
     R0 = PolynomialRing(QQ,'nu')
     R = PolynomialRing(R0,2,'x,y')
@@ -41,7 +38,6 @@ def make_curve_latex(crv_str):
     return eqn_str
 
 def make_map_latex(map_str):
-    from sage.all import PolynomialRing, FractionField, gcd
     # FIXME: Get rid of nu when map is defined over QQ
     R0 = PolynomialRing(QQ,'nu')
     R = PolynomialRing(R0,2,'x,y')
@@ -137,8 +133,6 @@ class WebBelyiGalmap(object):
 
 
     def make_galmap_object(self, galmap):
-        from lmfdb.belyi.main import url_for_belyi_galmap_label
-        from lmfdb.belyi.main import url_for_belyi_passport_label
 
         # all information about the map goes in the data dictionary
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
@@ -194,13 +188,13 @@ class WebBelyiGalmap(object):
         self.properties = properties
 
         # Friends
-        self.friends = friends = [('Passport', url_for_belyi_passport_label(galmap['plabel']))]
+        self.friends = [('Passport', url_for_belyi_passport_label(galmap['plabel']))]
 
         # Breadcrumbs
         groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr, letnum = data['label'].split("-");
         lambdasstr = '%s-%s-%s' % (sigma0, sigma1, sigmaoo);
         lambdasgstr = lambdasstr + "-" + gstr;
-        self.bread = bread = [
+        self.bread = [
                 ('Belyi Maps', url_for(".index")),
                 (groupstr,
                     url_for(".by_url_belyi_search_group",
@@ -238,7 +232,7 @@ class WebBelyiGalmap(object):
         self.title = "Belyi map " + data['label']
 
         # Code snippets (only for curves)
-        self.code = code = {}
+        self.code = {}
         return
 
 class WebBelyiPassport(object):
@@ -293,7 +287,7 @@ class WebBelyiPassport(object):
         galmaps_for_plabel = belyi_db_galmaps().find({"plabel" : passport['plabel']}).sort([('label_index', ASCENDING)])
         galmapdata = [] 
         for galmap in galmaps_for_plabel:
-            F = WebNumberField.from_coeffs(galmap['base_field'])
+            # F = WebNumberField.from_coeffs(galmap['base_field'])
             galmapdatum = [galmap['label'].split('-')[-1], 
                            url_for_belyi_galmap_label(galmap['label']), 
                            galmap['orbit_size'], 
@@ -313,14 +307,14 @@ class WebBelyiPassport(object):
         self.properties = properties
 
         # Friends
-        self.friends = friends = []
+        self.friends = []
 
         # Breadcrumbs
 
         groupstr, abcstr, sigma0, sigma1, sigmaoo, gstr = data['plabel'].split("-");
         lambdasstr = '%s-%s-%s' % (sigma0, sigma1, sigmaoo);
         lambdasgstr = lambdasstr + "-" + gstr;
-        self.bread = bread = [
+        self.bread = [
                 ('Belyi Maps', url_for(".index")),
                 (groupstr,
                     url_for(".by_url_belyi_search_group",
@@ -348,5 +342,5 @@ class WebBelyiPassport(object):
         self.title = "Passport " + data['plabel']
 
         # Code snippets (only for curves)
-        self.code = code = {}
+        self.code = {}
         return

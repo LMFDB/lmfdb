@@ -7,7 +7,7 @@ galmaps = belyidb['galmaps']
 
 # import the raw data
 # import ola
-exec(open("raw_data.py").read())
+from raw_data import ola
 
 # insert passports one at a time
 for i in range(0,len(ola)):

@@ -5,13 +5,11 @@ from ast import literal_eval
 import re
 import time
 from pymongo import ASCENDING, DESCENDING
-from operator import mul
 from flask import render_template, url_for, request, redirect, send_file, abort
-from sage.all import ZZ
 from sage.misc.cachefunc import cached_function
 
 from lmfdb.utils import to_dict, comma, format_percentage, random_value_from_collection, attribute_value_counts, flash_error
-from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.belyi import belyi_page
 from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport, belyi_db_galmaps, belyi_db_passports
 
@@ -419,7 +417,6 @@ class belyi_stats(object):
 
 
 def download_search(info):
-    download_languages = ['magma', 'sage', 'gp', 'text']
     download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
     download_assignment_defn = {'magma':':=','sage':' = ','gp':' = ' ,'text':'='}
     delim_start = {'magma':'[*','sage':'[','gp':'[','text':' ['}
