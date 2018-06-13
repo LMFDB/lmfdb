@@ -144,9 +144,8 @@ class WebBelyiGalmap(object):
         # most of the data from the database gets polished/formatted before we put it in the data dictionary
         data = self.data = {}
         # the stuff that does not need to be polished
-        for elt in ('label', 'plabel', 'triples_cyc', 'orbit_size', 'g', 'abc', 'embeddings', 'deg'):
+        for elt in ('label', 'plabel', 'triples_cyc', 'orbit_size', 'g', 'abc', 'deg'):
             data[elt] = galmap[elt]
-
         nt = galmap['group'].split('T')
         data['group'] = group_display_knowl(nt[0],nt[1],getDBConnection())
 
@@ -165,6 +164,13 @@ class WebBelyiGalmap(object):
         else:
             data['curve'] = make_curve_latex(crv_str)
 
+        # change pairs of floats to complex numbers
+        embeds = galmap['embeddings']
+        embed_strs = []
+        for el in embeds:
+            el_str = str(el[0]) + "+" + str(el[1]) + "\sqrt{-1}"
+            embed_strs.append(el_str)
+
         data['map'] = make_map_latex(galmap['map'])
         data['embeddings_and_triples'] = []
         if data['isQQ']:
@@ -174,8 +180,7 @@ class WebBelyiGalmap(object):
         else:
             for i in range(0,len(data['triples_cyc'])):
                 triple_cyc = data['triples_cyc'][i]
-                data['embeddings_and_triples'].append([data['embeddings'][i], triple_cyc[0], triple_cyc[1], triple_cyc[2]])
-
+                data['embeddings_and_triples'].append([embed_strs[i], triple_cyc[0], triple_cyc[1], triple_cyc[2]])
 
         data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
 
