@@ -35,8 +35,8 @@ def make_curve_latex(crv_str):
     R = PolynomialRing(R0,2,'x,y')
     F = FractionField(R)
     sides = crv_str.split("=")
-    lhs = latex(F(sides[0]))
-    rhs = latex(F(sides[1]))
+    lhs = latex(F(sides[0])).replace('(','\\left(').replace(')','\\right)')
+    rhs = latex(F(sides[1])).replace('(','\\left(').replace(')','\\right)')
     eqn_str = lhs + '=' + rhs
     return eqn_str
 
@@ -271,6 +271,7 @@ class WebBelyiPassport(object):
 
         data['geomtype'] = geomtypelet_to_geomtypename_dict[passport['geomtype']]
         data['lambdas'] = [str(c)[1:-1] for c in passport['lambdas']]
+        data['pass_size'] = passport['pass_size']
 
         # Permutation triples
         galmaps_for_plabel = belyi_db_galmaps().find({"plabel" : passport['plabel']}).sort([('label_index', ASCENDING)])
