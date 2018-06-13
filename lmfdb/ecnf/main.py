@@ -750,8 +750,6 @@ def ecnf_code(**args):
         lang = 'pari'
     if lang=='sage':
         code += "\nx = polygen(QQ)\n"
-    elif lang=='magma':
-        code += "\nQx<x> := PolynomialRing(RationalField());\n"
     for k in sorted_code_names:
         if lang in Ecode[k]:
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])
