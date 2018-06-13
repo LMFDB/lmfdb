@@ -24,16 +24,35 @@ div.properties-body table tr td.label { vertical-align: top; }
 <h2>Invariants</h2>
   <p>
     <table>
-      <tr><td>{{ KNOWL('belyi.base_field', title='Base field:') }}</td> <td> {{ data.base_field.knowl()|safe }}
+      <tr><td>{{ KNOWL('belyi.base_field', title='Base field:') }}</td><td></td> <td> {{ data.base_field.knowl()|safe }}
       {% if not data['isQQ'] %}
        ; {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
         {{ data.base_field.latex_poly }}.
       {% endif %}</td>
     </tr>
-    <tr><td> Genus:</td> <td>{{data.g}}</td> </tr>
-    <tr><td> {{ KNOWL('belyi.orbit_size', title='Orbit size:') }}</td> <td>{{ data.orbit_size}}</td></tr>
+    <tr><td>{{ KNOWL('belyi.deg', title="Degree") }}:<td><td>${{data.deg}}$<td></tr>
+    <tr><td>{{ KNOWL('belyi.group', title="Monodromy group") }}:<td><td>{{data.group | safe}}<td></tr>
+    <tr><td> Genus:</td><td><td>{{data.g}}</td> </tr>
+    <tr><td> {{ KNOWL('belyi.orbit_size', title='Orbit size:') }}</td><td> <td>{{ data.orbit_size}}</td></tr>
+    <tr><td>{{ KNOWL('belyi.geomtype', title="Geometry type") }}:<td><td>{{data.geomtype}}<td></tr>
     </table>
   </p>
+
+<p><h2>Generators</h2>
+
+  <table class="ntdata">
+      <thead><tr><td>Order</td><td>Partition</td></tr></thead>
+      <tbody>
+        {% for i in [0,1,2] %}
+           <tr><td>${{data.abc[i]}}$</td>
+              <td>${{data.lambdas[i]}}$</td>
+           </tr>
+        {% endfor %}
+      </tbody>
+      </table>
+
+</p>
+
 
 <h2>Curve</h2>
   <p> \(\displaystyle {{data.curve}}\) </p>
@@ -47,7 +66,7 @@ div.properties-body table tr td.label { vertical-align: top; }
       <tbody>
         {% for g in data.embeddings_and_triples %}
            <td>${{g[0]}}$</td>
-           <td>${{g[1]}}$</td>
+           <td>${{g[1]}},{{g[2]}},{{g[3]}}$</td>
            </tr>
         {% endfor %}
       </tbody>
