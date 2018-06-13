@@ -162,7 +162,10 @@ class WebBelyiGalmap(object):
         embeds = galmap['embeddings']
         embed_strs = []
         for el in embeds:
-            el_str = str(el[0]) + "+" + str(el[1]) + "\sqrt{-1}"
+            if el[1] < 0:
+                el_str = str(el[0]) + str(el[1]) + "\sqrt{-1}"
+            else:
+                el_str = str(el[0]) + "+" + str(el[1]) + "\sqrt{-1}"
             embed_strs.append(el_str)
 
         data['map'] = make_map_latex(galmap['map'])
