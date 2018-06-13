@@ -1,0 +1,19 @@
+TODO:
+- genus 0 corner cases
+- hyperelliptic RR
+- hyperelliptic Newton
+- compute lots of maps
+- deg 7, g=2,3
+- timings/update tables
+- local sanity check before global in belyi_main
+- use sage to compute monodromy for computing entire Galois orbits
+
+It would be nice if:
+- sort a,b,c
+- when F=QQ, use polyring over QQ not QQ(nu)
+- Friends
+- embeddings in binary
+- factorization of phi (or divisor)
+- tripleredabs?
+- display info about group
+- download curve/map in magma then in sage and/or pari
