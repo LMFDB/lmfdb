@@ -28,9 +28,11 @@ filename = inspect.getframeinfo(inspect.currentframe())[0];
 folder = os.path.dirname(os.path.abspath(filename));
 sys.path.append(os.path.join(folder, "../../"));
 from data_mgt.utilities.rewrite import create_random_object_index, rewrite_collection
-belyidb["galmaps"].rename("galmaps_old")
+if "galmaps" in belyidb.collection_names():
+    belyidb["galmaps"].rename("galmaps_old")
 galmaps.rename("galmaps");
-belyidb["passports"].rename("passports_old")
+if "passports" in belyidb.collection_names():
+    belyidb["passports"].rename("passports_old")
 passports.rename("passports");
 create_random_object_index(belyidb, "galmaps");
 belyidb.drop_collection('passports_old');
