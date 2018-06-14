@@ -5,10 +5,11 @@
 import re
 import pymongo
 ASC = pymongo.ASCENDING
-from lmfdb.base import getDBConnection
-from flask import render_template, request, url_for
+
+from lmfdb.db_backend import db
+from flask import render_template, request, url_for, jsonify
 from lmfdb.utils import to_dict, image_callback
-from lmfdb.search_parsing import clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted
+from lmfdb.search_parsing import clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted, parse_start, parse_count
 from lmfdb.transitive_group import small_group_display_knowl
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing
@@ -24,18 +25,6 @@ def learnmore_list():
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
-
-# Database access
-def db():
-    return getDBConnection()
-
-def motivedb():
-    return db().hgm.newmotives
-    return db().hgm.motives
-
-def familydb():
-    return db().hgm.newfamilies
-    return db().hgm.families
 
 def list2string(li):
     return ','.join([str(x) for x in li])
@@ -65,12 +54,12 @@ def getgroup(m1,ell):
     myB = list2string(m1[3][1])
     if len(myA)==0 and len(myB)==0:
         return [small_group_display_knowl(1,1), 1]
-    newthing = familydb().find_one({'A': myA, 'B': myB})
-    if newthing is None:
+    mono = db.hgm_families.lucky({'A': myA, 'B': myB}, projection="mono")
+    if mono is None:
         return ['??', 1]
-    newthing = newthing['mono'][pind[ell]]
-    newthing[1] = dogapthing(newthing[1])
-    return [newthing[1][2], newthing[1][0]]
+    newthing = mono[pind[ell]]
+    newthing = dogapthing(newthing[1])
+    return [newthing[2], newthing[0]]
 
 # Helper functions
 
@@ -271,60 +260,17 @@ def hgm_search(**args):
             parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
     except ValueError:
         return search_input_error(info, bread)
-
-    #print query
-    count_default = 20
-    if info.get('count'):
-        try:
-            count = int(info['count'])
-        except:
-            count = count_default
-    else:
-        count = count_default
-    info['count'] = count
-
-    start_default = 0
-    if info.get('start'):
-        try:
-            start = int(info['start'])
-            if(start < 0):
-                start += (1 - (start + 1) / count) * count
-        except:
-            start = start_default
-    else:
-        start = start_default
-    if info.get('paging'):
-        try:
-            paging = int(info['paging'])
-            if paging == 0:
-                start = 0
-        except:
-            pass
-
-    # logger.debug(query)
     if family_search:
-        #query['leader'] = '1'
-        res = familydb().find(query).sort([('label', pymongo.ASCENDING)])
+        coll = db.hgm_families
     else:
-        res = motivedb().find(query).sort([('cond', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
-    nres = res.count()
-    res = res.skip(start).limit(count)
+        coll = db.hgm_motives
+    if 'result_count' in info:
+        nres = coll.count(query)
+        return jsonify({"nres":str(nres)})
 
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    info['motives'] = res
-    info['number'] = nres
-    info['start'] = start
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
+    start = parse_start(info)
+    count = parse_count(info)
+    info['motives'] = coll.search(query, limit=count, offset=start, info=info)
     info['make_label'] = make_abt_label
     info['make_t_label'] = make_t_label
     info['ab_label'] = ab_label
@@ -343,7 +289,7 @@ def render_hgm_webpage(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        data = motivedb().find_one({'label': label})
+        data = db.hgm_motives.lookup(label)
         if data is None:
             bread = get_bread([("Search error", url_for('.search'))])
             info['err'] = "Motive " + label + " was not found in the database."
@@ -352,11 +298,10 @@ def render_hgm_webpage(args):
         title = 'Hypergeometric Motive:' + label
         A = data['A']
         B = data['B']
-        myfam = familydb().find_one({'A': A, 'B': B})
-        if myfam is None:
+        det = db.hgm_families.lucky({'A': A, 'B': B}, 'det')
+        if det is None:
             det = 'data not computed'
         else:
-            det = myfam['det']
             det = [det[0],str(det[1])]
             d1 = det[1]
             d1 = re.sub(r'\s','', d1)
@@ -422,7 +367,7 @@ def render_hgm_family_webpage(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        data = familydb().find_one({'label': label})
+        data = db.hgm_families.lookup(label)
         if data is None:
             bread = get_bread([("Search error", url_for('.search'))])
             info['err'] = "Family of hypergeometric motives " + label + " was not found in the database."

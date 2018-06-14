@@ -280,6 +280,7 @@ function increase_start_by_count_and_submit_form(form_id) {
 function get_count_of_results() {
     var address = window.location.href
     $("#result-count").html("computing...");
+    $("#download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
         address = address.slice(0,-1);
     address += "&result_count=1";
@@ -287,5 +288,11 @@ function get_count_of_results() {
 };
 
 function get_count_callback(res) {
-  $('#result-count').html(res['nres']);
+    $('#result-count').html(res['nres']);
+    if (parseInt(res, 10) > 100000) {
+        $("#download-msg").html("There are too many search results for downloading.");
+    } else {
+        $("#download-msg").html("");
+        $("#download-form").show();
+    }
 };

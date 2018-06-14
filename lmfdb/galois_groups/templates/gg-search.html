@@ -114,7 +114,6 @@ table.ntdata a {
 </form>
 
 {% if info.err is defined %}
-
 {% if info.label is defined %}
 <form>
 <table border=0 cellpadding=5>
@@ -130,28 +129,11 @@ table.ntdata a {
 </tr>
 </table>
 </form>
-
+{% endif %}
 {% endif %}
 
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
-
-
-<h2> Results: ({% if info.number==1 -%}
-  unique match
-  {% elif info.number <= info.count and info.start == 0 -%}
-    displaying all {{ info.number }} matches
-  {% elif info.exact_count -%}
-    displaying matches {{ info.start + 1 }}-{{ info.upper_count }} of {{ info.number }}
-  {% else -%}
-    displaying matches {{ info.start + 1 }}-{{ info.upper_count }} of <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">at least {{ info.number }}</a></span>{% endif %})</h2>
-
-{% if info.number > 0 %}
+{% include 'matches.html' %}
+{% if info.number %}
 
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
@@ -173,7 +155,7 @@ table.ntdata a {
 {% set wgg = info.wgg(group) %}
 <tr>
 <td><a href="/GaloisGroup/{{group.label}}">{{group.label}}</a></td>
-<td>{{info.group_display([group.n, group.t])}}</td>
+<td>{{info.group_display(group.n, group.t)}}</td>
 <td align="right">{{group.size}}</td>
 <td align="right">{{group.parity}}</td>
 <td align="center">{{info.yesno(group.solv)}}</td>
@@ -187,16 +169,10 @@ table.ntdata a {
 
 </tbody>
 </table>
-<br>
-
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-
+<hr>
+{% include 'forward_back.html' %}
+{% include 'dummy_download_search_results.html' %}
 {% endif %}
-{% endif %}
+{% include 'debug_info.html' %}
 
 {% endblock %}

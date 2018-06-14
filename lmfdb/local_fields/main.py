@@ -4,28 +4,19 @@
 
 import pymongo
 #from lmfdb import base
-from lmfdb.base import app, getDBConnection
-from flask import render_template, request, url_for, redirect
+from lmfdb.db_backend import db
+from lmfdb.base import app
+from flask import render_template, request, url_for, redirect, jsonify
 from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, random_object_from_collection, display_multiset
 from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input, parse_rats
 from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
-from lmfdb.WebNumberField import string2list
 
 from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia, small_group_knowl_guts, WebGaloisGroup
-from lmfdb.galois_groups.main import group_display_shortC
 
 LF_credit = 'J. Jones and D. Roberts'
 
 # centralize db access here so that we can switch collection names when needed
-
-
-def db():
-    return getDBConnection()
-
-def lfdb():
-    return db().localfields.fields
-
 
 def get_bread(breads=[]):
     bc = [("Local Number Fields", url_for(".index"))]
@@ -34,15 +25,15 @@ def get_bread(breads=[]):
     return bc
 
 def galois_group_data(n, t):
-    return group_knowl_guts(n, t, db())
+    return group_knowl_guts(n, t)
 
 def display_poly(coeffs):
-    return web_latex(coeff_to_poly(string2list(coeffs)))
+    return web_latex(coeff_to_poly(coeffs))
 
 def format_coeffs(coeffs):
-    return pol_to_html(str(coeff_to_poly(string2list(coeffs))))
+    return pol_to_html(str(coeff_to_poly(coeffs)))
 
-def lf_algebra_knowl_guts(labels, C):
+def local_algebra_data(labels):
     labs = labels.split(',')
     f1 = labs[0].split('.')
     labs = sorted(labs, key=lambda u: (int(j) for j in u.split('.')), reverse=True)
@@ -51,7 +42,7 @@ def lf_algebra_knowl_guts(labels, C):
     ans += '</div>'
     ans += '<p>'
     ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Slopes"
-    fall = [C.localfields.fields.find_one({'label':label}) for label in labs]
+    fall = [db.lf_fields.lookup(label) for label in labs]
     for f in fall:
         l = str(f['label'])
         ans += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>'%(l,l)
@@ -64,32 +55,27 @@ def lf_algebra_knowl_guts(labels, C):
         ans +='<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
     return ans
 
-def lf_knowl_guts(label, C):
-    f = C.localfields.fields.find_one({'label':label})
+def local_field_data(label):
+    f = db.lf_fields.lookup(label)
     ans = 'Local number field %s<br><br>'% label
-    ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(string2list(f['coeffs']))))
-    GG = f['gal']
-    ans += 'Degree: %s<br>' % str(GG[0])
+    ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
+    gt = f['gal']
+    gn = f['n']
+    ans += 'Degree: %s<br>' % str(gt)
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
-    ans += 'Galois group $G$: %s<br>' % group_display_knowl(GG[0], GG[1])
+    ans += 'Galois group $G$: %s<br>' % group_display_knowl(gn, gt)
     ans += '<div align="right">'
     ans += '<a href="%s">%s home page</a>' % (str(url_for("local_fields.by_label", label=label)),label)
     ans += '</div>'
     return ans
 
-def local_algebra_data(labels):
-    return lf_algebra_knowl_guts(labels, db())
+def lf_display_knowl(label):
+    return '<a title = "{0} [lf.field.data]" knowl="lf.field.data" kwargs="label={0}">{0}</a>'.format(label)
 
-def local_field_data(label):
-    return lf_knowl_guts(label, db())
-
-def lf_display_knowl(label, C):
-    return '<a title = "%s [lf.field.data]" knowl="lf.field.data" kwargs="label=%s">%s</a>' % (label, label, label)
-
-def local_algebra_display_knowl(labels, C):
-    return '<a title = "%s [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels=%s">%s</a>' % (labels, labels, labels)
+def local_algebra_display_knowl(labels):
+    return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
 
 @app.context_processor
 def ctx_local_fields():
@@ -99,13 +85,13 @@ def ctx_local_fields():
 
 # Utilities for subfield display
 def format_lfield(coefmult,p):
-    data = lfdb().find_one({'coeffs': coefmult, 'p': p})
-    if data is None:
+    label = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=0)
+    if label is None:
         # This should not happen, what do we do?
         # This is wrong
         return ''
     # This is the nf version
-    return lf_display_knowl(data['label'],db())
+    return lf_display_knowl(label)
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
@@ -153,7 +139,7 @@ def local_field_search(**args):
         return redirect(url_for(".by_label",label=info['jump_to']), 301)
 
     try:
-        parse_galgrp(info,query,'gal', use_bson=False)
+        parse_galgrp(info,query,'gal',qfield=('n','galt'))
         parse_ints(info,query,'p',name='Prime p')
         parse_ints(info,query,'n',name='Degree')
         parse_ints(info,query,'c',name='Discriminant exponent c')
@@ -161,33 +147,18 @@ def local_field_search(**args):
         parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
     except ValueError:
         return search_input_error(info, bread)
+
+    if 'result_count' in info:
+        nres = db.lf_fields.count(query)
+        return jsonify({"nres":str(nres)})
+
     count = parse_count(info)
     start = parse_start(info)
 
-    # logger.debug(query)
-    res = lfdb().find(query).sort([('p', pymongo.ASCENDING), (
-        'n', pymongo.ASCENDING), ('c', pymongo.ASCENDING), ('label', pymongo.ASCENDING)])
-    nres = res.count()
-    res = res.skip(start).limit(count)
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    info['fields'] = res
-    info['number'] = nres
-    info['group_display'] = group_display_shortC()
+    info['fields'] = db.lf_fields.search(query, limit=count, offset=start, info=info)
+    info['group_display'] = group_display_short
     info['display_poly'] = format_coeffs
     info['slopedisp'] = show_slope_content
-    info['start'] = start
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
 
     return render_template("lf-search.html", info=info, title="Local Number Field Search Result", bread=bread, credit=LF_credit)
 
@@ -197,21 +168,20 @@ def render_field_webpage(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        data = lfdb().find_one({'label': label})
+        data = db.lf_fields.lookup(label)
         if data is None:
             bread = get_bread([("Search error", ' ')])
             info['err'] = "Field " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
         title = 'Local Number Field ' + label
-        polynomial = coeff_to_poly(string2list(data['coeffs']))
+        polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
         e = data['e']
         f = data['f']
         cc = data['c']
-        GG = data['gal']
-        gn = GG[0]
-        gt = GG[1]
+        gt = data['gal']
+        gn = data['n']
         the_gal = WebGaloisGroup.from_nt(gn,gt)
         isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
         abelian = ' and abelian' if the_gal.is_abelian() else ''
@@ -231,25 +201,25 @@ def render_field_webpage(args):
         eisenp = Pyt(str(data['eisen']))
         unramp = Pyt(str(data['unram']))
         # Look up the unram poly so we can link to it
-        unramdata = lfdb().find_one({'p': p, 'n': f, 'c': 0})
-        if unramdata is not None:
-            unramfriend = "/LocalNumberField/%s" % unramdata['label']
-        else:
+        unramlabel = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0}, projection=0)
+        if unramlabel is None:
             logger.fatal("Cannot find unramified field!")
             unramfriend = ''
-        rfdata = lfdb().find_one({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']})
-        if rfdata is None:
+        else:
+            unramfriend = "/LocalNumberField/%s" % unramlabel
+        rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=0)
+        if rflabel is None:
             logger.fatal("Cannot find discriminant root field!")
             rffriend = ''
         else:
-            rffriend = "/LocalNumberField/%s" % rfdata['label']
+            rffriend = "/LocalNumberField/%s" % rflabel
         gsm = data['gsm']
         if gsm == '0':
             gsm = 'Not computed'
         elif gsm == '-1':
             gsm = 'Does not exist'
         else:
-            gsm = web_latex(coeff_to_poly(string2list(gsm)))
+            gsm = web_latex(coeff_to_poly(gsm))
 
 
         info.update({
@@ -322,7 +292,7 @@ def search_input_error(info, bread):
 
 @local_fields_page.route("/random")
 def random_field():
-    label = random_object_from_collection(lfdb())['label']
+    label = db.lf_fields.random()
     return redirect(url_for(".by_label", label=label), 307)
 
 @local_fields_page.route("/Completeness")

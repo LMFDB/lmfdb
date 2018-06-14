@@ -9,7 +9,8 @@ import flask
 from functools import wraps
 from lmfdb.base import app, getDBConnection
 from flask import render_template, request, Blueprint, url_for, make_response
-from flask.ext.login import login_required, login_user, current_user, logout_user
+#from flask.ext.login import login_required, login_user, current_user, logout_user
+from flask_login import login_required, login_user, current_user, logout_user, LoginManager
 
 login_page = Blueprint("users", __name__, template_folder='templates')
 import lmfdb.utils
@@ -18,17 +19,15 @@ logger = lmfdb.utils.make_logger(login_page)
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
 
-from flask.ext.login import LoginManager
+#from flask.ext.login import LoginManager
 login_manager = LoginManager()
 
-import pwdmanager
-from pwdmanager import LmfdbUser, LmfdbAnonymousUser
+from pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
 
 base_url = "http://beta.lmfdb.org"
 
 @login_manager.user_loader
 def load_user(userid):
-    from pwdmanager import LmfdbUser
     return LmfdbUser(userid)
 
 login_manager.login_view = "users.info"
@@ -80,9 +79,8 @@ def base_bread():
 @login_page.route("/")
 @login_required
 def list():
-    import pwdmanager
     COLS = 5
-    users = pwdmanager.get_user_list()
+    users = userdb.get_user_list()
     # attempt to sort by last name
     users = sorted(users, key=lambda x: x[1].strip().split(" ")[-1].lower())
     if len(users)%COLS:
@@ -122,13 +120,9 @@ def set_info():
 @login_required
 def profile(userid):
     # See issue #1169
-    #try:
-    #    getDBConnection().knowledge.knowls.ensure_index('title')
-    #except pymongo.errors.OperationFailure:
-    #    pass
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
-    userknowls = getDBConnection().knowledge.knowls.find({'authors': userid}, ['title']).sort([('title', ASC)])
+    userknowls = knowldb.search(author=userid, sort=['title'])
     return render_template("user-detail.html", user=user,
                            title="%s" % user.name, bread=bread, userknowls=userknowls)
 
@@ -178,15 +172,10 @@ def housekeeping(fn):
         return admin_required(fn)(*args, **kwargs)
     return decorated_view
 
-
-def get_user_token_coll():
-    return getDBConnection().userdb.tokens
-
-
 @login_page.route("/register")
 def register_new():
     return ""
-    # q_admins = getDBConnection().userdb.users.find({'admin' : True})
+    # q_admins = userdb.find({'admin' : True}) ## find is from MongoDB
     # admins =', '.join((_['full_name'] or _['_id'] for _ in q_admins))
     # return "You have to contact one of the Admins: %s" % admins
 
@@ -196,33 +185,18 @@ def register_new():
 @admin_required
 def register(N=10):
     N = 100 if N > 100 else N
-    from datetime import datetime, timedelta
-    now = datetime.utcnow()
-    tdelta = timedelta(days=1)
-    exp = now + tdelta
     import random
     tokens = [str(random.randrange(1e20, 1e21)) for _ in range(N)]
-    for t in tokens:
-        get_user_token_coll().save({'_id': t, 'expire': exp})
-    urls = ["%s%s" % (base_url, url_for(".register_token", token=_)) for _ in tokens]
+    userdb.create_tokens(tokens)
+    urls = ["%s%s" % (base_url, url_for(".register_token", token=t)) for t in tokens]
     resp = make_response('\n'.join(urls))
     resp.headers['Content-type'] = 'text/plain'
     return resp
 
-
-def delete_old_tokens():
-    from datetime import datetime, timedelta
-    now = datetime.utcnow()
-    tdelta = timedelta(days=8)
-    exp = now + tdelta
-    get_user_token_coll().remove({'expire': {'$gt': exp}})
-
-
 @login_page.route("/register/<token>", methods=['GET', 'POST'])
 def register_token(token):
-    delete_old_tokens()
-    token_exists = get_user_token_coll().find({'_id': token}).count() == 1
-    if not token_exists:
+    userdb.delete_old_tokens()
+    if not userdb.token_exists(token):
         flask.abort(401)
     bread = base_bread() + [('Register', url_for(".register_new"))]
     if request.method == "GET":
@@ -248,16 +222,16 @@ def register_token(token):
         full_name = request.form['full_name']
         next = request.form["next"]
 
-        if pwdmanager.user_exists(name):
+        if userdb.user_exists(name):
             flask.flash("Sorry, user ID '%s' already exists!" % name, "error")
             return flask.redirect(url_for(".register_new"))
 
-        newuser = pwdmanager.new_user(name, pw1)
+        newuser = userdb.new_user(name, pw1)
         newuser.full_name = full_name
         newuser.save()
         login_user(newuser, remember=True)
         flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
-        get_user_token_coll().remove({'_id': token})
+        userdb.delete_token(token)
         logger.debug("removed login token '%s'" % token)
         logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
         return flask.redirect(next or url_for(".info"))
@@ -278,7 +252,7 @@ def change_password():
         flask.flash("Oops, new passwords do not match!", "error")
         return flask.redirect(url_for(".info"))
 
-    pwdmanager.change_password(uid, pw1)
+    userdb.change_password(uid, pw1)
     flask.flash("Your password has been changed.")
     return flask.redirect(url_for(".info"))
 

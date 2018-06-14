@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
 
 class Genus2Test(LmfdbTest):
@@ -42,7 +42,7 @@ class Genus2Test(LmfdbTest):
         for x in "abcdefghij":
             assert "15360."+x in L.data
         L = self.tc.get('/Genus2Curve/Q/15360/?abs_disc=169')
-        assert '0 matches' in L.data
+        assert 'No matches' in L.data
             
     def test_by_url_isogeny_class_label(self):
         L = self.tc.get('/Genus2Curve/Q/336/a/')
@@ -133,7 +133,7 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/?has_square_sha=False')
         assert  '336.a.172032.1' in L.data and not '169.a.169.1' in L.data
         L = self.tc.get('/Genus2Curve/Q/?locally_solvable=True&has_square_sha=False')
-        assert 'displaying all 0 matches' in L.data
+        assert 'No matches' in L.data
 
     def test_torsion(self):
         L = self.tc.get('/Genus2Curve/Q/976/a/999424/1')

@@ -193,7 +193,7 @@ class AVHomeTest(LmfdbTest):
         self.not_check_args("/Variety/Abelian/Fq/?q=3&primitive=any&g=2&simple=any&p_rank=&jacobian=no&ang_rank=&polarizable=any&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&count=",'2.3.ae_i')
         self.not_check_args("/Variety/Abelian/Fq/?start=0&count=50&q=3&g=2&p_rank=&ang_rank=&newton_polygon=&initial_coefficients=&abvar_point_count=&curve_point_count=&decomposition=&number_field=&simple=any&primitive=any&jacobian=no&polarizable=any",'2.3.ae_i')
         # unknowns
-        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=3&simple=any&primitive=any&jacobian=not_yes&polarizable=yes",'no matches')
+        self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=&g=3&simple=any&primitive=any&jacobian=not_yes&polarizable=yes",'No matches')
         self.check_args("/Variety/Abelian/Fq/?start=0&count=50&q=2&g=3&p_rank=0&simple=any&primitive=any&jacobian=not_no&polarizable=any",'3.2.c_c_c')
 
     def test_search_princpol(self):

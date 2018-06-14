@@ -411,7 +411,7 @@ def render_lfunction_exception(err):
         errmsg = "Unable to render L-function page due to the following problem:<br><ul><li>%s</li></ul>"%err
     bread =  [('L-functions', url_for('.l_function_top_page')), ('Error', '')]
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
-    return render_template('problem.html', **info),
+    return render_template('problem.html', **info)
 
 def render_lcalcfile(L, url):
     ''' Function for rendering the lcalc file of an L-function.

@@ -7,10 +7,8 @@ import math
 from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import truncate_number
-from lmfdb.elliptic_curves.web_ec import is_ec_isogeny_class_in_db
-from lmfdb.ecnf.WebEllipticCurve import is_ecnf_isogeny_class_in_db
 from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
 from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
@@ -468,7 +466,6 @@ def lfuncEPhtml(L,fmt):
     eptable += "</tr>\n"
     eptable += "</thead>"
     goodorbad = "bad"
-    C = getDBConnection()
     for lf in L.bad_lfactors:
         try:
             thispolygal = list_to_factored_poly_otherorder(lf[1], galois=True)
@@ -921,11 +918,11 @@ def name_and_object_from_url(url):
             # EllipticCurve/Q/341641/a
             label_isogeny_class = ".".join(url_split[-2:]);
             # count doesn't honor limit!
-            obj_exists = is_ec_isogeny_class_in_db(label_isogeny_class);
+            obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
         else:
             # EllipticCurve/2.2.140.1/14.1/a
             label_isogeny_class =  "-".join(url_split[-3:]);
-            obj_exists = is_ecnf_isogeny_class_in_db(label_isogeny_class);
+            obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
         name = 'Isogeny class ' + label_isogeny_class;
 
     elif url_split[0] == "ModularForm":

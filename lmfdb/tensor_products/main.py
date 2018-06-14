@@ -4,7 +4,7 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
-from lmfdb.base import  getDBConnection
+from lmfdb.db_backend import db
 from flask import render_template, request, url_for
 from lmfdb.tensor_products import tensor_products_page 
 
@@ -134,11 +134,9 @@ def zeros(L):
         negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
 
 def galois_rep_from_path(p):
-    C = getDBConnection()
     if p[0]=='EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
-        data = C.elliptic_curves.curves.find_one({'lmfdb_label':p[2]+"."+p[3]+p[4]})
-        ainvs = [int(a) for a in data['ainvs']]
+        ainvs = db.ec_curves.lucky({'lmfdb_label':p[2]+"."+p[3]+p[4]}, 'ainvs')
         E = EllipticCurve(ainvs)
         return GaloisRepresentation(E)
 

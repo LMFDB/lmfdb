@@ -18,8 +18,9 @@ import flask
 from lmfdb.base import app
 from datetime import datetime
 from flask import render_template, render_template_string, request, url_for, make_response
-from flask.ext.login import login_required, current_user
-from knowl import Knowl, knowl_db, knowl_title, knowl_exists
+#from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
+from knowl import Knowl, knowldb, knowl_title, knowl_exists
 from lmfdb.users import admin_required, housekeeping
 import markdown
 from lmfdb.knowledge import logger
@@ -306,7 +307,7 @@ def edit(ID):
     lock = None
     if request.args.get("lock", "") != 'ignore':
         try:
-            lock = knowl_db().is_locked(knowl.id)
+            lock = knowldb.is_locked(knowl.id)
         except DatabaseError as e:
             logger.info("Oops, failed to get the lock. Error: %s" %e)
     author_edits = lock and lock['who'] == current_user.get_id()
@@ -315,7 +316,7 @@ def edit(ID):
         lock = None
     if not lock:
         try:
-            knowl_db().set_locked(knowl, current_user.get_id())
+            knowldb.set_locked(knowl, current_user.get_id())
         except DatabaseError as e:
             logger.info("Oops, failed to set the lock. Error: %s" %e)
 
@@ -353,7 +354,7 @@ def raw(ID):
 
 @knowledge_page.route("/history")
 def history():
-    h_items = knowl_db().get_history()
+    h_items = knowldb.get_history()
     bread = get_bread([("History", url_for('.history'))])
     return render_template("knowl-history.html",
                            title="Knowledge History",
@@ -396,7 +397,7 @@ def save_form():
     k.quality = request.form['quality']
     k.timestamp = datetime.now()
     k.save(who=current_user.get_id())
-    knowl_db().save_history(k, current_user.get_id())
+    knowldb.save_history(k, current_user.get_id())
     return flask.redirect(url_for(".show", ID=ID))
 
 
@@ -511,7 +512,7 @@ def cleanup():
     reindexes knowls, also the list of categories. prunes history.
     this is an internal task just for admins!
     """
-    cats, reindex_count, prune_count = knowl_db().cleanup()
+    cats, reindex_count, prune_count = knowldb.cleanup()
     return "categories: %s <br/>reindexed %s knowls<br/>pruned %s histories" % (cats, reindex_count, prune_count)
 
 
@@ -524,7 +525,7 @@ def index():
     filters = [request.args.get(quality, "") == "on" or not filtermode for quality in knowl_qualities]
 
     search = request.args.get("search", "")
-    knowls = knowl_db().search(cur_cat, filters, search.lower())
+    knowls = knowldb.search(cur_cat, filters, search.lower())
 
     def first_char(k):
         t = k['title']
@@ -552,6 +553,6 @@ def index():
                            knowl_qualities=knowl_qualities,
                            searchmode=bool(search),
                            filters=tuple(filters),
-                           categories = knowl_db().get_categories(),
+                           categories = knowldb.get_categories(),
                            cur_cat = cur_cat,
                            categorymode = bool(cur_cat))

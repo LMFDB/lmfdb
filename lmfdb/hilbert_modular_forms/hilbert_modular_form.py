@@ -2,15 +2,14 @@
 
 import pymongo
 
-from flask import render_template, url_for, request, redirect, make_response, flash
+from flask import render_template, url_for, request, redirect, make_response, flash, jsonify
 
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
 
 from lmfdb.ecnf.main import split_class_label
-from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 
 from lmfdb.WebNumberField import WebNumberField
 
@@ -18,29 +17,18 @@ from markupsafe import Markup
 from lmfdb.utils import to_dict, random_value_from_collection, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
-def db_forms():
-    hmfs = getDBConnection().hmfs
-    return hmfs.forms
-
-def db_fields():
-    return getDBConnection().hmfs.fields
-
-def db_hecke():
-    hmfs = getDBConnection().hmfs
-    return hmfs.hecke
-
 def get_hmf(label):
     """Return a complete HMF, give its label.  Note that the
     hecke_polynomial, hecke_eigenvalues and AL_eigenvalues may be in a
     separate collection.  Use of this function hides this
     implementation detail from the user.
     """
-    f = db_forms().find_one({'label': label})
-    if f==None:
+    f = db.hmf_forms.lookup(label)
+    if f is None:
         return None
     if not 'hecke_polynomial' in f:
         # Hecke data now stored in separate hecke collection:
-        h = db_hecke().find_one({'label': label})
+        h = db.hmf_hecke.lookup(label)
         if h:
             f.update(h)
     return f
@@ -49,13 +37,13 @@ def get_hmf_field(label):
     """Return a field from the HMF fields collection, given its label.
     Use of this function hides implementation detail from the user.
     """
-    return db_fields().find_one({'label': label})
+    return db.hmf_fields.lookup(label)
 
 hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A HREF="http://www.math.dartmouth.edu/~jvoight/">John Voight</A>'
 
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
-    return hilbert_modular_form_by_label( random_value_from_collection( db_forms(), 'label' ) )
+    return hilbert_modular_form_by_label(db.hmf_forms.random())
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
     o_str = pol_str.replace('*', '')
@@ -113,11 +101,11 @@ def split_full_label(lab):
 
 def hilbert_modular_form_by_label(lab):
     if isinstance(lab, basestring):
-        res = db_forms().find_one({'label': lab},{'label':True})
+        res = db.hmf_forms.lookup(lab, projection=0)
     else:
         res = lab
         lab = res['label']
-    if res == None:
+    if res is None:
         flash(Markup("No Hilbert modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
         return redirect(url_for(".hilbert_modular_form_render_webpage"))
     else:
@@ -145,56 +133,30 @@ def hilbert_modular_form_search(**args):
         parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
     except ValueError:
         return search_input_error()
-        
+
     if 'cm' in info:
         if info['cm'] == 'exclude':
             query['is_CM'] = 'no'
         elif info['cm'] == 'only':
             query['is_CM'] = 'yes'
-                
+
     if 'bc' in info:
         if info['bc'] == 'exclude':
             query['is_base_change'] = 'no'
         elif info['bc'] == 'only':
             query['is_base_change'] = 'yes'
-                     
+
+    if 'result_count' in info:
+        nres = db.hmf_forms.count(query)
+        return jsonify({"nres":str(nres)})
+
     count = parse_count(info,100)
     start = parse_start(info)
-
-    info['query'] = dict(query)
-    res = db_forms().find(
-        query).sort([('deg', pymongo.ASCENDING), ('disc', pymongo.ASCENDING), ('level_norm', pymongo.ASCENDING), ('level_label', pymongo.ASCENDING), ('label_nsuffix', pymongo.ASCENDING)]).skip(start).limit(count)
-    nres = res.count()
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    info['number'] = nres
-    info['start'] = start
-    info['more'] = int(start + count < nres)
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres == 0:
-            info['report'] = 'no matches'
-        else:
-            if nres > count or start != 0:
-                info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-            else:
-                info['report'] = 'displaying all %s matches' % nres
-
-    res_clean = []
+    proj = ['field_label', 'short_label', 'label', 'level_ideal', 'dimension']
+    res = db.hmf_forms.search(query, proj, limit=count, offset=start, info=info)
     for v in res:
-        v_clean = {}
-        v_clean['field_label'] = v['field_label']
-        v_clean['short_label'] = v['short_label']
-        v_clean['label'] = v['label']
-        v_clean['level_ideal'] = teXify_pol(v['level_ideal'])
-        v_clean['dimension'] = v['dimension']
-        res_clean.append(v_clean)
-
-    info['forms'] = res_clean
+        v['level_ideal'] = teXify_pol(v['level_ideal'])
+    info['forms'] = res
 
     t = 'Hilbert Modular Form search results'
 
@@ -362,8 +324,8 @@ def render_hmf_webpage(**args):
         info['friends'] = [('L-function not available', "")]
     if data['dimension'] == 1:   # Try to attach associated elliptic curve
         lab = split_class_label(info['label'])
-        ec_from_hmf = db_ecnf().find_one({"label": label + '1'})
-        if ec_from_hmf == None:
+        ec_from_hmf = db.ec_nfcurves.lookup(label + '1')
+        if ec_from_hmf is None:
             info['friends'] += [('Elliptic curve not available', "")]
         else:
             info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
@@ -373,13 +335,9 @@ def render_hmf_webpage(**args):
 
     t = "Hilbert Cusp Form %s" % info['label']
 
-    forms_space = db_forms().find(
-        {'field_label': data['field_label'], 'level_ideal': data['level_ideal']},{'dimension':True})
-    dim_space = 0
-    for v in forms_space:
-        dim_space += v['dimension']
+    forms_dims = db.hmf_forms.search({'field_label': data['field_label'], 'level_ideal': data['level_ideal']}, projection='dimension')
 
-    info['newspace_dimension'] = dim_space
+    info['newspace_dimension'] = sum(forms_dims)
 
     # Get hecke_polynomial, hecke_eigenvalues and AL_eigenvalues
     try:

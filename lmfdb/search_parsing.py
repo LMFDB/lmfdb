@@ -450,8 +450,8 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
             inp = '[%s]'%','.join([str(a) for a in L])
             query[qfield] = inp if keepbrackets else inp[1:-1]
 
-def parse_gap_id(info, query, field='group', name='group', qfield='group'):
-    parse_bracketed_posints(info,query,'group', split=False, exactlength=2, keepbrackets=True, name='Group')
+def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
+    parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield, use_bson=True):

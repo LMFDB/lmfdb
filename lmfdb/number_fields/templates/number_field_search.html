@@ -60,7 +60,6 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
 </form>
 
 {% if info.err is defined %}
-
 {% if info.label is defined %}
 <form>
 <table border=0 cellpadding=5>
@@ -77,24 +76,9 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
 </table>
 </form>
 {% endif %}
-
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
-<h2> Results: ({% if info.number==1 -%}
-  unique match
-  {% elif info.number <= info.count and info.start == 0 -%}
-    displaying all {{ info.number }} matches
-  {% elif info.exact_count -%}
-    displaying matches {{ info.start + 1 }}-{{ info.upper_count }} of {{ info.number }}
-  {% else -%}
-    displaying matches {{ info.start + 1 }}-{{ info.upper_count }} of <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">at least {{ info.number }}</a></span>{% endif %})</h2>
-
-{% if info.number > 0 %}
+{% endif %}
+{% include 'matches.html' %}
+{% if info.number %}
 <table border=1 cellpadding=5 class="ntdata" id="fieldTab"`>
 <thead>
 <tr>
@@ -130,39 +114,10 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
 {% endfor %}
 </tbody>
 </table>
-<br>
-     {% if info.start > 0 %}
-      <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-      <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-<br>
-<br>
-{% if info.number < 100001 %}
-<form>
-Download all {{info.number}} search results for
-<input type="submit" name="Submit" value="gp">
-<input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="magma">
-<input type="submit" name="Submit" value="mathematica">
-<input type="hidden" name="download" value="1"/>
-<input type="hidden" name="degree" value="{{info.degree}}"/>
-<input type="hidden" name="signature" value="{{info.signature}}"/>
-<input type="hidden" name="galois_group" value="{{info.galois_group}}"/>
-<input type="hidden" name="class_number" value="{{info.class_number}}"/>
-<input type="hidden" name="class_group" value="{{info.class_group}}"/>
-<input type="hidden" name="ur_primes" value="{{info.ur_primes}}"/>
-<input type="hidden" name="ram_primes" value="{{info.ram_primes}}"/>
-<input type="hidden" name="ram_quantifier" value="{{info.ram_quantifier}}"/>
-<input type="hidden" name="discriminant" value="{{info.discriminant}}"/>
-
-</form>
-{% else %}
-There are too many fields in the search results for downloading.
-{% endif %} {# provide download links? #}
-{% endif %} {# info.number > 0 #}
+<hr>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

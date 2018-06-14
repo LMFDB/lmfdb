@@ -2,8 +2,10 @@
 from flask import url_for
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_logger
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, db_ec
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
+from lmfdb.db_backend import db
+ec_db = db.ec_curves
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
 
@@ -33,13 +35,13 @@ class ECisog_class(object):
             N, iso, number = split_lmfdb_label(label)
             if number:
                 label = ".".join([N,iso])
-            data = db_ec().lucky({"lmfdb_iso" : label, 'number':1}, data_level=2)
+            data = ec_db.lucky({"lmfdb_iso" : label, 'number':1})
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
                 if number:
                     label = "".join([N,iso])
-                data = db_ec().lucky({"iso" : label, 'number':1}, data_level=2)
+                data = ec_db.lucky({"iso" : label, 'number':1})
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
 
@@ -54,7 +56,7 @@ class ECisog_class(object):
         # Extract the size of the isogeny class from the database
         ncurves = self.class_size
         # Create a list of the curves in the class from the database
-        self.curves = [db_ec().lucky({'iso':self.iso, 'lmfdb_number': i+1}, data_level=2)
+        self.curves = [ec_db.lucky({'iso':self.iso, 'lmfdb_number': i+1})
                           for i in range(ncurves)]
 
         # Set optimality flags.  The optimal curve is number 1 except

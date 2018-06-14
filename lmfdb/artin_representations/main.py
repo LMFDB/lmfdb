@@ -4,7 +4,7 @@
 
 import pymongo
 ASC = pymongo.ASCENDING
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from flask import render_template, request, url_for, flash, redirect
 from markupsafe import Markup
 
@@ -189,10 +189,9 @@ def render_artin_representation_webpage(label):
         if cc.modulus == 1 and cc.number == 1:
             friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
         else:
-            lfuncdb = getDBConnection().Lfunctions.instances
             # looking for Lhash dirichlet_L_modulus.number
             mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
-            lres = lfuncdb.find_one({'Lhash': mylhash})
+            lres = db.lfunc_instances.lucky({'Lhash': mylhash})
             if lres is not None:
                 friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
 

@@ -105,7 +105,6 @@ $t$</td><td align=left> <input type="text" name="t" size="3" value="{{info.t}}" 
 </form>
 
 {% if info.err is defined %}
-
 {% if info.label is defined %}
 <form>
 <table border=0 cellpadding=5>
@@ -119,21 +118,11 @@ $t$</td><td align=left> <input type="text" name="t" size="3" value="{{info.t}}" 
 </tr>
 </table>
 </form>
-
+{% endif %}
 {% endif %}
 
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
-
-
-<h2> Results: ({{info.report}}) </h2>
-
-{% if info.number > 0 %}
+{% include 'matches.html' %}
+{% if info.number %}
 
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
@@ -180,19 +169,10 @@ $t$</td><td align=left> <input type="text" name="t" size="3" value="{{info.t}}" 
 
 </tbody>
 </table>
-<br>
-
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-
-
+<hr>
+{% include 'forward_back.html' %}
+{% include 'dummy_download_search_results.html' %}
 {% endif %}
-{% endif %}
-
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

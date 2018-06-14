@@ -5,7 +5,7 @@ import yaml
 import time
 from flask import url_for
 from lmfdb.base import getDBConnection
-from lmfdb.db_backend import PostgresBackend
+from lmfdb.db_backend import db
 from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
 from lmfdb.search_parsing import split_list
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
@@ -56,25 +56,8 @@ def class_cremona_label(conductor, iso_class):
 
 logger = make_logger("ec")
 
-ec_backend = None
-def db_ec():
-    global ec_backend
-    if ec_backend is None:
-        ec_backend = PostgresBackend(('ellQ_small', 'ellQ_extras', 'ellQ_counts'), ('label', 'lmfdb_label', 'iso', 'lmfdb_iso', 'iso_nlabel', 'number', 'lmfdb_number', 'ainvs', 'jinv', 'conductor', 'torsion', 'rank', 'sha', 'torsion_structure', 'cm', 'isogeny_degrees', 'nonmax_primes', 'nonmax_rad'), ('equation', 'signD', 'cm', 'torsion_generators', 'xcoord_integral_points', 'gens', 'heights', 'regulator', 'tamagawa_product', 'special_value', 'real_period', 'degree', 'modp_images', 'label_2adic', 'index_2adic', 'log_level_2adic', 'gens_2adic', 'isogeny_matrix', 'class_deg', 'class_size', 'sha_an', 'sha_primes', 'torsion_primes', 'tor_degs', 'tor_fields', 'tor_gro', 'local_data', 'min_quad_twist', 'aplist', 'anlist', 'iwdata', 'iwp0'), [('conductor', 1), ('iso_nlabel', 1),('lmfdb_number', 1)], ('ainvs', 'torsion_structure', 'isogeny_degrees', 'nonmax_primes', 'torsion_generators', 'xcoord_integral_points', 'gens', 'heights', 'nonsurj_primes', 'galois_images', 'modp_images', 'gens_2adic', 'isogeny_matrix', 'sha_primes', 'torsion_primes', 'local_data', 'min_quad_twist', 'aplist', 'anlist', 'iwdata', 'iwp0'), logger=logger)
-    return ec_backend
-
 def db_ecstats():
     return getDBConnection().elliptic_curves.curves.stats
-
-padic_backend = None
-def padic_db():
-    global padic_backend
-    if padic_backend is None:
-        padic_backend = PostgresBackend(('ellQ_padic', None, None), ('lmfdb_iso', 'p', 'prec', 'val', 'unit'), (), [('lmfdb_iso',1),('p',1)], logger=logger)
-    return padic_backend
-
-def is_ec_isogeny_class_in_db(label_isogeny_class):
-    return db_ec().lucky({"lmfdb_iso" : label_isogeny_class}) is not None
 
 def split_galois_image_code(s):
     """Each code starts with a prime (1-3 digits but we allow for more)
@@ -149,10 +132,10 @@ class WebEC(object):
         self.mod_p_images = dbdata['modp_images']
 
         # Next lines because the python identifiers cannot start with 2
-        self.twoadic_index = dbdata['index_2adic']
-        self.twoadic_log_level = dbdata['log_level_2adic']
-        self.twoadic_gens = dbdata['gens_2adic']
-        self.twoadic_label = dbdata['label_2adic']
+        self.twoadic_index = dbdata.get('index_2adic')
+        self.twoadic_log_level = dbdata.get('log_level_2adic')
+        self.twoadic_gens = dbdata.get('gens_2adic')
+        self.twoadic_label = dbdata.get('label_2adic')
         # All other fields are handled here
         self.make_curve()
 
@@ -165,11 +148,11 @@ class WebEC(object):
         """
         try:
             N, iso, number = split_lmfdb_label(label)
-            data = db_ec().lucky({"lmfdb_label" : label}, data_level=2)
+            data = db.ec_curves.lucky({"lmfdb_label" : label})
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
-                data = db_ec().lucky({"label" : label}, data_level=2)
+                data = db.ec_curves.lucky({"label" : label})
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
 
@@ -213,7 +196,7 @@ class WebEC(object):
 
         data['minq_D'] = minqD = self.min_quad_twist['disc']
         minq_label = self.min_quad_twist['label']
-        data['minq_label'] = db_ec().lucky({'label':minq_label}, data_level=1)['lmfdb_label']
+        data['minq_label'] = db.ec_curves.lucky({'label':minq_label}, 'lmfdb_label')
         data['minq_info'] = '(itself)' if minqD==1 else '(by %s)' % minqD
         if self.degree is None:
             data['degree'] = 0 # invalid, but will be displayed nicely
@@ -223,7 +206,7 @@ class WebEC(object):
             data['an'] = self.anlist
             data['ap'] = self.aplist
         else:
-            r = db_ec().lucky({'lmfdb_iso':self.lmfdb_iso, 'number':1}, data_level=2)
+            r = db.ec_curves.lucky({'lmfdb_iso':self.lmfdb_iso, 'number':1})
             data['an'] = r['anlist']
             data['ap'] = r['aplist']
 
@@ -268,7 +251,7 @@ class WebEC(object):
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
         self.one_deg = ZZ(self.class_deg).is_prime()
-        self.ncurves = db_ec().count({'lmfdb_iso':self.lmfdb_iso})
+        self.ncurves = db.ec_curves.count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
             data['isogeny_degrees'] = " and ".join(isodegs)
@@ -296,7 +279,7 @@ class WebEC(object):
 
         data['p_adic_data_exists'] = False
         if data['Gamma0optimal']:
-            data['p_adic_data_exists'] = (padic_db().lucky({'lmfdb_iso': self.lmfdb_iso}, data_level=1) is not None)
+            data['p_adic_data_exists'] = db.ec_padic.exists({'lmfdb_iso': self.lmfdb_iso})
 
         # Iwasawa data (where present)
 
@@ -409,8 +392,10 @@ class WebEC(object):
         bsd['tamagawa_product'] = prod(tamagawa_numbers)
 
     def make_iwasawa(self):
-        iwdata = self.iwdata
-        if iwdata is None: # For curves with no Iwasawa data
+        try:
+            iwdata = self.iwdata
+        except AttributeError: # For curves with no Iwasawa data
+            self.iwdata = None
             return
         iw = self.iw = {}
         iw['p0'] = self.iwp0 # could be None
@@ -462,8 +447,7 @@ class WebEC(object):
         self.tg = tg = {}
         tg['data'] = tgextra = []
         # find all base-changes of this curve in the database, if any
-        from lmfdb.ecnf.WebEllipticCurve import db_ecnf
-        bcs = [res['label'] for res in  db_ecnf().find({'base_change': self.lmfdb_label}, projection={'label': True, '_id': False})]
+        bcs = list(db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, projection='label'))
         bcfs = [lab.split("-")[0] for lab in bcs]
         for F, T in tor_gro.items():
             tg1 = {}

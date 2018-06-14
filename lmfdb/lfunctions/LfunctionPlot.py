@@ -2,7 +2,7 @@
 
 import math
 from flask import url_for
-import lmfdb.base as base
+from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.characters.ListCharacters import get_character_modulus
@@ -163,20 +163,14 @@ def getWidthAndHeight(gls):
     ## TODO: This should be adjusted
     ##return ((700,450))
 
-    conn = base.getDBConnection()
-    db = conn.Lfunctions
-    collection = db.Lfunctions
-    LfunctionList = collection.find({'group': gls[0], 'conductor': gls[1]
-                                         },{'origin': True, 'root_number': True})
-
     xfactor = 20
     yfactor = 20
     extraSpace = 40
 
     xMax = 0
     yMax = 0
-    for l in LfunctionList:
-        splitId = l['origin'].split('/')[6].split('_')
+    for origin in db.lfunc_lfunctions.search({'grp': gls[0], 'conductor': gls[1]}, 'origin'):
+        splitId = origin.split('/')[6].split('_')
 
         if float(splitId[0]) > xMax:
             xMax = float(splitId[0])
@@ -206,9 +200,6 @@ def paintSvgFileAll(glslist):  # list of group and level
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
     ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
 
-    conn = base.getDBConnection()
-    db = conn.Lfunctions
-    collection = db.Lfunctions
     paralist = []
     xMax = 0
     yMax = 0
@@ -216,11 +207,8 @@ def paintSvgFileAll(glslist):  # list of group and level
         group = gls[0]
         level = gls[1]
 
-        LfunctionList = collection.find(
-                {'group': group, 'conductor': level},
-                {'origin': True, 'root_number': True})
-
-        for l in LfunctionList:
+        for l in db.lfunc_lfunctions.search({'grp': group, 'conductor': level},
+                                            ['origin', 'root_number']):
             splitOrigin = l['origin'].split('/')
             char = splitOrigin[5]
             R = splitOrigin[6]

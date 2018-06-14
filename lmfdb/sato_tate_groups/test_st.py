@@ -1,5 +1,6 @@
-# -*- coding: utf8 -*-
-from lmfdb.base import LmfdbTest, getDBConnection
+# -*- coding: utf-8 -*-
+from lmfdb.base import LmfdbTest
+from lmfdb.db_backend import db
 
 class SatoTateGroupTest(LmfdbTest):
 
@@ -35,15 +36,15 @@ class SatoTateGroupTest(LmfdbTest):
 
     def test_browse(self):
         L = self.tc.get('/SatoTateGroup/?identity_component=U(1)')
-        assert 'all 2 matches' in L.data
+        assert 'both matches' in L.data
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4&&components=48')
         assert 'unique match' in L.data
         L = self.tc.get('SatoTateGroup/?components=48')
-        assert 'all 2 matches' in L.data
+        assert 'both matches' in L.data
         L = self.tc.get('SatoTateGroup/?degree=1&start=1000&count=25')
         assert 'matches 1001-1025' in L.data
         L = self.tc.get('SatoTateGroup/?degree=1&rational_only=yes')
-        assert 'all 2 matches' in L.data
+        assert 'both matches' in L.data
 
     def test_moments(self):
         L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
@@ -59,31 +60,29 @@ class SatoTateGroupTest(LmfdbTest):
 
     def test_completeness(self):
         import sys
-        stdb = getDBConnection().sato_tate_groups.st_groups
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
         assert '3 matches' in L.data
-        data = stdb.find({'weight':int(1),'degree':int(2)})
-        assert data.count() == 3
+        data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(2)}, projection='label'))
+        assert len(data) == 3
         print ""
-        for r in data:
-            sys.stdout.write("{}...".format(r['label']))
+        for label in data:
+            sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
-            L = self.tc.get('/SatoTateGroup/' + r['label'])
-            assert r['label'] in L.data and 'Moment Statistics' in L.data
-        data = stdb.find({'weight':int(1),'degree':int(2)})
+            L = self.tc.get('/SatoTateGroup/' + label)
+            assert label in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4')
         assert 'of 52' in L.data
-        data = stdb.find({'weight':int(1),'degree':int(4)})
-        assert data.count() == 52
-        
-        for r in data:
-            sys.stdout.write("{}...".format(r['label']))
+        data = list(db.gps_sato_tate.search({'weight':int(1),'degree':int(4)}, projection='label'))
+        assert len(data) == 52
+
+        for label in data:
+            sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
-            L = self.tc.get('/SatoTateGroup/' + r['label'])
-            assert r['label'] in L.data and 'Moment Statistics' in L.data
+            L = self.tc.get('/SatoTateGroup/' + label)
+            assert label in L.data and 'Moment Statistics' in L.data
         L = self.tc.get('/SatoTateGroup/?components=999999999')
         assert 'unique match'  in L.data and 'mu(999999999)' in L.data
-        
+
     def test_trace_zero_density(self):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=1')
         assert '0 matches'

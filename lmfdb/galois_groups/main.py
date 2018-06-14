@@ -21,9 +21,10 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup, tgdb, gmdb
+from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
 
-from lmfdb.WebNumberField import modules2string, nfdb
+from lmfdb.WebNumberField import modules2string
+from lmfdb.db_backend import db
 
 GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
 
@@ -53,16 +54,6 @@ def ctx_galois_groups():
     return {'group_alias_table': aliastable,
             'galois_module_data': galois_module_knowl_guts}
 
-
-def group_display_shortC():
-    def gds(nt):
-        return group_display_short(nt[0], nt[1])
-    return gds
-
-def group_display_prettyC():
-    def gds(nt):
-        return group_display_pretty(nt[0], nt[1])
-    return gds
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
@@ -135,36 +126,16 @@ def galois_group_search(**args):
         info['err'] = str(err)
         return search_input_error(info, bread)
 
-    count = parse_count(info, 50)
-    start = parse_start(info)
     if 'result_count' in info:
-        nres = tgdb().count(query)
+        nres = db.gps_transitive.count(query)
         return jsonify({"nres":str(nres)})
 
-    res, nres, exact_count = tgdb().search_results(query, limit=count, offset=start)
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    info['groups'] = res
-    info['group_display'] = group_display_prettyC()
-    info['report'] = "found %s groups" % nres
+    count = parse_count(info, 50)
+    start = parse_start(info)
+    info['groups'] = db.gps_transitive.search(query, limit=count, offset=start, info=info)
+    info['group_display'] = group_display_pretty
     info['yesno'] = yesno
     info['wgg'] = WebGaloisGroup.from_data
-    info['start'] = start
-    info['number'] = nres
-    info['count'] = count
-    info['upper_count'] = min(nres, start + count) # min is annoying in jinja
-    info['exact_count'] = exact_count
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
 
     return render_template("gg-search.html", info=info, title="Galois Group Search Result", bread=bread, credit=GG_credit)
 
@@ -181,7 +152,7 @@ def render_group_webpage(args):
     if 'label' in args:
         label = clean_input(args['label'])
         label = label.replace('t', 'T')
-        data = tgdb().lookup(label)
+        data = db.gps_transitive.lookup(label)
         if data is None:
             bread = get_bread([("Search error", ' ')])
             info['err'] = "Group " + label + " was not found in the database."
@@ -229,9 +200,7 @@ def render_group_webpage(args):
             data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
         if len(data['otherreps']) == 0:
             data['otherreps']="There is no other low degree representation."
-        intreps, _, _ = gmdb().search_results({'n': n, 't': t})
-        # turn cursor into a list of dictionaries
-        intreps = [{k:v for k,v in zip(gmdb()._search_cols, z)} for z in intreps]
+        intreps = list(db.gps_gmodules.search({'n': n, 't': t}))
         if len(intreps) > 0:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
@@ -249,9 +218,8 @@ def render_group_webpage(args):
                 #print data['isoms']
 
         friends = []
-        one = nfdb().lucky({'degree': n, 'galt': t})
-        if one:
-            friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) )) 
+        if db.nf_fields.exists({'degree': n, 'galt': t}):
+            friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
             ('Order', '\(%s\)' % order),
             ('n', '\(%s\)' % data['n']),
@@ -278,7 +246,7 @@ def search_input_error(info, bread):
 
 @galois_groups_page.route("/random")
 def random_group():
-    label = tgdb().random()
+    label = db.gps_transitive.random()
     return redirect(url_for(".by_label", label=label), 307)
 
 @galois_groups_page.route("/Completeness")

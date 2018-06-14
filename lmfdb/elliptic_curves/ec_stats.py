@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 from lmfdb.base import app
-from lmfdb.utils import comma, make_logger
+from lmfdb.utils import comma, make_logger, format_percentage
 from lmfdb.elliptic_curves.web_ec import db_ecstats
 from flask import url_for
-
-def format_percentage(num, denom):
-    return "%10.2f"%((100.0*num)/denom)
 
 logger = make_logger("ec")
 

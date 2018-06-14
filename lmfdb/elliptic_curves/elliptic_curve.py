@@ -4,6 +4,7 @@ import time
 import ast
 from pymongo import ASCENDING
 from operator import mul
+from lmfdb.db_backend import db, prep_json
 from lmfdb.base import app
 from flask import render_template, url_for, request, redirect, make_response, send_file, jsonify
 import tempfile
@@ -15,7 +16,7 @@ from lmfdb.utils import web_latex, to_dict, web_latex_split_on_pm, random_object
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, padic_db, db_ec
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs
 from lmfdb.search_parsing import parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start, parse_element_of
 
 import sage.all
@@ -98,7 +99,7 @@ def rational_elliptic_curves(err_args=None):
 
 @ec_page.route("/random")
 def random_curve():
-    label = db_ec().random(data_level=1)['lmfdb_label']
+    label = db.ec_curves.random(projection=1)['lmfdb_label']
     cond, iso, num = split_lmfdb_label(label)
     return redirect(url_for(".by_triple_label", conductor=cond, iso_label=iso, number=num))
 
@@ -107,7 +108,7 @@ def todays_curve():
     from datetime import date
     mordells_birthday = date(1888,1,28)
     n = (date.today()-mordells_birthday).days
-    label = db_ec().lucky({'number': 1}, offset = n)
+    label = db.ec_curves.lucky({'number': 1}, offset = n)
     #return render_curve_webpage_by_label(label)
     return redirect(url_for(".by_ec_label", label=label), 307)
 
@@ -197,11 +198,11 @@ def elliptic_curve_search(info):
                 E = EllipticCurve(labvec).minimal_model()
                 # Now we do have a valid curve over Q, but it might
                 # not be in the database.
-                data = db_ec().lucky({'ainvs': EC_ainvs(E)}, data_level=1)
-                if data is None:
+                lmfdb_label = db.ec_curves.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
+                if lmfdb_label is None:
                     info['conductor'] = E.conductor()
                     return elliptic_curve_jump_error(label, info, missing_curve=True)
-                return by_ec_label(data['lmfdb_label'])
+                return by_ec_label(lmfdb_label)
             except (TypeError, ValueError, ArithmeticError):
                 return elliptic_curve_jump_error(label, info)
         else:
@@ -226,13 +227,13 @@ def elliptic_curve_search(info):
         parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees')
         #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
 
-        parse_primes(info, query, 'surj_primes', name='surjective primes',
+        parse_primes(info, query, 'surj_primes', name='maximal primes',
                      qfield='nonmax_primes', mode='complement', prefix=1, radical='nonmax_rad')
         if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
-        parse_primes(info, query, 'nonsurj_primes', name='non-surjective primes',
+        parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
                      qfield='nonmax_primes',mode=mode, prefix=1, radical='nonmax_rad')
     except ValueError as err:
         info['err'] = str(err)
@@ -242,39 +243,15 @@ def elliptic_curve_search(info):
         # fails on 990h3
         query['number'] = 1
 
-    count = parse_count(info,100)
-    start = parse_start(info)
-
-    info['query'] = query
-    ecdb = db_ec()
     if 'result_count' in info:
-        nres = ecdb.count(query)
+        nres = db.ec_curves.count(query)
         return jsonify({"nres":str(nres)})
 
-    res, nres, exact_count = ecdb.search_results(query, count, start)
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-    info['curves'] = res
+    count = parse_count(info,100)
+    start = parse_start(info)
+    info['curves'] = db.ec_curves.search(query, limit=count, offset=start, info=info)
     info['curve_url'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
-    info['number'] = nres
-    info['start'] = start
-    info['count'] = count
-    info['more'] = int(start + count < nres)
-    info['upper_count'] = min(nres, start + count) # min is annoying in jinja
-    info['exact_count'] = exact_count
-
-    #if nres == 1:
-    #    info['report'] = 'unique match'
-    #elif nres == 2:
-    #    info['report'] = 'displaying both matches'
-    #else:
-    #    if nres > count or start != 0:
-    #        info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-    #    else:
-    #        info['report'] = 'displaying all %s matches' % nres
 
     t = info.get('title','Elliptic Curves search results')
     return render_template("ec-search-results.html", info=info, credit=ec_credit(), bread=bread, title=t)
@@ -331,7 +308,7 @@ def by_ec_label(label):
         else:
             label_type = 'iso'
 
-        data = db_ec().lucky({label_type: label}, data_level=1)
+        data = db.ec_curves.lucky({label_type: label}, projection=1)
         if data is None:
             return elliptic_curve_jump_error(label, {})
         ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
@@ -353,11 +330,11 @@ def by_weierstrass(eqn):
     except TypeError:
         return elliptic_curve_jump_error(eqn, {})
     E = EllipticCurve(ainvs).global_minimal_model()
-    N = E.conductor()
-    data = db_ec().lucky({'ainvs': EC_ainvs(E)},data_level=1)
-    if data is None:
+    label = db.ec_curves.lucky({'ainvs': EC_ainvs(E)},'lmfdb_label')
+    if label is None:
+        N = E.conductor()
         return elliptic_curve_jump_error(eqn, {'conductor':N}, missing_curve=True)
-    return redirect(url_for(".by_ec_label", label=data['lmfdb_label']), 301)
+    return redirect(url_for(".by_ec_label", label=label), 301)
 
 def render_isogeny_class(iso_class):
     class_data = ECisog_class.by_label(iso_class)
@@ -389,10 +366,10 @@ def modular_form_display(label, number):
         number = 10
     if number > 1000:
         number = 1000
-    data = db_ec().lucky({'lmfdb_label': label}, data_level=1)
-    if data is None:
+    ainvs = db.ec_curves.lucky({'lmfdb_label': label}, 'ainvs')
+    if ainvs is None:
         return elliptic_curve_jump_error(label, {})
-    E = EllipticCurve(data['ainvs'])
+    E = EllipticCurve(ainvs)
     modform = E.q_eigenform(number)
     modform_string = web_latex_split_on_pm(modform)
     return modform_string
@@ -401,11 +378,10 @@ def modular_form_display(label, number):
 # base64-encoded pngs.
 @ec_page.route("/plot/<label>")
 def plot_ec(label):
-    CDB = db_ec()
-    data = CDB.lucky({'lmfdb_label': label}, data_level=1)
-    if data is None:
+    ainvs = db.ec_curves.lucky({'lmfdb_label': label}, 'ainvs')
+    if ainvs is None:
         return elliptic_curve_jump_error(label, {})
-    E = EllipticCurve(data['ainvs'])
+    E = EllipticCurve(ainvs)
     P = E.plot()
     _, filename = tempfile.mkstemp('.png')
     P.save(filename)
@@ -458,8 +434,7 @@ def padic_data():
     if request.args['rank'] == '0':
         info['reg'] = 1
     elif number == '1':
-        data = padic_db().lucky({'lmfdb_iso': N + '.' + iso, 'p': p}, data_level=1)
-        info['data'] = data
+        data = db.ec_padic.lucky({'lmfdb_iso': N + '.' + iso, 'p': p})
         if data is None:
             info['reg'] = 'no data'
         else:
@@ -474,13 +449,12 @@ def padic_data():
 
 @ec_page.route("/download_qexp/<label>/<limit>")
 def download_EC_qexp(label, limit):
-    CDB = db_ec()
     N, iso, number = split_lmfdb_label(label)
     if number:
-        data = CDB.lucky({'lmfdb_label': label}, data_level=1)
+        ainvs = db.ec_curves.lucky({'lmfdb_label': label}, 'ainvs')
     else:
-        data = CDB.lucky({'lmfdb_iso': label}, data_level=1)
-    E = EllipticCurve(data['ainvs'])
+        ainvs = db.ec_curves.lucky({'lmfdb_iso': label}, 'ainvs')
+    E = EllipticCurve(ainvs)
     response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
     return response
@@ -492,19 +466,18 @@ def download_EC_all(label):
         N, iso, number = split_lmfdb_label(label)
     except (ValueError,AttributeError):
         return elliptic_curve_jump_error(label, {})
-    CDB = db_ec()
     if number:
-        data = CDB.lucky({'lmfdb_label': label}, data_level=1)
+        data = db.ec_curves.lucky({'lmfdb_label': label})
         if data is None:
             return elliptic_curve_jump_error(label, {})
         data_list = [data]
     else:
-        data_list = sorted(list(CDB.search_results({'lmfdb_iso': label})[0]), key=lambda E: E['number'])
+        data_list = list(db.ec_curves.search({'lmfdb_iso': label}, projection=2, sort=['number']))
         if len(data_list) == 0:
             return elliptic_curve_jump_error(label, {})
 
     import json
-    response = make_response('\n\n'.join(json.dumps(d) for d in data_list))
+    response = make_response('\n\n'.join(json.dumps(prep_json(d)) for d in data_list))
     response.headers['Content-type'] = 'text/plain'
     return response
 
@@ -535,9 +508,8 @@ def download_search(info):
     s += '\n' + com2 + '\n'
     s += 'data ' + ass + ' [' + '\\\n'
     # reissue saved query here
-    res = db_ec().search_results(ast.literal_eval(info["query"]))[0]
-    i = db_ec()._search_cols.index('ainvs')
-    s += ",\\\n".join([str(f[i]) for f in res])
+    res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
+    s += ",\\\n".join([str(ainvs) for ainvs in res])
     s += ']' + eol + '\n'
     strIO = StringIO.StringIO()
     strIO.write(s)

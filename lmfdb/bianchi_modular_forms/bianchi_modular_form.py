@@ -8,11 +8,12 @@ from markupsafe import Markup
 
 from sage.all import latex
 
-from lmfdb.utils import to_dict, random_object_from_collection, web_latex_ideal_fact
-from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string
+from lmfdb.db_backend import db
+from lmfdb.utils import to_dict, web_latex_ideal_fact
+from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string, parse_start, parse_count
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
-from lmfdb.bianchi_modular_forms.web_BMF import WebBMF, db_dims, db_forms
+from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
 from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_display_knowl
 from lmfdb.nfutils.psort import ideal_from_label
 
@@ -81,8 +82,10 @@ def index():
         return bianchi_modular_form_search(**args)
 
 @bmf_page.route("/random")
-def random_bmf():    # Random Hilbert modular form
-    return bianchi_modular_form_by_label( random_object_from_collection( db_forms() ) )
+def random_bmf():    # Random Bianchi modular form
+    label = db.bmf_forms.random()
+    print label
+    return bianchi_modular_form_by_label(label)
 
 def bianchi_modular_form_search(**args):
     """Function to handle requests from the top page, either jump to one
@@ -128,56 +131,29 @@ def bianchi_modular_form_search(**args):
     else:
         info['include_base_change'] = "on"
 
-    start = 0
-    if 'start' in request.args:
-        start = int(request.args['start'])
-    count = 50
-    if 'count' in request.args:
-        count = int(request.args['count'])
+    if 'result_count' in info:
+        nres = db.bmf_forms.count(query)
+        return jsonify({"nres":str(nres)})
 
-    info['query'] = dict(query)
-    res = db_forms().find(query).sort([('level_norm', ASCENDING), ('label', ASCENDING)]).skip(start).limit(count)
-    nres = res.count()
-
-    if nres > 0:
+    start = parse_start(info)
+    count = parse_count(info, 50)
+    proj = ['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM']
+    res = db.bmf_forms.search(query, limit=count, offset=start, info=info)
+    if info['number'] > 0:
         info['field_pretty_name'] = field_pretty(res[0]['field_label'])
     else:
         info['field_pretty_name'] = ''
-    info['number'] = nres
 
-    if nres == 1:
-        info['report'] = 'unique match'
-    elif nres == 2:
-        info['report'] = 'displaying both matches'
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying items %s-%s of %s matches' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
-
-    res_clean = []
     for v in res:
-        v_clean = {}
-        v_clean['field_label'] = v['field_label']
-        v_clean['short_label'] = v['short_label']
-        v_clean['level_label'] = v['level_label']
-        v_clean['level_norm']  = v['level_norm']
-        v_clean['level_number'] = v['level_label'].split(".")[1]
-        v_clean['label_suffix'] = v['label_suffix']
-        v_clean['label'] = v['label']
-        v_clean['level_ideal'] = teXify_pol(v['level_ideal'])
-        v_clean['dimension'] = v['dimension']
-        v_clean['sfe'] = "+1" if v['sfe']==1 else "-1"
-        v_clean['url'] = url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix'])
-        v_clean['bc'] = bc_info(v['bc'])
-        v_clean['cm'] = cm_info(v['CM'])
-        res_clean.append(v_clean)
+        v['level_number'] = v['level_label'].split(".")[1]
+        v['level_ideal'] = teXify_pol(v['level_ideal'])
+        v['sfe'] = "+1" if v['sfe']==1 else "-1"
+        v['url'] = url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix'])
+        v['bc'] = bc_info(v['bc'])
+        v['cm'] = cm_info(v.pop('CM'))
 
-    res_clean.sort(key=lambda x: [int(x['level_norm']), int(x['level_number']), x['label_suffix']])
-    info['forms'] = res_clean
-    info['count'] = count
-    info['start'] = start
-    info['more'] = int(start + count < nres)
+    res.sort(key=lambda x: [x['level_norm'], int(x['level_number']), x['label_suffix']])
+    info['forms'] = res
 
     t = 'Bianchi modular form search results'
 
@@ -206,9 +182,7 @@ def bmf_field_dim_table(**args):
     field_label=argsdict['field_label']
     field_label = nf_string_to_label(field_label)
 
-    start = 0
-    if 'start' in argsdict:
-        start = int(argsdict['start'])
+    start = parse_start(argsdict)
 
     info={}
     info['gl_or_sl'] = gl_or_sl
@@ -217,9 +191,7 @@ def bmf_field_dim_table(**args):
     # with positive new dimension ('new').  Default is 'cusp'.
     level_flag = argsdict.get('level_flag', 'cusp')
     info['level_flag'] = level_flag
-    count = 50
-    if 'count' in argsdict:
-        count = int(argsdict['count'])
+    count = parse_count(argsdict, 50)
 
     pretty_field_label = field_pretty(field_label)
     bread = [('Bianchi Modular Forms', url_for(".index")), (
@@ -235,9 +207,8 @@ def bmf_field_dim_table(**args):
     query = {}
     query['field_label'] = field_label
     query[gl_or_sl] = {'$exists': True}
-    data = db_dims().find(query)
-    data = data.sort([('level_norm', ASCENDING)])
-    info['number'] = nres = data.count()
+    data = db.bmf_dims.search(query, limit=count, offset=start, info=info)
+    nres = info['number']
     if nres > count or start != 0:
         info['report'] = 'Displaying items %s-%s of %s levels,' % (start + 1, min(nres, start + count), nres)
     else:
@@ -253,7 +224,6 @@ def bmf_field_dim_table(**args):
     flag = 'cuspidal_dim' if level_flag=='cusp' else 'new_dim'
     data = [dat for dat in data if level_flag == 'all' or filter(dat, flag)]
 
-    data = data[start:start+count]
     info['field'] = field_label
     info['field_pretty'] = pretty_field_label
     nf = WebNumberField(field_label)
@@ -268,9 +238,6 @@ def bmf_field_dim_table(**args):
     weights.sort()
     info['weights'] = weights
     info['nweights'] = len(weights)
-    info['count'] = count
-    info['start'] = start
-    info['more'] = int(start + count < nres)
 
     data.sort(key = lambda x: [int(y) for y in x['level_label'].split(".")])
     dims = {}
@@ -306,16 +273,14 @@ def render_bmf_space_webpage(field_label, level_label):
         info['err'] = "%s is not a valid label for an imaginary quadratic field" % field_label
     else:
         pretty_field_label = field_pretty(field_label)
-        if not db_dims().find({'field_label': field_label}):
+        if not db.bmf_dims.exists({'field_label': field_label}):
             info['err'] = "no dimension information exists in the database for field %s" % pretty_field_label
         else:
             t = "Bianchi Modular Forms of level %s over %s" % (level_label, pretty_field_label)
-            data = db_dims().find({'field_label': field_label, 'level_label': level_label})
-            nres = data.count()
-            if nres==0:
+            data = db.bmf_dims.lucky({'field_label': field_label, 'level_label': level_label})
+            if not data:
                 info['err'] = "no dimension information exists in the database for level %s and field %s" % (level_label, pretty_field_label)
             else:
-                data = data.next()
                 info['label'] = data['label']
                 info['nf'] = nf = WebNumberField(field_label)
                 info['field_label'] = field_label
@@ -341,7 +306,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['nweights'] = len(weights)
 
                 newdim = data['gl2_dims']['2']['new_dim']
-                newforms = db_forms().find({'field_label':field_label, 'level_label':level_label}).sort('label_suffix', ASCENDING)
+                newforms = db.bmf_forms.search({'field_label':field_label, 'level_label':level_label})
                 info['nfdata'] = [{
                     'label': f['short_label'],
                     'url': url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix']),
@@ -378,6 +343,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
         properties2 = data.properties2
         friends = data.friends
     except ValueError:
+        raise
         info['err'] = "No Bianchi modular form in the database has label {}".format(label)
     return render_template("bmf-newform.html", title=title, credit=credit, bread=bread, data=data, properties2=properties2, friends=friends, info=info)
 
@@ -386,15 +352,18 @@ def bianchi_modular_form_by_label(lab):
         # do nothing: display the top page
         return redirect(url_for(".index"))
     if isinstance(lab, basestring):
-        res = db_forms().find_one({'label': lab})
+        print "lookup", lab
+        res = db.bmf_forms.lookup(lab)
+        print "res", res['level_label']
     else:
         res = lab
         lab = res['label']
 
-    if res == None:
+    if res is None:
         flash(Markup("No Bianchi modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
         return redirect(url_for(".index"))
     else:
+        print "level_label", res['level_label']
         return redirect(url_for(".render_bmf_webpage", field_label = res['field_label'], level_label = res['level_label'], label_suffix = res['label_suffix']))
 
 @bmf_page.route("/Source")

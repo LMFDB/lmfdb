@@ -5,10 +5,11 @@ ASC = pymongo.ASCENDING
 import time, os
 import flask
 from lmfdb.base import app, getDBConnection
-from flask import render_template, request, url_for, redirect, send_file, flash
+from flask import render_template, request, url_for, redirect, send_file, flash, jsonify
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
-from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex, nfdb
+from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex
+from lmfdb.db_backend import db
 from lmfdb.local_fields.main import show_slope_content
 
 from markupsafe import Markup
@@ -33,7 +34,6 @@ FIELD_LABEL_RE = re.compile(r'^\d+\.\d+\.(\d+(e\d+)?(t\d+(e\d+)?)*)\.\d+$')
 nfields = None
 max_deg = None
 init_nf_flag = False
-backend = None
 
 def statdb():
     return getDBConnection().numberfields.stats
@@ -44,9 +44,8 @@ class_group_data_directory = os.path.expanduser('~/data/class_numbers')
 def init_nf_count():
     global nfields, init_nf_flag, max_deg
     if not init_nf_flag:
-        fields = nfdb()
-        nfields = fields.count()
-        max_deg = fields.max('degree')
+        nfields = db.nf_fields.count()
+        max_deg = db.nf_fields.max('degree')
         init_nf_flag = True
 
 def galois_group_data(n, t):
@@ -288,7 +287,7 @@ def number_field_render_webpage():
 
 @nf_page.route("/random")
 def random_nfglobal():
-    label = nfdb().random()
+    label = db.nf_fields.random()
     #This version leaves the word 'random' in the URL:
     #return render_field_webpage({'label': label})
     #This version uses the number field's own URL:
@@ -578,18 +577,9 @@ def by_label(label):
 # input is a sage int
 
 
-def make_disc_key(D):
-    s = 1
-    if D < 0:
-        s = -1
-    Dz = D.abs()
-    if Dz == 0:
-        D1 = 0
-    else:
-        D1 = int(Dz.log(10))
-    return s, '%03d%s' % (D1, str(Dz))
-
 def number_field_search(info):
+    if info.get('download') == '1' and info.get('Submit') and info.get('query'):
+        return download_search(info)
 
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Global Number Field search results'
@@ -635,50 +625,19 @@ def number_field_search(info):
             parse_primes(info,query,'ram_primes','ramified primes','ramps',prefix='ram',cutoff=100,radical='disc_rad',mode='exact')
     except ValueError:
         return search_input_error(info, bread)
-    count = parse_count(info)
-    if 'download' in info and info['download'] != '0':
-        count = None
-    start = parse_start(info)
 
-    # nf_logger.debug(query)
-    info['query'] = dict(query)
-    fields = nfdb()
+    if 'result_count' in info:
+        nres = db.nf_fields.count(query)
+        return flask.jsonify({"nres":str(nres)})
     if 'lucky' in info:
-        label = fields.lucky(query)
+        label = db.nf_fields.lucky(query, 0)
         if label:
             return redirect(url_for(".by_label", label=clean_input(label)))
 
-    if 'result_count' in info:
-        nres = fields.count(query)
-        return flask.jsonify({"nres":str(nres)})
-
-    res, nres, exact_count = fields.search_results(query, count, start)
-    if count is None:
-        return download_search(info, res)
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
+    start = parse_start(info)
+    count = parse_count(info)
+    res = db.nf_fields.search(query, limit=count, offset=start, info=info)
     info['fields'] = res
-    info['number'] = nres
-    info['start'] = start
-    info['count'] = count
-    info['upper_count'] = min(nres, start + count) # min is annoying in jinja
-    info['exact_count'] = exact_count
-    #if nres == 1:
-    #    info['report'] = 'unique match'
-    #else:
-    #    if nres > count or start != 0:
-    #        if exact_count:
-    #            result_count = str(nres)
-    #        else:
-    #            result_count = '<a href="#" title="Get exact count" onclick="get_count_of_results(%s); return false;">about %s</a>'%(js_query, nres)
-    #        info['report'] = 'displaying matches {0}-{1} of <div id="result-count">{2}</div>'.format(start + 1, min(nres, start + count), result_count)
-    #    else:
-    #        info['report'] = 'displaying all %s matches' % nres
-
     info['wnf'] = WebNumberField.from_data
     return render_template("number_field_search.html", info=info, title=t, bread=bread)
 
@@ -790,18 +749,14 @@ def download_search(info, res):
         s += 'data = ['
     s += '\\\n'
     Qx = PolynomialRing(QQ,'x')
-    str2pol = lambda s: Qx([QQ(str(c)) for c in s.split(',')])
+    # reissue saved query here
+    res = db.nf_fields.search(ast.literal_eval(info["query"]))
     for f in res:
-        ##  We should try to avoid using database specific information here
-        ##  Kept for now for speed
-#        wnf = WebNumberField.from_data(f)
-#        entry = ', '.join(
-#            [str(wnf.poly()), str(wnf.disc()), str(wnf.galois_t()), str(wnf.class_group_invariants_raw())])
-        pol = str2pol(f['coeffs'])
-        D = decodedisc(f['disc_abs_key'], f['disc_sign'])
-        gal_t = f['galois']['t']
+        pol = Qx(f['coeffs'])
+        D = f['disc_abs'] * f['disc_sign']
+        gal_t = f['galt']
         if 'class_group' in f:
-            cl = string2list(f['class_group'])
+            cl = f['class_group']
         else:
             cl = [-1]
         entry = ', '.join([str(pol), str(D), str(gal_t), str(cl)])

@@ -54,6 +54,7 @@ from lmfdb.modular_forms.elliptic_modular_forms import (
      emf_version,
      emf_logger
      )
+from lmfdb.db_backend import db
 
 from sage.all import (
      Gamma0,
@@ -214,11 +215,9 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         return self._properties['hecke_orbits'].only_rational()
 
     def data_from_dimension_db(self):
-        res = self.connect_to_db()[self._dimension_table_name].find_one({'space_label':self.space_label})
+        res = db.mf_dims.lucky({'space_label': self.space_label})
         # make sure that the return value is always a dict.
-        if res == None:
-            return {}
-        return res
+        return {} if res is None else res
 
     def make_code_snippets(self):
          # read in code.yaml from numberfields directory:

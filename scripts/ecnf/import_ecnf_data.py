@@ -60,7 +60,7 @@ K=Q(w) of degree d.
    - torsion_gens       *     list of point-strings (see below)
    - sha_an                   int
    - isogeny_matrix     *     list of list of ints (degrees)
-   - non-surjective_primes    list of ints
+   - non_surjective_primes    list of ints
    - galois_images            list of strings
 
    - equation           *     string
@@ -475,7 +475,7 @@ def split_galois_image_code(s):
 
 def galrep(line):
     r""" Parses one line from a galrep file.  Returns the label and a
-    dict containing two fields: 'non-surjective_primes', a list of
+    dict containing two fields: 'non_surjective_primes', a list of
     primes p for which the Galois representation modulo p is not
     surjective (cut off at p=37 for CM curves for which this would
     otherwise contain all primes), 'galois_images', a list of strings
@@ -510,7 +510,7 @@ def galrep(line):
 #    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
     pr = [ int(split_galois_image_code(s)[0]) for s in image_codes]
     return label, {
-        'non-surjective_primes': pr,
+        'non_surjective_primes': pr,
         'galois_images': image_codes,
     }
 
@@ -745,7 +745,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'isogeny_matrix': list_type, # of lists of ints
                       'isogeny_degrees': list_type, # of ints
                       #'class_deg': int_type,
-                      'non-surjective_primes': list_type, # of ints
+                      'non_surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
                       'galois_images': list_type, # of strings
                       #'mod-p_images': list_type, # of strings
@@ -779,7 +779,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
 #   fields the curves are still being found and uploaded, o we ignore
 #   these keys over degree 6 fields for now.
 #
-    galrep_keys = ['galois_images', 'non-surjective_primes']
+    galrep_keys = ['galois_images', 'non_surjective_primes']
     print("key_set has {} keys".format(len(key_set)))
 
     query = {}

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import pymongo
 import urllib2
-ASC = pymongo.ASCENDING
-DESC = pymongo.DESCENDING
 import re
 import yaml
 import json
 import flask
 import lmfdb.base as base
+from collections import defaultdict
+from psycopg2.extensions import QueryCanceledError
+from lmfdb.db_backend import db, prep_json
 from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import render_template, request, url_for, current_app
@@ -19,45 +19,15 @@ from bson.objectid import ObjectId
 def pluck(n, list):
     return [_[n] for _ in list]
 
-def oid_strip(s):
-    t = str(s).replace(' ','')
-    return t[10:-2] if t.startswith("ObjectId(") else t
-
-def oid_format(oid):
-    return "ObjectId('%s')"%oid
-
 def quote_string(value):
     if isinstance(value,unicode) or isinstance(value,str):
         return repr(value)
-    elif isinstance(value,ObjectId):
-        return '"' + oid_format(value) + '"'
     return value
-
-def oids_to_strings(doc):
-    """ recursively replace all ObjectId values in dictionary doc with strings encoding the ObjectId values"""
-    for k,v in doc.items():
-        if isinstance(v,ObjectId):
-            doc[k] = oid_format(v)
-        elif isinstance(v,dict):
-            oids_to_strings(doc[k])
 
 def pretty_document(rec,sep=", ",id=True):
     # sort keys and remove _id for html display
-    attrs = sorted([(key,quote_string(rec[key])) for key in rec.keys() if (id or key != '_id')])
+    attrs = sorted([(key,quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
     return "{"+sep.join(["'%s': %s"%attr for attr in attrs])+"}"
-
-
-def censored_db(db):
-    """
-    completely hide some databases
-    """
-    return db in ["local", "userdb", "admin", "contrib", "upload","test"]
-
-def censored_collection(c):
-    """
-    completely hide some collections
-    """
-    return c.startswith("system.")
 
 def hidden_collection(c):
     """
@@ -65,27 +35,15 @@ def hidden_collection(c):
     """
     return c.startswith("test") or c.endswith(".rand") or c.endswith(".stats") or c.endswith(".chunks") or c.endswith(".new") or c.endswith(".old")
 
-def collection_indexed_keys(collection):
-    """
-    input: cursor for the collection
-    output: a set with all the keys indexed
-    """
-    indexed_keys = set({});
-    for name, val in collection.index_information().iteritems():
-        if name != '_id_':
-            #print val['key']
-            for key, _ in val['key']:
-                #print key
-                indexed_keys.add(key)
-    return indexed_keys
-
-
 def get_database_info(show_hidden=False):
-    C = base.getDBConnection()
-    info = {}
-    for db in C.database_names():
-        if not censored_db(db):
-            info[db] = sorted([(c, C[db][c].count()) for c in C[db].collection_names() if not censored_collection(c) and (show_hidden or not hidden_collection(c))])
+    info = defaultdict(list)
+    for table in db.tablenames:
+        i = table.find('_')
+        if i == -1:
+            raise RuntimeError
+        database = table[:i]
+        coll = getattr(db, table)
+        info[database].append((table, table[i+1:], coll.count()))
     return info
 
 @api_page.route("/")
@@ -151,15 +109,15 @@ def stats():
     info['stats'] = [stats[key] for key in sortedkeys]
     return render_template('api-stats.html', info=info)
 
-@api_page.route("/<db>/<collection>/<id>")
-def api_query_id(db, collection, id):
-    return api_query(db, collection, id = id)
+@api_page.route("/<table>/<id>")
+def api_query_id(table, id):
+    return api_query(table, id = id)
 
-@api_page.route("/<db>/<collection>")
-@api_page.route("/<db>/<collection>/")
-def api_query(db, collection, id = None):
-    if censored_db(db) or censored_collection(collection):
-        return flask.abort(404)
+@api_page.route("/<table>")
+@api_page.route("/<table>/")
+def api_query(table, id = None):
+    #if censored_table(table):
+    #    return flask.abort(404)
 
     # parsing the meta parameters _format and _offset
     format = request.args.get("_format", "html")
@@ -179,10 +137,17 @@ def api_query(db, collection, id = None):
             flask.abort(404)
         else:
             flash_error("offset %s too large, please refine your query.", offset)
-            return flask.redirect(url_for(".api_query", db=db, collection=collection))
+            return flask.redirect(url_for(".api_query", table=table))
 
     # preparing the actual database query q
-    C = base.getDBConnection()
+    try:
+        coll = getattr(db, table)
+    except AttributeError:
+        if format != "html":
+            flask.abort(404)
+        else:
+            flash_error("table %s does not exist", table)
+            return flask.redirect(url_for(".index"))
     q = {}
 
     # if id is set, just go and get it, ignore query parameeters
@@ -190,13 +155,10 @@ def api_query(db, collection, id = None):
         if offset:
             return flask.abort(404)
         single_object = True
-        data = []
         api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
-        # if id looks like an ObjectId, assume it is and try to find it
-        if len(id) == 24 and re.match('[0-9a-f]+$', id.strip()):
-            data = C[db][collection].find_one({'_id':ObjectId(id)},projection=fields)
-        if not data:
-            data = C[db][collection].find_one({'_id':id},projection=fields)
+        if re.match(r'^\d+$', id):
+            id = int(id)
+        data = coll.lucky({'id':id},projection=fields)
         data = [data] if data else []
     else:
         single_object = False
@@ -223,13 +185,13 @@ def api_query(db, collection, id = None):
                 elif qval.startswith("py"):     # literal evaluation
                     qval = literal_eval(qval[2:])
                 elif qval.startswith("cs"):     # containing string in list
-                    qval = { "$in" : [qval[2:]] }
+                    qval = { "$contains" : [qval[2:]] }
                 elif qval.startswith("ci"):
-                    qval = { "$in" : [int(qval[2:])] }
+                    qval = { "$contains" : [int(qval[2:])] }
                 elif qval.startswith("cf"):
-                    qval = { "$in" : [float(qval[2:])] }
+                    qval = { "contains" : [float(qval[2:])] }
                 elif qval.startswith("cpy"):
-                    qval = { "$in" : [literal_eval(qval[3:])] }
+                    qval = { "$contains" : [literal_eval(qval[3:])] }
             except:
                 # no suitable conversion for the value, keep it as string
                 pass
@@ -239,57 +201,52 @@ def api_query(db, collection, id = None):
 
         # assure that one of the keys of the query is indexed
         # however, this doesn't assure that the query will be fast... 
-        if q != {} and len(set(q.keys()).intersection(collection_indexed_keys(C[db][collection]))) == 0:
-            flash_error("no key in the query %s is indexed.", q)
-            return flask.redirect(url_for(".api_query", db=db, collection=collection))
+        #if q != {} and len(set(q.keys()).intersection(collection_indexed_keys(coll))) == 0:
+        #    flash_error("no key in the query %s is indexed.", q)
+        #    return flask.redirect(url_for(".api_query", table=table))
 
-
-
-        # sort = [('fieldname1', ASC/DESC), ...]
+        # sort = [('fieldname1', 1 (ascending) or -1 (descending)), ...]
         if sortby is not None:
             sort = []
             for key in sortby:
                 if key.startswith("-"):
-                    sort.append((key[1:], DESC))
+                    sort.append((key[1:], -1))
                 else:
-                    sort.append((key, ASC))
+                    sort.append((key, 1))
         else:
             sort = None
 
         # executing the query "q" and replacing the _id in the result list
         api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
-        from pymongo.errors import ExecutionTimeout
         try:
-            data = list(C[db][collection].find(q, projection = fields, sort=sort).skip(offset).limit(100).max_time_ms(10000))
-        except ExecutionTimeout:
+            data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
+        except QueryCanceledError:
             flash_error("Query %s exceeded time limit.", q)
             return flask.redirect(url_for(".api_query", db=db, collection=collection))
-    
+
     if single_object and not data:
         if format != 'html':
             flask.abort(404)
         else:
-            flash_error("no document with id %s found in collection %s.%s.", id, db, collection)
-            return flask.redirect(url_for(".api_query", db=db, collection=collection))
-    
-    # fixup object ids for display and json/yaml encoding
-    for document in data:
-        oids_to_strings(document)
+            flash_error("no document with id %s found in table %s.", id, table)
+            return flask.redirect(url_for(".api_query", table=table))
+
+    # fixup data for display and json/yaml encoding
+    data = prep_json(data)
 
     # preparing the datastructure
     start = offset
     next_req = dict(request.args)
     next_req["_offset"] = offset
     url_args = next_req.copy()
-    query = url_for(".api_query", db=db, collection=collection, **next_req)
+    query = url_for(".api_query", table=table, **next_req)
     offset += len(data)
     next_req["_offset"] = offset
-    next = url_for(".api_query", db=db, collection=collection, **next_req)
+    next = url_for(".api_query", table=table, **next_req)
 
     # the collected result
     data = {
-        "database": db,
-        "collection": collection,
+        "table": table,
         "timestamp": datetime.utcnow().isoformat(),
         "data": data,
         "start": start,
@@ -310,15 +267,15 @@ def api_query(db, collection, id = None):
     else:
         # sort displayed records by key (as jsonify and yaml_dump do)
         data["pretty"] = pretty_document
-        location = "%s/%s" % (db, collection)
+        location = table
         title = "API - " + location
-        bc = [("API", url_for(".index")), (location, query)]
+        bc = [("API", url_for(".index")), (table,)]
         query_unquote = urllib2.unquote(data["query"])
         return render_template("collection.html",
                                title=title,
                                single_object=single_object,
                                query_unquote = query_unquote,
-                               url_args = url_args, oid_strip = oid_strip,
+                               url_args = url_args,
                                bread=bc,
                                **data)
 

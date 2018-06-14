@@ -4,9 +4,6 @@ from lmfdb.utils import comma, make_logger
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.ecnf.WebEllipticCurve import db_ecnfstats
 
-def format_percentage(num, denom):
-    return "%10.2f"%((100.0*num)/denom)
-
 def field_data(s):
     r"""
     Returns full field data from field label.

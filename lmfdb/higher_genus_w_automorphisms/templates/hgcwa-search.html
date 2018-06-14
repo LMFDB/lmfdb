@@ -128,25 +128,8 @@ Download displayed results for
 </table>
 </form>
 
-
-
-{% if info.err is defined %}
-  <p>
-    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)"> </p>
-{% else  %}
-
-
-<h2> Results: ({{info.report}})
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-</h2>
-
-
-{% if info.number > 0 %}
+{% include 'matches.html' %}
+{% if info.number %}
 
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
@@ -177,16 +160,8 @@ Download displayed results for
 
 </tbody>
 </table>
-<br>
-
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-
-
+<hr>
+{% include 'forward_back.html' %}
 {% if info.fields|length > 0 %}
   <form>
 Download displayed results for 
@@ -194,11 +169,7 @@ Download displayed results for
 <button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
 </form>
 {% endif %}
-
-
 {% endif %}
-
-{% endif %}
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

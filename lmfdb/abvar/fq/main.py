@@ -3,8 +3,8 @@ import re
 import time
 import ast
 import StringIO
-import lmfdb.base
 from pymongo import ASCENDING
+from lmfdb.db_backend import db
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger, random_object_from_collection
 from lmfdb.abvar.fq import abvarfq_page
@@ -12,20 +12,11 @@ from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, pa
 from search_parsing import parse_newton_polygon, parse_abvar_decomp
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
-from flask import flash, render_template, url_for, request, redirect, send_file
+from flask import flash, render_template, url_for, request, redirect, send_file, jsonify
 from markupsafe import Markup
-from sage.misc.cachefunc import cached_function
 from sage.rings.all import PolynomialRing, ZZ
 
 logger = make_logger("abvarfq")
-
-#########################
-#   Database connection
-#########################
-
-@cached_function
-def db():
-    return lmfdb.base.getDBConnection().abvar.fq_isog
 
 #########################
 #    Top level
@@ -97,7 +88,7 @@ def abelian_varieties_by_gqi(g, q, iso):
         return search_input_error()
     try:
         cl = AbvarFq_isoclass.by_label(label)
-    except ValueError:
+    except ValueError as err:
         flash(Markup("Error: <span style='color:black'>%s</span> is not in the database." % (label)), "error")
         return search_input_error()
     bread = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)),
@@ -165,37 +156,20 @@ def abelian_variety_search(**args):
         parse_string_start(info,query,'curve_point_count',qfield='C_cnts',first_field='pt_cnt')
         parse_abvar_decomp(info,query,'decomposition',qfield='decomp',av_stats=AbvarFqStats())
         parse_nf_string(info,query,'number_field',qfield='nf')
-        parse_galgrp(info,query,qfield='gal')
+        parse_galgrp(info,query,qfield=('galois_n','galois_t'))
     except ValueError:
         return search_input_error(info, bread)
 
-    info['query'] = query
+    if 'result_count' in info:
+        nres = db.av_fqisog.count(query)
+        return jsonify({"nres":str(nres)})
+
     count = parse_count(info, 50)
     start = parse_start(info)
 
-    cursor = db().find(query)
-    nres = cursor.count()
-    if start >= nres:
-        start -= (1 + (start - nres) / count) * count
-    if start < 0:
-        start = 0
+    res = db.av_fqisog.search(query, limit=count, offset=start, info=info)
 
-
-    res = cursor.sort([('sort', ASCENDING)]).skip(start).limit(count)
-    res = list(res)
     info['abvars'] = [AbvarFq_isoclass(x) for x in res]
-    info['number'] = nres
-    info['start'] = start
-    info['count'] = count
-    info['more'] = int(start + count < nres)
-    if nres == 1:
-        info['report'] = 'unique match'
-    elif nres == 0:
-        info['report'] = 'no matches'
-    elif nres > count or start != 0:
-        info['report'] = 'displaying matches %s-%s of %s' %(start + 1, min(nres, start+count), nres)
-    else:
-        info['report'] = 'displaying all %s matches' % nres
     t = 'Abelian Variety search results'
     return render_template("abvarfq-search-results.html", info=info, credit=abvarfq_credit, bread=bread, title=t)
 
@@ -284,7 +258,7 @@ def by_label(label):
 
 @abvarfq_page.route("/random")
 def random_class():
-    label = random_object_from_collection(db())['label']
+    label = db.av_fqisog.random()
     g, q, iso = split_label(label)
     return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
 
@@ -321,9 +295,8 @@ def download_search(info):
             s += 'x = polygen(ZZ) \n'
         s += 'data = [ '
     s += '\\\n'
-    res = db().find(ast.literal_eval(info["query"]))
-    for f in res:
-        poly = R([int(c) for c in f['poly'].split(" ")])
+    for f in db.av_fqisog.search(ast.literal_eval(info["query"]), 'poly'):
+        poly = R(f)
         s += str(poly) + ',\\\n'
     s = s[:-3]
     s += ']\n'

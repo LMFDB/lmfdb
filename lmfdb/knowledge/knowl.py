@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
 from lmfdb.knowledge import logger
-from lmfdb.base import getDBConnection
 from datetime import datetime
 import pymongo
 ASC = pymongo.ASCENDING
 DSC = pymongo.DESCENDING
 
 import psycopg2, psycopg2.extras
-from lmfdb.db_backend import getPostgresConnection
+from lmfdb.db_backend import db, PostgresBase
+from lmfdb.users.pwdmanager import userdb
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -43,33 +43,23 @@ def extract_cat(kid):
         return None
     return kid.split(".")[0]
 
-# We don't use the PostgresBackend from lmfdb.db_backend
+# We don't use the PostgresTable from lmfdb.db_backend
 # since it's aimed at constructing queries for mathematical
 # objects, doesn't support insertion, etc.
 
-class KnowlBackend(object):
+class KnowlBackend(PostgresBase):
     _default_fields = ['authors', 'cat', 'content', 'last_author', 'quality', 'timestamp', 'title'] # doesn't include id
     def __init__(self):
-        self._conn = getPostgresConnection()
-    def _execute(self, query, vars=None):
-        cur = self._conn.cursor()
-        try:
-            cur.execute(query, vars)
-        except DatabaseError:
-            self._conn.rollback()
-            raise
-        else:
-            self._conn.commit()
-        return cur
+        PostgresBase.__init__(self, 'db_knowl', db.conn)
     def get_knowl(self, ID, fields=None):
         if fields is None:
             fields = ['id'] + self._default_fields
-        selector = "SELECT {0} FROM knowls WHERE id = %s;".format(", ".join(fields))
+        selector = "SELECT {0} FROM kwl_knowls WHERE id = %s;".format(", ".join(fields))
         cur = self._execute(selector, (ID,))
         if cur.rowcount > 0:
             res = cur.fetchone()
             return {k:v for k,v in zip(fields, res)}
-    def search(self, category="", filters=[], keywords=""):
+    def search(self, category="", filters=[], keywords="", author=None, sort=None):
         restrictions = []
         values = []
         if category:
@@ -84,9 +74,14 @@ class KnowlBackend(object):
             if keywords:
                 restrictions.append("_keywords @> %s")
                 values.append(psycopg2.extras.Json(keywords))
-        selector = "SELECT id, title FROM knowls"
+        if author is not None:
+            restrictions.append("authors @> %s")
+            values.append(psycopg2.extras.Json([author]))
+        selector = "SELECT id, title FROM kwl_knowls"
         if restrictions:
             selector += " WHERE " + " AND ".join(restrictions)
+        if sort is not None:
+            selector += " ORDER BY {0}".format(self._sort_str(sort))
         cur = self._execute(selector, values)
         return [{k:v for k,v in zip(["id", "title"], res)} for res in cur]
     def save(self, knowl, who):
@@ -104,7 +99,7 @@ class KnowlBackend(object):
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
         values = (authors, cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
-        insertor = u"INSERT INTO knowls (id, {0}, history, _keywords) VALUES (%s, {1}, %s, %s) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1}, %s, %s);".format(u', '.join(self._default_fields), u', '.join(u"%s" * len(self._default_fields)))
+        insertor = u"INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}, %s, %s) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1}, %s, %s);".format(u', '.join(self._default_fields), u', '.join(u"%s" * len(self._default_fields)))
         self._execute(insertor, (knowl.id,) + values + values)
         if new_knowl:
             self.update_knowl_categories(cat)
@@ -112,7 +107,7 @@ class KnowlBackend(object):
     def update(self, kid, key, value):
         if key not in self._default_fields + ['history', '_keywords']:
             raise ValueError("Bad key")
-        updator = "UPDATE knowls SET ({0}) VALUES (%s) WHERE id = %s".format(key)
+        updator = "UPDATE kwl_knowls SET ({0}) VALUES (%s) WHERE id = %s".format(key)
         cur = self._execute(updator, (value, kid))
     def save_history(self, knowl, who):
         """
@@ -123,7 +118,7 @@ class KnowlBackend(object):
         'state' can either be 'saved' (for the recent changes list) or 'locked'.
         TODO also calculate a diff with python's difflib and store it here.
         """
-        insertor = u"INSERT INTO knowls_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s);"
+        insertor = u"INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s);"
         now = datetime.utcnow()
         values = (knowl.title, now, who, 'saved')
         self._execute(insertor, (knowl.id,) + values + values)
@@ -132,15 +127,15 @@ class KnowlBackend(object):
         returns the last @limit history items
         """
         cols = ("id", "title", "time", "who")
-        selector = "SELECT {0} FROM knowls_history WHERE state = 'saved' ORDER BY time DESC LIMIT %s;".format(", ".join(cols))
+        selector = "SELECT {0} FROM kwl_history WHERE state = 'saved' ORDER BY time DESC LIMIT %s;".format(", ".join(cols))
         cur = self._execute(selector, (limit,))
         return [{k:v for k,v in zip(cols, res)} for res in cur]
     def delete(self, knowl):
         """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
-        insertor = u"INSERT INTO knowls_deleted (id, {0}) VALUES (%s, {1});".format(u', '.join(self._default_values), u', '.join(u"%s"*len(self._default_values)))
+        insertor = u"INSERT INTO kwl_knowls_deleted (id, {0}) VALUES (%s, {1});".format(u', '.join(self._default_values), u', '.join(u"%s"*len(self._default_values)))
         values = self.get_knowl(knowl.id)
         self._execute(insertor, [knowl.id] + [values[i] for i in self._default_values])
-        deletor = "DELETE FROM knowls WHERE id = %s"
+        deletor = "DELETE FROM kwl_knowls WHERE id = %s"
         self._execute(deletor, (knowl.id,))
         self.refresh_knowl_categories()
     def is_locked(self, knowlid, delta_min=10):
@@ -152,9 +147,9 @@ class KnowlBackend(object):
         now = datetime.utcnow()
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
-        deletor = "DELETE FROM knowls_history WHERE state = 'locked' AND time <= %s;"
+        deletor = "DELETE FROM kwl_history WHERE state = 'locked' AND time <= %s;"
         cur = self._execute(deletor, (time,))
-        selector = "SELECT who, time FROM knowls_history WHERE id = %s AND time >= %s LIMIT 1;"
+        selector = "SELECT who, time FROM kwl_history WHERE id = %s AND time >= %s LIMIT 1;"
         cur.execute(selector, (knowlid, time))
         if cur.rowcount > 0:
             return {k:v for k,v in zip(["who", "time"], cur.fetchone())}
@@ -162,7 +157,7 @@ class KnowlBackend(object):
         """
         when a knowl is edited, a lock is created. who is the user id.
         """
-        insertor = u"INSERT INTO knowls_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s);"
+        insertor = u"INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s);"
         now = datetime.utcnow()
         self._execute(insertor, (knowl.id, knowl.title, now, who, 'locked', know.title, now, who, 'locked'))
     def knowl_title(self, kid):
@@ -178,10 +173,10 @@ class KnowlBackend(object):
         """
         return self.get_knowl(kid) is not None
     #def refresh_knowl_categories(self):
-    #    selector = "SELECT id FROM knowls;"
+    #    selector = "SELECT id FROM kwl_knowls;"
     #    cur = self._execute(selector)
     #    cats = sorted(list(set((extract_cat(res[0]) for res in cur))))
-    #    updator = "UPDATE knowls_meta SET categories = %s WHERE id = %s;"
+    #    updator = "UPDATE kwl_knowls_meta SET categories = %s WHERE id = %s;"
     #    cur.execute(updator, (cats, CAT_ID))
     #    return str(cats)
     #def update_knowl_categories(self, cat):
@@ -190,17 +185,17 @@ class KnowlBackend(object):
     #    ensures that we know it. this is much more efficient than the
     #    refresh variant.
     #    """
-    #    selector = "SELECT categories FROM knowls_meta WHERE id = %s AND NOT categories @> %s"
+    #    selector = "SELECT categories FROM kwl_knowls_meta WHERE id = %s AND NOT categories @> %s"
     #    cur = self._execute(selector, (CAT_ID, psycopg2.extras.Json([cat])))
     #    if cur.rowcount > 0:
     #        categories = cur.fetchone()[0]
-    #        updator = "UPDATE knowls_meta SET categories = %s WHERE id = %s"
+    #        updator = "UPDATE kwl_meta SET categories = %s WHERE id = %s"
     #        categories = psycopg2.extras.Json(sorted(categories + [cat]))
     #        cur.execute(updator, (categories, CAT_ID))
     def get_categories(self):
-        #selector = "SELECT categories FROM knowls_meta WHERE id = %s"
+        #selector = "SELECT categories FROM kwl_meta WHERE id = %s"
         #cur.execute(selector, (CAT_ID,))
-        selector = "SELECT DISTINCT cat FROM knowls;"
+        selector = "SELECT DISTINCT cat FROM kwl_knowls;"
         cur.execute(selector)
         return sorted([res[0] for res in cur])
     def cleanup(self, max_h=50):
@@ -209,53 +204,33 @@ class KnowlBackend(object):
         returns the list of categories (as a string), a count of the the number of knowls reindexed and the number of histories pruned.
         """
         cats = self.refresh_knowl_categories()
-        selector = "SELECT (id, content, title) FROM knowls;"
+        selector = "SELECT (id, content, title) FROM kwl_knowls;"
         cur = self._execute(selector)
-        updator = "UPDATE knowls SET (cat, _keywords) = (%s, %s) WHERE id = %s;"
+        updator = "UPDATE kwl_knowls SET (cat, _keywords) = (%s, %s) WHERE id = %s;"
         for kid, content, title in cur:
             cat = extract_cat(kid)
             search_keywords = make_keywords(content, kid, title)
             self._execute(updator, (cat, search_keywords, kid))
         hcount = 0
-        selector = "SELECT id, history FROM knowls WHERE history IS NOT NULL;"
+        selector = "SELECT id, history FROM kwl_knowls WHERE history IS NOT NULL;"
         cur = self._execute(selector)
-        updator = "UPDATE knowls SET history = %s WHERE id = %s"
+        updator = "UPDATE kwl_knowls SET history = %s WHERE id = %s"
         for kid, history in cur:
             if len(history) > max_h:
                 hcount += 1
                 self._execute(updator, (history[-max_h:], kid))
-        counter = "SELECT COUNT(*) FROM knowls WHERE history IS NOT NULL;"
+        counter = "SELECT COUNT(*) FROM kwl_knowls WHERE history IS NOT NULL;"
         cur = self._execute(counter)
         reindex_count = int(cur.fetchone()[0])
         return cats, reindex_count, hcount
 
-backend = None
-def knowl_db():
-    global backend
-    if backend is None:
-        backend = KnowlBackend()
-    return backend
+knowldb = KnowlBackend()
 
 def knowl_title(kid):
-    return knowl_db().knowl_title(kid)
+    return knowldb.knowl_title(kid)
 
 def knowl_exists(kid):
-    return knowl_db().knowl_exists(kid)
-
-def get_knowls():
-    _C = getDBConnection()
-    return _C.knowledge.knowls
-
-def get_meta():
-    """
-    collection of meta-documents, like categories
-    """
-    _C = getDBConnection()
-    return _C.knowledge.meta
-
-def get_deleted_knowls():
-    _C = getDBConnection()
-    return _C.knowledge.deleted_knowls
+    return knowldb.knowl_exists(kid)
 
 # allowed qualities for knowls
 knowl_qualities = ['beta', 'ok', 'reviewed']
@@ -270,7 +245,7 @@ class Knowl(object):
         self.template_kwargs = template_kwargs or {}
 
         self._id = ID
-        data = knowl_db().get_knowl(ID)
+        data = knowldb.get_knowl(ID)
         if data:
             self._title = data.get('title', '')
             self._content = data.get('content', '')
@@ -289,11 +264,11 @@ class Knowl(object):
             self._timestamp = datetime.utcnow()
 
     def save(self, who):
-        knowl_db().save(self, who)
+        knowldb.save(self, who)
 
     def delete(self):
         """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
-        knowl_db().delete(self)
+        knowldb.delete(self)
 
     @property
     def authors(self):
@@ -304,12 +279,7 @@ class Knowl(object):
         Basically finds all full names for all the referenced authors.
         (lookup for all full names in just *one* query, hence the or)
         """
-        a_query = [{'_id': _} for _ in self.authors]
-        a = []
-        if len(a_query) > 0:
-            users = getDBConnection().userdb.users
-            a = users.find({"$or": a_query}, ["full_name"])
-        return a
+        return userdb.full_names(self.authors)
 
     @property
     def id(self):
@@ -364,10 +334,10 @@ class Knowl(object):
         self._store_db("title", title)
 
     def _store_db(self, key, value):
-        knowl_db().update(self.id, key, value)
+        knowldb.update(self.id, key, value)
 
     def exists(self):
-        return knowl_db().knowl_exists(self._id)
+        return knowldb.knowl_exists(self._id)
 
     def data(self, fields=None):
         """
@@ -376,7 +346,7 @@ class Knowl(object):
         the given fields.
         """
         if not self._title or not self._content:
-            data = knowl_db().get_knowl(self._id, fields)
+            data = knowldb.get_knowl(self._id, fields)
             if data:
                 self._title = data['title']
                 self._content = data['content']

@@ -12,7 +12,8 @@ import re
 import tarfile
 from lmfdb.base import app, getDBConnection
 from flask import render_template, request, Blueprint, url_for
-from flask.ext.login import login_required, current_user
+#from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
 from gridfs import GridFS
 from os import path
 from bson.objectid import ObjectId
@@ -274,7 +275,8 @@ def getUploadedFor(path, addExtras):
         "metadata.status": "approved"}, {"metadata.status": "approvedchild"}]})
     ret = [[x['metadata']['name'], "/upload/view/%s" % x['_id']] for x in files]
     if addExtras:
-        from flask.ext.login import current_user
+        #from flask.ext.login import current_user
+        from flask_login import current_user
         if current_user.is_authenticated:
             ret.insert(0, ["Upload your data here", url_for("upload.index") + "?related_to=" + request.path])
             ret.append(["View all data", url_for("upload.viewAll")])

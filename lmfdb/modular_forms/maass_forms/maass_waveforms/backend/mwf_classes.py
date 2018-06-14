@@ -10,8 +10,11 @@ class MaassFormTable(MFDataTable):
     r"""
     To Display one form
     """
-    def __init__(self, dbname='', **kwds):
-        MFDataTable.__init__(self, dbname, **kwds)
+    def __init__(self, db, **kwds):
+        """
+        db -- a PostgresTable from lmfdb.db_backend
+        """
+        MFDataTable.__init__(self, db, **kwds)
         self._id = kwds.get('id', None)
         if not self._id:
             mwf_logger.critical("You must supply an id!")
@@ -29,14 +32,12 @@ class MaassFormTable(MFDataTable):
         skip = rec_len * self._skip_rec
         mwf_logger.debug("rows: {0}".format(self._nrows))
         mwf_logger.debug("cols: {0}".format(self._ncols))
-        mwf_logger.debug("In mwf.set_table: collections : {0}".format(self.collection()))
+        mwf_logger.debug("In mwf.set_table")
         mwf_logger.debug("skip: {0} rec_len:{1}".format(skip, rec_len))
-        # only have one collection here...
-        c = self.collection()[0]
-        mwf_logger.debug("collection: {0}".format(c))
         limit = self._nrows
         skip = self._skip_rec
         mwf_logger.debug("limit: {0}, skip: {1}".format(limit, skip))
+        # getDBConnection for grepping
         f = c.find_one({'_id': bson.objectid.ObjectId(self._id)})  # .skip(skip).limit(limit)
         if not f:
             mwf_logger.critical("You did not supply a valid id! Got:{0}".format(self._id))
@@ -55,6 +56,7 @@ class MaassFormTable(MFDataTable):
         metadata = dict()
         MD = self._db['metadata']
         mwf_logger.debug("metadata: {0}".format(MD))
+        # getDBConnection grepping
         mdfind = MD.find_one({'c_name': self._collection_name})
         mwf_logger.debug("mdfind: {0}".format(mdfind))
         for x in mdfind:

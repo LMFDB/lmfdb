@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import lmfdb.base as base
 import sage
 from sage.all import gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari, valuation
 import yaml, os
@@ -9,22 +8,11 @@ from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html, disp
 from flask import url_for
 from collections import Counter
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
-from lmfdb.db_backend import MongoBackend, PostgresBackend
+from lmfdb.db_backend import db
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
 dnc = 'data not computed'
-backend = None
-
-def nfdb():
-    global backend
-    if backend is None:
-        backend = PostgresBackend(('nf_small', 'nf_extras', 'nf_counts'), ('label', 'coeffs', 'degree', 'r2', 'cm', 'disc_abs', 'disc_sign', 'disc_rad', 'ramps', 'galt', 'class_number', 'class_group', 'used_grh', 'oldpolredabscoeffs'), ('zk', 'reduced', 'units', 'reg', 'subs', 'unitsGmodule', 'unitsType', 'res', 'loc_algebras'), [('degree', 1), ('disc_abs', 1),('disc_sign', 1)], ('coeffs', 'ramps', 'big_ramps', 'class_group', 'oldpolredabscoeffs'), logger=wnflog)
-    return backend
-
-def lfdb():
-    return base.getDBConnection().localfields.fields
-
 
 # Dictionary of field label: n for abs(disc(Q(zeta_n)))
 # Does all cyclotomic fields of degree n s.t. 2<n<24
@@ -203,10 +191,10 @@ class WebNumberField:
         if isinstance(coeffs, str):
             coeffs = string2list(coeffs)
         if isinstance(coeffs, list):
-            f = nfdb().lucky({'coeffs': coeffs}, data_level=2)
+            f = db.nf_fields.lucky({'coeffs': coeffs})
             if f is None:
                 # Check if we have a result of the old polredabs
-                f = nfdb().lucky({'oldpolredabscoeffs': coeffs}, data_level=2)
+                f = db.nf_fields.lucky({'oldpolredabscoeffs': coeffs})
                 if f is None:
                     return cls('a')  # will initialize data to None
             return cls(f['label'], f)
@@ -252,7 +240,7 @@ class WebNumberField:
         return cls.from_coeffs(coeffs)
 
     def _get_dbdata(self):
-        return nfdb().lookup(self.label)
+        return db.nf_fields.lookup(self.label)
 
     def get_label(self):
         if self.label == 'a':
@@ -723,7 +711,7 @@ class WebNumberField:
             palgs = [R(str(s)) for s in palg.split(',')]
             palgstr = [list2string([int(c) for c in 
                 pol.coefficients(sparse=False)]) for pol in palgs]
-            palgrec = [lfdb().find_one({'p': p, 'coeffs': c}) for c in palgstr]
+            palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': c}) for c in palgstr]
             return [[LF['label'], latex(f), 
                 int(LF['e']), int(LF['f']),int(LF['c']),
                 group_display_knowl(LF['gal'][0], LF['gal'][1]),

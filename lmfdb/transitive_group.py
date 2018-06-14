@@ -2,7 +2,7 @@ import re
 import string
 import bson
 
-from lmfdb.db_backend import PostgresBackend
+from lmfdb.db_backend import db
 
 from sage.all import ZZ, gap
 
@@ -10,36 +10,19 @@ from lmfdb.utils import list_to_latex_matrix, display_multiset
 
 MAX_GROUP_DEGREE = 23
 
-tgbackend = None
-def tgdb():
-    global tgbackend
-    if tgbackend is None:
-        tgbackend = PostgresBackend(('transitivegroups', None, None), ('n', 't', 'label', 'name', 'pretty', 'size', 'arith_equiv', 'auts', 'parity', 'ab', 'cyc', 'prim', 'solv', 'repns', 'resolve', 'subs', 'moddecompuniq'), (), [('n', 1), ('t', 1)], ('repns', 'resolve', 'subs', 'moddecompuniq'))
-    return tgbackend
-
-sgbackend = None
-def sgdb():
-    global sgbackend
-    if sgbackend is None:
-        sgbackend = PostgresBackend(('smallgroups', None, None), ('size', 'exponent', 'label', 'name', 'pretty', 'abelian', 'cyclic', 'perfect', 'simple', 'solvable', 'abelian_quotient', 'center', 'derived_group', 'clases', 'maximal_subgroups', 'normal_subgroups'), (), [('label', 1)], ('clases', 'maximal_subgroups', 'normal_subgroups'))
-    return sgbackend
-
-gmbackend = None
-def gmdb():
-    global gmbackend
-    if gmbackend is None:
-        gmbackend = PostgresBackend(('gmodules', None, None), ('n', 't', 'index', 'name', 'dim', 'complete', 'gens'), (), [('n', 1), ('t', 1), ('index', 1)], ('gens',))
-    return gmbackend
+tg_db = db.gps_transitive
+sg_db = db.gps_small
+gm_db = db.gps_gmodules
 
 def small_group_display_knowl(n, k, name=None):
     if not name:
-        group = sgdb().lookup('%s.%s'%(n,k))
+        group = sg_db.lookup('%s.%s'%(n,k))
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + name + '</a>'
 
 def small_group_label_display_knowl(label, name=None):
     if not name:
-        group = sgdb().lookup(label)
+        group = sg_db.lookup(label)
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
 
@@ -47,7 +30,7 @@ def small_group_knowl_guts(gapid):
     parts = gapid.split('.')
     n = int(parts[0])
     k = int(parts[1])
-    group = sgdb().lookup(str(gapid))
+    group = sg_db.lookup(str(gapid))
     inf = "Group $%s$"%str(group['pretty'])
     inf += '&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  '
     inf += ('' if group['cyclic'] else 'not')+' cyclic, '
@@ -92,7 +75,7 @@ class WebGaloisGroup:
         return cls(data['label'], data)
 
     def _get_dbdata(self):
-        return tgdb().lookup(self.label)
+        return tg_db.lookup(self.label)
 
     def n(self):
         return self._data['n']
@@ -185,24 +168,24 @@ def tryknowl(n, t):
 
 def group_display_short(n, t):
     label = base_label(n, t)
-    group = tgdb().lookup(label)
-    if group is not None and group['pretty']:
+    group = tg_db.lookup(label)
+    if group is not None and group.get('pretty'):
         return group['pretty']
     return "%dT%d"%(n,t)
 
 # Returns the empty string if there is no pretty name
 def group_display_pretty(n, t):
     label = base_label(n, t)
-    group = tgdb().lookup(label)
-    if group['pretty']:
+    group = tg_db.lookup(label)
+    if group.get('pretty'):
         return group['pretty']
     return ""
 
 def group_display_knowl(n, t, name=None):
     label = base_label(n, t)
-    group = tgdb().lookup(label)
+    group = tg_db.lookup(label)
     if not name:
-        if group is not None and group['pretty']:
+        if group is not None and group.get('pretty'):
             name = group['pretty']
         else:
             name = "%dT%d"%(n,t)
@@ -212,10 +195,9 @@ def group_display_knowl(n, t, name=None):
 
 
 def galois_module_knowl(n, t, index):
-    data = gmdb().lucky({'n': n, 't': t, 'index': index}, data_level=1)
-    if data is None:
+    name = gm_db.lucky({'n': n, 't': t, 'index': index}, 'name')
+    if name is None:
         return 'Error'
-    name = data['name']
     return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
 
 
@@ -241,7 +223,7 @@ def make_galois_pair(n, t):
 
 def group_phrase(n, t):
     label = base_label(n, t)
-    group = tgdb().lookup(label)
+    group = tg_db.lookup(label)
     inf = ''
     if group['cyc'] == 1:
         inf += "A cyclic"
@@ -258,7 +240,7 @@ def group_phrase(n, t):
 
 def group_display_long(n, t):
     label = base_label(n, t)
-    group = tgdb().lookup(label)
+    group = tg_db.lookup(label)
     inf = "Group %sT%s, order %s, parity %s" % (group['n'], group['t'], group['size'], group['parity'])
     if group['cyc'] == 1:
         inf += ", cyclic"
@@ -281,7 +263,7 @@ def group_display_long(n, t):
 
 def group_knowl_guts(n, t):
     label = base_label(n, t)
-    group = tgdb().lookup(label)
+    group = tg_db.lookup(label)
     inf = "Transitive group " + str(group['n']) + "T" + str(group['t'])
     inf += ", order " + str(group['size'])
     inf += ", parity " + str(group['parity'])
@@ -322,7 +304,7 @@ def group_knowl_guts(n, t):
 
 def group_cclasses_knowl_guts(n, t):
     label = base_label(n, t)
-    group = tgdb().lookup(label)
+    group = tg_db.lookup(label)
     gname = group['name']
     if group['pretty']:
         gname = group['pretty']
@@ -338,7 +320,7 @@ def group_cclasses_knowl_guts(n, t):
 
 def group_character_table_knowl_guts(n, t):
     label = base_label(n, t)
-    group = tgdb().lookup(label)
+    group = tg_db.lookup(label)
     gname = group['name']
     gname = gname.replace('=', ' = ')
     if group['pretty']:
@@ -354,7 +336,7 @@ def group_character_table_knowl_guts(n, t):
 
 
 def galois_module_knowl_guts(n, t, index):
-    mymod = gmdb().lucky({'n': int(n), 't': int(t), 'index': int(index)}, data_level=1)
+    mymod = gm_db.lucky({'n': int(n), 't': int(t), 'index': int(index)}, ['name','dim','gens'])
     if mymod is None:
         return 'Database call failed'
     name = mymod['name']

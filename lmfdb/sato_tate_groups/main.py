@@ -2,12 +2,11 @@
 
 import re, itertools
 from pymongo import ASCENDING
-from flask import render_template, url_for, redirect, request
+from flask import render_template, url_for, redirect, request, jsonify
 from lmfdb.sato_tate_groups import st_page
 from lmfdb.utils import to_dict, random_object_from_collection, encode_plot, flash_error
 from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash, clean_input
-from lmfdb.transitive_group import sgdb
-from lmfdb.db_backend import PostgresBackend
+from lmfdb.db_backend import db
 
 from sage.all import ZZ, cos, sin, pi, list_plot, circle
 
@@ -42,19 +41,9 @@ st0_dict = {
 # Database connection
 ###############################################################################
 
-stbackend = None
-def stdb():
-    global stbackend
-    if stbackend is None:
-        stbackend = PostgresBackend(('st_groups', None, None), ('label', 'weight', 'degree', 'components', 'component_group', 'identity_component', 'name', 'pretty', 'real_dimension', 'rational', 'trace_zero_density', 'subgroups', 'supgroups', 'gens', 'counts', 'moments', 'trace_histogram'), (), [('weight', 1), ('degree', 1), ('real_dimension', 1), ('identity_component', 1), ('name', 1)], ('subgroups', 'supgroups', 'gens', 'counts', 'moments'))
-    return stbackend
-
-st0backend = None
-def st0db():
-    global st0backend
-    if st0backend is None:
-        st0backend = PostgresBackend(('st0_groups', None, None), ('label', 'degree', 'real_dimension', 'name', 'pretty', 'description'), (), [('name', 1)])
-    return st0backend
+st_db = db.gps_sato_tate
+st0_db = db.gps_sato_tate0
+sg_db = db.gps_small
 
 ###############################################################################
 # Utility functions
@@ -74,7 +63,7 @@ def string_matrix(m):
 def st_link(label):
     if re.match(MU_LABEL_RE, label):
         return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mu(%s)'%label.split('.')[2])
-    data = stdb().lookup(label)
+    data = st_db.lookup(label)
     if not data:
         return label
     return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), data['pretty'])
@@ -94,7 +83,7 @@ def st0_pretty(st0_name):
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
-    data = sgdb().lookup(sg_label)
+    data = sg_db.lookup(sg_label)
     if data and 'pretty' in data:
         return data['pretty']
     return sg_label
@@ -147,7 +136,7 @@ def index():
 
 @st_page.route('/random')
 def random():
-    label = stdb().random()
+    label = st_db.random()
     return redirect(url_for('.by_label', label=label), 307)
 
 @st_page.route('/<label>')
@@ -178,7 +167,7 @@ def search_by_label(label):
     if re.match(ST_LABEL_NAME_RE,label):
         slabel = label.split('.')
         try:
-            label = stdb().lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, data_level=0)
+            label = st_db.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, 0)
         except ValueError:
             label = None
     if label is None:
@@ -236,45 +225,32 @@ def search(**args):
     else:
         nres = 0
 
+    if 'result_count' in info:
+        nres += db.gps_sato_tate.count(query)
+        return jsonify({"nres":str(nres)})
+
     # Now lookup other (rational) ST groups in database
     if nres != INFINITY:
         start2 = start - nres if start > nres else 0
-        res, rational_count, exact_count = stdb().search_results(query, max(count - len(results), 0), start2)
-        nres += rational_count
-        if not exact_count: # should never happen since there are only 55 records
-            raise RuntimeError
-        if start < nres and len(results) < count:
+        proj = ['label','weight','degree','real_dimension','identity_component','name','pretty','components','component_group','trace_zero_density','moments']
+        res = db.gps_sato_tate.search(query, proj, limit=max(count - len(results), 0), offset=start2, info=info)
+        info['number'] += nres
+        if start < info['number'] and len(results) < count:
             for v in res:
-                v_clean = {}
-                v_clean['label'] = v['label']
-                v_clean['weight'] = v['weight']
-                v_clean['degree'] = v['degree']
-                v_clean['real_dimension'] = v['real_dimension']
-                v_clean['identity_component'] = st0_pretty(v['identity_component'])
-                v_clean['name'] = v['name']
-                v_clean['pretty'] = v['pretty']
-                v_clean['components'] = v['components']
-                v_clean['component_group'] = sg_pretty(v['component_group'])
-                v_clean['trace_zero_density'] = v['trace_zero_density']
-                v_clean['trace_moments'] = trace_moments(v['moments'])
-                results.append(v_clean)
-    if nres == 0:
-        info['report'] = 'no matches'
-    elif nres == 1:
-        info['report'] = 'unique match'
+                v['identity_component'] = st0_pretty(v['identity_component'])
+                v['component_group'] = sg_pretty(v['component_group'])
+                v['trace_moments'] = trace_moments(v['moments'])
+                results.append(v)
     else:
-        if nres == INFINITY or nres > count or start > 0:
-            info['report'] = 'displaying matches %d-%d %s' % (start + 1, start + len(results), "of %d"%nres if nres != INFINITY else "")
-        else:
-            info['report'] = 'displaying all %s matches' % nres
+        info['number'] = 'infinity'
+        info['start'] = start
+        info['count'] = count
 
+    print info.get('number')
     info['st0_list'] = st0_list
     info['st0_dict'] = st0_dict
     info['stgroups'] = results
     info['stgroup_url'] = lambda dbc: url_for('.by_label', label=dbc['label'])
-    info['start'] = start
-    info['count'] = count
-    info['more'] = 1 if nres < 0 or nres > start+count else 0
     title = 'Sato-Tate group search results'
     return render_template('st_results.html', info=info, credit=credit_string,learnmore=learnmore_list(), bread=bread, title=title)
 
@@ -338,7 +314,7 @@ def render_by_label(label):
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
-    data = stdb().lookup(label)
+    data = st_db.lookup(label)
     info = {}
     if data is None:
         flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
@@ -348,13 +324,13 @@ def render_by_label(label):
     info['ambient'] = st_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
     info['rational']=boolean_name(info.get('rational',True))
-    st0 = st0db().lucky({'name':data['identity_component']}, data_level=2)
+    st0 = st0_db.lucky({'name':data['identity_component']})
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
     info['st0_name']=st0['pretty']
     info['st0_description']=st0['description']
-    G = sgdb().lookup(data['component_group'])
+    G = sg_db.lookup(data['component_group'])
     if not G:
         flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
         return redirect(url_for(".index"))

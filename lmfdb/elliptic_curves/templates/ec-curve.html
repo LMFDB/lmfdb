@@ -584,13 +584,15 @@ are as follows:
 {% if tgd.m !=0 %}
 <td align=center rowspan={{tgd.m}}>
 {{tgd.d}}
+</td>
 {% endif %}
-<td align=center>{{tgd.f | safe}}
-<td align=center>{{tgd.t}}
+<td align=center>{{tgd.f | safe}}</td>
+<td align=center>{{tgd.t}}</td>
 <td align=center>
 {% if tgd.bc == 'Not in database' %}Not in database
 {% else %}<a href={{tgd.bc_url}}>{{tgd.bc}}</a>
 {% endif %}
+</td>
 </tr>
 {% endfor %}
 </table>

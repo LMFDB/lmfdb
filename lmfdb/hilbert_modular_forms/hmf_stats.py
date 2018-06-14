@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
+from lmfdb.db_backend import db
 from lmfdb.base import app, getDBConnection
 from lmfdb.utils import comma, make_logger
 from lmfdb.WebNumberField import nf_display_knowl
-
-def format_percentage(num, denom):
-    return "%10.2f"%((100.0*num)/denom)
+from sage.misc.cachefunc import cached_method
 
 def field_sort_key(F):
     dsdn = F.split(".")
@@ -83,20 +82,8 @@ class HMFstats(object):
         self._counts = {}
         self._stats = {}
 
+    @cached_method
     def counts(self):
-        self.init_hmf_count()
-        return self._counts
-
-    def stats(self, d=None):
-        self.init_hmf_stats()
-        if d:
-            return self._stats[str(d)]
-        return self._stats
-
-    def init_hmf_count(self):
-        if self._counts:
-            return
-        #print("initializing HMF counts")
         counts = {}
 
         formstats = db_forms_stats()
@@ -120,15 +107,12 @@ class HMFstats(object):
         counts['fields_by_degree'] = dict([(d,fields[d]['fields']) for d in degrees])
         counts['nfields_by_degree'] = dict([(d,fields[d]['nfields']) for d in degrees])
         counts['max_disc_by_degree'] = dict([(d,fields[d]['maxdisc']) for d in degrees])
-        self._counts  = counts
-        #print("-- finished initializing HMF counts")
+        return counts
 
-    def init_hmf_stats(self):
-        if self._stats:
-            return
-        if not self._counts:
-            self.init_hmf_count()
-        #print("initializing HMF stats")
+    @cached_method
+    def stats(self, d=None):
+        if d:
+            return self.stats()[str(d)]
         deg_data = db_forms_stats().find_one({'_id':'level_norm_by_degree'})
         field_data = db_forms_stats().find_one({'_id':'level_norm_by_field'})
         def field_stats(F):
@@ -138,20 +122,17 @@ class HMFstats(object):
                     'field_knowl': nf_display_knowl(F, F),
                     'forms': url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
             }
+        stats = {}
         for d in self._counts['degrees']:
-            #print("initializing HMF stats for degree {}".format(d))
             d = str(d)
             # NB the only reason for keeping the list of fields here
             # is that we can sort them, while the keys of stats.counts
             # are the fields in a random order
             fields = self._counts['fields_by_degree'][d]
             fields.sort(key=field_sort_key)
-            self._stats[d] = {'fields': fields,
-                     'nfields': len(fields),
-                     'nforms': deg_data[d]['nforms'],
-                     'maxnorm': deg_data[d]['max_norm'],
-                     'counts': dict([(F,field_stats(F)) for F in fields])
-                     }
-            #print("-- finished initializing HMF stats for degree {}".format(d))
-
-        #print("-- finished initializing HMF stats")
+            stats[d] = {'fields': fields,
+                        'nfields': len(fields),
+                        'nforms': deg_data[d]['nforms'],
+                        'maxnorm': deg_data[d]['max_norm'],
+                        'counts': dict([(F,field_stats(F)) for F in fields])}
+        return stats

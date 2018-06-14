@@ -3,27 +3,15 @@ import yaml
 from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
+from lmfdb.db_backend import db
 from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.bianchi_modular_forms.web_BMF import db_forms
-
-def db_ecnf():
-    return getDBConnection().elliptic_curves.nfcurves
+from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
 
 def db_ecnfstats():
     return getDBConnection().elliptic_curves.nfcurves.stats
-
-def db_nfdb():
-    return getDBConnection().numberfields.fields
-
-def db_iqf_labels():
-    return getDBConnection().elliptic_curves.IQF_labels
-
-def is_ecnf_isogeny_class_in_db(label_isogeny_class):
-    return db_ecnf().find({"class_label" : label_isogeny_class}).limit(1).count(True) > 0;
-
 
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
@@ -44,9 +32,8 @@ def convert_IQF_label(fld, lab):
         newlab = lab[1:-1].replace(",",".")
     if len(newlab.split("."))!=3:
         return newlab
-    data = db_iqf_labels().find_one({'fld':fld, 'old':newlab})
-    if data:
-        newlab = data['new']
+    newlab = db.ec_IQF_labels.lucky({'fld':fld, 'old':newlab}, 'new')
+    if newlab:
         if newlab!=lab:
             print("Converted label {} to {} over {}".format(lab, newlab, fld))
         return newlab
@@ -254,7 +241,7 @@ class ECNF(object):
         # del dbdata["_id"]
         self.__dict__.update(dbdata)
         self.field = FIELD(self.field_label)
-        self.non_surjective_primes = dbdata.get('non-surjective_primes',None)
+        self.non_surjective_primes = dbdata.get('non_surjective_primes',None)
         self.make_E()
 
     @staticmethod
@@ -262,7 +249,7 @@ class ECNF(object):
         """
         searches for a specific elliptic curve in the ecnf collection by its label
         """
-        data = db_ecnf().find_one({"label": label})
+        data = db.ec_nfcurves.lookup(label)
         if data:
             return ECNF(data)
         print "No such curve in the database: %s" % label
@@ -527,7 +514,7 @@ class ECNF(object):
             if "CM" in self.label:
                 self.friends += [('Bianchi Modular Form is not cuspidal', '')]
             else:
-                if db_forms().find_one({'label':self.bmf_label}) != None:
+                if is_bmf_in_db(self.bmf_label):
                     self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
                 else:
                     self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]

@@ -24,7 +24,7 @@ AUTHORS:
 from flask import url_for, request, redirect, make_response, send_from_directory,flash, render_template
 import os, tempfile
 import sage
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.utils import to_dict, random_object_from_collection
@@ -46,9 +46,6 @@ emf_logger.setLevel(int(100))
 @emf.context_processor
 def body_class():
     return {'body_class': EMF}
-
-def db_emf():
-    return getDBConnection().modularforms2.webnewforms
 
 #################
 # Top level
@@ -182,7 +179,7 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
 
 @emf.route("/random")
 def random_form():
-    label = random_object_from_collection( db_emf() )['hecke_orbit_label']
+    label = db.mf_newforms.random('hecke_orbit_label') # getDBConnection grep doesn't support random
     level, weight, character, label = parse_newform_label(label)
     args={}
     args['level'] = level

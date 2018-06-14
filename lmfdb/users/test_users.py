@@ -1,6 +1,7 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 # testing users blueprint
 from lmfdb.base import LmfdbTest
+from pwdmanager import userdb
 from main import login_page
 import unittest2
 
@@ -9,8 +10,9 @@ class UsersTestCase(LmfdbTest):
         LmfdbTest.setUp(self)
         self.users = self.C.userdb.users
         # With authentication we can no longer add a test user during the test
+        # from pwdmanager import userdb
         # self.users.remove("$test_user")
-        # self.test_user = new_user("$test_user", "testpw")
+        # self.test_user = userdb.new_user("$test_user", "testpw")
 
         # self.tc.post('/users/login', data=dict(
         #     name='$test_user',

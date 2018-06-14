@@ -5,17 +5,15 @@ from lmfdb.modular_forms import mf_logger
 
 
 class MFDataTable(object):
-    def __init__(self, dbname='', **kwds):
+    def __init__(self, db, **kwds):
         r"""
         For 'one-dimensional' data sets the second skip parameter does not have a meaning but should be present anyway...
 
         """
+        self.db = db
         self._skip = kwds.get('skip', [])
         self._limit = kwds.get('limit', [])
         self._keys = kwds.get('keys', [])
-        self._db = getDBConnection()[dbname]
-        self._collection_name = kwds.get('collection', 'all')
-        self._collection = []
         self._skip_rec = 0
         self._props = {}
         if self._limit and self._skip:
@@ -31,7 +29,6 @@ class MFDataTable(object):
                 self._skip_rec = self._skip[0]
         self._table = dict()
         self._is_set = False
-        self._set_collection()
         self._row_heads = []
         self._col_heads = []
 
@@ -46,23 +43,6 @@ class MFDataTable(object):
 
     def set_table(self, **kwds):
         raise NotImplementedError("Method needs to be implemented in subclasses!")
-
-    def _set_collection(self):
-        mf_logger.debug("Available collections : {0}".format(self._db.collection_names()))
-        mf_logger.debug("Want : {0}".format(self._collection_name))
-        if self._collection_name in self._db.collection_names():
-            self._collection = [self._db[self._collection_name]]
-        else:
-            self._collection = list()
-            for name in self._db.collection_names():
-                if name in ['system.indexes', 'system.users']:
-                    continue
-                self._collection.append(self._db[name])
-
-    def collection(self):
-        if not self._collection:
-            self._set_collection()
-        return self._collection
 
     def table(self):
         if not self._is_set:

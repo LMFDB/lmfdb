@@ -10,13 +10,14 @@ import pymongo
 ASC = pymongo.ASCENDING
 from operator import mul
 from urllib import quote, unquote
+from lmfdb.db_backend import db
 from lmfdb.base import app
-from flask import render_template, request, url_for, redirect, flash, send_file
+from flask import render_template, request, url_for, redirect, flash, send_file, jsonify
 from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ecnf_degree_summary, ecnf_signature_summary, sort_field
-from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnf, db_ecnfstats, web_ainvs, convert_IQF_label
+from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnfstats, web_ainvs, convert_IQF_label
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
@@ -256,7 +257,7 @@ def index():
 
 @ecnf_page.route("/random")
 def random_curve():
-    E = random_object_from_collection(db_ecnf())
+    E = db.ec_nfcurves.random(projection=['field_label', 'conductor_label', 'iso_label', 'number'])
     return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 307)
 
 @ecnf_page.route("/<nf>/")
@@ -372,7 +373,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
 
 def elliptic_curve_search(info):
 
-    if info.get('download') == '1' and info.get('Submit') and info.get('query'):
+    if info.get('download') == '1' and info.get('submit') and info.get('query'):
         return download_search(info)
 
     if not 'query' in info:
@@ -438,40 +439,20 @@ def elliptic_curve_search(info):
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
 
-    info['query'] = query
+    if 'result_count' in info:
+        nres = db.ec_nfcurves.count(query)
+        return jsonify({"nres":str(nres)})
+
     count = parse_count(info, 50)
     start = parse_start(info)
-
-    # make the query and trim results according to start/count:
-
-    cursor = db_ecnf().find(query)
-    nres = cursor.count()
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-    
-    res = cursor.sort([('field_label', ASC), ('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)]).skip(start).limit(count)
-
-    res = list(res)
+    res = db.ec_nfcurves.search(query, limit=count, offset=start, info=info)
     for e in res:
         e['numb'] = str(e['number'])
         e['field_knowl'] = nf_display_knowl(e['field_label'], field_pretty(e['field_label']))
 
-    info['curves'] = res  # [ECNF(e) for e in res]
-    info['number'] = nres
-    info['start'] = start
-    info['count'] = count
-    info['more'] = int(start + count < nres)
+    info['curves'] = res
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
     t = info.get('title','Elliptic Curve search results')
     return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
 
@@ -592,7 +573,7 @@ def statistics_by_signature(d,r):
 
 
 def download_search(info):
-    dltype = info['Submit']
+    dltype = info['submit']
     delim = 'bracket'
     com = r'\\'  # single line comment start
     com1 = ''  # multiline comment start
@@ -625,8 +606,7 @@ def download_search(info):
         s += 'data = [ '
     s += '\\\n'
     nf_dict = {}
-    res = db_ecnf().find(ast.literal_eval(info["query"]))
-    for f in res:
+    for f in db.ec_nfcurves.search(ast.literal_eval(info["query"]), ['field_label', 'ainvs']):
         nf = str(f['field_label'])
         # look up number field and see if we already have the min poly
         if nf in nf_dict:

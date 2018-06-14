@@ -20,8 +20,8 @@ AUTHOR: Fredrik Strömberg <fredrik314@gmail.com>
 
 """
 from flask import render_template, url_for, flash
-from  lmfdb.base import getDBConnection
-from lmfdb.utils import to_dict 
+from lmfdb.db_backend import db
+from lmfdb.utils import to_dict
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, EMF_TOP
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -60,24 +60,23 @@ def render_web_modform_space_gamma1(level=None, weight=None, character=None, lab
 
 
 def set_info_for_gamma1(level,weight,weight2=None):
-    dimension_table_name = WebModFormSpace._dimension_table_name
     if weight != None and weight2>weight:
         w1 = weight; w2 = weight2
     else:
         w1 = weight; w2 = weight
     table = {'galois_orbit':{},'galois_orbits_reps':{},'cells':{}}
     table['weights']=range(w1,w2+1)
-    emf_logger.debug("dimension table name={0}".format(dimension_table_name))
-    db_dim = getDBConnection()['modularforms2'][dimension_table_name]
-    s = {'level':int(level),'weight':{"$lt":int(w2+1),"$gt":int(w1-1)},'cchi':{"$exists":True}}
-    q = db_dim.find(s).sort([('cchi',int(1)),('weight',int(1))])
-    if q.count() == 0:
+    res = list(db.mf_dims.search({'level': int(level),
+                                  'weight': {"$lt": int(w2+1), "$gt": int(w1-1)},
+                                  'cchi': {"$exists": True}},
+                                 sort=['cchi', 'weight']))
+    if not res:
         emf_logger.debug("No spaces in the database!")
         flash('The database does not currently contain any spaces matching these parameters. Please try again!')
         return None #'error':'The database does not currently contain any spaces matching these parameters!'}
     else:
         table['maxGalCount']=1
-        for r in q:
+        for r in res:
             xi = r['cchi']
             orbit = r['character_orbit']
             k = r['weight']

@@ -662,6 +662,8 @@ class WebChar(WebCharObject):
 
     @property
     def friends(self):
+        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+
         f = []
         cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
         f.append( ("Character Group", cglink) )
@@ -669,7 +671,7 @@ class WebChar(WebCharObject):
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
             url = url_character(type=self.type, umber_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
-            if lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata(url[1:]):
+            if get_lfunction_by_url(url[1:]):
                 f.append( ('L-function', '/L'+ url) )
         if self.type == 'Dirichlet':
             f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
