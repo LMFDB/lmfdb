@@ -1,11 +1,11 @@
 import pymongo
 import os
 _C = None
-
+server = "belyi.lmfdb.xyz:27017"
+#server = "localhost:37010"
 def makeDBconnection():
     global _C
-    #_C = pymongo.MongoClient("localhost:37010");
-    _C = pymongo.MongoClient("belyi.lmfdb.xyz:27017");
+    _C = pymongo.MongoClient(server);
     _C.admin.authenticate("lmfdb","lmfdb")
 
 def getDBconnection():
@@ -17,8 +17,7 @@ def getDBconnection():
 _Cwrite = None
 def makeDBconnection_write():
     global _Cwrite
-    #_Cwrite = pymongo.MongoClient("localhost:37010");
-    _Cwrite = pymongo.MongoClient("belyi.lmfdb.xyz:27017");
+    _Cwrite = pymongo.MongoClient(server);
     #_Cwrite.admin.authenticate("lmfdb","lmfdb")
     path = os.path.join(os.getcwd(), "../../passwords.yaml")
     import yaml
