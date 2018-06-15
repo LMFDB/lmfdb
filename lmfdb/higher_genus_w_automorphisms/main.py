@@ -2,6 +2,8 @@
 # This Blueprint is about Higher Genus Curves
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
+from pymongo.mongo_client import MongoClient
+from bson import ObjectId
 
 import StringIO
 import re
@@ -482,7 +484,7 @@ def render_family(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        C = base.getDBConnection()
+        C = MongoClient(port=int(27017))
         dataz = C.curve_automorphisms.passports.find({'label': label})
         if dataz.count() is 0:
             flash_error( "No Family with Label %s was Found in the Database.", label)
@@ -522,6 +524,8 @@ def render_family(args):
 
         Lcc=[]
         Lall=[]
+        Ltopo_rep=[] #List of topological representatives
+        Ltopo_class={} # List of list topological class
         i=1
         for dat in dataz:
             if ast.literal_eval(dat['con']) not in Lcc:
@@ -531,9 +535,37 @@ def render_family(args):
                              urlstrng])
                 i=i+1
 
+            #Generate topological representatives
+            if "topological" in dat:
+                topo_passport = C.curve_automorphisms.passports.find({'_id': ObjectId(dat['topological'])})
+
+                x1=[] #A list of permutations of generating vectors of topo_rep
+                    
+                for topo_rep_vector in topo_passport:
+                    for topo_rep_perm in topo_rep_vector['gen_vectors']:
+                        x1.append(sep.join(split_perm(Permutation(topo_rep_perm).cycle_string())))
+                    
+                    if [topo_rep_vector['passport_label'], topo_rep_vector['total_label'], x1] not in Ltopo_rep:
+                        Ltopo_rep.append([topo_rep_vector['passport_label'], topo_rep_vector['total_label'], x1])
+
+                    L = topo_rep_vector['passport_label']
+
+                    if L not in Ltopo_class:
+                        Ltopo_class[L] = []
+                        Ltopo_class[L].append(topo_rep_vector['passport_label'])
+                    elif dat['passport_label'] not in Ltopo_class[topo_rep_vector['passport_label']]:
+                        Ltopo_class[L].append(dat['passport_label'])
+                    
+        keylist = Ltopo_class.keys()
+        keylist.sort()
+        ###### Needs to sort key of Ltopo_class #########        
         info.update({'passport': Lall})
+        info.update({'passport_num': len(Lall)})
 
-
+        #Add topological equivalence to info
+        info.update({'topological_rep': Ltopo_rep})
+        info.update({'topological_class': Ltopo_class})
+        
         g2List = ['[2,1]','[4,2]','[8,3]','[10,2]','[12,4]','[24,8]','[48,29]']
         if g  == 2 and data['group'] in g2List:
             g2url = "/Genus2Curve/Q/?geom_aut_grp_id=" + data['group']
@@ -566,7 +598,7 @@ def render_passport(args):
     if 'passport_label' in args:
         label =clean_input(args['passport_label'])
 
-        C = base.getDBConnection()
+        C = MongoClient(port=int(27017))
 
         dataz = C.curve_automorphisms.passports.find({'passport_label': label})
         if dataz.count() is 0:
@@ -620,6 +652,7 @@ def render_passport(args):
         Ldata=[]
         HypColumn = False
         Lfriends=[]
+        Lbraid=[]
         for i in range (0, min(numgenvecs,numb)):
             dat= dataz[i]
             x1=dat['total_label']
@@ -644,11 +677,29 @@ def render_passport(args):
 
             Ldata.append([x1,x2,x3,x4])
 
-
-
         info.update({'genvects': Ldata, 'HypColumn' : HypColumn})
 
         info.update({'passport_cc': cc_display(ast.literal_eval(data['con']))})
+            
+        #Generate braid representatives
+        for i in range (0, numb):
+            dat = dataz[i]
+            if "braid" in dat:
+               # print (dat['braid'])
+                braid_rep = C.curve_automorphisms.passports.find({'_id': ObjectId(dat['braid'])})
+                x5=[] #A list of permutations of generating vectors of braid_rep
+                for braid_rep_vector in braid_rep:
+                   # print (braid_rep_vector['total_label'])
+                    for braid_rep_perm in braid_rep_vector['gen_vectors']:
+                        x5.append(sep.join(split_perm(Permutation(braid_rep_perm).cycle_string())))
+                        #print ([braid_rep_vector['total_label'],x5] in Lbraid)
+                    if [braid_rep_vector['total_label'],x5] not in Lbraid:
+                        Lbraid.append([braid_rep_vector['total_label'],x5])
+                           # print(Lbraid)
+        
+        #Add braid equivalence into info
+        info.update({'braid': Lbraid, 'numBraid': len(Lbraid)})
+        print (len(Lbraid))
 
         if 'eqn' in data:
             info.update({'eqns': data['eqn']})

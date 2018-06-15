@@ -131,21 +131,28 @@ transition: 0.3s;
 }
 </style>
 <!-- add in style.css -->
+  {% if info.numb == 1 %}
+  Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+<p>{% for cdata in info.genvects %}
+  {{cdata[0]}}
+  <table>{% for perm in cdata[3] %}
+    <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+    {% endfor %} </table> <br>
+  {% endfor %}
+</p>
+
+{% else %}
 <div class="tab">
-  <button type="select" class="tablinks" onclick="openData(event, 'Full')" id="defaultOpen">Full</button> 
-  <button type="submit" class="tablinks" onclick="openData(event, 'Less')">Less</button>
+  <button type="select" class="tablinks" onclick="openData(event, 'Full')"
+          id="defaultOpen">All Vectors</button> 
+  <button type="submit" class="tablinks" onclick="openData(event,
+          'Less')">Braid Equivalence Representative</button>
 </div>
+{% endif %}
 
 <div id="Full" class="tabcontent">
   <p>
-  {% if info.numb == 1 %}
-  Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
-
-  {% else %}
   Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
-
-  {% endif %}
-
  <p>{% for cdata in info.genvects %}
    {{cdata[0]}}
    <table>{% for perm in cdata[3] %}
@@ -171,12 +178,15 @@ transition: 0.3s;
 </div>
 
 <div id="Less" class="tabcontent">
+  <p>
+  Displaying braid equivalence representatives
  <p>{% for braid_rep in info.braid %}
    {{braid_rep[0]}}
    <table>{% for perm in braid_rep[1] %}
      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
      {% endfor %} </table> <br>
    {% endfor %}
+ </p>
  </p>
 </div>
 

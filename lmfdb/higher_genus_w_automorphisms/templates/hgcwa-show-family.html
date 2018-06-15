@@ -82,12 +82,34 @@ transition: 0.3s;
 }
 </style>
 <!-- add in style.css -->
-<div class="tab">
-  <button type="select" class="tablinks" onclick="openData(event, 'Full')" id="defaultOpen">Full</button> 
-  <button type="submit" class="tablinks" onclick="openData(event, 'Less')">Less</button>
-</div>
+{% if info.passport_num == 1 %}
+<table>
+  <tr>
+    <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+    <th>Lists of Conjugacy Classes</th>
+    
+  </tr>
+  
+  {% for itm in info.passport %}
+  <tr>
+    <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
+    <td class="center">{{itm[0]}}</td>
 
-<div id="Full" class="tabcontent">
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<div class="tab">
+  <button type="select" class="tablinks" onclick="openData(event, 'passports')"
+          id="defaultOpen">All Passports</button> 
+  <button type="submit" class="tablinks" onclick="openData(event,'representative')"
+          >Topological Equivalence Representative</button>
+  <button type="submit" class="tablinks" onclick="openData(event,'equivalence class')"
+          >Topological Equivalence Classes</button>
+</div>
+{% endif %}
+
+<div id="passports" class="tabcontent">
   <table>
     <tr>
       <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
@@ -105,16 +127,33 @@ transition: 0.3s;
   </table>
 </div>
 
-<div id="Less" class="tabcontent">
-  <p>{% for topo_rep in info.topological %}
-    {{topo_rep[0]}}
-    <table> {{topo_rep[1]}}
-      <table>{% for perm in topo_rep[2] %}
-        <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-        {% endfor %} </table> <br>
-    </table>
+<div id="representative" class="tabcontent">
+  <p>{% for topo_rep in info.topological_rep %}
+    <a href="{{topo_rep[0]}}">{{topo_rep[0]}}</a><br>
+    &nbsp; {{topo_rep[1]}} <br>
+    <table>{% for perm in topo_rep[2] %}
+      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+      {% endfor %} </table> <br>
     {% endfor %}
   </p>
+</div>
+
+<div id="equivalence class" class="tabcontent">
+ <table>
+   <tr>
+     <th> Class Representatives </th>
+     <th> All Passport Labels </th>
+   </tr>
+   
+   {% for key,values in info.topological_class.items() %}
+   <tr>
+     <td><a href="{{key}}">{{key}}<a></td> 
+     <td> {% for value in values %}
+        <a href="{{value}}">{{value}}</a><br>
+       {% endfor %} </td>
+   </tr>
+   {% endfor %}
+</table>
 </div>
 
 <script>
