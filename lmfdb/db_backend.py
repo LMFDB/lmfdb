@@ -30,7 +30,7 @@ import logging
 import pymongo
 import re, os
 from psycopg2 import connect, DatabaseError
-import psycopg2.extras, psycopg2.extensions
+from psycopg2.sql import SQL, Identifier, Placeholder, Literal
 from psycopg2.extras import Json, execute_values
 from psycopg2.extensions import register_type, register_adapter, new_type, UNICODE, UNICODEARRAY, AsIs
 import json, random, time
@@ -44,6 +44,36 @@ from lmfdb.utils import make_logger, format_percentage
 
 SLOW_QUERY_LOGFILE = "slow_queries.log"
 SLOW_CUTOFF = 1
+
+# This list is used when creating new tables
+types_whitelist = set([
+    "int2", "smallint", "smallserial", "serial2",
+    "int4", "int", "integer", "serial", "serial4",
+    "int8", "bigint", "bigserial", "serial8",
+    "numeric", "decimal",
+    "float4", "real",
+    "float8", "double precision",
+    "boolean", "bool",
+    "text", "char", "character", "character varying", "varchar",
+    "json", "jsonb", "xml",
+    "date", "interval", "time", "time without time zone", "time with time zone", "timetz",
+    "timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz",
+    "bytea", "bit", "bit varying", "varbit",
+    "point", "line", "lseg", "path", "box", "polygon", "circle",
+    "tsquery", "tsvector",
+    "txid_snapshot", "uuid",
+    "cidr", "inet", "macaddr",
+    "money", "pg_lsn",
+])
+param_types_whitelist = [
+    r"^(bit( varying)?|varbit)\s*\([1-9][0-9]*\)$",
+    r'(text|(char(acter)?|character varying|varchar(\s*\(1-9][0-9]*\))?))(\s+collate "(c|posix|[a-z][a-z]_[a-z][a-z](\.[a-z0-9-]+)?)")?',
+    r"^interval(\s+year|month|day|hour|minute|second|year to month|day to hour|day to minute|day to second|hour to minute|hour to second|minute to second)?(\s*\([0-6]\))?$",
+    r"^timestamp\s*\([0-6]\)(\s+with(out)? time zone)?$",
+    r"^time\s*\(([0-9]|10)\)(\s+with(out)? time zone)?$",
+    r"^(numeric|decimal)\s*\([1-9][0-9]*(,\s*(0|[1-9][0-9]*))?\)$",
+]
+param_types_whitelist = [re.compile(s) for s in param_types_whitelist]
 
 def numeric_converter(value, cur):
     """
@@ -154,7 +184,7 @@ class PostgresBase(object):
 
     @cached_method
     def _table_exists(self, tablename):
-        cur = self._execute("SELECT to_regclass(%s);", [tablename], silent=True)
+        cur = self._execute(SQL("SELECT to_regclass(%s)"), [tablename], silent=True)
         return cur.fetchone()[0] is not None
 
     @staticmethod
@@ -203,7 +233,7 @@ class PostgresTable(PostgresBase):
         PostgresBase.__init__(self, search_table, db.conn)
         cap = {col.lower(): col for col in cap}
         def set_column_info(col_list, json_set, table_name):
-            cur = self._execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position", [table_name])
+            cur = self._execute(SQL("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
             has_id = False
             for rec in cur:
                 col = cap.get(rec[0],rec[0])
@@ -278,13 +308,13 @@ class PostgresTable(PostgresBase):
               u'val': u'smallint'},
              None)
         """
-        selector = "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s;"
-        cur = self._execute(selector, [self.search_table])
+        selecter = SQL("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s")
+        cur = self._execute(selecter, [self.search_table])
         search_types = {k:v for k,v in cur}
         if self.extras_table is None:
             extras_types = None
         else:
-            cur = self._execute(selector, [self.extras_table])
+            cur = self._execute(selecter, [self.extras_table])
             extras_types = {k:v for k,v in cur}
         return search_types, extras_types
 
@@ -434,32 +464,32 @@ class PostgresTable(PostgresBase):
             else:
                 return None, None
         elif key == '$lte':
-            return "{0} <= %s".format(col), [value]
+            return SQL("{0} <= %s").format(Identifier(col)), [value]
         elif key == '$lt':
-            return "{0} < %s".format(col), [value]
+            return SQL("{0} < %s").format(Identifier(col)), [value]
         elif key == '$gte':
-            return "{0} >= %s".format(col), [value]
+            return SQL("{0} >= %s").format(Identifier(col)), [value]
         elif key == '$gt':
-            return "{0} > %s".format(col), [value]
+            return SQL("{0} > %s").format(Identifier(col)), [value]
         elif key == '$ne':
-            return "{0} != %s".format(col), [value]
+            return SQL("{0} != %s").format(Identifier(col)), [value]
         elif key == '$in':
-            return "{0} = ANY(%s)".format(col), [value]
+            return SQL("{0} = ANY(%s)").format(Identifier(col)), [value]
         elif key == '$contains':
             value = self._json_wrap(col, value)
-            return "{0} @> %s".format(col), [value]
+            return SQL("{0} @> %s").format(Identifier(col)), [value]
         elif key == '$notcontains':
             if col in self._json_override:
                 value = [Json([v]) for v in value]
-            return " AND ".join("NOT {0} @> %s".format(col) for v in value), value
+            return SQL(" AND ").join(SQL("NOT {0} @> %s").format(Identifier(col)) for v in value), value
         elif key == '$containedin':
             value = self._json_wrap(col, value)
-            return "{0} <@ %s".format(col), [value]
+            return SQL("{0} <@ %s").format(Identifier(col)), [value]
         elif key == '$exists':
             if value:
-                return "{0} IS NOT NULL".format(col), []
+                return SQL("{0} IS NOT NULL").format(Identifier(col)), []
             else:
-                return "{0} IS NULL".format(col), []
+                return SQL("{0} IS NULL").format(Identifier(col)), []
         else:
             raise ValueError("Error building query: {0}".format(key))
 
@@ -512,10 +542,10 @@ class PostgresTable(PostgresBase):
                 elif '.' in key:
                     raise ValueError("Error building query: subdocuments not supported")
                 else:
-                    strings.append("{0} = %s".format(key))
+                    strings.append(SQL("{0} = %s").format(Indentifier(key)))
                     values.append(self._json_wrap(key, value))
             if strings:
-                return " AND ".join(strings), values
+                return SQL(" AND ").join(strings), values
             else:
                 return None, None
 
@@ -597,8 +627,8 @@ class PostgresTable(PostgresBase):
             else:
                 D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:]) if v is not None}
                 if extra_cols:
-                    selector = "SELECT {0} FROM {1} WHERE id = %s".format(", ".join(extra_cols), self.extras_table)
-                    extra_cur = self._execute(selector, [rec[0]])
+                    selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(SQL(", ").join(map(Identifier, extra_cols)), Identifier(self.extras_table))
+                    extra_cur = self._execute(selecter, [rec[0]])
                     extra_rec = extra_cur.fetchone()
                     for k,v in zip(extra_cols, extra_rec):
                         if v is not None:
@@ -665,10 +695,10 @@ class PostgresTable(PostgresBase):
             {'reg':455.191694993}
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
-        vars = ", ".join(search_cols)
+        vars = SQL(", ").join(map(Identifier, search_cols))
         qstr, values = self._build_query(query, 1, offset)
-        selector = "SELECT {0} FROM {1}{2}".format(vars, self.search_table, qstr)
-        cur = self._execute(selector, values)
+        selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
+        cur = self._execute(selecter, values)
         if cur.rowcount > 0:
             rec = cur.fetchone()
             if projection == 0:
@@ -676,9 +706,9 @@ class PostgresTable(PostgresBase):
             elif extra_cols:
                 id = rec[0]
                 D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:]) if v is not None}
-                vars = ", ".join(extra_cols)
-                selector = "SELECT {0} FROM {1} WHERE id = %s".format(vars, self.extras_table)
-                cur = self._execute(selector, [id])
+                vars = SQL(", ").join(map(Identifier, extra_cols))
+                selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(vars, Identifier(self.extras_table))
+                cur = self._execute(selecter, [id])
                 rec = cur.fetchone()
                 for k,v in zip(extra_cols, rec):
                     if v is not None:
@@ -758,7 +788,7 @@ class PostgresTable(PostgresBase):
             (1000, False)
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
-        vars = ", ".join(search_cols)
+        vars = SQL(", ").join(map(Identifier, search_cols))
         if limit is None:
             qstr, values = self._build_query(query, sort=sort)
         else:
@@ -768,8 +798,8 @@ class PostgresTable(PostgresBase):
                 qstr, values = self._build_query(query, prelimit, offset, sort)
             else:
                 qstr, values = self._build_query(query, limit, offset, sort)
-        selector = "SELECT {0} FROM {1}{2}".format(vars, self.search_table, qstr)
-        cur = self._execute(selector, values)
+        selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
+        cur = self._execute(selecter, values)
         if limit is None:
             if info is not None:
                 # caller is requesting count data
@@ -931,56 +961,27 @@ class PostgresTable(PostgresBase):
         Execution time: 1947.655 ms
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
-        vars = ", ".join(search_cols)
+        vars = SQL(", ").join(map(Identifier, search_cols))
         if limit is None:
             qstr, values = self._build_query(query, sort=sort)
         else:
             qstr, values = self._build_query(query, limit, offset, sort)
-        selector = "SELECT {0} FROM {1}{2}".format(vars, self.search_table, qstr)
+        selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
         if explain_only:
-            analyzer = "EXPLAIN " + selector
+            analyzer = SQL("EXPLAIN {0}").format(selecter)
         else:
-            analyzer = "EXPLAIN ANALYZE " + selector
-        print selector%tuple(values)
+            analyzer = SQL("EXPLAIN ANALYZE {0}").format(selecter)
+        print selecter.as_string(self.conn)%tuple(values)
         cur = self._execute(analyzer, values, silent=True)
         for line in cur:
             print line[0]
-
-    def _approx_cost(self, selector, values):
-        """
-        Determines an approximate cost for running a query using Postgres' EXPLAIN command.
-
-        INPUT:
-
-        - ``selector`` -- an SQL SELECT query, possibly with %s entries to be substituted.
-        - ``values`` -- the values to substitute.  See the ``_execute`` method for more discussion.
-
-        OUTPUT:
-
-        - the query planner's approximation to the number of rows that will be returned.
-        - the query planner's estimate on the amount of time the query will require, measured in disk page fetches.
-        """
-        explainer = "EXPLAIN (FORMAT JSON) " + selector
-        cur = self._execute(explainer, values)
-        try:
-            plan = cur.fetchall()[0][0][0]['Plan']
-        except IndexError, KeyError:
-            # This doesn't happen for the queries I've tested,
-            # But maybe some queries have a different format for explain?
-            raise RuntimeError("Unexpected explanation")
-        t = plan['Total Cost']
-        if plan['Node Type'] == 'Limit' and plan.get('Plans',[]):
-            nrows = plan['Plans'][0]['Plan Rows']
-        else:
-            nrows = plan['Plan Rows']
-        return nrows, t
 
     def list_indexes(self):
         """
         Lists the indexes on the search table.
         """
-        selector = "SELECT index_name, columns, type FROM meta_indexes WHERE table_name = %s;"
-        cur = self._execute(selector, [self.search_table])
+        selecter = SQL("SELECT index_name, columns, type FROM meta_indexes WHERE table_name = %s")
+        cur = self._execute(selecter, [self.search_table])
         for name, columns, typ in cur:
             print "{0} ({1}): {2}".format(name, typ, ", ".join(columns))
 
@@ -1019,33 +1020,33 @@ class PostgresTable(PostgresBase):
             name = self.search_table + "_" + "_".join(cols)
             if type != "btree":
                 name += "_" + type
-        selector = "SELECT 1 FROM meta_indexes WHERE index_name = %s AND table_name = %s"
-        cur = self._execute(selector, [name, self.search_table])
+        selecter = SQL("SELECT 1 FROM meta_indexes WHERE index_name = %s AND table_name = %s")
+        cur = self._execute(selecter, [name, self.search_table])
         if cur.rowcount > 0:
             raise ValueError("Index with that name already exists")
         if command is None:
             if type == "btree":
-                command = "CREATE INDEX {0} ON {1} USING btree (%s) WITH (fillfactor='100');"
+                command = "CREATE INDEX {0} ON {1} USING btree (%s) WITH (fillfactor='100')"
             elif type == "gin":
                 command = "CREATE INDEX {0} ON {1} USING gin (%s)"
-            command = command%(colspec)
+            command = command%(colspec) # FIX
         self._execute(command, commit=False)
-        insertor = "INSERT INTO meta_indexes (index_name, table_name, columns, type, command) VALUES (%s, %s, %s, %s, %s);"
-        self._execute(insertor, [name, self.search_table, Json(cols), type, command])
+        inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, columns, type, command) VALUES (%s, %s, %s, %s, %s)")
+        self._execute(inserter, [name, self.search_table, Json(cols), type, command])
 
     def drop_index(self, name, permanent=False):
         if permanent:
-            deleter = "DELETE FROM meta_indexes WHERE table_name = %s AND index_name = %s"
+            deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND index_name = %s")
             self._execute(deleter, [self.search_table, name])
-        dropper = "DROP INDEX {0}".format(name)
+        dropper = SQL("DROP INDEX {0}").format(Identifier(name))
         self._execute(dropper)
 
     def drop_indexes(self, columns=[]):
-        selector = "SELECT index_name FROM meta_indexes WHERE table_name = %s"
+        selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
         if columns:
-            selector += " AND (" + " OR ".join("columns @> %s" for _ in columns) + ")"
+            selecter = SQL("{0} AND ({1})").format(selecter, SQL(" OR ").join(SQL("columns @> %s") * len(columns)))
             columns = [Json([col]) for col in columns]
-        cur = self._execute(selector, [self.search_table] + columns)
+        cur = self._execute(selecter, [self.search_table] + columns)
         for res in cur:
             try:
                 self.drop_index(res[0])
@@ -1053,7 +1054,7 @@ class PostgresTable(PostgresBase):
                 pass
 
     def restore_index(self, name):
-        selector = "SELECT command FROM meta_indexes WHERE table_name = %s AND index_name = %s"
+        selecter = SQL("SELECT command FROM meta_indexes WHERE table_name = %s AND index_name = %s")
 
     def restore_indexes(self, columns=None):
         pass
@@ -1070,8 +1071,8 @@ class PostgresTable(PostgresBase):
         """
         if self._stats_valid:
             # Only need to interact with database in this case.
-            updator = "UPDATE meta_tables SET stats_valid = false WHERE name = %s"
-            self._execute(updator, [self.search_table], commit=False)
+            updater = SQL("UPDATE meta_tables SET stats_valid = false WHERE name = %s")
+            self._execute(updater, [self.search_table], commit=False)
             self._stats_valid = False
 
     def _break_order(self):
@@ -1082,8 +1083,8 @@ class PostgresTable(PostgresBase):
         """
         if not self._out_of_order:
             # Only need to interact with database in this case.
-            updator = "UPDATE meta_tables SET out_of_order = true WHERE name = %s"
-            self._execute(updator, [self.search_table], commit=False)
+            updater = SQL("UPDATE meta_tables SET out_of_order = true WHERE name = %s")
+            self._execute(updater, [self.search_table], commit=False)
             self._out_of_order = True
 
     def finalize_changes(self):
@@ -1132,8 +1133,8 @@ class PostgresTable(PostgresBase):
         # because we have to take different additional steps depending on whether
         # an insertion actually occurred
         qstr, values = self._parse_dict(query)
-        selector = "SELECT {2} FROM {0} WHERE {1} LIMIT 2".format(self.search_table, qstr, "id" if self.has_id else "1")
-        cur = self._execute(selector, values)
+        selecter = SQL("SELECT {0} FROM {1} WHERE {2} LIMIT 2").format(Identifier("id") if self.has_id else Literal(1), Identifier(self.search_table), qstr)
+        cur = self._execute(selecter, values)
         cases = [(self.search_table, search_data)]
         if self.extras_table is not None:
             cases.append((self.extras_table, extras_data))
@@ -1142,17 +1143,17 @@ class PostgresTable(PostgresBase):
         elif cur.rowcount == 1:
             row_id = cur.fetchone()[0] # might be just 1 if has_id is False
             for table, dat in cases:
-                updator = "UPDATE {0} SET ({1}) = ({2}) WHERE {3}"
-                updator = updator.format(table,
-                                         ", ".join(dat.keys()),
-                                         ", ".join(["%s"] * len(dat)),
-                                         "id = %s" if self.has_id else qstr)
+                updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
+                updater = updater.format(Identifier(table),
+                                         SQL(", ").join(map(Identifier, dat.keys())),
+                                         SQL(", ").join(Placeholder() * len(dat)),
+                                         SQL("id = %s") if self.has_id else qstr)
                 dvalues = dat.values()
                 if self.has_id:
                     dvalues.append(row_id)
                 else:
                     dvalues.extend(values)
-                self._execute(updator, dvalues, commit=False)
+                self._execute(updater, dvalues, commit=False)
             if not self._out_of_order and any(key in self._sort_keys for key in data):
                 self._break_order()
         else:
@@ -1170,10 +1171,11 @@ class PostgresTable(PostgresBase):
                 if self.extras_table is not None:
                     extras_data["id"] = self.stats.total
             for table, dat in cases:
-                insertor = "INSERT INTO {0} ({1}) VALUES ({2})".format(table,
-                                                                       ", ".join(dat.keys()),
-                                                                       ", ".join(["%s"] * len(dat)))
-                self._execute(insertor, dat.values(), commit=False)
+                inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
+                inserter.format(Identifier(table),
+                                SQL(", ").join(map(Identifier, dat.keys())),
+                                SQL(", ").join(Placeholder() * len(dat)))
+                self._execute(inserter, dat.values(), commit=False)
             self._break_order()
             self.stats.total += 1
         self._break_stats()
@@ -1208,18 +1210,20 @@ class PostgresTable(PostgresBase):
             raise ValueError("search_data and extras_data must have same length")
         if drop_indexes:
             self.drop_indexes()
-        cases = [(self.search_table, search_data)]
         if self.has_id:
             for i, SD in enumerate(search_data):
                 SD["id"] = self.stats.total + i
+        cases = [(self.search_table, search_data)]
         if extras_data is not None:
-            cases.append((self.extras_table, extras_data))
             for i, ED in enumerate(extras_data):
                 ED["id"] = self.stats.total + i
+            cases.append((self.extras_table, extras_data))
         for table, L in cases:
-            template = "(" + ", ".join("%({0})s".format(col) for col in L[0].keys()) + ")"
-            insertor = "INSERT INTO {0} ({1}) VALUES %s".format(table, ", ".join(L[0].keys()))
-            self._execute(insertor, L, silent=True, values_list=True, template=template, commit=False)
+            template = SQL("({0})").format(map(Placeholder, L[0].keys()))
+            inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
+            inserter = inserter.format(Identifier(table),
+                                       SQL(", ").join(map(Identifier, L[0].keys())))
+            self._execute(inserter, L, silent=True, values_list=True, template=template, commit=False)
         self._break_order()
         self._break_stats()
         self.stats.total += len(search_data)
@@ -1300,7 +1304,7 @@ class PostgresTable(PostgresBase):
         - ``filename`` -- a string, the file to export
         - ``appendix`` -- a string ("extras", "counts", "stats"), used when copying from an auxiliary table.
         - ``include_ids`` -- whether to include the id column.  Note that this keyword differs from that in ``copy_from`` (no "s")
-        - ``kwds`` -- passed on to pscyopg2's ``copy_to``.  Notably, ``columns`` allows one
+        - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Notably, ``columns`` allows one
             to specify the order of columns in the file; the default is self._search_cols/self._extra_cols.
         """
         if appendix is None:
@@ -1362,8 +1366,9 @@ class PostgresStatsTable(PostgresBase):
         else:
             values.append(threshold)
             threshold = "threshold = %s"
-        selector = "SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}".format(self.stats, ccols, cvals, threshold)
-        cur = self._execute(selector, values)
+        selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}")
+        selecter = selecter.format(Identifier(self.stats), SQL(ccols), SQL(cvals), SQL(threshold))
+        cur = self._execute(selecter, values)
         return cur.rowcount > 0
 
     def quick_count(self, query):
@@ -1380,8 +1385,8 @@ class PostgresStatsTable(PostgresBase):
         Either an integer giving the number of results, or None if not cached.
         """
         cols, vals = self._split_dict(query)
-        selector = "SELECT count FROM {0} WHERE cols = %s AND values = %s;".format(self.counts)
-        cur = self._execute(selector, [cols, vals])
+        selecter = SQL("SELECT count FROM {0} WHERE cols = %s AND values = %s").format(Identifier(self.counts))
+        cur = self._execute(selecter, [cols, vals])
         if cur.rowcount:
             return int(cur.fetchone()[0])
 
@@ -1398,19 +1403,19 @@ class PostgresStatsTable(PostgresBase):
 
         The number of rows in the search table satisfying the query.
         """
-        selector = "SELECT COUNT(*) FROM " + self.search_table
+        selecter = SQL("SELECT COUNT(*) FROM {0}").format(Identifier(self.search_table))
         qstr, values = self.table._parse_dict(query)
         if qstr is not None:
-            selector += " WHERE " + qstr
-        cur = self._execute(selector, values)
+            selecter = SQL("{0} WHERE {1}").format(selecter, qstr)
+        cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
         if record:
             cols, vals = self._split_dict(query)
             if self.quick_count(query) is None:
-                updator = "INSERT INTO {0} (count, cols, values) VALUES (%s, %s, %s);".format(self.counts)
+                updater = SQL("INSERT INTO {0} (count, cols, values) VALUES (%s, %s, %s)")
             else:
-                updator = "UPDATE {0} SET count = %s WHERE cols = %s AND values = %s;".format(self.counts)
-            self._execute(updator, [nres, cols, vals])
+                updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
+            self._execute(updater.format(Identifier(self.counts)), [nres, cols, vals])
         return nres
 
     def count(self, query={}):
@@ -1455,18 +1460,22 @@ class PostgresStatsTable(PostgresBase):
         if col not in self.table._search_cols:
             raise ValueError("%s not a column of %s"%(col, self.search_table))
         jcol = Json([col])
-        cur = self._execute("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND constraint_cols IS NULL".format(self.stats), ["max", jcol])
+        selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND constraint_cols IS NULL")
+        cur = self._execute(selecter.format(Identifier(self.stats)), ["max", jcol])
         if cur.rowcount:
             return cur.fetchone()[0]
-        cur = self._execute("SELECT {0} FROM {1} ORDER BY {0} DESC LIMIT 1".format(col, self.search_table))
+        selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC LIMIT 1")
+        cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)))
         m = cur.fetchone()[0]
         if m is None:
             # the default order ends with NULLs, so we now have to use NULLS LAST,
             # preventing the use of indexes.
-            cur = self._execute("SELECT {0} FROM {1} ORDER BY {0} DESC NULLS LAST LIMIT 1".format(col, self.search_table))
+            selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC NULLS LAST LIMIT 1")
+            cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)))
             m = cur.fetchone()[0]
         try:
-            self._execute("INSERT INTO {0} (cols, stat, value) VALUES (%s, %s, %s)", [jcol, "max", m])
+            inserter = SQL("INSERT INTO {0} (cols, stat, value) VALUES (%s, %s, %s)")
+            self._execute(inserter.format(Identifier(self.stats)), [jcol, "max", m])
         except Exception:
             pass
         return m
@@ -1510,7 +1519,8 @@ class PostgresStatsTable(PostgresBase):
     def add_stats(self, cols, constraint=None, threshold=None):
         cols = sorted(cols)
         jcols = Json(cols)
-        where, values, ccols, cvals = " WHERE " + " AND ".join("{0} IS NOT NULL".format(col) for col in cols), [], None, None
+        where = SQL(" WHERE {0}").format(SQL(" AND ").join(SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols))
+        values, ccols, cvals = [], None, None
         if constraint is None:
             allcols = cols
         else:
@@ -1521,24 +1531,24 @@ class PostgresStatsTable(PostgresBase):
             ccols, cvals = self._split_dict(constraint)
             qstr, values = self.table._parse_dict(constraint)
             if qstr is not None:
-                where = where + " AND " + qstr
+                where = SQL(" AND ").join([where, qstr])
         if self._has_stats(jcols, ccols, cvals, threshold):
             return
         self.logger.info("Adding stats for {0} ({1})".format(", ".join(cols), "no threshold" if threshold is None else "threshold = %s"%threshold))
-        having = ""
+        having = SQL("")
         if threshold is not None:
-            having = " HAVING COUNT(*) >= {0}".format(threshold)
+            having = SQL(" HAVING COUNT(*) >= {0}").format(Literal(threshold))
         if cols:
-            vars = ", ".join(cols)
-            groupby = " GROUP BY {0}".format(vars)
-            vars += ", COUNT(*)"
+            vars = SQL(", ").join(map(Identifier, cols))
+            groupby = SQL(" GROUP BY {0}").format(vars)
+            vars = SQL("{0}, COUNT(*)").format(vars)
         else:
-            vars = "COUNT(*)"
-            groupby = ""
+            vars = SQL("COUNT(*)")
+            groupby = SQL("")
             if not allcols:
-                where = ""
-        selector = "SELECT {vars} FROM {table}{where}{groupby}{having}".format(vars=vars, table=self.search_table, groupby=groupby, where=where, having=having)
-        cur = self._execute(selector, values, silent=True)
+                where = SQL("")
+        selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table), groupby=groupby, where=where, having=having)
+        cur = self._execute(selecter, values, silent=True)
         to_add = []
         total = 0
         onenumeric = False # whether we're grouping by a single numeric column
@@ -1580,42 +1590,44 @@ class PostgresStatsTable(PostgresBase):
             stats.append((jcols, "min", mn, ccols, cvals, threshold))
             stats.append((jcols, "max", mx, ccols, cvals, threshold))
         # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
-        self._execute("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s;".format(self.stats), stats, values_list=True, silent=True)
-        self._execute("INSERT INTO {0} (cols, values, count) VALUES %s;".format(self.counts), to_add, values_list=True, silent=True)
+        inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
+        self._execute(inserter.format(Identifier(self.stats)), stats, values_list=True, silent=True)
+        inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
+        self._execute(inserter.format(Identifier(self.counts)), to_add, values_list=True, silent=True)
 
     def _get_values_counts(self, cols, constraint):
-        selector_constraints = ["cols = %s"]
+        selecter_constraints = [SQL("cols = %s")]
         if constraint:
             allcols = sorted(list(set(cols + constraint.keys())))
             positions = [allcols.index(x) for x in cols]
-            selector_values = [Json(allcols)]
+            selecter_values = [Json(allcols)]
             for i, x in enumerate(allcols):
                 if x in constraint:
-                    selector_constraints.append("values->{0} = %s".format(i))
-                    selector_values.append(Json(constraint[x]))
+                    selecter_constraints.append(SQL("values->{0} = %s".format(i)))
+                    selecter_values.append(Json(constraint[x]))
         else:
-            selector_values = [Json(cols)]
+            selecter_values = [Json(cols)]
             positions = range(len(cols))
-        selector = "SELECT values, count FROM {0} WHERE {1}".format(self.counts, " AND ".join(selector_constraints))
-        return [([values[i] for i in positions], int(count)) for values, count in self._execute(selector, values = selector_values)]
+        selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
+        return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values = selecter_values)]
 
     def _get_total_avg(self, cols, constraint, include_avg):
-        totaler = "SELECT value FROM {0} WHERE cols = %s AND stat = %s AND threshold IS NULL".format(self.stats)
+        totaler = SQL("SELECT value FROM {0} WHERE cols = %s AND stat = %s AND threshold IS NULL").format(Identifier(self.stats))
         if constraint:
             ccols, cvals = self._split_dict(constraint)
-            totaler += " AND constraint_cols = %s AND constraint_values = %s;"
+            totaler = SQL("{0} AND constraint_cols = %s AND constraint_values = %s").format(totaler)
             totaler_values = [Json(cols), "total", ccols, cvals]
         else:
-            totaler += " AND constraint_cols IS NULL;"
+            totaler = SQL("{0} AND constraint_cols IS NULL").format(totaler)
             totaler_values = [Json(cols), "total"]
-        cur_total = self._execute(totaler, values = totaler_values)
+        cur_total = self._execute(totaler, values=totaler_values)
         if cur_total.rowcount == 0:
             raise ValueError("Database does not contain stats for %s"%(cols[0],))
         total = cur_total.fetchone()[0]
         if include_avg:
             # Modify totaler_values in place since query for avg is very similar
             totaler_values[1] = "avg"
-            cur_avg = self._execute(totaler, values = totaler_values)
+            cur_avg = self._execute(totaler, values=totaler_values)
             avg = cur_avg.fetchone()[0]
         else:
             avg = None
@@ -1693,12 +1705,12 @@ class PostgresDatabase(PostgresBase):
         # We want to use unicode everywhere
         register_type(UNICODE, self.conn)
         register_type(UNICODEARRAY, self.conn)
-        cur = self._execute("SELECT NULL::numeric")
+        cur = self._execute(SQL("SELECT NULL::numeric"))
         oid = cur.description[0][1]
         NUMERIC = new_type((oid,), "NUMERIC", numeric_converter)
         register_type(NUMERIC, self.conn)
         register_adapter(Integer, AsIs)
-        cur = self._execute("SELECT name, sort, capitalization, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables")
+        cur = self._execute(SQL("SELECT name, sort, capitalization, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
@@ -1779,7 +1791,10 @@ class PostgresDatabase(PostgresBase):
             allcols = []
             hasid = False
             for typ, cols in coldict.items():
-                if typ in ('text','char','varchar'):
+                if typ.lower() not in types_whitelist:
+                    if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
+                        raise ValueError("%s is not a valid type"%(typ))
+                if typ == 'text' or typ.startswith('char'):
                     typ = typ + ' COLLATE "C"'
                 if isinstance(cols, basestring):
                     cols = [cols]
@@ -1790,21 +1805,29 @@ class PostgresDatabase(PostgresBase):
                         caps.append(col)
                     if col == 'id':
                         hasid = True
-                    allcols.append("{0} {1}".format(col, typ))
+                    # We have whitelisted the types, so it's okay to use string formatting
+                    # to insert them into the SQL command.
+                    # This is useful so that we can specify the collation in the type
+                    allcols.append(SQL("{0} " + typ).format(Identifier(col)))
             if (not hasid) and (id_ordered or extra_columns is not None):
-                allcols.insert(0,"id bigint")
+                allcols.insert(0, SQL("id bigint"))
             return allcols
         columns = process_columns(columns)
-        creator = 'CREATE TABLE {0} ({1});'.format(name, ", ".join(columns))
+        creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(columns))
         self._execute(creator)
         if extra_columns is not None:
             extra_columns = process_columns(extra_columns)
-            creator = 'CREATE TABLE {0}_extras ({1});'.format(name, ", ".join(extra_columns))
-        creator = 'CREATE TABLE {0}_counts (cols jsonb, values jsonb, count bigint);'.format(name)
+            creator = SQL('CREATE TABLE {0} ({1})')
+            creator = creator.format(Identifier(name+"_extras"),
+                                     SQL(", ").join(extra_columns))
+            self._execute(creator)
+        creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
+        creator = creator.format(Identifier(name+"_counts"))
         self._execute(creator)
-        creator = 'CREATE TABLE {0}_stats (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer);'.format(name)
+        creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
+        creator = creator.format(Identifier(name + "_stats"))
         self._execute(creator)
-        insertor = 'INSERT INTO meta_tables (name, sort, capitalization, id_ordered, out_of_order, has_extras) VALUES (%s, %s, %s, %s, %s, %s);'
-        self._execute(insertor, [name, sort, Json(caps), id_ordered, not id_ordered, extra_columns is not None])
+        inserter = SQL('INSERT INTO meta_tables (name, sort, capitalization, id_ordered, out_of_order, has_extras) VALUES (%s, %s, %s, %s, %s, %s)')
+        self._execute(inserter, [name, sort, Json(caps), id_ordered, not id_ordered, extra_columns is not None])
 
 db = PostgresDatabase()
