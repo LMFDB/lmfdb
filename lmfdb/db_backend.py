@@ -20,7 +20,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
     sage: G['Exponent']
     4
 
-- ``extras_table`` -- a string or None.  If provided, gives the name of a table that is linked to the search table by an ``id`` column and provides more data that cannot be searched on.  The reason to separate the data into two tables is to reduce the size of the search table.  For large tables this speeds up some queries.
+- ``extra_table`` -- a string or None.  If provided, gives the name of a table that is linked to the search table by an ``id`` column and provides more data that cannot be searched on.  The reason to separate the data into two tables is to reduce the size of the search table.  For large tables this speeds up some queries.
 - ``count_table`` -- a string or None.  If provided, gives the name of a table that caches counts for searches on the search table.  These counts are relevant when many results are returned, allowing the search pages to report the number of records even when it would take Postgres a long time to compute this count.
 
 """
@@ -28,7 +28,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import logging
 import pymongo
-import re, os
+import re, os, time
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal
 from psycopg2.extras import Json, execute_values
@@ -74,6 +74,22 @@ param_types_whitelist = [
     r"^(numeric|decimal)\s*\([1-9][0-9]*(,\s*(0|[1-9][0-9]*))?\)$",
 ]
 param_types_whitelist = [re.compile(s) for s in param_types_whitelist]
+# the non-default operator classes, used in creating indexes
+_operator_classes = {'brin':   ['inet_minmax_ops'],
+                     'btree':  ['bpchar_pattern_ops', 'cidr_ops', 'record_image_ops',
+                                'text_pattern_ops', 'varchar_ops', 'varchar_pattern_ops'],
+                     'gin':    ['jsonb_path_ops'],
+                     'gist':   ['inet_ops'],
+                     'hash':   ['bpchar_pattern_ops', 'cidr_ops', 'text_pattern_ops',
+                                'varchar_ops', 'varchar_pattern_ops'],
+                     'spgist': ['kd_point_ops']}
+# Valid storage parameters by type, used in creating indexes
+_valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
+                         'btree':  ['fillfactor'],
+                         'gin':    ['fastupdate', 'gin_pending_list_limit'],
+                         'gist':   ['fillfactor', 'buffering'],
+                         'hash':   ['fillfactor'],
+                         'spgist': ['fillfactor']}
 
 def numeric_converter(value, cur):
     """
@@ -190,7 +206,7 @@ class PostgresBase(object):
     @staticmethod
     def _sort_str(sort_list):
         """
-        Constructs a string describing a sort order for Postgres from a list of columns.
+        Constructs a psycopg2.sql.Composable object describing a sort order for Postgres from a list of columns.
 
         INPUT:
 
@@ -198,15 +214,17 @@ class PostgresBase(object):
 
         OUTPUT:
 
-        - a string to be used in postgres in the ORDER BY clause.
+        - a Composable to be used by psycopg2 in the ORDER BY clause.
         """
         L = []
         for col in sort_list:
             if isinstance(col, basestring):
-                L.append(col)
+                L.append(Identifier(col))
+            elif col[1] == 1:
+                L.append(Identifier(col[0]))
             else:
-                L.append(col[0] if col[1] == 1 else col[0] + " DESC")
-        return ", ".join(L)
+                L.append(SQL("{0} DESC").format(Identifier(col[0])))
+        return SQL(", ").join(L)
 
 class PostgresTable(PostgresBase):
     """
@@ -243,19 +261,19 @@ class PostgresTable(PostgresBase):
                     col_list.append(col)
                     if rec[1] == 'jsonb':
                         json_set.add(col)
-            if (self._id_ordered or self.extras_table is not None) and not has_id:
+            if (self._id_ordered or self.extra_table is not None) and not has_id:
                 raise RuntimeError("Table %s must have id column!"%(table_name))
             self.has_id = has_id # used in determining how to sort
         self._search_cols = []
         self._json_override = set()
         if has_extras:
-            self.extras_table = search_table + "_extras"
+            self.extra_table = search_table + "_extras"
             self._extra_cols = []
-            set_column_info(self._extra_cols, self._json_override, self.extras_table)
+            set_column_info(self._extra_cols, self._json_override, self.extra_table)
             self._extra_cols = tuple(self._extra_cols)
         else:
-            self.extras_table = None
-            self._extra_cols = None
+            self.extra_table = None
+            self._extra_cols = ()
         set_column_info(self._search_cols, self._json_override, search_table)
         self._search_cols = tuple(self._search_cols)
         self._sort_keys = set([])
@@ -311,10 +329,10 @@ class PostgresTable(PostgresBase):
         selecter = SQL("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s")
         cur = self._execute(selecter, [self.search_table])
         search_types = {k:v for k,v in cur}
-        if self.extras_table is None:
+        if self.extra_table is None:
             extras_types = None
         else:
-            cur = self._execute(selecter, [self.extras_table])
+            cur = self._execute(selecter, [self.extra_table])
             extras_types = {k:v for k,v in cur}
         return search_types, extras_types
 
@@ -378,7 +396,7 @@ class PostgresTable(PostgresBase):
         if projection == 1:
             return self._search_cols, (), 0
         elif projection == 2:
-            if self.extras_table is None:
+            if self.extra_table is None:
                 return self._search_cols, (), 0
             else:
                 return ("id",) + self._search_cols, self._extra_cols, 1
@@ -392,7 +410,7 @@ class PostgresTable(PostgresBase):
                 if (col in projection) == including:
                     search_cols.append(col)
                 projection.pop(col, None)
-            if self._extra_cols is not None:
+            if self.extra_table is not None:
                 for col in self._extra_cols:
                     if (col in projvals) == including:
                         extra_cols.append(col)
@@ -406,7 +424,7 @@ class PostgresTable(PostgresBase):
             for col in projection:
                 if col in self._search_cols:
                     search_cols.append(col)
-                elif self._extra_cols is not None and col in self._extra_cols:
+                elif col in self._extra_cols:
                     extra_cols.append(col)
                 elif col == 'id':
                     include_id = True
@@ -576,9 +594,9 @@ class PostgresTable(PostgresBase):
         """
         qstr, values = self._parse_dict(query)
         if qstr is None:
-            s = ""
+            s = SQL("")
         else:
-            s = " WHERE " + qstr
+            s = SQL(" WHERE {0}").format(qstr)
         if sort is None:
             if self._sort is None:
                 if limit is not None and not (limit == 1 and offset == 0):
@@ -588,15 +606,17 @@ class PostgresTable(PostgresBase):
                 # the primary key is connected to the id.
                 sort = self._sort
             else:
-                sort = "id"
+                sort = Identifier("id")
         else:
             sort = self._sort_str(sort)
         if sort:
-            s += " ORDER BY " + sort
+            s = SQL("{0} ORDER BY {1}").format(s, sort)
         if limit is not None:
-            s += " LIMIT " + str(limit)
+            s = SQL("{0} LIMIT %s").format(s)
+            values.append(limit)
             if offset != 0:
-                s += " OFFSET " + str(offset)
+                s = "{0} OFFSET %s".format(s)
+                values.append(offset)
         return s, values
 
     def _search_iterator(self, cur, search_cols, extra_cols, id_offset, projection):
@@ -619,7 +639,7 @@ class PostgresTable(PostgresBase):
         Otherwise, an iterator that yields dictionaries with keys
         from ``search_cols`` and ``extra_cols``.
         """
-        # Eventually want to batch the queries on the extras_table so that we make
+        # Eventually want to batch the queries on the extra_table so that we make
         # fewer SQL queries here.
         for rec in cur:
             if projection == 0 or isinstance(projection, basestring) and not extra_cols:
@@ -627,7 +647,7 @@ class PostgresTable(PostgresBase):
             else:
                 D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:]) if v is not None}
                 if extra_cols:
-                    selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(SQL(", ").join(map(Identifier, extra_cols)), Identifier(self.extras_table))
+                    selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(SQL(", ").join(map(Identifier, extra_cols)), Identifier(self.extra_table))
                     extra_cur = self._execute(selecter, [rec[0]])
                     extra_rec = extra_cur.fetchone()
                     for k,v in zip(extra_cols, extra_rec):
@@ -707,7 +727,7 @@ class PostgresTable(PostgresBase):
                 id = rec[0]
                 D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:]) if v is not None}
                 vars = SQL(", ").join(map(Identifier, extra_cols))
-                selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(vars, Identifier(self.extras_table))
+                selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(vars, Identifier(self.extra_table))
                 cur = self._execute(selecter, [id])
                 rec = cur.fetchone()
                 for k,v in zip(extra_cols, rec):
@@ -980,84 +1000,211 @@ class PostgresTable(PostgresBase):
         """
         Lists the indexes on the search table.
         """
-        selecter = SQL("SELECT index_name, columns, type FROM meta_indexes WHERE table_name = %s")
-        cur = self._execute(selecter, [self.search_table])
-        for name, columns, typ in cur:
-            print "{0} ({1}): {2}".format(name, typ, ", ".join(columns))
+        selecter = SQL("SELECT index_name, type, columns, modifiers FROM meta_indexes WHERE table_name = %s")
+        cur = self._execute(selecter, [self.search_table], silent=True)
+        for name, typ, columns, modifiers in cur:
+            colspec = [" ".join([col] + mods) for col, mods in zip(columns, modifiers)]
+            print "{0} ({1}): {2}".format(name, typ, ", ".join(colspec))
 
-    def create_index(self, columns, type="btree", name=None, command=None):
-        cols = [] # just column names
-        colspec = [] # include DESC
-        for col in columns:
-            if isinstance(col, basestring):
-                cols.append(col)
-                colspec.append(col)
-            elif command is not None:
-                raise ValueError("Cannot specify both command and directions")
+    @staticmethod
+    def _create_index_statement(name, table, type, columns, modifiers, storage_params):
+        """
+        Utility function for making the create index SQL statement.
+        """
+        # We whitelisted the type, modifiers and storage parameters
+        # when creating the index so the following is safe from SQL injection
+        if storage_params:
+            # The inner format is on a string rather than a psycopg2.sql.Composable:
+            # the keys of storage_params have been whitelisted.
+            storage_params = SQL(" WITH ({0})").format(SQL(", ").join(SQL("{0} = %s".format(param)) for param in storage_params))
+        else:
+            storage_params = SQL("")
+        modifiers = [" " + " ".join(mods) if mods else "" for mods in modifiers]
+        # The inner % operator is on strings prior to being wrapped by SQL: modifiers have been whitelisted.
+        columns = SQL(", ").join(SQL("{0}%s"%mods).format(Identifier(col)) for col, mods in zip(columns, modifiers))
+        # The inner % operator is on strings prior to being wrapped by SQL: type has been whitelisted.
+        creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}"%(type))
+        return creator.format(Identifier(name), Identifier(table), columns, storage_params)
+
+    def create_index(self, columns, type="btree", modifiers=None, name=None, storage_params=None):
+        """
+        Create an index.
+
+        This function will also add the indexing data to the meta_indexes table
+        so that indexes can be dropped and recreated when uploading data.
+
+        INPUT:
+
+        - ``columns`` -- a list of column names
+        - ``type`` -- one of the postgres index types: btree, gin, gist, brin, hash, spgist.
+        - ``modifiers`` -- a list of lists of strings.  The overall length should be
+            the same as the length of ``columns``, and each internal list can only contain the
+            following whitelisted column modifiers:
+            - a non-default operator class
+            - ``ASC``
+            - ``DESC``
+            - ``NULLS FIRST``
+            - ``NULLS LAST``
+            This interface doesn't currently support creating indexes with nonstandard collations.
+        """
+        if type not in _operator_classes:
+            raise ValueError("Unrecognized index type")
+        if modifiers is None:
+            if type == "gin":
+                modifiers = [["jsonb_path_ops"]]
             else:
-                if len(col) != 2:
-                    raise ValueError
-                if not isinstance(col[0], basestring):
-                    raise ValueError("First entry must be a column")
-                if col[1] == 1:
-                    cols.append(col[0])
-                    if type == "gin":
-                        colspec.append(col[0] + " jsonb_path_ops")
-                    else:
-                        colspec.append(col[0])
-                elif type == "gin":
-                    raise ValueError("Cannot specify order using gin")
-                elif col[1] == -1:
-                    cols.append(col[0])
-                    colspec.append(col[0] + " DESC")
-                else:
-                    raise ValueError("Invalid order specification %s"%(col[1]))
-        for col in cols:
+                modifiers = [[]] * len(columns)
+        else:
+            if len(modifiers) != len(columns):
+                raise ValueError("modifiers must have same length as columns")
+            for mods in modifiers:
+                for mod in mods:
+                    if mod.lower() not in ["asc", "desc", "nulls first", "nulls last"] + _operator_classes[type]:
+                        raise ValueError("Invalid modifier %s"%(mod,))
+        if storage_params is None:
+            if type in ["btree", "hash", "gist", "spgist"]:
+                storage_params = {"fillfactor": 100}
+            else:
+                storage_params = {}
+        else:
+            for key in storage_params:
+                if key not in _valid_storage_params[type]:
+                    raise ValueError("Invalid storage parameter %s"%key)
+        for col in columns:
             if col != "id" and col not in self._search_cols:
                 raise ValueError("%s not a column"%(col))
-        colspec = ", ".join(colspec)
         if name is None:
-            name = self.search_table + "_" + "_".join(cols)
-            if type != "btree":
-                name += "_" + type
+            name = "_".join([self.search_table] + cols + ([] if type == "btree" else [type]))
         selecter = SQL("SELECT 1 FROM meta_indexes WHERE index_name = %s AND table_name = %s")
-        cur = self._execute(selecter, [name, self.search_table])
+        cur = self._execute(selecter, [name, self.search_table], silent=True)
         if cur.rowcount > 0:
-            raise ValueError("Index with that name already exists")
-        if command is None:
-            if type == "btree":
-                command = "CREATE INDEX {0} ON {1} USING btree (%s) WITH (fillfactor='100')"
-            elif type == "gin":
-                command = "CREATE INDEX {0} ON {1} USING gin (%s)"
-            command = command%(colspec) # FIX
-        self._execute(command, commit=False)
-        inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, columns, type, command) VALUES (%s, %s, %s, %s, %s)")
-        self._execute(inserter, [name, self.search_table, Json(cols), type, command])
+            raise ValueError("Index with that name already exists; try specifying a different name")
+        creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
+        self._execute(creator, storage_params.values(), silent=True, commit=False)
+        inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
+        self._execute(inserter, [name, self.search_table, type, Json(columns), Json(modifiers), Json(storage_params)], silent=True, commit=False)
+        self.conn.commit()
 
-    def drop_index(self, name, permanent=False):
+    def drop_index(self, name, suffix="", permanent=False):
+        """
+        Drop a specified index.
+
+        INPUT:
+
+        - ``name`` -- the name of the index
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the DROP INDEX statement.
+        - ``permanent`` -- whether to remove the index from the meta_indexes table
+        """
+        now = time.time()
         if permanent:
             deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND index_name = %s")
-            self._execute(deleter, [self.search_table, name])
-        dropper = SQL("DROP INDEX {0}").format(Identifier(name))
-        self._execute(dropper)
+            self._execute(deleter, [self.search_table, name], silent=True, commit=False)
+        dropper = SQL("DROP INDEX {0}").format(Identifier(name + suffix))
+        self._execute(dropper, silent=True, commit=False)
+        self.conn.commit()
+        print "Dropped index %s in %.3f secs"%(name, time.time() - now)
 
-    def drop_indexes(self, columns=[]):
+    def restore_index(self, name, suffix=""):
+        """
+        Restore a specified index using the meta_indexes table.
+
+        INPUT:
+
+        - ``name`` -- the name of the index
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the CREATE INDEX statement.
+        """
+        now = time.time()
+        selecter = SQL("SELECT type, columns, modifiers, storage_params FROM meta_indexes WHERE table_name = %s AND index_name = %s")
+        cur = self._execute(selecter, [self.search_table, name], silent=True)
+        if cur.rowcount > 1:
+            raise RuntimeError("Duplicated rows in meta_indexes")
+        elif cur.rowcount == 0:
+            raise ValueError("Index %s does not exist in meta_indexes"%(name,))
+        type, columns, modifiers, storage_params = cur.fetchone()
+        creator = self._create_index_statement(name + suffix, self.search_table + suffix, type, columns, modifiers, storage_params)
+        self._execute(creator, storage_params.values(), silent=True)
+        print "Created index %s in %.3f secs"%(name, time.time() - now)
+
+    def _indexes_touching(self, columns):
+        """
+        Utility function for determining which indexes reference any of the given columns.
+        """
         selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
         if columns:
             selecter = SQL("{0} AND ({1})").format(selecter, SQL(" OR ").join(SQL("columns @> %s") * len(columns)))
             columns = [Json([col]) for col in columns]
-        cur = self._execute(selecter, [self.search_table] + columns)
-        for res in cur:
-            try:
-                self.drop_index(res[0])
-            except Exception:
-                pass
+        return self._execute(selecter, [self.search_table] + columns, silent=True)
 
-    def restore_index(self, name):
-        selecter = SQL("SELECT command FROM meta_indexes WHERE table_name = %s AND index_name = %s")
+    def drop_indexes(self, columns=[], suffix=""):
+        """
+        Drop all indexes, or indexes that refer to any of a list of columns.
 
-    def restore_indexes(self, columns=None):
-        pass
+        INPUT:
+
+        - ``columns`` -- a list of column names.  If any are included,
+            then only indexes referencing those columns will be included.
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the DROP INDEX statement.
+        """
+        for res in self._indexes_touching(columns):
+            self.drop_index(res[0], suffix)
+
+    def restore_indexes(self, columns=[], suffix=""):
+        """
+        Restore all indexes using the meta_indexes table, or indexes that refer to any of a list of columns.
+
+        INPUT:
+
+        - ``columns`` -- a list of column names.  If any are included,
+            then only indexes referencing those columns will be included.
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the CREATE INDEX statement.
+        """
+        for res in self._indexes_touching(columns):
+            self.restore_index(res[0], suffix)
+
+    def _pkey_common(self, command, suffix, action):
+        """
+        Common code for ``drop_pkeys`` and ``restore_pkeys``.
+
+        INPUT:
+
+        - ``command`` -- an sql.Composable object giving the command to execute.
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the command.
+        - ``action`` -- either "Dropped" or "Built", for printing.
+        """
+        now = time.time()
+        # Note that the primary keys don't follow the same convention as the other
+        # indexes, since they end in _pkey rather than the suffix.
+        self._execute(command.format(Identifier(self.search_table + suffix),
+                                     Identifier(self.search_table + suffix + "_pkey")),
+                      silent=True, commit=False)
+        if self.extra_table is not None:
+            self._execute(command.format(Identifier(self.extra_table + suffix),
+                                         Identifier(self.search_table + suffix + "_pkey")),
+                          silent=True, commit=False)
+        self.conn.commit()
+        print "%s primary key on %s in %.3f secs"%(action, self.search_table, time.time()-now)
+
+    def drop_pkeys(self, suffix=""):
+        """
+        Drop the primary key on the id columns.
+
+        INPUT:
+
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the ALTER TABLE statements.
+        """
+        command = SQL("ALTER TABLE {0} DROP CONSTRAINT {1}")
+        self._pkey_common(command, suffix, "Dropped")
+
+    def restore_pkeys(self, suffix=""):
+        """
+        Restore the primary key on the id columns.
+
+        INPUT:
+
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the ALTER TABLE statements.
+        """
+        command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
+        self._pkey_common(command, suffix, "Built")
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -1072,7 +1219,7 @@ class PostgresTable(PostgresBase):
         if self._stats_valid:
             # Only need to interact with database in this case.
             updater = SQL("UPDATE meta_tables SET stats_valid = false WHERE name = %s")
-            self._execute(updater, [self.search_table], commit=False)
+            self._execute(updater, [self.search_table], silent=True, commit=False)
             self._stats_valid = False
 
     def _break_order(self):
@@ -1084,10 +1231,11 @@ class PostgresTable(PostgresBase):
         if not self._out_of_order:
             # Only need to interact with database in this case.
             updater = SQL("UPDATE meta_tables SET out_of_order = true WHERE name = %s")
-            self._execute(updater, [self.search_table], commit=False)
+            self._execute(updater, [self.search_table], silent=True, commit=False)
             self._out_of_order = True
 
     def finalize_changes(self):
+        # TODO
         # Update stats.total
         # Refresh stats targets
         # Sort and set self._out_of_order
@@ -1105,15 +1253,18 @@ class PostgresTable(PostgresBase):
         - ``data`` -- a dictionary containing key/value pairs to be set on this row.
 
         The keys of both inputs must be columns in either the search or extras table.
+
+        Upserting will often break the order constraint if the table is id_ordered,
+        so you will probably want to call ``resort`` after all upserts are complete.
         """
-        if not label or not data:
-            raise ValueError("Both label and data must be nonempty")
+        if not query or not data:
+            raise ValueError("Both query and data must be nonempty")
         if "id" in data:
             raise ValueError("Cannot set id")
         for col in query:
             if col != "id" and col not in self._search_cols:
                 raise ValueError("%s is not a column of %s"%(col, self.search_table))
-        if self.extras_table is None:
+        if self.extra_table is None:
             search_data = data
             for col in data:
                 if col not in self._search_cols:
@@ -1128,19 +1279,19 @@ class PostgresTable(PostgresBase):
                     extras_data[col] = self._json_wrap(col, val)
                 else:
                     raise ValueError("%s is not a column of %s"%(col, self.search_table))
+        cases = [(self.search_table, search_data)]
+        if self.extra_table is not None:
+            cases.append((self.extra_table, extras_data))
         # We have to split this command into a SELECT and an INSERT statement
         # rather than using postgres' INSERT INTO ... ON CONFLICT statement
         # because we have to take different additional steps depending on whether
         # an insertion actually occurred
         qstr, values = self._parse_dict(query)
         selecter = SQL("SELECT {0} FROM {1} WHERE {2} LIMIT 2").format(Identifier("id") if self.has_id else Literal(1), Identifier(self.search_table), qstr)
-        cur = self._execute(selecter, values)
-        cases = [(self.search_table, search_data)]
-        if self.extras_table is not None:
-            cases.append((self.extras_table, extras_data))
+        cur = self._execute(selecter, values, silent=True)
         if cur.rowcount > 1:
             raise ValueError("Query %s does not specify a unique row"%(query))
-        elif cur.rowcount == 1:
+        elif cur.rowcount == 1: # update
             row_id = cur.fetchone()[0] # might be just 1 if has_id is False
             for table, dat in cases:
                 updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
@@ -1153,10 +1304,10 @@ class PostgresTable(PostgresBase):
                     dvalues.append(row_id)
                 else:
                     dvalues.extend(values)
-                self._execute(updater, dvalues, commit=False)
+                self._execute(updater, dvalues, silent=True, commit=False)
             if not self._out_of_order and any(key in self._sort_keys for key in data):
                 self._break_order()
-        else:
+        else: # insertion
             if self.has_id and ("id" in data or "id" in query):
                 raise ValueError("Cannot specify an id for insertion")
             for col, val in query.items():
@@ -1167,21 +1318,21 @@ class PostgresTable(PostgresBase):
             # but it will raise an error rather than leading to invalid database state,
             # so it should be okay.
             if self.has_id:
-                search_data["id"] = self.stats.total
-                if self.extras_table is not None:
-                    extras_data["id"] = self.stats.total
+                search_data["id"] = self.stats.total + 1
+                if self.extra_table is not None:
+                    extras_data["id"] = self.stats.total + 1
             for table, dat in cases:
                 inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
                 inserter.format(Identifier(table),
                                 SQL(", ").join(map(Identifier, dat.keys())),
                                 SQL(", ").join(Placeholder() * len(dat)))
-                self._execute(inserter, dat.values(), commit=False)
+                self._execute(inserter, dat.values(), silent=True, commit=False)
             self._break_order()
             self.stats.total += 1
         self._break_stats()
         self.conn.commit()
 
-    def insert_many(self, search_data, extras_data=None, drop_indexes=False):
+    def insert_many(self, search_data, extras_data=None, resort=True, reindex=False):
         """
         Insert multiple rows.
 
@@ -1195,7 +1346,8 @@ class PostgresTable(PostgresBase):
           instead of the desired value, or an error may be raised.
         - ``extras_data`` -- a list of dictionaries with data to be inserted into the extras table.
           Must be present, and of the same length as search_data, if the extras table exists.
-        - ``drop_indexes`` -- boolean (default False). Whether to drop the indexes
+        - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
+        - ``reindex`` -- boolean (default False). Whether to drop the indexes
           before insertion and restore afterward.  Note that if there is an exception during insertion
           the indexes will need to be restored manually using ``restore_indexes``.
 
@@ -1204,71 +1356,117 @@ class PostgresTable(PostgresBase):
         """
         if not search_data:
             raise ValueError("No data provided")
-        if (extras_data is None) != (self.extras_table is None):
-            raise ValueError("extras_data must be present iff extras_table is")
+        if (extras_data is None) != (self.extra_table is None):
+            raise ValueError("extras_data must be present iff extra_table is")
         if extras_data is not None and len(search_data) != len(extras_data):
             raise ValueError("search_data and extras_data must have same length")
-        if drop_indexes:
+        if reindex:
+            self.drop_pkeys()
             self.drop_indexes()
         if self.has_id:
             for i, SD in enumerate(search_data):
-                SD["id"] = self.stats.total + i
+                SD["id"] = self.stats.total + i + 1
         cases = [(self.search_table, search_data)]
         if extras_data is not None:
             for i, ED in enumerate(extras_data):
-                ED["id"] = self.stats.total + i
-            cases.append((self.extras_table, extras_data))
+                ED["id"] = self.stats.total + i + 1
+            cases.append((self.extra_table, extras_data))
+        now = time.time()
         for table, L in cases:
             template = SQL("({0})").format(map(Placeholder, L[0].keys()))
             inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
             inserter = inserter.format(Identifier(table),
                                        SQL(", ").join(map(Identifier, L[0].keys())))
-            self._execute(inserter, L, silent=True, values_list=True, template=template, commit=False)
+            self._execute(inserter, L, silent=True, values_list=True, template=template, silent=True, commit=False)
+        print "Inserted %s records into %s in %.3f secs"%(len(search_data), self.search_table, time.time()-now)
         self._break_order()
         self._break_stats()
         self.stats.total += len(search_data)
         self.conn.commit()
-        if drop_indexes:
+        if resort:
+            self.resort()
+        if reindex:
+            self.restore_pkeys()
             self.restore_indexes()
 
-    def copy_from(self, filename, appendix=None, tmp_table=False, includes_ids=None, drop_indexes=None, sort=False, **kwds):
+    def _identify_tables(self, search_table, extra_table):
         """
-        Efficiently copy data from a file into the database.
+        Utility function for normalizing input on ``resort``.
+        """
+        if search_table is not None:
+            search_table = Identifier(search_table)
+        else:
+            search_table = Identifier(self.search_table)
+        if extra_table is not None:
+            if self.extra_table is None:
+                raise ValueError("No extra table")
+            extra_table = Identifier(extra_table)
+        elif self.extra_table is not None:
+            extra_table = Identifier(self.extra_table)
+        return search_table, extra_table
+
+    def resort(self, search_table=None, extra_table=None):
+        """
+        Restores the sort order on the id column.
 
         INPUT:
 
-        - ``filename`` -- a string, the file to import
-        - ``appendix`` -- a string ("extras", "counts", "stats"), used when copying into an auxiliary table.
-        - ``tmp_table`` -- boolean (default False), whether to create a temporary table to load the data, before renaming the current and new tables to do the actual swap.
-        - ``includes_ids`` -- whether the file includes ids as the first column.
-            If so, the ids should be contiguous, starting immediately after the current max id.
-            If ids are provided, if this table is id_ordered, and if this table
-            currently contains no data, the ids should be in sorted order
-            (since the metadata will reflect this assumption after the import).
-            If the file does not include ids, and this table has ids, the user must have write permission
-            to the file's directory: the filename with "_with_ids" will be used as a temporary file.
-        - ``drop_indexes`` -- whether to drop the indexes before importing data and rebuild them afterward.
-        - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Notably, ``columns`` allows one
-            to specify the order of columns in the file; the default is self._search_cols/self._extra_cols.
+        - ``search_table`` -- a string giving the name of the search_table to be sorted.
+            If None, will use ``self.search_table``; another common input is ``self.search_table + "_tmp"``.
+        - ``extra_table`` -- a string giving the name of the extra_table to be sorted.
+            If None, will use ``self.extra_table``; another common input is ``self.extra_table + "_tmp"``.
         """
-        if appendix is None:
-            table = self.search_table
-            cols = list(self._search_cols)
-            if self.has_id:
-                cols.insert(0, "id")
-        elif appendix == "extras":
-            if self.extras_table is None:
-                raise ValueError("No extras table")
-            table = self.extras_table
-            cols = ["id"] + self._extra_cols
-        elif appendix == "counts":
-            table = self.stats.counts
-            cols = ["cols", "values", "count"]
-        elif appendix == "stats":
-            table = self.stats.stats
-            cols = ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"]
+        if self._id_ordered and (search_table is not None or self._out_of_order):
+            now = time.time()
+            search_table, extra_table = self._identify_tables(search_table, extra_table)
+            newid = "newid"
+            while newid in self._search_cols or newid in self._extra_cols:
+                newid += "_"
+            newid = Identifier(newid)
+            oldid = Identifier("id")
+            addcol = SQL("ALTER TABLE {0} ADD COLUMN {1} bigint")
+            dropcol = SQL("ALTER TABLE {0} DROP COLUMN {1}")
+            movecol = SQL("ALTER TABLE {0} RENAME COLUMN {1} TO {2}")
+            pkey = SQL("ALTER TABLE {0} ADD PRIMARY KEY ({1})")
+            self._execute(addcol.format(search_table, newid), silent=True, commit=False)
+            updater = SQL("UPDATE {0} SET {1} = newsort.newid FROM (SELECT id, ROW_NUMBER() OVER(ORDER BY {2}) AS newid FROM {0}) newsort WHERE {0}.id = newsort.id")
+            updater = updater.format(search_table, newid, self._sort)
+            self._execute(updater, silent=True, commit=False)
+            if extra_table is not None:
+                self._execute(addcol.format(extra_table, newid), silent=True, commit=False)
+                updater = SQL("UPDATE {0} SET {1} = search_table.{1} FROM (SELECT id, {1} FROM {2}) search_table WHERE {0}.id = search_table.id")
+                updater = updater.format(extra_table, newid, search_table)
+                self._execute(updater, silent=True, commit=False)
+                self._execute(dropcol.format(extra_table, oldid), silent=True, commit=False)
+                self._execute(movecol.format(extra_table, newid, oldid), silent=True, commit=False)
+                self._execute(pkey.format(extra_table, oldid), silent=True, commit=False)
+            self._execute(dropcol.format(search_table, oldid), silent=True, commit=False)
+            self._execute(movecol.format(search_table, newid, oldid), silent=True, commit=False)
+            self._execute(pkey.format(search_table, oldid), silent=True, commit=False)
+            updater = SQL("UPDATE meta_tables SET out_of_order = false WHERE name = %s")
+            self._execute(updater, [self.search_table], silent=True, commit=False)
+            self._out_of_order = False
+            print "Resorted %s in %.3f secs"%(self.search_table, time.time() - now)
+            self.conn.commit()
+        elif self._id_ordered:
+            print "Data already sorted"
         else:
-            raise ValueError("Unrecognized appendix")
+            print "Data does not have an id column to be sorted"
+
+    def _copy_from(self, filename, table, columns, cur_count, includes_ids, kwds):
+        """
+        Helper function for ``copy_from`` and ``reload``.
+
+        INPUT:
+
+        - ``filename`` -- the filename to load
+        - ``table`` -- the table into which the data should be added
+        - ``columns`` -- a list of columns specifying the format of the file
+        - ``cur_count`` -- the current number of rows in the table
+        - ``includes_ids`` -- whether the file starts with an id column.
+            If not, a temporary file will be written to.
+        - ``kwds`` -- passed on to psycopg2's copy_from
+        """
         if not includes_ids:
             idfile = filename + "_with_ids"
             if os.path.exists(idfile):
@@ -1277,68 +1475,225 @@ class PostgresTable(PostgresBase):
             with open(filename) as F:
                 with open(idfile, 'w') as Fid:
                     for i, line in enumerate(F):
-                        Fid.write((unicode(i + self.stats.total) + sep + line).encode("utf-8"))
+                        Fid.write((unicode(i + cur_count + 1) + sep + line).encode("utf-8"))
         else:
             idfile = filename
-        kwds = dict(kwds)
-        kwds["columns"] = kwds.get("columns", cols)
         cur = self.conn.cursor()
         with open(idfile) as Fid:
             try:
-                cur.copy_from(Fid, table, **kwds)
+                cur.copy_from(Fid, table, columns=columns, **kwds)
+                return cur.rowcount
             except Exception:
                 self.conn.rollback()
                 raise
-        if not (includes_ids and self._id_ordered and self.stats.total == 0):
-            self._break_order()
+
+    def _clone(self, table, tmp_table, commit=False):
+        """
+        Utility function: creates a table with the same schema as the given one.
+        """
+        creator = SQL("CREATE TABLE {0} LIKE {1}")
+        self._execute(creator, commit=commit)
+
+    def _swap_in_tmp(self, tables, indexed):
+        """
+        Helper function for ``reload``: appends _old{n} to the names of tables/indexes/pkeys
+        and renames the _tmp versions to the live versions.
+
+        INPUT:
+
+        - ``tables`` -- a list of tables to rename (e.g. self.search_table, self.extra_table, self.stats.counts, self.stats.stats)
+        - ``indexed`` -- boolean, whether the temporary table has indexes on it.
+        """
+        now = time.time()
+        backup_number = 1
+        for table in tables:
+            while self._table_exists("{0}_old{1}".format(table, backup_number)):
+                backup_number += 1
+        rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
+        rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
+        rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
+        for table in tables:
+            self._execute(rename_table.format(Identifier(table), Identifier("{0}_old{1}".format(table, backup_number))), silent=True, commit=False)
+            self._execute(rename_table.format(Identifier(table + "_tmp"), Identifier(table)), silent=True, commit=False)
+            if self.has_id:
+                self._execute(rename_pkey.format(Identifier("{0}_old{1}".format(table, backup_number)),
+                                                 Identifier("{0}_pkey".format(table)),
+                                                 Identifier("{0}_old{1}_pkey".format(table, backup_number))),
+                              silent=True, commit=False)
+                self._execute(rename_pkey.format(Identifier(table),
+                                                 Identifier("{0}_tmp_pkey".format(table)),
+                                                 Identifier("{0}_pkey".format(table))),
+                              silent=True, commit=False)
+        selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
+        cur = self._execute(selecter, [self.search_table], silent=True, commit=False)
+        for res in cur:
+            self._execute(rename_index.format(Identifier(res[0]), Identifier("{0}_old{1}".format(res[0], backup_number))), silent=True, commit=False)
+            if indexed:
+                self._execute(rename_index.format(Identifier(res[0] + "_tmp"), Identifier(res[0])), silent=True, commit=False)
+        print "Swapped temporary tables for %s into place in %s secs\nNew backup at %s"%(self.search_table, time.time()-now, "{0}_old{1}".format(self.search_table, backup_number))
+        self.conn.commit()
+
+    def _check_file_input(self, searchfile, extrafile, kwds):
+        """
+        Utility function for validating the inputs to ``reload`` and ``copy_from``.
+        """
+        if searchfile is None:
+            raise ValueError("Must specify search file")
+        if extrafile is not None and self.extra_table is None:
+            raise ValueError("No extra table available")
+        if extrafile is None and self.extra_table is not None:
+            raise ValueError("Must provide file for extra table")
+        if "columns" in kwds:
+            raise ValueError("Cannot specify column order using the columns parameter")
+
+    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, includes_ids=True, resort=None, reindex=True, **kwds):
+        """
+        Safely and efficiently replaces this table with the contents of one or more files.
+
+        INPUT:
+
+        - ``searchfile`` -- a string, the file with data for the search table
+        - ``extrafile`` -- a string, the file with data for the extra table.
+            If there is an extra table, this argument is required.
+        - ``countsfile`` -- a string (optional), giving a file containing counts information for the table.
+        - ``statsfile`` -- a string (optional), giving a file containing stats information for the table.
+        - ``includes_ids`` -- whether the search/extra files include ids as the first column.
+            If so, the ids should be contiguous, starting immediately after the current max id (or at 1 if empty).
+            If the file does not include ids, and this table has ids, the user must have write permission
+            to the file's directory: the filename with "_with_ids" will be used as a temporary file.
+        - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
+        - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
+            If the number of rows is a substantial fraction of the size of the table, this will be faster.
+        - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
+        """
+        if resort is None:
+            resort = not includes_ids
+        self._check_file_input(searchfile, extrafile, kwds)
+        tables = []
+        counts = {}
+        for table, cols, addid, filename in [(self.search_table, self._search_cols, self.has_id, searchfile),
+                                             (self.extra_table, self._extra_cols, True, extrafile),
+                                             (self.stats.counts, ["cols", "values", "count"],False, countfile),
+                                             (self.stats.stats, ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"], False, statsfile)]:
+            if filename is None:
+                continue
+            tables.append(table)
+            now = time.time()
+            if addid:
+                cols = ["id"] + cols
+            tmp_table = table + "_tmp"
+            self._clone(table, tmp_table)
+            counts[table] = self._copy_from(filename, tmp_table, cols, 0, includes_ids, kwds)
+            print "Loaded data into %s in %.3f secs"%(table, time.time() - now)
+        if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
+            self.conn.rollback()
+            raise RuntimeError("Different number of rows in searchfile and extrafile")
+        if self._id_ordered and resort:
+            extra_table = None if self.extra_table is None else self.extra_table + "_tmp"
+            self.resort(self.search_table + "_tmp", extra_table)
+        elif self.has_id:
+            # We still need to build primary keys
+            self.restore_pkeys(suffix="_tmp")
+        if reindex:
+            self.restore_indexes(self.search_table, suffix="_tmp")
+        self._swap_in_tmp(tables, reindex)
+        self.conn.commit()
+
+    def copy_from(self, searchfile, extrafile=None, search_cols=None, extra_cols=None, includes_ids=False, resort=True, reindex=False, **kwds):
+        """
+        Efficiently copy data from files into this table.
+
+        INPUT:
+
+        - ``searchfile`` -- a string, the file with data for the search table
+        - ``extrafile`` -- a string, the file with data for the extra table.
+            If there is an extra table, this argument is required.
+        - ``search_cols`` -- the order of the cols in the search_file, tab-separated.
+            Defaults to ``self._search_cols``.  Do not include "id".
+        - ``extra_cols`` -- the order of the cols in the extra_file, tab-separated.
+            Defaults to ``self._extra_cols``.  Do not include "id".
+        - ``includes_ids`` -- whether the search/extra files include ids as the first column.
+            If so, the ids should be contiguous, starting immediately after the current max id (or at 1 if empty).
+            If the file does not include ids, and this table has ids, the user must have write permission
+            to the file's directory: the filename with "_with_ids" will be used as a temporary file.
+        - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
+        - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
+            If the number of rows is a substantial fraction of the size of the table, this will be faster.
+        - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
+        """
+        self._check_file_input(searchfile, extrafile, kwds)
+        if search_cols is None:
+            search_cols = self._search_cols
+        if self.has_id:
+            search_cols = ["id"] + search_cols
+        if reindex:
+            self.drop_indexes()
+        now = time.time()
+        search_count = self._copy_from(searchfile, self.search_table, search_cols, self.stats.total, includes_ids, kwds)
+        print "Loaded data into %s in %.3f secs"%(self.search_table, time.time() - now)
+        if extrafile is not None:
+            if extra_cols is None:
+                extra_cols = self._extra_cols
+            extra_cols = ["id"] + extra_cols
+            extra_count = self._copy_from(extrafile, self.extra_table, extra_cols, self.stats.total, includes_ids, kwds)
+            if search_count != extra_count:
+                self.conn.rollback()
+                raise RuntimeError("Different number of rows in searchfile and extrafile")
+        self._break_order()
+        if self._id_ordered and resort:
+            self.resort()
+        if reindex:
+            self.restore_indexes()
         self._break_stats()
         self.stats.total += cur.rowcount
         self.conn.commit()
 
-    def copy_to(self, filename, appendix=None, include_ids=False, **kwds):
+    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, include_ids=True, **kwds):
         """
         Efficiently copy data from the database to a file.
 
+        The result will have one line per row of the table, tab separated and in order
+        given by self._search_cols and self._extra_cols.
+
         INPUT:
 
-        - ``filename`` -- a string, the file to export
-        - ``appendix`` -- a string ("extras", "counts", "stats"), used when copying from an auxiliary table.
+        - ``searchfile`` -- a string, the file with data for the search table
+        - ``extrafile`` -- a string, the file with data for the extra table.
+            If there is an extra table, this argument is required.
+        - ``countsfile`` -- a string (optional), giving a file containing counts information for the table.
+        - ``statsfile`` -- a string (optional), giving a file containing stats information for the table.
         - ``include_ids`` -- whether to include the id column.  Note that this keyword differs from that in ``copy_from`` (no "s")
-        - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Notably, ``columns`` allows one
-            to specify the order of columns in the file; the default is self._search_cols/self._extra_cols.
+        - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
-        if appendix is None:
-            table = self.search_table
-            cols = list(self._search_cols)
-            if self.has_id:
-                cols.insert(0, "id")
-        elif appendix == "extras":
-            if self.extras_table is None:
-                raise ValueError("No extras table")
-            table = self.extras_table
-            cols = list(self._extra_cols)
-            if include_ids:
-                cols.insert(0, "id")
-        elif appendix == "counts":
-            table = self.stats.counts
-            cols = ["cols", "values", "count"]
-        elif appendix == "stats":
-            table = self.stats.stats
-            cols = ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"]
-        else:
-            raise ValueError("Unrecognized appendix")
-        kwds = dict(kwds)
-        kwds["columns"] = kwds.get("columns", cols)
-        cur = self.conn.cursor()
-        with open(filename, "w") as F:
-            try:
-                cur.copy_to(filename, table, **kwds)
-            except Exception:
-                self.conn.rollback()
-                raise
-        self.conn.commit()
+        self._check_file_input(searchfile, extrafile, kwds)
+        for table, cols, addid, filename in [(self.search_table, self._search_cols, self.has_id and include_ids, searchfile),
+                                             (self.extra_table, self._extra_cols, include_ids, extrafile),
+                                             (self.stats.counts, ["cols", "values", "count"],False, countfile),
+                                             (self.stats.stats, ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"], False, statsfile)]:
+            if filename is None:
+                continue
+            now = time.time()
+            if addid:
+                cols = ["id"] + cols
+            cur = self.conn.cursor()
+            with open(filename, "w") as F:
+                try:
+                    cur.copy_to(F, table, columns=cols, **kwds)
+                except Exception:
+                    self.conn.rollback()
+                    raise
+                else:
+                    self.conn.commit()
+            print "Exported data from %s in %.3f secs"%(table, time.time() - now)
 
 class PostgresStatsTable(PostgresBase):
+    """
+    This object is used for storing statistics and counts for a search table.
+
+    INPUT:
+
+    - ``table`` -- a ``PostgresTable`` object.
+    """
     # We cache this for quick counting
     empty_json_list = Json([])
 
@@ -1353,6 +1708,19 @@ class PostgresStatsTable(PostgresBase):
             self.total = self._slow_count({}, record=True)
 
     def _has_stats(self, jcols, ccols, cvals, threshold):
+        """
+        Checks whether statistics have been recorded for a given set of columns.
+        It just checks whether the "total" stat has been computed.
+
+        INPUT:
+
+        - ``jcols`` -- a Json object listing the columns to be accumulated.
+        - ``ccols`` -- a Json object listing the columns of the constraints.
+        - ``cvals`` -- a Json object listing the values required for the constraint columns.
+        - ``threshold`` -- an integer: if the number of rows with a given tuple of
+           values for the accumulated columns is less than this threshold, those
+           rows are thrown away.
+        """
         values = [jcols, "total"]
         if ccols is None:
             ccols = "constraint_cols IS NULL"
@@ -1481,6 +1849,22 @@ class PostgresStatsTable(PostgresBase):
         return m
 
     def _split_buckets(self, buckets, constraint, include_upper=True):
+        """
+        Utility function for adding buckets to a constraint
+
+        INPUT:
+
+        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
+            The buckets are the values between these break points.  Repeating break points
+            makes one bucket consist of just that point.
+        - ``constraint`` -- a dictionary giving additional constraints on other columns.
+        - ``include_upper`` -- whether to use intervals of the form A < x <= B (vs A <= x < B).
+
+        OUTPUT:
+
+        Iterates over the cartesian product of the buckets formed, yielding in each case
+        a dictionary that can be used as a query.
+        """
         expanded_buckets = []
         for col, divisions in buckets.items():
             expanded_buckets.append([])
@@ -1506,17 +1890,51 @@ class PostgresStatsTable(PostgresBase):
             yield bucketed_constraint
 
     def add_bucketed_counts(self, cols, buckets, constraint={}, include_upper=True):
+        """
+        A convenience function for adding statistics on a given set of columns,
+        where rows are grouped into intervals by a bucketing dictionary.
+
+        See the ``add_stats`` mehtod for the actual statistics computed.
+
+        INPUT:
+
+        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
+            The buckets are the values between these break points.  Repeating break points
+            makes one bucket consist of just that point.
+        - ``constraint`` -- a dictionary giving additional constraints on other columns.
+        - ``include_upper`` -- whether to use intervals of the form A < x <= B (vs A <= x < B).
+        """
         # Need to check that the buckets cover all cases.
         for bucketed_constraint in self._split_buckets(buckets, constraint, include_upper):
             self.add_stats(cols, bucketed_constraint)
 
     def _split_dict(self, D):
+        """
+        A utility function for splitting a dictionary into parallel lists of keys and values.
+        """
         if D:
             return map(Json, zip(*sorted(D.items())))
         else:
             return self.empty_json_list, self.empty_json_list
 
     def add_stats(self, cols, constraint=None, threshold=None):
+        """
+        Add statistics on counts, average, min and max values for a given set of columns.
+
+        INPUT:
+
+        - ``cols`` -- a list of columns, usually of length 1 or 2.
+        - ``constraint`` -- only rows satisfying this constraint will be considered.
+            It should take the form of a dictionary of the form used in search queries.
+        - ``threshold`` -- an integer or None.
+
+        OUTPUT:
+
+        Counts for each distinct tuple of values will be stored,
+        as long as the number of rows sharing that tuple is above
+        the given threshold.  If there is only one column and it is numeric,
+        average, min, and max will be computed as well.
+        """
         cols = sorted(cols)
         jcols = Json(cols)
         where = SQL(" WHERE {0}").format(SQL(" AND ").join(SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols))
@@ -1596,6 +2014,17 @@ class PostgresStatsTable(PostgresBase):
         self._execute(inserter.format(Identifier(self.counts)), to_add, values_list=True, silent=True)
 
     def _get_values_counts(self, cols, constraint):
+        """
+        Utility function used in ``display_data``.
+
+        Returns a list of pairs (value, count), where value is a list of values taken on by the specified
+        columns and count is an integer giving the number of rows with those values.
+
+        INPUT:
+
+        - ``cols`` -- a list of column names that are stored in the counts table.
+        - ``constraint`` -- a dictionary specifying a constraint on rows to consider.
+        """
         selecter_constraints = [SQL("cols = %s")]
         if constraint:
             allcols = sorted(list(set(cols + constraint.keys())))
@@ -1612,6 +2041,22 @@ class PostgresStatsTable(PostgresBase):
         return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values = selecter_values)]
 
     def _get_total_avg(self, cols, constraint, include_avg):
+        """
+        Utility function used in ``display_data``.
+
+        Returns the total number of rows and average value for the column, subject to the given constraint.
+
+        INPUT:
+
+        - ``cols`` -- a list of columns
+        - ``constraint`` -- a dictionary specifying a constraint on rows to consider.
+        - ``include_avg`` -- boolean, whether to compute the average.
+
+        OUTPUT:
+
+        - the total number of rows satisying the constraint
+        - the average value of the given column (only possible if cols has length 1), or None if the average not requested.
+        """
         totaler = SQL("SELECT value FROM {0} WHERE cols = %s AND stat = %s AND threshold IS NULL").format(Identifier(self.stats))
         if constraint:
             ccols, cvals = self._split_dict(constraint)
@@ -1634,6 +2079,34 @@ class PostgresStatsTable(PostgresBase):
         return total, avg
 
     def display_data(self, cols, base_url, constraint=None, include_avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, count_key='count'):
+        """
+        Returns statistics data in a common format that is used by page templates.
+
+        INPUT:
+
+        - ``cols`` -- a list of column names
+        - ``base_url`` -- a base url, to which col=value tags are appended.
+        - ``constraint`` -- a dictionary giving constraints on other columns.
+            Only rows satsifying those constraints are included in the counts.
+        - ``include_avg`` -- whether to include the average value of cols[0]
+            (cols must be of length 1 with no bucketing)
+        - ``formatter`` -- a function applied to the tuple of values for display.
+        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
+            The buckets are the values between these break points.  Repeating break points
+            makes one bucket consist of just that point.  Values of these columns
+            are grouped based on which bucket they fall into.
+        - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
+        - ``query_formatter`` -- a function for encoding the values into the url.
+        - ``count_key`` -- the key to use for counts in the returned dictionaries.
+
+        OUTPUT:
+
+        A list of dictionaries, each with four keys.
+        - ``value`` -- a tuple of values taken on by the given columns.
+        - ``count_key`` -- (this key specified by the input parameter).  The number of rows with that tuple of values.
+        - ``query`` -- a url resulting in a list of entries with the given tuple of values.
+        - ``proportion`` -- the fraction of rows having this tuple of values, as a string formatted as a percentage.
+        """
         if formatter is None:
             formatter = lambda x: x
         if len(cols) == 1 and buckets is None:
@@ -1663,6 +2136,8 @@ class PostgresStatsTable(PostgresBase):
                 count = L[0][1]
                 data.append((bucketed_constraint[col], count))
                 total += count
+        else:
+            raise NotImplementedError
         data = [{'value':formatter(value),
                  count_key:count,
                  'query':"{0}?{1}={2}".format(base_url, col, query_formatter(value)),
@@ -1766,6 +2241,7 @@ class PostgresDatabase(PostgresBase):
         - jsonb -- data iteratively built from numerics, strings, booleans, nulls, lists and dictionaries.
         - timestamp -- 8-byte date and time with no timezone.
         """
+        now = time.time()
         valid_sort_list = sum(columns.values(),[])
         valid_sort_set = set(valid_sort_list)
         # Check that columns aren't listed twice
@@ -1814,20 +2290,22 @@ class PostgresDatabase(PostgresBase):
             return allcols
         columns = process_columns(columns)
         creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(columns))
-        self._execute(creator)
+        self._execute(creator, silent=True, commit=False)
         if extra_columns is not None:
             extra_columns = process_columns(extra_columns)
             creator = SQL('CREATE TABLE {0} ({1})')
             creator = creator.format(Identifier(name+"_extras"),
                                      SQL(", ").join(extra_columns))
-            self._execute(creator)
+            self._execute(creator, silent=True, commit=False)
         creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
         creator = creator.format(Identifier(name+"_counts"))
-        self._execute(creator)
+        self._execute(creator, silent=True, commit=False)
         creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
         creator = creator.format(Identifier(name + "_stats"))
-        self._execute(creator)
+        self._execute(creator, silent=True, commit=False)
         inserter = SQL('INSERT INTO meta_tables (name, sort, capitalization, id_ordered, out_of_order, has_extras) VALUES (%s, %s, %s, %s, %s, %s)')
-        self._execute(inserter, [name, sort, Json(caps), id_ordered, not id_ordered, extra_columns is not None])
+        self._execute(inserter, [name, sort, Json(caps), id_ordered, not id_ordered, extra_columns is not None], silent=True, commit=False)
+        print "Table %s created in %.3f secs"%(name, time.time()-now)
+        self.conn.commit()
 
 db = PostgresDatabase()
