@@ -60,6 +60,7 @@ Behind the Scenes:
  * Data Management: Ralf Furmaniak
 
 Sections:
+ * Genus 2 Curves: Andrew Sutherland
  * Hilbert MF: John Voight
  * Elliptic Curves: John Cremona
  * L-functions: Stefan Lemurell
@@ -67,7 +68,7 @@ Sections:
  * Elliptic MFs: Nathan Ryan
  * Maass Fs: Fredrik Stromberg
  * Number Fields / Galois Groups: John Jones
- * Artin Repos: Paul-Olivier Dehaye
+ * Artin Reps: Paul-Olivier Dehaye
  * Dirichlet Characters: Pascal Molin
  * Zeroes: Jonathan Bober
 
