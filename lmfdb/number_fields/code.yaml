@@ -64,7 +64,7 @@ unit_group:
 unit_rank:
   sage:  UK.rank()
   pari:  |
-    #K.fu
+    K.fu
   magma: UnitRank(K);
 
 unit_torsion_gen:
