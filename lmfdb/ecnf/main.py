@@ -748,8 +748,6 @@ def ecnf_code(**args):
     code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
     if lang=='gp':
         lang = 'pari'
-    if lang=='sage':
-        code += "\nx = polygen(QQ)\n"
     for k in sorted_code_names:
         if lang in Ecode[k]:
             code += "\n{} {}: \n".format(Comment[lang],code_names[k])

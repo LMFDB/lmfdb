@@ -17,7 +17,7 @@ not-implemented:
     // (not yet implemented)
 
 field:
-  sage:  K.<a> = NumberField(%s)
+  sage: x = polygen(QQ);  K.<a> = NumberField(%s)
   pari: K = nfinit(%s);
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(R!%s);
 
