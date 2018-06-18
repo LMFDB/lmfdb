@@ -26,6 +26,16 @@ Browse by type:
 <a href="?solv=-1">Non-solvable</a>
 <a href="?prim=1">Primitive</a>
 <a href="?prim=-1">Imprimitive</a>
+
+<p>
+Browse by group:
+<a href="?gapid=[6,1]">$S_3$</a>
+<a href="?gapid=[8,3]">$D_4$</a>
+<a href="?gapid=[12,3]">$A_4$</a>
+<a href="?gapid=[24,12]">$S_4$</a>
+<a href="?gapid=[60,5]">$A_5$</a>
+<a href="?gapid=[120,34]">$S_5$</a>
+<a href="?gapid=[168,42]">$\GL(3,2)$</a>
 <p>
 
 <p>
@@ -107,6 +117,15 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
             </td><td><input type="text" name="order" value="" placeholder="24"></td>
 	    <td>
 	      <span class="formexample">e.g. 6 or 4,6 or 2..35 or 4,6..80</span>
+	    </td>
+          </tr>
+
+          <tr>
+            <td align="right">
+              {{KNOWL('curve.highergenus.aut.groupnotation',title='Gap id')}} :
+            </td><td><input type="text" name="gapid" value="" placeholder="[8,3]"></td>
+	    <td>
+	      <span class="formexample">e.g. [8,3] or [16,7]</span>
 	    </td>
           </tr>
 
