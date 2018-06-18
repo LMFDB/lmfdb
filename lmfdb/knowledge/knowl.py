@@ -306,7 +306,6 @@ class Knowl(object):
         with "Dirichlet Series" and nothing else.
         """
         title = self._title
-        from flask import g
         if self._quality=='beta' and g.BETA:
             title += " (beta status)"
         return title
