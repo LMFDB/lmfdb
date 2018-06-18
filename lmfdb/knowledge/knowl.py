@@ -307,8 +307,8 @@ class Knowl(object):
         """
         title = self._title
         from flask import g
-        if self._quality=='beta' and g.BETA:
-            title += " (beta status)"
+        # if self._quality=='beta' and g.BETA:
+        #     title += " (beta status)"
         return title
 
     @title.setter
