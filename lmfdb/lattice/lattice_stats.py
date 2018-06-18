@@ -11,7 +11,7 @@ def lattice_summary():
     latstats = db_latstats()
 
     integral = '<a knowl="lattice.definition">integral lattices</a>'
-    positivedef = '<a knowl="lattice.postive_definite">postive definite</a>'
+    positivedef = '<a knowl="lattice.postive_definite">positive definite</a>'
     catalogue = '<a knowl="lattice.catalogue_of_lattices">Catalogue of Lattices</a>'
     cn = '<a knowl="lattice.class_number">class number</a>'
     dim = '<a knowl="lattice.dimension">dimension</a>'
