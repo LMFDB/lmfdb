@@ -5,7 +5,7 @@ ASC = pymongo.ASCENDING
 import time, os
 import flask
 from lmfdb.base import app, getDBConnection
-from flask import render_template, request, url_for, redirect, send_file, flash
+from flask import render_template, request, url_for, redirect, send_file, flash, make_response
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex
@@ -556,6 +556,11 @@ def render_field_webpage(args):
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
                    ('Galois Group', group_display_short(data['degree'], t, C))
                    ]
+    downloads = []
+    for lang in [["Magma","magma"], ["SageMath","sage"], ["GP", "gp"]]:
+        downloads.append(('Download {} code'.format(lang[0]),
+                          url_for(".nf_code_download", nf=label, download_type=lang[1])))
+
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
@@ -569,7 +574,7 @@ def render_field_webpage(args):
     except AttributeError:
         pass
 #    del info['_id']
-    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info)
+    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=info.pop('learnmore'), info=info)
 
 
 def format_coeffs2(coeffs):
@@ -853,4 +858,53 @@ def download_search(info, res):
                      attachment_filename=filename,
                      as_attachment=True,
                      add_etags=False)
+
+@nf_page.route('/<nf>/download/<download_type>')
+def nf_code_download(**args):
+    response = make_response(nf_code(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+
+sorted_code_names = ['field', 'poly', 'degree', 'signature',
+                     'discriminant', 'ramified_primes',
+                     'integral_basis', 'class_group', 'unit_group',
+                     'unit_rank', 'unit_torsion_gen',
+                     'fundamental_units', 'regulator', 'galois_group',
+                     'prime_cycle_types']
+
+code_names = {'field': 'Define the number field',
+              'poly': 'Defining polynomial',
+              'degree': 'Degree over Q',
+              'signature': 'Signature',
+              'discriminant': 'Discriminant',
+              'ramified_primes': 'Ramified primes',
+              'integral_basis': 'Integral basis',
+              'class_group': 'Class group',
+              'unit_group': 'Unit group',
+              'unit_rank': 'Unit rank',
+              'unit_torsion_gen': 'Generator for roots of unity',
+              'fundamental_units': 'Fundamental units',
+              'regulator': 'Regulator',
+              'galois_group': 'Galois group',
+              'prime_cycle_types': 'Frobenius cycle types'
+          }
+
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+
+def nf_code(**args):
+    label = args['nf']
+    nf = WebNumberField(label)
+    nf.make_code_snippets()
+    lang = args['download_type']
+    code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
+    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
+    if lang=='gp':
+        lang = 'pari'
+    for k in sorted_code_names:
+        if lang in nf.code[k]:
+            code += "\n{} {}: \n".format(Comment[lang],code_names[k])
+            code += nf.code[k][lang] + ('\n' if not '\n' in nf.code[k][lang] else '')
+    return code
 
