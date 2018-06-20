@@ -19,7 +19,7 @@ $(function() {
 <table>
 <tr>
  <td>Search</td>
- <td> 
+ <td>
  <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
     <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
     {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
@@ -30,11 +30,11 @@ $(function() {
 
 <tr>
  <td>Filter</td>
- <td>Category: 
+ <td>Category:
     {% for cat in categories -%}
-     <a 
+     <a
       {% if cur_cat == cat -%}class='curcat'{%- endif %}
-      href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
+      href="{{ url_for('.index', qualities=qualities, category=cat,) }}">{{cat}}</a>
        {# {% if not loop.last -%} &middot; {%- endif %} #}
     {%- endfor %}
     {% if categorymode -%}
@@ -45,15 +45,20 @@ $(function() {
  </td>
 </tr>
 
-{% if not searchmode and not categorymode %}
+{% if not searchmode %}
 <tr>
  <td></td>
  <td>
-  <form method="GET" action="{{ url_for('.index') }}">
-    Quality:
+ {% if categorymode %}
+   <form method="POST" action="{{ url_for('.index', category=cur_cat, filtered='True') }}">
+ {% else %}
+   <form method="POST" action="{{ url_for('.index', filtered='True') }}">
+ {% endif %}
+    Quality:&nbsp;
     {% for kq in knowl_qualities -%}
+     <label for="{{ kq }}">{{ kq|capitalize }}</label>:
      <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
-        <label for="{{ kq }}">{{ kq|capitalize }}</label>
+     &nbsp;&nbsp;
     {%- endfor %}
     <button type="submit" name="filter">Filter</button>
    </form>
@@ -63,7 +68,7 @@ $(function() {
 
 <tr>
  <td>More</td>
- <td> 
+ <td>
    <a href="{{ url_for('.history') }}">Recently modified Knowls</a></td>
 </tr>
 </table>
