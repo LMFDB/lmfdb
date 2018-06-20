@@ -27,3 +27,4 @@ lmfdb/.coverage
 .coverage
 .DS_Store
 .idea/
+logs/
