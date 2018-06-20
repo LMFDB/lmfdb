@@ -555,18 +555,24 @@ def index():
 #        pass
 
     cur_cat = request.args.get("category", "")
-
     qualities = []
+
     defaults = "filtered" not in request.args
     filtermode = "filtered" in request.args
     searchmode = "search" in request.args
     categorymode = "category" in request.args
 
     from knowl import knowl_qualities
-    # TODO wrap this into a loop:
-    reviewed = request.form.get("reviewed", "") == "on" or defaults
-    ok = request.form.get("ok", "") == "on" or defaults
-    beta = request.form.get("beta", "") == "on" or defaults
+
+    if request.method == 'POST':
+        reviewed = request.form.get("reviewed", "") == "on" or defaults
+        ok = request.form.get("ok", "") == "on" or defaults
+        beta = request.form.get("beta", "") == "on" or defaults
+    if request.method == 'GET':
+        quals = list(request.args.getlist('qualities'))
+        reviewed = "reviewed" in quals
+        ok = "ok" in quals
+        beta = "beta" in quals
 
     if reviewed:
         qualities.append("reviewed")
@@ -634,4 +640,6 @@ def index():
                            filters=(beta, ok, reviewed),
                            categories = cats,
                            cur_cat = cur_cat,
-                           categorymode = categorymode)
+                           categorymode = categorymode,
+                           filtermode = filtermode,
+                           qualities = qualities)

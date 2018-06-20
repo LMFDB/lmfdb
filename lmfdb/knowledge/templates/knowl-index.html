@@ -19,7 +19,7 @@ $(function() {
 <table>
 <tr>
  <td>Search</td>
- <td> 
+ <td>
  <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
     <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
     {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
@@ -30,11 +30,11 @@ $(function() {
 
 <tr>
  <td>Filter</td>
- <td>Category: 
+ <td>Category:
     {% for cat in categories -%}
-     <a 
+     <a
       {% if cur_cat == cat -%}class='curcat'{%- endif %}
-      href="{{ url_for('.index', category=cat) }}">{{cat}}</a>
+      href="{{ url_for('.index', qualities=qualities, category=cat,) }}">{{cat}}</a>
        {# {% if not loop.last -%} &middot; {%- endif %} #}
     {%- endfor %}
     {% if categorymode -%}
@@ -68,7 +68,7 @@ $(function() {
 
 <tr>
  <td>More</td>
- <td> 
+ <td>
    <a href="{{ url_for('.history') }}">Recently modified Knowls</a></td>
 </tr>
 </table>
