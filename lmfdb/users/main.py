@@ -7,7 +7,7 @@ import pymongo
 ASC = pymongo.ASCENDING
 import flask
 from functools import wraps
-from lmfdb.base import app, getDBConnection
+from lmfdb.base import app
 from flask import render_template, request, Blueprint, url_for, make_response
 #from flask.ext.login import login_required, login_user, current_user, logout_user
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager

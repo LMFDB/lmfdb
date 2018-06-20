@@ -1,0 +1,6 @@
+{% if info.start > 0 %}
+<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</a>
+{% endif %}
+{% if not info.exact_count or info.start + info.count < info.number %}
+<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</a>
+{% endif %}

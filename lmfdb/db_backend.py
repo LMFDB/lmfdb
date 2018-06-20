@@ -28,11 +28,13 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import logging
 import pymongo
+import tempfile, datetime
 import re, os, time
+from collections import Counter
 from psycopg2 import connect, DatabaseError
-from psycopg2.sql import SQL, Identifier, Placeholder, Literal
+from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import Json, execute_values
-from psycopg2.extensions import register_type, register_adapter, new_type, UNICODE, UNICODEARRAY, AsIs
+from psycopg2.extensions import adapt, register_type, register_adapter, new_type, UNICODE, UNICODEARRAY, AsIs
 import json, random, time
 from lmfdb.utils import random_object_from_collection
 from sage.rings.integer import Integer
@@ -112,7 +114,41 @@ def numeric_converter(value, cur):
     else:
         return Integer(value)
 
-def prep_json(value):
+class Array(object):
+    """
+    Since we use Json by default for lists, this class lets us
+    get back the default behavior when needed.
+    """
+    def __init__(self, seq):
+        self._seq = seq
+        self._conn = None
+
+    def prepare(self, conn):
+        self._conn = conn
+
+    def getquoted(self):
+        # this is the important line: note how every object in the
+        # list is adapted and then how getquoted() is called on it
+        pobjs = [adapt(o) for o in self._seq]
+        if self._conn is not None:
+            for obj in pobjs:
+                if hasattr(obj, 'prepare'):
+                    obj.prepare(self._conn)
+        qobjs = [o.getquoted() for o in pobjs]
+        return b'ARRAY[' + b', '.join(qobjs) + b']'
+
+    def __str__(self):
+        return str(self.getquoted())
+
+class RealLiteralEncoder(object):
+    def __init__(self, value):
+        self._value = value
+    def getquoted(self):
+        return self._value.literal
+    def __str__(self):
+        return self._value.literal
+
+def prep_json(value, escape_backslashes=False):
     """
     Make json compliant.  Namely, it iteratively changes Integers to ints and RealLiterals to floats.
     """
@@ -125,7 +161,14 @@ def prep_json(value):
     elif isinstance(value, Integer):
         return int(value)
     elif isinstance(value, RealLiteral):
-        return float(value)
+        newval = float(value)
+        if str(newval) != str(value):
+            # The caller needs to deal with precision issues in an appropriate way;
+            # we don't want to lose precision by casting to float for them.
+            raise ValueError("RealLiteral encoding into float does not preserve precision")
+        return newval
+    elif escape_backslashes and isinstance(value, basestring):
+        return value.replace('\\','\\\\\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"',r'\"')
     else:
         return value
 
@@ -162,7 +205,7 @@ class PostgresBase(object):
 
         INPUT:
 
-        - ``query`` -- string, the SQL command to execute.
+        - ``query`` -- an SQL Composable object, the SQL command to execute.
         - ``values`` -- values to substitute for %s in the query.  Quoting from the documentation for psycopg2 (http://initd.org/psycopg/docs/usage.html#passing-parameters-to-sql-queries):
 
         Never, never, NEVER use Python string concatenation (+) or string parameters interpolation (%) to pass variables to a SQL query string. Not even at gunpoint.
@@ -177,6 +220,8 @@ class PostgresBase(object):
 
         This function will also log slow queries.
         """
+        if not isinstance(query, Composable):
+            raise TypeError("You must use the psycopg2.sql module to execute queries")
         cur = self.conn.cursor()
         try:
             t = time.time()
@@ -188,7 +233,7 @@ class PostgresBase(object):
                 t = time.time() - t
                 if t > SLOW_CUTOFF:
                     if values:
-                        query = query%(tuple(values))
+                        query = query.as_string(self.conn)%(tuple(values))
                     self.logger.info(query + " ran in %ss"%(t))
         except DatabaseError:
             self.conn.rollback()
@@ -238,10 +283,9 @@ class PostgresTable(PostgresBase):
     - ``db`` -- an instance of ``PostgresDatabase``, currently just used to store the common connection ``conn``.
     - ``search_table`` -- a string, the name of the table in postgres.
     - ``sort`` -- a list giving the default sort order on the table, or None.  If None, sorts that can return more than one result must explicitly specify a sort order.  Note that the id column is sometimes used for sorting; see the ``search`` method for more details.
-    - ``cap`` -- a list of strings giving the list of column names that are not lower case.  This is necessary since postgres is not case sensitive but Python is.
     - ``count_cutoff`` -- an integer parameter (default 1000) which determines the threshold at which searches will no longer report the exact number of results.
     """
-    def __init__(self, db, search_table, sort=None, cap=[], count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True):
+    def __init__(self, db, search_table, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True):
         self._db = db
         self.search_table = search_table
         self._count_cutoff = count_cutoff
@@ -249,32 +293,30 @@ class PostgresTable(PostgresBase):
         self._out_of_order = out_of_order
         self._stats_valid = stats_valid
         PostgresBase.__init__(self, search_table, db.conn)
-        cap = {col.lower(): col for col in cap}
-        def set_column_info(col_list, json_set, table_name):
+        self._col_type = {}
+        def set_column_info(col_list, table_name):
             cur = self._execute(SQL("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
             has_id = False
             for rec in cur:
-                col = cap.get(rec[0],rec[0])
+                col = rec[0]
                 if col == 'id':
                     has_id = True
                 else:
                     col_list.append(col)
-                    if rec[1] == 'jsonb':
-                        json_set.add(col)
+                    self._col_type[col] = rec[1]
             if (self._id_ordered or self.extra_table is not None) and not has_id:
                 raise RuntimeError("Table %s must have id column!"%(table_name))
             self.has_id = has_id # used in determining how to sort
         self._search_cols = []
-        self._json_override = set()
         if has_extras:
             self.extra_table = search_table + "_extras"
             self._extra_cols = []
-            set_column_info(self._extra_cols, self._json_override, self.extra_table)
+            set_column_info(self._extra_cols, self.extra_table)
             self._extra_cols = tuple(self._extra_cols)
         else:
             self.extra_table = None
             self._extra_cols = ()
-        set_column_info(self._search_cols, self._json_override, search_table)
+        set_column_info(self._search_cols, search_table)
         self._search_cols = tuple(self._search_cols)
         self._sort_keys = set([])
         if sort:
@@ -297,44 +339,6 @@ class PostgresTable(PostgresBase):
     ##################################################################
     # Helper functions for querying                                  #
     ##################################################################
-
-    def _json_wrap(self, col, val):
-        """
-        Helper function that wraps the value in psycopg2's Json if necessary.
-        """
-        if val is None or col not in self._json_override:
-            return val
-        else:
-            return Json(val)
-
-    @cached_method
-    def _col_types(self):
-        """
-        Returns dictionaries with the postgres types of the columns
-        in the search and extras tables.
-
-        If there is no extras table, the second dictionary will be None.
-
-        EXAMPLES::
-
-            sage: from lmfdb.db_backend import db
-            sage: db.ec_padic._col_types()
-            ({u'lmfdb_iso': u'text',
-              u'p': u'smallint',
-              u'prec': u'smallint',
-              u'unit': u'numeric',
-              u'val': u'smallint'},
-             None)
-        """
-        selecter = SQL("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s")
-        cur = self._execute(selecter, [self.search_table])
-        search_types = {k:v for k,v in cur}
-        if self.extra_table is None:
-            extras_types = None
-        else:
-            cur = self._execute(selecter, [self.extra_table])
-            extras_types = {k:v for k,v in cur}
-        return search_types, extras_types
 
     def _parse_projection(self, projection):
         """
@@ -463,13 +467,14 @@ class PostgresTable(PostgresBase):
         EXAMPLES::
 
             sage: from lmfdb.db_backend import db
-            sage: nf = db.nf_fields
-            sage: nf._parse_special("$lte", 5, "degree")
-            ('degree <= %s', [5])
-            sage: nf._parse_special("$or", [{"degree":{"$lte":5}},{"class_number":{"$gte":3}}], None)
-            ('(degree <= %s OR class_number >= %s)', [5, 3])
-            sage: nf._parse_special("$contains", [2,3,5], "ramps")
-            ('ramps @> %s', [<psycopg2._json.Json object at 0x...>])
+            sage: statement, vals = db.nf_fields._parse_special("$lte", 5, "degree")
+            ('"degree" <= %s', [5])
+            sage: statement, vals = db.nf_fields._parse_special("$or", [{"degree":{"$lte":5}},{"class_number":{"$gte":3}}], None)
+            sage: statement.as_string(db.conn), vals
+            ('("degree" <= %s OR "class_number" >= %s)', [5, 3])
+            sage: statement, vals = db.nf_fields._parse_special("$contains", [2,3,5], "ramps")
+            sage: statement.as_string(db.conn), vals
+            ('"ramps" @> %s', [[2, 3, 5]])
         """
         if key == '$or':
             pairs = [self._parse_dict(clause) for clause in value]
@@ -478,7 +483,7 @@ class PostgresTable(PostgresBase):
                 strings, values = zip(*pairs)
                 # flatten values
                 values = [item for sublist in values for item in sublist]
-                return "(" + " OR ".join(strings) + ")", values
+                return SQL("({0})").format(SQL(" OR ").join(strings)), values
             else:
                 return None, None
         elif key == '$lte':
@@ -492,16 +497,13 @@ class PostgresTable(PostgresBase):
         elif key == '$ne':
             return SQL("{0} != %s").format(Identifier(col)), [value]
         elif key == '$in':
-            return SQL("{0} = ANY(%s)").format(Identifier(col)), [value]
+            return SQL("{0} = ANY(%s)").format(Identifier(col)), [Array(value)]
         elif key == '$contains':
-            value = self._json_wrap(col, value)
             return SQL("{0} @> %s").format(Identifier(col)), [value]
         elif key == '$notcontains':
-            if col in self._json_override:
-                value = [Json([v]) for v in value]
-            return SQL(" AND ").join(SQL("NOT {0} @> %s").format(Identifier(col)) for v in value), value
+            return (SQL(" AND ").join(SQL("NOT {0} @> %s").format(Identifier(col)) * len(value)),
+                    [[v] for v in value])
         elif key == '$containedin':
-            value = self._json_wrap(col, value)
             return SQL("{0} <@ %s").format(Identifier(col)), [value]
         elif key == '$exists':
             if value:
@@ -522,21 +524,22 @@ class PostgresTable(PostgresBase):
 
         OUTPUT:
 
-        - A string giving the WHERE component of an SQL query (possibly containing %s), or None if D imposes no constraint
+        - An SQL Composable giving the WHERE component of an SQL query (possibly containing %s), or None if D imposes no constraint
         - A list of values to fill in for the %s in the string.  See ``_execute`` for more details.
 
         EXAMPLES::
 
             sage: from lmfdb.db_backend import db
-            sage: nf = db.nf_fields
-            sage: nf._parse_dict({"degree":2, "class_number":6})
-            ('class_number = %s AND degree = %s', [6, 2])
-            sage: nf._parse_dict({"degree":{"$gte":4,"$lte":8}, "r2":1})
-            ('r2 = %s AND degree <= %s AND degree >= %s', [1, 8, 4])
-            sage: nf._parse_dict({"degree":2, "$or":[{"class_number":1,"r2":0},{"disc_sign":1,"disc_abs":{"$lte":10000},"class_number":{"$lte":8}}]})
-            ('(class_number = %s AND r2 = %s OR disc_sign = %s AND class_number <= %s AND disc_abs <= %s) AND degree = %s',
- [1, 0, 1, 8, 10000, 2])
-            sage: nf._parse_dict({})
+            sage: statement, vals = db.nf_fields._parse_dict({"degree":2, "class_number":6})
+            sage: statement.as_string(db.conn), vals
+            ('"class_number" = %s AND "degree" = %s', [6, 2])
+            sage: statement, vals = db.nf_fields._parse_dict({"degree":{"$gte":4,"$lte":8}, "r2":1})
+            sage: statement.as_string(db.conn), vals
+            ('"r2" = %s AND "degree" <= %s AND "degree" >= %s', [1, 8, 4])
+            sage: statement, vals = db.nf_fields._parse_dict({"degree":2, "$or":[{"class_number":1,"r2":0},{"disc_sign":1,"disc_abs":{"$lte":10000},"class_number":{"$lte":8}}]})
+            sage: statement.as_string(db.conn), vals
+            ('("class_number" = %s AND "r2" = %s OR "disc_sign" = %s AND "class_number" <= %s AND "disc_abs" <= %s) AND "degree" = %s', [1, 0, 1, 8, 10000, 2])
+            sage: db.nf_fields._parse_dict({})
             (None, None)
         """
         if len(D) == 0:
@@ -559,9 +562,11 @@ class PostgresTable(PostgresBase):
                         values.extend(vals)
                 elif '.' in key:
                     raise ValueError("Error building query: subdocuments not supported")
+                elif value is None:
+                    strings.append(SQL("{0} IS NULL").format(Identifier(key)))
                 else:
-                    strings.append(SQL("{0} = %s").format(Indentifier(key)))
-                    values.append(self._json_wrap(key, value))
+                    strings.append(SQL("{0} = %s").format(Identifier(key)))
+                    values.append(value)
             if strings:
                 return SQL(" AND ").join(strings), values
             else:
@@ -580,27 +585,31 @@ class PostgresTable(PostgresBase):
 
         OUTPUT:
 
-        - a string giving the WHERE, ORDER BY, LIMIT and OFFSET components of an SQL query, possibly including %s
+        - an SQL Composable giving the WHERE, ORDER BY, LIMIT and OFFSET components of an SQL query, possibly including %s
         - a list of values to substitute for the %s entries
 
         EXAMPLES::
 
             sage: from lmfdb.db_backend import db
-            sage: nf = db.nf_fields
-            sage: nf._build_query({"degree":2, "class_number":6})
-            (' WHERE class_number = %s AND degree = %s ORDER BY degree, disc_abs, disc_sign, label', [6, 2])
-            sage: nf._build_query({"class_number":1}, 20)
-            (' WHERE class_number = %s ORDER BY id LIMIT 20', [1])
+            sage: statement, vals = db.nf_fields._build_query({"degree":2, "class_number":6})
+            sage: statement.as_string(db.conn), vals
+            (' WHERE "class_number" = %s AND "degree" = %s ORDER BY "degree", "disc_abs", "disc_sign", "label"', [6, 2])
+            sage: statement, vals = db.nf_fields._build_query({"class_number":1}, 20)
+            sage: statement.as_string(db.conn), vals
+            (' WHERE "class_number" = %s ORDER BY "id" LIMIT %s', [1, 20])
         """
         qstr, values = self._parse_dict(query)
         if qstr is None:
             s = SQL("")
+            values = []
         else:
             s = SQL(" WHERE {0}").format(qstr)
         if sort is None:
+            has_sort = True
             if self._sort is None:
                 if limit is not None and not (limit == 1 and offset == 0):
                     raise ValueError("You must specify a sort order")
+                has_sort = False
             elif self._primary_sort in query or self._out_of_order:
                 # We use the actual sort because the postgres query planner doesn't know that
                 # the primary key is connected to the id.
@@ -608,8 +617,9 @@ class PostgresTable(PostgresBase):
             else:
                 sort = Identifier("id")
         else:
+            has_sort = bool(sort)
             sort = self._sort_str(sort)
-        if sort:
+        if has_sort:
             s = SQL("{0} ORDER BY {1}").format(s, sort)
         if limit is not None:
             s = SQL("{0} LIMIT %s").format(s)
@@ -935,6 +945,18 @@ class PostgresTable(PostgresBase):
         """
         return self.stats.max(col)
 
+    def distinct(self, col, query={}):
+        """
+        Returns a list of the distinct values taken on by a given column.
+        """
+        selecter = SQL("SELECT DISTINCT {0} FROM {1}").format(Identifier(col), Identifier(self.search_table))
+        qstr, values = self._parse_dict(query)
+        if qstr is not None:
+            selecter = SQL("{0} WHERE {1}").format(selecter, qstr)
+        selecter = SQL("{0} ORDER BY {1}").format(selecter, Identifier(col))
+        cur = self._execute(selecter)
+        return [res[0] for res in cur]
+
     def count(self, query={}):
         """
         Count the number of results for a given query.
@@ -1051,7 +1073,7 @@ class PostgresTable(PostgresBase):
             raise ValueError("Unrecognized index type")
         if modifiers is None:
             if type == "gin":
-                modifiers = [["jsonb_path_ops"]]
+                modifiers = [["jsonb_path_ops"]] * len(columns)
             else:
                 modifiers = [[]] * len(columns)
         else:
@@ -1074,7 +1096,7 @@ class PostgresTable(PostgresBase):
             if col != "id" and col not in self._search_cols:
                 raise ValueError("%s not a column"%(col))
         if name is None:
-            name = "_".join([self.search_table] + cols + ([] if type == "btree" else [type]))
+            name = "_".join([self.search_table] + columns + ([] if type == "btree" else [type]))
         selecter = SQL("SELECT 1 FROM meta_indexes WHERE index_name = %s AND table_name = %s")
         cur = self._execute(selecter, [name, self.search_table], silent=True)
         if cur.rowcount > 0:
@@ -1082,7 +1104,7 @@ class PostgresTable(PostgresBase):
         creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
         self._execute(creator, storage_params.values(), silent=True, commit=False)
         inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
-        self._execute(inserter, [name, self.search_table, type, Json(columns), Json(modifiers), Json(storage_params)], silent=True, commit=False)
+        self._execute(inserter, [name, self.search_table, type, columns, modifiers, storage_params], silent=True, commit=False)
         self.conn.commit()
 
     def drop_index(self, name, suffix="", permanent=False):
@@ -1132,7 +1154,7 @@ class PostgresTable(PostgresBase):
         selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
         if columns:
             selecter = SQL("{0} AND ({1})").format(selecter, SQL(" OR ").join(SQL("columns @> %s") * len(columns)))
-            columns = [Json([col]) for col in columns]
+            columns = [[col] for col in columns]
         return self._execute(selecter, [self.search_table] + columns, silent=True)
 
     def drop_indexes(self, columns=[], suffix=""):
@@ -1241,6 +1263,52 @@ class PostgresTable(PostgresBase):
         # Sort and set self._out_of_order
         pass
 
+    def rewrite(self, func, projection=2, filter={}, resort=True, reindex=True, tostr_func=None, **kwds):
+        search_cols = ["id"] + self._search_cols if self.has_id else self._search_cols
+        if self.extra_table is not None:
+            extra_cols = ["id"] + self._extra_cols
+        # It would be nice to just use Postgres' COPY TO here, but it would then be hard
+        # to give func access to the data to process.
+        # An alternative approach would be to use COPY TO and have func and filter both
+        # operate on the results, but then func would have to process the strings
+        if tostr_func is None:
+            def tostr_func(inp, typ):
+                if inp is None:
+                    return ur'\N'
+                elif typ in ('text', 'char', 'varchar'):
+                    if not isinstance(inp, basestring):
+                        inp = str(inp)
+                    return inp.replace('\\','\\\\').replace('\r',r'\r').replace('\n',r'\n').replace('\t',r'\t').replace('"',r'\"')
+                elif typ in ('json','jsonb'):
+                    return json.dumps(prep_json(inp, escape_backslashes=True))
+                elif isinstance(inp, RealLiteral):
+                    return inp.literal
+                elif isinstance(inp, (int, long, Integer, float)):
+                    return str(inp)
+                elif typ=='boolean':
+                    return 't' if inp else 'f'
+                elif isinstance(inp, (datetime.date, datetime.time, datetime.datetime)):
+                    return "%s"%(inp)
+                elif typ == 'bytea':
+                    return r'\\x' + ''.join(c.encode('hex') for c in inp)
+                else:
+                    raise TypeError("Invalid input %s (%s) for postgres type %s"%(inp, type(inp), typ))
+        searchfile = tempfile.NamedTemporaryFile('w', delete=False)
+        extrafile = None if self.extra_table is None else tempfile.NamedTemporaryFile('w', delete=False)
+        try:
+            with searchfile:
+                with extrafile:
+                    for rec in self.search(query, projection=projection, sort=[]):
+                        processed = func(rec)
+                        searchfile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in search_cols) + u'\n')
+                        if self.extra_table is not None:
+                            extrafile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in extra_cols) + u'\n')
+            self.reload(searchfile, extrafile, includes_ids=True, resort=resort, reindex=reindex, **kwds)
+        finally:
+            searchfile.unlink(searchfile.name)
+            if extrafile is not None:
+                extrafile.unlink(extrafile.name)
+
     def upsert(self, query, data):
         """
         Update the unique row satisfying the given query, or insert a new row if no such row exists.
@@ -1274,9 +1342,9 @@ class PostgresTable(PostgresBase):
             extras_data = {}
             for col, val in data.items():
                 if col in self._search_cols:
-                    search_data[col] = self._json_wrap(col, val)
+                    search_data[col] = val
                 elif col in self._extra_cols:
-                    extras_data[col] = self._json_wrap(col, val)
+                    extras_data[col] = val
                 else:
                     raise ValueError("%s is not a column of %s"%(col, self.search_table))
         cases = [(self.search_table, search_data)]
@@ -1377,7 +1445,7 @@ class PostgresTable(PostgresBase):
             inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
             inserter = inserter.format(Identifier(table),
                                        SQL(", ").join(map(Identifier, L[0].keys())))
-            self._execute(inserter, L, silent=True, values_list=True, template=template, silent=True, commit=False)
+            self._execute(inserter, L, values_list=True, template=template, silent=True, commit=False)
         print "Inserted %s records into %s in %.3f secs"%(len(search_data), self.search_table, time.time()-now)
         self._break_order()
         self._break_stats()
@@ -1443,15 +1511,18 @@ class PostgresTable(PostgresBase):
             self._execute(dropcol.format(search_table, oldid), silent=True, commit=False)
             self._execute(movecol.format(search_table, newid, oldid), silent=True, commit=False)
             self._execute(pkey.format(search_table, oldid), silent=True, commit=False)
-            updater = SQL("UPDATE meta_tables SET out_of_order = false WHERE name = %s")
-            self._execute(updater, [self.search_table], silent=True, commit=False)
-            self._out_of_order = False
+            self._set_ordered(commit=False)
             print "Resorted %s in %.3f secs"%(self.search_table, time.time() - now)
             self.conn.commit()
         elif self._id_ordered:
             print "Data already sorted"
         else:
             print "Data does not have an id column to be sorted"
+
+    def _set_ordered(self, commit=True):
+        updater = SQL("UPDATE meta_tables SET out_of_order = false WHERE name = %s")
+        self._execute(updater, [self.search_table], silent=True, commit=commit)
+        self._out_of_order = False
 
     def _copy_from(self, filename, table, columns, cur_count, includes_ids, kwds):
         """
@@ -1467,25 +1538,35 @@ class PostgresTable(PostgresBase):
             If not, a temporary file will be written to.
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
-        if not includes_ids:
-            idfile = filename + "_with_ids"
-            if os.path.exists(idfile):
-                raise ValueError("Would overwrite existing file")
-            sep = kwds.get("sep", u"\t")
-            with open(filename) as F:
-                with open(idfile, 'w') as Fid:
-                    for i, line in enumerate(F):
-                        Fid.write((unicode(i + cur_count + 1) + sep + line).encode("utf-8"))
-        else:
-            idfile = filename
         cur = self.conn.cursor()
-        with open(idfile) as Fid:
+        # We have to add quotes manually since copy_from doesn't accept psycopg2.sql.Identifiers
+        # None of our column names have double quotes in them. :-D
+        columns = ['"' + col + '"' for col in columns]
+        if self.has_id and not includes_ids:
+            idfile = tempfile.NamedTemporaryFile('w', delete=False)
             try:
-                cur.copy_from(Fid, table, columns=columns, **kwds)
-                return cur.rowcount
-            except Exception:
-                self.conn.rollback()
-                raise
+                sep = kwds.get("sep", u"\t")
+                with open(filename) as F:
+                    with idfile:
+                        for i, line in enumerate(F):
+                            idfile.write((unicode(i + cur_count + 1) + sep + line).encode("utf-8"))
+                try:
+                    with open(idfile.name) as Fid:
+                        cur.copy_from(Fid, table, columns=columns, **kwds)
+                        return cur.rowcount
+                except Exception:
+                    self.conn.rollback()
+                    raise
+            finally:
+                idfile.unlink(idfile.name)
+        else:
+            with open(filename) as F:
+                try:
+                    cur.copy_from(F, table, columns=columns, **kwds)
+                    return cur.rowcount
+                except Exception:
+                    self.conn.rollback()
+                    raise
 
     def _clone(self, table, tmp_table, commit=False):
         """
@@ -1535,7 +1616,7 @@ class PostgresTable(PostgresBase):
 
     def _check_file_input(self, searchfile, extrafile, kwds):
         """
-        Utility function for validating the inputs to ``reload`` and ``copy_from``.
+        Utility function for validating the inputs to ``rewrite``, ``reload`` and ``copy_from``.
         """
         if searchfile is None:
             raise ValueError("Must specify search file")
@@ -1645,7 +1726,7 @@ class PostgresTable(PostgresBase):
         if reindex:
             self.restore_indexes()
         self._break_stats()
-        self.stats.total += cur.rowcount
+        self.stats.total += search_count
         self.conn.commit()
 
     def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, include_ids=True, **kwds):
@@ -1694,9 +1775,6 @@ class PostgresStatsTable(PostgresBase):
 
     - ``table`` -- a ``PostgresTable`` object.
     """
-    # We cache this for quick counting
-    empty_json_list = Json([])
-
     def __init__(self, table):
         PostgresBase.__init__(self, table.search_table, table.conn)
         self.table = table
@@ -1714,9 +1792,9 @@ class PostgresStatsTable(PostgresBase):
 
         INPUT:
 
-        - ``jcols`` -- a Json object listing the columns to be accumulated.
-        - ``ccols`` -- a Json object listing the columns of the constraints.
-        - ``cvals`` -- a Json object listing the values required for the constraint columns.
+        - ``jcols`` -- a list of the columns to be accumulated.
+        - ``ccols`` -- a list of the constraint columns.
+        - ``cvals`` -- a list of the values required for the constraint columns.
         - ``threshold`` -- an integer: if the number of rows with a given tuple of
            values for the accumulated columns is less than this threshold, those
            rows are thrown away.
@@ -1827,9 +1905,8 @@ class PostgresStatsTable(PostgresBase):
             return self.count() - 1
         if col not in self.table._search_cols:
             raise ValueError("%s not a column of %s"%(col, self.search_table))
-        jcol = Json([col])
         selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND constraint_cols IS NULL")
-        cur = self._execute(selecter.format(Identifier(self.stats)), ["max", jcol])
+        cur = self._execute(selecter.format(Identifier(self.stats)), ["max", [col]])
         if cur.rowcount:
             return cur.fetchone()[0]
         selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC LIMIT 1")
@@ -1843,7 +1920,7 @@ class PostgresStatsTable(PostgresBase):
             m = cur.fetchone()[0]
         try:
             inserter = SQL("INSERT INTO {0} (cols, stat, value) VALUES (%s, %s, %s)")
-            self._execute(inserter.format(Identifier(self.stats)), [jcol, "max", m])
+            self._execute(inserter.format(Identifier(self.stats)), [[col], "max", m])
         except Exception:
             pass
         return m
@@ -1913,9 +1990,9 @@ class PostgresStatsTable(PostgresBase):
         A utility function for splitting a dictionary into parallel lists of keys and values.
         """
         if D:
-            return map(Json, zip(*sorted(D.items())))
+            return zip(*sorted(D.items()))
         else:
-            return self.empty_json_list, self.empty_json_list
+            return [], []
 
     def add_stats(self, cols, constraint=None, threshold=None):
         """
@@ -1936,7 +2013,6 @@ class PostgresStatsTable(PostgresBase):
         average, min, and max will be computed as well.
         """
         cols = sorted(cols)
-        jcols = Json(cols)
         where = SQL(" WHERE {0}").format(SQL(" AND ").join(SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols))
         values, ccols, cvals = [], None, None
         if constraint is None:
@@ -1950,7 +2026,7 @@ class PostgresStatsTable(PostgresBase):
             qstr, values = self.table._parse_dict(constraint)
             if qstr is not None:
                 where = SQL(" AND ").join([where, qstr])
-        if self._has_stats(jcols, ccols, cvals, threshold):
+        if self._has_stats(cols, ccols, cvals, threshold):
             return
         self.logger.info("Adding stats for {0} ({1})".format(", ".join(cols), "no threshold" if threshold is None else "threshold = %s"%threshold))
         having = SQL("")
@@ -1972,13 +2048,11 @@ class PostgresStatsTable(PostgresBase):
         onenumeric = False # whether we're grouping by a single numeric column
         if len(cols) == 1:
             col = cols[0]
-            stypes, etypes = self.table._col_types()
-            if stypes.get(col) in ["numeric", "bigint", "integer", "smallint", "double precision"]:
+            if self.table._col_type.get(col) in ["numeric", "bigint", "integer", "smallint", "double precision"]:
                 onenumeric = True
                 avg = 0
                 mn = None
                 mx = None
-        jallcols = Json(allcols)
         for countvec in cur:
             colvals, count = countvec[:-1], countvec[-1]
             if constraint is None:
@@ -1992,7 +2066,7 @@ class PostgresStatsTable(PostgresBase):
                         i += 1
                     else:
                         allcolvals.append(prep_json(constraint[col]))
-            to_add.append((jallcols, Json(allcolvals), count))
+            to_add.append((allcols, allcolvals, count))
             total += count
             if onenumeric:
                 val = colvals[0]
@@ -2001,12 +2075,12 @@ class PostgresStatsTable(PostgresBase):
                     mn = val
                 if mx is None or val > mx:
                     mx = val
-        stats = [(jcols, "total", total, ccols, cvals, threshold)]
+        stats = [(cols, "total", total, ccols, cvals, threshold)]
         if onenumeric:
             avg = float(avg) / total
-            stats.append((jcols, "avg", avg, ccols, cvals, threshold))
-            stats.append((jcols, "min", mn, ccols, cvals, threshold))
-            stats.append((jcols, "max", mx, ccols, cvals, threshold))
+            stats.append((cols, "avg", avg, ccols, cvals, threshold))
+            stats.append((cols, "min", mn, ccols, cvals, threshold))
+            stats.append((cols, "max", mx, ccols, cvals, threshold))
         # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
         inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
         self._execute(inserter.format(Identifier(self.stats)), stats, values_list=True, silent=True)
@@ -2029,16 +2103,16 @@ class PostgresStatsTable(PostgresBase):
         if constraint:
             allcols = sorted(list(set(cols + constraint.keys())))
             positions = [allcols.index(x) for x in cols]
-            selecter_values = [Json(allcols)]
+            selecter_values = [allcols]
             for i, x in enumerate(allcols):
                 if x in constraint:
                     selecter_constraints.append(SQL("values->{0} = %s".format(i)))
-                    selecter_values.append(Json(constraint[x]))
+                    selecter_values.append(constraint[x])
         else:
-            selecter_values = [Json(cols)]
+            selecter_values = [cols]
             positions = range(len(cols))
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
-        return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values = selecter_values)]
+        return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values=selecter_values)]
 
     def _get_total_avg(self, cols, constraint, include_avg):
         """
@@ -2061,10 +2135,10 @@ class PostgresStatsTable(PostgresBase):
         if constraint:
             ccols, cvals = self._split_dict(constraint)
             totaler = SQL("{0} AND constraint_cols = %s AND constraint_values = %s").format(totaler)
-            totaler_values = [Json(cols), "total", ccols, cvals]
+            totaler_values = [cols, "total", ccols, cvals]
         else:
             totaler = SQL("{0} AND constraint_cols IS NULL").format(totaler)
-            totaler_values = [Json(cols), "total"]
+            totaler_values = [cols, "total"]
         cur_total = self._execute(totaler, values=totaler_values)
         if cur_total.rowcount == 0:
             raise ValueError("Database does not contain stats for %s"%(cols[0],))
@@ -2150,6 +2224,27 @@ class PostgresStatsTable(PostgresBase):
                          'proportion':format_percentage(1,1)})
         return data
 
+    def create_oldstats(self, filename):
+        creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(self.search_table + "_oldstats"))
+        self._execute(creator)
+        cur = self.conn.cursor()
+        with open(filename) as F:
+            try:
+                cur.copy_from(F, self.search_table + "_oldstats")
+            except Exception:
+                self.conn.rollback()
+                raise
+            else:
+                self.conn.commit()
+                print "Oldstats created successfully"
+
+    def get_oldstat(self, name):
+        selecter = SQL("SELECT data FROM {0} WHERE _id = %s").format(Identifier(self.search_table + "_oldstats"))
+        cur = self._execute(selecter, [name])
+        if cur.rowcount != 1:
+            raise ValueError("Not a unique oldstat identifier")
+        return cur.fetchone()[0]
+
 class PostgresDatabase(PostgresBase):
     """
     The interface to the postgres database.
@@ -2185,38 +2280,51 @@ class PostgresDatabase(PostgresBase):
         NUMERIC = new_type((oid,), "NUMERIC", numeric_converter)
         register_type(NUMERIC, self.conn)
         register_adapter(Integer, AsIs)
-        cur = self._execute(SQL("SELECT name, sort, capitalization, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
+        register_adapter(RealLiteral, RealLiteralEncoder)
+        register_adapter(list, Json)
+        register_adapter(tuple, Json)
+        register_adapter(dict, Json)
+        cur = self._execute(SQL("SELECT name, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
             ## Skip until fixed
-            if tablename in ('mwf_coeffs', 'mwf_forms', 'mwf_plots', 'smf_samples', 'sl2z_subgroups'):
+            if tablename in ('sl2z_subgroups',):
                 continue
             self.__dict__[tablename] = PostgresTable(self, *tabledata)
             self.tablenames.append(tablename)
+        self.tablenames.sort()
 
     def __repr__(self):
         return "Interface to Postgres database"
 
-    def create_new_table(self, name, columns, sort=None, id_ordered=False, extra_columns=None):
+    def __getitem__(self, name):
+        if name in self.tablenames:
+            return getattr(self, name)
+        else:
+            raise ValueError
+
+    def create_new_table(self, name, search_columns, sort=None, id_ordered=False, extra_columns=None, search_order=None, extra_order=None):
         """
         Add a new search table to the database.
 
         INPUT:
 
         - ``name`` -- the name of the table.  See existing names for consistency.
-        - ``columns`` -- a dictionary whose keys are valid postgres types and whose values are lists
-            of column names (or just a string if only one column has the specified type).
+        - ``search_columns`` -- a dictionary whose keys are valid postgres types and whose values
+            are lists of column names (or just a string if only one column has the specified type).
             An id column of type bigint will be added if either id_ordered is set or
             extra_columns are specified.
         - ``sort`` -- If not None, provides a default sort order for the table, in formats accepted by
             the ``_sort_str`` method.
         - ``id_ordered`` -- boolean (default False).  If set, the table will be sorted by id when
             pushed to production, speeding up some kinds of search queries.
-        - ``extra_columns`` -- a dictionary in the same format as the columns dictionary.
+        - ``extra_columns`` -- a dictionary in the same format as the search_columns dictionary.
             If present, will create a second table (the name with "_extras" appended), linked by
             an id column.  Data in this table cannot be searched on, but will also not appear
             in the search table, speeding up scans.
+        - ``search_order`` -- (optional) list of column names, specifying the default order of columns
+        - ``extra_order`` -- (optional) list of column names, specifying the default order of columns
 
         NOTE:
 
@@ -2242,12 +2350,14 @@ class PostgresDatabase(PostgresBase):
         - timestamp -- 8-byte date and time with no timezone.
         """
         now = time.time()
-        valid_sort_list = sum(columns.values(),[])
-        valid_sort_set = set(valid_sort_list)
+        for typ, L in search_columns.items():
+            if isinstance(L, basestring):
+                search_columns[typ] = [L]
+        valid_list = sum(search_columns.values(),[])
+        valid_set = set(valid_list)
         # Check that columns aren't listed twice
-        if len(valid_sort_list) != len(valid_sort_set):
-            from collections import Counter
-            C = Counter(valid_sort_list)
+        if len(valid_list) != len(valid_set):
+            C = Counter(valid_list)
             raise ValueError("Column %s repeated"%(C.most_common(1)[0][0]))
         # Check that sort is valid
         if sort is not None:
@@ -2258,14 +2368,19 @@ class PostgresDatabase(PostgresBase):
                     if col[1] not in [1, -1]:
                         raise ValueError("Sort terms must be of the form (col, 1) or (col, -1)")
                     col = col[0]
-                if col not in valid_sort_set:
+                if col not in valid_set:
                     raise ValueError("Column %s does not exist"%(col))
-            sort = Json(sort)
-        # caps will be updated by process_columns
-        caps = []
-        def process_columns(coldict):
-            allcols = []
+        # Check that search order is valid
+        if search_order is not None:
+            for col in search_order:
+                if col not in valid_set:
+                    raise ValueError("Column %s does not exist"%(col))
+            if len(search_order) != len(valid_set):
+                raise ValueError("Must include all columns")
+        def process_columns(coldict, colorder):
+            allcols = {}
             hasid = False
+            dictorder = []
             for typ, cols in coldict.items():
                 if typ.lower() not in types_whitelist:
                     if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
@@ -2277,22 +2392,34 @@ class PostgresDatabase(PostgresBase):
                 for col in cols:
                     if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', col):
                         raise ValueError("Invalid column name")
-                    if col != col.lower():
-                        caps.append(col)
                     if col == 'id':
                         hasid = True
                     # We have whitelisted the types, so it's okay to use string formatting
                     # to insert them into the SQL command.
                     # This is useful so that we can specify the collation in the type
-                    allcols.append(SQL("{0} " + typ).format(Identifier(col)))
+                    allcols[col] = SQL("{0} " + typ).format(Identifier(col))
+                    dictorder.append(col)
+            allcols = [allcols[col] for col in (dictorder if colorder is None else colorder)]
             if (not hasid) and (id_ordered or extra_columns is not None):
                 allcols.insert(0, SQL("id bigint"))
             return allcols
-        columns = process_columns(columns)
-        creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(columns))
+        search_columns = process_columns(search_columns, search_order)
+        creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(search_columns))
         self._execute(creator, silent=True, commit=False)
         if extra_columns is not None:
-            extra_columns = process_columns(extra_columns)
+            valid_extra_list = sum(extra_columns.values(),[])
+            valid_extra_set = set(valid_list)
+            # Check that columns aren't listed twice
+            if len(valid_extra_list) != len(valid_extra_set):
+                C = Counter(valid_extra_list)
+                raise ValueError("Column %s repeated"%(C.most_common(1)[0][0]))
+            if extra_order is not None:
+                for col in extra_order:
+                    if col not in valid_extra_set:
+                        raise ValueError("Column %s does not exist"%(col))
+                if len(extra_order) != len(valid_extra_set):
+                    raise ValueError("Must include all columns")
+            extra_columns = process_columns(extra_columns, extra_order)
             creator = SQL('CREATE TABLE {0} ({1})')
             creator = creator.format(Identifier(name+"_extras"),
                                      SQL(", ").join(extra_columns))
@@ -2303,9 +2430,12 @@ class PostgresDatabase(PostgresBase):
         creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
         creator = creator.format(Identifier(name + "_stats"))
         self._execute(creator, silent=True, commit=False)
-        inserter = SQL('INSERT INTO meta_tables (name, sort, capitalization, id_ordered, out_of_order, has_extras) VALUES (%s, %s, %s, %s, %s, %s)')
-        self._execute(inserter, [name, sort, Json(caps), id_ordered, not id_ordered, extra_columns is not None], silent=True, commit=False)
+        inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras) VALUES (%s, %s, %s, %s, %s)')
+        self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None], silent=True, commit=False)
         print "Table %s created in %.3f secs"%(name, time.time()-now)
         self.conn.commit()
+        self.__dict__[name] = PostgresTable(self, name, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None))
+        self.tablenames.append(name)
+        self.tablenames.sort()
 
 db = PostgresDatabase()

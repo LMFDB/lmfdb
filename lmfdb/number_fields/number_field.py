@@ -4,7 +4,7 @@ import pymongo
 ASC = pymongo.ASCENDING
 import time, os
 import flask
-from lmfdb.base import app, getDBConnection
+from lmfdb.base import app
 from flask import render_template, request, url_for, redirect, send_file, flash, jsonify
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
@@ -34,9 +34,6 @@ FIELD_LABEL_RE = re.compile(r'^\d+\.\d+\.(\d+(e\d+)?(t\d+(e\d+)?)*)\.\d+$')
 nfields = None
 max_deg = None
 init_nf_flag = False
-
-def statdb():
-    return getDBConnection().numberfields.stats
 
 # For imaginary quadratic field class group data
 class_group_data_directory = os.path.expanduser('~/data/class_numbers')
@@ -187,10 +184,10 @@ def statistics():
     t = 'Global number field statistics'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number field statistics', '')]
     init_nf_count()
-    n = statdb().find_one({'_id': 'degree'})['counts']
-    nsig = statdb().find_one({'_id': 'nsig'})['counts']
+    n = db.nf_fields.stats.get_oldstat('degree')['counts']
+    nsig = db.nf_fields.stats.get_oldstat('nsig')['counts']
     # Galois groups
-    nt_all = statdb().find_one({'_id': 'nt'})['counts']
+    nt_all = db.nf_fields.stats.get_oldstat('nt')['counts']
     nt = [nt_all[j] for j in range(7)]
     # Galois group families
     cn = galstatdict([u[0] for u in nt_all], n, [1 for u in nt_all])
@@ -198,12 +195,12 @@ def statistics():
     an = galstatdict([u[max(len(u)-2,0)] for u in nt_all], n, [len(u)-1 for u in nt_all])
     # t-numbers for D_n
     dn_tlist = [1,1,2,3,2,3,2,6,3,3,2,12,2,3,2,56,2,13,2,10,5,3,2]
-    dn = galstatdict(statdb().find_one({'_id': 'dn'})['counts'], n, dn_tlist)
+    dn = galstatdict(db.nf_fields.stats.get_oldstat('dn')['counts'], n, dn_tlist)
 
-    h = statdb().find_one({'_id': 'h_range'})['counts']
-    has_h = statdb().find_one({'_id': 'has_h'})['val']
-    hdeg = statdb().find_one({'_id': 'hdeg'})['counts']
-    has_hdeg = statdb().find_one({'_id': 'has_hdeg'})['counts']
+    h = db.nf_fields.stats.get_oldstat('h_range')['counts']
+    has_h = db.nf_fields.stats.get_oldstat('has_h')['val']
+    hdeg = db.nf_fields.stats.get_oldstat('hdeg')['counts']
+    has_hdeg = db.nf_fields.stats.get_oldstat('has_hdeg')['counts']
     hdeg = [ [ {'cnt': comma(hdeg[nn][j]), 
               'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
               'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s'%(nn+1,str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))] for nn in range(len(hdeg))]
@@ -231,8 +228,8 @@ def statistics():
     h[0]['query'] = url_for(".number_field_render_webpage")+'?class_number=1'
 
     # Class number 1 by signature
-    sigclass1 = statdb().find_one({'_id': 'sigclass1'})['counts']
-    sighasclass = statdb().find_one({'_id': 'sighasclass'})['counts']
+    sigclass1 = db.nf_fields.stats.get_oldstat('sigclass1')['counts']
+    sighasclass = db.nf_fields.stats.get_oldstat('sighasclass')['counts']
     sigclass1 = [ [ {'cnt': comma(sigclass1[nn][r2]), 
               'prop': format_percentage(sigclass1[nn][r2], sighasclass[nn][r2]) if sighasclass[nn][r2]>0 else 0,
               'show': sighasclass[nn][r2]>0,

@@ -84,9 +84,6 @@ assert hecke_algebras
 from inventory_app.inventory_app import inventory_app
 assert inventory_app
 
-# Currently uploading is not supported
-# import upload
-
 import logging
 import utils
 import os

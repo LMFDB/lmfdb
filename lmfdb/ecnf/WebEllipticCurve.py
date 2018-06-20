@@ -10,9 +10,6 @@ from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
 
-def db_ecnfstats():
-    return getDBConnection().elliptic_curves.nfcurves.stats
-
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
 # 1. [N,c,d] with N=norm and [N/d,0;c,d] the HNF

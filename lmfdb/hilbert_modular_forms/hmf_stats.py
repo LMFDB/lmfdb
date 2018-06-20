@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb.db_backend import db
-from lmfdb.base import app, getDBConnection
+from lmfdb.base import app
+from lmfdb.db_backend import db
 from lmfdb.utils import comma, make_logger
 from lmfdb.WebNumberField import nf_display_knowl
 from sage.misc.cachefunc import cached_method
@@ -11,10 +12,6 @@ def field_sort_key(F):
     return (int(dsdn[0]), int(dsdn[2]))  # by degree then discriminant
 
 logger = make_logger("hmf")
-
-def db_forms_stats():
-    hmfs = getDBConnection().hmfs
-    return hmfs.forms.stats
 
 the_HMFstats = None
 
@@ -86,13 +83,13 @@ class HMFstats(object):
     def counts(self):
         counts = {}
 
-        formstats = db_forms_stats()
+        formstats = db.hmf_forms.stats
 
-        nforms = formstats.find_one({'_id':'deg'})['total']
+        nforms = formstats.get_oldstat('deg')['total']
         counts['nforms']  = nforms
         counts['nforms_c']  = comma(nforms)
 
-        degs = formstats.find_one({'_id':'fields_summary'})
+        degs = formstats.get_oldstat('fields_summary')
         nfields = degs['total']
         degrees = [x[0] for x in degs['counts']]
         degrees.sort()
@@ -103,7 +100,7 @@ class HMFstats(object):
         counts['maxdeg'] = max_deg
         counts['max_deg_c'] = comma(max_deg)
 
-        fields = formstats.find_one({'_id':'fields_by_degree'})
+        fields = formstats.get_oldstat('fields_by_degree')
         counts['fields_by_degree'] = dict([(d,fields[d]['fields']) for d in degrees])
         counts['nfields_by_degree'] = dict([(d,fields[d]['nfields']) for d in degrees])
         counts['max_disc_by_degree'] = dict([(d,fields[d]['maxdisc']) for d in degrees])
@@ -113,8 +110,8 @@ class HMFstats(object):
     def stats(self, d=None):
         if d:
             return self.stats()[str(d)]
-        deg_data = db_forms_stats().find_one({'_id':'level_norm_by_degree'})
-        field_data = db_forms_stats().find_one({'_id':'level_norm_by_field'})
+        deg_data = db.hmf_forms.stats.get_oldstat('level_norm_by_degree')
+        field_data = db.hmf_forms.stats.get_oldstat('level_norm_by_field')
         def field_stats(F):
             ff = F.replace(".",":")
             return {'nforms': field_data[ff]['nforms'],

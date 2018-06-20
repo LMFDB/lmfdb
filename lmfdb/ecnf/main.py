@@ -17,7 +17,7 @@ from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ecnf_degree_summary, ecnf_signature_summary, sort_field
-from lmfdb.ecnf.WebEllipticCurve import ECNF, db_ecnfstats, web_ainvs, convert_IQF_label
+from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
@@ -174,9 +174,9 @@ def index():
     # data['fields'] holds data for a sample of number fields of different
     # signatures for a general browse:
 
-    ecnfstats = db_ecnfstats()
-    fields_by_deg = ecnfstats.find_one({'_id':'fields_by_degree'})
-    fields_by_sig = ecnfstats.find_one({'_id':'fields_by_signature'})
+    ecnfstats = db.ec_nfcurves.stats
+    fields_by_deg = ecnfstats.get_oldstat('fields_by_degree')
+    fields_by_sig = ecnfstats.get_oldstat('fields_by_signature')
     data['fields'] = []
     # Rationals
     data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)])
@@ -465,7 +465,7 @@ def search_input_error(info=None, bread=None):
 
 @ecnf_page.route("/browse/")
 def browse():
-    data = db_ecnfstats().find_one({'_id':'signatures_by_degree'}, projection={'_id': False})
+    data = db.ec_nfcurves.stats.get_oldstat('signatures_by_degree')
     # We could use the dict directly but then could not control the order
     # of the keys (degrees), so we use a list
     info = [[d,data[str(d)]] for d in sorted([int(d) for d in data.keys()])]
@@ -481,16 +481,16 @@ def statistics_by_degree(d):
         return redirect(url_for("ec.statistics"))
     info = {}
 
-    ecnfstats = db_ecnfstats()
-    sigs_by_deg = ecnfstats.find_one({'_id':'signatures_by_degree'}, projection={'_id': False})
+    ecnfstats = db.ec_nfcurves.stats
+    sigs_by_deg = ecnfstats.get_oldstat('signatures_by_degree')
     if not str(d) in sigs_by_deg:
         info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
     else:
         info['degree'] = d
 
-    fields_by_sig = ecnfstats.find_one({'_id':'fields_by_signature'}, projection={'_id': False})
-    counts_by_sig = ecnfstats.find_one({'_id':'conductor_norm_by_signature'}, projection={'_id': False})
-    counts_by_field = ecnfstats.find_one({'_id':'conductor_norm_by_field'}, projection={'_id': False})
+    fields_by_sig = ecnfstats.get_oldstat('fields_by_signature')
+    counts_by_sig = ecnfstats.get_oldstat('conductor_norm_by_signature')
+    counts_by_field = ecnfstats.get_oldstat('conductor_norm_by_field')
 
     def field_counts(f):
         ff = f.replace(".",":")
@@ -527,8 +527,8 @@ def statistics_by_signature(d,r):
 
     info = {}
 
-    ecnfstats = db_ecnfstats()
-    sigs_by_deg = ecnfstats.find_one({'_id':'signatures_by_degree'}, projection={'_id': False})
+    ecnfstats = db.ec_nfcurves.stats
+    sigs_by_deg = ecnfstats.get_oldstat('signatures_by_degree')
     if not str(d) in sigs_by_deg:
         info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
     else:
@@ -540,8 +540,8 @@ def statistics_by_signature(d,r):
     info['sig'] = sig = '%s,%s' % (r,s)
     info['summary'] = ecnf_signature_summary(sig)
 
-    fields_by_sig = ecnfstats.find_one({'_id':'fields_by_signature'}, projection={'_id': False})
-    counts_by_field = ecnfstats.find_one({'_id':'conductor_norm_by_field'}, projection={'_id': False})
+    fields_by_sig = ecnfstats.get_oldstat('fields_by_signature')
+    counts_by_field = ecnfstats.get_oldstat('conductor_norm_by_field')
 
     def field_counts(f):
         ff = f.replace(".",":")
@@ -638,8 +638,8 @@ def download_search(info):
                      add_etags=False)
 
 def get_torsion_structures():
-    ecnfstats = db_ecnfstats()
-    torsion_structures = [t[0] for t in ecnfstats.find_one({'_id':'torsion_structure'})['counts']]
+    ecnfstats = db.ec_nfcurves.stats
+    torsion_structures = [t[0] for t in ecnfstats.get_oldstat('torsion_structure')['counts']]
     torsion_structures = [[int(str(n)) for n in t.split(",")] for t in torsion_structures if t]
     torsion_structures.sort()
     return torsion_structures

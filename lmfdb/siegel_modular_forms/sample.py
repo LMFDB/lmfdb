@@ -38,7 +38,7 @@ class Sample_class (SageObject):
 
         self.__collection = doc.get('collection')
         self.__name = doc.get('name')
-        self.__weight = doc.get('wt')
+        self.__weight = doc.get('weight')
         self.__degree_of_field = doc.get('fdeg')
         self.__field_poly = PolynomialRing(QQ,'x')(str(doc.get('field_poly')))
         self.__field = None # created on demand
@@ -48,7 +48,7 @@ class Sample_class (SageObject):
         self.__is_eigenform = doc.get('is_eigenform')
         self.__is_integral = doc.get('is_integral')
         self.__representation = doc.get('representation')
-        self.__id = doc.get('_id')
+        self.__id = doc.get('label')
  
     def collection(self):
         return self.__collection

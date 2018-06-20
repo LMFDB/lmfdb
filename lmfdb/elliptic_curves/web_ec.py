@@ -4,7 +4,6 @@ import os
 import yaml
 import time
 from flask import url_for
-from lmfdb.base import getDBConnection
 from lmfdb.db_backend import db
 from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
 from lmfdb.search_parsing import split_list
@@ -55,9 +54,6 @@ def class_cremona_label(conductor, iso_class):
     return "%s%s" % (conductor, iso_class)
 
 logger = make_logger("ec")
-
-def db_ecstats():
-    return getDBConnection().elliptic_curves.curves.stats
 
 def split_galois_image_code(s):
     """Each code starts with a prime (1-3 digits but we allow for more)
@@ -480,7 +476,7 @@ class WebEC(object):
                 tg1['m'] = len([x for x in tgextra if x['d']==d])
                 lastd = d
         ## Hard code for now
-        #tg['maxd'] = max(db_ecstats().find_one({'_id': 'torsion_growth'})['degrees'])
+        #tg['maxd'] = max(db.ec_curves.stats.get_oldstat('torsion_growth')['degrees'])
         tg['maxd'] = 7
 
 

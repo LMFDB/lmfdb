@@ -10,8 +10,9 @@
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
 from lmfdb import base
-from lmfdb.db_backend import PostgresBase, db
+from lmfdb.db_backend import PostgresBase, db, Array
 from psycopg2 import connect
+from psycopg2.sql import SQL, Identifier, Placeholder
 from main import logger
 from datetime import datetime, timedelta
 
@@ -20,7 +21,7 @@ class PostgresUserTable(PostgresBase):
         PostgresBase.__init__(self, 'db_users', db.conn)
         # never narrow down the rmin-rmax range, only increase it!
         self.rmin, self.rmax = -10000, 10000
-        cur = self._execute("SELECT column_name FROM information_schema.columns WHERE table_schema = 'userdb' AND table_name = 'users'")
+        cur = self._execute(SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s"), ['userdb', 'users'])
         self._cols = [rec[0] for rec in cur]
     def get_random_salt(self):
         """
@@ -74,30 +75,30 @@ class PostgresUserTable(PostgresBase):
             pwd = pwd_input
         password = self.bchash(pwd)
         from datetime import datetime
-        insertor = u"INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)"
+        insertor = SQL(u"INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
         self._execute(insertor, [uid, password, datetime.utcnow(), full_name, about, url])
         new_user = LmfdbUser(uid)
         return new_user
     def change_password(self, uid, newpwd):
         bcpass = self.bchash(newpwd)
-        updator = "UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s"
-        self._execute(updator, [bcpass, uid])
+        updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
+        self._execute(updater, [bcpass, uid])
         logger.info("password for %s changed!" % uid)
     def user_exists(self, uid):
-        selector = "SELECT 1 FROM userdb.users WHERE username = %s"
-        cur = self._execute(selector, [uid])
+        selecter = SQL("SELECT 1 FROM userdb.users WHERE username = %s")
+        cur = self._execute(selecter, [uid])
         return cur.rowcount > 0
     def get_user_list(self):
         """
         returns a list of tuples: [('username', 'full_name'),…]
         If full_name is None it will be replaced with username.
         """
-        selector = "SELECT username, full_name FROM userdb.users"
-        cur = self._execute(selector)
+        selecter = SQL("SELECT username, full_name FROM userdb.users")
+        cur = self._execute(selecter)
         return [(uid, full_name or uid) for uid, full_name in cur]
     def authenticate(self, uid, pwd, bcpass=None, oldpass=None):
-        selector = "SELECT bcpassword, password FROM userdb.users WHERE id = %s"
-        cur = self._execute(selector, [uid])
+        selecter = SQL("SELECT bcpassword, password FROM userdb.users WHERE username = %s")
+        cur = self._execute(selecter, [uid])
         if cur.rowcount == 0:
             raise ValueError("User not present in database!")
         bcpass, oldpass = cur.fetchone()
@@ -109,18 +110,18 @@ class PostgresUserTable(PostgresBase):
                 if oldpass == self.hashpwd(pwd, str(i)):
                     bcpass = self.bchash(pwd)
                     if bcpass:
-                        logger.info("user " + self._uid  +  " logged in with old style password, trying to update")
+                        logger.info("user " + uid  +  " logged in with old style password, trying to update")
                         try:
-                            updator = "UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s"
-                            self._execute(updator, [bcpass, uid])
-                            logger.info("password update for " + self._uid + " succeeded")
+                            updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
+                            self._execute(updater, [bcpass, uid])
+                            logger.info("password update for " + uid + " succeeded")
                         except Exception:
                             #if you can't update the password then likely someone is using a local install
                             #log and continue
-                            logger.warning("password update for " + self._uid + " failed!")
+                            logger.warning("password update for " + uid + " failed!")
                         return True
                     else:
-                        logger.warning("user " + self._uid + " logged in with old style password, but update was not possible")
+                        logger.warning("user " + uid + " logged in with old style password, but update was not possible")
                         return False
         return False
     def save(self, data):
@@ -133,38 +134,38 @@ class PostgresUserTable(PostgresBase):
         if not data:
             raise ValueError("no data to save")
         fields, values = zip(*data.items())
-        updator = "UPDATE userdb.users SET ({0}) VALUES ({1}) WHERE username = %s".format(", ".join(fields), ", ".join(["%s"] * len(values)))
-        self._execute(updator, values + [uid])
+        updater = SQL("UPDATE userdb.users SET ({0}) VALUES ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), Placeholder() * len(values))
+        self._execute(updater, list(values) + [uid])
     def lookup(self, uid):
-        selector = "SELECT {0} FROM userdb.users WHERE username = %s".format(", ".join(self._cols))
-        cur = self._execute(selector, [uid])
+        selecter = SQL("SELECT {0} FROM userdb.users WHERE username = %s").format(SQL(", ").join(map(Identifier, self._cols)))
+        cur = self._execute(selecter, [uid])
         if cur.rowcount == 0:
             raise ValueError("user does not exist")
         if cur.rowcount > 1:
             raise ValueError("multiple users with same username!")
         return {field:value for field,value in zip(self._cols, cur.fetchone()) if value is not None}
     def full_names(self, uids):
-        selector = "SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)"
-        cur = self._execute(selector, [uids])
+        selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
+        cur = self._execute(selecter, Array([uids]))
         return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
     def create_tokens(self, tokens):
-        insertor = "INSERT INTO userdb.tokens (id, expire) VALUES %s"
+        insertor = SQL("INSERT INTO userdb.tokens (id, expire) VALUES %s")
         now = datetime.utcnow()
         tdelta = timedelta(days=1)
         exp = now + tdelta
         self._execute(insertor, [(t, exp) for t in tokens], values_list=True)
     def token_exists(self, token):
-        selector = "SELECT 1 FROM userdb.tokens WHERE id = %s"
-        cur = self._execute(selector, [token])
+        selecter = SQL("SELECT 1 FROM userdb.tokens WHERE id = %s")
+        cur = self._execute(selecter, [token])
         return cur.rowcount == 1
     def delete_old_tokens(self):
-        deletor = "DELETE FROM userdb.tokens WHERE expire < %s"
+        deletor = SQL("DELETE FROM userdb.tokens WHERE expire < %s")
         now = datetime.utcnow()
         tdelta = timedelta(days=8)
         cutoff = now - tdelta
         cur = self._execute(deletor, [cutoff])
     def delete_token(self, token):
-        deletor = "DELETE FROM userdb.tokens WHERE id = %s"
+        deletor = SQL("DELETE FROM userdb.tokens WHERE id = %s")
         cur = self._execute(deletor, [token])
 
 userdb = PostgresUserTable()

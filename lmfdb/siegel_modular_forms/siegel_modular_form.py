@@ -18,7 +18,7 @@ from lmfdb.utils import to_dict, flash_error
 ###############################################################################
 
 def find_samples(family, weight):
-    slist = sample.smf_db_samples().find({'data_type':'sample','collection':family, 'wt':int(weight)},{'name':True})
+    slist = sample.smf_db_samples().find({'data_type':'sample','collection':family, 'weight':int(weight)},{'name':True})
     ret = []
     for res in slist:
         name = res['name']

@@ -6,9 +6,9 @@ import pymongo
 ASC = pymongo.ASCENDING
 DSC = pymongo.DESCENDING
 
-import psycopg2, psycopg2.extras
-from lmfdb.db_backend import db, PostgresBase
+from lmfdb.db_backend import db, PostgresBase, Array
 from lmfdb.users.pwdmanager import userdb
+from psycopg2.sql import SQL, Identifier
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -44,8 +44,7 @@ def extract_cat(kid):
     return kid.split(".")[0]
 
 # We don't use the PostgresTable from lmfdb.db_backend
-# since it's aimed at constructing queries for mathematical
-# objects, doesn't support insertion, etc.
+# since it's aimed at constructing queries for mathematical objects
 
 class KnowlBackend(PostgresBase):
     _default_fields = ['authors', 'cat', 'content', 'last_author', 'quality', 'timestamp', 'title'] # doesn't include id
@@ -54,8 +53,8 @@ class KnowlBackend(PostgresBase):
     def get_knowl(self, ID, fields=None):
         if fields is None:
             fields = ['id'] + self._default_fields
-        selector = "SELECT {0} FROM kwl_knowls WHERE id = %s;".format(", ".join(fields))
-        cur = self._execute(selector, (ID,))
+        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, (ID,))
         if cur.rowcount > 0:
             res = cur.fetchone()
             return {k:v for k,v in zip(fields, res)}
@@ -63,26 +62,26 @@ class KnowlBackend(PostgresBase):
         restrictions = []
         values = []
         if category:
-            restrictions.append("category = %s")
+            restrictions.append(SQL("category = %s"))
             values.append(category)
         if any(filters):
             qualities = [quality for quality, filt in zip(knowl_qualities, filters) if filt]
-            restrictions.append("quality IN %s")
-            values.append(qualities)
+            restrictions.append(SQL("quality = ANY(%s)"))
+            values.append(Array(qualities))
         if keywords:
             keywords = filter(lambda _: len(_) >= 3, keyword.split(" "))
             if keywords:
-                restrictions.append("_keywords @> %s")
-                values.append(psycopg2.extras.Json(keywords))
+                restrictions.append(SQL("_keywords @> %s"))
+                values.append(keywords)
         if author is not None:
-            restrictions.append("authors @> %s")
-            values.append(psycopg2.extras.Json([author]))
-        selector = "SELECT id, title FROM kwl_knowls"
+            restrictions.append(SQL("authors @> %s"))
+            values.append([author])
+        selecter = SQL("SELECT id, title FROM kwl_knowls")
         if restrictions:
-            selector += " WHERE " + " AND ".join(restrictions)
+            selecter = SQL("{0} WHERE {1}").format(selecter, SQL(" AND ").join(restrictions))
         if sort is not None:
-            selector += " ORDER BY {0}".format(self._sort_str(sort))
-        cur = self._execute(selector, values)
+            selecter = SQL("{0} ORDER BY {1}").format(selecter, self._sort_str(sort))
+        cur = self._execute(selecter, values)
         return [{k:v for k,v in zip(["id", "title"], res)} for res in cur]
     def save(self, knowl, who):
         """who is the ID of the user, who wants to save the knowl"""
@@ -99,16 +98,17 @@ class KnowlBackend(PostgresBase):
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
         values = (authors, cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
-        insertor = u"INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}, %s, %s) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1}, %s, %s);".format(u', '.join(self._default_fields), u', '.join(u"%s" * len(self._default_fields)))
-        self._execute(insertor, (knowl.id,) + values + values)
+        insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
+        insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), Placeholder() * (len(self._default_fields) + 2))
+        self._execute(insterer, (knowl.id,) + values + values)
         if new_knowl:
             self.update_knowl_categories(cat)
         self.save_history(knowl, who)
     def update(self, kid, key, value):
         if key not in self._default_fields + ['history', '_keywords']:
             raise ValueError("Bad key")
-        updator = "UPDATE kwl_knowls SET ({0}) VALUES (%s) WHERE id = %s".format(key)
-        cur = self._execute(updator, (value, kid))
+        updater = SQL("UPDATE kwl_knowls SET ({0}) VALUES (%s) WHERE id = %s").format(Identifier(key))
+        cur = self._execute(updater, (value, kid))
     def save_history(self, knowl, who):
         """
         saves history tokens in a collection "history".
@@ -118,24 +118,24 @@ class KnowlBackend(PostgresBase):
         'state' can either be 'saved' (for the recent changes list) or 'locked'.
         TODO also calculate a diff with python's difflib and store it here.
         """
-        insertor = u"INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s);"
+        insterer = SQL("INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s)")
         now = datetime.utcnow()
         values = (knowl.title, now, who, 'saved')
-        self._execute(insertor, (knowl.id,) + values + values)
+        self._execute(insterer, (knowl.id,) + values + values)
     def get_history(self, limit=25):
         """
         returns the last @limit history items
         """
         cols = ("id", "title", "time", "who")
-        selector = "SELECT {0} FROM kwl_history WHERE state = 'saved' ORDER BY time DESC LIMIT %s;".format(", ".join(cols))
-        cur = self._execute(selector, (limit,))
+        selecter = SQL("SELECT {0} FROM kwl_history WHERE state = 'saved' ORDER BY time DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
+        cur = self._execute(selecter, (limit,))
         return [{k:v for k,v in zip(cols, res)} for res in cur]
     def delete(self, knowl):
         """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
-        insertor = u"INSERT INTO kwl_knowls_deleted (id, {0}) VALUES (%s, {1});".format(u', '.join(self._default_values), u', '.join(u"%s"*len(self._default_values)))
+        insterer = SQL("INSERT INTO kwl_knowls_deleted (id, {0}) VALUES (%s, {1})").format(SQL(', ').join(map(Identifier, self._default_values)), Placeholder() * len(self._default_values))
         values = self.get_knowl(knowl.id)
-        self._execute(insertor, [knowl.id] + [values[i] for i in self._default_values])
-        deletor = "DELETE FROM kwl_knowls WHERE id = %s"
+        self._execute(insterer, [knowl.id] + [values[i] for i in self._default_values])
+        deletor = SQL("DELETE FROM kwl_knowls WHERE id = %s")
         self._execute(deletor, (knowl.id,))
         self.refresh_knowl_categories()
     def is_locked(self, knowlid, delta_min=10):
@@ -147,19 +147,19 @@ class KnowlBackend(PostgresBase):
         now = datetime.utcnow()
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
-        deletor = "DELETE FROM kwl_history WHERE state = 'locked' AND time <= %s;"
+        deletor = SQL("DELETE FROM kwl_history WHERE state = 'locked' AND time <= %s")
         cur = self._execute(deletor, (time,))
-        selector = "SELECT who, time FROM kwl_history WHERE id = %s AND time >= %s LIMIT 1;"
-        cur.execute(selector, (knowlid, time))
+        selecter = SQL("SELECT who, time FROM kwl_history WHERE id = %s AND time >= %s LIMIT 1")
+        cur.execute(selecter, (knowlid, time))
         if cur.rowcount > 0:
             return {k:v for k,v in zip(["who", "time"], cur.fetchone())}
     def set_locked(self, knowl, who):
         """
         when a knowl is edited, a lock is created. who is the user id.
         """
-        insertor = u"INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s);"
+        insterer = SQL("INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s)")
         now = datetime.utcnow()
-        self._execute(insertor, (knowl.id, knowl.title, now, who, 'locked', know.title, now, who, 'locked'))
+        self._execute(insterer, (knowl.id, knowl.title, now, who, 'locked', know.title, now, who, 'locked'))
     def knowl_title(self, kid):
         """
         just the title, used in the knowls in the templates for the pages.
@@ -173,11 +173,11 @@ class KnowlBackend(PostgresBase):
         """
         return self.get_knowl(kid) is not None
     #def refresh_knowl_categories(self):
-    #    selector = "SELECT id FROM kwl_knowls;"
-    #    cur = self._execute(selector)
+    #    selecter = SQL("SELECT id FROM kwl_knowls")
+    #    cur = self._execute(selecter)
     #    cats = sorted(list(set((extract_cat(res[0]) for res in cur))))
-    #    updator = "UPDATE kwl_knowls_meta SET categories = %s WHERE id = %s;"
-    #    cur.execute(updator, (cats, CAT_ID))
+    #    updater = SQL("UPDATE kwl_knowls_meta SET categories = %s WHERE id = %s")
+    #    cur.execute(updater, (cats, CAT_ID))
     #    return str(cats)
     #def update_knowl_categories(self, cat):
     #    """
@@ -185,18 +185,16 @@ class KnowlBackend(PostgresBase):
     #    ensures that we know it. this is much more efficient than the
     #    refresh variant.
     #    """
-    #    selector = "SELECT categories FROM kwl_knowls_meta WHERE id = %s AND NOT categories @> %s"
-    #    cur = self._execute(selector, (CAT_ID, psycopg2.extras.Json([cat])))
+    #    selecter = SQL("SELECT categories FROM kwl_knowls_meta WHERE id = %s AND NOT categories @> %s")
+    #    cur = self._execute(selecter, (CAT_ID, [cat]))
     #    if cur.rowcount > 0:
     #        categories = cur.fetchone()[0]
-    #        updator = "UPDATE kwl_meta SET categories = %s WHERE id = %s"
-    #        categories = psycopg2.extras.Json(sorted(categories + [cat]))
-    #        cur.execute(updator, (categories, CAT_ID))
+    #        updater = SQL("UPDATE kwl_meta SET categories = %s WHERE id = %s")
+    #        categories = sorted(categories + [cat])
+    #        cur.execute(updater, (categories, CAT_ID))
     def get_categories(self):
-        #selector = "SELECT categories FROM kwl_meta WHERE id = %s"
-        #cur.execute(selector, (CAT_ID,))
-        selector = "SELECT DISTINCT cat FROM kwl_knowls;"
-        cur.execute(selector)
+        selecter = SQL("SELECT DISTINCT cat FROM kwl_knowls")
+        cur.execute(selecter)
         return sorted([res[0] for res in cur])
     def cleanup(self, max_h=50):
         """
@@ -204,22 +202,22 @@ class KnowlBackend(PostgresBase):
         returns the list of categories (as a string), a count of the the number of knowls reindexed and the number of histories pruned.
         """
         cats = self.refresh_knowl_categories()
-        selector = "SELECT (id, content, title) FROM kwl_knowls;"
-        cur = self._execute(selector)
-        updator = "UPDATE kwl_knowls SET (cat, _keywords) = (%s, %s) WHERE id = %s;"
+        selecter = SQL("SELECT (id, content, title) FROM kwl_knowls")
+        cur = self._execute(selecter)
+        updater = SQL("UPDATE kwl_knowls SET (cat, _keywords) = (%s, %s) WHERE id = %s")
         for kid, content, title in cur:
             cat = extract_cat(kid)
             search_keywords = make_keywords(content, kid, title)
-            self._execute(updator, (cat, search_keywords, kid))
+            self._execute(updater, (cat, search_keywords, kid))
         hcount = 0
-        selector = "SELECT id, history FROM kwl_knowls WHERE history IS NOT NULL;"
-        cur = self._execute(selector)
-        updator = "UPDATE kwl_knowls SET history = %s WHERE id = %s"
+        selecter = SQL("SELECT id, history FROM kwl_knowls WHERE history IS NOT NULL")
+        cur = self._execute(selecter)
+        updater = SQL("UPDATE kwl_knowls SET history = %s WHERE id = %s")
         for kid, history in cur:
             if len(history) > max_h:
                 hcount += 1
-                self._execute(updator, (history[-max_h:], kid))
-        counter = "SELECT COUNT(*) FROM kwl_knowls WHERE history IS NOT NULL;"
+                self._execute(updater, (history[-max_h:], kid))
+        counter = SQL("SELECT COUNT(*) FROM kwl_knowls WHERE history IS NOT NULL")
         cur = self._execute(counter)
         reindex_count = int(cur.fetchone()[0])
         return cats, reindex_count, hcount
