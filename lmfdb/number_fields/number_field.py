@@ -5,7 +5,7 @@ ASC = pymongo.ASCENDING
 import time, os
 import flask
 from lmfdb.base import app, getDBConnection
-from flask import render_template, request, url_for, redirect, send_file, flash
+from flask import render_template, request, url_for, redirect, send_file, flash, make_response
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex
@@ -26,7 +26,7 @@ from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, f
 from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
-Completename = 'Completeness of this data'
+Completename = 'Completeness of the data'
 dnc = 'data not computed'
 
 FIELD_LABEL_RE = re.compile(r'^\d+\.\d+\.(\d+(e\d+)?(t\d+(e\d+)?)*)\.\d+$')
@@ -119,7 +119,7 @@ def how_computed_page():
         ('Galois group labels', url_for(".render_groups_page")), 
         (Completename, url_for(".render_discriminants_page")) ]
     t = 'How Number Field Data was Computed'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois group labels', ' ')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Source', ' ')]
     return render_template("single.html", kid='dq.nf.howcomputed', 
         credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
@@ -128,7 +128,7 @@ def render_groups_page():
     info = {}
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")) ]
     t = 'Galois group labels'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois group labels', ' ')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois Group Labels', ' ')]
     C = db()
     return render_template("galois_groups.html", al=aliastable(C), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
@@ -136,9 +136,15 @@ def render_groups_page():
 @nf_page.route("/FieldLabels")
 def render_labels_page():
     info = {}
+    info['learnmore'] = [(Completename, url_for(".render_discriminants_page")),
+                         ('How data was computed', url_for(".how_computed_page")),
+                         ('Galois group labels', url_for(".render_groups_page")),
+                         ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
+    t = 'Labels for Global Number Fields'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Number field labels'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number field labels', '')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Global Number Field Labels', '')]
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 
@@ -147,8 +153,10 @@ def render_discriminants_page():
     info = {}
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Completeness of Global Number Field Data'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), (Completename, ' ')]
-    return render_template("discriminant_ranges.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
+    return render_template("single.html", kid='dq.nf.completeness', 
+        credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+
 
 @nf_page.route("/QuadraticImaginaryClassGroups")
 def render_class_group_data():
@@ -350,7 +358,7 @@ def render_field_webpage(args):
     nf = WebNumberField(label)
     data = {}
     if nf.is_null():
-        bread.append(('Search results', ' '))
+        bread.append(('Search Results', ' '))
         info['err'] = 'There is no field with label %s in the database' % label
         info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
         return search_input_error(info, bread)
@@ -548,6 +556,11 @@ def render_field_webpage(args):
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
                    ('Galois Group', group_display_short(data['degree'], t, C))
                    ]
+    downloads = []
+    for lang in [["Magma","magma"], ["SageMath","sage"], ["GP", "gp"]]:
+        downloads.append(('Download {} code'.format(lang[0]),
+                          url_for(".nf_code_download", nf=label, download_type=lang[1])))
+
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
@@ -561,7 +574,7 @@ def render_field_webpage(args):
     except AttributeError:
         pass
 #    del info['_id']
-    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), learnmore=info.pop('learnmore'), info=info)
+    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=info.pop('learnmore'), info=info)
 
 
 def format_coeffs2(coeffs):
@@ -589,7 +602,7 @@ def by_label(label):
         return render_field_webpage({'label': nf_string_to_label(label)})
     except ValueError as err:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (label,err)), "error")
-        bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search results', ' ')]
+        bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
         return search_input_error({'err':''}, bread)
 
 # input is a sage int
@@ -610,7 +623,7 @@ def number_field_search(info):
 
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Global Number Field search results'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search results', ' ')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
 
     if 'natural' in info:
         query = {'label_orig': info['natural']}
@@ -845,4 +858,53 @@ def download_search(info, res):
                      attachment_filename=filename,
                      as_attachment=True,
                      add_etags=False)
+
+@nf_page.route('/<nf>/download/<download_type>')
+def nf_code_download(**args):
+    response = make_response(nf_code(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+
+sorted_code_names = ['field', 'poly', 'degree', 'signature',
+                     'discriminant', 'ramified_primes',
+                     'integral_basis', 'class_group', 'unit_group',
+                     'unit_rank', 'unit_torsion_gen',
+                     'fundamental_units', 'regulator', 'galois_group',
+                     'prime_cycle_types']
+
+code_names = {'field': 'Define the number field',
+              'poly': 'Defining polynomial',
+              'degree': 'Degree over Q',
+              'signature': 'Signature',
+              'discriminant': 'Discriminant',
+              'ramified_primes': 'Ramified primes',
+              'integral_basis': 'Integral basis',
+              'class_group': 'Class group',
+              'unit_group': 'Unit group',
+              'unit_rank': 'Unit rank',
+              'unit_torsion_gen': 'Generator for roots of unity',
+              'fundamental_units': 'Fundamental units',
+              'regulator': 'Regulator',
+              'galois_group': 'Galois group',
+              'prime_cycle_types': 'Frobenius cycle types'
+          }
+
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+
+def nf_code(**args):
+    label = args['nf']
+    nf = WebNumberField(label)
+    nf.make_code_snippets()
+    lang = args['download_type']
+    code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
+    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
+    if lang=='gp':
+        lang = 'pari'
+    for k in sorted_code_names:
+        if lang in nf.code[k]:
+            code += "\n{} {}: \n".format(Comment[lang],code_names[k])
+            code += nf.code[k][lang] + ('\n' if not '\n' in nf.code[k][lang] else '')
+    return code
 

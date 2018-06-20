@@ -24,3 +24,12 @@ class GalGpTest(LmfdbTest):
 		assert '8T3' in L.data
 		assert '660' in L.data # order of 11T5
 
+    def test_search_order(self):
+        L = self.tc.get('GaloisGroup/?order=18')
+        assert '9T5' in L.data
+        assert 'all 9 matches' in L.data
+
+    def test_search_gapid(self):
+        L = self.tc.get('GaloisGroup/?gapid=[60,5]')
+        assert '20T15' in L.data
+        assert '15T5' in L.data

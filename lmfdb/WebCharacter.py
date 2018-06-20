@@ -132,7 +132,7 @@ class WebCharObject:
 ###  Dirichlet type
 
 class WebDirichlet(WebCharObject):
-    """ 
+    """
     For some applications (orbits, enumeration), Dirichlet characters may be
     represented by a couple (modulus, number) without computing the Dirichlet
     group.
@@ -337,7 +337,7 @@ class WebHecke(WebCharObject):
         numlabel = self.number2label( c.exponents() )
         if prim == None:
             prim = c.is_primitive()
-        return (modlabel, numlabel, self.char2tex(c), prim ) 
+        return (modlabel, numlabel, self.char2tex(c), prim )
 
     @staticmethod
     def ideal2tex(ideal):
@@ -430,7 +430,7 @@ class WebHecke(WebCharObject):
 class WebCharFamily(WebCharObject):
     """ compute first groups """
     _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
-            'nfpol', 'code', 'headers', 'contents' ]   
+            'nfpol', 'code', 'headers', 'contents' ]
     headers = [ 'modulus', 'order', 'structure', 'first characters' ]
 
     def __init__(self, **args):
@@ -483,7 +483,7 @@ class WebCharGroup(WebCharObject):
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
-            'properties2', 'friends', 'rowtruncate', 'coltruncate'] 
+            'properties2', 'friends', 'rowtruncate', 'coltruncate']
 
     def __init__(self, **args):
         self._contents = None
@@ -575,7 +575,7 @@ class WebChar(WebCharObject):
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
-              'codegauss', 'codejacobi', 'codekloosterman']   
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
 
     def __init__(self, **args):
         self.maxcols = 30
@@ -705,7 +705,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     """
     Heritage: WebCharGroup -> __init__()
               WebDirichlet -> _compute()
-    """           
+    """
 
     def _compute(self):
         """ WARNING: do not remove otherwise _compute
@@ -765,9 +765,9 @@ class WebSmallDirichletGroup(WebDirichletGroup):
 
 class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     """
-    Heritage: WebCharacter -> __init__()
+    Heritage: WebChar -> __init__()
               WebDirichlet -> _compute()
-    """           
+    """
 
     def _compute(self):
         self.modulus = int(self.modlabel)
@@ -789,6 +789,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def indlabel(self):  return None
     def value(self, *args): return None
+    def charsums(self, *args): return False
     def gauss_sum(self, *args): return None
     def jacobi_sum(self, *args): return None
     def kloosterman_sum(self, *args): return None
@@ -840,14 +841,14 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
         return ( self._char_desc(num, prim=prim) for num in orbit )
 
-    def symbol_numerator(self): 
+    def symbol_numerator(self):
         """ chi is equal to a kronecker symbol if and only if it is real """
         if self.order != 2:
             return None
         return symbol_numerator(self.conductor, self.chi.is_odd())
 
     @property
-    def symbol(self): 
+    def symbol(self):
         return kronecker_symbol(self.symbol_numerator())
 
     @property
@@ -883,7 +884,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
-              'codegauss', 'codejacobi', 'codekloosterman']   
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
 
     def _compute(self):
         WebDirichlet._compute(self)
@@ -941,6 +942,15 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
     def codevalue(self):
         return { 'sage': 'chi(x) # x integer',
                  'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
+
+    @property
+    def charsums(self):
+        if self.modulus < 1000:
+            return { 'gauss': self.gauss_sum(2),
+                     'jacobi': self.jacobi_sum(1),
+                     'kloosterman': self.kloosterman_sum('1,2') }
+        else:
+            return None
 
     def gauss_sum(self, val):
         val = int(val)
@@ -1014,7 +1024,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 class WebHeckeExamples(WebHecke):
     """ this class only collects some interesting number fields """
 
-    _keys = [ 'title', 'credit', 'headers', 'contents' ]   
+    _keys = [ 'title', 'credit', 'headers', 'contents' ]
     headers = ['label','signature', 'polynomial' ]
 
     def __init__(self, **args):
@@ -1065,13 +1075,13 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
 
     def first_moduli(self, bound=200):
         """ first ideals which are conductors """
-        bnf = self.k.pari_bnf()                                                           
+        bnf = self.k.pari_bnf()
         oldbound = 0
         while True:
             L = bnf.ideallist(bound)[oldbound:]
-            for l in L:   
-                if l == []: next                                                           
-                for ideal in l:                                            
+            for l in L:
+                if l == []: next
+                for ideal in l:
                     if gp.bnrisconductor(bnf,ideal):
                         yield self.k.ideal(ideal)
             """ double the range if one needs more ideal """
@@ -1116,7 +1126,7 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
 class WebHeckeCharacter(WebChar, WebHecke):
 
     def _compute(self):
-        WebHecke._compute(self) 
+        WebHecke._compute(self)
         self.number = self.label2number(self.numlabel)
         assert len(self.number) == self.G.ngens()
         self.chi = HeckeChar(self.H, self.number)

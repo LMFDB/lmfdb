@@ -659,11 +659,11 @@ def complete_human_table(inv_db_toplevel, db_id, coll_id):
         human_record = h_db.find_one(rec_find)
         #Should never be two records with same coll-id and name
         alter = False
+        try:
+            rec_set = human_record['data']
+        except:
+            rec_set = {}
         for field in inv.base_editable_fields:
-            try:
-                rec_set = human_record['data']
-            except:
-                rec_set = {}
             try:
                 a = human_record['data'][field]
                 assert(a or not a) #Use a for Pyflakes, but we don't care what is is

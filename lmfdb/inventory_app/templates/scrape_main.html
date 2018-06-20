@@ -24,14 +24,14 @@
   {% for item in listing %}
   <div class = 'unbreaking'>
     <h2>{{item}}</h2>
-    {% if current_user.is_authenticated() %}
+    {% if user_is_authenticated %}
       <input type='button' id = '{{coll}}' class="scrape_button" value ='Rescan all collections' onclick='rescanAll("{{item}}")'>
     {% else %}
       <input type='button' value ='Rescan all collections' class="scrape_button" title ='Please login to scrape' disabled class=disabledbutton>
     {% endif %}
     <br></br>
     {% for coll in listing[item] %}
-      {% if current_user.is_authenticated() %}
+      {% if user_is_authenticated %}
         <input type='button' id = '{{coll}}' class="scrape_button" value ='Rescan {{coll}}' onclick='rescan("{{item}}", "{{coll}}")'>
       {% else %}
         <input type='button' value ='Rescan {{coll}}' class="scrape_button" title ='Please login to scrape' disabled class=disabledbutton>

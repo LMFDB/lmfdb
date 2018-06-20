@@ -146,7 +146,7 @@ def index():
     group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.4.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
     title = 'Sato-Tate groups'
-    bread = [('Sato-Tate groups', '.')]
+    bread = [('Sato-Tate Groups', '.')]
     return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
 
 @st_page.route('/random')
@@ -200,7 +200,7 @@ def search(**args):
         return redirect(url_for('.by_label', label=info['jump']), 301)
     if 'label' in info:
         return redirect(url_for('.by_label', label=info['label']), 301)
-    bread = [('Sato-Tate groups', url_for('.index')),('Search Results', '.')]
+    bread = [('Sato-Tate Groups', url_for('.index')),('Search Results', '.')]
     count = parse_count(info, 25)
     start = parse_start(info)
     # if user clicked refine search always restart at 0
@@ -394,7 +394,7 @@ def render_st_group(info, portrait=None):
         ('Component group', '\(%s\)'%info['component_group']),
     ]
     bread = [
-        ('Sato-Tate groups', url_for('.index')),
+        ('Sato-Tate Groups', url_for('.index')),
         ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
@@ -411,20 +411,20 @@ def render_st_group(info, portrait=None):
 @st_page.route('/Completeness')
 def completeness_page():
     t = 'Completeness of Sato-Tate group data'
-    bread = [('Sato-Tate groups', url_for('.index')), ('Completeness','')]
+    bread = [('Sato-Tate Groups', url_for('.index')), ('Completeness','')]
     return render_template('single.html', kid='dq.st.extent',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
 def how_computed_page():
     t = 'Source of Sato-Tate group data'
-    bread = [('Sato-Tate groups', url_for('.index')), ('Source','')]
+    bread = [('Sato-Tate Groups', url_for('.index')), ('Source','')]
     return render_template('single.html', kid='dq.st.source',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Labels')
 def labels_page():
     t = 'Labels for Sato-Tate groups'
-    bread = [('Sato-Tate groups', url_for('.index')), ('Labels','')]
+    bread = [('Sato-Tate Groups', url_for('.index')), ('Labels','')]
     return render_template('single.html', kid='st_group.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))

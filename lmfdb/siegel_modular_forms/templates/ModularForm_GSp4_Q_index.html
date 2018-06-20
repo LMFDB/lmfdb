@@ -1,12 +1,11 @@
 {% extends 'homepage.html' %}
 {% block content %}
 <p>
-  The database contains information about {{ info.number_of_samples }} examples of scalar and vector
+  The database contains examples of scalar and vector
   valued {{KNOWL('mf.siegel.degree',title='Siegel modular forms')}}, as well as
   dimension formulas for spaces of Siegel modular forms.  The examples
-  not in the image of a lift from a lower rank group are almost all of
-  the known examples in the literature, and most published dimension
-  formulas are included.
+  that are not {{KNOWL('mf.siegeil.lift',title='lifts')}} represent most of
+  the known examples that have appeared in the literature.
 </p> 
 
 <h2>Browse spaces</h2>
