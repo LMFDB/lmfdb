@@ -159,19 +159,19 @@ def ref_to_link(txt):
             the_doi = ref[3:]    # remove the "doi"
             this_link = '{{ LINK_EXT("' + the_doi + '","http://dx.doi.org/' + the_doi + '")| safe }}'
         elif ref.lower().startswith("mr"):
-            ref = ref.replace(":","") 
+            ref = ref.replace(":","")
             the_mr = ref[2:]    # remove the "MR"
             this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
             this_link += '"http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1='
             this_link += the_mr + '") | safe}}'
         elif ref.lower().startswith("arxiv"):
-            ref = ref.replace(":","")  
+            ref = ref.replace(":","")
             the_arx = ref[5:]    # remove the "arXiv"
             this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
             this_link += '"http://arxiv.org/abs/'
             this_link += the_arx + '")| safe}}'
 
-  
+
         if this_link:
             if ans:
                 ans += ", "
@@ -295,7 +295,7 @@ def test():
 @knowledge_page.route("/edit/<ID>")
 @login_required
 def edit(ID):
-    from pymongo.errors import OperationFailure 
+    from pymongo.errors import OperationFailure
     if not allowed_knowl_id.match(ID):
         flask.flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
@@ -543,11 +543,11 @@ def cleanup():
     return "categories: %s <br/>reindexed %s knowls<br/>pruned %s histories" % (cats, q_knowls.count(), hcount)
 
 
-@knowledge_page.route("/")
+@knowledge_page.route("/", methods=['GET', 'POST'])
 def index():
     # bypassing the Knowl objects to speed things up
     from knowl import get_knowls
-# See issue #1169    
+# See issue #1169
 #    try:
 #        get_knowls().ensure_index('_keywords')
 #        get_knowls().ensure_index('cat')
@@ -555,18 +555,24 @@ def index():
 #        pass
 
     cur_cat = request.args.get("category", "")
-
     qualities = []
-    defaults = "filter" not in request.args
-    filtermode = "filter" in request.args
+
+    defaults = "filtered" not in request.args
+    filtermode = "filtered" in request.args
     searchmode = "search" in request.args
     categorymode = "category" in request.args
 
     from knowl import knowl_qualities
-    # TODO wrap this into a loop:
-    reviewed = request.args.get("reviewed", "") == "on" or defaults
-    ok = request.args.get("ok", "") == "on" or defaults
-    beta = request.args.get("beta", "") == "on" or defaults
+
+    if request.method == 'POST':
+        reviewed = request.form.get("reviewed", "") == "on" or defaults
+        ok = request.form.get("ok", "") == "on" or defaults
+        beta = request.form.get("beta", "") == "on" or defaults
+    if request.method == 'GET':
+        quals = list(request.args.getlist('qualities'))
+        reviewed = "reviewed" in quals
+        ok = "ok" in quals
+        beta = "beta" in quals
 
     if reviewed:
         qualities.append("reviewed")
@@ -634,4 +640,6 @@ def index():
                            filters=(beta, ok, reviewed),
                            categories = cats,
                            cur_cat = cur_cat,
-                           categorymode = categorymode)
+                           categorymode = categorymode,
+                           filtermode = filtermode,
+                           qualities = qualities)
