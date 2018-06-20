@@ -27,7 +27,7 @@ def lattice_summary():
 
     return ''.join([r'<p>The database currently contains {} '.format(comma(number)), positivedef,' ', integral,'. It includes data from the ', catalogue,
                     '.</p><p>The largest ', cn , ' is {}, '.format(comma(max_cn)), ' the largest ', dim, ' is {}, '.format(comma(max_dim)),
-                    'and the largest ', det, ' is {}.</p> '.format(comma(max_det)),'<p>In the case of ', pri ,' ', integral, ' of ', cn, ' one the database is complete.</p>'])
+                    'and the largest ', det, ' is {}.</p> '.format(comma(max_det)),'<p>In the case of ', pri ,' ', integral, ' of ', cn, ' one the database is complete, by a calculation of Kirschmer and Lorch.</p>'])
 
 def lattice_summary_data():
     latstats = db_latstats()
