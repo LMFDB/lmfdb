@@ -27,4 +27,5 @@ lmfdb/.coverage
 .coverage
 .DS_Store
 .idea/
-logs/
+LMFDBinventory.log
+LMFDBtransactions_inv.log
