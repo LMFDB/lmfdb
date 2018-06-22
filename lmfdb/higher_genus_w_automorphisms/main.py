@@ -560,9 +560,10 @@ def render_family(args):
             Ltopo_rep.append([dat['passport_label'], dat['total_label'], x1])
 
         #print Ltopo_class
+        ###### Needs to sort key of Ltopo_class #########  
         keylist = Ltopo_class.keys()
         keylist.sort()
-        ###### Needs to sort key of Ltopo_class #########        
+              
         info.update({'passport': Lall})
         info.update({'passport_num': len(Lall)})
 
