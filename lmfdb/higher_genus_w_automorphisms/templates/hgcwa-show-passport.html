@@ -152,7 +152,7 @@ transition: 0.3s;
 
 <div id="Full" class="tabcontent">
   <p>
-  Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+  Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
  <p>{% for cdata in info.genvects %}
    {{cdata[0]}}
    <table>{% for perm in cdata[3] %}
@@ -178,16 +178,36 @@ transition: 0.3s;
 </div>
 
 <div id="Less" class="tabcontent">
-  <p>
-  Displaying braid equivalence representatives
- <p>{% for braid_rep in info.braid %}
-   {{braid_rep[0]}}
-   <table>{% for perm in braid_rep[1] %}
-     <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-     {% endfor %} </table> <br>
-   {% endfor %}
- </p>
- </p>
+    {% if info.braid_numb == 1 %}
+  Displaying the unique braid equivalence representative for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+    {% else %}
+    Displaying {{info.braid_disp_numb}} of {{info.braid_numb}} braid
+  equivalence representatives for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+    {% endif %}
+    
+    <p>{% for count in range(info.braid_disp_numb) %}
+      {% for braid_rep in info.braid %}
+    {{braid_rep[0]}}
+    <table>{% for perm in braid_rep[1] %}
+      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+      {% endfor %} </table> <br>
+    {% endfor %}
+    {% endfor %}
+  </p>
+
+  {% if info.braid_numb >= 2 %}
+ <form>
+  <table>
+    <tr>
+      <td>Display number of braid equivalence representatives:</td>
+      <td><input type='text' name='numbraidreps' placeholder='20' size=10></td>
+    </tr>
+    <tr>
+      <td colspan=3><button type='submit' value='display'>Display</button></td>
+    </tr>
+  </table>
+</form>
+ {% endif %}
 </div>
 
 <script>
@@ -207,6 +227,5 @@ function openData(evt, dataType) {
 
 document.getElementById("defaultOpen").click();
 </script>
-
 
 {% endblock %}

@@ -131,6 +131,14 @@ gen_vect_label:
    gap:    gen_vect_label:=
    magma:  gen_vect_label:=
 
+braid_class:
+   gap:    braid_class:=
+   magma:  braid_class:=
+
+topological_class:
+   gap:    topological_class:=
+   magma:  topological_class:=
+
 
 add_to_total_basic:
    gap:  "Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list, genus:=genus, dimension:=dim, r:=r, g0:=g0,  passport_label:= passport_label,gen_vect_label:=gen_vect_label, is_hyperelliptic:=is_hyperelliptic) ); "
