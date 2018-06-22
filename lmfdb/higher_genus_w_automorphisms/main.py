@@ -902,9 +902,9 @@ def hgcwa_code_download(**args):
     stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
     stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
     # For all generating vectors and passports
-    #if lang == args['download_type']:
-    stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
-    stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
+    if lang == args['download_type']:
+        stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
+        stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
         
     # extended formatting template for when signH is present
     signHfmt = stdfmt
