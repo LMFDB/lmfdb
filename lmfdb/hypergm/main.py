@@ -3,8 +3,6 @@
 # Author: John Jones 
 
 import re
-import pymongo
-ASC = pymongo.ASCENDING
 
 from lmfdb.db_backend import db
 from flask import render_template, request, url_for, jsonify

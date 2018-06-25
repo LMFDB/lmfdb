@@ -3,8 +3,6 @@
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
 
-import pymongo
-ASC = pymongo.ASCENDING
 import flask
 from functools import wraps
 from lmfdb.base import app

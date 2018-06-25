@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import re
-import pymongo
 import time
 import ast
 import StringIO
 
-ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 from flask import render_template, request, url_for, redirect, make_response, flash,  send_file, jsonify
@@ -13,7 +11,7 @@ from markupsafe import Markup
 
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
-from lmfdb.utils import to_dict, web_latex_split_on_pm, random_object_from_collection
+from lmfdb.utils import to_dict, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
 
 from lmfdb.lattice import lattice_page
@@ -182,7 +180,7 @@ def render_lattice_webpage(**args):
         lab = clean_input(args.get('label'))
         if lab != args.get('label'):
             return redirect(url_for('.render_lattice_webpage', label=lab), 301)
-        f = db.lat_lattices.lucky({'$or':[{'label': lab }, {'name': lab }]})
+        f = db.lat_lattices.lucky({'$or':[{'label': lab }, {'name': {'$contains': [lab]}}]})
     if f is None:
         t = "Integral Lattices Search Error"
         bread = [('Lattice', url_for(".lattice_render_webpage"))]

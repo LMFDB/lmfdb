@@ -3,10 +3,9 @@ import re
 import time
 import ast
 import StringIO
-from pymongo import ASCENDING
 from lmfdb.db_backend import db
 from lmfdb.base import app
-from lmfdb.utils import to_dict, make_logger, random_object_from_collection
+from lmfdb.utils import to_dict, make_logger
 from lmfdb.abvar.fq import abvarfq_page
 from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string, parse_galgrp
 from search_parsing import parse_newton_polygon, parse_abvar_decomp

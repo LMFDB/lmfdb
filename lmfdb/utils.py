@@ -13,11 +13,13 @@ import time
 import math
 import cmath
 import sage
+from types import GeneratorType
 
 from sage.all import latex, CC
 from copy import copy
 from random import randint
 from functools import wraps
+from itertools import islice
 from flask import request, make_response, flash, url_for, current_app
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
@@ -500,63 +502,49 @@ def order_values(doc, field, sub_fields=["len", "val"]):
     return doc
 
 ################################################################################
-#  pymongo utilities
+#  pagination utilities
 ################################################################################
 
-def random_object_from_collection(collection):
-    """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
-    import pymongo
-    n = collection.rand.count()
-    if n:
-        m = collection.count()
-        if m != n:
-            current_app.logger.warning("Random object index {0}.rand is out of date ({1} != {2}), proceeding anyway.".format(collection,n,m))
-        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
-        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
-            return obj
-    if pymongo.version_tuple[0] < 3:
-        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next()
-    else:
-        # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
-        return collection.aggregate([{ '$sample': { 'size': int(1) } } ]).next()
+class ValueSaver(object):
+    """
+    Takes a generator and saves values as they are generated so that values can be retrieved multiple times.
+    """
+    def __init__(self, source):
+        self.source = source
+        self.store = []
+    def fill(self, stop):
+        """
+        Consumes values from the source until there are at least ``stop`` entries in the store.
+        """
+        if stop > len(self.store):
+            self.store.extend(islice(self.source, stop - len(self.store)))
+    def __getitem__(self, i):
+        if isinstance(i, slice):
+            if (i.start is not None and i.start < 0) or i.stop is None or i.stop < 0 or (i.step is not None and i.step < 0):
+                raise ValueError("Only positive indexes supported")
+            self.fill(i.stop)
+            return self.store[i]
+        else:
+            self.fill(i+1)
+            return self.store[i]
+    def __len__(self):
+        raise TypeError("Unknown length")
 
+class Pagination(object):
+    """
+    INPUT:
 
-def random_value_from_collection(collection,attribute):
-    """ retrieves the value of attribute (e.g. label) from a random object in mongo db collection; uses collection.rand to improve performance if present """
-    import pymongo
-    n = collection.rand.count()
-    if n:
-        m = collection.count()
-        if m != n:
-            current_app.logger.warning("Random object index {0}.rand is out of date ({1} < {2})".format(collection,n,m))
-        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True})
-        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
-            return obj.get(attribute)
-    if pymongo.version_tuple[0] < 3:
-        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't bother optimizing this
-    else:
-        # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
-        return collection.aggregate([{ '$sample': { 'size': int(1) } }, { '$project' : {'_id':False,attribute:True}} ]).next().get(attribute)
-
-
-def attribute_value_counts(collection,attribute):
-    """ returns a sorted array of pairs (value,count) with count=collection.find({attribute:value}); uses collection.stats to improve peroformance if present """
-    if collection.stats.count():
-        m = collection.count()
-        stats = collection.stats.find_one({'_id':attribute},{'total':True,'counts':True})
-        if stats and 'counts' in stats:
-            # Don't use statistics that we know are out of date.
-            if stats['total'] != m:
-                current_app.logger.warning("Statistics in {0}.stats are out of date ({1} != {2}), they will not be used until they are updated.".format(collection,stats['total'],m))
-            else:
-                return stats['counts']
-    # note that pymongo will raise an error if the return value from .distinct is large than 16MB (this is a good thing)
-    return [[value,collection.find({attribute:value}).count()] for value in sorted(collection.distinct(attribute))]
-
-
-class MongoDBPagination(object):
-    def __init__(self, query, per_page, page, endpoint, endpoint_params):
-        self.query = query
+    - ``source`` -- a list or generator containing results.
+        If a generator, won't support the ``count`` or ``pages`` attributes
+    - ``per_page`` -- an integer, the number of results shown per page
+    - ``page`` -- the current page (initial value is 1)
+    - ``endpoint`` -- an argument for ``url_for`` to get more pages
+    - ``endpoint_params`` -- keyword arguments for the ``url_for`` call
+    """
+    def __init__(self, source, per_page, page, endpoint, endpoint_params):
+        if isinstance(source, GeneratorType):
+            source = ValueSaver(source)
+        self.source = source
         self.per_page = int(per_page)
         self.page = int(page)
         self.endpoint = endpoint
@@ -564,17 +552,33 @@ class MongoDBPagination(object):
 
     @cached_property
     def count(self):
-        return self.query.count(True)
+        return len(self.source)
 
     @cached_property
     def entries(self):
-        return self.query.skip(self.start).limit(self.per_page)
+        return self.source[self.start : self.start+self.per_page]
+
+    @cached_property
+    def has_next(self):
+        try:
+            _ = self.source[self.start + self.per_page]
+        except IndexError:
+            return False
+        else:
+            return True
 
     has_previous = property(lambda x: x.page > 1)
-    has_next = property(lambda x: x.page < x.pages)
     pages = property(lambda x: max(0, x.count - 1) // x.per_page + 1)
     start = property(lambda x: (x.page - 1) * x.per_page)
     end = property(lambda x: min(x.start + x.per_page - 1, x.count - 1))
+
+    @property
+    def end(self):
+        if isinstance(self.source, ValueSaver):
+            self.source.fill(self.start + self.per_page)
+            return len(self.source.store) - 1
+        else:
+            return min(self.start + self.per_page, self.count) - 1
 
     @property
     def previous(self):
@@ -587,21 +591,6 @@ class MongoDBPagination(object):
         kwds = copy(self.endpoint_params)
         kwds['page'] = self.page + 1
         return url_for(self.endpoint, **kwds)
-
-
-class LazyMongoDBPagination(MongoDBPagination):
-    @cached_property
-    def has_next(self):
-        return self.query.skip(self.start).limit(self.per_page + 1).count(True) > self.per_page
-
-    @property
-    def count(self):
-        raise NotImplementedError
-
-    @property
-    def pages(self):
-        raise NotImplementedError
-
 
 ################################################################################
 #  web development utilities

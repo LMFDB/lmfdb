@@ -27,22 +27,19 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 
 import logging
-import pymongo
 import tempfile, datetime
 import re, os, time
 from collections import Counter
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
-from psycopg2.extras import Json, execute_values
-from psycopg2.extensions import adapt, register_type, register_adapter, new_type, UNICODE, UNICODEARRAY, AsIs
+from psycopg2.extras import execute_values
+from lmfdb.db_encoding import setup_connection, Array, copy_dumps
 import json, random, time
-from lmfdb.utils import random_object_from_collection
-from sage.rings.integer import Integer
 from sage.misc.cachefunc import cached_method
-from sage.rings.real_mpfr import RealLiteral, RealField
 from sage.functions.other import ceil
 from sage.misc.mrange import cartesian_product_iterator
 from lmfdb.utils import make_logger, format_percentage
+from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 SLOW_QUERY_LOGFILE = "slow_queries.log"
 SLOW_CUTOFF = 1
@@ -92,85 +89,6 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'gist':   ['fillfactor', 'buffering'],
                          'hash':   ['fillfactor'],
                          'spgist': ['fillfactor']}
-
-def numeric_converter(value, cur):
-    """
-    Used for converting numeric values from Postgres to Python.
-
-    INPUT:
-
-    - ``value`` -- a string representing a decimal number.
-    - ``cur`` -- a cursor, unused
-
-    OUTPUT:
-
-    - either a sage integer (if there is no decimal point) or a real number whose precision depends on the number of digits in value.
-    """
-    if value is None:
-        return None
-    if '.' in value:
-        prec = max(ceil(len(value)*3.322), 53)
-        return RealLiteral(RealField(prec), value)
-    else:
-        return Integer(value)
-
-class Array(object):
-    """
-    Since we use Json by default for lists, this class lets us
-    get back the default behavior when needed.
-    """
-    def __init__(self, seq):
-        self._seq = seq
-        self._conn = None
-
-    def prepare(self, conn):
-        self._conn = conn
-
-    def getquoted(self):
-        # this is the important line: note how every object in the
-        # list is adapted and then how getquoted() is called on it
-        pobjs = [adapt(o) for o in self._seq]
-        if self._conn is not None:
-            for obj in pobjs:
-                if hasattr(obj, 'prepare'):
-                    obj.prepare(self._conn)
-        qobjs = [o.getquoted() for o in pobjs]
-        return b'ARRAY[' + b', '.join(qobjs) + b']'
-
-    def __str__(self):
-        return str(self.getquoted())
-
-class RealLiteralEncoder(object):
-    def __init__(self, value):
-        self._value = value
-    def getquoted(self):
-        return self._value.literal
-    def __str__(self):
-        return self._value.literal
-
-def prep_json(value, escape_backslashes=False):
-    """
-    Make json compliant.  Namely, it iteratively changes Integers to ints and RealLiterals to floats.
-    """
-    if isinstance(value, list):
-        return [prep_json(x) for x in value]
-    elif isinstance(value, tuple):
-        return tuple(prep_json(x) for x in value)
-    elif isinstance(value, dict):
-        return {k:prep_json(v) for k,v in value.iteritems()}
-    elif isinstance(value, Integer):
-        return int(value)
-    elif isinstance(value, RealLiteral):
-        newval = float(value)
-        if str(newval) != str(value):
-            # The caller needs to deal with precision issues in an appropriate way;
-            # we don't want to lose precision by casting to float for them.
-            raise ValueError("RealLiteral encoding into float does not preserve precision")
-        return newval
-    elif escape_backslashes and isinstance(value, basestring):
-        return value.replace('\\','\\\\\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"',r'\"')
-    else:
-        return value
 
 class QueryLogFilter(object):
     """
@@ -555,17 +473,25 @@ class PostgresTable(PostgresBase):
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
-                elif isinstance(value, dict) and all(k.startswith('$') for k in value.iterkeys()):
+                    continue
+                if isinstance(value, dict) and all(k.startswith('$') for k in value.iterkeys()):
                     sub, vals = self._parse_dict(value, key)
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
-                elif '.' in key:
-                    raise ValueError("Error building query: subdocuments not supported")
-                elif value is None:
-                    strings.append(SQL("{0} IS NULL").format(Identifier(key)))
+                    continue
+                if '.' in key:
+                    path = [int(p) if p.isdigit() else p for p in key.split('.')]
+                    key, path = path[0], [SQL("->{0}").format(Literal(p)) for p in path[1:]]
                 else:
-                    strings.append(SQL("{0} = %s").format(Identifier(key)))
+                    path = []
+                if not (self.has_id and key == 'id' or key in self._search_cols):
+                    raise ValueError("%s is not a column of %s"%(key, self.search_table))
+                key = SQL("{0}{1}").format(Identifier(key), SQL("").join(path))
+                if value is None:
+                    strings.append(SQL("{0} IS NULL").format(key))
+                else:
+                    strings.append(SQL("{0} = %s").format(key))
                     values.append(value)
             if strings:
                 return SQL(" AND ").join(strings), values
@@ -625,7 +551,7 @@ class PostgresTable(PostgresBase):
             s = SQL("{0} LIMIT %s").format(s)
             values.append(limit)
             if offset != 0:
-                s = "{0} OFFSET %s".format(s)
+                s = SQL("{0} OFFSET %s").format(s)
                 values.append(offset)
         return s, values
 
@@ -672,7 +598,7 @@ class PostgresTable(PostgresBase):
     # Methods for querying                                           #
     ##################################################################
 
-    def lucky(self, query, projection=2, offset=0):
+    def lucky(self, query={}, projection=2, offset=0):
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for situations where only a single result is desired.
@@ -752,7 +678,7 @@ class PostgresTable(PostgresBase):
             else:
                 return {k:v for k,v in zip(search_cols, rec) if v is not None}
 
-    def search(self, query, projection=1, limit=None, offset=0, sort=None, info=None):
+    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for usage from search pages where multiple results may be returned.
@@ -775,7 +701,7 @@ class PostgresTable(PostgresBase):
                                2 means all columns).
         - ``limit`` -- an integer or None (default), giving the maximum number of records to return.
         - ``offset`` -- an integer (default 0), where to start in the list of results.
-        - ``sort`` -- a sort order.  Either None or a list of strings (which are interpreted as column names in the ascending direction) or of pairs (column name, 1 or -1).  If not specified, will use the default sort order on the table.
+        - ``sort`` -- a sort order.  Either None or a list of strings (which are interpreted as column names in the ascending direction) or of pairs (column name, 1 or -1).  If not specified, will use the default sort order on the table.  If you want the result unsorted, use [].
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
 
         WARNING:
@@ -921,13 +847,29 @@ class PostgresTable(PostgresBase):
             sage: nf.random()
             u'2.0.294787.1'
         """
+        maxtries = 100
         if self.has_id:
             maxid = self.max('id')
             id = random.randint(0, maxid)
-            return self.lucky({'id':id}, projection=projection)
+            # The id may not exist if rows have been deleted
+            for _ in range(maxtries):
+                res = self.lucky({'id':id}, projection=projection)
+                if res: return res
         else:
-            # We should use TABLESAMPLE in this case
-            raise NotImplementedError
+            # Get the number of pages occupied by the search_table
+            cur = self._execute(SQL("SELECT relpages FROM pg_class WHERE relname = %s"), [self.search_table])
+            num_pages = cur.fetchone()[0]
+            # extra_cols will be () and id_offset will be 0 since there is no id
+            search_cols, extra_cols, id_offset = self._parse_projection(projection)
+            vars = SQL(", ").join(map(Identifier, search_cols))
+            selecter = SQL("SELECT {0} FROM {1} TABLESAMPLE SYSTEM(%s)").format(vars, Identifier(self.search_table))
+            # We select 3 pages in an attempt to not accidentally get nothing.
+            percentage = min(float(300) / num_pages, 100)
+            for _ in range(maxtries):
+                cur = self._execute(selecter, [percentage])
+                if cur.rowcount > 0:
+                    return {k:v for k,v in zip(search_cols, random.choice(list(cur)))}
+        raise RuntimeError("Random selection failed!")
 
     ##################################################################
     # Convenience methods for accessing statistics                   #
@@ -1069,6 +1011,7 @@ class PostgresTable(PostgresBase):
             - ``NULLS LAST``
             This interface doesn't currently support creating indexes with nonstandard collations.
         """
+        now = time.time()
         if type not in _operator_classes:
             raise ValueError("Unrecognized index type")
         if modifiers is None:
@@ -1106,6 +1049,7 @@ class PostgresTable(PostgresBase):
         inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
         self._execute(inserter, [name, self.search_table, type, columns, modifiers, storage_params], silent=True, commit=False)
         self.conn.commit()
+        print "Index %s created in %.3f secs"%(name, time.time()-now)
 
     def drop_index(self, name, suffix="", permanent=False):
         """
@@ -1214,8 +1158,9 @@ class PostgresTable(PostgresBase):
 
         - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the ALTER TABLE statements.
         """
-        command = SQL("ALTER TABLE {0} DROP CONSTRAINT {1}")
-        self._pkey_common(command, suffix, "Dropped")
+        if self.has_id:
+            command = SQL("ALTER TABLE {0} DROP CONSTRAINT {1}")
+            self._pkey_common(command, suffix, "Dropped")
 
     def restore_pkeys(self, suffix=""):
         """
@@ -1225,8 +1170,9 @@ class PostgresTable(PostgresBase):
 
         - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the ALTER TABLE statements.
         """
-        command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
-        self._pkey_common(command, suffix, "Built")
+        if self.has_id:
+            command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
+            self._pkey_common(command, suffix, "Built")
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -1272,27 +1218,7 @@ class PostgresTable(PostgresBase):
         # An alternative approach would be to use COPY TO and have func and filter both
         # operate on the results, but then func would have to process the strings
         if tostr_func is None:
-            def tostr_func(inp, typ):
-                if inp is None:
-                    return ur'\N'
-                elif typ in ('text', 'char', 'varchar'):
-                    if not isinstance(inp, basestring):
-                        inp = str(inp)
-                    return inp.replace('\\','\\\\').replace('\r',r'\r').replace('\n',r'\n').replace('\t',r'\t').replace('"',r'\"')
-                elif typ in ('json','jsonb'):
-                    return json.dumps(prep_json(inp, escape_backslashes=True))
-                elif isinstance(inp, RealLiteral):
-                    return inp.literal
-                elif isinstance(inp, (int, long, Integer, float)):
-                    return str(inp)
-                elif typ=='boolean':
-                    return 't' if inp else 'f'
-                elif isinstance(inp, (datetime.date, datetime.time, datetime.datetime)):
-                    return "%s"%(inp)
-                elif typ == 'bytea':
-                    return r'\\x' + ''.join(c.encode('hex') for c in inp)
-                else:
-                    raise TypeError("Invalid input %s (%s) for postgres type %s"%(inp, type(inp), typ))
+            tostr_func = copy_dumps
         searchfile = tempfile.NamedTemporaryFile('w', delete=False)
         extrafile = None if self.extra_table is None else tempfile.NamedTemporaryFile('w', delete=False)
         try:
@@ -1400,7 +1326,7 @@ class PostgresTable(PostgresBase):
         self._break_stats()
         self.conn.commit()
 
-    def insert_many(self, search_data, extras_data=None, resort=True, reindex=False):
+    def insert_many(self, search_data, extras_data=None, resort=True, reindex=False, restat=True):
         """
         Insert multiple rows.
 
@@ -1418,6 +1344,7 @@ class PostgresTable(PostgresBase):
         - ``reindex`` -- boolean (default False). Whether to drop the indexes
           before insertion and restore afterward.  Note that if there is an exception during insertion
           the indexes will need to be restored manually using ``restore_indexes``.
+        - ``restat`` -- whether to refresh statistics after insertion
 
         If the search table has an id, the dictionaries will be updated with the ids of the inserted records,
         though note that those ids will change if the ids are resorted.
@@ -1450,12 +1377,15 @@ class PostgresTable(PostgresBase):
         self._break_order()
         self._break_stats()
         self.stats.total += len(search_data)
+        self.stats._record_count({}, self.stats.total)
         self.conn.commit()
         if resort:
             self.resort()
         if reindex:
             self.restore_pkeys()
             self.restore_indexes()
+        if restat:
+            self.stats.refresh_stats(total=False)
 
     def _identify_tables(self, search_table, extra_table):
         """
@@ -1627,7 +1557,7 @@ class PostgresTable(PostgresBase):
         if "columns" in kwds:
             raise ValueError("Cannot specify column order using the columns parameter")
 
-    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, includes_ids=True, resort=None, reindex=True, **kwds):
+    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, includes_ids=True, resort=None, reindex=True, restat=None, **kwds):
         """
         Safely and efficiently replaces this table with the contents of one or more files.
 
@@ -1645,10 +1575,13 @@ class PostgresTable(PostgresBase):
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
             If the number of rows is a substantial fraction of the size of the table, this will be faster.
+        - ``restat`` -- whether to refresh statistics afterward.  Default behavior is to refresh stats if either countfile or statsfile is missing.
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
         """
         if resort is None:
             resort = not includes_ids
+        if restat is None:
+            restat = (countfile is None or statsfile is None)
         self._check_file_input(searchfile, extrafile, kwds)
         tables = []
         counts = {}
@@ -1677,10 +1610,15 @@ class PostgresTable(PostgresBase):
             self.restore_pkeys(suffix="_tmp")
         if reindex:
             self.restore_indexes(self.search_table, suffix="_tmp")
+        if restat:
+            self.stats.refresh_stats(suffix="_tmp")
+            for table in [self.stats.counts, self.stats.stats]:
+                if table not in tables:
+                    tables.append(table)
         self._swap_in_tmp(tables, reindex)
         self.conn.commit()
 
-    def copy_from(self, searchfile, extrafile=None, search_cols=None, extra_cols=None, includes_ids=False, resort=True, reindex=False, **kwds):
+    def copy_from(self, searchfile, extrafile=None, search_cols=None, extra_cols=None, includes_ids=False, resort=True, reindex=False, restat=True, **kwds):
         """
         Efficiently copy data from files into this table.
 
@@ -1727,6 +1665,9 @@ class PostgresTable(PostgresBase):
             self.restore_indexes()
         self._break_stats()
         self.stats.total += search_count
+        self.stats._record_count({}, self.stats.total)
+        if restat:
+            self.stats.refresh_stats(total=False)
         self.conn.commit()
 
     def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, include_ids=True, **kwds):
@@ -1856,13 +1797,16 @@ class PostgresStatsTable(PostgresBase):
         cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
         if record:
-            cols, vals = self._split_dict(query)
-            if self.quick_count(query) is None:
-                updater = SQL("INSERT INTO {0} (count, cols, values) VALUES (%s, %s, %s)")
-            else:
-                updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
-            self._execute(updater.format(Identifier(self.counts)), [nres, cols, vals])
+            self._record_count(query, nres)
         return nres
+
+    def _record_count(self, query, count):
+        cols, vals = self._split_dict(query)
+        if self.quick_count(query) is None:
+            updater = SQL("INSERT INTO {0} (count, cols, values) VALUES (%s, %s, %s)")
+        else:
+            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
+        self._execute(updater.format(Identifier(self.counts)), [count, cols, vals])
 
     def count(self, query={}):
         """
@@ -2056,16 +2000,16 @@ class PostgresStatsTable(PostgresBase):
         for countvec in cur:
             colvals, count = countvec[:-1], countvec[-1]
             if constraint is None:
-                allcolvals = map(prep_json, colvals)
+                allcolvals = colvals
             else:
                 allcolvals = []
                 i = 0
                 for col in allcols:
                     if col in cols:
-                        allcolvals.append(prep_json(colvals[i]))
+                        allcolvals.append(colvals[i])
                         i += 1
                     else:
-                        allcolvals.append(prep_json(constraint[col]))
+                        allcolvals.append(constraint[col])
             to_add.append((allcols, allcolvals, count))
             total += count
             if onenumeric:
@@ -2086,6 +2030,9 @@ class PostgresStatsTable(PostgresBase):
         self._execute(inserter.format(Identifier(self.stats)), stats, values_list=True, silent=True)
         inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
         self._execute(inserter.format(Identifier(self.counts)), to_add, values_list=True, silent=True)
+
+    def refresh_stats(self, total=True, suffix=None):
+        pass
 
     def _get_values_counts(self, cols, constraint):
         """
@@ -2245,6 +2192,30 @@ class PostgresStatsTable(PostgresBase):
             raise ValueError("Not a unique oldstat identifier")
         return cur.fetchone()[0]
 
+class ExtendedTable(PostgresTable):
+    """
+    This class supports type conversion when extracting data from the database.
+
+    It's use is currently hardcoded for artin_reps and artin_field_data,
+    but could eventually be specified by columns in meta_tables.
+    """
+    def __init__(self, type_conversion, *args, **kwds):
+        self._type_conversion = type_conversion
+        PostgresTable.__init__(self, *args, **kwds)
+    def _search_and_convert_iterator(self, source):
+        for x in source:
+            yield self._type_conversion(x)
+    def search_and_convert(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
+        results = self.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        if limit is None:
+            return self._search_and_convert_iterator(results)
+        else:
+            return [self._type_conversion(x) for x in results]
+    def convert_lucky(self, *args, **kwds):
+        result = self.lucky(*args, **kwds)
+        if result:
+            return self._type_conversion(result)
+
 class PostgresDatabase(PostgresBase):
     """
     The interface to the postgres database.
@@ -2272,31 +2243,41 @@ class PostgresDatabase(PostgresBase):
     """
     def __init__(self):
         PostgresBase.__init__(self, 'db_all', connect(dbname="lmfdb", user="lmfdb", password="LMFDB5077simons"))
-        # We want to use unicode everywhere
-        register_type(UNICODE, self.conn)
-        register_type(UNICODEARRAY, self.conn)
-        cur = self._execute(SQL("SELECT NULL::numeric"))
-        oid = cur.description[0][1]
-        NUMERIC = new_type((oid,), "NUMERIC", numeric_converter)
-        register_type(NUMERIC, self.conn)
-        register_adapter(Integer, AsIs)
-        register_adapter(RealLiteral, RealLiteralEncoder)
-        register_adapter(list, Json)
-        register_adapter(tuple, Json)
-        register_adapter(dict, Json)
+        # The following function controls how Python classes are converted to
+        # strings for passing to Postgres, and how the results are decoded upon
+        # extraction from the database.
+        # Note that it has some global effects, since register_adapter
+        # is not limited to just one connection
+        setup_connection(self.conn)
         cur = self._execute(SQL("SELECT name, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
-            ## Skip until fixed
-            if tablename in ('sl2z_subgroups',):
-                continue
-            self.__dict__[tablename] = PostgresTable(self, *tabledata)
+            # it would be nice to include this in meta_tables
+            if tablename == 'artin_reps':
+                table = ExtendedTable(Dokchitser_ArtinRepresentation, self, *tabledata)
+            elif tablename == 'artin_field_data':
+                table = ExtendedTable(Dokchitser_NumberFieldGaloisGroup, self, *tabledata)
+            else:
+                table = PostgresTable(self, *tabledata)
+            self.__dict__[tablename] = table
             self.tablenames.append(tablename)
         self.tablenames.sort()
 
     def __repr__(self):
         return "Interface to Postgres database"
+
+    def is_alive(self):
+        """
+        Check that the connection to the database is active.
+        """
+        try:
+            cur = self._execute(SQL("SELECT 1"))
+            if cur.rowcount == 1:
+                return True
+        except Exception:
+            pass
+        return False
 
     def __getitem__(self, name):
         if name in self.tablenames:
@@ -2304,7 +2285,7 @@ class PostgresDatabase(PostgresBase):
         else:
             raise ValueError
 
-    def create_new_table(self, name, search_columns, sort=None, id_ordered=False, extra_columns=None, search_order=None, extra_order=None):
+    def create_table(self, name, search_columns, sort=None, id_ordered=False, extra_columns=None, search_order=None, extra_order=None):
         """
         Add a new search table to the database.
 
@@ -2349,6 +2330,8 @@ class PostgresDatabase(PostgresBase):
         - jsonb -- data iteratively built from numerics, strings, booleans, nulls, lists and dictionaries.
         - timestamp -- 8-byte date and time with no timezone.
         """
+        if name in self.tablenames:
+            raise ValueError("%s already exists"%name)
         now = time.time()
         for typ, L in search_columns.items():
             if isinstance(L, basestring):
@@ -2390,8 +2373,6 @@ class PostgresDatabase(PostgresBase):
                 if isinstance(cols, basestring):
                     cols = [cols]
                 for col in cols:
-                    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', col):
-                        raise ValueError("Invalid column name")
                     if col == 'id':
                         hasid = True
                     # We have whitelisted the types, so it's okay to use string formatting
@@ -2437,5 +2418,24 @@ class PostgresDatabase(PostgresBase):
         self.__dict__[name] = PostgresTable(self, name, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None))
         self.tablenames.append(name)
         self.tablenames.sort()
+
+    def drop_table(self, name, commit=True):
+        if name not in self.tablenames:
+            raise ValueError("%s is not a search table")
+        table = getattr(self, name)
+        indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
+        if indexes:
+            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name], commit=False)
+            print "Deleted indexes {0}".format(", ".join(index[0] for index in indexes))
+        self._execute(SQL("DELETE FROM meta_tables WHERE name = %s"), [name], commit=False)
+        if table.extra_table is not None:
+            self._execute(SQL("DROP TABLE {0}").format(Identifier(table.extra_table)), commit=False)
+            print "Dropped {0}".format(table.extra_table)
+        for tbl in [name, name + "_counts", name + "_stats"]:
+            self._execute(SQL("DROP TABLE {0}").format(Identifier(tbl)), commit=False)
+            print "Dropped {0}".format(tbl)
+        self.tablenames.remove(name)
+        if commit:
+            self.conn.commit()
 
 db = PostgresDatabase()

@@ -1,6 +1,5 @@
 # Functions for getting info about elliptic curves and related modular forms
 
-from pymongo import ASCENDING
 from lmfdb.db_backend import db
 
 # TODO These should perhaps be defined in the elliptic curves codebase

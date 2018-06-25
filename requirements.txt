@@ -2,7 +2,7 @@ flask
 flask-cache
 flask-login==0.2.11
 flask-markdown
-pymongo
+psycopg2
 pyyaml
 pyflakes
 unittest2

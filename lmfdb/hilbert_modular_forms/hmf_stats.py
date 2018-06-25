@@ -76,8 +76,6 @@ class HMFstats(object):
 
     def __init__(self):
         logger.debug("Constructing an instance of HMFstats")
-        self._counts = {}
-        self._stats = {}
 
     @cached_method
     def counts(self):
@@ -120,12 +118,12 @@ class HMFstats(object):
                     'forms': url_for('hmf.hilbert_modular_form_render_webpage', field_label=F)
             }
         stats = {}
-        for d in self._counts['degrees']:
+        for d in self.counts()['degrees']:
             d = str(d)
             # NB the only reason for keeping the list of fields here
             # is that we can sort them, while the keys of stats.counts
             # are the fields in a random order
-            fields = self._counts['fields_by_degree'][d]
+            fields = self.counts()['fields_by_degree'][d]
             fields.sort(key=field_sort_key)
             stats[d] = {'fields': fields,
                         'nfields': len(fields),

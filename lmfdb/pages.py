@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from base import app, getDBConnection
+from base import app
 from flask import render_template, url_for, abort
 
 @app.route("/about")
@@ -23,12 +23,11 @@ contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 @app.route("/health")
 @app.route("/alive")
 def alive():
-    try:
-        conn = getDBConnection()
-        assert conn.userdb.users.count()
-    except:
+    from lmfdb.db_backend import db
+    if db.is_alive():
+        return "LMFDB!"
+    else:
         abort(503)
-    return "LMFDB!"
 
 @app.route("/acknowledgment")
 def acknowledgment():

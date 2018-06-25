@@ -13,7 +13,6 @@
 # author: Harald Schilly <harald.schilly@univie.ac.at>
 import string
 import re
-import pymongo
 import flask
 from lmfdb.base import app
 from datetime import datetime
@@ -24,9 +23,6 @@ from knowl import Knowl, knowldb, knowl_title, knowl_exists
 from lmfdb.users import admin_required, housekeeping
 import markdown
 from lmfdb.knowledge import logger
-
-ASC = pymongo.ASCENDING
-DSC = pymongo.DESCENDING
 
 # just for those, who still use an older markdown
 try:

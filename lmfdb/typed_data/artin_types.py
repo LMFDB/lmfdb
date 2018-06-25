@@ -1,8 +1,3 @@
-artin_location = ("artin", "representations")
-galois_group_location = ("artin", "field_data")
-#artin_location = ("artin", "representations_new")
-#galois_group_location = ("artin", "field_data_new")
-
 from type_generation import String, Array, Dict, Int, Anything
 
 from standard_types import PolynomialAsString, PermutationAsList,\
@@ -17,8 +12,6 @@ from sage.rings.integer_ring import ZZ
 Polynomial_X_QQ_AsString = PolynomialAsString(PolynomialRing(QQ, "x", sparse=False))
 Polynomial_X_ZZ_AsString = PolynomialAsString(PolynomialRing(ZZ, "x", sparse=False))
 Polynomial_a_ZZ_AsString = PolynomialAsString(PolynomialRing(ZZ, "a", sparse=False))
-
-from bind_collection import bind_collection
 
 Dokchitser_AlgebraicNumber_MinPol = PolynomialAsString(
     PolynomialRing(PolynomialRing(ZZ, "x", sparse=False), "a", sparse=False))
@@ -64,9 +57,9 @@ Dokchitser_ArtinRepresentation = Dict({
     "BadPrimes": FiniteSequence(TooLargeInt),
     "NFGal": LabelString,
     "CharacterField": Int,
-    "Conductor_key": String,
-    "Galois_nt": Array(Int,Int),                          
-    "Hide": Int,                                           
+    "Galt": Int,
+    "Galn": Int,
+    "Hide": Int,
     "GaloisConjugates": FiniteSequence(Galois_Conjugate)
 })
 
@@ -107,7 +100,7 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "Frobs": PrimeIndexedSequence(Int),
     "G-Gens": FiniteSet(PermutationAsList),
     "G-Name": Custom_GroupLabel,
-    "Polynomial": String, #PolynomialAsSequenceTooLargeInt,
+    "Polynomial": FiniteSequence(Int),
     "QpRts": FiniteSequence(PolynomialAsSequenceTooLargeInt),
     "QpRts-minpoly": PolynomialAsSequenceInt,
     "QpRts-p": Int,
@@ -115,8 +108,3 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "Size": TooLargeInt,
     "TransitiveDegree": Int
 })
-
-
-Dokchitser_ArtinRepresentation_Collection = bind_collection(artin_location, Dokchitser_ArtinRepresentation)
-Dokchitser_NumberFieldGaloisGroup_Collection = bind_collection(
-    galois_group_location, Dokchitser_NumberFieldGaloisGroup)

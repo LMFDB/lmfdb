@@ -5,14 +5,12 @@
 
 import StringIO
 import re
-import pymongo
 import ast
-ASC = pymongo.ASCENDING
 import yaml
 import os
 from lmfdb.db_backend import db
 from flask import render_template, request, url_for, redirect, send_file
-from lmfdb.utils import to_dict, random_value_from_collection, flash_error
+from lmfdb.utils import to_dict, flash_error
 from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_input, parse_bracketed_posints, parse_gap_id
 
 from sage.all import Permutation
@@ -146,7 +144,7 @@ def by_label(label):
     if label_is_one_passport(label):
         return render_passport({'passport_label': label})
     elif label_is_one_family(label):
-        return render_family({'label': label})    
+        return render_family({'label': label})
     else:
         flash_error( "No family with label %s was found in the database.", label)
         return redirect(url_for(".index"))
@@ -357,7 +355,7 @@ def higher_genus_w_automorphisms_search(**args):
         info['signature'] = info['signature'].replace(';',',')
 
     try:
-        parse_gap_id(info,query,'group',name='Group',qfield='grp')
+        parse_gap_id(info,query,'group',name='Group',qfield='group')
         parse_ints(info,query,'genus',name='Genus')
         parse_bracketed_posints(info,query,'signature',split=False,name='Signature',keepbrackets=True)
         if query.get('signature'):
@@ -421,7 +419,7 @@ def render_family(args):
             return redirect(url_for(".index"))
         data=dataz[0]
         g = data['genus']
-        GG = ast.literal_eval(data['grp'])
+        GG = ast.literal_eval(data['group'])
         gn = GG[0]
         gt = GG[1]
 
@@ -467,8 +465,8 @@ def render_family(args):
 
 
         g2List = ['[2,1]','[4,2]','[8,3]','[10,2]','[12,4]','[24,8]','[48,29]']
-        if g  == 2 and data['grp'] in g2List:
-            g2url = "/Genus2Curve/Q/?geom_aut_grp_id=" + data['grp']
+        if g  == 2 and data['group'] in g2List:
+            g2url = "/Genus2Curve/Q/?geom_aut_grp_id=" + data['group']
             friends = [("Genus 2 curves over $\Q$", g2url ) ]
         else:    
             friends = [ ]
@@ -504,7 +502,7 @@ def render_passport(args):
             return redirect(url_for(".index"))
         data=dataz[0]
         g = data['genus']
-        GG = ast.literal_eval(data['grp'])
+        GG = ast.literal_eval(data['group'])
         gn = GG[0]
         gt = GG[1]
         
@@ -723,7 +721,7 @@ def hgcwa_code_download(**args):
         data = list(db.hgcwa_passports.search({"label" : label}))
     
     code += s + code_list['gp_comment'][lang] +'\n'
-    code += code_list['group'][lang] + str(data[0]['grp'])+ ';\n'
+    code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
 
     if lang == 'magma':
         code += code_list['group_construct'][lang] + '\n'
@@ -801,7 +799,7 @@ def hgcwa_code_download_search(res,download_type):
             
             data = list(db.hgcwa_passports.search({"label" : label}))
             code += s + code_list['search_result_gp_comment'][lang] +'\n'
-            code += code_list['group'][lang] + str(data[0]['grp'])+ ';\n'
+            code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
 
             if lang == 'magma':
                 code += code_list['group_construct'][lang] + '\n'

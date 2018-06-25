@@ -10,7 +10,8 @@
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
 from lmfdb import base
-from lmfdb.db_backend import PostgresBase, db, Array
+from lmfdb.db_backend import PostgresBase, db
+from lmfdb.db_encoding import Array
 from psycopg2 import connect
 from psycopg2.sql import SQL, Identifier, Placeholder
 from main import logger
@@ -146,7 +147,7 @@ class PostgresUserTable(PostgresBase):
         return {field:value for field,value in zip(self._cols, cur.fetchone()) if value is not None}
     def full_names(self, uids):
         selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
-        cur = self._execute(selecter, Array([uids]))
+        cur = self._execute(selecter, [Array(uids)])
         return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
     def create_tokens(self, tokens):
         insertor = SQL("INSERT INTO userdb.tokens (id, expire) VALUES %s")

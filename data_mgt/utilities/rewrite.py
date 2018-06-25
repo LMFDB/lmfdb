@@ -108,8 +108,6 @@ def create_random_object_index(db, coll, filter=None):
     """
 
     Creates (or recreates) a collection named incoll.rand used to support fast random object access.
-    This index will automatically be used by the functions random_object_from_collection and
-    random_value_from_collection (in lmfdb.utils) to improve performance.
     
     Required arguments:
 

@@ -1,13 +1,11 @@
 import re
-import pymongo
-ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 #from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
 from flask import flash, make_response, send_file, request, render_template, redirect, url_for, jsonify
 
 from lmfdb.db_backend import db
-from lmfdb.utils import to_dict, random_object_from_collection
+from lmfdb.utils import to_dict
 
 from sage.all import ZZ, conway_polynomial
 

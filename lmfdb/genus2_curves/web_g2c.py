@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from pymongo import ASCENDING
 from ast import literal_eval
 from lmfdb.db_backend import db
 from lmfdb.utils import web_latex, encode_plot

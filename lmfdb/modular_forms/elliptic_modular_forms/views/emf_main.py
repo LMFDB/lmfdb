@@ -27,7 +27,7 @@ import sage
 from lmfdb.db_backend import db
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.utils import to_dict, random_object_from_collection
+from lmfdb.utils import to_dict
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, EMF_TOP, emf_logger, emf
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
@@ -179,7 +179,7 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
 
 @emf.route("/random")
 def random_form():
-    label = db.mf_newforms.random('hecke_orbit_label') # getDBConnection grep doesn't support random
+    label = db.mf_newforms.random('hecke_orbit_label')
     level, weight, character, label = parse_newform_label(label)
     args={}
     args['level'] = level

@@ -18,7 +18,7 @@ from Lfunctionutilities import (p2sage, string2number, get_bread,
 from LfunctionComp import EC_from_modform, isogeny_class_cm
 
 from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, getHmfData, getHgmData, getEllipticCurveData
-from LfunctionDatabase import getMaassDb # getDBConnection grep
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
@@ -902,12 +902,10 @@ class Lfunction_EMF(Lfunction):
 class Lfunction_Maass(Lfunction):
     """Class representing the L-function of a Maass form
 
-    Compulsory parameters: dbid (if not from DB
-                           fromDB  (True if data is in Lfuntions database
+    Compulsory parameters: maass_id (if not from DB)
+                           fromDB  (True if data is in Lfuntions database)
 
-    Possible parameters: dbName  (the name of the database for the Maass form)
-                        dbColl  (the name of the collection for the Maass form)
-                        group,level,char,R,ap_id  (if data is in Lfunctions DB
+    Possible parameters: group,level,char,R,ap_id  (if data is in Lfunctions DB)
     """
     def __init__(self, **args):
         constructor_logger(self, args)
@@ -924,17 +922,17 @@ class Lfunction_Maass(Lfunction):
                                     args, 'group', 'level', 'char', 'R', 'ap_id')
         else:
             validate_required_args ('Unable to construct L-function of Maass form.',
-                                    args, 'dbid')
+                                    args, 'maass_id')
 
         self._Ltype = "maass"
 
         if self.fromDB:   # L-function data is in Lfunctions DB
             # Load data from the database
-            self.dbid = "ModularForm/%s/Q/Maass/%s/%s/%s/%s/" % (
+            self.maass_id = "ModularForm/%s/Q/Maass/%s/%s/%s/%s/" % (
                 self.group, self.level, self.char, self.R, self.ap_id)
-            self.lfunc_data = get_lfunction_by_url(self.dbid)
+            self.lfunc_data = get_lfunction_by_url(self.maass_id)
             if self.lfunc_data is None:
-                raise KeyError('No L-function instance data for "%s" was found in the database.' % self.dbid)
+                raise KeyError('No L-function instance data for "%s" was found in the database.' % self.maass_id)
 
             # Extract the data
             makeLfromdata(self)
@@ -955,8 +953,7 @@ class Lfunction_Maass(Lfunction):
         else:   # Generate from Maass form
 
             # Create the Maass form
-            DB = getMaassDb()
-            self.mf = WebMaassForm(DB, self.dbid, get_dirichlet_c_only=1)
+            self.mf = WebMaassForm(self.maass_id, get_dirichlet_c_only=1)
             self.group = 'GL2'
 
             # Extract the L-function information from the Maass form object
@@ -1019,7 +1016,7 @@ class Lfunction_Maass(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,f)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-        self.label = self.dbid
+        self.label = self.maass_id
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()

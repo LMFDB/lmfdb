@@ -1,10 +1,7 @@
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 import flask
 from flask import render_template, request
-
-from lmfdb.utils import LazyMongoDBPagination
-
-import pymongo
+from lmfdb.utils import Pagination
 
 mod = flask.Blueprint('LfunctionDB', __name__, template_folder="templates")
 title = "L-function search"
@@ -18,14 +15,12 @@ def body_class():
 @mod.route("/")
 @mod.route("/<zero>")
 def zero_search(**kwargs):
-    C = getDBConnection()
     if not 'zero' in kwargs:
-        query = C.test.Lfunctions_test2.find().sort('first_zero')
+        results = db.lfunc_zeros.search()
     else:
         zero = float(kwargs['zero'])
-        query = C.test.Lfunctions_test2.find(
-            {'first_zero': {'$lt': zero + .1, '$gt': zero - .1}}).sort('first_zero')
-    pagination = LazyMongoDBPagination(query=query, per_page=50, page=request.args.get(
+        results = db.lfunc_zeros.search({'first_zero': {'$lt': zero + .1, '$gt': zero - .1}})
+    pagination = Pagination(results, per_page=50, page=request.args.get(
         'page', 1), endpoint=".zero_search", endpoint_params=kwargs)
         # result_string = ""
         # printed_arrow = False
@@ -40,7 +35,6 @@ def zero_search(**kwargs):
 
 @mod.route("/query")
 def query(**kwargs):
-    C = getDBConnection()
     degree = request.args.get("degree", 0, type=int)
     level = request.args.get("level", 0, type=int)
     first_zero_start = request.args.get("zerolowerbound", -1.0, type=float)
@@ -48,30 +42,30 @@ def query(**kwargs):
     sort = request.args.get("sort", "first_zero", type=str)
     direction = request.args.get("direction", "up", type=str)
 
-    if sort not in ['degree', 'first_zero', 'level', 'coeffs']:
-        sort = "first_zero"
     if direction not in ["up", "down"]:
         direction = "up"
-
-    if direction == "up":
-        direction = pymongo.ASCENDING
+    direction = 1 if direction == "up" else -1
+    if sort not in ['degree', 'first_zero', 'level', 'coeffs']:
+        sort = "first_zero"
+    if (sort, direction) == ('first_zero', 1):
+        sort = None # uses id if available
     else:
-        direction = pymongo.DESCENDING
+        sort = [(sort, direction)]
 
-    filter = {}
+    query = {}
     if degree:
-        filter['degree'] = degree
+        query['degree'] = degree
     if level:
-        filter['level'] = level
+        query['level'] = level
 
     if first_zero_start != -1.0 or first_zero_end != -1.0:
-        filter['first_zero'] = {}
+        query['first_zero'] = {}
     if first_zero_start != -1.0:
-        filter['first_zero']['$gte'] = float(first_zero_start)
+        query['first_zero']['$gte'] = float(first_zero_start)
     if first_zero_end != -1.0:
-        filter['first_zero']['$lte'] = float(first_zero_end)
+        query['first_zero']['$lte'] = float(first_zero_end)
 
-    query = C.test.Lfunctions_test2.find(filter).sort(sort, direction)
-    pagination = LazyMongoDBPagination(query=query, per_page=50, page=request.args.get(
+    results = db.lfunc_zeros.search(query, sort=sort)
+    pagination = Pagination(results, per_page=50, page=request.args.get(
         'page', 1), endpoint=".query", endpoint_params=dict(request.args))
     return render_template('lf-list.html', pagination=pagination, title=title)

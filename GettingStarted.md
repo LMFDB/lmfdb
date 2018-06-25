@@ -171,9 +171,6 @@ Running
 Troubleshooting
 ===============
 
-If the `pymongo` module is not able to connect to the database, make
-sure that the warwick.sh script is still running.
-
 [warning] Recently on some linux machines, users have had to install the
 contents of requirements.txt by manually.  If the above instructions do not
 work, un-install the above packages and re-install them one at a time,

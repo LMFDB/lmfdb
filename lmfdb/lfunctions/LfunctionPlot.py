@@ -169,7 +169,7 @@ def getWidthAndHeight(gls):
 
     xMax = 0
     yMax = 0
-    for origin in db.lfunc_lfunctions.search({'grp': gls[0], 'conductor': gls[1]}, 'origin'):
+    for origin in db.lfunc_lfunctions.search({'group': gls[0], 'conductor': gls[1]}, 'origin'):
         splitId = origin.split('/')[6].split('_')
 
         if float(splitId[0]) > xMax:
@@ -207,7 +207,7 @@ def paintSvgFileAll(glslist):  # list of group and level
         group = gls[0]
         level = gls[1]
 
-        for l in db.lfunc_lfunctions.search({'grp': group, 'conductor': level},
+        for l in db.lfunc_lfunctions.search({'group': group, 'conductor': level},
                                             ['origin', 'root_number']):
             splitOrigin = l['origin'].split('/')
             char = splitOrigin[5]

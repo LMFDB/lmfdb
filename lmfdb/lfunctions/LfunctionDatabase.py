@@ -1,9 +1,6 @@
 # Functions for fetching L-function data from databases
 
-from lmfdb import base
 from lmfdb.db_backend import db
-import pymongo
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
 
 def get_lfunction_by_Lhash(Lhash):
     Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash})
@@ -50,16 +47,6 @@ def getHmfData(label):
     if f:
         return (f, get_hmf_field(f['field_label']))
     return (None, None)
-
-def getMaassDb():
-    # NB although base.getDBConnection().PORT works it gives the
-    # default port number of 27017 and not the actual one!
-    if pymongo.version_tuple[0] < 3:
-        host = base.getDBConnection().host
-        port = base.getDBConnection().port
-    else:
-        host, port = base.getDBConnection().address
-    return MaassDB(host=host, port=port)
 
 def getHgmData(label):
     return db.hgm_motives.lookup(label)

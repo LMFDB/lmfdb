@@ -4,14 +4,13 @@ import StringIO
 from ast import literal_eval
 import re
 import time
-from pymongo import ASCENDING, DESCENDING
 from operator import mul
 from flask import render_template, url_for, request, redirect, send_file, abort
 from sage.all import ZZ
 from sage.misc.cachefunc import cached_method
 
 from lmfdb.db_backend import db
-from lmfdb.utils import to_dict, comma, random_value_from_collection, attribute_value_counts, flash_error
+from lmfdb.utils import to_dict, comma, flash_error
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, st0_group_name

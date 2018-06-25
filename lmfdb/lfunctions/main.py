@@ -22,6 +22,8 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunct
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
                                 getConductorIsogenyFromLabel)
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
+
 from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page
@@ -300,12 +302,9 @@ def l_function_hmf_redirect_2(field, label):
 
 
 # L-function of GL(2) Maass form ###############################################
-@l_function_page.route("/ModularForm/GL2/Q/Maass/<dbid>/")
-def l_function_maass_page(dbid):
-    try:
-        args = {'dbid': bson.objectid.ObjectId(dbid), 'fromDB': False}
-    except Exception:
-        args = {'dbid': dbid, 'fromDB': False}
+@l_function_page.route("/ModularForm/GL2/Q/Maass/<maass_id>/")
+def l_function_maass_page(maass_id):
+    args = {'maass_id': maass_id, 'fromDB': False}
     return render_single_Lfunction(Lfunction_Maass, args, request)
 
 
@@ -553,7 +552,7 @@ def set_bread_and_friends(L, request):
             bread = get_bread(L.degree,
                                       [('Maass Form', url_for('.l_function_maass_gln_browse_page',
                                                               degree='degree' + str(L.degree))),
-                                       (L.dbid.partition('/')[2], request.url)])
+                                       (L.maass_id.partition('/')[2], request.url)])
 
 
     elif L.Ltype() == 'hilbertmodularform':
@@ -943,11 +942,8 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_HMF(label=arg6, character=arg7, number=arg8)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
-        try:
-            dbid = bson.objectid.ObjectId(arg5)
-        except Exception:
-            dbid = arg5
-        return Lfunction_Maass(dbid=dbid, fromDB=False)
+        maass_id = arg5
+        return Lfunction_Maass(maass_id=maass_id, fromDB=False)
 
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'Maass':
         return Lfunction_Maass(fromDB = True, group = arg2, level = arg5,
@@ -1098,7 +1094,6 @@ def processMaassNavigation(numrecs=35):
     """
     Produces a table of numrecs Maassforms with Fourier coefficients in the database
     """
-    DB = LfunctionDatabase.getMaassDb()
     s = '<h5>The L-functions attached to the first 4 weight 0 Maass newforms with trivial character on Hecke congruence groups $\Gamma_0(N)$</h5>'
     s += '<table>\n'
     i = 0
@@ -1107,9 +1102,9 @@ def processMaassNavigation(numrecs=35):
         j = 0
         s += '<tr>\n'
         s += '<td><bold>N={0}:</bold></td>\n'.format(level)
-        finds = DB.get_Maass_forms({'Level': int(level),
-                                    'char': 1,
-                                    'Newform' : None})
+        finds = maass_db.get_Maass_forms({'Level': int(level),
+                                          'char': 1,
+                                          'Newform' : None})
         for f in finds:
             nc = f.get('Numc', 0)
             if nc <= 0:
@@ -1123,11 +1118,11 @@ def processMaassNavigation(numrecs=35):
                 T = 'e'
             _until = min(12, len(str(R)))
             Rst = str(R)[:_until]
-            idd = f.get('_id', None)
+            idd = f.get('maass_id', None)
             if idd is None:
                 continue
             idd = str(idd)
-            url = url_for('.l_function_maass_page', dbid=idd)
+            url = url_for('.l_function_maass_page', maass_id=idd)
             s += '<td><a href="{0}">{1}</a>{2}'.format(url, Rst, T)
             i += 1
             j += 1

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import pymongo
-ASC = pymongo.ASCENDING
 import time, os
 import flask
 from lmfdb.base import app
@@ -22,7 +20,7 @@ from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
 
 from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, group_knowl_guts, group_cclasses_knowl_guts, group_character_table_knowl_guts, aliastable
 
-from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, random_object_from_collection, web_latex_split_on_pm
+from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm
 from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
@@ -612,14 +610,17 @@ def number_field_search(info):
         parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
         parse_ints(info,query,'class_number')
         parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
-        parse_primes(info,query,'ur_primes',name='Unramified primes',qfield='ramps',prefix='ram',cutoff=100,radical='disc_rad',mode='complement')
+        parse_primes(info,query,'ur_primes',name='Unramified primes',
+                     qfield='ramps',mode='complement')
         # modes are now contained (in), exactly, include
         if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
-            parse_primes(info,query,'ram_primes','ramified primes','ramps',prefix='ram',cutoff=100,radical='disc_rad',mode='append')
+            mode='append'
         elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
-            parse_primes(info,query,'ram_primes','ramified primes','ramps',prefix='ram',cutoff=100,radical='disc_rad',mode='subsets')
+            mode='subsets'
         else:
-            parse_primes(info,query,'ram_primes','ramified primes','ramps',prefix='ram',cutoff=100,radical='disc_rad',mode='exact')
+            mode='exact'
+        parse_primes(info,query,'ram_primes',name='Ramified primes',
+                     qfield='ramps',mode=mode,radical='disc_rad')
     except ValueError:
         return search_input_error(info, bread)
 

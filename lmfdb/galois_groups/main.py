@@ -2,11 +2,9 @@
 # This Blueprint is about Galois Groups
 # Author: John Jones
 
-import pymongo
-ASC = pymongo.ASCENDING
 from lmfdb.base import app
 from flask import render_template, request, url_for, redirect, jsonify
-from lmfdb.utils import to_dict, list_to_latex_matrix, random_object_from_collection
+from lmfdb.utils import to_dict, list_to_latex_matrix
 from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start, parse_restricted
 import re
 import bson

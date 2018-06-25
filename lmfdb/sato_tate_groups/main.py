@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import re, itertools
-from pymongo import ASCENDING
 from flask import render_template, url_for, redirect, request, jsonify
 from lmfdb.sato_tate_groups import st_page
-from lmfdb.utils import to_dict, random_object_from_collection, encode_plot, flash_error
+from lmfdb.utils import to_dict, encode_plot, flash_error
 from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash, clean_input
 from lmfdb.db_backend import db
 

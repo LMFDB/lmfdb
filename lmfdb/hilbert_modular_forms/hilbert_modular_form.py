@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import pymongo
-
 from flask import render_template, url_for, request, redirect, make_response, flash, jsonify
 
 from lmfdb.db_backend import db
@@ -14,7 +12,7 @@ from lmfdb.ecnf.main import split_class_label
 from lmfdb.WebNumberField import WebNumberField
 
 from markupsafe import Markup
-from lmfdb.utils import to_dict, random_value_from_collection, web_latex_split_on_pm
+from lmfdb.utils import to_dict, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
 
 def get_hmf(label):

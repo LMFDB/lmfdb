@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2010-2012 by the LMFDB authors
 #
@@ -339,4 +339,6 @@ class LmfdbTest(unittest2.TestCase):
         self.tc = app.test_client()
         import lmfdb.website
         assert lmfdb.website
+        from lmfdb.db_backend import db
+        self.db = db
         self.C = getDBConnection()

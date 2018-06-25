@@ -2,7 +2,7 @@
 
 from lmfdb.db_backend import db
 from flask import render_template, url_for, request
-from lmfdb.modular_forms.maass_forms.picard import mwfp, mwfp_logger, mwfp_dbname
+from lmfdb.modular_forms.maass_forms.picard import mwfp, mwfp_logger
 from lmfdb.modular_forms.maass_forms.picard.backend.mwfp_classes import PicardFormTable, PicardDataTable
 
 # see main mwfp blueprint for details
@@ -22,23 +22,17 @@ def render_picard_maass_forms():
         return render_picard_test()
     if docid is not None:
         return render_picard_maass_forms_get_one(docid)
-    # getDBConnection grep
-    #ds = db.mwfp_forms.search(
-    ds = [(_['_id'], _['ev']) for _ in db.mwfp_forms.search({}, ['_id', 'ev'])]
+    ds = [(_['maass_id'], _['ev']) for _ in db.mwfp_forms.search({}, ['maass_id', 'ev'])]
     data = None
     # TT= MaassformsPicardDisplay(mwfp_dbname,collection='all',skip=[0],limit=[10],keys=['Eigenvalue'])
     # TT.set_table_browsing()
-    # TT.get_metadata()
-    if docid:
-        data = htp.find_one({'_id': docid})
     return render_template("maass_form_picard.html", title="Maass forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)", data=data, id=docid, ds=ds)
 
 
 @mwfp.route("/<docid>", methods=['GET', 'POST'])
 def render_picard_maass_forms_get_one(docid):
     mwfp_logger.debug("Render one picard form!")
-    PT = PicardFormTable(db = db.mwfp_forms,
-        skip=[0, 0], limit=[20, 20], keys=['coef'], docid=docid)
+    PT = PicardFormTable(skip=[0, 0], limit=[20, 20], keys=['coef'], docid=docid)
     PT.set_table(name='browsing')
     info = dict()
     title = "Maass form on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)"

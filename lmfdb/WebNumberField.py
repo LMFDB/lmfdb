@@ -613,14 +613,13 @@ class WebNumberField:
             return self._data['artincoefs']
         try:
             if nfgg is not None:
-                    self._data["nfgg"] = nfgg
+                self._data["nfgg"] = nfgg
+            elif "nfgg" not in self._data:
+                from artin_representations.math_classes import NumberFieldGaloisGroup
+                nfgg = NumberFieldGaloisGroup(self._data['coeffs'])
+                self._data["nfgg"] = nfgg
             else:
-                if "nfgg" not in self._data:
-                    from artin_representations.math_classes import NumberFieldGaloisGroup
-                    nfgg = NumberFieldGaloisGroup(self._data['coeffs'])
-                    self._data["nfgg"] = nfgg
-                else:
-                    nfgg = self._data["nfgg"]
+                nfgg = self._data["nfgg"]
 
             cc = nfgg.conjugacy_classes()
             # cc is list, each has methods group, size, order, representative

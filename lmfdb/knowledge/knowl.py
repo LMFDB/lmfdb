@@ -2,11 +2,9 @@
 # the basic knowlege object, with database awareness, …
 from lmfdb.knowledge import logger
 from datetime import datetime
-import pymongo
-ASC = pymongo.ASCENDING
-DSC = pymongo.DESCENDING
 
-from lmfdb.db_backend import db, PostgresBase, Array
+from lmfdb.db_backend import db, PostgresBase
+from lmfdb.db_encoding import Array
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier
 
@@ -83,6 +81,14 @@ class KnowlBackend(PostgresBase):
             selecter = SQL("{0} ORDER BY {1}").format(selecter, self._sort_str(sort))
         cur = self._execute(selecter, values)
         return [{k:v for k,v in zip(["id", "title"], res)} for res in cur]
+    def check_title_and_content(self):
+        # This should really be done at the database level now that we can require columns to be not null
+        cur = self._execute(SQL("SELECT COUNT(*) FROM kwl_knowls WHERE title IS NULL"))
+        notitle = cur.fetchone()[0]
+        cur = self._execute(SQL("SELECT COUNT(*) FROM kwl_knowls WHERE content IS NULL"))
+        nocontent = cur.fetchone()[0]
+        assert notitle == 0, "%s knowl(s) don't have a title" % notitle
+        assert nocontent == 0, "%s knowl(s) don't have content" % nocontent
     def save(self, knowl, who):
         """who is the ID of the user, who wants to save the knowl"""
         new_history_item = self.get_knowl(knowl.id, ['id'] + self._default_fields + ['history'])

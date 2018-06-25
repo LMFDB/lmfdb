@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.modular_forms import mf_logger
 
 
 class MFDataTable(object):
-    def __init__(self, db, **kwds):
+    def __init__(self, **kwds):
         r"""
         For 'one-dimensional' data sets the second skip parameter does not have a meaning but should be present anyway...
 
         """
-        self.db = db
         self._skip = kwds.get('skip', [])
         self._limit = kwds.get('limit', [])
         self._keys = kwds.get('keys', [])
@@ -60,31 +60,3 @@ class MFDataTable(object):
             return self._props[name]
         else:
             return ''
-
-
-class MFDisplay(object):
-    r"""
-    Main class for displaying Modular forms objects.
-    """
-
-    def __init__(self, dbname='', **kwds):
-        self._dbname = dbname
-        self.db = None
-        self._keys = []
-        self._skip = []
-        self._limit = []
-        self._metadata = []
-        self._title = ''
-        self._cols = []
-        self.table = {}
-
-    def connect(self):
-        self.db = getDBConnection()[self._dbname]
-
-    def set_table(self):
-        raise NotImplementedError("Needs to be overwritten in subclasses!")
-
-    def table(self):
-        if not self._table:
-            self.set_table()  # If unset we set it using default parameters
-        return self._table

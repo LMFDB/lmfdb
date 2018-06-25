@@ -2,12 +2,10 @@
 # This Blueprint is about Local Number Fields
 # Author: John Jones
 
-import pymongo
-#from lmfdb import base
 from lmfdb.db_backend import db
 from lmfdb.base import app
 from flask import render_template, request, url_for, redirect, jsonify
-from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, random_object_from_collection, display_multiset
+from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, display_multiset
 from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input, parse_rats
 from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
@@ -139,7 +137,7 @@ def local_field_search(**args):
         return redirect(url_for(".by_label",label=info['jump_to']), 301)
 
     try:
-        parse_galgrp(info,query,'gal',qfield=('n','galt'))
+        parse_galgrp(info,query,'gal',qfield=('n','galT'))
         parse_ints(info,query,'p',name='Prime p')
         parse_ints(info,query,'n',name='Degree')
         parse_ints(info,query,'c',name='Discriminant exponent c')

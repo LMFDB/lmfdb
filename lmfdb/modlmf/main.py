@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import re
-import pymongo
-ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 from flask import render_template, request, url_for, make_response, redirect, flash, send_file, jsonify
 
-from lmfdb.utils import to_dict, random_object_from_collection, web_latex_split_on_pm
+from lmfdb.utils import to_dict, web_latex_split_on_pm
 
 from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
 

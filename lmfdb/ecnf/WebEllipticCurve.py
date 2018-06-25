@@ -4,7 +4,6 @@ from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
 from lmfdb.db_backend import db
-from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name

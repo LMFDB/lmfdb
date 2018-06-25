@@ -434,8 +434,10 @@ class WebObject(object):
         """
         emf_logger.debug('key: {0}'.format(self._key))
         #emf_logger.debug('properties: {0}'.format(self._properties))
+        print "self_file_key", self._file_key
         keys = copy(self._file_key)
         if include_multi and self._file_key_multi is not None:
+            print "self_file_key_multi", self._file_key_multi
             keys +=  self._file_key_multi
         return { key : self._properties[key].to_db() for key in keys }
 
@@ -496,6 +498,9 @@ class WebObject(object):
         """
         if not self._use_gridfs:
             raise ValueError('We do not use gridfs for this class.')
+        print "get_file", add_to_fs_query, self._add_to_fs_query
+        import traceback
+        traceback.print_stack(limit = 4)
         fs = self._files
         emf_logger.debug("{} self._add_to_fs_query: {}".format(self.__class__, self._add_to_fs_query))
         if add_to_fs_query is None:
@@ -505,6 +510,7 @@ class WebObject(object):
             add_to_fs_query = copy(self._add_to_fs_query)
             add_to_fs_query.update(q)
         file_key = self.file_key_dict(include_multi = not get_all)
+        print "file_key", file_key
         if add_to_fs_query is not None and not get_all:
             file_key.update(add_to_fs_query)
         sort = self._sort_files
@@ -515,8 +521,10 @@ class WebObject(object):
             coll = self._file_collection
             if get_all:
                 files = coll.find(file_key, sort = sort)
+                print "filecount", files.count()
             else:
                 files = [coll.find_one(file_key, sort = sort)]
+                print "onefilecount"
             for m in files:
                 fid = m['_id']
                 #emf_logger.debug("col={0}".format(coll))

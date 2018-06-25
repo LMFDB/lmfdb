@@ -319,79 +319,55 @@ def parse_rats(inp, query, qfield, process=None):
         raise ValueError("It needs to be a non-negative rational number (such as 4/3), a range of non-negative rational numbers (such as 2-5/2 or 2.5..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_primes(inp, query, qfield, mode=None, to_string=False, prefix=None, cutoff=100, radical=None):
+def parse_primes(inp, query, qfield, mode=None, radical=None): #, prefix=None, cutoff=100):
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(',')]
-        primes = sorted(primes)
+        primes.sort()
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if format_ok:
-        if prefix is not None: # new style parsing
-            small_primes = [p for p in primes if p < cutoff]
-            big_primes = [p for p in primes if p >= cutoff]
-            if mode == 'complement':
-                #for p in small_primes:
-                #    query[prefix + str(p)] = False
-                #if big_primes:
-                #    query[qfield] = {'$notcontains': big_primes}
-                query[qfield] = {'$notcontains': primes}
-            elif mode == 'exact':
-                query[radical] = prod(primes)
-            elif mode == 'subsets':
-                query[qfield] = {'$containedin': primes}
-                ##if big_primes:
-                ##    pass
-                ##else:
-                ##    allfield = 'all' + prefix + 'small'
-                ##    query[allfield] = True
-                ##    for p in prime_range(cutoff):
-                ##        if p not in small_primes:
-                ##            query[prefix + str(p)] = False
-            elif mode == 'append':
+        #small_primes = [p for p in primes if p < cutoff]
+        #big_primes = [p for p in primes if p >= cutoff]
+        if mode == 'complement':
+            #for p in small_primes:
+            #    query[prefix + str(p)] = False
+            #if big_primes:
+            #    query[qfield] = {'$notcontains': big_primes}
+            query[qfield] = {'$notcontains': primes}
+        elif mode == 'exact':
+            if radical is None:
                 if qfield in query:
-                    query[qfield]['$contains'] = primes
-                else:
-                    query[qfield] = {'$contains': primes}
-                #for p in small_primes:
-                #    key = prefix + str(p)
-                #    if key in query:
-                #        raise ValueError("Contradictory requirements for %s."%p)
-                #    query[key] = True
-                #if big_primes:
-                #    if qfield in query:
-                #        query[qfield]['$contains'] = big_primes
-                #    else:
-                #        query[qfield] = {'$contains': big_primes}
+                    raise ValueError("Cannot specify containment and equality simultaneously")
+                query[qfield] = primes
             else:
-                raise ValueError("Unrecognized mode: programming error in LMFDB code")
+                query[radical] = prod(primes)
+        elif mode == 'subsets':
+            query[qfield] = {'$containedin': primes}
+            ##if big_primes:
+            ##    pass
+            ##else:
+            ##    allfield = 'all' + prefix + 'small'
+            ##    query[allfield] = True
+            ##    for p in prime_range(cutoff):
+            ##        if p not in small_primes:
+            ##            query[prefix + str(p)] = False
+        elif mode == 'append':
+            if qfield in query:
+                query[qfield]['$contains'] = primes
+            else:
+                query[qfield] = {'$contains': primes}
+            #for p in small_primes:
+            #    key = prefix + str(p)
+            #    if key in query:
+            #        raise ValueError("Contradictory requirements for %s."%p)
+            #    query[key] = True
+            #if big_primes:
+            #    if qfield in query:
+            #        query[qfield]['$contains'] = big_primes
+            #    else:
+            #        query[qfield] = {'$contains': big_primes}
         else:
-            if to_string:
-                primes = [str(p) for p in primes]
-            if mode == 'complement':
-                query[qfield] = {"$nin": primes}
-            elif mode == 'liststring':
-                primes = [str(p) for p in primes]
-                query[qfield] = ",".join(primes)
-            elif mode == 'subsets':
-                # need all subsets of the list of primes 
-                powerset = [[]]
-                for p in primes:
-                    powerset.extend([a+[p] for a in powerset])
-                # now set up a big $or clause
-                powerset = [','.join([str(p) for p in a]) for a in powerset]
-                powerset = [{qfield: a} for a in powerset]
-                collapse_ors(['$or', powerset], query)
-            elif mode == 'exact':
-                query[qfield] = sorted(primes)
-            elif mode == "append":
-                if qfield not in query:
-                    query[qfield] = {}
-                if "$all" in query[qfield]:
-                    query[qfield]["$all"].extend(primes)
-                else:
-                    query[qfield]["$all"] = primes
-            else:
-                raise ValueError("Unrecognized mode: programming error in LMFDB code")
+            raise ValueError("Unrecognized mode: programming error in LMFDB code")
     else:
         raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
 

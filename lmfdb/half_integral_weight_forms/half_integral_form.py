@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-import pymongo
 
 from lmfdb.db_backend import db
 from flask import render_template, url_for, request, redirect, jsonify

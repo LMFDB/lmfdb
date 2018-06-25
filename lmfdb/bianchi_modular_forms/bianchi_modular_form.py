@@ -2,7 +2,6 @@
 
 import re
 
-from pymongo import ASCENDING
 from flask import render_template, url_for, request, redirect, flash
 from markupsafe import Markup
 

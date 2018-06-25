@@ -1,14 +1,9 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 # testing users blueprint
 from lmfdb.base import LmfdbTest
-
+from lmfdb.knowledge.knowl import knowldb
 
 class KnowlTestCase(LmfdbTest):
 
     def test_knowls_need_to_have_title_and_content(self):
-        knowls = self.C.knowledge.knowls
-        a = knowls.find({'title': {"$exists": True}}).count()
-        b = knowls.find({'content': {"$exists": True}}).count()
-        e = knowls.find().count()
-        assert a == e, "%s knowl(s) don't have a title" % (e - a)
-        assert b == e, "%s knowl(s) don't have a content" % (e - b)
+        knowldb.check_title_and_content()

@@ -2,7 +2,6 @@
 import re
 import time
 import ast
-from pymongo import ASCENDING
 from operator import mul
 from lmfdb.db_backend import db, prep_json
 from lmfdb.base import app
@@ -12,7 +11,7 @@ import os
 import StringIO
 import cPickle
 
-from lmfdb.utils import web_latex, to_dict, web_latex_split_on_pm, random_object_from_collection
+from lmfdb.utils import web_latex, to_dict, web_latex_split_on_pm
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
@@ -228,13 +227,13 @@ def elliptic_curve_search(info):
         #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
 
         parse_primes(info, query, 'surj_primes', name='maximal primes',
-                     qfield='nonmax_primes', mode='complement', prefix=1, radical='nonmax_rad')
+                     qfield='nonmax_primes', mode='complement')
         if info.get('surj_quantifier') == 'exactly':
             mode = 'exact'
         else:
             mode = 'append'
         parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
-                     qfield='nonmax_primes',mode=mode, prefix=1, radical='nonmax_rad')
+                     qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
     except ValueError as err:
         info['err'] = str(err)
         return search_input_error(info, bread)

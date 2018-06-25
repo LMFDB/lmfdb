@@ -2,8 +2,6 @@
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 
-import pymongo
-ASC = pymongo.ASCENDING
 from lmfdb.db_backend import db
 from flask import render_template, request, url_for
 from lmfdb.tensor_products import tensor_products_page 

@@ -6,6 +6,7 @@ from flask import render_template, url_for, request, send_file, flash, redirect
 from markupsafe import Markup
 import StringIO
 import dimensions, sample
+from lmfdb.db_backend import db
 from family import get_smf_family, get_smf_families
 from sage.all import latex, Set
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
@@ -18,11 +19,10 @@ from lmfdb.utils import to_dict, flash_error
 ###############################################################################
 
 def find_samples(family, weight):
-    slist = sample.smf_db_samples().find({'data_type':'sample','collection':family, 'weight':int(weight)},{'name':True})
+    slist = db.smf_samples.search({'collection':{'$contains':[family]}, 'weight':int(weight)},'name')
     ret = []
-    for res in slist:
-        name = res['name']
-        url = url_for(".by_label", label=family+"."+res['name'])
+    for name in slist:
+        url = url_for(".by_label", label=family+"."+name)
         ret.append({'url':url, 'name':name})
     return ret
 
@@ -146,7 +146,7 @@ def Sp4Z_j():
 def render_main_page(bread):
     fams = get_smf_families()
     fam_list = [c for c in fams if c.computes_dimensions() and not c.name in ["Sp4Z","Sp4Z_2"]] # Sp4Z and Sp4Z_2 are sub-families of Sp4Z_j
-    info = { 'family_list': fam_list, 'args': {}, 'number_of_samples': sample.count_samples()}
+    info = { 'family_list': fam_list, 'args': {}, 'number_of_samples': db.smf_samples.count()}
     return render_template('ModularForm_GSp4_Q_index.html', title='Siegel Modular Forms', bread=bread, info=info)
 
 def build_dimension_table(info, fam, args):

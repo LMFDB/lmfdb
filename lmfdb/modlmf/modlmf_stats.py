@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from pymongo import DESCENDING
-import lmfdb.base
 from lmfdb.base import app
+from lmfdb.db_backend import db
 from lmfdb.utils import make_logger, comma
 from sage.misc.cachefunc import cached_method
 
