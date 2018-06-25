@@ -490,8 +490,7 @@ def render_family(args):
     if 'label' in args:
         label = clean_input(args['label'])
         C = MongoClient(port=int(27017))
-        dataz = C.curve_automorphisms.passports.find({'label': label})
-        #print dataz.count()
+        dataz = C.curve_automorphisms.passports.find({'label': label}).sort('passport_label', pymongo.ASCENDING).collation({'locale': "en_US", 'numericOrdering': True})
 
         if dataz.count() is 0:
             flash_error( "No Family with Label %s was Found in the Database.", label)
@@ -532,10 +531,9 @@ def render_family(args):
         Lcc=[]
         Lall=[]
         Ltopo_rep=[] #List of topological representatives
-        Ltopo_class={} # List of list topological class
+        #Ltopo_class={} # List of list topological class
         i=1
         for dat in dataz:
-            #print dat
             if ast.literal_eval(dat['con']) not in Lcc:
                 urlstrng=dat['passport_label']
                 Lcc.append(ast.literal_eval(dat['con']))
@@ -543,26 +541,32 @@ def render_family(args):
                              urlstrng])
                 i=i+1
 
-            #Generate topological representatives
-            L = create_total_label(dat['label'], str(dat['topological'][0]), str(dat['topological'][1]))
-                #topo_passport = C.curve_automorphisms.passports.find({'total_label': L})    
-            if L not in Ltopo_class:
-                Ltopo_class[L] = []
-                Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
-            elif dat['total_label'] not in Ltopo_class[L]:
-                Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
+            #Generate topological equivalence class
+            #L = create_total_label(dat['label'], str(dat['topological'][0]), str(dat['topological'][1]))
+            #if L not in Ltopo_class:
+            #    Ltopo_class[L] = []
+            #    Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
+            #elif dat['total_label'] not in Ltopo_class[L]:
+            #    Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
 
-        topological_data = C.curve_automorphisms.passports.find({'label': label, '$expr': {'$eq': ['$topological', '$cc']}}) #Topological representatives
+        #Topological equivalence
+        Lelements=[] #List of lists of equivalence classes
+        topological_data = C.curve_automorphisms.passports.find({'label': label, '$expr': {'$eq': ['$topological', '$cc']}}).sort('passport_label', pymongo.ASCENDING).collation({'locale': "en_US", 'numericOrdering': True})
         for dat in topological_data:
             x1=[] #A list of permutations of generating vectors of topo_rep
             for perm in dat['gen_vectors']:
                 x1.append(sep.join(split_perm(Permutation(perm).cycle_string())))
             Ltopo_rep.append([dat['passport_label'], dat['total_label'], x1])
 
-        #print Ltopo_class
-        ###### Needs to sort key of Ltopo_class #########  
-        keylist = Ltopo_class.keys()
-        keylist.sort()
+            #Topological equivalence classes
+            topo_class = C.curve_automorphisms.passports.find({'label': dat['label'], 'topological': dat['cc']}).sort('passport_label', pymongo.ASCENDING).collation({'locale': "en_US", 'numericOrdering': True})
+            elements=[] #An equivalence class
+            for element in topo_class:
+                elements.append((element['passport_label'], element['total_label']))
+            Lelements.append(elements)
+
+        #List of tupples of representative and equivalence class
+        Ltopo_class = zip(Ltopo_rep, Lelements)
               
         info.update({'passport': Lall})
         info.update({'passport_num': len(Lall)})
@@ -893,7 +897,6 @@ def hgcwa_code_download(**args):
     stdfmt = ''
     for k in depends_on_action:
         stdfmt += code_list[k][lang] + '{' + k + '}'+ ';\n'
-        print code_list[k][lang] + '{' + k + '}'+ ';\n'
 
     if lang == 'magma':
         stdfmt += code_list['con'][lang] + '{con}' + ';\n'
@@ -901,7 +904,8 @@ def hgcwa_code_download(**args):
     stdfmt += code_list['gen_gp'][lang]+ '\n'
     stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
     stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
-    # For all generating vectors and passports
+    
+    # Add braid and topological tag for each entry
     if lang == args['download_type']:
         stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
         stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
@@ -910,21 +914,31 @@ def hgcwa_code_download(**args):
     signHfmt = stdfmt
     signHfmt += code_list['full_auto'][lang] + '{full_auto}' + ';\n'
     signHfmt += code_list['full_sign'][lang] + '{signH}' + ';\n'
-    signHfmt += code_list['add_to_total_full'][lang] + '\n'
 
     # additional info for hyperelliptic cases
     hypfmt = code_list['hyp'][lang] + code_list['tr'][lang] + ';\n'
     hypfmt += code_list['hyp_inv'][lang] + '{hyp_involution}' + code_list['hyp_inv_last'][lang]
     hypfmt += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
-    hypfmt += code_list['add_to_total_hyp'][lang] + '\n'
+    
     cyctrigfmt = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
     cyctrigfmt += code_list['cyc'][lang] + code_list['tr'][lang] + ';\n'
     cyctrigfmt += code_list['cyc_auto'][lang] + '{cinv}' + code_list['hyp_inv_last'][lang]
-    cyctrigfmt += code_list['add_to_total_cyc_trig'][lang] + '\n'
+   
     nhypcycstr = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
     nhypcycstr += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
-    nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
-
+   
+    #Action for all vectors and action for just representatives
+    if lang == args['download_type']:
+        signHfmt += code_list['add_to_total_full_rep'][lang] + '\n'
+        hypfmt += code_list['add_to_total_hyp_rep'][lang] + '\n'
+        cyctrigfmt += code_list['add_to_total_cyc_trig_rep'][lang] + '\n'
+        nhypcycstr += code_list['add_to_total_basic_rep'][lang] + '\n'
+    else:
+        signHfmt += code_list['add_to_total_full'][lang] + '\n'
+        hypfmt += code_list['add_to_total_hyp'][lang] + '\n'
+        cyctrigfmt += code_list['add_to_total_cyc_trig'][lang] + '\n'
+        nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
+    
     start = time.time()
     lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
     code += '\n'.join(lines)

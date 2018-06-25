@@ -150,11 +150,11 @@ transition: 0.3s;
     </thead>
 
     <tbody>
-      {% for key,values in info.topological_class.items() %}
+      {% for class in info.topological_class %}
       <tr>
-        <td>{{key}}</td> 
-        <td> {% for value in values %}
-          <a href="{{value[1]}}">{{value[0]}}</a><br>
+        <td><a href="{{class[0][0]}}">{{class[0][1]}}</a></td>
+        <td> {% for element in class[1] %}
+          <a href="{{element[0]}}">{{element[1]}}</a><br>
           {% endfor %} </td>
       </tr>
       {% endfor %}
@@ -180,8 +180,4 @@ function openData(evt, dataType) {
 document.getElementById("defaultOpen").click();
 </script>
 
-</p>
-
-
-  
 {% endblock %}

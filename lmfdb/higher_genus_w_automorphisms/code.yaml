@@ -15,9 +15,7 @@ not-implemented:
 
 top_matter:
   gap:  "# WARNING: The conjugacy class numbers may not be the same as those listed in lmfdb.org, as numberings in Magma and GAP may differ. If you need to connect this data to that posted on lmfdb.org, compare the variables 'passport_label' and 'gen_vector_labels'."
-  magma:  RecFormat:=recformat<group,gp_id, signature,gen_vectors,conj_classes,genus,dimension,r,g0, passport_label,gen_vect_label, is_hyperelliptic, hyp_involution, is_cyclic_trigonal,cyc_auto,full_auto, full_sign>;
-
-
+  magma:  RecFormat:=recformat<group,gp_id, signature,gen_vectors,conj_classes,genus,dimension,r,g0,passport_label,gen_vect_label, braid_class, topological_class, is_hyperelliptic, hyp_involution, is_cyclic_trigonal,cyc_auto,full_auto, full_sign>;
 
 
 gp_comment:
@@ -155,11 +153,29 @@ add_to_total_cyc_trig:
    magma: "Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, is_hyperelliptic:=is_hyperelliptic, is_cyclic_trigonal:=is_cyclic_trigonal, cyc_auto:=cyc_auto >);"
 
 
-
-
 add_to_total_full:
    gap:  "Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,  genus:=genus, dimension:=dim, r:=r, g0:=g0,passport_label:= passport_label,gen_vect_label:=gen_vect_label, full_auto:=full_auto, full_sign:=full_sign) ); "
    magma: "Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label,full_auto:=full_auto, full_sign:=full_sign>);"
+
+
+add_to_total_basic_rep:
+   gap:  "Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label, gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic) ); "
+   magma: "Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic,is_cyclic_trigonal:=is_cyclic_trigonal >);"
+
+
+add_to_total_hyp_rep:
+   gap:  "Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic, hyp_involution:=hyp_involution,is_cyclic_trigonal:=is_cyclic_trigonal) ); "
+   magma: "Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic, hyp_involution:=hyp_involution,is_cyclic_trigonal:=is_cyclic_trigonal >);"
+
+
+add_to_total_cyc_trig_rep:
+   gap:  "Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic, is_cyclic_trigonal:=is_cyclic_trigonal, cyc_auto:=cyc_auto) ); "
+   magma: "Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic, is_cyclic_trigonal:=is_cyclic_trigonal, cyc_auto:=cyc_auto >);"
+
+
+add_to_total_full_rep:
+   gap:  "Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,  genus:=genus, dimension:=dim, r:=r, g0:=g0,passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, full_auto:=full_auto, full_sign:=full_sign) ); "
+   magma: "Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, full_auto:=full_auto, full_sign:=full_sign>);"
 
 
 search_result_gp_comment:
