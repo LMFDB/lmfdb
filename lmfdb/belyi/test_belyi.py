@@ -16,52 +16,25 @@ class BelyiTest(LmfdbTest):
     def test_random(self):
         self.check_args('/Belyi/random', 'Monodromy group')
 
-    # def test_by_galmap_label(self):
-    #     self.check_args('/Belyi/6T15-[5,4,4]-51-42-42-g1-b', 'A_6')
+    def test_by_galmap_label(self):
+        self.check_args('/Belyi/6T15-[5,4,4]-51-42-42-g1-b', 'A_6')
 
     def test_passport_label(self):
         self.check_args('/Belyi/5T4-[5,3,3]-5-311-311-g0-a', '5T4-[5,3,3]-5-311-311-g0')
 
     def test_passport(self):
         self.check_args('/Belyi/9T33-[10,15,2]-522-531-22221-g0-a', '3.1.14175.1')
-        # self.check_args('/Belyi/9T33-[10,15,2]-522-531-22221-g0', '3.1.14175.1')
 
+######## web pages
+    def test_urls(self):
+        self.check_args('/Belyi/4T5-[4,3,2]-4-31-211-g0-a', 'Belyi map 4T5-[4,3,2]-4-31-211-g0-a')
+        self.check_args('/Belyi/4T5-[4,3,2]-4-31-211-g0-', 'Passport 4T5-[4,3,2]-4-31-211-g0')
+        self.check_args('/Belyi/4T5-[4,3,2]-4-31-211-g0', 'Passport 4T5-[4,3,2]-4-31-211-g0')
+        self.check_args('/Belyi/4T5-[4,3,2]-4-31-211-', 'Belyi maps with group 4T5 and orders [4,3,2]')
+        self.check_args('/Belyi/4T5-[4,3,2]-4-31-', 'Belyi maps with group 4T5 and orders [4,3,2]')
+        self.check_args('/Belyi/4T5-[4,3,2]', 'Belyi maps with group 4T5')
 
-
-
-
-    # def test_by_conductor(self):
-    #     L = self.tc.get('/Genus2Curve/Q/15360/')
-    #     for x in "abcdefghij":
-    #         assert "15360."+x in L.data
-    #     L = self.tc.get('/Genus2Curve/Q/15360/?abs_disc=169')
-    #     assert '0 matches' in L.data
-
-    # def test_by_url_isogeny_class_label(self):
-    #     L = self.tc.get('/Genus2Curve/Q/336/a/')
-    #     assert '336.a.172032.1' in L.data
-
-    # def test_by_url_curve_label(self):
-    #     # Two elliptic curve factors and decomposing endomorphism algebra:
-    #     L = self.tc.get('/Genus2Curve/Q/1088/b/2176/1')
-    #     assert '32.a1' in L.data and '34.a3' in L.data
-    #     # RM curve:
-    #     L = self.tc.get('/Genus2Curve/Q/17689/e/866761/1')
-    #     assert ('simple' in L.data or 'Simple' in L.data) and 'G_{3,3}' in L.data
-    #     # QM curve:
-    #     L = self.tc.get('Genus2Curve/Q/262144/d/524288/1')
-    #     assert 'quaternion algebra' in L.data and 'J(E_2)' in L.data
-    #     L = self.tc.get('Genus2Curve/Q/4096/b/65536/1')
-    #     # Square over a quadratic extension that is CM over one extension and
-    #     # multiplication by a quaternion algebra ramifying at infinity over another
-    #     assert 'square of' in L.data and '2.2.8.1-64.1-a3'\
-    #         in L.data and r'\mathbf{H}' in L.data and '(CM)' in L.data
-
-    # def test_by_url_isogeny_class_discriminant(self):
-    #     L = self.tc.get('/Genus2Curve/Q/15360/f/983040/')
-    #     assert '15360.f.983040.1' in L.data and '15360.f.983040.2' in L.data and not '15360.d.983040.1' in L.data
-
-    ######## searches
+######## searches
 
     def test_deg_range(self):
         L = self.tc.get('/Belyi/?deg=2-7')
