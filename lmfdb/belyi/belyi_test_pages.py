@@ -1,19 +1,21 @@
 from lmfdb.base import LmfdbTest, getDBConnection
 
-class Genus2Test(LmfdbTest):
+class BelyiTest(LmfdbTest):
 
     def runTest():
         pass
 
     def test_all_pages(self):
         errors = []
-        curves = getDBConnection().genus2_curves.curves
-        data = curves.find({},{'_id':False,'label':True,'class':True})
+        passports = getDBConnection().belyi.curves
+        gal_maps = getDBConnection().belyi.gal_maps
+        gal_maps_data = gal_maps.find({},{'_id':False,'label':True,})
+        passports_data = passports.find({},{'_id':False,'label':True,})
         n = 0
-        for c in data:
-            l = c['label'].split('.')
-            url = "Genus2Curve/Q/%s/%s/%s/%s"%(l[0],l[1],l[2],l[3])
-            print "Checking home page for genus 2 curve " + c['label']
+        for c in gal_maps_data:
+            l = c['label'].split('-')
+            url = "Belyi/%s/%s/%s/%s/%s/%s/%s"%(l[0],l[1],l[2],l[3],l[4],l[5],l[6])
+            print "Checking home page for Belyi map" + c['label']
             try:
                 n = n+1
                 page = self.tc.get(url, follow_redirects=True)
@@ -22,8 +24,8 @@ class Genus2Test(LmfdbTest):
                 print "Internal server error on page " + url
                 errors.append(url)
                 continue
-            url = "Genus2Curve/Q/%s/%s/"%(l[0],l[1])
-            print "Checking home page for genus 2 isogeny class " + c['class']
+            url = "Belyi/%s/%s/%s/%s/%s/%s/%s"%(l[0],l[1],l[2],l[3],l[4],l[5])
+            print "Checking home page for Belyi Passport " + c['class']
             try:
                 n = n+1
                 page = self.tc.get(url, follow_redirects=True)
