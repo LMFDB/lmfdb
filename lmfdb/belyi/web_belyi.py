@@ -309,12 +309,31 @@ class WebBelyiPassport(object):
         galmaps_for_plabel = belyi_db_galmaps().find({"plabel" : passport['plabel']}).sort([('label_index', ASCENDING)])
         galmapdata = [] 
         for galmap in galmaps_for_plabel:
-            # F = WebNumberField.from_coeffs(galmap['base_field'])
-            galmapdatum = [galmap['label'].split('-')[-1], 
-                           url_for_belyi_galmap_label(galmap['label']), 
-                           galmap['orbit_size'], 
-                           belyi_base_field(galmap),
-                           galmap['triples_cyc'][0][0], galmap['triples_cyc'][0][1], galmap['triples_cyc'][0][2]]
+            # wrap number field nonsense
+            F = belyi_base_field(galmap)
+            inLMFDB = False;
+            field = {};
+            if F._data == None:
+                field['in_LMFDB'] = False;
+                fld_coeffs = galmap['base_field']
+                pol = PolynomialRing(QQ, 'x')(fld_coeffs)
+                field['base_field'] = latex(pol)
+                field['isQQ'] = False;
+            else:
+                field['in_LMFDB'] = True;
+                if F.poly().degree()==1:
+                    field['isQQ'] = True
+                F.latex_poly = web_latex(F.poly())
+                field['base_field'] = F
+
+            galmapdatum = [galmap['label'].split('-')[-1],
+                           url_for_belyi_galmap_label(galmap['label']),
+                           galmap['orbit_size'],
+                           field,
+                           galmap['triples_cyc'][0][0],
+                           galmap['triples_cyc'][0][1],
+                           galmap['triples_cyc'][0][2],
+                           ]
             galmapdata.append(galmapdatum)
         data['galmapdata'] = galmapdata
 
