@@ -27,7 +27,8 @@ print galmaps.find().count(), len(galmaps_upload)
 filename = inspect.getframeinfo(inspect.currentframe())[0];
 folder = os.path.dirname(os.path.abspath(filename));
 sys.path.append(os.path.join(folder, "../../"));
-from data_mgt.utilities.rewrite import create_random_object_index, rewrite_collection
+# from data_mgt.utilities.rewrite import create_random_object_index, rewrite_collection
+from data_mgt.utilities.rewrite import create_random_object_index
 if "galmaps" in belyidb.collection_names():
     belyidb["galmaps"].rename("galmaps_old")
 galmaps.rename("galmaps");

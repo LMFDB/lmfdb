@@ -5,7 +5,8 @@ class BelyiTest(LmfdbTest):
 
     def check_args(self, path, text):
         L = self.tc.get(path, follow_redirects=True)
-        assert text in L.data, "assert failed: %s not in : %s" % (text, L.data)
+        # assert text in L.data, "assert failed: %s not in : %s" % (text, L.data)
+        assert text in L.data
 
     # All tests should pass
     def test_stats(self):
@@ -18,12 +19,12 @@ class BelyiTest(LmfdbTest):
     # def test_by_galmap_label(self):
     #     self.check_args('/Belyi/6T15-[5,4,4]-51-42-42-g1-b', 'A_6')
 
-    # def test_passport_label(self):
-    #     self.check_args('/Belyi/5T4-[5,3,3]-5-311-311-g0-a', '5T4-[5,3,3]-5-311-311-g0')
+    def test_passport_label(self):
+        self.check_args('/Belyi/5T4-[5,3,3]-5-311-311-g0-a', '5T4-[5,3,3]-5-311-311-g0')
 
-    # def test_passport(self):
-    #     self.check_args('/Belyi/9T33-[10,15,2]-522-531-22221-g0-a', '3.1.14175.1')
-
+    def test_passport(self):
+        self.check_args('/Belyi/9T33-[10,15,2]-522-531-22221-g0-a', '3.1.14175.1')
+        # self.check_args('/Belyi/9T33-[10,15,2]-522-531-22221-g0', '3.1.14175.1')
 
 
 
@@ -74,9 +75,6 @@ class BelyiTest(LmfdbTest):
 
     def test_abc_list_search(self):
         self.check_args('/Belyi/?abc_list=[7,6,6]', '7T7-[7,6,6]-7-3211-3211-g0-a')
-
-    def test_genus_search(self):
-        self.check_args('/Belyi/?genus=2', '6T6-[6,6,3]-6-6-33-g2-a')
 
     def test_genus_search(self):
         self.check_args('/Belyi/?genus=2', '6T6-[6,6,3]-6-6-33-g2-a')
