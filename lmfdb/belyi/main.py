@@ -81,7 +81,7 @@ def statistics():
     return render_template("belyi_stats.html", info=info, credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 ###############################################################################
-# Curve and isogeny class pages
+# Galmaps, passports, triples and groups routes
 ###############################################################################
 
 @belyi_page.route("/<group>/<abc>/<sigma0>/<sigma1>/<sigmaoo>/<g>/<letnum>")
@@ -94,30 +94,13 @@ def by_url_belyi_passport_label(group, abc, sigma0, sigma1, sigmaoo, g):
     label = group+"-"+abc+"-"+sigma0+"-"+sigma1+"-"+sigmaoo+"-"+g
     return render_belyi_passport_webpage(label)
 
-@belyi_page.route("/<group>/")
-def by_url_belyi_search_group(group):
-    #FIXME add breads
-    info = to_dict(request.args)
-    info['title'] = 'Belyi maps with group %s' % group;
-    info['bread'] = [('Belyi Maps', url_for(".index")), ('%s' % group, url_for(".by_url_belyi_search_group", group=group))];
-    if len(request.args) > 0:
-        # if conductor changed, fall back to a general search
-        if 'group' in request.args and request.args['group'] != str(group):
-            return redirect (url_for(".index", **request.args), 307)
-        info['title'] += ' search results'
-        info['bread'].append(('search results',''))
-        #FIXME add breads
-    info['group'] = group;
-    return belyi_search(info);
-
-@belyi_page.route("/<group>/<abc>/")
+@belyi_page.route("/<group>/<abc>")
 def by_url_belyi_search_group_triple(group, abc):
-    #FIXME add breads
     info = to_dict(request.args)
     info['title'] = 'Belyi maps with group %s and orders %s' % (group, abc)
     info['bread'] = [('Belyi Maps', url_for(".index")), ('%s' % group, url_for(".by_url_belyi_search_group", group=group)), ('%s' % abc, url_for(".by_url_belyi_search_group_triple", group=group, abc=abc)) ];
     if len(request.args) > 0:
-        # if conductor changed, fall back to a general search
+        # if group or abc changed, fall back to a general search
         if 'group' in request.args and (request.args['group'] != str(group) or request.args['abc_list'] != str(abc)):
             return redirect (url_for(".index", **request.args), 307)
         info['title'] += ' search results'
@@ -125,6 +108,41 @@ def by_url_belyi_search_group_triple(group, abc):
     info['group'] = group;
     info['abc_list'] = abc;
     return belyi_search(info);
+
+
+
+@belyi_page.route("/<smthorlabel>")
+def by_url_belyi_search_url(smthorlabel):
+    split = smthorlabel.split('-');
+    # strip out the last field if empty
+    if split[-1] == '':
+        split = split[:-1];
+    if len(split) == 1:
+        return by_url_belyi_search_group(group = split[0])
+    elif len(split) <= 5:
+        # not all the sigmas and g
+        return redirect(url_for(".by_url_belyi_search_group_triple", group = split[0], abc = split[1]), 301);
+    elif len(split) == 6:
+        return redirect( url_for(".by_url_belyi_passport_label", group = split[0], abc = split[1], sigma0 = split[2], sigma1 = split[3], sigmaoo = split[4], g = split[5]), 301);
+    elif len(split) == 7:
+        return redirect( url_for(".by_url_belyi_galmap_label", group = split[0], abc = split[1], sigma0 = split[2], sigma1 = split[3], sigmaoo = split[4], g = split[5], letnum = split[6]), 301);
+
+@belyi_page.route("/<group>")
+def by_url_belyi_search_group(group):
+    info = to_dict(request.args)
+    info['title'] = 'Belyi maps with group %s' % group;
+    info['bread'] = [('Belyi Maps', url_for(".index")), ('%s' % group, url_for(".by_url_belyi_search_group", group=group))];
+    if len(request.args) > 0:
+        # if the group changed, fall back to a general search
+        if 'group' in request.args and request.args['group'] != str(group):
+            return redirect (url_for(".index", **request.args), 307)
+        info['title'] += ' search results'
+        info['bread'].append(('search results',''))
+    info['group'] = group;
+    return belyi_search(info);
+
+
+
 
 def render_belyi_galmap_webpage(label):
     try:
@@ -226,10 +244,10 @@ def belyi_orbit_from_label(label):
 def belyi_search(info):
     if 'jump' in info:
         jump = info["jump"].strip()
-        if re.match(r'^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+[a-z]+$', jump):
+        if re.match(r'^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+-[a-z]+$', jump):
             return redirect(url_for_belyi_galmap_label(jump), 301)
         else:
-            if re.match(r'^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d$', jump):
+            if re.match(r'^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+$', jump):
                 return redirect(url_for_belyi_passport_label(jump), 301)
             else:
                 errmsg = "%s is not a valid Belyi map or passport label"
@@ -265,7 +283,6 @@ def belyi_search(info):
                 a = query['abc_list'][0];
                 query['$or'] = [{'a_s': a}, {'b_s': a}, {'c_s': a}];
             query.pop('abc_list');
-            print query
 
 
         # a naive hack
