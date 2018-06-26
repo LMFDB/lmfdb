@@ -45,7 +45,7 @@
         {% for g in data.galmapdata %}
            <tr><td><a href="{{g[1]|safe}}">{{g[0]}}</a></td>
            <td>${{g[2]}}$</td>
-           <td>{{g[3].knowl()|safe}}</td>
+           <td>
             {% if g[3]['in_LMFDB'] %}
               {{ g[3].base_field.knowl()|safe }}
               {% if not g[3]['isQQ'] %}
@@ -55,6 +55,7 @@
             {% else %}
             \(\mathbb{Q}(\nu)\); {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }} ${{ data.base_field }}$.
           {% endif %}
+          </td>
            <td>${{g[4]}},{{g[5]}},{{g[6]}}$</td>
            </tr>
         {% endfor %}
