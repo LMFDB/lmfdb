@@ -40,28 +40,28 @@
   </table>
 
   <table class="ntdata">
-      <thead><tr><td>Label</td><td>Orbit size</td><td>Base field</td><td>Representative triple</td></tr></thead>
-      <tbody>
-        {% for g in data.galmapdata %}
-           <tr><td><a href="{{g[1]|safe}}">{{g[0]}}</a></td>
-           <td>${{g[2]}}$</td>
-           <td>
-            {% if g[3]['in_LMFDB'] %}
-              {{ g[3].base_field.knowl()|safe }}
-              {% if not g[3]['isQQ'] %}
-              ; {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
-                {{ g[3].base_field.latex_poly }}.
-              {% endif %}
-            {% else %}
-            \(\mathbb{Q}(\nu)\); {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }} ${{ data.base_field }}$.
+    <thead><tr><td>Label</td><td>Orbit size</td><td>Base field</td><td>Representative triple</td></tr></thead>
+    <tbody>
+      {% for g in data.galmapdata %}
+      <tr><td><a href="{{g[1]|safe}}">{{g[0]}}</a></td>
+        <td>${{g[2]}}$</td>
+        <td>
+          {% if g[3]['in_LMFDB'] %}
+          {{ g[3].base_field.knowl()|safe }}
+          {% if not g[3]['isQQ'] %}
+          ; {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+          {{ g[3].base_field.latex_poly }}.
           {% endif %}
-          </td>
-           <td>${{g[4]}},{{g[5]}},{{g[6]}}$</td>
-           </tr>
-        {% endfor %}
-      </tbody>
+          {% else %}
+          \(\mathbb{Q}(\nu)\); {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }} ${{ g[3].base_field }}$.
+          {% endif %}
+        </td>
+        <td>${{g[4]}},{{g[5]}},{{g[6]}}$</td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
-  
+
 </p>
   
 {% endblock %}
