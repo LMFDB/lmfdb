@@ -1,8 +1,8 @@
 import pymongo
 import os
 _C = None
-server = "belyi.lmfdb.xyz:27017"
-#server = "localhost:37010" # run warwick.sh first
+#server = "belyi.lmfdb.xyz:27017"
+server = "localhost:37010" # run warwick.sh first
 def makeDBconnection():
     global _C
     _C = pymongo.MongoClient(server);
