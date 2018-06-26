@@ -31,7 +31,7 @@ class BelyiTest(LmfdbTest):
                 page = self.tc.get(url, follow_redirects=True)
                 assert c['label'] in page.data
             except:
-                print "Internal server error on page "+url
+                print "Internal server error on page " + url
                 errors.append(url)
                 continue
         if not errors:

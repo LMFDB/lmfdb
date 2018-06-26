@@ -3,20 +3,26 @@ from lmfdb.base import LmfdbTest
 
 class BelyiTest(LmfdbTest):
 
+    def check_args(self, path, text):
+        L = self.tc.get(path, follow_redirects=True)
+        assert text in L.data, "assert failed: %s not in : %s" % (text, L.data)
+
     # All tests should pass
     def test_stats(self):
         L = self.tc.get('/Belyi/stats')
         assert 'number of maps' in L.data and 'proportion' in L.data
 
+    def test_random(self):
+        self.check_args('/Belyi/random', 'Monodromy group')
+
     def test_deg_range(self):
         L = self.tc.get('/Belyi/?deg=2-7')
         assert '5T4-[5,3,3]-5-311-311-g0-a' in L.data
 
-    # def test_by__label(self):
-    #     L = self.tc.get('/Genus2Curve/Q/169.a.169.1',follow_redirects=True)
-    #     assert 'square of' in L.data and 'E_6' in L.data
-    #     L = self.tc.get('/Genus2Curve/Q/1152.a.147456.1',follow_redirects=True)
-    #     assert 'non-isogenous elliptic curves' in L.data and '24.a5' in L.data and '48.a5' in L.data
+    def test_by_gal_map_label(self):
+        self.check_args('/Belyi/6T15-[5,4,4]-51-42-42-g1-b', 'A_6')
+        # L = self.tc.get('/Genus2Curve/Q/1152.a.147456.1',follow_redirects=True)
+        # assert 'non-isogenous elliptic curves' in L.data and '24.a5' in L.data and '48.a5' in L.data
     #     L = self.tc.get('/Genus2Curve/Q/15360.f.983040.2',follow_redirects=True)
     #     assert 'N(G_{1,3})' in L.data and '480.b3' in L.data and '32.a3' in L.data
 
@@ -64,9 +70,6 @@ class BelyiTest(LmfdbTest):
     #     L = self.tc.get('/Genus2Curve/Q/15360/f/983040/')
     #     assert '15360.f.983040.1' in L.data and '15360.f.983040.2' in L.data and not '15360.d.983040.1' in L.data
 
-    # def test_random(self):
-    #     L = self.tc.get('/Genus2Curve/Q/random',follow_redirects=True)
-    #     assert 'geometric invariants' in L.data
 
     # def test_conductor_search(self):
     #     L = self.tc.get('/Genus2Curve/Q/?cond=1225')
