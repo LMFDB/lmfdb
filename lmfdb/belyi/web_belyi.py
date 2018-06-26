@@ -153,7 +153,7 @@ class WebBelyiGalmap(object):
         for elt in ('label', 'plabel', 'triples_cyc', 'orbit_size', 'g', 'abc', 'deg'):
             data[elt] = galmap[elt]
         nt = galmap['group'].split('T')
-        data['group'] = group_display_knowl(nt[0],nt[1],getDBConnection())
+        data['group'] = group_display_knowl(int(nt[0]),int(nt[1]),getDBConnection())
 
         data['geomtype'] = geomtypelet_to_geomtypename_dict[galmap['geomtype']]
         data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
@@ -299,7 +299,7 @@ class WebBelyiPassport(object):
             data[elt] = passport[elt]
 
         nt = passport['group'].split('T')
-        data['group'] = group_display_knowl(nt[0],nt[1],getDBConnection())
+        data['group'] = group_display_knowl(int(nt[0]),int(nt[1]),getDBConnection())
 
         data['geomtype'] = geomtypelet_to_geomtypename_dict[passport['geomtype']]
         data['lambdas'] = [str(c)[1:-1] for c in passport['lambdas']]
