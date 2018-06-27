@@ -8,7 +8,8 @@ class BelyiTest(LmfdbTest):
         # assert text in L.data, "assert failed: %s not in : %s" % (text, L.data)
         assert text in L.data
 
-    # All tests should pass
+    ######## all tests should pass
+
     def test_stats(self):
         L = self.tc.get('/Belyi/stats')
         assert 'number of maps' in L.data and 'proportion' in L.data
@@ -25,7 +26,8 @@ class BelyiTest(LmfdbTest):
     def test_passport(self):
         self.check_args('/Belyi/9T33-[10,15,2]-522-531-22221-g0-a', '3.1.14175.1')
 
-######## web pages
+    ######## web pages
+
     def test_urls(self):
         self.check_args('/Belyi/4T5-[4,3,2]-4-31-211-g0-a', 'Belyi map 4T5-[4,3,2]-4-31-211-g0-a')
         self.check_args('/Belyi/4T5-[4,3,2]-4-31-211-g0-', 'Passport 4T5-[4,3,2]-4-31-211-g0')
@@ -34,7 +36,7 @@ class BelyiTest(LmfdbTest):
         self.check_args('/Belyi/4T5-[4,3,2]-4-31-', 'Belyi maps with group 4T5 and orders [4,3,2]')
         self.check_args('/Belyi/4T5-[4,3,2]', 'Belyi maps with group 4T5')
 
-######## searches
+    ######## searches
 
     def test_deg_range(self):
         L = self.tc.get('/Belyi/?deg=2-7')
@@ -60,29 +62,3 @@ class BelyiTest(LmfdbTest):
 
     def test_count_search(self):
         self.check_args('/Belyi/?count=20', '5T1-[5,5,5]-5-5-5-g2-c')
-
-
-    # def test_download(self):
-    #     self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=gp")
-    #     self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=sage")
-    #     self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=magma")
-
-    # def test_torsion(self):
-    #     L = self.tc.get('/Genus2Curve/Q/976/a/999424/1')
-    #     assert '\Z/{29}\Z' in L.data
-    #     L = self.tc.get('/Genus2Curve/Q/118606/a/118606/1')
-    #     assert 'trivial' in L.data
-
-    # def test_mfhilbert(self):
-    #     L = self.tc.get('/Genus2Curve/Q/12500/a/12500/1')
-    #     assert '2.2.5.1-500.1-a' in L.data
-    #     L = self.tc.get('/Genus2Curve/Q/12500/a/')
-    #     assert '2.2.5.1-500.1-a' in L.data
-
-    # def test_ratpts(self):
-    #     L = self.tc.get('/Genus2Curve/Q/792079/a/792079/1')
-    #     assert '(-15 : -6579 : 14)' in L.data
-    #     assert '(13 : -4732 : 20)' in L.data
-    #     L = self.tc.get('/Genus2Curve/Q/126746/a/126746/1')
-    #     assert 'everywhere' in L.data
-    #     assert 'no rational points' in L.data

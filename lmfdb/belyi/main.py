@@ -34,10 +34,8 @@ from web_belyi import geomtypelet_to_geomtypename_dict as geometry_types_dict
 geometry_types_list = geometry_types_dict.keys();
 
 
-
-
 ###############################################################################
-# Routing for top level, random_curve, and stats
+# Routing for top level, random, and stats
 ###############################################################################
 
 def learnmore_list():
@@ -56,7 +54,7 @@ def index():
     info = {'counts' : belyistats().counts()}
     info["stats_url"] = url_for(".statistics")
     info["belyi_galmap_url"] =  lambda label: url_for_belyi_galmap_label(label)
-    belyi_galmap_labels = ('4T5-[4,4,3]-4-4-31-g1-a','5T4-[5,3,3]-5-311-311-g0-a')
+    belyi_galmap_labels = ('7T6-[7,4,4]-7-421-421-g1-b','7T7-[7,12,12]-7-43-43-g2-d', '7T5-[7,7,3]-7-7-331-g2-a', '6T15-[5,5,5]-51-51-51-g1-a', '7T7-[6,6,6]-61-61-322-g1-a')
     info["belyi_galmap_list"] = [ {'label':label,'url':url_for_belyi_galmap_label(label)} for label in belyi_galmap_labels ]
     info["degree_list"] = ('1-6', '7-8', '9-10','10-100')
     info['title'] = title =  'Belyi maps'
