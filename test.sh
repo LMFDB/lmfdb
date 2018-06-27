@@ -8,8 +8,8 @@
 # To run it, first install or upgrade "pytest", "unittest2" "pytest-cov" and
 # "pyflakes".  e.g. $ pip install --user -U pytest pytest-cov unittest2 pyflakes
 # or $ sage -pip install --user -U pytest pytest-cov unittest2 pyflakes
-# or inside the Sage environment: $ easy_install -U nose
-#                                 $ easy_install -U coverage
+# or inside the Sage environment: $ easy_install -U pytest
+#                                 $ easy_install -U pytest-cov
 #                                 $ easy_install -U unittest2
 #                                 $ easy_install -U pyflakes
 # Second, call it in three ways, either
