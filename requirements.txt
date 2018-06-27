@@ -8,6 +8,7 @@ pyflakes
 unittest2
 pytest
 pytest-cov
+pytest-xdist
 cython
 markupsafe
 git+https://github.com/jwbober/conrey-dirichlet-characters.git@master#egg=dirichlet_conrey

@@ -20,6 +20,8 @@
 # or (for example)
 # $ ./test.sh  lmfdb/knowledge
 # to test only a part of LMFDB
+# To run tests with 3 cores in parallel, use
+# $ ./test.sh -n 3
 
 cd `dirname "$0"`
 
