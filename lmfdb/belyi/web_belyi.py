@@ -311,7 +311,7 @@ class WebBelyiPassport(object):
         for galmap in galmaps_for_plabel:
             # wrap number field nonsense
             F = belyi_base_field(galmap)
-            inLMFDB = False;
+            # inLMFDB = False;
             field = {};
             if F._data == None:
                 field['in_LMFDB'] = False;
