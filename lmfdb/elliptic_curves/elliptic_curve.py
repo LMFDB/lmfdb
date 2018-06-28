@@ -3,7 +3,8 @@ import re
 import time
 import ast
 from operator import mul
-from lmfdb.db_backend import db, prep_json
+from lmfdb.db_backend import db
+from lmfdb.db_encoding import Json
 from lmfdb.base import app
 from flask import render_template, url_for, request, redirect, make_response, send_file, jsonify
 import tempfile
@@ -476,7 +477,7 @@ def download_EC_all(label):
             return elliptic_curve_jump_error(label, {})
 
     import json
-    response = make_response('\n\n'.join(json.dumps(prep_json(d)) for d in data_list))
+    response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
     response.headers['Content-type'] = 'text/plain'
     return response
 

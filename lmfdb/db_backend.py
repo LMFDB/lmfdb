@@ -150,8 +150,9 @@ class PostgresBase(object):
             if not silent:
                 t = time.time() - t
                 if t > SLOW_CUTOFF:
+                    query = query.as_string(self.conn)
                     if values:
-                        query = query.as_string(self.conn)%(tuple(values))
+                        query = query%(tuple(values))
                     self.logger.info(query + " ran in %ss"%(t))
         except DatabaseError:
             self.conn.rollback()

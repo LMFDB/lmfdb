@@ -8,7 +8,8 @@ import flask
 import lmfdb.base as base
 from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
-from lmfdb.db_backend import db, prep_json
+from lmfdb.db_backend import db
+from lmfdb.db_encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import render_template, request, url_for, current_app
@@ -232,7 +233,7 @@ def api_query(table, id = None):
             return flask.redirect(url_for(".api_query", table=table))
 
     # fixup data for display and json/yaml encoding
-    data = prep_json(data)
+    data = Json.prep(data)
 
     # preparing the datastructure
     start = offset
