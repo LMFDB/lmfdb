@@ -485,7 +485,6 @@ def higher_genus_w_automorphisms_search(**args):
 
 
 def render_family(args):
-    start_time = time.time()
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
@@ -531,7 +530,6 @@ def render_family(args):
         Lcc=[]
         Lall=[]
         Ltopo_rep=[] #List of topological representatives
-        #Ltopo_class={} # List of list topological class
         i=1
         for dat in dataz:
             if ast.literal_eval(dat['con']) not in Lcc:
@@ -540,14 +538,6 @@ def render_family(args):
                 Lall.append([cc_display(ast.literal_eval(dat['con'])),dat['passport_label'],
                              urlstrng])
                 i=i+1
-
-            #Generate topological equivalence class
-            #L = create_total_label(dat['label'], str(dat['topological'][0]), str(dat['topological'][1]))
-            #if L not in Ltopo_class:
-            #    Ltopo_class[L] = []
-            #    Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
-            #elif dat['total_label'] not in Ltopo_class[L]:
-            #    Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
 
         #Topological equivalence
         Lelements=[] #List of lists of equivalence classes
@@ -601,7 +591,6 @@ def render_family(args):
                              ('Download Topological Equivalence Representative Magma code', url_for(".hgcwa_code_download",  label=label, download_type='topo_magma')),
                              ('Download Topological Equivalence Representative Gap code', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))] 
 
-        print ("--- family: %s seconds ---" % (time.time() - start_time))
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
                                properties2=prop2, friends=friends,
@@ -609,7 +598,6 @@ def render_family(args):
 
 
 def render_passport(args):
-    start_time = time.time()
     info = {}
     if 'passport_label' in args:
         label =clean_input(args['passport_label'])
@@ -700,7 +688,7 @@ def render_passport(args):
         info.update({'passport_cc': cc_display(ast.literal_eval(data['con']))})
             
         #Generate braid representatives
-        braid_data = C.curve_automorphisms.passports.find({'passport_label': label, '$expr': {'$eq': ['$braid', '$cc']}}) #Braid representatives
+        braid_data = C.curve_automorphisms.passports.find({'passport_label': label, '$expr': {'$eq': ['$braid', '$cc']}}).sort('passport_label', pymongo.ASCENDING).collation({'locale': "en_US", 'numericOrdering': True}) #Braid representatives
         for dat in braid_data:
             x5=[]
             for perm in dat['gen_vectors']:
@@ -785,8 +773,7 @@ def render_passport(args):
                              ('Download Braid Equivalence Representative Magma code', url_for(".hgcwa_code_download", label=label, download_type='braid_magma')),
                              ('Download Braid Equivalence Representative Gap code', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))
                              ]
-
-        print ("--- family: %s seconds ---" % (time.time() - start_time))                
+            
         return render_template("hgcwa-show-passport.html",
                                title=title, bread=bread, info=info,
                                properties2=prop2, friends=friends,
