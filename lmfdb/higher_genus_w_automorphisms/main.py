@@ -2,8 +2,6 @@
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
 from pymongo.mongo_client import MongoClient
-from bson import ObjectId
-import time
 
 import StringIO
 import re
