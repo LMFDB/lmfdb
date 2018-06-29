@@ -196,7 +196,7 @@ def abelian_variety_search(**args):
         info['report'] = 'displaying matches %s-%s of %s' %(start + 1, min(nres, start+count), nres)
     else:
         info['report'] = 'displaying all %s matches' % nres
-    t = 'Abelian Variety Search Results'
+    t = 'Abelian Variety search results'
     return render_template("abvarfq-search-results.html", info=info, credit=abvarfq_credit, bread=bread, title=t)
 
 def abelian_variety_browse(**args):

@@ -490,7 +490,7 @@ def browse():
     # of the keys (degrees), so we use a list
     info = [[d,data[str(d)]] for d in sorted([int(d) for d in data.keys()])]
     credit = 'John Cremona'
-    t = 'Elliptic Curves over Number Fields'
+    t = 'Elliptic curves over number fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('Browse', ' ')]
     return render_template("ecnf-stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
@@ -524,17 +524,17 @@ def statistics_by_degree(d):
     info['sig_stats'] = [sig_counts(sig) for sig in sigs_by_deg[str(d)]]
     credit = 'John Cremona'
     if d==2:
-        t = 'Elliptic Curves over Quadratic Number Fields'
+        t = 'Elliptic curves over quadratic number fields'
     elif d==3:
-        t = 'Elliptic Curves over Cubic Number Fields'
+        t = 'Elliptic curves over cubic number fields'
     elif d==4:
-        t = 'Elliptic Curves over Quartic Number Fields'
+        t = 'Elliptic curves over quartic number fields'
     elif d==5:
-        t = 'Elliptic Curves over Quintic Number Fields'
+        t = 'Elliptic curves over quintic number fields'
     elif d==6:
-        t = 'Elliptic Curves over Sextic Number Fields'
+        t = 'Elliptic curves over sextic number fields'
     else:
-        t = 'Elliptic Curves over Number Fields of Degree {}'.format(d)
+        t = 'Elliptic curves over number fields of degree {}'.format(d)
 
     bread = [('Elliptic Curves', url_for("ecnf.index")),
               ('Degree %s' % d,' ')]
@@ -571,21 +571,21 @@ def statistics_by_signature(d,r):
     info['sig_stats'] = [field_counts(f) for f in sorted_fields]
     credit = 'John Cremona'
     if info['sig'] == '2,0':
-        t = 'Elliptic Curves over Real Quadratic Number Fields'
+        t = 'Elliptic curves over real quadratic number fields'
     elif info['sig'] == '0,1':
-        t = 'Elliptic Curves over Imaginary Quadratic Number Fields'
+        t = 'Elliptic curves over imaginary quadratic number fields'
     elif info['sig'] == '3,0':
-        t = 'Elliptic Curves over Totally Real Cubic Number fields'
+        t = 'Elliptic curves over totally real cubic number fields'
     elif info['sig'] == '1,1':
-        t = 'Elliptic Curves over Mixed Cubic Number Fields'
+        t = 'Elliptic curves over mixed cubic number fields'
     elif info['sig'] == '4,0':
-        t = 'Elliptic Curves over Totally Real Quartic Number Fields'
+        t = 'Elliptic curves over totally real quartic number fields'
     elif info['sig'] == '5,0':
-        t = 'Elliptic Curves over Totally Real Quintic Number Fields'
+        t = 'Elliptic curves over totally real quintic number fields'
     elif info['sig'] == '6,0':
-        t = 'Elliptic Curves over Totally Real Sextic Number Fields'
+        t = 'Elliptic curves over totally real sextic number fields'
     else:
-        t = 'Elliptic Curves over Number Fields of Degree %s, Signature (%s)' % (d,info['sig'])
+        t = 'Elliptic curves over number fields of degree %s, signature (%s)' % (d,info['sig'])
     bread = [('Elliptic Curves', url_for("ecnf.index")),
               ('Degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
               ('Signature (%s)' % info['sig'],' ')]

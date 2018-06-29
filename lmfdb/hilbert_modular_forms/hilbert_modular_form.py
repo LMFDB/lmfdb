@@ -211,7 +211,7 @@ def hilbert_modular_form_search(**args):
 
     info['forms'] = res_clean
 
-    t = 'Hilbert Modular Form Search Results'
+    t = 'Hilbert Modular Form search results'
 
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms',
         url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
@@ -494,7 +494,7 @@ def learnmore_list_remove(matchstring):
 #data quality pages
 @hmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Hilbert Modular Forms Data'
+    t = 'Completeness of the Hilbert Modular Forms data'
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Completeness', '')]
     return render_template("single.html", kid='dq.mf.hilbert.extent',
@@ -502,7 +502,7 @@ def completeness_page():
 
 @hmf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Hilbert Modular Forms Data'
+    t = 'Source of the Hilbert Modular Forms data'
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Source', '')]
     return render_template("single.html", kid='dq.mf.hilbert.source',
@@ -523,8 +523,7 @@ def browse():
         'stats': get_stats()
     }
     credit = 'John Voight'
-    t = 'Hilbert Modular Forms'
-
+    t = 'Hilbert modular forms'
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
              ('Browse', ' ')]
     return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
@@ -547,23 +546,23 @@ def statistics_by_degree(d):
 
     credit = 'John Cremona'
     if d==2:
-        t = 'Hilbert Modular Forms over Real Quadratic Number Fields'
+        t = 'Hilbert modular forms over real quadratic number fields'
     elif d==3:
-        t = 'Hilbert Modular Forms over Totally Real Cubic Number Fields'
+        t = 'Hilbert modular forms over totally real cubic number fields'
     elif d==4:
-        t = 'Hilbert Modular Forms over Totally Real Quartic Number Fields'
+        t = 'Hilbert modular forms over totally real quartic number fields'
     elif d==5:
-        t = 'Hilbert Modular Forms over Totally Real Quintic Number Fields'
+        t = 'Hilbert modular forms over totally real quintic number fields'
     elif d==6:
-        t = 'Hilbert Modular Forms over Totally Real Sextic Number Fields'
+        t = 'Hilbert modular forms over totally real sextic number fields'
     else:
-        t = 'Hilbert Modular Forms over Totally Real Fields of Degree %s' % d
+        t = 'Hilbert modular forms over totally real fields of degree %s' % d
 
     bread = [('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
               ('Degree %s' % d,' ')]
 
     if d=='bad':
-        t = 'Hilbert Modular Forms'
+        t = 'Hilbert modular forms'
         bread = bread[:-1]
 
     return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove("Completeness"))
