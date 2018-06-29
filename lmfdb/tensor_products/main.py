@@ -28,7 +28,7 @@ def get_bread(breads=[]):
 @tensor_products_page.route("/")
 def index():
     bread = get_bread()
-    return render_template("tensor_products_index.html", title="Tensor Products", bread=bread)
+    return render_template("tensor_products_index.html", title="Tensor products", bread=bread)
 
 @tensor_products_page.route("/navigate/")
 def navigate():
@@ -37,7 +37,7 @@ def navigate():
 
     type1 = args.get('type1')
     type2 = args.get('type2')
-    return render_template("tensor_products_navigate.html", title="Tensor Products Navigation", bread=bread, type1=type1 , type2=type2)
+    return render_template("tensor_products_navigate.html", title="Tensor products navigation", bread=bread, type1=type1 , type2=type2)
 
 @tensor_products_page.route("/show/")
 def show():

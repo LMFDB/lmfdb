@@ -364,7 +364,7 @@ def how_computed_page():
 
 @lattice_page.route("/Labels")
 def labels_page():
-    t = 'Label of an Integral Lattice'
+    t = 'Label of an integral lattice'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Labels', '')]
     credit = lattice_credit
@@ -373,7 +373,7 @@ def labels_page():
 
 @lattice_page.route("/History")
 def history_page():
-    t = 'A Brief History of Lattices'
+    t = 'A brief history of lattices'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('History', '')]
     credit = lattice_credit

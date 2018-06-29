@@ -92,7 +92,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
         mwf_logger.debug("info=%s" % info)
         mwf_logger.debug("search=%s" % search)
         return render_search_results_wp(info, search)
-    title = 'Maass Forms'
+    title = 'Maass forms'
     info['list_of_levels'] = DB.levels()
     if info['list_of_levels']:
         info['max_level'] = max(info['list_of_levels'])
@@ -128,7 +128,7 @@ def render_maass_browse_graph(min_level, max_level, min_R, max_R):
              ('Maass Waveforms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
 
-    return render_template("mwf_browse_graph.html", title='Browsing Graph of Maass Forms', **info)
+    return render_template("mwf_browse_graph.html", title='Browsing graph of Maass forms', **info)
 
 
 @mwf.route("/<maass_id>", methods=['GET', 'POST'])
@@ -208,7 +208,7 @@ def render_one_maass_waveform_wp(info, prec=9):
     except KeyError:
         return flask.abort(404)
     info['MF'] = MF
-    info['title'] = "Maass Form"
+    info['title'] = "Maass form"
     info['bread'] = [('Modular Forms', url_for('mf.modular_form_main_page')),
                      ('Maass Waveforms', url_for('.render_maass_waveforms'))]
     if hasattr(MF,'level'):
@@ -339,11 +339,11 @@ def render_search_results_wp(info, search):
     if info.get('browse', None) is not None:
         info['title'] = 'Browse Maassforms'
         if int(info.get('weight', -1)) in [0, 1]:
-            info['title'] += ' of Weight {0}'.format(info['weight'])
+            info['title'] += ' of weight {0}'.format(info['weight'])
             if info.get('level', 0) > 0:
-                info['title'] += ' and Level {0}'.format(info['level'])
+                info['title'] += ' and level {0}'.format(info['level'])
         elif int(info.get('Level', 0)) > 0:
-            info['title'] += ' of Level {0}'.format(info['level'])
+            info['title'] += ' of level {0}'.format(info['level'])
     else:
         info['title'] = 'Search Results'
     mwf_logger.debug("in render_search_results. info={0}".format(info))

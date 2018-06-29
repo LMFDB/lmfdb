@@ -193,7 +193,7 @@ def render_family_page(family, args, bread):
     if family.computes_dimensions():
         build_dimension_table (info, family, args)
     bread.append(('$'+family.latex_name+'$', ''))
-    return render_template("ModularForm_GSp4_Q_family.html", title='Siegel Modular Forms for $'+family.latex_name+'$', bread=bread, info=info)
+    return render_template("ModularForm_GSp4_Q_family.html", title='Siegel modular forms for $'+family.latex_name+'$', bread=bread, info=info)
 
 def render_search_results_page(args, bread):
     if args.get("table"):
@@ -211,7 +211,7 @@ def render_search_results_page(args, bread):
     if not info.get('error'):
         info['results'] = sample.Samples(query)
     bread.append(('Search Results', ''))
-    return render_template( "ModularForm_GSp4_Q_search_results.html", title='Siegel Modular Forms Search Results', bread=bread, info=info)
+    return render_template( "ModularForm_GSp4_Q_search_results.html", title='Siegel modular forms search results', bread=bread, info=info)
 
 def render_dimension_table_page(args, bread):
     fams = get_smf_families()
@@ -233,7 +233,7 @@ def render_dimension_table_page(args, bread):
         else:
             build_dimension_table (info, family, info['args'])
     bread.append(('Dimensions', 'dimensions'))
-    return render_template("ModularForm_GSp4_Q_dimensions.html", title='Siegel Modular Forms Dimension Tables', bread=bread, info=info)
+    return render_template("ModularForm_GSp4_Q_dimensions.html", title='Siegel modular forms dimension tables', bread=bread, info=info)
 
 def render_sample_page(family, sam, args, bread):
     info = { 'args': to_dict(args), 'sam': sam, 'latex': latex, 'type':sam.type(), 'name':sam.name(), 'full_name': sam.full_name(), 'weight':sam.weight(), 'fdeg':sam.degree_of_field(), 'is_eigenform':sam.is_eigenform(), 'field_poly': sam.field_poly()}
@@ -255,7 +255,7 @@ def render_sample_page(family, sam, args, bread):
             info['field_href'] = '<a href="%s">%s</a>'%(info['field_url'], field_pretty(label))
     
     bread.append((info['name'], ''))
-    title='Siegel Modular Forms Sample ' + info['full_name']
+    title='Siegel modular forms sample ' + info['full_name']
     properties = [('Space', info['space_href']),
                   ('Name', info['name']),
                   ('Type', '<br>'.join(info['type'].split(','))),

@@ -1296,8 +1296,8 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         generateSageLfunction(self)
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "mf.siegel"
-        self.info['title'] = ("$L(s,F)$, " + "Where $F$ is a Scalar-valued Siegel " +
-                      "Modular Form of Weight " + str(self.weight) + ".")
+        self.info['title'] = ("$L(s,F)$, " + "where $F$ is a scalar-valued Siegel " +
+                      "modular form of weight " + str(self.weight) + ".")
 
     def original_object(self):
         return self.S
