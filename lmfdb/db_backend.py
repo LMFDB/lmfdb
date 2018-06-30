@@ -231,12 +231,17 @@ class PostgresTable(PostgresBase):
             self.extra_table = search_table + "_extras"
             self._extra_cols = []
             set_column_info(self._extra_cols, self.extra_table)
-            self._extra_cols = tuple(self._extra_cols)
         else:
             self.extra_table = None
-            self._extra_cols = ()
+            self._extra_cols = []
         set_column_info(self._search_cols, search_table)
-        self._search_cols = tuple(self._search_cols)
+        self._set_sort(sort)
+        self.stats = PostgresStatsTable(self)
+
+    def _set_sort(self, sort):
+        """
+        Initialize the sorting attributes from a list of columns or pairs (col, direction)
+        """
         self._sort_keys = set([])
         if sort:
             for col in sort:
@@ -250,7 +255,6 @@ class PostgresTable(PostgresBase):
             self._sort = self._sort_str(sort)
         else:
             self._sort = self._primary_sort = None
-        self.stats = PostgresStatsTable(self)
 
     def __repr__(self):
         return "Interface to Postgres table %s"%(self.search_table)
@@ -322,7 +326,7 @@ class PostgresTable(PostgresBase):
             if self.extra_table is None:
                 return self._search_cols, (), 0
             else:
-                return ("id",) + self._search_cols, self._extra_cols, 1
+                return ["id"] + self._search_cols, self._extra_cols, 1
         elif isinstance(projection, dict):
             projvals = set(bool(val) for val in projection.values())
             if len(projvals) > 1:
@@ -1210,7 +1214,7 @@ class PostgresTable(PostgresBase):
         # Sort and set self._out_of_order
         pass
 
-    def rewrite(self, func, projection=2, filter={}, resort=True, reindex=True, tostr_func=None, **kwds):
+    def rewrite(self, func, projection=2, query={}, resort=True, reindex=True, restat=True, tostr_func=None, **kwds):
         search_cols = ["id"] + self._search_cols if self.has_id else self._search_cols
         if self.extra_table is not None:
             extra_cols = ["id"] + self._extra_cols
@@ -1230,11 +1234,33 @@ class PostgresTable(PostgresBase):
                         searchfile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in search_cols) + u'\n')
                         if self.extra_table is not None:
                             extrafile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in extra_cols) + u'\n')
-            self.reload(searchfile, extrafile, includes_ids=True, resort=resort, reindex=reindex, **kwds)
+            self.reload(searchfile, extrafile, includes_ids=True, resort=resort, reindex=reindex, restat=restat, **kwds)
         finally:
             searchfile.unlink(searchfile.name)
             if extrafile is not None:
                 extrafile.unlink(extrafile.name)
+
+    def delete(self, query, resort=True, restat=True):
+        """
+        Delete all rows matching the query.
+        """
+        qstr, values = self._parse_dict(query)
+        if qstr is None:
+            qstr = SQL("")
+        else:
+            qstr = SQL(" WHERE {0}").format(qstr)
+        deleter = SQL("DELETE FROM {0}{1}").format(Identifier(self.search_table), qstr)
+        if self.extra_table is not None:
+            deleter = SQL("WITH deleted_ids AS ({0} RETURNING id) DELETE FROM {1} WHERE id IN (SELECT id FROM deleted_ids)").format(deleter, Identifier(self.extra_table))
+        cur = self._execute(deleter, values)
+        self._break_order()
+        self._break_stats()
+        self.stats.total -= cur.rowcount
+        self.stats._record_count({}, self.stats.total)
+        if resort:
+            self.resort()
+        if restat:
+            self.stats.refresh_stats(total = False)
 
     def upsert(self, query, data):
         """
@@ -1451,6 +1477,9 @@ class PostgresTable(PostgresBase):
             print "Data does not have an id column to be sorted"
 
     def _set_ordered(self, commit=True):
+        """
+        Marks this table as sorted in meta_tables
+        """
         updater = SQL("UPDATE meta_tables SET out_of_order = false WHERE name = %s")
         self._execute(updater, [self.search_table], silent=True, commit=commit)
         self._out_of_order = False
@@ -1708,6 +1737,110 @@ class PostgresTable(PostgresBase):
                 else:
                     self.conn.commit()
             print "Exported data from %s in %.3f secs"%(table, time.time() - now)
+
+    ##################################################################
+    # Updating the schema                                            #
+    ##################################################################
+
+    # Note that create_table and drop_table are methods on PostgresDatabase
+
+    def set_sort(self, sort, resort=True):
+        """
+        Change the default sort order for this table
+        """
+        self._set_sort(sort)
+        if sort:
+            updater = SQL("UPDATE meta_tables SET sort = %s WHERE name = %s")
+            values = [sort, self.search_table]
+        else:
+            updater = SQL("UPDATE meta_tables SET sort = NULL WHERE name = %s")
+            values = [self.search_table]
+        self._execute(updater, values, commit=False)
+        self._break_order()
+        if resort:
+            self.resort() # commits
+        else:
+            self.conn.commit()
+
+    def add_column(self, name, datatype, extra=False, force=False, commit=True):
+        if name == 'id' and not force:
+            raise ValueError("Use the add_id() method to add an id column")
+        if name in self._search_cols:
+            raise ValueError("%s already has column %s"%(self.search_table, name))
+        if name in self._extra_cols:
+            raise ValueError("%s already has column %s"%(self.extra_table, name))
+        if datatype.lower() not in types_whitelist:
+            if not any(regexp.match(datatype.lower()) for regexp in param_types_whitelist):
+                raise ValueError("%s is not a valid type"%(datatype))
+        self._col_type[name] = datatype
+        if datatype == 'text' or datatype.startswith('char'):
+            datatype = datatype + ' COLLATE "C"'
+        if extra:
+            if self.extra_table is None:
+                raise ValueError("No extra table")
+            table = self.extra_table
+        else:
+            table = self.search_table
+        # Since we have run the datatype through the whitelist,
+        # the following string substitution is safe
+        modifier = SQL("ALTER TABLE {0} ADD COLUMN {1} %s"%datatype).format(Identifier(table), Identifier(name))
+        self._execute(modifier, commit=False)
+        if extra and name != 'id':
+            self._extra_cols.append(name)
+        elif not extra and name != 'id':
+            self._search_cols.append(name)
+        if commit:
+            self.conn.commit()
+
+    def drop_column(self, name):
+        if name in self._sort_keys():
+            raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before dropping column"%(self.search_table, name))
+        if name in self._search_cols:
+            table = self.search_table
+            deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND columns @> %s")
+            self._execute(deleter, [self.search_table, [name]], commit=False)
+        elif name in self._extra_cols:
+            table = self.extra_table
+        else:
+            raise ValueError("%s is not a column of %s"%(name, self.search_table))
+        modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(name))
+        self._execute(modifier) # commits
+        self._search_cols.remove(name)
+        self._extra_cols.remove(name)
+        self._col_type.pop(name, None)
+
+    def add_id(self, ordered=False):
+        if self.has_id:
+            raise ValueError("%s already has id column"%(self.search_table))
+        if ordered and not self._sort:
+            raise ValueError("You must specify a default sort order")
+        self.add_column('id', 'bigint', force=True, commit=False)
+        sequencer = SQL("CREATE TEMPORARY SEQUENCE tmp_id")
+        self._execute(sequencer, commit=False)
+        updater = SQL("UPDATE {0} SET id = nextval('tmp_id')").format(Identifier(self.search_table))
+        self._execute(updater, commit=False)
+        self.has_id = True
+        if ordered:
+            updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order) = (%s, %s)")
+            self._execute(updater, [True, True], commit=False)
+            self._id_ordered = True
+            self._out_of_order = True
+            self.resort() # commits
+
+    def create_extra_table(self, columns, ordered=False):
+        if self.extra_table is not None:
+            raise ValueError("Extra table already exists")
+        if not self.has_id:
+            self.add_id(ordered=ordered)
+        elif ordered and not self._id_ordered:
+            updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order) = (%s, %s)")
+            self._execute(updater, [True, True], commit=False)
+            self._id_ordered = True
+            self._out_of_order = True
+            self.resort() # commits
+        #vars = SQL(", ").join(
+        #creator = SQL("CREATE TABLE {0} (")
+        #if not columns:
 
 class PostgresStatsTable(PostgresBase):
     """

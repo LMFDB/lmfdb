@@ -164,9 +164,6 @@ class WebHMF(object):
         data['is_base_change'] = '?'
 
 
-    def save_to_db(self):
-        pass
-
     def compare_with_db(self, field=None):
         lab = self.dbdata['label']
         f = WebHMF.by_label(lab)
