@@ -479,18 +479,12 @@ def higher_genus_w_automorphisms_search(**args):
 
 
 def render_family(args):
+    start_time = time.time()
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-<<<<<<< HEAD
         C = base.getDBConnection()
         dataz = C.curve_automorphisms.passports.find({'label': label})
-=======
-        C = MongoClient(port=int(27017))
-        dataz = C.curve_automorphisms.passports.find({'label': label})
-        #print dataz.count()
-
->>>>>>> parent of c5c58642... Another way of finding top equivalence classes
         if dataz.count() is 0:
             flash_error( "No family with label %s was found in the database.", label)
             return redirect(url_for(".index"))
@@ -529,11 +523,11 @@ def render_family(args):
 
         Lcc=[]
         Lall=[]
-<<<<<<< HEAD
-=======
+
         Ltopo_rep=[] #List of topological representatives
-        Ltopo_class={} # List of list topological class
->>>>>>> parent of c5c58642... Another way of finding top equivalence classes
+
+        #Ltopo_class={} # List of list topological class
+
         i=1
         for dat in dataz:
             #print dat
@@ -544,8 +538,7 @@ def render_family(args):
                              urlstrng])
                 i=i+1
 
-<<<<<<< HEAD
-=======
+
             #Generate topological representatives
             L = create_total_label(dat['label'], str(dat['topological'][0]), str(dat['topological'][1]))
                 #topo_passport = C.curve_automorphisms.passports.find({'total_label': L})    
@@ -556,6 +549,19 @@ def render_family(args):
                 Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
 
         topological_data = C.curve_automorphisms.passports.find({'label': label, '$expr': {'$eq': ['$topological', '$cc']}}) #Topological representatives
+
+            #Generate topological equivalence class
+            #L = create_total_label(dat['label'], str(dat['topological'][0]), str(dat['topological'][1]))
+            #if L not in Ltopo_class:
+            #    Ltopo_class[L] = []
+            #    Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
+            #elif dat['total_label'] not in Ltopo_class[L]:
+            #    Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
+
+        #Topological equivalence
+        Lelements=[] #List of lists of equivalence classes
+        topological_data = C.curve_automorphisms.passports.find({'label': label, '$expr': {'$eq': ['$topological', '$cc']}}).sort('passport_label', pymongo.ASCENDING).collation({'locale': "en_US", 'numericOrdering': True})
+
         for dat in topological_data:
             x1=[] #A list of permutations of generating vectors of topo_rep
             for perm in dat['gen_vectors']:
@@ -567,7 +573,7 @@ def render_family(args):
         keylist = Ltopo_class.keys()
         keylist.sort()
               
->>>>>>> parent of c5c58642... Another way of finding top equivalence classes
+
         info.update({'passport': Lall})
 
 
@@ -592,6 +598,7 @@ def render_family(args):
         downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
                      ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
 
+        print ("--- family: %s seconds ---" % (time.time() - start_time))
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
                                properties2=prop2, friends=friends,
@@ -599,6 +606,7 @@ def render_family(args):
 
 
 def render_passport(args):
+    start_time = time.time()
     info = {}
     if 'passport_label' in args:
         label =clean_input(args['passport_label'])
@@ -686,6 +694,19 @@ def render_passport(args):
         info.update({'genvects': Ldata, 'HypColumn' : HypColumn})
 
         info.update({'passport_cc': cc_display(ast.literal_eval(data['con']))})
+            
+        #Generate braid representatives
+        braid_data = C.curve_automorphisms.passports.find({'passport_label': label, '$expr': {'$eq': ['$braid', '$cc']}}) #Braid representatives
+        for dat in braid_data:
+            x5=[]
+            for perm in dat['gen_vectors']:
+                x5.append(sep.join(split_perm(Permutation(perm).cycle_string())))
+            Lbraid.append([dat['total_label'], x5])
+        
+        #Add braid equivalence into info
+        info.update({'braid': Lbraid, 'braid_numb': len(Lbraid), 'braid_disp_numb': min(len(Lbraid), numbraidreps)})
+        #print (len(Lbraid))
+
 
         if 'eqn' in data:
             info.update({'eqns': data['eqn']})
@@ -754,6 +775,11 @@ def render_passport(args):
 
         downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
                      ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+                             ('Download Braid Equivalence Representative Magma code', url_for(".hgcwa_code_download", label=label, download_type='braid_magma')),
+                             ('Download Braid Equivalence Representative Gap code', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))
+                             ]
+
+        print ("--- family: %s seconds ---" % (time.time() - start_time))                
 
         return render_template("hgcwa-show-passport.html",
                                title=title, bread=bread, info=info,
@@ -858,15 +884,12 @@ def hgcwa_code_download(**args):
     stdfmt += code_list['gen_gp'][lang]+ '\n'
     stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
     stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
-<<<<<<< HEAD
 
-=======
     # For all generating vectors and passports
     if lang == args['download_type']:
         stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
         stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
         
->>>>>>> parent of c5c58642... Another way of finding top equivalence classes
     # extended formatting template for when signH is present
     signHfmt = stdfmt
     signHfmt += code_list['full_auto'][lang] + '{full_auto}' + ';\n'
