@@ -65,11 +65,11 @@ script:
     # run pyflakes
     - pyflakes lmfdb/ > pyflakeslog
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
-    # run pytest in parallel with 3 jobs
-    # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once
-    - ${SAGE} -python -m pytest --version
-    - ${SAGE} -python -m pytest lmfdb/
-      #- ${SAGE} -python -m pytest --cov=lmfdb --cov-report= lmfdb
+    - ${SAGE} -sh -c "pytest --version"
+      #- ${SAGE} -python -m pytest lmfdb/
+    - ${SAGE} -sh -c "pytest"
+    - ${SAGE} -sh -c "pytest --cov=lmfdb"
+    #- ${SAGE} -python -m pytest --cov=lmfdb --cov-report= lmfdb
 
 after_failure:
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
