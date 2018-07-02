@@ -1132,7 +1132,7 @@ class PostgresTable(PostgresBase):
         for res in self._indexes_touching(columns):
             self.restore_index(res[0], suffix)
 
-    def _pkey_common(self, command, suffix, action):
+    def _pkey_common(self, command, suffix, action, commit):
         """
         Common code for ``drop_pkeys`` and ``restore_pkeys``.
 
@@ -1152,10 +1152,11 @@ class PostgresTable(PostgresBase):
             self._execute(command.format(Identifier(self.extra_table + suffix),
                                          Identifier(self.search_table + suffix + "_pkey")),
                           silent=True, commit=False)
-        self.conn.commit()
+        if commit:
+            self.conn.commit()
         print "%s primary key on %s in %.3f secs"%(action, self.search_table, time.time()-now)
 
-    def drop_pkeys(self, suffix=""):
+    def drop_pkeys(self, suffix="", commit=True):
         """
         Drop the primary key on the id columns.
 
@@ -1165,9 +1166,9 @@ class PostgresTable(PostgresBase):
         """
         if self.has_id:
             command = SQL("ALTER TABLE {0} DROP CONSTRAINT {1}")
-            self._pkey_common(command, suffix, "Dropped")
+            self._pkey_common(command, suffix, "Dropped", commit)
 
-    def restore_pkeys(self, suffix=""):
+    def restore_pkeys(self, suffix="", commit=True):
         """
         Restore the primary key on the id columns.
 
@@ -1177,7 +1178,7 @@ class PostgresTable(PostgresBase):
         """
         if self.has_id:
             command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
-            self._pkey_common(command, suffix, "Built")
+            self._pkey_common(command, suffix, "Built", commit)
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -1234,7 +1235,7 @@ class PostgresTable(PostgresBase):
                         searchfile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in search_cols) + u'\n')
                         if self.extra_table is not None:
                             extrafile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in extra_cols) + u'\n')
-            self.reload(searchfile, extrafile, includes_ids=True, resort=resort, reindex=reindex, restat=restat, **kwds)
+            self.reload(searchfile.name, extrafile.name, includes_ids=True, resort=resort, reindex=reindex, restat=restat, **kwds)
         finally:
             searchfile.unlink(searchfile.name)
             if extrafile is not None:
@@ -1430,7 +1431,7 @@ class PostgresTable(PostgresBase):
             extra_table = Identifier(self.extra_table)
         return search_table, extra_table
 
-    def resort(self, search_table=None, extra_table=None):
+    def resort(self, search_table=None, extra_table=None, commit=True):
         """
         Restores the sort order on the id column.
 
@@ -1470,7 +1471,8 @@ class PostgresTable(PostgresBase):
             self._execute(pkey.format(search_table, oldid), silent=True, commit=False)
             self._set_ordered(commit=False)
             print "Resorted %s in %.3f secs"%(self.search_table, time.time() - now)
-            self.conn.commit()
+            if commit:
+                self.conn.commit()
         elif self._id_ordered:
             print "Data already sorted"
         else:
@@ -1792,24 +1794,33 @@ class PostgresTable(PostgresBase):
         if commit:
             self.conn.commit()
 
-    def drop_column(self, name):
-        if name in self._sort_keys():
+    def drop_column(self, name, commit=True):
+        if name in self._sort_keys:
             raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before dropping column"%(self.search_table, name))
         if name in self._search_cols:
             table = self.search_table
             deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND columns @> %s")
             self._execute(deleter, [self.search_table, [name]], commit=False)
+            self._search_cols.remove(name)
         elif name in self._extra_cols:
             table = self.extra_table
+            self._extra_cols.remove(name)
         else:
             raise ValueError("%s is not a column of %s"%(name, self.search_table))
         modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(name))
-        self._execute(modifier) # commits
-        self._search_cols.remove(name)
-        self._extra_cols.remove(name)
+        self._execute(modifier, commit=commit)
         self._col_type.pop(name, None)
 
-    def add_id(self, ordered=False):
+    def add_id(self, ordered=False, restore_pkey=True, commit=True):
+        """
+        Add an id column.
+
+        INPUT:
+
+        - ``ordered`` -- whether the id column should be sorted matching the default sort order
+        - ``restore_pkey`` -- whether to create a primary key on the new column
+        - ``commit`` -- whether to commit the changes permanently
+        """
         if self.has_id:
             raise ValueError("%s already has id column"%(self.search_table))
         if ordered and not self._sort:
@@ -1825,22 +1836,86 @@ class PostgresTable(PostgresBase):
             self._execute(updater, [True, True], commit=False)
             self._id_ordered = True
             self._out_of_order = True
-            self.resort() # commits
+            self.resort(commit=False)
+        if restore_pkey:
+            self.restore_pkeys(commit=False)
+        if commit:
+            self.conn.commit()
 
     def create_extra_table(self, columns, ordered=False):
+        """
+        Splits this search table into two, linked by an id column.
+
+        INPUT:
+
+        - ``columns`` -- columns that are currently in the search table
+            that should be moved to the new extra table. Can be empty.
+        - ``ordered`` -- whether the id column should be kept in sorted
+            order based on the default sort order stored in meta_tables.
+        """
         if self.extra_table is not None:
             raise ValueError("Extra table already exists")
         if not self.has_id:
-            self.add_id(ordered=ordered)
+            self.add_id(ordered=ordered, restore_pkey=False, commit=False)
         elif ordered and not self._id_ordered:
-            updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order) = (%s, %s)")
-            self._execute(updater, [True, True], commit=False)
+            updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order, has_extras) = (%s, %s, %s)")
+            self._execute(updater, [True, True, True], commit=False)
             self._id_ordered = True
             self._out_of_order = True
-            self.resort() # commits
-        #vars = SQL(", ").join(
-        #creator = SQL("CREATE TABLE {0} (")
-        #if not columns:
+            self.resort(commit=False)
+        else:
+            updater = SQL("UPDATE meta_tables SET (has_extras) = (%s)")
+            self._execute(updater, [True], commit=False)
+        self.extra_table = search_table + "_extras"
+        vars = [('id', 'bigint')]
+        for col in columns:
+            if col not in self._col_type:
+                raise ValueError("%s is not a column of %s"%(col, self.search_table))
+            if col in self._sort_keys:
+                raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
+            selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s AND columns @> %s")
+            cur = self._execute(selecter, [self.search_table, [col]], commit=False)
+            if cur.rowcount > 0:
+                raise ValueError("Indexes (%s) depend on %s"%(", ".join(rec[0] for rec in cur), col))
+            typ = self._col_type[col]
+            if typ not in types_whitelist:
+                if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
+                    raise RuntimeError("%s is not a valid type"%(typ))
+            if typ == 'text' or typ.startswith('char'):
+                typ += ' COLLATE "C"'
+            vars.append((col, typ))
+        self._extra_cols = []
+        vars = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in vars)
+        creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), vars)
+        self._execute(creator)
+        if columns:
+            try:
+                transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
+                cur = self.conn.cursor()
+                with transfer_file:
+                    try:
+                        cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns)
+                    except Exception:
+                        self.conn.rollback()
+                        raise
+                with open(transfer_file.name) as F:
+                    try:
+                        cur.copy_from(F, self.extra_table, columns=['id'] + columns)
+                    except Exception:
+                        self.conn.rollback()
+                        raise
+            finally:
+                transfer_file.unlink(transfer_file.name)
+            for col in columns:
+                modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(col))
+                self._execute(modifier, commit=False)
+        else:
+            sequencer = SQL("CREATE TEMPORARY SEQUENCE tmp_id")
+            self._execute(sequencer, commit=False)
+            updater = SQL("UPDATE {0} SET id = nextval('tmp_id')").format(Identifier(self.extra_table))
+            self._execute(updater, commit=False)
+        self.restore_pkeys(commit=False)
+        self.conn.commit()
 
 class PostgresStatsTable(PostgresBase):
     """

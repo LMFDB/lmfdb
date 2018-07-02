@@ -31,6 +31,7 @@ import re, sage
 from copy import deepcopy
 
 from flask import url_for
+from lmfdb.db_backend import db
 import pymongo
 
 from lmfdb.utils import web_latex_split_on_re
@@ -116,7 +117,7 @@ class WebqExp(WebPoly):
         if name is not None and self.value().base_ring().absolute_degree()>1:
             oldname = latex(self.value().base_ring().gen())
             subfrom = oldname.strip()
-            subfrom = subfrom.replace("\\","\\\\")  
+            subfrom = subfrom.replace("\\","\\\\")
             subfrom = subfrom.replace("{","\\{")   # because x_{0} means something in a regular expression
             if subfrom[0].isalpha():
                 subfrom = "\\b" + subfrom
@@ -156,6 +157,9 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             WebInt('prec', value=prec),
             WebFloat('version', value=float(emf_version)),
         )
+        query = {'hecke_orbit_label':hecke_orbit_label}
+        rec = db.mf_ev.lucky(query)
+        self._set_from_record(rec)
 
         self._ap = {}
         super(WebEigenvalues, self).__init__(
@@ -169,13 +173,10 @@ class WebEigenvalues(WebObject, CachedRepresentation):
             c = multiply_mat_vec(self.E,self.v)
             lc = len(c)
             primes_to_lc = primes_first_n(lc)
-            self._ap = {}
             for i in range(len(c)):
                 p = primes_to_lc[i]
                 self._ap[p] = c[i]
             self.prec = self._ap.keys()[len(self._ap)-1]
-        else:
-            self._ap = {}
 
     def primes(self):
         return self._ap.keys()
@@ -228,7 +229,7 @@ class WebCoeffs(WebProperty):
         self._nv_coeff_trace = None  #trace of first a(n) \neq 0 with n>1
         super(WebCoeffs, self).__init__(name, default_value=default_value)
 
-    def from_db(self, coeffs_props):
+    def set_value(self, coeffs_props):
         if coeffs_props is not None:
             self._coeff_cplxty = coeffs_props['coeff_cplxty']
             self._nv_coeff_index = coeffs_props['nv_coeff_index']
@@ -371,6 +372,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                     raise ValueError,"Need label either string or integer! We got:{0}".format(label)
 
         emf_logger.debug("Before init properties 0")
+        hecke_orbit_label = newform_label(level, weight, character_number, label)
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
@@ -379,7 +381,7 @@ class WebNewForm(WebObject, CachedRepresentation):
                             value = character),
             WebStr('character_naming_scheme', value='Conrey'),
             WebStr('sage_version', value=''),
-            WebStr('hecke_orbit_label', default_value=newform_label(level, weight, character_number, label)),
+            WebStr('hecke_orbit_label', default_value=hecke_orbit_label),
             WebStr('label', default_value=label),
             WebInt('dimension'),
             WebqExp('q_expansion'),
@@ -406,6 +408,12 @@ class WebNewForm(WebObject, CachedRepresentation):
                                     weight = weight,
                                     character = character_number)
             )
+        query = {'hecke_orbit_label':hecke_orbit_label}
+        rec = db.mf_newforms.lucky(query)
+        # We don't want to overwrite parent with a string
+        if rec is not None:
+            rec.pop('parent', None)
+        self._set_from_record(rec)
 
         super(WebNewForm, self).__init__(**kwargs)
 

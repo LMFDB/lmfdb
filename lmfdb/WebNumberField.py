@@ -490,6 +490,10 @@ class WebNumberField:
         else:
             return web_latex(self.gen_name)
 
+    def variable_name(self):
+        # For consistency with Sage number fields
+        return self.gen_name
+
     def unit_rank(self):
         if not self.haskey('unit_rank'):
             sig = self.signature()

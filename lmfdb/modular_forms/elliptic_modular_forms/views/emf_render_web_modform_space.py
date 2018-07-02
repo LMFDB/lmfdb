@@ -92,7 +92,7 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
     try:
         WMFS = WebModFormSpace(level = level, weight = weight, cuspidal=True, character = character)
         emf_logger.debug("Created WebModFormSpace %s"%WMFS)
-        if not WMFS.in_db():
+        if not WMFS.in_db:
             #get the representative we have in the db for this space (Galois conjugate)
             cchi = db.mf_dims.lucky({'level': level, 'weight': weight, 'character_orbit': {'$contains': [character]}}, 'cchi')
             if cchi is not None and cchi != character: # don't link back to myself!

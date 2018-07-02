@@ -23,7 +23,7 @@ AUTHORS:
 
 
 NOTE: We are now working completely with the Conrey naming scheme.
- 
+
 TODO:
 Fix complex characters. I.e. embedddings and galois conjugates in a consistent way.
 
@@ -31,6 +31,7 @@ Fix complex characters. I.e. embedddings and galois conjugates in a consistent w
 from flask import url_for
 from sage.all import euler_phi,gcd,trivial_character
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger,emf_version,use_cache
+from lmfdb.db_backend import db
 
 from sage.structure.unique_representation import CachedRepresentation
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import WebObject, WebInt, WebProperties, WebStr, WebNoStoreObject, WebDict, WebFloat
@@ -42,17 +43,16 @@ except:
 
 # import logging
 #emf_logger.setLevel(logging.DEBUG)
-    
+
 class WebChar(WebObject, CachedRepresentation):
     r"""
-    Class which should/might be replaced with 
+    Class which should/might be replaced with
     WebDirichletCharcter once this is ok.
-    
     """
     _key = ['modulus', 'number','version']
     _file_key = ['modulus', 'number','version']
     _collection_name = 'webchar'
-    
+
     def __init__(self, modulus=1, number=1, compute_values=False, init_dynamic_properties=True):
         r"""
         Init self.
@@ -83,6 +83,9 @@ class WebChar(WebObject, CachedRepresentation):
             WebDict('_embeddings'),
             WebFloat('version', value=float(emf_version))
             )
+        query = {'modulus':int(modulus), 'number':int(number)}
+        rec = db.mf_chars.lucky(query)
+        self._set_from_record(rec)
         emf_logger.debug('Set properties in WebChar!')
         super(WebChar, self).__init__(
             init_dynamic_properties=init_dynamic_properties
@@ -164,13 +167,13 @@ class WebChar(WebObject, CachedRepresentation):
           (that is to elements in $S_k(N,\chi)$).
         """
         return self._embeddings[self.number]
-            
+
     def __repr__(self):
         r"""
         Return the string representation of the character of self.
         """
         return self.name
-            
+
     def value(self, x, value_format='algebraic'):
         r"""
         Return the value of self as an algebraic integer or float.
@@ -196,7 +199,7 @@ class WebChar(WebObject, CachedRepresentation):
             return self._values_float[x]
         else:
             raise ValueError,"Format {0} is not known!".format(value_format)
-        
+
     def url(self):
         r"""
         Return the url of self.
@@ -207,7 +210,6 @@ class WebChar(WebObject, CachedRepresentation):
 
 
 class WebCharProperty(WebInt):
-    
     def __init__(self, name, modulus=1, number=int(1), **kwargs):
         #self._default_value = WebChar(modulus, number, compute=True)
         self.modulus = modulus
@@ -224,6 +226,6 @@ class WebCharProperty(WebInt):
         else:
             super(WebCharProperty, self).__init__(name, value=c, **kwargs)
 
-    def from_db(self, n):
+    def set_value(self, n):
         emf_logger.debug('converting {0} from store in WebCharProperty {1}'.format(n, self.name))
-        return WebChar(self.modulus, n, compute_values=False)
+        self._value = WebChar(self.modulus, n, compute_values=False)

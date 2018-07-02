@@ -28,7 +28,7 @@
 <br>
 {# { sage_version | safe} #}
 {% else %}
-{% if not space.in_db() and not trivially_zero > 0 %}
+{% if not space.in_db and not trivially_zero > 0 %}
   {% if wmfs_rep_url is defined %}
     <p>This space is a Galois conjugate of <a href="{{ wmfs_rep_url }}"> \( S_&#123; {{space.weight}} &#125;(\chi_&#123;{{space.level}} &#125;({{ wmfs_rep_number }}, \cdot)) \)</a></p>
   {% elif space.data_from_dimension_db().get('in_wdb',0) == 0  %}

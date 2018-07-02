@@ -4,18 +4,24 @@ and decoding the results.
 """
 from psycopg2.extras import register_json, Json as pgJson
 from psycopg2.extensions import adapt, register_type, register_adapter, new_type, UNICODE, UNICODEARRAY, AsIs, ISQLQuote
-from sage.rings.real_mpfr import RealLiteral, RealField
+from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
 from sage.rings.complex_number import ComplexNumber
 from sage.rings.complex_field import ComplexField
 from sage.rings.integer import Integer
 from sage.rings.rational import Rational
+from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
-from sage.rings.number_field.number_field_element import NumberFieldElement_absolute
-from sage.rings.number_field.number_field import NumberField, CyclotomicField, NumberField_cyclotomic
-from sage.rings.polynomial.polynomial_rational_flint import Polynomial_rational_flint
+from sage.rings.infinity import infinity
+from sage.rings.number_field.number_field_element import NumberFieldElement
+from sage.rings.number_field.number_field import NumberField, CyclotomicField, NumberField_generic, NumberField_absolute, NumberField_cyclotomic
+from sage.rings.number_field.number_field_rel import NumberField_relative
+from sage.rings.polynomial.polynomial_element_generic import Polynomial_generic_dense_field
+from sage.rings.polynomial.polynomial_element import Polynomial
+from sage.rings.power_series_poly import PowerSeries_poly
 from sage.modules.free_module_element import vector, FreeModuleElement
 from sage.arith.functions import lcm
 import json
+import datetime
 
 def setup_connection(conn):
     # We want to use unicode everywhere
@@ -118,23 +124,22 @@ class Json(pgJson):
             # Lists of complex numbers occur, and we'd like to save space
             # We currently only support Python's complex numbers
             # but support for Sage complex numbers would be easy to add
-            if all(isinstance(z, complex) for z in obj):
+            if obj and all(isinstance(z, complex) for z in obj):
                 return {'__ComplexList__': 0, # encoding version
                         'data': [[z.real, z.imag] for z in obj]}
-            elif obj and all(isinstance(z, NumberFieldElement_absolute) for z in obj) and all(z.parent() is obj[0].parent() for z in obj[1:]):
+            elif obj and all(isinstance(z, Rational) for z in obj):
+                return {'__QQList__': 0, # encoding version
+                        'data': [[int(z.numerator()), int(z.denominator())] for z in obj]}
+            elif obj and all(isinstance(z, NumberFieldElement) for z in obj) and all(z.parent() is obj[0].parent() for z in obj[1:]):
                 K = obj[0].parent()
-                if isinstance(K, NumberField_cyclotomic):
-                    ans = {'__CycList__': 0, # encoding version
-                           'n': K._n()}
-                else:
-                    ans = {'__NFList__': 0, # encoding version
-                           'poly': [[c.numerator(), c.denominator()] for c in K.polynomial().list()],
-                           'vname': K.variable_name()}
-                ans['data'] = [[[c.numerator(), c.denominator()] for c in z.list()] for z in obj]
+                base = cls.prep(K, escape_backslashes)
+                return {'__NFList__': 0, # encoding version
+                        'base': base,
+                        'data': [cls.prep(z, escape_backslashes)['data'] for z in obj]}
             else:
                 return [cls.prep(x, escape_backslashes) for x in obj]
         elif isinstance(obj, dict):
-            if all(isinstance(k, (int, Integer)) for k in obj):
+            if obj and all(isinstance(k, (int, Integer)) for k in obj):
                 return {'__IntDict__': 0, # encoding version
                         'data': [[int(k), cls.prep(v, escape_backslashes)] for k, v in obj.items()]}
             elif all(isinstance(k, basestring) for k in obj):
@@ -142,14 +147,9 @@ class Json(pgJson):
             else:
                 raise TypeError("keys must be strings or integers")
         elif isinstance(obj, FreeModuleElement):
-            if obj.base_ring() is QQ:
-                base = 'QQ'
-                data = [[int(c.numerator()), int(c.denominator())] for c in obj]
-            else:
-                raise NotImplementedError
             return {'__Vector__': 0, # encoding version
-                    'base': base,
-                    'data': data}
+                    'base': cls.prep(obj.base_ring(), escape_backslashes),
+                    'data': [cls.prep(c, escape_backslashes)['data'] for c in obj]}
         elif isinstance(obj, Integer):
             return int(obj)
         elif isinstance(obj, Rational):
@@ -168,15 +168,74 @@ class Json(pgJson):
             return {'__Complex__': 0, # encoding version
                     'prec': int(obj.prec()),
                     'data': [str(obj.real()), str(obj.imag())]}
-        elif isinstance(obj, Polynomial_rational_flint):
-            return {'__RationalPoly__': 0, # encoding version
+        elif isinstance(obj, NumberFieldElement):
+            return {'__NFElt__': 0, # encoding version
+                    'parent': cls.prep(obj.parent(), escape_backslashes),
+                    'data': [cls.prep(c, escape_backslashes)['data'] for c in obj.list()]}
+        elif isinstance(obj, NumberField_generic):
+            if isinstance(obj, NumberField_relative):
+                return {'__NFRelative__': 0, # encoding version
+                        'vname': obj.variable_name(),
+                        'data': cls.prep(obj.relative_polynomial(), escape_backslashes)}
+            elif isinstance(obj, NumberField_cyclotomic):
+                return {'__NFCyclotomic__': 0, # encoding version
+                        'data': int(obj._n())}
+            else:
+                return {'__NFAbsolute__': 0, # encoding version
+                        'vname': obj.variable_name(),
+                        'data': cls.prep(obj.absolute_polynomial(), escape_backslashes)}
+        elif obj is ZZ:
+            return {'__IntegerRing__': 0, # encoding version
+                    'data': 0} # must be present for decoding
+        elif obj is QQ:
+            return {'__RationalField__': 0, # encoding version
+                    'data': 0} # must be present for decoding
+        elif isinstance(obj, Polynomial):
+            return {'__Poly__': 0, # encoding version
                     'vname': obj.variable_name(),
-                    'data': [[c.numerator(), c.denominator()] for c in obj]}
+                    'base': cls.prep(obj.base_ring(), escape_backslashes),
+                    'data': [cls.prep(c, escape_backslashes)['data'] for c in obj.list()]}
+        elif isinstance(obj, PowerSeries_poly):
+            if obj.base_ring() is ZZ:
+                data = [int(c) for c in obj.list()]
+            else:
+                data = [cls.prep(c, escape_backslashes)['data'] for c in obj.list()]
+            return {'__PowerSeries__': 0, # encoding version
+                    'vname': obj.variable_name(),
+                    'base': cls.prep(obj.base_ring(), escape_backslashes),
+                    'prec': 'inf' if obj.prec() is infinity else int(obj.prec()),
+                    'data': data}
         elif escape_backslashes and isinstance(obj, basestring):
             # For use in copy_dumps below
             return obj.replace('\\','\\\\\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"',r'\"')
-        else:
+        elif obj is None:
+            return None
+        elif isinstance(obj, datetime.date):
+            return {'__date__': 0,
+                    'data': "%s"%(obj)}
+        elif isinstance(obj, datetime.time):
+            return {'__time__': 0,
+                    'data': "%s"%(obj)}
+        elif isinstance(obj, datetime.datetime):
+            return {'__datetime__': 0,
+                    'data': "%s"%(obj)}
+        elif isinstance(obj, (basestring, int, long, bool, float)):
             return obj
+        else:
+            raise ValueError("Unsupported type: %s"%(type(obj)))
+
+    @classmethod
+    def _extract(cls, parent, obj):
+        if parent is ZZ:
+            return ZZ(obj)
+        elif parent is QQ:
+            return QQ(tuple(obj))
+        elif isinstance(parent, NumberField_generic):
+            base = parent.base_ring()
+            obj = [cls._extract(base, c) for c in obj]
+            return parent(obj)
+        else:
+            raise NotImplementedError("Cannot extract element of %s"%(parent))
 
     @classmethod
     def extract(cls, obj):
@@ -187,12 +246,16 @@ class Json(pgJson):
         if isinstance(obj, dict) and 'data' in obj:
             if len(obj) == 2 and '__ComplexList__' in obj:
                 return [complex(*v) for v in obj['data']]
+            elif len(obj) == 2 and '__QQList__' in obj:
+                return [QQ(tuple(v)) for v in obj['data']]
+            elif len(obj) == 3 and '__NFList__' in obj and 'base' in obj:
+                base = cls.extract(obj['base'])
+                return [cls._extract(base, c) for c in obj['data']]
             elif len(obj) == 2 and '__IntDict__' in obj:
                 return {Integer(k): cls.extract(v) for k,v in obj['data']}
             elif len(obj) == 3 and '__Vector__' in obj and 'base' in obj:
-                if base != 'QQ':
-                    raise NotImplementedError
-                return vector([QQ(*v) for v in obj['data']])
+                base = cls.extract(obj['base'])
+                return vector([cls._extract(base, v) for v in obj['data']])
             elif len(obj) == 2 and '__Rational__' in obj:
                 return Rational(*obj['data'])
             elif len(obj) == 3 and '__RealLiteral__' in obj and 'prec' in obj:
@@ -201,17 +264,28 @@ class Json(pgJson):
                 return complex(*obj['data'])
             elif len(obj) == 3 and '__Complex__' in obj and 'prec' in obj:
                 return ComplexNumber(ComplexField(obj['prec']), *obj['data'])
+            elif len(obj) == 3 and '__NFElt__' in obj and 'parent' in obj:
+                return cls._extract(cls.extract(obj['parent']), obj['data'])
+            elif len(obj) == 3 and ('__NFRelative__' in obj or '__NFAbsolute__' in obj) and 'vname' in obj:
+                poly = cls.extract(obj['data'])
+                return NumberField(poly, name=obj['vname'])
+            elif len(obj) == 2 and '__NFCyclotomic__' in obj:
+                return CyclotomicField(obj['data'])
+            elif len(obj) == 2 and '__IntegerRing__' in obj:
+                return ZZ
+            elif len(obj) == 2 and '__RationalField__' in obj:
+                return QQ
             elif len(obj) == 3 and '__RationalPoly__' in obj and 'vname' in obj:
                 return QQ[obj['vname']]([QQ(tuple(v)) for v in obj['data']])
-            elif '__CycList__' in obj or '__NFList__' in obj:
-                K = None
-                if len(obj) == 3 and 'n' in obj:
-                    K = CyclotomicField(obj['n'])
-                elif len(obj) == 4 and 'fden' in obj and 'fnum' in obj:
-                    R = QQ['x']
-                    K = NumberField(R([QQ(tuple(v)) for v in obj['poly']]), name=obj['vname'])
-                if K is not None:
-                    return [K([QQ(tuple(v)) for v in z]) for z in obj['data']]
+            elif len(obj) == 4 and '__Poly__' in obj and 'vname' in obj and 'base' in obj:
+                base = cls.extract(obj['base'])
+                return base[obj['vname']]([cls._extract(base, c) for c in obj['data']])
+            elif len(obj) == 5 and '__PowerSeries__' in obj and 'vname' in obj and 'base' in obj and 'prec' in obj:
+                base = cls.extract(obj['base'])
+                prec = infinity if obj['prec'] == 'inf' else int(obj['prec'])
+                return base[[obj['vname']]]([cls._extract(base, c) for c in obj['data']], prec=prec)
+            elif len(obj) == 2 and ('__date__' in obj or '__time__' in obj or '__datetime__' in obj):
+                return obj['data']
         return obj
 
 def copy_dumps(inp, typ):

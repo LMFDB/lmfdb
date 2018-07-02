@@ -56,7 +56,7 @@ info in this page is set by set_info_for_web_newform in emf_render_web_newform.p
              {% if vars.update({'cyclotomicorder': f.coefficient_field.variable_name()[4:]}) %} {% endif %}
          {% endif %}
        <tr>
-     {% if not f.in_db() %}
+     {% if not f.in_db %}
        <td valign="top">{{ f.hecke_orbit_label }}</td>
        <td colspan="3"> This Hecke orbit is unfortunately not available. </td>
        {% else %}
@@ -127,7 +127,7 @@ Click on the label in the table above for more information about each newform.</
   <tbody>
     {% for label in orbits %}
     {% set f = orbits2[label] %}
-            {% if f.in_db() and f.base_ring != f.coefficient_field and f.coefficient_field.lmfdb_label != '1.1.1.1' %}
+            {% if f.in_db and f.base_ring != f.coefficient_field and f.coefficient_field.lmfdb_label != '1.1.1.1' %}
     <tr>
         {% if f.coefficient_field.lmfdb_label %}
         <td align="left" valign="top">$\Q(\alpha_{ {{loop.index}} })\cong$ 

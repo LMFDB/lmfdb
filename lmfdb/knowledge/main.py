@@ -544,7 +544,7 @@ def index():
                            title="Knowledge Database",
                            bread=get_bread(),
                            knowls=knowls,
-                           search=keyword,
+                           search=search,
                            searchbox=searchbox(search, bool(search)),
                            knowl_qualities=knowl_qualities,
                            searchmode=bool(search),

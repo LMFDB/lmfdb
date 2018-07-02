@@ -71,7 +71,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     emf_logger.debug("BITPREC: {0}".format(bprec))
     try:
         WNF = WebNewForm(level=level, weight=weight, character=character, label=label)
-        if not WNF.in_db():
+        if not WNF.in_db:
             raise IndexError("Unfortunately, we do not have this newform in the database.")
         info['character_order'] = WNF.character.order
         info['code'] = WNF.code

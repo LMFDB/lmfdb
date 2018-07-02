@@ -84,7 +84,7 @@ def print_list_of_coefficients(info):
     number = int(info['number'])+1 if 'number' in info else 20
     emf_logger.debug("number = {}".format(number))
     F = WebNewForm(level= level, weight = weight, character = character, label = label, prec=number)
-    if not F.in_db():
+    if not F.in_db:
         return ""
     if not 'number' in info:
         raise RuntimeError

@@ -25,7 +25,7 @@ AUTHORS:
 from flask import url_for
 from copy import copy
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
-from lmfdb.WebNumberField import field_pretty
+from lmfdb.WebNumberField import WebNumberField as LMFDBWebNumberField
 from lmfdb.utils import web_latex_split_on_pm
 
 from sage.rings.power_series_poly import PowerSeries_poly
@@ -173,6 +173,15 @@ class WebObject(object):
         except:
             object.__setattr__(self, n, v)
 
+    def _set_from_record(self, rec):
+        if rec is None:
+            self.in_db = False
+        else:
+            self.in_db = True
+            for k, v in rec.items():
+                if k in self._properties._d:
+                    self._properties[k].set_value(v)
+
     def collection_name(self):
         return self._collection_name
 
@@ -225,45 +234,35 @@ class WebObject(object):
 
 class WebDate(WebProperty):
     _default_value = datetime.now()
-    def __init__(self, name, value=None, **kwargs):
-        date_fn = lambda t: datetime(t.year, t.month, t.day, t.hour, t.minute, t.second)
-        super(WebDate, self).__init__(name, value, date_fn, date_fn, **kwargs)
 
 class WebInt(WebProperty):
     _default_value = int(0)
-    def __init__(self, name, value=None, **kwargs):
-        super(WebInt, self).__init__(name, value, int, int, **kwargs)
-        #print self.__class__
 
 class WebBool(WebProperty):
     _default_value = True
-    def __init__(self, name, value=None, **kwargs):
-        super(WebBool, self).__init__(name, value, int, int, **kwargs)
-        #print self.__class__
 
 class WebFloat(WebProperty):
     _default_value = float(0)
-    def __init__(self, name, value=None, **kwargs):
-        super(WebFloat, self).__init__(name, value, float, float, **kwargs)
 
 class WebStr(WebProperty):
     _default_value = ''
-    def __init__(self, name, value=None, **kwargs):
-        super(WebStr, self).__init__(name, value, str, str, **kwargs)
 
 class WebDict(WebProperty):
 
     def __init__(self, name, value=None, **kwargs):
         self._default_value = {}
-        super(WebDict, self).__init__(name, value, dict, dict, **kwargs)
+        super(WebDict, self).__init__(name, value, **kwargs)
 
 class WebList(WebProperty):
     def __init__(self, name, value=None, **kwargs):
         self._default_value = []
-        super(WebList, self).__init__(name, value, list, list, **kwargs)
+        super(WebList, self).__init__(name, value, **kwargs)
 
 class WebSageObject(WebProperty):
     _default_value = None
+
+    def set_value(self, v):
+        self._value = loads(str(v))
 
 class WebPoly(WebProperty):
     pass
@@ -278,39 +277,17 @@ class WebNumberField(WebDict):
         self.lmfdb_label = ''
         self.lmfdb_url = ''
         self.lmfdb_pretty = ''
-        super(WebDict, self).__init__(name, value, dict, dict, **kwargs)
+        super(WebDict, self).__init__(name, value, **kwargs)
 
-    def set_extended_properties(self):
-        setattr(self._value, "lmfdb_label", self.lmfdb_label)
-        if self.lmfdb_label is not None and self.lmfdb_label != '':
-            label = self.lmfdb_label
-            setattr(self._value, "lmfdb_pretty", field_pretty(label))
-        else:
-            if self._value == QQ:
-                label = '1.1.1.1'
-                setattr(self._value, "lmfdb_pretty", field_pretty(label))
-                setattr(self._value, "lmfdb_label", label)
-            else:
-                emf_logger.critical("could not set lmfdb_pretty for the label")
-                label = ''
-        if label != '':
-            try:
-                url =  url_for("number_fields.by_label", label=label)
-                setattr(self._value, "lmfdb_url", url)
-            except RuntimeError:
-                emf_logger.critical("could not set url for the label")
-        try:
-            if hasattr(self._value,'absolute_polynomial'):
-                setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.absolute_polynomial(), n))
-            else:
-                setattr(self._value, "absolute_polynomial_latex",'')
-            if hasattr(self._value,'relative_polynomial'):
-                setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.relative_polynomial(), n))
-            else:
-                setattr(self._value, "relative_polynomial_latex",'')
-        except AttributeError as e:
-            emf_logger.debug(e)
-            pass
+    def set_value(self, label):
+        self.lmfdb_label = label
+        self.lmfdb_url = url_for("number_fields.by_label", label=label)
+        self._value = LMFDBWebNumberField(label)
+        self.lmfdb_pretty = self._value.field_pretty()
+        # WebNumberFields don't have specified base rings, but the code from
+        # display-list-newforms.html requires a relative_polynomial_latex
+        setattr(self._value, "absolute_polynomial_latex", lambda n: web_latex_poly(self._value.poly(), n))
+        setattr(self._value, "relative_polynomial_latex", lambda n: web_latex_poly(self._value.poly(), n))
 
 def web_latex_poly(pol, name='x', keepzeta=False):
     """
@@ -331,54 +308,3 @@ def web_latex_poly(pol, name='x', keepzeta=False):
     newpol = re.sub(subfrom, subto, latex(pol))
 #    print "result is",newpol
     return web_latex_split_on_pm(newpol)
-
-
-def number_field_to_dict(F):
-
-    r"""
-    INPUT:
-    - 'K' -- Number Field
-    - 't' -- (p,gens) where p is a polynomial in the variable(s) xN with coefficients in K. (The 'x' is just a convention)
-
-    OUTPUT:
-
-    - 'F' -- Number field extending K with relative minimal polynomial p.
-    """
-    if F.base_ring().absolute_degree()==1:
-        K = 'QQ'
-    else:
-        K = number_field_to_dict(F.base_ring())
-    if F.absolute_degree() == 1:
-        p = 'x'
-        g = ('x',)
-    else:
-        p = F.relative_polynomial()
-        g = str(F.gen())
-        x = p.variables()[0]
-        p = str(p).replace(str(x),str(g))
-    return {'base':K,'relative polynomial':p,'gens':g}
-
-QQdict = number_field_to_dict(QQ)
-        
-
-def number_field_from_dict(d):
-    r"""
-    INPUT:
-
-    - 'd' -- {'base':F,'p':p,'g':g } where p is a polynomial in the variable(s) xN with coefficients in K. (The 'x' is just a convention)
-
-    OUTPUT:
-
-    - 'F' -- Number field extending K with relative minimal polynomial p.
-    """
-    K = d['base']; p=d['relative polynomial']; g=d['gens']
-    if K=='QQ':
-        K = QQ
-    elif isinstance(K,dict):
-        K = number_field_from_dict(K)
-    else:
-        raise ValueError,"Could not construct number field!"
-    F = NumberField(K[g](p),names=g)
-    if F.absolute_degree()==1:
-        F = QQ
-    return F

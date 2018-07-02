@@ -230,7 +230,7 @@ class LmfdbUser(UserMixin):
 
     @property
     def created(self):
-        return self._data['created']
+        return self._data.get('created')
 
     @property
     def id(self):

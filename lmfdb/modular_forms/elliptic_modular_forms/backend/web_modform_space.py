@@ -81,7 +81,7 @@ class WebHeckeOrbits(WebDict):
             )
         emf_logger.debug("Initiated Hecke orbits!")
 
-    def from_db(self, l):
+    def set_value(self, l):
         emf_logger.debug("Get Hecke orbits for labels : {0}!".format(l))
         self._only_rational = True
         from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
@@ -94,7 +94,7 @@ class WebHeckeOrbits(WebDict):
             res[lbl]=F
         emf_logger.debug("Got Hecke orbits!")
 
-        return res
+        self._value = res
 
     def only_rational(self):
         return self._only_rational
@@ -137,6 +137,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         emf_logger.debug("level={0}".format(level))
         emf_logger.debug("character={0},type={1}".format(character,type(character)))
         emf_logger.debug("character_number={0}".format(character_number))
+        label = space_label(level=level, weight=weight, character=character)
         self._properties = WebProperties(
             WebInt('level', value=level),
             WebInt('weight', value=weight),
@@ -145,7 +146,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebList('_character_galois_orbit', default_value=[character]),
             WebDict('_character_galois_orbit_embeddings', default_value={}),
             WebCharProperty('character_orbit_rep', modulus=level),
-            WebStr('space_label', default_value=space_label(level=level, weight=weight, character=character)),
+            WebStr('space_label', default_value=label),
             WebStr('space_orbit_label', value=''),
             WebInt('dimension'),
             WebInt('dimension_cusp_forms'),
@@ -164,13 +165,19 @@ class WebModFormSpace(WebObject, CachedRepresentation):
             WebList('zeta_orders',value=[]),
             WebDate('creation_date',value=None)
                     )
+        query = {'space_label':label}
+        rec = db.mf_spaces.lucky(query)
+        # We need to make_code_snippets before setting hecke_orbits
+        # but after setting character
+        if rec is not None:
+            self.character = rec.pop('character')
+            self.make_code_snippets()
+        self._set_from_record(rec)
 
-        self.make_code_snippets()
-            
         emf_logger.debug("Have set properties of space 1 !!")
         super(WebModFormSpace, self).__init__(**kwargs)
         emf_logger.debug("Have set properties of space 2 !!")
-        emf_logger.debug("orbits={0}".format(self.hecke_orbits))                
+        emf_logger.debug("orbits={0}".format(self.hecke_orbits))
 
     def init_dynamic_properties(self):
         if self.character.is_trivial():
@@ -187,7 +194,7 @@ class WebModFormSpace(WebObject, CachedRepresentation):
         return {} if res is None else res
 
     def make_code_snippets(self):
-         # read in code.yaml from numberfields directory:
+        # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "../code.yaml")))
         self.code['show'] = {'sage':'','magma':''}
