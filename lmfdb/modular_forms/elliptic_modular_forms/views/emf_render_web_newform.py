@@ -26,12 +26,13 @@ from sage.all import uniq,ZZ,latex,QQ
 from lmfdb.utils import to_dict
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm_cached
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, default_prec, default_display_bprec, EMF_TOP, default_max_height
 #from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty, nf_display_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label
+from lmfdb.base import getDBConnection
 
 def render_web_newform(level, weight, character, label, **kwds):
     r"""
@@ -68,10 +69,10 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     prec = my_get(info, 'prec', default_prec, int)
     bprec = my_get(info, 'bprec', default_display_bprec, int)
     emf_logger.debug("PREC: {0}".format(prec))
-    emf_logger.debug("BITPREC: {0}".format(bprec))
+    emf_logger.debug("BITPREC: {0}".format(bprec))    
     try:
-        WNF = WebNewForm(level=level, weight=weight, character=character, label=label)
-        if not WNF.in_db:
+        WNF = WebNewForm_cached(level=level, weight=weight, character=character, label=label)
+        if not WNF.has_updated():
             raise IndexError("Unfortunately, we do not have this newform in the database.")
         info['character_order'] = WNF.character.order
         info['code'] = WNF.code
@@ -139,7 +140,9 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
         info['index_nv'] = n
     else:
         if WNF.prec < prec:
-            raise ValueError("Newform not known at high enough precision")
+            #get WNF record at larger prec
+            WNF.prec = prec
+            WNF.update_from_db()
         info['qexp'] = WNF.q_expansion_latex(prec=10, name='\\alpha ')
         info['qexp_display'] = url_for(".get_qexp_latex", level=level, weight=weight, character=character, label=label)
         info["hide_qexp"] = False
@@ -241,7 +244,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if WNF.is_cm == 1:
         info['cm_field'] = "2.0.{0}.1".format(-WNF.cm_disc)
         info['cm_disc'] = WNF.cm_disc
-        info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], field_pretty(info['cm_field']))
+        info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], getDBConnection(), field_pretty(info['cm_field']))
         info['cm_field_url'] = url_for("number_fields.by_label", label=info["cm_field"])
     if WNF.is_cm is None or WNF.is_cm==-1:
         s = '- Unknown (insufficient data)<br>'

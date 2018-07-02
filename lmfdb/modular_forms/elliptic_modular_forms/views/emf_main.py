@@ -24,12 +24,12 @@ AUTHORS:
 from flask import url_for, request, redirect, make_response, send_from_directory,flash, render_template
 import os, tempfile
 import sage
-from lmfdb.db_backend import db
+from lmfdb.base import getDBConnection
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
-from lmfdb.utils import to_dict
+from lmfdb.utils import to_dict, random_object_from_collection
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, EMF_TOP, emf_logger, emf
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
     render_fd_plot,
     extract_data_from_jump_to,
@@ -46,6 +46,9 @@ emf_logger.setLevel(int(100))
 @emf.context_processor
 def body_class():
     return {'body_class': EMF}
+
+def db_emf():
+    return getDBConnection().modularforms2.webnewforms
 
 #################
 # Top level
@@ -179,7 +182,7 @@ def get_downloads(level=None, weight=None, character=None, label=None, **kwds):
 
 @emf.route("/random")
 def random_form():
-    label = db.mf_newforms.random('hecke_orbit_label')
+    label = random_object_from_collection( db_emf() )['hecke_orbit_label']
     level, weight, character, label = parse_newform_label(label)
     args={}
     args['level'] = level
@@ -213,7 +216,7 @@ def get_qexp(level, weight, character, label, prec, latex=False, **kwds):
     #if not arg:
     #    return flask.abort(404)
     try:
-        M = WebModFormSpace(level=level,weight=weight,character=character)
+        M = WebModFormSpace_cached(level=level,weight=weight,character=character)
         WNF = M.hecke_orbits[label]
         WNF.prec = prec
         if not latex:

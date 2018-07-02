@@ -21,10 +21,10 @@ AUTHOR: Fredrik Strömberg  <fredrik314@gmail.com>
 """
 from flask import render_template, url_for, send_file,flash, redirect
 from lmfdb.utils import to_dict
-from lmfdb.db_backend import db
+from lmfdb.base import getDBConnection
 from sage.all import uniq
 from lmfdb.modular_forms import MF_TOP
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached, WebModFormSpace
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, EMF_TOP, default_max_height
 
 
@@ -90,17 +90,27 @@ def set_info_for_modular_form_space(level=None, weight=None, character=None, lab
         info['error'] = "Got wrong level: %s " % level
         return info
     try:
-        WMFS = WebModFormSpace(level = level, weight = weight, cuspidal=True, character = character)
+        WMFS = WebModFormSpace_cached(level = level, weight = weight, cuspidal=True, character = character, update_from_db=True)
         emf_logger.debug("Created WebModFormSpace %s"%WMFS)
-        if not WMFS.in_db:
+        if not WMFS.has_updated():
             #get the representative we have in the db for this space (Galois conjugate)
-            cchi = db.mf_dims.lucky({'level': level, 'weight': weight, 'character_orbit': {'$contains': [character]}}, 'cchi')
-            if cchi is not None and cchi != character: # don't link back to myself!
-                info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=cchi)
-                info['wmfs_rep_number'] = cchi
+            #note that this does not use the web_object infrastructure at all right now
+            #which should be changed for sure!
+            dimension_table_name = WebModFormSpace._dimension_table_name
+            db_dim = getDBConnection()['modularforms2'][dimension_table_name]
+            rep = db_dim.find_one({'level': level, 'weight': weight, 'character_orbit': {'$in': [character]}})
+            if not rep is None and not rep['cchi'] == character: # don't link back to myself!
+                info['wmfs_rep_url'] = url_for('emf.render_elliptic_modular_forms', level=level, weight=weight, character=rep['cchi'])
+                info['wmfs_rep_number'] =  rep['cchi']
+        # FIXME: the variable WNF is not defined above, so the code below cannot work (I don't think it is ever used)
+        # if 'download' in info and 'tempfile' in info:
+        #     save(WNF,info['tempfile'])
+        #     info['filename'] = str(weight) + '-' + str(level) + '-' + str(character) + '-' + label + '.sobj'
+        #     return info
     except ValueError as e:
         emf_logger.debug(e)
         emf_logger.debug(e.message)
+        #if isinstance(e,IndexError):
         info['error'] = e.message
         WMFS = None
     if WMFS is None:
