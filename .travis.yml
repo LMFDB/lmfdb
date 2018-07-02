@@ -68,7 +68,7 @@ script:
     # run pytest in parallel with 3 jobs
     # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once
     - ${SAGE} -python -m pytest --version
-    - ${SAGE} -python -m pytest --verbose
+    - ${SAGE} -python -m pytest lmfdb/
       #- ${SAGE} -python -m pytest --cov=lmfdb --cov-report= lmfdb
 
 after_failure:
