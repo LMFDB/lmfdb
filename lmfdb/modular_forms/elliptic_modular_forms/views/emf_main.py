@@ -29,7 +29,7 @@ from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.utils import to_dict
 from lmfdb.modular_forms.elliptic_modular_forms import EMF, EMF_TOP, emf_logger, emf
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
+from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace_cached
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import (
     render_fd_plot,
     extract_data_from_jump_to,
@@ -213,7 +213,7 @@ def get_qexp(level, weight, character, label, prec, latex=False, **kwds):
     #if not arg:
     #    return flask.abort(404)
     try:
-        M = WebModFormSpace(level=level,weight=weight,character=character)
+        M = WebModFormSpace_cached(level=level,weight=weight,character=character)
         WNF = M.hecke_orbits[label]
         WNF.prec = prec
         if not latex:
