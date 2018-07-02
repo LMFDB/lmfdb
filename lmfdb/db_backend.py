@@ -2409,7 +2409,7 @@ class PostgresDatabase(PostgresBase):
         try:
             self._user = "webserver"
             self._password = open(pw_filename, "r").readlines()[0].strip()
-        except:
+        except Exception:
             # file not found or any other problem
             # this is read-only everywhere
             logging.warning("PostgresSQL authentication: no webserver password -- fallback to read-only access")
