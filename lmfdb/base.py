@@ -31,7 +31,6 @@ def get_logfocus():
 # global db connection instance (will be set by the first call to
 # getDBConnection() and should always be obtained from that)
 _mongo_C = None
-_mongo_port = None
 _mongo_kwargs = None
 _mongo_user = None
 _mongo_pass = None
@@ -62,8 +61,8 @@ def getDBConnection():
             abort(503)
     return _mongo_C
 
-def configureDBConnection(port, **kwargs):
-    global _mongo_port, _mongo_kwargs, _mongo_user, _mongo_pass, _mongo_dbmon
+def configureDBConnection(**kwargs):
+    global _mongo_kwargs, _mongo_user, _mongo_pass, _mongo_dbmon
 
     if "dbmon" in kwargs:
         _mongo_dbmon = kwargs.pop("dbmon")
@@ -71,7 +70,6 @@ def configureDBConnection(port, **kwargs):
             _mongo_dbmon = ''
         kwargs["event_listeners"] = [MongoEventLogger()]
 
-    _mongo_port = port
     _mongo_kwargs = kwargs
     pw_filename = join(dirname(dirname(__file__)), "password")
     try:
@@ -80,25 +78,25 @@ def configureDBConnection(port, **kwargs):
     except:
         # file not found or any other problem
         # this is read-only everywhere
-        logging.warning("authentication: no password -- fallback to read-only access")
+        logging.warning("MongoDB authentication: no webserver password -- fallback to read-only access")
         _mongo_user = "lmfdb"
         _mongo_pass = "lmfdb"
 
 def makeDBConnection():
     global _mongo_C
 
-    logging.info("attempting to establish mongo db connection on port %s ..." % _mongo_port)
+    logging.info("attempting to establish mongo db connection with args = %s ..." % _mongo_kwargs)
     logging.info("using pymongo version %s" % pymongo.version)
     try:
         if pymongo.version_tuple[0] >= 3 or _mongo_kwargs.get("replicaset",None) is None:
-            _mongo_C = MongoClient(port = _mongo_port,  **_mongo_kwargs)
+            _mongo_C = MongoClient( **_mongo_kwargs)
         else:
-            _mongo_C = MongoReplicaSetClient(port = _mongo_port,  **_mongo_kwargs)
+            _mongo_C = MonoReplicaSetClient( **_mongo_kwargs)
         mongo_info = _mongo_C.server_info()
         logging.info("mongodb version: %s" % mongo_info["version"])
         logging.info("_mongo_C = %s", (_mongo_C,) )
         #the reads are not necessarily from host/address
-        #those depend on the cursor, and can be checked with cursor.conn_id or cursor.address 
+        #those depend on the cursor, and can be checked with cursor.conn_id or cursor.address
         if pymongo.version_tuple[0] >= 3:
             logging.info("_mongo_C.address = %s" % (_mongo_C.address,) )
         else:
@@ -114,7 +112,7 @@ def makeDBConnection():
         except pymongo.errors.PyMongoError as err:
             logging.error("authentication: FAILED -- aborting")
             raise err
-        #read something from the db    
+        #read something from the db
         #and check from where was it read
         if pymongo.version_tuple[0] >= 3:
             cursor = _mongo_C.knowledge.knowls.find({},{'_id':True}).limit(-1)
@@ -167,9 +165,14 @@ def _db_reconnect(func):
 # disabling this reconnect thing, doesn't really help anyways
 Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
 
-def _init(port, **kwargs):
-    configureDBConnection(port, **kwargs)
+def _init(configuration):
+    # creates MongoDB connection
+    configureDBConnection(**configuration['mongo_client_options'])
     makeDBConnection()
+
+    # creates PostgresSQL connection
+    from lmfdb.db_backend import PostgresDatabase
+    global db = PostgresDatabase(**configuration['postgresql_client_options'])
 
 app = Flask(__name__)
 
@@ -339,6 +342,5 @@ class LmfdbTest(unittest2.TestCase):
         self.tc = app.test_client()
         import lmfdb.website
         assert lmfdb.website
-        from lmfdb.db_backend import db
         self.db = db
         self.C = getDBConnection()

@@ -2375,8 +2375,10 @@ class PostgresDatabase(PostgresBase):
         sage: db.av_fqisog
         Interface to Postgres table av_fqisog
     """
-    def __init__(self):
-        PostgresBase.__init__(self, 'db_all', connect(dbname="lmfdb", user="lmfdb", password="LMFDB5077simons"))
+    def __init__(self, **kwargs):
+        self.fetch_userpassword();
+        connection = connect(user = self._user, password = self._password, **kwargs)
+        PostgresBase.__init__(self, 'db_all', connection)
         # The following function controls how Python classes are converted to
         # strings for passing to Postgres, and how the results are decoded upon
         # extraction from the database.
@@ -2400,6 +2402,19 @@ class PostgresDatabase(PostgresBase):
 
     def __repr__(self):
         return "Interface to Postgres database"
+
+    def fetch_userpassword(self):
+        # tries to read the file "password" on root of the project
+        pw_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), "password")
+        try:
+            self._user = "webserver"
+            self._password = open(pw_filename, "r").readlines()[0].strip()
+        except:
+            # file not found or any other problem
+            # this is read-only everywhere
+            logging.warning("PostgresSQL authentication: no webserver password -- fallback to read-only access")
+            self._user = "lmfdb"
+            self._password = "lmfdb"
 
     def is_alive(self):
         """
@@ -2572,4 +2587,3 @@ class PostgresDatabase(PostgresBase):
         if commit:
             self.conn.commit()
 
-db = PostgresDatabase()

@@ -95,8 +95,10 @@ from base import app, set_logfocus, get_logfocus, _init
 from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
 import sage
 
-DEFAULT_DB_PORT = 27017
+DEFAULT_MONGODB_PORT = 27017
+DEFAULT_POSTGRESQL_PORT = 5432
 LMFDB_SAGE_VERSION = '7.1'
+DEFAULT_USER_PASSWORD = ["lmfdb", "lmfdb"];
 
 def timestamp():
     return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
@@ -198,17 +200,25 @@ def usage():
     print """
 Usage: %s [OPTION]...
 
-  -p, --port=NUM            bind to port NUM (default 37777)
-  -h, --host=HOST           bind to host HOST (default "127.0.0.1")
-  -l, --log=FILE            log to FILE (default "flasklog")
-  -m, --mongo-client=FILE   config file for connecting to MongoDB (default is "mongoclient.config")
-      --logfocus=NAME       name of a logger to focus on
-      --debug               enable debug mode
-      --mongo-port=NUM      bind the MongoDB to the given port (default %d)
-      --mongo-host=hostname bind the MongoDB to a given hostname
-      --dbmon=NAME          monitor MongoDB commands to the specified database (use NAME=* to monitor everything, NAME=~DB to monitor all but DB)
-      --help                show this help
-""" % (sys.argv[0], DEFAULT_DB_PORT)
+  -p, --port=NUM                bind to port NUM (default 37777)
+  -h, --host=HOST               bind to host HOST (default "127.0.0.1")
+  -l, --log=FILE                log to FILE (default "flasklog")
+      --debug                   enable debug mode
+      --help                    show this help
+      --logfocus=NAME           name of a logger to focus on
+
+  MongoDB options:
+  -m, --mongo-client=FILE       config file for connecting to MongoDB server (default is "mongoclient.config")
+      --mongo-host=HOST         connect to the MongoDB server on the given HOST
+      --mongo-port=PORT         connect to the MongoDB server on the given PORT (default %d)
+      --dbmon=NAME              monitor MongoDB commands to the specified database (use NAME=* to monitor everything, NAME=~DB to monitor all but DB)
+
+  PostgreSQL options:
+  -s, --postgresql-client=FILE  config file for connecting to PostgreSQL server (default is "postgresclient.config")
+      --postgresql-host=HOST    connect to the PostgreSQL server on the given HOST
+      --postgresql-port=PORT    connect to the PostgreSQL server on the given PORT (default %d)
+
+""" % (sys.argv[0], DEFAULT_MONGODB_PORT, DEFAULT_POSTGRESQL_PORT )
 
 def get_configuration():
 
@@ -217,30 +227,42 @@ def get_configuration():
     logging_options = {"logfile": "flasklog"}
 
     # default options to pass to the MongoClient
-    mongo_client_options = {"port": DEFAULT_DB_PORT, "host": "m0.lmfdb.xyz", "replicaset": None, "read_preference": ReadPreference.NEAREST};
+    mongo_client_options = {"port": DEFAULT_MONGODB_PORT, "host": "m0.lmfdb.xyz", "replicaset": None, "read_preference": ReadPreference.NEAREST};
     read_preference_classes = {"PRIMARY": ReadPreference.PRIMARY, "PRIMARY_PREFERRED": ReadPreference.PRIMARY_PREFERRED , "SECONDARY": ReadPreference.SECONDARY, "SECONDARY_PREFERRED": ReadPreference.SECONDARY_PREFERRED, "NEAREST": ReadPreference.NEAREST };
-    
-    #setups the default mongo_client_config_filename
+
+    # default options to pass to the psycopg2.connect
+    postgresql_client_options = {"dbname": "lmfdb", "host": "devmirror.lmfdb.xyz", "port": 5432};
+    # default user/password
+    user_password = [DEFAULT_USER_PASSWORD];
+
+    #setups the default mongo_client_config_filename, postgres_client_config_filename, and passwords_yaml_filename
     mongo_client_config_filename = "mongoclient.config"
+    postgres_client_config_filename = "postgresclient.config"
     config_dir = '/'.join( os.path.dirname(os.path.abspath(__file__)).split('/')[0:-1])
-    mongo_client_config_filename = '{0}/{1}'.format(config_dir,mongo_client_config_filename)
+    mongo_client_config_filename = '{0}/{1}'.format(config_dir, mongo_client_config_filename)
+    postgres_client_config_filename = '{0}/{1}'.format(config_dir, postgres_client_config_filename)
+
+
 
     if not 'sage' in sys.argv[0] and not sys.argv[0].endswith('nosetests'):
         try:
             opts, args = getopt.getopt(
                                         sys.argv[1:],
-                                        "p:h:l:tm:",
+                                        "p:h:l:tm:s:",
                                        [
                                            "port=",
-                                           "host=", 
-                                           "log=", 
-                                           "logfocus=", 
+                                           "host=",
+                                           "log=",
+                                           "logfocus=",
                                            "dbmon=",
                                            "debug",
-                                           "help", 
+                                           "help",
                                            "mongo-client=",
                                            "mongo-port=",
                                            "mongo-host=",
+                                           "postgresql-client=",
+                                           "postgresql-host=",
+                                           "postgresql-port=",
                                             # undocumented, see below
                                             "enable-reloader", "disable-reloader",
                                             "enable-debugger", "disable-debugger",
@@ -271,6 +293,9 @@ def get_configuration():
                 flask_options["debug"] = True
             elif opt == "--logfocus":
                 logging_options["logfocus"] = arg
+
+
+            # MongoDB options
             elif opt in ("-m", "--mongo-client"):
                 if os.path.exists(arg):
                     mongo_client_config_filename = arg
@@ -281,6 +306,20 @@ def get_configuration():
                 mongo_client_options['port'] = int(arg)
             elif opt == "--mongo-host":
                 mongo_client_options['host'] = arg
+
+            # PostgreSQL options
+            elif opt in ("-s", "--postgresql-client"):
+                if os.path.exists(arg):
+                    postgres_client_config_filename = arg
+                else:
+                    sys.stderr.write("%s doesn't exist\n" % arg);
+                    sys.exit(2);
+            elif opt == "--postgresql-port":
+                postgresql_client_options['port'] = int(arg)
+            elif opt == "--postgresql-host":
+                postgresql_client_options['host'] = arg
+
+
 
 
             # undocumented: the following allow changing the defaults for
@@ -298,9 +337,10 @@ def get_configuration():
             elif opt =="--enable-profiler":
                 flask_options["PROFILE"] = True
 
-    #reads the kwargs from  mongo_client_config_filename  
+    from ConfigParser import ConfigParser;
+    #reads the kwargs from  mongo_client_config_filename
     if os.path.exists(mongo_client_config_filename):
-        from ConfigParser import ConfigParser;
+        loggin.info("Parsing mongo-client = %s" % mongo_client_config_filename);
         parser = ConfigParser()
         parser.read(mongo_client_config_filename);
         for key, value in parser.items("db"):
@@ -318,19 +358,34 @@ def get_configuration():
                 if not value:
                     #enforcing None to be the default if
                     mongo_client_options["replicaset"] = None
-                else: 
+                else:
                     mongo_client_options["replicaset"] = value
             else:
                 # tries to see if it is an integer valued keyword argument, if so converts it
                 if value == "":
                     value = None
                 else:
-                    try: 
+                    try:
                         value = int(value);
                     except ValueError:
                         pass;
-                mongo_client_options[key] = value;       
-    return { 'flask_options' : flask_options, 'mongo_client_options' : mongo_client_options, 'logging_options' : logging_options }
+                mongo_client_options[key] = value;
+
+        if os.path.exists(postgres_client_config_filename):
+            logging.info("Parsing postgresql-client = %s" % postgres_client_config_filename)
+            parser = ConfigParser()
+            parser.read(postgres_client_config_filename);
+            for key, value in parser.items("db"):
+                if value == "":
+                    value = None
+                else:
+                    try:
+                        value = int(value);
+                    except ValueError:
+                        pass;
+                postgresql_client_options[key] = value;
+
+    return { 'flask_options' : flask_options, 'mongo_client_options' : mongo_client_options, 'postgresql_client_options' : postgresql_client_options, 'logging_options' : logging_options, 'user_password' : user_password}
 
 configuration = None
 
@@ -367,7 +422,7 @@ if True:
     root_logger.addHandler(ch)
 
     logging.info("configuration: %s" % configuration)
-    _init(**configuration['mongo_client_options'])
+    _init(configuration)
     app.logger.addHandler(file_handler)
     if [int(c) for c in sage.version.version.split(".")[:2]] < [int(c) for c in LMFDB_SAGE_VERSION.split(".")[:2]]:
         logging.warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***"%(sage.version.version,LMFDB_SAGE_VERSION))
