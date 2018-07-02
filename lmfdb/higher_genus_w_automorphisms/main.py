@@ -482,8 +482,15 @@ def render_family(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
+<<<<<<< HEAD
         C = base.getDBConnection()
         dataz = C.curve_automorphisms.passports.find({'label': label})
+=======
+        C = MongoClient(port=int(27017))
+        dataz = C.curve_automorphisms.passports.find({'label': label})
+        #print dataz.count()
+
+>>>>>>> parent of c5c58642... Another way of finding top equivalence classes
         if dataz.count() is 0:
             flash_error( "No family with label %s was found in the database.", label)
             return redirect(url_for(".index"))
@@ -522,8 +529,14 @@ def render_family(args):
 
         Lcc=[]
         Lall=[]
+<<<<<<< HEAD
+=======
+        Ltopo_rep=[] #List of topological representatives
+        Ltopo_class={} # List of list topological class
+>>>>>>> parent of c5c58642... Another way of finding top equivalence classes
         i=1
         for dat in dataz:
+            #print dat
             if ast.literal_eval(dat['con']) not in Lcc:
                 urlstrng=dat['passport_label']
                 Lcc.append(ast.literal_eval(dat['con']))
@@ -531,6 +544,30 @@ def render_family(args):
                              urlstrng])
                 i=i+1
 
+<<<<<<< HEAD
+=======
+            #Generate topological representatives
+            L = create_total_label(dat['label'], str(dat['topological'][0]), str(dat['topological'][1]))
+                #topo_passport = C.curve_automorphisms.passports.find({'total_label': L})    
+            if L not in Ltopo_class:
+                Ltopo_class[L] = []
+                Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
+            elif dat['total_label'] not in Ltopo_class[L]:
+                Ltopo_class[L].append([dat['total_label'], dat['passport_label']])
+
+        topological_data = C.curve_automorphisms.passports.find({'label': label, '$expr': {'$eq': ['$topological', '$cc']}}) #Topological representatives
+        for dat in topological_data:
+            x1=[] #A list of permutations of generating vectors of topo_rep
+            for perm in dat['gen_vectors']:
+                x1.append(sep.join(split_perm(Permutation(perm).cycle_string())))
+            Ltopo_rep.append([dat['passport_label'], dat['total_label'], x1])
+
+        #print Ltopo_class
+        ###### Needs to sort key of Ltopo_class #########  
+        keylist = Ltopo_class.keys()
+        keylist.sort()
+              
+>>>>>>> parent of c5c58642... Another way of finding top equivalence classes
         info.update({'passport': Lall})
 
 
@@ -813,6 +850,7 @@ def hgcwa_code_download(**args):
     stdfmt = ''
     for k in depends_on_action:
         stdfmt += code_list[k][lang] + '{' + k + '}'+ ';\n'
+        print code_list[k][lang] + '{' + k + '}'+ ';\n'
 
     if lang == 'magma':
         stdfmt += code_list['con'][lang] + '{con}' + ';\n'
@@ -820,7 +858,15 @@ def hgcwa_code_download(**args):
     stdfmt += code_list['gen_gp'][lang]+ '\n'
     stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
     stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
+<<<<<<< HEAD
 
+=======
+    # For all generating vectors and passports
+    if lang == args['download_type']:
+        stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
+        stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
+        
+>>>>>>> parent of c5c58642... Another way of finding top equivalence classes
     # extended formatting template for when signH is present
     signHfmt = stdfmt
     signHfmt += code_list['full_auto'][lang] + '{full_auto}' + ';\n'
