@@ -158,7 +158,7 @@ class Configuration(object):
             if args_dict[key] != val:
                 sec, opt = key.split('_');
                 _cfgp.set(sec, opt, args_dict[key]);
-
+    
         # some generic function
 
         def get(section, key):
@@ -177,8 +177,10 @@ class Configuration(object):
                     ret['%s%s%s' % (s, sep, k)]  =  v
             return ret
 
+        print all()
 
-        print get('web', 'port')
+
+        print get('web', 'port t')
         self.flask_options = {
                 "port": getint('web', 'port'),
                 "host": get('web', 'bindip'),
