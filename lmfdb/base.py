@@ -170,10 +170,8 @@ def _init(configuration):
     from lmfdb.config import Configuration
     configureDBConnection(**Configuration().get_mongodb())
     makeDBConnection()
-
     # creates PostgresSQL connection
-    from lmfdb.db_backend import PostgresDatabase
-    global db = PostgresDatabase(**configuration['postgresql_client_options'])
+    from lmfdb.db_backend import db
 
 app = Flask(__name__)
 
@@ -343,5 +341,6 @@ class LmfdbTest(unittest2.TestCase):
         self.tc = app.test_client()
         import lmfdb.website
         assert lmfdb.website
+        from lmfdb.db_backend import db
         self.db = db
         self.C = getDBConnection()
