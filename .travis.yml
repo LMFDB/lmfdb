@@ -49,8 +49,6 @@ install:
     - ${SAGE} -pip install -r requirements.txt
 
 before_script:
-    # --cov-report= suppresses printing coverage to terminal
-    - export COVERAGE='--cov=lmfdb --cov-report='
     # assert that m0.lmfdb.xyz accepts our connections
     - nc -vz  m0.lmfdb.xyz 27017
     # create a list of files and folder where we will run the tests
@@ -68,17 +66,10 @@ script:
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
     # This runs without fail
-    - ${SAGE} -sh -c "pytest"
-    # But using commandline args breaks the test in odd ways. All of the following three will fail and not actually run tests.
-    - ${SAGE} -sh -c "pytest --cov=lmfdb"
-    - ${SAGE} -sh -c "pytest --verbose"
-    - ${SAGE} -sh -c "pytest -v -s"
-    #- ${SAGE} -sh -c "pytest --verbose --cov=lmfdb lmfdb"
+    - ${SAGE} -sh -c "pytest --verbose -s --cov=lmfdb"
 
 after_failure:
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
-    # print the logs with failed tests
-    #- grep 'FAILED' -r pytestlog > greplog ; cat greplog
 
 after_success:
     - ls -a
