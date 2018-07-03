@@ -176,6 +176,8 @@ class Configuration(object):
                     ret['%s%s%s' % (s, sep, k)]  =  v
             return ret
 
+        print(all())
+
         self.flask_options = {
                 "port": getint('web', 'port'),
                 "host": get('web', 'bindip'),

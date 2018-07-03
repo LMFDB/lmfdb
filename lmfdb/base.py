@@ -75,7 +75,7 @@ def configureDBConnection(**kwargs):
     try:
         _mongo_user = "webserver"
         _mongo_pass = open(pw_filename, "r").readlines()[0].strip()
-    except:
+    except Exception:
         # file not found or any other problem
         # this is read-only everywhere
         logging.warning("MongoDB authentication: no webserver password -- fallback to read-only access")
@@ -275,7 +275,7 @@ def git_infos():
         rev = Popen([git_rev_cmd], shell=True, stdout=PIPE).communicate()[0]
         date = Popen([git_date_cmd], shell=True, stdout=PIPE).communicate()[0]
         cmd_output = rev, date
-    except:
+    except Exception:
         cmd_output = '-', '-'
     return cmd_output
 
