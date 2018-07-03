@@ -2383,7 +2383,7 @@ class PostgresDatabase(PostgresBase):
         self.fetch_userpassword();
         logging.info("Done!")
         options['user'] = self._user;
-        password['password'] = self._password;
+        options['password'] = self._password;
         print options
         logging.info("Connecting to PostgresSQL...")
         connection = connect( **options)
