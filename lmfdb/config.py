@@ -166,6 +166,7 @@ class Configuration(object):
 
         def getint(section, key):
             return _cfgp.getint(section, key)
+
         def getboolean(section, key):
             return _cfgp.getboolean(section, key)
 
@@ -177,6 +178,7 @@ class Configuration(object):
             return ret
 
 
+        print get('web', 'port')
         self.flask_options = {
                 "port": getint('web', 'port'),
                 "host": get('web', 'bindip'),
