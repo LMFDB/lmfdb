@@ -2376,8 +2376,11 @@ class PostgresDatabase(PostgresBase):
         Interface to Postgres table av_fqisog
     """
     def __init__(self):
+        logging.info("Fetching user/password...")
         self.fetch_userpassword();
+        logging.info("Done!")
         from lmfdb.config import Configuration
+        print options
         options = Configuration().get_postgresql();
         logging.info("Connecting to PostgresSQL...")
         connection = connect(user = self._user, password = self._password, **options)
