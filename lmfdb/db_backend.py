@@ -2375,9 +2375,11 @@ class PostgresDatabase(PostgresBase):
         sage: db.av_fqisog
         Interface to Postgres table av_fqisog
     """
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.fetch_userpassword();
-        connection = connect(user = self._user, password = self._password, **kwargs)
+        from lmfdb.config import Configuration
+        options = Configuration().get_postgresql();
+        connection = connect(user = self._user, password = self._password, **options)
         PostgresBase.__init__(self, 'db_all', connection)
         # The following function controls how Python classes are converted to
         # strings for passing to Postgres, and how the results are decoded upon
@@ -2587,3 +2589,4 @@ class PostgresDatabase(PostgresBase):
         if commit:
             self.conn.commit()
 
+db = PostgresDatabase()
