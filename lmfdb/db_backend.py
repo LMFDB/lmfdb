@@ -2380,8 +2380,9 @@ class PostgresDatabase(PostgresBase):
         self.fetch_userpassword();
         logging.info("Done!")
         from lmfdb.config import Configuration
-        print options
+        logging.info("Fetching config...")
         options = Configuration().get_postgresql();
+        print options
         logging.info("Connecting to PostgresSQL...")
         connection = connect(user = self._user, password = self._password, **options)
 
