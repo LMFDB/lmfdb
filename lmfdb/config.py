@@ -176,7 +176,6 @@ class Configuration(object):
                     ret['%s%s%s' % (s, sep, k)]  =  v
             return ret
 
-        print(all())
 
         self.flask_options = {
                 "port": getint('web', 'port'),
@@ -218,4 +217,3 @@ class Configuration(object):
     def get_logging(self):
         return self.logging_options;
 
-Configuration()
