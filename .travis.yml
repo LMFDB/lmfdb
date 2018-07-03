@@ -65,11 +65,15 @@ script:
     # run pyflakes
     - pyflakes lmfdb/ > pyflakeslog
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
+    # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
-      #- ${SAGE} -python -m pytest lmfdb/
+    # This runs without fail
     - ${SAGE} -sh -c "pytest"
+    # But using commandline args breaks the test in odd ways. All of the following three will fail and not actually run tests.
     - ${SAGE} -sh -c "pytest --cov=lmfdb"
-    #- ${SAGE} -python -m pytest --cov=lmfdb --cov-report= lmfdb
+    - ${SAGE} -sh -c "pytest --verbose"
+    - ${SAGE} -sh -c "pytest -v -s"
+    #- ${SAGE} -sh -c "pytest --verbose --cov=lmfdb lmfdb"
 
 after_failure:
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
