@@ -157,7 +157,7 @@ class Configuration(object):
             # if a nondefault value was passed through command line arguments set it
             if args_dict[key] != val:
                 sec, opt = key.split('_');
-                _cfgp.set(sec, opt, args_dict[key]);
+                _cfgp.set(sec, opt, str(args_dict[key]));
     
         # some generic function
 
