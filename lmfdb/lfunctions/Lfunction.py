@@ -989,6 +989,7 @@ class Lfunction_Maass(Lfunction):
             self.quasidegree = 2
             self.eigenvalue = float(self.mf.R if self.mf.R else 0)
             self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
+            print "A", self.mf
             self.nu_fe = []
             self.compute_kappa_lambda_Q_from_mu_nu()
             self.algebraic = False

@@ -63,7 +63,7 @@ def by_label(label):
         if len(slabel) == 1:
             return render_family_page(family, request.args, bread)
         if len(slabel) == 2:
-            sam = sample.Samples({ 'collection': slabel[0], 'name': slabel[1]})
+            sam = sample.Samples({ 'collection': {'$contains': [slabel[0]]}, 'name': slabel[1]})
             if len(sam) > 0:
                 bread.append(('$'+family.latex_name+'$', url_for('.by_label',label=slabel[0])))
                 return render_sample_page(family, sam[0], request.args, bread)

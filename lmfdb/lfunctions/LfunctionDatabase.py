@@ -4,7 +4,6 @@ from lmfdb.db_backend import db
 
 def get_lfunction_by_Lhash(Lhash):
     Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash})
-    print Ldata.keys()
     if Ldata is None:
         raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
     return fix_Ldata(Ldata);

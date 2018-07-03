@@ -122,9 +122,9 @@ def bianchi_modular_form_search(**args):
         query['sfe'] = int(info['sfe'])
     if 'include_cm' in info:
         if info['include_cm'] == 'exclude':
-            query['CM'] = 0
+            query['CM'] = 0 # will exclude NULL values
         elif info['include_cm'] == 'only':
-            query['CM'] = {'$nin' : [0,'?']}
+            query['CM'] = {'$ne': 0} # will exclude NULL values
     if 'include_base_change' in info and info['include_base_change'] == 'off':
         query['bc'] = 0
     else:

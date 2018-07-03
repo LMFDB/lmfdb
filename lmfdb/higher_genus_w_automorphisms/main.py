@@ -376,7 +376,7 @@ def higher_genus_w_automorphisms_search(**args):
                 query['full_auto'] = {'$exists': True}
             elif info['inc_full'] == 'only':
                 query['full_auto'] = {'$exists': False}
-        query['cc->1'] = 1
+        query['cc.1'] = 1
 
     except ValueError:
         return search_input_error(info, bread)

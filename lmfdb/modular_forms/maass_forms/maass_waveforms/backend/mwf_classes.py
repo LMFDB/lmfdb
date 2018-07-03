@@ -143,11 +143,10 @@ class WebMaassForm(object):
 
         else:
             self.coeffs = {}
-        coeff_id = f.get('coeff_id', None)
         nc = Gamma0(self.level).ncusps()
         self.M0 = f.get('M0', nc)
-        mwf_logger.debug("coeffid={0}, get_coeffs={1}".format(coeff_id, self._get_coeffs))
-        if coeff_id and self._get_coeffs:  # self.coeffs==[] and coeff_id:
+        mwf_logger.debug("maass_id={0}, get_coeffs={1}".format(maass_id, self._get_coeffs))
+        if self._get_coeffs:  # self.coeffs==[] and maass_id:
             ## Let's see if we have coefficients stored
             C = maass_db.get_coefficients({"maass_id": self._maass_id})
             if C is not None:
@@ -163,7 +162,7 @@ class WebMaassForm(object):
                 else:
                     mwf_logger.debug("setting C!")
                     self.coeffs = C
-         ## Make sure that self.coeffs is only the current coefficients
+        ## Make sure that self.coeffs is only the current coefficients
         if self._get_coeffs and isinstance(self.coeffs, dict) and not self._get_dirichlet_c_only:
             if not isinstance(self.coeffs, dict):
                 mwf_logger.warning("Coefficients s not a dict. Got:{0}".format(type(self.coeffs)))

@@ -4,6 +4,7 @@ and decoding the results.
 """
 from psycopg2.extras import register_json, Json as pgJson
 from psycopg2.extensions import adapt, register_type, register_adapter, new_type, UNICODE, UNICODEARRAY, AsIs, ISQLQuote
+from sage.functions.other import ceil
 from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
 from sage.rings.complex_number import ComplexNumber
 from sage.rings.complex_field import ComplexField
@@ -39,6 +40,17 @@ def setup_connection(conn):
     register_adapter(dict, Json)
     register_json(conn, loads=Json.loads)
 
+class LmfdbRealLiteral(RealLiteral):
+    """
+    A real number that prints using the string used to construct it.
+    """
+    def __init__(self, parent, x=0, base=10):
+        if not isinstance(x, basestring):
+            x = str(x)
+        RealLiteral.__init__(self, parent, x, base)
+    def __repr__(self):
+        return self.literal
+
 def numeric_converter(value, cur):
     """
     Used for converting numeric values from Postgres to Python.
@@ -55,8 +67,11 @@ def numeric_converter(value, cur):
     if value is None:
         return None
     if '.' in value:
-        prec = max(ceil(len(value)*3.322), 53)
-        return RealLiteral(RealField(prec), value)
+        # The following is a good guess for the bit-precision,
+        # but we use LmfdbRealLiterals to ensure that our number
+        # prints the same as we got it.
+        prec = ceil(len(value)*3.322)
+        return LmfdbRealLiteral(RealField(prec), value)
     else:
         return Integer(value)
 
@@ -113,8 +128,7 @@ class Json(pgJson):
     def prep(cls, obj, escape_backslashes=False):
         """
         Returns a version of the object that is parsable by the standard json dumps function.
-        For example, replace Integers with ints and RealLiterals with floats, encode complex
-        numbers using a dictionary....
+        For example, replace Integers with ints, encode various Sage types using dictionaries....
         """
         # For now we just hard code the encoding.
         # It would be nice to have something more abstracted/systematic eventually
@@ -259,7 +273,7 @@ class Json(pgJson):
             elif len(obj) == 2 and '__Rational__' in obj:
                 return Rational(*obj['data'])
             elif len(obj) == 3 and '__RealLiteral__' in obj and 'prec' in obj:
-                return RealLiteral(RealField(obj['prec']), obj['data'])
+                return LmfdbRealLiteral(RealField(obj['prec']), obj['data'])
             elif len(obj) == 2 and '__complex__' in obj:
                 return complex(*obj['data'])
             elif len(obj) == 3 and '__Complex__' in obj and 'prec' in obj:

@@ -502,6 +502,27 @@ def order_values(doc, field, sub_fields=["len", "val"]):
     return doc
 
 ################################################################################
+#  pymongo utilities - will be removed soon
+################################################################################
+
+def random_object_from_collection(collection):
+    """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
+    import pymongo
+    n = collection.rand.count()
+    if n:
+        m = collection.count()
+        if m != n:
+            current_app.logger.warning("Random object index {0}.rand is out of date ({1} != {2}), proceeding anyway.".format(collection,n,m))
+        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
+        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
+            return obj
+    if pymongo.version_tuple[0] < 3:
+        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next()
+    else:
+        # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
+        return collection.aggregate([{ '$sample': { 'size': int(1) } } ]).next()
+
+################################################################################
 #  pagination utilities
 ################################################################################
 

@@ -625,6 +625,9 @@ class NumberFieldGaloisGroup(object):
                 coeffs = x[0]
             coeffs = [int(c) for c in coeffs]
             self._data = db.artin_field_data.convert_lucky({'Polynomial':coeffs})
+            if self._data is None:
+                # This should probably be a ValueError, but we use an AttributeError for backward compatibility
+                raise AttributeError("No Galois group data for polynonial %s"%(coeffs))
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):

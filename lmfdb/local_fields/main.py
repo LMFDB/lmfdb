@@ -83,6 +83,7 @@ def ctx_local_fields():
 
 # Utilities for subfield display
 def format_lfield(coefmult,p):
+    coefmult = [int(c) for c in coefmult.split(",")]
     label = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=0)
     if label is None:
         # This should not happen, what do we do?

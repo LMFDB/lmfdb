@@ -244,7 +244,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if WNF.is_cm == 1:
         info['cm_field'] = "2.0.{0}.1".format(-WNF.cm_disc)
         info['cm_disc'] = WNF.cm_disc
-        info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], getDBConnection(), field_pretty(info['cm_field']))
+        info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], field_pretty(info['cm_field']))
         info['cm_field_url'] = url_for("number_fields.by_label", label=info["cm_field"])
     if WNF.is_cm is None or WNF.is_cm==-1:
         s = '- Unknown (insufficient data)<br>'

@@ -388,7 +388,6 @@ def l_function_by_hash_page(lhash):
 
 def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
-
     try:
         L = Lclass(**args)
         # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
