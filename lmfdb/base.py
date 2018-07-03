@@ -167,7 +167,8 @@ Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
 
 def _init(configuration):
     # creates MongoDB connection
-    configureDBConnection(**configuration['mongo_client_options'])
+    from lmfdb.config import Configuration
+    configureDBConnection(**Configuration().get_mongodb())
     makeDBConnection()
 
     # creates PostgresSQL connection
