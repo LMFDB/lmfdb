@@ -2379,7 +2379,10 @@ class PostgresDatabase(PostgresBase):
         self.fetch_userpassword();
         from lmfdb.config import Configuration
         options = Configuration().get_postgresql();
+        logging.info("Connecting to PostgresSQL...")
         connection = connect(user = self._user, password = self._password, **options)
+
+        logging.info("Done!\n%s" % connection)
         PostgresBase.__init__(self, 'db_all', connection)
         # The following function controls how Python classes are converted to
         # strings for passing to Postgres, and how the results are decoded upon
