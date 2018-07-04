@@ -70,15 +70,7 @@ def collection_indexed_keys(collection):
     input: cursor for the collection
     output: a set with all the keys indexed
     """
-    indexed_keys = set({});
-    for name, val in collection.index_information().iteritems():
-        if name != '_id_':
-            #print val['key']
-            for key, _ in val['key']:
-                #print key
-                indexed_keys.add(key)
-    return indexed_keys
-
+    return set([t[0] for t in sum([val['key'] for name, val in collection.index_information().iteritems() if name!='_id_'],[])])
 
 def get_database_info(show_hidden=False):
     C = base.getDBConnection()
@@ -191,7 +183,7 @@ def api_query(db, collection, id = None):
             return flask.abort(404)
         single_object = True
         data = []
-        api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
+        api_logger.debug("API query: id = '%s', fields = '%s'" % (id, fields))
         # if id looks like an ObjectId, assume it is and try to find it
         if len(id) == 24 and re.match('[0-9a-f]+$', id.strip()):
             data = C[db][collection].find_one({'_id':ObjectId(id)},projection=fields)
@@ -239,6 +231,8 @@ def api_query(db, collection, id = None):
 
         # assure that one of the keys of the query is indexed
         # however, this doesn't assure that the query will be fast... 
+        #print("Keys in query: {}".format(q.keys()))
+        #print("Keys indexed in collection {}.{}: {}".format(db,collection,collection_indexed_keys(C[db][collection])))
         if q != {} and len(set(q.keys()).intersection(collection_indexed_keys(C[db][collection]))) == 0:
             flash_error("no key in the query %s is indexed.", q)
             return flask.redirect(url_for(".api_query", db=db, collection=collection))
@@ -257,7 +251,7 @@ def api_query(db, collection, id = None):
             sort = None
 
         # executing the query "q" and replacing the _id in the result list
-        api_logger.info("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
+        api_logger.debug("API query: q = '%s', fields = '%s', sort = '%s', offset = %s" % (q, fields, sort, offset))
         from pymongo.errors import ExecutionTimeout
         try:
             data = list(C[db][collection].find(q, projection = fields, sort=sort).skip(offset).limit(100).max_time_ms(10000))
