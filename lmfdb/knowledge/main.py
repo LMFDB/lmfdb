@@ -156,19 +156,19 @@ def ref_to_link(txt):
             the_doi = ref[3:]    # remove the "doi"
             this_link = '{{ LINK_EXT("' + the_doi + '","http://dx.doi.org/' + the_doi + '")| safe }}'
         elif ref.lower().startswith("mr"):
-            ref = ref.replace(":","") 
+            ref = ref.replace(":","")
             the_mr = ref[2:]    # remove the "MR"
             this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
             this_link += '"http://www.ams.org/mathscinet/search/publdoc.html?pg1=MR&s1='
             this_link += the_mr + '") | safe}}'
         elif ref.lower().startswith("arxiv"):
-            ref = ref.replace(":","")  
+            ref = ref.replace(":","")
             the_arx = ref[5:]    # remove the "arXiv"
             this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
             this_link += '"http://arxiv.org/abs/'
             this_link += the_arx + '")| safe}}'
 
-  
+
         if this_link:
             if ans:
                 ans += ", "
@@ -512,13 +512,16 @@ def cleanup():
     return "categories: %s <br/>reindexed %s knowls<br/>pruned %s histories" % (cats, reindex_count, prune_count)
 
 
-@knowledge_page.route("/")
+@knowledge_page.route("/", methods=['GET', 'POST'])
 def index():
     cur_cat = request.args.get("category", "")
 
-    filtermode = "filter" in request.args
+    filtermode = "filtered" in request.args
     from knowl import knowl_qualities
-    filters = [request.args.get(quality, "") == "on" or not filtermode for quality in knowl_qualities]
+    if request.method == 'POST':
+        filters = [request.args.get(quality, "") == "on" or not filtermode for quality in knowl_qualities]
+    elif request.method == 'GET':
+        filters = request.args.getlist('filters')
 
     search = request.args.get("search", "")
     knowls = knowldb.search(cur_cat, filters, search.lower())

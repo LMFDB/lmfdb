@@ -172,9 +172,9 @@ body.checklist {
 }
 
 a:visited { color: {{color.a_text_visited}}; }
-a:hover { 
-    color: {{color.a_text_hover}}; 
-    background: {{color.a_background_hover}};  
+a:hover {
+    color: {{color.a_text_hover}};
+    background: {{color.a_background_hover}};
 }
 
 #logo a, #logo a:hover, body.knowl #logo a:hover {
@@ -238,7 +238,7 @@ body.knowl #header {
 
 #header .topright {
   text-align: right;
-  white-space:nowrap; 
+  white-space:nowrap;
   color: {{color.header_text_topright}};
   font-family: sans-serif;
   min-height: 18px;
@@ -252,7 +252,7 @@ body.knowl #header {
 #header .topright a {
     color: {{color.header_text_topright}};
 }
-#header .topright #communication-wrapper {  
+#header .topright #communication-wrapper {
   display: none;
   padding: 4px;
 }
@@ -278,7 +278,7 @@ body.knowl #header {
   padding: 2px 5px;
   position: absolute;
   bottom: 0px;
-  right: 0px;  
+  right: 0px;
   z-index: 5;
 }
 
@@ -345,7 +345,7 @@ body > .debug {
     margin-top: 10px;
 }
 .properties-body h2:first-child { margin-top: 0px; }
-.properties-body table th, 
+.properties-body table th,
 .properties-body table td {
   padding: 2px 10px;
 }
@@ -531,7 +531,7 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 .visible {
 	visibility: visible;
 }
-	
+
 .hidden {
 	visibility: hidden;
 	height: 0px;
@@ -594,7 +594,7 @@ select {
    background: {{color.select_background}};
 }
 
-body.knowl form button, 
+body.knowl form button,
 body.knowl form select {
   border: 2px solid {{color.knowl_thin_border}};
   background: {{color.knowl_border}};
@@ -604,7 +604,7 @@ body.knowl form input {
     border: 2px solid {{color.knowl_thin_border}};
 }
 
-form button:hover, 
+form button:hover,
 form select:hover {
     background:    {{color.button_background_hover}};
     border: 2px solid {{color.button_border_hover}};
@@ -652,9 +652,9 @@ table.newforms {
 
 table.ntdata .knowl-header a,
 table.ntdata .knowl-footer a,
-table.ntdata a.knowl-link, 
+table.ntdata a.knowl-link,
 table.ntdata a[knowl],
-table a.knowl-link, 
+table a.knowl-link,
 table a[knowl] {
   display: inline;
   padding: 0;
@@ -709,6 +709,10 @@ table.ntdata tr.line {
     border-bottom: 1px dotted {{color.table_ntdata_border_bottom}};
 }
 
+table.right_align_table td {
+  text-align: right;
+}
+
 /* TODO: where? */
 div.literature {
     margin-top: 10px;
@@ -761,7 +765,7 @@ table .knowl-link {
   border-top-left-radius: 10px;
   -moz-border-radius-topleft: 10px;
 }
-.knowl-bar button, 
+.knowl-bar button,
 .knowl-bar input,
 .knowl-bar form {
   font-size: small;
@@ -795,7 +799,7 @@ table .knowl-link {
   background: {{ color.knowl_l_1 }};
   border-top-left-radius: 5px;
   -moz-border-radius-topleft: 5px;
-} 
+}
 .knowl {
   padding: 0;
 }
@@ -831,7 +835,7 @@ table .knowl-link {
   background: {{ color.knowl_hover }};
   cursor: pointer;
 }
-#knowl-index td { 
+#knowl-index td {
   padding: 0;
 }
 #knowl-index tr td:first-child {
@@ -888,7 +892,7 @@ table.ntdata td.center {
     text-align: center;
 }
 table.euler {
-    margin-left:auto; 
+    margin-left:auto;
     margin-right:auto;
 }
 
@@ -969,7 +973,7 @@ knowl-qm does not seem to be currently used.
   font-weight: bold;
   border: 1px solid {{ color.knowl_thin_border }};
   background: transparent;
-  color: {{ color.knowl_hover_text }}; 
+  color: {{ color.knowl_hover_text }};
   cursor: pointer;
   padding: 0 0.4em;
   border-radius: 0.8em;
@@ -984,7 +988,7 @@ knowl-qm does not seem to be currently used.
 }
 .knowl-qm.active:hover {
   background: transparent;
-  color: {{ color.knowl_hover_text }}; 
+  color: {{ color.knowl_hover_text }};
 }
 h1 > .knowl-qm {
   font-size: 0.6em;
@@ -1002,7 +1006,7 @@ h2 > .knowl-qm {
 }
 */
 .knowl-output {
-  background: {{ color.knowl_background }}; 
+  background: {{ color.knowl_background }};
   border: 10px solid {{ color.knowl_border }};
   {{ BORDER_RADIUS(10) }}
   padding: 0px;
@@ -1101,9 +1105,9 @@ div.limit-height {
 
 /*** Tables for the Siegel corner ***/
 
-/** TODO these definitions are too broad. please make siegel a 
- * blueprint (name is e.g. "siegel") and prefix all siegel 
- * related definitions with body.siegel 
+/** TODO these definitions are too broad. please make siegel a
+ * blueprint (name is e.g. "siegel") and prefix all siegel
+ * related definitions with body.siegel
  */
 .box1 {
     margin: 20px 5px 20px 5px;
@@ -1190,16 +1194,18 @@ table.tablesorter {
 	text-align: left;
 }
 table.tablesorter thead tr th, table.tablesorter tfoot tr th {
-    background-color: {{color.col_main_ll}};/*TODO: or really light grey?*/
-    border: 1px solid {{color.white}};
+  background-color: {{color.col_main_ll}};/*TODO: or really light grey?*/
+  border: 1px solid {{color.white}};
 	font-size: 8pt;
 	padding: 4px;
 }
 table.tablesorter thead tr .header {
-	/*background-image: url(bg.gif);*/
+	background-image: url("static/images/black-unsorted.gif");
 	background-repeat: no-repeat;
 	background-position: center right;
 	cursor: pointer;
+  padding-left: 4px;
+  padding-right: 15px;
 }
 table.tablesorter tbody td {
     color: {{color.dark_grey}};
@@ -1211,10 +1217,10 @@ table.tablesorter tbody tr.odd td {
     background-color:{{color.knowl_background}};
 }
 table.tablesorter thead tr .headerSortUp {
-	/*background: url('static/images/asc.gif');*/
+	background-image: url("static/images/black-asc.gif");
 }
 table.tablesorter thead tr .headerSortDown {
-	/*background-image: url(desc.gif);*/
+	background-image: url("static/images/black-desc.gif");
 }
 table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
     background-color: {{color.light_grey_2}};
@@ -1727,7 +1733,7 @@ div.maassformplot img {
 
 #sidebar table td a {
     display: block;
-    padding: 2px; 
+    padding: 2px;
     border-radius: 0;
 }
 
@@ -1752,19 +1758,19 @@ div.maassformplot img {
     padding: 2px 5px;
 }
 
-#sidebar .future { 
+#sidebar .future {
     color: {{color.sidebar_text_future}};
     display: inherit;
 }
 
 
-#sidebar .beta { 
+#sidebar .beta {
     color: purple; /*{{color.sidebar_text_beta}};*/
     display: inherit;
 }
 
 
-#sidebar .beta a { 
+#sidebar .beta a {
     color: purple; /*{{color.sidebar_text_beta}};*/
 }
 
@@ -1828,13 +1834,13 @@ p.rotation  {
 #sidebar table.short td.borc{
 	text-align: center;
 }
- 
+
 #sidebar table.short td.full{
         text-align: left;
 }
 
-#sidebar table.short td.off { 
-	text-align: center;	
+#sidebar table.short td.off {
+	text-align: center;
 	background: {{color.sidebar_background_off}};
 }
 
@@ -1888,7 +1894,7 @@ table.boxes {
   margin-left: 15px;
   font-size:1em;
   display:table;
-  } 
+  }
 table.boxes > tbody > tr > td {
   padding: 0px 50px 50px 0px;
   overflow: hidden;
@@ -1900,7 +1906,7 @@ table.box {
   padding: 10;
   border-radius: 0px;
   font-size:1em;
-  } 
+  }
 table.box td.img {
   background: {{color.box_background_img}};
   width: 150px;
@@ -1910,7 +1916,7 @@ table.box td.img {
   padding-bottom: 0px;
   padding-top: 5px;
   padding-right: 5px;
-  } 
+  }
 table.box img {
   border: 15;
   padding: 5;

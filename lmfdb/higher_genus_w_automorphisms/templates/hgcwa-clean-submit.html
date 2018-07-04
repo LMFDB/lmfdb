@@ -1,0 +1,23 @@
+<script type="text/javascript">
+// strips empty select fields with a value of 'include' from query URLs.
+function cleanSubmitHGCWA(formID)
+{
+    // Remove default values from query string
+    const select_ids = ['inc_hyper', 'inc_cyc_trig', 'inc_full']
+
+    for (var i = 0; i < select_ids.length; i++) {
+      var item = document.getElementById(select_ids[i]);
+      if (item && item.value == 'include') {
+        item.setAttribute('name', '');
+      }
+    }
+
+    var item = document.getElementById('count');
+    if (item && item.value == '20') {
+      item.setAttribute('name', '');
+    }
+
+    // Run LMFDB's cleanSubmit
+    cleanSubmit(formID);
+}
+</script>

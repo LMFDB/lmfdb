@@ -146,7 +146,7 @@ def bigpicture():
 
 @app.route("/universe")
 def universe():
-    b = [('LMFDB universe', url_for('universe'))]
+    b = [('LMFDB Universe', url_for('universe'))]
     return render_template("universe.html", title="The LMFDB universe", body_class=_bc, bread=b)
 
 

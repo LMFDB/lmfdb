@@ -624,7 +624,7 @@ class Lfunction_EC(Lfunction):
         if self.base_field() == '1.1.1.1': #i.e. QQ
             lbread = get_bread(2,
                     [
-                      ('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                      ('Elliptic Curve', url_for('.l_function_ec_browse_page')),
                       (self.label, url_for('.l_function_ec_page',
                               conductor_label=self.conductor,
                               isogeny_class_label = self.isogeny_class_label))
@@ -633,7 +633,7 @@ class Lfunction_EC(Lfunction):
             lbread = get_bread(self.degree,
                 [
                     # FIXME there is no .l_function_ecnf_browse_page
-                    #('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                    #('Elliptic Curve', url_for('.l_function_ec_browse_page')),
                     (self.label,
                      url_for('.l_function_ecnf_page',
                             field_label = self.field_label,

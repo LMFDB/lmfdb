@@ -38,7 +38,7 @@ class HomePageTest(LmfdbTest):
                 "http://www2.warwick.ac.uk/fac/sci/maths/research/events/2013-2014/nonsymp/lmfdb/",
                 'elliptic curves over number fields' )
         self.check_external(homepage,
-                "http://hobbes.la.asu.edu/lmfdb-14/",
+                "https://hobbes.la.asu.edu/lmfdb-14/",
                 'Arizona State University' )
         self.check_external(homepage,
                 "http://www.maths.bris.ac.uk/~maarb/public/lmfdb2013.html",

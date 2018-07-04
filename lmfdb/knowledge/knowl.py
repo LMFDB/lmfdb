@@ -285,6 +285,14 @@ class Knowl(object):
         """
         return userdb.full_names(self.authors)
 
+    def last_author(self):
+        """
+        Full names for the last authors.
+        (lookup for all full names in just *one* query, hence the or)
+        """
+        users = getDBConnection().userdb.users
+        return users.find_one({'_id': self._last_author}, ["full_name"])["full_name"]
+
     @property
     def id(self):
         return self._id
@@ -328,7 +336,11 @@ class Knowl(object):
         Example: KNOWL('algebra.dirichlet_series') should be replaced
         with "Dirichlet Series" and nothing else.
         """
-        return self._title
+        title = self._title
+        #from flask import g
+        # if self._quality=='beta' and g.BETA:
+        #     title += " (beta status)"
+        return title
 
     @title.setter
     def title(self, title):

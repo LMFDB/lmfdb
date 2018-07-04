@@ -183,7 +183,7 @@ def render_lattice_webpage(**args):
         f = db.lat_lattices.lucky({'$or':[{'label': lab }, {'name': {'$contains': [lab]}}]})
     if f is None:
         t = "Integral Lattices Search Error"
-        bread = [('Lattice', url_for(".lattice_render_webpage"))]
+        bread = [('Lattices', url_for(".lattice_render_webpage"))]
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral lattice in the database." % (lab)),"error")
         return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
@@ -338,7 +338,7 @@ def labels_page():
 def history_page():
     t = 'A brief history of lattices'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
-             ('Histoy', '')]
+             ('History', '')]
     credit = lattice_credit
     return render_template("single.html", kid='lattice.history',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('History'))

@@ -95,13 +95,21 @@ table.ntdata a {
 
 <tr>
 <td align=left> 
-{{KNOWL('gg.degree',title='Degree')}} :<td align=left> <input type='text' name='n' size=3 value="{{info.n}}">
+{{KNOWL('gg.degree',title='Degree')}} :<td align=left> <input type='text' name='n' size="5" value="{{info.n}}">
 </td>
 
 <td align=left> 
 {{KNOWL('gg.tnumber',title='$t$')}} :
-<td align=left> <input type="text" name="t" size="3" value="{{info.t}}" ></td>
+<td align=left> <input type="text" name="t" size="5" value="{{info.t}}" ></td>
+
+<td align=left> 
+{{KNOWL('group.order',title='Order')}} :
+<td align=left> <input type="text" name="order" size="5" value="{{info.order}}" ></td>
+<td align=left> 
+{{KNOWL('curve.highergenus.aut.groupnotation',title='Gap id')}} :
+<td align=left><input type="text" name="gapid" size="5" value="{{info.gapid}}" ></td>
 </tr>
+
 <tr>
 <td align='left' colspan='4'>Maximum number of groups to display <input type='text' name='count' value="{{info.count}}" size='10'>
 </td>
@@ -140,7 +148,7 @@ table.ntdata a {
 <tr>
 <th>Label</th>
 <th>{{KNOWL('gg.simple_name', title='Name')}}</th>
-<th>Order</th>
+<th>{{KNOWL('group.order', title='Order')}}</th>
 <th>{{ KNOWL('gg.parity', 'Parity') }} </th>
 <th>{{ KNOWL('gg.solvable', 'Solvable') }}</th>
 {% if info.show_subs %}

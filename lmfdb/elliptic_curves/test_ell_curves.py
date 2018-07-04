@@ -3,6 +3,11 @@ from lmfdb.base import LmfdbTest
 
 class EllCurveTest(LmfdbTest):
 
+    def check_args_with_timeout(self, path, text):
+        timeout_error = 'The search query took longer than expected!'
+        data = self.tc.get(path, follow_redirects=True).data
+        assert (text in data) or (timeout_error in data)
+
     # All tests should pass
     #
     def test_int_points(self):
@@ -53,12 +58,10 @@ class EllCurveTest(LmfdbTest):
         assert '[1, -1, 1, 9588, 2333199]' in L.data
 
     def test_SurjPrimes_search(self):
-        L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=2&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert '[0, 0, 1, -270, -1708]' in L.data
+        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=2&surj_quantifier=include&nonsurj_primes=&count=100', '[0, 0, 1, -270, -1708]');
 
     def test_NonSurjPrimes_search(self):
-        L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=37&count=100')
-        assert '[0, 0, 0, -36705844875, 2706767485056250]' in L.data
+        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=37&count=100', '[0, 0, 0, -36705844875, 2706767485056250]');
 
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')

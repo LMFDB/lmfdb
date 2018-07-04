@@ -75,7 +75,7 @@ affil: University of Bristol and AIM
 url: http://www.aimath.org/conrey/
 ---
 name: Edgar Costa
-url: http://www.math.dartmouth.edu/~edgarcosta/
+url: https://www.math.dartmouth.edu/~edgarcosta/
 affil: Dartmouth College
 ---
 name: John Cremona
@@ -126,6 +126,9 @@ name: David W. Farmer
 email: farmer@aimath.org
 affil: AIM
 ---
+name: Albert Ford
+affil: Grinnell College
+---
 name: Markus Fraczek
 email: markus.fraczek@gmail.com
 affil: University of Warwick
@@ -162,7 +165,7 @@ url: http://www.math.uwaterloo.ca/~dkhuynh/
 affil: University of Waterloo
 ---
 name: John Jones
-url: http://hobbes.la.asu.edu/
+url: https://hobbes.la.asu.edu/
 affil: Arizona State University
 ---
 name: Jon Keating
@@ -231,6 +234,9 @@ affil: University of Bristol
 url: https://bnaskrecki.faculty.wmi.amu.edu.pl/
 ---
 name: David Neill Asanza
+affil: Grinnell College
+---
+name: Nhi Ngo
 affil: Grinnell College
 ---
 name: Aurel Page
@@ -347,7 +353,7 @@ email: christelle.vincent@uvm.edu
 url: http://www.uvm.edu/~cvincen1/
 ---
 name: John Voight
-url: http://www.math.dartmouth.edu/~jvoight
+url: https://www.math.dartmouth.edu/~jvoight
 affil: Dartmouth College
 ---
 name: Lynne Walling

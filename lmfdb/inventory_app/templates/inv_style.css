@@ -198,6 +198,11 @@ h2.link{
   /* Link styled headings for names */
 }
 
+h1.warn{
+  color : red !important;
+  font-size : 200% !important;
+}
+
 #inv_main{
 
   float: left;
@@ -236,8 +241,36 @@ h2
     margin: 15px 0 10px 0;
 }
 
+.important{
+  color: red;
+  font-size:120%;
+  font-style:italic;
+}
+
 .err_text{
     color: red;
     font-size:120%;
     font-weight: bold;
+}
+
+.upload_box
+{
+    min-width : 40em;
+    min-height : 12em;
+    display : block;
+    margin : 0 0 1em 0;
+}
+.upload_div
+{
+  padding: 5px 5px 3em 5px;
+
+}
+
+.scrape_button {
+  min-width: 50px;
+  padding: none;
+  margin-left:2px;
+  height: 2em;
+  vertical-align: middle;
+  float:left;
 }

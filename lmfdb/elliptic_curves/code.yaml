@@ -87,7 +87,7 @@ qexp:
   sage:  E.q_eigenform(20)
   pari:  |
     xy = elltaniyama(E);
-    deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)
+    x*deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)
   magma: ModularForm(E);
 
 moddeg:

@@ -95,8 +95,8 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
     else:
         info['max_level'] = 0
     mwf_logger.debug("info3=%s" % info)
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),
-             ('Maass forms', url_for('.render_maass_waveforms'))]
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Maass Forms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
     info['title'] = title
     maass_db.set_table()
@@ -120,8 +120,8 @@ def render_maass_browse_graph(min_level, max_level, min_R, max_R):
     info['max_R'] = max_R
     info['coloreven'] = rgbtohex(signtocolour(1))
     info['colorodd'] = rgbtohex(signtocolour(-1))
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),
-             ('Maass waveforms', url_for('.render_maass_waveforms'))]
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Maass Waveforms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
 
     return render_template("mwf_browse_graph.html", title='Browsing graph of Maass forms', **info)
@@ -194,8 +194,8 @@ def render_one_maass_waveform_wp(info, prec=9):
         return flask.abort(404)
     info['MF'] = MF
     info['title'] = "Maass form"
-    info['bread'] = [('Modular forms', url_for('mf.modular_form_main_page')),
-                     ('Maass waveforms', url_for('.render_maass_waveforms'))]
+    info['bread'] = [('Modular Forms', url_for('mf.modular_form_main_page')),
+                     ('Maass Waveforms', url_for('.render_maass_waveforms'))]
     if hasattr(MF,'level'):
         info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
         info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
@@ -308,8 +308,8 @@ def render_search_results_wp(info, search):
     if limit > maxNumberOfResultsToShow:
         limit = maxNumberOfResultsToShow
     offset = search.pop('skip', 0)
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),
-             ('Maass forms', url_for('.render_maass_waveforms'))]
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Maass Forms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
     info['evs'] = evs_table2(search, limit=limit, offset=offset)
     mwf_logger.debug("in render_search_results. info2={0}".format(info))
@@ -450,7 +450,7 @@ def evs_table2(search, twodarray=False, limit=50, offset=0):
 @mwf.route("/Tables", methods=met)
 def render_browse_all_eigenvalues(**kwds):
     info = get_args_mwf(**kwds)
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),('Maass forms', url_for('.render_maass_waveforms'))]
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),('Maass Forms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
     info['colheads'] = ['Level', 'Weight', 'Char',
                         'Eigenvalue', 'Symmetry',

@@ -15,8 +15,10 @@ sg_db = db.gps_small
 gm_db = db.gps_gmodules
 
 def small_group_display_knowl(n, k, name=None):
+    group = sg_db.lookup('%s.%s'%(n,k))
+    if group is None:
+        return '$[%d, %d]$'%(n,k)
     if not name:
-        group = sg_db.lookup('%s.%s'%(n,k))
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + name + '</a>'
 
