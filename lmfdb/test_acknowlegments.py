@@ -47,8 +47,8 @@ class HomePageTest(LmfdbTest):
                 #"http://icms.org.uk/workshops/onlinedatabases"
                 "https://aimath.org/pastworkshops/onlinedata.html"
                 ,'development of new software tools' )
-#        self.check_external(homepage, "http://www.msri.org/programs/262",
-#                'algebraic number fields')
+        self.check_external(homepage, "http://www.msri.org/programs/262",
+                'algebraic number fields')
         self.check_external(homepage,
                 "http://aimath.org/pastworkshops/lfunctionsandmf.html",
                 'L-functions and modular forms')
