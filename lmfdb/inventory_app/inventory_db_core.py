@@ -610,7 +610,7 @@ def update_and_check(coll, rec_find, rec_set):
         result = coll.find_and_modify(query=rec_find, update={"$set":rec_set}, upsert=False, full_response=True)
         _id = result['value']['_id']
     except Exception as e:
-        print e
+        #print e
         inv.log_dest.error("Error updating record "+str(rec_find)+' '+ str(e))
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':True}
@@ -700,8 +700,8 @@ def cleanup_records(inv_db, coll_id, record_list):
             extant_hashes.append(ih.hash_record_schema(item['schema']))
         for item in db_record_list:
             if item['hash'] not in extant_hashes:
-                print 'Record no longer exists'
-                print item
+                #print 'Record no longer exists'
+                #print item
                 coll.remove(item)
 
     except Exception as e:
