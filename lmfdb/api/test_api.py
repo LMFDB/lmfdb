@@ -76,7 +76,14 @@ class ApiTest(LmfdbTest):
         r"""
         Check that the queries used by ODK demo all work
         """
-        queries = ['transitivegroups/groups?_format=json&label=1T1']
+        queries = ['transitivegroups/groups?_format=json&label=1T1',
+                   'transitivegroups/groups?_format=json&label=8T3',
+                   'elliptic_curves/curves?_format=json&label=11a1']
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).data
-            assert '"name": "Trivial group"' in data
+            if '1T1' in query:
+                assert '"name": "Trivial group"' in data
+            if '8T3' in query:
+                assert '"name": "E(8)=2[x]2[x]2"' in data
+            if '11a1' in query:
+                assert '"equation": "\\\\( y^2 + y = x^{3} -  x^{2} - 10 x - 20  \\\\)"' in data
