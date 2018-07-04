@@ -3,6 +3,7 @@ from lmfdb.base import LmfdbTest
 
 class ApiTest(LmfdbTest):
 
+    
     def test_api_home(self):
         r"""
         Check that the top-level api page works
