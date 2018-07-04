@@ -73,4 +73,5 @@ after_failure:
 
 after_success:
     - ls -a
-    - COVERALLS_PARALLEL=true coveralls
+      #- COVERALLS_PARALLEL=true coveralls
+    - coveralls
