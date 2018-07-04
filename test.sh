@@ -58,8 +58,7 @@ echo "Using Sage command $SAGE_COMMAND"
 if [[ -n $WHAT ]]; then
    eval "$SAGE_COMMAND -python -m pytest $ARGS $COVER $WHAT"
 else
-   cd lmfdb
-   eval "$SAGE_COMMAND -python -m pytest $ARGS $COVER"
+   eval "$SAGE_COMMAND -python -m pytest $ARGS $COVER lmfdb/"
 fi
 
 if [[ $PYFLAKES_ERRCNT > 0 ]]; then
