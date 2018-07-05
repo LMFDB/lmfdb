@@ -21,7 +21,7 @@ from main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
 from distutils.version import StrictVersion
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
-from flask.ext.login import UserMixin, AnonymousUserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 
 class PostgresUserTable(PostgresBase):
     def __init__(self):

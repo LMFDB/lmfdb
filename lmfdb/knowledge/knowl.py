@@ -290,8 +290,7 @@ class Knowl(object):
         Full names for the last authors.
         (lookup for all full names in just *one* query, hence the or)
         """
-        users = getDBConnection().userdb.users
-        return users.find_one({'_id': self._last_author}, ["full_name"])["full_name"]
+        return userdb.lookup(self._last_author)["full_name"]
 
     @property
     def id(self):
