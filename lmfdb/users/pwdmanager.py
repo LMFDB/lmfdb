@@ -17,6 +17,12 @@ from psycopg2.sql import SQL, Identifier, Placeholder
 from main import logger
 from datetime import datetime, timedelta
 
+from main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
+from distutils.version import StrictVersion
+
+# Read about flask-login if you are unfamiliar with this UserMixin/Login
+from flask.ext.login import UserMixin, AnonymousUserMixin
+
 class PostgresUserTable(PostgresBase):
     def __init__(self):
         PostgresBase.__init__(self, 'db_users', db.conn)
@@ -171,10 +177,6 @@ class PostgresUserTable(PostgresBase):
 
 userdb = PostgresUserTable()
 
-# Read about flask-login if you are unfamiliar with this UserMixin/Login
-#from flask.ext.login import UserMixin
-from flask_login import UserMixin
-
 class LmfdbUser(UserMixin):
     """
     The User Object
@@ -230,7 +232,7 @@ class LmfdbUser(UserMixin):
 
     @property
     def created(self):
-        return self._data['created']
+        return self._data.get('created')
 
     @property
     def id(self):
@@ -242,7 +244,9 @@ class LmfdbUser(UserMixin):
 
     def is_anonymous(self):
         """required by flask-login user class"""
-        return not self.is_authenticated()
+        if StrictVersion(FLASK_LOGIN_VERSION) < StrictVersion(FLASK_LOGIN_LIMIT):
+            return not self.is_authenticated()
+        return not self.is_authenticated
 
     def is_admin(self):
         """true, iff has attribute admin set to True"""
@@ -266,9 +270,6 @@ class LmfdbUser(UserMixin):
         userdb.save(self._data)
         self._dirty = False
 
-#from flask.ext.login import AnonymousUserMixin
-from flask_login import AnonymousUserMixin
-
 class LmfdbAnonymousUser(AnonymousUserMixin):
     """
     The sole purpose of this Anonymous User is the 'is_admin' method
@@ -279,6 +280,12 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
 
     def name(self):
         return "Anonymous"
+
+    # For versions of flask_login earlier than 0.3.0,
+    # AnonymousUserMixin.is_anonymous() is callable. For later versions, it's a
+    # property. To match the behavior of LmfdbUser, we make it callable always.
+    def is_anonymous(self):
+        return True
 
 if __name__ == "__main__":
     print "Usage:"

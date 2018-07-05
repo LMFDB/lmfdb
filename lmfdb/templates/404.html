@@ -15,11 +15,11 @@
 {% elif request.referrer %}
 <br>
 <div>
-If you think accessing "{{ request.referrer }}" is an error, please <a href="http://code.google.com/p/lmfdb/issues/list">report that URL</a>!
+If you think accessing "{{ request.referrer }}" is an error, please help us improve and report that URL <a href="{{ feedbackpage }}" target=_blank>here</a>.
 </div>
 {% else %}
 <div>
-If you believe this page should be here, please <a href = "http://code.google.com/p/lmfdb/issues/list">report this problem</a> so we can improve the site.
+  If you believe this page should be here, please help us improve and report this problem here <a href="{{ feedbackpage }}" target=_blank>here</a>.
 </div>
 {% endif %}
 

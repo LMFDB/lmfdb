@@ -84,11 +84,11 @@ def print_list_of_coefficients(info):
     number = int(info['number'])+1 if 'number' in info else 20
     emf_logger.debug("number = {}".format(number))
     F = WebNewForm(level= level, weight = weight, character = character, label = label, prec=number)
-    if not F.in_db():
+    if not F.has_updated():
         return ""
     if not 'number' in info:
-        raise RuntimeError
-        #F.prec = number = max(F.parent.sturm_bound + 1, 20)
+        F.prec = number = max(F.parent.sturm_bound + 1, 20)
+        F.update_from_db()
     shead = "Cusp forms of weight " + str(weight) + "on \(" + latex(F.parent.group) + "\)"
     s = ""
     if((character is not None) and (character > 0)):

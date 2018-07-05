@@ -2,7 +2,7 @@
 {% set limit = 30 %}
 
 {% block description %}
- 
+
         {{ place_code('init') }}
 
         {# Kronecker symbol #}
@@ -27,10 +27,10 @@
             <a href="{{ url_character(
                 type = type,
                 number_field = nflabel,
-                modulus = condlabel, 
-                number  = indlabel)}}"> 
+                modulus = condlabel,
+                number  = indlabel)}}">
                 {{inducing}}
-            </a>  {% if symbol %}  = {{ symbol }} {% endif %}	
+            </a>  {% if symbol %}  = {{ symbol }} {% endif %}
             </p>
         {% endif %}
 
@@ -66,7 +66,7 @@
         </div>
 
         {% set value_default = 2 %}
-        <form> value  at&nbsp; 
+        <form> value  at&nbsp;
             <input id="calc-value-input" size=10 placeholder={{value_default}}>
             <button id="calc-value-go"> Compute </button>
             <span class="formexample"> e.g. {{value_default}} </span>
@@ -103,7 +103,7 @@
         <a href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num)}}">
                 {{label}}
             </a>
-         {% endfor %}
+        {% endfor %}
         </p>
 
         {# Fields #}
@@ -133,7 +133,7 @@
 
         {# sums #}
 
-        {% if type=='Dirichlet' and values %}
+        {% if type=='Dirichlet' and charsums %}
 
         {# Gauss sum #}
 
@@ -146,9 +146,8 @@
             <input id="calc-gauss-input" size=10 placeholder={{gauss_default}}>
             <button id="calc-gauss-go"> Compute </button>
             <span class="formexample"> e.g. {{gauss_default}} </span>
-            <div class="slider" id="slider-gauss"></div>
         </form>
-        <div class="output"><span id="calc-gauss-output"></span></div>
+        <div class="output"><span id="calc-gauss-output">{{ charsums.gauss|safe }}</span></div>
 
         {# Jacobi sum #}
 
@@ -161,9 +160,8 @@
             <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
             <button id="calc-jacobi-go"> Compute </button>
             <span class="formexample"> e.g. 1</span>
-            <div class="slider" id="slider-jacobi-b"></div>
         </form>
-        <div class="output"><span id="calc-jacobi-output"></span></div>
+        <div class="output"><span id="calc-jacobi-output">{{ charsums.jacobi|safe }}</span></div>
 
         {# Kloosterman sum #}
 
@@ -172,34 +170,32 @@
         </h2>
         {{ place_code('kloosterman') }}
         {% set kloosterman_default_a = 1 %}
-        {% set kloosterman_default_b = 2 %} 
+        {% set kloosterman_default_b = 2 %}
         <form> \(K(a,b,\chi_{ {{modulus}} }({{number}},&middot;)) \;\) at \(\; a,b = \)
             <input id="calc-kloosterman-input" size=10 placeholder={{kloosterman_default_a}},{{kloosterman_default_b}}>
             <button id="calc-kloosterman-go"> Compute </button>
             <span class="formexample"> e.g. {{kloosterman_default_a}},{{kloosterman_default_b}}</span>
-            <table style="width: 95%;">
-            <tr><td style="width: 3em; text-align: right;">a: </td><td><div class="slider" id="slider-kloosterman-a"></div></td></tr>
-            <tr><td style="width: 3em; text-align: right;">b: </td><td><div class="slider" id="slider-kloosterman-b"></div></td></tr>
-            </table>
         </form>
-        <div class="output"><span id="calc-kloosterman-output"></span></div>
-        {% endif %}
+        <div class="output"><span id="calc-kloosterman-output">{{ charsums.kloosterman|safe }}</span></div>
 
+        {% endif %} {# charsums #}
+
+{% if values %}
 <script type="text/javascript">
 function value_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-value-input").val();
-    $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val, 
+    $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val,
      function() {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-value-output"]);
      });
 }
-        {% if type=='Dirichlet' and values %}
+        {% if type=='Dirichlet' and charsums %}
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
-    $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val, 
+    $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val,
      function() {
         {# tell mathjx to render the output #}
         MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
@@ -231,7 +227,7 @@ $(function() {
         {% if type=='Dirichlet' %}
     $("#calc-gauss-go").click(function(e) {gauss_handler(e)});
     $("#calc-jacobi-go").click(function(e) {jacobi_handler(e)});
-    $("#calc-kloosterman-go").click(function(e) {gauss_handler(e)});
+    $("#calc-kloosterman-go").click(function(e) {kloosterman_handler(e)});
         {% endif %}
     $("#calc-value-input").keypress(function(e) {
         if (e.which == 13) value_handler(e);
@@ -249,56 +245,11 @@ $(function() {
     $("#calc-kloosterman-input").keypress(function(e) {
         if (e.which == 13) kloosterman_handler(e);
     });
-
-    {#{$( "#slider-gauss-default" ).slider({ value:2,
-        create: function( event, ui ) {
-          $( "#calc-gauss-input" ).val(ui.value);
-          gauss_handler(event);
-        }
-        });#}
-    $( "#slider-gauss" ).slider({ value: {{gauss_default}}, min: 0, max: 2*{{modulus}}, step: 1,
-        change: function( event, ui ) {
-          $( "#calc-gauss-input" ).val(ui.value);
-          gauss_handler(event);
-        }
-    });
-
-    function jacobi_slider_handler(event, ui) {
-      var b = $("#slider-jacobi-b").slider("value");
-      $( "#calc-jacobi-input" ).val(b);
-      jacobi_handler(event);
-                                                };
-
-    $( "#slider-jacobi-b").slider({ value: {{jacobi_default}}, min: 0, max: {{modulus}}, step: 1,
-        change: function( event, ui ) {
-            $( "#calc-jacobi-input" ).val(ui.value);
-            jacobi_handler(event);
-        }
-     });
-
-    function kloosterman_slider_handler(event, ui) {
-      var a = $("#slider-kloosterman-a").slider("value");
-      var b = $("#slider-kloosterman-b").slider("value");
-      $( "#calc-kloosterman-input" ).val(""+a+","+b);
-      kloosterman_handler(event);
-    }; 
-
-    $( "#slider-kloosterman-a" ).slider({ value: {{kloosterman_default_a}}, min: 0, max: 2*{{modulus}}, step: 1,
-      change: function( event, ui ) {
-        kloosterman_slider_handler(event, ui);
-       }
-     });
-
-    $( "#slider-kloosterman-b" ).slider({ value: {{kloosterman_default_b}}, min: 0, max: 2*{{modulus}}, step: 1,
-      change: function( event, ui ) {
-        kloosterman_slider_handler(event, ui);
-      }
-     });
-        {% endif %}
+    {% endif %}
 
 });
 </script>
-
+{% endif %}
 
 {% endblock %}
 

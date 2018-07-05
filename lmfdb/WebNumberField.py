@@ -193,10 +193,7 @@ class WebNumberField:
         if isinstance(coeffs, list):
             f = db.nf_fields.lucky({'coeffs': coeffs})
             if f is None:
-                # Check if we have a result of the old polredabs
-                f = db.nf_fields.lucky({'oldpolredabscoeffs': coeffs})
-                if f is None:
-                    return cls('a')  # will initialize data to None
+                return cls('a')  # will initialize data to None
             return cls(f['label'], f)
         else:
             raise Exception('wrong type')
@@ -489,6 +486,10 @@ class WebNumberField:
             return '\phi'
         else:
             return web_latex(self.gen_name)
+
+    def variable_name(self):
+        # For consistency with Sage number fields
+        return self.gen_name
 
     def unit_rank(self):
         if not self.haskey('unit_rank'):

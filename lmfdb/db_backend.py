@@ -33,10 +33,9 @@ from collections import Counter
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
-from lmfdb.db_encoding import setup_connection, Array, copy_dumps
+from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
 import json, random, time
 from sage.misc.cachefunc import cached_method
-from sage.functions.other import ceil
 from sage.misc.mrange import cartesian_product_iterator
 from lmfdb.utils import make_logger, format_percentage
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
@@ -99,6 +98,16 @@ class QueryLogFilter(object):
             return 1
         else:
             return 0
+
+class EmptyContext(object):
+    """
+    Used to simplify code in cases where we may or may not want to open an extras file.
+    """
+    name = None
+    def __enter__(self):
+        pass
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
 class PostgresBase(object):
     """
@@ -218,11 +227,11 @@ class PostgresTable(PostgresBase):
             has_id = False
             for rec in cur:
                 col = rec[0]
+                self._col_type[col] = rec[1]
                 if col == 'id':
                     has_id = True
                 else:
                     col_list.append(col)
-                    self._col_type[col] = rec[1]
             if (self._id_ordered or self.extra_table is not None) and not has_id:
                 raise RuntimeError("Table %s must have id column!"%(table_name))
             self.has_id = has_id # used in determining how to sort
@@ -375,6 +384,7 @@ class PostgresTable(PostgresBase):
           - ``$gt`` -- greater than
           - ``$ne`` -- not equal to
           - ``$in`` -- the column must be one of the given set of values
+          - ``$nin`` -- the column must not be any of the given set of values
           - ``$contains`` -- for json columns, the given value should be a subset of the column.
           - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
           - ``$containedin`` -- for json columns, the column should be a subset of the given list
@@ -395,46 +405,73 @@ class PostgresTable(PostgresBase):
             sage: statement, vals = db.nf_fields._parse_special("$or", [{"degree":{"$lte":5}},{"class_number":{"$gte":3}}], None)
             sage: statement.as_string(db.conn), vals
             ('("degree" <= %s OR "class_number" >= %s)', [5, 3])
+            sage: statement, vals = db.nf_fields._parse_special("$or", [{"$lte":5}, {"$gte":10}], "degree")
+            sage: statement.as_string(db.conn), vals
+            ('("degree" <= %s OR "degree" >= %s)', [5, 10])
+            sage: statement, vals = db.nf_fields._parse_special("$and", [{"$gte":5}, {"$lte":10}], "degree")
+            sage: statement.as_string(db.conn), vals
+            ('("degree" >= %s AND "degree" <= %s)', [5, 10])
             sage: statement, vals = db.nf_fields._parse_special("$contains", [2,3,5], "ramps")
             sage: statement.as_string(db.conn), vals
             ('"ramps" @> %s', [[2, 3, 5]])
         """
-        if key == '$or':
-            pairs = [self._parse_dict(clause) for clause in value]
+        if key in ['$or', '$and']:
+            pairs = [self._parse_dict(clause, outer=col) for clause in value]
             pairs = [pair for pair in pairs if pair[0] is not None]
             if pairs:
                 strings, values = zip(*pairs)
                 # flatten values
                 values = [item for sublist in values for item in sublist]
-                return SQL("({0})").format(SQL(" OR ").join(strings)), values
+                joiner = " OR " if key == '$or' else " AND "
+                return SQL("({0})").format(SQL(joiner).join(strings)), values
             else:
                 return None, None
-        elif key == '$lte':
-            return SQL("{0} <= %s").format(Identifier(col)), [value]
-        elif key == '$lt':
-            return SQL("{0} < %s").format(Identifier(col)), [value]
-        elif key == '$gte':
-            return SQL("{0} >= %s").format(Identifier(col)), [value]
-        elif key == '$gt':
-            return SQL("{0} > %s").format(Identifier(col)), [value]
-        elif key == '$ne':
-            return SQL("{0} != %s").format(Identifier(col)), [value]
-        elif key == '$in':
-            return SQL("{0} = ANY(%s)").format(Identifier(col)), [Array(value)]
-        elif key == '$contains':
-            return SQL("{0} @> %s").format(Identifier(col)), [value]
-        elif key == '$notcontains':
-            return (SQL(" AND ").join(SQL("NOT {0} @> %s").format(Identifier(col)) * len(value)),
-                    [[v] for v in value])
-        elif key == '$containedin':
-            return SQL("{0} <@ %s").format(Identifier(col)), [value]
-        elif key == '$exists':
-            if value:
-                return SQL("{0} IS NOT NULL").format(Identifier(col)), []
-            else:
-                return SQL("{0} IS NULL").format(Identifier(col)), []
+        if isinstance(col, Composable):
+            # Compound specifier like cc.1
+            force_json = True
         else:
-            raise ValueError("Error building query: {0}".format(key))
+            force_json = (self._col_type[col] == 'jsonb')
+            col = Identifier(col)
+        # First handle the cases that have unusual values
+        if key == '$exists':
+            if value:
+                cmd = SQL("{0} IS NOT NULL").format(col)
+            else:
+                cmd = SQL("{0} IS NULL").format(col)
+            value = []
+        elif key == '$notcontains':
+            cmd = SQL(" AND ").join(SQL("NOT {0} @> %s").format(col) * len(value))
+            value = [[v] for v in value]
+        else:
+            if key == '$lte':
+                cmd = SQL("{0} <= %s")
+            elif key == '$lt':
+                cmd = SQL("{0} < %s")
+            elif key == '$gte':
+                cmd = SQL("{0} >= %s")
+            elif key == '$gt':
+                cmd = SQL("{0} > %s")
+            elif key == '$ne':
+                cmd = SQL("{0} != %s")
+            elif key == '$in':
+                cmd = SQL("{0} = ANY(%s)")
+                value = Array(value)
+            elif key == '$nin':
+                cmd = SQL("NOT ({0} = ANY(%s)")
+                value = Array(value)
+            elif key == '$contains':
+                cmd = SQL("{0} @> %s")
+            elif key == '$containedin':
+                cmd = SQL("{0} <@ %s")
+            else:
+                raise ValueError("Error building query: {0}".format(key))
+            if force_json:
+                if isinstance(value, Array):
+                    raise ValueError("$in and $nin operators not supported for jsonb")
+                value = Json(value)
+            cmd = cmd.format(col)
+            value = [value]
+        return cmd, value
 
     def _parse_dict(self, D, outer=None):
         """
@@ -479,23 +516,33 @@ class PostgresTable(PostgresBase):
                         strings.append(sub)
                         values.extend(vals)
                     continue
+                if '.' in key:
+                    path = [int(p) if p.isdigit() else p for p in key.split('.')]
+                    key, path = path[0], [SQL("->{0}").format(Literal(p)) for p in path[1:]]
+                    force_json = True
+                else:
+                    path = []
+                    force_json = (self._col_type[key] == 'jsonb')
+                if not (self.has_id and key == 'id' or key in self._search_cols):
+                    raise ValueError("%s is not a column of %s"%(key, self.search_table))
+                if path:
+                    # Only call SQL for compound keys here so that _parse_special calls
+                    # can distinguish between basic and compound keys based on type
+                    key = SQL("{0}{1}").format(Identifier(key), SQL("").join(path))
                 if isinstance(value, dict) and all(k.startswith('$') for k in value.iterkeys()):
                     sub, vals = self._parse_dict(value, key)
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
                     continue
-                if '.' in key:
-                    path = [int(p) if p.isdigit() else p for p in key.split('.')]
-                    key, path = path[0], [SQL("->{0}").format(Literal(p)) for p in path[1:]]
-                else:
-                    path = []
-                if not (self.has_id and key == 'id' or key in self._search_cols):
-                    raise ValueError("%s is not a column of %s"%(key, self.search_table))
-                key = SQL("{0}{1}").format(Identifier(key), SQL("").join(path))
+                if not path:
+                    # Now need to make key an identifier
+                    key = Identifier(key)
                 if value is None:
                     strings.append(SQL("{0} IS NULL").format(key))
                 else:
+                    if force_json:
+                        value = Json(value)
                     strings.append(SQL("{0} = %s").format(key))
                     values.append(value)
             if strings:
@@ -683,7 +730,7 @@ class PostgresTable(PostgresBase):
             else:
                 return {k:v for k,v in zip(search_cols, rec) if v is not None}
 
-    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
+    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None, silent=False):
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for usage from search pages where multiple results may be returned.
@@ -708,6 +755,7 @@ class PostgresTable(PostgresBase):
         - ``offset`` -- an integer (default 0), where to start in the list of results.
         - ``sort`` -- a sort order.  Either None or a list of strings (which are interpreted as column names in the ascending direction) or of pairs (column name, 1 or -1).  If not specified, will use the default sort order on the table.  If you want the result unsorted, use [].
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
+        - ``silent`` -- a boolean.  If True, slow query warnings will be suppressed.
 
         WARNING:
 
@@ -760,7 +808,7 @@ class PostgresTable(PostgresBase):
             else:
                 qstr, values = self._build_query(query, limit, offset, sort)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
-        cur = self._execute(selecter, values)
+        cur = self._execute(selecter, values, silent=silent)
         if limit is None:
             if info is not None:
                 # caller is requesting count data
@@ -1132,7 +1180,7 @@ class PostgresTable(PostgresBase):
         for res in self._indexes_touching(columns):
             self.restore_index(res[0], suffix)
 
-    def _pkey_common(self, command, suffix, action):
+    def _pkey_common(self, command, suffix, action, commit):
         """
         Common code for ``drop_pkeys`` and ``restore_pkeys``.
 
@@ -1152,10 +1200,11 @@ class PostgresTable(PostgresBase):
             self._execute(command.format(Identifier(self.extra_table + suffix),
                                          Identifier(self.search_table + suffix + "_pkey")),
                           silent=True, commit=False)
-        self.conn.commit()
+        if commit:
+            self.conn.commit()
         print "%s primary key on %s in %.3f secs"%(action, self.search_table, time.time()-now)
 
-    def drop_pkeys(self, suffix=""):
+    def drop_pkeys(self, suffix="", commit=True):
         """
         Drop the primary key on the id columns.
 
@@ -1165,9 +1214,9 @@ class PostgresTable(PostgresBase):
         """
         if self.has_id:
             command = SQL("ALTER TABLE {0} DROP CONSTRAINT {1}")
-            self._pkey_common(command, suffix, "Dropped")
+            self._pkey_common(command, suffix, "Dropped", commit)
 
-    def restore_pkeys(self, suffix=""):
+    def restore_pkeys(self, suffix="", commit=True):
         """
         Restore the primary key on the id columns.
 
@@ -1177,7 +1226,7 @@ class PostgresTable(PostgresBase):
         """
         if self.has_id:
             command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
-            self._pkey_common(command, suffix, "Built")
+            self._pkey_common(command, suffix, "Built", commit)
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -1214,9 +1263,27 @@ class PostgresTable(PostgresBase):
         # Sort and set self._out_of_order
         pass
 
-    def rewrite(self, func, projection=2, query={}, resort=True, reindex=True, restat=True, tostr_func=None, **kwds):
+    def rewrite(self, func, query={}, resort=True, reindex=True, restat=True, tostr_func=None, **kwds):
+        """
+        This function can be used to edit some or all records in the table.
+
+        Note that if you want to add new columns, you must explicitly call add_column() first.
+
+        For example, to add a new column to artin_reps that tracks the
+        signs of the galois conjugates, you would do the following::
+
+            sage: from lmfdb.db_backend import db
+            sage: db.artin_reps.add_column('GalConjSigns','jsonb')
+            sage: def add_signs(rec):
+            ....:     rec['GalConjSigns'] = sorted(list(set([conj['Sign'] for conj in rec['GaloisConjugates']])))
+            ....:     return rec
+            sage: db.artin_reps.rewrite(add_signs)
+        """
         search_cols = ["id"] + self._search_cols if self.has_id else self._search_cols
-        if self.extra_table is not None:
+        if self.extra_table is None:
+            projection = search_cols
+        else:
+            projection = search_cols + self._extra_cols
             extra_cols = ["id"] + self._extra_cols
         # It would be nice to just use Postgres' COPY TO here, but it would then be hard
         # to give func access to the data to process.
@@ -1225,7 +1292,7 @@ class PostgresTable(PostgresBase):
         if tostr_func is None:
             tostr_func = copy_dumps
         searchfile = tempfile.NamedTemporaryFile('w', delete=False)
-        extrafile = None if self.extra_table is None else tempfile.NamedTemporaryFile('w', delete=False)
+        extrafile = EmptyContext() if self.extra_table is None else tempfile.NamedTemporaryFile('w', delete=False)
         try:
             with searchfile:
                 with extrafile:
@@ -1234,10 +1301,10 @@ class PostgresTable(PostgresBase):
                         searchfile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in search_cols) + u'\n')
                         if self.extra_table is not None:
                             extrafile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in extra_cols) + u'\n')
-            self.reload(searchfile, extrafile, includes_ids=True, resort=resort, reindex=reindex, restat=restat, **kwds)
+            self.reload(searchfile.name, extrafile.name, includes_ids=True, resort=resort, reindex=reindex, restat=restat, **kwds)
         finally:
             searchfile.unlink(searchfile.name)
-            if extrafile is not None:
+            if self.extra_table is not None:
                 extrafile.unlink(extrafile.name)
 
     def delete(self, query, resort=True, restat=True):
@@ -1430,7 +1497,7 @@ class PostgresTable(PostgresBase):
             extra_table = Identifier(self.extra_table)
         return search_table, extra_table
 
-    def resort(self, search_table=None, extra_table=None):
+    def resort(self, search_table=None, extra_table=None, commit=True):
         """
         Restores the sort order on the id column.
 
@@ -1470,7 +1537,8 @@ class PostgresTable(PostgresBase):
             self._execute(pkey.format(search_table, oldid), silent=True, commit=False)
             self._set_ordered(commit=False)
             print "Resorted %s in %.3f secs"%(self.search_table, time.time() - now)
-            self.conn.commit()
+            if commit:
+                self.conn.commit()
         elif self._id_ordered:
             print "Data already sorted"
         else:
@@ -1532,7 +1600,7 @@ class PostgresTable(PostgresBase):
         """
         Utility function: creates a table with the same schema as the given one.
         """
-        creator = SQL("CREATE TABLE {0} LIKE {1}")
+        creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
         self._execute(creator, commit=commit)
 
     def _swap_in_tmp(self, tables, indexed):
@@ -1605,19 +1673,19 @@ class PostgresTable(PostgresBase):
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
             If the number of rows is a substantial fraction of the size of the table, this will be faster.
-        - ``restat`` -- whether to refresh statistics afterward.  Default behavior is to refresh stats if either countfile or statsfile is missing.
+        - ``restat`` -- whether to refresh statistics afterward.  Default behavior is to refresh stats if either countsfile or statsfile is missing.
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
         """
         if resort is None:
             resort = not includes_ids
         if restat is None:
-            restat = (countfile is None or statsfile is None)
+            restat = (countsfile is None or statsfile is None)
         self._check_file_input(searchfile, extrafile, kwds)
         tables = []
         counts = {}
         for table, cols, addid, filename in [(self.search_table, self._search_cols, self.has_id, searchfile),
                                              (self.extra_table, self._extra_cols, True, extrafile),
-                                             (self.stats.counts, ["cols", "values", "count"],False, countfile),
+                                             (self.stats.counts, ["cols", "values", "count"],False, countsfile),
                                              (self.stats.stats, ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"], False, statsfile)]:
             if filename is None:
                 continue
@@ -1639,7 +1707,7 @@ class PostgresTable(PostgresBase):
             # We still need to build primary keys
             self.restore_pkeys(suffix="_tmp")
         if reindex:
-            self.restore_indexes(self.search_table, suffix="_tmp")
+            self.restore_indexes(suffix="_tmp")
         if restat:
             self.stats.refresh_stats(suffix="_tmp")
             for table in [self.stats.counts, self.stats.stats]:
@@ -1720,7 +1788,7 @@ class PostgresTable(PostgresBase):
         self._check_file_input(searchfile, extrafile, kwds)
         for table, cols, addid, filename in [(self.search_table, self._search_cols, self.has_id and include_ids, searchfile),
                                              (self.extra_table, self._extra_cols, include_ids, extrafile),
-                                             (self.stats.counts, ["cols", "values", "count"],False, countfile),
+                                             (self.stats.counts, ["cols", "values", "count"],False, countsfile),
                                              (self.stats.stats, ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"], False, statsfile)]:
             if filename is None:
                 continue
@@ -1792,24 +1860,33 @@ class PostgresTable(PostgresBase):
         if commit:
             self.conn.commit()
 
-    def drop_column(self, name):
-        if name in self._sort_keys():
+    def drop_column(self, name, commit=True):
+        if name in self._sort_keys:
             raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before dropping column"%(self.search_table, name))
         if name in self._search_cols:
             table = self.search_table
             deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND columns @> %s")
             self._execute(deleter, [self.search_table, [name]], commit=False)
+            self._search_cols.remove(name)
         elif name in self._extra_cols:
             table = self.extra_table
+            self._extra_cols.remove(name)
         else:
             raise ValueError("%s is not a column of %s"%(name, self.search_table))
         modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(name))
-        self._execute(modifier) # commits
-        self._search_cols.remove(name)
-        self._extra_cols.remove(name)
+        self._execute(modifier, commit=commit)
         self._col_type.pop(name, None)
 
-    def add_id(self, ordered=False):
+    def add_id(self, ordered=False, restore_pkey=True, commit=True):
+        """
+        Add an id column.
+
+        INPUT:
+
+        - ``ordered`` -- whether the id column should be sorted matching the default sort order
+        - ``restore_pkey`` -- whether to create a primary key on the new column
+        - ``commit`` -- whether to commit the changes permanently
+        """
         if self.has_id:
             raise ValueError("%s already has id column"%(self.search_table))
         if ordered and not self._sort:
@@ -1825,22 +1902,86 @@ class PostgresTable(PostgresBase):
             self._execute(updater, [True, True], commit=False)
             self._id_ordered = True
             self._out_of_order = True
-            self.resort() # commits
+            self.resort(commit=False)
+        if restore_pkey:
+            self.restore_pkeys(commit=False)
+        if commit:
+            self.conn.commit()
 
     def create_extra_table(self, columns, ordered=False):
+        """
+        Splits this search table into two, linked by an id column.
+
+        INPUT:
+
+        - ``columns`` -- columns that are currently in the search table
+            that should be moved to the new extra table. Can be empty.
+        - ``ordered`` -- whether the id column should be kept in sorted
+            order based on the default sort order stored in meta_tables.
+        """
         if self.extra_table is not None:
             raise ValueError("Extra table already exists")
         if not self.has_id:
-            self.add_id(ordered=ordered)
+            self.add_id(ordered=ordered, restore_pkey=False, commit=False)
         elif ordered and not self._id_ordered:
-            updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order) = (%s, %s)")
-            self._execute(updater, [True, True], commit=False)
+            updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order, has_extras) = (%s, %s, %s)")
+            self._execute(updater, [True, True, True], commit=False)
             self._id_ordered = True
             self._out_of_order = True
-            self.resort() # commits
-        #vars = SQL(", ").join(
-        #creator = SQL("CREATE TABLE {0} (")
-        #if not columns:
+            self.resort(commit=False)
+        else:
+            updater = SQL("UPDATE meta_tables SET (has_extras) = (%s)")
+            self._execute(updater, [True], commit=False)
+        self.extra_table = search_table + "_extras"
+        vars = [('id', 'bigint')]
+        for col in columns:
+            if col not in self._col_type:
+                raise ValueError("%s is not a column of %s"%(col, self.search_table))
+            if col in self._sort_keys:
+                raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
+            selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s AND columns @> %s")
+            cur = self._execute(selecter, [self.search_table, [col]], commit=False)
+            if cur.rowcount > 0:
+                raise ValueError("Indexes (%s) depend on %s"%(", ".join(rec[0] for rec in cur), col))
+            typ = self._col_type[col]
+            if typ not in types_whitelist:
+                if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
+                    raise RuntimeError("%s is not a valid type"%(typ))
+            if typ == 'text' or typ.startswith('char'):
+                typ += ' COLLATE "C"'
+            vars.append((col, typ))
+        self._extra_cols = []
+        vars = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in vars)
+        creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), vars)
+        self._execute(creator)
+        if columns:
+            try:
+                transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
+                cur = self.conn.cursor()
+                with transfer_file:
+                    try:
+                        cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns)
+                    except Exception:
+                        self.conn.rollback()
+                        raise
+                with open(transfer_file.name) as F:
+                    try:
+                        cur.copy_from(F, self.extra_table, columns=['id'] + columns)
+                    except Exception:
+                        self.conn.rollback()
+                        raise
+            finally:
+                transfer_file.unlink(transfer_file.name)
+            for col in columns:
+                modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(col))
+                self._execute(modifier, commit=False)
+        else:
+            sequencer = SQL("CREATE TEMPORARY SEQUENCE tmp_id")
+            self._execute(sequencer, commit=False)
+            updater = SQL("UPDATE {0} SET id = nextval('tmp_id')").format(Identifier(self.extra_table))
+            self._execute(updater, commit=False)
+        self.restore_pkeys(commit=False)
+        self.conn.commit()
 
 class PostgresStatsTable(PostgresBase):
     """

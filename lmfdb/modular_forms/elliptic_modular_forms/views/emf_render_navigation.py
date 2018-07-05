@@ -4,7 +4,7 @@ Routines for rendering the navigation.
 """
 from flask import url_for,render_template,request,redirect
 from lmfdb.utils import to_dict
-from lmfdb.db_backend import db
+from lmfdb.base import getDBConnection
 from lmfdb.modular_forms import MF_TOP
 from lmfdb.modular_forms.backend.mf_utils import my_get
 from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, EMF_TOP
@@ -15,6 +15,9 @@ def render_elliptic_modular_form_navigation_wp(**args):
     Renders the webpage for the navigational page.
     """
     from sage.all import is_even
+    from lmfdb.modular_forms.elliptic_modular_forms import WebModFormSpace
+    dimension_table_name = WebModFormSpace._dimension_table_name
+  
     info = to_dict(args)
     args = to_dict(request.args)
     info.update(args)
@@ -79,6 +82,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
         return redirect(url_for("emf.render_elliptic_modular_forms",
           level=limits_level[0],weight=limits_weight[0],group=group), code=301)
     info['show_switch'] = True
+    db_dim = getDBConnection()['modularforms2'][dimension_table_name]
     s = {'level':{"$lt":int(limits_level[1]+1),"$gt":int(limits_level[0]-1)},
          'weight' : {"$lt":int(limits_weight[1]+1),"$gt":int(limits_weight[0]-1)}}
     if group == 0:
@@ -102,7 +106,7 @@ def render_elliptic_modular_form_navigation_wp(**args):
         info['table'][n]={}
         for k in weight_range:
             info['table'][n][k]={'dim_new':int(0), 'in_db':-1}
-    for r in db.mf_dims.search(s):
+    for r in db_dim.find(s):
         N = r['level']
         k = r['weight']
         if group != 0 or k%2==0:

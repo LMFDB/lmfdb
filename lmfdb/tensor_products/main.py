@@ -18,7 +18,7 @@ from lmfdb.lfunctions.main import render_lfunction_exception
 
 def get_bread(breads=[]):
     bc = [("L-functions", url_for("l_functions.l_function_top_page")),
-          ("Tensor products", url_for(".index"))]
+          ("Tensor Products", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc

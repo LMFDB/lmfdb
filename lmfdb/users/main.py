@@ -9,6 +9,7 @@ from lmfdb.base import app
 from flask import render_template, request, Blueprint, url_for, make_response
 #from flask.ext.login import login_required, login_user, current_user, logout_user
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager
+from distutils.version import StrictVersion
 
 login_page = Blueprint("users", __name__, template_folder='templates')
 import lmfdb.utils
@@ -20,6 +21,9 @@ allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
 #from flask.ext.login import LoginManager
 login_manager = LoginManager()
 
+# We log a warning if the version of flask-login is less than FLASK_LOGIN_LIMIT
+FLASK_LOGIN_VERSION = flask_login.__version__
+FLASK_LOGIN_LIMIT = '0.3.0'
 from pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
 
 base_url = "http://beta.lmfdb.org"
@@ -46,7 +50,17 @@ def ctx_proc_userdata():
     userdata = {}
     userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
     userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
-    userdata['user_is_authenticated'] = current_user.is_authenticated()
+
+    if StrictVersion(FLASK_LOGIN_VERSION) > StrictVersion(FLASK_LOGIN_LIMIT):
+        userdata['user_is_authenticated'] = current_user.is_authenticated
+    else:
+        userdata['user_is_authenticated'] = current_user.is_authenticated()
+
+    try:
+        roles = getDBConnection()['admin'].command(SON({"connectionStatus":int(1)}))
+        userdata['user_can_write'] = 'readWrite' in [el['role'] for el in roles['authInfo']['authenticatedUserRoles'] if el['db']=='inventory']
+    except:
+        userdata['user_can_write'] = False
     userdata['user_is_admin'] = current_user.is_admin()
     userdata['get_username'] = get_username # this is a function
     return userdata

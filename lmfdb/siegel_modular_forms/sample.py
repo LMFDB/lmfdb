@@ -98,7 +98,7 @@ class Sample_class (SageObject):
         query = {'owner_id': self.__id, 'det': {'$in': det_list}}
         fcs = db.smf_fc.search(query, ['det', 'data'])
         P = PolynomialRing(self.__field, names = 'x,y')
-        return dict((fcd['fc_det'], dict((tuple(literal_eval(f)), P(str(fcd['data'][f]))) for f in fcd['data'] )) for fcd in fcs)
+        return dict((fcd['det'], dict((tuple(literal_eval(f)), P(str(poly))) for f, poly in fcd['data'].items() )) for fcd in fcs)
 
 
 def Sample(collection, name):

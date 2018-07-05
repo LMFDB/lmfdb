@@ -25,7 +25,7 @@ from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
 
-from lmfdb.base import app
+from lmfdb.base import app, ctx_proc_userdata
 
 ################################################################################
 #   number utilities
@@ -500,6 +500,61 @@ def order_values(doc, field, sub_fields=["len", "val"]):
     tmp = doc[field]
     doc[field] = bson.SON([(sub_field, tmp[sub_field]) for sub_field in sub_fields])
     return doc
+
+################################################################################
+#  pymongo utilities - will be removed soon
+################################################################################
+
+from pymongo.errors import ExecutionTimeout
+
+def search_cursor_timeout_decorator(cursor, skip, limit):
+    r"""
+    INPUT:
+            - pymongo cursor
+            - skip value to pass to cursor (after cursor.count())
+            - limit value to pass to cursor (after cursor.count())
+
+    OUTPUT:
+            If the query doesn't time out returns the tuple (skip, cursor.count(), cursor.skip(skip).limit(limit))
+            If the query times out, it raises a ValueError
+    """
+
+    # 25 seconds, timeout, hopefully enough to avoid google's and gunicorn's timeout of 30s
+    cursor = cursor.max_time_ms(25000)
+    try:
+        ncursor = cursor.count()
+
+        # adjusts skip if necessary
+        if(skip >= ncursor):
+            skip -= (1 + (skip - ncursor) / limit) * limit
+        if(skip < 0):
+            skip = 0
+
+        cursor = cursor.skip(skip).limit(limit)
+    except ExecutionTimeout as err:
+        ctx = ctx_proc_userdata()
+        flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage']);
+        raise ValueError(err)
+
+    return skip, ncursor, cursor
+
+
+def random_object_from_collection(collection):
+    """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
+    import pymongo
+    n = collection.rand.count()
+    if n:
+        m = collection.count()
+        if m != n:
+            current_app.logger.warning("Random object index {0}.rand is out of date ({1} != {2}), proceeding anyway.".format(collection,n,m))
+        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']})
+        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
+            return obj
+    if pymongo.version_tuple[0] < 3:
+        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next()
+    else:
+        # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
+        return collection.aggregate([{ '$sample': { 'size': int(1) } } ]).next()
 
 ################################################################################
 #  pagination utilities

@@ -1,0 +1,112 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% set max_cols = 10 %}
+{% set genus_detail = info.stats.genus_detail %}
+{% set dim_detail = info.stats.dim_detail %}
+
+<style>
+table.ntdata th.center {
+  text-align: center;
+}
+
+table.ntdata td {
+  text-align: center;
+}
+</style>
+
+<div>
+  <p>
+    Currently the database contains all groups G acting as automorphisms of
+    curves  X from genus {{info.stats.genus.min}} up to genus
+    {{info.stats.genus.max}} so that the quotient space X/G is the Riemann
+    sphere (X/G has genus 0). There are {{info.stats.refined_passports.distinct}}
+    distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} in the database. The number of distinct
+    {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
+  </p>
+</div>
+
+<h2> Distribution by genus </h2>
+{% for i in range(0, genus_detail | length, max_cols) %}
+<div>
+  <table border=1 cellpadding=5 class="ntdata">
+    <thead>
+      <tr>
+        <th>Genus</th>
+        {% for genus in genus_detail[i:i+max_cols] %}
+        <th class="center">
+          <a href={{ url_for('.index', genus=genus.genus_num)}}>{{genus.genus_num}}</a>
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>distinct families</th>
+        {% for genus in genus_detail[i:i+max_cols] %}
+        <td>{{genus.families}}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <th>distinct refined passports</th>
+        {% for genus in genus_detail[i:i+max_cols] %}
+        <td>{{genus.refined_passports}}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <th>distinct generating vectors</th>
+        {% for genus in genus_detail[i:i+max_cols] %}
+        <td>
+          {{genus.gen_vectors}}
+        </td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <th>unique groups</th>
+        {% for genus in genus_detail[i:i+max_cols] %}
+        <td>
+          <a href={{ url_for('.groups_per_genus', genus=genus.genus_num) }}>{{genus.groups[0]}}</a>
+        </td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <th>maximum group order</th>
+        {% for genus in genus_detail[i:i+max_cols] %}
+        <td>
+          <a href={{ url_for('.index', genus=genus.genus_num, groupsize=genus.groups[1])}}>{{genus.groups[1]}}</a>
+        </td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+
+<br>
+
+
+<h2> Distribution by dimension </h2>
+{% for i in range(0, dim_detail | length, max_cols) %}
+<div>
+  <table border=1 cellpadding=5 class="ntdata">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        {% for dim in dim_detail[i:i+max_cols] %}
+        <th class="center">{{dim.dim_num}}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>distinct generating vectors</th>
+        {% for dim in dim_detail[i:i+max_cols] %}
+        <td>{{dim.gen_vectors}}</td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+
+{% endblock %}

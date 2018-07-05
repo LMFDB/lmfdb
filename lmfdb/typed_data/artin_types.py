@@ -55,12 +55,13 @@ Dokchitser_ArtinRepresentation = Dict({
     "Conductor": TooLargeInt,
     "HardPrimes": FiniteSequence(TooLargeInt),
     "BadPrimes": FiniteSequence(TooLargeInt),
-    "NFGal": LabelString,
+    "NFGal": FiniteSequence(TooLargeInt),
     "CharacterField": Int,
     "Galt": Int,
     "Galn": Int,
     "Hide": Int,
-    "GaloisConjugates": FiniteSequence(Galois_Conjugate)
+    "GaloisConjugates": FiniteSequence(Galois_Conjugate),
+    "GalConjSigns": FiniteSequence(Int)
 })
 
 

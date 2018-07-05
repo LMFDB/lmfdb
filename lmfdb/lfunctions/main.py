@@ -99,7 +99,7 @@ def l_function_degree_page(degree):
 # L-function of holomorphic cusp form with trivial character browsing page ##############################################
 @l_function_page.route("/degree2/CuspForm/")
 def l_function_cuspform_browse_page():
-    info = {"bread": get_bread(2, [("CuspForm", url_for('.l_function_cuspform_browse_page'))])}
+    info = {"bread": get_bread(2, [("Cusp Form", url_for('.l_function_cuspform_browse_page'))])}
     info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(1, 13, 2, 12)]
     return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_0(N)\) with trivial character', **info)
 
@@ -107,7 +107,7 @@ def l_function_cuspform_browse_page():
 # L-function of GL(2) maass forms browsing page ##############################################
 @l_function_page.route("/degree2/MaassForm/")
 def l_function_maass_browse_page():
-    info = {"bread": get_bread(2, [("MaassForm", url_for('.l_function_maass_browse_page'))])}
+    info = {"bread": get_bread(2, [("Maass Form", url_for('.l_function_maass_browse_page'))])}
     info["contents"] = [processMaassNavigation()]
     info["gl2spectrum0"] = [paintSvgMaass(1, 10, 0, 10, L="/L")]
     info["colorminus1"] = rgbtohex(signtocolour(-1))
@@ -118,7 +118,7 @@ def l_function_maass_browse_page():
 # L-function of elliptic curves browsing page ##############################################
 @l_function_page.route("/degree2/EllipticCurve/")
 def l_function_ec_browse_page():
-    info = {"bread": get_bread(2, [("Elliptic curve", url_for('.l_function_ec_browse_page'))])}
+    info = {"bread": get_bread(2, [("Elliptic Curve", url_for('.l_function_ec_browse_page'))])}
     info["representation"] = ''
     info["contents"] = [processEllipticCurveNavigation(11, 65)]
     return render_template("ellipticcurve.html", title='L-functions of Elliptic Curves', **info)
@@ -133,7 +133,7 @@ def l_function_maass_gln_browse_page(degree):
     contents = LfunctionPlot.getAllMaassGraphHtml(degree)
     if not contents:
         return flask.abort(404)
-    info = {"bread": get_bread(degree, [("MaassForm", url_for('.l_function_maass_gln_browse_page',
+    info = {"bread": get_bread(degree, [("Maass Form", url_for('.l_function_maass_gln_browse_page',
                                                               degree='degree' + str(degree)))])}
     info["contents"] = contents
     return render_template("MaassformGLn.html",
@@ -143,7 +143,7 @@ def l_function_maass_gln_browse_page(degree):
 # L-function of symmetric square of elliptic curves browsing page ##############
 @l_function_page.route("/degree3/EllipticCurve/SymmetricSquare/")
 def l_function_ec_sym2_browse_page():
-    info = {"bread": get_bread(3, [("Symmetric square of Elliptic curve",
+    info = {"bread": get_bread(3, [("Symmetric Square of Elliptic Curve",
                                     url_for('.l_function_ec_sym2_browse_page'))])}
     info["representation"] = 'Symmetric square'
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 26, 2)]
@@ -154,7 +154,7 @@ def l_function_ec_sym2_browse_page():
 # L-function of symmetric cube of elliptic curves browsing page ################
 @l_function_page.route("/degree4/EllipticCurve/SymmetricCube/")
 def l_function_ec_sym3_browse_page():
-    info = {"bread": get_bread(4, [("Symmetric cube of Elliptic curve", url_for('.l_function_ec_sym3_browse_page'))])}
+    info = {"bread": get_bread(4, [("Symmetric Cube of Elliptic Curve", url_for('.l_function_ec_sym3_browse_page'))])}
     info["representation"] = 'Symmetric cube'
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 17, 3)]
     return render_template("ellipticcurve.html",
@@ -163,7 +163,7 @@ def l_function_ec_sym3_browse_page():
 # L-function of genus 2 curves browsing page ##############################################
 @l_function_page.route("/degree4/Genus2Curve/")
 def l_function_genus2_browse_page():
-    info = {"bread": get_bread(2, [("Genus 2 curve", url_for('.l_function_genus2_browse_page'))])}
+    info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
     info["representation"] = ''
     #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
     return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
@@ -388,7 +388,6 @@ def l_function_by_hash_page(lhash):
 
 def render_single_Lfunction(Lclass, args, request):
     temp_args = to_dict(request.args)
-
     try:
         L = Lclass(**args)
         # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
@@ -535,7 +534,7 @@ def set_bread_and_friends(L, request):
                     ('Symmetric cube L-function',
                      url_for(".l_function_ec_sym_page_label", power='3',
                              label=L.ellipticcurve)))
-        bread = get_bread(2, [('Cusp form', url_for('.l_function_cuspform_browse_page')),
+        bread = get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page')),
                                       (full_label, request.url)])
 
     elif L.Ltype() == 'maass':
@@ -623,13 +622,13 @@ def set_bread_and_friends(L, request):
                                           (L.label, url_for('.l_function_ec_sym_page_label',
                                                             label=L.label,power=L.m))])
         elif L.m == 3:
-            bread = get_bread(4, [("Symmetric cube of Elliptic curve",
+            bread = get_bread(4, [("Symmetric Cube of Elliptic Curve",
                                            url_for('.l_function_ec_sym3_browse_page')),
                                           (L.label, url_for('.l_function_ec_sym_page_label',
                                                             label=L.label,power=L.m))])
         else:
             bread = [('L-functions', url_for('.l_function_top_page')),
-                             ('Symmetric %s of Elliptic curve ' % ordinal(L.m)
+                             ('Symmetric %s of Elliptic Curve ' % ordinal(L.m)
                               + str(L.label),
                               url_for('.l_function_ec_sym_page_label',
                                       label=L.label,power=L.m))]

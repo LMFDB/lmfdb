@@ -83,6 +83,7 @@ def ctx_local_fields():
 
 # Utilities for subfield display
 def format_lfield(coefmult,p):
+    coefmult = [int(c) for c in coefmult.split(",")]
     label = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=0)
     if label is None:
         # This should not happen, what do we do?
@@ -131,7 +132,7 @@ def by_label(label):
 
 def local_field_search(**args):
     info = to_dict(args)
-    bread = get_bread([("Search results", ' ')])
+    bread = get_bread([("Search Results", ' ')])
     query = {}
     if info.get('jump_to'):
         return redirect(url_for(".by_label",label=info['jump_to']), 301)

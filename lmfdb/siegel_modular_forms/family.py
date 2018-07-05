@@ -62,5 +62,5 @@ class SiegelFamily (SageObject):
 
     def samples(self):
         if not self.__samples:
-            self.__samples = Samples({ 'collection': self.name })
+            self.__samples = Samples({'collection': {'$contains': [self.name]}})
         return self.__samples

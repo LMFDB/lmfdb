@@ -117,6 +117,7 @@ def get_db(inv_db, name):
 
 def set_db(inv_db, name, nice_name):
     """ Insert a new DB with given name and optional nice name (defaults to equal name), or return id if this exists. """
+#TODO make nice_name parameter optional
     try:
         table_name = inv.ALL_STRUC.db_ids[inv.STR_NAME]
         coll = inv_db[table_name]
@@ -253,6 +254,7 @@ def update_coll(inv_db, id, name=None, nice_name=None, status=None):
     Optional args:
     name -- new name for collection
     nice_name -- new nice_name for collection
+    status -- status code
     """
 
     try:
@@ -473,7 +475,15 @@ def set_record(inv_db, coll_id, data, type='auto'):
         #Generate the hash
         hash = ih.hash_record_schema(data['schema'])
         rec_find = {records_fields[1]:coll_id, records_fields[2]:hash}
-        rec_set = {records_fields[5]:data['schema'], records_fields[6]:data['count']}
+        rec_entry = get_record(inv_db, coll_id, hash)
+        if rec_entry['exist']:
+            rec_set = {records_fields[6]:data['count']}
+        else:
+            rec_set = rec_find
+            rec_set[records_fields[3]] = None
+            rec_set[records_fields[4]] = None
+            rec_set[records_fields[5]] = data['schema']
+            rec_set[records_fields[6]] = data['count']
         return upsert_and_check(coll, rec_find, rec_set)
     elif type == 'human':
         #Added data for records is the known hash for lookup, a "name" and "description" field
@@ -501,8 +511,8 @@ def update_record_description(inv_db, coll_id, data):
     rec_set = {}
     for field in data:
         rec_set[field] = data[field]
-    print rec_find, rec_set
-    return upsert_and_check(coll, rec_find, rec_set)
+    #print rec_find, rec_set
+    return update_and_check(coll, rec_find, rec_set)
 
 def update_record_count(inv_db, record_id, new_count):
     """Update the count for an existing record, given by record_id"""
@@ -527,7 +537,7 @@ def add_index(inv_db, coll_id, index_data):
         inv.log_dest.error("Error getting collection "+str(e))
         return {'err':True, 'id':0, 'exist':False}
     indexes_fields = inv.ALL_STRUC.indexes[inv.STR_CONTENT]
-    record = {indexes_fields[1]:index_data['name']}
+    record = {indexes_fields[1]:index_data['name'], indexes_fields[2]:coll_id}
     #If record exists, just return its ID
     exists_at = coll.find_one(record)
     if exists_at is not None:
@@ -583,7 +593,7 @@ def upsert_and_check(coll, rec_find, rec_set):
         elif 'value' in result:
             _id = result['value']['_id']
     except Exception as e:
-        inv.log_dest.error("Error inserting new record "+ str(e)) #TODO this is the wrong message
+        inv.log_dest.error("Error inserting new record "+ str(e))
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':(not 'upserted' in result['lastErrorObject'])}
 
@@ -601,7 +611,7 @@ def update_and_check(coll, rec_find, rec_set):
         _id = result['value']['_id']
     except Exception as e:
         print e
-        inv.log_dest.error("Error updating record "+ str(e)) #TODO this is the wrong message
+        inv.log_dest.error("Error updating record "+str(rec_find)+' '+ str(e))
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':True}
 
@@ -647,16 +657,56 @@ def complete_human_table(inv_db_toplevel, db_id, coll_id):
     for record in auto_cursor:
         rec_find = {fields_fields[1]:coll_id, fields_fields[2]: record['name']}
         human_record = h_db.find_one(rec_find)
-        rec_set = {}
+        #Should never be two records with same coll-id and name
+        alter = False
+        try:
+            rec_set = human_record['data']
+        except:
+            rec_set = {}
         for field in inv.base_editable_fields:
             try:
-                a = human_record[field]
-                assert(a)
+                a = human_record['data'][field]
+                assert(a or not a) #Use a for Pyflakes, but we don't care what is is
             except:
                 rec_set[field] = None
-        if rec_set:
+                alter = True
+        #Rec_set is now original data plus any missing base_editable_fields
+        if alter:
             #Creates if absent, else updates with missing fields
             set_field(inv_db_toplevel, coll_id, record['name'], rec_set, type='human')
+
+def cleanup_records(inv_db, coll_id, record_list):
+    """Trims records for this collection that no longer exist
+
+    inv_db -- connection to LMFDB inventory database
+    coll_id -- id of collection to strip
+    record_list -- List of all existing records
+    """
+
+    try:
+        table_name = inv.ALL_STRUC.record_types[inv.STR_NAME]
+        coll = inv_db[table_name]
+    except Exception as e:
+        inv.log_dest.error("Error getting collection "+str(e))
+        return {'err':True}
+
+    try:
+        records_fields = inv.ALL_STRUC.record_types[inv.STR_CONTENT]
+        rec_find = {records_fields[1]:coll_id}
+        db_record_list = coll.find(rec_find)
+        extant_hashes = []
+        for key in record_list:
+            item = record_list[key]
+            extant_hashes.append(ih.hash_record_schema(item['schema']))
+        for item in db_record_list:
+            if item['hash'] not in extant_hashes:
+                print 'Record no longer exists'
+                print item
+                coll.remove(item)
+
+    except Exception as e:
+        inv.log_dest.error("Error cleaning records "+str(e))
+        return {'err':True}
 
 #End table sync --------------------------------------------------------------------------
 #Assorted helper access functions --------------------------------------------------------

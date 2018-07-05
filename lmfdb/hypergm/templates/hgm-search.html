@@ -20,7 +20,7 @@ $A$:
 <td align=left>  $B$ 
 <td align=left> <input type="text" name="B" size="8" value="{{info.B}}" example='[6,4]'>
 <td align=left> {{KNOWL('hgm.familyhodgevector', title="family Hodge vector")}}
-  <td align=left><input type='text' name='famhodge' size="8" value="{{info.hodge}}" example='[1,1,1,1]'>
+  <td align=left><input type='text' name='famhodge' size="8" value="{{info.famhodge}}" example='[1,1,1,1]'>
 
 <tr>
 <td align=left><a title="A2">A<sub>2</sub></a>
@@ -104,26 +104,8 @@ $t$</td><td align=left> <input type="text" name="t" size="3" value="{{info.t}}" 
 {% endif %}
 </form>
 
-{% if info.err is defined %}
-{% if info.label is defined %}
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>Motive:&nbsp;&nbsp;</td>
-<td ><input type='text' name='jump_to' size=60 value="{{info.label}}"> </td>
-<td><button type='submit' value='Find'>Find</button></td>
-</tr>
-<tr>
-<td colspan="3" rowspan="2"><span class="formexample"> a motive label, e.g. 2.4.6.7</span></td>
-</tr>
-</table>
-</form>
-{% endif %}
-{% endif %}
-
 {% include 'matches.html' %}
 {% if info.number %}
-
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
 <tr>

@@ -81,11 +81,11 @@ class MaassDB(object):
             print "f=", f
         if nc == 0:
             return None
-        cid = fn.get('coeff_label', None)
+        cid = f.get('coeff_label', None)
         if cid is None:
-            return fn.get('Coefficients', None)
-        ff = self._coeffs.lucky({'label':cid})
-        return None if ff is None else loads(ff)
+            return f.get('Coefficients', None)
+        ff = self._coeffs.lucky({'label':cid}, 'coefficients')
+        return None if ff is None else loads(str(ff))
 
     def count(self, query={}):
         return self._forms.count(query)

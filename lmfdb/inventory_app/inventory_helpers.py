@@ -5,6 +5,7 @@ from urlparse import urlparse
 from logging import getLogger
 from lmfdb_inventory import LOG_ID as LOG_ID
 from lmfdb_inventory import coll_status as coll_status
+import re
 
 #Log for db actions
 log_dest = getLogger(LOG_ID)
@@ -60,10 +61,12 @@ def is_record_name(item):
     except:
         return False
 def is_probable_record_hash(name):
-    """ Check whether given name seems to be a record identifiers
-    This is a 32 char alpha-numeric string right now"""
+    """ Check whether given name seems to be a record identifier
+    This is a 32 char hex string right now"""
     try:
-        return len(name) == 32
+        reg = r"([a-fA-F\d]{32})"
+        #32 digits all either a-f or a number
+        return (re.match(reg, name) is not None)
     except:
         return False
 

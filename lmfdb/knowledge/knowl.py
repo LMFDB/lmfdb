@@ -6,7 +6,7 @@ from datetime import datetime
 from lmfdb.db_backend import db, PostgresBase
 from lmfdb.db_encoding import Array
 from lmfdb.users.pwdmanager import userdb
-from psycopg2.sql import SQL, Identifier
+from psycopg2.sql import SQL, Identifier, Placeholder
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -113,7 +113,7 @@ class KnowlBackend(PostgresBase):
     def update(self, kid, key, value):
         if key not in self._default_fields + ['history', '_keywords']:
             raise ValueError("Bad key")
-        updater = SQL("UPDATE kwl_knowls SET ({0}) VALUES (%s) WHERE id = %s").format(Identifier(key))
+        updater = SQL("UPDATE kwl_knowls SET ({0}) = (%s) WHERE id = %s").format(Identifier(key))
         cur = self._execute(updater, (value, kid))
     def save_history(self, knowl, who):
         """
@@ -165,7 +165,7 @@ class KnowlBackend(PostgresBase):
         """
         insterer = SQL("INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s)")
         now = datetime.utcnow()
-        self._execute(insterer, (knowl.id, knowl.title, now, who, 'locked', know.title, now, who, 'locked'))
+        self._execute(insterer, (knowl.id, knowl.title, now, who, 'locked', knowl.title, now, who, 'locked'))
     def knowl_title(self, kid):
         """
         just the title, used in the knowls in the templates for the pages.
@@ -200,7 +200,7 @@ class KnowlBackend(PostgresBase):
     #        cur.execute(updater, (categories, CAT_ID))
     def get_categories(self):
         selecter = SQL("SELECT DISTINCT cat FROM kwl_knowls")
-        cur.execute(selecter)
+        cur = self._execute(selecter)
         return sorted([res[0] for res in cur])
     def cleanup(self, max_h=50):
         """
@@ -285,6 +285,14 @@ class Knowl(object):
         """
         return userdb.full_names(self.authors)
 
+    def last_author(self):
+        """
+        Full names for the last authors.
+        (lookup for all full names in just *one* query, hence the or)
+        """
+        users = getDBConnection().userdb.users
+        return users.find_one({'_id': self._last_author}, ["full_name"])["full_name"]
+
     @property
     def id(self):
         return self._id
@@ -328,7 +336,11 @@ class Knowl(object):
         Example: KNOWL('algebra.dirichlet_series') should be replaced
         with "Dirichlet Series" and nothing else.
         """
-        return self._title
+        title = self._title
+        #from flask import g
+        # if self._quality=='beta' and g.BETA:
+        #     title += " (beta status)"
+        return title
 
     @title.setter
     def title(self, title):

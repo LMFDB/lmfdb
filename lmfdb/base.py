@@ -104,11 +104,15 @@ def makeDBConnection():
 
         logging.info("_mongo_C.nodes = %s" %  (_mongo_C.nodes,) )
         logging.info("_mongo_C.read_preference = %s" %  (_mongo_C.read_preference,) )
-
+        logging.info("_mongo_C.is_primary = %s" %  (_mongo_C.is_primary,) )
         try:
-            _mongo_C["admin"].authenticate(_mongo_user, _mongo_pass)
-            if _mongo_user == "webserver":
-                logging.info("authentication: partial read-write access enabled")
+            if _mongo_C.is_primary:
+                _mongo_C["admin"].authenticate(_mongo_user, _mongo_pass);
+                if _mongo_user == "webserver":
+                    logging.info("authentication: partial read-write access enabled");
+            else:
+                logging.info("authentication: not connected to the primary server -- fallback to read-only access");
+                _mongo_C["admin"].authenticate("lmfdb", "lmfdb");
         except pymongo.errors.PyMongoError as err:
             logging.error("authentication: FAILED -- aborting")
             raise err
@@ -227,7 +231,7 @@ def ctx_proc_userdata():
 
     # meta_description appears in the meta tag "description"
     vars['meta_description'] = r'Welcome to the LMFDB, the database of L-functions, modular forms, and related objects. These pages are intended to be a modern handbook including tables, formulas, links, and references for L-functions and their underlying objects.'
-    vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the US National Science Foundation and the UK Engineering and Physical Sciences Research Council.' % (url_for('acknowledgment') + "#sponsors")
+    vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the US National Science Foundation, the UK Engineering and Physical Sciences Research Council, and the Simons Foundation.' % (url_for('acknowledgment') + "#sponsors")
 #    vars['feedbackpage'] = url_for('contact')
     vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
     vars['LINK_EXT'] = lambda a, b: '<a href="%s" target="_blank">%s</a>' % (b, a)

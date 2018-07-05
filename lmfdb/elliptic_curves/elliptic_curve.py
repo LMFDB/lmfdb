@@ -122,7 +122,7 @@ def statistics():
     t = 'Elliptic curves over $\Q$: statistics'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
-             ('statistics', ' ')]
+             ('Statistics', ' ')]
     return render_template("ec-stats.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list())
 
 
@@ -136,7 +136,7 @@ def by_conductor(conductor):
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
         info['title'] += ' search results'
-        info['bread'].append(('search results',''))
+        info['bread'].append(('Search Results',''))
     info['conductor'] = conductor
     return elliptic_curve_search(info)
 

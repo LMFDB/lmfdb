@@ -624,7 +624,7 @@ class Lfunction_EC(Lfunction):
         if self.base_field() == '1.1.1.1': #i.e. QQ
             lbread = get_bread(2,
                     [
-                      ('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                      ('Elliptic Curve', url_for('.l_function_ec_browse_page')),
                       (self.label, url_for('.l_function_ec_page',
                               conductor_label=self.conductor,
                               isogeny_class_label = self.isogeny_class_label))
@@ -633,7 +633,7 @@ class Lfunction_EC(Lfunction):
             lbread = get_bread(self.degree,
                 [
                     # FIXME there is no .l_function_ecnf_browse_page
-                    #('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                    #('Elliptic Curve', url_for('.l_function_ec_browse_page')),
                     (self.label,
                      url_for('.l_function_ecnf_page',
                             field_label = self.field_label,
@@ -989,6 +989,7 @@ class Lfunction_Maass(Lfunction):
             self.quasidegree = 2
             self.eigenvalue = float(self.mf.R if self.mf.R else 0)
             self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
+            print "A", self.mf
             self.nu_fe = []
             self.compute_kappa_lambda_Q_from_mu_nu()
             self.algebraic = False

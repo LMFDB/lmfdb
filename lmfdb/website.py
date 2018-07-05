@@ -229,7 +229,6 @@ def checklist():
     return render_template("checklist-fs.html")
 
 
-
 def main():
     logging.info("main: ...done.")
     flask_options = Configuration().get_flask();

@@ -270,24 +270,30 @@ function show_invs(invstyle) {
 <p>
 {{place_code('tamagawa')}}
 </p>
-<h3 class="inline"> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: </h3>
-{{data.tama}}
+<h3 class="inline"> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: </h3>{{data.tama}}
 
 <p>
 {{place_code('torsion_subgroup')}}
 </p>
 <h3 class="inline"> {{ KNOWL('g2c.torsion', title='Torsion') }}: </h3>\({{data.torsion_subgroup}}\)
 
+<p>
+{{place_code('two_torsion_field')}}
+</p>
+<h3 class="inline">  {{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}:</h3> <div style="display: inline">{{data.two_torsion_field_knowl|safe}}</div>
+
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
-<table>
-    <tr>
-        <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.st_group_link|safe}}</td>
-    </tr>
-    <tr>
-        <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\) </td>
-    </tr>
-</table>
+<p>
+    <table>
+        <tr>
+            <td>\(\mathrm{ST}\)</td><td>\(\simeq\)</td> <td>{{ data.st_group_link|safe}}</td>
+        </tr>
+        <tr>
+            <td>\(\mathrm{ST}^0\)</td><td>\(\simeq\)</td> <td>\({{ data.st0_group_name}}\) </td>
+        </tr>
+    </table>
+</p>
 
 <h3 style="display: inline"> {{ KNOWL('g2c.decomposition', title='Decomposition') }} </h3>
 

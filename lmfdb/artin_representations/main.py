@@ -8,7 +8,7 @@ from markupsafe import Markup
 
 from lmfdb.artin_representations import artin_representations_page
 from lmfdb.utils import to_dict
-from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_count, parse_start, clean_input
+from lmfdb.search_parsing import parse_primes, parse_restricted, parse_element_of, parse_galgrp, parse_ints, parse_count, parse_start, clean_input
 
 from math_classes import ArtinRepresentation
 from lmfdb.transitive_group import group_display_knowl
@@ -59,12 +59,12 @@ def artin_representation_search(**args):
             label = parse_artin_label(label)
         except ValueError as err:
             flash(Markup("Error: %s" % (err)), "error")
-            bread = get_bread([('Search results','')])
+            bread = get_bread([('Search Results','')])
             return search_input_error({'err':''}, bread)
         return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
     title = 'Artin representation search results'
-    bread = [('Artin representation', url_for(".index")), ('Search results', ' ')]
+    bread = [('Artin Representations', url_for(".index")), ('Search Results', ' ')]
     sign_code = 0
     query = {'Hide': 0}
     try:
@@ -72,8 +72,7 @@ def artin_representation_search(**args):
                      qfield="BadPrimes",mode="complement")
         parse_primes(info,query,"ramified",name="Ramified primes",
                      qfield="BadPrimes",mode="append")
-        parse_restricted(info,query,"root_number",qfield="GaloisConjugates.Sign",
-                         allowed=[1,-1],process=int)
+        parse_element_of(info,query,"root_number",qfield="GalConjSigns")
         parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                          allowed=[1,0,-1],process=int)
         parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))

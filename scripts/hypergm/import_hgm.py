@@ -20,12 +20,13 @@ C= MongoClient(port=37010, host='lmfdb-ib')
 C['hgm'].authenticate('editor', password)
 
 hgm = C.hgm.newmotives
+#hgm = C.hgm.motives
 
 saving = True
 
 count = 0
 
-hgm.drop()
+#hgm.drop()
 #time.sleep(3)
 
 # New game plan:
@@ -45,13 +46,15 @@ def fixname(s):
     a = re.sub(r'D(\d+)', r'D_{\1}',a)
     return a
 
+def pnotp(a,p):
+    pv = p**valuation(a,p)
+    return [pv, a/pv]
+
 # Insert both forms into the database
 def modvec(A,p):
     Ap = []
     for a in A:
-        v = valuation(a,p)
-        ap = p**v
-        aprime = a/ap
+        ap, aprime = pnotp(a,p)
         Ap.extend([ap]*euler_phi(aprime))
     Ap.sort(reverse=True)
     return Ap
@@ -59,9 +62,7 @@ def modvec(A,p):
 def modvecupper(A,p):
     Ap = []
     for a in A:
-        v = valuation(a,p)
-        ap = p**v
-        aprime = a/ap
+        ap, aprime = pnotp(a,p)
         Ap.extend([aprime]*euler_phi(ap))
     Ap.sort(reverse=True)
     return Ap
@@ -95,9 +96,19 @@ def modpair(A,B,p):
 def modupperpair(A,B,p):
     return [modvecupper(A,p),modvecupper(B,p)]
 
-def do_addrec(A,B,F):
+def orderAB(A,B):
+    if 1 in B:
+        return [A,B]
+    if 1 in A:
+        return [B,A]
+    if A[-1]<B[-1]:
+        return [A,B]
+    return [B,A]
+
+def do_addrec(F):
     global newrecs
-    degree, weight, A1, B1, t, famhodge, hodge, conductor, sign, sig, locinfo, lcms, hardness, coeffs  = F
+    degree, weight, A, B, t, famhodge, hodge, conductor, sign, sig, locinfo, lcms, hardness, coeffs  = F
+    A,B = orderAB(A,B)
     A.sort(reverse=True)
     B.sort(reverse=True)
     Astr = '.'.join([str(x) for x in A])
@@ -113,6 +124,8 @@ def do_addrec(A,B,F):
         't': str(myt),
         'A': list2string(A),
         'B': list2string(B),
+        'Arev': list2string(B),
+        'Brev': list2string(A),
         'hodge': list2string(hodge),
         'famhodge': list2string(famhodge),
         'sign': sign,
@@ -130,11 +143,17 @@ def do_addrec(A,B,F):
         data['A'+str(p)] = list2string(mod[0])
         data['B'+str(p)] = list2string(mod[1])
         data['C'+str(p)] = list2string(mod[2])
+        mod = modpair(B,A,p)
+        mod = killdup(mod[0],mod[1])
+        data['A'+str(p)+'rev'] = list2string(mod[0])
+        data['B'+str(p)+'rev'] = list2string(mod[1])
         mod = modupperpair(A,B,p)
         mod = killdup(mod[0],mod[1])
         data['Au'+str(p)] = list2string(mod[0])
         data['Bu'+str(p)] = list2string(mod[1])
         data['Cu'+str(p)] = list2string(mod[2])
+        data['Bu'+str(p)+'rev'] = list2string(mod[0])
+        data['Au'+str(p)+'rev'] = list2string(mod[1])
 
     is_new = True
     for field in hgm.find({'label': label}):
@@ -152,12 +171,6 @@ def do_addrec(A,B,F):
     #else:
         #print "Have this one"
 
-def both_addrec(F):
-    A=F[2]
-    B=F[3]
-    do_addrec(A,B,F)
-    do_addrec(B,A,F)
-
 for path in sys.argv[1:]:
     print path
     filename = os.path.basename(path)
@@ -168,7 +181,7 @@ for path in sys.argv[1:]:
     dat = dat.replace("'",'"')
     l = json.loads(dat)
     for motfam in l:
-        both_addrec(motfam)
+        do_addrec(motfam)
         count += 1
         #print "Count %d"%(count)
     fn.close()
