@@ -18,7 +18,6 @@ logger = lmfdb.utils.make_logger(login_page)
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
 
-#from flask.ext.login import LoginManager
 login_manager = LoginManager()
 
 # We log a warning if the version of flask-login is less than FLASK_LOGIN_LIMIT
