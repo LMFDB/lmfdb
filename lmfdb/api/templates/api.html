@@ -63,19 +63,22 @@ where the prefix "-" indicates to sort in descending order.
     <a href='{{ url_for(".api_query", table="ec_curves", rank="i2", torsion="i5")}}'><code>?rank=i2&amp;torsion=i5</code></a>.
     </li>
     <li>
-    A list of strings (string encoded integers) for the <code>ainvs</code> parameter of an elliptic curve is
-    <a href='{{ url_for(".api_query", table="ec_curves", ainvs="ls0;1;1;-840;39800", _format="yaml", _delim=";")}}'>
-       <code>?ainvs=ls0;1;1;-840;39800&amp;_format=yaml&amp;_delim=;</code></a>,
-    where the delimiter is "<code>;</code>" and the result formatted in YAML.
+
+    A string encoding a list of integers for the <code>xainvs</code> parameter of an elliptic curve is
+    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", xainvs="s[0,1,1,-840,39800]", _format="yaml")}}'>
+       <code>?xainvs=s[0,1,1,-840,39800]&amp;_format=yaml</code></a>,
+    the result formatted in YAML.
     </li>
+    {#
     <li>
     This query <a href='{{ url_for('.api_query', table="ec_curves", isogeny_matrix="py[[1,13],[13,1]]", _format="json") }}'>?isogeny_matrix=py[[1,13],[13,1]]</a>
     returns elliptic curves where the isogeny matrix is $\left(\begin{smallmatrix}1 & 13\\ 13 & 1\end{smallmatrix}\right)$.
     </li>
+    #}
     <li>
-    To see those elliptic curves, where the <code>ainvs</code> list contains the integer <code>-769</code>
-    and the field <code>nonmax_primes</code> contains the integer 3:
-    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="ci-769", nonmax_primes="ci3") }}'>?ainvs=ci-769&amp;nonmax_primes=ci3</a>.
+    To see those elliptic curves, where the field <code>torsion_structure</code> contains the list  [2,2], encoded as a list of strings:
+    <a href='{{ url_for(".api_query", db="elliptic_curves",
+    collection="curves", torsion_structure="ls2;2", _delim=";")}}'>?torsion_structure=ls2;2&amp;_delim=;</a>.
     </li>
     <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
     query <a href="{{ url_for('.api_query', table="kwl_knowls", _fields='authors,last_author') }}"</a>?_fields=authors,last_author</a>.

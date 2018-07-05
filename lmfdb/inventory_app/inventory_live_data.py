@@ -249,7 +249,7 @@ def collate_orphans():
     orph_data = {}
 
     for entry in records:
-        print entry['uid']
+        #print entry['uid']
         db_name = idc.get_db_name(inv_db, entry['db'])['name']
         orph_data[db_name] = {}
         coll = idc.get_coll_name(inv_db, entry['coll'])['name']

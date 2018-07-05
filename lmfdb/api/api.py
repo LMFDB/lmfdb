@@ -36,6 +36,13 @@ def hidden_collection(c):
     """
     return c.startswith("test") or c.endswith(".rand") or c.endswith(".stats") or c.endswith(".chunks") or c.endswith(".new") or c.endswith(".old")
 
+#def collection_indexed_keys(collection):
+#    """
+#    input: cursor for the collection
+#    output: a set with all the keys indexed
+#    """
+#    return set([t[0] for t in sum([val['key'] for name, val in collection.index_information().iteritems() if name!='_id_'],[])])
+
 def get_database_info(show_hidden=False):
     info = defaultdict(list)
     for table in db.tablenames:
