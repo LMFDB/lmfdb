@@ -117,12 +117,12 @@ def redirect_nonwww():
 def not_found_404(error):
     app.logger.info('%s 404 error for URL %s %s'%(timestamp(),request.url,error.description))
     messages = error.description if isinstance(error.description,(list,tuple)) else (error.description,)
-    return render_template("404.html", title='LMFDB page not found', messages=messages), 404
+    return render_template("404.html", title='LMFDB Page Not Found', messages=messages), 404
 
 @app.errorhandler(500)
 def not_found_500(error):
     app.logger.error("%s 500 error on URL %s %s"%(timestamp(),request.url, error.args))
-    return render_template("500.html", title='LMFDB error'), 500
+    return render_template("500.html", title='LMFDB Error'), 500
 
 @app.errorhandler(503)
 def not_found_503(error):
