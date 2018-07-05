@@ -64,9 +64,9 @@ where the prefix "-" indicates to sort in descending order.
     </li>
     <li>
 
-    A string encoding a list of integers for the <code>xainvs</code> parameter of an elliptic curve is
-    <a href='{{ url_for(".api_query", table="ec_curves", xainvs="s[0,1,1,-840,39800]", _format="yaml")}}'>
-       <code>?xainvs=s[0,1,1,-840,39800]&amp;_format=yaml</code></a>,
+    A string encoding a list of integers for the <code>ainvs</code> parameter of an elliptic curve is
+    <a href='{{ url_for(".api_query", table="ec_curves", ainvs="li[0,1,1,-840,39800]", _format="yaml")}}'>
+       <code>?ainvs=li[0,1,1,-840,39800]&amp;_format=yaml</code></a>,
     the result formatted in YAML.
     </li>
     {#

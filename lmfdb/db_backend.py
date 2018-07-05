@@ -282,6 +282,7 @@ class PostgresTable(PostgresBase):
 
           - If 0, projects just to the ``label``.  If the search table does not have a lable column, raises a RuntimeError.
           - If 1, projects to all columns in the search table.
+          - If 1.1, as 1 but with id included
           - If 2, projects to all columns in either the search or extras tables.
           - If a dictionary, can specify columns to include by giving True values, or columns to exclude by giving False values.
           - If a list, specifies which columns to include.
@@ -331,6 +332,8 @@ class PostgresTable(PostgresBase):
             raise ValueError("You must specify at least one key.")
         if projection == 1:
             return self._search_cols, (), 0
+        elif projection == 1.1:
+                return ["id"] + self._search_cols, (), 0
         elif projection == 2:
             if self.extra_table is None:
                 return self._search_cols, (), 0
@@ -702,6 +705,7 @@ class PostgresTable(PostgresBase):
             sage: nf.lucky({'label':u'6.6.409587233.1'},projection=['reg'])
             {'reg':455.191694993}
         """
+        print query
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
         vars = SQL(", ").join(map(Identifier, search_cols))
         qstr, values = self._build_query(query, 1, offset)
@@ -2519,9 +2523,7 @@ class PostgresDatabase(PostgresBase):
     def __init__(self):
         from lmfdb.config import Configuration
         options = Configuration().get_postgresql();
-        self.fetch_userpassword();
-        options['user'] = self._user;
-        options['password'] = self._password;
+        self.fetch_userpassword(options);
         logging.info("Connecting to PostgresSQL...")
         connection = connect( **options)
         logging.info("Done!\n connection = %s" % connection)
@@ -2533,6 +2535,10 @@ class PostgresDatabase(PostgresBase):
         # is not limited to just one connection
         setup_connection(self.conn)
         cur = self._execute(SQL("SELECT name, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
+
+        if options['user'] == "webserver":
+            self._execute(SQL("SET SESSION statement_timeout = '25s'"))
+
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
@@ -2550,20 +2556,26 @@ class PostgresDatabase(PostgresBase):
     def __repr__(self):
         return "Interface to Postgres database"
 
-    def fetch_userpassword(self):
-        logging.info("Fetching webserver password...")
-        # tries to read the file "password" on root of the project
-        pw_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), "password")
-        try:
-            self._user = "webserver"
-            self._password = open(pw_filename, "r").readlines()[0].strip()
-            logging.info("Done!")
-        except Exception:
-            # file not found or any other problem
-            # this is read-only everywhere
-            logging.warning("PostgresSQL authentication: no webserver password -- fallback to read-only access")
-            self._user = "lmfdb"
-            self._password = "lmfdb"
+    def fetch_userpassword(self, options):
+        if 'user' not in options:
+            options['user'] = 'lmfdb'
+
+        if options['user'] == 'webserver':
+            logging.info("Fetching webserver password...")
+            # tries to read the file "password" on root of the project
+            pw_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), "password")
+            try:
+                password = open(pw_filename, "r").readlines()[0].strip()
+                logging.info("Done!")
+            except Exception:
+                # file not found or any other problem
+                # this is read-only everywhere
+                logging.warning("PostgresSQL authentication: no webserver password -- fallback to read-only access")
+                options['user'], options['password'] = ['lmfdb', 'lmfdb']
+
+        elif 'password' not in options:
+            options['user'], options['password'] = ['lmfdb', 'lmfdb']
+
 
     def is_alive(self):
         """

@@ -135,7 +135,9 @@ def api_query(table, id = None):
     sortby = request.args.get("_sort", None)
 
     if fields:
-        fields = fields.split(DELIM)
+        fields = ['id'] + fields.split(DELIM)
+    else:
+        fields = 1.1
 
     if sortby:
         sortby = sortby.split(DELIM)
@@ -166,7 +168,7 @@ def api_query(table, id = None):
         api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         if re.match(r'^\d+$', id):
             id = int(id)
-        data = coll.lucky({'id':id},projection=fields)
+        data = coll.lucky({'id':id}, projection=fields)
         data = [data] if data else []
     else:
         single_object = False
@@ -185,11 +187,12 @@ def api_query(table, id = None):
                 elif qval.startswith("o"):
                     qval = ObjectId(qval[1:])
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
-                    qval = qval[2:].split(DELIM)
+                    qval = qval[3:-1].split(DELIM)
                 elif qval.startswith("li"):
-                    qval = [int(_) for _ in qval[2:].split(DELIM)]
+                    qval = [int(_) for _ in qval[3:-1].split(DELIM)]
+                    print qval
                 elif qval.startswith("lf"):
-                    qval = [float(_) for _ in qval[2:].split(DELIM)]
+                    qval = [float(_) for _ in qval[3:-1].split(DELIM)]
                 elif qval.startswith("py"):     # literal evaluation
                     qval = literal_eval(qval[2:])
                 elif qval.startswith("cs"):     # containing string in list
