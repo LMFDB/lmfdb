@@ -334,7 +334,7 @@ def dirichlet_table():
 # should refactor this into WebDirichlet.py
 @characters_page.route("/Dirichlet/grouptable")
 def dirichlet_group_table(**args):
-    modulus = request.args.get("Modulus", 1, type=int)
+    modulus = request.args.get("modulus", 1, type=int)
     info = to_dict(args)
     if "modulus" not in info:
         info["modulus"] = modulus
