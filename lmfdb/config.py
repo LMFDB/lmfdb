@@ -14,6 +14,8 @@ is present) and replace values stored within it with those given
 via optional command-line arguments.
 """
 import argparse
+import sys
+import os
 
 class Configuration(object):
 
@@ -88,6 +90,18 @@ class Configuration(object):
                 help = 'PostgreSQL server port [default: %(default)d]',
                 default = 5432);
 
+        postgresqlgroup.add_argument('--postgresql-user',
+                dest = 'postgresql_user',
+                metavar = 'USER',
+                help = 'PostgreSQL username [default: %(default)s]',
+                default = "lmfdb");
+
+        postgresqlgroup.add_argument('--postgresql-pass',
+                dest = 'postgresql_password',
+                metavar = 'PASS',
+                help = 'PostgreSQL password [default: %(default)s]',
+                default = "lmfdb");
+
         # undocumented options
         parser.add_argument('--enable-profiler',
                 dest = 'profiler',
@@ -119,13 +133,14 @@ class Configuration(object):
                 help=argparse.SUPPRESS,
                 action='store_false',
                 default=argparse.SUPPRESS)
-
-        args = parser.parse_args()
+        if os.path.split(sys.argv[0])[-1] == "start-lmfdb.py":
+            args = parser.parse_args(sys.argv)
+        else:
+            args = parser.parse_args([])
         args_dict = vars(args);
         default_arguments_dict = vars(parser.parse_args([]));
         del default_arguments_dict['config_file'];
 
-        import os
         from ConfigParser import ConfigParser
 
         # reading the config file, creating it if necessary
@@ -197,6 +212,11 @@ class Configuration(object):
                 "port": getint("postgresql", "port"),
                 "host": get("postgresql", "host"),
                 "dbname": "lmfdb"};
+
+        # optional items
+        for elt in ['user','password']:
+            if _cfgp.has_option("postgresql", elt):
+                self.postgresql_options[elt] = get("postgresql", elt);
 
         self.logging_options = {'logfile': get('logging', 'logfile')};
         if "logfocus" in args_dict:
