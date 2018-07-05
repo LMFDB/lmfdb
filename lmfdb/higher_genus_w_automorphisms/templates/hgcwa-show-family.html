@@ -41,22 +41,6 @@ table,td {
 
 
 <p> <h2> Conjugacy Class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined Passports')}} </h2>
-<!--
-<table>
-  <tr>
-     <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-  <th>Lists of Conjugacy Classes</th>
- 
-</tr>
-{% for itm in info.passport %}
-<tr>
-  <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
-  <td class="center">{{itm[0]}}</td>
-
-</tr>
-{% endfor %}
-</table>
--->
 <style>
 .tab button {
 transition: 0.3s;
@@ -82,7 +66,7 @@ transition: 0.3s;
 }
 </style>
 <!-- add in style.css -->
-{% if info.passport_num == 1 %}
+{% if info.passport_num == 1 or info.topological_num == 0%}
 <table>
   <tr>
     <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
