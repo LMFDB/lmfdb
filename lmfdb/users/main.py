@@ -7,7 +7,6 @@ import flask
 from functools import wraps
 from lmfdb.base import app
 from flask import render_template, request, Blueprint, url_for, make_response
-#from flask.ext.login import login_required, login_user, current_user, logout_user
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager
 from distutils.version import StrictVersion
 
@@ -18,11 +17,10 @@ logger = lmfdb.utils.make_logger(login_page)
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
 
-#from flask.ext.login import LoginManager
 login_manager = LoginManager()
 
 # We log a warning if the version of flask-login is less than FLASK_LOGIN_LIMIT
-FLASK_LOGIN_VERSION = flask_login.__version__
+from flask_login import __version__ as FLASK_LOGIN_VERSION
 FLASK_LOGIN_LIMIT = '0.3.0'
 from pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
 
