@@ -158,9 +158,8 @@ class Configuration(object):
             if args_dict[key] != val:
                 sec, opt = key.split('_');
                 _cfgp.set(sec, opt, str(args_dict[key]));
-    
-        # some generic function
 
+        # some generic functions
         def get(section, key):
             return _cfgp.get(section, key)
 
@@ -204,7 +203,7 @@ class Configuration(object):
             self.logging_options["logfocus"] = args_dict["logfocus"];
 
     def get_all(self):
-        return { 'flask_options' : self.flask_options, 'mongodb_options' : self.mongo__options, 'postgresql_options' : self.postgresql_options, 'logging_options' : self.logging_options}
+        return { 'flask_options' : self.flask_options, 'mongodb_options' : self.mongodb_options, 'postgresql_options' : self.postgresql_options, 'logging_options' : self.logging_options}
 
     def get_flask(self):
         return self.flask_options;

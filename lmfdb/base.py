@@ -165,7 +165,7 @@ def _db_reconnect(func):
 # disabling this reconnect thing, doesn't really help anyways
 Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
 
-def _init(configuration):
+def _init():
     # creates MongoDB connection
     from lmfdb.config import Configuration
     configureDBConnection(**Configuration().get_mongodb())

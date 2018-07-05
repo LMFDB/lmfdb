@@ -2377,18 +2377,13 @@ class PostgresDatabase(PostgresBase):
     """
     def __init__(self):
         from lmfdb.config import Configuration
-        logging.info("Fetching config...")
         options = Configuration().get_postgresql();
-        logging.info("Fetching user/password...")
         self.fetch_userpassword();
-        logging.info("Done!")
         options['user'] = self._user;
         options['password'] = self._password;
-        print options
         logging.info("Connecting to PostgresSQL...")
         connection = connect( **options)
-
-        logging.info("Done!\n%s" % connection)
+        logging.info("Done!\n connection = %s" % connection)
         PostgresBase.__init__(self, 'db_all', connection)
         # The following function controls how Python classes are converted to
         # strings for passing to Postgres, and how the results are decoded upon
@@ -2415,11 +2410,13 @@ class PostgresDatabase(PostgresBase):
         return "Interface to Postgres database"
 
     def fetch_userpassword(self):
+        logging.info("Fetching webserver password...")
         # tries to read the file "password" on root of the project
         pw_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), "password")
         try:
             self._user = "webserver"
             self._password = open(pw_filename, "r").readlines()[0].strip()
+            logging.info("Done!")
         except Exception:
             # file not found or any other problem
             # this is read-only everywhere
