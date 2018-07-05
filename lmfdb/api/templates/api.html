@@ -65,7 +65,7 @@ where the prefix "-" indicates to sort in descending order.
     <li>
 
     A string encoding a list of integers for the <code>xainvs</code> parameter of an elliptic curve is
-    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", xainvs="s[0,1,1,-840,39800]", _format="yaml")}}'>
+    <a href='{{ url_for(".api_query", table="ec_curves", xainvs="s[0,1,1,-840,39800]", _format="yaml")}}'>
        <code>?xainvs=s[0,1,1,-840,39800]&amp;_format=yaml</code></a>,
     the result formatted in YAML.
     </li>
@@ -77,8 +77,7 @@ where the prefix "-" indicates to sort in descending order.
     #}
     <li>
     To see those elliptic curves, where the field <code>torsion_structure</code> contains the list  [2,2], encoded as a list of strings:
-    <a href='{{ url_for(".api_query", db="elliptic_curves",
-    collection="curves", torsion_structure="ls2;2", _delim=";")}}'>?torsion_structure=ls2;2&amp;_delim=;</a>.
+    <a href='{{ url_for(".api_query", table="ec_curves", torsion_structure="ls2;2", _delim=";")}}'>?torsion_structure=ls2;2&amp;_delim=;</a>.
     </li>
     <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
     query <a href="{{ url_for('.api_query', table="kwl_knowls", _fields='authors,last_author') }}"</a>?_fields=authors,last_author</a>.
