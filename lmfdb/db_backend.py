@@ -2682,9 +2682,17 @@ class PostgresDatabase(PostgresBase):
             if (not hasid) and (id_ordered or extra_columns is not None):
                 allcols.insert(0, SQL("id bigint"))
             return allcols
+        def grant_select(table_name):
+            grantor = SQL('GRANT SELECT ON TABLE {0} TO {1}')
+            self._execute(grantor.format(Identifier(table_name), Identifier('lmfdb')), silent=True, commit=False)
+            self._execute(grantor.format(Identifier(table_name), Identifier('webserver')), silent=True, commit=False)
+        def grant_insert(table_name):
+            grantor = SQL('GRANT INSERT ON TABLE {0} TO {1}')
+            self._execute(grantor.format(Identifier(table_name), Identifier('webserver')), silent=True, commit=False)
         search_columns = process_columns(search_columns, search_order)
         creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(search_columns))
         self._execute(creator, silent=True, commit=False)
+        grant_select(name)
         if extra_columns is not None:
             valid_extra_list = sum(extra_columns.values(),[])
             valid_extra_set = set(valid_list)
@@ -2703,12 +2711,16 @@ class PostgresDatabase(PostgresBase):
             creator = creator.format(Identifier(name+"_extras"),
                                      SQL(", ").join(extra_columns))
             self._execute(creator, silent=True, commit=False)
+            grant_select(name+"_extras")
         creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
         creator = creator.format(Identifier(name+"_counts"))
         self._execute(creator, silent=True, commit=False)
+        grant_select(name+"_counts")
+        grant_insert(name+"_counts")
         creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
         creator = creator.format(Identifier(name + "_stats"))
         self._execute(creator, silent=True, commit=False)
+        grant_select(name+"_stats")
         inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras) VALUES (%s, %s, %s, %s, %s)')
         self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None], silent=True, commit=False)
         print "Table %s created in %.3f secs"%(name, time.time()-now)
