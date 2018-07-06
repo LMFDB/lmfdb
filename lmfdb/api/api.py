@@ -187,12 +187,13 @@ def api_query(table, id = None):
                 elif qval.startswith("o"):
                     qval = ObjectId(qval[1:])
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
-                    qval = qval[3:-1].split(DELIM)
+                    qval = qval[2].split(DELIM)
                 elif qval.startswith("li"):
-                    qval = [int(_) for _ in qval[3:-1].split(DELIM)]
+                    print qval
+                    qval = [int(_) for _ in qval[2:].split(DELIM)]
                     print qval
                 elif qval.startswith("lf"):
-                    qval = [float(_) for _ in qval[3:-1].split(DELIM)]
+                    qval = [float(_) for _ in qval[2:].split(DELIM)]
                 elif qval.startswith("py"):     # literal evaluation
                     qval = literal_eval(qval[2:])
                 elif qval.startswith("cs"):     # containing string in list
@@ -233,7 +234,10 @@ def api_query(table, id = None):
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
         except QueryCanceledError:
             flash_error("Query %s exceeded time limit.", q)
-            return flask.redirect(url_for(".api_query", db=db, collection=collection))
+            return flask.redirect(url_for(".api_query", table=table))
+        except KeyError, err:
+            flash_error("No key %s in table %s", err, table)
+            return flask.redirect(url_for(".api_query", table=table))
 
     if single_object and not data:
         if format != 'html':
