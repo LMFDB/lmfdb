@@ -18,7 +18,6 @@ from Lfunctionutilities import (p2sage, string2number, get_bread,
 from LfunctionComp import EC_from_modform, isogeny_class_cm
 
 from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, getHmfData, getHgmData, getEllipticCurveData
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
@@ -989,7 +988,6 @@ class Lfunction_Maass(Lfunction):
             self.quasidegree = 2
             self.eigenvalue = float(self.mf.R if self.mf.R else 0)
             self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
-            print "A", self.mf
             self.nu_fe = []
             self.compute_kappa_lambda_Q_from_mu_nu()
             self.algebraic = False
