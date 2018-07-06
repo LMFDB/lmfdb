@@ -215,7 +215,7 @@ class Json(pgJson):
             else:
                 data = [cls.prep(c, escape_backslashes)['data'] for c in obj.list()]
             return {'__PowerSeries__': 0, # encoding version
-                    'vname': obj.variable_name(),
+                    'vname': obj.variable(),
                     'base': cls.prep(obj.base_ring(), escape_backslashes),
                     'prec': 'inf' if obj.prec() is infinity else int(obj.prec()),
                     'data': data}
@@ -298,8 +298,12 @@ class Json(pgJson):
                 base = cls.extract(obj['base'])
                 prec = infinity if obj['prec'] == 'inf' else int(obj['prec'])
                 return base[[obj['vname']]]([cls._extract(base, c) for c in obj['data']], prec=prec)
-            elif len(obj) == 2 and ('__date__' in obj or '__time__' in obj or '__datetime__' in obj):
-                return obj['data']
+            elif len(obj) == 2 and '__date__' in obj:
+                return datetime.datetime.strptime(obj['data'], "%Y-%m-%d").date()
+            elif len(obj) == 2 and '__time__' in obj:
+                return datetime.datetime.strptime(obj['data'], "%H:%M:%S.%f").time()
+            elif len(obj) == 2 and '__datetime__' in obj:
+                return datetime.datetime.strptime(obj['data'], "%Y-%m-%d %H:%M:%S.%f")
         return obj
 
 def copy_dumps(inp, typ):

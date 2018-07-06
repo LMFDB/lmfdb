@@ -141,6 +141,7 @@ class Configuration(object):
         if os.path.split(sys.argv[0])[-1] == "start-lmfdb.py":
             args = parser.parse_args()
         else:
+            # only read config file
             args = parser.parse_args([])
         args_dict = vars(args);
         default_arguments_dict = vars(parser.parse_args([]));
