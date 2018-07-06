@@ -9,12 +9,9 @@
 # NEVER EVER change the fixed_salt!
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
-from lmfdb import base
 from lmfdb.db_backend import PostgresBase, db
 from lmfdb.db_encoding import Array
-from psycopg2 import connect
 from psycopg2.sql import SQL, Identifier, Placeholder
-from main import logger
 from datetime import datetime, timedelta
 
 from main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
@@ -38,7 +35,7 @@ class PostgresUserTable(PostgresBase):
         once computers are 10x faster, change the rmin,rmax limits
         """
         import random
-        return str(random.randrange(rmin, rmax))
+        return str(random.randrange(self.rmin, self.rmax))
     def hashpwd(self, pwd, random_salt=None):
         """
         Globally unique routine how passwords are hashed.
@@ -152,7 +149,7 @@ class PostgresUserTable(PostgresBase):
             raise ValueError("multiple users with same username!")
         return {field:value for field,value in zip(self._cols, cur.fetchone()) if value is not None}
     def full_names(self, uids):
-        selecter = SQL("SELECT username, full_name FROM userdb.usyers WHERE username = ANY(%s)")
+        selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
         cur = self._execute(selecter, [Array(uids)])
         return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
     def create_tokens(self, tokens):
@@ -170,10 +167,10 @@ class PostgresUserTable(PostgresBase):
         now = datetime.utcnow()
         tdelta = timedelta(days=8)
         cutoff = now - tdelta
-        cur = self._execute(deletor, [cutoff])
+        self._execute(deletor, [cutoff])
     def delete_token(self, token):
         deletor = SQL("DELETE FROM userdb.tokens WHERE id = %s")
-        cur = self._execute(deletor, [token])
+        self._execute(deletor, [token])
 
 userdb = PostgresUserTable()
 

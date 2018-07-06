@@ -2524,6 +2524,7 @@ class PostgresDatabase(PostgresBase):
         from lmfdb.config import Configuration
         options = Configuration().get_postgresql();
         self.fetch_userpassword(options);
+        self._user = options['user']
         logging.info("Connecting to PostgresSQL...")
         connection = connect( **options)
         logging.info("Done!\n connection = %s" % connection)
@@ -2536,7 +2537,7 @@ class PostgresDatabase(PostgresBase):
         setup_connection(self.conn)
         cur = self._execute(SQL("SELECT name, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
 
-        if options['user'] == "webserver":
+        if self._user == "webserver":
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
 
         self.tablenames = []
