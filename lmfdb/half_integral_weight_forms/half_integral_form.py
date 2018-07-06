@@ -52,7 +52,7 @@ def half_integral_weight_form_search(**args):
     count = parse_count(info, 100)
     start = parse_start(info)
     proj = ['level','label','weight','character','dim']
-    res = db.halfmf_forms.search(query, limit=count, offset=start, info=info)
+    res = db.halfmf_forms.search(query, proj, limit=count, offset=start, info=info)
 
     for v in res:
         v['char']= "\chi_{"+v['character'].split(".")[0]+"}("+v['character'].split(".")[1]+",\cdot)"

@@ -2,7 +2,7 @@
 from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals
-
+from lmfdb.db_backend import db
 #
 # This script is intended to run Magma on all Hilbert newforms (or all
 # those over one base field), compute a string representing the
@@ -36,7 +36,7 @@ def qexpansion(field_label=None):
 
         print v_label
 
-        if v.get('q_expansion') is not None:f
+        if v.get('q_expansion') is not None:
             v = S.next()
             continue
 

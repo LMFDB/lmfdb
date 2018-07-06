@@ -1,5 +1,3 @@
-import lmfdb.base
-
 def my_get(dict, key, default, f=None):
     r"""
     Improved version of dict.get where an empty string also gives default.

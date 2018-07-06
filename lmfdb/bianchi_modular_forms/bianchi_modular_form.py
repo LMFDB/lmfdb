@@ -2,7 +2,7 @@
 
 import re
 
-from flask import render_template, url_for, request, redirect, flash
+from flask import render_template, url_for, request, redirect, flash, jsonify
 from markupsafe import Markup
 
 from sage.all import latex
@@ -137,7 +137,7 @@ def bianchi_modular_form_search(**args):
     start = parse_start(info)
     count = parse_count(info, 50)
     proj = ['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM']
-    res = db.bmf_forms.search(query, limit=count, offset=start, info=info)
+    res = db.bmf_forms.search(query, proj, limit=count, offset=start, info=info)
     if info['number'] > 0:
         info['field_pretty_name'] = field_pretty(res[0]['field_label'])
     else:

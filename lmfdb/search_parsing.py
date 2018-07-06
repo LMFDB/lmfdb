@@ -20,7 +20,7 @@ FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 
 from flask import flash
-from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing, prod, prime_range
+from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
 from sage.misc.decorators import decorator_keywords
 
 from markupsafe import Markup

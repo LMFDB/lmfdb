@@ -616,7 +616,7 @@ class Pagination(object):
     @cached_property
     def has_next(self):
         try:
-            _ = self.source[self.start + self.per_page]
+            self.source[self.start + self.per_page]
         except IndexError:
             return False
         else:

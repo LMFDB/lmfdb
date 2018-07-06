@@ -91,7 +91,7 @@ def makeDBConnection():
         if pymongo.version_tuple[0] >= 3 or _mongo_kwargs.get("replicaset",None) is None:
             _mongo_C = MongoClient( **_mongo_kwargs)
         else:
-            _mongo_C = MonoReplicaSetClient( **_mongo_kwargs)
+            _mongo_C = MongoReplicaSetClient( **_mongo_kwargs)
         mongo_info = _mongo_C.server_info()
         logging.info("mongodb version: %s" % mongo_info["version"])
         logging.info("_mongo_C = %s", (_mongo_C,) )
@@ -176,6 +176,7 @@ def _init():
     makeDBConnection()
     # creates PostgresSQL connection
     from lmfdb.db_backend import db
+    assert db
 
 app = Flask(__name__)
 

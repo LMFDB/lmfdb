@@ -5,7 +5,7 @@ from ast import literal_eval
 import re
 import time
 from operator import mul
-from flask import render_template, url_for, request, redirect, send_file, abort
+from flask import render_template, url_for, request, redirect, send_file, abort, jsonify
 from sage.all import ZZ
 from sage.misc.cachefunc import cached_method
 

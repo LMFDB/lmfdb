@@ -36,6 +36,13 @@ def hidden_collection(c):
     """
     return c.startswith("test") or c.endswith(".rand") or c.endswith(".stats") or c.endswith(".chunks") or c.endswith(".new") or c.endswith(".old")
 
+#def collection_indexed_keys(collection):
+#    """
+#    input: cursor for the collection
+#    output: a set with all the keys indexed
+#    """
+#    return set([t[0] for t in sum([val['key'] for name, val in collection.index_information().iteritems() if name!='_id_'],[])])
+
 def get_database_info(show_hidden=False):
     info = defaultdict(list)
     for table in db.tablenames:
@@ -128,7 +135,9 @@ def api_query(table, id = None):
     sortby = request.args.get("_sort", None)
 
     if fields:
-        fields = fields.split(DELIM)
+        fields = ['id'] + fields.split(DELIM)
+    else:
+        fields = 1.1
 
     if sortby:
         sortby = sortby.split(DELIM)
@@ -159,7 +168,7 @@ def api_query(table, id = None):
         api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         if re.match(r'^\d+$', id):
             id = int(id)
-        data = coll.lucky({'id':id},projection=fields)
+        data = coll.lucky({'id':id}, projection=fields)
         data = [data] if data else []
     else:
         single_object = False
@@ -178,9 +187,11 @@ def api_query(table, id = None):
                 elif qval.startswith("o"):
                     qval = ObjectId(qval[1:])
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
-                    qval = qval[2:].split(DELIM)
+                    qval = qval[2].split(DELIM)
                 elif qval.startswith("li"):
+                    print qval
                     qval = [int(_) for _ in qval[2:].split(DELIM)]
+                    print qval
                 elif qval.startswith("lf"):
                     qval = [float(_) for _ in qval[2:].split(DELIM)]
                 elif qval.startswith("py"):     # literal evaluation
@@ -223,7 +234,10 @@ def api_query(table, id = None):
             data = list(coll.search(q, projection=fields, sort=sort, limit=100, offset=offset))
         except QueryCanceledError:
             flash_error("Query %s exceeded time limit.", q)
-            return flask.redirect(url_for(".api_query", db=db, collection=collection))
+            return flask.redirect(url_for(".api_query", table=table))
+        except KeyError, err:
+            flash_error("No key %s in table %s", err, table)
+            return flask.redirect(url_for(".api_query", table=table))
 
     if single_object and not data:
         if format != 'html':

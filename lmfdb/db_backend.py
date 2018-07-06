@@ -26,15 +26,12 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 """
 
 
-import logging
-import tempfile, datetime
-import re, os, time
+import logging, tempfile, re, os, time, random
 from collections import Counter
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
-import json, random, time
 from sage.misc.cachefunc import cached_method
 from sage.misc.mrange import cartesian_product_iterator
 from lmfdb.utils import make_logger, format_percentage
@@ -210,31 +207,30 @@ class PostgresTable(PostgresBase):
 
     - ``db`` -- an instance of ``PostgresDatabase``, currently just used to store the common connection ``conn``.
     - ``search_table`` -- a string, the name of the table in postgres.
+    - ``label_col`` -- the column holding the LMFDB label, or None if no such column exists.
     - ``sort`` -- a list giving the default sort order on the table, or None.  If None, sorts that can return more than one result must explicitly specify a sort order.  Note that the id column is sometimes used for sorting; see the ``search`` method for more details.
     - ``count_cutoff`` -- an integer parameter (default 1000) which determines the threshold at which searches will no longer report the exact number of results.
     """
-    def __init__(self, db, search_table, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True):
+    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True):
         self._db = db
         self.search_table = search_table
+        self._label_col = label_col
         self._count_cutoff = count_cutoff
         self._id_ordered = id_ordered
         self._out_of_order = out_of_order
         self._stats_valid = stats_valid
         PostgresBase.__init__(self, search_table, db.conn)
         self._col_type = {}
+        self.has_id = False
         def set_column_info(col_list, table_name):
             cur = self._execute(SQL("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
-            has_id = False
             for rec in cur:
                 col = rec[0]
                 self._col_type[col] = rec[1]
-                if col == 'id':
-                    has_id = True
-                else:
+                if col != 'id':
                     col_list.append(col)
-            if (self._id_ordered or self.extra_table is not None) and not has_id:
-                raise RuntimeError("Table %s must have id column!"%(table_name))
-            self.has_id = has_id # used in determining how to sort
+                else:
+                    self.has_id = True
         self._search_cols = []
         if has_extras:
             self.extra_table = search_table + "_extras"
@@ -282,6 +278,7 @@ class PostgresTable(PostgresBase):
 
           - If 0, projects just to the ``label``.  If the search table does not have a lable column, raises a RuntimeError.
           - If 1, projects to all columns in the search table.
+          - If 1.1, as 1 but with id included
           - If 2, projects to all columns in either the search or extras tables.
           - If a dictionary, can specify columns to include by giving True values, or columns to exclude by giving False values.
           - If a list, specifies which columns to include.
@@ -331,6 +328,8 @@ class PostgresTable(PostgresBase):
             raise ValueError("You must specify at least one key.")
         if projection == 1:
             return self._search_cols, (), 0
+        elif projection == 1.1:
+                return ["id"] + self._search_cols, (), 0
         elif projection == 2:
             if self.extra_table is None:
                 return self._search_cols, (), 0
@@ -523,7 +522,7 @@ class PostgresTable(PostgresBase):
                 else:
                     path = []
                     force_json = (self._col_type[key] == 'jsonb')
-                if not (self.has_id and key == 'id' or key in self._search_cols):
+                if key != 'id' and key not in self._search_cols:
                     raise ValueError("%s is not a column of %s"%(key, self.search_table))
                 if path:
                     # Only call SQL for compound keys here so that _parse_special calls
@@ -702,6 +701,7 @@ class PostgresTable(PostgresBase):
             sage: nf.lucky({'label':u'6.6.409587233.1'},projection=['reg'])
             {'reg':455.191694993}
         """
+        print query
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
         vars = SQL(", ").join(map(Identifier, search_cols))
         qstr, values = self._build_query(query, 1, offset)
@@ -855,7 +855,9 @@ class PostgresTable(PostgresBase):
             sage: rec['loc_algebras']['13']
             u'x^2-13,x^2-x+2,x^4+x^2-x+2'
         """
-        return self.lucky({'label':label}, projection=projection)
+        if self._label_col is None:
+            raise ValueError("Lookup method not supported for tables with no label column")
+        return self.lucky({self._label_col:label}, projection=projection)
 
     def exists(self, query):
         """
@@ -901,27 +903,26 @@ class PostgresTable(PostgresBase):
             u'2.0.294787.1'
         """
         maxtries = 100
-        if self.has_id:
-            maxid = self.max('id')
-            id = random.randint(0, maxid)
+        maxid = self.max('id')
+        for _ in range(maxtries):
             # The id may not exist if rows have been deleted
-            for _ in range(maxtries):
-                res = self.lucky({'id':id}, projection=projection)
-                if res: return res
-        else:
-            # Get the number of pages occupied by the search_table
-            cur = self._execute(SQL("SELECT relpages FROM pg_class WHERE relname = %s"), [self.search_table])
-            num_pages = cur.fetchone()[0]
-            # extra_cols will be () and id_offset will be 0 since there is no id
-            search_cols, extra_cols, id_offset = self._parse_projection(projection)
-            vars = SQL(", ").join(map(Identifier, search_cols))
-            selecter = SQL("SELECT {0} FROM {1} TABLESAMPLE SYSTEM(%s)").format(vars, Identifier(self.search_table))
-            # We select 3 pages in an attempt to not accidentally get nothing.
-            percentage = min(float(300) / num_pages, 100)
-            for _ in range(maxtries):
-                cur = self._execute(selecter, [percentage])
-                if cur.rowcount > 0:
-                    return {k:v for k,v in zip(search_cols, random.choice(list(cur)))}
+            rid = random.randint(1, maxid)
+            res = self.lucky({'id':rid}, projection=projection)
+            if res: return res
+        ### This code was used when not every table had an id.
+        ## Get the number of pages occupied by the search_table
+        #cur = self._execute(SQL("SELECT relpages FROM pg_class WHERE relname = %s"), [self.search_table])
+        #num_pages = cur.fetchone()[0]
+        ## extra_cols will be () and id_offset will be 0 since there is no id
+        #search_cols, extra_cols, id_offset = self._parse_projection(projection)
+        #vars = SQL(", ").join(map(Identifier, search_cols))
+        #selecter = SQL("SELECT {0} FROM {1} TABLESAMPLE SYSTEM(%s)").format(vars, Identifier(self.search_table))
+        ## We select 3 pages in an attempt to not accidentally get nothing.
+        #percentage = min(float(300) / num_pages, 100)
+        #for _ in range(maxtries):
+        #    cur = self._execute(selecter, [percentage])
+        #    if cur.rowcount > 0:
+        #        return {k:v for k,v in zip(search_cols, random.choice(list(cur)))}
         raise RuntimeError("Random selection failed!")
 
     ##################################################################
@@ -1212,9 +1213,8 @@ class PostgresTable(PostgresBase):
 
         - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the ALTER TABLE statements.
         """
-        if self.has_id:
-            command = SQL("ALTER TABLE {0} DROP CONSTRAINT {1}")
-            self._pkey_common(command, suffix, "Dropped", commit)
+        command = SQL("ALTER TABLE {0} DROP CONSTRAINT {1}")
+        self._pkey_common(command, suffix, "Dropped", commit)
 
     def restore_pkeys(self, suffix="", commit=True):
         """
@@ -1224,9 +1224,8 @@ class PostgresTable(PostgresBase):
 
         - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the ALTER TABLE statements.
         """
-        if self.has_id:
-            command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
-            self._pkey_common(command, suffix, "Built", commit)
+        command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
+        self._pkey_common(command, suffix, "Built", commit)
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -1279,7 +1278,7 @@ class PostgresTable(PostgresBase):
             ....:     return rec
             sage: db.artin_reps.rewrite(add_signs)
         """
-        search_cols = ["id"] + self._search_cols if self.has_id else self._search_cols
+        search_cols = ["id"] + self._search_cols
         if self.extra_table is None:
             projection = search_cols
         else:
@@ -1375,28 +1374,25 @@ class PostgresTable(PostgresBase):
         # because we have to take different additional steps depending on whether
         # an insertion actually occurred
         qstr, values = self._parse_dict(query)
-        selecter = SQL("SELECT {0} FROM {1} WHERE {2} LIMIT 2").format(Identifier("id") if self.has_id else Literal(1), Identifier(self.search_table), qstr)
+        selecter = SQL("SELECT {0} FROM {1} WHERE {2} LIMIT 2").format(Identifier("id"), Identifier(self.search_table), qstr)
         cur = self._execute(selecter, values, silent=True)
         if cur.rowcount > 1:
             raise ValueError("Query %s does not specify a unique row"%(query))
         elif cur.rowcount == 1: # update
-            row_id = cur.fetchone()[0] # might be just 1 if has_id is False
+            row_id = cur.fetchone()[0]
             for table, dat in cases:
                 updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
                 updater = updater.format(Identifier(table),
                                          SQL(", ").join(map(Identifier, dat.keys())),
                                          SQL(", ").join(Placeholder() * len(dat)),
-                                         SQL("id = %s") if self.has_id else qstr)
+                                         SQL("id = %s"))
                 dvalues = dat.values()
-                if self.has_id:
-                    dvalues.append(row_id)
-                else:
-                    dvalues.extend(values)
+                dvalues.append(row_id)
                 self._execute(updater, dvalues, silent=True, commit=False)
             if not self._out_of_order and any(key in self._sort_keys for key in data):
                 self._break_order()
         else: # insertion
-            if self.has_id and ("id" in data or "id" in query):
+            if "id" in data or "id" in query:
                 raise ValueError("Cannot specify an id for insertion")
             for col, val in query.items():
                 if col not in search_data:
@@ -1405,10 +1401,9 @@ class PostgresTable(PostgresBase):
             # has inserted data this will be a problem,
             # but it will raise an error rather than leading to invalid database state,
             # so it should be okay.
-            if self.has_id:
-                search_data["id"] = self.stats.total + 1
-                if self.extra_table is not None:
-                    extras_data["id"] = self.stats.total + 1
+            search_data["id"] = self.stats.total + 1
+            if self.extra_table is not None:
+                extras_data["id"] = self.stats.total + 1
             for table, dat in cases:
                 inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
                 inserter.format(Identifier(table),
@@ -1452,9 +1447,8 @@ class PostgresTable(PostgresBase):
         if reindex:
             self.drop_pkeys()
             self.drop_indexes()
-        if self.has_id:
-            for i, SD in enumerate(search_data):
-                SD["id"] = self.stats.total + i + 1
+        for i, SD in enumerate(search_data):
+            SD["id"] = self.stats.total + i + 1
         cases = [(self.search_table, search_data)]
         if extras_data is not None:
             for i, ED in enumerate(extras_data):
@@ -1570,7 +1564,7 @@ class PostgresTable(PostgresBase):
         # We have to add quotes manually since copy_from doesn't accept psycopg2.sql.Identifiers
         # None of our column names have double quotes in them. :-D
         columns = ['"' + col + '"' for col in columns]
-        if self.has_id and not includes_ids:
+        if not includes_ids:
             idfile = tempfile.NamedTemporaryFile('w', delete=False)
             try:
                 sep = kwds.get("sep", u"\t")
@@ -1624,15 +1618,14 @@ class PostgresTable(PostgresBase):
         for table in tables:
             self._execute(rename_table.format(Identifier(table), Identifier("{0}_old{1}".format(table, backup_number))), silent=True, commit=False)
             self._execute(rename_table.format(Identifier(table + "_tmp"), Identifier(table)), silent=True, commit=False)
-            if self.has_id:
-                self._execute(rename_pkey.format(Identifier("{0}_old{1}".format(table, backup_number)),
-                                                 Identifier("{0}_pkey".format(table)),
-                                                 Identifier("{0}_old{1}_pkey".format(table, backup_number))),
-                              silent=True, commit=False)
-                self._execute(rename_pkey.format(Identifier(table),
-                                                 Identifier("{0}_tmp_pkey".format(table)),
-                                                 Identifier("{0}_pkey".format(table))),
-                              silent=True, commit=False)
+            self._execute(rename_pkey.format(Identifier("{0}_old{1}".format(table, backup_number)),
+                                             Identifier("{0}_pkey".format(table)),
+                                             Identifier("{0}_old{1}_pkey".format(table, backup_number))),
+                          silent=True, commit=False)
+            self._execute(rename_pkey.format(Identifier(table),
+                                             Identifier("{0}_tmp_pkey".format(table)),
+                                             Identifier("{0}_pkey".format(table))),
+                          silent=True, commit=False)
         selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
         cur = self._execute(selecter, [self.search_table], silent=True, commit=False)
         for res in cur:
@@ -1683,7 +1676,7 @@ class PostgresTable(PostgresBase):
         self._check_file_input(searchfile, extrafile, kwds)
         tables = []
         counts = {}
-        for table, cols, addid, filename in [(self.search_table, self._search_cols, self.has_id, searchfile),
+        for table, cols, addid, filename in [(self.search_table, self._search_cols, True, searchfile),
                                              (self.extra_table, self._extra_cols, True, extrafile),
                                              (self.stats.counts, ["cols", "values", "count"],False, countsfile),
                                              (self.stats.stats, ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"], False, statsfile)]:
@@ -1703,7 +1696,7 @@ class PostgresTable(PostgresBase):
         if self._id_ordered and resort:
             extra_table = None if self.extra_table is None else self.extra_table + "_tmp"
             self.resort(self.search_table + "_tmp", extra_table)
-        elif self.has_id:
+        else:
             # We still need to build primary keys
             self.restore_pkeys(suffix="_tmp")
         if reindex:
@@ -1741,8 +1734,7 @@ class PostgresTable(PostgresBase):
         self._check_file_input(searchfile, extrafile, kwds)
         if search_cols is None:
             search_cols = self._search_cols
-        if self.has_id:
-            search_cols = ["id"] + search_cols
+        search_cols = ["id"] + search_cols
         if reindex:
             self.drop_indexes()
         now = time.time()
@@ -1786,7 +1778,7 @@ class PostgresTable(PostgresBase):
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
-        for table, cols, addid, filename in [(self.search_table, self._search_cols, self.has_id and include_ids, searchfile),
+        for table, cols, addid, filename in [(self.search_table, self._search_cols, include_ids, searchfile),
                                              (self.extra_table, self._extra_cols, include_ids, extrafile),
                                              (self.stats.counts, ["cols", "values", "count"],False, countsfile),
                                              (self.stats.stats, ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"], False, statsfile)]:
@@ -1830,10 +1822,8 @@ class PostgresTable(PostgresBase):
         else:
             self.conn.commit()
 
-    def add_column(self, name, datatype, extra=False, force=False, commit=True):
-        if name == 'id' and not force:
-            raise ValueError("Use the add_id() method to add an id column")
-        if name in self._search_cols:
+    def add_column(self, name, datatype, extra=False, commit=True):
+        if name in self._search_cols: #name == 'id' or 
             raise ValueError("%s already has column %s"%(self.search_table, name))
         if name in self._extra_cols:
             raise ValueError("%s already has column %s"%(self.extra_table, name))
@@ -1841,8 +1831,6 @@ class PostgresTable(PostgresBase):
             if not any(regexp.match(datatype.lower()) for regexp in param_types_whitelist):
                 raise ValueError("%s is not a valid type"%(datatype))
         self._col_type[name] = datatype
-        if datatype == 'text' or datatype.startswith('char'):
-            datatype = datatype + ' COLLATE "C"'
         if extra:
             if self.extra_table is None:
                 raise ValueError("No extra table")
@@ -1873,40 +1861,9 @@ class PostgresTable(PostgresBase):
             self._extra_cols.remove(name)
         else:
             raise ValueError("%s is not a column of %s"%(name, self.search_table))
-        modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(name))
+        modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(table), Identifier(name))
         self._execute(modifier, commit=commit)
         self._col_type.pop(name, None)
-
-    def add_id(self, ordered=False, restore_pkey=True, commit=True):
-        """
-        Add an id column.
-
-        INPUT:
-
-        - ``ordered`` -- whether the id column should be sorted matching the default sort order
-        - ``restore_pkey`` -- whether to create a primary key on the new column
-        - ``commit`` -- whether to commit the changes permanently
-        """
-        if self.has_id:
-            raise ValueError("%s already has id column"%(self.search_table))
-        if ordered and not self._sort:
-            raise ValueError("You must specify a default sort order")
-        self.add_column('id', 'bigint', force=True, commit=False)
-        sequencer = SQL("CREATE TEMPORARY SEQUENCE tmp_id")
-        self._execute(sequencer, commit=False)
-        updater = SQL("UPDATE {0} SET id = nextval('tmp_id')").format(Identifier(self.search_table))
-        self._execute(updater, commit=False)
-        self.has_id = True
-        if ordered:
-            updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order) = (%s, %s)")
-            self._execute(updater, [True, True], commit=False)
-            self._id_ordered = True
-            self._out_of_order = True
-            self.resort(commit=False)
-        if restore_pkey:
-            self.restore_pkeys(commit=False)
-        if commit:
-            self.conn.commit()
 
     def create_extra_table(self, columns, ordered=False):
         """
@@ -1921,9 +1878,7 @@ class PostgresTable(PostgresBase):
         """
         if self.extra_table is not None:
             raise ValueError("Extra table already exists")
-        if not self.has_id:
-            self.add_id(ordered=ordered, restore_pkey=False, commit=False)
-        elif ordered and not self._id_ordered:
+        if ordered and not self._id_ordered:
             updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order, has_extras) = (%s, %s, %s)")
             self._execute(updater, [True, True, True], commit=False)
             self._id_ordered = True
@@ -1932,7 +1887,7 @@ class PostgresTable(PostgresBase):
         else:
             updater = SQL("UPDATE meta_tables SET (has_extras) = (%s)")
             self._execute(updater, [True], commit=False)
-        self.extra_table = search_table + "_extras"
+        self.extra_table = self.search_table + "_extras"
         vars = [('id', 'bigint')]
         for col in columns:
             if col not in self._col_type:
@@ -2429,9 +2384,9 @@ class PostgresStatsTable(PostgresBase):
                 L = self._get_values_counts(cols, bucketed_constraint)
                 if len(L) != 1:
                     raise RuntimeError
-                count = L[0][1]
-                data.append((bucketed_constraint[col], count))
-                total += count
+                cnt = L[0][1]
+                data.append((bucketed_constraint[col], cnt))
+                total += cnt
         else:
             raise NotImplementedError
         data = [{'value':formatter(value),
@@ -2519,9 +2474,7 @@ class PostgresDatabase(PostgresBase):
     def __init__(self):
         from lmfdb.config import Configuration
         options = Configuration().get_postgresql();
-        self.fetch_userpassword();
-        options['user'] = self._user;
-        options['password'] = self._password;
+        self.fetch_userpassword(options);
         logging.info("Connecting to PostgresSQL...")
         connection = connect( **options)
         logging.info("Done!\n connection = %s" % connection)
@@ -2532,7 +2485,10 @@ class PostgresDatabase(PostgresBase):
         # Note that it has some global effects, since register_adapter
         # is not limited to just one connection
         setup_connection(self.conn)
-        cur = self._execute(SQL("SELECT name, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
+        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
+
+        if options['user'] == "webserver":
+            self._execute(SQL("SET SESSION statement_timeout = '25s'"))
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
@@ -2550,20 +2506,26 @@ class PostgresDatabase(PostgresBase):
     def __repr__(self):
         return "Interface to Postgres database"
 
-    def fetch_userpassword(self):
-        logging.info("Fetching webserver password...")
-        # tries to read the file "password" on root of the project
-        pw_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), "password")
-        try:
-            self._user = "webserver"
-            self._password = open(pw_filename, "r").readlines()[0].strip()
-            logging.info("Done!")
-        except Exception:
-            # file not found or any other problem
-            # this is read-only everywhere
-            logging.warning("PostgresSQL authentication: no webserver password -- fallback to read-only access")
-            self._user = "lmfdb"
-            self._password = "lmfdb"
+    def fetch_userpassword(self, options):
+        if 'user' not in options:
+            options['user'] = 'lmfdb'
+
+        if options['user'] == 'webserver':
+            logging.info("Fetching webserver password...")
+            # tries to read the file "password" on root of the project
+            pw_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), "password")
+            try:
+                password = open(pw_filename, "r").readlines()[0].strip()
+                logging.info("Done!")
+            except Exception:
+                # file not found or any other problem
+                # this is read-only everywhere
+                logging.warning("PostgresSQL authentication: no webserver password -- fallback to read-only access")
+                options['user'], options['password'] = ['lmfdb', 'lmfdb']
+
+        elif 'password' not in options:
+            options['user'], options['password'] = ['lmfdb', 'lmfdb']
+
 
     def is_alive(self):
         """
@@ -2583,7 +2545,7 @@ class PostgresDatabase(PostgresBase):
         else:
             raise ValueError
 
-    def create_table(self, name, search_columns, sort=None, id_ordered=False, extra_columns=None, search_order=None, extra_order=None):
+    def create_table(self, name, search_columns, label_col, sort=None, id_ordered=None, extra_columns=None, search_order=None, extra_order=None):
         """
         Add a new search table to the database.
 
@@ -2592,26 +2554,20 @@ class PostgresDatabase(PostgresBase):
         - ``name`` -- the name of the table.  See existing names for consistency.
         - ``search_columns`` -- a dictionary whose keys are valid postgres types and whose values
             are lists of column names (or just a string if only one column has the specified type).
-            An id column of type bigint will be added if either id_ordered is set or
-            extra_columns are specified.
+            An id column of type bigint will be added as a primary key (do not include it).
+        - ``label_col`` -- the column holding the LMFDB label.  This will be used in the ``lookup`` method
+            and in the display of results on the API.  Use None if there is no appropriate column.
         - ``sort`` -- If not None, provides a default sort order for the table, in formats accepted by
             the ``_sort_str`` method.
-        - ``id_ordered`` -- boolean (default False).  If set, the table will be sorted by id when
-            pushed to production, speeding up some kinds of search queries.
+        - ``id_ordered`` -- boolean (default None).  If set, the table will be sorted by id when
+            pushed to production, speeding up some kinds of search queries.  Defaults to True
+            when sort is not None.
         - ``extra_columns`` -- a dictionary in the same format as the search_columns dictionary.
             If present, will create a second table (the name with "_extras" appended), linked by
             an id column.  Data in this table cannot be searched on, but will also not appear
             in the search table, speeding up scans.
         - ``search_order`` -- (optional) list of column names, specifying the default order of columns
         - ``extra_order`` -- (optional) list of column names, specifying the default order of columns
-
-        NOTE:
-
-        For collatable types (text, char and varchar) we add 'COLLATE "C"' to the postgres type for speed,
-        since most text data in the LMFDB doesn't need locale-specific sorting.  If a different collation
-        is desired, you can specify it in the type itself (e.g. 'text COLLATE "en_US.UTF-8"')
-
-        Beware that some mathematical terms (e.g. group and order) are postgres keywords and must be avoided.
 
         COMMON TYPES:
 
@@ -2631,6 +2587,8 @@ class PostgresDatabase(PostgresBase):
         if name in self.tablenames:
             raise ValueError("%s already exists"%name)
         now = time.time()
+        if id_ordered is None:
+            id_ordered = (sort is not None)
         for typ, L in search_columns.items():
             if isinstance(L, basestring):
                 search_columns[typ] = [L]
@@ -2640,6 +2598,9 @@ class PostgresDatabase(PostgresBase):
         if len(valid_list) != len(valid_set):
             C = Counter(valid_list)
             raise ValueError("Column %s repeated"%(C.most_common(1)[0][0]))
+        # Check that label_col is valid
+        if label_col is not None and label_col not in valid_set:
+            raise ValueError("label_col must be a search column")
         # Check that sort is valid
         if sort is not None:
             for col in sort:
@@ -2666,8 +2627,6 @@ class PostgresDatabase(PostgresBase):
                 if typ.lower() not in types_whitelist:
                     if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
                         raise ValueError("%s is not a valid type"%(typ))
-                if typ == 'text' or typ.startswith('char'):
-                    typ = typ + ' COLLATE "C"'
                 if isinstance(cols, basestring):
                     cols = [cols]
                 for col in cols:
@@ -2679,7 +2638,7 @@ class PostgresDatabase(PostgresBase):
                     allcols[col] = SQL("{0} " + typ).format(Identifier(col))
                     dictorder.append(col)
             allcols = [allcols[col] for col in (dictorder if colorder is None else colorder)]
-            if (not hasid) and (id_ordered or extra_columns is not None):
+            if (not hasid):
                 allcols.insert(0, SQL("id bigint"))
             return allcols
         def grant_select(table_name):
@@ -2725,7 +2684,7 @@ class PostgresDatabase(PostgresBase):
         self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None], silent=True, commit=False)
         print "Table %s created in %.3f secs"%(name, time.time()-now)
         self.conn.commit()
-        self.__dict__[name] = PostgresTable(self, name, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None))
+        self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None))
         self.tablenames.append(name)
         self.tablenames.sort()
 

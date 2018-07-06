@@ -2,7 +2,6 @@
 import sage
 from sage.all import gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari, valuation
 import yaml, os
-import hashlib
 from sage.misc.cachefunc import cached_function
 from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html, display_multiset
 from flask import url_for

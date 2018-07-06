@@ -9,7 +9,7 @@ import ast
 import yaml
 import os
 from lmfdb.db_backend import db
-from flask import render_template, request, url_for, redirect, send_file, abort
+from flask import render_template, request, url_for, redirect, send_file, abort, jsonify
 from lmfdb.utils import to_dict, flash_error
 from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_input, parse_bracketed_posints, parse_gap_id
 

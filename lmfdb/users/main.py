@@ -7,7 +7,6 @@ import flask
 from functools import wraps
 from lmfdb.base import app
 from flask import render_template, request, Blueprint, url_for, make_response
-#from flask.ext.login import login_required, login_user, current_user, logout_user
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
 from distutils.version import StrictVersion
 
@@ -132,6 +131,7 @@ def profile(userid):
     # See issue #1169
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
+    from lmfdb.knowledge.knowl import knowldb
     userknowls = knowldb.search(author=userid, sort=['title'])
     return render_template("user-detail.html", user=user,
                            title="%s" % user.name, bread=bread, userknowls=userknowls)

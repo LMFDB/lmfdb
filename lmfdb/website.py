@@ -15,10 +15,7 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 import logging
 import utils
 import os
-import sys
 import time
-import getopt
-from pymongo import ReadPreference
 from base import app, set_logfocus, get_logfocus, _init
 from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
 import sage

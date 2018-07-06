@@ -2,19 +2,9 @@
 ### Class for computing and storing Maass waveforms.
 
 from lmfdb.db_backend import db
-from copy import copy
-from sage.all import RR, real, imag
-from sage.symbolic.expression import Expression
-import datetime
-from lmfdb import base
-from sage.all import Integer, DirichletGroup, is_even, loads, dumps, cached_method
+from sage.all import Integer, loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
-import math
 logger = mwf_logger
-try:
-    from dirichlet_conrey import DirichletGroup_conrey
-except:
-    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
 
 class MaassDB(object):
     r"""
@@ -70,9 +60,8 @@ class MaassDB(object):
         maass_id = data.get('maass_id')
         if maass_id is None:
             raise ValueError
-        res = []
         if verbose > 0:
-            print "id=", idd
+            print "id=", maass_id
         f = self._forms.lucky({'maass_id': maass_id})
         if f is None:
             return None
