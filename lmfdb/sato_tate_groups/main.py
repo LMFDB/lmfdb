@@ -37,14 +37,6 @@ st0_dict = {
 }
 
 ###############################################################################
-# Database connection
-###############################################################################
-
-st_db = db.gps_sato_tate
-st0_db = db.gps_sato_tate0
-sg_db = db.gps_small
-
-###############################################################################
 # Utility functions
 ###############################################################################
 
@@ -62,7 +54,7 @@ def string_matrix(m):
 def st_link(label):
     if re.match(MU_LABEL_RE, label):
         return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mu(%s)'%label.split('.')[2])
-    data = st_db.lookup(label)
+    data = db.gps_sato_tate.lookup(label)
     if not data:
         return label
     return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), data['pretty'])
@@ -82,7 +74,7 @@ def st0_pretty(st0_name):
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
-    data = sg_db.lookup(sg_label)
+    data = db.gps_small.lookup(sg_label)
     if data and 'pretty' in data:
         return data['pretty']
     return sg_label
@@ -135,7 +127,7 @@ def index():
 
 @st_page.route('/random')
 def random():
-    label = st_db.random()
+    label = db.gps_sato_tate.random()
     return redirect(url_for('.by_label', label=label), 307)
 
 @st_page.route('/<label>')
@@ -166,7 +158,7 @@ def search_by_label(label):
     if re.match(ST_LABEL_NAME_RE,label):
         slabel = label.split('.')
         try:
-            label = st_db.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, 0)
+            label = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, 0)
         except ValueError:
             label = None
     if label is None:
@@ -313,7 +305,7 @@ def render_by_label(label):
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
-    data = st_db.lookup(label)
+    data = db.gps_sato_tate.lookup(label)
     info = {}
     if data is None:
         flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
@@ -323,13 +315,13 @@ def render_by_label(label):
     info['ambient'] = st_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
     info['rational']=boolean_name(info.get('rational',True))
-    st0 = st0_db.lucky({'name':data['identity_component']})
+    st0 = db.gps_sato_tate0.lucky({'name':data['identity_component']})
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
     info['st0_name']=st0['pretty']
     info['st0_description']=st0['description']
-    G = sg_db.lookup(data['component_group'])
+    G = db.gps_small.lookup(data['component_group'])
     if not G:
         flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
         return redirect(url_for(".index"))

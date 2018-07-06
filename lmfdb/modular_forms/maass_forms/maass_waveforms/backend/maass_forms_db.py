@@ -10,49 +10,40 @@ class MaassDB(object):
     r"""
     Compute and store Maass forms
     """
-    def __init__(self):
-        r"""
-        Use postgres tables to store and show Maass forms
-        """
-        self._forms = db.mwf_forms
-        self._coeffs = db.mwf_coeffs
-        self._plots = db.mwf_plots
-        self._tables = db.mwf_tables
-
     def __repr__(self):
         return "Maass waveforms database"
 
     def lucky(self, *args, **kwds):
-        return self._forms.lucky(*args, **kwds)
+        return db.mwf_forms.lucky(*args, **kwds)
 
     def get_Maass_forms(self, query, projection=1, limit=50, offset=0, sort=None):
         query = arg_to_search_parameters(query)
         #sorting = ['Weight', 'Level', 'Character', 'Eigenvalue']
-        return self._forms.search(query, projection, limit=limit, offset=offset, sort=sort)
+        return db.mwf_forms.search(query, projection, limit=limit, offset=offset, sort=sort)
 
     def get_next_maassform_id(self, level, character, weight, eigenvalue, maass_id):
-        ID = self._forms.lucky({'maass_id':maass_id}, projection='id')
+        ID = db.mwf_forms.lucky({'maass_id':maass_id}, projection='id')
         if ID is None:
             raise ValueError("Maass form not found")
         query = {'id':{'$gt':ID}, 'Level': level, 'Character': character,
                  'Eigenvalue': {'$gte':eigenvalue-(1e-6)}, 'Newform' : None, 'Weight' : weight}
-        forms = self._forms.search(query, projection='maass_id', limit=1)
+        forms = db.mwf_forms.search(query, projection='maass_id', limit=1)
         return forms[0] if forms else None
 
     def get_prev_maassform_id(self, level, character, weight, eigenvalue, maass_id):
-        ID = self._forms.lucky({'maass_id':maass_id}, projection='id')
+        ID = db.mwf_forms.lucky({'maass_id':maass_id}, projection='id')
         if ID is None:
             raise ValueError("Maass form not found")
         query = {'id':{'$lt':ID}, 'Level': level, 'Character': character,
                  'Eigenvalue': {'$lte':eigenvalue+(1e-6)}, 'Newform' : None, 'Weight' : weight}
-        forms = self._forms.search(query, projection='maass_id', limit=1, sort=[('Eigenvalue',-1)])
+        forms = db.mwf_forms.search(query, projection='maass_id', limit=1, sort=[('Eigenvalue',-1)])
         return forms[0] if forms else None
 
     def get_maassform_plot_by_id(self, maass_id):
-        return self._plots.lucky({'maass_id':maass_id}, projection='plot')
+        return db.mwf_plots.lucky({'maass_id':maass_id}, projection='plot')
 
     def maassform_has_plot(self, maass_id):
-        return self._plots.exists({'maass_id':maass_id})
+        return db.mwf_plots.exists({'maass_id':maass_id})
 
     def get_coefficients(self, data={}, verbose=0, **kwds):
         if verbose > 0:
@@ -62,7 +53,7 @@ class MaassDB(object):
             raise ValueError
         if verbose > 0:
             print "id=", maass_id
-        f = self._forms.lucky({'maass_id': maass_id})
+        f = db.mwf_forms.lucky({'maass_id': maass_id})
         if f is None:
             return None
         nc = f.get('Numc', 0)
@@ -73,22 +64,22 @@ class MaassDB(object):
         cid = f.get('coeff_label', None)
         if cid is None:
             return f.get('Coefficients', None)
-        ff = self._coeffs.lucky({'label':cid}, 'coefficients')
+        ff = db.mwf_coeffs.lucky({'label':cid}, 'coefficients')
         return None if ff is None else loads(str(ff))
 
     def count(self, query={}):
-        return self._forms.count(query)
+        return db.mwf_forms.count(query)
 
     def levels(self):
-        return self._forms.distinct('Level')
+        return db.mwf_forms.distinct('Level')
 
     def weights(self, Level=0):
         query = {'Level':int(Level)} if Level > 0 else {}
-        return self._forms.distinct('Weight', query)
+        return db.mwf_forms.distinct('Weight', query)
 
     def characters(self, Level=0, Weight=0):
         query = {'Level':int(Level), 'Weight':int(Weight)} if Level > 0 else {}
-        return self._forms.distinct('Character', query)
+        return db.mwf_forms.distinct('Character', query)
 
     # def Dirchars(self, N, parity=0, verbose=0, refresh=False):
     #     r"""
@@ -213,7 +204,7 @@ class MaassDB(object):
     #    return resm
 
     def set_table(self, refresh=False):
-        self.table = self._tables.lucky({})
+        self.table = db.mwf_tables.lucky({})
         self.table['keylist'] = map(tuple, self.table['keylist'])
         self.table['data'] = {tuple(map(int, k.split(','))):tuple(v) for k,v in self.table['data'].iteritems()}
         #data = self.show_data()
