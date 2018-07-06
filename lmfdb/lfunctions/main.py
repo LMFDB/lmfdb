@@ -5,14 +5,12 @@ from flask import render_template, url_for, request, make_response
 from sage.all import plot, srange, spline, line
 
 import tempfile
-import bson
 import os
 import re
 import sqlite3
 import numpy
 
 import LfunctionPlot
-import LfunctionDatabase
 
 from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunction_EC_Q,
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,

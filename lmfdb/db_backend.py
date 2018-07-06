@@ -26,15 +26,12 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 """
 
 
-import logging
-import tempfile, datetime
-import re, os, time
+import logging, tempfile, re, os, time, random
 from collections import Counter
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
-import json, random, time
 from sage.misc.cachefunc import cached_method
 from sage.misc.mrange import cartesian_product_iterator
 from lmfdb.utils import make_logger, format_percentage
@@ -1873,7 +1870,7 @@ class PostgresTable(PostgresBase):
             self._extra_cols.remove(name)
         else:
             raise ValueError("%s is not a column of %s"%(name, self.search_table))
-        modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(name))
+        modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(table), Identifier(name))
         self._execute(modifier, commit=commit)
         self._col_type.pop(name, None)
 
@@ -1932,7 +1929,7 @@ class PostgresTable(PostgresBase):
         else:
             updater = SQL("UPDATE meta_tables SET (has_extras) = (%s)")
             self._execute(updater, [True], commit=False)
-        self.extra_table = search_table + "_extras"
+        self.extra_table = self.search_table + "_extras"
         vars = [('id', 'bigint')]
         for col in columns:
             if col not in self._col_type:
@@ -2429,9 +2426,9 @@ class PostgresStatsTable(PostgresBase):
                 L = self._get_values_counts(cols, bucketed_constraint)
                 if len(L) != 1:
                     raise RuntimeError
-                count = L[0][1]
-                data.append((bucketed_constraint[col], count))
-                total += count
+                cnt = L[0][1]
+                data.append((bucketed_constraint[col], cnt))
+                total += cnt
         else:
             raise NotImplementedError
         data = [{'value':formatter(value),

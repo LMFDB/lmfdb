@@ -7,7 +7,6 @@ from flask import render_template, request, url_for, redirect, jsonify
 from lmfdb.utils import to_dict, list_to_latex_matrix
 from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start, parse_bracketed_posints, parse_restricted
 import re
-import bson
 from lmfdb.galois_groups import galois_groups_page, logger
 from sage.all import ZZ, latex, gap
 
@@ -19,7 +18,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
+from lmfdb.transitive_group import group_display_pretty, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
 
 from lmfdb.WebNumberField import modules2string
 from lmfdb.db_backend import db

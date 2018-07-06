@@ -67,7 +67,7 @@ class KnowlBackend(PostgresBase):
             restrictions.append(SQL("quality = ANY(%s)"))
             values.append(Array(qualities))
         if keywords:
-            keywords = filter(lambda _: len(_) >= 3, keyword.split(" "))
+            keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
             if keywords:
                 restrictions.append(SQL("_keywords @> %s"))
                 values.append(keywords)
@@ -114,7 +114,7 @@ class KnowlBackend(PostgresBase):
         if key not in self._default_fields + ['history', '_keywords']:
             raise ValueError("Bad key")
         updater = SQL("UPDATE kwl_knowls SET ({0}) = (%s) WHERE id = %s").format(Identifier(key))
-        cur = self._execute(updater, (value, kid))
+        self._execute(updater, (value, kid))
     def save_history(self, knowl, who):
         """
         saves history tokens in a collection "history".

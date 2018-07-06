@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import lmfdb
 from lmfdb.base import LmfdbTest
 from lmfdb.WebCharacter import WebDirichlet, WebHecke
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url

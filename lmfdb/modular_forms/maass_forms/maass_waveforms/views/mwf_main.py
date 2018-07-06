@@ -23,7 +23,6 @@ AUTHORS:
 
 import flask
 from flask import render_template, url_for, request, make_response, send_file
-import bson
 import StringIO
 from sage.all import loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
@@ -436,7 +435,7 @@ def evs_table2(search, twodarray=False, limit=50, offset=0):
         search.pop('limit')
     if 'skip' in search:
         search.pop('skip')
-    evs['totalrecords'] = n = maass_db.count(search)
+    evs['totalrecords'] = maass_db.count(search)
     evs['totalrecords_filtered'] = len(fs)
 
     return evs

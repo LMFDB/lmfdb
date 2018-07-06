@@ -677,7 +677,7 @@ def download_ECNF_all(nf,conductor_label,class_label,number):
     except ValueError:
         return search_input_error()
     label = "".join(["-".join([nf_label, conductor_label, class_label]), number])
-    data = db_ecnf().find_one({'label':label}, {'_id':False})
+    data = db.ec_nfcurves.lookup(label)
     if data is None:
         return search_input_error()
 

@@ -2,7 +2,6 @@
 import re
 import time
 import ast
-from operator import mul
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.base import app
@@ -10,7 +9,6 @@ from flask import render_template, url_for, request, redirect, make_response, se
 import tempfile
 import os
 import StringIO
-import cPickle
 
 from lmfdb.utils import web_latex, to_dict, web_latex_split_on_pm
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -476,7 +474,6 @@ def download_EC_all(label):
         if len(data_list) == 0:
             return elliptic_curve_jump_error(label, {})
 
-    import json
     response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
     response.headers['Content-type'] = 'text/plain'
     return response

@@ -7,7 +7,6 @@
 from sage.structure.sage_object import SageObject
 from sage.all import ZZ, QQ, NumberField, PolynomialRing
 from ast import literal_eval
-from random import randint
 from lmfdb.db_backend import db
 
 def random_sample_name():

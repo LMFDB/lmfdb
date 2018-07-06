@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import bson
-import lmfdb.base
-import pymongo
 import random
 from flask import url_for, request
 from lmfdb.utils import to_dict, ajax_url
@@ -188,7 +185,6 @@ class MWFTable(object):
                     row['cusp_evs'] = rec.get("Cusp_evs")
                     row['err'] = rec.get('Error', 0)
                     row['url'] = url_for('mwf.render_one_maass_waveform', maass_id=maass_id)
-                    row['name'] = c.name
                     row['numc'] = rec.get('Numc', 0)
                     evs.append(row)
                 kmax = int(totalc / ev_limit)

@@ -6,10 +6,10 @@ from lmfdb.base import app
 from flask import render_template, request, url_for, redirect, send_file, flash, jsonify, make_response
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
-from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, decodedisc, factor_base_factor, factor_base_factorization_latex
+from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor, factor_base_factorization_latex
 from lmfdb.db_backend import db
 from lmfdb.local_fields.main import show_slope_content
-
+import ast
 
 from markupsafe import Markup
 
@@ -321,9 +321,6 @@ def string2list(s):
 
 
 def render_field_webpage(args):
-    from sage.misc.misc import cputime
-    cpt0 = cputime()
-    t0 = time.time()
     data = None
     info = {}
     bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
@@ -376,8 +373,8 @@ def render_field_webpage(args):
     data['frob_data'], data['seeram'] = frobs(nf)
     # Bad prime information
     npr = len(ram_primes)
-    #ramified_algebras_data = nf.ramified_algebras_data()
-    if True: #isinstance(ramified_algebras_data,str):
+    ramified_algebras_data = nf.ramified_algebras_data()
+    if isinstance(ramified_algebras_data,str):
         loc_alg = ''
     else:
         # [label, latex, e, f, c, gal]
@@ -634,7 +631,7 @@ def number_field_search(info):
 
     if 'result_count' in info:
         nres = db.nf_fields.count(query)
-        return flask.jsonify({"nres":str(nres)})
+        return jsonify({"nres":str(nres)})
     if 'lucky' in info:
         label = db.nf_fields.lucky(query, 0)
         if label:

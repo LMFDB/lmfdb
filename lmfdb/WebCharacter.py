@@ -3,7 +3,6 @@
 from sage.misc.cachefunc import cached_method
 from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
-import lmfdb
 from lmfdb.utils import make_logger, web_latex_split_on_pm
 logger = make_logger("DC")
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label

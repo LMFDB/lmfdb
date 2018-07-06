@@ -132,6 +132,7 @@ def profile(userid):
     # See issue #1169
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
+    from lmfdb.knowledge.knowl import knowldb
     userknowls = knowldb.search(author=userid, sort=['title'])
     return render_template("user-detail.html", user=user,
                            title="%s" % user.name, bread=bread, userknowls=userknowls)

@@ -2,7 +2,6 @@
 from flask import url_for
 from lmfdb.db_backend import db
 from lmfdb.base import app
-from lmfdb.db_backend import db
 from lmfdb.utils import comma, make_logger
 from lmfdb.WebNumberField import nf_display_knowl
 from sage.misc.cachefunc import cached_method

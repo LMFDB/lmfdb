@@ -11,6 +11,7 @@ from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, pri
 from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
 from lmfdb.search_parsing import parse_ints, parse_count, parse_start
+from lmfdb.db_backend import db
 
 from markupsafe import Markup
 

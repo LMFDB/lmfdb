@@ -14,13 +14,11 @@ from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
 from sage.rings.infinity import infinity
 from sage.rings.number_field.number_field_element import NumberFieldElement
-from sage.rings.number_field.number_field import NumberField, CyclotomicField, NumberField_generic, NumberField_absolute, NumberField_cyclotomic
+from sage.rings.number_field.number_field import NumberField, CyclotomicField, NumberField_generic, NumberField_cyclotomic
 from sage.rings.number_field.number_field_rel import NumberField_relative
-from sage.rings.polynomial.polynomial_element_generic import Polynomial_generic_dense_field
 from sage.rings.polynomial.polynomial_element import Polynomial
 from sage.rings.power_series_poly import PowerSeries_poly
 from sage.modules.free_module_element import vector, FreeModuleElement
-from sage.arith.functions import lcm
 import json
 import datetime
 

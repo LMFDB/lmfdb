@@ -3,9 +3,7 @@ from lmfdb.utils import truncate_number
 from mwf_utils import mwf_logger
 from maass_forms_db import maass_db
 from sage.all import Gamma0, CC
-import bson
-
-
+from lmfdb.db_backend import db
 
 class MaassFormTable(MFDataTable):
     r"""
