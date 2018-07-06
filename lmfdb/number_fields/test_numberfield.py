@@ -4,7 +4,7 @@ from lmfdb.base import LmfdbTest
 class NumberFieldTest(LmfdbTest):
 
     # All tests should pass
-    
+
     def test_Q(self):
         L = self.tc.get('/NumberField/Q', follow_redirects=True)
         assert '\chi_{1}' in L.data
@@ -67,23 +67,23 @@ class NumberFieldTest(LmfdbTest):
 
     def test_how_computed(self):
         L = self.tc.get('/NumberField/HowComputed')
-        assert 'Hunter searches' in L.data 
+        assert 'Hunter searches' in L.data
 
     def test_galois_group_page(self):
         L = self.tc.get('/NumberField/GaloisGroups')
-        assert 'abstract group may have' in L.data 
+        assert 'abstract group may have' in L.data
 
     def test_imaginary_quadratic_page(self):
         L = self.tc.get('/NumberField/QuadraticImaginaryClassGroups')
-        assert 'Mosunov' in L.data 
+        assert 'Mosunov' in L.data
 
     def test_discriminants_page(self):
         L = self.tc.get('/NumberField/Discriminants')
-        assert 'Jones-Roberts' in L.data 
+        assert 'Jones-Roberts' in L.data
 
     def test_field_labels_page(self):
         L = self.tc.get('/NumberField/FieldLabels')
-        assert 'with the same signature and absolute value of the' in L.data 
+        assert 'with the same signature and absolute value of the' in L.data
 
     def test_url_bad(self):
         L = self.tc.get('/NumberField/junk')
@@ -91,19 +91,15 @@ class NumberFieldTest(LmfdbTest):
 
     def test_random_field(self):
         L = self.tc.get('/NumberField/random', follow_redirects=True)
-        assert 'Discriminant' in L.data 
+        assert 'Discriminant' in L.data
 
     def test_statistics(self):
         L = self.tc.get('/NumberField/stats', follow_redirects=True)
-        assert 'Class number' in L.data 
+        assert 'Class number' in L.data
 
     def test_signature_search(self):
-        L = self.tc.get('/NumberField/?start=0&signature=%5B0%2C3%5D&count=100', follow_redirects=True)
+        L = self.tc.get('/NumberField/?start=0&degree=6&signature=%5B0%2C3%5D&count=100', follow_redirects=True)
         assert '6.0.61131.1' in L.data
 
-        L = self.tc.get('/NumberField/?start=0&signature=%5B3%2C2%5D&count=100', follow_redirects=True)
+        L = self.tc.get('/NumberField/?start=0&degree=7&signature=%5B3%2C2%5D&count=100', follow_redirects=True)
         assert '7.3.1420409.1' in L.data
-
-
-
-
