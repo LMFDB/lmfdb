@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # testing users blueprint
 from lmfdb.base import LmfdbTest
-from pwdmanager import userdb
 from main import login_page
 
 class UsersTestCase(LmfdbTest):

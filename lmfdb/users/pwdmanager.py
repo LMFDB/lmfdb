@@ -149,7 +149,7 @@ class PostgresUserTable(PostgresBase):
             raise ValueError("multiple users with same username!")
         return {field:value for field,value in zip(self._cols, cur.fetchone()) if value is not None}
     def full_names(self, uids):
-        selecter = SQL("SELECT username, full_name FROM userdb.usyers WHERE username = ANY(%s)")
+        selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
         cur = self._execute(selecter, [Array(uids)])
         return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
     def create_tokens(self, tokens):

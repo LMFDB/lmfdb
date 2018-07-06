@@ -83,7 +83,7 @@ class ArtinRepresentation(object):
             self._data = data_dict["data"]
             label=self._data['label']
         else:
-            if len(x)==1: # Assume we got a label
+            if len(x) == 1: # Assume we got a label
                 label = x[0]
                 parts = x[0].split("c")
                 base = parts[0]
@@ -97,7 +97,7 @@ class ArtinRepresentation(object):
             self._data = db.artin_reps.convert_lucky({'Baselabel':str(base)})
             conjs = self._data["GaloisConjugates"]
             conj = [xx for xx in conjs if xx['GalOrbIndex'] == conjindex]
-            self._data['label']=label
+            self._data['label'] = label
             self._data.update(conj[0])
 
     @classmethod
@@ -186,7 +186,9 @@ class ArtinRepresentation(object):
         try:
             return self._nf
         except AttributeError:
-            self._nf = NumberFieldGaloisGroup.lucky({"Polynomial": self._data["NFGal"]})
+            #FIXME fix this hack to force list of ints
+            intNFGal = map(int, self._data["NFGal"]);
+            self._nf = NumberFieldGaloisGroup.lucky({"Polynomial":  intNFGal})
         return self._nf
 
     def galois_conjugacy_size(self):
