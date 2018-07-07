@@ -10,7 +10,7 @@
 
 
 <p>
-Browse by degree $n$ :
+Browse by {{KNOWL('gg.degree', title='degree')}} $n$ :
 {% for n in info.degree_list: %}
     <a href="?n={{n}}">{{n}}</a>
 {% endfor %}
@@ -28,7 +28,7 @@ Browse by type:
 <a href="?prim=-1">Imprimitive</a>
 
 <p>
-Browse by group:
+Browse by abstract group:
 <a href="?gapid=[6,1]">$S_3$</a>
 <a href="?gapid=[8,3]">$D_4$</a>
 <a href="?gapid=[12,3]">$A_4$</a>
@@ -49,7 +49,7 @@ A <a href={{url_for('.random_group')}}>random Galois group</a> from the database
 Search by {{KNOWL('gg.label',title="Galois group label")}}
 <input type="text" name="jump_to" value="" placeholder="8T14"> 
 <button type="submit" value="Find">Find</button>
-<span class="formexample"> e.g. 6T3</span>
+<span class="formexample"> e.g. 8T14</span>
 </form>
 </div>
 
@@ -61,10 +61,10 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
             <td colspan="2" align="center">
             <table>
               <tr>
-                <td align="center">Parity</td>
-                <td align="center">Cyclic</td>
-                <td align="center">Solvable</td>
-                <td align="center">Primitive</td>
+                <td align="center">{{KNOWL('gg.parity', 'Parity')}}</td>
+                <td align="center">{{KNOWL('group.cyclic','Cyclic')}}</td>
+                <td align="center">{{KNOWL('group.solvable','Solvable')}}</td>
+                <td align="center">{{KNOWL('gg.primitive', 'Primitive')}}</td>
               </tr>
               <tr>
                 <td> <select name='parity'>
@@ -97,7 +97,7 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
           </tr>
           <tr>
             <td align="right">
-          {{KNOWL('gg.degree',title='Degree')}}:
+          {{KNOWL('gg.degree',title='degree')}}:
             </td><td><input type="text" name="n" value="" placeholder="6"></td>
 	    <td>
 	      <span class="formexample">e.g. 6 or 4,6 or 2..5 or 4,6..8</span>
@@ -108,13 +108,13 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
               {{KNOWL('gg.tnumber',title='$t$')}} :
             </td><td><input type="text" name="t" value="" placeholder="3"></td>
 	    <td>
-	      <span class="formexample">e.g. 6 or 4,6 or 2..5 or 4,6..8</span>
+	      <span class="formexample">e.g. 3 or 4,6 or 2..5 or 4,6..8</span>
 	    </td>
           </tr>
           <tr>
             <td align="right">
-              {{KNOWL('group.order',title='Order')}} :
-            </td><td><input type="text" name="order" value="" placeholder="24"></td>
+              {{KNOWL('group.order',title='order')}} :
+            </td><td><input type="text" name="order" value="" placeholder="6"></td>
 	    <td>
 	      <span class="formexample">e.g. 6 or 4,6 or 2..35 or 4,6..80</span>
 	    </td>
@@ -122,7 +122,7 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
 
           <tr>
             <td align="right">
-              {{KNOWL('curve.highergenus.aut.groupnotation',title='Gap id')}} :
+              {{KNOWL('curve.highergenus.aut.groupnotation',title='GAP id')}} :
             </td><td><input type="text" name="gapid" value="" placeholder="[8,3]"></td>
 	    <td>
 	      <span class="formexample">e.g. [8,3] or [16,7]</span>
@@ -131,7 +131,7 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
 
 
           <tr>
-          <td> Maximum number of groups to display: </td>
+          <td> Maximum number to display: </td>
           <td>
             <input type="text" name="count" value="{{info.count}}" size="10">
           </td>
