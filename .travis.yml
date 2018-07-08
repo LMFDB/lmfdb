@@ -29,8 +29,8 @@ install:
     - parallel --version
     # install the latest pyflakes
     - pip install pyflakes --user
-    # install the latest codecov
-    - pip install codecov --user
+    # install the latest coveralls
+    - pip install coveralls --user
     - export PATH=${HOME}/.local/bin/:${PATH}
     # install SAGE with GAP already built in
     - export SAGE_VERSION=8.1
@@ -47,22 +47,11 @@ install:
     - ${SAGE} -python -c 'from sage.all import gap;G = gap.TransitiveGroup(9, 2); print G'
     # install LMFDB requirements
     - ${SAGE} -pip install -r requirements.txt
-    # hack nosetests to run in parallel, otherwise all the processes try to write into the same file
-    # this equivalent to have parallel = True in .coveragerc (but nosetests overwrites)
-    # we also disable the coverage report in nosetests
-    - wget https://raw.githubusercontent.com/edgarcosta/binary-pkg/master/patches/cover.py.patch
-    - patch ${SAGE_DIR}/local/lib/python2.7/site-packages/nose/plugins/cover.py cover.py.patch --verbose
 
 before_script:
-    # make the testmatch a environment variable
-    # alternatively one could, try to escape the string accordingly
-    # however, due to the nested calling of sage and then parallel
-    # it gets quite tricky.
-    - export TESTMATCH='"(?:^|\/)[Tt]est_"'
-    - export COVERAGE='--with-coverage  --cover-package=lmfdb'
     # assert that m0.lmfdb.xyz accepts our connections
     - nc -vz  m0.lmfdb.xyz 27017
-    # create a list of files and folder where we will run the nosetests
+    # create a list of files and folder where we will run the tests
     - ls  lmfdb/*.py  > list
     - ls -d lmfdb/*/ >> list
     # how much free ram do we have
@@ -74,19 +63,15 @@ script:
     # run pyflakes
     - pyflakes lmfdb/ > pyflakeslog
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
-    # run nosetests in parallel with the aid of parallel
-    # we cannot use the option --processes in nosetests, as MongoDB doesn't support forking
-    # usually we have at most 4gb of RAM per test, we should avoid running many jobs at once
-    - ${SAGE} -sh -c 'parallel --joblog joblog --jobs 3 --results nosetests  --group --progress --verbose -a list ${SAGE_DIR}/local/bin/nosetests --verbosity=3 -s --testmatch=${TESTMATCH} ${COVERAGE}'
+    # Check that pytest is installed
+    - ${SAGE} -sh -c "pytest --version"
+    # This runs without fail
+    - ${SAGE} -sh -c "pytest --verbose -s --cov=lmfdb"
 
 after_failure:
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
-    # print the logs with failed tests
-    - grep 'FAILED' -r nosetests -l > greplog ; cat greplog
-    - parallel -a greplog echo ERROR in filename = '{}' \; cat '{}' \; echo \;
 
 after_success:
     - ls -a
-    - coverage combine
-    - codecov
-
+      #- COVERALLS_PARALLEL=true coveralls
+    - coveralls

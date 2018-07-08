@@ -12,7 +12,7 @@ def act(request):
     clean_scrapes -- Clean up any bad scrapes (i.e old but not complete)
     """
     request = json.loads(request)
-    print request
+    #print request
     action = request['action']
     #action = request['action']
     result = None

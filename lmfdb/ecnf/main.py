@@ -130,7 +130,7 @@ def learnmore_list_remove(matchstring):
 
 @ecnf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the elliptic curve data over number fields'
+    t = 'Completeness of the Elliptic Curve Data over Number Fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('Completeness', '')]
     credit = 'John Cremona'
@@ -140,7 +140,7 @@ def completeness_page():
 
 @ecnf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the elliptic curve data over number fields'
+    t = 'Source of the Elliptic Curve Data over Number Fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('Source', '')]
     credit = 'John Cremona'
@@ -149,7 +149,7 @@ def how_computed_page():
 
 @ecnf_page.route("/Labels")
 def labels_page():
-    t = 'Labels for elliptic curves over number fields'
+    t = 'Labels for Elliptic Curves over Number Fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('Labels', '')]
     credit = 'John Cremona'
@@ -289,7 +289,7 @@ def show_ecnf_conductor(nf, conductor_label):
     except ValueError:
         return search_input_error()
     info = to_dict(request.args)
-    info['title'] = 'Elliptic Curves over %s of conductor %s' % (nf_pretty, conductor_label)
+    info['title'] = 'Elliptic Curves over %s of Conductor %s' % (nf_pretty, conductor_label)
     info['bread'] = [('Elliptic Curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
     if len(request.args) > 0:
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
@@ -318,7 +318,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     if not isinstance(cl, ECNF_isoclass):
         info = {'query':{}, 'err':'No elliptic curve isogeny class in the database has label %s.' % label}
         return search_input_error(info, bread)
-    title = "Elliptic Curve isogeny class %s over Number Field %s" % (full_class_label, cl.field_name)
+    title = "Elliptic Curve Isogeny Class %s over Number Field %s" % (full_class_label, cl.field_name)
     bread.append((nf_pretty, url_for(".show_ecnf1", nf=nf)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
     bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=quote(conductor_label), class_label=class_label)))
@@ -473,7 +473,7 @@ def elliptic_curve_search(info):
             info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
         else:
             info['report'] = 'displaying all %s matches' % nres
-    t = info.get('title','Elliptic Curve search results')
+    t = info.get('title','Elliptic Curve Search Results')
     return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
 
 

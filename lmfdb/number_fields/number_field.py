@@ -127,7 +127,7 @@ def how_computed_page():
 def render_groups_page():
     info = {}
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")) ]
-    t = 'Galois group labels'
+    t = 'Galois Group Labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois Group Labels', ' ')]
     C = db()
     return render_template("galois_groups.html", al=aliastable(C), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
@@ -143,7 +143,7 @@ def render_labels_page():
     t = 'Labels for Global Number Fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Number field labels'
+    t = 'Number Field Labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Global Number Field Labels', '')]
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=info.pop('learnmore'))
 
@@ -214,8 +214,8 @@ def galstatdict(li, tots, t):
 
 @nf_page.route("/stats")
 def statistics():
-    t = 'Global number field statistics'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number field statistics', '')]
+    t = 'Global Number Field Statistics'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Statistics', '')]
     init_nf_count()
     n = statdb().find_one({'_id': 'degree'})['counts']
     nsig = statdb().find_one({'_id': 'nsig'})['counts']
@@ -622,7 +622,7 @@ def make_disc_key(D):
 def number_field_search(info):
 
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Global Number Field search results'
+    t = 'Global Number Field Search Results'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
 
     if 'natural' in info:
@@ -640,7 +640,7 @@ def number_field_search(info):
         for j in range(len(fields)):
             if fields2[j] is None:
                 fields2[j] = WebNumberField.fakenf(fields[j])
-        t = 'Number field algebra'
+        t = 'Number Field Algebra'
         info = {}
         info = {'fields': fields2}
         return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
