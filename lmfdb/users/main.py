@@ -10,6 +10,10 @@ from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
 from distutils.version import StrictVersion
 
+from lmfdb.db_backend import  db
+from psycopg2.sql import SQL
+
+
 login_page = Blueprint("users", __name__, template_folder='templates')
 import lmfdb.utils
 logger = lmfdb.utils.make_logger(login_page)
@@ -51,12 +55,18 @@ def ctx_proc_userdata():
     if StrictVersion(FLASK_LOGIN_VERSION) > StrictVersion(FLASK_LOGIN_LIMIT):
         userdata['user_is_authenticated'] = current_user.is_authenticated
     else:
+
         userdata['user_is_authenticated'] = current_user.is_authenticated()
 
     try:
-        roles = getDBConnection()['admin'].command(SON({"connectionStatus":int(1)}))
-        userdata['user_can_write'] = 'readWrite' in [el['role'] for el in roles['authInfo']['authenticatedUserRoles'] if el['db']=='inventory']
-    except:
+        #TODO improve this
+        privileges = ['INSERT', 'SELECT', 'UPDATE', 'DELETE']
+        if all( db._execute(SQL("SELECT COUNT(privilege_type) FROM information_schema.role_table_grants WHERE grantee=%s AND table_name=%s AND privilege_type=%s"), [db._user, 'kwl_knowls', priv]).rowcount == 1 for priv in privileges):
+            userdata['user_can_write'] = True
+        else:
+            userdata['user_can_write'] = False
+    except Exception, err:
+        print err
         userdata['user_can_write'] = False
     userdata['user_is_admin'] = current_user.is_admin()
     userdata['get_username'] = get_username # this is a function
@@ -128,6 +138,7 @@ def set_info():
 @login_page.route("/profile/<userid>")
 @login_required
 def profile(userid):
+    from lmfdb.knowledge import knowldb
     # See issue #1169
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
