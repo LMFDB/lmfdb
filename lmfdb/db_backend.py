@@ -1199,7 +1199,7 @@ class PostgresTable(PostgresBase):
                       silent=True, commit=False)
         if self.extra_table is not None:
             self._execute(command.format(Identifier(self.extra_table + suffix),
-                                         Identifier(self.search_table + suffix + "_pkey")),
+                                         Identifier(self.extra_table + suffix + "_pkey")),
                           silent=True, commit=False)
         if commit:
             self.conn.commit()
@@ -2402,8 +2402,10 @@ class PostgresStatsTable(PostgresBase):
         return data
 
     def create_oldstats(self, filename):
-        creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(self.search_table + "_oldstats"))
+        name = self.search_table + "_oldstats"
+        creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(name))
         self._execute(creator)
+        self.table._db.grant_select(name)
         cur = self.conn.cursor()
         with open(filename) as F:
             try:
@@ -2527,6 +2529,23 @@ class PostgresDatabase(PostgresBase):
         elif 'password' not in options:
             options['user'], options['password'] = ['lmfdb', 'lmfdb']
 
+    def _grant(self, action, table_name, users, commit):
+        action = action.upper()
+        if action not in ['SELECT', 'INSERT', 'UPDATE', 'DELETE']:
+            raise ValueError("%s is not a valid action"%action)
+        grantor = SQL('GRANT %s ON TABLE {0} TO {1}'%action)
+        for user in users:
+            self._execute(grantor.format(Identifier(table_name), Identifier(user)), silent=True, commit=False)
+        if commit:
+            self.conn.commit()
+    def grant_select(self, table_name, users=['lmfdb', 'webserver'], commit=True):
+        self._grant("SELECT", table_name, users, commit)
+    def grant_insert(self, table_name, users=['webserver'], commit=True):
+        self._grant("INSERT", table_name, users, commit)
+    def grant_update(self, table_name, users=['webserver'], commit=True):
+        self._grant("UPDATE", table_name, users, commit)
+    def grant_delete(self, table_name, users=['webserver'], commit=True):
+        self._grant("DELETE", table_name, users, commit)
 
     def is_alive(self):
         """
@@ -2642,20 +2661,13 @@ class PostgresDatabase(PostgresBase):
             if (not hasid):
                 allcols.insert(0, SQL("id bigint"))
             return allcols
-        def grant_select(table_name):
-            grantor = SQL('GRANT SELECT ON TABLE {0} TO {1}')
-            self._execute(grantor.format(Identifier(table_name), Identifier('lmfdb')), silent=True, commit=False)
-            self._execute(grantor.format(Identifier(table_name), Identifier('webserver')), silent=True, commit=False)
-        def grant_insert(table_name):
-            grantor = SQL('GRANT INSERT ON TABLE {0} TO {1}')
-            self._execute(grantor.format(Identifier(table_name), Identifier('webserver')), silent=True, commit=False)
         search_columns = process_columns(search_columns, search_order)
         creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(search_columns))
         self._execute(creator, silent=True, commit=False)
-        grant_select(name)
+        self.grant_select(name)
         if extra_columns is not None:
             valid_extra_list = sum(extra_columns.values(),[])
-            valid_extra_set = set(valid_list)
+            valid_extra_set = set(valid_extra_list)
             # Check that columns aren't listed twice
             if len(valid_extra_list) != len(valid_extra_set):
                 C = Counter(valid_extra_list)
@@ -2671,18 +2683,18 @@ class PostgresDatabase(PostgresBase):
             creator = creator.format(Identifier(name+"_extras"),
                                      SQL(", ").join(extra_columns))
             self._execute(creator, silent=True, commit=False)
-            grant_select(name+"_extras")
+            self.grant_select(name+"_extras")
         creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
         creator = creator.format(Identifier(name+"_counts"))
         self._execute(creator, silent=True, commit=False)
-        grant_select(name+"_counts")
-        grant_insert(name+"_counts")
+        self.grant_select(name+"_counts")
+        self.grant_insert(name+"_counts")
         creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
         creator = creator.format(Identifier(name + "_stats"))
         self._execute(creator, silent=True, commit=False)
-        grant_select(name+"_stats")
-        inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras) VALUES (%s, %s, %s, %s, %s)')
-        self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None], silent=True, commit=False)
+        self.grant_select(name+"_stats")
+        inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
+        self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col], silent=True, commit=False)
         print "Table %s created in %.3f secs"%(name, time.time()-now)
         self.conn.commit()
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None))
